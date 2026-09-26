@@ -25,6 +25,10 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}"""),
             Rarity: CardRarity.Basic,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":10},{"op":"applyPower","power":"base-spire:vulnerable","amount":3,"target":"firstEnemy"}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.BattleTrance, 0, CardType.Skill,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"drawCards","amount":3},{"op":"applyPower","power":"base-spire:no-draw","amount":1,"target":"self"}]}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"drawCards","amount":4},{"op":"applyPower","power":"base-spire:no-draw","amount":1,"target":"self"}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Bloodletting, 0, CardType.Skill,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"loseHp","amount":3,"target":"self"},{"op":"modifyEnergy","amount":2}]}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Common,
@@ -95,7 +99,8 @@ internal static class IroncladCards
             Target: TargetSelector.Self, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":9},{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting,
+            [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.BattleTrance,
+                BaseSpireIds.Bloodletting,
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
