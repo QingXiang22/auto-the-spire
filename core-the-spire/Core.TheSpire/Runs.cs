@@ -256,8 +256,10 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
 public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
     IReadOnlyList<RunRoomType> RoomTypes);
 
-public enum RunRewardKind { Gold }
-public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount);
+public enum RunRewardKind { Gold, Card }
+public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
+    IReadOnlyList<CardInstance> CardOptions);
+public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
 
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
     ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds,
@@ -348,6 +350,8 @@ internal sealed class RunState
         Definition = definition;
         Character = character;
         Random = random;
+        RewardRandom = random.Get("rewards");
+        CardRarityOdds = new CardRarityOddsState();
         Encounters = encounters;
         Hp = character.MaxHp;
         MaxHp = character.MaxHp;
@@ -387,6 +391,9 @@ internal sealed class RunState
     public RunDefinition Definition { get; }
     public CharacterDefinition Character { get; }
     public RandomStreams Random { get; }
+    public SeededRandom RewardRandom { get; }
+    public CardRarityOddsState CardRarityOdds { get; }
+    public int NextRewardCardInstanceId { get; set; }
     public IReadOnlyDictionary<ContentId, EncounterDefinition>? Encounters { get; }
     public UnknownRoomOddsState? UnknownRoomOdds { get; }
     public IReadOnlyList<ActRoomContentState?> RoomContentStates { get; }
@@ -463,7 +470,8 @@ internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bo
     public List<RunRewardState> Rewards { get; } = [];
 }
 
-internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount);
+internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount,
+    IReadOnlyList<CardInstance>? CardOptions = null);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -474,14 +482,18 @@ public sealed class RunEnvironment
     private readonly IReadOnlyDictionary<ContentId, EncounterDefinition>? _encounters;
     private readonly IReadOnlyDictionary<ContentId, RunEventDefinition>? _runEvents;
     private readonly IReadOnlyDictionary<ContentId, CardDefinition>? _cards;
+    private readonly IReadOnlyDictionary<ContentId, CardPoolDefinition>? _cardPools;
 
     public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
-        IEnumerable<CardDefinition>? cards = null)
+        IEnumerable<CardDefinition>? cards = null, IEnumerable<CardPoolDefinition>? cardPools = null,
+        IEnumerable<EncounterDefinition>? encounters = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _character = character ?? throw new ArgumentNullException(nameof(character));
         _runHooks = Array.AsReadOnly(runHooks?.ToArray() ?? []);
         _cards = cards?.ToDictionary(card => card.Id);
+        _cardPools = cardPools?.ToDictionary(pool => pool.Id);
+        _encounters = encounters?.ToDictionary(encounter => encounter.Id);
     }
 
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
@@ -490,6 +502,7 @@ public sealed class RunEnvironment
         _encounters = gameDefinition.Encounters;
         _runEvents = gameDefinition.RunEvents;
         _cards = gameDefinition.Cards;
+        _cardPools = gameDefinition.CardPools;
     }
 
     public RunSession Start(uint seed)
@@ -523,7 +536,8 @@ public sealed class RunEnvironment
     private static RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame) => new(
         frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
-        Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind, reward.Amount)).ToArray()));
+        Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
+            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>())).ToArray()));
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
     {
@@ -538,8 +552,13 @@ public sealed class RunEnvironment
             var rewards = state.RoomStack[^1].Rewards;
             return rewards.Count == 0
                 ? [new ProceedAfterRewardsAction()]
-                : rewards.Where(reward => reward.Kind == RunRewardKind.Gold)
-                    .Select(reward => (PlayerAction)new ClaimGoldRewardAction(reward.Id))
+                : rewards.SelectMany(reward => reward.Kind switch
+                    {
+                        RunRewardKind.Gold => [(PlayerAction)new ClaimGoldRewardAction(reward.Id)],
+                        RunRewardKind.Card => reward.CardOptions!.Select(card =>
+                            (PlayerAction)new ClaimCardRewardAction(reward.Id, card.InstanceId)).ToArray(),
+                        _ => Array.Empty<PlayerAction>()
+                    })
                     .Append(new SkipRewardSetAction()).ToArray();
         }
         if (state.Phase == RunPhase.ResolveRestSite && state.RoomStack.Count > 0
@@ -715,7 +734,7 @@ public sealed class RunEnvironment
         return FinishCompletedRoom(session, completedFrame);
     }
 
-    private static bool TryGenerateCombatRewards(RunState state, RunRoomFrame frame)
+    private bool TryGenerateCombatRewards(RunState state, RunRoomFrame frame)
     {
         if (frame.RoomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss)
             || frame.EncounterId is not { } encounterId
@@ -725,8 +744,14 @@ public sealed class RunEnvironment
 
         if (frame.RoomType != RunRoomType.Boss || state.ActIndex != state.Definition.Acts.Count - 1)
         {
-            var amount = state.Random.Get("rewards").NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
+            var amount = state.RewardRandom.NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
             frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
+        }
+        if (_cards is not null && _cardPools is not null && state.Character.CardPools.Count > 0)
+        {
+            var options = CardRewardGenerator.Generate(state, _cards, _cardPools);
+            if (options.Count > 0)
+                frame.Rewards.Add(new RunRewardState($"{encounterId}:cards", RunRewardKind.Card, 0, options));
         }
         return true;
     }
@@ -741,6 +766,18 @@ public sealed class RunEnvironment
             var reward = frame.Rewards.SingleOrDefault(item => item.Id == claim.RewardId && item.Kind == RunRewardKind.Gold)
                 ?? throw new InvalidOperationException($"Gold reward '{claim.RewardId}' is not available.");
             state.Gold = checked(state.Gold + reward.Amount);
+            frame.Rewards.Remove(reward);
+            return Observe(session);
+        }
+        if (action is ClaimCardRewardAction claimCard)
+        {
+            var reward = frame.Rewards.SingleOrDefault(item =>
+                item.Id == claimCard.RewardId && item.Kind == RunRewardKind.Card)
+                ?? throw new InvalidOperationException($"Card reward '{claimCard.RewardId}' is not available.");
+            var card = reward.CardOptions?.SingleOrDefault(option =>
+                option.InstanceId == claimCard.CardInstanceId)
+                ?? throw new InvalidOperationException($"Card option '{claimCard.CardInstanceId}' is not available.");
+            state.Deck.Add(card);
             frame.Rewards.Remove(reward);
             return Observe(session);
         }
