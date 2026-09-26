@@ -39,13 +39,14 @@ public sealed class CombatSliceTests
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
         Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
-                BaseSpireIds.DemonForm, BaseSpireIds.Inflame,
+                BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Headbutt].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
@@ -56,6 +57,11 @@ public sealed class CombatSliceTests
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.DemonFormPower, 3, TargetSelector.Self),
             definition.Cards[BaseSpireIds.DemonForm]
                 .ResolveEffect(new CardInstance("test:demon-form+", BaseSpireIds.DemonForm, 1)));
+        var upgradedHeadbutt = (SequenceEffect)definition.Cards[BaseSpireIds.Headbutt]
+            .ResolveEffect(new CardInstance("test:headbutt+", BaseSpireIds.Headbutt, 1));
+        Assert.Equal(new AttackEffect(12), upgradedHeadbutt.Effects[0]);
+        Assert.Equal(new ChooseCardFromPileEffect(CardPile.Discard, CardPile.Draw,
+            "Choose a card from discard", CardPilePosition.Top), upgradedHeadbutt.Effects[1]);
         Assert.Equal(TargetSelector.AllOpponents, definition.Cards[BaseSpireIds.Thunderclap].Target);
         var thunderclap = (SequenceEffect)definition.Cards[BaseSpireIds.Thunderclap].Effect;
         Assert.Equal(new AttackEffect(4, TargetSelector.AllOpponents), thunderclap.Effects[0]);
@@ -734,6 +740,70 @@ public sealed class CombatSliceTests
         var upgradedCopy = upgraded.State.Player.DiscardPileInstances.Single();
         Assert.Equal(1, upgradedCopy.UpgradeLevel);
         Assert.True("fixture-upgraded-anger" != upgradedCopy.InstanceId);
+    }
+
+    public void HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(35, "ironclad", 56, 65, [BaseSpireIds.Headbutt],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        var strike = new CardInstance("fixture-discard-strike", BaseSpireIds.StrikeIronclad);
+        var defend = new CardInstance("fixture-discard-defend", BaseSpireIds.DefendIronclad);
+        state.State.Player.MutableDiscardPile.AddRange([strike, defend]);
+
+        var paused = env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+        Assert.Equal(44, state.State.Enemy.Hp);
+        Assert.Equal("Choose a card from discard", paused.Observation.PendingCardChoice!.Prompt);
+        Assert.Equal(new[] { strike.InstanceId, defend.InstanceId },
+            paused.Observation.PendingCardChoice.Options.Select(card => card.InstanceId));
+        var cardChoices = env.LegalActions(state).OfType<ChooseCardAction>().ToArray();
+        Assert.Equal(2, cardChoices.Length);
+        Assert.True(cardChoices.Any(choice => choice.CardInstanceId == defend.InstanceId));
+
+        var resolved = env.Step(state, new ChooseCardAction(defend.InstanceId));
+        Assert.True(resolved.Observation.PendingCardChoice is null);
+        Assert.Equal(defend.InstanceId, state.State.Player.DrawPileInstances[0].InstanceId);
+        Assert.Equal(strike.InstanceId, state.State.Player.DiscardPileInstances.Single().InstanceId);
+        Assert.True(resolved.Events.Any(gameEvent => gameEvent.Type == "card_choice"
+            && gameEvent.Target == defend.InstanceId));
+
+        var continuationCard = ContentId.Parse("test:card-choice-continuation");
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        registry.Register(new CardDefinition(continuationCard, 1, CardType.Skill,
+            new SequenceEffect([
+                new ChooseCardFromPileEffect(CardPile.Discard, CardPile.Hand, "Choose a card"),
+                new GainBlockEffect(4)
+            ]), Target: TargetSelector.Self));
+        var continuationEnvironment = new CombatEnvironment(registry.Build());
+        var continuation = continuationEnvironment.Start(38, "ironclad", 56, 65, [continuationCard],
+            BaseSpireIds.DampCultist.ToString());
+        var continuationCardInstance = new CardInstance("fixture-followup-choice", BaseSpireIds.StrikeIronclad);
+        continuation.State.Player.MutableDiscardPile.Add(continuationCardInstance);
+        var continuationPaused = continuationEnvironment.Step(continuation,
+            new PlayCardAction(0, continuation.State.Player.Id));
+        Assert.True(continuationPaused.NeedsChoice);
+        Assert.Equal(0, continuation.State.Player.Creature.Block);
+        continuationEnvironment.Step(continuation, new ChooseCardAction(continuationCardInstance.InstanceId));
+        Assert.Equal(4, continuation.State.Player.Creature.Block);
+
+        var lethal = env.Start(37, "ironclad", 56, 65, [BaseSpireIds.Headbutt],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 9);
+        var lethalChoice = new CardInstance("fixture-lethal-choice", BaseSpireIds.StrikeIronclad);
+        lethal.State.Player.MutableDiscardPile.Add(lethalChoice);
+        var lethalPaused = env.Step(lethal, new PlayCardAction(0, lethal.State.Enemy.Id));
+        Assert.False(lethalPaused.Observation.IsTerminal);
+        Assert.Equal(1, env.LegalActions(lethal).Count);
+        Assert.True(env.LegalActions(lethal).Single() is ChooseCardAction);
+        var lethalResolved = env.Step(lethal, new ChooseCardAction(lethalChoice.InstanceId));
+        Assert.True(lethal.State.Player.DrawPileInstances.Single().InstanceId == lethalChoice.InstanceId);
+        Assert.True(lethalResolved.Observation.IsTerminal);
+
+        var emptyDiscard = env.Start(36, "ironclad", 56, 65, [BaseSpireIds.Headbutt],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        var noChoice = env.Step(emptyDiscard, new PlayCardAction(0, emptyDiscard.State.Enemy.Id));
+        Assert.True(noChoice.Observation.PendingCardChoice is null);
+        Assert.Equal(44, emptyDiscard.State.Enemy.Hp);
     }
 
     public void RestSiteOffersHealingOrUpgradingOneCard()
@@ -1901,6 +1971,7 @@ internal static class Program
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
+        tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
@@ -1942,7 +2013,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 45 gameplay checks.");
+        Console.WriteLine("Passed 46 gameplay checks.");
     }
 }
 

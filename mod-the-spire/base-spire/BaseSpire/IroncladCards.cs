@@ -30,6 +30,10 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":2,"target":"self"}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Rare,
             UpgradedEffect: EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":3,"target":"self"}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Headbutt, 1, CardType.Attack,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":9},{"op":"chooseCardFromPile","from":"discard","to":"draw","prompt":"Choose a card from discard","destinationPosition":"top"}]}"""),
+            Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":12},{"op":"chooseCardFromPile","from":"discard","to":"draw","prompt":"Choose a card from discard","destinationPosition":"top"}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.IronWave, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":5},{"op":"attack","amount":5}]}"""),
             Rarity: CardRarity.Common,
@@ -60,7 +64,7 @@ internal static class IroncladCards
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":7,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
             [BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
-                BaseSpireIds.DemonForm, BaseSpireIds.Inflame,
+                BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut]));
