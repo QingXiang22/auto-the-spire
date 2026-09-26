@@ -10,6 +10,9 @@ public static class BaseSpireIds
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
     public static readonly ContentId IronWave = ContentId.Parse("base-spire:iron-wave");
     public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
+    public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");
+    public static readonly ContentId ShrugItOff = ContentId.Parse("base-spire:shrug-it-off");
+    public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId IroncladCardPool = ContentId.Parse("base-spire:ironclad-card-pool");
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
     public static readonly ContentId CalcifiedCultist = ContentId.Parse("base-spire:calcified-cultist");

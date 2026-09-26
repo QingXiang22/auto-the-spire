@@ -38,8 +38,9 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash,
-                BaseSpireIds.IronWave, BaseSpireIds.Inflame }.AsEnumerable(),
+        Assert.Equal(new[] { BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
+                BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.TwinStrike }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
@@ -50,6 +51,16 @@ public sealed class CombatSliceTests
         Assert.Equal(new AttackEffect(7), upgradedIronWave.Effects[1]);
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Strength, 3, TargetSelector.Self),
             definition.Cards[BaseSpireIds.Inflame].ResolveEffect(new CardInstance("test:inflame+", BaseSpireIds.Inflame, 1)));
+        var upgradedPommel = (SequenceEffect)definition.Cards[BaseSpireIds.PommelStrike]
+            .ResolveEffect(new CardInstance("test:pommel+", BaseSpireIds.PommelStrike, 1));
+        Assert.Equal(new AttackEffect(10), upgradedPommel.Effects[0]);
+        Assert.Equal(new DrawCardsEffect(2), upgradedPommel.Effects[1]);
+        var upgradedShrug = (SequenceEffect)definition.Cards[BaseSpireIds.ShrugItOff]
+            .ResolveEffect(new CardInstance("test:shrug+", BaseSpireIds.ShrugItOff, 1));
+        Assert.Equal(new GainBlockEffect(11), upgradedShrug.Effects[0]);
+        Assert.Equal(new DrawCardsEffect(1), upgradedShrug.Effects[1]);
+        Assert.Equal(new RepeatEffect(2, new AttackEffect(7)),
+            definition.Cards[BaseSpireIds.TwinStrike].ResolveEffect(new CardInstance("test:twin+", BaseSpireIds.TwinStrike, 1)));
         Assert.Equal(new AttackEffect(9), definition.Cards[BaseSpireIds.StrikeIronclad]
             .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
         Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
@@ -93,6 +104,24 @@ public sealed class CombatSliceTests
         Assert.Equal(48, addedCards.State.Enemy.Hp);
         env.Step(addedCards, new PlayCardAction(0, addedCards.State.Player.Id));
         Assert.Equal(2, addedCards.State.Player.Creature.Strength);
+
+        var pommel = env.Start(22, "ironclad", 56, 65, [BaseSpireIds.PommelStrike],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53, drawPile: [BaseSpireIds.StrikeIronclad]);
+        env.Step(pommel, new PlayCardAction(0, pommel.State.Enemy.Id));
+        Assert.Equal(44, pommel.State.Enemy.Hp);
+        Assert.Equal(BaseSpireIds.StrikeIronclad, pommel.State.Player.Hand[0]);
+
+        var shrug = env.Start(23, "ironclad", 56, 65, [BaseSpireIds.ShrugItOff],
+            BaseSpireIds.DampCultist.ToString(), drawPile: [BaseSpireIds.StrikeIronclad]);
+        env.Step(shrug, new PlayCardAction(0, "ironclad"));
+        Assert.Equal(8, shrug.State.Player.Creature.Block);
+        Assert.Equal(BaseSpireIds.StrikeIronclad, shrug.State.Player.Hand[0]);
+
+        var twin = env.Start(24, "ironclad", 56, 65, [BaseSpireIds.TwinStrike],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(twin, new PlayCardAction(0, twin.State.Enemy.Id));
+        Assert.Equal(43, twin.State.Enemy.Hp);
+        Assert.Equal(2, twin.State.Events.Count(gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 5));
     }
 
     public void BaseDampCultistNormalValuesMatchSourceRules()
