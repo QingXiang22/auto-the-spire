@@ -1,0 +1,12 @@
+# Structurizr Local runtime artifacts
+docs/architecture/c4/.structurizr/
+docs/architecture/c4/workspace.json
+
+# .NET build outputs
+**/bin/
+**/obj/
+
+# Locally restored game project and external checkout copies
+/sts2/
+/fmod-gdextension/
+/tools/fmod-gdextension/

@@ -1,0 +1,149 @@
+namespace CoreTheSpire;
+
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SequenceEffect), "sequence")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AttackEffect), "attack")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(DrawCardsEffect), "drawCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(MoveCardEffect), "moveCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnergyEffect), "modifyEnergy")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseEffect), "choose")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
+public abstract record EffectNode;
+public sealed record SequenceEffect : EffectNode
+{
+    [System.Text.Json.Serialization.JsonConstructor]
+    public SequenceEffect(IReadOnlyList<EffectNode> effects) => Effects = Array.AsReadOnly(effects.ToArray());
+    public IReadOnlyList<EffectNode> Effects { get; }
+}
+public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
+public sealed record GainBlockEffect(int Amount) : EffectNode;
+public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record DrawCardsEffect(int Amount) : EffectNode;
+public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
+public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
+public sealed record ChooseEffect : EffectNode
+{
+    [System.Text.Json.Serialization.JsonConstructor]
+    public ChooseEffect(string prompt, IReadOnlyList<ChoiceOption> options)
+    {
+        Prompt = prompt;
+        Options = Array.AsReadOnly(options.ToArray());
+    }
+    public string Prompt { get; }
+    public IReadOnlyList<ChoiceOption> Options { get; }
+}
+public sealed record ChoiceOption(string Label, EffectNode? Effect = null);
+public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, EffectNode? Else = null) : EffectNode;
+public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
+public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
+
+public enum TargetSelector { Self, FirstEnemy, SelectedTarget }
+public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyAtLeastPredicate), "energyAtLeast")]
+public abstract record EffectPredicate;
+public sealed record TargetAlivePredicate : EffectPredicate;
+public sealed record HasPowerPredicate(ContentId Power) : EffectPredicate;
+public sealed record EnergyAtLeastPredicate(int Amount) : EffectPredicate;
+
+internal static class EffectExecutor
+{
+    public static void Execute(GameSession session, EntityState owner, EffectNode effect, EntityState? target = null)
+    {
+        var state = session.State;
+        state.PendingEffects.Add((owner, effect, target));
+        Drain(session);
+    }
+
+    public static void Resume(GameSession session) => Drain(session);
+
+    private static void Drain(GameSession session)
+    {
+        var state = session.State;
+        while (state.PendingChoice is null && state.PendingEffects.Count > 0)
+        {
+            var index = state.PendingEffects.Count - 1;
+            var (owner, effect, target) = state.PendingEffects[index];
+            state.PendingEffects.RemoveAt(index);
+            switch (effect)
+            {
+                case SequenceEffect sequence:
+                    for (var i = sequence.Effects.Count - 1; i >= 0; i--)
+                        state.PendingEffects.Add((owner, sequence.Effects[i], target));
+                    break;
+                case AttackEffect attack:
+                    var victim = ResolveTarget(state, owner, target, attack.Target);
+                    var rawDamage = Math.Max(0, attack.Amount + owner.Strength);
+                    if (state.HasPowerRole(victim, PowerRole.Vulnerable)) rawDamage = (int)MathF.Floor(rawDamage * 1.5f);
+                    var absorbed = Math.Min(victim.Block, rawDamage);
+                    victim.Block -= absorbed;
+                    var damage = Math.Min(victim.Hp, rawDamage - absorbed);
+                    victim.Hp -= damage;
+                    state.Emit(session, "damage", owner.Id, victim.Id, damage);
+                    break;
+                case GainBlockEffect block:
+                    owner.Block += block.Amount;
+                    state.Emit(session, "block", owner.Id, owner.Id, block.Amount);
+                    break;
+                case ApplyPowerEffect power:
+                    var recipient = ResolveTarget(state, owner, target, power.Target);
+                    state.ApplyPower(session, recipient, power.Power, power.Amount, owner.IsEnemy);
+                    break;
+                case DrawCardsEffect draw:
+                    state.Draw(session, draw.Amount);
+                    break;
+                case MoveCardEffect move:
+                    state.MoveCards(move.From, move.To, move.Count);
+                    break;
+                case ModifyEnergyEffect energy:
+                    state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);
+                    state.Emit(session, "energy", state.Player.Id, state.Player.Id, energy.Amount);
+                    break;
+                case ChooseEffect choice:
+                    if (choice.Options.Count == 0) throw new InvalidOperationException("A choice must have at least one option.");
+                    state.PendingChoice = choice;
+                    state.PendingChoiceOwner = owner;
+                    state.PendingChoiceTarget = target;
+                    break;
+                case IfEffect conditional:
+                    var condition = conditional.Predicate switch
+                    {
+                        TargetAlivePredicate => (target ?? OpponentOf(state, owner)).Hp > 0,
+                        HasPowerPredicate hasPower => owner.PowerAmount(hasPower.Power) > 0,
+                        EnergyAtLeastPredicate energy => state.Player.Energy >= energy.Amount,
+                        _ => false
+                    };
+                    if (condition) state.PendingEffects.Add((owner, conditional.Then, target));
+                    else if (conditional.Else is not null) state.PendingEffects.Add((owner, conditional.Else, target));
+                    break;
+                case RepeatEffect repeat:
+                    if (repeat.Count < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
+                    for (var i = 0; i < repeat.Count; i++) state.PendingEffects.Add((owner, repeat.Effect, target));
+                    break;
+                case CustomEffect custom:
+                    if (!state.Definition.CustomEffects.TryGetValue(custom.Handler, out var handler))
+                        throw new InvalidOperationException($"Unknown custom effect handler '{custom.Handler}'.");
+                    handler.Execute(new EffectExecutionContext(session, owner, target, handler.Id), custom.Payload);
+                    break;
+                default:
+                    throw new NotSupportedException($"Unsupported effect node: {effect.GetType().Name}");
+            }
+        }
+    }
+
+    private static EntityState ResolveTarget(GameState state, EntityState owner, EntityState? selected, TargetSelector selector) => selector switch
+    {
+        TargetSelector.Self => owner,
+        TargetSelector.FirstEnemy => OpponentOf(state, owner),
+        TargetSelector.SelectedTarget => selected ?? OpponentOf(state, owner),
+        _ => throw new ArgumentOutOfRangeException(nameof(selector))
+    };
+
+    private static EntityState OpponentOf(GameState state, EntityState owner) => owner.IsEnemy ? state.Player.Creature : state.Enemy;
+}

@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
+    <ProjectReference Include="../../base-spire/BaseSpire/BaseSpire.csproj" />
+  </ItemGroup>
+</Project>

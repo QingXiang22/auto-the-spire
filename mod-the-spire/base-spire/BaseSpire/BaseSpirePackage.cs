@@ -1,0 +1,78 @@
+using CoreTheSpire;
+
+namespace BaseSpire;
+
+public static class BaseSpireIds
+{
+    public static readonly ContentId Ironclad = ContentId.Parse("base-spire:ironclad");
+    public static readonly ContentId StrikeIronclad = ContentId.Parse("base-spire:strike-ironclad");
+    public static readonly ContentId DefendIronclad = ContentId.Parse("base-spire:defend-ironclad");
+    public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
+    public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
+    public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
+    public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
+    public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
+    public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
+}
+
+public static class BaseSpireContent
+{
+    public const int IroncladStartingMaxHp = 80;
+    public const int IroncladStartingGold = 99;
+    public static IReadOnlyList<ContentId> IroncladStarterDeck() =>
+        [.. Enumerable.Repeat(BaseSpireIds.StrikeIronclad, 5), .. Enumerable.Repeat(BaseSpireIds.DefendIronclad, 4), BaseSpireIds.Bash];
+    public static CharacterDefinition Ironclad() => new(BaseSpireIds.Ironclad, IroncladStartingMaxHp,
+        IroncladStartingGold, IroncladStarterDeck(), [BaseSpireIds.BurningBlood]);
+}
+
+public sealed class BaseSpirePackage(bool deadlyEnemies = false) : IRulePackage
+{
+    public PackageInfo Info { get; } = new("base-spire", "0.1.0");
+
+    public void Register(ContentRegistry registry)
+    {
+        registry.Register(BaseSpireContent.Ironclad());
+        registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
+        registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
+            BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
+        registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
+            Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true));
+
+        registry.Register(new CardDefinition(BaseSpireIds.StrikeIronclad, 1, CardType.Attack,
+            EffectDsl.Parse("""{"op":"attack","amount":6}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.DefendIronclad, 1, CardType.Skill,
+            EffectDsl.Parse("""{"op":"gainBlock","amount":5}"""), Target: TargetSelector.Self));
+        registry.Register(new CardDefinition(BaseSpireIds.Bash, 2, CardType.Attack,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}""")));
+
+        var ritual = deadlyEnemies ? 6 : 5;
+        var attack = deadlyEnemies ? 3 : 1;
+        var incantation = new EnemyActionDefinition(ContentId.Parse("base-spire:damp-cultist-incantation"),
+            new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff, AppliedPower: BaseSpireIds.Ritual, AppliedPowerAmount: ritual);
+        var darkStrike = new EnemyActionDefinition(ContentId.Parse("base-spire:damp-cultist-dark-strike"),
+            new AttackEffect(attack, TargetSelector.FirstEnemy), IntentKind.Attack, IntentDamage: attack);
+        registry.Register(new EnemyDefinition(BaseSpireIds.DampCultist, 52, 54, [incantation, darkStrike]));
+    }
+
+}
+
+public sealed class SyntheticCombatPackage : IRulePackage
+{
+    public PackageInfo Info { get; } = new("test-fixture", "1.0.0");
+
+    public void Register(ContentRegistry registry)
+    {
+        registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
+        registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
+            BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
+        registry.Register(new EnemyDefinition(ContentId.Parse("test-fixture:cultist"), 53, 53,
+        [
+            new EnemyActionDefinition(ContentId.Parse("test-fixture:ritual"), new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
+                AppliedPower: BaseSpireIds.Ritual, AppliedPowerAmount: 5),
+            new EnemyActionDefinition(ContentId.Parse("test-fixture:attack"), new AttackEffect(3), IntentKind.Attack, 3)
+        ]));
+        registry.Register(new CardDefinition(ContentId.Parse("test-fixture:strike"), 1, CardType.Attack, new AttackEffect(6)));
+        registry.Register(new CardDefinition(ContentId.Parse("test-fixture:defend"), 1, CardType.Skill, new GainBlockEffect(5)));
+        registry.Register(new CardDefinition(ContentId.Parse("test-fixture:bash"), 2, CardType.Attack, new AttackEffect(8)));
+    }
+}
