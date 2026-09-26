@@ -3,6 +3,7 @@ namespace CoreTheSpire;
 internal sealed class EntityState
 {
     private readonly Dictionary<ContentId, int> _powers = [];
+    private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
 
     public EntityState(string id, bool isEnemy, int hp, int maxHp)
@@ -22,6 +23,7 @@ internal sealed class EntityState
     public int Strength { get; internal set; }
     public IReadOnlyDictionary<ContentId, int> Powers => _powerView;
     internal Dictionary<ContentId, int> MutablePowers => _powers;
+    internal Dictionary<ContentId, HashSet<string>> MutablePowerAppliers => _powerAppliers;
     internal HashSet<ContentId> SkipNextPowerTriggers { get; } = [];
     public int PowerAmount(ContentId id) => _powers.GetValueOrDefault(id);
 }
@@ -126,11 +128,55 @@ internal sealed class GameState
     {
         if (!Definition.Powers.TryGetValue(power, out var definition))
             throw new InvalidOperationException($"Unknown power '{power}'.");
-        owner.MutablePowers[power] = owner.PowerAmount(power) + amount;
+        var newAmount = owner.PowerAmount(power) + amount;
+        if (newAmount == 0)
+        {
+            owner.MutablePowers.Remove(power);
+            owner.MutablePowerAppliers.Remove(power);
+            owner.SkipNextPowerTriggers.Remove(power);
+        }
+        else
+        {
+            owner.MutablePowers[power] = newAmount;
+            if (!owner.MutablePowerAppliers.TryGetValue(power, out var appliers))
+                owner.MutablePowerAppliers.Add(power, appliers = []);
+            appliers.Add(applier.Id);
+        }
         if (definition.Role == PowerRole.Strength) owner.Strength += amount;
-        if (owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToEnemy || !owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToPlayer)
+        if (amount != 0 && (owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToEnemy
+            || !owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToPlayer))
             owner.SkipNextPowerTriggers.Add(power);
         Emit(session, "power", applier.Id, owner.Id, amount);
+    }
+
+    internal int CalculateDamage(EntityState dealer, EntityState target, int baseDamage)
+    {
+        var damage = Math.Max(0, baseDamage + dealer.Strength);
+        decimal multiplier = 1m;
+        foreach (var (powerId, amount) in dealer.Powers)
+        {
+            if (amount != 0 && Definition.Powers[powerId].OutgoingDamageMultiplier is { } factor)
+                multiplier *= factor;
+        }
+        damage = (int)decimal.Floor(damage * multiplier);
+        if (HasPowerRole(target, PowerRole.Vulnerable)) damage = (int)MathF.Floor(damage * 1.5f);
+        return Math.Max(0, damage);
+    }
+
+    internal void RemovePowersAppliedBy(GameSession session, string applierId)
+    {
+        var owners = Enemies.Select(enemy => enemy.Creature).Append(Player.Creature);
+        foreach (var owner in owners)
+        foreach (var (powerId, sourceIds) in owner.MutablePowerAppliers.ToArray())
+        {
+            if (!Definition.Powers[powerId].RemoveWhenApplierDies || !sourceIds.Remove(applierId)) continue;
+            if (sourceIds.Count > 0) continue;
+            var amount = owner.PowerAmount(powerId);
+            owner.MutablePowerAppliers.Remove(powerId);
+            owner.MutablePowers.Remove(powerId);
+            owner.SkipNextPowerTriggers.Remove(powerId);
+            Emit(session, "power_removed", applierId, owner.Id, amount);
+        }
     }
 
     internal bool HasPowerRole(EntityState entity, PowerRole role) => entity.Powers.Keys.Any(id => Definition.Powers[id].Role == role);

@@ -152,6 +152,54 @@ public sealed class CombatSliceTests
         Assert.Equal(13, toughDeadlyEnvironment.Observe(toughDeadly).IntentDamage);
     }
 
+    public void BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(209, "ironclad", 56, 65,
+            [BaseSpireIds.StrikeIronclad], BaseSpireIds.ShrinkerBeetleWeak);
+        var initial = environment.Observe(session);
+        Assert.True(initial.Enemies[0].Hp is >= 38 and <= 40);
+        Assert.Equal(IntentKind.Buff, initial.Intent);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(-1, session.State.Player.Creature.PowerAmount(BaseSpireIds.Shrink));
+        Assert.Equal(7, environment.Observe(session).IntentDamage);
+        var enemyInstanceId = environment.Observe(session).Enemies[0].Id;
+        var enemyHp = session.State.Enemies[0].Creature.Hp;
+        var attack = environment.Step(session, new PlayCardAction(0, enemyInstanceId));
+        Assert.Equal(enemyHp - 4, session.State.Enemies[0].Creature.Hp);
+        Assert.Contains(attack.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 4);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(49, environment.Observe(session).PlayerHp);
+        Assert.Equal(13, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(36, environment.Observe(session).PlayerHp);
+        Assert.Equal(7, environment.Observe(session).IntentDamage);
+
+        var composite = environment.StartEncounter(210, "ironclad", 56, 65, [], BaseSpireIds.OvergrowthCrawlers);
+        Assert.Equal(2, environment.Observe(composite).Enemies.Count);
+        Assert.True(environment.Observe(composite).Enemies.Any(enemy => enemy.Id.StartsWith(BaseSpireIds.ShrinkerBeetle.Value, StringComparison.Ordinal)));
+        Assert.True(environment.Observe(composite).Enemies.Any(enemy => enemy.Id.StartsWith(BaseSpireIds.FuzzyWurmCrawler.Value, StringComparison.Ordinal)));
+
+        var lethal = environment.Start(211, "ironclad", 56, 65, [BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.ShrinkerBeetle.ToString(), enemyHp: 1);
+        environment.Step(lethal, new EndTurnAction());
+        Assert.Equal(-1, lethal.State.Player.Creature.PowerAmount(BaseSpireIds.Shrink));
+        var lethalEnemyId = environment.Observe(lethal).Enemies[0].Id;
+        environment.Step(lethal, new PlayCardAction(0, lethalEnemyId));
+        Assert.Equal(0, lethal.State.Player.Creature.PowerAmount(BaseSpireIds.Shrink));
+        Assert.Contains(lethal.State.Events, gameEvent => gameEvent.Type == "power_removed"
+            && gameEvent.Target == "ironclad" && gameEvent.Amount == -1);
+    }
+
+    public void EnemyActionPowerReferencesAreValidatedWhenBuildingContent()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new MissingEnemyPowerPackage());
+        Assert.Throws<InvalidOperationException>(() => registry.Build());
+    }
+
     public void PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide()
     {
         var env = new CombatEnvironment(Build(new IncomingVulnerablePackage()));
@@ -1206,6 +1254,17 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class MissingEnemyPowerPackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("missing-enemy-power-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new EnemyDefinition(
+            ContentId.Parse("missing-enemy-power:enemy"), 10, 10,
+            [new EnemyActionDefinition(ContentId.Parse("missing-enemy-power:action"),
+                new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
+                AppliedPower: ContentId.Parse("missing-enemy-power:unknown-power"), AppliedPowerAmount: 1)]));
+    }
+
     private sealed class ChoiceCardPackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("choice-test", "1.0.0");
@@ -1315,6 +1374,8 @@ internal static class Program
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
+        tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
+        tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
         tests.NamedRandomStreamsAreDeterministicAndCountCalls();
@@ -1345,7 +1406,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 36 gameplay checks.");
+        Console.WriteLine("Passed 38 gameplay checks.");
     }
 }
 

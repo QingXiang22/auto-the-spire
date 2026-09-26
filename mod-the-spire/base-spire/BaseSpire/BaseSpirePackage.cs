@@ -13,9 +13,13 @@ public static class BaseSpireIds
     public static readonly ContentId CultistsNormal = ContentId.Parse("base-spire:cultists-normal");
     public static readonly ContentId FuzzyWurmCrawler = ContentId.Parse("base-spire:fuzzy-wurm-crawler");
     public static readonly ContentId FuzzyWurmCrawlerWeak = ContentId.Parse("base-spire:fuzzy-wurm-crawler-weak");
+    public static readonly ContentId ShrinkerBeetle = ContentId.Parse("base-spire:shrinker-beetle");
+    public static readonly ContentId ShrinkerBeetleWeak = ContentId.Parse("base-spire:shrinker-beetle-weak");
+    public static readonly ContentId OvergrowthCrawlers = ContentId.Parse("base-spire:overgrowth-crawlers");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
+    public static readonly ContentId Shrink = ContentId.Parse("base-spire:shrink");
     public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -46,6 +50,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
             Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true));
+        registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
+            OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
         registry.Register(new CardDefinition(BaseSpireIds.StrikeIronclad, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"attack","amount":6}""")));
@@ -90,6 +96,28 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             ]));
         registry.Register(new EncounterDefinition(BaseSpireIds.FuzzyWurmCrawlerWeak, RunRoomType.Monster,
             [BaseSpireIds.FuzzyWurmCrawler], isWeak: true, tags: [ContentId.Parse("base-spire:crawler")]));
+
+        var shrink = ContentId.Parse("base-spire:shrinker-beetle-shrink");
+        var chomp = ContentId.Parse("base-spire:shrinker-beetle-chomp");
+        var stomp = ContentId.Parse("base-spire:shrinker-beetle-stomp");
+        var chompDamage = deadlyEnemies ? 8 : 7;
+        var stompDamage = deadlyEnemies ? 14 : 13;
+        registry.Register(new EnemyDefinition(BaseSpireIds.ShrinkerBeetle,
+            toughEnemies ? 40 : 38, toughEnemies ? 42 : 40,
+            [
+                new EnemyActionDefinition(shrink, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
+                    AppliedPower: BaseSpireIds.Shrink, AppliedPowerAmount: -1,
+                    NextActionId: chomp, AppliedPowerTarget: TargetSelector.FirstEnemy),
+                new EnemyActionDefinition(chomp, new AttackEffect(chompDamage), IntentKind.Attack,
+                    chompDamage, NextActionId: stomp),
+                new EnemyActionDefinition(stomp, new AttackEffect(stompDamage), IntentKind.Attack,
+                    stompDamage, NextActionId: chomp)
+            ]));
+        registry.Register(new EncounterDefinition(BaseSpireIds.ShrinkerBeetleWeak, RunRoomType.Monster,
+            [BaseSpireIds.ShrinkerBeetle], isWeak: true, tags: [ContentId.Parse("base-spire:shrinker")]));
+        registry.Register(new EncounterDefinition(BaseSpireIds.OvergrowthCrawlers, RunRoomType.Monster,
+            [BaseSpireIds.ShrinkerBeetle, BaseSpireIds.FuzzyWurmCrawler],
+            tags: [ContentId.Parse("base-spire:shrinker"), ContentId.Parse("base-spire:crawler")]));
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());

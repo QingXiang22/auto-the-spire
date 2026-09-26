@@ -79,13 +79,13 @@ internal static class EffectExecutor
                     break;
                 case AttackEffect attack:
                     var victim = ResolveTarget(state, owner, target, attack.Target);
-                    var rawDamage = Math.Max(0, attack.Amount + owner.Strength);
-                    if (state.HasPowerRole(victim, PowerRole.Vulnerable)) rawDamage = (int)MathF.Floor(rawDamage * 1.5f);
+                    var rawDamage = state.CalculateDamage(owner, victim, attack.Amount);
                     var absorbed = Math.Min(victim.Block, rawDamage);
                     victim.Block -= absorbed;
                     var damage = Math.Min(victim.Hp, rawDamage - absorbed);
                     victim.Hp -= damage;
                     state.Emit(session, "damage", owner.Id, victim.Id, damage);
+                    if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
                     break;
                 case GainBlockEffect block:
                     owner.Block += block.Amount;

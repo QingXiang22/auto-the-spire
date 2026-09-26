@@ -26,12 +26,24 @@ public readonly record struct ContentId(string Value)
 public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerTrigger.None, ContentId? TriggerEffect = null,
     bool SkipFirstTriggerWhenAppliedToEnemy = false, PowerRole Role = PowerRole.None, bool DecrementOnTrigger = false,
-    bool SkipFirstTriggerWhenAppliedToPlayer = false);
+    bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
+    bool RemoveWhenApplierDies = false)
+{
+    public void Validate()
+    {
+        Id.Validate();
+        if (TriggerEffect is { } triggerEffect) triggerEffect.Validate();
+        if (!Enum.IsDefined(Trigger) || !Enum.IsDefined(Role))
+            throw new ArgumentException("Power trigger and role must be recognized values.");
+        if (OutgoingDamageMultiplier is < 0m)
+            throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
+    }
+}
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy);
 public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent,
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
-    ContentId? NextActionId = null);
+    ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self);
 public enum RunEventKind { Event, Ancient }
 
 public sealed record RunEventDefinition(ContentId Id, RunEventKind Kind = RunEventKind.Event)
@@ -84,7 +96,16 @@ public sealed record EnemyDefinition
         var copiedActions = actions.ToArray();
         if (copiedActions.Any(action => action is null))
             throw new ArgumentException("Enemy actions cannot be null.", nameof(actions));
-        foreach (var action in copiedActions) action.Id.Validate();
+        foreach (var action in copiedActions)
+        {
+            action.Id.Validate();
+            action.AppliedPower?.Validate();
+            if (!Enum.IsDefined(action.Intent) || !Enum.IsDefined(action.AppliedPowerTarget))
+                throw new ArgumentException($"Enemy action '{action.Id}' has an unsupported intent or power target.", nameof(actions));
+            ArgumentOutOfRangeException.ThrowIfNegative(action.IntentDamage);
+            if (action.AppliedPower is null && action.AppliedPowerAmount != 0)
+                throw new ArgumentException($"Enemy action '{action.Id}' has a power amount without a power ID.", nameof(actions));
+        }
         var indexes = copiedActions.Select((action, index) => (action.Id, index))
             .ToDictionary(pair => pair.Id, pair => pair.index);
         foreach (var action in copiedActions)
@@ -182,7 +203,12 @@ public sealed class ContentRegistry
         definition.Validate();
         AddUnique(_runEvents, definition.Id, definition, "run event");
     }
-    public void Register(PowerDefinition definition) => AddUnique(_powers, definition.Id, definition, "power");
+    public void Register(PowerDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        AddUnique(_powers, definition.Id, definition, "power");
+    }
     public void Register(CharacterDefinition definition) => AddUnique(_characters, definition.Id, definition, "character");
     public void Register(RunDefinition definition) => AddUnique(_runs, definition.Id, definition, "run");
     public void Register(IRuleHook hook)
@@ -206,7 +232,12 @@ public sealed class ContentRegistry
     public void Override(CardDefinition definition) => Replace(_cards, definition.Id, definition, "card");
     public void Override(EnemyDefinition definition) => Replace(_enemies, definition.Id, definition, "enemy");
     public void Override(EncounterDefinition definition) => Replace(_encounters, definition.Id, definition, "encounter");
-    public void Override(PowerDefinition definition) => Replace(_powers, definition.Id, definition, "power");
+    public void Override(PowerDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        Replace(_powers, definition.Id, definition, "power");
+    }
     public void Override(CharacterDefinition definition) => Replace(_characters, definition.Id, definition, "character");
     public void Override(RunDefinition definition) => Replace(_runs, definition.Id, definition, "run");
 
@@ -218,6 +249,13 @@ public sealed class ContentRegistry
         foreach (var enemyId in encounter.EnemyIds)
             if (!_enemies.ContainsKey(enemyId))
                 throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
+        foreach (var enemy in _enemies.Values)
+        foreach (var action in enemy.Actions)
+            if (action.AppliedPower is { } powerId && !_powers.ContainsKey(powerId))
+                throw new InvalidOperationException($"Enemy action '{action.Id}' references unknown power '{powerId}'.");
+        foreach (var power in _powers.Values)
+            if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
+                throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
         foreach (var run in _runs.Values)
         foreach (var act in run.Acts)
         {
