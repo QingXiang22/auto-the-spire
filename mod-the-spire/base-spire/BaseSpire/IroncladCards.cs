@@ -76,6 +76,9 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:strength","amount":2,"target":"self"}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:strength","amount":3,"target":"self"}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Impervious, 2, CardType.Skill,
+            new GainBlockEffect(30), Keywords: CardKeywords.Exhaust, Target: TargetSelector.Self,
+            Rarity: CardRarity.Rare, UpgradedEffect: new GainBlockEffect(40)));
         registry.Register(new CardDefinition(BaseSpireIds.PommelStrike, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":9},{"op":"drawCards","amount":1}]}"""),
             Rarity: CardRarity.Common,
@@ -114,7 +117,7 @@ internal static class IroncladCards
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
-                BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
+                BaseSpireIds.Impervious, BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
                 BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
                 BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
