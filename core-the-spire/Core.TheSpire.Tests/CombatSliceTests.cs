@@ -1304,6 +1304,13 @@ public sealed class CombatSliceTests
         Assert.Equal(1, state.State.Player.ExhaustPileInstances.Count(instance =>
             instance.CardId == BaseSpireIds.Impervious));
         Assert.Equal(0, state.State.Player.PlayPileInstances.Count);
+
+        var synergy = env.Start(76, "ironclad", 56, 65,
+            [BaseSpireIds.FeelNoPain, BaseSpireIds.Impervious], BaseSpireIds.DampCultist.ToString());
+        env.Step(synergy, new PlayCardAction(0, synergy.State.Player.Id));
+        env.Step(synergy, new PlayCardAction(0, synergy.State.Player.Id));
+        Assert.Equal(33, synergy.State.Player.Creature.Block);
+        Assert.Contains(synergy.State.Events, gameEvent => gameEvent.Type == "card_exhausted");
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
