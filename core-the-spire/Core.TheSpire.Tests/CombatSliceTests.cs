@@ -213,7 +213,7 @@ public sealed class CombatSliceTests
                 combat.Step(session, new EndTurnAction());
                 damages.Add(combat.Observe(session).IntentDamage);
             }
-            Assert.Equal(8, session.Random.Get("enemy-ai").Counter);
+            Assert.Equal(9, session.Random.Get("enemy-ai").Counter);
             return damages.ToArray();
         }
 
@@ -263,6 +263,7 @@ public sealed class CombatSliceTests
         Assert.Equal(3, altered.State.Enemies[0].Creature.Strength);
 
         var pair = environment.StartEncounter(214, "ironclad", 80, 80, [], BaseSpireIds.NibbitsNormal);
+        Assert.Equal(0, pair.Random.Get("enemy-ai").Counter);
         var pairOpening = environment.Observe(pair).Enemies;
         Assert.Equal(2, pairOpening.Count);
         Assert.Equal(6, pairOpening[0].IntentDamage);
@@ -1359,7 +1360,7 @@ public sealed class CombatSliceTests
                 new EnemyActionChoice(action.Id, index + 1)), EnemyActionRepeatPolicy.PreventImmediateRepeat);
             registry.Register(new EnemyDefinition(ContentId.Parse("random-enemy:enemy"), 30, 30,
                 actions.Select(action => new EnemyActionDefinition(action.Id, new AttackEffect(action.Damage),
-                    IntentKind.Attack, action.Damage, Transition: transition)).ToArray()));
+                    IntentKind.Attack, action.Damage, Transition: transition)).ToArray(), startingTransition: transition));
         }
     }
 

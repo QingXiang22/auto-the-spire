@@ -126,7 +126,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             {
                 ActionIndex = spawn.StartingActionOverride is { } actionId
                     ? enemyDefinition.GetActionIndex(actionId)
-                    : enemyDefinition.StartingActionIndex
+                    : enemyDefinition.ResolveStartingActionIndex(rng.Get("enemy-ai"))
             });
         }
         var state = new GameState(definition,
