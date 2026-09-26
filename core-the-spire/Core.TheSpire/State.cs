@@ -143,10 +143,9 @@ internal sealed class GameState
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
     public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0))
-        && PendingChoice is null && PendingCardChoice is null && PendingCardSetChoice is null && PendingEffects.Count == 0;
+        && PendingChoice is null && PendingCardSelection is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }
-    internal PendingCardChoice? PendingCardChoice { get; set; }
-    internal PendingCardSetChoice? PendingCardSetChoice { get; set; }
+    internal PendingCardSelectionState? PendingCardSelection { get; set; }
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
     internal CardInstance? PendingChoiceSelectedCard { get; set; }
@@ -350,10 +349,19 @@ internal sealed class GameState
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
-internal sealed record PendingCardChoice(ChooseCardFromPileEffect Effect, IReadOnlyList<CardInstance> Options,
-    EntityState Owner, EntityState? Target, CardInstance? SelectedCard);
+internal abstract class PendingCardSelectionState;
+internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
+    EntityState owner, EntityState? target, CardInstance? selectedCard) : PendingCardSelectionState
+{
+    public ChooseCardFromPileEffect Effect { get; } = effect;
+    public IReadOnlyList<CardInstance> Options { get; } = options;
+    public EntityState Owner { get; } = owner;
+    public EntityState? Target { get; } = target;
+    public CardInstance? SelectedCard { get; } = selectedCard;
+}
 internal sealed class PendingCardSetChoice(ChooseCardsFromPileEffect effect, IEnumerable<CardInstance> options,
     EntityState owner, EntityState? target, CardInstance? selectedCard, int maxChoices)
+    : PendingCardSelectionState
 {
     public ChooseCardsFromPileEffect Effect { get; } = effect;
     public List<CardInstance> Options { get; } = options.ToList();
@@ -363,9 +371,15 @@ internal sealed class PendingCardSetChoice(ChooseCardsFromPileEffect effect, IEn
     public int MaxChoices { get; } = maxChoices;
     public List<CardInstance> Selected { get; } = [];
 }
-public sealed record PendingCardChoiceView(string Prompt, IReadOnlyList<CardInstance> Options);
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PendingCardChoiceView), "single")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PendingCardSetChoiceView), "multiple")]
+public abstract record PendingCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Options);
+public sealed record PendingCardChoiceView(string Prompt, IReadOnlyList<CardInstance> Options)
+    : PendingCardSelectionView(Prompt, Options);
 public sealed record PendingCardSetChoiceView(string Prompt, IReadOnlyList<CardInstance> Options,
-    IReadOnlyList<CardInstance> Selected, int MinChoices, int MaxChoices);
+    IReadOnlyList<CardInstance> Selected, int MinChoices, int MaxChoices)
+    : PendingCardSelectionView(Prompt, Options);
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
     IReadOnlyList<ContentId> Hand, IReadOnlyDictionary<ContentId, int> PlayerPowers,
     int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
@@ -375,8 +389,7 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile,
     IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
     IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
-    IReadOnlyList<CardInstance> PlayPileInstances, PendingCardChoiceView? PendingCardChoice,
-    PendingCardSetChoiceView? PendingCardSetChoice);
+    IReadOnlyList<CardInstance> PlayPileInstances, PendingCardSelectionView? PendingCardSelection);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;

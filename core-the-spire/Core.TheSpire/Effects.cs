@@ -135,8 +135,7 @@ internal static class EffectExecutor
     private static void Drain(GameSession session)
     {
         var state = session.State;
-        while (state.PendingChoice is null && state.PendingCardChoice is null
-            && state.PendingCardSetChoice is null && state.PendingEffects.Count > 0)
+        while (state.PendingChoice is null && state.PendingCardSelection is null && state.PendingEffects.Count > 0)
         {
             var index = state.PendingEffects.Count - 1;
             var (owner, effect, target, selectedCard) = state.PendingEffects[index];
@@ -252,7 +251,7 @@ internal static class EffectExecutor
                     var options = state.GetPile(chooseCard.From)
                         .Where(card => state.MatchesCardSelectionFilter(card, chooseCard.Filter)).ToArray();
                     if (options.Length > 0)
-                        state.PendingCardChoice = new PendingCardChoice(chooseCard, options, owner, target, selectedCard);
+                        state.PendingCardSelection = new PendingCardChoice(chooseCard, options, owner, target, selectedCard);
                     break;
                 case ChooseCardsFromPileEffect chooseCards:
                     if (chooseCards.MinChoices < 0 || chooseCards.MaxChoices < chooseCards.MinChoices)
@@ -264,7 +263,7 @@ internal static class EffectExecutor
                         var maximum = Math.Min(chooseCards.MaxChoices, multiOptions.Length);
                         if (chooseCards.MinChoices > maximum)
                             throw new InvalidOperationException("Not enough cards satisfy the required selection count.");
-                        state.PendingCardSetChoice = new PendingCardSetChoice(chooseCards, multiOptions,
+                        state.PendingCardSelection = new PendingCardSetChoice(chooseCards, multiOptions,
                             owner, target, selectedCard, maximum);
                     }
                     break;
