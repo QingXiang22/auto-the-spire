@@ -13,6 +13,7 @@ public static class BaseSpireIds
     public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");
     public static readonly ContentId ShrugItOff = ContentId.Parse("base-spire:shrug-it-off");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
+    public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
     public static readonly ContentId IroncladCardPool = ContentId.Parse("base-spire:ironclad-card-pool");
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
     public static readonly ContentId CalcifiedCultist = ContentId.Parse("base-spire:calcified-cultist");
@@ -32,6 +33,7 @@ public static class BaseSpireIds
     public static readonly ContentId SlimesWeak = ContentId.Parse("base-spire:slimes-weak");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
+    public static readonly ContentId Weak = ContentId.Parse("base-spire:weak");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
     public static readonly ContentId Shrink = ContentId.Parse("base-spire:shrink");
     public static readonly ContentId Slimed = ContentId.Parse("base-spire:slimed");
@@ -66,6 +68,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
             Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true));
+        registry.Register(new PowerDefinition(BaseSpireIds.Weak, PowerTrigger.AfterEnemyTurnEnd,
+            DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true, OutgoingDamageMultiplier: 0.75m));
         registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
