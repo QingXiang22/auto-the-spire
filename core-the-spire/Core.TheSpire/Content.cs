@@ -373,7 +373,7 @@ public sealed record EnemyDefinition
 
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
-public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4 }
+public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted }
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
@@ -514,7 +514,8 @@ public sealed class ContentRegistry
             card.Id.Validate();
             if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity))
                 throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, or rarity.");
-            if ((card.Keywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable)) != 0)
+            if ((card.Keywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
+                | CardKeywords.Retain)) != 0)
                 throw new InvalidOperationException($"Card '{card.Id}' contains unsupported keywords.");
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
             if (card.UpgradedEffect is { } upgradedEffect)
