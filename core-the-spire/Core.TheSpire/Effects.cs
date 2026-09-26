@@ -14,6 +14,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RandomlyMoveCardFromPileEffect), "randomlyMoveCardFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
@@ -35,6 +36,8 @@ public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Cou
 public sealed record ChooseCardFromPileEffect(CardPile From, CardPile? To, string Prompt,
     CardPilePosition DestinationPosition = CardPilePosition.Top,
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
+public sealed record RandomlyMoveCardFromPileEffect(CardPile From, CardPile To,
+    CardSelectionFilter Filter = CardSelectionFilter.Any) : EffectNode;
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
@@ -156,6 +159,22 @@ internal static class EffectExecutor
                         }).ToArray();
                     if (options.Length > 0)
                         state.PendingCardChoice = new PendingCardChoice(chooseCard, options, owner, target, selectedCard);
+                    break;
+                case RandomlyMoveCardFromPileEffect randomCard:
+                    var randomOptions = state.GetPile(randomCard.From)
+                        .Where(card => randomCard.Filter switch
+                        {
+                            CardSelectionFilter.Any => true,
+                            CardSelectionFilter.Upgradeable => state.IsUpgradeable(card),
+                            _ => false
+                        }).ToArray();
+                    if (randomOptions.Length > 0)
+                    {
+                        var randomOption = randomOptions[session.Random.Get("card-selection").NextInt(randomOptions.Length)];
+                        if (!state.MoveCard(randomCard.From, randomCard.To, randomOption.InstanceId, CardPilePosition.Bottom))
+                            throw new InvalidOperationException("The randomly selected card is no longer in its source pile.");
+                        state.Emit(session, "random_card_choice", owner.Id, randomOption.InstanceId, 1);
+                    }
                     break;
                 case UpgradeSelectedCardEffect:
                     if (selectedCard is null)
