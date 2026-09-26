@@ -16,6 +16,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomlyMoveCardFromPileEffect), "randomlyMoveCardFromPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ForEachCardInPileEffect), "forEachCardInPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(MoveSelectedCardToPileEffect), "moveSelectedCardToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
@@ -40,6 +42,9 @@ public sealed record ChooseCardFromPileEffect(CardPile From, CardPile? To, strin
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
 public sealed record RandomlyMoveCardFromPileEffect(CardPile From, CardPile To,
     CardSelectionFilter Filter = CardSelectionFilter.Any) : EffectNode;
+public sealed record ForEachCardInPileEffect(CardPile From, CardSelectionFilter Filter, EffectNode Effect) : EffectNode;
+public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
+    CardPilePosition DestinationPosition = CardPilePosition.Bottom) : EffectNode;
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
@@ -62,7 +67,7 @@ public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElemen
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
-public enum CardSelectionFilter { Any, Upgradeable }
+public enum CardSelectionFilter { Any, Upgradeable, NonAttack }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
@@ -165,23 +170,13 @@ internal static class EffectExecutor
                     break;
                 case ChooseCardFromPileEffect chooseCard:
                     var options = state.GetPile(chooseCard.From)
-                        .Where(card => chooseCard.Filter switch
-                        {
-                            CardSelectionFilter.Any => true,
-                            CardSelectionFilter.Upgradeable => state.IsUpgradeable(card),
-                            _ => false
-                        }).ToArray();
+                        .Where(card => state.MatchesCardSelectionFilter(card, chooseCard.Filter)).ToArray();
                     if (options.Length > 0)
                         state.PendingCardChoice = new PendingCardChoice(chooseCard, options, owner, target, selectedCard);
                     break;
                 case RandomlyMoveCardFromPileEffect randomCard:
                     var randomOptions = state.GetPile(randomCard.From)
-                        .Where(card => randomCard.Filter switch
-                        {
-                            CardSelectionFilter.Any => true,
-                            CardSelectionFilter.Upgradeable => state.IsUpgradeable(card),
-                            _ => false
-                        }).ToArray();
+                        .Where(card => state.MatchesCardSelectionFilter(card, randomCard.Filter)).ToArray();
                     if (randomOptions.Length > 0)
                     {
                         var randomOption = randomOptions[session.Random.Get("card-selection").NextInt(randomOptions.Length)];
@@ -189,6 +184,20 @@ internal static class EffectExecutor
                             throw new InvalidOperationException("The randomly selected card is no longer in its source pile.");
                         state.Emit(session, "random_card_choice", owner.Id, randomOption.InstanceId, 1);
                     }
+                    break;
+                case ForEachCardInPileEffect eachCard:
+                    var matchingCards = state.GetPile(eachCard.From)
+                        .Where(card => state.MatchesCardSelectionFilter(card, eachCard.Filter)).ToArray();
+                    for (var i = matchingCards.Length - 1; i >= 0; i--)
+                        state.PendingEffects.Add((owner, eachCard.Effect, target, matchingCards[i]));
+                    break;
+                case MoveSelectedCardToPileEffect moveSelectedCard:
+                    if (selectedCard is null)
+                        throw new InvalidOperationException("Moving a selected card requires a card selection context.");
+                    if (!state.MoveCard(moveSelectedCard.From, moveSelectedCard.To,
+                            selectedCard.InstanceId, moveSelectedCard.DestinationPosition))
+                        throw new InvalidOperationException("The selected card is no longer in its source pile.");
+                    state.Emit(session, "card_moved", owner.Id, selectedCard.InstanceId, 1);
                     break;
                 case UpgradeSelectedCardEffect:
                     if (selectedCard is null)

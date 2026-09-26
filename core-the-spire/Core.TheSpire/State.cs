@@ -280,6 +280,15 @@ internal sealed class GameState
         && Definition.Cards.TryGetValue(card.CardId, out var definition)
         && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null);
 
+    internal bool MatchesCardSelectionFilter(CardInstance card, CardSelectionFilter filter) => filter switch
+    {
+        CardSelectionFilter.Any => true,
+        CardSelectionFilter.Upgradeable => IsUpgradeable(card),
+        CardSelectionFilter.NonAttack => Definition.Cards.TryGetValue(card.CardId, out var definition)
+            && definition.Type != CardType.Attack,
+        _ => false
+    };
+
     internal bool UpgradeCard(GameSession session, string instanceId)
     {
         foreach (var pile in Enum.GetValues<CardPile>())

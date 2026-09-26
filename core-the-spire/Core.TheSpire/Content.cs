@@ -609,6 +609,16 @@ public sealed class ContentRegistry
                     || !Enum.IsDefined(randomCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid random card selection pile or filter.");
                 break;
+            case ForEachCardInPileEffect eachCard:
+                if (!Enum.IsDefined(eachCard.From) || !Enum.IsDefined(eachCard.Filter))
+                    throw new InvalidOperationException($"{owner} has an invalid card iteration pile or filter.");
+                ValidateEffectReferences(eachCard.Effect, owner);
+                break;
+            case MoveSelectedCardToPileEffect moveSelectedCard:
+                if (!Enum.IsDefined(moveSelectedCard.From) || !Enum.IsDefined(moveSelectedCard.To)
+                    || !Enum.IsDefined(moveSelectedCard.DestinationPosition))
+                    throw new InvalidOperationException($"{owner} moves a selected card to an invalid pile.");
+                break;
             case UpgradeCardsInPileEffect upgradeCards when !Enum.IsDefined(upgradeCards.Pile):
                 throw new InvalidOperationException($"{owner} upgrades an invalid card pile.");
             case UpgradeCardsInPileEffect:

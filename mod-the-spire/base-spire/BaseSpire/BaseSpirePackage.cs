@@ -21,6 +21,7 @@ public static class BaseSpireIds
     public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
     public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");
     public static readonly ContentId ShrugItOff = ContentId.Parse("base-spire:shrug-it-off");
+    public static readonly ContentId SecondWind = ContentId.Parse("base-spire:second-wind");
     public static readonly ContentId SwordBoomerang = ContentId.Parse("base-spire:sword-boomerang");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
