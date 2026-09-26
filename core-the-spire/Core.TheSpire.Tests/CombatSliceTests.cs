@@ -200,6 +200,38 @@ public sealed class CombatSliceTests
         Assert.Throws<InvalidOperationException>(() => registry.Build());
     }
 
+    public void EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats()
+    {
+        var environment = new CombatEnvironment(Build(new RandomEnemyTransitionPackage()));
+
+        static int[] Trace(CombatEnvironment combat, uint seed)
+        {
+            var session = combat.Start(seed, "ironclad", 100, 100, [], "random-enemy:enemy");
+            var damages = new List<int> { combat.Observe(session).IntentDamage };
+            for (var i = 0; i < 8; i++)
+            {
+                combat.Step(session, new EndTurnAction());
+                damages.Add(combat.Observe(session).IntentDamage);
+            }
+            Assert.Equal(8, session.Random.Get("enemy-ai").Counter);
+            return damages.ToArray();
+        }
+
+        var first = Trace(environment, 304);
+        var replay = Trace(environment, 304);
+        Assert.Equal(first.AsEnumerable(), replay.AsEnumerable());
+        Assert.True(first.Zip(first.Skip(1)).All(pair => pair.First != pair.Second));
+        Assert.True(Enumerable.Range(0, 12).Select(seed => Trace(environment, (uint)seed)[1]).Distinct().Count() > 1);
+
+        var invalidTransition = new EnemyActionTransition([new EnemyActionChoice(ContentId.Parse("random-enemy:missing"))]);
+        Assert.Throws<ArgumentException>(() => new EnemyDefinition(ContentId.Parse("random-enemy:invalid"), 10, 10,
+            [new EnemyActionDefinition(ContentId.Parse("random-enemy:action"), new AttackEffect(1), IntentKind.Attack,
+                Transition: invalidTransition)]));
+        Assert.Throws<ArgumentException>(() => new EnemyActionTransition(
+            [new EnemyActionChoice(ContentId.Parse("random-enemy:only"))],
+            EnemyActionRepeatPolicy.PreventImmediateRepeat));
+    }
+
     public void BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle()
     {
         var definition = Build(new BaseSpirePackage());
@@ -1311,6 +1343,26 @@ public sealed class CombatSliceTests
                 AppliedPower: ContentId.Parse("missing-enemy-power:unknown-power"), AppliedPowerAmount: 1)]));
     }
 
+    private sealed class RandomEnemyTransitionPackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("random-enemy-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var actions = new[]
+            {
+                (Id: ContentId.Parse("random-enemy:one"), Damage: 1),
+                (Id: ContentId.Parse("random-enemy:two"), Damage: 2),
+                (Id: ContentId.Parse("random-enemy:three"), Damage: 3)
+            };
+            var transition = new EnemyActionTransition(actions.Select((action, index) =>
+                new EnemyActionChoice(action.Id, index + 1)), EnemyActionRepeatPolicy.PreventImmediateRepeat);
+            registry.Register(new EnemyDefinition(ContentId.Parse("random-enemy:enemy"), 30, 30,
+                actions.Select(action => new EnemyActionDefinition(action.Id, new AttackEffect(action.Damage),
+                    IntentKind.Attack, action.Damage, Transition: transition)).ToArray()));
+        }
+    }
+
     private sealed class ChoiceCardPackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("choice-test", "1.0.0");
@@ -1422,6 +1474,7 @@ internal static class Program
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
+        tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
@@ -1453,7 +1506,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 39 gameplay checks.");
+        Console.WriteLine("Passed 40 gameplay checks.");
     }
 }
 

@@ -43,7 +43,47 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy);
 public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent,
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
-    ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self);
+    ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
+    EnemyActionTransition? Transition = null);
+public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1);
+public enum EnemyActionRepeatPolicy { Allow, PreventImmediateRepeat }
+
+public sealed record EnemyActionTransition
+{
+    public EnemyActionTransition(IEnumerable<EnemyActionChoice> choices,
+        EnemyActionRepeatPolicy repeatPolicy = EnemyActionRepeatPolicy.Allow)
+    {
+        ArgumentNullException.ThrowIfNull(choices);
+        var copiedChoices = choices.ToArray();
+        if (copiedChoices.Length == 0 || copiedChoices.Any(choice => choice is null))
+            throw new ArgumentException("An enemy action transition needs at least one choice.", nameof(choices));
+        foreach (var choice in copiedChoices)
+        {
+            choice.ActionId.Validate();
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(choice.Weight);
+        }
+        if (!Enum.IsDefined(repeatPolicy)) throw new ArgumentOutOfRangeException(nameof(repeatPolicy));
+        if (repeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
+            && copiedChoices.Select(choice => choice.ActionId).Distinct().Count() < 2)
+            throw new ArgumentException("PreventImmediateRepeat needs at least two distinct actions.", nameof(choices));
+        long totalWeight = 0;
+        try
+        {
+            foreach (var choice in copiedChoices) totalWeight = checked(totalWeight + choice.Weight);
+        }
+        catch (OverflowException)
+        {
+            throw new ArgumentOutOfRangeException(nameof(choices), "Transition weights exceed supported range.");
+        }
+        if (totalWeight > int.MaxValue)
+            throw new ArgumentOutOfRangeException(nameof(choices), "Transition weights exceed supported range.");
+        Choices = Array.AsReadOnly(copiedChoices);
+        RepeatPolicy = repeatPolicy;
+    }
+
+    public IReadOnlyList<EnemyActionChoice> Choices { get; }
+    public EnemyActionRepeatPolicy RepeatPolicy { get; }
+}
 public enum RunEventKind { Event, Ancient }
 
 public sealed record RunEventDefinition(ContentId Id, RunEventKind Kind = RunEventKind.Event)
@@ -124,6 +164,12 @@ public sealed record EnemyDefinition
         {
             if (action.NextActionId is { } next && !indexes.ContainsKey(next))
                 throw new ArgumentException($"Enemy action '{action.Id}' references unknown successor '{next}'.", nameof(actions));
+            if (action.NextActionId is not null && action.Transition is not null)
+                throw new ArgumentException($"Enemy action '{action.Id}' cannot declare both a fixed successor and a transition.", nameof(actions));
+            if (action.Transition is { } transition)
+            foreach (var choice in transition.Choices)
+                if (!indexes.ContainsKey(choice.ActionId))
+                    throw new ArgumentException($"Enemy action '{action.Id}' transitions to unknown action '{choice.ActionId}'.", nameof(actions));
         }
         var startId = startingActionId ?? copiedActions.FirstOrDefault()?.Id;
         if (startId is { } starting && !indexes.ContainsKey(starting))
@@ -143,6 +189,31 @@ public sealed record EnemyDefinition
     public bool LoopLastAction { get; }
     public int StartingActionIndex { get; }
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
+
+    internal int ResolveNextActionIndex(ContentId currentActionId, SeededRandom random)
+    {
+        var current = Actions[GetActionIndex(currentActionId)];
+        if (current.NextActionId is { } next) return GetActionIndex(next);
+        if (current.Transition is { } transition)
+        {
+            var choices = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
+                ? transition.Choices.Where(choice => choice.ActionId != currentActionId).ToArray()
+                : transition.Choices.ToArray();
+            if (choices.Length == 0)
+                throw new InvalidOperationException($"Enemy action '{currentActionId}' has no eligible transition choices.");
+            var totalWeight = choices.Sum(choice => choice.Weight);
+            var roll = random.NextInt(totalWeight);
+            foreach (var choice in choices)
+            {
+                if (roll < choice.Weight) return GetActionIndex(choice.ActionId);
+                roll -= choice.Weight;
+            }
+            throw new InvalidOperationException("Enemy transition weight selection failed.");
+        }
+        return currentActionId == Actions[^1].Id && LoopLastAction
+            ? Actions.Count - 1
+            : Math.Min(GetActionIndex(currentActionId) + 1, Actions.Count - 1);
+    }
 }
 
 public enum CardType { Attack, Skill, Power }
