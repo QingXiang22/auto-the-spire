@@ -392,22 +392,136 @@ public sealed class CombatSliceTests
         var route = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, opening));
         Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
         Assert.Equal(1, environment.LegalActions(session).Count);
+
+        var secondAct = new ActDefinition(ContentId.Parse("test-fixture:ancient-act-two"), _ => map);
+        var twoActRun = new RunDefinition(ContentId.Parse("test-fixture:two-ancient-run"), [act, secondAct]);
+        var twoActEnvironment = new RunEnvironment(twoActRun, BaseSpireContent.Ironclad());
+        var twoActSession = twoActEnvironment.Start(10);
+        var firstEntry = twoActEnvironment.Observe(twoActSession);
+        twoActEnvironment.CompleteRoom(twoActSession, RunResult(RunOutcome.RoomCleared, firstEntry));
+        twoActEnvironment.Step(twoActSession, new ChooseMapPointAction("monster"));
+        twoActEnvironment.CompleteRoom(twoActSession,
+            RunResult(RunOutcome.RoomCleared, twoActEnvironment.Observe(twoActSession)));
+        twoActEnvironment.Step(twoActSession, new ChooseMapPointAction("boss"));
+        var nextActEntry = twoActEnvironment.CompleteRoom(twoActSession,
+            RunResult(RunOutcome.RoomCleared, twoActEnvironment.Observe(twoActSession)));
+        Assert.Equal(1, nextActEntry.ActIndex);
+        Assert.Equal(RunPhase.ResolveRoom, nextActEntry.Phase);
+        Assert.Equal(RunRoomType.Event, nextActEntry.CurrentRoom!.Value);
     }
 
     public void BaseSpireStandardRunUsesItsActMapGenerators()
     {
-        var run = BaseSpireMapGenerator.CreateStandardRun(_ => RunRoomType.Event);
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        var definition = registry.Build();
+        var run = definition.Runs[BaseSpireIds.StandardRun];
+        Assert.True(run.UnknownRoomOdds is not null);
         Assert.Equal(new[] { BaseSpireIds.OvergrowthAct, BaseSpireIds.HiveAct, BaseSpireIds.GloryAct }.AsEnumerable(),
             run.Acts.Select(act => act.Id));
-        var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
-        var session = environment.Start(20260927);
+        var environment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var session = environment.Start("20260927");
+        var replay = environment.Observe(environment.Start("20260927"));
         var start = environment.Observe(session);
+        Assert.Equal(start.Map.Select(point => (point.Id, point.Type)), replay.Map.Select(point => (point.Id, point.Type)));
         Assert.Equal(MapPointType.Ancient, start.Map.Single(point => point.Id == start.CurrentPointId).Type);
         Assert.Equal(RunPhase.ResolveRoom, start.Phase);
         Assert.Equal(RunRoomType.Event, start.CurrentRoom!.Value);
         var route = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, start));
         Assert.True(environment.LegalActions(session).Count > 0);
         Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
+    }
+
+    public void UnknownMapPointOddsAdaptAfterEachRoll()
+    {
+        var map = new ActMapDefinition("ancient", "boss",
+        [
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["unknown-1"]),
+            new MapPointDefinition("unknown-1", 1, 3, MapPointType.Unknown, ["unknown-2"]),
+            new MapPointDefinition("unknown-2", 2, 3, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 3, 3, MapPointType.Boss, [])
+        ]);
+        var odds = new UnknownRoomOddsDefinition(
+        [
+            new UnknownRoomOddsEntry(RunRoomType.Monster, 0.1f),
+            new UnknownRoomOddsEntry(RunRoomType.Elite, -1f),
+            new UnknownRoomOddsEntry(RunRoomType.Treasure, 0.02f),
+            new UnknownRoomOddsEntry(RunRoomType.Shop, 0.03f)
+        ]);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:odds-act"), _ => map);
+        var run = new RunDefinition(ContentId.Parse("test-fixture:odds-run"), [act], odds);
+        var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
+        var seed = FindSeedForUnknownRolls(first => first > 0.15f, second => second <= 0.2f);
+        var session = environment.Start(seed);
+        var opening = environment.Observe(session);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, opening));
+
+        var firstUnknown = environment.Step(session, new ChooseMapPointAction("unknown-1"));
+        Assert.Equal(RunRoomType.Event, firstUnknown.CurrentRoom!.Value);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, firstUnknown));
+        var secondUnknown = environment.Step(session, new ChooseMapPointAction("unknown-2"));
+        Assert.Equal(RunRoomType.Monster, secondUnknown.CurrentRoom!.Value);
+    }
+
+    public void UnknownMapOddsResetWhenTheActChanges()
+    {
+        var firstMap = new ActMapDefinition("ancient", "boss",
+        [
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["unknown-1"]),
+            new MapPointDefinition("unknown-1", 1, 3, MapPointType.Unknown, ["unknown-2"]),
+            new MapPointDefinition("unknown-2", 2, 3, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 3, 3, MapPointType.Boss, [])
+        ]);
+        var secondMap = new ActMapDefinition("ancient-2", "boss-2",
+        [
+            new MapPointDefinition("ancient-2", 0, 3, MapPointType.Ancient, ["unknown-3"]),
+            new MapPointDefinition("unknown-3", 1, 3, MapPointType.Unknown, ["boss-2"]),
+            new MapPointDefinition("boss-2", 2, 3, MapPointType.Boss, [])
+        ]);
+        var odds = new UnknownRoomOddsDefinition(
+        [
+            new UnknownRoomOddsEntry(RunRoomType.Monster, 0.1f),
+            new UnknownRoomOddsEntry(RunRoomType.Elite, -1f),
+            new UnknownRoomOddsEntry(RunRoomType.Treasure, 0.02f),
+            new UnknownRoomOddsEntry(RunRoomType.Shop, 0.03f)
+        ]);
+        var run = new RunDefinition(ContentId.Parse("test-fixture:odds-reset-run"),
+        [
+            new ActDefinition(ContentId.Parse("test-fixture:odds-reset-act-1"), _ => firstMap),
+            new ActDefinition(ContentId.Parse("test-fixture:odds-reset-act-2"), _ => secondMap)
+        ], odds);
+        var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
+        var seed = FindSeedForUnknownRolls(first => first > 0.15f, second => second <= 0.2f, third => third > 0.15f);
+        var session = environment.Start(seed);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
+        var firstUnknown = environment.Step(session, new ChooseMapPointAction("unknown-1"));
+        Assert.Equal(RunRoomType.Event, firstUnknown.CurrentRoom!.Value);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, firstUnknown));
+        var secondUnknown = environment.Step(session, new ChooseMapPointAction("unknown-2"));
+        Assert.Equal(RunRoomType.Monster, secondUnknown.CurrentRoom!.Value);
+        var secondUnknownResult = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, secondUnknown));
+        Assert.Equal(RunPhase.ChooseMapPoint, secondUnknownResult.Phase);
+        environment.Step(session, new ChooseMapPointAction("boss"));
+        var nextActEntry = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
+        Assert.Equal(1, nextActEntry.ActIndex);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, nextActEntry));
+        var thirdUnknown = environment.Step(session, new ChooseMapPointAction("unknown-3"));
+        Assert.Equal(RunRoomType.Event, thirdUnknown.CurrentRoom!.Value);
+    }
+
+    private static string FindSeedForUnknownRolls(Func<float, bool> firstCondition, Func<float, bool> secondCondition,
+        Func<float, bool>? thirdCondition = null)
+    {
+        for (var candidate = 0; candidate < 100_000; candidate++)
+        {
+            var rng = RandomStreams.FromStringSeed(candidate.ToString()).Get("unknown_map_point");
+            var first = rng.NextFloat();
+            var second = rng.NextFloat();
+            var third = rng.NextFloat();
+            if (firstCondition(first) && secondCondition(second) && (thirdCondition is null || thirdCondition(third)))
+                return candidate.ToString();
+        }
+        throw new InvalidOperationException("Could not find a deterministic run seed for the unknown-room odds fixture.");
     }
 
     private static RunDefinition BuildRunDefinition()
@@ -579,7 +693,9 @@ internal static class Program
         tests.BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout();
         tests.AncientEntryIsAnInitialEventBeforeTheFirstRouteChoice();
         tests.BaseSpireStandardRunUsesItsActMapGenerators();
-        Console.WriteLine("Passed 22 gameplay checks.");
+        tests.UnknownMapPointOddsAdaptAfterEachRoll();
+        tests.UnknownMapOddsResetWhenTheActChanges();
+        Console.WriteLine("Passed 24 gameplay checks.");
     }
 }
 

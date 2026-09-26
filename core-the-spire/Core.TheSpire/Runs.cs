@@ -1,7 +1,7 @@
 namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
-public enum RunRoomType { Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
+public enum RunRoomType { Unassigned, Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
 public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
 public enum RunStatus { InProgress, Won, Lost }
@@ -71,6 +71,69 @@ public sealed class ActMapDefinition
 public sealed record ActDefinition(ContentId Id, Func<SeededRandom, ActMapDefinition> GenerateMap,
     Func<SeededRandom, RunRoomType>? ResolveUnknownRoom = null);
 
+public sealed record UnknownRoomOddsEntry(RunRoomType RoomType, float Weight);
+
+public sealed class UnknownRoomOddsDefinition
+{
+    public UnknownRoomOddsDefinition(IEnumerable<UnknownRoomOddsEntry> entries)
+    {
+        ArgumentNullException.ThrowIfNull(entries);
+        var odds = entries.ToArray();
+        if (odds.Length == 0) throw new ArgumentException("Unknown-room odds need at least one non-event room type.", nameof(entries));
+        if (odds.Any(entry => entry.RoomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Treasure or RunRoomType.Shop)))
+            throw new ArgumentException("Unknown-room odds may define Monster, Elite, Treasure, and Shop only.", nameof(entries));
+        if (odds.Any(entry => !float.IsFinite(entry.Weight)))
+            throw new ArgumentException("Unknown-room weights must be finite.", nameof(entries));
+        if (odds.Select(entry => entry.RoomType).Distinct().Count() != odds.Length)
+            throw new ArgumentException("Unknown-room types must be unique.", nameof(entries));
+        Entries = Array.AsReadOnly(odds);
+    }
+
+    public IReadOnlyList<UnknownRoomOddsEntry> Entries { get; }
+}
+
+internal sealed class UnknownRoomOddsState
+{
+    private readonly UnknownRoomOddsEntry[] _baseOdds;
+    private readonly float[] _currentOdds;
+
+    public UnknownRoomOddsState(UnknownRoomOddsDefinition definition)
+    {
+        _baseOdds = definition.Entries.ToArray();
+        _currentOdds = _baseOdds.Select(entry => entry.Weight).ToArray();
+    }
+
+    public RunRoomType Roll(SeededRandom random)
+    {
+        var roll = random.NextFloat();
+        var result = RunRoomType.Event;
+        var cumulative = 0f;
+        for (var i = 0; i < _baseOdds.Length; i++)
+        {
+            var weight = _currentOdds[i];
+            if (weight < 0f) continue;
+            cumulative += weight;
+            if (roll <= cumulative)
+            {
+                result = _baseOdds[i].RoomType;
+                break;
+            }
+        }
+
+        for (var i = 0; i < _baseOdds.Length; i++)
+        {
+            if (_baseOdds[i].RoomType == result) _currentOdds[i] = _baseOdds[i].Weight;
+            else _currentOdds[i] += _baseOdds[i].Weight;
+        }
+        return result;
+    }
+
+    public void ResetToBase()
+    {
+        for (var i = 0; i < _baseOdds.Length; i++) _currentOdds[i] = _baseOdds[i].Weight;
+    }
+}
+
 public sealed class CharacterDefinition
 {
     public CharacterDefinition(ContentId id, int maxHp, int startingGold,
@@ -99,11 +162,12 @@ public sealed class CharacterDefinition
 
 public sealed class RunDefinition
 {
-    public RunDefinition(ContentId id, IEnumerable<ActDefinition> acts)
+    public RunDefinition(ContentId id, IEnumerable<ActDefinition> acts, UnknownRoomOddsDefinition? unknownRoomOdds = null)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(acts);
         Id = id;
+        UnknownRoomOdds = unknownRoomOdds;
         Acts = Array.AsReadOnly(acts.ToArray());
         if (Acts.Count == 0) throw new ArgumentException("A run needs at least one act.", nameof(acts));
         foreach (var act in Acts)
@@ -117,6 +181,7 @@ public sealed class RunDefinition
 
     public ContentId Id { get; }
     public IReadOnlyList<ActDefinition> Acts { get; }
+    public UnknownRoomOddsDefinition? UnknownRoomOdds { get; }
 }
 
 public sealed record ChooseMapPointAction(string PointId) : PlayerAction;
@@ -196,8 +261,14 @@ internal sealed class RunState
         Deck = [.. character.StartingDeck];
         Relics = [.. character.StartingRelics];
         Potions = [.. character.StartingPotions];
+        UnknownRoomOdds = definition.UnknownRoomOdds is null ? null : new UnknownRoomOddsState(definition.UnknownRoomOdds);
         Map = GenerateMap(0);
         MapView = BuildMapView(Map);
+        EnterMapStart();
+    }
+
+    public void EnterMapStart()
+    {
         CurrentPointId = Map.StartPointId;
         var entryPoint = Map.Points[CurrentPointId];
         if (entryPoint.Type == MapPointType.Ancient)
@@ -206,11 +277,18 @@ internal sealed class RunState
             CurrentRoom = RunRoomType.Event;
             Phase = RunPhase.ResolveRoom;
         }
+        else
+        {
+            CurrentMapPointType = null;
+            CurrentRoom = null;
+            Phase = RunPhase.ChooseMapPoint;
+        }
     }
 
     public RunDefinition Definition { get; }
     public CharacterDefinition Character { get; }
     public RandomStreams Random { get; }
+    public UnknownRoomOddsState? UnknownRoomOdds { get; }
     public int Hp { get; set; }
     public int MaxHp { get; set; }
     public int Gold { get; set; }
@@ -220,7 +298,7 @@ internal sealed class RunState
     public int ActIndex { get; set; }
     public ActMapDefinition Map { get; set; }
     public IReadOnlyList<MapPointView> MapView { get; set; }
-    public string CurrentPointId { get; set; }
+    public string CurrentPointId { get; set; } = string.Empty;
     public MapPointType? CurrentMapPointType { get; set; }
     public RunRoomType? CurrentRoom { get; set; }
     public RunPhase Phase { get; set; } = RunPhase.ChooseMapPoint;
@@ -262,6 +340,12 @@ public sealed class RunEnvironment
     public RunSession Start(uint seed)
     {
         return new RunSession(new RunState(_definition, _character, new RandomStreams(seed)));
+    }
+
+    public RunSession Start(string seed)
+    {
+        ArgumentNullException.ThrowIfNull(seed);
+        return new RunSession(new RunState(_definition, _character, RandomStreams.FromStringSeed(seed)));
     }
 
     public RunObservation Observe(RunSession session)
@@ -347,10 +431,8 @@ public sealed class RunEnvironment
 
             state.Map = state.GenerateMap(state.ActIndex);
             state.MapView = RunState.BuildMapView(state.Map);
-            state.CurrentPointId = state.Map.StartPointId;
-            state.CurrentMapPointType = null;
-            state.CurrentRoom = null;
-            state.Phase = RunPhase.ChooseMapPoint;
+            state.UnknownRoomOdds?.ResetToBase();
+            state.EnterMapStart();
         }
         else
         {
@@ -384,9 +466,7 @@ public sealed class RunEnvironment
 
     private static RunRoomType ResolveRoomType(RunState state, MapPointType pointType) => pointType switch
     {
-        MapPointType.Unknown => state.Definition.Acts[state.ActIndex].ResolveUnknownRoom?.Invoke(
-            state.Random.Get($"act_{state.ActIndex + 1}_unknown-room"))
-            ?? throw new InvalidOperationException("Unknown map points require an act room resolver."),
+        MapPointType.Unknown => ResolveUnknownRoom(state),
         MapPointType.Shop => RunRoomType.Shop,
         MapPointType.Treasure => RunRoomType.Treasure,
         MapPointType.RestSite => RunRoomType.RestSite,
@@ -397,6 +477,16 @@ public sealed class RunEnvironment
         MapPointType.Start => throw new InvalidOperationException("The map entry point is not a room."),
         _ => throw new ArgumentOutOfRangeException(nameof(pointType), pointType, null)
     };
+
+    private static RunRoomType ResolveUnknownRoom(RunState state)
+    {
+        var act = state.Definition.Acts[state.ActIndex];
+        if (act.ResolveUnknownRoom is not null)
+            return act.ResolveUnknownRoom(state.Random.Get($"act_{state.ActIndex + 1}_unknown-room"));
+        if (state.UnknownRoomOdds is not null)
+            return state.UnknownRoomOdds.Roll(state.Random.Get("unknown_map_point"));
+        throw new InvalidOperationException("Unknown map points need configured run odds or an act room resolver.");
+    }
 
     private static RunDefinition GetRun(GameDefinition gameDefinition, ContentId id)
     {

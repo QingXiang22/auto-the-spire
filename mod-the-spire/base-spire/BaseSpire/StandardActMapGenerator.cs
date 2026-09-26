@@ -7,20 +7,26 @@ public static class BaseSpireMapGenerator
 {
     private sealed record PointTypeCounts(int Unknowns, int Rests, int Elites = 5, int Shops = 3);
 
-    public static RunDefinition CreateStandardRun(Func<SeededRandom, RunRoomType> resolveUnknownRoom)
+    public static RunDefinition CreateStandardRun() => CreateStandardRun(null);
+
+    public static RunDefinition CreateStandardRun(Func<SeededRandom, RunRoomType>? resolveUnknownRoom)
     {
-        ArgumentNullException.ThrowIfNull(resolveUnknownRoom);
         return new RunDefinition(BaseSpireIds.StandardRun,
         [
             new ActDefinition(BaseSpireIds.OvergrowthAct, GenerateOvergrowth, resolveUnknownRoom),
             new ActDefinition(BaseSpireIds.HiveAct, GenerateHive, resolveUnknownRoom),
             new ActDefinition(BaseSpireIds.GloryAct, GenerateGlory, resolveUnknownRoom)
-        ]);
+        ], resolveUnknownRoom is null ? new UnknownRoomOddsDefinition(
+        [
+            new UnknownRoomOddsEntry(RunRoomType.Monster, 0.1f),
+            new UnknownRoomOddsEntry(RunRoomType.Elite, -1f),
+            new UnknownRoomOddsEntry(RunRoomType.Treasure, 0.02f),
+            new UnknownRoomOddsEntry(RunRoomType.Shop, 0.03f)
+        ]) : null);
     }
 
-    public static ActDefinition CreateUnderdocksAct(Func<SeededRandom, RunRoomType> resolveUnknownRoom)
+    public static ActDefinition CreateUnderdocksAct(Func<SeededRandom, RunRoomType>? resolveUnknownRoom = null)
     {
-        ArgumentNullException.ThrowIfNull(resolveUnknownRoom);
         return new ActDefinition(BaseSpireIds.UnderdocksAct, GenerateUnderdocks, resolveUnknownRoom);
     }
 
