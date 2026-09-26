@@ -268,13 +268,17 @@ public sealed class CombatSliceTests
         Assert.True(goopSession is not null);
         environment.Step(goopSession!, new EndTurnAction());
         Assert.Contains(goopSession!.State.Player.Hand, card => card == BaseSpireIds.Slimed);
+        var addedSlimed = goopSession.State.Player.HandInstances.Single(card => card.CardId == BaseSpireIds.Slimed);
+        Assert.True(addedSlimed.InstanceId.Contains("generated-card-", StringComparison.Ordinal));
         Assert.Equal(goopSession.State.Player.DiscardPile.AsEnumerable(), environment.Observe(goopSession).DiscardPile.AsEnumerable());
 
         var playedSlimed = environment.Start(403, "ironclad", 80, 80, [BaseSpireIds.Slimed], BaseSpireIds.TwigSlimeSmall.ToString(),
             drawPile: [BaseSpireIds.StrikeIronclad]);
+        var slimedInstanceId = playedSlimed.State.Player.HandInstances[0].InstanceId;
         environment.Step(playedSlimed, new PlayCardAction(0, "ironclad"));
         Assert.Equal(BaseSpireIds.StrikeIronclad, playedSlimed.State.Player.Hand[0]);
         Assert.Equal(BaseSpireIds.Slimed, playedSlimed.State.Player.ExhaustPile[0]);
+        Assert.Equal(slimedInstanceId, playedSlimed.State.Player.ExhaustPileInstances[0].InstanceId);
 
         var leafMedium = environment.Start(404, "ironclad", 80, 80, [], BaseSpireIds.LeafSlimeMedium.ToString());
         Assert.Equal(IntentKind.Debuff, environment.Observe(leafMedium).Intent);
@@ -538,6 +542,7 @@ public sealed class CombatSliceTests
         Assert.Equal(80, started.Hp);
         Assert.Equal(99, started.Gold);
         Assert.Equal(10, started.Deck.Count);
+        Assert.Equal(10, started.DeckInstances.Select(card => card.InstanceId).Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(BaseSpireIds.BurningBlood, started.Relics.Single());
         Assert.Equal(2, environment.LegalActions(session).Count);
         Assert.Throws<InvalidOperationException>(() => environment.Step(session, new ChooseMapPointAction("boss")));
@@ -546,7 +551,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveRoom, environment.Observe(session).Phase);
         Assert.Equal(0, environment.LegalActions(session).Count);
         var afterCombat = new RunRoomResult(RunOutcome.RoomCleared, 73, 80, 120,
-            started.Deck, started.Relics, [ContentId.Parse("base-spire:fire-potion")]);
+            started.Deck, started.Relics, [ContentId.Parse("base-spire:fire-potion")], started.DeckInstances);
         environment.CompleteRoom(session, afterCombat);
         var afterCombatObservation = environment.Observe(session);
         Assert.Equal(79, afterCombatObservation.Hp);
@@ -688,11 +693,12 @@ public sealed class CombatSliceTests
         ]);
         var package = new RunCombatPackage(runDefinition,
             new CharacterDefinition(characterId, 60, 50, deck),
-            new EnemyDefinition(enemyId, 1, 1,
+            new EnemyDefinition(enemyId, 2, 2,
             [
                 new EnemyActionDefinition(ContentId.Parse("test-fixture:idle"),
                     new AttackEffect(100), IntentKind.Attack, 100)
-            ]), deck.Select(id => new CardDefinition(id, 0, CardType.Attack, new AttackEffect(1))),
+            ]), deck.Select(id => new CardDefinition(id, 0, CardType.Attack, new AttackEffect(1),
+                UpgradedEffect: new AttackEffect(2), UpgradedCost: 1)),
             new EncounterDefinition(encounterId, RunRoomType.Monster, [enemyId]),
             [new EnemyDefinition(finalBossEnemyId, 1, 1,
                 [new EnemyActionDefinition(ContentId.Parse("test-fixture:boss-idle"),
@@ -709,12 +715,31 @@ public sealed class CombatSliceTests
         var definition = registry.Build();
         var runEnvironment = new RunEnvironment(definition, runId, characterId);
         var combatEnvironment = new CombatEnvironment(definition);
-        var runSession = runEnvironment.Start(183);
+        uint runSeed = 183;
+        while (true)
+        {
+            var shuffledIndexes = Enumerable.Range(0, deck.Length).ToList();
+            new RandomStreams(runSeed).Get("shuffle").Shuffle(shuffledIndexes);
+            if (shuffledIndexes.Take(5).Contains(0)) break;
+            runSeed++;
+        }
+        var runSession = runEnvironment.Start(runSeed);
+        var originalCard = runSession.State.Deck[0];
+        var upgradedCard = new CardInstance(originalCard.InstanceId, originalCard.CardId, 1);
+        runSession.State.Deck[0] = upgradedCard;
+        Assert.Equal(2, ((AttackEffect)definition.Cards[upgradedCard.CardId].ResolveEffect(upgradedCard)).Amount);
         runEnvironment.Step(runSession, new ChooseMapPointAction("event"));
         runEnvironment.PushSubRoom(runSession, RunRoomType.Monster);
 
         var combatSession = combatEnvironment.StartEncounterForRun(runSession, encounterId);
         Assert.Equal(5, combatEnvironment.Observe(combatSession).Hand.Count);
+        Assert.True(combatEnvironment.Observe(combatSession).HandInstances
+            .Concat(combatEnvironment.Observe(combatSession).DrawPileInstances)
+            .Any(card => card == upgradedCard));
+        Assert.Equal(1, definition.Cards[upgradedCard.CardId].ResolveCost(upgradedCard));
+        var upgradedHandIndex = combatEnvironment.Observe(combatSession).HandInstances
+            .ToList().FindIndex(card => card.InstanceId == upgradedCard.InstanceId);
+        Assert.True(upgradedHandIndex >= 0);
         Assert.Equal(5, combatEnvironment.Observe(combatSession).Hand.Distinct().Count());
         Assert.True(combatEnvironment.Observe(combatSession).Hand.All(deck.Contains));
         Assert.Throws<InvalidOperationException>(() => combatEnvironment.StartEncounterForRun(runSession, encounterId));
@@ -722,14 +747,18 @@ public sealed class CombatSliceTests
             RunResult(RunOutcome.RoomCleared, runEnvironment.Observe(runSession))));
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteCombat(runSession, combatSession));
 
-        var replayRun = runEnvironment.Start(183);
+        var replayRun = runEnvironment.Start(runSeed);
+        replayRun.State.Deck[0] = upgradedCard;
         runEnvironment.Step(replayRun, new ChooseMapPointAction("event"));
         runEnvironment.PushSubRoom(replayRun, RunRoomType.Monster);
         var replayCombat = combatEnvironment.StartEncounterForRun(replayRun, encounterId);
         Assert.True(combatEnvironment.Observe(combatSession).Hand.SequenceEqual(
             combatEnvironment.Observe(replayCombat).Hand));
 
-        combatEnvironment.Step(combatSession, new PlayCardAction(0, enemyId.ToString()));
+        var upgradedPlay = combatEnvironment.Step(combatSession,
+            new PlayCardAction(upgradedHandIndex, enemyId.ToString()));
+        Assert.Contains(upgradedPlay.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 2);
+        Assert.Equal(2, combatSession.State.Player.Energy);
         Assert.True(combatEnvironment.Observe(combatSession).IsTerminal);
         var completed = runEnvironment.CompleteCombat(runSession, combatSession);
         Assert.Equal(RunStatus.InProgress, completed.Status);
@@ -745,6 +774,7 @@ public sealed class CombatSliceTests
             [RunRoomType.Event, RunRoomType.Monster]));
         Assert.Equal(60, completed.Hp);
         Assert.True(deck.SequenceEqual(completed.Deck));
+        Assert.Equal(upgradedCard, completed.DeckInstances.Single(card => card.InstanceId == upgradedCard.InstanceId));
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteCombat(runSession, combatSession));
 
         var claimAction = runEnvironment.LegalActions(runSession).OfType<ClaimGoldRewardAction>().Single();
@@ -780,7 +810,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveRoom, noRewardCompletion.Phase);
         Assert.Equal(RunRoomType.Event, noRewardCompletion.CurrentRoom!.Value);
 
-        combatEnvironment.Step(replayCombat, new PlayCardAction(0, enemyId.ToString()));
+        combatEnvironment.Step(replayCombat, new PlayCardAction(upgradedHandIndex, enemyId.ToString()));
         var replayReward = runEnvironment.CompleteCombat(replayRun, replayCombat);
         Assert.Equal(goldReward.Amount, replayReward.RoomStack[^1].Rewards.Single().Amount);
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteRoom(replayRun,
@@ -1365,7 +1395,7 @@ public sealed class CombatSliceTests
 
     private static RunRoomResult RunResult(RunOutcome outcome, RunObservation state) =>
         new(outcome, outcome == RunOutcome.PlayerDefeated ? 0 : state.Hp, state.MaxHp, state.Gold,
-            state.Deck, state.Relics, state.Potions);
+            state.Deck, state.Relics, state.Potions, state.DeckInstances);
 
     private static GameDefinition Build(IRulePackage package)
     {

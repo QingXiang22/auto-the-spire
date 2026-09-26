@@ -29,6 +29,8 @@
 
 角色通过一个或多个 `CardPoolDefinition` 声明可生成的卡牌池；卡牌定义带有稀有度，注册构建时校验池中卡牌和角色池引用。当前 `base-spire` 的 Ironclad 池仅列出已迁移的 Basic 起始牌，卡池模型可复用，但尚不构成原版完整卡牌奖励池。
 
+动态牌组与战斗牌堆保存 `CardInstance`，用稳定的实例 ID 区分同一内容定义的多张牌，并记录升级级别。牌在战斗区域间移动时保留实例身份；卡牌定义可按实例升级级别解析费用与效果。此实例基础仍未覆盖完整的运行期修改数据，也未把战斗新增、移除或变形等牌组改动统一回写到局外牌组；这些生命周期规则需随奖励、营火及卡牌效果逐步补齐。
+
 C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../sts2/src/Core/Random/Rng.cs) 包装的是自定义 [`MegaRandom`](../sts2/src/Core/Random/MegaRandom.cs)，后者实现 Xoshiro256**；**仅使用 C# 或 `System.Random` 不会自动复现原版随机数**。运行级与玩家级随机流分别见 [`RunRngSet`](../sts2/src/Core/Runs/RunRngSet.cs) 和 [`PlayerRngSet`](../sts2/src/Core/Random/PlayerRngSet.cs)。首阶段以固定种子从开局按需取数和重放为目标；随机流由运行会话持有，暂不要求把游标写入 `GameState`。原版存档确实保存各流计数器，任意中途恢复或分叉时必须增加等价能力，见第 3 节。
 
 ### 2.1 依赖方向与最小接口

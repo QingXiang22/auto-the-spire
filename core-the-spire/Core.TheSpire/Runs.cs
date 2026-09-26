@@ -266,20 +266,29 @@ public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int 
     int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
     RunRoomType? CurrentRoom,
     RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map, IReadOnlyList<RunMapVisitView> VisitedMapPoints,
-    IReadOnlyList<RunRoomFrameView> RoomStack);
+    IReadOnlyList<RunRoomFrameView> RoomStack, IReadOnlyList<CardInstance> DeckInstances);
 
 public sealed class RunRoomResult
 {
     public RunRoomResult(RunOutcome outcome, int hp, int maxHp, int gold,
-        IEnumerable<ContentId> deck, IEnumerable<ContentId> relics, IEnumerable<ContentId>? potions = null)
+        IEnumerable<ContentId> deck, IEnumerable<ContentId> relics, IEnumerable<ContentId>? potions = null,
+        IEnumerable<CardInstance>? deckInstances = null)
     {
         ArgumentNullException.ThrowIfNull(deck);
         ArgumentNullException.ThrowIfNull(relics);
+        var cardIds = deck.ToArray();
+        var instances = deckInstances?.ToArray() ?? cardIds.Select((cardId, index) =>
+            new CardInstance($"room-result-card-{index:D4}", cardId)).ToArray();
+        if (!cardIds.SequenceEqual(instances.Select(card => card.CardId)))
+            throw new ArgumentException("Deck card IDs must match the provided card instances.", nameof(deckInstances));
+        if (instances.Select(card => card.InstanceId).Distinct(StringComparer.Ordinal).Count() != instances.Length)
+            throw new ArgumentException("Deck card instance IDs must be unique.", nameof(deckInstances));
         Outcome = outcome;
         Hp = hp;
         MaxHp = maxHp;
         Gold = gold;
-        Deck = Array.AsReadOnly(deck.ToArray());
+        Deck = Array.AsReadOnly(cardIds);
+        DeckInstances = Array.AsReadOnly(instances);
         Relics = Array.AsReadOnly(relics.ToArray());
         Potions = Array.AsReadOnly(potions?.ToArray() ?? []);
     }
@@ -289,6 +298,7 @@ public sealed class RunRoomResult
     public int MaxHp { get; }
     public int Gold { get; }
     public IReadOnlyList<ContentId> Deck { get; }
+    public IReadOnlyList<CardInstance> DeckInstances { get; }
     public IReadOnlyList<ContentId> Relics { get; }
     public IReadOnlyList<ContentId> Potions { get; }
 }
@@ -337,7 +347,8 @@ internal sealed class RunState
         Hp = character.MaxHp;
         MaxHp = character.MaxHp;
         Gold = character.StartingGold;
-        Deck = [.. character.StartingDeck];
+        Deck = character.StartingDeck.Select((cardId, index) =>
+            new CardInstance($"run-card-{index:D4}", cardId)).ToList();
         Relics = [.. character.StartingRelics];
         Potions = [.. character.StartingPotions];
         UnknownRoomOdds = definition.UnknownRoomOdds is null ? null : new UnknownRoomOddsState(definition.UnknownRoomOdds);
@@ -378,7 +389,7 @@ internal sealed class RunState
     public int Hp { get; set; }
     public int MaxHp { get; set; }
     public int Gold { get; set; }
-    public List<ContentId> Deck { get; }
+    public List<CardInstance> Deck { get; }
     public List<ContentId> Relics { get; }
     public List<ContentId> Potions { get; }
     public int ActIndex { get; set; }
@@ -492,11 +503,12 @@ public sealed class RunEnvironment
     private static RunObservation ObserveState(RunState state)
     {
         return new RunObservation(state.Character.Id, state.Hp, state.MaxHp, state.Gold,
-            Array.AsReadOnly(state.Deck.ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
+            Array.AsReadOnly(state.Deck.Select(card => card.CardId).ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
             state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()),
-            Array.AsReadOnly(state.RoomStack.Select(ObserveRoomFrame).ToArray()));
+            Array.AsReadOnly(state.RoomStack.Select(ObserveRoomFrame).ToArray()),
+            Array.AsReadOnly(state.Deck.ToArray()));
     }
 
     private static RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame) => new(
@@ -585,7 +597,7 @@ public sealed class RunEnvironment
         var combat = combatSession.State;
         var outcome = combat.Player.Creature.Hp <= 0 ? RunOutcome.PlayerDefeated : RunOutcome.RoomCleared;
         var result = new RunRoomResult(outcome, combat.Player.Creature.Hp, combat.Player.Creature.MaxHp,
-            state.Gold, state.Deck, state.Relics, state.Potions);
+            state.Gold, state.Deck.Select(card => card.CardId), state.Relics, state.Potions, state.Deck);
         var observation = CompleteRoomCore(session, result, generateCombatRewards: outcome == RunOutcome.RoomCleared);
         state.ActiveCombat = null;
         combatSession.RunOwner = null;
@@ -736,7 +748,7 @@ public sealed class RunEnvironment
         state.MaxHp = result.MaxHp;
         state.Gold = result.Gold;
         state.Deck.Clear();
-        state.Deck.AddRange(result.Deck);
+        state.Deck.AddRange(result.DeckInstances);
         state.Relics.Clear();
         state.Relics.AddRange(result.Relics);
         state.Potions.Clear();

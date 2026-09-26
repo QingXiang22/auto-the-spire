@@ -43,7 +43,37 @@ public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, To
 
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy,
-    CardRarity Rarity = CardRarity.Common);
+    CardRarity Rarity = CardRarity.Common, EffectNode? UpgradedEffect = null, int? UpgradedCost = null)
+{
+    public EffectNode ResolveEffect(CardInstance instance)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        return instance.UpgradeLevel > 0 ? UpgradedEffect ?? Effect : Effect;
+    }
+
+    public int ResolveCost(CardInstance instance)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        return instance.UpgradeLevel > 0 ? UpgradedCost ?? Cost : Cost;
+    }
+}
+
+public sealed record CardInstance
+{
+    public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
+        cardId.Validate();
+        ArgumentOutOfRangeException.ThrowIfNegative(upgradeLevel);
+        InstanceId = instanceId;
+        CardId = cardId;
+        UpgradeLevel = upgradeLevel;
+    }
+
+    public string InstanceId { get; }
+    public ContentId CardId { get; }
+    public int UpgradeLevel { get; }
+}
 
 public sealed class CardPoolDefinition
 {
@@ -483,6 +513,8 @@ public sealed class ContentRegistry
             if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity))
                 throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, or rarity.");
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
+            if (card.UpgradedEffect is { } upgradedEffect)
+                ValidateEffectReferences(upgradedEffect, $"Upgraded card '{card.Id}'");
         }
         foreach (var pool in _cardPools.Values)
             foreach (var cardId in pool.Cards)
