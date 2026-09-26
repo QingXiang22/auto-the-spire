@@ -58,7 +58,8 @@ public sealed record RunEventDefinition(ContentId Id, RunEventKind Kind = RunEve
 public sealed class EncounterDefinition
 {
     public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds,
-        bool isWeak = false, IEnumerable<ContentId>? tags = null)
+        bool isWeak = false, IEnumerable<ContentId>? tags = null,
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(enemyIds);
@@ -69,11 +70,21 @@ public sealed class EncounterDefinition
         foreach (var enemyId in enemies) enemyId.Validate();
         var encounterTags = tags?.ToArray() ?? [];
         foreach (var tag in encounterTags) tag.Validate();
+        var startingActions = startingActionsByEnemyIndex is null
+            ? new Dictionary<int, ContentId>()
+            : new Dictionary<int, ContentId>(startingActionsByEnemyIndex);
+        foreach (var (enemyIndex, actionId) in startingActions)
+        {
+            if (enemyIndex < 0 || enemyIndex >= enemies.Length)
+                throw new ArgumentOutOfRangeException(nameof(startingActionsByEnemyIndex), "Starting action index must refer to an enemy in this encounter.");
+            actionId.Validate();
+        }
         Id = id;
         RoomType = roomType;
         EnemyIds = Array.AsReadOnly(enemies);
         IsWeak = isWeak;
         Tags = Array.AsReadOnly(encounterTags);
+        StartingActionsByEnemyIndex = new ReadOnlyDictionary<int, ContentId>(startingActions);
     }
 
     public ContentId Id { get; }
@@ -81,6 +92,7 @@ public sealed class EncounterDefinition
     public IReadOnlyList<ContentId> EnemyIds { get; }
     public bool IsWeak { get; }
     public IReadOnlyList<ContentId> Tags { get; }
+    public IReadOnlyDictionary<int, ContentId> StartingActionsByEnemyIndex { get; }
 }
 public sealed record EnemyDefinition
 {
@@ -246,9 +258,17 @@ public sealed class ContentRegistry
         if (_packages.Count == 0)
             throw new InvalidOperationException("At least one rules package must be loaded.");
         foreach (var encounter in _encounters.Values)
-        foreach (var enemyId in encounter.EnemyIds)
-            if (!_enemies.ContainsKey(enemyId))
-                throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
+        {
+            foreach (var enemyId in encounter.EnemyIds)
+                if (!_enemies.ContainsKey(enemyId))
+                    throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
+            foreach (var (enemyIndex, actionId) in encounter.StartingActionsByEnemyIndex)
+            {
+                var enemyId = encounter.EnemyIds[enemyIndex];
+                if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
+                    throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
+            }
+        }
         foreach (var enemy in _enemies.Values)
         foreach (var action in enemy.Actions)
             if (action.AppliedPower is { } powerId && !_powers.ContainsKey(powerId))

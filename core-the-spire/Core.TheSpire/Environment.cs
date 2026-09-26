@@ -1,6 +1,7 @@
 namespace CoreTheSpire;
 
-public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? InstanceId = null);
+public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? InstanceId = null,
+    ContentId? StartingActionOverride = null);
 
 public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Block, int Strength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers);
@@ -25,7 +26,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         if (runSession.State.CurrentEncounterId is { } selectedEncounter && selectedEncounter != encounterId)
             throw new InvalidOperationException($"Encounter '{encounterId}' does not match the encounter selected for this room.");
         return StartForRun(runSession, encounter.EnemyIds
-            .Select(enemyId => new CombatEnemySpawn(enemyId.ToString())).ToArray());
+            .Select((enemyId, index) => new CombatEnemySpawn(enemyId.ToString(),
+                StartingActionOverride: encounter.StartingActionsByEnemyIndex.TryGetValue(index, out var actionId) ? actionId : null)).ToArray());
     }
 
     public GameSession StartCurrentEncounterForRun(RunSession runSession)
@@ -83,7 +85,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         if (!definition.Encounters.TryGetValue(encounterId, out var encounter))
             throw new KeyNotFoundException($"Unknown encounter '{encounterId}'.");
         return StartEncounter(seed, playerId, playerHp, playerMaxHp, hand,
-            encounter.EnemyIds.Select(enemyId => new CombatEnemySpawn(enemyId.ToString())));
+            encounter.EnemyIds.Select((enemyId, index) => new CombatEnemySpawn(enemyId.ToString(),
+                StartingActionOverride: encounter.StartingActionsByEnemyIndex.TryGetValue(index, out var actionId) ? actionId : null)));
     }
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
@@ -109,6 +112,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (!instanceIds.Add(entityId)) throw new ArgumentException("Enemy instance IDs must be unique.", nameof(enemies));
             if (spawn.Hp is < 1 || spawn.Hp > enemyDefinition.MaxHp)
                 throw new ArgumentOutOfRangeException(nameof(enemies));
+            if (spawn.StartingActionOverride is { } startingAction
+                && !enemyDefinition.Actions.Any(action => action.Id == startingAction))
+                throw new ArgumentException($"Enemy '{spawn.EnemyId}' has no action '{startingAction}'.", nameof(enemies));
             prepared[i] = (spawn, enemyDefinition, entityId);
         }
 
@@ -118,7 +124,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var hp = spawn.Hp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
             combatEnemies.Add(new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition)
             {
-                ActionIndex = enemyDefinition.StartingActionIndex
+                ActionIndex = spawn.StartingActionOverride is { } actionId
+                    ? enemyDefinition.GetActionIndex(actionId)
+                    : enemyDefinition.StartingActionIndex
             });
         }
         var state = new GameState(definition,
