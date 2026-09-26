@@ -15,6 +15,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseEffect), "choose")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForXCostEffect), "repeatForXCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardsFromPileEffect), "chooseCardsFromPile")]
@@ -73,6 +74,7 @@ public sealed record ChooseEffect : EffectNode
 public sealed record ChoiceOption(string Label, EffectNode? Effect = null);
 public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, EffectNode? Else = null) : EffectNode;
 public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
+public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
@@ -241,7 +243,7 @@ internal static class EffectExecutor
                         throw new InvalidOperationException("Combat card piles are only modeled for the player.");
                     var destination = state.GetPile(addCards.Pile);
                     var upgradeLevel = addCards.InheritUpgradeFromPlayedCard
-                        ? state.PendingPlayedCard?.UpgradeLevel ?? 0
+                        ? state.PendingCardPlay?.Card.UpgradeLevel ?? 0
                         : 0;
                     for (var i = 0; i < addCards.Count; i++)
                         destination.Add(state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel));
@@ -344,6 +346,10 @@ internal static class EffectExecutor
                 case RepeatEffect repeat:
                     if (repeat.Count < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
                     for (var i = 0; i < repeat.Count; i++) state.PendingEffects.Add((owner, repeat.Effect, target, selectedCard));
+                    break;
+                case RepeatForXCostEffect repeatForX:
+                    for (var i = 0; i < (state.PendingCardPlay?.XEnergy ?? 0); i++)
+                        state.PendingEffects.Add((owner, repeatForX.Effect, target, selectedCard));
                     break;
                 case CustomEffect custom:
                     if (!state.Definition.CustomEffects.TryGetValue(custom.Handler, out var handler))

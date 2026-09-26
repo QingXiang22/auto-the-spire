@@ -111,6 +111,11 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":7},{"op":"randomlyMoveCardFromPile","from":"hand","to":"exhaust"}]}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":9},{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Whirlwind, 0, CardType.Attack,
+            new RepeatForXCostEffect(new AttackEffect(5, TargetSelector.AllOpponents)),
+            Target: TargetSelector.AllOpponents, Rarity: CardRarity.Uncommon,
+            UpgradedEffect: new RepeatForXCostEffect(new AttackEffect(8, TargetSelector.AllOpponents)),
+            CostKind: CardCostKind.X));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
             [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade, BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
@@ -121,6 +126,6 @@ internal static class IroncladCards
                 BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
                 BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
-                BaseSpireIds.Uppercut]));
+                BaseSpireIds.Uppercut, BaseSpireIds.Whirlwind]));
     }
 }

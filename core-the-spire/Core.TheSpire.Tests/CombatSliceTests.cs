@@ -49,13 +49,14 @@ public sealed class CombatSliceTests
                 BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
                 BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
-                BaseSpireIds.Uppercut }.AsEnumerable(),
+                BaseSpireIds.Uppercut, BaseSpireIds.Whirlwind }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Armaments].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.BodySlam].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.BattleTrance].Rarity);
+        Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Whirlwind].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.FeelNoPain].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Headbutt].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.TrueGrit].Rarity);
@@ -1316,6 +1317,44 @@ public sealed class CombatSliceTests
         env.Step(synergy, new PlayCardAction(0, synergy.State.Player.Id));
         Assert.Equal(33, synergy.State.Player.Creature.Block);
         Assert.Contains(synergy.State.Events, gameEvent => gameEvent.Type == "card_exhausted");
+    }
+
+    public void WhirlwindSpendsXEnergyAndRepeatsAnAoEAttack()
+    {
+        Assert.Equal(new RepeatForXCostEffect(new AttackEffect(5, TargetSelector.AllOpponents)),
+            EffectDsl.Parse("""{"op":"repeatForXCost","effect":{"op":"attack","amount":5,"target":"allOpponents"}}"""));
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.StartEncounter(77, "ironclad", 56, 65, [BaseSpireIds.Whirlwind],
+            [new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString()),
+                new CombatEnemySpawn(BaseSpireIds.CalcifiedCultist.ToString())]);
+        var initialHp = state.State.Enemies.Select(enemy => enemy.Creature.Hp).ToArray();
+        Assert.Equal(CardCostKind.X, state.State.Definition.Cards[BaseSpireIds.Whirlwind].CostKind);
+
+        env.Step(state, new PlayCardAction(0));
+
+        Assert.Equal(0, state.State.Player.Energy);
+        Assert.Equal(new[] { initialHp[0] - 15, initialHp[1] - 15 },
+            state.State.Enemies.Select(enemy => enemy.Creature.Hp));
+        Assert.Equal(6, state.State.Events.Count(gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 5));
+
+        var upgraded = env.StartEncounter(78, "ironclad", 56, 65, [BaseSpireIds.Whirlwind],
+            [new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString()),
+                new CombatEnemySpawn(BaseSpireIds.CalcifiedCultist.ToString())]);
+        var whirlwind = upgraded.State.Player.MutableHand[0];
+        upgraded.State.Player.MutableHand[0] = new CardInstance(whirlwind.InstanceId, whirlwind.CardId, 1);
+        upgraded.State.Player.Energy = 3;
+        var upgradedHp = upgraded.State.Enemies.Select(enemy => enemy.Creature.Hp).ToArray();
+        env.Step(upgraded, new PlayCardAction(0));
+        Assert.Equal(new[] { upgradedHp[0] - 24, upgradedHp[1] - 24 },
+            upgraded.State.Enemies.Select(enemy => enemy.Creature.Hp));
+
+        var zeroEnergy = env.Start(79, "ironclad", 56, 65, [BaseSpireIds.Whirlwind],
+            BaseSpireIds.DampCultist.ToString());
+        zeroEnergy.State.Player.Energy = 0;
+        Assert.Contains(env.LegalActions(zeroEnergy), action => action is PlayCardAction { HandIndex: 0 });
+        var enemyHp = zeroEnergy.State.Enemy.Hp;
+        env.Step(zeroEnergy, new PlayCardAction(0));
+        Assert.Equal(enemyHp, zeroEnergy.State.Enemy.Hp);
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
@@ -2592,6 +2631,7 @@ internal static class Program
         tests.BarricadePreventsPlayerBlockFromClearingAtTurnStart();
         tests.EntrenchAddsBlockEqualToCurrentBlockAndIsAnEventCard();
         tests.ImperviousGrantsBlockAndExhaustsItself();
+        tests.WhirlwindSpendsXEnergyAndRepeatsAnAoEAttack();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();

@@ -40,11 +40,15 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     }
 }
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
+public enum CardCostKind { Fixed, X }
 
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     CardKeywords Keywords = CardKeywords.None, TargetSelector Target = TargetSelector.FirstEnemy,
-    CardRarity Rarity = CardRarity.Common, EffectNode? UpgradedEffect = null, int? UpgradedCost = null)
+    CardRarity Rarity = CardRarity.Common, EffectNode? UpgradedEffect = null, int? UpgradedCost = null,
+    CardCostKind CostKind = CardCostKind.Fixed)
 {
+    public bool HasEnergyXCost => CostKind == CardCostKind.X;
+
     public EffectNode ResolveEffect(CardInstance instance)
     {
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
@@ -512,8 +516,13 @@ public sealed class ContentRegistry
         foreach (var card in _cards.Values)
         {
             card.Id.Validate();
-            if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity))
-                throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, or rarity.");
+            if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity)
+                || !Enum.IsDefined(card.CostKind))
+                throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, rarity, or cost kind.");
+            ArgumentOutOfRangeException.ThrowIfNegative(card.Cost);
+            if (card.UpgradedCost is { } upgradedCost) ArgumentOutOfRangeException.ThrowIfNegative(upgradedCost);
+            if (card.HasEnergyXCost && card.Cost != 0)
+                throw new InvalidOperationException($"X-cost card '{card.Id}' must declare a base cost of zero.");
             if ((card.Keywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
                 | CardKeywords.Retain)) != 0)
                 throw new InvalidOperationException($"Card '{card.Id}' contains unsupported keywords.");
@@ -667,6 +676,9 @@ public sealed class ContentRegistry
             case RepeatEffect repeat:
                 ArgumentOutOfRangeException.ThrowIfNegative(repeat.Count);
                 ValidateEffectReferences(repeat.Effect, owner);
+                break;
+            case RepeatForXCostEffect repeatForX:
+                ValidateEffectReferences(repeatForX.Effect, owner);
                 break;
             case CustomEffect custom when !_customEffects.ContainsKey(custom.Handler):
                 throw new InvalidOperationException($"{owner} references unknown custom effect '{custom.Handler}'.");
