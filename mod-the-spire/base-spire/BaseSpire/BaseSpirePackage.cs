@@ -8,6 +8,9 @@ public static class BaseSpireIds
     public static readonly ContentId StrikeIronclad = ContentId.Parse("base-spire:strike-ironclad");
     public static readonly ContentId DefendIronclad = ContentId.Parse("base-spire:defend-ironclad");
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
+    public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
+    public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");
+    public static readonly ContentId DemonFormPower = ContentId.Parse("base-spire:demon-form-power");
     public static readonly ContentId IronWave = ContentId.Parse("base-spire:iron-wave");
     public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
     public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");
@@ -65,6 +68,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
     {
         registry.Register(BaseSpireContent.Ironclad());
         registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
+        registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,
+            BaseSpireIds.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,

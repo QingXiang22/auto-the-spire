@@ -38,7 +38,8 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
+        Assert.Equal(new[] { BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
+                BaseSpireIds.DemonForm, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut }.AsEnumerable(),
@@ -47,6 +48,13 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
+        Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Bludgeon].Rarity);
+        Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.DemonForm].Rarity);
+        Assert.Equal(new AttackEffect(42), definition.Cards[BaseSpireIds.Bludgeon]
+            .ResolveEffect(new CardInstance("test:bludgeon+", BaseSpireIds.Bludgeon, 1)));
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.DemonFormPower, 3, TargetSelector.Self),
+            definition.Cards[BaseSpireIds.DemonForm]
+                .ResolveEffect(new CardInstance("test:demon-form+", BaseSpireIds.DemonForm, 1)));
         Assert.Equal(TargetSelector.AllOpponents, definition.Cards[BaseSpireIds.Thunderclap].Target);
         var thunderclap = (SequenceEffect)definition.Cards[BaseSpireIds.Thunderclap].Effect;
         Assert.Equal(new AttackEffect(4, TargetSelector.AllOpponents), thunderclap.Effects[0]);
@@ -679,6 +687,28 @@ public sealed class CombatSliceTests
         Assert.Equal(0, hook.InvocationCount);
         Assert.Equal(0, environment.LegalActions(session).Count);
         Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, lost)));
+    }
+
+    public void BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var bludgeon = env.Start(31, "ironclad", 56, 65, [BaseSpireIds.Bludgeon],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(bludgeon, new PlayCardAction(0, bludgeon.State.Enemy.Id));
+        Assert.Equal(21, bludgeon.State.Enemy.Hp);
+
+        var demonForm = env.Start(32, "ironclad", 56, 65, [BaseSpireIds.DemonForm],
+            BaseSpireIds.DampCultist.ToString(),
+            drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.StrikeIronclad,
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.StrikeIronclad, BaseSpireIds.StrikeIronclad]);
+        env.Step(demonForm, new PlayCardAction(0, demonForm.State.Player.Id));
+        Assert.Equal(2, demonForm.State.Player.Creature.PowerAmount(BaseSpireIds.DemonFormPower));
+        Assert.Equal(0, demonForm.State.Player.Creature.Strength);
+        env.Step(demonForm, new EndTurnAction());
+        Assert.Equal(2, demonForm.State.Player.Creature.Strength);
+        Assert.Equal(5, demonForm.State.Player.Hand.Count);
+        env.Step(demonForm, new EndTurnAction());
+        Assert.Equal(4, demonForm.State.Player.Creature.Strength);
     }
 
     public void RestSiteOffersHealingOrUpgradingOneCard()
@@ -1844,6 +1874,7 @@ internal static class Program
         var tests = new CombatSliceTests();
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
+        tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
@@ -1885,7 +1916,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 43 gameplay checks.");
+        Console.WriteLine("Passed 44 gameplay checks.");
     }
 }
 

@@ -373,7 +373,7 @@ public sealed record EnemyDefinition
 
 public enum CardType { Attack, Skill, Power, Status }
 public enum IntentKind { None, Attack, Buff, Debuff }
-public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd }
+public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart }
 public enum PowerRole { None, Strength, Vulnerable }
 
 public interface IRulePackage
