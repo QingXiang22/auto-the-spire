@@ -139,8 +139,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             ? state.Enemies.Single(enemy => ReferenceEquals(enemy.Creature, living))
             : state.Enemies[0];
         var next = primary.Definition.Actions[Math.Min(primary.ActionIndex, primary.Definition.Actions.Count - 1)];
-        var intentDamage = Math.Max(0, next.IntentDamage + primary.Creature.Strength);
-        if (state.HasPowerRole(state.Player.Creature, PowerRole.Vulnerable)) intentDamage = (int)MathF.Floor(intentDamage * 1.5f);
+        var intentDamage = next.Intent == IntentKind.Attack
+            ? state.CalculateDamage(primary.Creature, state.Player.Creature, next.IntentDamage)
+            : 0;
         return new CombatObservation(state.Turn, state.Player.Creature.Hp, state.Player.Creature.MaxHp,
             state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(), primary.Creature.Hp,
             primary.Creature.MaxHp, primary.Creature.Block, primary.Creature.Strength, next.Intent, intentDamage,
@@ -152,8 +153,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
     {
         var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
-        var damage = Math.Max(0, action.IntentDamage + enemy.Creature.Strength);
-        if (state.HasPowerRole(state.Player.Creature, PowerRole.Vulnerable)) damage = (int)MathF.Floor(damage * 1.5f);
+        var damage = action.Intent == IntentKind.Attack
+            ? state.CalculateDamage(enemy.Creature, state.Player.Creature, action.IntentDamage)
+            : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
             enemy.Creature.Block, enemy.Creature.Strength, action.Intent, damage,
             new Dictionary<ContentId, int>(enemy.Creature.Powers));
@@ -292,8 +294,13 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     var selectedAction = currentEnemy.Definition.Actions[currentEnemy.ActionIndex];
                     state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
                     if (selectedAction.AppliedPower is { } appliedPower)
-                        state.ApplyPower(session, currentEnemy.Creature, appliedPower,
+                    {
+                        var powerOwner = selectedAction.AppliedPowerTarget == TargetSelector.Self
+                            ? currentEnemy.Creature
+                            : state.Player.Creature;
+                        state.ApplyPower(session, powerOwner, appliedPower,
                             selectedAction.AppliedPowerAmount, currentEnemy.Creature);
+                    }
                     state.CurrentEnemyIndex++;
                     break;
                 case EndTurnResolutionStage.EnemyTurnEndPowers:
