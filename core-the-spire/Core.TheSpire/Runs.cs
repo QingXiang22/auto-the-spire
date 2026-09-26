@@ -791,6 +791,10 @@ public sealed class RunEnvironment
                     state.MaxHp = checked(state.MaxHp + gainMaxHp.Amount);
                     state.Hp = checked(state.Hp + gainMaxHp.Amount);
                     break;
+                case LoseRunMaxHpEffect loseMaxHp:
+                    state.MaxHp = (int)Math.Max(1L, (long)state.MaxHp - loseMaxHp.Amount);
+                    state.Hp = Math.Min(state.Hp, state.MaxHp);
+                    break;
                 case LoseRunHpEffect loseHp:
                     state.Hp = Math.Max(0, state.Hp - loseHp.Amount);
                     break;
