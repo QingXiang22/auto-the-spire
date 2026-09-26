@@ -1044,6 +1044,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal(3, state.State.Player.HandInstances.Count);
         Assert.Equal(1, state.State.Player.Creature.PowerAmount(BaseSpireIds.NoDrawPower));
+        Assert.Equal(1, env.Observe(state).PlayerPowers[BaseSpireIds.NoDrawPower]);
         state.State.Draw(state, 2);
         Assert.Equal(3, state.State.Player.HandInstances.Count);
         Assert.Equal(7, state.State.Player.DrawPileInstances.Count);

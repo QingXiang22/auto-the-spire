@@ -322,7 +322,8 @@ internal sealed record PendingCardChoice(ChooseCardFromPileEffect Effect, IReadO
     EntityState Owner, EntityState? Target, CardInstance? SelectedCard);
 public sealed record PendingCardChoiceView(string Prompt, IReadOnlyList<CardInstance> Options);
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
-    IReadOnlyList<ContentId> Hand, int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
+    IReadOnlyList<ContentId> Hand, IReadOnlyDictionary<ContentId, int> PlayerPowers,
+    int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> EnemyPowers, bool IsTerminal,
     PendingChoiceView? PendingChoice, IReadOnlyList<EnemyCombatObservation> Enemies,
     IReadOnlyList<ContentId> DrawPile, IReadOnlyList<ContentId> DiscardPile,
