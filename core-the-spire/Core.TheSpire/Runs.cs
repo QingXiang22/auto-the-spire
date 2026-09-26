@@ -314,10 +314,14 @@ public interface IRunHook
     IReadOnlySet<RunRoomType> ModifyUnknownRoomTypes(RunObservation observation,
         IReadOnlySet<RunRoomType> roomTypes) => roomTypes;
     float ModifyUnknownOddsIncrease(RunObservation observation, RunRoomType roomType, float increase) => increase;
+    CardRewardOdds ModifyCardRewardOdds(RunObservation observation, RunRoomType roomType,
+        CardRewardOdds odds) => odds;
     int ModifyRestSiteHealAmount(RunObservation observation, int amount) => amount;
     void AfterRestSiteHeal(RunHookContext context) { }
     void AfterRestSiteSmith(RunHookContext context) { }
 }
+
+public readonly record struct CardRewardOdds(float RareChance, float UncommonChance);
 
 public sealed class RunHookContext
 {
@@ -725,7 +729,7 @@ public sealed class RunEnvironment
                 hook.AfterCombatVictory(new RunHookContext(state, hook.Id));
         }
 
-        if (generateCombatRewards && TryGenerateCombatRewards(state, completedFrame))
+        if (generateCombatRewards && TryGenerateCombatRewards(state, completedFrame, Observe(session)))
         {
             state.Phase = RunPhase.ResolveRewards;
             return Observe(session);
@@ -734,7 +738,7 @@ public sealed class RunEnvironment
         return FinishCompletedRoom(session, completedFrame);
     }
 
-    private bool TryGenerateCombatRewards(RunState state, RunRoomFrame frame)
+    private bool TryGenerateCombatRewards(RunState state, RunRoomFrame frame, RunObservation observation)
     {
         if (frame.RoomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss)
             || frame.EncounterId is not { } encounterId
@@ -749,7 +753,7 @@ public sealed class RunEnvironment
         }
         if (_cards is not null && _cardPools is not null && state.Character.CardPools.Count > 0)
         {
-            var options = CardRewardGenerator.Generate(state, _cards, _cardPools);
+            var options = CardRewardGenerator.Generate(state, _cards, _cardPools, _runHooks, observation);
             if (options.Count > 0)
                 frame.Rewards.Add(new RunRewardState($"{encounterId}:cards", RunRewardKind.Card, 0, options));
         }
