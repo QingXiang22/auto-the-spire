@@ -218,12 +218,15 @@ public sealed class CharacterDefinition
 public sealed class RunDefinition
 {
     public RunDefinition(ContentId id, IEnumerable<ActDefinition> acts, UnknownRoomOddsDefinition? unknownRoomOdds = null,
-        IEnumerable<ContentId>? sharedEventIds = null, IEnumerable<ContentId>? sharedAncientIds = null)
+        IEnumerable<ContentId>? sharedEventIds = null, IEnumerable<ContentId>? sharedAncientIds = null,
+        ContentId? finalEventId = null)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(acts);
         Id = id;
         UnknownRoomOdds = unknownRoomOdds;
+        finalEventId?.Validate();
+        FinalEventId = finalEventId;
         SharedEventIds = ActDefinition.CopyIds(sharedEventIds, nameof(sharedEventIds));
         SharedAncientIds = ActDefinition.CopyIds(sharedAncientIds, nameof(sharedAncientIds));
         Acts = Array.AsReadOnly(acts.ToArray());
@@ -239,6 +242,7 @@ public sealed class RunDefinition
     public ContentId Id { get; }
     public IReadOnlyList<ActDefinition> Acts { get; }
     public UnknownRoomOddsDefinition? UnknownRoomOdds { get; }
+    public ContentId? FinalEventId { get; }
     public IReadOnlyList<ContentId> SharedEventIds { get; }
     public IReadOnlyList<ContentId> SharedAncientIds { get; }
 }
@@ -433,7 +437,7 @@ internal sealed class RunState
         ? RoomContentStates[ActIndex]?.NextEvent(VisitedEventIds)
         : null;
 
-    private IReadOnlyList<RunEventOptionDefinition> GetEventOptions(ContentId? eventId) =>
+    public IReadOnlyList<RunEventOptionDefinition> GetEventOptions(ContentId? eventId) =>
         eventId is { } id && RunEvents is not null && RunEvents.TryGetValue(id, out var runEvent)
             ? runEvent.Options
             : Array.Empty<RunEventOptionDefinition>();
@@ -572,6 +576,11 @@ public sealed class RunEnvironment
             return state.RoomStack[^1].EventOptions
                 .Where(option => IsEventOptionAffordable(option, state.Gold))
                 .Select(option => (PlayerAction)new ChooseRunEventOptionAction(option.Id)).ToArray();
+        if (state.Phase == RunPhase.ResolveFinalEvent && state.RoomStack.Count > 0
+            && state.RoomStack[^1].EventOptions.Count > 0)
+            return state.RoomStack[^1].EventOptions
+                .Where(option => IsEventOptionAffordable(option, state.Gold))
+                .Select(option => (PlayerAction)new ChooseRunEventOptionAction(option.Id)).ToArray();
         if (state.Phase == RunPhase.ResolveRewards && state.RoomStack.Count > 0)
         {
             var rewards = state.RoomStack[^1].Rewards;
@@ -608,6 +617,9 @@ public sealed class RunEnvironment
         if (state.Phase == RunPhase.ResolveRewards)
             return ResolveRewardAction(session, action);
         if (state.Phase == RunPhase.ResolveEvent)
+            return ResolveRunEventAction(session, action);
+        if (state.Phase == RunPhase.ResolveFinalEvent && state.RoomStack.Count > 0
+            && state.RoomStack[^1].EventOptions.Count > 0)
             return ResolveRunEventAction(session, action);
         if (state.Phase == RunPhase.ResolveRestSite)
             return ResolveRestSiteAction(session, action);
@@ -662,7 +674,8 @@ public sealed class RunEnvironment
     private RunObservation ResolveRunEventAction(RunSession session, PlayerAction action)
     {
         var state = session.State;
-        if (state.RoomStack.Count == 0 || state.RoomStack[^1].EventId is null)
+        if (state.RoomStack.Count == 0 || state.RoomStack[^1].EventId is null
+            || state.Phase is not (RunPhase.ResolveEvent or RunPhase.ResolveFinalEvent))
             throw new InvalidOperationException("There is no active run event.");
         if (action is not ChooseRunEventOptionAction choose || !LegalActions(session).Contains(action))
             throw new InvalidOperationException("The selected event option is not currently legal.");
@@ -688,17 +701,26 @@ public sealed class RunEnvironment
                 case AddCardToRunDeckEffect addCard:
                     state.Deck.Add(new CardInstance($"run-event-card-{state.NextEventCardInstanceId++:D4}", addCard.Card));
                     break;
+                case WinRunEffect when frame.IsFinalEvent:
+                    state.Status = RunStatus.Won;
+                    state.Phase = RunPhase.Terminal;
+                    break;
+                case WinRunEffect:
+                    throw new InvalidOperationException("Only the final event can win the run.");
                 default:
                     throw new InvalidOperationException($"Unsupported run event effect '{effect.GetType().Name}'.");
             }
-        }
 
-        if (state.Hp == 0)
-        {
-            state.Status = RunStatus.Lost;
-            state.Phase = RunPhase.Terminal;
-            return Observe(session);
+            if (state.Hp == 0)
+            {
+                state.Status = RunStatus.Lost;
+                state.Phase = RunPhase.Terminal;
+                return Observe(session);
+            }
+            if (state.Status == RunStatus.Won) return Observe(session);
         }
+        if (frame.IsFinalEvent)
+            throw new InvalidOperationException("A final event option did not complete the run.");
         return FinishCompletedRoom(session, frame);
     }
 
@@ -783,6 +805,8 @@ public sealed class RunEnvironment
         {
             if (state.Phase != RunPhase.ResolveFinalEvent || state.Status != RunStatus.InProgress)
                 throw new InvalidOperationException("The final event is not the active room.");
+            if (completedFrame.EventOptions.Count > 0)
+                throw new InvalidOperationException("A configured final event must be completed through a legal option.");
             if (result.Outcome != RunOutcome.RunWon)
                 throw new InvalidOperationException("The final event must report the run victory outcome.");
             ApplyRoomResult(state, result);
@@ -891,7 +915,10 @@ public sealed class RunEnvironment
             state.ActIndex++;
             if (state.ActIndex == state.Definition.Acts.Count)
             {
-                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null, null, [], []));
+                var finalEventId = state.Definition.FinalEventId;
+                var finalEventOptions = state.GetEventOptions(finalEventId);
+                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null,
+                    finalEventId, [], finalEventOptions));
                 state.Phase = RunPhase.ResolveFinalEvent;
                 return Observe(session);
             }

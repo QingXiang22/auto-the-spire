@@ -141,7 +141,7 @@ public sealed record EnemyActionTransition
     public IReadOnlyList<EnemyActionChoice> Choices { get; }
     public EnemyActionRepeatPolicy RepeatPolicy { get; }
 }
-public enum RunEventKind { Event, Ancient }
+public enum RunEventKind { Event, Ancient, Final }
 
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainRunGoldEffect), "gainRunGold")]
@@ -149,12 +149,14 @@ public enum RunEventKind { Event, Ancient }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealRunEffect), "healRun")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseRunHpEffect), "loseRunHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardToRunDeckEffect), "addCardToRunDeck")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(WinRunEffect), "winRun")]
 public abstract record RunEffectNode;
 public sealed record GainRunGoldEffect(int Amount) : RunEffectNode;
 public sealed record LoseRunGoldEffect(int Amount) : RunEffectNode;
 public sealed record HealRunEffect(int Amount) : RunEffectNode;
 public sealed record LoseRunHpEffect(int Amount) : RunEffectNode;
 public sealed record AddCardToRunDeckEffect(ContentId Card) : RunEffectNode;
+public sealed record WinRunEffect : RunEffectNode;
 
 public sealed record RunEventOptionDefinition
 {
@@ -189,6 +191,8 @@ public sealed record RunEventDefinition
             throw new ArgumentException("Run event options cannot contain null values.", nameof(options));
         if (copiedOptions.Select(option => option.Id).Distinct().Count() != copiedOptions.Length)
             throw new ArgumentException("Run event option IDs must be unique.", nameof(options));
+        if (kind == RunEventKind.Final && copiedOptions.Length == 0)
+            throw new ArgumentException("A final event needs at least one option.", nameof(options));
         Options = Array.AsReadOnly(copiedOptions);
     }
 
@@ -603,8 +607,16 @@ public sealed class ContentRegistry
         }
         foreach (var runEvent in _runEvents.Values)
         foreach (var option in runEvent.Options)
-        foreach (var effect in option.Effects)
-            ValidateRunEffectReferences(effect, $"Run event '{runEvent.Id}' option '{option.Id}'");
+        {
+            var winEffectCount = option.Effects.Count(effect => effect is WinRunEffect);
+            var endsWithWin = option.Effects.LastOrDefault() is WinRunEffect;
+            if (runEvent.Kind == RunEventKind.Final && (winEffectCount != 1 || !endsWithWin))
+                throw new InvalidOperationException($"Final event '{runEvent.Id}' option '{option.Id}' must end with WinRunEffect.");
+            if (runEvent.Kind != RunEventKind.Final && option.Effects.Any(effect => effect is WinRunEffect))
+                throw new InvalidOperationException($"Only a final event option can win the run ('{runEvent.Id}/{option.Id}').");
+            foreach (var effect in option.Effects)
+                ValidateRunEffectReferences(effect, $"Run event '{runEvent.Id}' option '{option.Id}'");
+        }
         foreach (var run in _runs.Values)
         foreach (var act in run.Acts)
         {
@@ -616,6 +628,10 @@ public sealed class ContentRegistry
         {
             ValidateRunEventPool(run.SharedEventIds, RunEventKind.Event, _runEvents);
             ValidateRunEventPool(run.SharedAncientIds, RunEventKind.Ancient, _runEvents);
+            if (run.FinalEventId is { } finalEventId
+                && (!_runEvents.TryGetValue(finalEventId, out var finalEvent)
+                    || finalEvent.Kind != RunEventKind.Final))
+                throw new InvalidOperationException($"Run '{run.Id}' references missing or non-final event '{finalEventId}'.");
         }
         return new GameDefinition(
             _packages.ToArray(),
@@ -663,6 +679,8 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} adds unknown card '{addCard.Card}'.");
             case AddCardToRunDeckEffect addCard:
                 addCard.Card.Validate();
+                break;
+            case WinRunEffect:
                 break;
             default:
                 throw new InvalidOperationException($"{owner} uses unsupported run effect '{effect.GetType().Name}'.");
