@@ -7,7 +7,8 @@ internal sealed class CardRarityOddsState
 {
     private float _offset = -0.05f;
 
-    public CardRarity Roll(CardRarityOddsType type, SeededRandom random)
+    public CardRarity Roll(CardRarityOddsType type, SeededRandom random,
+        RunRoomType roomType, IReadOnlyList<IRunHook> hooks, RunObservation observation)
     {
         var rareBase = type switch
         {
@@ -23,11 +24,22 @@ internal sealed class CardRarityOddsState
             CardRarityOddsType.BossEncounter => 0f,
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
+        var odds = new CardRewardOdds(Math.Max(0f,
+                rareBase + (type == CardRarityOddsType.BossEncounter ? 0f : _offset)),
+            uncommonBase);
+        foreach (var hook in hooks)
+        {
+            odds = hook.ModifyCardRewardOdds(observation, roomType, odds);
+            if (!float.IsFinite(odds.RareChance) || !float.IsFinite(odds.UncommonChance)
+                || odds.RareChance < 0f || odds.UncommonChance < 0f
+                || odds.RareChance + odds.UncommonChance > 1f)
+                throw new InvalidOperationException($"Run hook '{hook.Id}' returned invalid card reward odds.");
+        }
+
         var roll = (float)random.NextDouble();
-        var rareChance = rareBase + (type == CardRarityOddsType.BossEncounter ? 0f : _offset);
         CardRarity rarity;
-        if (roll < rareChance) rarity = CardRarity.Rare;
-        else if (roll < uncommonBase + rareChance) rarity = CardRarity.Uncommon;
+        if (roll < odds.RareChance) rarity = CardRarity.Rare;
+        else if (roll < odds.RareChance + odds.UncommonChance) rarity = CardRarity.Uncommon;
         else rarity = CardRarity.Common;
 
         _offset = rarity == CardRarity.Rare ? -0.05f : Math.Min(_offset + 0.005f, 0.4f);
@@ -41,7 +53,8 @@ internal static class CardRewardGenerator
 
     public static IReadOnlyList<CardInstance> Generate(RunState state,
         IReadOnlyDictionary<ContentId, CardDefinition> cards,
-        IReadOnlyDictionary<ContentId, CardPoolDefinition> cardPools)
+        IReadOnlyDictionary<ContentId, CardPoolDefinition> cardPools,
+        IReadOnlyList<IRunHook> hooks, RunObservation observation)
     {
         var pool = state.Character.CardPools.SelectMany(id => cardPools[id].Cards)
             .Distinct().Select(id => cards[id]).ToArray();
@@ -55,12 +68,14 @@ internal static class CardRewardGenerator
             RunRoomType.Boss => CardRarityOddsType.BossEncounter,
             _ => throw new InvalidOperationException("Card rewards require a combat room.")
         };
+        var roomType = state.CurrentRoom!.Value;
 
         for (var i = 0; i < OptionCount; i++)
         {
             var available = pool.Where(card => !blacklist.Contains(card.Id)).ToArray();
             var allowedRarities = available.Select(card => card.Rarity).ToHashSet();
-            var rolledRarity = state.CardRarityOdds.Roll(oddsType, random);
+            var rolledRarity = state.CardRarityOdds.Roll(oddsType, random,
+                roomType, hooks, observation);
             var selectedRarity = NextAllowedRarity(rolledRarity, allowedRarities);
             var rarityCards = available.Where(card => card.Rarity == selectedRarity).ToArray();
             if (rarityCards.Length == 0)
