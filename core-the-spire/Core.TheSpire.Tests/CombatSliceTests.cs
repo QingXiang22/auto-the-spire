@@ -2674,7 +2674,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 59 gameplay checks.");
+        Console.WriteLine("All gameplay checks passed.");
     }
 }
 
