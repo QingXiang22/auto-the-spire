@@ -1158,6 +1158,30 @@ public sealed class CombatSliceTests
         Assert.True(handBefore.All(instanceId => state.State.Player.HandInstances.Any(card => card.InstanceId == instanceId)));
     }
 
+    public void BeforeFlushHookCanPauseToRetainASelectedCardAndAfterFlushSeesTheResult()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        var hook = new RetainOneCardHook();
+        registry.AddPackage(new TestHookPackage(hook));
+        var env = new CombatEnvironment(registry.Build());
+        var state = env.Start(68, "ironclad", 56, 65,
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad], BaseSpireIds.DampCultist.ToString(),
+            drawPile: Enumerable.Repeat(BaseSpireIds.StrikeIronclad, 5));
+        var retainedCard = state.State.Player.HandInstances[1];
+        var flushedCard = state.State.Player.HandInstances[0];
+
+        var paused = env.Step(state, new EndTurnAction());
+
+        Assert.True(paused.NeedsChoice);
+        Assert.Equal(2, paused.Observation.PendingCardChoice!.Options.Count);
+        env.Step(state, new ChooseCardAction(retainedCard.InstanceId));
+
+        Assert.Contains(state.State.Player.HandInstances, card => card.InstanceId == retainedCard.InstanceId);
+        Assert.Equal(new[] { flushedCard.InstanceId }, hook.FlushedCards.Select(card => card.InstanceId));
+        Assert.Equal(new[] { retainedCard.InstanceId }, hook.RetainedCards.Select(card => card.InstanceId));
+    }
+
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2214,6 +2238,26 @@ public sealed class CombatSliceTests
         public void Register(ContentRegistry registry) => registry.Register(hook);
     }
 
+    private sealed class RetainOneCardHook : IRuleHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("retain-hook:plans");
+        public IReadOnlyList<CardInstance> FlushedCards { get; private set; } = [];
+        public IReadOnlyList<CardInstance> RetainedCards { get; private set; } = [];
+
+        public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+        public EffectNode? BeforeFlush(RuleHookContext context, string playerId) =>
+            EffectDsl.Parse("""{"op":"chooseCardFromPile","from":"hand","to":null,"prompt":"Choose a card to retain","filter":"notRetained","onSelected":{"op":"retainSelectedCard"}}""");
+
+        public EffectNode? AfterFlush(RuleHookContext context, string playerId,
+            IReadOnlyList<CardInstance> flushedCards, IReadOnlyList<CardInstance> retainedCards)
+        {
+            FlushedCards = flushedCards;
+            RetainedCards = retainedCards;
+            return null;
+        }
+    }
+
     private sealed class MultiEnemyPackage(CardDefinition card, params EnemyDefinition[] enemies) : IRulePackage
     {
         public PackageInfo Info { get; } = new("multi-enemy-fixture", "1.0.0");
@@ -2401,6 +2445,7 @@ internal static class Program
         tests.EtherealCardsExhaustBeforeEnemyTurnAndTriggerPowers();
         tests.RetainedCardInstancesStayInHandAcrossEnemyTurn();
         tests.HandCleanupHooksCanSuppressEtherealAndFlush();
+        tests.BeforeFlushHookCanPauseToRetainASelectedCardAndAfterFlushSeesTheResult();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2443,7 +2488,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 58 gameplay checks.");
+        Console.WriteLine("Passed 59 gameplay checks.");
     }
 }
 

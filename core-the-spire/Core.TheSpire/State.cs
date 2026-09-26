@@ -152,6 +152,10 @@ internal sealed class GameState
     internal CardInstance? PendingPlayedCard { get; set; }
     internal List<(EntityState Owner, EffectNode Effect, EntityState? Target, CardInstance? SelectedCard)> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
+    internal int FlushHookIndex { get; set; }
+    internal HashSet<string> TemporarilyRetainedCards { get; } = new(StringComparer.Ordinal);
+    internal IReadOnlyList<CardInstance> FlushedCards { get; set; } = [];
+    internal IReadOnlyList<CardInstance> RetainedCards { get; set; } = [];
     internal EntityState? PendingPowerOwner { get; set; }
     internal PowerTrigger PendingPowerTrigger { get; set; }
     internal List<ContentId>? PendingPowerQueue { get; set; }
@@ -298,6 +302,8 @@ internal sealed class GameState
         CardSelectionFilter.Upgradeable => IsUpgradeable(card),
         CardSelectionFilter.NonAttack => Definition.Cards.TryGetValue(card.CardId, out var definition)
             && definition.Type != CardType.Attack,
+        CardSelectionFilter.NotRetained => (Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) == 0
+            && !TemporarilyRetainedCards.Contains(card.InstanceId),
         _ => false
     };
 
@@ -381,6 +387,10 @@ internal enum EndTurnResolutionStage
 {
     None,
     PlayerHandCleanup,
+    BeforeFlushHooks,
+    BeforeFlushLateHooks,
+    FlushHand,
+    AfterFlushHooks,
     PlayerTurnEndPowers,
     EnemyAction,
     ApplyEnemyActionPower,

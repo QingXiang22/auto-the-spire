@@ -22,6 +22,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -51,6 +52,7 @@ public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
+public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
@@ -71,7 +73,7 @@ public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElemen
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
-public enum CardSelectionFilter { Any, Upgradeable, NonAttack }
+public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
@@ -279,6 +281,12 @@ internal static class EffectExecutor
                     foreach (var card in state.GetPile(upgradeCards.Pile).ToArray())
                         if (state.IsUpgradeable(card) && state.UpgradeCard(session, card.InstanceId)) upgradedCount++;
                     state.Emit(session, "cards_upgraded", owner.Id, state.Player.Id, upgradedCount);
+                    break;
+                case RetainSelectedCardEffect:
+                    if (selectedCard is null || state.Player.MutableHand.All(card => card.InstanceId != selectedCard.InstanceId))
+                        throw new InvalidOperationException("Retaining a card requires a selected card still in hand.");
+                    state.TemporarilyRetainedCards.Add(selectedCard.InstanceId);
+                    state.Emit(session, "card_retained", owner.Id, selectedCard.InstanceId, 1);
                     break;
                 case DecrementPowerEffect decrementPower:
                     var previousAmount = owner.PowerAmount(decrementPower.Power);

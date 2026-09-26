@@ -374,22 +374,16 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         EffectExecutor.Resume(session);
                         break;
                     }
-                    var shouldFlush = state.Definition.Hooks.All(hook => hook.ShouldFlush(
-                        new RuleHookContext(session, hook.Id), state.Player.Id));
-                    for (var handIndex = 0; shouldFlush && handIndex < state.Player.MutableHand.Count;)
-                    {
-                        var card = state.Player.MutableHand[handIndex];
-                        if ((state.Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) != 0)
-                        {
-                            handIndex++;
-                            continue;
-                        }
-                        state.Player.MutableHand.RemoveAt(handIndex);
-                        state.Player.MutableDiscardPile.Add(card);
-                    }
-                    state.Player.MutableDiscardPile.AddRange(state.Player.MutablePlayPile);
-                    state.Player.MutablePlayPile.Clear();
-                    state.EndTurnStage = EndTurnResolutionStage.PlayerTurnEndPowers;
+                    state.EndTurnStage = EndTurnResolutionStage.BeforeFlushHooks;
+                    state.FlushHookIndex = 0;
+                    break;
+                case EndTurnResolutionStage.BeforeFlushHooks:
+                case EndTurnResolutionStage.BeforeFlushLateHooks:
+                case EndTurnResolutionStage.AfterFlushHooks:
+                    if (!RunFlushHooks(session)) return;
+                    break;
+                case EndTurnResolutionStage.FlushHand:
+                    FlushPlayerHand(session);
                     break;
                 case EndTurnResolutionStage.PlayerTurnEndPowers:
                     state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
@@ -520,5 +514,66 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.PendingPowerOwner = null;
         state.PendingPowerIndex = 0;
         return true;
+    }
+
+    private static bool RunFlushHooks(GameSession session)
+    {
+        var state = session.State;
+        var stage = state.EndTurnStage;
+        while (state.FlushHookIndex < state.Definition.Hooks.Count
+            && state.PendingChoice is null && state.PendingCardChoice is null)
+        {
+            var hook = state.Definition.Hooks[state.FlushHookIndex++];
+            var context = new RuleHookContext(session, hook.Id);
+            var effect = stage switch
+            {
+                EndTurnResolutionStage.BeforeFlushHooks => hook.BeforeFlush(context, state.Player.Id),
+                EndTurnResolutionStage.BeforeFlushLateHooks => hook.BeforeFlushLate(context, state.Player.Id),
+                EndTurnResolutionStage.AfterFlushHooks => hook.AfterFlush(context, state.Player.Id,
+                    state.FlushedCards, state.RetainedCards),
+                _ => throw new InvalidOperationException($"'{stage}' is not a flush hook stage.")
+            };
+            if (effect is not null) EffectExecutor.Execute(session, state.Player.Creature, effect);
+        }
+        if (state.PendingChoice is not null || state.PendingCardChoice is not null) return false;
+
+        state.FlushHookIndex = 0;
+        state.EndTurnStage = stage switch
+        {
+            EndTurnResolutionStage.BeforeFlushHooks => EndTurnResolutionStage.BeforeFlushLateHooks,
+            EndTurnResolutionStage.BeforeFlushLateHooks => EndTurnResolutionStage.FlushHand,
+            EndTurnResolutionStage.AfterFlushHooks => EndTurnResolutionStage.PlayerTurnEndPowers,
+            _ => throw new InvalidOperationException($"'{stage}' is not a flush hook stage.")
+        };
+        return true;
+    }
+
+    private static void FlushPlayerHand(GameSession session)
+    {
+        var state = session.State;
+        var shouldFlush = state.Definition.Hooks.All(hook => hook.ShouldFlush(
+            new RuleHookContext(session, hook.Id), state.Player.Id));
+        var flushed = new List<CardInstance>();
+        var retained = new List<CardInstance>();
+        foreach (var card in state.Player.MutableHand)
+        {
+            var hasRetainKeyword = (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) != 0;
+            if (!shouldFlush || hasRetainKeyword || state.TemporarilyRetainedCards.Contains(card.InstanceId))
+                retained.Add(card);
+            else
+                flushed.Add(card);
+        }
+
+        state.Player.MutableHand.Clear();
+        state.Player.MutableHand.AddRange(retained);
+        state.Player.MutableDiscardPile.AddRange(flushed);
+        state.Player.MutableDiscardPile.AddRange(state.Player.MutablePlayPile);
+        state.Player.MutablePlayPile.Clear();
+        state.FlushedCards = Array.AsReadOnly(flushed.ToArray());
+        state.RetainedCards = Array.AsReadOnly(retained.ToArray());
+        state.TemporarilyRetainedCards.Clear();
+        foreach (var card in flushed) state.Emit(session, "card_moved", state.Player.Id, card.InstanceId, 1);
+        state.EndTurnStage = EndTurnResolutionStage.AfterFlushHooks;
+        state.FlushHookIndex = 0;
     }
 }
