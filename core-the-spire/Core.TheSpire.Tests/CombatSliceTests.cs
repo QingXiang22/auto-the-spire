@@ -40,12 +40,17 @@ public sealed class CombatSliceTests
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
         Assert.Equal(new[] { BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.TwinStrike, BaseSpireIds.Uppercut }.AsEnumerable(),
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
+                BaseSpireIds.Uppercut }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
+        Assert.Equal(TargetSelector.AllOpponents, definition.Cards[BaseSpireIds.Thunderclap].Target);
+        var thunderclap = (SequenceEffect)definition.Cards[BaseSpireIds.Thunderclap].Effect;
+        Assert.Equal(new AttackEffect(4, TargetSelector.AllOpponents), thunderclap.Effects[0]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 1, TargetSelector.AllOpponents), thunderclap.Effects[1]);
         var upgradedIronWave = (SequenceEffect)definition.Cards[BaseSpireIds.IronWave]
             .ResolveEffect(new CardInstance("test:iron-wave+", BaseSpireIds.IronWave, 1));
         Assert.Equal(new GainBlockEffect(7), upgradedIronWave.Effects[0]);
@@ -1225,6 +1230,34 @@ public sealed class CombatSliceTests
         var lethalTurn = environment.Step(lethalSession, new EndTurnAction());
         Assert.Equal(0, lethalTurn.Observation.PlayerHp);
         Assert.Equal(1, lethalTurn.Events.Count(gameEvent => gameEvent.Type == "enemy_action"));
+
+        var areaCardId = ContentId.Parse("test-fixture:all-opponents-strike");
+        var vulnerableId = ContentId.Parse("test-fixture:area-vulnerable");
+        var areaPackage = new AllOpponentsPackage(
+            new CardDefinition(areaCardId, 1, CardType.Attack,
+                new SequenceEffect([new AttackEffect(4, TargetSelector.AllOpponents),
+                    new ApplyPowerEffect(vulnerableId, 1, TargetSelector.AllOpponents)]),
+                Target: TargetSelector.AllOpponents),
+            new PowerDefinition(vulnerableId, Role: PowerRole.Vulnerable),
+            new EnemyDefinition(firstEnemyId, 10, 10,
+                [new EnemyActionDefinition(ContentId.Parse("test-fixture:first-hit-area"),
+                    new AttackEffect(3), IntentKind.Attack, 3)]),
+            new EnemyDefinition(secondEnemyId, 10, 10,
+                [new EnemyActionDefinition(ContentId.Parse("test-fixture:second-hit-area"),
+                    new AttackEffect(4), IntentKind.Attack, 4)]));
+        var areaEnvironment = new CombatEnvironment(Build(areaPackage));
+        var areaSession = areaEnvironment.StartEncounter(189, "ironclad", 20, 20, [areaCardId],
+        [
+            new CombatEnemySpawn(firstEnemyId.ToString()),
+            new CombatEnemySpawn(secondEnemyId.ToString())
+        ]);
+        var areaAction = areaEnvironment.LegalActions(areaSession).OfType<PlayCardAction>().Single();
+        Assert.True(areaAction.TargetId is null);
+        areaEnvironment.Step(areaSession, areaAction);
+        Assert.Equal(6, areaSession.State.Enemies[0].Creature.Hp);
+        Assert.Equal(6, areaSession.State.Enemies[1].Creature.Hp);
+        Assert.Equal(1, areaSession.State.Enemies[0].Creature.PowerAmount(vulnerableId));
+        Assert.Equal(1, areaSession.State.Enemies[1].Creature.PowerAmount(vulnerableId));
     }
 
     public void UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType()
@@ -1645,6 +1678,19 @@ public sealed class CombatSliceTests
         public void Register(ContentRegistry registry)
         {
             registry.Register(card);
+            foreach (var enemy in enemies) registry.Register(enemy);
+        }
+    }
+
+    private sealed class AllOpponentsPackage(CardDefinition card, PowerDefinition power,
+        params EnemyDefinition[] enemies) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("all-opponents-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(card);
+            registry.Register(power);
             foreach (var enemy in enemies) registry.Register(enemy);
         }
     }

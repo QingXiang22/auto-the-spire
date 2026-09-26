@@ -44,7 +44,7 @@ public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, Effect
 public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
-public enum TargetSelector { Self, FirstEnemy, SelectedTarget }
+public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents }
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
@@ -81,22 +81,30 @@ internal static class EffectExecutor
                         state.PendingEffects.Add((owner, sequence.Effects[i], target));
                     break;
                 case AttackEffect attack:
-                    var victim = ResolveTarget(state, owner, target, attack.Target);
-                    var rawDamage = state.CalculateDamage(owner, victim, attack.Amount);
-                    var absorbed = Math.Min(victim.Block, rawDamage);
-                    victim.Block -= absorbed;
-                    var damage = Math.Min(victim.Hp, rawDamage - absorbed);
-                    victim.Hp -= damage;
-                    state.Emit(session, "damage", owner.Id, victim.Id, damage);
-                    if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
+                    if (attack.Target == TargetSelector.AllOpponents)
+                    {
+                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount);
+                        else
+                            foreach (var enemy in state.Enemies)
+                                if (enemy.Creature.Hp > 0) ApplyAttack(session, owner, enemy.Creature, attack.Amount);
+                    }
+                    else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target), attack.Amount);
                     break;
                 case GainBlockEffect block:
                     owner.Block += block.Amount;
                     state.Emit(session, "block", owner.Id, owner.Id, block.Amount);
                     break;
                 case ApplyPowerEffect power:
-                    var recipient = ResolveTarget(state, owner, target, power.Target);
-                    state.ApplyPower(session, recipient, power.Power, power.Amount, owner);
+                    if (power.Target == TargetSelector.AllOpponents)
+                    {
+                        if (owner.IsEnemy) state.ApplyPower(session, state.Player.Creature, power.Power, power.Amount, owner);
+                        else
+                            foreach (var enemy in state.Enemies)
+                                if (enemy.Creature.Hp > 0)
+                                    state.ApplyPower(session, enemy.Creature, power.Power, power.Amount, owner);
+                    }
+                    else
+                        state.ApplyPower(session, ResolveSingleTarget(state, owner, target, power.Target), power.Power, power.Amount, owner);
                     break;
                 case DrawCardsEffect draw:
                     state.Draw(session, draw.Amount);
@@ -106,7 +114,7 @@ internal static class EffectExecutor
                     break;
                 case AddCardsToPileEffect addCards:
                     if (addCards.Count < 0) throw new InvalidOperationException("Added card count cannot be negative.");
-                    var cardOwner = ResolveTarget(state, owner, target, addCards.Target);
+                    var cardOwner = ResolveSingleTarget(state, owner, target, addCards.Target);
                     if (!ReferenceEquals(cardOwner, state.Player.Creature))
                         throw new InvalidOperationException("Combat card piles are only modeled for the player.");
                     var destination = state.GetPile(addCards.Pile);
@@ -150,13 +158,27 @@ internal static class EffectExecutor
         }
     }
 
-    private static EntityState ResolveTarget(GameState state, EntityState owner, EntityState? selected, TargetSelector selector) => selector switch
+    private static EntityState ResolveSingleTarget(GameState state, EntityState owner,
+        EntityState? selected, TargetSelector selector) => selector switch
     {
         TargetSelector.Self => owner,
         TargetSelector.FirstEnemy => OpponentOf(state, owner),
         TargetSelector.SelectedTarget => selected ?? OpponentOf(state, owner),
-        _ => throw new ArgumentOutOfRangeException(nameof(selector))
+        _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect requires one target.")
     };
+
+    private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount)
+    {
+        if (victim.Hp <= 0) return;
+        var state = session.State;
+        var rawDamage = state.CalculateDamage(owner, victim, amount);
+        var absorbed = Math.Min(victim.Block, rawDamage);
+        victim.Block -= absorbed;
+        var damage = Math.Min(victim.Hp, rawDamage - absorbed);
+        victim.Hp -= damage;
+        state.Emit(session, "damage", owner.Id, victim.Id, damage);
+        if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
+    }
 
     private static EntityState OpponentOf(GameState state, EntityState owner) => owner.IsEnemy
         ? state.Player.Creature
