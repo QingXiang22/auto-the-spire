@@ -197,6 +197,7 @@ public sealed class GameSession
 
     internal GameState State { get; }
     internal RandomStreams Random { get; }
+    internal RunSession? RunOwner { get; set; }
 }
 
 internal enum EndTurnResolutionStage

@@ -4,12 +4,42 @@ public sealed class CombatEnvironment(GameDefinition definition)
 {
     public GameSession Start(uint seed, string playerId, int playerHp, int playerMaxHp,
         IEnumerable<ContentId> hand, string enemyId, int? enemyHp = null, IEnumerable<ContentId>? drawPile = null)
+        => Start(new RandomStreams(seed), playerId, playerHp, playerMaxHp, hand, enemyId, enemyHp, drawPile);
+
+    /// <summary>Starts combat from an active run room, using the run deck and its shared RNG streams.</summary>
+    public GameSession StartForRun(RunSession runSession, string enemyId, int? enemyHp = null)
+    {
+        ArgumentNullException.ThrowIfNull(runSession);
+        var run = runSession.State;
+        if (run.Status != RunStatus.InProgress || run.Phase != RunPhase.ResolveRoom
+            || run.CurrentRoom is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss))
+            throw new InvalidOperationException("Combat can only start in an active Monster, Elite, or Boss room.");
+        if (run.ActiveCombat is not null)
+            throw new InvalidOperationException("This run already has an active combat session.");
+        var enemyDefinition = definition.Enemies.Values.SingleOrDefault(e => e.Id.Value == enemyId || e.Id.ToString() == enemyId)
+            ?? throw new KeyNotFoundException($"Unknown enemy '{enemyId}'.");
+        if (enemyDefinition.Actions.Count == 0)
+            throw new InvalidOperationException($"Enemy '{enemyId}' has no actions.");
+        foreach (var cardId in run.Deck)
+            if (!definition.Cards.ContainsKey(cardId))
+                throw new InvalidOperationException($"Run card '{cardId}' is not registered in this combat definition.");
+
+        var shuffledDeck = run.Deck.ToList();
+        run.Random.Get("shuffle").Shuffle(shuffledDeck);
+        var session = Start(run.Random, run.Character.Id.ToString(), run.Hp, run.MaxHp,
+            shuffledDeck.Take(5), enemyId, enemyHp, shuffledDeck.Skip(5));
+        session.RunOwner = runSession;
+        run.ActiveCombat = session;
+        return session;
+    }
+
+    private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
+        IEnumerable<ContentId> hand, string enemyId, int? enemyHp, IEnumerable<ContentId>? drawPile)
     {
         var enemyDefinition = definition.Enemies.Values.Single(e => e.Id.Value == enemyId || e.Id.ToString() == enemyId);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(playerMaxHp);
         if (playerHp < 0 || playerHp > playerMaxHp) throw new ArgumentOutOfRangeException(nameof(playerHp));
         if (enemyDefinition.Actions.Count == 0) throw new InvalidOperationException($"Enemy '{enemyId}' has no actions.");
-        var rng = new RandomStreams(seed);
         var hp = enemyHp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
         if (hp < 1 || hp > enemyDefinition.MaxHp) throw new ArgumentOutOfRangeException(nameof(enemyHp));
         var state = new GameState(definition,
