@@ -131,7 +131,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 
 1. **内核契约已建立**：`core-the-spire/Core.TheSpire` 实现 `GameDefinition`、不可从外部取得的 `GameState`、独立持有 RNG 的 `GameSession`、外部动作、观察投影、效果树、规则包注册和受控 Hook 事件。
 2. **最小战斗切片已建立**：测试规则包覆盖攻击、格挡、仪式、三段行动时序、选择暂停/恢复、非法动作拒绝和种子重放。
-3. **原版内容切片已建立**：`mod-the-spire/base-spire` 注册铁甲战士起始角色（生命、金币、起始牌组、Burning Blood 起始遗物）、Strike/Defend/Bash、力量、易伤、仪式和普通/DeadlyEnemies 下的咔咔行动；Burning Blood 通过 `IRunHook` 在胜利战斗结算后回复 6 点生命，且受最大生命限制。
+3. **原版内容切片已建立**：`mod-the-spire/base-spire` 注册铁甲战士起始角色（生命、金币、起始牌组、Burning Blood 起始遗物）、Strike/Defend/Bash 的基础及升级效果、力量、易伤、仪式和普通/DeadlyEnemies 下的咔咔行动；Burning Blood 通过 `IRunHook` 在胜利战斗结算后回复 6 点生命，且受最大生命限制。
 4. **mod 扩展已验证**：`mod-the-spire/test-hook-mod` 作为独立子项目覆盖一张卡、新增一张卡，通过受控 C# 效果 handler 执行扩展效果，并用每局隔离的命名空间状态观察出牌事件。
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
