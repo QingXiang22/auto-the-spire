@@ -611,6 +611,53 @@ public sealed class CombatSliceTests
         Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, lost)));
     }
 
+    public void RestSiteOffersHealingOrUpgradingOneCard()
+    {
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 3, MapPointType.Start, ["rest"]),
+            new MapPointDefinition("rest", 1, 3, MapPointType.RestSite, ["boss"]),
+            new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
+        ]);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:rest-site-act"), _ => map);
+        var run = new RunDefinition(ContentId.Parse("test-fixture:rest-site-run"), [act]);
+        var character = new CharacterDefinition(ContentId.Parse("test-fixture:rest-site-character"), 80, 0,
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad]);
+        var cards = new[]
+        {
+            new CardDefinition(BaseSpireIds.StrikeIronclad, 1, CardType.Attack, new AttackEffect(6),
+                UpgradedEffect: new AttackEffect(9)),
+            new CardDefinition(BaseSpireIds.DefendIronclad, 1, CardType.Skill, new GainBlockEffect(5),
+                UpgradedEffect: new GainBlockEffect(8))
+        };
+        var restSiteHook = new RestSiteTestHook();
+        var environment = new RunEnvironment(run, character, [restSiteHook], cards);
+
+        var healSession = environment.Start(501);
+        healSession.State.Hp = 40;
+        environment.Step(healSession, new ChooseMapPointAction("rest"));
+        Assert.Equal(RunPhase.ResolveRestSite, environment.Observe(healSession).Phase);
+        Assert.Equal(3, environment.LegalActions(healSession).Count);
+        var healed = environment.Step(healSession, new RestSiteHealAction());
+        Assert.Equal(66, healed.Hp);
+        Assert.Equal(RunPhase.ChooseMapPoint, healed.Phase);
+        Assert.Equal(1, restSiteHook.HealCount);
+
+        var smithSession = environment.Start(502);
+        var alreadyUpgraded = smithSession.State.Deck[0];
+        smithSession.State.Deck[0] = new CardInstance(alreadyUpgraded.InstanceId, alreadyUpgraded.CardId, 1);
+        var cardToUpgrade = smithSession.State.Deck[1];
+        environment.Step(smithSession, new ChooseMapPointAction("rest"));
+        Assert.Equal(2, environment.LegalActions(smithSession).Count);
+        Assert.False(environment.LegalActions(smithSession).OfType<RestSiteUpgradeCardAction>()
+            .Any(action => action.CardInstanceId == alreadyUpgraded.InstanceId));
+        var upgraded = environment.Step(smithSession, new RestSiteUpgradeCardAction(cardToUpgrade.InstanceId));
+        var upgradedInstance = upgraded.DeckInstances.Single(card => card.InstanceId == cardToUpgrade.InstanceId);
+        Assert.Equal(1, upgradedInstance.UpgradeLevel);
+        Assert.Equal(RunPhase.ChooseMapPoint, upgraded.Phase);
+        Assert.Equal(1, restSiteHook.SmithCount);
+    }
+
     public void NestedCombatReturnsToItsParentRoom()
     {
         var map = new ActMapDefinition("start", "boss",
@@ -1432,6 +1479,17 @@ public sealed class CombatSliceTests
         public void AfterCombatVictory(RunHookContext context) => InvocationCount++;
     }
 
+    private sealed class RestSiteTestHook : IRunHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("test-fixture:rest-site-hook");
+        public int HealCount { get; private set; }
+        public int SmithCount { get; private set; }
+        public void AfterCombatVictory(RunHookContext context) { }
+        public int ModifyRestSiteHealAmount(RunObservation observation, int amount) => amount + 2;
+        public void AfterRestSiteHeal(RunHookContext context) => HealCount++;
+        public void AfterRestSiteSmith(RunHookContext context) => SmithCount++;
+    }
+
     private sealed class UnknownRoomOddsHook : IRunHook
     {
         public ContentId Id { get; } = ContentId.Parse("test-fixture:unknown-room-odds-hook");
@@ -1698,6 +1756,7 @@ internal static class Program
         tests.ChoiceDuringEnemyTurnResumesTheTurnScheduler();
         tests.SinglePlayerRunTraversesActsAndStopsAtVictory();
         tests.SinglePlayerRunDefeatIsTerminal();
+        tests.RestSiteOffersHealingOrUpgradingOneCard();
         tests.NestedCombatReturnsToItsParentRoom();
         tests.UnknownRoomOddsExposeOrderedModHooks();
         tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
@@ -1715,7 +1774,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 42 gameplay checks.");
+        Console.WriteLine("Passed 43 gameplay checks.");
     }
 }
 

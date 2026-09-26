@@ -2,7 +2,7 @@ namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
 public enum RunRoomType { Unassigned, Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
-public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveRewards, ResolveFinalEvent, Terminal }
+public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveRestSite, ResolveRewards, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
 public enum RunStatus { InProgress, Won, Lost }
 
@@ -247,6 +247,8 @@ public sealed record ChooseMapPointAction(string PointId) : PlayerAction;
 public sealed record ClaimGoldRewardAction(string RewardId) : PlayerAction;
 public sealed record SkipRewardSetAction : PlayerAction;
 public sealed record ProceedAfterRewardsAction : PlayerAction;
+public sealed record RestSiteHealAction : PlayerAction;
+public sealed record RestSiteUpgradeCardAction(string CardInstanceId) : PlayerAction;
 
 public sealed record MapPointView(string Id, int Floor, int Column, MapPointType Type,
     IReadOnlyList<string> Children);
@@ -310,6 +312,9 @@ public interface IRunHook
     IReadOnlySet<RunRoomType> ModifyUnknownRoomTypes(RunObservation observation,
         IReadOnlySet<RunRoomType> roomTypes) => roomTypes;
     float ModifyUnknownOddsIncrease(RunObservation observation, RunRoomType roomType, float increase) => increase;
+    int ModifyRestSiteHealAmount(RunObservation observation, int amount) => amount;
+    void AfterRestSiteHeal(RunHookContext context) { }
+    void AfterRestSiteSmith(RunHookContext context) { }
 }
 
 public sealed class RunHookContext
@@ -468,12 +473,15 @@ public sealed class RunEnvironment
     private readonly IReadOnlyList<IRunHook> _runHooks;
     private readonly IReadOnlyDictionary<ContentId, EncounterDefinition>? _encounters;
     private readonly IReadOnlyDictionary<ContentId, RunEventDefinition>? _runEvents;
+    private readonly IReadOnlyDictionary<ContentId, CardDefinition>? _cards;
 
-    public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null)
+    public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
+        IEnumerable<CardDefinition>? cards = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _character = character ?? throw new ArgumentNullException(nameof(character));
         _runHooks = Array.AsReadOnly(runHooks?.ToArray() ?? []);
+        _cards = cards?.ToDictionary(card => card.Id);
     }
 
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
@@ -481,6 +489,7 @@ public sealed class RunEnvironment
     {
         _encounters = gameDefinition.Encounters;
         _runEvents = gameDefinition.RunEvents;
+        _cards = gameDefinition.Cards;
     }
 
     public RunSession Start(uint seed)
@@ -533,6 +542,17 @@ public sealed class RunEnvironment
                     .Select(reward => (PlayerAction)new ClaimGoldRewardAction(reward.Id))
                     .Append(new SkipRewardSetAction()).ToArray();
         }
+        if (state.Phase == RunPhase.ResolveRestSite && state.RoomStack.Count > 0
+            && state.RoomStack[^1].RoomType == RunRoomType.RestSite)
+        {
+            var choices = new List<PlayerAction> { new RestSiteHealAction() };
+            if (_cards is not null)
+                choices.AddRange(state.Deck.Where(instance => instance.UpgradeLevel == 0
+                        && _cards.TryGetValue(instance.CardId, out var card)
+                        && (card.UpgradedEffect is not null || card.UpgradedCost is not null))
+                    .Select(instance => (PlayerAction)new RestSiteUpgradeCardAction(instance.InstanceId)));
+            return Array.AsReadOnly(choices.ToArray());
+        }
         return [];
     }
 
@@ -543,6 +563,8 @@ public sealed class RunEnvironment
         var state = session.State;
         if (state.Phase == RunPhase.ResolveRewards)
             return ResolveRewardAction(session, action);
+        if (state.Phase == RunPhase.ResolveRestSite)
+            return ResolveRestSiteAction(session, action);
         if (action is not ChooseMapPointAction choose || !LegalActions(session).Contains(choose))
             throw new InvalidOperationException("A reachable map point must be selected.");
 
@@ -555,7 +577,38 @@ public sealed class RunEnvironment
         state.VisitHistory.Add(new RunMapVisitView(state.ActIndex, point.Id, point.Type,
             Array.AsReadOnly(new[] { roomType })));
         state.Phase = RunPhase.ResolveRoom;
+        if (roomType == RunRoomType.RestSite) state.Phase = RunPhase.ResolveRestSite;
         return Observe(session);
+    }
+
+    private RunObservation ResolveRestSiteAction(RunSession session, PlayerAction action)
+    {
+        var state = session.State;
+        if (state.RoomStack.Count == 0 || state.RoomStack[^1].RoomType != RunRoomType.RestSite)
+            throw new InvalidOperationException("There is no active rest site.");
+        if (!LegalActions(session).Contains(action))
+            throw new InvalidOperationException("The selected rest site action is not currently legal.");
+
+        if (action is RestSiteHealAction)
+        {
+            var amount = (int)(state.MaxHp * 0.3m);
+            var observation = Observe(session);
+            foreach (var hook in _runHooks)
+                amount = hook.ModifyRestSiteHealAmount(observation, amount);
+            ArgumentOutOfRangeException.ThrowIfNegative(amount);
+            state.Hp = Math.Min(state.MaxHp, checked(state.Hp + amount));
+            foreach (var hook in _runHooks) hook.AfterRestSiteHeal(new RunHookContext(state, hook.Id));
+        }
+        else if (action is RestSiteUpgradeCardAction upgrade)
+        {
+            var index = state.Deck.FindIndex(card => card.InstanceId == upgrade.CardInstanceId);
+            if (index < 0) throw new InvalidOperationException("The selected card is no longer in the deck.");
+            var card = state.Deck[index];
+            state.Deck[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel + 1);
+            foreach (var hook in _runHooks) hook.AfterRestSiteSmith(new RunHookContext(state, hook.Id));
+        }
+
+        return FinishCompletedRoom(session, state.RoomStack[^1]);
     }
 
     /// <summary>Push a nested room, such as a combat started by an event, while preserving its parent room.</summary>
