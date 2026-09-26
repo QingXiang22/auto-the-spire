@@ -23,6 +23,8 @@ public static class BaseSpireIds
     public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");
     public static readonly ContentId ShrugItOff = ContentId.Parse("base-spire:shrug-it-off");
     public static readonly ContentId SecondWind = ContentId.Parse("base-spire:second-wind");
+    public static readonly ContentId BattleTrance = ContentId.Parse("base-spire:battle-trance");
+    public static readonly ContentId NoDrawPower = ContentId.Parse("base-spire:no-draw");
     public static readonly ContentId SwordBoomerang = ContentId.Parse("base-spire:sword-boomerang");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
@@ -80,6 +82,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,
             BaseSpireIds.Strength));
+        registry.Register(new PowerDefinition(BaseSpireIds.NoDrawPower, PowerTrigger.AfterPlayerTurnEnd,
+            Role: PowerRole.NoDraw, DecrementOnTrigger: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,

@@ -235,6 +235,7 @@ internal sealed class GameState
 
     internal void Draw(GameSession session, int count)
     {
+        if (HasPowerRole(Player.Creature, PowerRole.NoDraw)) return;
         for (var i = 0; i < count; i++)
         {
             if (Player.MutableDrawPile.Count == 0 && Player.MutableDiscardPile.Count > 0)
