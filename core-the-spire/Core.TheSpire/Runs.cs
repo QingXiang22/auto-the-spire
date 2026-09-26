@@ -191,7 +191,7 @@ public sealed class CharacterDefinition
 {
     public CharacterDefinition(ContentId id, int maxHp, int startingGold,
         IEnumerable<ContentId> startingDeck, IEnumerable<ContentId>? startingRelics = null,
-        IEnumerable<ContentId>? startingPotions = null)
+        IEnumerable<ContentId>? startingPotions = null, IEnumerable<ContentId>? cardPools = null)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHp);
@@ -203,6 +203,7 @@ public sealed class CharacterDefinition
         StartingDeck = Array.AsReadOnly(startingDeck.ToArray());
         StartingRelics = Array.AsReadOnly(startingRelics?.ToArray() ?? []);
         StartingPotions = Array.AsReadOnly(startingPotions?.ToArray() ?? []);
+        CardPools = ActDefinition.CopyIds(cardPools, nameof(cardPools));
     }
 
     public ContentId Id { get; }
@@ -211,6 +212,7 @@ public sealed class CharacterDefinition
     public IReadOnlyList<ContentId> StartingDeck { get; }
     public IReadOnlyList<ContentId> StartingRelics { get; }
     public IReadOnlyList<ContentId> StartingPotions { get; }
+    public IReadOnlyList<ContentId> CardPools { get; }
 }
 
 public sealed class RunDefinition
