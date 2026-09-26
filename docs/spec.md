@@ -132,11 +132,11 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
-8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。遭遇槽支持固定敌人、随机候选池和组内不重复；敌人阵容在进入 run 房间时抽取并保存在房间视图，启动战斗时沿用该阵容。encounter 可为每个敌人槽位指定确定性起始动作，EnemyDefinition 也可声明加权随机起始动作；动作图支持加权后继、即时不重复和连续使用上限，并通过独立的 `enemy-ai` 随机流结算。`base-spire` 已验证 `CultistsNormal`、Overgrowth 的 `FuzzyWurmCrawlerWeak`、`SlimesWeak`、单怪 `NibbitsWeak`、双怪 `NibbitsNormal` 和双怪 `OvergrowthCrawlers`。Slimes 弱遭遇复现两只互异小史莱姆与一只随机中型史莱姆；Slimed 可加入玩家牌堆并出现在战斗观察中。多怪开局生命抽取会优先避开同侧已抽出的生命值，候选值耗尽后回退到完整区间。Shrinker Beetle 的 Shrink 使用通用出手伤害倍率，并在施加者死亡时解除；Nibbit 弱遭遇复现 Butt → Slice(+Block) → Hiss(+Strength) 循环，普通遭遇以槽位起点复现前位先 Slice、后位先 Hiss。真实随机转移行为由确定性回放和动作限制测试覆盖。条件后继、跨多回合冷却/全历史重复规则、原版完整敌人/遭遇池及 source 的双 boss 选择仍未完成。
+8. **遭遇、整局战斗与战斗奖励接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。遭遇槽支持固定敌人、随机候选池和组内不重复；敌人阵容在进入 run 房间时抽取并保存在房间视图，启动战斗时沿用该阵容。encounter 可为每个敌人槽位指定确定性起始动作，EnemyDefinition 也可声明加权随机起始动作；动作图支持加权后继、即时不重复和连续使用上限，并通过独立的 `enemy-ai` 随机流结算。`base-spire` 已验证 `CultistsNormal`、Overgrowth 的 `FuzzyWurmCrawlerWeak`、`SlimesWeak`、单怪 `NibbitsWeak`、双怪 `NibbitsNormal` 和双怪 `OvergrowthCrawlers`。Slimes 弱遭遇复现两只互异小史莱姆与一只随机中型史莱姆；Slimed 可加入玩家牌堆并出现在战斗观察中。多怪开局生命抽取会优先避开同侧已抽出的生命值，候选值耗尽后回退到完整区间。战斗胜利进入可观察、可操作的奖励阶段，目前实现 encounter 配置的金币范围、金币领取、跳过奖励和继续流程；最后一幕 Boss 进入空奖励阶段后继续。Shrinker Beetle 的 Shrink 使用通用出手伤害倍率，并在施加者死亡时解除；Nibbit 弱遭遇复现 Butt → Slice(+Block) → Hiss(+Strength) 循环，普通遭遇以槽位起点复现前位先 Slice、后位先 Hiss。真实随机转移行为由确定性回放和动作限制测试覆盖。卡牌/药水/遗物奖励生成、奖励 hook、条件后继、跨多回合冷却/全历史重复规则、原版完整敌人/遭遇池及 source 的双 boss 选择仍未完成。
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 
-后续按审计索引继续补足原版 Architect 与事件选项/结算、真实 Act encounter/Event/Ancient 内容池及其可用性筛选、双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化和非战斗房间。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
+后续按审计索引继续补足奖励中的卡牌/药水/遗物生成与 hook、原版 Architect 与事件选项/结算、真实 Act encounter/Event/Ancient 内容池及其可用性筛选、双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化和非战斗房间。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗、运行奖励决策并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
 
 ## 9. 待验证事项
 

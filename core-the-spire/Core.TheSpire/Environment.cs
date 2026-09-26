@@ -26,9 +26,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         if (runSession.State.CurrentEncounterId is { } selectedEncounter && selectedEncounter != encounterId)
             throw new InvalidOperationException($"Encounter '{encounterId}' does not match the encounter selected for this room.");
         ValidateRunCombatStart(runSession);
+        runSession.State.BindEncounterToCurrentRoom(encounter);
         var selections = runSession.State.CurrentEncounterSelections;
-        if (selections.Count == 0)
-            selections = encounter.SelectEnemies(runSession.State.Random.Get("encounter-enemies"));
         return StartForRun(runSession, selections
             .Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
                 StartingActionOverride: selection.StartingActionOverride)).ToArray());
