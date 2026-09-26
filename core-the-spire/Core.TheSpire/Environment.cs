@@ -54,13 +54,13 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (spawn.Hp is < 1 || spawn.Hp > enemyDefinition.MaxHp)
                 throw new ArgumentOutOfRangeException(nameof(spawns));
         }
-        foreach (var cardId in run.Deck)
-            if (!definition.Cards.ContainsKey(cardId))
-                throw new InvalidOperationException($"Run card '{cardId}' is not registered in this combat definition.");
+        foreach (var card in run.Deck)
+            if (!definition.Cards.ContainsKey(card.CardId))
+                throw new InvalidOperationException($"Run card '{card.CardId}' is not registered in this combat definition.");
 
         var shuffledDeck = run.Deck.ToList();
         run.Random.Get("shuffle").Shuffle(shuffledDeck);
-        var session = Start(run.Random, run.Character.Id.ToString(), run.Hp, run.MaxHp,
+        var session = StartWithInstances(run.Random, run.Character.Id.ToString(), run.Hp, run.MaxHp,
             shuffledDeck.Take(5), spawns, shuffledDeck.Skip(5));
         session.RunOwner = runSession;
         run.ActiveCombat = session;
@@ -102,6 +102,17 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
         IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile)
+    {
+        var handCards = hand.ToArray();
+        var drawCards = drawPile?.ToArray() ?? [];
+        var instanceIndex = 0;
+        var handInstances = handCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
+        var drawInstances = drawCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
+        return StartWithInstances(rng, playerId, playerHp, playerMaxHp, handInstances, enemies, drawInstances);
+    }
+
+    private GameSession StartWithInstances(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
+        IEnumerable<CardInstance> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<CardInstance>? drawPile)
     {
         ArgumentNullException.ThrowIfNull(enemies);
         var enemySpawns = enemies.ToArray();
@@ -145,8 +156,17 @@ public sealed class CombatEnvironment(GameDefinition definition)
             enemy.SelectAction(enemyDefinition.Actions[actionIndex].Id);
             combatEnemies.Add(enemy);
         }
+        var handInstances = hand.ToArray();
+        var drawInstances = drawPile?.ToArray() ?? [];
+        var allCardInstanceIds = handInstances.Concat(drawInstances).Select(card => card.InstanceId).ToArray();
+        if (allCardInstanceIds.Distinct(StringComparer.Ordinal).Count() != allCardInstanceIds.Length)
+            throw new ArgumentException("Combat card instance IDs must be unique.", nameof(hand));
+        foreach (var card in handInstances.Concat(drawInstances))
+            if (!definition.Cards.ContainsKey(card.CardId))
+                throw new KeyNotFoundException($"Unknown combat card '{card.CardId}'.");
+
         var state = new GameState(definition,
-            new PlayerCombatState(playerId, playerHp, playerMaxHp, hand, drawPile),
+            new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances),
             combatEnemies);
         return new GameSession(state, rng);
     }
@@ -183,7 +203,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.PendingChoice is { } choice ? new PendingChoiceView(choice.Prompt, choice.Options.Select(option => option.Label).ToArray()) : null,
             Array.AsReadOnly(state.Enemies.Select(enemy => ObserveEnemy(state, enemy)).ToArray()),
             state.Player.DrawPile.ToArray(), state.Player.DiscardPile.ToArray(),
-            state.Player.ExhaustPile.ToArray(), state.Player.PlayPile.ToArray());
+            state.Player.ExhaustPile.ToArray(), state.Player.PlayPile.ToArray(),
+            state.Player.HandInstances.ToArray(), state.Player.DrawPileInstances.ToArray(),
+            state.Player.DiscardPileInstances.ToArray(), state.Player.ExhaustPileInstances.ToArray(),
+            state.Player.PlayPileInstances.ToArray());
     }
 
     private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
@@ -209,8 +232,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var enemies = state.Enemies.Where(enemy => enemy.Creature.Hp > 0).ToArray();
         for (var i = 0; i < state.Player.Hand.Count; i++)
         {
-            var card = definition.Cards[state.Player.Hand[i]];
-            if (card.Cost > state.Player.Energy) continue;
+            var instance = state.Player.HandInstances[i];
+            var card = definition.Cards[instance.CardId];
+            if (card.ResolveCost(instance) > state.Player.Energy) continue;
             if (card.Target == TargetSelector.Self)
                 actions.Add(new PlayCardAction(i, state.Player.Id));
             else if (card.Target == TargetSelector.SelectedTarget)
@@ -252,23 +276,23 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
         if (action is PlayCardAction play)
         {
-            var cardId = state.Player.Hand[play.HandIndex];
-            var card = definition.Cards[cardId];
+            var cardInstance = state.Player.HandInstances[play.HandIndex];
+            var card = definition.Cards[cardInstance.CardId];
             state.Player.MutableHand.RemoveAt(play.HandIndex);
-            state.Player.Energy -= card.Cost;
-            state.Player.MutablePlayPile.Add(cardId);
-            state.PendingPlayedCard = cardId;
+            state.Player.Energy -= card.ResolveCost(cardInstance);
+            state.Player.MutablePlayPile.Add(cardInstance);
+            state.PendingPlayedCard = cardInstance;
             var selectedTarget = play.TargetId == state.Player.Id ? state.Player.Creature
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
             state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
-            EffectExecutor.Execute(session, state.Player.Creature, card.Effect, selectedTarget);
+            EffectExecutor.Execute(session, state.Player.Creature, card.ResolveEffect(cardInstance), selectedTarget);
             if (state.PendingChoice is null) FinalizePlayedCard(state);
         }
         else if (action is EndTurnAction)
         {
-            state.Player.MutableDiscardPile.AddRange(state.Player.Hand);
+            state.Player.MutableDiscardPile.AddRange(state.Player.MutableHand);
             state.Player.MutableHand.Clear();
-            state.Player.MutableDiscardPile.AddRange(state.Player.PlayPile);
+            state.Player.MutableDiscardPile.AddRange(state.Player.MutablePlayPile);
             state.Player.MutablePlayPile.Clear();
             state.IsPlayerTurn = false;
             state.EndTurnStage = EndTurnResolutionStage.PlayerTurnEndPowers;
@@ -279,12 +303,12 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
     private static void FinalizePlayedCard(GameState state)
     {
-        if (state.PendingPlayedCard is not { } cardId) return;
-        var card = state.Definition.Cards[cardId];
+        if (state.PendingPlayedCard is not { } cardInstance) return;
+        var card = state.Definition.Cards[cardInstance.CardId];
         if (card.Exhaust)
         {
-            state.Player.MutablePlayPile.Remove(cardId);
-            state.Player.MutableExhaustPile.Add(cardId);
+            state.Player.MutablePlayPile.Remove(cardInstance);
+            state.Player.MutableExhaustPile.Add(cardInstance);
         }
         state.PendingPlayedCard = null;
     }

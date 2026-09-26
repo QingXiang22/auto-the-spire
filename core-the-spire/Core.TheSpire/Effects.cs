@@ -110,7 +110,8 @@ internal static class EffectExecutor
                     if (!ReferenceEquals(cardOwner, state.Player.Creature))
                         throw new InvalidOperationException("Combat card piles are only modeled for the player.");
                     var destination = state.GetPile(addCards.Pile);
-                    for (var i = 0; i < addCards.Count; i++) destination.Add(addCards.Card);
+                    for (var i = 0; i < addCards.Count; i++)
+                        destination.Add(state.Player.CreateGeneratedCard(addCards.Card));
                     state.Emit(session, "cards_added", owner.Id, cardOwner.Id, addCards.Count);
                     break;
                 case ModifyEnergyEffect energy:

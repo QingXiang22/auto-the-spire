@@ -1,5 +1,7 @@
 namespace CoreTheSpire;
 
+using System.Collections;
+
 internal sealed class EntityState
 {
     private readonly Dictionary<ContentId, int> _powers = [];
@@ -30,27 +32,39 @@ internal sealed class EntityState
 
 internal sealed class PlayerCombatState
 {
-    private readonly List<ContentId> _hand;
-    private readonly List<ContentId> _drawPile;
-    private readonly List<ContentId> _discardPile = [];
-    private readonly List<ContentId> _exhaustPile = [];
-    private readonly List<ContentId> _playPile = [];
-    private readonly IReadOnlyList<ContentId> _handView;
-    private readonly IReadOnlyList<ContentId> _drawPileView;
-    private readonly IReadOnlyList<ContentId> _discardPileView;
-    private readonly IReadOnlyList<ContentId> _exhaustPileView;
-    private readonly IReadOnlyList<ContentId> _playPileView;
+    private readonly List<CardInstance> _hand;
+    private readonly List<CardInstance> _drawPile;
+    private readonly List<CardInstance> _discardPile = [];
+    private readonly List<CardInstance> _exhaustPile = [];
+    private readonly List<CardInstance> _playPile = [];
+    private readonly CardInstanceIdView _handView;
+    private readonly CardInstanceIdView _drawPileView;
+    private readonly CardInstanceIdView _discardPileView;
+    private readonly CardInstanceIdView _exhaustPileView;
+    private readonly CardInstanceIdView _playPileView;
+    private readonly IReadOnlyList<CardInstance> _handInstanceView;
+    private readonly IReadOnlyList<CardInstance> _drawPileInstanceView;
+    private readonly IReadOnlyList<CardInstance> _discardPileInstanceView;
+    private readonly IReadOnlyList<CardInstance> _exhaustPileInstanceView;
+    private readonly IReadOnlyList<CardInstance> _playPileInstanceView;
+    private int _nextGeneratedCardId;
 
-    public PlayerCombatState(string id, int hp, int maxHp, IEnumerable<ContentId> hand, IEnumerable<ContentId>? drawPile = null)
+    public PlayerCombatState(string id, int hp, int maxHp, IEnumerable<CardInstance> hand,
+        IEnumerable<CardInstance>? drawPile = null)
     {
         Creature = new EntityState(id, false, hp, maxHp);
         _hand = [.. hand];
         _drawPile = drawPile is null ? [] : [.. drawPile];
-        _handView = _hand.AsReadOnly();
-        _drawPileView = _drawPile.AsReadOnly();
-        _discardPileView = _discardPile.AsReadOnly();
-        _exhaustPileView = _exhaustPile.AsReadOnly();
-        _playPileView = _playPile.AsReadOnly();
+        _handView = new CardInstanceIdView(_hand);
+        _drawPileView = new CardInstanceIdView(_drawPile);
+        _discardPileView = new CardInstanceIdView(_discardPile);
+        _exhaustPileView = new CardInstanceIdView(_exhaustPile);
+        _playPileView = new CardInstanceIdView(_playPile);
+        _handInstanceView = _hand.AsReadOnly();
+        _drawPileInstanceView = _drawPile.AsReadOnly();
+        _discardPileInstanceView = _discardPile.AsReadOnly();
+        _exhaustPileInstanceView = _exhaustPile.AsReadOnly();
+        _playPileInstanceView = _playPile.AsReadOnly();
     }
 
     public EntityState Creature { get; }
@@ -61,11 +75,27 @@ internal sealed class PlayerCombatState
     public IReadOnlyList<ContentId> DiscardPile => _discardPileView;
     public IReadOnlyList<ContentId> ExhaustPile => _exhaustPileView;
     public IReadOnlyList<ContentId> PlayPile => _playPileView;
-    internal List<ContentId> MutableHand => _hand;
-    internal List<ContentId> MutableDrawPile => _drawPile;
-    internal List<ContentId> MutableDiscardPile => _discardPile;
-    internal List<ContentId> MutableExhaustPile => _exhaustPile;
-    internal List<ContentId> MutablePlayPile => _playPile;
+    public IReadOnlyList<CardInstance> HandInstances => _handInstanceView;
+    public IReadOnlyList<CardInstance> DrawPileInstances => _drawPileInstanceView;
+    public IReadOnlyList<CardInstance> DiscardPileInstances => _discardPileInstanceView;
+    public IReadOnlyList<CardInstance> ExhaustPileInstances => _exhaustPileInstanceView;
+    public IReadOnlyList<CardInstance> PlayPileInstances => _playPileInstanceView;
+    internal List<CardInstance> MutableHand => _hand;
+    internal List<CardInstance> MutableDrawPile => _drawPile;
+    internal List<CardInstance> MutableDiscardPile => _discardPile;
+    internal List<CardInstance> MutableExhaustPile => _exhaustPile;
+    internal List<CardInstance> MutablePlayPile => _playPile;
+
+    public CardInstance CreateGeneratedCard(ContentId cardId) =>
+        new($"{Id}/generated-card-{_nextGeneratedCardId++}", cardId);
+}
+
+internal sealed class CardInstanceIdView(List<CardInstance> cards) : IReadOnlyList<ContentId>
+{
+    public int Count => cards.Count;
+    public ContentId this[int index] => cards[index].CardId;
+    public IEnumerator<ContentId> GetEnumerator() => cards.Select(card => card.CardId).GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition definition)
@@ -116,7 +146,7 @@ internal sealed class GameState
     public ChooseEffect? PendingChoice { get; internal set; }
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
-    internal ContentId? PendingPlayedCard { get; set; }
+    internal CardInstance? PendingPlayedCard { get; set; }
     internal List<(EntityState Owner, EffectNode Effect, EntityState? Target)> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal EntityState? PendingPowerOwner { get; set; }
@@ -230,7 +260,7 @@ internal sealed class GameState
         }
     }
 
-    internal List<ContentId> GetPile(CardPile pile) => pile switch
+    internal List<CardInstance> GetPile(CardPile pile) => pile switch
     {
         CardPile.Draw => Player.MutableDrawPile,
         CardPile.Hand => Player.MutableHand,
@@ -248,7 +278,10 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> EnemyPowers, bool IsTerminal,
     PendingChoiceView? PendingChoice, IReadOnlyList<EnemyCombatObservation> Enemies,
     IReadOnlyList<ContentId> DrawPile, IReadOnlyList<ContentId> DiscardPile,
-    IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile);
+    IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile,
+    IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
+    IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
+    IReadOnlyList<CardInstance> PlayPileInstances);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;
