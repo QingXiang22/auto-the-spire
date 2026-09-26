@@ -492,6 +492,108 @@ public sealed class CombatSliceTests
         Assert.Equal(0, lost.Hp);
     }
 
+    public void ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters()
+    {
+        var points = new List<MapPointDefinition>
+        {
+            new("start", 0, 0, MapPointType.Start, ["monster-1"])
+        };
+        for (var floor = 1; floor <= 8; floor++)
+            points.Add(new MapPointDefinition($"monster-{floor}", floor, 0, MapPointType.Monster,
+                [floor == 8 ? "boss" : $"monster-{floor + 1}"]));
+        points.Add(new MapPointDefinition("boss", 9, 0, MapPointType.Boss, []));
+        var map = new ActMapDefinition("start", "boss", points);
+        var weak = ContentId.Parse("pool-test:weak");
+        var regular = ContentId.Parse("pool-test:regular");
+        var tagged = ContentId.Parse("pool-test:tagged");
+        var elite = ContentId.Parse("pool-test:elite");
+        var boss = ContentId.Parse("pool-test:boss");
+        var enemyId = ContentId.Parse("pool-test:enemy");
+        var runId = ContentId.Parse("pool-test:run");
+        var characterId = ContentId.Parse("pool-test:character");
+        var pool = new ActEncounterPoolDefinition([weak], [regular, tagged], [elite], [boss],
+            normalRoomCount: 7, weakNormalRoomCount: 2, eliteQueueCount: 3);
+        var run = new RunDefinition(runId,
+            [new ActDefinition(ContentId.Parse("pool-test:act"), _ => map, EncounterPool: pool)]);
+        var package = new EncounterPoolPackage(run, new CharacterDefinition(characterId, 60, 50, []), enemyId,
+        [
+            new EncounterDefinition(weak, RunRoomType.Monster, [enemyId], isWeak: true),
+            new EncounterDefinition(regular, RunRoomType.Monster, [enemyId]),
+            new EncounterDefinition(tagged, RunRoomType.Monster, [enemyId], tags: [ContentId.Parse("pool-test:group")]),
+            new EncounterDefinition(elite, RunRoomType.Elite, [enemyId]),
+            new EncounterDefinition(boss, RunRoomType.Boss, [enemyId])
+        ]);
+        var registry = new ContentRegistry();
+        registry.AddPackage(package);
+        var definition = registry.Build();
+        var environment = new RunEnvironment(definition, runId, characterId);
+
+        var combatRun = environment.Start(912);
+        environment.Step(combatRun, new ChooseMapPointAction("monster-1"));
+        var combatEnvironment = new CombatEnvironment(definition);
+        Assert.Throws<InvalidOperationException>(() => combatEnvironment.StartEncounterForRun(combatRun, regular));
+        var combat = combatEnvironment.StartCurrentEncounterForRun(combatRun);
+        Assert.Equal(1, combatEnvironment.Observe(combat).Enemies.Count);
+
+        var eliteRun = environment.Start(912);
+        environment.Step(eliteRun, new ChooseMapPointAction("monster-1"));
+        var eliteChoices = new List<ContentId?>();
+        for (var visit = 0; visit < 4; visit++)
+        {
+            environment.PushSubRoom(eliteRun, RunRoomType.Elite);
+            eliteChoices.Add(environment.Observe(eliteRun).RoomStack[^1].EncounterId);
+            environment.CompleteRoom(eliteRun, RunResult(RunOutcome.RoomCleared, environment.Observe(eliteRun)));
+        }
+        Assert.True(eliteChoices.All(id => id == elite));
+        Assert.Equal(eliteChoices[0], eliteChoices[3]);
+
+        var first = environment.Start(912);
+        var replay = environment.Start(912);
+        var selected = new List<ContentId?>();
+        var replaySelected = new List<ContentId?>();
+        for (var floor = 1; floor <= 8; floor++)
+        {
+            environment.Step(first, new ChooseMapPointAction($"monster-{floor}"));
+            environment.Step(replay, new ChooseMapPointAction($"monster-{floor}"));
+            selected.Add(environment.Observe(first).RoomStack[^1].EncounterId);
+            replaySelected.Add(environment.Observe(replay).RoomStack[^1].EncounterId);
+            var completed = RunResult(RunOutcome.RoomCleared, environment.Observe(first));
+            environment.CompleteRoom(first, completed);
+            environment.CompleteRoom(replay, RunResult(RunOutcome.RoomCleared, environment.Observe(replay)));
+        }
+        Assert.True(selected.SequenceEqual(replaySelected));
+        Assert.True(selected.Take(2).All(id => id == weak));
+        Assert.True(selected.Skip(2).Take(5).All(id => id is { } value && (value == regular || value == tagged)));
+        Assert.True(selected.Skip(2).Take(4).Zip(selected.Skip(3).Take(4),
+            (left, right) => left != right).All(equal => equal));
+        Assert.Equal(selected[0], selected[7]);
+
+        var noContentEnvironment = new RunEnvironment(run, BaseSpireContent.Ironclad());
+        Assert.Throws<InvalidOperationException>(() => noContentEnvironment.Start(912));
+    }
+
+    public void EncounterPoolsRejectMissingOrMisclassifiedContentAtBuild()
+    {
+        var enemyId = ContentId.Parse("pool-validation:enemy");
+        var encounterId = ContentId.Parse("pool-validation:wrong-category");
+        var runId = ContentId.Parse("pool-validation:run");
+        var characterId = ContentId.Parse("pool-validation:character");
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 0, MapPointType.Start, ["boss"]),
+            new MapPointDefinition("boss", 1, 0, MapPointType.Boss, [])
+        ]);
+        var pool = new ActEncounterPoolDefinition([], [encounterId], [encounterId], [encounterId],
+            normalRoomCount: 1, weakNormalRoomCount: 0);
+        var package = new EncounterPoolPackage(new RunDefinition(runId,
+            [new ActDefinition(ContentId.Parse("pool-validation:act"), _ => map, EncounterPool: pool)]),
+            new CharacterDefinition(characterId, 60, 50, []), enemyId,
+            [new EncounterDefinition(encounterId, RunRoomType.Monster, [enemyId])]);
+        var registry = new ContentRegistry();
+        registry.AddPackage(package);
+        Assert.Throws<InvalidOperationException>(() => registry.Build());
+    }
+
     public void CombatEncounterSupportsMultipleEnemiesAndSelectedTargets()
     {
         var cardId = ContentId.Parse("test-fixture:focused-strike");
@@ -903,6 +1005,21 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class EncounterPoolPackage(RunDefinition run, CharacterDefinition character,
+        ContentId enemyId, IEnumerable<EncounterDefinition> encounters) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("encounter-pool-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(run);
+            registry.Register(character);
+            registry.Register(new EnemyDefinition(enemyId, 20, 20,
+                [new EnemyActionDefinition(ContentId.Parse("pool-test:idle"), new GainBlockEffect(0), IntentKind.None)]));
+            foreach (var encounter in encounters) registry.Register(encounter);
+        }
+    }
+
     private sealed class MultiEnemyPackage(CardDefinition card, params EnemyDefinition[] enemies) : IRulePackage
     {
         public PackageInfo Info { get; } = new("multi-enemy-fixture", "1.0.0");
@@ -1037,6 +1154,8 @@ internal static class Program
         tests.NestedCombatReturnsToItsParentRoom();
         tests.UnknownRoomOddsExposeOrderedModHooks();
         tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
+        tests.ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters();
+        tests.EncounterPoolsRejectMissingOrMisclassifiedContentAtBuild();
         tests.CombatEncounterSupportsMultipleEnemiesAndSelectedTargets();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
@@ -1046,7 +1165,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 30 gameplay checks.");
+        Console.WriteLine("Passed 32 gameplay checks.");
     }
 }
 

@@ -22,8 +22,18 @@ public sealed class CombatEnvironment(GameDefinition definition)
             throw new KeyNotFoundException($"Unknown encounter '{encounterId}'.");
         if (runSession.State.CurrentRoom != encounter.RoomType)
             throw new InvalidOperationException($"Encounter '{encounterId}' is incompatible with active room '{runSession.State.CurrentRoom}'.");
+        if (runSession.State.CurrentEncounterId is { } selectedEncounter && selectedEncounter != encounterId)
+            throw new InvalidOperationException($"Encounter '{encounterId}' does not match the encounter selected for this room.");
         return StartForRun(runSession, encounter.EnemyIds
             .Select(enemyId => new CombatEnemySpawn(enemyId.ToString())).ToArray());
+    }
+
+    public GameSession StartCurrentEncounterForRun(RunSession runSession)
+    {
+        ArgumentNullException.ThrowIfNull(runSession);
+        var encounterId = runSession.State.CurrentEncounterId
+            ?? throw new InvalidOperationException("The active room has no encounter selected by its act definition.");
+        return StartEncounterForRun(runSession, encounterId);
     }
 
     private GameSession StartForRun(RunSession runSession, IReadOnlyList<CombatEnemySpawn> spawns)
