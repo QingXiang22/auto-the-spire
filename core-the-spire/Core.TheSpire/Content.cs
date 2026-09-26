@@ -155,6 +155,7 @@ public enum RunEventKind { Event, Ancient, Final }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemoveSelectedRunCardEffect), "removeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedRunCardEffect), "upgradeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(WinRunEffect), "winRun")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CustomRunEffect), "customRun")]
 public abstract record RunEffectNode;
 public sealed record GainRunGoldEffect(int Amount) : RunEffectNode;
 public sealed record LoseRunGoldEffect(int Amount) : RunEffectNode;
@@ -169,6 +170,7 @@ public sealed record ChooseRunCardEffect(string Prompt, RunCardFilter Filter, bo
 public sealed record RemoveSelectedRunCardEffect : RunEffectNode;
 public sealed record UpgradeSelectedRunCardEffect : RunEffectNode;
 public sealed record WinRunEffect : RunEffectNode;
+public sealed record CustomRunEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : RunEffectNode;
 
 public sealed record RunEventOptionDefinition
 {
@@ -466,6 +468,7 @@ public sealed class ContentRegistry
     private readonly Dictionary<ContentId, CharacterDefinition> _characters = [];
     private readonly Dictionary<ContentId, RunDefinition> _runs = [];
     private readonly Dictionary<ContentId, ICustomEffectHandler> _customEffects = [];
+    private readonly Dictionary<ContentId, ICustomRunEffectHandler> _customRunEffects = [];
     private readonly List<IRuleHook> _hooks = [];
     private readonly List<IRunHook> _runHooks = [];
     private readonly List<PackageInfo> _packages = [];
@@ -484,6 +487,7 @@ public sealed class ContentRegistry
         var charactersBefore = new Dictionary<ContentId, CharacterDefinition>(_characters);
         var runsBefore = new Dictionary<ContentId, RunDefinition>(_runs);
         var customEffectsBefore = new Dictionary<ContentId, ICustomEffectHandler>(_customEffects);
+        var customRunEffectsBefore = new Dictionary<ContentId, ICustomRunEffectHandler>(_customRunEffects);
         var hookCountBefore = _hooks.Count;
         var runHookCountBefore = _runHooks.Count;
         try
@@ -502,6 +506,7 @@ public sealed class ContentRegistry
             Restore(_characters, charactersBefore);
             Restore(_runs, runsBefore);
             Restore(_customEffects, customEffectsBefore);
+            Restore(_customRunEffects, customRunEffectsBefore);
             _hooks.RemoveRange(hookCountBefore, _hooks.Count - hookCountBefore);
             _runHooks.RemoveRange(runHookCountBefore, _runHooks.Count - runHookCountBefore);
             throw;
@@ -543,6 +548,7 @@ public sealed class ContentRegistry
         _runHooks.Add(hook);
     }
     public void Register(ICustomEffectHandler handler) => AddUnique(_customEffects, handler.Id, handler, "custom effect handler");
+    public void Register(ICustomRunEffectHandler handler) => AddUnique(_customRunEffects, handler.Id, handler, "custom run effect handler");
 
     public void Override(CardDefinition definition) => Replace(_cards, definition.Id, definition, "card");
     public void Override(CardPoolDefinition definition) => Replace(_cardPools, definition.Id, definition, "card pool");
@@ -658,6 +664,7 @@ public sealed class ContentRegistry
             new ReadOnlyDictionary<ContentId, CharacterDefinition>(new Dictionary<ContentId, CharacterDefinition>(_characters)),
             new ReadOnlyDictionary<ContentId, RunDefinition>(new Dictionary<ContentId, RunDefinition>(_runs)),
             new ReadOnlyDictionary<ContentId, ICustomEffectHandler>(new Dictionary<ContentId, ICustomEffectHandler>(_customEffects)),
+            new ReadOnlyDictionary<ContentId, ICustomRunEffectHandler>(new Dictionary<ContentId, ICustomRunEffectHandler>(_customRunEffects)),
             _hooks.ToArray(), _runHooks.ToArray());
     }
 
@@ -717,6 +724,11 @@ public sealed class ContentRegistry
             case RemoveSelectedRunCardEffect or UpgradeSelectedRunCardEffect:
                 break;
             case WinRunEffect:
+                break;
+            case CustomRunEffect custom when !_customRunEffects.ContainsKey(custom.Handler):
+                throw new InvalidOperationException($"{owner} references unknown custom run effect '{custom.Handler}'.");
+            case CustomRunEffect custom:
+                custom.Handler.Validate();
                 break;
             default:
                 throw new InvalidOperationException($"{owner} uses unsupported run effect '{effect.GetType().Name}'.");
@@ -850,7 +862,9 @@ public sealed class GameDefinition
         IReadOnlyDictionary<ContentId, RunEventDefinition> runEvents,
         IReadOnlyDictionary<ContentId, PowerDefinition> powers,
         IReadOnlyDictionary<ContentId, CharacterDefinition> characters, IReadOnlyDictionary<ContentId, RunDefinition> runs,
-        IReadOnlyDictionary<ContentId, ICustomEffectHandler> customEffects, IRuleHook[] hooks, IRunHook[] runHooks)
+        IReadOnlyDictionary<ContentId, ICustomEffectHandler> customEffects,
+        IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> customRunEffects,
+        IRuleHook[] hooks, IRunHook[] runHooks)
     {
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
@@ -862,6 +876,7 @@ public sealed class GameDefinition
         Characters = characters;
         Runs = runs;
         CustomEffects = customEffects;
+        CustomRunEffects = customRunEffects;
         Hooks = Array.AsReadOnly(hooks);
         RunHooks = Array.AsReadOnly(runHooks);
         Version = string.Join("+", packages.Select(p => $"{p.Id}@{p.Version}"));
@@ -877,6 +892,7 @@ public sealed class GameDefinition
     public IReadOnlyDictionary<ContentId, CharacterDefinition> Characters { get; }
     public IReadOnlyDictionary<ContentId, RunDefinition> Runs { get; }
     internal IReadOnlyDictionary<ContentId, ICustomEffectHandler> CustomEffects { get; }
+    internal IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> CustomRunEffects { get; }
     internal IReadOnlyList<IRuleHook> Hooks { get; }
     internal IReadOnlyList<IRunHook> RunHooks { get; }
     public string Version { get; }

@@ -612,6 +612,14 @@ public sealed class CombatSliceTests
         env.Step(freshPractice, new PlayCardAction(0, freshPractice.State.Player.Id));
         Assert.Equal(1, freshPractice.State.GetModInt("training-mod", "practice-card-uses", 0));
         Assert.Equal(1, freshPractice.State.GetModInt("training-mod", "play-count", 0));
+
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(9);
+        Assert.Equal(TrainingModPackage.TrainingAncientId, runEnvironment.Observe(run).RoomStack[^1].EventId);
+        var afterRunEffect = runEnvironment.Step(run,
+            new ChooseRunEventOptionAction(TrainingModPackage.TrainingAncientOptionId));
+        Assert.Equal(101, afterRunEffect.Gold);
+        Assert.Equal(RunPhase.ChooseMapPoint, afterRunEffect.Phase);
     }
 
     public void LegalActionsRejectUnaffordableCardAndInvalidHandIndex()
@@ -1742,6 +1750,10 @@ public sealed class CombatSliceTests
         Assert.Equal(gainMaxHp, EffectDsl.ParseRun(EffectDsl.Serialize(gainMaxHp)));
         var loseMaxHp = new LoseRunMaxHpEffect(5);
         Assert.Equal(loseMaxHp, EffectDsl.ParseRun(EffectDsl.Serialize(loseMaxHp)));
+        var customRunEffect = EffectDsl.ParseRun(
+            """{"op":"customRun","handler":"run-event-fixture:gain-gold","payload":{"amount":4}}""");
+        var customRunEffectJson = EffectDsl.Serialize(customRunEffect);
+        Assert.Equal(customRunEffectJson, EffectDsl.Serialize(EffectDsl.ParseRun(customRunEffectJson)));
         var chooseCard = new ChooseRunCardEffect("Choose a card to upgrade", RunCardFilter.Upgradeable,
             false, new UpgradeSelectedRunCardEffect());
         Assert.Equal(chooseCard, EffectDsl.ParseRun(EffectDsl.Serialize(chooseCard)));
@@ -1758,7 +1770,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
         Assert.Equal(RunEventFixturePackage.EventId,
             observation.RoomStack[^1].EventId!.Value);
-        Assert.Equal(9, observation.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(10, observation.RoomStack[^1].EventOptions.Count);
 
         var legalActions = environment.LegalActions(run);
         Assert.Contains(legalActions, action => action ==
@@ -1851,6 +1863,11 @@ public sealed class CombatSliceTests
             new ChooseRunEventOptionAction(RunEventFixturePackage.MaxHpLossOptionId));
         Assert.Equal(20, weakened.MaxHp);
         Assert.Equal(20, weakened.Hp);
+
+        var customRunEffectRun = environment.Start(425);
+        var customRunEffectResult = environment.Step(customRunEffectRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.CustomRunEffectOptionId));
+        Assert.Equal(14, customRunEffectResult.Gold);
     }
 
     public void ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters()
@@ -2543,6 +2560,8 @@ public sealed class CombatSliceTests
         public static readonly ContentId GoldOptionId = ContentId.Parse("run-event-fixture:gold");
         public static readonly ContentId MaxHpOptionId = ContentId.Parse("run-event-fixture:max-hp");
         public static readonly ContentId MaxHpLossOptionId = ContentId.Parse("run-event-fixture:max-hp-loss");
+        public static readonly ContentId CustomRunEffectHandlerId = ContentId.Parse("run-event-fixture:gain-gold");
+        public static readonly ContentId CustomRunEffectOptionId = ContentId.Parse("run-event-fixture:custom-effect");
         public static readonly ContentId UnaffordableOptionId = ContentId.Parse("run-event-fixture:unaffordable");
         public static readonly ContentId FatalOptionId = ContentId.Parse("run-event-fixture:fatal");
         public static readonly ContentId FinalOptionId = ContentId.Parse("run-event-fixture:final-option");
@@ -2554,6 +2573,7 @@ public sealed class CombatSliceTests
 
         public void Register(ContentRegistry registry)
         {
+            registry.Register(new GainGoldRunEffectHandler());
             var map = new ActMapDefinition("entry", "boss",
             [
                 new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["boss"]),
@@ -2575,6 +2595,9 @@ public sealed class CombatSliceTests
                     [new GainRunMaxHpEffect(5)]),
                 new RunEventOptionDefinition(MaxHpLossOptionId, "Lose maximum health",
                     [new LoseRunMaxHpEffect(10)]),
+                new RunEventOptionDefinition(CustomRunEffectOptionId, "Gain gold through a custom run effect",
+                    [EffectDsl.ParseRun(
+                        """{"op":"customRun","handler":"run-event-fixture:gain-gold","payload":{"amount":4}}""")]),
                 new RunEventOptionDefinition(UnaffordableOptionId, "Pay too much",
                     [new LoseRunGoldEffect(11)]),
                 new RunEventOptionDefinition(FatalOptionId, "Take lethal damage",
@@ -2593,6 +2616,14 @@ public sealed class CombatSliceTests
             [
                 new RunEventOptionDefinition(FinalOptionId, "Complete the run", [new WinRunEffect()])
             ]));
+        }
+
+        private sealed class GainGoldRunEffectHandler : ICustomRunEffectHandler
+        {
+            public ContentId Id => CustomRunEffectHandlerId;
+
+            public void Execute(RunEffectExecutionContext context, System.Text.Json.JsonElement payload) =>
+                context.GainGold(payload.GetProperty("amount").GetInt32());
         }
     }
 
