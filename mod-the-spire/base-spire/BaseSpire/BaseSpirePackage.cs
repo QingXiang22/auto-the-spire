@@ -8,6 +8,8 @@ public static class BaseSpireIds
     public static readonly ContentId StrikeIronclad = ContentId.Parse("base-spire:strike-ironclad");
     public static readonly ContentId DefendIronclad = ContentId.Parse("base-spire:defend-ironclad");
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
+    public static readonly ContentId IronWave = ContentId.Parse("base-spire:iron-wave");
+    public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
     public static readonly ContentId IroncladCardPool = ContentId.Parse("base-spire:ironclad-card-pool");
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
     public static readonly ContentId CalcifiedCultist = ContentId.Parse("base-spire:calcified-cultist");
@@ -64,21 +66,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
-        registry.Register(new CardDefinition(BaseSpireIds.StrikeIronclad, 1, CardType.Attack,
-            EffectDsl.Parse("""{"op":"attack","amount":6}"""), Rarity: CardRarity.Basic,
-            UpgradedEffect: EffectDsl.Parse("""{"op":"attack","amount":9}""")));
-        registry.Register(new CardDefinition(BaseSpireIds.DefendIronclad, 1, CardType.Skill,
-            EffectDsl.Parse("""{"op":"gainBlock","amount":5}"""), Target: TargetSelector.Self,
-            Rarity: CardRarity.Basic,
-            UpgradedEffect: EffectDsl.Parse("""{"op":"gainBlock","amount":8}""")));
-        registry.Register(new CardDefinition(BaseSpireIds.Bash, 2, CardType.Attack,
-            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}"""),
-            Rarity: CardRarity.Basic,
-            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":10},{"op":"applyPower","power":"base-spire:vulnerable","amount":3,"target":"firstEnemy"}]}""")));
-        registry.Register(new CardDefinition(BaseSpireIds.Slimed, 1, CardType.Status,
-            new DrawCardsEffect(1), Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Status));
-        registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash]));
+        IroncladCards.Register(registry);
 
         var ritual = deadlyEnemies ? 6 : 5;
         var attack = deadlyEnemies ? 3 : 1;

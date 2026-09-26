@@ -38,9 +38,18 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash }.AsEnumerable(),
+        Assert.Equal(new[] { BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash,
+                BaseSpireIds.IronWave, BaseSpireIds.Inflame }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
+        Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
+        var upgradedIronWave = (SequenceEffect)definition.Cards[BaseSpireIds.IronWave]
+            .ResolveEffect(new CardInstance("test:iron-wave+", BaseSpireIds.IronWave, 1));
+        Assert.Equal(new GainBlockEffect(7), upgradedIronWave.Effects[0]);
+        Assert.Equal(new AttackEffect(7), upgradedIronWave.Effects[1]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Strength, 3, TargetSelector.Self),
+            definition.Cards[BaseSpireIds.Inflame].ResolveEffect(new CardInstance("test:inflame+", BaseSpireIds.Inflame, 1)));
         Assert.Equal(new AttackEffect(9), definition.Cards[BaseSpireIds.StrikeIronclad]
             .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
         Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
@@ -76,6 +85,14 @@ public sealed class CombatSliceTests
         env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
         Assert.Equal(36, state.State.Enemy.Hp);
         Assert.Contains(state.State.Events, e => e.Type == "damage" && e.Amount == 9);
+
+        var addedCards = env.Start(21, "ironclad", 56, 65,
+            [BaseSpireIds.IronWave, BaseSpireIds.Inflame], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(addedCards, new PlayCardAction(0, addedCards.State.Enemy.Id));
+        Assert.Equal(5, addedCards.State.Player.Creature.Block);
+        Assert.Equal(48, addedCards.State.Enemy.Hp);
+        env.Step(addedCards, new PlayCardAction(0, addedCards.State.Player.Id));
+        Assert.Equal(2, addedCards.State.Player.Creature.Strength);
     }
 
     public void BaseDampCultistNormalValuesMatchSourceRules()
