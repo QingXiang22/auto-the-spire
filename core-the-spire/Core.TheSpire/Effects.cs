@@ -12,6 +12,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -27,6 +28,8 @@ public sealed record DrawCardsEffect(int Amount) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
     TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
+public sealed record ChooseCardFromPileEffect(CardPile From, CardPile To, string Prompt,
+    CardPilePosition DestinationPosition = CardPilePosition.Top) : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
@@ -46,6 +49,7 @@ public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElemen
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents }
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
+public enum CardPilePosition { Top, Bottom }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
@@ -69,7 +73,7 @@ internal static class EffectExecutor
     private static void Drain(GameSession session)
     {
         var state = session.State;
-        while (state.PendingChoice is null && state.PendingEffects.Count > 0)
+        while (state.PendingChoice is null && state.PendingCardChoice is null && state.PendingEffects.Count > 0)
         {
             var index = state.PendingEffects.Count - 1;
             var (owner, effect, target) = state.PendingEffects[index];
@@ -124,6 +128,11 @@ internal static class EffectExecutor
                     for (var i = 0; i < addCards.Count; i++)
                         destination.Add(state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel));
                     state.Emit(session, "cards_added", owner.Id, cardOwner.Id, addCards.Count);
+                    break;
+                case ChooseCardFromPileEffect chooseCard:
+                    var options = state.GetPile(chooseCard.From).ToArray();
+                    if (options.Length > 0)
+                        state.PendingCardChoice = new PendingCardChoice(chooseCard, options);
                     break;
                 case ModifyEnergyEffect energy:
                     state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);

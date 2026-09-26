@@ -12,6 +12,7 @@ public static class BaseSpireIds
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
     public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");
     public static readonly ContentId DemonFormPower = ContentId.Parse("base-spire:demon-form-power");
+    public static readonly ContentId Headbutt = ContentId.Parse("base-spire:headbutt");
     public static readonly ContentId IronWave = ContentId.Parse("base-spire:iron-wave");
     public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
     public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");

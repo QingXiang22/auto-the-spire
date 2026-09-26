@@ -142,8 +142,10 @@ internal sealed class GameState
     public int CurrentEnemyIndex { get; internal set; }
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
-    public bool IsTerminal => Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0);
+    public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0))
+        && PendingChoice is null && PendingCardChoice is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }
+    internal PendingCardChoice? PendingCardChoice { get; set; }
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
     internal CardInstance? PendingPlayedCard { get; set; }
@@ -260,6 +262,19 @@ internal sealed class GameState
         }
     }
 
+    internal bool MoveCard(CardPile from, CardPile to, string instanceId, CardPilePosition position)
+    {
+        var source = GetPile(from);
+        var index = source.FindIndex(card => card.InstanceId == instanceId);
+        if (index < 0) return false;
+        var card = source[index];
+        source.RemoveAt(index);
+        var destination = GetPile(to);
+        if (position == CardPilePosition.Top) destination.Insert(0, card);
+        else destination.Add(card);
+        return true;
+    }
+
     internal List<CardInstance> GetPile(CardPile pile) => pile switch
     {
         CardPile.Draw => Player.MutableDrawPile,
@@ -273,6 +288,8 @@ internal sealed class GameState
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
+public sealed record PendingCardChoice(ChooseCardFromPileEffect Effect, IReadOnlyList<CardInstance> Options);
+public sealed record PendingCardChoiceView(string Prompt, IReadOnlyList<CardInstance> Options);
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
     IReadOnlyList<ContentId> Hand, int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> EnemyPowers, bool IsTerminal,
@@ -281,12 +298,13 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile,
     IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
     IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
-    IReadOnlyList<CardInstance> PlayPileInstances);
+    IReadOnlyList<CardInstance> PlayPileInstances, PendingCardChoiceView? PendingCardChoice);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;
 public sealed record EndTurnAction : PlayerAction;
 public sealed record ChooseOptionAction(int OptionIndex) : PlayerAction;
+public sealed record ChooseCardAction(string CardInstanceId) : PlayerAction;
 
 public sealed record StepResult(CombatObservation Observation, IReadOnlyList<GameEvent> Events, bool NeedsChoice);
 

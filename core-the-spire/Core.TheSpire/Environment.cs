@@ -206,7 +206,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.Player.ExhaustPile.ToArray(), state.Player.PlayPile.ToArray(),
             state.Player.HandInstances.ToArray(), state.Player.DrawPileInstances.ToArray(),
             state.Player.DiscardPileInstances.ToArray(), state.Player.ExhaustPileInstances.ToArray(),
-            state.Player.PlayPileInstances.ToArray());
+            state.Player.PlayPileInstances.ToArray(),
+            state.PendingCardChoice is { } cardChoice
+                ? new PendingCardChoiceView(cardChoice.Effect.Prompt, cardChoice.Options.ToArray())
+                : null);
     }
 
     private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
@@ -224,9 +227,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
     private IReadOnlyList<PlayerAction> LegalActions(GameState state)
     {
-        if (state.IsTerminal) return [];
+        if (state.PendingCardChoice is { } cardChoice)
+            return cardChoice.Options.Select(card => (PlayerAction)new ChooseCardAction(card.InstanceId)).ToArray();
         if (state.PendingChoice is { } pending)
             return Enumerable.Range(0, pending.Options.Count).Select(i => (PlayerAction)new ChooseOptionAction(i)).ToArray();
+        if (state.IsTerminal) return [];
         if (!state.IsPlayerTurn) return [];
         var actions = new List<PlayerAction> { new EndTurnAction() };
         var enemies = state.Enemies.Where(enemy => enemy.Creature.Hp > 0).ToArray();
@@ -252,7 +257,20 @@ public sealed class CombatEnvironment(GameDefinition definition)
         ArgumentNullException.ThrowIfNull(action);
         var state = session.State;
         var firstEvent = state.Events.Count;
-        if (state.PendingChoice is { } pending)
+        if (state.PendingCardChoice is { } cardChoice)
+        {
+            if (action is not ChooseCardAction chooseCard
+                || !cardChoice.Options.Any(card => card.InstanceId == chooseCard.CardInstanceId))
+                throw new InvalidOperationException("A card from the pending pile selection must be chosen.");
+            state.PendingCardChoice = null;
+            if (!state.MoveCard(cardChoice.Effect.From, cardChoice.Effect.To,
+                    chooseCard.CardInstanceId, cardChoice.Effect.DestinationPosition))
+                throw new InvalidOperationException("The selected card is no longer in its source pile.");
+            state.Emit(session, "card_choice", state.Player.Id, chooseCard.CardInstanceId, 1);
+            EffectExecutor.Resume(session);
+            ResumeChoiceContinuation(session);
+        }
+        else if (state.PendingChoice is { } pending)
         {
             if (action is not ChooseOptionAction choose || choose.OptionIndex < 0 || choose.OptionIndex >= pending.Options.Count)
                 throw new InvalidOperationException("A valid choice option is required to resume the effect.");
@@ -265,11 +283,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (pending.Options[choose.OptionIndex].Effect is { } selectedEffect)
                 EffectExecutor.Execute(session, choiceOwner, selectedEffect, choiceTarget);
             EffectExecutor.Resume(session);
-            if (state.PendingChoice is null)
-            {
-                if (state.EndTurnStage != EndTurnResolutionStage.None) ContinueEndTurn(session);
-                else FinalizePlayedCard(state);
-            }
+            ResumeChoiceContinuation(session);
         }
         else if (!LegalActions(state).Any(a => a == action))
         {
@@ -288,7 +302,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
             state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
             EffectExecutor.Execute(session, state.Player.Creature, card.ResolveEffect(cardInstance), selectedTarget);
-            if (state.PendingChoice is null) FinalizePlayedCard(state);
+            if (state.PendingChoice is null && state.PendingCardChoice is null) FinalizePlayedCard(state);
         }
         else if (action is EndTurnAction)
         {
@@ -300,7 +314,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.EndTurnStage = EndTurnResolutionStage.PlayerTurnEndPowers;
             ContinueEndTurn(session);
         }
-        return new StepResult(Observe(state), state.Events.Skip(firstEvent).ToArray(), state.PendingChoice is not null);
+        return new StepResult(Observe(state), state.Events.Skip(firstEvent).ToArray(),
+            state.PendingChoice is not null || state.PendingCardChoice is not null);
     }
 
     private static void FinalizePlayedCard(GameState state)
@@ -315,10 +330,18 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.PendingPlayedCard = null;
     }
 
+    private static void ResumeChoiceContinuation(GameSession session)
+    {
+        var state = session.State;
+        if (state.PendingChoice is not null || state.PendingCardChoice is not null) return;
+        if (state.EndTurnStage != EndTurnResolutionStage.None) ContinueEndTurn(session);
+        else FinalizePlayedCard(state);
+    }
+
     private static void ContinueEndTurn(GameSession session)
     {
         var state = session.State;
-        while (state.PendingChoice is null)
+        while (state.PendingChoice is null && state.PendingCardChoice is null)
         {
             if (state.PendingPowerQueue is not null && !RunPendingPowerQueue(session)) return;
             switch (state.EndTurnStage)
@@ -434,7 +457,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = session.State;
         var owner = state.PendingPowerOwner ?? throw new InvalidOperationException("Missing power trigger owner.");
         var queue = state.PendingPowerQueue!;
-        while (state.PendingPowerIndex < queue.Count && state.PendingChoice is null)
+        while (state.PendingPowerIndex < queue.Count && state.PendingChoice is null
+            && state.PendingCardChoice is null)
         {
             var powerId = queue[state.PendingPowerIndex++];
             if (!owner.Powers.TryGetValue(powerId, out var amount)) continue;
@@ -448,7 +472,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 else owner.MutablePowers[powerId] = amount - 1;
             }
         }
-        if (state.PendingChoice is not null) return false;
+        if (state.PendingChoice is not null || state.PendingCardChoice is not null) return false;
         state.PendingPowerQueue = null;
         state.PendingPowerOwner = null;
         state.PendingPowerIndex = 0;

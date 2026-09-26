@@ -587,6 +587,12 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an invalid card destination or target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(addCards.Count);
                 break;
+            case ChooseCardFromPileEffect chooseCard:
+                if (!Enum.IsDefined(chooseCard.From) || !Enum.IsDefined(chooseCard.To)
+                    || !Enum.IsDefined(chooseCard.DestinationPosition))
+                    throw new InvalidOperationException($"{owner} has an invalid card selection pile or destination.");
+                ArgumentException.ThrowIfNullOrWhiteSpace(chooseCard.Prompt);
+                break;
             case ChooseEffect choice:
                 foreach (var option in choice.Options)
                     if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);
