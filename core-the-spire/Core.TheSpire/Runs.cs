@@ -155,6 +155,34 @@ public sealed class RunRoomResult
     public IReadOnlyList<ContentId> Potions { get; }
 }
 
+public interface IRunHook
+{
+    ContentId Id { get; }
+    void AfterCombatVictory(RunHookContext context);
+}
+
+public sealed class RunHookContext
+{
+    private readonly RunState _state;
+
+    internal RunHookContext(RunState state, ContentId hookId)
+    {
+        _state = state;
+        HookId = hookId;
+    }
+
+    public ContentId HookId { get; }
+    public int Hp => _state.Hp;
+    public int MaxHp => _state.MaxHp;
+    public bool HasRelic(ContentId relic) => _state.Relics.Contains(relic);
+
+    public void Heal(int amount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+        _state.Hp = Math.Min(_state.MaxHp, _state.Hp + amount);
+    }
+}
+
 internal sealed class RunState
 {
     public RunState(RunDefinition definition, CharacterDefinition character, RandomStreams random)
@@ -206,20 +234,27 @@ public sealed class RunSession
 }
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
-public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition character)
+public sealed class RunEnvironment
 {
+    private readonly RunDefinition _definition;
+    private readonly CharacterDefinition _character;
+    private readonly IReadOnlyList<IRunHook> _runHooks;
+
+    public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null)
+    {
+        _definition = definition ?? throw new ArgumentNullException(nameof(definition));
+        _character = character ?? throw new ArgumentNullException(nameof(character));
+        _runHooks = Array.AsReadOnly(runHooks?.ToArray() ?? []);
+    }
+
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
-        : this(GetRun(gameDefinition, runId), GetCharacter(gameDefinition, characterId))
+        : this(GetRun(gameDefinition, runId), GetCharacter(gameDefinition, characterId), gameDefinition.RunHooks)
     {
     }
 
     public RunSession Start(uint seed)
     {
-        ArgumentNullException.ThrowIfNull(definition);
-        ArgumentNullException.ThrowIfNull(character);
-        ArgumentOutOfRangeException.ThrowIfNegative(character.StartingGold);
-        if (character.MaxHp <= 0) throw new ArgumentOutOfRangeException(nameof(character));
-        return new RunSession(new RunState(definition, character, new RandomStreams(seed)));
+        return new RunSession(new RunState(_definition, _character, new RandomStreams(seed)));
     }
 
     public RunObservation Observe(RunSession session)
@@ -280,12 +315,18 @@ public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition
 
         if (result.Outcome == RunOutcome.RunWon)
             throw new InvalidOperationException("RunWon is valid only after the final event.");
+        var completedRoomType = state.CurrentRoom.Value;
         ApplyRoomResult(state, result);
         if (result.Outcome == RunOutcome.PlayerDefeated)
         {
             state.Status = RunStatus.Lost;
             state.Phase = RunPhase.Terminal;
             return Observe(session);
+        }
+        if (completedRoomType is RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss)
+        {
+            foreach (var hook in _runHooks)
+                hook.AfterCombatVictory(new RunHookContext(state, hook.Id));
         }
         if (state.CurrentPointId == state.Map.BossPointId)
         {
@@ -302,7 +343,6 @@ public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition
             state.CurrentPointId = state.Map.StartPointId;
             state.CurrentMapPointType = null;
             state.CurrentRoom = null;
-            state.CurrentMapPointType = null;
             state.Phase = RunPhase.ChooseMapPoint;
         }
         else

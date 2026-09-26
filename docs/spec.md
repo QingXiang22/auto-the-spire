@@ -127,7 +127,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 
 1. **内核契约已建立**：`core-the-spire/Core.TheSpire` 实现 `GameDefinition`、不可从外部取得的 `GameState`、独立持有 RNG 的 `GameSession`、外部动作、观察投影、效果树、规则包注册和受控 Hook 事件。
 2. **最小战斗切片已建立**：测试规则包覆盖攻击、格挡、仪式、三段行动时序、选择暂停/恢复、非法动作拒绝和种子重放。
-3. **原版内容切片已建立**：`mod-the-spire/base-spire` 注册铁甲战士起始角色（生命、金币、起始牌组、Burning Blood 起始遗物 ID）、Strike/Defend/Bash、力量、易伤、仪式和普通/DeadlyEnemies 下的咔咔行动；Burning Blood 的胜利后回血仍未实现。
+3. **原版内容切片已建立**：`mod-the-spire/base-spire` 注册铁甲战士起始角色（生命、金币、起始牌组、Burning Blood 起始遗物）、Strike/Defend/Bash、力量、易伤、仪式和普通/DeadlyEnemies 下的咔咔行动；Burning Blood 通过 `IRunHook` 在胜利战斗结算后回复 6 点生命，且受最大生命限制。
 4. **mod 扩展已验证**：`mod-the-spire/test-hook-mod` 作为独立子项目覆盖一张卡、新增一张卡，通过受控 C# 效果 handler 执行扩展效果，并用每局隔离的命名空间状态观察出牌事件。
 5. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
 

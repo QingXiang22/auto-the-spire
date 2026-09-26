@@ -67,6 +67,7 @@ public sealed class ContentRegistry
     private readonly Dictionary<ContentId, RunDefinition> _runs = [];
     private readonly Dictionary<ContentId, ICustomEffectHandler> _customEffects = [];
     private readonly List<IRuleHook> _hooks = [];
+    private readonly List<IRunHook> _runHooks = [];
     private readonly List<PackageInfo> _packages = [];
 
     public void AddPackage(IRulePackage package)
@@ -81,6 +82,7 @@ public sealed class ContentRegistry
         var runsBefore = new Dictionary<ContentId, RunDefinition>(_runs);
         var customEffectsBefore = new Dictionary<ContentId, ICustomEffectHandler>(_customEffects);
         var hookCountBefore = _hooks.Count;
+        var runHookCountBefore = _runHooks.Count;
         try
         {
             package.Register(this);
@@ -95,6 +97,7 @@ public sealed class ContentRegistry
             Restore(_runs, runsBefore);
             Restore(_customEffects, customEffectsBefore);
             _hooks.RemoveRange(hookCountBefore, _hooks.Count - hookCountBefore);
+            _runHooks.RemoveRange(runHookCountBefore, _runHooks.Count - runHookCountBefore);
             throw;
         }
     }
@@ -111,6 +114,14 @@ public sealed class ContentRegistry
         if (_hooks.Any(existing => existing.Id == hook.Id))
             throw new InvalidOperationException($"Duplicate hook ID '{hook.Id}'.");
         _hooks.Add(hook);
+    }
+    public void Register(IRunHook hook)
+    {
+        ArgumentNullException.ThrowIfNull(hook);
+        hook.Id.Validate();
+        if (_runHooks.Any(existing => existing.Id == hook.Id))
+            throw new InvalidOperationException($"Duplicate run hook ID '{hook.Id}'.");
+        _runHooks.Add(hook);
     }
     public void Register(ICustomEffectHandler handler) => AddUnique(_customEffects, handler.Id, handler, "custom effect handler");
 
@@ -132,7 +143,7 @@ public sealed class ContentRegistry
             new ReadOnlyDictionary<ContentId, CharacterDefinition>(new Dictionary<ContentId, CharacterDefinition>(_characters)),
             new ReadOnlyDictionary<ContentId, RunDefinition>(new Dictionary<ContentId, RunDefinition>(_runs)),
             new ReadOnlyDictionary<ContentId, ICustomEffectHandler>(new Dictionary<ContentId, ICustomEffectHandler>(_customEffects)),
-            _hooks.ToArray());
+            _hooks.ToArray(), _runHooks.ToArray());
     }
 
     private static void AddUnique<T>(Dictionary<ContentId, T> items, ContentId id, T definition, string kind)
@@ -162,7 +173,7 @@ public sealed class GameDefinition
     internal GameDefinition(PackageInfo[] packages, IReadOnlyDictionary<ContentId, CardDefinition> cards,
         IReadOnlyDictionary<ContentId, EnemyDefinition> enemies, IReadOnlyDictionary<ContentId, PowerDefinition> powers,
         IReadOnlyDictionary<ContentId, CharacterDefinition> characters, IReadOnlyDictionary<ContentId, RunDefinition> runs,
-        IReadOnlyDictionary<ContentId, ICustomEffectHandler> customEffects, IRuleHook[] hooks)
+        IReadOnlyDictionary<ContentId, ICustomEffectHandler> customEffects, IRuleHook[] hooks, IRunHook[] runHooks)
     {
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
@@ -172,6 +183,7 @@ public sealed class GameDefinition
         Runs = runs;
         CustomEffects = customEffects;
         Hooks = Array.AsReadOnly(hooks);
+        RunHooks = Array.AsReadOnly(runHooks);
         Version = string.Join("+", packages.Select(p => $"{p.Id}@{p.Version}"));
     }
 
@@ -183,6 +195,7 @@ public sealed class GameDefinition
     public IReadOnlyDictionary<ContentId, RunDefinition> Runs { get; }
     internal IReadOnlyDictionary<ContentId, ICustomEffectHandler> CustomEffects { get; }
     internal IReadOnlyList<IRuleHook> Hooks { get; }
+    internal IReadOnlyList<IRunHook> RunHooks { get; }
     public string Version { get; }
 }
 

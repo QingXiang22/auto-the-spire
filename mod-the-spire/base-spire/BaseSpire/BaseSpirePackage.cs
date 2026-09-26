@@ -52,8 +52,21 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false) : IRulePackage
         var darkStrike = new EnemyActionDefinition(ContentId.Parse("base-spire:damp-cultist-dark-strike"),
             new AttackEffect(attack, TargetSelector.FirstEnemy), IntentKind.Attack, IntentDamage: attack);
         registry.Register(new EnemyDefinition(BaseSpireIds.DampCultist, 52, 54, [incantation, darkStrike]));
+
+        registry.Register(new BurningBloodRunHook());
     }
 
+}
+
+internal sealed class BurningBloodRunHook : IRunHook
+{
+    public ContentId Id { get; } = ContentId.Parse("base-spire:burning-blood-post-combat");
+
+    public void AfterCombatVictory(RunHookContext context)
+    {
+        if (context.Hp > 0 && context.HasRelic(BaseSpireIds.BurningBlood))
+            context.Heal(6);
+    }
 }
 
 public sealed class SyntheticCombatPackage : IRulePackage
