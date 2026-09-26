@@ -42,7 +42,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
 
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
-    bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy,
+    CardKeywords Keywords = CardKeywords.None, TargetSelector Target = TargetSelector.FirstEnemy,
     CardRarity Rarity = CardRarity.Common, EffectNode? UpgradedEffect = null, int? UpgradedCost = null)
 {
     public EffectNode ResolveEffect(CardInstance instance)
@@ -372,6 +372,8 @@ public sealed record EnemyDefinition
 }
 
 public enum CardType { Attack, Skill, Power, Status }
+[Flags]
+public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted }
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
@@ -512,6 +514,8 @@ public sealed class ContentRegistry
             card.Id.Validate();
             if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity))
                 throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, or rarity.");
+            if ((card.Keywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable)) != 0)
+                throw new InvalidOperationException($"Card '{card.Id}' contains unsupported keywords.");
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
             if (card.UpgradedEffect is { } upgradedEffect)
                 ValidateEffectReferences(upgradedEffect, $"Upgraded card '{card.Id}'");

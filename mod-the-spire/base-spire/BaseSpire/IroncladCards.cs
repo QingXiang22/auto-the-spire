@@ -42,10 +42,10 @@ internal static class IroncladCards
             UpgradedCost: 0));
         registry.Register(new CardDefinition(BaseSpireIds.BurningPact, 1, CardType.Skill,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":2}]}"""),
-            Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
+            Keywords: CardKeywords.Exhaust, Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":3}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Slimed, 1, CardType.Status,
-            new DrawCardsEffect(1), Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Status));
+            new DrawCardsEffect(1), Keywords: CardKeywords.Exhaust, Target: TargetSelector.Self, Rarity: CardRarity.Status));
         registry.Register(new CardDefinition(BaseSpireIds.DemonForm, 3, CardType.Power,
             EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":2,"target":"self"}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Rare,
@@ -64,7 +64,7 @@ internal static class IroncladCards
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":7},{"op":"attack","amount":7}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Offering, 0, CardType.Skill,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"loseHp","amount":6,"target":"self"},{"op":"modifyEnergy","amount":2},{"op":"drawCards","amount":3}]}"""),
-            Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Rare,
+            Keywords: CardKeywords.Exhaust, Target: TargetSelector.Self, Rarity: CardRarity.Rare,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"loseHp","amount":6,"target":"self"},{"op":"modifyEnergy","amount":2},{"op":"drawCards","amount":5}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Inflame, 1, CardType.Power,
             EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:strength","amount":2,"target":"self"}"""),

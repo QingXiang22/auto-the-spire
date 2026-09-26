@@ -1089,6 +1089,30 @@ public sealed class CombatSliceTests
             BaseSpireIds.DefendIronclad, BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash]));
     }
 
+    public void EtherealCardsExhaustBeforeEnemyTurnAndTriggerPowers()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(64, "ironclad", 56, 65,
+            [BaseSpireIds.FeelNoPain, BaseSpireIds.Dazed, BaseSpireIds.Dazed, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString());
+
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        Assert.True(!env.LegalActions(state).Any(action => action is PlayCardAction play && play.HandIndex == 0));
+        env.Step(state, new EndTurnAction());
+
+        Assert.Equal(2, state.State.Player.ExhaustPileInstances.Count(card => card.CardId == BaseSpireIds.Dazed));
+        Assert.Contains(state.State.Player.Hand, card => card == BaseSpireIds.StrikeIronclad);
+        var exhaustEvents = state.State.Events.Where(gameEvent => gameEvent.Type == "card_exhausted").ToArray();
+        var blockEvents = state.State.Events.Where(gameEvent => gameEvent.Type == "block" && gameEvent.Amount == 3).ToArray();
+        Assert.Equal(2, exhaustEvents.Length);
+        Assert.Equal(2, blockEvents.Length);
+        var enemyActionEvent = state.State.Events.Last(gameEvent => gameEvent.Type == "enemy_action");
+        Assert.True(exhaustEvents[0].Sequence < blockEvents[0].Sequence
+            && blockEvents[0].Sequence < exhaustEvents[1].Sequence
+            && exhaustEvents[1].Sequence < blockEvents[1].Sequence
+            && blockEvents[1].Sequence < enemyActionEvent.Sequence);
+    }
+
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2292,6 +2316,7 @@ internal static class Program
         tests.BodySlamUsesCurrentBlockAsAttackDamageAndUpgradesItsCost();
         tests.BattleTranceDrawsThenPreventsFurtherDrawsUntilNextTurn();
         tests.FeelNoPainTriggersAfterChosenAndPlayedCardsExhaust();
+        tests.EtherealCardsExhaustBeforeEnemyTurnAndTriggerPowers();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2334,7 +2359,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 55 gameplay checks.");
+        Console.WriteLine("Passed 56 gameplay checks.");
     }
 }
 

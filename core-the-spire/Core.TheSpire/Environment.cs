@@ -240,6 +240,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             var instance = state.Player.HandInstances[i];
             var card = definition.Cards[instance.CardId];
+            if ((card.Keywords & CardKeywords.Unplayable) != 0) continue;
             if (card.ResolveCost(instance) > state.Player.Energy) continue;
             if (card.Target == TargetSelector.Self)
                 actions.Add(new PlayCardAction(i, state.Player.Id));
@@ -317,12 +318,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         }
         else if (action is EndTurnAction)
         {
-            state.Player.MutableDiscardPile.AddRange(state.Player.MutableHand);
-            state.Player.MutableHand.Clear();
-            state.Player.MutableDiscardPile.AddRange(state.Player.MutablePlayPile);
-            state.Player.MutablePlayPile.Clear();
             state.IsPlayerTurn = false;
-            state.EndTurnStage = EndTurnResolutionStage.PlayerTurnEndPowers;
+            state.EndTurnStage = EndTurnResolutionStage.EtherealCards;
             ContinueEndTurn(session);
         }
         return new StepResult(Observe(state), state.Events.Skip(firstEvent).ToArray(),
@@ -334,7 +331,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = session.State;
         if (state.PendingPlayedCard is not { } cardInstance) return;
         var card = state.Definition.Cards[cardInstance.CardId];
-        if (card.Exhaust)
+        if ((card.Keywords & CardKeywords.Exhaust) != 0)
         {
             state.Player.MutablePlayPile.Remove(cardInstance);
             state.Player.MutableExhaustPile.Add(cardInstance);
@@ -364,6 +361,23 @@ public sealed class CombatEnvironment(GameDefinition definition)
             {
                 case EndTurnResolutionStage.None:
                     return;
+                case EndTurnResolutionStage.EtherealCards:
+                    var etherealCard = state.Player.MutableHand.FirstOrDefault(card =>
+                        (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Ethereal) != 0);
+                    if (etherealCard is not null)
+                    {
+                        state.Player.MutableHand.Remove(etherealCard);
+                        state.Player.MutableExhaustPile.Add(etherealCard);
+                        EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, etherealCard);
+                        EffectExecutor.Resume(session);
+                        break;
+                    }
+                    state.Player.MutableDiscardPile.AddRange(state.Player.MutableHand);
+                    state.Player.MutableHand.Clear();
+                    state.Player.MutableDiscardPile.AddRange(state.Player.MutablePlayPile);
+                    state.Player.MutablePlayPile.Clear();
+                    state.EndTurnStage = EndTurnResolutionStage.PlayerTurnEndPowers;
+                    break;
                 case EndTurnResolutionStage.PlayerTurnEndPowers:
                     state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnEnd);
