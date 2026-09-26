@@ -35,7 +35,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 - `base-spire` 依赖内核提供的注册与扩展接口；其他 mod 依赖内核，也可显式依赖 `base-spire` 中的内容 ID。
 - `net-the-spire` 提供统一协议，分别实现模拟后端（调用内核及已组合规则包）和真实游戏后端（连接外部游戏）。`ai-the-spire` 只使用协议接口；`sts2/` 是对照资料，不成为内核的编译依赖。
 
-统一协议的首批操作是启动或重置会话、获取观察与合法动作、提交一个玩家决策、读取结果与后端能力。模拟后端可接受测试场景与种子；真实游戏后端只能声明自己实际支持的重置和控制能力。规则包组合发生在启动会话前，同一会话的规则集版本保持固定。Core 提供通用整局地图流转、地图访问历史和 Unknown 房间解析；`base-spire` 已按恢复源码迁移单人标准地图生成流程及赔率配置。`CombatEnvironment.StartEncounterForRun` 可按注册的 encounter 定义在活动 Monster/Elite/Boss 房间中，从整局牌组用共享 `shuffle` 流洗牌、抽 5 张并建立多敌战斗；`RunEnvironment.CompleteCombat` 将终局战斗生命和结果写回整局并执行房间结算。`base-spire` 已注册由 Calcified Cultist 与 Damp Cultist 组成的 `CultistsNormal` encounter。按 Act 生成和轮换遭遇队列、完整怪物 AI/HP 随机规则以及战斗中的整局牌组变化仍待迁移。
+统一协议的首批操作是启动或重置会话、获取观察与合法动作、提交一个玩家决策、读取结果与后端能力。模拟后端可接受测试场景与种子；真实游戏后端只能声明自己实际支持的重置和控制能力。规则包组合发生在启动会话前，同一会话的规则集版本保持固定。Core 提供通用整局地图流转、地图访问历史和 Unknown 房间解析；`base-spire` 已按恢复源码迁移单人标准地图生成流程及赔率配置。Act 可声明 normal weak/regular、elite、boss encounter 池；`ContentRegistry.Build()` 校验遭遇存在且房间类别/weak 标记匹配，队列在 run 初始化时从 `up_front` 流生成，并在房间进入时将选中的 encounter ID 放入可观察房间帧。`StartCurrentEncounterForRun` 可直接消费该选择。生成实现等权 grab bag、相邻重复/tag 回避和无可用项时的源逻辑回退；普通及 elite 队列按生成顺序循环，boss 暂时固定为本幕生成的一个 encounter。`CombatEnvironment.StartEncounterForRun` 从整局牌组用共享 `shuffle` 流洗牌、抽 5 张并建立多敌战斗；`RunEnvironment.CompleteCombat` 将终局战斗生命和结果写回整局并执行房间结算。`base-spire` 已注册由 Calcified Cultist 与 Damp Cultist 组成的 `CultistsNormal` encounter，但还没有足够的原版遭遇库来配置真实 Act 池，因此此机制由合成内容验证。
 
 ## 3. 规则定义、游戏运行态和外部视图
 
@@ -132,11 +132,11 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
-8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动序列并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。`base-spire` 的 `CultistsNormal` 组合及两名祭仪教徒的三回合行为已有源码参数校验。Act 遭遇队列、完整多怪物 AI 和怪物生命唯一化算法仍未完成。
+8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动序列并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。`base-spire` 的 `CultistsNormal` 组合及两名祭仪教徒的三回合行为已有源码参数校验。Act 遭遇池定义、分类校验、seeded 队列生成、相邻标签回避、轮换及从房间选择直接启动遭遇的接缝已实现并由合成 Act 测试。真实 Act 内容池、source 的双 boss 选择、多怪物完整 AI 和怪物生命唯一化算法仍未完成。
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 
-后续按审计索引继续补足原版 Architect/事件队列、Act Encounter 池生成与轮换、战斗中的牌组状态变化、真实敌人 HP/意图初始化、非战斗房间和完整内容库。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可按指定 encounter 共享 run 随机流、从整局牌组洗牌发起多敌战斗并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
+后续按审计索引继续补足原版 Architect/事件队列、真实 Act encounter 内容及双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化、非战斗房间和完整内容库。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
 
 ## 9. 待验证事项
 

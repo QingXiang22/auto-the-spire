@@ -32,7 +32,8 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
 public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent, int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0);
 public sealed class EncounterDefinition
 {
-    public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds)
+    public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds,
+        bool isWeak = false, IEnumerable<ContentId>? tags = null)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(enemyIds);
@@ -41,14 +42,20 @@ public sealed class EncounterDefinition
             throw new ArgumentOutOfRangeException(nameof(roomType), "Encounters must be Monster, Elite, or Boss rooms.");
         if (enemies.Length == 0) throw new ArgumentException("An encounter must contain at least one enemy.", nameof(enemyIds));
         foreach (var enemyId in enemies) enemyId.Validate();
+        var encounterTags = tags?.ToArray() ?? [];
+        foreach (var tag in encounterTags) tag.Validate();
         Id = id;
         RoomType = roomType;
         EnemyIds = Array.AsReadOnly(enemies);
+        IsWeak = isWeak;
+        Tags = Array.AsReadOnly(encounterTags);
     }
 
     public ContentId Id { get; }
     public RunRoomType RoomType { get; }
     public IReadOnlyList<ContentId> EnemyIds { get; }
+    public bool IsWeak { get; }
+    public IReadOnlyList<ContentId> Tags { get; }
 }
 public sealed record EnemyDefinition
 {
@@ -164,6 +171,9 @@ public sealed class ContentRegistry
         foreach (var enemyId in encounter.EnemyIds)
             if (!_enemies.ContainsKey(enemyId))
                 throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
+        foreach (var run in _runs.Values)
+        foreach (var act in run.Acts)
+            act.EncounterPool?.Validate(_encounters);
         return new GameDefinition(
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
