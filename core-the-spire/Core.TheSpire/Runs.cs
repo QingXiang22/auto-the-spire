@@ -103,19 +103,30 @@ internal sealed class UnknownRoomOddsState
         _currentOdds = _baseOdds.Select(entry => entry.Weight).ToArray();
     }
 
-    public RunRoomType Roll(SeededRandom random, IReadOnlySet<RunRoomType> blacklist)
+    public RunRoomType Roll(SeededRandom random, IReadOnlySet<RunRoomType> blacklist,
+        IReadOnlyList<IRunHook> hooks, RunObservation observation)
     {
+        var roomTypes = _baseOdds.Select(entry => entry.RoomType).Append(RunRoomType.Event)
+            .Where(type => !blacklist.Contains(type)).ToHashSet();
+        foreach (var hook in hooks)
+        {
+            var modified = hook.ModifyUnknownRoomTypes(observation, roomTypes);
+            ArgumentNullException.ThrowIfNull(modified);
+            if (modified.Any(type => type is not (RunRoomType.Event or RunRoomType.Monster or
+                RunRoomType.Elite or RunRoomType.Treasure or RunRoomType.Shop)))
+                throw new InvalidOperationException($"Run hook '{hook.Id}' returned an unsupported unknown-room type.");
+            roomTypes = modified.ToHashSet();
+        }
+        if (roomTypes.Count == 0)
+            throw new InvalidOperationException("Unknown-room hooks removed every possible room type.");
+
         var roll = random.NextFloat();
-        var result = blacklist.Contains(RunRoomType.Event)
-            ? _baseOdds.Select(entry => entry.RoomType).Where(type => !blacklist.Contains(type)).Order().FirstOrDefault(RunRoomType.Unassigned)
-            : RunRoomType.Event;
-        if (result == RunRoomType.Unassigned)
-            throw new InvalidOperationException("All unknown-room types are blacklisted.");
+        var result = roomTypes.Contains(RunRoomType.Event) ? RunRoomType.Event : roomTypes.Order().First();
         var cumulative = 0f;
         for (var i = 0; i < _baseOdds.Length; i++)
         {
             var weight = _currentOdds[i];
-            if (weight < 0f || blacklist.Contains(_baseOdds[i].RoomType)) continue;
+            if (weight < 0f || !roomTypes.Contains(_baseOdds[i].RoomType)) continue;
             cumulative += weight;
             if (roll <= cumulative)
             {
@@ -127,7 +138,14 @@ internal sealed class UnknownRoomOddsState
         for (var i = 0; i < _baseOdds.Length; i++)
         {
             if (_baseOdds[i].RoomType == result) _currentOdds[i] = _baseOdds[i].Weight;
-            else if (!blacklist.Contains(_baseOdds[i].RoomType)) _currentOdds[i] += _baseOdds[i].Weight;
+            else if (roomTypes.Contains(_baseOdds[i].RoomType))
+            {
+                var increase = hooks.Aggregate(_baseOdds[i].Weight,
+                    (current, hook) => hook.ModifyUnknownOddsIncrease(observation, _baseOdds[i].RoomType, current));
+                if (!float.IsFinite(increase))
+                    throw new InvalidOperationException($"A run hook returned a non-finite unknown-room odds increase for '{_baseOdds[i].RoomType}'.");
+                _currentOdds[i] += increase;
+            }
         }
         return result;
     }
@@ -234,6 +252,9 @@ public interface IRunHook
 {
     ContentId Id { get; }
     void AfterCombatVictory(RunHookContext context);
+    IReadOnlySet<RunRoomType> ModifyUnknownRoomTypes(RunObservation observation,
+        IReadOnlySet<RunRoomType> roomTypes) => roomTypes;
+    float ModifyUnknownOddsIncrease(RunObservation observation, RunRoomType roomType, float increase) => increase;
 }
 
 public sealed class RunHookContext
@@ -367,7 +388,11 @@ public sealed class RunEnvironment
     public RunObservation Observe(RunSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
-        var state = session.State;
+        return ObserveState(session.State);
+    }
+
+    private static RunObservation ObserveState(RunState state)
+    {
         return new RunObservation(state.Character.Id, state.Hp, state.MaxHp, state.Gold,
             Array.AsReadOnly(state.Deck.ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
@@ -531,7 +556,7 @@ public sealed class RunEnvironment
         return blacklist;
     }
 
-    private static RunRoomType ResolveRoomType(RunState state, MapPointDefinition point, IReadOnlySet<RunRoomType> blacklist) => point.Type switch
+    private RunRoomType ResolveRoomType(RunState state, MapPointDefinition point, IReadOnlySet<RunRoomType> blacklist) => point.Type switch
     {
         MapPointType.Unknown => ResolveUnknownRoom(state, blacklist),
         MapPointType.Shop => RunRoomType.Shop,
@@ -545,13 +570,14 @@ public sealed class RunEnvironment
         _ => throw new ArgumentOutOfRangeException(nameof(point), point.Type, null)
     };
 
-    private static RunRoomType ResolveUnknownRoom(RunState state, IReadOnlySet<RunRoomType> blacklist)
+    private RunRoomType ResolveUnknownRoom(RunState state, IReadOnlySet<RunRoomType> blacklist)
     {
         var act = state.Definition.Acts[state.ActIndex];
         if (act.ResolveUnknownRoom is not null)
             return act.ResolveUnknownRoom(state.Random.Get($"act_{state.ActIndex + 1}_unknown-room"), blacklist);
         if (state.UnknownRoomOdds is not null)
-            return state.UnknownRoomOdds.Roll(state.Random.Get("unknown_map_point"), blacklist);
+            return state.UnknownRoomOdds.Roll(state.Random.Get("unknown_map_point"), blacklist,
+                _runHooks, ObserveState(state));
         throw new InvalidOperationException("Unknown map points need configured run odds or an act room resolver.");
     }
 
