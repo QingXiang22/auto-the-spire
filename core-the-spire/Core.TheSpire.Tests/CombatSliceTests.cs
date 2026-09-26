@@ -147,6 +147,7 @@ public sealed class CombatSliceTests
         Assert.False(definition.Cards.ContainsKey(ContentId.Parse("partial-mod:orphan")));
         Assert.False(definition.Characters.ContainsKey(ContentId.Parse("partial-mod:character")));
         Assert.False(definition.Runs.ContainsKey(ContentId.Parse("partial-mod:run")));
+        Assert.False(definition.RunHooks.Any(hook => hook.Id == ContentId.Parse("test-fixture:counting-run-hook")));
     }
 
     public void IndependentModCanOverrideContentAndObserveHooks()
@@ -255,13 +256,14 @@ public sealed class CombatSliceTests
             started.Deck, started.Relics, [ContentId.Parse("base-spire:fire-potion")]);
         environment.CompleteRoom(session, afterCombat);
         var afterCombatObservation = environment.Observe(session);
-        Assert.Equal(73, afterCombatObservation.Hp);
+        Assert.Equal(79, afterCombatObservation.Hp);
         Assert.Equal(120, afterCombatObservation.Gold);
         Assert.Equal(ContentId.Parse("base-spire:fire-potion"), afterCombatObservation.Potions.Single());
         Assert.Equal(RunPhase.ChooseMapPoint, environment.Observe(session).Phase);
 
         environment.Step(session, new ChooseMapPointAction("boss"));
         environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
+        Assert.Equal(80, environment.Observe(session).Hp);
         Assert.Equal(1, environment.Observe(session).ActIndex);
         Assert.Equal(RunStatus.InProgress, environment.Observe(session).Status);
 
@@ -281,8 +283,9 @@ public sealed class CombatSliceTests
 
     public void SinglePlayerRunDefeatIsTerminal()
     {
+        var hook = new CountingRunHook();
         var environment = new RunEnvironment(BuildRunDefinition(),
-            new CharacterDefinition(ContentId.Parse("base-spire:ironclad"), 80, 99, BaseSpireContent.IroncladStarterDeck()));
+            new CharacterDefinition(ContentId.Parse("base-spire:ironclad"), 80, 99, BaseSpireContent.IroncladStarterDeck()), [hook]);
         var session = environment.Start(18);
         environment.Step(session, new ChooseMapPointAction("monster"));
         var beforeDeath = environment.Observe(session);
@@ -290,6 +293,7 @@ public sealed class CombatSliceTests
             beforeDeath.MaxHp, beforeDeath.Gold, beforeDeath.Deck, beforeDeath.Relics, beforeDeath.Potions));
         Assert.Equal(RunStatus.Lost, lost.Status);
         Assert.Equal(0, lost.Hp);
+        Assert.Equal(0, hook.InvocationCount);
         Assert.Equal(0, environment.LegalActions(session).Count);
         Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, lost)));
     }
@@ -370,6 +374,13 @@ public sealed class CombatSliceTests
         public void Register(ContentRegistry registry) => registry.Register(run);
     }
 
+    private sealed class CountingRunHook : IRunHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("test-fixture:counting-run-hook");
+        public int InvocationCount { get; private set; }
+        public void AfterCombatVictory(RunHookContext context) => InvocationCount++;
+    }
+
     private sealed class ChoiceCardPackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("choice-test", "1.0.0");
@@ -386,6 +397,7 @@ public sealed class CombatSliceTests
         public PackageInfo Info { get; } = new("partial-mod", "1.0.0");
         public void Register(ContentRegistry registry)
         {
+            registry.Register(new CountingRunHook());
             registry.Register(new CardDefinition(ContentId.Parse("partial-mod:orphan"), 0, CardType.Skill, new GainBlockEffect(1)));
             registry.Register(new CharacterDefinition(ContentId.Parse("partial-mod:character"), 60, 50, []));
             registry.Register(new RunDefinition(ContentId.Parse("partial-mod:run"),
