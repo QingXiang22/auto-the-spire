@@ -11,6 +11,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseEffect), "choose")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -24,6 +25,8 @@ public sealed record GainBlockEffect(int Amount) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DrawCardsEffect(int Amount) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
+public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
+    TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
@@ -100,6 +103,15 @@ internal static class EffectExecutor
                     break;
                 case MoveCardEffect move:
                     state.MoveCards(move.From, move.To, move.Count);
+                    break;
+                case AddCardsToPileEffect addCards:
+                    if (addCards.Count < 0) throw new InvalidOperationException("Added card count cannot be negative.");
+                    var cardOwner = ResolveTarget(state, owner, target, addCards.Target);
+                    if (!ReferenceEquals(cardOwner, state.Player.Creature))
+                        throw new InvalidOperationException("Combat card piles are only modeled for the player.");
+                    var destination = state.GetPile(addCards.Pile);
+                    for (var i = 0; i < addCards.Count; i++) destination.Add(addCards.Card);
+                    state.Emit(session, "cards_added", owner.Id, cardOwner.Id, addCards.Count);
                     break;
                 case ModifyEnergyEffect energy:
                     state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);

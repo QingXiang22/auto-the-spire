@@ -232,6 +232,60 @@ public sealed class CombatSliceTests
             EnemyActionRepeatPolicy.PreventImmediateRepeat));
     }
 
+    public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var encounter = environment.StartEncounter(401, "ironclad", 80, 80, [], BaseSpireIds.SlimesWeak);
+        var enemyIds = environment.Observe(encounter).Enemies.Select(enemy => enemy.Id.Split('#')[0]).ToArray();
+        Assert.Equal(3, enemyIds.Length);
+        Assert.True(enemyIds[0] is "base-spire:leaf-slime-small" or "base-spire:twig-slime-small");
+        Assert.True(enemyIds[2] is "base-spire:leaf-slime-small" or "base-spire:twig-slime-small");
+        Assert.True(enemyIds[0] != enemyIds[2]);
+        Assert.True(enemyIds[1] is "base-spire:leaf-slime-medium" or "base-spire:twig-slime-medium");
+        Assert.Equal(3, encounter.Random.Get("encounter-enemies").Counter);
+        var replay = environment.StartEncounter(401, "ironclad", 80, 80, [], BaseSpireIds.SlimesWeak);
+        Assert.True(environment.Observe(encounter).Enemies.Select(enemy => (enemy.Id, enemy.Intent, enemy.IntentDamage))
+            .SequenceEqual(environment.Observe(replay).Enemies.Select(enemy => (enemy.Id, enemy.Intent, enemy.IntentDamage))));
+
+        GameSession? goopSession = null;
+        for (uint seed = 0; seed < 32; seed++)
+        {
+            var candidate = environment.Start(seed, "ironclad", 80, 80, [], BaseSpireIds.LeafSlimeSmall.ToString());
+            if (environment.Observe(candidate).Intent != IntentKind.Debuff) continue;
+            goopSession = candidate;
+            break;
+        }
+        Assert.True(goopSession is not null);
+        environment.Step(goopSession!, new EndTurnAction());
+        Assert.Contains(goopSession!.State.Player.Hand, card => card == BaseSpireIds.Slimed);
+        Assert.Equal(goopSession.State.Player.DiscardPile.AsEnumerable(), environment.Observe(goopSession).DiscardPile.AsEnumerable());
+
+        var playedSlimed = environment.Start(403, "ironclad", 80, 80, [BaseSpireIds.Slimed], BaseSpireIds.TwigSlimeSmall.ToString(),
+            drawPile: [BaseSpireIds.StrikeIronclad]);
+        environment.Step(playedSlimed, new PlayCardAction(0, "ironclad"));
+        Assert.Equal(BaseSpireIds.StrikeIronclad, playedSlimed.State.Player.Hand[0]);
+        Assert.Equal(BaseSpireIds.Slimed, playedSlimed.State.Player.ExhaustPile[0]);
+
+        var leafMedium = environment.Start(404, "ironclad", 80, 80, [], BaseSpireIds.LeafSlimeMedium.ToString());
+        Assert.Equal(IntentKind.Debuff, environment.Observe(leafMedium).Intent);
+        environment.Step(leafMedium, new EndTurnAction());
+        Assert.Equal(2, leafMedium.State.Player.Hand.Count(card => card == BaseSpireIds.Slimed));
+        Assert.Equal(8, environment.Observe(leafMedium).IntentDamage);
+
+        var twigMedium = environment.Start(405, "ironclad", 1000, 1000, [], BaseSpireIds.TwigSlimeMedium.ToString());
+        Assert.Equal(IntentKind.Debuff, environment.Observe(twigMedium).Intent);
+        var history = new List<ContentId>();
+        for (var turn = 0; turn < 18; turn++)
+        {
+            environment.Step(twigMedium, new EndTurnAction());
+            history.Add(twigMedium.State.Enemies[0].Definition.Actions[twigMedium.State.Enemies[0].ActionIndex].Id);
+        }
+        var clumpAction = ContentId.Parse("base-spire:twig-medium-clump-shot");
+        Assert.True(history.Zip(history.Skip(1)).Any(pair => pair.First == clumpAction && pair.Second == clumpAction));
+        Assert.False(history.Zip(history.Skip(1)).Zip(history.Skip(2), (pair, third) =>
+            pair.First == clumpAction && pair.Second == clumpAction && third == clumpAction).Any(run => run));
+    }
+
     public void BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle()
     {
         var definition = Build(new BaseSpirePackage());
@@ -678,6 +732,7 @@ public sealed class CombatSliceTests
         var elite = ContentId.Parse("pool-test:elite");
         var boss = ContentId.Parse("pool-test:boss");
         var enemyId = ContentId.Parse("pool-test:enemy");
+        var alternateEnemyId = ContentId.Parse("pool-test:alternate-enemy");
         var runId = ContentId.Parse("pool-test:run");
         var characterId = ContentId.Parse("pool-test:character");
         var pool = new ActEncounterPoolDefinition([weak], [regular, tagged], [elite], [boss],
@@ -686,12 +741,13 @@ public sealed class CombatSliceTests
             [new ActDefinition(ContentId.Parse("pool-test:act"), _ => map, encounterPool: pool)]);
         var package = new EncounterPoolPackage(run, new CharacterDefinition(characterId, 60, 50, []), enemyId,
         [
-            new EncounterDefinition(weak, RunRoomType.Monster, [enemyId], isWeak: true),
+            EncounterDefinition.WithEnemySlots(weak, RunRoomType.Monster,
+                [EncounterEnemySlot.ChooseOne([enemyId, alternateEnemyId])], isWeak: true),
             new EncounterDefinition(regular, RunRoomType.Monster, [enemyId]),
             new EncounterDefinition(tagged, RunRoomType.Monster, [enemyId], tags: [ContentId.Parse("pool-test:group")]),
             new EncounterDefinition(elite, RunRoomType.Elite, [enemyId]),
             new EncounterDefinition(boss, RunRoomType.Boss, [enemyId])
-        ]);
+        ], alternateEnemyId);
         var registry = new ContentRegistry();
         registry.AddPackage(package);
         var definition = registry.Build();
@@ -699,10 +755,14 @@ public sealed class CombatSliceTests
 
         var combatRun = environment.Start(912);
         environment.Step(combatRun, new ChooseMapPointAction("monster-1"));
+        var plannedEnemyId = environment.Observe(combatRun).RoomStack[^1].EnemyIds.Single();
+        Assert.Equal(1, combatRun.State.Random.Get("encounter-enemies").Counter);
         var combatEnvironment = new CombatEnvironment(definition);
         Assert.Throws<InvalidOperationException>(() => combatEnvironment.StartEncounterForRun(combatRun, regular));
         var combat = combatEnvironment.StartCurrentEncounterForRun(combatRun);
         Assert.Equal(1, combatEnvironment.Observe(combat).Enemies.Count);
+        Assert.Equal(plannedEnemyId.ToString(), combatEnvironment.Observe(combat).Enemies[0].Id.Split('#')[0]);
+        Assert.Equal(1, combatRun.State.Random.Get("encounter-enemies").Counter);
 
         var eliteRun = environment.Start(912);
         environment.Step(eliteRun, new ChooseMapPointAction("monster-1"));
@@ -1289,7 +1349,7 @@ public sealed class CombatSliceTests
     }
 
     private sealed class EncounterPoolPackage(RunDefinition run, CharacterDefinition character,
-        ContentId enemyId, IEnumerable<EncounterDefinition> encounters) : IRulePackage
+        ContentId enemyId, IEnumerable<EncounterDefinition> encounters, ContentId? alternateEnemyId = null) : IRulePackage
     {
         public PackageInfo Info { get; } = new("encounter-pool-fixture", "1.0.0");
 
@@ -1299,6 +1359,9 @@ public sealed class CombatSliceTests
             registry.Register(character);
             registry.Register(new EnemyDefinition(enemyId, 20, 20,
                 [new EnemyActionDefinition(ContentId.Parse("pool-test:idle"), new GainBlockEffect(0), IntentKind.None)]));
+            if (alternateEnemyId is { } alternateId)
+                registry.Register(new EnemyDefinition(alternateId, 20, 20,
+                    [new EnemyActionDefinition(ContentId.Parse("pool-test:alternate-idle"), new GainBlockEffect(0), IntentKind.None)]));
             foreach (var encounter in encounters) registry.Register(encounter);
         }
     }
@@ -1476,6 +1539,7 @@ internal static class Program
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
+        tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
@@ -1507,7 +1571,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 40 gameplay checks.");
+        Console.WriteLine("Passed 41 gameplay checks.");
     }
 }
 

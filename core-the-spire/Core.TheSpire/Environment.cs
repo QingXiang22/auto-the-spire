@@ -25,9 +25,13 @@ public sealed class CombatEnvironment(GameDefinition definition)
             throw new InvalidOperationException($"Encounter '{encounterId}' is incompatible with active room '{runSession.State.CurrentRoom}'.");
         if (runSession.State.CurrentEncounterId is { } selectedEncounter && selectedEncounter != encounterId)
             throw new InvalidOperationException($"Encounter '{encounterId}' does not match the encounter selected for this room.");
-        return StartForRun(runSession, encounter.EnemyIds
-            .Select((enemyId, index) => new CombatEnemySpawn(enemyId.ToString(),
-                StartingActionOverride: encounter.StartingActionsByEnemyIndex.TryGetValue(index, out var actionId) ? actionId : null)).ToArray());
+        ValidateRunCombatStart(runSession);
+        var selections = runSession.State.CurrentEncounterSelections;
+        if (selections.Count == 0)
+            selections = encounter.SelectEnemies(runSession.State.Random.Get("encounter-enemies"));
+        return StartForRun(runSession, selections
+            .Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
+                StartingActionOverride: selection.StartingActionOverride)).ToArray());
     }
 
     public GameSession StartCurrentEncounterForRun(RunSession runSession)
@@ -41,12 +45,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private GameSession StartForRun(RunSession runSession, IReadOnlyList<CombatEnemySpawn> spawns)
     {
         ArgumentNullException.ThrowIfNull(runSession);
+        ValidateRunCombatStart(runSession);
         var run = runSession.State;
-        if (run.Status != RunStatus.InProgress || run.Phase != RunPhase.ResolveRoom
-            || run.CurrentRoom is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss))
-            throw new InvalidOperationException("Combat can only start in an active Monster, Elite, or Boss room.");
-        if (run.ActiveCombat is not null)
-            throw new InvalidOperationException("This run already has an active combat session.");
         foreach (var spawn in spawns)
         {
             var enemyDefinition = FindEnemy(spawn.EnemyId);
@@ -68,6 +68,16 @@ public sealed class CombatEnvironment(GameDefinition definition)
         return session;
     }
 
+    private static void ValidateRunCombatStart(RunSession runSession)
+    {
+        var run = runSession.State;
+        if (run.Status != RunStatus.InProgress || run.Phase != RunPhase.ResolveRoom
+            || run.CurrentRoom is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss))
+            throw new InvalidOperationException("Combat can only start in an active Monster, Elite, or Boss room.");
+        if (run.ActiveCombat is not null)
+            throw new InvalidOperationException("This run already has an active combat session.");
+    }
+
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
         IEnumerable<ContentId> hand, string enemyId, int? enemyHp, IEnumerable<ContentId>? drawPile)
     {
@@ -84,9 +94,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
     {
         if (!definition.Encounters.TryGetValue(encounterId, out var encounter))
             throw new KeyNotFoundException($"Unknown encounter '{encounterId}'.");
-        return StartEncounter(seed, playerId, playerHp, playerMaxHp, hand,
-            encounter.EnemyIds.Select((enemyId, index) => new CombatEnemySpawn(enemyId.ToString(),
-                StartingActionOverride: encounter.StartingActionsByEnemyIndex.TryGetValue(index, out var actionId) ? actionId : null)));
+        var random = new RandomStreams(seed);
+        var selections = encounter.SelectEnemies(random.Get("encounter-enemies"));
+        return Start(random, playerId, playerHp, playerMaxHp, hand,
+            selections.Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
+                StartingActionOverride: selection.StartingActionOverride)), drawPile: null);
     }
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
@@ -122,12 +134,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
         foreach (var (spawn, enemyDefinition, entityId) in prepared)
         {
             var hp = spawn.Hp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
-            combatEnemies.Add(new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition)
+            var actionIndex = spawn.StartingActionOverride is { } actionId
+                ? enemyDefinition.GetActionIndex(actionId)
+                : enemyDefinition.ResolveStartingActionIndex(rng.Get("enemy-ai"));
+            var enemy = new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition)
             {
-                ActionIndex = spawn.StartingActionOverride is { } actionId
-                    ? enemyDefinition.GetActionIndex(actionId)
-                    : enemyDefinition.ResolveStartingActionIndex(rng.Get("enemy-ai"))
-            });
+                ActionIndex = actionIndex
+            };
+            enemy.SelectAction(enemyDefinition.Actions[actionIndex].Id);
+            combatEnemies.Add(enemy);
         }
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, hand, drawPile),
@@ -155,7 +170,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             primary.Creature.MaxHp, primary.Creature.Block, primary.Creature.Strength, next.Intent, intentDamage,
             new Dictionary<ContentId, int>(primary.Creature.Powers), state.IsTerminal,
             state.PendingChoice is { } choice ? new PendingChoiceView(choice.Prompt, choice.Options.Select(option => option.Label).ToArray()) : null,
-            Array.AsReadOnly(state.Enemies.Select(enemy => ObserveEnemy(state, enemy)).ToArray()));
+            Array.AsReadOnly(state.Enemies.Select(enemy => ObserveEnemy(state, enemy)).ToArray()),
+            state.Player.DrawPile.ToArray(), state.Player.DiscardPile.ToArray(),
+            state.Player.ExhaustPile.ToArray(), state.Player.PlayPile.ToArray());
     }
 
     private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
@@ -334,7 +351,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         if (enemy.Creature.Hp <= 0) continue;
                         var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
                         enemy.ActionIndex = enemy.Definition.ResolveNextActionIndex(currentAction.Id,
-                            session.Random.Get("enemy-ai"));
+                            enemy.LastActionId, enemy.ConsecutiveActionCount, session.Random.Get("enemy-ai"));
+                        enemy.SelectAction(enemy.Definition.Actions[enemy.ActionIndex].Id);
                     }
                     state.CurrentEnemyIndex = 0;
                     state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
