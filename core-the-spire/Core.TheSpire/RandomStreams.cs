@@ -33,6 +33,8 @@ public sealed class SeededRandom
         return NextDoubleCore();
     }
 
+    public float NextFloat() => (float)NextDouble();
+
     public void Shuffle<T>(IList<T> values)
     {
         for (var i = values.Count - 1; i > 0; i--)
@@ -86,6 +88,13 @@ public sealed class RandomStreams(uint seed)
 {
     private readonly Dictionary<string, SeededRandom> _streams = new(StringComparer.Ordinal);
     public uint Seed { get; } = seed;
+
+    public static RandomStreams FromStringSeed(string seed)
+    {
+        ArgumentNullException.ThrowIfNull(seed);
+        return new RandomStreams(unchecked((uint)DeterministicHash(seed)));
+    }
+
     public SeededRandom Get(string name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);

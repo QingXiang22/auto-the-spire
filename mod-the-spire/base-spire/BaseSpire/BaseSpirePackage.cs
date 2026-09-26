@@ -59,6 +59,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false) : IRulePackage
         registry.Register(new EnemyDefinition(BaseSpireIds.DampCultist, 52, 54, [incantation, darkStrike]));
 
         registry.Register(new BurningBloodRunHook());
+        registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
 }
