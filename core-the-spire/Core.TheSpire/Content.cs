@@ -738,6 +738,7 @@ public interface IRuleHook
     void OnEvent(RuleHookContext context, GameEvent gameEvent);
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
+    bool ShouldClearBlock(RuleHookContext context, string creatureId) => true;
     EffectNode? BeforeFlush(RuleHookContext context, string playerId) => null;
     EffectNode? BeforeFlushLate(RuleHookContext context, string playerId, bool shouldFlush) => null;
     EffectNode? AfterFlush(RuleHookContext context, string playerId,

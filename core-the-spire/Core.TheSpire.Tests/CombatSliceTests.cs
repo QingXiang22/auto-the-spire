@@ -38,7 +38,8 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.BattleTrance,
+        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
+                BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam,
                 BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
@@ -67,6 +68,7 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.BurningPact].Rarity);
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.DemonForm].Rarity);
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Offering].Rarity);
+        Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Barricade].Rarity);
         Assert.Equal(new AttackEffect(42), definition.Cards[BaseSpireIds.Bludgeon]
             .ResolveEffect(new CardInstance("test:bludgeon+", BaseSpireIds.Bludgeon, 1)));
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.DemonFormPower, 3, TargetSelector.Self),
@@ -1238,6 +1240,29 @@ public sealed class CombatSliceTests
         env.Step(upgraded, new ConfirmCardSelectionAction());
         Assert.Equal(2, upgraded.State.Events.Count(gameEvent => gameEvent.Type == "card_retained"
             && upgradeCards.Any(card => card.InstanceId == gameEvent.Target)));
+    }
+
+    public void BarricadePreventsPlayerBlockFromClearingAtTurnStart()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(72, "ironclad", 56, 65, [BaseSpireIds.Barricade],
+            BaseSpireIds.DampCultist.ToString());
+        var barricade = state.State.Definition.Cards[BaseSpireIds.Barricade];
+        Assert.Equal(3, barricade.ResolveCost(new CardInstance("barricade-basic", BaseSpireIds.Barricade)));
+        Assert.Equal(2, barricade.ResolveCost(new CardInstance("barricade-upgraded", BaseSpireIds.Barricade, 1)));
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        state.State.Player.Creature.Block = 12;
+
+        env.Step(state, new EndTurnAction());
+        Assert.Equal(12, state.State.Player.Creature.Block);
+        Assert.Equal(1, state.State.Player.Creature.PowerAmount(BaseSpireIds.BarricadePower));
+
+        var controlEnv = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var control = controlEnv.Start(73, "ironclad", 56, 65, [BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        control.State.Player.Creature.Block = 12;
+        controlEnv.Step(control, new EndTurnAction());
+        Assert.Equal(0, control.State.Player.Creature.Block);
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
@@ -2505,6 +2530,7 @@ internal static class Program
         tests.HandCleanupHooksCanSuppressEtherealAndFlush();
         tests.BeforeFlushHookCanPauseToRetainASelectedCardAndAfterFlushSeesTheResult();
         tests.WellLaidPlansAllowsSelectingUpToItsPowerAmountOrConfirmingNone();
+        tests.BarricadePreventsPlayerBlockFromClearingAtTurnStart();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();

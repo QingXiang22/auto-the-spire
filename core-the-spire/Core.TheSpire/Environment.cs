@@ -500,7 +500,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     {
                         state.Turn++;
                         state.Player.Energy = 3;
-                        state.Player.Creature.Block = 0;
+                        if (state.Definition.Hooks.All(hook => hook.ShouldClearBlock(
+                            new RuleHookContext(session, hook.Id), state.Player.Id)))
+                            state.Player.Creature.Block = 0;
                         state.IsPlayerTurn = true;
                         state.Emit(session, "player_turn_start", state.Player.Id, state.Player.Id, state.Turn);
                         state.EndTurnStage = EndTurnResolutionStage.PlayerTurnStartPowers;
