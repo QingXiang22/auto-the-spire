@@ -143,8 +143,59 @@ public sealed record EnemyActionTransition
 }
 public enum RunEventKind { Event, Ancient }
 
-public sealed record RunEventDefinition(ContentId Id, RunEventKind Kind = RunEventKind.Event)
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GainRunGoldEffect), "gainRunGold")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(LoseRunGoldEffect), "loseRunGold")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(HealRunEffect), "healRun")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(LoseRunHpEffect), "loseRunHp")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardToRunDeckEffect), "addCardToRunDeck")]
+public abstract record RunEffectNode;
+public sealed record GainRunGoldEffect(int Amount) : RunEffectNode;
+public sealed record LoseRunGoldEffect(int Amount) : RunEffectNode;
+public sealed record HealRunEffect(int Amount) : RunEffectNode;
+public sealed record LoseRunHpEffect(int Amount) : RunEffectNode;
+public sealed record AddCardToRunDeckEffect(ContentId Card) : RunEffectNode;
+
+public sealed record RunEventOptionDefinition
 {
+    public RunEventOptionDefinition(ContentId id, string label, IEnumerable<RunEffectNode>? effects = null)
+    {
+        id.Validate();
+        ArgumentException.ThrowIfNullOrWhiteSpace(label);
+        Id = id;
+        Label = label;
+        var copiedEffects = effects?.ToArray() ?? [];
+        if (copiedEffects.Any(effect => effect is null))
+            throw new ArgumentException("Run event effects cannot contain null values.", nameof(effects));
+        Effects = Array.AsReadOnly(copiedEffects);
+    }
+
+    public ContentId Id { get; }
+    public string Label { get; }
+    public IReadOnlyList<RunEffectNode> Effects { get; }
+}
+
+public sealed record RunEventDefinition
+{
+    public RunEventDefinition(ContentId id, RunEventKind kind = RunEventKind.Event,
+        IEnumerable<RunEventOptionDefinition>? options = null)
+    {
+        id.Validate();
+        if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
+        Id = id;
+        Kind = kind;
+        var copiedOptions = options?.ToArray() ?? [];
+        if (copiedOptions.Any(option => option is null))
+            throw new ArgumentException("Run event options cannot contain null values.", nameof(options));
+        if (copiedOptions.Select(option => option.Id).Distinct().Count() != copiedOptions.Length)
+            throw new ArgumentException("Run event option IDs must be unique.", nameof(options));
+        Options = Array.AsReadOnly(copiedOptions);
+    }
+
+    public ContentId Id { get; }
+    public RunEventKind Kind { get; }
+    public IReadOnlyList<RunEventOptionDefinition> Options { get; }
+
     public void Validate()
     {
         Id.Validate();
@@ -550,6 +601,10 @@ public sealed class ContentRegistry
             if (power.TriggerRuleEffect is { } triggerEffect)
                 ValidateEffectReferences(triggerEffect, $"Power '{power.Id}' trigger");
         }
+        foreach (var runEvent in _runEvents.Values)
+        foreach (var option in runEvent.Options)
+        foreach (var effect in option.Effects)
+            ValidateRunEffectReferences(effect, $"Run event '{runEvent.Id}' option '{option.Id}'");
         foreach (var run in _runs.Values)
         foreach (var act in run.Acts)
         {
@@ -585,6 +640,32 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"Run event pool references unknown content '{id}'.");
             if (definition.Kind != expectedKind)
                 throw new InvalidOperationException($"Run event '{id}' has kind '{definition.Kind}', expected '{expectedKind}'.");
+        }
+    }
+
+    private void ValidateRunEffectReferences(RunEffectNode effect, string owner)
+    {
+        switch (effect)
+        {
+            case GainRunGoldEffect gainGold:
+                ArgumentOutOfRangeException.ThrowIfNegative(gainGold.Amount);
+                break;
+            case LoseRunGoldEffect loseGold:
+                ArgumentOutOfRangeException.ThrowIfNegative(loseGold.Amount);
+                break;
+            case HealRunEffect heal:
+                ArgumentOutOfRangeException.ThrowIfNegative(heal.Amount);
+                break;
+            case LoseRunHpEffect loseHp:
+                ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
+                break;
+            case AddCardToRunDeckEffect addCard when !_cards.ContainsKey(addCard.Card):
+                throw new InvalidOperationException($"{owner} adds unknown card '{addCard.Card}'.");
+            case AddCardToRunDeckEffect addCard:
+                addCard.Card.Validate();
+                break;
+            default:
+                throw new InvalidOperationException($"{owner} uses unsupported run effect '{effect.GetType().Name}'.");
         }
     }
 

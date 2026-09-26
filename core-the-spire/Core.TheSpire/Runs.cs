@@ -2,7 +2,7 @@ namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
 public enum RunRoomType { Unassigned, Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
-public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveRestSite, ResolveRewards, ResolveFinalEvent, Terminal }
+public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveEvent, ResolveRestSite, ResolveRewards, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
 public enum RunStatus { InProgress, Won, Lost }
 
@@ -244,6 +244,7 @@ public sealed class RunDefinition
 }
 
 public sealed record ChooseMapPointAction(string PointId) : PlayerAction;
+public sealed record ChooseRunEventOptionAction(ContentId OptionId) : PlayerAction;
 public sealed record ClaimGoldRewardAction(string RewardId) : PlayerAction;
 public sealed record SkipRewardSetAction : PlayerAction;
 public sealed record ProceedAfterRewardsAction : PlayerAction;
@@ -260,10 +261,11 @@ public enum RunRewardKind { Gold, Card }
 public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
     IReadOnlyList<CardInstance> CardOptions);
 public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
+public sealed record RunEventOptionView(ContentId Id, string Label);
 
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
     ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds,
-    IReadOnlyList<RunRewardView> Rewards);
+    IReadOnlyList<RunRewardView> Rewards, IReadOnlyList<RunEventOptionView> EventOptions);
 
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
     IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
@@ -357,11 +359,13 @@ internal sealed class RunState
         RewardRandom = random.Get("rewards");
         CardRarityOdds = new CardRarityOddsState();
         Encounters = encounters;
+        RunEvents = runEvents;
         Hp = character.MaxHp;
         MaxHp = character.MaxHp;
         Gold = character.StartingGold;
         Deck = character.StartingDeck.Select((cardId, index) =>
             new CardInstance($"run-card-{index:D4}", cardId)).ToList();
+        NextEventCardInstanceId = Deck.Count;
         Relics = [.. character.StartingRelics];
         Potions = [.. character.StartingPotions];
         UnknownRoomOdds = definition.UnknownRoomOdds is null ? null : new UnknownRoomOddsState(definition.UnknownRoomOdds);
@@ -380,8 +384,9 @@ internal sealed class RunState
         {
             CurrentMapPointType = MapPointType.Ancient;
             RoomStack.Add(new RunRoomFrame(RunRoomType.Event, entryPoint.Id, false, null,
-                RoomContentStates[ActIndex]?.AncientEventId, []));
-            Phase = RunPhase.ResolveRoom;
+                RoomContentStates[ActIndex]?.AncientEventId, [],
+                GetEventOptions(RoomContentStates[ActIndex]?.AncientEventId)));
+            Phase = RoomStack[^1].EventOptions.Count > 0 ? RunPhase.ResolveEvent : RunPhase.ResolveRoom;
             VisitHistory.Add(new RunMapVisitView(ActIndex, entryPoint.Id, entryPoint.Type,
                 Array.AsReadOnly(new[] { RunRoomType.Event })));
         }
@@ -399,6 +404,8 @@ internal sealed class RunState
     public CardRarityOddsState CardRarityOdds { get; }
     public int NextRewardCardInstanceId { get; set; }
     public IReadOnlyDictionary<ContentId, EncounterDefinition>? Encounters { get; }
+    public IReadOnlyDictionary<ContentId, RunEventDefinition>? RunEvents { get; }
+    public int NextEventCardInstanceId { get; set; }
     public UnknownRoomOddsState? UnknownRoomOdds { get; }
     public IReadOnlyList<ActRoomContentState?> RoomContentStates { get; }
     public HashSet<ContentId> VisitedEventIds { get; } = [];
@@ -426,13 +433,19 @@ internal sealed class RunState
         ? RoomContentStates[ActIndex]?.NextEvent(VisitedEventIds)
         : null;
 
+    private IReadOnlyList<RunEventOptionDefinition> GetEventOptions(ContentId? eventId) =>
+        eventId is { } id && RunEvents is not null && RunEvents.TryGetValue(id, out var runEvent)
+            ? runEvent.Options
+            : Array.Empty<RunEventOptionDefinition>();
+
     public RunRoomFrame CreateRoomFrame(RunRoomType roomType, string? mapPointId, ContentId? eventId)
     {
         var encounterId = SelectEncounter(roomType);
         var enemySelections = encounterId is { } id && Encounters is not null && Encounters.TryGetValue(id, out var encounter)
             ? encounter.SelectEnemies(Random.Get("encounter-enemies"))
             : Array.Empty<EncounterEnemySelection>();
-        return new RunRoomFrame(roomType, mapPointId, false, encounterId, eventId, enemySelections);
+        return new RunRoomFrame(roomType, mapPointId, false, encounterId, eventId, enemySelections,
+            GetEventOptions(eventId));
     }
 
     public void BindEncounterToCurrentRoom(EncounterDefinition encounter)
@@ -469,7 +482,8 @@ public sealed class RunSession
 }
 
 internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<EncounterEnemySelection> EnemySelections)
+    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<EncounterEnemySelection> EnemySelections,
+    IReadOnlyList<RunEventOptionDefinition> EventOptions)
 {
     public List<RunRewardState> Rewards { get; } = [];
 }
@@ -490,7 +504,8 @@ public sealed class RunEnvironment
 
     public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
         IEnumerable<CardDefinition>? cards = null, IEnumerable<CardPoolDefinition>? cardPools = null,
-        IEnumerable<EncounterDefinition>? encounters = null)
+        IEnumerable<EncounterDefinition>? encounters = null,
+        IEnumerable<RunEventDefinition>? runEvents = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _character = character ?? throw new ArgumentNullException(nameof(character));
@@ -498,6 +513,7 @@ public sealed class RunEnvironment
         _cards = cards?.ToDictionary(card => card.Id);
         _cardPools = cardPools?.ToDictionary(pool => pool.Id);
         _encounters = encounters?.ToDictionary(encounter => encounter.Id);
+        _runEvents = runEvents?.ToDictionary(runEvent => runEvent.Id);
     }
 
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
@@ -541,7 +557,8 @@ public sealed class RunEnvironment
         frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
         Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
-            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>())).ToArray()));
+            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>())).ToArray()),
+        Array.AsReadOnly(frame.EventOptions.Select(option => new RunEventOptionView(option.Id, option.Label)).ToArray()));
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
     {
@@ -551,6 +568,10 @@ public sealed class RunEnvironment
         if (state.Phase == RunPhase.ChooseMapPoint)
             return state.Map.Points[state.CurrentPointId].Children
                 .Select(id => (PlayerAction)new ChooseMapPointAction(id)).ToArray();
+        if (state.Phase == RunPhase.ResolveEvent && state.RoomStack.Count > 0)
+            return state.RoomStack[^1].EventOptions
+                .Where(option => IsEventOptionAffordable(option, state.Gold))
+                .Select(option => (PlayerAction)new ChooseRunEventOptionAction(option.Id)).ToArray();
         if (state.Phase == RunPhase.ResolveRewards && state.RoomStack.Count > 0)
         {
             var rewards = state.RoomStack[^1].Rewards;
@@ -586,6 +607,8 @@ public sealed class RunEnvironment
         var state = session.State;
         if (state.Phase == RunPhase.ResolveRewards)
             return ResolveRewardAction(session, action);
+        if (state.Phase == RunPhase.ResolveEvent)
+            return ResolveRunEventAction(session, action);
         if (state.Phase == RunPhase.ResolveRestSite)
             return ResolveRestSiteAction(session, action);
         if (action is not ChooseMapPointAction choose || !LegalActions(session).Contains(choose))
@@ -596,10 +619,12 @@ public sealed class RunEnvironment
         state.CurrentMapPointType = point.Type;
         var blacklist = BuildRoomTypeBlacklist(state, point);
         var roomType = ResolveRoomType(state, point, blacklist);
-        state.RoomStack.Add(state.CreateRoomFrame(roomType, point.Id, state.SelectEvent(roomType)));
+        var frame = state.CreateRoomFrame(roomType, point.Id, state.SelectEvent(roomType));
+        state.RoomStack.Add(frame);
         state.VisitHistory.Add(new RunMapVisitView(state.ActIndex, point.Id, point.Type,
             Array.AsReadOnly(new[] { roomType })));
         state.Phase = RunPhase.ResolveRoom;
+        if (frame.EventOptions.Count > 0) state.Phase = RunPhase.ResolveEvent;
         if (roomType == RunRoomType.RestSite) state.Phase = RunPhase.ResolveRestSite;
         return Observe(session);
     }
@@ -634,6 +659,61 @@ public sealed class RunEnvironment
         return FinishCompletedRoom(session, state.RoomStack[^1]);
     }
 
+    private RunObservation ResolveRunEventAction(RunSession session, PlayerAction action)
+    {
+        var state = session.State;
+        if (state.RoomStack.Count == 0 || state.RoomStack[^1].EventId is null)
+            throw new InvalidOperationException("There is no active run event.");
+        if (action is not ChooseRunEventOptionAction choose || !LegalActions(session).Contains(action))
+            throw new InvalidOperationException("The selected event option is not currently legal.");
+
+        var frame = state.RoomStack[^1];
+        var option = frame.EventOptions.Single(candidate => candidate.Id == choose.OptionId);
+        foreach (var effect in option.Effects)
+        {
+            switch (effect)
+            {
+                case GainRunGoldEffect gainGold:
+                    state.Gold = checked(state.Gold + gainGold.Amount);
+                    break;
+                case LoseRunGoldEffect loseGold:
+                    state.Gold -= loseGold.Amount;
+                    break;
+                case HealRunEffect heal:
+                    state.Hp = (int)Math.Min(state.MaxHp, (long)state.Hp + heal.Amount);
+                    break;
+                case LoseRunHpEffect loseHp:
+                    state.Hp = Math.Max(0, state.Hp - loseHp.Amount);
+                    break;
+                case AddCardToRunDeckEffect addCard:
+                    state.Deck.Add(new CardInstance($"run-event-card-{state.NextEventCardInstanceId++:D4}", addCard.Card));
+                    break;
+                default:
+                    throw new InvalidOperationException($"Unsupported run event effect '{effect.GetType().Name}'.");
+            }
+        }
+
+        if (state.Hp == 0)
+        {
+            state.Status = RunStatus.Lost;
+            state.Phase = RunPhase.Terminal;
+            return Observe(session);
+        }
+        return FinishCompletedRoom(session, frame);
+    }
+
+    private static bool IsEventOptionAffordable(RunEventOptionDefinition option, int currentGold)
+    {
+        long gold = currentGold;
+        foreach (var effect in option.Effects)
+        {
+            if (effect is GainRunGoldEffect gain) gold += gain.Amount;
+            if (effect is LoseRunGoldEffect loss) gold -= loss.Amount;
+            if (gold is < 0 or > int.MaxValue) return false;
+        }
+        return true;
+    }
+
     /// <summary>Push a nested room, such as a combat started by an event, while preserving its parent room.</summary>
     public RunObservation PushSubRoom(RunSession session, RunRoomType roomType)
     {
@@ -645,8 +725,9 @@ public sealed class RunEnvironment
         if (roomType == RunRoomType.Unassigned)
             throw new ArgumentOutOfRangeException(nameof(roomType));
 
-        state.RoomStack.Add(state.CreateRoomFrame(roomType, null, state.SelectEvent(roomType)));
-        state.Phase = RunPhase.ResolveRoom;
+        var frame = state.CreateRoomFrame(roomType, null, state.SelectEvent(roomType));
+        state.RoomStack.Add(frame);
+        state.Phase = frame.EventOptions.Count > 0 ? RunPhase.ResolveEvent : RunPhase.ResolveRoom;
         if (state.RoomStack.Any(frame => frame.MapPointId is not null) && state.VisitHistory.Count > 0)
         {
             var currentVisit = state.VisitHistory[^1];
@@ -810,7 +891,7 @@ public sealed class RunEnvironment
             state.ActIndex++;
             if (state.ActIndex == state.Definition.Acts.Count)
             {
-                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null, null, []));
+                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null, null, [], []));
                 state.Phase = RunPhase.ResolveFinalEvent;
                 return Observe(session);
             }
