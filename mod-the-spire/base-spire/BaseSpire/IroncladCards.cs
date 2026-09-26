@@ -24,6 +24,10 @@ internal static class IroncladCards
         registry.Register(new CardDefinition(BaseSpireIds.Bludgeon, 3, CardType.Attack,
             EffectDsl.Parse("""{"op":"attack","amount":32}"""), Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"attack","amount":42}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.BurningPact, 1, CardType.Skill,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":2}]}"""),
+            Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":3}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Slimed, 1, CardType.Status,
             new DrawCardsEffect(1), Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Status));
         registry.Register(new CardDefinition(BaseSpireIds.DemonForm, 3, CardType.Power,
@@ -63,7 +67,8 @@ internal static class IroncladCards
             Target: TargetSelector.AllOpponents, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":7,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
+            [BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.BurningPact,
+                BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
