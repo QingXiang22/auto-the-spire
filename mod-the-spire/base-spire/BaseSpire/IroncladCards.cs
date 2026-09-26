@@ -43,9 +43,14 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":13},{"op":"applyPower","power":"base-spire:weak","amount":1,"target":"firstEnemy"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"firstEnemy"}]}"""),
             Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":13},{"op":"applyPower","power":"base-spire:weak","amount":2,"target":"firstEnemy"},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Thunderclap, 1, CardType.Attack,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":4,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}"""),
+            Target: TargetSelector.AllOpponents, Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":7,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
             [BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.TwinStrike, BaseSpireIds.Uppercut]));
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
+                BaseSpireIds.Uppercut]));
     }
 }

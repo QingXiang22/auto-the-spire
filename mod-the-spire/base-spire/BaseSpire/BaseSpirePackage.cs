@@ -14,6 +14,7 @@ public static class BaseSpireIds
     public static readonly ContentId ShrugItOff = ContentId.Parse("base-spire:shrug-it-off");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
+    public static readonly ContentId Thunderclap = ContentId.Parse("base-spire:thunderclap");
     public static readonly ContentId IroncladCardPool = ContentId.Parse("base-spire:ironclad-card-pool");
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
     public static readonly ContentId CalcifiedCultist = ContentId.Parse("base-spire:calcified-cultist");
