@@ -93,7 +93,7 @@ internal static class EffectExecutor
                     break;
                 case ApplyPowerEffect power:
                     var recipient = ResolveTarget(state, owner, target, power.Target);
-                    state.ApplyPower(session, recipient, power.Power, power.Amount, owner.IsEnemy);
+                    state.ApplyPower(session, recipient, power.Power, power.Amount, owner);
                     break;
                 case DrawCardsEffect draw:
                     state.Draw(session, draw.Amount);
@@ -145,5 +145,7 @@ internal static class EffectExecutor
         _ => throw new ArgumentOutOfRangeException(nameof(selector))
     };
 
-    private static EntityState OpponentOf(GameState state, EntityState owner) => owner.IsEnemy ? state.Player.Creature : state.Enemy;
+    private static EntityState OpponentOf(GameState state, EntityState owner) => owner.IsEnemy
+        ? state.Player.Creature
+        : state.FirstLivingEnemy ?? throw new InvalidOperationException("There is no living enemy to target.");
 }

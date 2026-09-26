@@ -66,29 +66,43 @@ internal sealed class PlayerCombatState
     internal List<ContentId> MutablePlayPile => _playPile;
 }
 
+internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition definition)
+{
+    public EntityState Creature { get; } = creature;
+    public EnemyDefinition Definition { get; } = definition;
+    public int ActionIndex { get; set; }
+}
+
 internal sealed class GameState
 {
     private readonly List<GameEvent> _events = [];
     private readonly IReadOnlyList<GameEvent> _eventView;
     private readonly Dictionary<string, Dictionary<string, int>> _modInts = new(StringComparer.Ordinal);
 
-    internal GameState(GameDefinition definition, PlayerCombatState player, EntityState enemy, EnemyDefinition enemyDefinition)
+    internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
     {
         Definition = definition;
         Player = player;
-        Enemy = enemy;
-        EnemyDefinition = enemyDefinition;
+        Enemies = enemies.ToList();
+        if (Enemies.Count == 0) throw new ArgumentException("A combat encounter needs at least one enemy.", nameof(enemies));
         _eventView = _events.AsReadOnly();
     }
 
     public GameDefinition Definition { get; }
     public PlayerCombatState Player { get; }
-    public EntityState Enemy { get; }
-    public EnemyDefinition EnemyDefinition { get; }
+    public List<EnemyCombatState> Enemies { get; }
+    public EntityState Enemy => Enemies[0].Creature;
+    public EnemyDefinition EnemyDefinition => Enemies[0].Definition;
     public int Turn { get; internal set; } = 1;
-    public int EnemyActionIndex { get; internal set; }
+    public int EnemyActionIndex
+    {
+        get => Enemies[0].ActionIndex;
+        internal set => Enemies[0].ActionIndex = value;
+    }
+    public int CurrentEnemyIndex { get; internal set; }
+    public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
-    public bool IsTerminal => Player.Creature.Hp <= 0 || Enemy.Hp <= 0;
+    public bool IsTerminal => Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0);
     public ChooseEffect? PendingChoice { get; internal set; }
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
@@ -108,7 +122,7 @@ internal sealed class GameState
         foreach (var hook in Definition.Hooks) hook.OnEvent(new RuleHookContext(session, hook.Id), gameEvent);
     }
 
-    internal void ApplyPower(GameSession session, EntityState owner, ContentId power, int amount, bool appliedByEnemy)
+    internal void ApplyPower(GameSession session, EntityState owner, ContentId power, int amount, EntityState applier)
     {
         if (!Definition.Powers.TryGetValue(power, out var definition))
             throw new InvalidOperationException($"Unknown power '{power}'.");
@@ -116,7 +130,7 @@ internal sealed class GameState
         if (definition.Role == PowerRole.Strength) owner.Strength += amount;
         if (owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToEnemy || !owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToPlayer)
             owner.SkipNextPowerTriggers.Add(power);
-        Emit(session, "power", appliedByEnemy ? Enemy.Id : Player.Id, owner.Id, amount);
+        Emit(session, "power", applier.Id, owner.Id, amount);
     }
 
     internal bool HasPowerRole(EntityState entity, PowerRole role) => entity.Powers.Keys.Any(id => Definition.Powers[id].Role == role);
@@ -178,7 +192,7 @@ public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Opti
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
     IReadOnlyList<ContentId> Hand, int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> EnemyPowers, bool IsTerminal,
-    PendingChoiceView? PendingChoice);
+    PendingChoiceView? PendingChoice, IReadOnlyList<EnemyCombatObservation> Enemies);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;
