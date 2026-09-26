@@ -72,6 +72,45 @@ public sealed class CombatSliceTests
         Assert.Equal(5, state.State.Enemy.Strength);
     }
 
+    public void BaseCultistsEncounterRunsBothSourceEnemySequences()
+    {
+        var definition = Build(new BaseSpirePackage());
+        Assert.True(definition.Encounters.ContainsKey(BaseSpireIds.CultistsNormal));
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(186, "ironclad", 56, 65, [], BaseSpireIds.CultistsNormal);
+
+        var initial = environment.Observe(session);
+        Assert.Equal(2, initial.Enemies.Count);
+        Assert.True(initial.Enemies[0].Hp is >= 38 and <= 41);
+        Assert.True(initial.Enemies[1].Hp is >= 52 and <= 54);
+        environment.Step(session, new EndTurnAction());
+        var afterIncantations = environment.Observe(session);
+        Assert.Equal(2, session.State.Enemies[0].Creature.PowerAmount(BaseSpireIds.Ritual));
+        Assert.Equal(5, session.State.Enemies[1].Creature.PowerAmount(BaseSpireIds.Ritual));
+        Assert.Equal(0, session.State.Enemies[0].Creature.Strength);
+        Assert.Equal(0, session.State.Enemies[1].Creature.Strength);
+        Assert.Equal(9, afterIncantations.Enemies[0].IntentDamage);
+        Assert.Equal(1, afterIncantations.Enemies[1].IntentDamage);
+
+        var secondTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(46, secondTurn.Observation.PlayerHp);
+        Assert.Equal(10, secondTurn.Events.Where(gameEvent => gameEvent.Type == "damage").Sum(gameEvent => gameEvent.Amount));
+        Assert.Equal(2, session.State.Enemies[0].Creature.Strength);
+        Assert.Equal(5, session.State.Enemies[1].Creature.Strength);
+
+        var thirdTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(29, thirdTurn.Observation.PlayerHp);
+        Assert.Equal(17, thirdTurn.Events.Where(gameEvent => gameEvent.Type == "damage").Sum(gameEvent => gameEvent.Amount));
+
+        var deadlyEnvironment = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true, toughEnemies: true)));
+        var deadly = deadlyEnvironment.StartEncounter(187, "ironclad", 56, 65, [], BaseSpireIds.CultistsNormal);
+        Assert.True(deadlyEnvironment.Observe(deadly).Enemies[0].Hp is >= 39 and <= 42);
+        Assert.True(deadlyEnvironment.Observe(deadly).Enemies[1].Hp is >= 51 and <= 53);
+        deadlyEnvironment.Step(deadly, new EndTurnAction());
+        var deadlyAttackIntents = deadlyEnvironment.Observe(deadly).Enemies.Select(enemy => enemy.IntentDamage).ToArray();
+        Assert.True(deadlyAttackIntents.SequenceEqual([11, 3]));
+    }
+
     public void PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide()
     {
         var env = new CombatEnvironment(Build(new IncomingVulnerablePackage()));
@@ -377,6 +416,7 @@ public sealed class CombatSliceTests
         var runId = ContentId.Parse("test-fixture:combat-run");
         var characterId = ContentId.Parse("test-fixture:combat-character");
         var enemyId = ContentId.Parse("test-fixture:one-hit-enemy");
+        var encounterId = ContentId.Parse("test-fixture:one-hit-encounter");
         var deck = Enumerable.Range(0, 10)
             .Select(index => ContentId.Parse($"test-fixture:run-strike-{index}"))
             .ToArray();
@@ -397,7 +437,8 @@ public sealed class CombatSliceTests
             [
                 new EnemyActionDefinition(ContentId.Parse("test-fixture:idle"),
                     new AttackEffect(100), IntentKind.Attack, 100)
-            ]), deck.Select(id => new CardDefinition(id, 0, CardType.Attack, new AttackEffect(1))));
+            ]), deck.Select(id => new CardDefinition(id, 0, CardType.Attack, new AttackEffect(1))),
+            new EncounterDefinition(encounterId, RunRoomType.Monster, [enemyId]));
         var registry = new ContentRegistry();
         registry.AddPackage(new BaseSpirePackage());
         registry.AddPackage(package);
@@ -408,11 +449,11 @@ public sealed class CombatSliceTests
         runEnvironment.Step(runSession, new ChooseMapPointAction("event"));
         runEnvironment.PushSubRoom(runSession, RunRoomType.Monster);
 
-        var combatSession = combatEnvironment.StartForRun(runSession, enemyId.ToString(), enemyHp: 1);
+        var combatSession = combatEnvironment.StartEncounterForRun(runSession, encounterId);
         Assert.Equal(5, combatEnvironment.Observe(combatSession).Hand.Count);
         Assert.Equal(5, combatEnvironment.Observe(combatSession).Hand.Distinct().Count());
         Assert.True(combatEnvironment.Observe(combatSession).Hand.All(deck.Contains));
-        Assert.Throws<InvalidOperationException>(() => combatEnvironment.StartForRun(runSession, enemyId.ToString(), 1));
+        Assert.Throws<InvalidOperationException>(() => combatEnvironment.StartEncounterForRun(runSession, encounterId));
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteRoom(runSession,
             RunResult(RunOutcome.RoomCleared, runEnvironment.Observe(runSession))));
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteCombat(runSession, combatSession));
@@ -420,7 +461,7 @@ public sealed class CombatSliceTests
         var replayRun = runEnvironment.Start(183);
         runEnvironment.Step(replayRun, new ChooseMapPointAction("event"));
         runEnvironment.PushSubRoom(replayRun, RunRoomType.Monster);
-        var replayCombat = combatEnvironment.StartForRun(replayRun, enemyId.ToString(), enemyHp: 1);
+        var replayCombat = combatEnvironment.StartEncounterForRun(replayRun, encounterId);
         Assert.True(combatEnvironment.Observe(combatSession).Hand.SequenceEqual(
             combatEnvironment.Observe(replayCombat).Hand));
 
@@ -442,13 +483,65 @@ public sealed class CombatSliceTests
         var defeatedRun = runEnvironment.Start(184);
         runEnvironment.Step(defeatedRun, new ChooseMapPointAction("event"));
         runEnvironment.PushSubRoom(defeatedRun, RunRoomType.Monster);
-        var doomedCombat = combatEnvironment.StartForRun(defeatedRun, enemyId.ToString(), enemyHp: 1);
+        var doomedCombat = combatEnvironment.StartEncounterForRun(defeatedRun, encounterId);
         combatEnvironment.Step(doomedCombat, new EndTurnAction());
         Assert.Equal(0, combatEnvironment.Observe(doomedCombat).PlayerHp);
         var lost = runEnvironment.CompleteCombat(defeatedRun, doomedCombat);
         Assert.Equal(RunStatus.Lost, lost.Status);
         Assert.Equal(RunPhase.Terminal, lost.Phase);
         Assert.Equal(0, lost.Hp);
+    }
+
+    public void CombatEncounterSupportsMultipleEnemiesAndSelectedTargets()
+    {
+        var cardId = ContentId.Parse("test-fixture:focused-strike");
+        var firstEnemyId = ContentId.Parse("test-fixture:first-foe");
+        var secondEnemyId = ContentId.Parse("test-fixture:second-foe");
+        var package = new MultiEnemyPackage(
+            new CardDefinition(cardId, 1, CardType.Attack,
+                new AttackEffect(9, TargetSelector.SelectedTarget), Target: TargetSelector.SelectedTarget),
+            new EnemyDefinition(firstEnemyId, 10, 10,
+            [
+                new EnemyActionDefinition(ContentId.Parse("test-fixture:first-hit"),
+                    new AttackEffect(3), IntentKind.Attack, 3)
+            ]),
+            new EnemyDefinition(secondEnemyId, 10, 10,
+            [
+                new EnemyActionDefinition(ContentId.Parse("test-fixture:second-hit"),
+                    new AttackEffect(4), IntentKind.Attack, 4)
+            ]));
+        var definition = Build(package);
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(185, "ironclad", 20, 20, [cardId],
+        [
+            new CombatEnemySpawn(firstEnemyId.ToString()),
+            new CombatEnemySpawn(secondEnemyId.ToString())
+        ]);
+        var initial = environment.Observe(session);
+        Assert.Equal(2, initial.Enemies.Count);
+        Assert.Equal($"{firstEnemyId}#1", initial.Enemies[0].Id);
+        Assert.Equal($"{secondEnemyId}#2", initial.Enemies[1].Id);
+        var targetChoices = environment.LegalActions(session).OfType<PlayCardAction>().ToArray();
+        Assert.True(targetChoices.Select(action => action.TargetId).ToHashSet(StringComparer.Ordinal)
+            .SetEquals([$"{firstEnemyId}#1", $"{secondEnemyId}#2"]));
+
+        environment.Step(session, new PlayCardAction(0, $"{secondEnemyId}#2"));
+        var afterTargetedAttack = environment.Observe(session);
+        Assert.Equal(10, afterTargetedAttack.Enemies[0].Hp);
+        Assert.Equal(1, afterTargetedAttack.Enemies[1].Hp);
+        var enemyTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(13, enemyTurn.Observation.PlayerHp);
+        Assert.Equal(2, enemyTurn.Events.Count(gameEvent => gameEvent.Type == "enemy_action"));
+        Assert.Equal(2, enemyTurn.Observation.Turn);
+
+        var lethalSession = environment.StartEncounter(188, "ironclad", 3, 20, [],
+        [
+            new CombatEnemySpawn(firstEnemyId.ToString()),
+            new CombatEnemySpawn(secondEnemyId.ToString())
+        ]);
+        var lethalTurn = environment.Step(lethalSession, new EndTurnAction());
+        Assert.Equal(0, lethalTurn.Observation.PlayerHp);
+        Assert.Equal(1, lethalTurn.Events.Count(gameEvent => gameEvent.Type == "enemy_action"));
     }
 
     public void UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType()
@@ -796,7 +889,7 @@ public sealed class CombatSliceTests
     }
 
     private sealed class RunCombatPackage(RunDefinition run, CharacterDefinition character,
-        EnemyDefinition enemy, IEnumerable<CardDefinition> cards) : IRulePackage
+        EnemyDefinition enemy, IEnumerable<CardDefinition> cards, EncounterDefinition encounter) : IRulePackage
     {
         public PackageInfo Info { get; } = new("run-combat-fixture", "1.0.0");
 
@@ -806,6 +899,18 @@ public sealed class CombatSliceTests
             registry.Register(character);
             registry.Register(enemy);
             foreach (var card in cards) registry.Register(card);
+            registry.Register(encounter);
+        }
+    }
+
+    private sealed class MultiEnemyPackage(CardDefinition card, params EnemyDefinition[] enemies) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("multi-enemy-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(card);
+            foreach (var enemy in enemies) registry.Register(enemy);
         }
     }
 
@@ -915,6 +1020,7 @@ internal static class Program
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
+        tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
         tests.NamedRandomStreamsAreDeterministicAndCountCalls();
@@ -931,6 +1037,7 @@ internal static class Program
         tests.NestedCombatReturnsToItsParentRoom();
         tests.UnknownRoomOddsExposeOrderedModHooks();
         tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
+        tests.CombatEncounterSupportsMultipleEnemiesAndSelectedTargets();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
         tests.BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout();
@@ -939,7 +1046,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 28 gameplay checks.");
+        Console.WriteLine("Passed 30 gameplay checks.");
     }
 }
 

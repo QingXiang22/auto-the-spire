@@ -9,6 +9,8 @@ public static class BaseSpireIds
     public static readonly ContentId DefendIronclad = ContentId.Parse("base-spire:defend-ironclad");
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
+    public static readonly ContentId CalcifiedCultist = ContentId.Parse("base-spire:calcified-cultist");
+    public static readonly ContentId CultistsNormal = ContentId.Parse("base-spire:cultists-normal");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
@@ -30,7 +32,7 @@ public static class BaseSpireContent
         IroncladStartingGold, IroncladStarterDeck(), [BaseSpireIds.BurningBlood]);
 }
 
-public sealed class BaseSpirePackage(bool deadlyEnemies = false) : IRulePackage
+public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemies = false) : IRulePackage
 {
     public PackageInfo Info { get; } = new("base-spire", "0.1.0");
 
@@ -56,7 +58,19 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false) : IRulePackage
             new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff, AppliedPower: BaseSpireIds.Ritual, AppliedPowerAmount: ritual);
         var darkStrike = new EnemyActionDefinition(ContentId.Parse("base-spire:damp-cultist-dark-strike"),
             new AttackEffect(attack, TargetSelector.FirstEnemy), IntentKind.Attack, IntentDamage: attack);
-        registry.Register(new EnemyDefinition(BaseSpireIds.DampCultist, 52, 54, [incantation, darkStrike]));
+        registry.Register(new EnemyDefinition(BaseSpireIds.DampCultist,
+            toughEnemies ? 51 : 52, toughEnemies ? 53 : 54, [incantation, darkStrike]));
+
+        var calcifiedAttack = deadlyEnemies ? 11 : 9;
+        var calcifiedIncantation = new EnemyActionDefinition(ContentId.Parse("base-spire:calcified-cultist-incantation"),
+            new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
+            AppliedPower: BaseSpireIds.Ritual, AppliedPowerAmount: 2);
+        var calcifiedDarkStrike = new EnemyActionDefinition(ContentId.Parse("base-spire:calcified-cultist-dark-strike"),
+            new AttackEffect(calcifiedAttack), IntentKind.Attack, IntentDamage: calcifiedAttack);
+        registry.Register(new EnemyDefinition(BaseSpireIds.CalcifiedCultist,
+            toughEnemies ? 39 : 38, toughEnemies ? 42 : 41, [calcifiedIncantation, calcifiedDarkStrike]));
+        registry.Register(new EncounterDefinition(BaseSpireIds.CultistsNormal, RunRoomType.Monster,
+            [BaseSpireIds.CalcifiedCultist, BaseSpireIds.DampCultist]));
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());

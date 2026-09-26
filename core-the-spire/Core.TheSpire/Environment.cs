@@ -1,5 +1,10 @@
 namespace CoreTheSpire;
 
+public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? InstanceId = null);
+
+public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Block, int Strength,
+    IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers);
+
 public sealed class CombatEnvironment(GameDefinition definition)
 {
     public GameSession Start(uint seed, string playerId, int playerHp, int playerMaxHp,
@@ -8,6 +13,20 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
     /// <summary>Starts combat from an active run room, using the run deck and its shared RNG streams.</summary>
     public GameSession StartForRun(RunSession runSession, string enemyId, int? enemyHp = null)
+        => StartForRun(runSession, [new CombatEnemySpawn(enemyId, enemyHp)]);
+
+    public GameSession StartEncounterForRun(RunSession runSession, ContentId encounterId)
+    {
+        ArgumentNullException.ThrowIfNull(runSession);
+        if (!definition.Encounters.TryGetValue(encounterId, out var encounter))
+            throw new KeyNotFoundException($"Unknown encounter '{encounterId}'.");
+        if (runSession.State.CurrentRoom != encounter.RoomType)
+            throw new InvalidOperationException($"Encounter '{encounterId}' is incompatible with active room '{runSession.State.CurrentRoom}'.");
+        return StartForRun(runSession, encounter.EnemyIds
+            .Select(enemyId => new CombatEnemySpawn(enemyId.ToString())).ToArray());
+    }
+
+    private GameSession StartForRun(RunSession runSession, IReadOnlyList<CombatEnemySpawn> spawns)
     {
         ArgumentNullException.ThrowIfNull(runSession);
         var run = runSession.State;
@@ -16,12 +35,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
             throw new InvalidOperationException("Combat can only start in an active Monster, Elite, or Boss room.");
         if (run.ActiveCombat is not null)
             throw new InvalidOperationException("This run already has an active combat session.");
-        var enemyDefinition = definition.Enemies.Values.SingleOrDefault(e => e.Id.Value == enemyId || e.Id.ToString() == enemyId)
-            ?? throw new KeyNotFoundException($"Unknown enemy '{enemyId}'.");
-        if (enemyDefinition.Actions.Count == 0)
-            throw new InvalidOperationException($"Enemy '{enemyId}' has no actions.");
-        if (enemyHp is < 1 || enemyHp > enemyDefinition.MaxHp)
-            throw new ArgumentOutOfRangeException(nameof(enemyHp));
+        foreach (var spawn in spawns)
+        {
+            var enemyDefinition = FindEnemy(spawn.EnemyId);
+            if (enemyDefinition.Actions.Count == 0)
+                throw new InvalidOperationException($"Enemy '{spawn.EnemyId}' has no actions.");
+            if (spawn.Hp is < 1 || spawn.Hp > enemyDefinition.MaxHp)
+                throw new ArgumentOutOfRangeException(nameof(spawns));
+        }
         foreach (var cardId in run.Deck)
             if (!definition.Cards.ContainsKey(cardId))
                 throw new InvalidOperationException($"Run card '{cardId}' is not registered in this combat definition.");
@@ -29,7 +50,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var shuffledDeck = run.Deck.ToList();
         run.Random.Get("shuffle").Shuffle(shuffledDeck);
         var session = Start(run.Random, run.Character.Id.ToString(), run.Hp, run.MaxHp,
-            shuffledDeck.Take(5), enemyId, enemyHp, shuffledDeck.Skip(5));
+            shuffledDeck.Take(5), spawns, shuffledDeck.Skip(5));
         session.RunOwner = runSession;
         run.ActiveCombat = session;
         return session;
@@ -38,30 +59,91 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
         IEnumerable<ContentId> hand, string enemyId, int? enemyHp, IEnumerable<ContentId>? drawPile)
     {
-        var enemyDefinition = definition.Enemies.Values.Single(e => e.Id.Value == enemyId || e.Id.ToString() == enemyId);
+        return Start(rng, playerId, playerHp, playerMaxHp, hand,
+            [new CombatEnemySpawn(enemyId, enemyHp)], drawPile);
+    }
+
+    public GameSession StartEncounter(uint seed, string playerId, int playerHp, int playerMaxHp,
+        IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile = null)
+        => Start(new RandomStreams(seed), playerId, playerHp, playerMaxHp, hand, enemies, drawPile);
+
+    public GameSession StartEncounter(uint seed, string playerId, int playerHp, int playerMaxHp,
+        IEnumerable<ContentId> hand, ContentId encounterId)
+    {
+        if (!definition.Encounters.TryGetValue(encounterId, out var encounter))
+            throw new KeyNotFoundException($"Unknown encounter '{encounterId}'.");
+        return StartEncounter(seed, playerId, playerHp, playerMaxHp, hand,
+            encounter.EnemyIds.Select(enemyId => new CombatEnemySpawn(enemyId.ToString())));
+    }
+
+    private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
+        IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile)
+    {
+        ArgumentNullException.ThrowIfNull(enemies);
+        var enemySpawns = enemies.ToArray();
+        if (enemySpawns.Length == 0) throw new ArgumentException("A combat encounter needs at least one enemy.", nameof(enemies));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(playerMaxHp);
         if (playerHp < 0 || playerHp > playerMaxHp) throw new ArgumentOutOfRangeException(nameof(playerHp));
-        if (enemyDefinition.Actions.Count == 0) throw new InvalidOperationException($"Enemy '{enemyId}' has no actions.");
-        var hp = enemyHp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
-        if (hp < 1 || hp > enemyDefinition.MaxHp) throw new ArgumentOutOfRangeException(nameof(enemyHp));
+        var prepared = new (CombatEnemySpawn Spawn, EnemyDefinition Definition, string InstanceId)[enemySpawns.Length];
+        var instanceIds = new HashSet<string>(StringComparer.Ordinal);
+        for (var i = 0; i < enemySpawns.Length; i++)
+        {
+            var spawn = enemySpawns[i];
+            var enemyDefinition = FindEnemy(spawn.EnemyId);
+            if (enemyDefinition.Actions.Count == 0)
+                throw new InvalidOperationException($"Enemy '{spawn.EnemyId}' has no actions.");
+            var entityId = spawn.InstanceId ?? (enemySpawns.Length == 1
+                ? enemyDefinition.Id.ToString()
+                : $"{enemyDefinition.Id}#{i + 1}");
+            ArgumentException.ThrowIfNullOrWhiteSpace(entityId);
+            if (!instanceIds.Add(entityId)) throw new ArgumentException("Enemy instance IDs must be unique.", nameof(enemies));
+            if (spawn.Hp is < 1 || spawn.Hp > enemyDefinition.MaxHp)
+                throw new ArgumentOutOfRangeException(nameof(enemies));
+            prepared[i] = (spawn, enemyDefinition, entityId);
+        }
+
+        var combatEnemies = new List<EnemyCombatState>(enemySpawns.Length);
+        foreach (var (spawn, enemyDefinition, entityId) in prepared)
+        {
+            var hp = spawn.Hp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
+            combatEnemies.Add(new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition));
+        }
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, hand, drawPile),
-            new EntityState(enemyDefinition.Id.ToString(), true, hp, hp), enemyDefinition);
+            combatEnemies);
         return new GameSession(state, rng);
     }
+
+    private EnemyDefinition FindEnemy(string enemyId) => definition.Enemies.Values
+        .SingleOrDefault(e => e.Id.Value == enemyId || e.Id.ToString() == enemyId)
+        ?? throw new KeyNotFoundException($"Unknown enemy '{enemyId}'.");
 
     public CombatObservation Observe(GameSession session) => Observe(session.State);
 
     private CombatObservation Observe(GameState state)
     {
-        var next = state.EnemyDefinition.Actions[Math.Min(state.EnemyActionIndex, state.EnemyDefinition.Actions.Count - 1)];
-        var intentDamage = Math.Max(0, next.IntentDamage + state.Enemy.Strength);
+        var primary = state.FirstLivingEnemy is { } living
+            ? state.Enemies.Single(enemy => ReferenceEquals(enemy.Creature, living))
+            : state.Enemies[0];
+        var next = primary.Definition.Actions[Math.Min(primary.ActionIndex, primary.Definition.Actions.Count - 1)];
+        var intentDamage = Math.Max(0, next.IntentDamage + primary.Creature.Strength);
         if (state.HasPowerRole(state.Player.Creature, PowerRole.Vulnerable)) intentDamage = (int)MathF.Floor(intentDamage * 1.5f);
         return new CombatObservation(state.Turn, state.Player.Creature.Hp, state.Player.Creature.MaxHp,
-            state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(), state.Enemy.Hp,
-            state.Enemy.MaxHp, state.Enemy.Block, state.Enemy.Strength, next.Intent, intentDamage,
-            new Dictionary<ContentId, int>(state.Enemy.Powers), state.IsTerminal,
-            state.PendingChoice is { } choice ? new PendingChoiceView(choice.Prompt, choice.Options.Select(option => option.Label).ToArray()) : null);
+            state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(), primary.Creature.Hp,
+            primary.Creature.MaxHp, primary.Creature.Block, primary.Creature.Strength, next.Intent, intentDamage,
+            new Dictionary<ContentId, int>(primary.Creature.Powers), state.IsTerminal,
+            state.PendingChoice is { } choice ? new PendingChoiceView(choice.Prompt, choice.Options.Select(option => option.Label).ToArray()) : null,
+            Array.AsReadOnly(state.Enemies.Select(enemy => ObserveEnemy(state, enemy)).ToArray()));
+    }
+
+    private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
+    {
+        var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
+        var damage = Math.Max(0, action.IntentDamage + enemy.Creature.Strength);
+        if (state.HasPowerRole(state.Player.Creature, PowerRole.Vulnerable)) damage = (int)MathF.Floor(damage * 1.5f);
+        return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
+            enemy.Creature.Block, enemy.Creature.Strength, action.Intent, damage,
+            new Dictionary<ContentId, int>(enemy.Creature.Powers));
     }
 
     public IReadOnlyList<PlayerAction> LegalActions(GameSession session) => LegalActions(session.State);
@@ -73,11 +155,17 @@ public sealed class CombatEnvironment(GameDefinition definition)
             return Enumerable.Range(0, pending.Options.Count).Select(i => (PlayerAction)new ChooseOptionAction(i)).ToArray();
         if (!state.IsPlayerTurn) return [];
         var actions = new List<PlayerAction> { new EndTurnAction() };
+        var enemies = state.Enemies.Where(enemy => enemy.Creature.Hp > 0).ToArray();
         for (var i = 0; i < state.Player.Hand.Count; i++)
         {
             var card = definition.Cards[state.Player.Hand[i]];
-            if (card.Cost <= state.Player.Energy)
-                actions.Add(new PlayCardAction(i, card.Target == TargetSelector.Self ? state.Player.Id : state.Enemy.Hp > 0 ? state.Enemy.Id : null));
+            if (card.Cost > state.Player.Energy) continue;
+            if (card.Target == TargetSelector.Self)
+                actions.Add(new PlayCardAction(i, state.Player.Id));
+            else if (card.Target == TargetSelector.SelectedTarget)
+                actions.AddRange(enemies.Select(enemy => new PlayCardAction(i, enemy.Creature.Id)));
+            else
+                actions.Add(new PlayCardAction(i, enemies.FirstOrDefault()?.Creature.Id));
         }
         return actions;
     }
@@ -119,9 +207,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.Player.Energy -= card.Cost;
             state.Player.MutablePlayPile.Add(cardId);
             state.PendingPlayedCard = cardId;
-            state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.Enemy.Id, 0);
             var selectedTarget = play.TargetId == state.Player.Id ? state.Player.Creature
-                : play.TargetId == state.Enemy.Id ? state.Enemy : null;
+                : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
+            state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
             EffectExecutor.Execute(session, state.Player.Creature, card.Effect, selectedTarget);
             if (state.PendingChoice is null) FinalizePlayedCard(state);
         }
@@ -165,31 +253,63 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnEnd);
                     break;
                 case EndTurnResolutionStage.EnemyAction:
-                    state.Enemy.Block = 0;
-                    var action = state.EnemyDefinition.Actions[state.EnemyActionIndex];
-                    state.Emit(session, "enemy_action", state.Enemy.Id, state.Player.Id, (int)action.Intent);
+                    if (state.Player.Creature.Hp <= 0)
+                    {
+                        state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
+                        break;
+                    }
+                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                        state.CurrentEnemyIndex++;
+                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    {
+                        state.CurrentEnemyIndex = 0;
+                        state.EndTurnStage = EndTurnResolutionStage.EnemyTurnEndPowers;
+                        break;
+                    }
+                    var actingEnemy = state.Enemies[state.CurrentEnemyIndex];
+                    actingEnemy.Creature.Block = 0;
+                    var action = actingEnemy.Definition.Actions[actingEnemy.ActionIndex];
+                    state.Emit(session, "enemy_action", actingEnemy.Creature.Id, state.Player.Id, (int)action.Intent);
                     state.EndTurnStage = EndTurnResolutionStage.ApplyEnemyActionPower;
-                    EffectExecutor.Execute(session, state.Enemy, action.Effect, state.Player.Creature);
+                    EffectExecutor.Execute(session, actingEnemy.Creature, action.Effect, state.Player.Creature);
                     break;
                 case EndTurnResolutionStage.ApplyEnemyActionPower:
-                    var selectedAction = state.EnemyDefinition.Actions[state.EnemyActionIndex];
-                    state.EndTurnStage = EndTurnResolutionStage.EnemyTurnEndPowers;
+                    var currentEnemy = state.Enemies[state.CurrentEnemyIndex];
+                    var selectedAction = currentEnemy.Definition.Actions[currentEnemy.ActionIndex];
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
                     if (selectedAction.AppliedPower is { } appliedPower)
-                        state.ApplyPower(session, state.Enemy, appliedPower, selectedAction.AppliedPowerAmount, true);
+                        state.ApplyPower(session, currentEnemy.Creature, appliedPower,
+                            selectedAction.AppliedPowerAmount, currentEnemy.Creature);
+                    state.CurrentEnemyIndex++;
                     break;
                 case EndTurnResolutionStage.EnemyTurnEndPowers:
-                    state.EndTurnStage = EndTurnResolutionStage.PlayerEnemySideEndPowers;
-                    BeginPowerQueue(state, state.Enemy, PowerTrigger.AfterEnemyTurnEnd);
+                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                        state.CurrentEnemyIndex++;
+                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    {
+                        state.CurrentEnemyIndex = 0;
+                        state.EndTurnStage = EndTurnResolutionStage.PlayerEnemySideEndPowers;
+                        break;
+                    }
+                    var endedEnemy = state.Enemies[state.CurrentEnemyIndex++];
+                    BeginPowerQueue(state, endedEnemy.Creature, PowerTrigger.AfterEnemyTurnEnd);
                     break;
                 case EndTurnResolutionStage.PlayerEnemySideEndPowers:
                     state.EndTurnStage = EndTurnResolutionStage.AdvanceEnemyAction;
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterEnemyTurnEnd);
                     break;
                 case EndTurnResolutionStage.AdvanceEnemyAction:
-                    var currentAction = state.EnemyDefinition.Actions[state.EnemyActionIndex];
-                    state.EnemyActionIndex = currentAction.Id == state.EnemyDefinition.Actions[^1].Id && state.EnemyDefinition.LoopLastAction
-                        ? state.EnemyDefinition.Actions.Count - 1
-                        : Math.Min(state.EnemyActionIndex + 1, state.EnemyDefinition.Actions.Count - 1);
+                    foreach (var enemy in state.Enemies)
+                    {
+                        var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
+                        enemy.ActionIndex = currentAction.Id == enemy.Definition.Actions[^1].Id
+                            && enemy.Definition.LoopLastAction
+                            ? enemy.Definition.Actions.Count - 1
+                            : Math.Min(enemy.ActionIndex + 1, enemy.Definition.Actions.Count - 1);
+                    }
+                    state.CurrentEnemyIndex = 0;
                     state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
                     break;
                 case EndTurnResolutionStage.StartPlayerTurn:
