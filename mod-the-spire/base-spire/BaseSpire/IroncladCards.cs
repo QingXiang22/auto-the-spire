@@ -78,12 +78,16 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":4,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}"""),
             Target: TargetSelector.AllOpponents, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":7,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.TrueGrit, 1, CardType.Skill,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":7},{"op":"randomlyMoveCardFromPile","from":"hand","to":"exhaust"}]}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":9},{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
             [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut]));
     }
 }

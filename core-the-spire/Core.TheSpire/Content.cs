@@ -601,6 +601,11 @@ public sealed class ContentRegistry
                 ArgumentException.ThrowIfNullOrWhiteSpace(chooseCard.Prompt);
                 if (chooseCard.OnSelected is { } onSelected) ValidateEffectReferences(onSelected, owner);
                 break;
+            case RandomlyMoveCardFromPileEffect randomCard:
+                if (!Enum.IsDefined(randomCard.From) || !Enum.IsDefined(randomCard.To)
+                    || !Enum.IsDefined(randomCard.Filter))
+                    throw new InvalidOperationException($"{owner} has an invalid random card selection pile or filter.");
+                break;
             case UpgradeCardsInPileEffect upgradeCards when !Enum.IsDefined(upgradeCards.Pile):
                 throw new InvalidOperationException($"{owner} upgrades an invalid card pile.");
             case UpgradeCardsInPileEffect:
