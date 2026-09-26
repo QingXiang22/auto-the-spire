@@ -584,6 +584,9 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an invalid HP loss target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
                 break;
+            case RandomAttackEffect randomAttack:
+                ArgumentOutOfRangeException.ThrowIfNegative(randomAttack.Amount);
+                break;
             case AddCardsToPileEffect addCards:
                 addCards.Card.Validate();
                 if (!_cards.ContainsKey(addCards.Card))
