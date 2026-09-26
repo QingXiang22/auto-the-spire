@@ -73,6 +73,14 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
     public int ActionIndex { get; set; }
+    public ContentId? LastActionId { get; private set; }
+    public int ConsecutiveActionCount { get; private set; }
+
+    public void SelectAction(ContentId actionId)
+    {
+        ConsecutiveActionCount = LastActionId == actionId ? ConsecutiveActionCount + 1 : 1;
+        LastActionId = actionId;
+    }
 }
 
 internal sealed class GameState
@@ -238,7 +246,9 @@ public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Opti
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
     IReadOnlyList<ContentId> Hand, int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> EnemyPowers, bool IsTerminal,
-    PendingChoiceView? PendingChoice, IReadOnlyList<EnemyCombatObservation> Enemies);
+    PendingChoiceView? PendingChoice, IReadOnlyList<EnemyCombatObservation> Enemies,
+    IReadOnlyList<ContentId> DrawPile, IReadOnlyList<ContentId> DiscardPile,
+    IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;

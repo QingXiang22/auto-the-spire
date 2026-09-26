@@ -45,7 +45,7 @@ public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, Inte
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
     ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
     EnemyActionTransition? Transition = null);
-public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1);
+public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null);
 public enum EnemyActionRepeatPolicy { Allow, PreventImmediateRepeat }
 
 public sealed record EnemyActionTransition
@@ -61,6 +61,8 @@ public sealed record EnemyActionTransition
         {
             choice.ActionId.Validate();
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(choice.Weight);
+            if (choice.MaxConsecutiveUses is { } maxUses)
+                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxUses);
         }
         if (!Enum.IsDefined(repeatPolicy)) throw new ArgumentOutOfRangeException(nameof(repeatPolicy));
         if (repeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
@@ -100,14 +102,22 @@ public sealed class EncounterDefinition
     public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds,
         bool isWeak = false, IEnumerable<ContentId>? tags = null,
         IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
+        : this(id, roomType, ToFixedSlots(enemyIds), isWeak, tags, startingActionsByEnemyIndex)
+    {
+    }
+
+    private EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<EncounterEnemySlot> enemySlots,
+        bool isWeak, IEnumerable<ContentId>? tags,
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex)
     {
         id.Validate();
-        ArgumentNullException.ThrowIfNull(enemyIds);
-        var enemies = enemyIds.ToArray();
+        ArgumentNullException.ThrowIfNull(enemySlots);
+        var slots = enemySlots.ToArray();
         if (roomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss))
             throw new ArgumentOutOfRangeException(nameof(roomType), "Encounters must be Monster, Elite, or Boss rooms.");
-        if (enemies.Length == 0) throw new ArgumentException("An encounter must contain at least one enemy.", nameof(enemyIds));
-        foreach (var enemyId in enemies) enemyId.Validate();
+        if (slots.Length == 0) throw new ArgumentException("An encounter must contain at least one enemy.", nameof(enemySlots));
+        if (slots.Any(slot => slot is null)) throw new ArgumentException("Encounter slots cannot be null.", nameof(enemySlots));
+        ValidateChoiceGroups(slots);
         var encounterTags = tags?.ToArray() ?? [];
         foreach (var tag in encounterTags) tag.Validate();
         var startingActions = startingActionsByEnemyIndex is null
@@ -115,13 +125,13 @@ public sealed class EncounterDefinition
             : new Dictionary<int, ContentId>(startingActionsByEnemyIndex);
         foreach (var (enemyIndex, actionId) in startingActions)
         {
-            if (enemyIndex < 0 || enemyIndex >= enemies.Length)
+            if (enemyIndex < 0 || enemyIndex >= slots.Length)
                 throw new ArgumentOutOfRangeException(nameof(startingActionsByEnemyIndex), "Starting action index must refer to an enemy in this encounter.");
             actionId.Validate();
         }
         Id = id;
         RoomType = roomType;
-        EnemyIds = Array.AsReadOnly(enemies);
+        EnemySlots = Array.AsReadOnly(slots);
         IsWeak = isWeak;
         Tags = Array.AsReadOnly(encounterTags);
         StartingActionsByEnemyIndex = new ReadOnlyDictionary<int, ContentId>(startingActions);
@@ -129,10 +139,62 @@ public sealed class EncounterDefinition
 
     public ContentId Id { get; }
     public RunRoomType RoomType { get; }
-    public IReadOnlyList<ContentId> EnemyIds { get; }
+    public IReadOnlyList<EncounterEnemySlot> EnemySlots { get; }
     public bool IsWeak { get; }
     public IReadOnlyList<ContentId> Tags { get; }
     public IReadOnlyDictionary<int, ContentId> StartingActionsByEnemyIndex { get; }
+
+    public static EncounterDefinition WithEnemySlots(ContentId id, RunRoomType roomType,
+        IEnumerable<EncounterEnemySlot> enemySlots, bool isWeak = false, IEnumerable<ContentId>? tags = null,
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null) =>
+        new(id, roomType, enemySlots, isWeak, tags, startingActionsByEnemyIndex);
+
+    public IReadOnlyList<EncounterEnemySelection> SelectEnemies(SeededRandom random)
+    {
+        ArgumentNullException.ThrowIfNull(random);
+        var selectedByGroup = new Dictionary<ContentId, HashSet<ContentId>>();
+        var selected = new EncounterEnemySelection[EnemySlots.Count];
+        for (var i = 0; i < EnemySlots.Count; i++)
+        {
+            var slot = EnemySlots[i];
+            var candidates = slot.EnemyChoices;
+            HashSet<ContentId>? groupSelection = null;
+            if (slot.UniqueChoiceGroup is { } group)
+            {
+                if (!selectedByGroup.TryGetValue(group, out groupSelection))
+                    selectedByGroup.Add(group, groupSelection = []);
+                candidates = candidates.Where(enemyId => !groupSelection.Contains(enemyId)).ToArray();
+            }
+            if (candidates.Count == 0)
+                throw new InvalidOperationException($"Encounter '{Id}' has no enemy choices left for slot {i}.");
+            var enemyId = slot.ChooseRandomly ? candidates[random.NextInt(candidates.Count)] : candidates[0];
+            groupSelection?.Add(enemyId);
+            ContentId? startingAction = StartingActionsByEnemyIndex.TryGetValue(i, out var overrideId) ? overrideId : null;
+            selected[i] = new EncounterEnemySelection(enemyId,
+                startingAction);
+        }
+        return Array.AsReadOnly(selected);
+    }
+
+    private static EncounterEnemySlot[] ToFixedSlots(IEnumerable<ContentId> enemyIds)
+    {
+        ArgumentNullException.ThrowIfNull(enemyIds);
+        return enemyIds.Select(EncounterEnemySlot.Fixed).ToArray();
+    }
+
+    private static void ValidateChoiceGroups(IReadOnlyList<EncounterEnemySlot> slots)
+    {
+        foreach (var group in slots.Where(slot => slot.UniqueChoiceGroup is not null)
+            .GroupBy(slot => slot.UniqueChoiceGroup!.Value))
+        {
+            var groupedSlots = group.ToArray();
+            var choices = groupedSlots[0].EnemyChoices.ToHashSet();
+            if (groupedSlots.Any(slot => !slot.ChooseRandomly || !slot.EnemyChoices.ToHashSet().SetEquals(choices)))
+                throw new ArgumentException($"All slots in unique-choice group '{group.Key}' must use the same random enemy pool.", nameof(slots));
+            if (choices.Count < groupedSlots.Length)
+                throw new ArgumentException($"Unique-choice group '{group.Key}' has fewer enemy choices than slots.", nameof(slots));
+        }
+    }
 }
 public sealed record EnemyDefinition
 {
@@ -200,25 +262,32 @@ public sealed record EnemyDefinition
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
 
     internal int ResolveStartingActionIndex(SeededRandom random) => StartingTransition is { } transition
-        ? ResolveTransitionIndex(transition, null, random)
+        ? ResolveTransitionIndex(transition, null, 0, random)
         : StartingActionIndex;
 
-    internal int ResolveNextActionIndex(ContentId currentActionId, SeededRandom random)
+    internal int ResolveNextActionIndex(ContentId currentActionId, ContentId? lastActionId,
+        int consecutiveActionCount, SeededRandom random)
     {
         var current = Actions[GetActionIndex(currentActionId)];
         if (current.NextActionId is { } next) return GetActionIndex(next);
         if (current.Transition is { } transition)
-            return ResolveTransitionIndex(transition, currentActionId, random);
+            return ResolveTransitionIndex(transition, lastActionId, consecutiveActionCount, random);
         return currentActionId == Actions[^1].Id && LoopLastAction
             ? Actions.Count - 1
             : Math.Min(GetActionIndex(currentActionId) + 1, Actions.Count - 1);
     }
 
-    private int ResolveTransitionIndex(EnemyActionTransition transition, ContentId? previousActionId, SeededRandom random)
+    private int ResolveTransitionIndex(EnemyActionTransition transition, ContentId? lastActionId,
+        int consecutiveActionCount, SeededRandom random)
     {
-        var choices = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat && previousActionId is { } previous
-            ? transition.Choices.Where(choice => choice.ActionId != previous).ToArray()
-            : transition.Choices.ToArray();
+        var choices = transition.Choices.Where(choice =>
+        {
+            var maximumConsecutiveUses = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
+                ? 1
+                : choice.MaxConsecutiveUses;
+            if (maximumConsecutiveUses is null || lastActionId != choice.ActionId) return true;
+            return consecutiveActionCount < maximumConsecutiveUses.Value;
+        }).ToArray();
         if (choices.Length == 0)
             throw new InvalidOperationException("Enemy transition has no eligible action choices.");
         var roll = random.NextInt(choices.Sum(choice => choice.Weight));
@@ -231,8 +300,8 @@ public sealed record EnemyDefinition
     }
 }
 
-public enum CardType { Attack, Skill, Power }
-public enum IntentKind { None, Attack, Buff }
+public enum CardType { Attack, Skill, Power, Status }
+public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd }
 public enum PowerRole { None, Strength, Vulnerable }
 
@@ -345,20 +414,25 @@ public sealed class ContentRegistry
             throw new InvalidOperationException("At least one rules package must be loaded.");
         foreach (var encounter in _encounters.Values)
         {
-            foreach (var enemyId in encounter.EnemyIds)
+            foreach (var enemyId in encounter.EnemySlots.SelectMany(slot => slot.EnemyChoices).Distinct())
                 if (!_enemies.ContainsKey(enemyId))
                     throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
             foreach (var (enemyIndex, actionId) in encounter.StartingActionsByEnemyIndex)
             {
-                var enemyId = encounter.EnemyIds[enemyIndex];
-                if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
-                    throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
+                foreach (var enemyId in encounter.EnemySlots[enemyIndex].EnemyChoices)
+                    if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
+                        throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
             }
         }
         foreach (var enemy in _enemies.Values)
         foreach (var action in enemy.Actions)
+        {
             if (action.AppliedPower is { } powerId && !_powers.ContainsKey(powerId))
                 throw new InvalidOperationException($"Enemy action '{action.Id}' references unknown power '{powerId}'.");
+            ValidateEffectReferences(action.Effect, $"Enemy action '{action.Id}'");
+        }
+        foreach (var card in _cards.Values)
+            ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
         foreach (var power in _powers.Values)
             if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
                 throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
@@ -396,6 +470,39 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"Run event pool references unknown content '{id}'.");
             if (definition.Kind != expectedKind)
                 throw new InvalidOperationException($"Run event '{id}' has kind '{definition.Kind}', expected '{expectedKind}'.");
+        }
+    }
+
+    private void ValidateEffectReferences(EffectNode effect, string owner)
+    {
+        switch (effect)
+        {
+            case SequenceEffect sequence:
+                foreach (var child in sequence.Effects) ValidateEffectReferences(child, owner);
+                break;
+            case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
+                throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
+            case AddCardsToPileEffect addCards:
+                addCards.Card.Validate();
+                if (!_cards.ContainsKey(addCards.Card))
+                    throw new InvalidOperationException($"{owner} adds unknown card '{addCards.Card}'.");
+                if (!Enum.IsDefined(addCards.Pile) || !Enum.IsDefined(addCards.Target))
+                    throw new InvalidOperationException($"{owner} has an invalid card destination or target.");
+                ArgumentOutOfRangeException.ThrowIfNegative(addCards.Count);
+                break;
+            case ChooseEffect choice:
+                foreach (var option in choice.Options)
+                    if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);
+                break;
+            case IfEffect conditional:
+                ValidateEffectReferences(conditional.Then, owner);
+                if (conditional.Else is { } elseEffect) ValidateEffectReferences(elseEffect, owner);
+                break;
+            case RepeatEffect repeat:
+                ValidateEffectReferences(repeat.Effect, owner);
+                break;
+            case CustomEffect custom when !_customEffects.ContainsKey(custom.Handler):
+                throw new InvalidOperationException($"{owner} references unknown custom effect '{custom.Handler}'.");
         }
     }
 

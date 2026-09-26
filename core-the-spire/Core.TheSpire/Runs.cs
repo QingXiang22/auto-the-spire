@@ -250,7 +250,7 @@ public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType 
     IReadOnlyList<RunRoomType> RoomTypes);
 
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId);
+    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds);
 
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
     IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
@@ -324,6 +324,7 @@ internal sealed class RunState
         Definition = definition;
         Character = character;
         Random = random;
+        Encounters = encounters;
         Hp = character.MaxHp;
         MaxHp = character.MaxHp;
         Gold = character.StartingGold;
@@ -346,7 +347,7 @@ internal sealed class RunState
         {
             CurrentMapPointType = MapPointType.Ancient;
             RoomStack.Add(new RunRoomFrame(RunRoomType.Event, entryPoint.Id, false, null,
-                RoomContentStates[ActIndex]?.AncientEventId));
+                RoomContentStates[ActIndex]?.AncientEventId, []));
             Phase = RunPhase.ResolveRoom;
             VisitHistory.Add(new RunMapVisitView(ActIndex, entryPoint.Id, entryPoint.Type,
                 Array.AsReadOnly(new[] { RunRoomType.Event })));
@@ -361,6 +362,7 @@ internal sealed class RunState
     public RunDefinition Definition { get; }
     public CharacterDefinition Character { get; }
     public RandomStreams Random { get; }
+    public IReadOnlyDictionary<ContentId, EncounterDefinition>? Encounters { get; }
     public UnknownRoomOddsState? UnknownRoomOdds { get; }
     public IReadOnlyList<ActRoomContentState?> RoomContentStates { get; }
     public HashSet<ContentId> VisitedEventIds { get; } = [];
@@ -378,6 +380,8 @@ internal sealed class RunState
     public GameSession? ActiveCombat { get; set; }
     public RunRoomType? CurrentRoom => RoomStack.Count == 0 ? null : RoomStack[^1].RoomType;
     public ContentId? CurrentEncounterId => RoomStack.Count == 0 ? null : RoomStack[^1].EncounterId;
+    public IReadOnlyList<EncounterEnemySelection> CurrentEncounterSelections =>
+        RoomStack.Count == 0 ? Array.Empty<EncounterEnemySelection>() : RoomStack[^1].EnemySelections;
     public ContentId? CurrentEventId => RoomStack.Count == 0 ? null : RoomStack[^1].EventId;
     public ContentId? SelectEncounter(RunRoomType roomType) => roomType is RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss
         ? ActIndex < RoomContentStates.Count ? RoomContentStates[ActIndex]?.NextEncounter(roomType) : null
@@ -385,6 +389,15 @@ internal sealed class RunState
     public ContentId? SelectEvent(RunRoomType roomType) => roomType == RunRoomType.Event && ActIndex < RoomContentStates.Count
         ? RoomContentStates[ActIndex]?.NextEvent(VisitedEventIds)
         : null;
+
+    public RunRoomFrame CreateRoomFrame(RunRoomType roomType, string? mapPointId, ContentId? eventId)
+    {
+        var encounterId = SelectEncounter(roomType);
+        var enemySelections = encounterId is { } id && Encounters is not null && Encounters.TryGetValue(id, out var encounter)
+            ? encounter.SelectEnemies(Random.Get("encounter-enemies"))
+            : Array.Empty<EncounterEnemySelection>();
+        return new RunRoomFrame(roomType, mapPointId, false, encounterId, eventId, enemySelections);
+    }
     public string CurrentPointId { get; set; } = string.Empty;
     public MapPointType? CurrentMapPointType { get; set; }
     public RunPhase Phase { get; set; } = RunPhase.ChooseMapPoint;
@@ -405,7 +418,7 @@ public sealed class RunSession
 }
 
 internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId);
+    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<EncounterEnemySelection> EnemySelections);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -455,7 +468,8 @@ public sealed class RunEnvironment
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
             state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()),
             Array.AsReadOnly(state.RoomStack.Select(frame => new RunRoomFrameView(
-                frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId)).ToArray()));
+                frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
+                Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()))).ToArray()));
     }
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
@@ -480,8 +494,7 @@ public sealed class RunEnvironment
         state.CurrentMapPointType = point.Type;
         var blacklist = BuildRoomTypeBlacklist(state, point);
         var roomType = ResolveRoomType(state, point, blacklist);
-        state.RoomStack.Add(new RunRoomFrame(roomType, point.Id, false, state.SelectEncounter(roomType),
-            state.SelectEvent(roomType)));
+        state.RoomStack.Add(state.CreateRoomFrame(roomType, point.Id, state.SelectEvent(roomType)));
         state.VisitHistory.Add(new RunMapVisitView(state.ActIndex, point.Id, point.Type,
             Array.AsReadOnly(new[] { roomType })));
         state.Phase = RunPhase.ResolveRoom;
@@ -499,8 +512,7 @@ public sealed class RunEnvironment
         if (roomType == RunRoomType.Unassigned)
             throw new ArgumentOutOfRangeException(nameof(roomType));
 
-        state.RoomStack.Add(new RunRoomFrame(roomType, null, false, state.SelectEncounter(roomType),
-            state.SelectEvent(roomType)));
+        state.RoomStack.Add(state.CreateRoomFrame(roomType, null, state.SelectEvent(roomType)));
         state.Phase = RunPhase.ResolveRoom;
         if (state.RoomStack.Any(frame => frame.MapPointId is not null) && state.VisitHistory.Count > 0)
         {
@@ -596,7 +608,7 @@ public sealed class RunEnvironment
             state.ActIndex++;
             if (state.ActIndex == state.Definition.Acts.Count)
             {
-                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null, null));
+                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null, null, []));
                 state.Phase = RunPhase.ResolveFinalEvent;
                 return Observe(session);
             }

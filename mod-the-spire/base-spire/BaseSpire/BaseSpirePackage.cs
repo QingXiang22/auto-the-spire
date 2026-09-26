@@ -19,10 +19,16 @@ public static class BaseSpireIds
     public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
     public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
     public static readonly ContentId NibbitsNormal = ContentId.Parse("base-spire:nibbits-normal");
+    public static readonly ContentId LeafSlimeSmall = ContentId.Parse("base-spire:leaf-slime-small");
+    public static readonly ContentId TwigSlimeSmall = ContentId.Parse("base-spire:twig-slime-small");
+    public static readonly ContentId LeafSlimeMedium = ContentId.Parse("base-spire:leaf-slime-medium");
+    public static readonly ContentId TwigSlimeMedium = ContentId.Parse("base-spire:twig-slime-medium");
+    public static readonly ContentId SlimesWeak = ContentId.Parse("base-spire:slimes-weak");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
     public static readonly ContentId Shrink = ContentId.Parse("base-spire:shrink");
+    public static readonly ContentId Slimed = ContentId.Parse("base-spire:slimed");
     public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -62,6 +68,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             EffectDsl.Parse("""{"op":"gainBlock","amount":5}"""), Target: TargetSelector.Self));
         registry.Register(new CardDefinition(BaseSpireIds.Bash, 2, CardType.Attack,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Slimed, 1, CardType.Status,
+            new DrawCardsEffect(1), Exhaust: true, Target: TargetSelector.Self));
 
         var ritual = deadlyEnemies ? 6 : 5;
         var attack = deadlyEnemies ? 3 : 1;
@@ -150,8 +158,77 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
                 [1] = nibbitHiss
             }));
 
+        var smallSlimeChoices = new[] { BaseSpireIds.LeafSlimeSmall, BaseSpireIds.TwigSlimeSmall };
+        var mediumSlimeChoices = new[] { BaseSpireIds.LeafSlimeMedium, BaseSpireIds.TwigSlimeMedium };
+        var smallSlimeGroup = ContentId.Parse("base-spire:distinct-small-slimes");
+        registry.Register(new EnemyDefinition(BaseSpireIds.LeafSlimeSmall,
+            toughEnemies ? 12 : 11, toughEnemies ? 16 : 15,
+            CreateLeafSmallActions(deadlyEnemies), startingTransition: CreateNoRepeatSlimeOpening()));
+        registry.Register(new EnemyDefinition(BaseSpireIds.TwigSlimeSmall,
+            toughEnemies ? 8 : 7, toughEnemies ? 12 : 11,
+            [new EnemyActionDefinition(ContentId.Parse("base-spire:twig-small-tackle"),
+                new AttackEffect(deadlyEnemies ? 5 : 4), IntentKind.Attack, deadlyEnemies ? 5 : 4)]));
+
+        var leafMediumClump = ContentId.Parse("base-spire:leaf-medium-clump-shot");
+        var leafMediumSticky = ContentId.Parse("base-spire:leaf-medium-sticky-shot");
+        registry.Register(new EnemyDefinition(BaseSpireIds.LeafSlimeMedium,
+            toughEnemies ? 33 : 32, toughEnemies ? 36 : 35,
+            [
+                new EnemyActionDefinition(leafMediumClump, new AttackEffect(deadlyEnemies ? 9 : 8),
+                    IntentKind.Attack, deadlyEnemies ? 9 : 8, NextActionId: leafMediumSticky),
+                new EnemyActionDefinition(leafMediumSticky,
+                    new AddCardsToPileEffect(BaseSpireIds.Slimed, CardPile.Discard, 2),
+                    IntentKind.Debuff, NextActionId: leafMediumClump)
+            ], startingActionId: leafMediumSticky));
+
+        var twigMediumClump = ContentId.Parse("base-spire:twig-medium-clump-shot");
+        var twigMediumSticky = ContentId.Parse("base-spire:twig-medium-sticky-shot");
+        var twigMediumTransition = new EnemyActionTransition(
+        [
+            new EnemyActionChoice(twigMediumClump, MaxConsecutiveUses: 2),
+            new EnemyActionChoice(twigMediumSticky, MaxConsecutiveUses: 1)
+        ]);
+        registry.Register(new EnemyDefinition(BaseSpireIds.TwigSlimeMedium,
+            toughEnemies ? 27 : 26, toughEnemies ? 29 : 29,
+            [
+                new EnemyActionDefinition(twigMediumClump, new AttackEffect(deadlyEnemies ? 12 : 11),
+                    IntentKind.Attack, deadlyEnemies ? 12 : 11, Transition: twigMediumTransition),
+                new EnemyActionDefinition(twigMediumSticky,
+                    new AddCardsToPileEffect(BaseSpireIds.Slimed, CardPile.Discard, 1),
+                    IntentKind.Debuff, Transition: twigMediumTransition)
+            ], startingActionId: twigMediumSticky));
+
+        registry.Register(EncounterDefinition.WithEnemySlots(BaseSpireIds.SlimesWeak, RunRoomType.Monster,
+        [
+            EncounterEnemySlot.ChooseOne(smallSlimeChoices, smallSlimeGroup),
+            EncounterEnemySlot.ChooseOne(mediumSlimeChoices),
+            EncounterEnemySlot.ChooseOne(smallSlimeChoices, smallSlimeGroup)
+        ], isWeak: true, tags: [ContentId.Parse("base-spire:slime")]));
+
         registry.Register(new BurningBloodRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
+    }
+
+    private static EnemyActionDefinition[] CreateLeafSmallActions(bool deadlyEnemies)
+    {
+        var tackle = ContentId.Parse("base-spire:leaf-small-tackle");
+        var goop = ContentId.Parse("base-spire:leaf-small-goop");
+        var transitions = CreateNoRepeatSlimeOpening();
+        return
+        [
+            new EnemyActionDefinition(tackle, new AttackEffect(deadlyEnemies ? 4 : 3), IntentKind.Attack,
+                deadlyEnemies ? 4 : 3, Transition: transitions),
+            new EnemyActionDefinition(goop, new AddCardsToPileEffect(BaseSpireIds.Slimed, CardPile.Discard),
+                IntentKind.Debuff, Transition: transitions)
+        ];
+    }
+
+    private static EnemyActionTransition CreateNoRepeatSlimeOpening()
+    {
+        var tackle = ContentId.Parse("base-spire:leaf-small-tackle");
+        var goop = ContentId.Parse("base-spire:leaf-small-goop");
+        var choices = new[] { new EnemyActionChoice(tackle), new EnemyActionChoice(goop) };
+        return new EnemyActionTransition(choices, EnemyActionRepeatPolicy.PreventImmediateRepeat);
     }
 
 }
