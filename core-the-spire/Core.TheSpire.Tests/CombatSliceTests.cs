@@ -372,6 +372,85 @@ public sealed class CombatSliceTests
         Assert.True(hook.TreasureIncreaseWasModified);
     }
 
+    public void RunCombatUsesTheRunDeckAndWritesItsOutcomeBack()
+    {
+        var runId = ContentId.Parse("test-fixture:combat-run");
+        var characterId = ContentId.Parse("test-fixture:combat-character");
+        var enemyId = ContentId.Parse("test-fixture:one-hit-enemy");
+        var deck = Enumerable.Range(0, 10)
+            .Select(index => ContentId.Parse($"test-fixture:run-strike-{index}"))
+            .ToArray();
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 3, MapPointType.Start, ["event"]),
+            new MapPointDefinition("event", 1, 3, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
+        ]);
+        var runDefinition = new RunDefinition(runId,
+        [
+            new ActDefinition(ContentId.Parse("test-fixture:combat-act"), _ => map,
+                (_, _) => RunRoomType.Event)
+        ]);
+        var package = new RunCombatPackage(runDefinition,
+            new CharacterDefinition(characterId, 60, 50, deck),
+            new EnemyDefinition(enemyId, 1, 1,
+            [
+                new EnemyActionDefinition(ContentId.Parse("test-fixture:idle"),
+                    new AttackEffect(100), IntentKind.Attack, 100)
+            ]), deck.Select(id => new CardDefinition(id, 0, CardType.Attack, new AttackEffect(1))));
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        registry.AddPackage(package);
+        var definition = registry.Build();
+        var runEnvironment = new RunEnvironment(definition, runId, characterId);
+        var combatEnvironment = new CombatEnvironment(definition);
+        var runSession = runEnvironment.Start(183);
+        runEnvironment.Step(runSession, new ChooseMapPointAction("event"));
+        runEnvironment.PushSubRoom(runSession, RunRoomType.Monster);
+
+        var combatSession = combatEnvironment.StartForRun(runSession, enemyId.ToString(), enemyHp: 1);
+        Assert.Equal(5, combatEnvironment.Observe(combatSession).Hand.Count);
+        Assert.Equal(5, combatEnvironment.Observe(combatSession).Hand.Distinct().Count());
+        Assert.True(combatEnvironment.Observe(combatSession).Hand.All(deck.Contains));
+        Assert.Throws<InvalidOperationException>(() => combatEnvironment.StartForRun(runSession, enemyId.ToString(), 1));
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteRoom(runSession,
+            RunResult(RunOutcome.RoomCleared, runEnvironment.Observe(runSession))));
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteCombat(runSession, combatSession));
+
+        var replayRun = runEnvironment.Start(183);
+        runEnvironment.Step(replayRun, new ChooseMapPointAction("event"));
+        runEnvironment.PushSubRoom(replayRun, RunRoomType.Monster);
+        var replayCombat = combatEnvironment.StartForRun(replayRun, enemyId.ToString(), enemyHp: 1);
+        Assert.True(combatEnvironment.Observe(combatSession).Hand.SequenceEqual(
+            combatEnvironment.Observe(replayCombat).Hand));
+
+        combatEnvironment.Step(combatSession, new PlayCardAction(0, enemyId.ToString()));
+        Assert.True(combatEnvironment.Observe(combatSession).IsTerminal);
+        var completed = runEnvironment.CompleteCombat(runSession, combatSession);
+        Assert.Equal(RunStatus.InProgress, completed.Status);
+        Assert.Equal(RunPhase.ResolveRoom, completed.Phase);
+        Assert.Equal(RunRoomType.Event, completed.CurrentRoom!.Value);
+        Assert.True(completed.VisitedMapPoints[^1].RoomTypes.SequenceEqual(
+            [RunRoomType.Event, RunRoomType.Monster]));
+        Assert.Equal(60, completed.Hp);
+        Assert.True(deck.SequenceEqual(completed.Deck));
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteCombat(runSession, combatSession));
+        var returnedToRoute = runEnvironment.CompleteRoom(runSession,
+            RunResult(RunOutcome.RoomCleared, completed));
+        Assert.Equal(RunPhase.ChooseMapPoint, returnedToRoute.Phase);
+
+        var defeatedRun = runEnvironment.Start(184);
+        runEnvironment.Step(defeatedRun, new ChooseMapPointAction("event"));
+        runEnvironment.PushSubRoom(defeatedRun, RunRoomType.Monster);
+        var doomedCombat = combatEnvironment.StartForRun(defeatedRun, enemyId.ToString(), enemyHp: 1);
+        combatEnvironment.Step(doomedCombat, new EndTurnAction());
+        Assert.Equal(0, combatEnvironment.Observe(doomedCombat).PlayerHp);
+        var lost = runEnvironment.CompleteCombat(defeatedRun, doomedCombat);
+        Assert.Equal(RunStatus.Lost, lost.Status);
+        Assert.Equal(RunPhase.Terminal, lost.Phase);
+        Assert.Equal(0, lost.Hp);
+    }
+
     public void UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType()
     {
         var map = new ActMapDefinition("start", "boss",
@@ -716,6 +795,20 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class RunCombatPackage(RunDefinition run, CharacterDefinition character,
+        EnemyDefinition enemy, IEnumerable<CardDefinition> cards) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("run-combat-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(run);
+            registry.Register(character);
+            registry.Register(enemy);
+            foreach (var card in cards) registry.Register(card);
+        }
+    }
+
     private sealed class ChoiceCardPackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("choice-test", "1.0.0");
@@ -837,6 +930,7 @@ internal static class Program
         tests.SinglePlayerRunDefeatIsTerminal();
         tests.NestedCombatReturnsToItsParentRoom();
         tests.UnknownRoomOddsExposeOrderedModHooks();
+        tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
         tests.BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout();
@@ -845,7 +939,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 27 gameplay checks.");
+        Console.WriteLine("Passed 28 gameplay checks.");
     }
 }
 

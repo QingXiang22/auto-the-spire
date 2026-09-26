@@ -333,6 +333,7 @@ internal sealed class RunState
     public IReadOnlyList<MapPointView> MapView { get; set; }
     public List<RunMapVisitView> VisitHistory { get; } = [];
     public List<RunRoomFrame> RoomStack { get; } = [];
+    public GameSession? ActiveCombat { get; set; }
     public RunRoomType? CurrentRoom => RoomStack.Count == 0 ? null : RoomStack[^1].RoomType;
     public string CurrentPointId { get; set; } = string.Empty;
     public MapPointType? CurrentMapPointType { get; set; }
@@ -437,7 +438,7 @@ public sealed class RunEnvironment
         ArgumentNullException.ThrowIfNull(session);
         var state = session.State;
         if (state.Status != RunStatus.InProgress || state.Phase is not (RunPhase.ResolveRoom or RunPhase.ResolveFinalEvent)
-            || state.RoomStack.Count == 0)
+            || state.RoomStack.Count == 0 || state.ActiveCombat is not null)
             throw new InvalidOperationException("A sub-room can only be entered from an active room.");
         if (roomType == RunRoomType.Unassigned)
             throw new ArgumentOutOfRangeException(nameof(roomType));
@@ -455,11 +456,41 @@ public sealed class RunEnvironment
         return Observe(session);
     }
 
+    /// <summary>Copies a finished run-owned combat result back into the active room and run state.</summary>
+    public RunObservation CompleteCombat(RunSession session, GameSession combatSession)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(combatSession);
+        var state = session.State;
+        if (!ReferenceEquals(state.ActiveCombat, combatSession)
+            || !ReferenceEquals(combatSession.RunOwner, session))
+            throw new InvalidOperationException("The combat session does not belong to this active run.");
+        if (!combatSession.State.IsTerminal)
+            throw new InvalidOperationException("Combat must reach a terminal outcome before it can update the run.");
+
+        var combat = combatSession.State;
+        var outcome = combat.Player.Creature.Hp <= 0 ? RunOutcome.PlayerDefeated : RunOutcome.RoomCleared;
+        var result = new RunRoomResult(outcome, combat.Player.Creature.Hp, combat.Player.Creature.MaxHp,
+            state.Gold, state.Deck, state.Relics, state.Potions);
+        var observation = CompleteRoomCore(session, result);
+        state.ActiveCombat = null;
+        combatSession.RunOwner = null;
+        return observation;
+    }
+
     /// <summary>Called by the active room environment after its rules reach an outcome.</summary>
     public RunObservation CompleteRoom(RunSession session, RunRoomResult result)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(result);
+        var state = session.State;
+        if (state.ActiveCombat is not null)
+            throw new InvalidOperationException("A run-owned combat must be completed through CompleteCombat.");
+        return CompleteRoomCore(session, result);
+    }
+
+    private RunObservation CompleteRoomCore(RunSession session, RunRoomResult result)
+    {
         var state = session.State;
         if (state.RoomStack.Count == 0)
             throw new InvalidOperationException("There is no active room to complete.");
