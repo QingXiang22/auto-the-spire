@@ -39,8 +39,29 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
     }
 }
+public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
+
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
-    bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy);
+    bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy,
+    CardRarity Rarity = CardRarity.Common);
+
+public sealed class CardPoolDefinition
+{
+    public CardPoolDefinition(ContentId id, IEnumerable<ContentId> cards)
+    {
+        id.Validate();
+        ArgumentNullException.ThrowIfNull(cards);
+        var cardIds = cards.ToArray();
+        foreach (var cardId in cardIds) cardId.Validate();
+        if (cardIds.Distinct().Count() != cardIds.Length)
+            throw new ArgumentException("Card pools cannot contain duplicate card IDs.", nameof(cards));
+        Id = id;
+        Cards = Array.AsReadOnly(cardIds);
+    }
+
+    public ContentId Id { get; }
+    public IReadOnlyList<ContentId> Cards { get; }
+}
 public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent,
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
     ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
@@ -334,6 +355,7 @@ public interface IRulePackage
 public sealed class ContentRegistry
 {
     private readonly Dictionary<ContentId, CardDefinition> _cards = [];
+    private readonly Dictionary<ContentId, CardPoolDefinition> _cardPools = [];
     private readonly Dictionary<ContentId, EnemyDefinition> _enemies = [];
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = [];
     private readonly Dictionary<ContentId, RunEventDefinition> _runEvents = [];
@@ -351,6 +373,7 @@ public sealed class ContentRegistry
         if (_packages.Any(p => p.Id == package.Info.Id))
             throw new InvalidOperationException($"Package '{package.Info.Id}' is already loaded.");
         var cardsBefore = new Dictionary<ContentId, CardDefinition>(_cards);
+        var cardPoolsBefore = new Dictionary<ContentId, CardPoolDefinition>(_cardPools);
         var enemiesBefore = new Dictionary<ContentId, EnemyDefinition>(_enemies);
         var encountersBefore = new Dictionary<ContentId, EncounterDefinition>(_encounters);
         var runEventsBefore = new Dictionary<ContentId, RunEventDefinition>(_runEvents);
@@ -368,6 +391,7 @@ public sealed class ContentRegistry
         catch
         {
             Restore(_cards, cardsBefore);
+            Restore(_cardPools, cardPoolsBefore);
             Restore(_enemies, enemiesBefore);
             Restore(_encounters, encountersBefore);
             Restore(_runEvents, runEventsBefore);
@@ -382,6 +406,7 @@ public sealed class ContentRegistry
     }
 
     public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
+    public void Register(CardPoolDefinition definition) => AddUnique(_cardPools, definition.Id, definition, "card pool");
     public void Register(EnemyDefinition definition) => AddUnique(_enemies, definition.Id, definition, "enemy");
     public void Register(EncounterDefinition definition) => AddUnique(_encounters, definition.Id, definition, "encounter");
     public void Register(RunEventDefinition definition)
@@ -417,6 +442,7 @@ public sealed class ContentRegistry
     public void Register(ICustomEffectHandler handler) => AddUnique(_customEffects, handler.Id, handler, "custom effect handler");
 
     public void Override(CardDefinition definition) => Replace(_cards, definition.Id, definition, "card");
+    public void Override(CardPoolDefinition definition) => Replace(_cardPools, definition.Id, definition, "card pool");
     public void Override(EnemyDefinition definition) => Replace(_enemies, definition.Id, definition, "enemy");
     public void Override(EncounterDefinition definition) => Replace(_encounters, definition.Id, definition, "encounter");
     public void Override(PowerDefinition definition)
@@ -452,7 +478,25 @@ public sealed class ContentRegistry
             ValidateEffectReferences(action.Effect, $"Enemy action '{action.Id}'");
         }
         foreach (var card in _cards.Values)
+        {
+            card.Id.Validate();
+            if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity))
+                throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, or rarity.");
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
+        }
+        foreach (var pool in _cardPools.Values)
+            foreach (var cardId in pool.Cards)
+                if (!_cards.ContainsKey(cardId))
+                    throw new InvalidOperationException($"Card pool '{pool.Id}' references unknown card '{cardId}'.");
+        foreach (var character in _characters.Values)
+        {
+            foreach (var cardId in character.StartingDeck)
+                if (!_cards.ContainsKey(cardId))
+                    throw new InvalidOperationException($"Character '{character.Id}' starts with unknown card '{cardId}'.");
+            foreach (var poolId in character.CardPools)
+                if (!_cardPools.ContainsKey(poolId))
+                    throw new InvalidOperationException($"Character '{character.Id}' references unknown card pool '{poolId}'.");
+        }
         foreach (var power in _powers.Values)
             if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
                 throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
@@ -471,6 +515,7 @@ public sealed class ContentRegistry
         return new GameDefinition(
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
+            new ReadOnlyDictionary<ContentId, CardPoolDefinition>(new Dictionary<ContentId, CardPoolDefinition>(_cardPools)),
             new ReadOnlyDictionary<ContentId, EnemyDefinition>(new Dictionary<ContentId, EnemyDefinition>(_enemies)),
             new ReadOnlyDictionary<ContentId, EncounterDefinition>(new Dictionary<ContentId, EncounterDefinition>(_encounters)),
             new ReadOnlyDictionary<ContentId, RunEventDefinition>(new Dictionary<ContentId, RunEventDefinition>(_runEvents)),
@@ -551,6 +596,7 @@ public sealed class ContentRegistry
 public sealed class GameDefinition
 {
     internal GameDefinition(PackageInfo[] packages, IReadOnlyDictionary<ContentId, CardDefinition> cards,
+        IReadOnlyDictionary<ContentId, CardPoolDefinition> cardPools,
         IReadOnlyDictionary<ContentId, EnemyDefinition> enemies, IReadOnlyDictionary<ContentId, EncounterDefinition> encounters,
         IReadOnlyDictionary<ContentId, RunEventDefinition> runEvents,
         IReadOnlyDictionary<ContentId, PowerDefinition> powers,
@@ -559,6 +605,7 @@ public sealed class GameDefinition
     {
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
+        CardPools = cardPools;
         Enemies = enemies;
         Encounters = encounters;
         RunEvents = runEvents;
@@ -573,6 +620,7 @@ public sealed class GameDefinition
 
     public IReadOnlyList<PackageInfo> Packages { get; }
     public IReadOnlyDictionary<ContentId, CardDefinition> Cards { get; }
+    public IReadOnlyDictionary<ContentId, CardPoolDefinition> CardPools { get; }
     public IReadOnlyDictionary<ContentId, EnemyDefinition> Enemies { get; }
     public IReadOnlyDictionary<ContentId, EncounterDefinition> Encounters { get; }
     public IReadOnlyDictionary<ContentId, RunEventDefinition> RunEvents { get; }

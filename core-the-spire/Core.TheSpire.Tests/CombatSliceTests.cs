@@ -36,6 +36,16 @@ public sealed class CombatSliceTests
         Assert.Equal(10, BaseSpireContent.IroncladStarterDeck().Count);
         Assert.Equal(5, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.StrikeIronclad));
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
+        var ironclad = definition.Characters[BaseSpireIds.Ironclad];
+        Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
+        Assert.Equal(new[] { BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash }.AsEnumerable(),
+            definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
+        Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
+        Assert.Throws<ArgumentException>(() => new CardPoolDefinition(ContentId.Parse("test:duplicate-pool"),
+            [BaseSpireIds.Bash, BaseSpireIds.Bash]));
+        var invalidPoolRegistry = new ContentRegistry();
+        invalidPoolRegistry.AddPackage(new InvalidCardPoolPackage());
+        Assert.Throws<InvalidOperationException>(() => invalidPoolRegistry.Build());
         var env = new CombatEnvironment(definition);
         var state = env.Start(1, "ironclad", 56, 65, [], BaseSpireIds.DampCultist.ToString());
         env.Step(state, new EndTurnAction());
@@ -1532,6 +1542,19 @@ public sealed class CombatSliceTests
             registry.Register(new RunDefinition(ContentId.Parse("partial-mod:run"),
                 [new ActDefinition(ContentId.Parse("partial-mod:act"), _ => throw new NotSupportedException())]));
             registry.Register(new CardDefinition(ContentId.Parse("test-fixture:strike"), 0, CardType.Attack, new AttackEffect(99)));
+        }
+    }
+
+    private sealed class InvalidCardPoolPackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("invalid-card-pool", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var poolId = ContentId.Parse("invalid-card-pool:pool");
+            registry.Register(new CardPoolDefinition(poolId, [ContentId.Parse("invalid-card-pool:missing-card")]));
+            registry.Register(new CharacterDefinition(ContentId.Parse("invalid-card-pool:character"), 60, 50, [],
+                cardPools: [poolId]));
         }
     }
 
