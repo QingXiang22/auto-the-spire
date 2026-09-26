@@ -276,6 +276,13 @@ public sealed class CombatSliceTests
         var finalEvent = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
         Assert.Equal(RunPhase.ResolveFinalEvent, finalEvent.Phase);
         Assert.Equal(RunStatus.InProgress, finalEvent.Status);
+        environment.PushSubRoom(session, RunRoomType.Monster);
+        Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session,
+            RunResult(RunOutcome.RunWon, environment.Observe(session))));
+        var returnedToArchitect = environment.CompleteRoom(session,
+            RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
+        Assert.Equal(RunPhase.ResolveFinalEvent, returnedToArchitect.Phase);
+        Assert.Equal(RunRoomType.Event, returnedToArchitect.CurrentRoom!.Value);
         var won = environment.CompleteRoom(session, RunResult(RunOutcome.RunWon, environment.Observe(session)));
         Assert.Equal(RunStatus.Won, won.Status);
         Assert.Equal(RunPhase.Terminal, won.Phase);
@@ -299,6 +306,39 @@ public sealed class CombatSliceTests
         Assert.Equal(0, hook.InvocationCount);
         Assert.Equal(0, environment.LegalActions(session).Count);
         Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, lost)));
+    }
+
+    public void NestedCombatReturnsToItsParentRoom()
+    {
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 3, MapPointType.Start, ["event"]),
+            new MapPointDefinition("event", 1, 3, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
+        ]);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:nested-act"), _ => map,
+            (_, _) => RunRoomType.Event);
+        var hook = new CountingRunHook();
+        var environment = new RunEnvironment(new RunDefinition(ContentId.Parse("test-fixture:nested-run"), [act]),
+            BaseSpireContent.Ironclad(), [hook]);
+        var session = environment.Start(181);
+        var parent = environment.Step(session, new ChooseMapPointAction("event"));
+        Assert.Equal(RunRoomType.Event, parent.CurrentRoom!.Value);
+
+        var child = environment.PushSubRoom(session, RunRoomType.Monster);
+        Assert.Equal(RunRoomType.Monster, child.CurrentRoom!.Value);
+        Assert.Equal(2, child.RoomStack.Count);
+        Assert.True(child.VisitedMapPoints[^1].RoomTypes.SequenceEqual(
+            [RunRoomType.Event, RunRoomType.Monster]));
+        var returned = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, child));
+        Assert.Equal(RunPhase.ResolveRoom, returned.Phase);
+        Assert.Equal(RunRoomType.Event, returned.CurrentRoom!.Value);
+        Assert.Equal(1, returned.RoomStack.Count);
+        Assert.Equal(1, hook.InvocationCount);
+
+        var route = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, returned));
+        Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
+        Assert.Equal(1, hook.InvocationCount);
     }
 
     public void UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType()
@@ -737,6 +777,7 @@ internal static class Program
         tests.ChoiceDuringEnemyTurnResumesTheTurnScheduler();
         tests.SinglePlayerRunTraversesActsAndStopsAtVictory();
         tests.SinglePlayerRunDefeatIsTerminal();
+        tests.NestedCombatReturnsToItsParentRoom();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
         tests.BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout();
@@ -745,7 +786,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 25 gameplay checks.");
+        Console.WriteLine("Passed 26 gameplay checks.");
     }
 }
 

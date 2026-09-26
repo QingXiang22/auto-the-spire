@@ -196,11 +196,14 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
 public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
     IReadOnlyList<RunRoomType> RoomTypes);
 
+public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent);
+
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
     IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
     int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
     RunRoomType? CurrentRoom,
-    RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map, IReadOnlyList<RunMapVisitView> VisitedMapPoints);
+    RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map, IReadOnlyList<RunMapVisitView> VisitedMapPoints,
+    IReadOnlyList<RunRoomFrameView> RoomStack);
 
 public sealed class RunRoomResult
 {
@@ -276,12 +279,13 @@ internal sealed class RunState
 
     public void EnterMapStart()
     {
+        RoomStack.Clear();
         CurrentPointId = Map.StartPointId;
         var entryPoint = Map.Points[CurrentPointId];
         if (entryPoint.Type == MapPointType.Ancient)
         {
             CurrentMapPointType = MapPointType.Ancient;
-            CurrentRoom = RunRoomType.Event;
+            RoomStack.Add(new RunRoomFrame(RunRoomType.Event, entryPoint.Id, false));
             Phase = RunPhase.ResolveRoom;
             VisitHistory.Add(new RunMapVisitView(ActIndex, entryPoint.Id, entryPoint.Type,
                 Array.AsReadOnly(new[] { RunRoomType.Event })));
@@ -289,7 +293,6 @@ internal sealed class RunState
         else
         {
             CurrentMapPointType = null;
-            CurrentRoom = null;
             Phase = RunPhase.ChooseMapPoint;
         }
     }
@@ -308,9 +311,10 @@ internal sealed class RunState
     public ActMapDefinition Map { get; set; }
     public IReadOnlyList<MapPointView> MapView { get; set; }
     public List<RunMapVisitView> VisitHistory { get; } = [];
+    public List<RunRoomFrame> RoomStack { get; } = [];
+    public RunRoomType? CurrentRoom => RoomStack.Count == 0 ? null : RoomStack[^1].RoomType;
     public string CurrentPointId { get; set; } = string.Empty;
     public MapPointType? CurrentMapPointType { get; set; }
-    public RunRoomType? CurrentRoom { get; set; }
     public RunPhase Phase { get; set; } = RunPhase.ChooseMapPoint;
     public RunStatus Status { get; set; } = RunStatus.InProgress;
 
@@ -327,6 +331,8 @@ public sealed class RunSession
     internal RunSession(RunState state) => State = state;
     internal RunState State { get; }
 }
+
+internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -366,7 +372,9 @@ public sealed class RunEnvironment
             Array.AsReadOnly(state.Deck.ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
-            state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()));
+            state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()),
+            Array.AsReadOnly(state.RoomStack.Select(frame => new RunRoomFrameView(
+                frame.RoomType, frame.MapPointId, frame.IsFinalEvent)).ToArray()));
     }
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
@@ -390,10 +398,35 @@ public sealed class RunEnvironment
         state.CurrentPointId = point.Id;
         state.CurrentMapPointType = point.Type;
         var blacklist = BuildRoomTypeBlacklist(state, point);
-        state.CurrentRoom = ResolveRoomType(state, point, blacklist);
+        var roomType = ResolveRoomType(state, point, blacklist);
+        state.RoomStack.Add(new RunRoomFrame(roomType, point.Id, false));
         state.VisitHistory.Add(new RunMapVisitView(state.ActIndex, point.Id, point.Type,
-            Array.AsReadOnly(new[] { state.CurrentRoom.Value })));
+            Array.AsReadOnly(new[] { roomType })));
         state.Phase = RunPhase.ResolveRoom;
+        return Observe(session);
+    }
+
+    /// <summary>Push a nested room, such as a combat started by an event, while preserving its parent room.</summary>
+    public RunObservation PushSubRoom(RunSession session, RunRoomType roomType)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        var state = session.State;
+        if (state.Status != RunStatus.InProgress || state.Phase is not (RunPhase.ResolveRoom or RunPhase.ResolveFinalEvent)
+            || state.RoomStack.Count == 0)
+            throw new InvalidOperationException("A sub-room can only be entered from an active room.");
+        if (roomType == RunRoomType.Unassigned)
+            throw new ArgumentOutOfRangeException(nameof(roomType));
+
+        state.RoomStack.Add(new RunRoomFrame(roomType, null, false));
+        state.Phase = RunPhase.ResolveRoom;
+        if (state.RoomStack.Any(frame => frame.MapPointId is not null) && state.VisitHistory.Count > 0)
+        {
+            var currentVisit = state.VisitHistory[^1];
+            state.VisitHistory[^1] = currentVisit with
+            {
+                RoomTypes = Array.AsReadOnly(currentVisit.RoomTypes.Append(roomType).ToArray())
+            };
+        }
         return Observe(session);
     }
 
@@ -403,23 +436,28 @@ public sealed class RunEnvironment
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(result);
         var state = session.State;
-        if (state.Phase == RunPhase.ResolveFinalEvent)
+        if (state.RoomStack.Count == 0)
+            throw new InvalidOperationException("There is no active room to complete.");
+
+        var completedFrame = state.RoomStack[^1];
+        if (completedFrame.IsFinalEvent)
         {
+            if (state.Phase != RunPhase.ResolveFinalEvent || state.Status != RunStatus.InProgress)
+                throw new InvalidOperationException("The final event is not the active room.");
             if (result.Outcome != RunOutcome.RunWon)
                 throw new InvalidOperationException("The final event must report the run victory outcome.");
             ApplyRoomResult(state, result);
             state.Status = RunStatus.Won;
             state.Phase = RunPhase.Terminal;
-            state.CurrentRoom = null;
             return Observe(session);
         }
 
-        if (state.Phase != RunPhase.ResolveRoom || state.CurrentRoom is null)
+        if (state.Phase != RunPhase.ResolveRoom)
             throw new InvalidOperationException("There is no active room to complete.");
 
         if (result.Outcome == RunOutcome.RunWon)
             throw new InvalidOperationException("RunWon is valid only after the final event.");
-        var completedRoomType = state.CurrentRoom.Value;
+        var completedRoomType = completedFrame.RoomType;
         ApplyRoomResult(state, result);
         if (result.Outcome == RunOutcome.PlayerDefeated)
         {
@@ -432,12 +470,20 @@ public sealed class RunEnvironment
             foreach (var hook in _runHooks)
                 hook.AfterCombatVictory(new RunHookContext(state, hook.Id));
         }
-        if (state.CurrentPointId == state.Map.BossPointId)
+
+        state.RoomStack.RemoveAt(state.RoomStack.Count - 1);
+        if (state.RoomStack.Count > 0)
+        {
+            state.Phase = state.RoomStack[^1].IsFinalEvent ? RunPhase.ResolveFinalEvent : RunPhase.ResolveRoom;
+            return Observe(session);
+        }
+
+        if (completedFrame.MapPointId == state.Map.BossPointId)
         {
             state.ActIndex++;
             if (state.ActIndex == state.Definition.Acts.Count)
             {
-                state.CurrentRoom = RunRoomType.Event;
+                state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true));
                 state.Phase = RunPhase.ResolveFinalEvent;
                 return Observe(session);
             }
@@ -449,7 +495,6 @@ public sealed class RunEnvironment
         }
         else
         {
-            state.CurrentRoom = null;
             state.CurrentMapPointType = null;
             state.Phase = RunPhase.ChooseMapPoint;
         }
