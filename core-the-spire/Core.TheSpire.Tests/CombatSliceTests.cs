@@ -333,6 +333,24 @@ public sealed class CombatSliceTests
             [new CombatEnemySpawn(BaseSpireIds.Nibbit.ToString(), StartingActionOverride: ContentId.Parse("base-spire:missing-action"))]));
     }
 
+    public void MultipleMonstersPreferDistinctInitialHpWhenRangesAllow()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var enemyId = BaseSpireIds.Nibbit.ToString();
+        var spawns = Enumerable.Range(0, 6).Select(index =>
+            new CombatEnemySpawn(enemyId, InstanceId: $"nibbit-{index}")).ToArray();
+        var session = environment.StartEncounter(20260927, "ironclad", 80, 80, [], spawns);
+        var hp = session.State.Enemies.Select(enemy => enemy.Creature.Hp).ToArray();
+
+        Assert.Equal(6, hp.Length);
+        Assert.Equal(5, hp.Take(5).Distinct().Count());
+        Assert.True(hp.All(value => value is >= 42 and <= 46));
+        Assert.Equal(6, session.Random.Get("encounter-hp").Counter);
+
+        var replay = environment.StartEncounter(20260927, "ironclad", 80, 80, [], spawns);
+        Assert.Equal(hp, replay.State.Enemies.Select(enemy => enemy.Creature.Hp));
+    }
+
     public void PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide()
     {
         var env = new CombatEnvironment(Build(new IncomingVulnerablePackage()));
@@ -1541,6 +1559,7 @@ internal static class Program
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
+        tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
         tests.NamedRandomStreamsAreDeterministicAndCountCalls();
@@ -1571,7 +1590,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 41 gameplay checks.");
+        Console.WriteLine("Passed 42 gameplay checks.");
     }
 }
 

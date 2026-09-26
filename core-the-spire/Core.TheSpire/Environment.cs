@@ -131,9 +131,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
         }
 
         var combatEnemies = new List<EnemyCombatState>(enemySpawns.Length);
+        var chosenEnemyHp = new HashSet<int>();
         foreach (var (spawn, enemyDefinition, entityId) in prepared)
         {
-            var hp = spawn.Hp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
+            var hp = spawn.Hp ?? ChooseUniqueEnemyHp(enemyDefinition, chosenEnemyHp, rng.Get("encounter-hp"));
+            chosenEnemyHp.Add(hp);
             var actionIndex = spawn.StartingActionOverride is { } actionId
                 ? enemyDefinition.GetActionIndex(actionId)
                 : enemyDefinition.ResolveStartingActionIndex(rng.Get("enemy-ai"));
@@ -148,6 +150,16 @@ public sealed class CombatEnvironment(GameDefinition definition)
             new PlayerCombatState(playerId, playerHp, playerMaxHp, hand, drawPile),
             combatEnemies);
         return new GameSession(state, rng);
+    }
+
+    private static int ChooseUniqueEnemyHp(EnemyDefinition enemy, IReadOnlySet<int> previouslyChosenHp,
+        SeededRandom random)
+    {
+        var candidates = Enumerable.Range(enemy.MinHp, enemy.MaxHp - enemy.MinHp + 1)
+            .Where(hp => !previouslyChosenHp.Contains(hp)).ToArray();
+        if (candidates.Length == 0)
+            candidates = Enumerable.Range(enemy.MinHp, enemy.MaxHp - enemy.MinHp + 1).ToArray();
+        return candidates[random.NextInt(candidates.Length)];
     }
 
     private EnemyDefinition FindEnemy(string enemyId) => definition.Enemies.Values
