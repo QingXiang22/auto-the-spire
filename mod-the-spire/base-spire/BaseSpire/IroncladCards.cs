@@ -50,6 +50,15 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":2}]}"""),
             Keywords: CardKeywords.Exhaust, Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":3}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Clothesline, 2, CardType.Attack,
+            new SequenceEffect([
+                new AttackEffect(12, TargetSelector.SelectedTarget),
+                new ApplyPowerEffect(BaseSpireIds.Weak, 2, TargetSelector.SelectedTarget)
+            ]), Target: TargetSelector.SelectedTarget, Rarity: CardRarity.Common,
+            UpgradedEffect: new SequenceEffect([
+                new AttackEffect(14, TargetSelector.SelectedTarget),
+                new ApplyPowerEffect(BaseSpireIds.Weak, 3, TargetSelector.SelectedTarget)
+            ])));
         registry.Register(new CardDefinition(BaseSpireIds.Slimed, 1, CardType.Status,
             new DrawCardsEffect(1), Keywords: CardKeywords.Exhaust, Target: TargetSelector.Self, Rarity: CardRarity.Status));
         registry.Register(new CardDefinition(BaseSpireIds.DemonForm, 3, CardType.Power,
@@ -120,7 +129,7 @@ internal static class IroncladCards
             [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade, BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam, BaseSpireIds.BurningPact,
-                BaseSpireIds.DefendIronclad,
+                BaseSpireIds.Clothesline, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.Impervious, BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
                 BaseSpireIds.ShrugItOff,
