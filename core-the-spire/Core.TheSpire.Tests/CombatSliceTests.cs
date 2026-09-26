@@ -38,22 +38,24 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon,
+        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon,
                 BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
-                BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
+                BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Headbutt].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Bloodletting].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Bludgeon].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.BurningPact].Rarity);
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.DemonForm].Rarity);
+        Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Offering].Rarity);
         Assert.Equal(new AttackEffect(42), definition.Cards[BaseSpireIds.Bludgeon]
             .ResolveEffect(new CardInstance("test:bludgeon+", BaseSpireIds.Bludgeon, 1)));
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.DemonFormPower, 3, TargetSelector.Self),
@@ -67,6 +69,14 @@ public sealed class CombatSliceTests
         var upgradedBurningPact = (SequenceEffect)definition.Cards[BaseSpireIds.BurningPact]
             .ResolveEffect(new CardInstance("test:burning-pact+", BaseSpireIds.BurningPact, 1));
         Assert.Equal(new DrawCardsEffect(3), upgradedBurningPact.Effects[1]);
+        var upgradedBloodletting = (SequenceEffect)definition.Cards[BaseSpireIds.Bloodletting]
+            .ResolveEffect(new CardInstance("test:bloodletting+", BaseSpireIds.Bloodletting, 1));
+        Assert.Equal(new ModifyEnergyEffect(3), upgradedBloodletting.Effects[1]);
+        var upgradedOffering = (SequenceEffect)definition.Cards[BaseSpireIds.Offering]
+            .ResolveEffect(new CardInstance("test:offering+", BaseSpireIds.Offering, 1));
+        Assert.Equal(new LoseHpEffect(6), upgradedOffering.Effects[0]);
+        Assert.Equal(new ModifyEnergyEffect(2), upgradedOffering.Effects[1]);
+        Assert.Equal(new DrawCardsEffect(5), upgradedOffering.Effects[2]);
         Assert.Equal(TargetSelector.AllOpponents, definition.Cards[BaseSpireIds.Thunderclap].Target);
         var thunderclap = (SequenceEffect)definition.Cards[BaseSpireIds.Thunderclap].Effect;
         Assert.Equal(new AttackEffect(4, TargetSelector.AllOpponents), thunderclap.Effects[0]);
@@ -839,6 +849,35 @@ public sealed class CombatSliceTests
         Assert.True(emptyHand.State.Player.Hand.SequenceEqual(
             [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash]));
         Assert.Equal(BaseSpireIds.BurningPact, emptyHand.State.Player.ExhaustPile.Single());
+    }
+
+    public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var bloodletting = env.Start(41, "ironclad", 56, 65, [BaseSpireIds.Bloodletting],
+            BaseSpireIds.DampCultist.ToString());
+        bloodletting.State.Player.Creature.Block = 9;
+        bloodletting.State.Player.Creature.Strength = 4;
+        env.Step(bloodletting, new PlayCardAction(0, bloodletting.State.Player.Id));
+        Assert.Equal(53, bloodletting.State.Player.Creature.Hp);
+        Assert.Equal(9, bloodletting.State.Player.Creature.Block);
+        Assert.Equal(5, bloodletting.State.Player.Energy);
+        Assert.True(bloodletting.State.Events.Any(gameEvent => gameEvent.Type == "hp_loss"
+            && gameEvent.Amount == 3));
+
+        var offering = env.Start(42, "ironclad", 56, 65,
+            [BaseSpireIds.Offering, BaseSpireIds.Anger], BaseSpireIds.DampCultist.ToString(),
+            drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash, BaseSpireIds.IronWave]);
+        offering.State.Player.Creature.Block = 7;
+        offering.State.Player.Creature.Strength = 5;
+        var offeringInstance = offering.State.Player.HandInstances[0];
+        env.Step(offering, new PlayCardAction(0, offering.State.Player.Id));
+        Assert.Equal(50, offering.State.Player.Creature.Hp);
+        Assert.Equal(7, offering.State.Player.Creature.Block);
+        Assert.Equal(5, offering.State.Player.Energy);
+        Assert.True(offering.State.Player.ExhaustPileInstances.Any(card => card.InstanceId == offeringInstance.InstanceId));
+        Assert.True(offering.State.Player.Hand.SequenceEqual([BaseSpireIds.Anger,
+            BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash, BaseSpireIds.IronWave]));
     }
 
     public void RestSiteOffersHealingOrUpgradingOneCard()
@@ -2008,6 +2047,7 @@ internal static class Program
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
         tests.BurningPactExhaustsAChosenHandInstanceThenDraws();
+        tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
@@ -2049,7 +2089,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 47 gameplay checks.");
+        Console.WriteLine("Passed 48 gameplay checks.");
     }
 }
 

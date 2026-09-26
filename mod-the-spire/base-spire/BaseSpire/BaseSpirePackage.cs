@@ -10,10 +10,12 @@ public static class BaseSpireIds
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
+    public static readonly ContentId Bloodletting = ContentId.Parse("base-spire:bloodletting");
     public static readonly ContentId BurningPact = ContentId.Parse("base-spire:burning-pact");
     public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");
     public static readonly ContentId DemonFormPower = ContentId.Parse("base-spire:demon-form-power");
     public static readonly ContentId Headbutt = ContentId.Parse("base-spire:headbutt");
+    public static readonly ContentId Offering = ContentId.Parse("base-spire:offering");
     public static readonly ContentId IronWave = ContentId.Parse("base-spire:iron-wave");
     public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
     public static readonly ContentId PommelStrike = ContentId.Parse("base-spire:pommel-strike");

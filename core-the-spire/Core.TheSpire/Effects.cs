@@ -3,6 +3,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SequenceEffect), "sequence")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackEffect), "attack")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DrawCardsEffect), "drawCards")]
@@ -22,6 +23,7 @@ public sealed record SequenceEffect : EffectNode
     public IReadOnlyList<EffectNode> Effects { get; }
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
+public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DrawCardsEffect(int Amount) : EffectNode;
@@ -93,6 +95,14 @@ internal static class EffectExecutor
                                 if (enemy.Creature.Hp > 0) ApplyAttack(session, owner, enemy.Creature, attack.Amount);
                     }
                     else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target), attack.Amount);
+                    break;
+                case LoseHpEffect loseHp:
+                    if (loseHp.Amount < 0) throw new InvalidOperationException("HP loss cannot be negative.");
+                    var hpLossTarget = ResolveSingleTarget(state, owner, target, loseHp.Target);
+                    var hpLost = Math.Min(hpLossTarget.Hp, loseHp.Amount);
+                    hpLossTarget.Hp -= hpLost;
+                    state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost);
+                    if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
                     break;
                 case GainBlockEffect block:
                     owner.Block += block.Amount;
