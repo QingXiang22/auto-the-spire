@@ -787,6 +787,10 @@ public sealed class RunEnvironment
                 case HealRunEffect heal:
                     state.Hp = (int)Math.Min(state.MaxHp, (long)state.Hp + heal.Amount);
                     break;
+                case GainRunMaxHpEffect gainMaxHp:
+                    state.MaxHp = checked(state.MaxHp + gainMaxHp.Amount);
+                    state.Hp = checked(state.Hp + gainMaxHp.Amount);
+                    break;
                 case LoseRunHpEffect loseHp:
                     state.Hp = Math.Max(0, state.Hp - loseHp.Amount);
                     break;

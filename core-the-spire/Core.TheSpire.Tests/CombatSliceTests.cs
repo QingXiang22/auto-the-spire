@@ -1738,6 +1738,8 @@ public sealed class CombatSliceTests
             """{"op":"addCardToRunDeck","card":"run-event-fixture:card"}""");
         Assert.Equal(new AddCardToRunDeckEffect(RunEventFixturePackage.CardId), cardEffect);
         Assert.Equal(cardEffect, EffectDsl.ParseRun(EffectDsl.Serialize(cardEffect)));
+        var gainMaxHp = new GainRunMaxHpEffect(5);
+        Assert.Equal(gainMaxHp, EffectDsl.ParseRun(EffectDsl.Serialize(gainMaxHp)));
         var chooseCard = new ChooseRunCardEffect("Choose a card to upgrade", RunCardFilter.Upgradeable,
             false, new UpgradeSelectedRunCardEffect());
         Assert.Equal(chooseCard, EffectDsl.ParseRun(EffectDsl.Serialize(chooseCard)));
@@ -1754,7 +1756,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
         Assert.Equal(RunEventFixturePackage.EventId,
             observation.RoomStack[^1].EventId!.Value);
-        Assert.Equal(7, observation.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(8, observation.RoomStack[^1].EventOptions.Count);
 
         var legalActions = environment.LegalActions(run);
         Assert.Contains(legalActions, action => action ==
@@ -1833,6 +1835,13 @@ public sealed class CombatSliceTests
         Assert.Equal(0, defeated.Hp);
         Assert.Equal(RunStatus.Lost, defeated.Status);
         Assert.Equal(RunPhase.Terminal, defeated.Phase);
+
+        var maxHpRun = environment.Start(423);
+        maxHpRun.State.Hp = 20;
+        var strengthened = environment.Step(maxHpRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.MaxHpOptionId));
+        Assert.Equal(35, strengthened.MaxHp);
+        Assert.Equal(25, strengthened.Hp);
     }
 
     public void ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters()
@@ -2523,6 +2532,7 @@ public sealed class CombatSliceTests
         public static readonly ContentId CardId = ContentId.Parse("run-event-fixture:card");
         public static readonly ContentId TradeOptionId = ContentId.Parse("run-event-fixture:trade");
         public static readonly ContentId GoldOptionId = ContentId.Parse("run-event-fixture:gold");
+        public static readonly ContentId MaxHpOptionId = ContentId.Parse("run-event-fixture:max-hp");
         public static readonly ContentId UnaffordableOptionId = ContentId.Parse("run-event-fixture:unaffordable");
         public static readonly ContentId FatalOptionId = ContentId.Parse("run-event-fixture:fatal");
         public static readonly ContentId FinalOptionId = ContentId.Parse("run-event-fixture:final-option");
@@ -2551,6 +2561,8 @@ public sealed class CombatSliceTests
                     [new LoseRunGoldEffect(8), new AddCardToRunDeckEffect(CardId)]),
                 new RunEventOptionDefinition(GoldOptionId, "Find gold",
                     [new GainRunGoldEffect(5), new HealRunEffect(3)]),
+                new RunEventOptionDefinition(MaxHpOptionId, "Gain maximum health",
+                    [new GainRunMaxHpEffect(5)]),
                 new RunEventOptionDefinition(UnaffordableOptionId, "Pay too much",
                     [new LoseRunGoldEffect(11)]),
                 new RunEventOptionDefinition(FatalOptionId, "Take lethal damage",
