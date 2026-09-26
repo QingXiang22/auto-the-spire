@@ -640,6 +640,7 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} upgrades an invalid card pile.");
             case UpgradeCardsInPileEffect:
             case UpgradeSelectedCardEffect:
+            case RetainSelectedCardEffect:
                 break;
             case DecrementPowerEffect decrementPower when !_powers.ContainsKey(decrementPower.Power):
                 throw new InvalidOperationException($"{owner} decrements unknown power '{decrementPower.Power}'.");
@@ -728,4 +729,8 @@ public interface IRuleHook
     void OnEvent(RuleHookContext context, GameEvent gameEvent);
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
+    EffectNode? BeforeFlush(RuleHookContext context, string playerId) => null;
+    EffectNode? BeforeFlushLate(RuleHookContext context, string playerId) => null;
+    EffectNode? AfterFlush(RuleHookContext context, string playerId,
+        IReadOnlyList<CardInstance> flushedCards, IReadOnlyList<CardInstance> retainedCards) => null;
 }
