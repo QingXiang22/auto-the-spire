@@ -208,13 +208,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.Player.HandInstances.ToArray(), state.Player.DrawPileInstances.ToArray(),
             state.Player.DiscardPileInstances.ToArray(), state.Player.ExhaustPileInstances.ToArray(),
             state.Player.PlayPileInstances.ToArray(),
-            state.PendingCardChoice is { } cardChoice
-                ? new PendingCardChoiceView(cardChoice.Effect.Prompt, cardChoice.Options.ToArray())
-                : null,
-            state.PendingCardSetChoice is { } cardSetChoice
-                ? new PendingCardSetChoiceView(cardSetChoice.Effect.Prompt, cardSetChoice.Options.ToArray(),
-                    cardSetChoice.Selected.ToArray(), cardSetChoice.Effect.MinChoices, cardSetChoice.MaxChoices)
-                : null);
+            state.PendingCardSelection switch
+            {
+                PendingCardChoice cardChoice => new PendingCardChoiceView(cardChoice.Effect.Prompt,
+                    cardChoice.Options.ToArray()),
+                PendingCardSetChoice cardSetChoice => new PendingCardSetChoiceView(cardSetChoice.Effect.Prompt,
+                    cardSetChoice.Options.ToArray(), cardSetChoice.Selected.ToArray(),
+                    cardSetChoice.Effect.MinChoices, cardSetChoice.MaxChoices),
+                _ => null
+            });
     }
 
     private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
@@ -232,9 +234,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
     private IReadOnlyList<PlayerAction> LegalActions(GameState state)
     {
-        if (state.PendingCardChoice is { } cardChoice)
+        if (state.PendingCardSelection is PendingCardChoice cardChoice)
             return cardChoice.Options.Select(card => (PlayerAction)new ChooseCardAction(card.InstanceId)).ToArray();
-        if (state.PendingCardSetChoice is { } cardSetChoice)
+        if (state.PendingCardSelection is PendingCardSetChoice cardSetChoice)
         {
             var choices = cardSetChoice.Selected.Count < cardSetChoice.MaxChoices
                 ? cardSetChoice.Options.Select(card => (PlayerAction)new ChooseCardAction(card.InstanceId)).ToList()
@@ -274,12 +276,12 @@ public sealed class CombatEnvironment(GameDefinition definition)
         ArgumentNullException.ThrowIfNull(action);
         var state = session.State;
         var firstEvent = state.Events.Count;
-        if (state.PendingCardChoice is { } cardChoice)
+        if (state.PendingCardSelection is PendingCardChoice cardChoice)
         {
             if (action is not ChooseCardAction chooseCard
                 || !cardChoice.Options.Any(card => card.InstanceId == chooseCard.CardInstanceId))
                 throw new InvalidOperationException("A card from the pending pile selection must be chosen.");
-            state.PendingCardChoice = null;
+            state.PendingCardSelection = null;
             var chosenCard = cardChoice.Options.Single(card => card.InstanceId == chooseCard.CardInstanceId);
             if (cardChoice.Effect.To is { } destination
                 && !state.MoveCard(cardChoice.Effect.From, destination,
@@ -293,7 +295,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             EffectExecutor.Resume(session);
             ResumeChoiceContinuation(session);
         }
-        else if (state.PendingCardSetChoice is { } cardSetChoice)
+        else if (state.PendingCardSelection is PendingCardSetChoice cardSetChoice)
         {
             if (action is ChooseCardAction chooseCard
                 && cardSetChoice.Options.Any(card => card.InstanceId == chooseCard.CardInstanceId)
@@ -307,7 +309,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             else if (action is ConfirmCardSelectionAction
                 && cardSetChoice.Selected.Count >= cardSetChoice.Effect.MinChoices)
             {
-                state.PendingCardSetChoice = null;
+                state.PendingCardSelection = null;
                 state.Emit(session, "card_selection_confirmed", cardSetChoice.Owner.Id,
                     cardSetChoice.Owner.Id, cardSetChoice.Selected.Count);
                 if (cardSetChoice.Effect.OnSelected is { } onSelected)
@@ -355,7 +357,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
             state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
             EffectExecutor.Execute(session, state.Player.Creature, card.ResolveEffect(cardInstance), selectedTarget);
-            if (state.PendingChoice is null && state.PendingCardChoice is null && state.PendingCardSetChoice is null) FinalizePlayedCard(session);
+            if (state.PendingChoice is null && state.PendingCardSelection is null) FinalizePlayedCard(session);
         }
         else if (action is EndTurnAction)
         {
@@ -364,7 +366,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             ContinueEndTurn(session);
         }
         return new StepResult(Observe(state), state.Events.Skip(firstEvent).ToArray(),
-            state.PendingChoice is not null || state.PendingCardChoice is not null || state.PendingCardSetChoice is not null);
+            state.PendingChoice is not null || state.PendingCardSelection is not null);
     }
 
     private static void FinalizePlayedCard(GameSession session)
@@ -387,7 +389,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private static void ResumeChoiceContinuation(GameSession session)
     {
         var state = session.State;
-        if (state.PendingChoice is not null || state.PendingCardChoice is not null || state.PendingCardSetChoice is not null) return;
+        if (state.PendingChoice is not null || state.PendingCardSelection is not null) return;
         if (state.EndTurnStage != EndTurnResolutionStage.None) ContinueEndTurn(session);
         else FinalizePlayedCard(session);
     }
@@ -395,7 +397,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private static void ContinueEndTurn(GameSession session)
     {
         var state = session.State;
-        while (state.PendingChoice is null && state.PendingCardChoice is null && state.PendingCardSetChoice is null)
+        while (state.PendingChoice is null && state.PendingCardSelection is null)
         {
             if (state.PendingPowerQueue is not null && !RunPendingPowerQueue(session)) return;
             switch (state.EndTurnStage)
@@ -538,7 +540,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var owner = state.PendingPowerOwner ?? throw new InvalidOperationException("Missing power trigger owner.");
         var queue = state.PendingPowerQueue!;
         while (state.PendingPowerIndex < queue.Count && state.PendingChoice is null
-            && state.PendingCardChoice is null && state.PendingCardSetChoice is null)
+            && state.PendingCardSelection is null)
         {
             var powerId = queue[state.PendingPowerIndex++];
             if (!owner.Powers.TryGetValue(powerId, out var amount)) continue;
@@ -552,7 +554,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (triggerEffects.Count > 0)
                 EffectExecutor.Execute(session, owner, new SequenceEffect(triggerEffects));
         }
-        if (state.PendingChoice is not null || state.PendingCardChoice is not null || state.PendingCardSetChoice is not null) return false;
+        if (state.PendingChoice is not null || state.PendingCardSelection is not null) return false;
         state.PendingPowerQueue = null;
         state.PendingPowerOwner = null;
         state.PendingPowerIndex = 0;
@@ -564,7 +566,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = session.State;
         var stage = state.EndTurnStage;
         while (state.FlushHookIndex < state.Definition.Hooks.Count
-            && state.PendingChoice is null && state.PendingCardChoice is null && state.PendingCardSetChoice is null)
+            && state.PendingChoice is null && state.PendingCardSelection is null)
         {
             var hook = state.Definition.Hooks[state.FlushHookIndex++];
             var context = new RuleHookContext(session, hook.Id);
@@ -579,7 +581,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             };
             if (effect is not null) EffectExecutor.Execute(session, state.Player.Creature, effect);
         }
-        if (state.PendingChoice is not null || state.PendingCardChoice is not null || state.PendingCardSetChoice is not null) return false;
+        if (state.PendingChoice is not null || state.PendingCardSelection is not null) return false;
 
         state.FlushHookIndex = 0;
         if (stage == EndTurnResolutionStage.BeforeFlushHooks)

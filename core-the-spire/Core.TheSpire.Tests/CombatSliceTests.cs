@@ -785,15 +785,15 @@ public sealed class CombatSliceTests
 
         var paused = env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
         Assert.Equal(44, state.State.Enemy.Hp);
-        Assert.Equal("Choose a card from discard", paused.Observation.PendingCardChoice!.Prompt);
+        Assert.Equal("Choose a card from discard", SingleCardChoice(paused.Observation)!.Prompt);
         Assert.Equal(new[] { strike.InstanceId, defend.InstanceId },
-            paused.Observation.PendingCardChoice.Options.Select(card => card.InstanceId));
+            SingleCardChoice(paused.Observation)!.Options.Select(card => card.InstanceId));
         var cardChoices = env.LegalActions(state).OfType<ChooseCardAction>().ToArray();
         Assert.Equal(2, cardChoices.Length);
         Assert.True(cardChoices.Any(choice => choice.CardInstanceId == defend.InstanceId));
 
         var resolved = env.Step(state, new ChooseCardAction(defend.InstanceId));
-        Assert.True(resolved.Observation.PendingCardChoice is null);
+        Assert.True(resolved.Observation.PendingCardSelection is null);
         Assert.Equal(defend.InstanceId, state.State.Player.DrawPileInstances[0].InstanceId);
         Assert.Equal(strike.InstanceId, state.State.Player.DiscardPileInstances.Single().InstanceId);
         Assert.True(resolved.Events.Any(gameEvent => gameEvent.Type == "card_choice"
@@ -834,7 +834,7 @@ public sealed class CombatSliceTests
         var emptyDiscard = env.Start(36, "ironclad", 56, 65, [BaseSpireIds.Headbutt],
             BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
         var noChoice = env.Step(emptyDiscard, new PlayCardAction(0, emptyDiscard.State.Enemy.Id));
-        Assert.True(noChoice.Observation.PendingCardChoice is null);
+        Assert.True(noChoice.Observation.PendingCardSelection is null);
         Assert.Equal(44, emptyDiscard.State.Enemy.Hp);
     }
 
@@ -849,8 +849,8 @@ public sealed class CombatSliceTests
         var pactCard = state.State.Player.HandInstances[0];
         var paused = env.Step(state, new PlayCardAction(0, state.State.Player.Id));
         Assert.True(paused.NeedsChoice);
-        Assert.Equal(2, paused.Observation.PendingCardChoice!.Options.Count);
-        Assert.True(paused.Observation.PendingCardChoice.Options.Any(card => card.InstanceId == chosenCard.InstanceId));
+        Assert.Equal(2, SingleCardChoice(paused.Observation)!.Options.Count);
+        Assert.True(SingleCardChoice(paused.Observation)!.Options.Any(card => card.InstanceId == chosenCard.InstanceId));
         env.Step(state, new ChooseCardAction(chosenCard.InstanceId));
 
         Assert.True(state.State.Player.ExhaustPileInstances.Any(card => card.InstanceId == chosenCard.InstanceId));
@@ -881,7 +881,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal(5, basic.State.Player.Creature.Block);
         Assert.Equal(new[] { strike.InstanceId, defend.InstanceId },
-            paused.Observation.PendingCardChoice!.Options.Select(card => card.InstanceId));
+            SingleCardChoice(paused.Observation)!.Options.Select(card => card.InstanceId));
         env.Step(basic, new ChooseCardAction(defend.InstanceId));
         Assert.Equal(0, strike.UpgradeLevel);
         Assert.Equal(1, basic.State.Player.HandInstances.Single(card => card.InstanceId == defend.InstanceId).UpgradeLevel);
@@ -935,8 +935,8 @@ public sealed class CombatSliceTests
             BaseSpireIds.TrueGrit, upgradeLevel: 1);
         var paused = env.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
         Assert.Equal(9, upgraded.State.Player.Creature.Block);
-        Assert.Equal(3, paused.Observation.PendingCardChoice!.Options.Count);
-        var chosen = paused.Observation.PendingCardChoice.Options.Single(card => card.CardId == BaseSpireIds.Slimed);
+        Assert.Equal(3, SingleCardChoice(paused.Observation)!.Options.Count);
+        var chosen = SingleCardChoice(paused.Observation)!.Options.Single(card => card.CardId == BaseSpireIds.Slimed);
         env.Step(upgraded, new ChooseCardAction(chosen.InstanceId));
         Assert.Contains(upgraded.State.Player.ExhaustPileInstances, card => card.InstanceId == chosen.InstanceId);
         Assert.Equal(2, upgraded.State.Player.HandInstances.Count);
@@ -1082,7 +1082,7 @@ public sealed class CombatSliceTests
         Assert.Equal(6, state.State.Player.Creature.PowerAmount(BaseSpireIds.FeelNoPain));
 
         var paused = env.Step(state, new PlayCardAction(0, state.State.Player.Id));
-        var chosen = paused.Observation.PendingCardChoice!.Options.Single(card => card.CardId == BaseSpireIds.Anger);
+        var chosen = SingleCardChoice(paused.Observation)!.Options.Single(card => card.CardId == BaseSpireIds.Anger);
         env.Step(state, new ChooseCardAction(chosen.InstanceId));
 
         Assert.Equal(12, state.State.Player.Creature.Block);
@@ -1180,7 +1180,7 @@ public sealed class CombatSliceTests
         var paused = env.Step(state, new EndTurnAction());
 
         Assert.True(paused.NeedsChoice);
-        Assert.Equal(2, paused.Observation.PendingCardChoice!.Options.Count);
+        Assert.Equal(2, SingleCardChoice(paused.Observation)!.Options.Count);
         env.Step(state, new ChooseCardAction(retainedCard.InstanceId));
 
         Assert.Contains(state.State.Player.HandInstances, card => card.InstanceId == retainedCard.InstanceId);
@@ -1193,6 +1193,11 @@ public sealed class CombatSliceTests
         Assert.Equal(new ChooseCardsFromPileEffect(CardPile.Hand, "Choose cards", 0, 2,
                 CardSelectionFilter.NotRetained, new RetainSelectedCardEffect()),
             EffectDsl.Parse("""{"op":"chooseCardsFromPile","from":"hand","prompt":"Choose cards","minChoices":0,"maxChoices":2,"filter":"notRetained","onSelected":{"op":"retainSelectedCard"}}"""));
+        PendingCardSelectionView multiView = new PendingCardSetChoiceView("Choose cards", [], [], 0, 2);
+        var multiJson = System.Text.Json.JsonSerializer.Serialize<PendingCardSelectionView>(multiView);
+        Assert.True(multiJson.Contains("\"kind\":\"multiple\"", StringComparison.Ordinal));
+        Assert.True(System.Text.Json.JsonSerializer.Deserialize<PendingCardSelectionView>(multiJson)
+            is PendingCardSetChoiceView);
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
         var state = env.Start(69, "ironclad", 56, 65,
             [BaseSpireIds.WellLaidPlans, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
@@ -1201,14 +1206,14 @@ public sealed class CombatSliceTests
         var hand = state.State.Player.HandInstances.ToArray();
 
         var paused = env.Step(state, new EndTurnAction());
-        var choice = paused.Observation.PendingCardSetChoice!;
+        var choice = MultiCardChoice(paused.Observation)!;
         Assert.Equal(0, choice.MinChoices);
         Assert.Equal(1, choice.MaxChoices);
         Assert.Equal(2, choice.Options.Count);
         Assert.Contains(env.LegalActions(state), action => action is ConfirmCardSelectionAction);
 
         env.Step(state, new ChooseCardAction(hand[0].InstanceId));
-        Assert.Equal(1, state.State.PendingCardSetChoice!.Selected.Count);
+        Assert.Equal(1, ((PendingCardSetChoice)state.State.PendingCardSelection!).Selected.Count);
         Assert.Contains(env.LegalActions(state), action => action is ConfirmCardSelectionAction);
         env.Step(state, new ConfirmCardSelectionAction());
 
@@ -1235,7 +1240,7 @@ public sealed class CombatSliceTests
         upgraded.State.Player.MutableHand[0] = new CardInstance(plans.InstanceId, plans.CardId, upgradeLevel: 1);
         env.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
         var upgradeCards = upgraded.State.Player.HandInstances.ToArray();
-        var upgradedChoice = env.Step(upgraded, new EndTurnAction()).Observation.PendingCardSetChoice!;
+        var upgradedChoice = MultiCardChoice(env.Step(upgraded, new EndTurnAction()).Observation)!;
         Assert.Equal(2, upgradedChoice.MaxChoices);
         env.Step(upgraded, new ChooseCardAction(upgradeCards[0].InstanceId));
         env.Step(upgraded, new ChooseCardAction(upgradeCards[1].InstanceId));
@@ -2210,6 +2215,12 @@ public sealed class CombatSliceTests
     private static RunRoomResult RunResult(RunOutcome outcome, RunObservation state) =>
         new(outcome, outcome == RunOutcome.PlayerDefeated ? 0 : state.Hp, state.MaxHp, state.Gold,
             state.Deck, state.Relics, state.Potions, state.DeckInstances);
+
+    private static PendingCardChoiceView? SingleCardChoice(CombatObservation observation) =>
+        observation.PendingCardSelection as PendingCardChoiceView;
+
+    private static PendingCardSetChoiceView? MultiCardChoice(CombatObservation observation) =>
+        observation.PendingCardSelection as PendingCardSetChoiceView;
 
     private static GameDefinition Build(IRulePackage package)
     {
