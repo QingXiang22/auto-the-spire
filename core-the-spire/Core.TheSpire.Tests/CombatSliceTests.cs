@@ -341,6 +341,37 @@ public sealed class CombatSliceTests
         Assert.Equal(1, hook.InvocationCount);
     }
 
+    public void UnknownRoomOddsExposeOrderedModHooks()
+    {
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 3, MapPointType.Start, ["unknown"]),
+            new MapPointDefinition("unknown", 1, 3, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
+        ]);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:odds-hook-act"), _ => map);
+        var odds = new UnknownRoomOddsDefinition(
+        [
+            new UnknownRoomOddsEntry(RunRoomType.Monster, 0.1f),
+            new UnknownRoomOddsEntry(RunRoomType.Elite, -1f),
+            new UnknownRoomOddsEntry(RunRoomType.Treasure, 0.02f),
+            new UnknownRoomOddsEntry(RunRoomType.Shop, 0.03f)
+        ]);
+        var hook = new UnknownRoomOddsHook();
+        var environment = new RunEnvironment(new RunDefinition(ContentId.Parse("test-fixture:odds-hook-run"), [act], odds),
+            BaseSpireContent.Ironclad(), [hook]);
+        var session = environment.Start(182);
+        var observation = environment.Step(session, new ChooseMapPointAction("unknown"));
+
+        Assert.Equal(MapPointType.Unknown, hook.ObservedMapType!.Value);
+        Assert.True(hook.AvailableTypes!.SetEquals(
+            [RunRoomType.Event, RunRoomType.Monster, RunRoomType.Elite, RunRoomType.Treasure,
+                RunRoomType.Shop]));
+        Assert.True(observation.CurrentRoom != RunRoomType.Shop);
+        Assert.True(hook.IncreaseCalls >= 2);
+        Assert.True(hook.TreasureIncreaseWasModified);
+    }
+
     public void UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType()
     {
         var map = new ActMapDefinition("start", "boss",
@@ -658,6 +689,33 @@ public sealed class CombatSliceTests
         public void AfterCombatVictory(RunHookContext context) => InvocationCount++;
     }
 
+    private sealed class UnknownRoomOddsHook : IRunHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("test-fixture:unknown-room-odds-hook");
+        public MapPointType? ObservedMapType { get; private set; }
+        public IReadOnlySet<RunRoomType>? AvailableTypes { get; private set; }
+        public int IncreaseCalls { get; private set; }
+        public bool TreasureIncreaseWasModified { get; private set; }
+
+        public void AfterCombatVictory(RunHookContext context) { }
+
+        public IReadOnlySet<RunRoomType> ModifyUnknownRoomTypes(RunObservation observation,
+            IReadOnlySet<RunRoomType> roomTypes)
+        {
+            ObservedMapType = observation.CurrentMapPointType;
+            AvailableTypes = roomTypes;
+            return roomTypes.Where(type => type != RunRoomType.Shop).ToHashSet();
+        }
+
+        public float ModifyUnknownOddsIncrease(RunObservation observation, RunRoomType roomType, float increase)
+        {
+            IncreaseCalls++;
+            if (roomType != RunRoomType.Treasure) return increase;
+            TreasureIncreaseWasModified = true;
+            return increase * 2;
+        }
+    }
+
     private sealed class ChoiceCardPackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("choice-test", "1.0.0");
@@ -778,6 +836,7 @@ internal static class Program
         tests.SinglePlayerRunTraversesActsAndStopsAtVictory();
         tests.SinglePlayerRunDefeatIsTerminal();
         tests.NestedCombatReturnsToItsParentRoom();
+        tests.UnknownRoomOddsExposeOrderedModHooks();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
         tests.BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout();
@@ -786,7 +845,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 26 gameplay checks.");
+        Console.WriteLine("Passed 27 gameplay checks.");
     }
 }
 

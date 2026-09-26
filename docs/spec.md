@@ -95,7 +95,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 
 ### 5.2 Hook 与 mod 兼容范围
 
-Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段、地图生成及房间事件；监听对象与遍历顺序必须确定。恢复源码的 [`CombatState.IterateHookListeners`](../sts2/src/Core/Combat/CombatState.cs) 会收集状态、怪物、遗物、药水、战斗牌区中的卡牌及其附加效果、修饰器等；[`Hook`](../sts2/src/Core/Hooks/Hook.cs) 还区分普通与较晚的回合结束回调。设计 hook 时应按阶段逐项对照，不能把所有触发合并成一个通用事件。
+Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段、地图生成及房间事件；监听对象与遍历顺序必须确定。未知地图点至少开放两个独立扩展点：修改可抽取房间类型集合，以及修改未抽中房间的赔率增量。恢复源码的 [`UnknownMapPointOdds`](../sts2/src/Core/Odds/UnknownMapPointOdds.cs) 在基础黑名单后调用 `ModifyUnknownMapPointRoomTypes`，再逐项通过 `ModifyOddsIncreaseForUnrolledRoomType` 调整赔率；因此候选集合 hook 必须先于赔率增量 hook，并按稳定的 mod 注册顺序执行。恢复源码的 [`CombatState.IterateHookListeners`](../sts2/src/Core/Combat/CombatState.cs) 会收集状态、怪物、遗物、药水、战斗牌区中的卡牌及其附加效果、修饰器等；[`Hook`](../sts2/src/Core/Hooks/Hook.cs) 还区分普通与较晚的回合结束回调。设计 hook 时应按阶段逐项对照，不能把所有触发合并成一个通用事件。
 
 真实游戏的 [`ModManager`](../sts2/src/Core/Modding/ModManager.cs) 可加载程序集，并允许 Harmony 补丁。它能改写任意方法，因此“支持实际 mod”不能等同于自动运行所有原版 mod。项目支持的范围是能映射到内容注册、DSL 命令和受控 hook 的 mod；超出范围的补丁需要适配或新增内核能力，并记录在兼容性清单中。
 
