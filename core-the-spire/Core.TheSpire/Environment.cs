@@ -319,7 +319,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         else if (action is EndTurnAction)
         {
             state.IsPlayerTurn = false;
-            state.EndTurnStage = EndTurnResolutionStage.EtherealCards;
+            state.EndTurnStage = EndTurnResolutionStage.PlayerHandCleanup;
             ContinueEndTurn(session);
         }
         return new StepResult(Observe(state), state.Events.Skip(firstEvent).ToArray(),
@@ -361,7 +361,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             {
                 case EndTurnResolutionStage.None:
                     return;
-                case EndTurnResolutionStage.EtherealCards:
+                case EndTurnResolutionStage.PlayerHandCleanup:
                     var etherealCard = state.Player.MutableHand.FirstOrDefault(card =>
                         (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Ethereal) != 0);
                     if (etherealCard is not null)
@@ -372,8 +372,17 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         EffectExecutor.Resume(session);
                         break;
                     }
-                    state.Player.MutableDiscardPile.AddRange(state.Player.MutableHand);
-                    state.Player.MutableHand.Clear();
+                    for (var handIndex = 0; handIndex < state.Player.MutableHand.Count;)
+                    {
+                        var card = state.Player.MutableHand[handIndex];
+                        if ((state.Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) != 0)
+                        {
+                            handIndex++;
+                            continue;
+                        }
+                        state.Player.MutableHand.RemoveAt(handIndex);
+                        state.Player.MutableDiscardPile.Add(card);
+                    }
                     state.Player.MutableDiscardPile.AddRange(state.Player.MutablePlayPile);
                     state.Player.MutablePlayPile.Clear();
                     state.EndTurnStage = EndTurnResolutionStage.PlayerTurnEndPowers;

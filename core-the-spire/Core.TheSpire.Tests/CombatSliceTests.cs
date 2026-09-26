@@ -1113,6 +1113,21 @@ public sealed class CombatSliceTests
             && blockEvents[1].Sequence < enemyActionEvent.Sequence);
     }
 
+    public void RetainedCardInstancesStayInHandAcrossEnemyTurn()
+    {
+        var retainedId = ContentId.Parse("retain-fixture:retained");
+        var plainId = ContentId.Parse("retain-fixture:plain");
+        var env = new CombatEnvironment(Build(new RetainFixturePackage(retainedId, plainId)));
+        var state = env.Start(65, "player", 30, 30, [retainedId, plainId], "retain-fixture:enemy");
+        var retainedInstanceId = state.State.Player.HandInstances[0].InstanceId;
+
+        env.Step(state, new EndTurnAction());
+
+        Assert.Contains(state.State.Player.HandInstances, card => card.InstanceId == retainedInstanceId);
+        Assert.True(state.State.Player.DiscardPileInstances.All(card => card.InstanceId != retainedInstanceId));
+        Assert.True(state.State.Player.ExhaustPileInstances.All(card => card.InstanceId != retainedInstanceId));
+    }
+
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2132,6 +2147,22 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class RetainFixturePackage(ContentId retainedId, ContentId plainId) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("retain-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(new CardDefinition(retainedId, 0, CardType.Skill, new GainBlockEffect(1),
+                Keywords: CardKeywords.Retain, Target: TargetSelector.Self));
+            registry.Register(new CardDefinition(plainId, 0, CardType.Skill, new GainBlockEffect(1),
+                Target: TargetSelector.Self));
+            var actionId = ContentId.Parse("retain-fixture:enemy-action");
+            registry.Register(new EnemyDefinition(ContentId.Parse("retain-fixture:enemy"), 10, 10,
+                [new EnemyActionDefinition(actionId, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff)]));
+        }
+    }
+
     private sealed class MultiEnemyPackage(CardDefinition card, params EnemyDefinition[] enemies) : IRulePackage
     {
         public PackageInfo Info { get; } = new("multi-enemy-fixture", "1.0.0");
@@ -2317,6 +2348,7 @@ internal static class Program
         tests.BattleTranceDrawsThenPreventsFurtherDrawsUntilNextTurn();
         tests.FeelNoPainTriggersAfterChosenAndPlayedCardsExhaust();
         tests.EtherealCardsExhaustBeforeEnemyTurnAndTriggerPowers();
+        tests.RetainedCardInstancesStayInHandAcrossEnemyTurn();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2359,7 +2391,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 56 gameplay checks.");
+        Console.WriteLine("Passed 57 gameplay checks.");
     }
 }
 

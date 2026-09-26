@@ -372,7 +372,7 @@ public sealed class GameSession
 internal enum EndTurnResolutionStage
 {
     None,
-    EtherealCards,
+    PlayerHandCleanup,
     PlayerTurnEndPowers,
     EnemyAction,
     ApplyEnemyActionPower,
