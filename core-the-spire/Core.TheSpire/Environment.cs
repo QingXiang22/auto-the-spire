@@ -20,6 +20,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             ?? throw new KeyNotFoundException($"Unknown enemy '{enemyId}'.");
         if (enemyDefinition.Actions.Count == 0)
             throw new InvalidOperationException($"Enemy '{enemyId}' has no actions.");
+        if (enemyHp is < 1 || enemyHp > enemyDefinition.MaxHp)
+            throw new ArgumentOutOfRangeException(nameof(enemyHp));
         foreach (var cardId in run.Deck)
             if (!definition.Cards.ContainsKey(cardId))
                 throw new InvalidOperationException($"Run card '{cardId}' is not registered in this combat definition.");
