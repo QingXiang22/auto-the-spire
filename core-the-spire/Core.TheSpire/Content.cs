@@ -139,7 +139,8 @@ public sealed record EnemyDefinition
     private readonly IReadOnlyDictionary<ContentId, int> _actionIndexes;
 
     public EnemyDefinition(ContentId id, int minHp, int maxHp, IReadOnlyList<EnemyActionDefinition> actions,
-        bool loopLastAction = true, ContentId? startingActionId = null)
+        bool loopLastAction = true, ContentId? startingActionId = null,
+        EnemyActionTransition? startingTransition = null)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minHp);
@@ -171,6 +172,12 @@ public sealed record EnemyDefinition
                 if (!indexes.ContainsKey(choice.ActionId))
                     throw new ArgumentException($"Enemy action '{action.Id}' transitions to unknown action '{choice.ActionId}'.", nameof(actions));
         }
+        if (startingActionId is not null && startingTransition is not null)
+            throw new ArgumentException("An enemy cannot declare both a fixed starting action and a starting transition.", nameof(startingTransition));
+        if (startingTransition is { } startTransition)
+        foreach (var choice in startTransition.Choices)
+            if (!indexes.ContainsKey(choice.ActionId))
+                throw new ArgumentException($"Enemy starting transition references unknown action '{choice.ActionId}'.", nameof(startingTransition));
         var startId = startingActionId ?? copiedActions.FirstOrDefault()?.Id;
         if (startId is { } starting && !indexes.ContainsKey(starting))
             throw new ArgumentException($"Starting action '{starting}' is not in the enemy action graph.", nameof(startingActionId));
@@ -180,6 +187,7 @@ public sealed record EnemyDefinition
         Actions = Array.AsReadOnly(copiedActions);
         LoopLastAction = loopLastAction;
         StartingActionIndex = startId is { } value ? indexes[value] : 0;
+        StartingTransition = startingTransition;
         _actionIndexes = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(indexes);
     }
     public ContentId Id { get; }
@@ -188,31 +196,38 @@ public sealed record EnemyDefinition
     public IReadOnlyList<EnemyActionDefinition> Actions { get; }
     public bool LoopLastAction { get; }
     public int StartingActionIndex { get; }
+    public EnemyActionTransition? StartingTransition { get; }
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
+
+    internal int ResolveStartingActionIndex(SeededRandom random) => StartingTransition is { } transition
+        ? ResolveTransitionIndex(transition, null, random)
+        : StartingActionIndex;
 
     internal int ResolveNextActionIndex(ContentId currentActionId, SeededRandom random)
     {
         var current = Actions[GetActionIndex(currentActionId)];
         if (current.NextActionId is { } next) return GetActionIndex(next);
         if (current.Transition is { } transition)
-        {
-            var choices = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
-                ? transition.Choices.Where(choice => choice.ActionId != currentActionId).ToArray()
-                : transition.Choices.ToArray();
-            if (choices.Length == 0)
-                throw new InvalidOperationException($"Enemy action '{currentActionId}' has no eligible transition choices.");
-            var totalWeight = choices.Sum(choice => choice.Weight);
-            var roll = random.NextInt(totalWeight);
-            foreach (var choice in choices)
-            {
-                if (roll < choice.Weight) return GetActionIndex(choice.ActionId);
-                roll -= choice.Weight;
-            }
-            throw new InvalidOperationException("Enemy transition weight selection failed.");
-        }
+            return ResolveTransitionIndex(transition, currentActionId, random);
         return currentActionId == Actions[^1].Id && LoopLastAction
             ? Actions.Count - 1
             : Math.Min(GetActionIndex(currentActionId) + 1, Actions.Count - 1);
+    }
+
+    private int ResolveTransitionIndex(EnemyActionTransition transition, ContentId? previousActionId, SeededRandom random)
+    {
+        var choices = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat && previousActionId is { } previous
+            ? transition.Choices.Where(choice => choice.ActionId != previous).ToArray()
+            : transition.Choices.ToArray();
+        if (choices.Length == 0)
+            throw new InvalidOperationException("Enemy transition has no eligible action choices.");
+        var roll = random.NextInt(choices.Sum(choice => choice.Weight));
+        foreach (var choice in choices)
+        {
+            if (roll < choice.Weight) return GetActionIndex(choice.ActionId);
+            roll -= choice.Weight;
+        }
+        throw new InvalidOperationException("Enemy transition weight selection failed.");
     }
 }
 
