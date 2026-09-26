@@ -27,8 +27,21 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:strength","amount":2,"target":"self"}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:strength","amount":3,"target":"self"}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.PommelStrike, 1, CardType.Attack,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":9},{"op":"drawCards","amount":1}]}"""),
+            Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":10},{"op":"drawCards","amount":2}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.ShrugItOff, 1, CardType.Skill,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":8},{"op":"drawCards","amount":1}]}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":11},{"op":"drawCards","amount":1}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.TwinStrike, 1, CardType.Attack,
+            EffectDsl.Parse("""{"op":"repeat","count":2,"effect":{"op":"attack","amount":5}}"""),
+            Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"repeat","count":2,"effect":{"op":"attack","amount":7}}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash,
-                BaseSpireIds.IronWave, BaseSpireIds.Inflame]));
+            [BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
+                BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.TwinStrike]));
     }
 }
