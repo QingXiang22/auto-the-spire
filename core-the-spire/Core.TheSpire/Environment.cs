@@ -246,6 +246,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 actions.AddRange(enemies.Select(enemy => new PlayCardAction(i, enemy.Creature.Id)));
             else if (card.Target == TargetSelector.AllOpponents)
                 actions.Add(new PlayCardAction(i));
+            else if (card.Target == TargetSelector.RandomEnemy)
+                actions.Add(new PlayCardAction(i));
             else
                 actions.Add(new PlayCardAction(i, enemies.FirstOrDefault()?.Creature.Id));
         }

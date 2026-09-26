@@ -3,6 +3,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SequenceEffect), "sequence")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackEffect), "attack")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RandomAttackEffect), "randomAttack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
@@ -26,6 +27,7 @@ public sealed record SequenceEffect : EffectNode
     public IReadOnlyList<EffectNode> Effects { get; }
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
+public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -57,7 +59,7 @@ public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, Effect
 public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
-public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents }
+public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
 public enum CardSelectionFilter { Any, Upgradeable }
@@ -105,6 +107,18 @@ internal static class EffectExecutor
                                 if (enemy.Creature.Hp > 0) ApplyAttack(session, owner, enemy.Creature, attack.Amount);
                     }
                     else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target), attack.Amount);
+                    break;
+                case RandomAttackEffect randomAttack:
+                    if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
+                    var opponents = owner.IsEnemy
+                        ? state.Player.Creature.Hp > 0 ? new[] { state.Player.Creature } : []
+                        : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray();
+                    if (opponents.Length > 0)
+                    {
+                        var victim = opponents[session.Random.Get("card-targets").NextInt(opponents.Length)];
+                        state.Emit(session, "random_attack_target", owner.Id, victim.Id, randomAttack.Amount);
+                        ApplyAttack(session, owner, victim, randomAttack.Amount);
+                    }
                     break;
                 case LoseHpEffect loseHp:
                     if (loseHp.Amount < 0) throw new InvalidOperationException("HP loss cannot be negative.");

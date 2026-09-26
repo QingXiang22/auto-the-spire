@@ -66,6 +66,10 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":8},{"op":"drawCards","amount":1}]}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":11},{"op":"drawCards","amount":1}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.SwordBoomerang, 1, CardType.Attack,
+            EffectDsl.Parse("""{"op":"repeat","count":3,"effect":{"op":"randomAttack","amount":3}}"""),
+            Target: TargetSelector.RandomEnemy, Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"repeat","count":4,"effect":{"op":"randomAttack","amount":3}}""")));
         registry.Register(new CardDefinition(BaseSpireIds.TwinStrike, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"repeat","count":2,"effect":{"op":"attack","amount":5}}"""),
             Rarity: CardRarity.Common,
@@ -87,7 +91,8 @@ internal static class IroncladCards
                 BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
+                BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut]));
     }
 }

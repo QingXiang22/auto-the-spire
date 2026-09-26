@@ -42,7 +42,8 @@ public sealed class CombatSliceTests
                 BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
+                BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
@@ -50,6 +51,7 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Armaments].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Headbutt].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.TrueGrit].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.SwordBoomerang].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Bloodletting].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
@@ -931,6 +933,38 @@ public sealed class CombatSliceTests
         Assert.Equal(7, emptyHand.State.Player.Creature.Block);
         Assert.Equal(0, emptyHand.State.Player.ExhaustPileInstances.Count);
         Assert.Equal(0, emptyHand.Random.Get("card-selection").Counter);
+    }
+
+    public void SwordBoomerangRandomizesEveryHitAndReplaysTheTargetSequence()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var enemies = new[]
+        {
+            new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString(), Hp: 53, InstanceId: "first-cultist"),
+            new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString(), Hp: 53, InstanceId: "second-cultist")
+        };
+        var state = env.StartEncounter(54, "ironclad", 56, 65, [BaseSpireIds.SwordBoomerang], enemies);
+        Assert.Equal(1, env.LegalActions(state).OfType<PlayCardAction>().Count());
+        env.Step(state, new PlayCardAction(0));
+
+        var targetSequence = state.State.Events.Where(gameEvent => gameEvent.Type == "random_attack_target")
+            .Select(gameEvent => gameEvent.Target).ToArray();
+        Assert.Equal(3, targetSequence.Length);
+        Assert.True(targetSequence.All(target => enemies.Any(enemy => enemy.InstanceId == target)));
+        Assert.Equal(3, state.Random.Get("card-targets").Counter);
+        Assert.Equal(9, state.State.Events.Where(gameEvent => gameEvent.Type == "damage").Sum(gameEvent => gameEvent.Amount));
+
+        var replay = env.StartEncounter(54, "ironclad", 56, 65, [BaseSpireIds.SwordBoomerang], enemies);
+        env.Step(replay, new PlayCardAction(0));
+        Assert.Equal(targetSequence, replay.State.Events.Where(gameEvent => gameEvent.Type == "random_attack_target")
+            .Select(gameEvent => gameEvent.Target));
+
+        var upgraded = env.StartEncounter(55, "ironclad", 56, 65, [BaseSpireIds.SwordBoomerang], enemies);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("fixture-sword-boomerang-upgraded",
+            BaseSpireIds.SwordBoomerang, upgradeLevel: 1);
+        env.Step(upgraded, new PlayCardAction(0));
+        Assert.Equal(4, upgraded.State.Events.Count(gameEvent => gameEvent.Type == "random_attack_target"));
+        Assert.Equal(4, upgraded.Random.Get("card-targets").Counter);
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
@@ -2131,6 +2165,7 @@ internal static class Program
         tests.BurningPactExhaustsAChosenHandInstanceThenDraws();
         tests.ArmamentsFiltersUpgradeableCardsAndUpgradesOneOrAll();
         tests.TrueGritUsesSeededRandomExhaustAndUpgradedPlayerChoice();
+        tests.SwordBoomerangRandomizesEveryHitAndReplaysTheTargetSequence();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2173,7 +2208,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 50 gameplay checks.");
+        Console.WriteLine("Passed 51 gameplay checks.");
     }
 }
 
