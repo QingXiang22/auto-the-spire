@@ -263,10 +263,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 || !cardChoice.Options.Any(card => card.InstanceId == chooseCard.CardInstanceId))
                 throw new InvalidOperationException("A card from the pending pile selection must be chosen.");
             state.PendingCardChoice = null;
-            if (!state.MoveCard(cardChoice.Effect.From, cardChoice.Effect.To,
+            var chosenCard = cardChoice.Options.Single(card => card.InstanceId == chooseCard.CardInstanceId);
+            if (cardChoice.Effect.To is { } destination
+                && !state.MoveCard(cardChoice.Effect.From, destination,
                     chooseCard.CardInstanceId, cardChoice.Effect.DestinationPosition))
                 throw new InvalidOperationException("The selected card is no longer in its source pile.");
             state.Emit(session, "card_choice", state.Player.Id, chooseCard.CardInstanceId, 1);
+            if (cardChoice.Effect.OnSelected is { } onSelected)
+                EffectExecutor.Execute(session, cardChoice.Owner, onSelected, cardChoice.Target, chosenCard);
             EffectExecutor.Resume(session);
             ResumeChoiceContinuation(session);
         }
@@ -277,11 +281,13 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.PendingChoice = null;
             var choiceOwner = state.PendingChoiceOwner ?? state.Player.Creature;
             var choiceTarget = state.PendingChoiceTarget;
+            var choiceSelectedCard = state.PendingChoiceSelectedCard;
             state.PendingChoiceOwner = null;
             state.PendingChoiceTarget = null;
+            state.PendingChoiceSelectedCard = null;
             state.Emit(session, "choice", state.Player.Id, state.Player.Id, choose.OptionIndex);
             if (pending.Options[choose.OptionIndex].Effect is { } selectedEffect)
-                EffectExecutor.Execute(session, choiceOwner, selectedEffect, choiceTarget);
+                EffectExecutor.Execute(session, choiceOwner, selectedEffect, choiceTarget, choiceSelectedCard);
             EffectExecutor.Resume(session);
             ResumeChoiceContinuation(session);
         }

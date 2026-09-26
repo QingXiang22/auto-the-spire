@@ -9,6 +9,7 @@ public static class BaseSpireIds
     public static readonly ContentId DefendIronclad = ContentId.Parse("base-spire:defend-ironclad");
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
+    public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
     public static readonly ContentId Bloodletting = ContentId.Parse("base-spire:bloodletting");
     public static readonly ContentId BurningPact = ContentId.Parse("base-spire:burning-pact");

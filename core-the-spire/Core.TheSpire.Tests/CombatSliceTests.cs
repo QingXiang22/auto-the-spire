@@ -38,7 +38,7 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon,
+        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon,
                 BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
@@ -47,6 +47,7 @@ public sealed class CombatSliceTests
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Armaments].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Headbutt].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Bloodletting].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
@@ -849,6 +850,47 @@ public sealed class CombatSliceTests
         Assert.True(emptyHand.State.Player.Hand.SequenceEqual(
             [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash]));
         Assert.Equal(BaseSpireIds.BurningPact, emptyHand.State.Player.ExhaustPile.Single());
+    }
+
+    public void ArmamentsFiltersUpgradeableCardsAndUpgradesOneOrAll()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var basic = env.Start(48, "ironclad", 56, 65,
+            [BaseSpireIds.Armaments, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Slimed],
+            BaseSpireIds.DampCultist.ToString());
+        var strike = basic.State.Player.HandInstances[1];
+        var defend = basic.State.Player.HandInstances[2];
+        var slimed = basic.State.Player.HandInstances[3];
+        var paused = env.Step(basic, new PlayCardAction(0, basic.State.Player.Id));
+
+        Assert.Equal(5, basic.State.Player.Creature.Block);
+        Assert.Equal(new[] { strike.InstanceId, defend.InstanceId },
+            paused.Observation.PendingCardChoice!.Options.Select(card => card.InstanceId));
+        env.Step(basic, new ChooseCardAction(defend.InstanceId));
+        Assert.Equal(0, strike.UpgradeLevel);
+        Assert.Equal(1, basic.State.Player.HandInstances.Single(card => card.InstanceId == defend.InstanceId).UpgradeLevel);
+        Assert.Equal(0, slimed.UpgradeLevel);
+
+        var upgraded = env.Start(49, "ironclad", 56, 65,
+            [BaseSpireIds.Armaments, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Slimed],
+            BaseSpireIds.DampCultist.ToString());
+        upgraded.State.Player.MutableHand[0] = new CardInstance("fixture-armaments-upgraded",
+            BaseSpireIds.Armaments, upgradeLevel: 1);
+        var handCards = upgraded.State.Player.HandInstances.Skip(1).ToArray();
+        var upgradedResolution = env.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
+
+        Assert.False(upgradedResolution.NeedsChoice);
+        Assert.Equal(5, upgraded.State.Player.Creature.Block);
+        Assert.Equal(new[] { 1, 1, 0 }, upgraded.State.Player.HandInstances.Select(card => card.UpgradeLevel));
+        Assert.Contains(upgraded.State.Events, gameEvent => gameEvent.Type == "cards_upgraded" && gameEvent.Amount == 2);
+        Assert.Equal(new[] { BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Slimed },
+            handCards.Select(card => card.CardId));
+
+        var noCandidates = env.Start(50, "ironclad", 56, 65,
+            [BaseSpireIds.Armaments, BaseSpireIds.Slimed], BaseSpireIds.DampCultist.ToString());
+        var noCandidateResult = env.Step(noCandidates, new PlayCardAction(0, noCandidates.State.Player.Id));
+        Assert.False(noCandidateResult.NeedsChoice);
+        Assert.Equal(5, noCandidates.State.Player.Creature.Block);
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
@@ -2047,6 +2089,7 @@ internal static class Program
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
         tests.BurningPactExhaustsAChosenHandInstanceThenDraws();
+        tests.ArmamentsFiltersUpgradeableCardsAndUpgradesOneOrAll();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2089,7 +2132,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 48 gameplay checks.");
+        Console.WriteLine("Passed 49 gameplay checks.");
     }
 }
 
