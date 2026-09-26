@@ -395,7 +395,6 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
                     break;
                 case EndTurnResolutionStage.StartPlayerTurn:
-                    state.EndTurnStage = EndTurnResolutionStage.None;
                     if (!state.IsTerminal)
                     {
                         state.Turn++;
@@ -403,8 +402,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         state.Player.Creature.Block = 0;
                         state.IsPlayerTurn = true;
                         state.Emit(session, "player_turn_start", state.Player.Id, state.Player.Id, state.Turn);
-                        state.Draw(session, 5);
+                        state.EndTurnStage = EndTurnResolutionStage.PlayerTurnStartPowers;
+                        BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnStart);
+                        break;
                     }
+                    state.EndTurnStage = EndTurnResolutionStage.None;
+                    return;
+                case EndTurnResolutionStage.PlayerTurnStartPowers:
+                    state.EndTurnStage = EndTurnResolutionStage.None;
+                    if (!state.IsTerminal) state.Draw(session, 5);
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -17,8 +17,15 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}"""),
             Rarity: CardRarity.Basic,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":10},{"op":"applyPower","power":"base-spire:vulnerable","amount":3,"target":"firstEnemy"}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Bludgeon, 3, CardType.Attack,
+            EffectDsl.Parse("""{"op":"attack","amount":32}"""), Rarity: CardRarity.Uncommon,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"attack","amount":42}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Slimed, 1, CardType.Status,
             new DrawCardsEffect(1), Exhaust: true, Target: TargetSelector.Self, Rarity: CardRarity.Status));
+        registry.Register(new CardDefinition(BaseSpireIds.DemonForm, 3, CardType.Power,
+            EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":2,"target":"self"}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Rare,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":3,"target":"self"}""")));
         registry.Register(new CardDefinition(BaseSpireIds.IronWave, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":5},{"op":"attack","amount":5}]}"""),
             Rarity: CardRarity.Common,
@@ -48,7 +55,8 @@ internal static class IroncladCards
             Target: TargetSelector.AllOpponents, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":7,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
+            [BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
+                BaseSpireIds.DemonForm, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut]));

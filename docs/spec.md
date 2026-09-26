@@ -27,7 +27,7 @@
 
 最终规则集由 `core-the-spire`、`base-spire` 和所选其他 mod 组合而成。原版是通用内核加载 `base-spire` 后形成的一个具体规则集。内容定义可以使用 DSL 或结构化数据（如 JSON）；效果和行为使用共享的效果表示与受控 hook。内容 ID 要稳定且带命名空间，注册顺序、覆盖规则和规则集版本须可追踪。具体 DSL 语法须由可运行案例反推。
 
-角色通过一个或多个 `CardPoolDefinition` 声明可生成的卡牌池；卡牌定义带有稀有度，注册构建时校验池中卡牌和角色池引用。当前 `base-spire` 的 Ironclad 池有 3 张 Basic 起始牌、4 张 Common 牌和 2 张 Uncommon 牌；87 张原版池尚未齐备，不能用于完整奖励抽取。
+角色通过一个或多个 `CardPoolDefinition` 声明可生成的卡牌池；卡牌定义带有稀有度，注册构建时校验池中卡牌和角色池引用。当前 `base-spire` 的 Ironclad 池有 3 张 Basic 起始牌、5 张 Common、3 张 Uncommon 和 1 张 Rare；87 张原版池尚未齐备，不能用于完整奖励抽取。Power 可声明玩家回合开始、玩家回合结束或敌方回合结束触发；玩家回合开始触发在能量重置后、抽牌前结算，Demon Form 以此持续获得力量。
 
 动态牌组与战斗牌堆保存 `CardInstance`，用稳定的实例 ID 区分同一内容定义的多张牌，并记录升级级别。牌在战斗区域间移动时保留实例身份；卡牌定义可按实例升级级别解析费用与效果。此实例基础仍未覆盖完整的运行期修改数据，也未把战斗新增、移除或变形等牌组改动统一回写到局外牌组；这些生命周期规则需随奖励、营火及卡牌效果逐步补齐。
 
@@ -136,7 +136,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
-8. **遭遇、整局战斗与战斗奖励接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。遭遇槽支持固定敌人、随机候选池和组内不重复；敌人阵容在进入 run 房间时抽取并保存在房间视图，启动战斗时沿用该阵容。encounter 可为每个敌人槽位指定确定性起始动作，EnemyDefinition 也可声明加权随机起始动作；动作图支持加权后继、即时不重复和连续使用上限，并通过独立的 `enemy-ai` 随机流结算。`base-spire` 已验证 `CultistsNormal`、Overgrowth 的 `FuzzyWurmCrawlerWeak`、`SlimesWeak`、单怪 `NibbitsWeak`、双怪 `NibbitsNormal` 和双怪 `OvergrowthCrawlers`。Slimes 弱遭遇复现两只互异小史莱姆与一只随机中型史莱姆；Slimed 可加入玩家牌堆并出现在战斗观察中。多怪开局生命抽取会优先避开同侧已抽出的生命值，候选值耗尽后回退到完整区间。战斗胜利进入可观察、可操作的奖励阶段，目前实现 encounter 配置的金币范围、金币领取、跳过奖励和继续流程；最后一幕 Boss 进入空奖励阶段后继续。角色可引用带稀有度的卡牌池，注册期校验池内容；原版 Ironclad 已迁入 10 张牌，尚未达到 87 张完整卡池。`TargetSelector.AllOpponents` 供攻击与施加状态效果共用；Thunderclap 验证 AoE 对所有存活敌人同时造成伤害和施加易伤。Shrinker Beetle 的 Shrink 使用通用出手伤害倍率，并在施加者死亡时解除；Nibbit 弱遭遇复现 Butt → Slice(+Block) → Hiss(+Strength) 循环，普通遭遇以槽位起点复现前位先 Slice、后位先 Hiss。真实随机转移行为由确定性回放和动作限制测试覆盖。卡牌/药水/遗物奖励生成、奖励 hook、条件后继、跨多回合冷却/全历史重复规则、原版完整敌人/遭遇池及 source 的双 boss 选择仍未完成。
+8. **遭遇、整局战斗与战斗奖励接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。遭遇槽支持固定敌人、随机候选池和组内不重复；敌人阵容在进入 run 房间时抽取并保存在房间视图，启动战斗时沿用该阵容。encounter 可为每个敌人槽位指定确定性起始动作，EnemyDefinition 也可声明加权随机起始动作；动作图支持加权后继、即时不重复和连续使用上限，并通过独立的 `enemy-ai` 随机流结算。`base-spire` 已验证 `CultistsNormal`、Overgrowth 的 `FuzzyWurmCrawlerWeak`、`SlimesWeak`、单怪 `NibbitsWeak`、双怪 `NibbitsNormal` 和双怪 `OvergrowthCrawlers`。Slimes 弱遭遇复现两只互异小史莱姆与一只随机中型史莱姆；Slimed 可加入玩家牌堆并出现在战斗观察中。多怪开局生命抽取会优先避开同侧已抽出的生命值，候选值耗尽后回退到完整区间。战斗胜利进入可观察、可操作的奖励阶段，目前实现 encounter 配置的金币范围、金币领取、跳过奖励和继续流程；最后一幕 Boss 进入空奖励阶段后继续。角色可引用带稀有度的卡牌池，注册期校验池内容；原版 Ironclad 已迁入 12 张牌，覆盖 Basic、Common、Uncommon、Rare，但尚未达到 87 张完整卡池。`TargetSelector.AllOpponents` 供攻击与施加状态效果共用；Thunderclap 验证 AoE 对所有存活敌人同时造成伤害和施加易伤。Bludgeon 验证高伤害攻击定义；Demon Form 验证由 `AfterPlayerTurnStart` 通用 Power 触发器持续增长力量。Shrinker Beetle 的 Shrink 使用通用出手伤害倍率，并在施加者死亡时解除；Nibbit 弱遭遇复现 Butt → Slice(+Block) → Hiss(+Strength) 循环，普通遭遇以槽位起点复现前位先 Slice、后位先 Hiss。真实随机转移行为由确定性回放和动作限制测试覆盖。卡牌/药水/遗物奖励生成、奖励 hook、条件后继、跨多回合冷却/全历史重复规则、原版完整敌人/遭遇池及 source 的双 boss 选择仍未完成。
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 

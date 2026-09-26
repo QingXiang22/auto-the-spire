@@ -312,5 +312,6 @@ internal enum EndTurnResolutionStage
     EnemyTurnEndPowers,
     PlayerEnemySideEndPowers,
     AdvanceEnemyAction,
-    StartPlayerTurn
+    StartPlayerTurn,
+    PlayerTurnStartPowers
 }
