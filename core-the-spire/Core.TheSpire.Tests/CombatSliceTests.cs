@@ -38,7 +38,8 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
+        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon,
+                BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
@@ -51,6 +52,7 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Bludgeon].Rarity);
+        Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.BurningPact].Rarity);
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.DemonForm].Rarity);
         Assert.Equal(new AttackEffect(42), definition.Cards[BaseSpireIds.Bludgeon]
             .ResolveEffect(new CardInstance("test:bludgeon+", BaseSpireIds.Bludgeon, 1)));
@@ -62,6 +64,9 @@ public sealed class CombatSliceTests
         Assert.Equal(new AttackEffect(12), upgradedHeadbutt.Effects[0]);
         Assert.Equal(new ChooseCardFromPileEffect(CardPile.Discard, CardPile.Draw,
             "Choose a card from discard", CardPilePosition.Top), upgradedHeadbutt.Effects[1]);
+        var upgradedBurningPact = (SequenceEffect)definition.Cards[BaseSpireIds.BurningPact]
+            .ResolveEffect(new CardInstance("test:burning-pact+", BaseSpireIds.BurningPact, 1));
+        Assert.Equal(new DrawCardsEffect(3), upgradedBurningPact.Effects[1]);
         Assert.Equal(TargetSelector.AllOpponents, definition.Cards[BaseSpireIds.Thunderclap].Target);
         var thunderclap = (SequenceEffect)definition.Cards[BaseSpireIds.Thunderclap].Effect;
         Assert.Equal(new AttackEffect(4, TargetSelector.AllOpponents), thunderclap.Effects[0]);
@@ -804,6 +809,36 @@ public sealed class CombatSliceTests
         var noChoice = env.Step(emptyDiscard, new PlayCardAction(0, emptyDiscard.State.Enemy.Id));
         Assert.True(noChoice.Observation.PendingCardChoice is null);
         Assert.Equal(44, emptyDiscard.State.Enemy.Hp);
+    }
+
+    public void BurningPactExhaustsAChosenHandInstanceThenDraws()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(39, "ironclad", 56, 65,
+            [BaseSpireIds.BurningPact, BaseSpireIds.Anger, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString(),
+            drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash, BaseSpireIds.IronWave]);
+        var chosenCard = state.State.Player.HandInstances[2];
+        var pactCard = state.State.Player.HandInstances[0];
+        var paused = env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        Assert.True(paused.NeedsChoice);
+        Assert.Equal(2, paused.Observation.PendingCardChoice!.Options.Count);
+        Assert.True(paused.Observation.PendingCardChoice.Options.Any(card => card.InstanceId == chosenCard.InstanceId));
+        env.Step(state, new ChooseCardAction(chosenCard.InstanceId));
+
+        Assert.True(state.State.Player.ExhaustPileInstances.Any(card => card.InstanceId == chosenCard.InstanceId));
+        Assert.True(state.State.Player.ExhaustPileInstances.Any(card => card.InstanceId == pactCard.InstanceId));
+        Assert.True(state.State.Player.Hand.SequenceEqual(
+            [BaseSpireIds.Anger, BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash]));
+
+        var emptyHand = env.Start(40, "ironclad", 56, 65, [BaseSpireIds.BurningPact],
+            BaseSpireIds.DampCultist.ToString(),
+            drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash, BaseSpireIds.IronWave]);
+        var noSelection = env.Step(emptyHand, new PlayCardAction(0, emptyHand.State.Player.Id));
+        Assert.False(noSelection.NeedsChoice);
+        Assert.True(emptyHand.State.Player.Hand.SequenceEqual(
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash]));
+        Assert.Equal(BaseSpireIds.BurningPact, emptyHand.State.Player.ExhaustPile.Single());
     }
 
     public void RestSiteOffersHealingOrUpgradingOneCard()
@@ -1972,6 +2007,7 @@ internal static class Program
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
+        tests.BurningPactExhaustsAChosenHandInstanceThenDraws();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
@@ -2013,7 +2049,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 46 gameplay checks.");
+        Console.WriteLine("Passed 47 gameplay checks.");
     }
 }
 
