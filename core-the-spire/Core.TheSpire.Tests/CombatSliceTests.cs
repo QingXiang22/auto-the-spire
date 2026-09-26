@@ -1732,6 +1732,60 @@ public sealed class CombatSliceTests
         Assert.True(cardReward.CardOptions.SequenceEqual(replayCards));
     }
 
+    public void RunEventOptionsExposeLegalChoicesAndApplyDeclarativeRunEffects()
+    {
+        var cardEffect = EffectDsl.ParseRun(
+            """{"op":"addCardToRunDeck","card":"run-event-fixture:card"}""");
+        Assert.Equal(new AddCardToRunDeckEffect(RunEventFixturePackage.CardId), cardEffect);
+        Assert.Equal(cardEffect, EffectDsl.ParseRun(EffectDsl.Serialize(cardEffect)));
+
+        var registry = new ContentRegistry();
+        registry.AddPackage(new RunEventFixturePackage());
+        var definition = registry.Build();
+        var environment = new RunEnvironment(definition, RunEventFixturePackage.RunId,
+            RunEventFixturePackage.CharacterId);
+        var run = environment.Start(421);
+        run.State.Hp = 20;
+        var observation = environment.Observe(run);
+        Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
+        Assert.Equal(RunEventFixturePackage.EventId,
+            observation.RoomStack[^1].EventId!.Value);
+        Assert.Equal(4, observation.RoomStack[^1].EventOptions.Count);
+
+        var legalActions = environment.LegalActions(run);
+        Assert.Contains(legalActions, action => action ==
+            new ChooseRunEventOptionAction(RunEventFixturePackage.TradeOptionId));
+        Assert.False(legalActions.Any(action => action ==
+            new ChooseRunEventOptionAction(RunEventFixturePackage.UnaffordableOptionId)));
+        Assert.Throws<InvalidOperationException>(() => environment.Step(run,
+            new ChooseRunEventOptionAction(ContentId.Parse("run-event-fixture:unknown-option"))));
+
+        var result = environment.Step(run,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.TradeOptionId));
+        Assert.Equal(2, result.Gold);
+        Assert.Equal(20, result.Hp);
+        Assert.Equal(2, result.DeckInstances.Count);
+        Assert.Equal(RunEventFixturePackage.CardId, result.DeckInstances[^1].CardId);
+        Assert.Equal("run-event-card-0001", result.DeckInstances[^1].InstanceId);
+        Assert.Equal(RunPhase.ChooseMapPoint, result.Phase);
+
+        var healRun = environment.Start(421);
+        healRun.State.Hp = 20;
+        var healed = environment.Step(healRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.GoldOptionId));
+        Assert.Equal(15, healed.Gold);
+        Assert.Equal(23, healed.Hp);
+        Assert.Equal(RunPhase.ChooseMapPoint, healed.Phase);
+
+        var fatalRun = environment.Start(422);
+        fatalRun.State.Hp = 10;
+        var defeated = environment.Step(fatalRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.FatalOptionId));
+        Assert.Equal(0, defeated.Hp);
+        Assert.Equal(RunStatus.Lost, defeated.Status);
+        Assert.Equal(RunPhase.Terminal, defeated.Phase);
+    }
+
     public void ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters()
     {
         var points = new List<MapPointDefinition>
@@ -2410,6 +2464,46 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class RunEventFixturePackage : IRulePackage
+    {
+        public static readonly ContentId RunId = ContentId.Parse("run-event-fixture:run");
+        public static readonly ContentId CharacterId = ContentId.Parse("run-event-fixture:character");
+        public static readonly ContentId ActId = ContentId.Parse("run-event-fixture:act");
+        public static readonly ContentId EventId = ContentId.Parse("run-event-fixture:ancient");
+        public static readonly ContentId CardId = ContentId.Parse("run-event-fixture:card");
+        public static readonly ContentId TradeOptionId = ContentId.Parse("run-event-fixture:trade");
+        public static readonly ContentId GoldOptionId = ContentId.Parse("run-event-fixture:gold");
+        public static readonly ContentId UnaffordableOptionId = ContentId.Parse("run-event-fixture:unaffordable");
+        public static readonly ContentId FatalOptionId = ContentId.Parse("run-event-fixture:fatal");
+
+        public PackageInfo Info { get; } = new("run-event-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var map = new ActMapDefinition("entry", "boss",
+            [
+                new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["boss"]),
+                new MapPointDefinition("boss", 1, 3, MapPointType.Boss, [])
+            ]);
+            registry.Register(new RunDefinition(RunId,
+                [new ActDefinition(ActId, _ => map, ancientIds: [EventId])]));
+            registry.Register(new CharacterDefinition(CharacterId, 30, 10, [CardId]));
+            registry.Register(new CardDefinition(CardId, 1, CardType.Attack, new AttackEffect(5),
+                Rarity: CardRarity.Basic));
+            registry.Register(new RunEventDefinition(EventId, RunEventKind.Ancient,
+            [
+                new RunEventOptionDefinition(TradeOptionId, "Trade gold for a card",
+                    [new LoseRunGoldEffect(8), new AddCardToRunDeckEffect(CardId)]),
+                new RunEventOptionDefinition(GoldOptionId, "Find gold",
+                    [new GainRunGoldEffect(5), new HealRunEffect(3)]),
+                new RunEventOptionDefinition(UnaffordableOptionId, "Pay too much",
+                    [new LoseRunGoldEffect(11)]),
+                new RunEventOptionDefinition(FatalOptionId, "Take lethal damage",
+                    [new LoseRunHpEffect(10)])
+            ]));
+        }
+    }
+
     private sealed class CardRewardOddsHook : IRunHook
     {
         public ContentId Id { get; } = ContentId.Parse("test-fixture:card-reward-odds-hook");
@@ -2801,6 +2895,7 @@ internal static class Program
         tests.UnknownRoomOddsExposeOrderedModHooks();
         tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
         tests.CombatCardRewardsGenerateDistinctOptionsAndWriteTheChosenInstanceToTheDeck();
+        tests.RunEventOptionsExposeLegalChoicesAndApplyDeclarativeRunEffects();
         tests.ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters();
         tests.EncounterPoolsRejectMissingOrMisclassifiedContentAtBuild();
         tests.ActRoomContentShufflesEventsBeforeSelectingTheAncientAndReplaysBySeed();
