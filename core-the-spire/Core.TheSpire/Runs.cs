@@ -74,7 +74,8 @@ public sealed record ActDefinition(ContentId Id, Func<SeededRandom, ActMapDefini
 public sealed class CharacterDefinition
 {
     public CharacterDefinition(ContentId id, int maxHp, int startingGold,
-        IEnumerable<ContentId> startingDeck, IEnumerable<ContentId>? startingRelics = null)
+        IEnumerable<ContentId> startingDeck, IEnumerable<ContentId>? startingRelics = null,
+        IEnumerable<ContentId>? startingPotions = null)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHp);
@@ -85,6 +86,7 @@ public sealed class CharacterDefinition
         StartingGold = startingGold;
         StartingDeck = Array.AsReadOnly(startingDeck.ToArray());
         StartingRelics = Array.AsReadOnly(startingRelics?.ToArray() ?? []);
+        StartingPotions = Array.AsReadOnly(startingPotions?.ToArray() ?? []);
     }
 
     public ContentId Id { get; }
@@ -92,6 +94,7 @@ public sealed class CharacterDefinition
     public int StartingGold { get; }
     public IReadOnlyList<ContentId> StartingDeck { get; }
     public IReadOnlyList<ContentId> StartingRelics { get; }
+    public IReadOnlyList<ContentId> StartingPotions { get; }
 }
 
 public sealed class RunDefinition
@@ -122,9 +125,35 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
     IReadOnlyList<string> Children);
 
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
-    IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
+    IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
+    int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
     RunRoomType? CurrentRoom,
     RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map);
+
+public sealed class RunRoomResult
+{
+    public RunRoomResult(RunOutcome outcome, int hp, int maxHp, int gold,
+        IEnumerable<ContentId> deck, IEnumerable<ContentId> relics, IEnumerable<ContentId>? potions = null)
+    {
+        ArgumentNullException.ThrowIfNull(deck);
+        ArgumentNullException.ThrowIfNull(relics);
+        Outcome = outcome;
+        Hp = hp;
+        MaxHp = maxHp;
+        Gold = gold;
+        Deck = Array.AsReadOnly(deck.ToArray());
+        Relics = Array.AsReadOnly(relics.ToArray());
+        Potions = Array.AsReadOnly(potions?.ToArray() ?? []);
+    }
+
+    public RunOutcome Outcome { get; }
+    public int Hp { get; }
+    public int MaxHp { get; }
+    public int Gold { get; }
+    public IReadOnlyList<ContentId> Deck { get; }
+    public IReadOnlyList<ContentId> Relics { get; }
+    public IReadOnlyList<ContentId> Potions { get; }
+}
 
 internal sealed class RunState
 {
@@ -134,9 +163,11 @@ internal sealed class RunState
         Character = character;
         Random = random;
         Hp = character.MaxHp;
+        MaxHp = character.MaxHp;
         Gold = character.StartingGold;
         Deck = [.. character.StartingDeck];
         Relics = [.. character.StartingRelics];
+        Potions = [.. character.StartingPotions];
         Map = GenerateMap(0);
         MapView = BuildMapView(Map);
         CurrentPointId = Map.StartPointId;
@@ -146,9 +177,11 @@ internal sealed class RunState
     public CharacterDefinition Character { get; }
     public RandomStreams Random { get; }
     public int Hp { get; set; }
+    public int MaxHp { get; set; }
     public int Gold { get; set; }
     public List<ContentId> Deck { get; }
     public List<ContentId> Relics { get; }
+    public List<ContentId> Potions { get; }
     public int ActIndex { get; set; }
     public ActMapDefinition Map { get; set; }
     public IReadOnlyList<MapPointView> MapView { get; set; }
@@ -193,8 +226,9 @@ public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition
     {
         ArgumentNullException.ThrowIfNull(session);
         var state = session.State;
-        return new RunObservation(state.Character.Id, state.Hp, state.Character.MaxHp, state.Gold,
-            Array.AsReadOnly(state.Deck.ToArray()), Array.AsReadOnly(state.Relics.ToArray()), state.ActIndex,
+        return new RunObservation(state.Character.Id, state.Hp, state.MaxHp, state.Gold,
+            Array.AsReadOnly(state.Deck.ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
+            Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
             state.Phase, state.Status, state.MapView);
     }
@@ -225,14 +259,16 @@ public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition
     }
 
     /// <summary>Called by the active room environment after its rules reach an outcome.</summary>
-    public RunObservation CompleteRoom(RunSession session, RunOutcome outcome)
+    public RunObservation CompleteRoom(RunSession session, RunRoomResult result)
     {
         ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(result);
         var state = session.State;
         if (state.Phase == RunPhase.ResolveFinalEvent)
         {
-            if (outcome != RunOutcome.RunWon)
+            if (result.Outcome != RunOutcome.RunWon)
                 throw new InvalidOperationException("The final event must report the run victory outcome.");
+            ApplyRoomResult(state, result);
             state.Status = RunStatus.Won;
             state.Phase = RunPhase.Terminal;
             state.CurrentRoom = null;
@@ -242,16 +278,15 @@ public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition
         if (state.Phase != RunPhase.ResolveRoom || state.CurrentRoom is null)
             throw new InvalidOperationException("There is no active room to complete.");
 
-        if (outcome == RunOutcome.PlayerDefeated)
+        if (result.Outcome == RunOutcome.RunWon)
+            throw new InvalidOperationException("RunWon is valid only after the final event.");
+        ApplyRoomResult(state, result);
+        if (result.Outcome == RunOutcome.PlayerDefeated)
         {
-            state.Hp = 0;
             state.Status = RunStatus.Lost;
             state.Phase = RunPhase.Terminal;
             return Observe(session);
         }
-        if (outcome != RunOutcome.RoomCleared)
-            throw new InvalidOperationException("RunWon is valid only after the final event.");
-
         if (state.CurrentPointId == state.Map.BossPointId)
         {
             state.ActIndex++;
@@ -277,6 +312,27 @@ public sealed class RunEnvironment(RunDefinition definition, CharacterDefinition
             state.Phase = RunPhase.ChooseMapPoint;
         }
         return Observe(session);
+    }
+
+    private static void ApplyRoomResult(RunState state, RunRoomResult result)
+    {
+        if (result.MaxHp <= 0 || result.Hp < 0 || result.Hp > result.MaxHp)
+            throw new ArgumentOutOfRangeException(nameof(result), "Room result health must be within the positive maximum HP.");
+        if (result.Gold < 0) throw new ArgumentOutOfRangeException(nameof(result), "Room result gold cannot be negative.");
+        if (result.Outcome == RunOutcome.PlayerDefeated && result.Hp != 0)
+            throw new ArgumentException("A defeated player must have zero HP.", nameof(result));
+        if (result.Outcome != RunOutcome.PlayerDefeated && result.Hp == 0)
+            throw new ArgumentException("A surviving room result must have positive HP.", nameof(result));
+
+        state.Hp = result.Hp;
+        state.MaxHp = result.MaxHp;
+        state.Gold = result.Gold;
+        state.Deck.Clear();
+        state.Deck.AddRange(result.Deck);
+        state.Relics.Clear();
+        state.Relics.AddRange(result.Relics);
+        state.Potions.Clear();
+        state.Potions.AddRange(result.Potions);
     }
 
     private static RunRoomType ResolveRoomType(RunState state, MapPointType pointType) => pointType switch
