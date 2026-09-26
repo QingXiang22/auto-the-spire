@@ -1,6 +1,6 @@
 namespace CoreTheSpire;
 
-public enum MapPointType { Start, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient }
+public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
 public enum RunRoomType { Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
 public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
@@ -29,8 +29,8 @@ public sealed class ActMapDefinition
                 throw new ArgumentException($"Duplicate map point ID '{point.Id}'.", nameof(points));
         }
 
-        if (!pointMap.TryGetValue(startPointId, out var start) || start.Type != MapPointType.Start)
-            throw new ArgumentException("The start point must exist and have type Start.", nameof(startPointId));
+        if (!pointMap.TryGetValue(startPointId, out var start) || start.Type is not (MapPointType.Start or MapPointType.Ancient))
+            throw new ArgumentException("The start point must exist and have type Start or Ancient.", nameof(startPointId));
         if (!pointMap.TryGetValue(bossPointId, out var boss) || boss.Type != MapPointType.Boss)
             throw new ArgumentException("The boss point must exist and have type Boss.", nameof(bossPointId));
 
@@ -199,6 +199,13 @@ internal sealed class RunState
         Map = GenerateMap(0);
         MapView = BuildMapView(Map);
         CurrentPointId = Map.StartPointId;
+        var entryPoint = Map.Points[CurrentPointId];
+        if (entryPoint.Type == MapPointType.Ancient)
+        {
+            CurrentMapPointType = MapPointType.Ancient;
+            CurrentRoom = RunRoomType.Event;
+            Phase = RunPhase.ResolveRoom;
+        }
     }
 
     public RunDefinition Definition { get; }

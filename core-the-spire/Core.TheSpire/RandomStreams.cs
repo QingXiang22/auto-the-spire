@@ -42,6 +42,27 @@ public sealed class SeededRandom
         }
     }
 
+    public int NextGaussianInt(int mean, int standardDeviation, int minimum, int maximum)
+    {
+        int value;
+        do
+        {
+            var first = 1.0 - NextDouble();
+            var second = 1.0 - NextDouble();
+            var normal = Math.Sqrt(-2.0 * Math.Log(first)) * Math.Sin(Math.PI * 2.0 * second);
+            value = (int)Math.Round(mean + standardDeviation * normal);
+        } while (value < minimum || value > maximum);
+        return value;
+    }
+
+    public void StableShuffle<T>(IList<T> values) where T : IComparable<T>
+    {
+        var sorted = values.ToArray();
+        Array.Sort(sorted);
+        for (var i = 0; i < sorted.Length; i++) values[i] = sorted[i];
+        Shuffle(values);
+    }
+
     private double NextDoubleCore() => (NextUInt64() >> 11) * (1.0 / 9007199254740992.0);
 
     private ulong NextUInt64()
