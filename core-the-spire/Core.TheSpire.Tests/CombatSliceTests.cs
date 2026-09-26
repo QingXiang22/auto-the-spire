@@ -38,13 +38,14 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
+        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bludgeon, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.Thunderclap, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
@@ -709,6 +710,30 @@ public sealed class CombatSliceTests
         Assert.Equal(5, demonForm.State.Player.Hand.Count);
         env.Step(demonForm, new EndTurnAction());
         Assert.Equal(4, demonForm.State.Player.Creature.Strength);
+    }
+
+    public void AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var basic = env.Start(33, "ironclad", 56, 65, [BaseSpireIds.Anger],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        var originalBasicId = basic.State.Player.HandInstances[0].InstanceId;
+        env.Step(basic, new PlayCardAction(0, basic.State.Enemy.Id));
+        Assert.Equal(47, basic.State.Enemy.Hp);
+        var basicCopy = basic.State.Player.DiscardPileInstances.Single();
+        Assert.Equal(BaseSpireIds.Anger, basicCopy.CardId);
+        Assert.Equal(0, basicCopy.UpgradeLevel);
+        Assert.True(originalBasicId != basicCopy.InstanceId);
+
+        var upgraded = env.Start(34, "ironclad", 56, 65, [BaseSpireIds.Anger],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("fixture-upgraded-anger",
+            BaseSpireIds.Anger, upgradeLevel: 1);
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+        Assert.Equal(45, upgraded.State.Enemy.Hp);
+        var upgradedCopy = upgraded.State.Player.DiscardPileInstances.Single();
+        Assert.Equal(1, upgradedCopy.UpgradeLevel);
+        Assert.True("fixture-upgraded-anger" != upgradedCopy.InstanceId);
     }
 
     public void RestSiteOffersHealingOrUpgradingOneCard()
@@ -1875,6 +1900,7 @@ internal static class Program
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
+        tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
@@ -1916,7 +1942,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 44 gameplay checks.");
+        Console.WriteLine("Passed 45 gameplay checks.");
     }
 }
 
