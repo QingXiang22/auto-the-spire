@@ -40,11 +40,12 @@ public sealed class CombatSliceTests
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
         Assert.Equal(new[] { BaseSpireIds.Bash, BaseSpireIds.DefendIronclad, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.TwinStrike }.AsEnumerable(),
+                BaseSpireIds.StrikeIronclad, BaseSpireIds.TwinStrike, BaseSpireIds.Uppercut }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
+        Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
         var upgradedIronWave = (SequenceEffect)definition.Cards[BaseSpireIds.IronWave]
             .ResolveEffect(new CardInstance("test:iron-wave+", BaseSpireIds.IronWave, 1));
         Assert.Equal(new GainBlockEffect(7), upgradedIronWave.Effects[0]);
@@ -61,6 +62,10 @@ public sealed class CombatSliceTests
         Assert.Equal(new DrawCardsEffect(1), upgradedShrug.Effects[1]);
         Assert.Equal(new RepeatEffect(2, new AttackEffect(7)),
             definition.Cards[BaseSpireIds.TwinStrike].ResolveEffect(new CardInstance("test:twin+", BaseSpireIds.TwinStrike, 1)));
+        var upgradedUppercut = (SequenceEffect)definition.Cards[BaseSpireIds.Uppercut]
+            .ResolveEffect(new CardInstance("test:uppercut+", BaseSpireIds.Uppercut, 1));
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 2, TargetSelector.FirstEnemy), upgradedUppercut.Effects[1]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 2, TargetSelector.FirstEnemy), upgradedUppercut.Effects[2]);
         Assert.Equal(new AttackEffect(9), definition.Cards[BaseSpireIds.StrikeIronclad]
             .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
         Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
@@ -122,6 +127,20 @@ public sealed class CombatSliceTests
         env.Step(twin, new PlayCardAction(0, twin.State.Enemy.Id));
         Assert.Equal(43, twin.State.Enemy.Hp);
         Assert.Equal(2, twin.State.Events.Count(gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 5));
+
+        var weakRules = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true)));
+        var darkStrike = ContentId.Parse("base-spire:damp-cultist-dark-strike");
+        var uppercut = weakRules.StartEncounter(25, "ironclad", 56, 65, [BaseSpireIds.Uppercut],
+            [new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString(), 52, StartingActionOverride: darkStrike)]);
+        weakRules.Step(uppercut, new PlayCardAction(0, uppercut.State.Enemy.Id));
+        Assert.Equal(39, uppercut.State.Enemy.Hp);
+        Assert.Equal(1, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Weak));
+        Assert.Equal(1, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        Assert.Equal(2, weakRules.Observe(uppercut).IntentDamage);
+        weakRules.Step(uppercut, new EndTurnAction());
+        Assert.Equal(54, uppercut.State.Player.Creature.Hp);
+        Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Weak));
+        Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
     }
 
     public void BaseDampCultistNormalValuesMatchSourceRules()
