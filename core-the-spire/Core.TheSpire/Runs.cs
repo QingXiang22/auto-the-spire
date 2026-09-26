@@ -69,7 +69,7 @@ public sealed class ActMapDefinition
 }
 
 public sealed record ActDefinition(ContentId Id, Func<SeededRandom, ActMapDefinition> GenerateMap,
-    Func<SeededRandom, RunRoomType>? ResolveUnknownRoom = null);
+    Func<SeededRandom, IReadOnlySet<RunRoomType>, RunRoomType>? ResolveUnknownRoom = null);
 
 public sealed record UnknownRoomOddsEntry(RunRoomType RoomType, float Weight);
 
@@ -103,15 +103,19 @@ internal sealed class UnknownRoomOddsState
         _currentOdds = _baseOdds.Select(entry => entry.Weight).ToArray();
     }
 
-    public RunRoomType Roll(SeededRandom random)
+    public RunRoomType Roll(SeededRandom random, IReadOnlySet<RunRoomType> blacklist)
     {
         var roll = random.NextFloat();
-        var result = RunRoomType.Event;
+        var result = blacklist.Contains(RunRoomType.Event)
+            ? _baseOdds.Select(entry => entry.RoomType).Where(type => !blacklist.Contains(type)).Order().FirstOrDefault(RunRoomType.Unassigned)
+            : RunRoomType.Event;
+        if (result == RunRoomType.Unassigned)
+            throw new InvalidOperationException("All unknown-room types are blacklisted.");
         var cumulative = 0f;
         for (var i = 0; i < _baseOdds.Length; i++)
         {
             var weight = _currentOdds[i];
-            if (weight < 0f) continue;
+            if (weight < 0f || blacklist.Contains(_baseOdds[i].RoomType)) continue;
             cumulative += weight;
             if (roll <= cumulative)
             {
@@ -123,7 +127,7 @@ internal sealed class UnknownRoomOddsState
         for (var i = 0; i < _baseOdds.Length; i++)
         {
             if (_baseOdds[i].RoomType == result) _currentOdds[i] = _baseOdds[i].Weight;
-            else _currentOdds[i] += _baseOdds[i].Weight;
+            else if (!blacklist.Contains(_baseOdds[i].RoomType)) _currentOdds[i] += _baseOdds[i].Weight;
         }
         return result;
     }
@@ -189,11 +193,14 @@ public sealed record ChooseMapPointAction(string PointId) : PlayerAction;
 public sealed record MapPointView(string Id, int Floor, int Column, MapPointType Type,
     IReadOnlyList<string> Children);
 
+public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
+    IReadOnlyList<RunRoomType> RoomTypes);
+
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
     IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
     int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
     RunRoomType? CurrentRoom,
-    RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map);
+    RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map, IReadOnlyList<RunMapVisitView> VisitedMapPoints);
 
 public sealed class RunRoomResult
 {
@@ -276,6 +283,8 @@ internal sealed class RunState
             CurrentMapPointType = MapPointType.Ancient;
             CurrentRoom = RunRoomType.Event;
             Phase = RunPhase.ResolveRoom;
+            VisitHistory.Add(new RunMapVisitView(ActIndex, entryPoint.Id, entryPoint.Type,
+                Array.AsReadOnly(new[] { RunRoomType.Event })));
         }
         else
         {
@@ -298,6 +307,7 @@ internal sealed class RunState
     public int ActIndex { get; set; }
     public ActMapDefinition Map { get; set; }
     public IReadOnlyList<MapPointView> MapView { get; set; }
+    public List<RunMapVisitView> VisitHistory { get; } = [];
     public string CurrentPointId { get; set; } = string.Empty;
     public MapPointType? CurrentMapPointType { get; set; }
     public RunRoomType? CurrentRoom { get; set; }
@@ -356,7 +366,7 @@ public sealed class RunEnvironment
             Array.AsReadOnly(state.Deck.ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
-            state.Phase, state.Status, state.MapView);
+            state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()));
     }
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
@@ -379,7 +389,10 @@ public sealed class RunEnvironment
         var point = state.Map.Points[choose.PointId];
         state.CurrentPointId = point.Id;
         state.CurrentMapPointType = point.Type;
-        state.CurrentRoom = ResolveRoomType(state, point.Type);
+        var blacklist = BuildRoomTypeBlacklist(state, point);
+        state.CurrentRoom = ResolveRoomType(state, point, blacklist);
+        state.VisitHistory.Add(new RunMapVisitView(state.ActIndex, point.Id, point.Type,
+            Array.AsReadOnly(new[] { state.CurrentRoom.Value })));
         state.Phase = RunPhase.ResolveRoom;
         return Observe(session);
     }
@@ -464,9 +477,18 @@ public sealed class RunEnvironment
         state.Potions.AddRange(result.Potions);
     }
 
-    private static RunRoomType ResolveRoomType(RunState state, MapPointType pointType) => pointType switch
+    private static HashSet<RunRoomType> BuildRoomTypeBlacklist(RunState state, MapPointDefinition point)
     {
-        MapPointType.Unknown => ResolveUnknownRoom(state),
+        var blacklist = new HashSet<RunRoomType>();
+        if ((state.VisitHistory.Count > 0 && state.VisitHistory[^1].RoomTypes.Contains(RunRoomType.Shop))
+            || (point.Children.Count > 0 && point.Children.All(childId => state.Map.Points[childId].Type == MapPointType.Shop)))
+            blacklist.Add(RunRoomType.Shop);
+        return blacklist;
+    }
+
+    private static RunRoomType ResolveRoomType(RunState state, MapPointDefinition point, IReadOnlySet<RunRoomType> blacklist) => point.Type switch
+    {
+        MapPointType.Unknown => ResolveUnknownRoom(state, blacklist),
         MapPointType.Shop => RunRoomType.Shop,
         MapPointType.Treasure => RunRoomType.Treasure,
         MapPointType.RestSite => RunRoomType.RestSite,
@@ -475,16 +497,16 @@ public sealed class RunEnvironment
         MapPointType.Boss => RunRoomType.Boss,
         MapPointType.Ancient => RunRoomType.Event,
         MapPointType.Start => throw new InvalidOperationException("The map entry point is not a room."),
-        _ => throw new ArgumentOutOfRangeException(nameof(pointType), pointType, null)
+        _ => throw new ArgumentOutOfRangeException(nameof(point), point.Type, null)
     };
 
-    private static RunRoomType ResolveUnknownRoom(RunState state)
+    private static RunRoomType ResolveUnknownRoom(RunState state, IReadOnlySet<RunRoomType> blacklist)
     {
         var act = state.Definition.Acts[state.ActIndex];
         if (act.ResolveUnknownRoom is not null)
-            return act.ResolveUnknownRoom(state.Random.Get($"act_{state.ActIndex + 1}_unknown-room"));
+            return act.ResolveUnknownRoom(state.Random.Get($"act_{state.ActIndex + 1}_unknown-room"), blacklist);
         if (state.UnknownRoomOdds is not null)
-            return state.UnknownRoomOdds.Roll(state.Random.Get("unknown_map_point"));
+            return state.UnknownRoomOdds.Roll(state.Random.Get("unknown_map_point"), blacklist);
         throw new InvalidOperationException("Unknown map points need configured run odds or an act room resolver.");
     }
 

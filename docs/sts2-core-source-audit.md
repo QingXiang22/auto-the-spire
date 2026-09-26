@@ -18,7 +18,7 @@
 | 敌人初始生命 | `Core/Entities/Creatures/Creature.cs` | 怪物初始化先设初值，`SetUniqueMonsterHpValue` 再依据传入 RNG 从 `[min,max]` 选择，并尝试避免同侧怪物生命重复。 | `CombatEnvironment.Start` 允许夹具指定 HP；未指定时用会话的 `encounter-hp` 流在闭区间选择。该流名尚未证明等于原版调用方所传流。 | 首轮已读；部分映射 |
 | 内容定义与实例 | `Core/Models/AbstractModel.cs`, `Core/Models/ModelDb.cs` | 原版以模型 ID 查找内容，定义概念与运行实例可变数据分开。 | `GameDefinition` 持有不可变规则定义视图；不可观察的 `GameState` 持有战斗实例；包重复 ID 拒绝，覆盖需显式调用 Override；失败注册回滚。 | 首轮已读；最小语义已实现 |
 | mod 入口与运行扩展 | `Core/Modding/ModManager.cs`, `Core/Models/ModelDb.cs` | 原版 mod 可加载程序集、初始化模型并应用 Harmony 补丁；补丁可超出数据规则边界。 | 首个内核允许内容覆盖、新增 JSON 效果节点和受控 C# effect handler；战斗事件 Hook 不直接取得可变运行态，扩展数据存于 `GameState` 的按 mod ID 隔离命名空间。独立 `IRunHook` 只提供受限整局查询/命令（当前含遗物检查与治疗）。任意 Harmony 补丁不在兼容范围。 | 最小扩展已实现；原版 mod 清单待审计 |
-| 运行与地图 | `Core/Runs/RunState.cs`, `RunManager.cs`, `Core/Map/StandardActMap.cs`, `MapPathPruning.cs`, `MapPostProcessing.cs`, `MapPoint.cs`, `MapPointType.cs`, `Core/Rooms/RoomType.cs`, `Core/Odds/UnknownMapPointOdds.cs` | 已确认运行态保存玩家、地图、幕索引、楼层、访问历史、当前房间栈及多种运行配置；标准地图按路径生成、节点类型分配/限制、重复路线剪枝与配额修复、居中/扩散/拉直的顺序处理。`MapPointType` 与 `RoomType` 不同：Unknown 使用运行级随机流和动态赔率，Ancient 解析为 Event。每幕起点均为 Ancient 事件；最后一幕 Boss 后还进入 The Architect 事件，选择胜利选项才结束运行。 | `Runs.cs` 提供通用地图图、选点、Ancient 开幕事件和赔率运行态；`base-spire/StandardActMapGenerator.cs` 移植四个 Act 的单人参数及生成管线。原版 Unknown 基础权重与累计/每幕重置已移植，`RunEnvironment.Start(string)` 复现字符串种子 hash 入口。多 seed 布局/重放检查通过；仍待原版运行时地图逐点差分、赔率 Hook/blacklist、房间栈、原版事件队列和战斗自动衔接。 | 地图与基础赔率已移植；逐点差分和房间语义待验 |
+| 运行与地图 | `Core/Runs/RunState.cs`, `RunManager.cs`, `Core/Map/StandardActMap.cs`, `MapPathPruning.cs`, `MapPostProcessing.cs`, `MapPoint.cs`, `MapPointType.cs`, `Core/Rooms/RoomType.cs`, `Core/Odds/UnknownMapPointOdds.cs` | 已确认运行态保存玩家、地图、幕索引、楼层、访问历史、当前房间栈及多种运行配置；标准地图按路径生成、节点类型分配/限制、重复路线剪枝与配额修复、居中/扩散/拉直的顺序处理。`MapPointType` 与 `RoomType` 不同：Unknown 使用运行级随机流、动态赔率和 Shop 禁用条件，Ancient 解析为 Event。每幕起点均为 Ancient 事件；最后一幕 Boss 后还进入 The Architect 事件，选择胜利选项才结束运行。 | `Runs.cs` 提供通用地图图、合法选点、可观察访问历史、Ancient 开幕事件和赔率运行态；`base-spire/StandardActMapGenerator.cs` 移植四个 Act 的单人参数及生成管线。原版 Unknown 基础权重、累计/每幕重置和“上个访问房间为 Shop”/“当前 Unknown 后续节点全为 Shop”黑名单已移植。`RunEnvironment.Start(string)` 复现字符串种子 hash 入口。多 seed 布局/重放检查通过；仍待原版运行时地图逐点差分、赔率 Hook、房间栈、原版事件队列和战斗自动衔接。 | 地图、访问历史及基础赔率已移植；逐点差分和房间语义待验 |
 
 ## 后续深读顺序
 
@@ -42,7 +42,7 @@
 | 阶段 | 源码入口 | 迁移目标 | 验收状态 |
 | --- | --- | --- | --- |
 | 地图定义与寻路 | `Core/Map/StandardActMap.cs`, `MapPathPruning.cs`, `MapPostProcessing.cs`, 各 Act 模型 | 复现种子驱动的地图拓扑、节点类型分配和地图后处理；规则配置归 `base-spire` | 算法及四个 Act 的单人参数已移植；需对照原版运行时固定 seed 结果 |
-| 节点与房间转场 | `Core/Runs/RunManager.cs`, `Core/Runs/RunState.cs`, `Core/Rooms/*Room.cs`, `Core/Odds/UnknownMapPointOdds.cs` | 复现 Ancient 入口、选点、map point 到 room 的解析、当前房间栈、房间完成、幕切换及终局事件 | Ancient 每幕 Event、原版基础 Unknown 赔率及跨 Act 重置、资源回写已实现；赔率 Hook/blacklist、房间栈、Architect/原版房间队列和战斗衔接待实现 |
+| 节点与房间转场 | `Core/Runs/RunManager.cs`, `Core/Runs/RunState.cs`, `Core/Rooms/*Room.cs`, `Core/Odds/UnknownMapPointOdds.cs` | 复现 Ancient 入口、选点、map point 到 room 的解析、当前房间栈、房间完成、幕切换及终局事件 | Ancient 每幕 Event、访问历史、Shop 黑名单、原版基础 Unknown 赔率及跨 Act 重置、资源回写已实现；赔率 Hook、房间栈、Architect/原版房间队列和战斗衔接待实现 |
 | 战斗房间 | `Core/Combat/*`, `Core/Commands/*`, `Core/GameActions/*`, `Core/MonsterMoves/*` | 完成多实体战斗、合法动作、伤害阶段、卡牌区域、AI 意图及结果回写整局 | 首轮切片；待扩展 |
 | 非战斗房间与奖励 | `Core/Rooms`, `Core/Rewards`, `Core/Events`, `Core/Models/Events` | 迁移宝箱、事件、商店、营火、奖励选择和玩家资源更新 | 未实现 |
 | 原版内容库 | `Core/Models/Cards`, `Monsters`, `Powers`, `Relics`, `Potions`, `Encounters`, `Acts`, `Characters` | 默认全解锁，完整注册快照中单人玩法内容 | 仅初始铁甲战士卡牌和咔咔切片 |
