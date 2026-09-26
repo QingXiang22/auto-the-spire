@@ -36,6 +36,9 @@ internal static class IroncladCards
         registry.Register(new CardDefinition(BaseSpireIds.Bludgeon, 3, CardType.Attack,
             EffectDsl.Parse("""{"op":"attack","amount":32}"""), Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"attack","amount":42}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Barricade, 3, CardType.Power,
+            new ApplyPowerEffect(BaseSpireIds.BarricadePower, 1), Target: TargetSelector.Self,
+            Rarity: CardRarity.Rare, UpgradedCost: 2));
         registry.Register(new CardDefinition(BaseSpireIds.BodySlam, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"attackUsingBlock"}"""),
             Target: TargetSelector.SelectedTarget, Rarity: CardRarity.Common,
@@ -103,7 +106,7 @@ internal static class IroncladCards
             Target: TargetSelector.Self, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":9},{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.BattleTrance,
+            [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade, BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,

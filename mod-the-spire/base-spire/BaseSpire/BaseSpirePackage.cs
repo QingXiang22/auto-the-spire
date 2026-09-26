@@ -28,6 +28,8 @@ public static class BaseSpireIds
     public static readonly ContentId FeelNoPain = ContentId.Parse("base-spire:feel-no-pain");
     public static readonly ContentId WellLaidPlans = ContentId.Parse("base-spire:well-laid-plans");
     public static readonly ContentId WellLaidPlansPower = ContentId.Parse("base-spire:well-laid-plans-power");
+    public static readonly ContentId Barricade = ContentId.Parse("base-spire:barricade");
+    public static readonly ContentId BarricadePower = ContentId.Parse("base-spire:barricade-power");
     public static readonly ContentId SwordBoomerang = ContentId.Parse("base-spire:sword-boomerang");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
@@ -92,6 +94,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             TriggerRuleEffect: EffectDsl.Parse("""{"op":"gainBlock","amount":1,"perPowerStack":"base-spire:feel-no-pain"}""")));
         registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
         registry.Register(new WellLaidPlansHook());
+        registry.Register(new PowerDefinition(BaseSpireIds.BarricadePower));
+        registry.Register(new BarricadeHook());
         registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
