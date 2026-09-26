@@ -66,6 +66,10 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":8},{"op":"drawCards","amount":1}]}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":11},{"op":"drawCards","amount":1}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.SecondWind, 1, CardType.Skill,
+            EffectDsl.Parse("""{"op":"forEachCardInPile","from":"hand","filter":"nonAttack","effect":{"op":"sequence","effects":[{"op":"moveSelectedCardToPile","from":"hand","to":"exhaust"},{"op":"gainBlock","amount":5}]}}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"forEachCardInPile","from":"hand","filter":"nonAttack","effect":{"op":"sequence","effects":[{"op":"moveSelectedCardToPile","from":"hand","to":"exhaust"},{"op":"gainBlock","amount":7}]}}""")));
         registry.Register(new CardDefinition(BaseSpireIds.SwordBoomerang, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"repeat","count":3,"effect":{"op":"randomAttack","amount":3}}"""),
             Target: TargetSelector.RandomEnemy, Rarity: CardRarity.Common,
@@ -90,7 +94,8 @@ internal static class IroncladCards
             [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
-                BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
+                BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
+                BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
                 BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
                 BaseSpireIds.Uppercut]));
