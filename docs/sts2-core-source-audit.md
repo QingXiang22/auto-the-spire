@@ -55,7 +55,7 @@
 - 当前战斗内核是用于验证边界的首版切片，未达到原版战斗等价。特定角色遗物、反应式 Hook、多人协作、完整卡牌区域规则、敌人意图选择、Ascension 配置和伤害类型都待实现。
 - `base-spire` 中现有状态/效果 primitive 是内核测试语义，不代表可直接无误迁移所有原版机制。
 - 目前 `RandomStreams` 复现 RNG 算法与确定性命名流基础，但尚未复现原版全部种子派生、RNG 分类、玩家槽种子和存档计数器语义。
-- `Runs.cs` / `ActRoomContent.cs` 提供通用整局流转、可嵌套房间栈、配置驱动的事件/遭遇队列及选择视图；房间进入时会保存随机 enemy slot 结果，`CombatEnvironment.StartCurrentEncounterForRun` 使用已选敌阵容，从 run 牌组及共享 `shuffle` 流构造战斗，`RunEnvironment.CompleteCombat` 将终局生命回写并完成当前战斗房间。事件选项和 RunEffect DSL（基础资源效果、单牌选择升级/移除）已实现；尚未实现原版全量池数据、事件动态条件与完整效果、运行内容可用性筛选、RNG 逐调用差分或完整怪物初始化。
+- `Runs.cs` / `ActRoomContent.cs` 提供通用整局流转、可嵌套房间栈、配置驱动的事件/遭遇队列及选择视图；房间进入时会保存随机 enemy slot 结果，`CombatEnvironment.StartCurrentEncounterForRun` 使用已选敌阵容，从 run 牌组及共享 `shuffle` 流构造战斗，`RunEnvironment.CompleteCombat` 将终局生命回写并完成当前战斗房间。事件选项和 RunEffect DSL 支持基础资源及最大生命变化、单牌选择升级/移除，并提供注册式 `ICustomRunEffectHandler` 通过受限命令扩展 run 效果；尚未实现原版全量池数据、事件动态条件与完整效果、运行内容可用性筛选、RNG 逐调用差分或完整怪物初始化。
 - 当前完整性范围是单人玩法到胜负、快照内全部原版内容默认全解锁；账号级元进度、多人、UI/音画和平台服务排除。
 
 ## 整局规则迁移队列

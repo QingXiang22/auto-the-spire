@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
@@ -514,11 +516,13 @@ public sealed class RunEnvironment
     private readonly IReadOnlyDictionary<ContentId, RunEventDefinition>? _runEvents;
     private readonly IReadOnlyDictionary<ContentId, CardDefinition>? _cards;
     private readonly IReadOnlyDictionary<ContentId, CardPoolDefinition>? _cardPools;
+    private readonly IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> _customRunEffects;
 
     public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
         IEnumerable<CardDefinition>? cards = null, IEnumerable<CardPoolDefinition>? cardPools = null,
         IEnumerable<EncounterDefinition>? encounters = null,
-        IEnumerable<RunEventDefinition>? runEvents = null)
+        IEnumerable<RunEventDefinition>? runEvents = null,
+        IEnumerable<ICustomRunEffectHandler>? customRunEffects = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _character = character ?? throw new ArgumentNullException(nameof(character));
@@ -527,6 +531,8 @@ public sealed class RunEnvironment
         _cardPools = cardPools?.ToDictionary(pool => pool.Id);
         _encounters = encounters?.ToDictionary(encounter => encounter.Id);
         _runEvents = runEvents?.ToDictionary(runEvent => runEvent.Id);
+        _customRunEffects = new ReadOnlyDictionary<ContentId, ICustomRunEffectHandler>(
+            customRunEffects?.ToDictionary(handler => handler.Id) ?? []);
     }
 
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
@@ -536,6 +542,7 @@ public sealed class RunEnvironment
         _runEvents = gameDefinition.RunEvents;
         _cards = gameDefinition.Cards;
         _cardPools = gameDefinition.CardPools;
+        _customRunEffects = gameDefinition.CustomRunEffects;
     }
 
     public RunSession Start(uint seed)
@@ -779,27 +786,30 @@ public sealed class RunEnvironment
             switch (effect)
             {
                 case GainRunGoldEffect gainGold:
-                    state.Gold = checked(state.Gold + gainGold.Amount);
+                    RunEffectCommands.GainGold(state, gainGold.Amount);
                     break;
                 case LoseRunGoldEffect loseGold:
                     state.Gold -= loseGold.Amount;
                     break;
                 case HealRunEffect heal:
-                    state.Hp = (int)Math.Min(state.MaxHp, (long)state.Hp + heal.Amount);
+                    RunEffectCommands.Heal(state, heal.Amount);
                     break;
                 case GainRunMaxHpEffect gainMaxHp:
-                    state.MaxHp = checked(state.MaxHp + gainMaxHp.Amount);
-                    state.Hp = checked(state.Hp + gainMaxHp.Amount);
+                    RunEffectCommands.GainMaxHp(state, gainMaxHp.Amount);
                     break;
                 case LoseRunMaxHpEffect loseMaxHp:
-                    state.MaxHp = (int)Math.Max(1L, (long)state.MaxHp - loseMaxHp.Amount);
-                    state.Hp = Math.Min(state.Hp, state.MaxHp);
+                    RunEffectCommands.LoseMaxHp(state, loseMaxHp.Amount);
                     break;
                 case LoseRunHpEffect loseHp:
-                    state.Hp = Math.Max(0, state.Hp - loseHp.Amount);
+                    RunEffectCommands.LoseHp(state, loseHp.Amount);
                     break;
                 case AddCardToRunDeckEffect addCard:
-                    state.Deck.Add(new CardInstance($"run-event-card-{state.NextEventCardInstanceId++:D4}", addCard.Card));
+                    RunEffectCommands.AddCardToDeck(state, addCard.Card);
+                    break;
+                case CustomRunEffect custom:
+                    if (!_customRunEffects.TryGetValue(custom.Handler, out var handler))
+                        throw new InvalidOperationException($"Unknown custom run effect '{custom.Handler}'.");
+                    handler.Execute(new RunEffectExecutionContext(state, custom.Handler, _cards), custom.Payload);
                     break;
                 case RemoveSelectedRunCardEffect when selectedCard is { } selectedToRemove:
                     state.Deck.RemoveAll(card => card.InstanceId == selectedToRemove.InstanceId);

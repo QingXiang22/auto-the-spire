@@ -39,7 +39,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 - `base-spire` 依赖内核提供的注册与扩展接口；其他 mod 依赖内核，也可显式依赖 `base-spire` 中的内容 ID。
 - `net-the-spire` 提供统一协议，分别实现模拟后端（调用内核及已组合规则包）和真实游戏后端（连接外部游戏）。`ai-the-spire` 只使用协议接口；`sts2/` 是对照资料，不成为内核的编译依赖。
 
-统一协议的首批操作是启动或重置会话、获取观察与合法动作、提交一个玩家决策、读取结果与后端能力。模拟后端可接受测试场景与种子；真实游戏后端只能声明自己实际支持的重置和控制能力。规则包组合发生在启动会话前，同一会话的规则集版本保持固定。Core 提供通用整局地图流转、地图访问历史和 Unknown 房间解析；`base-spire` 已按恢复源码迁移单人标准地图生成流程及赔率配置。Act 可声明 normal weak/regular、elite、boss encounter 池，以及 act-local/shared Event 和 Ancient ID 池；`ContentRegistry.Build()` 校验 ID 存在及事件类别。核心按原版顺序在 `up_front` 流上洗牌共享 Ancient、分配至后续 Acts、洗牌 Event 池、生成 encounter 队列与 Boss、抽取本幕 Ancient。进入事件房时，选中的 Event ID 出现在可观察房间帧；单局未访问过的事件会优先出队，耗尽后允许重复。encounter 同样在房间帧中暴露并可直接启动战斗。遭遇池实现等权 grab bag、相邻重复/tag 回避、源逻辑回退和队列轮换；Boss 暂时固定为本幕生成的一个 encounter。测试验证了这一配置驱动的调用计数顺序与 seed 重放。`RunEventDefinition` 已支持静态选项与 RunEffect DSL；当前 run 原语覆盖金币增减、治疗、失血、加入卡牌，以及可暂停并按实例 ID 续接的选牌升级/移除。事件选项及待选牌进入观察，合法动作会过滤不可支付或无候选的选项并完成房间转场。`base-spire` 尚未注册原版完整事件/遭遇/Ancient 池，原版事件条件、完整卡牌操作组合、遗物/药水等效果待补，因此真实内容 seed 仍未和原版对齐。
+统一协议的首批操作是启动或重置会话、获取观察与合法动作、提交一个玩家决策、读取结果与后端能力。模拟后端可接受测试场景与种子；真实游戏后端只能声明自己实际支持的重置和控制能力。规则包组合发生在启动会话前，同一会话的规则集版本保持固定。Core 提供通用整局地图流转、地图访问历史和 Unknown 房间解析；`base-spire` 已按恢复源码迁移单人标准地图生成流程及赔率配置。Act 可声明 normal weak/regular、elite、boss encounter 池，以及 act-local/shared Event 和 Ancient ID 池；`ContentRegistry.Build()` 校验 ID 存在及事件类别。核心按原版顺序在 `up_front` 流上洗牌共享 Ancient、分配至后续 Acts、洗牌 Event 池、生成 encounter 队列与 Boss、抽取本幕 Ancient。进入事件房时，选中的 Event ID 出现在可观察房间帧；单局未访问过的事件会优先出队，耗尽后允许重复。encounter 同样在房间帧中暴露并可直接启动战斗。遭遇池实现等权 grab bag、相邻重复/tag 回避、源逻辑回退和队列轮换；Boss 暂时固定为本幕生成的一个 encounter。测试验证了这一配置驱动的调用计数顺序与 seed 重放。`RunEventDefinition` 已支持静态选项与 RunEffect DSL；原语覆盖金币增减、治疗、失血、最大生命增减、加入卡牌，以及可暂停并按实例 ID 续接的选牌升级/移除。mod 可注册 `ICustomRunEffectHandler`，通过 `customRun` JSON 节点调用受控的整局命令，不需为每个 mod 效果改动核心。事件选项及待选牌进入观察，合法动作会过滤不可支付或无候选的选项并完成房间转场。`base-spire` 尚未注册原版完整事件/遭遇/Ancient 池，原版事件条件、完整卡牌操作组合、遗物/药水等效果待补，因此真实内容 seed 仍未和原版对齐。
 
 ## 3. 规则定义、游戏运行态和外部视图
 
@@ -81,7 +81,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 
 ### 4.2 其他场景
 
-事件、商店、休息、奖励和路线选择场景保留独立决策接口，并逐步补全各自的库存、选项、局部变量及结算规则。当前营火流程已进入 run 状态机：单人提供最大生命 30% 治疗或升级一张可升级牌，规则 hook 可调整治疗并响应选择。Run 事件池提供 Event/Ancient 内容定义、按源顺序生成和可观察 ID 选择；通用事件选项与 RunEffect DSL 已支持金币、治疗、失血、加入卡牌，以及暂停续接的单牌升级/移除选择。原版事件条件和完整效果仍待实现。房间可压栈与出栈；原版 [`StandardActMap`](../sts2/src/Core/Map/StandardActMap.cs) 通过路径生成、节点类型分配、限制检查和后处理构图，且 [`RunManager.GenerateMap`](../sts2/src/Core/Runs/RunManager.cs) 提供地图修改 hook。因此 `base-spire` 的地图内容应包含参数和生成器实现或受控扩展，不能预设一份静态 JSON 足以表达原版地图。
+事件、商店、休息、奖励和路线选择场景保留独立决策接口，并逐步补全各自的库存、选项、局部变量及结算规则。当前营火流程已进入 run 状态机：单人提供最大生命 30% 治疗或升级一张可升级牌，规则 hook 可调整治疗并响应选择。Run 事件池提供 Event/Ancient 内容定义、按源顺序生成和可观察 ID 选择；通用事件选项与 RunEffect DSL 支持金币、治疗、失血、最大生命增减、加入卡牌，以及暂停续接的单牌升级/移除选择。已提供受控的 C# 自定义 run 效果 handler 供 mod 扩展；原版事件条件和完整效果仍待实现。房间可压栈与出栈；原版 [`StandardActMap`](../sts2/src/Core/Map/StandardActMap.cs) 通过路径生成、节点类型分配、限制检查和后处理构图，且 [`RunManager.GenerateMap`](../sts2/src/Core/Runs/RunManager.cs) 提供地图修改 hook。因此 `base-spire` 的地图内容应包含参数和生成器实现或受控扩展，不能预设一份静态 JSON 足以表达原版地图。
 
 ## 5. 决策边界与效果结算
 
@@ -132,7 +132,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 1. **内核契约已建立**：`core-the-spire/Core.TheSpire` 实现 `GameDefinition`、不可从外部取得的 `GameState`、独立持有 RNG 的 `GameSession`、外部动作、观察投影、效果树、规则包注册和受控 Hook 事件。
 2. **最小战斗切片已建立**：测试规则包覆盖攻击、格挡、仪式、三段行动时序、选择暂停/恢复、非法动作拒绝和种子重放。
 3. **原版内容切片已建立**：`mod-the-spire/base-spire` 注册铁甲战士起始角色（生命、金币、起始牌组、Burning Blood 起始遗物）、Strike/Defend/Bash 的基础及升级效果、力量、易伤、仪式和普通/DeadlyEnemies 下的咔咔行动；Burning Blood 通过 `IRunHook` 在胜利战斗结算后回复 6 点生命，且受最大生命限制。
-4. **mod 扩展已验证**：`mod-the-spire/test-hook-mod` 作为独立子项目覆盖一张卡、新增一张卡，通过受控 C# 效果 handler 执行扩展效果，并用每局隔离的命名空间状态观察出牌事件。
+4. **mod 扩展已验证**：`mod-the-spire/test-hook-mod` 作为独立子项目覆盖一张卡、新增一张卡，通过受控 C# 战斗与整局效果 handler 执行扩展效果；额外注册 Ancient 事件验证 `customRun` 从 DSL 调用 mod handler，并用每局隔离的命名空间状态观察出牌事件。
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。

@@ -25,6 +25,13 @@ public interface ICustomEffectHandler
     void Execute(EffectExecutionContext context, JsonElement payload);
 }
 
+/// <summary>Runs a registered C# extension called by a declarative run-event effect.</summary>
+public interface ICustomRunEffectHandler
+{
+    ContentId Id { get; }
+    void Execute(RunEffectExecutionContext context, JsonElement payload);
+}
+
 /// <summary>Controlled commands available to C# effect extensions; mutable runtime state stays inside the core.</summary>
 public sealed class EffectExecutionContext
 {

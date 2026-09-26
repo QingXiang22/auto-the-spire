@@ -6,6 +6,8 @@ namespace TrainingMod;
 
 public sealed class TrainingModPackage : IRulePackage
 {
+    public static readonly ContentId TrainingAncientId = ContentId.Parse("training-mod:training-ancient");
+    public static readonly ContentId TrainingAncientOptionId = ContentId.Parse("training-mod:gain-run-gold");
     public PackageInfo Info { get; } = new("training-mod", "0.1.0");
     public PlayCounterHook Hook { get; } = new();
 
@@ -16,8 +18,30 @@ public sealed class TrainingModPackage : IRulePackage
             EffectDsl.Parse("""{"op":"custom","handler":"training-mod:grant-block","payload":{"amount":2}}"""),
             Target: TargetSelector.Self));
         registry.Register(new GrantBlockHandler());
+        registry.Register(new TrainingRunEffectHandler());
+        registry.Register(new RunEventDefinition(TrainingAncientId, RunEventKind.Ancient,
+        [
+            new RunEventOptionDefinition(TrainingAncientOptionId, "Gain training gold",
+            [
+                EffectDsl.ParseRun("""{"op":"customRun","handler":"training-mod:gain-run-gold","payload":{"amount":2}}""")
+            ])
+        ]));
+        var standardRun = BaseSpireMapGenerator.CreateStandardRun();
+        var acts = standardRun.Acts.Select((act, index) => index == 0
+            ? new ActDefinition(act.Id, act.GenerateMap, act.ResolveUnknownRoom, act.EncounterPool,
+                act.EventIds, [TrainingAncientId])
+            : act).ToArray();
+        registry.Override(new RunDefinition(standardRun.Id, acts, standardRun.UnknownRoomOdds));
         registry.Register(Hook);
     }
+}
+
+public sealed class TrainingRunEffectHandler : ICustomRunEffectHandler
+{
+    public ContentId Id { get; } = ContentId.Parse("training-mod:gain-run-gold");
+
+    public void Execute(RunEffectExecutionContext context, JsonElement payload) =>
+        context.GainGold(payload.GetProperty("amount").GetInt32());
 }
 
 public sealed class GrantBlockHandler : ICustomEffectHandler
