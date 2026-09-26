@@ -2,7 +2,7 @@ namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
 public enum RunRoomType { Unassigned, Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
-public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveFinalEvent, Terminal }
+public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveRewards, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
 public enum RunStatus { InProgress, Won, Lost }
 
@@ -242,6 +242,9 @@ public sealed class RunDefinition
 }
 
 public sealed record ChooseMapPointAction(string PointId) : PlayerAction;
+public sealed record ClaimGoldRewardAction(string RewardId) : PlayerAction;
+public sealed record SkipRewardSetAction : PlayerAction;
+public sealed record ProceedAfterRewardsAction : PlayerAction;
 
 public sealed record MapPointView(string Id, int Floor, int Column, MapPointType Type,
     IReadOnlyList<string> Children);
@@ -249,8 +252,12 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
 public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
     IReadOnlyList<RunRoomType> RoomTypes);
 
+public enum RunRewardKind { Gold }
+public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount);
+
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds);
+    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds,
+    IReadOnlyList<RunRewardView> Rewards);
 
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
     IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
@@ -398,6 +405,21 @@ internal sealed class RunState
             : Array.Empty<EncounterEnemySelection>();
         return new RunRoomFrame(roomType, mapPointId, false, encounterId, eventId, enemySelections);
     }
+
+    public void BindEncounterToCurrentRoom(EncounterDefinition encounter)
+    {
+        ArgumentNullException.ThrowIfNull(encounter);
+        if (RoomStack.Count == 0) throw new InvalidOperationException("There is no active room for the encounter.");
+        var frame = RoomStack[^1];
+        if (frame.RoomType != encounter.RoomType)
+            throw new InvalidOperationException($"Encounter '{encounter.Id}' is incompatible with active room '{frame.RoomType}'.");
+        if (frame.EncounterId is { } selected && selected != encounter.Id)
+            throw new InvalidOperationException($"Encounter '{encounter.Id}' does not match the encounter selected for this room.");
+        if (frame.EncounterId is not null) return;
+
+        var selections = encounter.SelectEnemies(Random.Get("encounter-enemies"));
+        RoomStack[^1] = frame with { EncounterId = encounter.Id, EnemySelections = selections };
+    }
     public string CurrentPointId { get; set; } = string.Empty;
     public MapPointType? CurrentMapPointType { get; set; }
     public RunPhase Phase { get; set; } = RunPhase.ChooseMapPoint;
@@ -418,7 +440,12 @@ public sealed class RunSession
 }
 
 internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<EncounterEnemySelection> EnemySelections);
+    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<EncounterEnemySelection> EnemySelections)
+{
+    public List<RunRewardState> Rewards { get; } = [];
+}
+
+internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -467,18 +494,32 @@ public sealed class RunEnvironment
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
             state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()),
-            Array.AsReadOnly(state.RoomStack.Select(frame => new RunRoomFrameView(
-                frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
-                Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()))).ToArray()));
+            Array.AsReadOnly(state.RoomStack.Select(ObserveRoomFrame).ToArray()));
     }
+
+    private static RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame) => new(
+        frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
+        Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
+        Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind, reward.Amount)).ToArray()));
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
     {
         ArgumentNullException.ThrowIfNull(session);
         var state = session.State;
-        if (state.Phase != RunPhase.ChooseMapPoint || state.Status != RunStatus.InProgress) return [];
-        return state.Map.Points[state.CurrentPointId].Children
-            .Select(id => (PlayerAction)new ChooseMapPointAction(id)).ToArray();
+        if (state.Status != RunStatus.InProgress) return [];
+        if (state.Phase == RunPhase.ChooseMapPoint)
+            return state.Map.Points[state.CurrentPointId].Children
+                .Select(id => (PlayerAction)new ChooseMapPointAction(id)).ToArray();
+        if (state.Phase == RunPhase.ResolveRewards && state.RoomStack.Count > 0)
+        {
+            var rewards = state.RoomStack[^1].Rewards;
+            return rewards.Count == 0
+                ? [new ProceedAfterRewardsAction()]
+                : rewards.Where(reward => reward.Kind == RunRewardKind.Gold)
+                    .Select(reward => (PlayerAction)new ClaimGoldRewardAction(reward.Id))
+                    .Append(new SkipRewardSetAction()).ToArray();
+        }
+        return [];
     }
 
     public RunObservation Step(RunSession session, PlayerAction action)
@@ -486,6 +527,8 @@ public sealed class RunEnvironment
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(action);
         var state = session.State;
+        if (state.Phase == RunPhase.ResolveRewards)
+            return ResolveRewardAction(session, action);
         if (action is not ChooseMapPointAction choose || !LegalActions(session).Contains(choose))
             throw new InvalidOperationException("A reachable map point must be selected.");
 
@@ -541,7 +584,7 @@ public sealed class RunEnvironment
         var outcome = combat.Player.Creature.Hp <= 0 ? RunOutcome.PlayerDefeated : RunOutcome.RoomCleared;
         var result = new RunRoomResult(outcome, combat.Player.Creature.Hp, combat.Player.Creature.MaxHp,
             state.Gold, state.Deck, state.Relics, state.Potions);
-        var observation = CompleteRoomCore(session, result);
+        var observation = CompleteRoomCore(session, result, generateCombatRewards: outcome == RunOutcome.RoomCleared);
         state.ActiveCombat = null;
         combatSession.RunOwner = null;
         return observation;
@@ -555,10 +598,10 @@ public sealed class RunEnvironment
         var state = session.State;
         if (state.ActiveCombat is not null)
             throw new InvalidOperationException("A run-owned combat must be completed through CompleteCombat.");
-        return CompleteRoomCore(session, result);
+        return CompleteRoomCore(session, result, generateCombatRewards: false);
     }
 
-    private RunObservation CompleteRoomCore(RunSession session, RunRoomResult result)
+    private RunObservation CompleteRoomCore(RunSession session, RunRoomResult result, bool generateCombatRewards)
     {
         var state = session.State;
         if (state.RoomStack.Count == 0)
@@ -596,6 +639,57 @@ public sealed class RunEnvironment
                 hook.AfterCombatVictory(new RunHookContext(state, hook.Id));
         }
 
+        if (generateCombatRewards && TryGenerateCombatRewards(state, completedFrame))
+        {
+            state.Phase = RunPhase.ResolveRewards;
+            return Observe(session);
+        }
+
+        return FinishCompletedRoom(session, completedFrame);
+    }
+
+    private static bool TryGenerateCombatRewards(RunState state, RunRoomFrame frame)
+    {
+        if (frame.RoomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss)
+            || frame.EncounterId is not { } encounterId
+            || state.Encounters is null || !state.Encounters.TryGetValue(encounterId, out var encounter)
+            || !encounter.ShouldGiveRewards)
+            return false;
+
+        if (frame.RoomType != RunRoomType.Boss || state.ActIndex != state.Definition.Acts.Count - 1)
+        {
+            var amount = state.Random.Get("rewards").NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
+            frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
+        }
+        return true;
+    }
+
+    private RunObservation ResolveRewardAction(RunSession session, PlayerAction action)
+    {
+        var state = session.State;
+        if (state.RoomStack.Count == 0) throw new InvalidOperationException("There is no active reward room.");
+        var frame = state.RoomStack[^1];
+        if (action is ClaimGoldRewardAction claim)
+        {
+            var reward = frame.Rewards.SingleOrDefault(item => item.Id == claim.RewardId && item.Kind == RunRewardKind.Gold)
+                ?? throw new InvalidOperationException($"Gold reward '{claim.RewardId}' is not available.");
+            state.Gold = checked(state.Gold + reward.Amount);
+            frame.Rewards.Remove(reward);
+            return Observe(session);
+        }
+        if (action is SkipRewardSetAction && frame.Rewards.Count > 0)
+        {
+            frame.Rewards.Clear();
+            return Observe(session);
+        }
+        if (action is ProceedAfterRewardsAction && frame.Rewards.Count == 0)
+            return FinishCompletedRoom(session, frame);
+        throw new InvalidOperationException("The selected reward action is not currently legal.");
+    }
+
+    private RunObservation FinishCompletedRoom(RunSession session, RunRoomFrame completedFrame)
+    {
+        var state = session.State;
         state.RoomStack.RemoveAt(state.RoomStack.Count - 1);
         if (state.RoomStack.Count > 0)
         {

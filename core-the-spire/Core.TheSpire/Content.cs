@@ -101,14 +101,17 @@ public sealed class EncounterDefinition
 {
     public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds,
         bool isWeak = false, IEnumerable<ContentId>? tags = null,
-        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
-        : this(id, roomType, ToFixedSlots(enemyIds), isWeak, tags, startingActionsByEnemyIndex)
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
+        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null)
+        : this(id, roomType, ToFixedSlots(enemyIds), isWeak, tags, startingActionsByEnemyIndex,
+            shouldGiveRewards, minGoldReward, maxGoldReward)
     {
     }
 
     private EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<EncounterEnemySlot> enemySlots,
         bool isWeak, IEnumerable<ContentId>? tags,
-        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex)
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex,
+        bool shouldGiveRewards, int? minGoldReward, int? maxGoldReward)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(enemySlots);
@@ -133,6 +136,18 @@ public sealed class EncounterDefinition
         RoomType = roomType;
         EnemySlots = Array.AsReadOnly(slots);
         IsWeak = isWeak;
+        ShouldGiveRewards = shouldGiveRewards;
+        var defaultGold = roomType switch
+        {
+            RunRoomType.Monster => (Min: 10, Max: 20),
+            RunRoomType.Elite => (Min: 35, Max: 45),
+            RunRoomType.Boss => (Min: 100, Max: 100),
+            _ => throw new ArgumentOutOfRangeException(nameof(roomType))
+        };
+        MinGoldReward = minGoldReward ?? defaultGold.Min;
+        MaxGoldReward = maxGoldReward ?? defaultGold.Max;
+        if (MinGoldReward < 0 || MaxGoldReward < MinGoldReward || MaxGoldReward == int.MaxValue)
+            throw new ArgumentOutOfRangeException(nameof(minGoldReward), "Gold reward bounds must satisfy 0 <= min <= max.");
         Tags = Array.AsReadOnly(encounterTags);
         StartingActionsByEnemyIndex = new ReadOnlyDictionary<int, ContentId>(startingActions);
     }
@@ -141,13 +156,18 @@ public sealed class EncounterDefinition
     public RunRoomType RoomType { get; }
     public IReadOnlyList<EncounterEnemySlot> EnemySlots { get; }
     public bool IsWeak { get; }
+    public bool ShouldGiveRewards { get; }
+    public int MinGoldReward { get; }
+    public int MaxGoldReward { get; }
     public IReadOnlyList<ContentId> Tags { get; }
     public IReadOnlyDictionary<int, ContentId> StartingActionsByEnemyIndex { get; }
 
     public static EncounterDefinition WithEnemySlots(ContentId id, RunRoomType roomType,
         IEnumerable<EncounterEnemySlot> enemySlots, bool isWeak = false, IEnumerable<ContentId>? tags = null,
-        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null) =>
-        new(id, roomType, enemySlots, isWeak, tags, startingActionsByEnemyIndex);
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
+        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null) =>
+        new(id, roomType, enemySlots, isWeak, tags, startingActionsByEnemyIndex,
+            shouldGiveRewards, minGoldReward, maxGoldReward);
 
     public IReadOnlyList<EncounterEnemySelection> SelectEnemies(SeededRandom random)
     {

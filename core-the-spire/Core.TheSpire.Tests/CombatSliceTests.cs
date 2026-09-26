@@ -658,6 +658,10 @@ public sealed class CombatSliceTests
         var characterId = ContentId.Parse("test-fixture:combat-character");
         var enemyId = ContentId.Parse("test-fixture:one-hit-enemy");
         var encounterId = ContentId.Parse("test-fixture:one-hit-encounter");
+        var finalBossId = ContentId.Parse("test-fixture:final-boss-encounter");
+        var finalBossEnemyId = ContentId.Parse("test-fixture:final-boss-enemy");
+        var noRewardId = ContentId.Parse("test-fixture:no-reward-encounter");
+        var noRewardEnemyId = ContentId.Parse("test-fixture:no-reward-enemy");
         var deck = Enumerable.Range(0, 10)
             .Select(index => ContentId.Parse($"test-fixture:run-strike-{index}"))
             .ToArray();
@@ -679,7 +683,16 @@ public sealed class CombatSliceTests
                 new EnemyActionDefinition(ContentId.Parse("test-fixture:idle"),
                     new AttackEffect(100), IntentKind.Attack, 100)
             ]), deck.Select(id => new CardDefinition(id, 0, CardType.Attack, new AttackEffect(1))),
-            new EncounterDefinition(encounterId, RunRoomType.Monster, [enemyId]));
+            new EncounterDefinition(encounterId, RunRoomType.Monster, [enemyId]),
+            [new EnemyDefinition(finalBossEnemyId, 1, 1,
+                [new EnemyActionDefinition(ContentId.Parse("test-fixture:boss-idle"),
+                    new AttackEffect(0), IntentKind.None)]),
+             new EnemyDefinition(noRewardEnemyId, 1, 1,
+                [new EnemyActionDefinition(ContentId.Parse("test-fixture:no-reward-idle"),
+                    new AttackEffect(0), IntentKind.None)])],
+            [new EncounterDefinition(finalBossId, RunRoomType.Boss, [finalBossEnemyId],
+                minGoldReward: 5, maxGoldReward: 5),
+             new EncounterDefinition(noRewardId, RunRoomType.Monster, [noRewardEnemyId], shouldGiveRewards: false)]);
         var registry = new ContentRegistry();
         registry.AddPackage(new BaseSpirePackage());
         registry.AddPackage(package);
@@ -710,16 +723,63 @@ public sealed class CombatSliceTests
         Assert.True(combatEnvironment.Observe(combatSession).IsTerminal);
         var completed = runEnvironment.CompleteCombat(runSession, combatSession);
         Assert.Equal(RunStatus.InProgress, completed.Status);
-        Assert.Equal(RunPhase.ResolveRoom, completed.Phase);
-        Assert.Equal(RunRoomType.Event, completed.CurrentRoom!.Value);
+        Assert.Equal(RunPhase.ResolveRewards, completed.Phase);
+        Assert.Equal(RunRoomType.Monster, completed.CurrentRoom!.Value);
+        Assert.Equal(encounterId, completed.RoomStack[^1].EncounterId!.Value);
+        var goldReward = completed.RoomStack[^1].Rewards.Single();
+        Assert.Equal(RunRewardKind.Gold, goldReward.Kind);
+        Assert.True(goldReward.Amount is >= 10 and <= 20);
+        Assert.Equal(1, runSession.State.Random.Get("rewards").Counter);
+        Assert.Equal(2, runEnvironment.LegalActions(runSession).Count);
         Assert.True(completed.VisitedMapPoints[^1].RoomTypes.SequenceEqual(
             [RunRoomType.Event, RunRoomType.Monster]));
         Assert.Equal(60, completed.Hp);
         Assert.True(deck.SequenceEqual(completed.Deck));
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteCombat(runSession, combatSession));
+
+        var claimAction = runEnvironment.LegalActions(runSession).OfType<ClaimGoldRewardAction>().Single();
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.Step(runSession,
+            new ClaimGoldRewardAction("test-fixture:unknown-gold")));
+        var claimed = runEnvironment.Step(runSession, claimAction);
+        Assert.Equal(50 + goldReward.Amount, claimed.Gold);
+        Assert.False(claimed.RoomStack[^1].Rewards.Any());
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.Step(runSession, new SkipRewardSetAction()));
+        var returnedToEvent = runEnvironment.Step(runSession, new ProceedAfterRewardsAction());
+        Assert.Equal(RunPhase.ResolveRoom, returnedToEvent.Phase);
+        Assert.Equal(RunRoomType.Event, returnedToEvent.CurrentRoom!.Value);
         var returnedToRoute = runEnvironment.CompleteRoom(runSession,
-            RunResult(RunOutcome.RoomCleared, completed));
+            RunResult(RunOutcome.RoomCleared, returnedToEvent));
         Assert.Equal(RunPhase.ChooseMapPoint, returnedToRoute.Phase);
+
+        runEnvironment.Step(runSession, new ChooseMapPointAction("boss"));
+        var finalBossCombat = combatEnvironment.StartEncounterForRun(runSession, finalBossId);
+        combatEnvironment.Step(finalBossCombat, new PlayCardAction(0, finalBossEnemyId.ToString()));
+        var finalBossRewards = runEnvironment.CompleteCombat(runSession, finalBossCombat);
+        Assert.Equal(RunPhase.ResolveRewards, finalBossRewards.Phase);
+        Assert.False(finalBossRewards.RoomStack[^1].Rewards.Any());
+        Assert.True(runEnvironment.LegalActions(runSession).Single() is ProceedAfterRewardsAction);
+        Assert.Equal(RunPhase.ResolveFinalEvent,
+            runEnvironment.Step(runSession, new ProceedAfterRewardsAction()).Phase);
+
+        var noRewardRun = runEnvironment.Start(185);
+        runEnvironment.Step(noRewardRun, new ChooseMapPointAction("event"));
+        runEnvironment.PushSubRoom(noRewardRun, RunRoomType.Monster);
+        var noRewardCombat = combatEnvironment.StartEncounterForRun(noRewardRun, noRewardId);
+        combatEnvironment.Step(noRewardCombat, new PlayCardAction(0, noRewardEnemyId.ToString()));
+        var noRewardCompletion = runEnvironment.CompleteCombat(noRewardRun, noRewardCombat);
+        Assert.Equal(RunPhase.ResolveRoom, noRewardCompletion.Phase);
+        Assert.Equal(RunRoomType.Event, noRewardCompletion.CurrentRoom!.Value);
+
+        combatEnvironment.Step(replayCombat, new PlayCardAction(0, enemyId.ToString()));
+        var replayReward = runEnvironment.CompleteCombat(replayRun, replayCombat);
+        Assert.Equal(goldReward.Amount, replayReward.RoomStack[^1].Rewards.Single().Amount);
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteRoom(replayRun,
+            RunResult(RunOutcome.RoomCleared, replayReward)));
+        var skipped = runEnvironment.Step(replayRun, new SkipRewardSetAction());
+        Assert.False(skipped.RoomStack[^1].Rewards.Any());
+        Assert.Equal(1, runEnvironment.LegalActions(replayRun).Count);
+        Assert.Equal(RunPhase.ResolveRoom,
+            runEnvironment.Step(replayRun, new ProceedAfterRewardsAction()).Phase);
 
         var defeatedRun = runEnvironment.Start(184);
         runEnvironment.Step(defeatedRun, new ChooseMapPointAction("event"));
@@ -1352,7 +1412,9 @@ public sealed class CombatSliceTests
     }
 
     private sealed class RunCombatPackage(RunDefinition run, CharacterDefinition character,
-        EnemyDefinition enemy, IEnumerable<CardDefinition> cards, EncounterDefinition encounter) : IRulePackage
+        EnemyDefinition enemy, IEnumerable<CardDefinition> cards, EncounterDefinition encounter,
+        IEnumerable<EnemyDefinition>? extraEnemies = null,
+        IEnumerable<EncounterDefinition>? extraEncounters = null) : IRulePackage
     {
         public PackageInfo Info { get; } = new("run-combat-fixture", "1.0.0");
 
@@ -1361,8 +1423,10 @@ public sealed class CombatSliceTests
             registry.Register(run);
             registry.Register(character);
             registry.Register(enemy);
+            foreach (var extraEnemy in extraEnemies ?? []) registry.Register(extraEnemy);
             foreach (var card in cards) registry.Register(card);
             registry.Register(encounter);
+            foreach (var extraEncounter in extraEncounters ?? []) registry.Register(extraEncounter);
         }
     }
 
