@@ -251,25 +251,32 @@ public sealed class CombatSliceTests
         environment.Step(session, new ChooseMapPointAction("monster"));
         Assert.Equal(RunPhase.ResolveRoom, environment.Observe(session).Phase);
         Assert.Equal(0, environment.LegalActions(session).Count);
-        environment.CompleteRoom(session, RunOutcome.RoomCleared);
+        var afterCombat = new RunRoomResult(RunOutcome.RoomCleared, 73, 80, 120,
+            started.Deck, started.Relics, [ContentId.Parse("base-spire:fire-potion")]);
+        environment.CompleteRoom(session, afterCombat);
+        var afterCombatObservation = environment.Observe(session);
+        Assert.Equal(73, afterCombatObservation.Hp);
+        Assert.Equal(120, afterCombatObservation.Gold);
+        Assert.Equal(ContentId.Parse("base-spire:fire-potion"), afterCombatObservation.Potions.Single());
         Assert.Equal(RunPhase.ChooseMapPoint, environment.Observe(session).Phase);
 
         environment.Step(session, new ChooseMapPointAction("boss"));
-        environment.CompleteRoom(session, RunOutcome.RoomCleared);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
         Assert.Equal(1, environment.Observe(session).ActIndex);
         Assert.Equal(RunStatus.InProgress, environment.Observe(session).Status);
 
         environment.Step(session, new ChooseMapPointAction("monster"));
-        environment.CompleteRoom(session, RunOutcome.RoomCleared);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
         environment.Step(session, new ChooseMapPointAction("boss"));
-        var finalEvent = environment.CompleteRoom(session, RunOutcome.RoomCleared);
+        var finalEvent = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
         Assert.Equal(RunPhase.ResolveFinalEvent, finalEvent.Phase);
         Assert.Equal(RunStatus.InProgress, finalEvent.Status);
-        var won = environment.CompleteRoom(session, RunOutcome.RunWon);
+        var won = environment.CompleteRoom(session, RunResult(RunOutcome.RunWon, environment.Observe(session)));
         Assert.Equal(RunStatus.Won, won.Status);
         Assert.Equal(RunPhase.Terminal, won.Phase);
         Assert.Equal(10, won.Deck.Count);
         Assert.Equal(BaseSpireIds.BurningBlood, won.Relics.Single());
+        Assert.Equal(ContentId.Parse("base-spire:fire-potion"), won.Potions.Single());
     }
 
     public void SinglePlayerRunDefeatIsTerminal()
@@ -278,11 +285,13 @@ public sealed class CombatSliceTests
             new CharacterDefinition(ContentId.Parse("base-spire:ironclad"), 80, 99, BaseSpireContent.IroncladStarterDeck()));
         var session = environment.Start(18);
         environment.Step(session, new ChooseMapPointAction("monster"));
-        var lost = environment.CompleteRoom(session, RunOutcome.PlayerDefeated);
+        var beforeDeath = environment.Observe(session);
+        var lost = environment.CompleteRoom(session, new RunRoomResult(RunOutcome.PlayerDefeated, 0,
+            beforeDeath.MaxHp, beforeDeath.Gold, beforeDeath.Deck, beforeDeath.Relics, beforeDeath.Potions));
         Assert.Equal(RunStatus.Lost, lost.Status);
         Assert.Equal(0, lost.Hp);
         Assert.Equal(0, environment.LegalActions(session).Count);
-        Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session, RunOutcome.RoomCleared));
+        Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, lost)));
     }
 
     public void UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType()
@@ -336,6 +345,10 @@ public sealed class CombatSliceTests
         return new RunDefinition(ContentId.Parse("test-fixture:two-act-run"),
             [Act("test-fixture:act-one"), Act("test-fixture:act-two")]);
     }
+
+    private static RunRoomResult RunResult(RunOutcome outcome, RunObservation state) =>
+        new(outcome, outcome == RunOutcome.PlayerDefeated ? 0 : state.Hp, state.MaxHp, state.Gold,
+            state.Deck, state.Relics, state.Potions);
 
     private static GameDefinition Build(IRulePackage package)
     {

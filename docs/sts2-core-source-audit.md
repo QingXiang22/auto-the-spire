@@ -18,7 +18,7 @@
 | 敌人初始生命 | `Core/Entities/Creatures/Creature.cs` | 怪物初始化先设初值，`SetUniqueMonsterHpValue` 再依据传入 RNG 从 `[min,max]` 选择，并尝试避免同侧怪物生命重复。 | `CombatEnvironment.Start` 允许夹具指定 HP；未指定时用会话的 `encounter-hp` 流在闭区间选择。该流名尚未证明等于原版调用方所传流。 | 首轮已读；部分映射 |
 | 内容定义与实例 | `Core/Models/AbstractModel.cs`, `Core/Models/ModelDb.cs` | 原版以模型 ID 查找内容，定义概念与运行实例可变数据分开。 | `GameDefinition` 持有不可变规则定义视图；不可观察的 `GameState` 持有战斗实例；包重复 ID 拒绝，覆盖需显式调用 Override；失败注册回滚。 | 首轮已读；最小语义已实现 |
 | mod 入口与运行扩展 | `Core/Modding/ModManager.cs`, `Core/Models/ModelDb.cs` | 原版 mod 可加载程序集、初始化模型并应用 Harmony 补丁；补丁可超出数据规则边界。 | 首个内核只允许内容覆盖、新增 JSON 效果节点和受控 C# effect handler；事件 Hook 不能拿到可变运行态。handler/Hook 通过 `GameState` 内按 mod ID 隔离的整数键保存每局状态。任意 Harmony 补丁不在兼容范围。 | 最小扩展已实现；原版 mod 清单待审计 |
-| 运行与地图 | `Core/Runs/RunState.cs`, `RunManager.cs`, `Core/Map/StandardActMap.cs`, `MapPoint.cs`, `MapPointType.cs`, `Core/Rooms/RoomType.cs` | 已确认运行态保存玩家、地图、幕索引、楼层、访问历史、当前房间栈及多种运行配置；标准地图先生成路径，再分配节点类型并剪枝/修复、居中、扩散相邻节点和拉直路径。`MapPointType` 与 `RoomType` 不同：Unknown 依据 Odds 解析为房间；Ancient 解析为 Event。幕首入口是 Ancient 事件。最后一幕 Boss 后还进入 The Architect 事件，选择其胜利选项才结束运行。 | `Runs.cs` 已实现通用角色/幕定义、图校验、可达节点选择、map point/room type 分离、房间结果回调、跨幕和最终事件终态骨架；使用伪 Start 节点，不代表原版幕首 Ancient。房间结果尚未回写完整角色资源；`base-spire` 尚无原版地图生成器和事件。 | 核心结构首轮已读；算法、房间队列及转场待深读 |
+| 运行与地图 | `Core/Runs/RunState.cs`, `RunManager.cs`, `Core/Map/StandardActMap.cs`, `MapPoint.cs`, `MapPointType.cs`, `Core/Rooms/RoomType.cs` | 已确认运行态保存玩家、地图、幕索引、楼层、访问历史、当前房间栈及多种运行配置；标准地图先生成路径，再分配节点类型并剪枝/修复、居中、扩散相邻节点和拉直路径。`MapPointType` 与 `RoomType` 不同：Unknown 依据 Odds 解析为房间；Ancient 解析为 Event。幕首入口是 Ancient 事件。最后一幕 Boss 后还进入 The Architect 事件，选择其胜利选项才结束运行。 | `Runs.cs` 已实现通用角色/幕定义、图校验、可达节点选择、map point/room type 分离、跨幕和最终事件终态骨架；`RunRoomResult` 可将生命、金币、牌组、遗物和药水写回。仍使用伪 Start 节点；战斗未与整局自动衔接；`base-spire` 尚无原版地图生成器和事件。 | 核心结构首轮已读；算法、房间队列及转场待深读 |
 
 ## 后续深读顺序
 
@@ -42,7 +42,7 @@
 | 阶段 | 源码入口 | 迁移目标 | 验收状态 |
 | --- | --- | --- | --- |
 | 地图定义与寻路 | `Core/Map/StandardActMap.cs`, `MapPathPruning.cs`, `MapPostProcessing.cs`, 各 Act 模型 | 复现种子驱动的地图拓扑、节点类型分配和地图后处理；规则配置归 `base-spire` | 未实现 |
-| 节点与房间转场 | `Core/Runs/RunManager.cs`, `Core/Runs/RunState.cs`, `Core/Rooms/*Room.cs` | 复现 Ancient 入口、选点、map point 到 room 的解析、当前房间栈、房间完成、幕切换及终局事件 | 通用图流转已实现；Ancient/Architect/原版房间队列未实现 |
+| 节点与房间转场 | `Core/Runs/RunManager.cs`, `Core/Runs/RunState.cs`, `Core/Rooms/*Room.cs` | 复现 Ancient 入口、选点、map point 到 room 的解析、当前房间栈、房间完成、幕切换及终局事件 | 通用图流转及房间资源快照回写已实现；Ancient/Architect/原版房间队列和战斗衔接未实现 |
 | 战斗房间 | `Core/Combat/*`, `Core/Commands/*`, `Core/GameActions/*`, `Core/MonsterMoves/*` | 完成多实体战斗、合法动作、伤害阶段、卡牌区域、AI 意图及结果回写整局 | 首轮切片；待扩展 |
 | 非战斗房间与奖励 | `Core/Rooms`, `Core/Rewards`, `Core/Events`, `Core/Models/Events` | 迁移宝箱、事件、商店、营火、奖励选择和玩家资源更新 | 未实现 |
 | 原版内容库 | `Core/Models/Cards`, `Monsters`, `Powers`, `Relics`, `Potions`, `Encounters`, `Acts`, `Characters` | 默认全解锁，完整注册快照中单人玩法内容 | 仅初始铁甲战士卡牌和咔咔切片 |
