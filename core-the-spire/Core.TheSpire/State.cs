@@ -86,8 +86,8 @@ internal sealed class PlayerCombatState
     internal List<CardInstance> MutableExhaustPile => _exhaustPile;
     internal List<CardInstance> MutablePlayPile => _playPile;
 
-    public CardInstance CreateGeneratedCard(ContentId cardId) =>
-        new($"{Id}/generated-card-{_nextGeneratedCardId++}", cardId);
+    public CardInstance CreateGeneratedCard(ContentId cardId, int upgradeLevel = 0) =>
+        new($"{Id}/generated-card-{_nextGeneratedCardId++}", cardId, upgradeLevel);
 }
 
 internal sealed class CardInstanceIdView(List<CardInstance> cards) : IReadOnlyList<ContentId>

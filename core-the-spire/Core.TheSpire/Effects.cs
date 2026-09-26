@@ -26,7 +26,7 @@ public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelecto
 public sealed record DrawCardsEffect(int Amount) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
-    TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
+    TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
@@ -118,8 +118,11 @@ internal static class EffectExecutor
                     if (!ReferenceEquals(cardOwner, state.Player.Creature))
                         throw new InvalidOperationException("Combat card piles are only modeled for the player.");
                     var destination = state.GetPile(addCards.Pile);
+                    var upgradeLevel = addCards.InheritUpgradeFromPlayedCard
+                        ? state.PendingPlayedCard?.UpgradeLevel ?? 0
+                        : 0;
                     for (var i = 0; i < addCards.Count; i++)
-                        destination.Add(state.Player.CreateGeneratedCard(addCards.Card));
+                        destination.Add(state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel));
                     state.Emit(session, "cards_added", owner.Id, cardOwner.Id, addCards.Count);
                     break;
                 case ModifyEnergyEffect energy:
