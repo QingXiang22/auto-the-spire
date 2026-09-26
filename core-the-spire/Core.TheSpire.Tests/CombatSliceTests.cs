@@ -200,6 +200,37 @@ public sealed class CombatSliceTests
         Assert.Throws<InvalidOperationException>(() => registry.Build());
     }
 
+    public void BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(212, "ironclad", 80, 80, [], BaseSpireIds.NibbitsWeak);
+        Assert.True(environment.Observe(session).Enemies[0].Hp is >= 42 and <= 46);
+        Assert.Equal(12, environment.Observe(session).IntentDamage);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(68, environment.Observe(session).PlayerHp);
+        Assert.Equal(6, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(62, environment.Observe(session).PlayerHp);
+        Assert.Equal(5, environment.Observe(session).Enemies[0].Block);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(2, session.State.Enemies[0].Creature.Strength);
+        Assert.Equal(14, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(48, environment.Observe(session).PlayerHp);
+
+        var toughDeadly = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true, toughEnemies: true)));
+        var altered = toughDeadly.StartEncounter(213, "ironclad", 80, 80, [], BaseSpireIds.NibbitsWeak);
+        Assert.True(toughDeadly.Observe(altered).Enemies[0].Hp is >= 44 and <= 48);
+        toughDeadly.Step(altered, new EndTurnAction());
+        toughDeadly.Step(altered, new EndTurnAction());
+        Assert.Equal(6, toughDeadly.Observe(altered).Enemies[0].Block);
+        toughDeadly.Step(altered, new EndTurnAction());
+        Assert.Equal(3, altered.State.Enemies[0].Creature.Strength);
+    }
+
     public void PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide()
     {
         var env = new CombatEnvironment(Build(new IncomingVulnerablePackage()));
@@ -1376,6 +1407,7 @@ internal static class Program
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
+        tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
         tests.NamedRandomStreamsAreDeterministicAndCountCalls();
@@ -1406,7 +1438,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 38 gameplay checks.");
+        Console.WriteLine("Passed 39 gameplay checks.");
     }
 }
 
