@@ -1265,6 +1265,26 @@ public sealed class CombatSliceTests
         Assert.Equal(0, control.State.Player.Creature.Block);
     }
 
+    public void EntrenchAddsBlockEqualToCurrentBlockAndIsAnEventCard()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(74, "ironclad", 56, 65, [BaseSpireIds.Entrench],
+            BaseSpireIds.DampCultist.ToString());
+        var card = state.State.Definition.Cards[BaseSpireIds.Entrench];
+        Assert.Equal(CardRarity.Event, card.Rarity);
+        Assert.Equal(2, card.ResolveCost(new CardInstance("entrench-basic", BaseSpireIds.Entrench)));
+        Assert.Equal(1, card.ResolveCost(new CardInstance("entrench-upgraded", BaseSpireIds.Entrench, 1)));
+        Assert.False(state.State.Definition.CardPools[BaseSpireIds.IroncladCardPool].Cards
+            .Contains(BaseSpireIds.Entrench));
+        Assert.Equal(new GainBlockFromCurrentBlockEffect(), EffectDsl.Parse(
+            """{"op":"gainBlockFromCurrentBlock"}"""));
+
+        state.State.Player.Creature.Block = 9;
+        var result = env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        Assert.Equal(18, state.State.Player.Creature.Block);
+        Assert.Contains(result.Events, gameEvent => gameEvent.Type == "block" && gameEvent.Amount == 9);
+    }
+
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2531,6 +2551,7 @@ internal static class Program
         tests.BeforeFlushHookCanPauseToRetainASelectedCardAndAfterFlushSeesTheResult();
         tests.WellLaidPlansAllowsSelectingUpToItsPowerAmountOrConfirmingNone();
         tests.BarricadePreventsPlayerBlockFromClearingAtTurnStart();
+        tests.EntrenchAddsBlockEqualToCurrentBlockAndIsAnEventCard();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();

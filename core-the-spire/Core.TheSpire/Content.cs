@@ -601,6 +601,9 @@ public sealed class ContentRegistry
                 if (gainBlock.PerPowerStack is { } blockPower && !_powers.ContainsKey(blockPower))
                     throw new InvalidOperationException($"{owner} scales block by unknown power '{blockPower}'.");
                 break;
+            case GainBlockFromCurrentBlockEffect gainBlockFromBlock:
+                ArgumentOutOfRangeException.ThrowIfNegative(gainBlockFromBlock.Multiplier);
+                break;
             case AttackUsingBlockEffect attackUsingBlock when !Enum.IsDefined(attackUsingBlock.Target)
                 || attackUsingBlock.Target == TargetSelector.RandomEnemy:
                 throw new InvalidOperationException($"{owner} has an invalid block-based attack target.");
