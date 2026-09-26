@@ -1,0 +1,48 @@
+# STS2 规则源码审计索引
+
+本文件记录 `sts2/src` 中与游戏语义有关的源码阅读进度，并把观察映射到 `core-the-spire` / `base-spire` 的实现。`sts2/README-for-browsing.md` 说明该工程由本机数据恢复，不是开发者发布的原始源码。仓库当前有 3,405 个 C# 源文件和 26 个 GDScript 文件；这里按规则域审阅，不把表现层资源计作规则源码。
+
+状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
+
+## 已读与当前实现依据
+
+| 规则域 | 主要源码 | 源码观察 | 当前映射 | 状态 |
+| --- | --- | --- | --- | --- |
+| RNG 算法 | `Core/Random/Rng.cs`, `MegaRandom.cs`, `RunRngSet.cs`, `PlayerRngSet.cs`, `Core/Helpers/StringHelper.cs` | `Rng` 包装 Xoshiro256** / Splitmix64；命名流种子由确定性字符串哈希派生；各 API 调用计数器。游戏源码存档可保存流计数器。 | `Core.TheSpire/RandomStreams.cs` 提供 Xoshiro256**、Splitmix64、确定性命名流和 shuffle。种子 `0` 的前四个 `Next(1000)` 已直接和恢复版 `MegaRandom` 对照为 `601,747,103,416`；运行/玩家流分类与种子派生仍未完整复现。 | 首轮已读；算法已对照 |
+| 动作与暂停 | `Core/GameActions/GameAction.cs`, `Core/GameActions/Multiplayer/PlayerChoiceContext.cs`, `Core/Commands/Cmd.cs` | 外部玩家动作与内部命令分离；动作可在选择期间暂停并恢复。 | `PlayerAction` 与 `EffectNode` 分离；选择会保留待执行效果栈及结束回合阶段，并在提交选择后继续。 | 首轮已读；最小语义已实现 |
+| 战斗运行态 | `Core/Combat/CombatState.cs`, `Core/Entities/Players/PlayerCombatState.cs` | 战斗侧轮、玩家回合、行动阶段是不同概念；战斗牌区、资源和参与者状态分开保存。 | `GameState`、`PlayerCombatState`、`EntityState` 和战斗观察。当前仅单人战斗、一个敌人。 | 首轮已读；模型待扩展 |
+| 仪式与力量 | `Core/Models/Powers/RitualPower.cs`, `StrengthPower.cs` | 敌方刚获得仪式时设置标记；阵营回合结束先跳过一次，后续触发力量。力量通过伤害修正参与攻击。 | `PowerDefinition` 触发阶段和跳过首次触发标志；敌方仪式测试验证第 2 次攻击 3、第 3 次攻击 8。 | 首轮已读；切片已实现 |
+| 咔咔行动 | `Core/Models/Monsters/DampCultist.cs`, `Core/MonsterMoves/MonsterMoveStateMachine/MonsterMoveStateMachine.cs` | 行动状态机为念咒后循环黑暗打击；普通参数为仪式 5、攻击 1；DeadlyEnemies 为 6、3。HP 普通范围 52–54，ToughEnemies 分支 51–53。 | `BaseSpirePackage` 记录普通与 DeadlyEnemies 参数并实现两步后循环。未实现其余敌人行动选择规则。 | 首轮已读；切片已实现 |
+| 铁甲战士起始内容 | `Core/Models/Characters/Ironclad.cs`, `Core/Models/Cards/StrikeIronclad.cs`, `DefendIronclad.cs`, `Bash.cs`, `Core/Models/Relics/BurningBlood.cs` | 铁甲战士开局生命 80、金币 99，卡组为 5 Strike、4 Defend、1 Bash，起始遗物为 Burning Blood；胜利后若存活则回复 6 生命。基础卡数值分别为 Strike 6、Defend 5、Bash 8 + Vulnerable 2。 | `base-spire` 注册铁甲战士初始角色数据及起始遗物 ID；Burning Blood 的房间后回血效果尚未实现。 | 初始角色规则首轮已读；遗物行为待实现 |
+| 伤害与易伤 | `Core/Commands/DamageCmd.cs`, `Core/Commands/PowerCmd.cs`, `Core/Models/Powers/VulnerablePower.cs`, `Core/MonsterMoves/Intents/AttackIntent.cs` | 伤害由命令及修正 Hook 结算；易伤是 powered attack 的 1.5 倍乘算并按阵营阶段衰减；意图伤害属于当前状态的投影。 | 内核切片实现 Strength 加算、Vulnerable 乘算和敌方意图预览。尚未实现完整伤害属性、格挡顺序、取整与所有 Hook。 | 首轮已读；需精确对照 |
+| 敌人初始生命 | `Core/Entities/Creatures/Creature.cs` | 怪物初始化先设初值，`SetUniqueMonsterHpValue` 再依据传入 RNG 从 `[min,max]` 选择，并尝试避免同侧怪物生命重复。 | `CombatEnvironment.Start` 允许夹具指定 HP；未指定时用会话的 `encounter-hp` 流在闭区间选择。该流名尚未证明等于原版调用方所传流。 | 首轮已读；部分映射 |
+| 内容定义与实例 | `Core/Models/AbstractModel.cs`, `Core/Models/ModelDb.cs` | 原版以模型 ID 查找内容，定义概念与运行实例可变数据分开。 | `GameDefinition` 持有不可变规则定义视图；不可观察的 `GameState` 持有战斗实例；包重复 ID 拒绝，覆盖需显式调用 Override；失败注册回滚。 | 首轮已读；最小语义已实现 |
+| mod 入口与运行扩展 | `Core/Modding/ModManager.cs`, `Core/Models/ModelDb.cs` | 原版 mod 可加载程序集、初始化模型并应用 Harmony 补丁；补丁可超出数据规则边界。 | 首个内核只允许内容覆盖、新增 JSON 效果节点和受控 C# effect handler；事件 Hook 不能拿到可变运行态。handler/Hook 通过 `GameState` 内按 mod ID 隔离的整数键保存每局状态。任意 Harmony 补丁不在兼容范围。 | 最小扩展已实现；原版 mod 清单待审计 |
+| 运行与地图 | `Core/Runs/RunState.cs`, `RunManager.cs`, `Core/Map/StandardActMap.cs`, `MapPoint.cs`, `MapPointType.cs`, `Core/Rooms/RoomType.cs` | 已确认运行态保存玩家、地图、幕索引、楼层、访问历史、当前房间栈及多种运行配置；标准地图先生成路径，再分配节点类型并剪枝/修复、居中、扩散相邻节点和拉直路径。`MapPointType` 与 `RoomType` 不同：Unknown 依据 Odds 解析为房间；Ancient 解析为 Event。幕首入口是 Ancient 事件。最后一幕 Boss 后还进入 The Architect 事件，选择其胜利选项才结束运行。 | `Runs.cs` 已实现通用角色/幕定义、图校验、可达节点选择、map point/room type 分离、房间结果回调、跨幕和最终事件终态骨架；使用伪 Start 节点，不代表原版幕首 Ancient。房间结果尚未回写完整角色资源；`base-spire` 尚无原版地图生成器和事件。 | 核心结构首轮已读；算法、房间队列及转场待深读 |
+
+## 后续深读顺序
+
+1. **战斗结算闭环**：逐个追踪 `CombatManager`、`DamageCmd`、`PowerCmd`、`CreatureCmd` 和 Hook 监听对象收集顺序；记录伤害计算阶段、力量/易伤/格挡的先后、取整和击杀事件。
+2. **玩家决策语义**：继续阅读所有常用 `GameAction`、选择上下文、卡牌目标和取消规则；为合法动作生成补上目标、能量、状态和终局条件。
+3. **实体与内容生命周期**：阅读 Creature、CardModel、PowerModel、MonsterModel 和模型注册；验证复制、变形、附加效果和升级实例状态怎样进入运行态。
+4. **随机流兼容**：逐项读取 `RunRngType` / `PlayerRngType` 和存档恢复；复现原版种子字符串哈希、每槽玩家种子与所有流命名后，通过已知向量比对。
+5. **整局流程**：继续追踪 RunManager 与运行状态写入调用方；逐项审阅地图路径生成/节点类型分配、房间栈、遭遇与奖励生成、事件、商店、休息、幕切换及地图 Hook，再在 core/base-spire 逐域实现。
+6. **mod 扩展边界**：对照 ModManager、模型发现、初始化器和 Harmony 补丁，形成可由 DSL 表达、需 C# 扩展、只能真实游戏运行三类能力清单。
+
+## 已知实现限制
+
+- 当前战斗内核是用于验证边界的首版切片，未达到原版战斗等价。特定角色遗物、反应式 Hook、多人协作、完整卡牌区域规则、敌人意图选择、Ascension 配置和伤害类型都待实现。
+- `base-spire` 中现有状态/效果 primitive 是内核测试语义，不代表可直接无误迁移所有原版机制。
+- 目前 `RandomStreams` 复现 RNG 算法与确定性命名流基础，但尚未复现原版全部种子派生、RNG 分类、玩家槽种子和存档计数器语义。
+- `Runs.cs` 只提供通用整局流转骨架，房间内容由外部房间环境完成；未接入原版地图算法、房间处理或战斗会话。
+- 当前完整性范围是单人玩法到胜负、快照内全部原版内容默认全解锁；账号级元进度、多人、UI/音画和平台服务排除。
+
+## 整局规则迁移队列
+
+| 阶段 | 源码入口 | 迁移目标 | 验收状态 |
+| --- | --- | --- | --- |
+| 地图定义与寻路 | `Core/Map/StandardActMap.cs`, `MapPathPruning.cs`, `MapPostProcessing.cs`, 各 Act 模型 | 复现种子驱动的地图拓扑、节点类型分配和地图后处理；规则配置归 `base-spire` | 未实现 |
+| 节点与房间转场 | `Core/Runs/RunManager.cs`, `Core/Runs/RunState.cs`, `Core/Rooms/*Room.cs` | 复现 Ancient 入口、选点、map point 到 room 的解析、当前房间栈、房间完成、幕切换及终局事件 | 通用图流转已实现；Ancient/Architect/原版房间队列未实现 |
+| 战斗房间 | `Core/Combat/*`, `Core/Commands/*`, `Core/GameActions/*`, `Core/MonsterMoves/*` | 完成多实体战斗、合法动作、伤害阶段、卡牌区域、AI 意图及结果回写整局 | 首轮切片；待扩展 |
+| 非战斗房间与奖励 | `Core/Rooms`, `Core/Rewards`, `Core/Events`, `Core/Models/Events` | 迁移宝箱、事件、商店、营火、奖励选择和玩家资源更新 | 未实现 |
+| 原版内容库 | `Core/Models/Cards`, `Monsters`, `Powers`, `Relics`, `Potions`, `Encounters`, `Acts`, `Characters` | 默认全解锁，完整注册快照中单人玩法内容 | 仅初始铁甲战士卡牌和咔咔切片 |
