@@ -222,6 +222,14 @@ internal sealed class GameState
 
     internal bool HasPowerRole(EntityState entity, PowerRole role) => entity.Powers.Keys.Any(id => Definition.Powers[id].Role == role);
 
+    internal int GetPowerAmount(string entityId, ContentId powerId)
+    {
+        if (Player.Id == entityId) return Player.Creature.PowerAmount(powerId);
+        foreach (var enemy in Enemies)
+            if (enemy.Creature.Id == entityId) return enemy.Creature.PowerAmount(powerId);
+        throw new KeyNotFoundException($"Unknown combat entity '{entityId}'.");
+    }
+
     internal int GetModInt(string modId, string key, int defaultValue) =>
         _modInts.TryGetValue(modId, out var values) ? values.GetValueOrDefault(key, defaultValue) : defaultValue;
 

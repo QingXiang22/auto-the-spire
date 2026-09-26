@@ -363,7 +363,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     return;
                 case EndTurnResolutionStage.PlayerHandCleanup:
                     var etherealCard = state.Player.MutableHand.FirstOrDefault(card =>
-                        (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Ethereal) != 0);
+                        (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Ethereal) != 0
+                        && state.Definition.Hooks.All(hook => hook.ShouldEtherealTrigger(
+                            new RuleHookContext(session, hook.Id), card)));
                     if (etherealCard is not null)
                     {
                         state.Player.MutableHand.Remove(etherealCard);
@@ -372,7 +374,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         EffectExecutor.Resume(session);
                         break;
                     }
-                    for (var handIndex = 0; handIndex < state.Player.MutableHand.Count;)
+                    var shouldFlush = state.Definition.Hooks.All(hook => hook.ShouldFlush(
+                        new RuleHookContext(session, hook.Id), state.Player.Id));
+                    for (var handIndex = 0; shouldFlush && handIndex < state.Player.MutableHand.Count;)
                     {
                         var card = state.Player.MutableHand[handIndex];
                         if ((state.Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) != 0)
