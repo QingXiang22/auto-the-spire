@@ -50,6 +50,10 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":2,"target":"self"}"""),
             Target: TargetSelector.Self, Rarity: CardRarity.Rare,
             UpgradedEffect: EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:demon-form-power","amount":3,"target":"self"}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.FeelNoPain, 1, CardType.Power,
+            EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:feel-no-pain","amount":3,"target":"self"}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Uncommon,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"applyPower","power":"base-spire:feel-no-pain","amount":4,"target":"self"}""")));
         registry.Register(new CardDefinition(BaseSpireIds.Headbutt, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":9},{"op":"chooseCardFromPile","from":"discard","to":"draw","prompt":"Choose a card from discard","destinationPosition":"top"}]}"""),
             Rarity: CardRarity.Common,
@@ -103,7 +107,7 @@ internal static class IroncladCards
                 BaseSpireIds.Bloodletting,
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,
-                BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
+                BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
                 BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,

@@ -27,7 +27,7 @@ public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerTrigger.None, ContentId? TriggerEffect = null,
     bool SkipFirstTriggerWhenAppliedToEnemy = false, PowerRole Role = PowerRole.None, bool DecrementOnTrigger = false,
     bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
-    bool RemoveWhenApplierDies = false)
+    bool RemoveWhenApplierDies = false, EffectNode? TriggerRuleEffect = null)
 {
     public void Validate()
     {
@@ -373,7 +373,7 @@ public sealed record EnemyDefinition
 
 public enum CardType { Attack, Skill, Power, Status }
 public enum IntentKind { None, Attack, Buff, Debuff }
-public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart }
+public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted }
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
 
 public interface IRulePackage
@@ -530,8 +530,12 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"Character '{character.Id}' references unknown card pool '{poolId}'.");
         }
         foreach (var power in _powers.Values)
+        {
             if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
                 throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
+            if (power.TriggerRuleEffect is { } triggerEffect)
+                ValidateEffectReferences(triggerEffect, $"Power '{power.Id}' trigger");
+        }
         foreach (var run in _runs.Values)
         foreach (var act in run.Acts)
         {
@@ -587,6 +591,11 @@ public sealed class ContentRegistry
             case RandomAttackEffect randomAttack:
                 ArgumentOutOfRangeException.ThrowIfNegative(randomAttack.Amount);
                 break;
+            case GainBlockEffect gainBlock:
+                ArgumentOutOfRangeException.ThrowIfNegative(gainBlock.Amount);
+                if (gainBlock.PerPowerStack is { } blockPower && !_powers.ContainsKey(blockPower))
+                    throw new InvalidOperationException($"{owner} scales block by unknown power '{blockPower}'.");
+                break;
             case AttackUsingBlockEffect attackUsingBlock when !Enum.IsDefined(attackUsingBlock.Target)
                 || attackUsingBlock.Target == TargetSelector.RandomEnemy:
                 throw new InvalidOperationException($"{owner} has an invalid block-based attack target.");
@@ -627,6 +636,8 @@ public sealed class ContentRegistry
             case UpgradeCardsInPileEffect:
             case UpgradeSelectedCardEffect:
                 break;
+            case DecrementPowerEffect decrementPower when !_powers.ContainsKey(decrementPower.Power):
+                throw new InvalidOperationException($"{owner} decrements unknown power '{decrementPower.Power}'.");
             case ChooseEffect choice:
                 foreach (var option in choice.Options)
                     if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);
@@ -636,6 +647,7 @@ public sealed class ContentRegistry
                 if (conditional.Else is { } elseEffect) ValidateEffectReferences(elseEffect, owner);
                 break;
             case RepeatEffect repeat:
+                ArgumentOutOfRangeException.ThrowIfNegative(repeat.Count);
                 ValidateEffectReferences(repeat.Effect, owner);
                 break;
             case CustomEffect custom when !_customEffects.ContainsKey(custom.Handler):

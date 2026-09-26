@@ -21,6 +21,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveSelectedCardToPileEffect), "moveSelectedCardToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -33,7 +34,7 @@ public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSele
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
-public sealed record GainBlockEffect(int Amount) : EffectNode;
+public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DrawCardsEffect(int Amount) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
@@ -49,6 +50,7 @@ public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
     CardPilePosition DestinationPosition = CardPilePosition.Bottom) : EffectNode;
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
+public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
@@ -90,6 +92,38 @@ internal static class EffectExecutor
     }
 
     public static void Resume(GameSession session) => Drain(session);
+
+    internal static void QueueCardExhaustion(GameSession session, EntityState owner, CardInstance card)
+    {
+        var state = session.State;
+        state.Emit(session, "card_exhausted", owner.Id, card.InstanceId, 1);
+        QueuePowerTriggerEffects(session, owner, PowerTrigger.AfterCardExhausted);
+    }
+
+    internal static void QueuePowerTriggerEffects(GameSession session, EntityState owner, PowerTrigger trigger,
+        EntityState? target = null, CardInstance? selectedCard = null)
+    {
+        var state = session.State;
+        var effects = BuildPowerTriggerEffects(state, owner, trigger);
+        if (effects.Count > 0)
+            state.PendingEffects.Add((owner, new SequenceEffect(effects), target, selectedCard));
+    }
+
+    private static List<EffectNode> BuildPowerTriggerEffects(GameState state, EntityState owner, PowerTrigger trigger)
+    {
+        var effects = new List<EffectNode>();
+        foreach (var powerId in owner.Powers.Keys.ToArray())
+        {
+            var definition = state.Definition.Powers[powerId];
+            if (definition.Trigger != trigger) continue;
+            if (owner.SkipNextPowerTriggers.Remove(powerId)) continue;
+            if (definition.TriggerEffect is { } triggeredPower)
+                effects.Add(new ApplyPowerEffect(triggeredPower, owner.PowerAmount(powerId), TargetSelector.Self));
+            if (definition.TriggerRuleEffect is { } triggerEffect) effects.Add(triggerEffect);
+            if (definition.DecrementOnTrigger) effects.Add(new DecrementPowerEffect(powerId));
+        }
+        return effects;
+    }
 
     private static void Drain(GameSession session)
     {
@@ -150,8 +184,11 @@ internal static class EffectExecutor
                     if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
                     break;
                 case GainBlockEffect block:
-                    owner.Block += block.Amount;
-                    state.Emit(session, "block", owner.Id, owner.Id, block.Amount);
+                    var blockAmount = block.PerPowerStack is { } perPowerStack
+                        ? block.Amount * owner.PowerAmount(perPowerStack)
+                        : block.Amount;
+                    owner.Block += blockAmount;
+                    state.Emit(session, "block", owner.Id, owner.Id, blockAmount);
                     break;
                 case ApplyPowerEffect power:
                     if (power.Target == TargetSelector.AllOpponents)
@@ -169,7 +206,20 @@ internal static class EffectExecutor
                     state.Draw(session, draw.Amount);
                     break;
                 case MoveCardEffect move:
-                    state.MoveCards(move.From, move.To, move.Count);
+                    var movedCards = state.MoveCards(move.From, move.To, move.Count);
+                    var moveTriggerEffects = new List<EffectNode>();
+                    foreach (var movedCard in movedCards)
+                    {
+                        state.Emit(session, "card_moved", owner.Id, movedCard.InstanceId, 1);
+                        if (move.To == CardPile.Exhaust && move.From != CardPile.Exhaust)
+                        {
+                            state.Emit(session, "card_exhausted", state.Player.Id, movedCard.InstanceId, 1);
+                            moveTriggerEffects.AddRange(BuildPowerTriggerEffects(state, state.Player.Creature,
+                                PowerTrigger.AfterCardExhausted));
+                        }
+                    }
+                    if (moveTriggerEffects.Count > 0)
+                        state.PendingEffects.Add((state.Player.Creature, new SequenceEffect(moveTriggerEffects), null, null));
                     break;
                 case AddCardsToPileEffect addCards:
                     if (addCards.Count < 0) throw new InvalidOperationException("Added card count cannot be negative.");
@@ -199,6 +249,8 @@ internal static class EffectExecutor
                         if (!state.MoveCard(randomCard.From, randomCard.To, randomOption.InstanceId, CardPilePosition.Bottom))
                             throw new InvalidOperationException("The randomly selected card is no longer in its source pile.");
                         state.Emit(session, "random_card_choice", owner.Id, randomOption.InstanceId, 1);
+                        if (randomCard.To == CardPile.Exhaust && randomCard.From != CardPile.Exhaust)
+                            QueueCardExhaustion(session, state.Player.Creature, randomOption);
                     }
                     break;
                 case ForEachCardInPileEffect eachCard:
@@ -214,6 +266,8 @@ internal static class EffectExecutor
                             selectedCard.InstanceId, moveSelectedCard.DestinationPosition))
                         throw new InvalidOperationException("The selected card is no longer in its source pile.");
                     state.Emit(session, "card_moved", owner.Id, selectedCard.InstanceId, 1);
+                    if (moveSelectedCard.To == CardPile.Exhaust && moveSelectedCard.From != CardPile.Exhaust)
+                        QueueCardExhaustion(session, state.Player.Creature, selectedCard);
                     break;
                 case UpgradeSelectedCardEffect:
                     if (selectedCard is null)
@@ -225,6 +279,12 @@ internal static class EffectExecutor
                     foreach (var card in state.GetPile(upgradeCards.Pile).ToArray())
                         if (state.IsUpgradeable(card) && state.UpgradeCard(session, card.InstanceId)) upgradedCount++;
                     state.Emit(session, "cards_upgraded", owner.Id, state.Player.Id, upgradedCount);
+                    break;
+                case DecrementPowerEffect decrementPower:
+                    var previousAmount = owner.PowerAmount(decrementPower.Power);
+                    state.DecrementPower(owner, decrementPower.Power);
+                    if (previousAmount > 0)
+                        state.Emit(session, "power", owner.Id, owner.Id, -1);
                     break;
                 case ModifyEnergyEffect energy:
                     state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);
