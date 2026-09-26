@@ -13,6 +13,11 @@ public static class BaseSpireIds
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
     public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
+    public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
+    public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
+    public static readonly ContentId GloryAct = ContentId.Parse("base-spire:glory-act");
+    public static readonly ContentId UnderdocksAct = ContentId.Parse("base-spire:underdocks-act");
+    public static readonly ContentId StandardRun = ContentId.Parse("base-spire:standard-run");
 }
 
 public static class BaseSpireContent

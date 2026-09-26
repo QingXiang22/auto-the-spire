@@ -119,6 +119,9 @@ public sealed class CombatSliceTests
     {
         var random = new SeededRandom(0);
         Assert.Equal(new[] { 601, 747, 103, 416 }.AsEnumerable(), Enumerable.Range(0, 4).Select(_ => random.NextInt(1000)));
+        var gaussian = new SeededRandom(0);
+        Assert.Equal(new[] { 13, 12, 12, 12, 13, 12, 12, 11 }.AsEnumerable(),
+            Enumerable.Range(0, 8).Select(_ => gaussian.NextGaussianInt(12, 1, 10, 14)));
     }
 
     public void JsonEffectDslBuildsTypedRuntimeTree()
@@ -336,6 +339,77 @@ public sealed class CombatSliceTests
         Assert.Equal(first.Map.Select(point => (point.Id, point.Type)), replay.Map.Select(point => (point.Id, point.Type)));
     }
 
+    public void BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout()
+    {
+        Func<SeededRandom, ActMapDefinition>[] generators =
+        [
+            BaseSpireMapGenerator.GenerateOvergrowth,
+            BaseSpireMapGenerator.GenerateHive,
+            BaseSpireMapGenerator.GenerateGlory,
+            BaseSpireMapGenerator.GenerateUnderdocks
+        ];
+        foreach (var generate in generators)
+        foreach (var seed in new uint[] { 0, 1, 2, 7, 42, 99, 2026 })
+        {
+            var first = generate(new SeededRandom(seed));
+            var replay = generate(new SeededRandom(seed));
+            Assert.Equal(first.Points.OrderBy(point => point.Key).Select(point =>
+                    $"{point.Key}:{point.Value.Floor}:{point.Value.Column}:{point.Value.Type}:{string.Join(',', point.Value.Children)}"),
+                replay.Points.OrderBy(point => point.Key).Select(point =>
+                    $"{point.Key}:{point.Value.Floor}:{point.Value.Column}:{point.Value.Type}:{string.Join(',', point.Value.Children)}"));
+            Assert.Equal(MapPointType.Ancient, first.Points[first.StartPointId].Type);
+            Assert.Equal(MapPointType.Boss, first.Points[first.BossPointId].Type);
+            Assert.Equal(0, first.Points[first.StartPointId].Floor);
+            Assert.True(first.Points[first.StartPointId].Children.Count > 0);
+            Assert.True(first.Points.Values.Where(point => point.Floor == 1).All(point => point.Type == MapPointType.Monster));
+            Assert.True(first.Points.Values.Where(point => point.Floor == first.Points[first.BossPointId].Floor - 1)
+                .All(point => point.Type == MapPointType.RestSite));
+            Assert.True(first.Points.Values.All(point => point.Column is >= 0 and < 7));
+            Assert.True(first.Points.Values.Count(point => point.Type == MapPointType.Elite) is > 0 and <= 5);
+            Assert.True(first.Points.Values.Count(point => point.Type == MapPointType.Shop) is > 0 and <= 3);
+            Assert.True(first.Points.Values.Count(point => point.Type == MapPointType.Treasure) > 0);
+        }
+    }
+
+    public void AncientEntryIsAnInitialEventBeforeTheFirstRouteChoice()
+    {
+        var map = new ActMapDefinition("ancient", "boss",
+        [
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["monster"]),
+            new MapPointDefinition("monster", 1, 3, MapPointType.Monster, ["boss"]),
+            new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
+        ]);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:ancient-act"), _ => map);
+        var environment = new RunEnvironment(new RunDefinition(ContentId.Parse("test-fixture:ancient-run"), [act]),
+            BaseSpireContent.Ironclad());
+        var session = environment.Start(8);
+
+        var opening = environment.Observe(session);
+        Assert.Equal(RunPhase.ResolveRoom, opening.Phase);
+        Assert.Equal(RunRoomType.Event, opening.CurrentRoom!.Value);
+        Assert.Equal(MapPointType.Ancient, opening.CurrentMapPointType!.Value);
+        Assert.Equal(0, environment.LegalActions(session).Count);
+        var route = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, opening));
+        Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
+        Assert.Equal(1, environment.LegalActions(session).Count);
+    }
+
+    public void BaseSpireStandardRunUsesItsActMapGenerators()
+    {
+        var run = BaseSpireMapGenerator.CreateStandardRun(_ => RunRoomType.Event);
+        Assert.Equal(new[] { BaseSpireIds.OvergrowthAct, BaseSpireIds.HiveAct, BaseSpireIds.GloryAct }.AsEnumerable(),
+            run.Acts.Select(act => act.Id));
+        var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
+        var session = environment.Start(20260927);
+        var start = environment.Observe(session);
+        Assert.Equal(MapPointType.Ancient, start.Map.Single(point => point.Id == start.CurrentPointId).Type);
+        Assert.Equal(RunPhase.ResolveRoom, start.Phase);
+        Assert.Equal(RunRoomType.Event, start.CurrentRoom!.Value);
+        var route = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, start));
+        Assert.True(environment.LegalActions(session).Count > 0);
+        Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
+    }
+
     private static RunDefinition BuildRunDefinition()
     {
         static ActDefinition Act(string id) => new(ContentId.Parse(id), _ => new ActMapDefinition("start", "boss",
@@ -502,7 +576,10 @@ internal static class Program
         tests.SinglePlayerRunDefeatIsTerminal();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
-        Console.WriteLine("Passed 19 gameplay checks.");
+        tests.BaseSpireActMapsAreDeterministicAndHonorTheSourceLayout();
+        tests.AncientEntryIsAnInitialEventBeforeTheFirstRouteChoice();
+        tests.BaseSpireStandardRunUsesItsActMapGenerators();
+        Console.WriteLine("Passed 22 gameplay checks.");
     }
 }
 
