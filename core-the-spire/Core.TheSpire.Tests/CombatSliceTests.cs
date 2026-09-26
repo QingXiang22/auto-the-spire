@@ -1738,6 +1738,7 @@ public sealed class CombatSliceTests
             """{"op":"addCardToRunDeck","card":"run-event-fixture:card"}""");
         Assert.Equal(new AddCardToRunDeckEffect(RunEventFixturePackage.CardId), cardEffect);
         Assert.Equal(cardEffect, EffectDsl.ParseRun(EffectDsl.Serialize(cardEffect)));
+        Assert.Equal(new WinRunEffect(), EffectDsl.ParseRun("""{"op":"winRun"}"""));
 
         var registry = new ContentRegistry();
         registry.AddPackage(new RunEventFixturePackage());
@@ -1768,6 +1769,20 @@ public sealed class CombatSliceTests
         Assert.Equal(RunEventFixturePackage.CardId, result.DeckInstances[^1].CardId);
         Assert.Equal("run-event-card-0001", result.DeckInstances[^1].InstanceId);
         Assert.Equal(RunPhase.ChooseMapPoint, result.Phase);
+
+        environment.Step(run, new ChooseMapPointAction("boss"));
+        var finalEvent = environment.CompleteRoom(run,
+            RunResult(RunOutcome.RoomCleared, environment.Observe(run)));
+        Assert.Equal(RunPhase.ResolveFinalEvent, finalEvent.Phase);
+        Assert.Equal(RunEventFixturePackage.FinalEventId, finalEvent.RoomStack[^1].EventId!.Value);
+        Assert.Contains(environment.LegalActions(run), action => action ==
+            new ChooseRunEventOptionAction(RunEventFixturePackage.FinalOptionId));
+        Assert.Throws<InvalidOperationException>(() => environment.CompleteRoom(run,
+            RunResult(RunOutcome.RunWon, environment.Observe(run))));
+        var won = environment.Step(run,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.FinalOptionId));
+        Assert.Equal(RunStatus.Won, won.Status);
+        Assert.Equal(RunPhase.Terminal, won.Phase);
 
         var healRun = environment.Start(421);
         healRun.State.Hp = 20;
@@ -2470,11 +2485,13 @@ public sealed class CombatSliceTests
         public static readonly ContentId CharacterId = ContentId.Parse("run-event-fixture:character");
         public static readonly ContentId ActId = ContentId.Parse("run-event-fixture:act");
         public static readonly ContentId EventId = ContentId.Parse("run-event-fixture:ancient");
+        public static readonly ContentId FinalEventId = ContentId.Parse("run-event-fixture:final-event");
         public static readonly ContentId CardId = ContentId.Parse("run-event-fixture:card");
         public static readonly ContentId TradeOptionId = ContentId.Parse("run-event-fixture:trade");
         public static readonly ContentId GoldOptionId = ContentId.Parse("run-event-fixture:gold");
         public static readonly ContentId UnaffordableOptionId = ContentId.Parse("run-event-fixture:unaffordable");
         public static readonly ContentId FatalOptionId = ContentId.Parse("run-event-fixture:fatal");
+        public static readonly ContentId FinalOptionId = ContentId.Parse("run-event-fixture:final-option");
 
         public PackageInfo Info { get; } = new("run-event-fixture", "1.0.0");
 
@@ -2486,7 +2503,8 @@ public sealed class CombatSliceTests
                 new MapPointDefinition("boss", 1, 3, MapPointType.Boss, [])
             ]);
             registry.Register(new RunDefinition(RunId,
-                [new ActDefinition(ActId, _ => map, ancientIds: [EventId])]));
+                [new ActDefinition(ActId, _ => map, ancientIds: [EventId])],
+                finalEventId: FinalEventId));
             registry.Register(new CharacterDefinition(CharacterId, 30, 10, [CardId]));
             registry.Register(new CardDefinition(CardId, 1, CardType.Attack, new AttackEffect(5),
                 Rarity: CardRarity.Basic));
@@ -2500,6 +2518,10 @@ public sealed class CombatSliceTests
                     [new LoseRunGoldEffect(11)]),
                 new RunEventOptionDefinition(FatalOptionId, "Take lethal damage",
                     [new LoseRunHpEffect(10)])
+            ]));
+            registry.Register(new RunEventDefinition(FinalEventId, RunEventKind.Final,
+            [
+                new RunEventOptionDefinition(FinalOptionId, "Complete the run", [new WinRunEffect()])
             ]));
         }
     }
