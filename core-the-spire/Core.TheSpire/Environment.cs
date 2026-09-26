@@ -331,12 +331,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 case EndTurnResolutionStage.AdvanceEnemyAction:
                     foreach (var enemy in state.Enemies)
                     {
+                        if (enemy.Creature.Hp <= 0) continue;
                         var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
-                        enemy.ActionIndex = currentAction.NextActionId is { } nextActionId
-                            ? enemy.Definition.GetActionIndex(nextActionId)
-                            : currentAction.Id == enemy.Definition.Actions[^1].Id && enemy.Definition.LoopLastAction
-                                ? enemy.Definition.Actions.Count - 1
-                                : Math.Min(enemy.ActionIndex + 1, enemy.Definition.Actions.Count - 1);
+                        enemy.ActionIndex = enemy.Definition.ResolveNextActionIndex(currentAction.Id,
+                            session.Random.Get("enemy-ai"));
                     }
                     state.CurrentEnemyIndex = 0;
                     state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
