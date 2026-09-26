@@ -44,7 +44,8 @@ public sealed class CombatSliceTests
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam,
                 BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
-                BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
+                BaseSpireIds.Impervious, BaseSpireIds.IronWave, BaseSpireIds.Offering,
+                BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
                 BaseSpireIds.ShrugItOff,
                 BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
                 BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
@@ -69,6 +70,9 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.DemonForm].Rarity);
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Offering].Rarity);
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Barricade].Rarity);
+        Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Impervious].Rarity);
+        Assert.Contains(definition.CardPools[BaseSpireIds.IroncladCardPool].Cards,
+            id => id == BaseSpireIds.Impervious);
         Assert.Equal(new AttackEffect(42), definition.Cards[BaseSpireIds.Bludgeon]
             .ResolveEffect(new CardInstance("test:bludgeon+", BaseSpireIds.Bludgeon, 1)));
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.DemonFormPower, 3, TargetSelector.Self),
@@ -1283,6 +1287,23 @@ public sealed class CombatSliceTests
         var result = env.Step(state, new PlayCardAction(0, state.State.Player.Id));
         Assert.Equal(18, state.State.Player.Creature.Block);
         Assert.Contains(result.Events, gameEvent => gameEvent.Type == "block" && gameEvent.Amount == 9);
+    }
+
+    public void ImperviousGrantsBlockAndExhaustsItself()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(75, "ironclad", 56, 65, [BaseSpireIds.Impervious],
+            BaseSpireIds.DampCultist.ToString());
+        var card = state.State.Definition.Cards[BaseSpireIds.Impervious];
+        Assert.Equal(new GainBlockEffect(40), card.ResolveEffect(
+            new CardInstance("impervious-upgraded", BaseSpireIds.Impervious, 1)));
+
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+
+        Assert.Equal(30, state.State.Player.Creature.Block);
+        Assert.Equal(1, state.State.Player.ExhaustPileInstances.Count(instance =>
+            instance.CardId == BaseSpireIds.Impervious));
+        Assert.Equal(0, state.State.Player.PlayPileInstances.Count);
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
@@ -2552,6 +2573,7 @@ internal static class Program
         tests.WellLaidPlansAllowsSelectingUpToItsPowerAmountOrConfirmingNone();
         tests.BarricadePreventsPlayerBlockFromClearingAtTurnStart();
         tests.EntrenchAddsBlockEqualToCurrentBlockAndIsAnEventCard();
+        tests.ImperviousGrantsBlockAndExhaustsItself();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();

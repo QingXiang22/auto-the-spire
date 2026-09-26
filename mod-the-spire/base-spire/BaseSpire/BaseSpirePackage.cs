@@ -31,6 +31,7 @@ public static class BaseSpireIds
     public static readonly ContentId Barricade = ContentId.Parse("base-spire:barricade");
     public static readonly ContentId BarricadePower = ContentId.Parse("base-spire:barricade-power");
     public static readonly ContentId Entrench = ContentId.Parse("base-spire:entrench");
+    public static readonly ContentId Impervious = ContentId.Parse("base-spire:impervious");
     public static readonly ContentId SwordBoomerang = ContentId.Parse("base-spire:sword-boomerang");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
