@@ -1738,6 +1738,9 @@ public sealed class CombatSliceTests
             """{"op":"addCardToRunDeck","card":"run-event-fixture:card"}""");
         Assert.Equal(new AddCardToRunDeckEffect(RunEventFixturePackage.CardId), cardEffect);
         Assert.Equal(cardEffect, EffectDsl.ParseRun(EffectDsl.Serialize(cardEffect)));
+        var chooseCard = new ChooseRunCardEffect("Choose a card to upgrade", RunCardFilter.Upgradeable,
+            false, new UpgradeSelectedRunCardEffect());
+        Assert.Equal(chooseCard, EffectDsl.ParseRun(EffectDsl.Serialize(chooseCard)));
         Assert.Equal(new WinRunEffect(), EffectDsl.ParseRun("""{"op":"winRun"}"""));
 
         var registry = new ContentRegistry();
@@ -1751,7 +1754,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
         Assert.Equal(RunEventFixturePackage.EventId,
             observation.RoomStack[^1].EventId!.Value);
-        Assert.Equal(4, observation.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(7, observation.RoomStack[^1].EventOptions.Count);
 
         var legalActions = environment.LegalActions(run);
         Assert.Contains(legalActions, action => action ==
@@ -1765,9 +1768,40 @@ public sealed class CombatSliceTests
             new ChooseRunEventOptionAction(RunEventFixturePackage.TradeOptionId));
         Assert.Equal(2, result.Gold);
         Assert.Equal(20, result.Hp);
-        Assert.Equal(2, result.DeckInstances.Count);
+        Assert.Equal(3, result.DeckInstances.Count);
         Assert.Equal(RunEventFixturePackage.CardId, result.DeckInstances[^1].CardId);
-        Assert.Equal("run-event-card-0001", result.DeckInstances[^1].InstanceId);
+        Assert.Equal("run-event-card-0002", result.DeckInstances[^1].InstanceId);
+
+        var upgradeRun = environment.Start(421);
+        var upgradePending = environment.Step(upgradeRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.UpgradeOptionId));
+        Assert.Equal(RunPhase.ResolveEventCardSelection, upgradePending.Phase);
+        Assert.Equal("Choose a card to upgrade", upgradePending.PendingRunCardSelection!.Prompt);
+        Assert.Equal(2, upgradePending.PendingRunCardSelection.Candidates.Count);
+        var upgradeTarget = upgradePending.PendingRunCardSelection.Candidates[1];
+        Assert.Contains(environment.LegalActions(upgradeRun), action => action ==
+            new ChooseRunCardAction(upgradeTarget.InstanceId));
+        var upgradedResult = environment.Step(upgradeRun, new ChooseRunCardAction(upgradeTarget.InstanceId));
+        Assert.Equal(RunPhase.ChooseMapPoint, upgradedResult.Phase);
+        Assert.Equal(12, upgradedResult.Gold);
+        Assert.Equal(1, upgradedResult.DeckInstances.Single(card =>
+            card.InstanceId == upgradeTarget.InstanceId).UpgradeLevel);
+
+        var removeRun = environment.Start(421);
+        var removePending = environment.Step(removeRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.RemoveOptionId));
+        var removedInstanceId = removePending.PendingRunCardSelection!.Candidates[0].InstanceId;
+        var removed = environment.Step(removeRun, new ChooseRunCardAction(removedInstanceId));
+        Assert.Equal(1, removed.DeckInstances.Count);
+        Assert.False(removed.DeckInstances.Any(card => card.InstanceId == removedInstanceId));
+
+        var skipRun = environment.Start(421);
+        var skipPending = environment.Step(skipRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.OptionalRemoveOptionId));
+        Assert.True(skipPending.PendingRunCardSelection!.CanSkip);
+        var skippedSelection = environment.Step(skipRun, new SkipRunCardSelectionAction());
+        Assert.Equal(2, skippedSelection.DeckInstances.Count);
+        Assert.Equal(11, skippedSelection.Gold);
         Assert.Equal(RunPhase.ChooseMapPoint, result.Phase);
 
         environment.Step(run, new ChooseMapPointAction("boss"));
@@ -2492,6 +2526,9 @@ public sealed class CombatSliceTests
         public static readonly ContentId UnaffordableOptionId = ContentId.Parse("run-event-fixture:unaffordable");
         public static readonly ContentId FatalOptionId = ContentId.Parse("run-event-fixture:fatal");
         public static readonly ContentId FinalOptionId = ContentId.Parse("run-event-fixture:final-option");
+        public static readonly ContentId UpgradeOptionId = ContentId.Parse("run-event-fixture:upgrade-option");
+        public static readonly ContentId RemoveOptionId = ContentId.Parse("run-event-fixture:remove-option");
+        public static readonly ContentId OptionalRemoveOptionId = ContentId.Parse("run-event-fixture:optional-remove-option");
 
         public PackageInfo Info { get; } = new("run-event-fixture", "1.0.0");
 
@@ -2505,9 +2542,9 @@ public sealed class CombatSliceTests
             registry.Register(new RunDefinition(RunId,
                 [new ActDefinition(ActId, _ => map, ancientIds: [EventId])],
                 finalEventId: FinalEventId));
-            registry.Register(new CharacterDefinition(CharacterId, 30, 10, [CardId]));
+            registry.Register(new CharacterDefinition(CharacterId, 30, 10, [CardId, CardId]));
             registry.Register(new CardDefinition(CardId, 1, CardType.Attack, new AttackEffect(5),
-                Rarity: CardRarity.Basic));
+                Rarity: CardRarity.Basic, UpgradedEffect: new AttackEffect(8)));
             registry.Register(new RunEventDefinition(EventId, RunEventKind.Ancient,
             [
                 new RunEventOptionDefinition(TradeOptionId, "Trade gold for a card",
@@ -2517,7 +2554,16 @@ public sealed class CombatSliceTests
                 new RunEventOptionDefinition(UnaffordableOptionId, "Pay too much",
                     [new LoseRunGoldEffect(11)]),
                 new RunEventOptionDefinition(FatalOptionId, "Take lethal damage",
-                    [new LoseRunHpEffect(10)])
+                    [new LoseRunHpEffect(10)]),
+                new RunEventOptionDefinition(UpgradeOptionId, "Upgrade a card",
+                    [new ChooseRunCardEffect("Choose a card to upgrade", RunCardFilter.Upgradeable,
+                        false, new UpgradeSelectedRunCardEffect()), new GainRunGoldEffect(2)]),
+                new RunEventOptionDefinition(RemoveOptionId, "Remove a card",
+                    [new ChooseRunCardEffect("Choose a card to remove", RunCardFilter.Any,
+                        false, new RemoveSelectedRunCardEffect())]),
+                new RunEventOptionDefinition(OptionalRemoveOptionId, "Optionally remove a card",
+                    [new ChooseRunCardEffect("Choose a card to remove", RunCardFilter.Any,
+                        true, new RemoveSelectedRunCardEffect()), new GainRunGoldEffect(1)])
             ]));
             registry.Register(new RunEventDefinition(FinalEventId, RunEventKind.Final,
             [

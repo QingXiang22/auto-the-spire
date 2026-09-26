@@ -2,7 +2,7 @@ namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
 public enum RunRoomType { Unassigned, Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
-public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveEvent, ResolveRestSite, ResolveRewards, ResolveFinalEvent, Terminal }
+public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveEvent, ResolveEventCardSelection, ResolveRestSite, ResolveRewards, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
 public enum RunStatus { InProgress, Won, Lost }
 
@@ -249,6 +249,8 @@ public sealed class RunDefinition
 
 public sealed record ChooseMapPointAction(string PointId) : PlayerAction;
 public sealed record ChooseRunEventOptionAction(ContentId OptionId) : PlayerAction;
+public sealed record ChooseRunCardAction(string CardInstanceId) : PlayerAction;
+public sealed record SkipRunCardSelectionAction : PlayerAction;
 public sealed record ClaimGoldRewardAction(string RewardId) : PlayerAction;
 public sealed record SkipRewardSetAction : PlayerAction;
 public sealed record ProceedAfterRewardsAction : PlayerAction;
@@ -266,6 +268,7 @@ public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
     IReadOnlyList<CardInstance> CardOptions);
 public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
 public sealed record RunEventOptionView(ContentId Id, string Label);
+public sealed record PendingRunCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Candidates, bool CanSkip);
 
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
     ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds,
@@ -276,7 +279,8 @@ public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int 
     int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
     RunRoomType? CurrentRoom,
     RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map, IReadOnlyList<RunMapVisitView> VisitedMapPoints,
-    IReadOnlyList<RunRoomFrameView> RoomStack, IReadOnlyList<CardInstance> DeckInstances);
+    IReadOnlyList<RunRoomFrameView> RoomStack, IReadOnlyList<CardInstance> DeckInstances,
+    PendingRunCardSelectionView? PendingRunCardSelection = null);
 
 public sealed class RunRoomResult
 {
@@ -410,6 +414,7 @@ internal sealed class RunState
     public IReadOnlyDictionary<ContentId, EncounterDefinition>? Encounters { get; }
     public IReadOnlyDictionary<ContentId, RunEventDefinition>? RunEvents { get; }
     public int NextEventCardInstanceId { get; set; }
+    public PendingRunCardSelectionState? PendingRunCardSelection { get; set; }
     public UnknownRoomOddsState? UnknownRoomOdds { get; }
     public IReadOnlyList<ActRoomContentState?> RoomContentStates { get; }
     public HashSet<ContentId> VisitedEventIds { get; } = [];
@@ -492,6 +497,10 @@ internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bo
     public List<RunRewardState> Rewards { get; } = [];
 }
 
+internal sealed record PendingRunCardSelectionState(ChooseRunCardEffect Selection,
+    IReadOnlyList<CardInstance> Candidates, IReadOnlyList<RunEffectNode> RemainingEffects,
+    bool IsFinalEvent);
+
 internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount,
     IReadOnlyList<CardInstance>? CardOptions = null);
 
@@ -554,7 +563,9 @@ public sealed class RunEnvironment
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
             state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()),
             Array.AsReadOnly(state.RoomStack.Select(ObserveRoomFrame).ToArray()),
-            Array.AsReadOnly(state.Deck.ToArray()));
+            Array.AsReadOnly(state.Deck.ToArray()), state.PendingRunCardSelection is { } pending
+                ? new PendingRunCardSelectionView(pending.Selection.Prompt, pending.Candidates, pending.Selection.CanSkip)
+                : null);
     }
 
     private static RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame) => new(
@@ -572,14 +583,21 @@ public sealed class RunEnvironment
         if (state.Phase == RunPhase.ChooseMapPoint)
             return state.Map.Points[state.CurrentPointId].Children
                 .Select(id => (PlayerAction)new ChooseMapPointAction(id)).ToArray();
+        if (state.Phase == RunPhase.ResolveEventCardSelection && state.PendingRunCardSelection is { } pendingSelection)
+        {
+            var actions = pendingSelection.Candidates
+                .Select(card => (PlayerAction)new ChooseRunCardAction(card.InstanceId)).ToList();
+            if (pendingSelection.Selection.CanSkip) actions.Add(new SkipRunCardSelectionAction());
+            return Array.AsReadOnly(actions.ToArray());
+        }
         if (state.Phase == RunPhase.ResolveEvent && state.RoomStack.Count > 0)
             return state.RoomStack[^1].EventOptions
-                .Where(option => IsEventOptionAffordable(option, state.Gold))
+                .Where(option => IsEventOptionLegal(option, state))
                 .Select(option => (PlayerAction)new ChooseRunEventOptionAction(option.Id)).ToArray();
         if (state.Phase == RunPhase.ResolveFinalEvent && state.RoomStack.Count > 0
             && state.RoomStack[^1].EventOptions.Count > 0)
             return state.RoomStack[^1].EventOptions
-                .Where(option => IsEventOptionAffordable(option, state.Gold))
+                .Where(option => IsEventOptionLegal(option, state))
                 .Select(option => (PlayerAction)new ChooseRunEventOptionAction(option.Id)).ToArray();
         if (state.Phase == RunPhase.ResolveRewards && state.RoomStack.Count > 0)
         {
@@ -618,6 +636,8 @@ public sealed class RunEnvironment
             return ResolveRewardAction(session, action);
         if (state.Phase == RunPhase.ResolveEvent)
             return ResolveRunEventAction(session, action);
+        if (state.Phase == RunPhase.ResolveEventCardSelection)
+            return ResolveRunCardSelectionAction(session, action);
         if (state.Phase == RunPhase.ResolveFinalEvent && state.RoomStack.Count > 0
             && state.RoomStack[^1].EventOptions.Count > 0)
             return ResolveRunEventAction(session, action);
@@ -682,8 +702,80 @@ public sealed class RunEnvironment
 
         var frame = state.RoomStack[^1];
         var option = frame.EventOptions.Single(candidate => candidate.Id == choose.OptionId);
-        foreach (var effect in option.Effects)
+        return ExecuteRunEventEffects(session, frame, option.Effects, frame.IsFinalEvent);
+    }
+
+    private RunObservation ExecuteRunEventEffects(RunSession session, RunRoomFrame frame,
+        IReadOnlyList<RunEffectNode> effects, bool isFinalEvent)
+    {
+        var state = session.State;
+        for (var index = 0; index < effects.Count; index++)
         {
+            var effect = effects[index];
+            if (effect is ChooseRunCardEffect chooseCard)
+            {
+                var candidates = GetRunCardCandidates(state, chooseCard);
+                if (candidates.Count == 0)
+                {
+                    if (chooseCard.CanSkip) continue;
+                    throw new InvalidOperationException("The event card selection has no available cards.");
+                }
+                state.PendingRunCardSelection = new PendingRunCardSelectionState(chooseCard,
+                    candidates, Array.AsReadOnly(effects.Skip(index + 1).ToArray()), isFinalEvent);
+                state.Phase = RunPhase.ResolveEventCardSelection;
+                return Observe(session);
+            }
+
+            ApplyRunEventEffect(state, frame, effect, selectedCard: null);
+            if (state.Hp == 0)
+            {
+                state.Status = RunStatus.Lost;
+                state.Phase = RunPhase.Terminal;
+                return Observe(session);
+            }
+            if (state.Status == RunStatus.Won) return Observe(session);
+        }
+
+        if (isFinalEvent)
+            throw new InvalidOperationException("A final event option did not complete the run.");
+        return FinishCompletedRoom(session, frame);
+    }
+
+    private RunObservation ResolveRunCardSelectionAction(RunSession session, PlayerAction action)
+    {
+        var state = session.State;
+        var pending = state.PendingRunCardSelection
+            ?? throw new InvalidOperationException("There is no pending run card selection.");
+        var frame = state.RoomStack[^1];
+        if (action is SkipRunCardSelectionAction && pending.Selection.CanSkip)
+        {
+            state.PendingRunCardSelection = null;
+            state.Phase = pending.IsFinalEvent ? RunPhase.ResolveFinalEvent : RunPhase.ResolveEvent;
+            return ExecuteRunEventEffects(session, frame, pending.RemainingEffects, pending.IsFinalEvent);
+        }
+        if (action is not ChooseRunCardAction choose
+            || !pending.Candidates.Any(card => card.InstanceId == choose.CardInstanceId))
+            throw new InvalidOperationException("The selected run card is not currently available.");
+
+        var cardIndex = state.Deck.FindIndex(card => card.InstanceId == choose.CardInstanceId);
+        if (cardIndex < 0) throw new InvalidOperationException("The selected run card is no longer in the deck.");
+        var selectedCard = state.Deck[cardIndex];
+        state.PendingRunCardSelection = null;
+        state.Phase = pending.IsFinalEvent ? RunPhase.ResolveFinalEvent : RunPhase.ResolveEvent;
+        ApplyRunEventEffect(state, frame, pending.Selection.OnSelected, selectedCard);
+        if (state.Hp == 0)
+        {
+            state.Status = RunStatus.Lost;
+            state.Phase = RunPhase.Terminal;
+            return Observe(session);
+        }
+        if (state.Status == RunStatus.Won) return Observe(session);
+        return ExecuteRunEventEffects(session, frame, pending.RemainingEffects, pending.IsFinalEvent);
+    }
+
+    private void ApplyRunEventEffect(RunState state, RunRoomFrame frame,
+        RunEffectNode effect, CardInstance? selectedCard)
+    {
             switch (effect)
             {
                 case GainRunGoldEffect gainGold:
@@ -701,6 +793,15 @@ public sealed class RunEnvironment
                 case AddCardToRunDeckEffect addCard:
                     state.Deck.Add(new CardInstance($"run-event-card-{state.NextEventCardInstanceId++:D4}", addCard.Card));
                     break;
+                case RemoveSelectedRunCardEffect when selectedCard is { } selectedToRemove:
+                    state.Deck.RemoveAll(card => card.InstanceId == selectedToRemove.InstanceId);
+                    break;
+                case UpgradeSelectedRunCardEffect when selectedCard is { } selectedToUpgrade:
+                    var selectedIndex = state.Deck.FindIndex(card => card.InstanceId == selectedToUpgrade.InstanceId);
+                    if (selectedIndex < 0) throw new InvalidOperationException("The selected run card is no longer in the deck.");
+                    state.Deck[selectedIndex] = new CardInstance(selectedToUpgrade.InstanceId,
+                        selectedToUpgrade.CardId, selectedToUpgrade.UpgradeLevel + 1);
+                    break;
                 case WinRunEffect when frame.IsFinalEvent:
                     state.Status = RunStatus.Won;
                     state.Phase = RunPhase.Terminal;
@@ -710,31 +811,32 @@ public sealed class RunEnvironment
                 default:
                     throw new InvalidOperationException($"Unsupported run event effect '{effect.GetType().Name}'.");
             }
-
-            if (state.Hp == 0)
-            {
-                state.Status = RunStatus.Lost;
-                state.Phase = RunPhase.Terminal;
-                return Observe(session);
-            }
-            if (state.Status == RunStatus.Won) return Observe(session);
-        }
-        if (frame.IsFinalEvent)
-            throw new InvalidOperationException("A final event option did not complete the run.");
-        return FinishCompletedRoom(session, frame);
     }
 
-    private static bool IsEventOptionAffordable(RunEventOptionDefinition option, int currentGold)
+    private bool IsEventOptionLegal(RunEventOptionDefinition option, RunState state)
     {
-        long gold = currentGold;
+        long gold = state.Gold;
         foreach (var effect in option.Effects)
         {
             if (effect is GainRunGoldEffect gain) gold += gain.Amount;
             if (effect is LoseRunGoldEffect loss) gold -= loss.Amount;
             if (gold is < 0 or > int.MaxValue) return false;
+            if (effect is ChooseRunCardEffect chooseCard
+                && GetRunCardCandidates(state, chooseCard).Count == 0 && !chooseCard.CanSkip)
+                return false;
         }
         return true;
     }
+
+    private IReadOnlyList<CardInstance> GetRunCardCandidates(RunState state, ChooseRunCardEffect selection) =>
+        Array.AsReadOnly(state.Deck.Where(card => selection.Filter switch
+        {
+            RunCardFilter.Any => true,
+            RunCardFilter.Upgradeable => card.UpgradeLevel == 0 && _cards is not null
+                && _cards.TryGetValue(card.CardId, out var definition)
+                && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null),
+            _ => false
+        }).ToArray());
 
     /// <summary>Push a nested room, such as a combat started by an event, while preserving its parent room.</summary>
     public RunObservation PushSubRoom(RunSession session, RunRoomType roomType)

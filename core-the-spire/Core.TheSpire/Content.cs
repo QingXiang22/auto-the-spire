@@ -149,6 +149,9 @@ public enum RunEventKind { Event, Ancient, Final }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealRunEffect), "healRun")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseRunHpEffect), "loseRunHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardToRunDeckEffect), "addCardToRunDeck")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseRunCardEffect), "chooseRunCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RemoveSelectedRunCardEffect), "removeSelectedRunCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedRunCardEffect), "upgradeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(WinRunEffect), "winRun")]
 public abstract record RunEffectNode;
 public sealed record GainRunGoldEffect(int Amount) : RunEffectNode;
@@ -156,6 +159,11 @@ public sealed record LoseRunGoldEffect(int Amount) : RunEffectNode;
 public sealed record HealRunEffect(int Amount) : RunEffectNode;
 public sealed record LoseRunHpEffect(int Amount) : RunEffectNode;
 public sealed record AddCardToRunDeckEffect(ContentId Card) : RunEffectNode;
+public enum RunCardFilter { Any, Upgradeable }
+public sealed record ChooseRunCardEffect(string Prompt, RunCardFilter Filter, bool CanSkip,
+    RunEffectNode OnSelected) : RunEffectNode;
+public sealed record RemoveSelectedRunCardEffect : RunEffectNode;
+public sealed record UpgradeSelectedRunCardEffect : RunEffectNode;
 public sealed record WinRunEffect : RunEffectNode;
 
 public sealed record RunEventOptionDefinition
@@ -608,6 +616,8 @@ public sealed class ContentRegistry
         foreach (var runEvent in _runEvents.Values)
         foreach (var option in runEvent.Options)
         {
+            if (option.Effects.Count(effect => effect is ChooseRunCardEffect) > 1)
+                throw new InvalidOperationException($"Run event '{runEvent.Id}' option '{option.Id}' can select one card at a time.");
             var winEffectCount = option.Effects.Count(effect => effect is WinRunEffect);
             var endsWithWin = option.Effects.LastOrDefault() is WinRunEffect;
             if (runEvent.Kind == RunEventKind.Final && (winEffectCount != 1 || !endsWithWin))
@@ -659,7 +669,8 @@ public sealed class ContentRegistry
         }
     }
 
-    private void ValidateRunEffectReferences(RunEffectNode effect, string owner)
+    private void ValidateRunEffectReferences(RunEffectNode effect, string owner,
+        bool hasSelectedCardContext = false)
     {
         switch (effect)
         {
@@ -679,6 +690,21 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} adds unknown card '{addCard.Card}'.");
             case AddCardToRunDeckEffect addCard:
                 addCard.Card.Validate();
+                break;
+            case ChooseRunCardEffect chooseCard:
+                ArgumentException.ThrowIfNullOrWhiteSpace(chooseCard.Prompt);
+                if (!Enum.IsDefined(chooseCard.Filter))
+                    throw new InvalidOperationException($"{owner} has an invalid run card filter.");
+                if (chooseCard.OnSelected is not (RemoveSelectedRunCardEffect or UpgradeSelectedRunCardEffect))
+                    throw new InvalidOperationException($"{owner} must remove or upgrade the selected card.");
+                if (chooseCard.OnSelected is UpgradeSelectedRunCardEffect
+                    && chooseCard.Filter != RunCardFilter.Upgradeable)
+                    throw new InvalidOperationException($"{owner} must filter for upgradeable cards before upgrading.");
+                ValidateRunEffectReferences(chooseCard.OnSelected, owner, hasSelectedCardContext: true);
+                break;
+            case RemoveSelectedRunCardEffect or UpgradeSelectedRunCardEffect when !hasSelectedCardContext:
+                throw new InvalidOperationException($"{owner} uses a selected-card effect without selecting a card.");
+            case RemoveSelectedRunCardEffect or UpgradeSelectedRunCardEffect:
                 break;
             case WinRunEffect:
                 break;
