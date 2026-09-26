@@ -21,6 +21,19 @@
 | mod 入口与运行扩展 | `Core/Modding/ModManager.cs`, `Core/Models/ModelDb.cs` | 原版 mod 可加载程序集、初始化模型并应用 Harmony 补丁；补丁可超出数据规则边界。 | 首个内核允许内容覆盖、新增 JSON 效果节点和受控 C# effect handler；战斗事件 Hook 不直接取得可变运行态，扩展数据存于 `GameState` 的按 mod ID 隔离命名空间。独立 `IRunHook` 只提供受限整局查询/命令（当前含遗物检查与治疗）。任意 Harmony 补丁不在兼容范围。 | 最小扩展已实现；原版 mod 清单待审计 |
 | 运行与地图 | `Core/Runs/RunState.cs`, `RunManager.cs`, `Core/Map/StandardActMap.cs`, `MapPathPruning.cs`, `MapPostProcessing.cs`, `MapPoint.cs`, `MapPointType.cs`, `Core/Rooms/RoomType.cs`, `Core/Odds/UnknownMapPointOdds.cs` | 已确认运行态保存玩家、地图、幕索引、楼层、访问历史、当前房间栈及多种运行配置；标准地图按路径生成、节点类型分配/限制、重复路线剪枝与配额修复、居中/扩散/拉直的顺序处理。`MapPointType` 与 `RoomType` 不同：Unknown 使用运行级随机流、动态赔率和 Shop 禁用条件，Ancient 解析为 Event。每幕起点均为 Ancient 事件；最后一幕 Boss 后还进入 The Architect 事件，选择胜利选项才结束运行。 | `Runs.cs` 提供通用地图图、合法选点、可观察访问历史、Ancient 开幕事件、赔率运行态和通用嵌套房间栈；子房间完成后恢复父房间，嵌套战斗获胜仍触发整局战斗钩子。`base-spire/StandardActMapGenerator.cs` 移植四个 Act 的单人参数及生成管线。原版 Unknown 基础权重、累计/每幕重置、“上个访问房间为 Shop”/“当前 Unknown 后续节点全为 Shop”黑名单，以及修改候选房间类型和未抽中赔率增量的有序 hook 已移植。`RunEnvironment.Start(string)` 复现字符串种子 hash 入口。遭遇池框架现按 `up_front` 流生成并在房间观察中记录遭遇选择；`CombatEnvironment.StartCurrentEncounterForRun` 可按选择建立多敌战斗，`CompleteCombat` 将结果回写。仍待原版运行时地图逐点差分、运行级 hook listener 收集等价性、真实 Act 遭遇池和敌人初始化。 | 地图、访问历史、基础赔率、赔率 hook、房间栈及遭遇队列框架已实现；地图逐点差分和真实池数据待验 |
 
+### Act encounter pool 迁移清单
+
+以下数量和 Encounter 类型来自各 Act 的 `GenerateAllEncounters()`。weak 数量是每幕常规队列的前缀长度；normal 房间总数不含 boss/ancient；elite 队列固定生成 15 项。当前 `base-spire` 尚未将这些清单注册为可运行遭遇定义。
+
+| Act | Normal 房间数 / weak 前缀 | Weak Encounter | Regular Encounter | Elite Encounter | Boss Encounter |
+|---|---:|---|---|---|---|
+| Overgrowth | 15 / 3 | FuzzyWurmCrawlerWeak, NibbitsWeak, ShrinkerBeetleWeak, SlimesWeak | CubexConstructNormal, FlyconidNormal, FogmogNormal, InkletsNormal, MawlerNormal, NibbitsNormal, OvergrowthCrawlers, RubyRaidersNormal, SlimesNormal, SlitheringStranglerNormal, SnappingJaxfruitNormal, VineShamblerNormal | BygoneEffigyElite, ByrdonisElite, PhrogParasiteElite | CeremonialBeastBoss, TheKinBoss, VantomBoss |
+| Hive | 14 / 2 | BowlbugsWeak, ExoskeletonsWeak, ThievingHopperWeak, TunnelerWeak | ChompersNormal, ExoskeletonsNormal, HunterKillerNormal, LouseProgenitorNormal, MytesNormal, OvicopterNormal, SlumberingBeetleNormal, SpinyToadNormal, TheObscuraNormal | DecimillipedeElite, EntomancerElite, InfestedPrismsElite | KaiserCrabBoss, KnowledgeDemonBoss, TheInsatiableBoss |
+| Glory | 13 / 2 | DevotedSculptorWeak, ScrollsOfBitingWeak, TurretOperatorWeak | AxebotsNormal, ConstructMenagerieNormal, FabricatorNormal, FrogKnightNormal, GlobeHeadNormal, OwlMagistrateNormal, ScrollsOfBitingNormal, SlimedBerserkerNormal, TheLostAndForgottenNormal | KnightsElite, MechaKnightElite, SoulNexusElite | AeonglassBoss, QueenBoss, TestSubjectBoss |
+| Underdocks | 15 / 3 | CorpseSlugsWeak, SeapunkWeak, SludgeSpinnerWeak, ToadpolesWeak | CorpseSlugsNormal, CultistsNormal, FossilStalkerNormal, GremlinMercNormal, HauntedShipNormal, LivingFogNormal, PunchConstructNormal, SeapunkNormal, SewerClamNormal, TwoTailedRatsNormal | PhantasmalGardenersElite, SkulkingColonyElite, TerrorEelElite | LagavulinMatriarchBoss, SoulFyshBoss, WaterfallGiantBoss |
+
+精确 seed 对齐还依赖先行的 `RunManager.GenerateRooms()` 逻辑：它先对共享 Ancients 洗牌并分配到 Acts，随后每幕 `GenerateRooms()` 先洗牌 Event 列表、再生成 normal/elite/boss/Ancient 选择。当前模拟只复现遭遇池部分的调用顺序，所以队列可重放，但随机流调用计数与原版完整房间生成尚未对齐。
+
 ## 后续深读顺序
 
 1. **战斗结算闭环**：逐个追踪 `CombatManager`、`DamageCmd`、`PowerCmd`、`CreatureCmd` 和 Hook 监听对象收集顺序；记录伤害计算阶段、力量/易伤/格挡的先后、取整和击杀事件。
