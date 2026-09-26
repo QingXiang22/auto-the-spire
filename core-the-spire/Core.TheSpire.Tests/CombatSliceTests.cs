@@ -229,6 +229,21 @@ public sealed class CombatSliceTests
         Assert.Equal(6, toughDeadly.Observe(altered).Enemies[0].Block);
         toughDeadly.Step(altered, new EndTurnAction());
         Assert.Equal(3, altered.State.Enemies[0].Creature.Strength);
+
+        var pair = environment.StartEncounter(214, "ironclad", 80, 80, [], BaseSpireIds.NibbitsNormal);
+        var pairOpening = environment.Observe(pair).Enemies;
+        Assert.Equal(2, pairOpening.Count);
+        Assert.Equal(6, pairOpening[0].IntentDamage);
+        Assert.Equal(IntentKind.Buff, pairOpening[1].Intent);
+        var openingTurn = environment.Step(pair, new EndTurnAction());
+        Assert.Equal(74, openingTurn.Observation.PlayerHp);
+        Assert.Equal(5, openingTurn.Observation.Enemies[0].Block);
+        Assert.Equal(2, openingTurn.Observation.Enemies[1].Strength);
+        Assert.Equal(IntentKind.Buff, openingTurn.Observation.Enemies[0].Intent);
+        Assert.Equal(14, openingTurn.Observation.Enemies[1].IntentDamage);
+
+        Assert.Throws<ArgumentException>(() => environment.StartEncounter(215, "ironclad", 80, 80, [],
+            [new CombatEnemySpawn(BaseSpireIds.Nibbit.ToString(), StartingActionOverride: ContentId.Parse("base-spire:missing-action"))]));
     }
 
     public void PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide()

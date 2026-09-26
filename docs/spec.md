@@ -132,7 +132,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
-8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。`base-spire` 已验证 `CultistsNormal`、Overgrowth 的 `FuzzyWurmCrawlerWeak`、单怪 `NibbitsWeak` 和双怪 `OvergrowthCrawlers`。Fuzzy Wurm 的有向动作图复现 Attack → Inhale(+7 Strength) → Attack → 回到首个 Attack；ShrinkerBeetle 的 Shrink 以通用出手伤害倍率表示，并在施加者死亡时解除；Nibbit 弱遭遇复现 Butt → Slice(+Block) → Hiss(+Strength) 循环。三类敌人覆盖 Deadly/Tough 参数及遭遇顺序。Act 遭遇池与房间内容生成、分类校验、seeded 队列和访问选择也已由合成 Act 测试。真实 Act 内容池、条件/随机 AI、source 的双 boss 选择和怪物生命唯一化算法仍未完成。
+8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。encounter 可为每个敌人槽位指定起始动作，以数据描述原版遭遇创建时选定的不同初始动作。`base-spire` 已验证 `CultistsNormal`、Overgrowth 的 `FuzzyWurmCrawlerWeak`、单怪 `NibbitsWeak`、双怪 `NibbitsNormal` 和双怪 `OvergrowthCrawlers`。Fuzzy Wurm 的有向动作图复现 Attack → Inhale(+7 Strength) → Attack → 回到首个 Attack；ShrinkerBeetle 的 Shrink 以通用出手伤害倍率表示，并在施加者死亡时解除；Nibbit 弱遭遇复现 Butt → Slice(+Block) → Hiss(+Strength) 循环，普通遭遇则以各自起始动作复现前位先 Slice、后位先 Hiss。三类敌人覆盖 Deadly/Tough 参数及遭遇顺序。Act 遭遇池与房间内容生成、分类校验、seeded 队列和访问选择也已由合成 Act 测试。真实 Act 内容池、通用运行时条件/随机 AI、source 的双 boss 选择和怪物生命唯一化算法仍未完成。
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 

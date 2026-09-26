@@ -18,6 +18,7 @@ public static class BaseSpireIds
     public static readonly ContentId OvergrowthCrawlers = ContentId.Parse("base-spire:overgrowth-crawlers");
     public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
     public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
+    public static readonly ContentId NibbitsNormal = ContentId.Parse("base-spire:nibbits-normal");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
@@ -141,6 +142,13 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             ]));
         registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsWeak, RunRoomType.Monster,
             [BaseSpireIds.Nibbit], isWeak: true, tags: [ContentId.Parse("base-spire:nibbit")]));
+        registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsNormal, RunRoomType.Monster,
+            [BaseSpireIds.Nibbit, BaseSpireIds.Nibbit], tags: [ContentId.Parse("base-spire:nibbit")],
+            startingActionsByEnemyIndex: new Dictionary<int, ContentId>
+            {
+                [0] = nibbitSlice,
+                [1] = nibbitHiss
+            }));
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
