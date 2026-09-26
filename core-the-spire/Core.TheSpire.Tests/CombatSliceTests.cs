@@ -42,7 +42,7 @@ public sealed class CombatSliceTests
                 BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
                 BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam,
-                BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
+                BaseSpireIds.BurningPact, BaseSpireIds.Clothesline, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.Impervious, BaseSpireIds.IronWave, BaseSpireIds.Offering,
                 BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
@@ -63,6 +63,7 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.SwordBoomerang].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.SecondWind].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Bloodletting].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Clothesline].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
@@ -119,6 +120,10 @@ public sealed class CombatSliceTests
             .ResolveEffect(new CardInstance("test:uppercut+", BaseSpireIds.Uppercut, 1));
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 2, TargetSelector.FirstEnemy), upgradedUppercut.Effects[1]);
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 2, TargetSelector.FirstEnemy), upgradedUppercut.Effects[2]);
+        var upgradedClothesline = (SequenceEffect)definition.Cards[BaseSpireIds.Clothesline]
+            .ResolveEffect(new CardInstance("test:clothesline+", BaseSpireIds.Clothesline, 1));
+        Assert.Equal(new AttackEffect(14, TargetSelector.SelectedTarget), upgradedClothesline.Effects[0]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 3, TargetSelector.SelectedTarget), upgradedClothesline.Effects[1]);
         Assert.Equal(new AttackEffect(9), definition.Cards[BaseSpireIds.StrikeIronclad]
             .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
         Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
@@ -194,6 +199,12 @@ public sealed class CombatSliceTests
         Assert.Equal(54, uppercut.State.Player.Creature.Hp);
         Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Weak));
         Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+
+        var clothesline = env.Start(26, "ironclad", 56, 65, [BaseSpireIds.Clothesline],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(clothesline, new PlayCardAction(0, clothesline.State.Enemy.Id));
+        Assert.Equal(41, clothesline.State.Enemy.Hp);
+        Assert.Equal(2, clothesline.State.Enemy.PowerAmount(BaseSpireIds.Weak));
     }
 
     public void BaseDampCultistNormalValuesMatchSourceRules()
