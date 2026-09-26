@@ -149,7 +149,7 @@ internal sealed class GameState
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
     internal CardInstance? PendingChoiceSelectedCard { get; set; }
-    internal CardInstance? PendingPlayedCard { get; set; }
+    internal PendingCardPlay? PendingCardPlay { get; set; }
     internal List<(EntityState Owner, EffectNode Effect, EntityState? Target, CardInstance? SelectedCard)> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal int FlushHookIndex { get; set; }
@@ -350,6 +350,7 @@ internal sealed class GameState
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState;
+internal sealed record PendingCardPlay(CardInstance Card, int XEnergy);
 internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
     EntityState owner, EntityState? target, CardInstance? selectedCard) : PendingCardSelectionState
 {

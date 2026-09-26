@@ -256,7 +256,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var instance = state.Player.HandInstances[i];
             var card = definition.Cards[instance.CardId];
             if ((card.Keywords & CardKeywords.Unplayable) != 0) continue;
-            if (card.ResolveCost(instance) > state.Player.Energy) continue;
+            if (!card.HasEnergyXCost && card.ResolveCost(instance) > state.Player.Energy) continue;
             if (card.Target == TargetSelector.Self)
                 actions.Add(new PlayCardAction(i, state.Player.Id));
             else if (card.Target == TargetSelector.SelectedTarget)
@@ -350,9 +350,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var cardInstance = state.Player.HandInstances[play.HandIndex];
             var card = definition.Cards[cardInstance.CardId];
             state.Player.MutableHand.RemoveAt(play.HandIndex);
-            state.Player.Energy -= card.ResolveCost(cardInstance);
+            var xEnergy = card.HasEnergyXCost ? state.Player.Energy : 0;
+            state.Player.Energy = card.HasEnergyXCost ? 0 : state.Player.Energy - card.ResolveCost(cardInstance);
             state.Player.MutablePlayPile.Add(cardInstance);
-            state.PendingPlayedCard = cardInstance;
+            state.PendingCardPlay = new PendingCardPlay(cardInstance, xEnergy);
             var selectedTarget = play.TargetId == state.Player.Id ? state.Player.Creature
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
             state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
@@ -372,18 +373,19 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private static void FinalizePlayedCard(GameSession session)
     {
         var state = session.State;
-        if (state.PendingPlayedCard is not { } cardInstance) return;
+        if (state.PendingCardPlay is not { } cardPlay) return;
+        var cardInstance = cardPlay.Card;
         var card = state.Definition.Cards[cardInstance.CardId];
         if ((card.Keywords & CardKeywords.Exhaust) != 0)
         {
             state.Player.MutablePlayPile.Remove(cardInstance);
             state.Player.MutableExhaustPile.Add(cardInstance);
-            state.PendingPlayedCard = null;
+            state.PendingCardPlay = null;
             EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, cardInstance);
             EffectExecutor.Resume(session);
             return;
         }
-        state.PendingPlayedCard = null;
+        state.PendingCardPlay = null;
     }
 
     private static void ResumeChoiceContinuation(GameSession session)
