@@ -273,7 +273,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 throw new InvalidOperationException("The selected card is no longer in its source pile.");
             state.Emit(session, "card_choice", state.Player.Id, chooseCard.CardInstanceId, 1);
             if (cardChoice.Effect.OnSelected is { } onSelected)
-                EffectExecutor.Execute(session, cardChoice.Owner, onSelected, cardChoice.Target, chosenCard);
+                state.PendingEffects.Add((cardChoice.Owner, onSelected, cardChoice.Target, chosenCard));
+            if (cardChoice.Effect.To == CardPile.Exhaust && cardChoice.Effect.From != CardPile.Exhaust)
+                EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, chosenCard);
             EffectExecutor.Resume(session);
             ResumeChoiceContinuation(session);
         }
@@ -311,7 +313,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
             state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
             EffectExecutor.Execute(session, state.Player.Creature, card.ResolveEffect(cardInstance), selectedTarget);
-            if (state.PendingChoice is null && state.PendingCardChoice is null) FinalizePlayedCard(state);
+            if (state.PendingChoice is null && state.PendingCardChoice is null) FinalizePlayedCard(session);
         }
         else if (action is EndTurnAction)
         {
@@ -327,14 +329,19 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.PendingChoice is not null || state.PendingCardChoice is not null);
     }
 
-    private static void FinalizePlayedCard(GameState state)
+    private static void FinalizePlayedCard(GameSession session)
     {
+        var state = session.State;
         if (state.PendingPlayedCard is not { } cardInstance) return;
         var card = state.Definition.Cards[cardInstance.CardId];
         if (card.Exhaust)
         {
             state.Player.MutablePlayPile.Remove(cardInstance);
             state.Player.MutableExhaustPile.Add(cardInstance);
+            state.PendingPlayedCard = null;
+            EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, cardInstance);
+            EffectExecutor.Resume(session);
+            return;
         }
         state.PendingPlayedCard = null;
     }
@@ -344,7 +351,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = session.State;
         if (state.PendingChoice is not null || state.PendingCardChoice is not null) return;
         if (state.EndTurnStage != EndTurnResolutionStage.None) ContinueEndTurn(session);
-        else FinalizePlayedCard(state);
+        else FinalizePlayedCard(session);
     }
 
     private static void ContinueEndTurn(GameSession session)
@@ -473,13 +480,13 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (!owner.Powers.TryGetValue(powerId, out var amount)) continue;
             if (owner.SkipNextPowerTriggers.Remove(powerId)) continue;
             var power = state.Definition.Powers[powerId];
-            if (power.TriggerEffect is { } triggerEffect)
-                EffectExecutor.Execute(session, owner, new ApplyPowerEffect(triggerEffect, amount, TargetSelector.Self));
-            if (power.DecrementOnTrigger)
-            {
-                if (amount <= 1) owner.MutablePowers.Remove(powerId);
-                else owner.MutablePowers[powerId] = amount - 1;
-            }
+            var triggerEffects = new List<EffectNode>();
+            if (power.TriggerEffect is { } triggerPower)
+                triggerEffects.Add(new ApplyPowerEffect(triggerPower, amount, TargetSelector.Self));
+            if (power.TriggerRuleEffect is { } triggerRule) triggerEffects.Add(triggerRule);
+            if (power.DecrementOnTrigger) triggerEffects.Add(new DecrementPowerEffect(powerId));
+            if (triggerEffects.Count > 0)
+                EffectExecutor.Execute(session, owner, new SequenceEffect(triggerEffects));
         }
         if (state.PendingChoice is not null || state.PendingCardChoice is not null) return false;
         state.PendingPowerQueue = null;

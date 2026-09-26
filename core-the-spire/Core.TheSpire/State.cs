@@ -252,16 +252,19 @@ internal sealed class GameState
         }
     }
 
-    internal void MoveCards(CardPile from, CardPile to, int count)
+    internal List<CardInstance> MoveCards(CardPile from, CardPile to, int count)
     {
         var source = GetPile(from);
         var destination = GetPile(to);
+        var moved = new List<CardInstance>();
         for (var i = 0; i < count && source.Count > 0; i++)
         {
             var card = source[0];
             source.RemoveAt(0);
             destination.Add(card);
+            moved.Add(card);
         }
+        return moved;
     }
 
     internal bool MoveCard(CardPile from, CardPile to, string instanceId, CardPilePosition position)
@@ -303,6 +306,19 @@ internal sealed class GameState
             return true;
         }
         return false;
+    }
+
+    internal void DecrementPower(EntityState owner, ContentId powerId)
+    {
+        if (!owner.MutablePowers.TryGetValue(powerId, out var amount)) return;
+        if (amount <= 1)
+        {
+            owner.MutablePowers.Remove(powerId);
+            owner.MutablePowerAppliers.Remove(powerId);
+            owner.SkipNextPowerTriggers.Remove(powerId);
+        }
+        else owner.MutablePowers[powerId] = amount - 1;
+        if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength--;
     }
 
     internal List<CardInstance> GetPile(CardPile pile) => pile switch

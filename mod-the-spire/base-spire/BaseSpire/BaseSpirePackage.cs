@@ -25,6 +25,7 @@ public static class BaseSpireIds
     public static readonly ContentId SecondWind = ContentId.Parse("base-spire:second-wind");
     public static readonly ContentId BattleTrance = ContentId.Parse("base-spire:battle-trance");
     public static readonly ContentId NoDrawPower = ContentId.Parse("base-spire:no-draw");
+    public static readonly ContentId FeelNoPain = ContentId.Parse("base-spire:feel-no-pain");
     public static readonly ContentId SwordBoomerang = ContentId.Parse("base-spire:sword-boomerang");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
@@ -84,6 +85,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             BaseSpireIds.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.NoDrawPower, PowerTrigger.AfterPlayerTurnEnd,
             Role: PowerRole.NoDraw, DecrementOnTrigger: true));
+        registry.Register(new PowerDefinition(BaseSpireIds.FeelNoPain, PowerTrigger.AfterCardExhausted,
+            TriggerRuleEffect: EffectDsl.Parse("""{"op":"gainBlock","amount":1,"perPowerStack":"base-spire:feel-no-pain"}""")));
         registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
