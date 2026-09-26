@@ -30,6 +30,17 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy);
 public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent, int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0);
+public enum RunEventKind { Event, Ancient }
+
+public sealed record RunEventDefinition(ContentId Id, RunEventKind Kind = RunEventKind.Event)
+{
+    public void Validate()
+    {
+        Id.Validate();
+        if (!Enum.IsDefined(Kind)) throw new ArgumentOutOfRangeException(nameof(Kind));
+    }
+}
+
 public sealed class EncounterDefinition
 {
     public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds,
@@ -90,6 +101,7 @@ public sealed class ContentRegistry
     private readonly Dictionary<ContentId, CardDefinition> _cards = [];
     private readonly Dictionary<ContentId, EnemyDefinition> _enemies = [];
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = [];
+    private readonly Dictionary<ContentId, RunEventDefinition> _runEvents = [];
     private readonly Dictionary<ContentId, PowerDefinition> _powers = [];
     private readonly Dictionary<ContentId, CharacterDefinition> _characters = [];
     private readonly Dictionary<ContentId, RunDefinition> _runs = [];
@@ -106,6 +118,7 @@ public sealed class ContentRegistry
         var cardsBefore = new Dictionary<ContentId, CardDefinition>(_cards);
         var enemiesBefore = new Dictionary<ContentId, EnemyDefinition>(_enemies);
         var encountersBefore = new Dictionary<ContentId, EncounterDefinition>(_encounters);
+        var runEventsBefore = new Dictionary<ContentId, RunEventDefinition>(_runEvents);
         var powersBefore = new Dictionary<ContentId, PowerDefinition>(_powers);
         var charactersBefore = new Dictionary<ContentId, CharacterDefinition>(_characters);
         var runsBefore = new Dictionary<ContentId, RunDefinition>(_runs);
@@ -122,6 +135,7 @@ public sealed class ContentRegistry
             Restore(_cards, cardsBefore);
             Restore(_enemies, enemiesBefore);
             Restore(_encounters, encountersBefore);
+            Restore(_runEvents, runEventsBefore);
             Restore(_powers, powersBefore);
             Restore(_characters, charactersBefore);
             Restore(_runs, runsBefore);
@@ -135,6 +149,12 @@ public sealed class ContentRegistry
     public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
     public void Register(EnemyDefinition definition) => AddUnique(_enemies, definition.Id, definition, "enemy");
     public void Register(EncounterDefinition definition) => AddUnique(_encounters, definition.Id, definition, "encounter");
+    public void Register(RunEventDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        AddUnique(_runEvents, definition.Id, definition, "run event");
+    }
     public void Register(PowerDefinition definition) => AddUnique(_powers, definition.Id, definition, "power");
     public void Register(CharacterDefinition definition) => AddUnique(_characters, definition.Id, definition, "character");
     public void Register(RunDefinition definition) => AddUnique(_runs, definition.Id, definition, "run");
@@ -173,17 +193,39 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
         foreach (var run in _runs.Values)
         foreach (var act in run.Acts)
+        {
             act.EncounterPool?.Validate(_encounters);
+            ValidateRunEventPool(act.EventIds, RunEventKind.Event, _runEvents);
+            ValidateRunEventPool(act.AncientIds, RunEventKind.Ancient, _runEvents);
+        }
+        foreach (var run in _runs.Values)
+        {
+            ValidateRunEventPool(run.SharedEventIds, RunEventKind.Event, _runEvents);
+            ValidateRunEventPool(run.SharedAncientIds, RunEventKind.Ancient, _runEvents);
+        }
         return new GameDefinition(
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
             new ReadOnlyDictionary<ContentId, EnemyDefinition>(new Dictionary<ContentId, EnemyDefinition>(_enemies)),
             new ReadOnlyDictionary<ContentId, EncounterDefinition>(new Dictionary<ContentId, EncounterDefinition>(_encounters)),
+            new ReadOnlyDictionary<ContentId, RunEventDefinition>(new Dictionary<ContentId, RunEventDefinition>(_runEvents)),
             new ReadOnlyDictionary<ContentId, PowerDefinition>(new Dictionary<ContentId, PowerDefinition>(_powers)),
             new ReadOnlyDictionary<ContentId, CharacterDefinition>(new Dictionary<ContentId, CharacterDefinition>(_characters)),
             new ReadOnlyDictionary<ContentId, RunDefinition>(new Dictionary<ContentId, RunDefinition>(_runs)),
             new ReadOnlyDictionary<ContentId, ICustomEffectHandler>(new Dictionary<ContentId, ICustomEffectHandler>(_customEffects)),
             _hooks.ToArray(), _runHooks.ToArray());
+    }
+
+    private static void ValidateRunEventPool(IEnumerable<ContentId> ids, RunEventKind expectedKind,
+        IReadOnlyDictionary<ContentId, RunEventDefinition> definitions)
+    {
+        foreach (var id in ids)
+        {
+            if (!definitions.TryGetValue(id, out var definition))
+                throw new InvalidOperationException($"Run event pool references unknown content '{id}'.");
+            if (definition.Kind != expectedKind)
+                throw new InvalidOperationException($"Run event '{id}' has kind '{definition.Kind}', expected '{expectedKind}'.");
+        }
     }
 
     private static void AddUnique<T>(Dictionary<ContentId, T> items, ContentId id, T definition, string kind)
@@ -212,6 +254,7 @@ public sealed class GameDefinition
 {
     internal GameDefinition(PackageInfo[] packages, IReadOnlyDictionary<ContentId, CardDefinition> cards,
         IReadOnlyDictionary<ContentId, EnemyDefinition> enemies, IReadOnlyDictionary<ContentId, EncounterDefinition> encounters,
+        IReadOnlyDictionary<ContentId, RunEventDefinition> runEvents,
         IReadOnlyDictionary<ContentId, PowerDefinition> powers,
         IReadOnlyDictionary<ContentId, CharacterDefinition> characters, IReadOnlyDictionary<ContentId, RunDefinition> runs,
         IReadOnlyDictionary<ContentId, ICustomEffectHandler> customEffects, IRuleHook[] hooks, IRunHook[] runHooks)
@@ -220,6 +263,7 @@ public sealed class GameDefinition
         Cards = cards;
         Enemies = enemies;
         Encounters = encounters;
+        RunEvents = runEvents;
         Powers = powers;
         Characters = characters;
         Runs = runs;
@@ -233,6 +277,7 @@ public sealed class GameDefinition
     public IReadOnlyDictionary<ContentId, CardDefinition> Cards { get; }
     public IReadOnlyDictionary<ContentId, EnemyDefinition> Enemies { get; }
     public IReadOnlyDictionary<ContentId, EncounterDefinition> Encounters { get; }
+    public IReadOnlyDictionary<ContentId, RunEventDefinition> RunEvents { get; }
     public IReadOnlyDictionary<ContentId, PowerDefinition> Powers { get; }
     public IReadOnlyDictionary<ContentId, CharacterDefinition> Characters { get; }
     public IReadOnlyDictionary<ContentId, RunDefinition> Runs { get; }

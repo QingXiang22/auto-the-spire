@@ -189,6 +189,7 @@ public sealed class CombatSliceTests
         Assert.False(definition.Cards.ContainsKey(ContentId.Parse("partial-mod:orphan")));
         Assert.False(definition.Characters.ContainsKey(ContentId.Parse("partial-mod:character")));
         Assert.False(definition.Runs.ContainsKey(ContentId.Parse("partial-mod:run")));
+        Assert.False(definition.RunEvents.ContainsKey(ContentId.Parse("partial-mod:event")));
         Assert.False(definition.RunHooks.Any(hook => hook.Id == ContentId.Parse("test-fixture:counting-run-hook")));
     }
 
@@ -514,7 +515,7 @@ public sealed class CombatSliceTests
         var pool = new ActEncounterPoolDefinition([weak], [regular, tagged], [elite], [boss],
             normalRoomCount: 7, weakNormalRoomCount: 2, eliteQueueCount: 3);
         var run = new RunDefinition(runId,
-            [new ActDefinition(ContentId.Parse("pool-test:act"), _ => map, EncounterPool: pool)]);
+            [new ActDefinition(ContentId.Parse("pool-test:act"), _ => map, encounterPool: pool)]);
         var package = new EncounterPoolPackage(run, new CharacterDefinition(characterId, 60, 50, []), enemyId,
         [
             new EncounterDefinition(weak, RunRoomType.Monster, [enemyId], isWeak: true),
@@ -586,12 +587,126 @@ public sealed class CombatSliceTests
         var pool = new ActEncounterPoolDefinition([], [encounterId], [encounterId], [encounterId],
             normalRoomCount: 1, weakNormalRoomCount: 0);
         var package = new EncounterPoolPackage(new RunDefinition(runId,
-            [new ActDefinition(ContentId.Parse("pool-validation:act"), _ => map, EncounterPool: pool)]),
+            [new ActDefinition(ContentId.Parse("pool-validation:act"), _ => map, encounterPool: pool)]),
             new CharacterDefinition(characterId, 60, 50, []), enemyId,
             [new EncounterDefinition(encounterId, RunRoomType.Monster, [enemyId])]);
         var registry = new ContentRegistry();
         registry.AddPackage(package);
         Assert.Throws<InvalidOperationException>(() => registry.Build());
+    }
+
+    public void ActRoomContentShufflesEventsBeforeSelectingTheAncientAndReplaysBySeed()
+    {
+        var start = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 0, MapPointType.Ancient, ["event"]),
+            new MapPointDefinition("event", 1, 0, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 2, 0, MapPointType.Boss, [])
+        ]);
+        var runId = ContentId.Parse("room-content-test:run");
+        var characterId = ContentId.Parse("room-content-test:character");
+        var localAncient = ContentId.Parse("room-content-test:local-ancient");
+        var sharedAncientA = ContentId.Parse("room-content-test:shared-ancient-a");
+        var sharedAncientB = ContentId.Parse("room-content-test:shared-ancient-b");
+        var eventA = ContentId.Parse("room-content-test:event-a");
+        var eventB = ContentId.Parse("room-content-test:event-b");
+        var sharedEvent = ContentId.Parse("room-content-test:shared-event");
+        var enemyId = ContentId.Parse("room-content-test:enemy");
+        var eliteEncounter = ContentId.Parse("room-content-test:elite-encounter");
+        var bossEncounter = ContentId.Parse("room-content-test:boss-encounter");
+        var encounterPool = new ActEncounterPoolDefinition([], [], [eliteEncounter], [bossEncounter],
+            normalRoomCount: 0, weakNormalRoomCount: 0);
+        var run = new RunDefinition(runId,
+            [new ActDefinition(ContentId.Parse("room-content-test:act"), _ => start,
+                resolveUnknownRoom: (_, _) => RunRoomType.Event,
+                encounterPool: encounterPool, eventIds: [eventA, eventB], ancientIds: [localAncient])],
+            sharedEventIds: [sharedEvent], sharedAncientIds: [sharedAncientA, sharedAncientB]);
+        var events = new[]
+        {
+            new RunEventDefinition(localAncient, RunEventKind.Ancient),
+            new RunEventDefinition(sharedAncientA, RunEventKind.Ancient),
+            new RunEventDefinition(sharedAncientB, RunEventKind.Ancient),
+            new RunEventDefinition(eventA),
+            new RunEventDefinition(eventB),
+            new RunEventDefinition(sharedEvent)
+        };
+        var registry = new ContentRegistry();
+        registry.AddPackage(new RoomContentPackage(run, new CharacterDefinition(characterId, 60, 50, []), events,
+            enemyId,
+            [
+                new EncounterDefinition(eliteEncounter, RunRoomType.Elite, [enemyId]),
+                new EncounterDefinition(bossEncounter, RunRoomType.Boss, [enemyId])
+            ]));
+        var definition = registry.Build();
+        var environment = new RunEnvironment(definition, runId, characterId);
+        var first = environment.Start(531);
+        var replay = environment.Start(531);
+        Assert.Equal(20, first.State.Random.Get("up_front").Counter);
+        var ancientId = environment.Observe(first).RoomStack[^1].EventId;
+        Assert.Equal(ancientId, environment.Observe(replay).RoomStack[^1].EventId);
+        Assert.Equal(localAncient, ancientId!.Value);
+
+        foreach (var session in new[] { first, replay })
+            environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
+        environment.Step(first, new ChooseMapPointAction("event"));
+        environment.Step(replay, new ChooseMapPointAction("event"));
+        var selected = new List<ContentId?> { environment.Observe(first).RoomStack[^1].EventId };
+        var replaySelected = new List<ContentId?> { environment.Observe(replay).RoomStack[^1].EventId };
+        for (var i = 0; i < 3; i++)
+        {
+            environment.PushSubRoom(first, RunRoomType.Event);
+            environment.PushSubRoom(replay, RunRoomType.Event);
+            selected.Add(environment.Observe(first).RoomStack[^1].EventId);
+            replaySelected.Add(environment.Observe(replay).RoomStack[^1].EventId);
+            if (i < 2)
+            {
+                environment.CompleteRoom(first, RunResult(RunOutcome.RoomCleared, environment.Observe(first)));
+                environment.CompleteRoom(replay, RunResult(RunOutcome.RoomCleared, environment.Observe(replay)));
+            }
+        }
+        Assert.True(selected.SequenceEqual(replaySelected));
+        Assert.Equal(3, selected.Where(id => id is not null).Distinct().Count());
+        Assert.Equal(selected[0], selected[3]);
+        Assert.True(selected.All(id => id is { } value && (value == eventA || value == eventB || value == sharedEvent)));
+    }
+
+    public void ActRoomPoolsRejectEventIdsWithTheWrongKind()
+    {
+        var id = ContentId.Parse("room-content-validation:event");
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 0, MapPointType.Start, ["boss"]),
+            new MapPointDefinition("boss", 1, 0, MapPointType.Boss, [])
+        ]);
+        var run = new RunDefinition(ContentId.Parse("room-content-validation:run"),
+        [
+            new ActDefinition(ContentId.Parse("room-content-validation:act"), _ => map, ancientIds: [id])
+        ]);
+        var package = new RoomContentPackage(run,
+            new CharacterDefinition(ContentId.Parse("room-content-validation:character"), 60, 50, []),
+            [new RunEventDefinition(id, RunEventKind.Event)]);
+        var registry = new ContentRegistry();
+        registry.AddPackage(package);
+        Assert.Throws<InvalidOperationException>(() => registry.Build());
+    }
+
+    public void SharedAncientDistributionConsumesOneDrawForEveryActAfterTheFirst()
+    {
+        var map = new ActMapDefinition("start", "boss",
+        [
+            new MapPointDefinition("start", 0, 0, MapPointType.Start, ["boss"]),
+            new MapPointDefinition("boss", 1, 0, MapPointType.Boss, [])
+        ]);
+        var run = new RunDefinition(ContentId.Parse("shared-ancient-test:run"),
+        [
+            new ActDefinition(ContentId.Parse("shared-ancient-test:act-1"), _ => map),
+            new ActDefinition(ContentId.Parse("shared-ancient-test:act-2"), _ => map),
+            new ActDefinition(ContentId.Parse("shared-ancient-test:act-3"), _ => map)
+        ]);
+        var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
+        var session = environment.Start(331);
+
+        Assert.Equal(2, session.State.Random.Get("up_front").Counter);
     }
 
     public void CombatEncounterSupportsMultipleEnemiesAndSelectedTargets()
@@ -1020,6 +1135,25 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class RoomContentPackage(RunDefinition run, CharacterDefinition character,
+        IEnumerable<RunEventDefinition> events, ContentId? enemyId = null,
+        IEnumerable<EncounterDefinition>? encounters = null) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("room-content-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(run);
+            registry.Register(character);
+            foreach (var runEvent in events) registry.Register(runEvent);
+            if (enemyId is { } id)
+                registry.Register(new EnemyDefinition(id, 20, 20,
+                    [new EnemyActionDefinition(ContentId.Parse("room-content-test:idle"),
+                        new GainBlockEffect(0), IntentKind.None)]));
+            foreach (var encounter in encounters ?? []) registry.Register(encounter);
+        }
+    }
+
     private sealed class MultiEnemyPackage(CardDefinition card, params EnemyDefinition[] enemies) : IRulePackage
     {
         public PackageInfo Info { get; } = new("multi-enemy-fixture", "1.0.0");
@@ -1048,6 +1182,7 @@ public sealed class CombatSliceTests
         public void Register(ContentRegistry registry)
         {
             registry.Register(new CountingRunHook());
+            registry.Register(new RunEventDefinition(ContentId.Parse("partial-mod:event")));
             registry.Register(new CardDefinition(ContentId.Parse("partial-mod:orphan"), 0, CardType.Skill, new GainBlockEffect(1)));
             registry.Register(new CharacterDefinition(ContentId.Parse("partial-mod:character"), 60, 50, []));
             registry.Register(new RunDefinition(ContentId.Parse("partial-mod:run"),
@@ -1156,6 +1291,9 @@ internal static class Program
         tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
         tests.ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters();
         tests.EncounterPoolsRejectMissingOrMisclassifiedContentAtBuild();
+        tests.ActRoomContentShufflesEventsBeforeSelectingTheAncientAndReplaysBySeed();
+        tests.ActRoomPoolsRejectEventIdsWithTheWrongKind();
+        tests.SharedAncientDistributionConsumesOneDrawForEveryActAfterTheFirst();
         tests.CombatEncounterSupportsMultipleEnemiesAndSelectedTargets();
         tests.UnknownMapPointKeepsMapTypeSeparateFromResolvedRoomType();
         tests.RunMapGenerationReplaysFromTheSessionSeed();
@@ -1165,7 +1303,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 32 gameplay checks.");
+        Console.WriteLine("Passed 35 gameplay checks.");
     }
 }
 
