@@ -1663,6 +1663,59 @@ public sealed class CombatSliceTests
         Assert.Equal(0, lost.Hp);
     }
 
+    public void CombatCardRewardsGenerateDistinctOptionsAndWriteTheChosenInstanceToTheDeck()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new CardRewardFixturePackage());
+        var definition = registry.Build();
+        var runEnvironment = new RunEnvironment(definition, CardRewardFixturePackage.RunId,
+            CardRewardFixturePackage.CharacterId);
+        var combatEnvironment = new CombatEnvironment(definition);
+        var run = runEnvironment.Start(810);
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        run.State.RoomStack[^1] = run.State.RoomStack[^1] with
+        {
+            EncounterId = CardRewardFixturePackage.EncounterId
+        };
+        var combat = combatEnvironment.StartForRun(run,
+            CardRewardFixturePackage.EnemyId.ToString(), enemyHp: 1);
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Enemy.Id));
+        var rewardObservation = runEnvironment.CompleteCombat(run, combat);
+        var rewards = rewardObservation.RoomStack[^1].Rewards;
+        var cardReward = rewards.Single(reward => reward.Kind == RunRewardKind.Card);
+        Assert.Equal(3, cardReward.CardOptions.Count);
+        Assert.Equal(3, cardReward.CardOptions.Select(card => card.CardId).Distinct().Count());
+        Assert.True(cardReward.CardOptions.All(card => CardRewardFixturePackage.RewardCardIds.Contains(card.CardId)));
+        Assert.Equal(10, run.State.RewardRandom.Counter);
+
+        var selected = cardReward.CardOptions[1];
+        Assert.Contains(runEnvironment.LegalActions(run), action => action ==
+            new ClaimCardRewardAction(cardReward.Id, selected.InstanceId));
+        Assert.Throws<InvalidOperationException>(() => runEnvironment.Step(run,
+            new ClaimCardRewardAction(cardReward.Id, "unknown-option")));
+        var claimed = runEnvironment.Step(run,
+            new ClaimCardRewardAction(cardReward.Id, selected.InstanceId));
+        Assert.Contains(claimed.DeckInstances, card => card == selected);
+        Assert.False(claimed.RoomStack[^1].Rewards.Any(reward => reward.Kind == RunRewardKind.Card));
+        Assert.True(claimed.RoomStack[^1].Rewards.Any(reward => reward.Kind == RunRewardKind.Gold));
+
+        var replayRunEnvironment = new RunEnvironment(definition, CardRewardFixturePackage.RunId,
+            CardRewardFixturePackage.CharacterId);
+        var replayCombatEnvironment = new CombatEnvironment(definition);
+        var replayRun = replayRunEnvironment.Start(810);
+        replayRunEnvironment.PushSubRoom(replayRun, RunRoomType.Monster);
+        replayRun.State.RoomStack[^1] = replayRun.State.RoomStack[^1] with
+        {
+            EncounterId = CardRewardFixturePackage.EncounterId
+        };
+        var replayCombat = replayCombatEnvironment.StartForRun(replayRun,
+            CardRewardFixturePackage.EnemyId.ToString(), enemyHp: 1);
+        replayCombatEnvironment.Step(replayCombat, new PlayCardAction(0, replayCombat.State.Enemy.Id));
+        var replayCards = replayRunEnvironment.CompleteCombat(replayRun, replayCombat)
+            .RoomStack[^1].Rewards.Single(reward => reward.Kind == RunRewardKind.Card).CardOptions;
+        Assert.True(cardReward.CardOptions.SequenceEqual(replayCards));
+    }
+
     public void ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters()
     {
         var points = new List<MapPointDefinition>
@@ -2288,6 +2341,49 @@ public sealed class CombatSliceTests
         public void AfterCombatVictory(RunHookContext context) => InvocationCount++;
     }
 
+    private sealed class CardRewardFixturePackage : IRulePackage
+    {
+        public static readonly ContentId RunId = ContentId.Parse("card-reward-fixture:run");
+        public static readonly ContentId CharacterId = ContentId.Parse("card-reward-fixture:character");
+        public static readonly ContentId CardPoolId = ContentId.Parse("card-reward-fixture:pool");
+        public static readonly ContentId StarterCardId = ContentId.Parse("card-reward-fixture:starter");
+        public static readonly ContentId EnemyId = ContentId.Parse("card-reward-fixture:enemy");
+        public static readonly ContentId EncounterId = ContentId.Parse("card-reward-fixture:encounter");
+        public static readonly ContentId[] RewardCardIds =
+        [
+            ContentId.Parse("card-reward-fixture:reward-one"),
+            ContentId.Parse("card-reward-fixture:reward-two"),
+            ContentId.Parse("card-reward-fixture:reward-three")
+        ];
+
+        public PackageInfo Info { get; } = new("card-reward-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var map = new ActMapDefinition("entry", "boss",
+            [
+                new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["boss"]),
+                new MapPointDefinition("boss", 1, 3, MapPointType.Boss, [])
+            ]);
+            registry.Register(new RunDefinition(RunId,
+                [new ActDefinition(ContentId.Parse("card-reward-fixture:act"), _ => map)]));
+            registry.Register(new CharacterDefinition(CharacterId, 30, 25, [StarterCardId],
+                cardPools: [CardPoolId]));
+            registry.Register(new CardDefinition(StarterCardId, 0, CardType.Attack,
+                new AttackEffect(5), Rarity: CardRarity.Basic));
+            foreach (var cardId in RewardCardIds)
+                registry.Register(new CardDefinition(cardId, 1, CardType.Attack,
+                    new AttackEffect(6), Rarity: CardRarity.Common,
+                    UpgradedEffect: new AttackEffect(9)));
+            registry.Register(new CardPoolDefinition(CardPoolId, RewardCardIds));
+            var enemyActionId = ContentId.Parse("card-reward-fixture:idle");
+            registry.Register(new EnemyDefinition(EnemyId, 5, 5,
+                [new EnemyActionDefinition(enemyActionId, new GainBlockEffect(0), IntentKind.None)]));
+            registry.Register(new EncounterDefinition(EncounterId, RunRoomType.Monster, [EnemyId],
+                minGoldReward: 10, maxGoldReward: 20));
+        }
+    }
+
     private sealed class RestSiteTestHook : IRunHook
     {
         public ContentId Id { get; } = ContentId.Parse("test-fixture:rest-site-hook");
@@ -2660,6 +2756,7 @@ internal static class Program
         tests.NestedCombatReturnsToItsParentRoom();
         tests.UnknownRoomOddsExposeOrderedModHooks();
         tests.RunCombatUsesTheRunDeckAndWritesItsOutcomeBack();
+        tests.CombatCardRewardsGenerateDistinctOptionsAndWriteTheChosenInstanceToTheDeck();
         tests.ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters();
         tests.EncounterPoolsRejectMissingOrMisclassifiedContentAtBuild();
         tests.ActRoomContentShufflesEventsBeforeSelectingTheAncientAndReplaysBySeed();
