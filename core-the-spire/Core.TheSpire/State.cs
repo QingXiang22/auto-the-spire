@@ -148,8 +148,9 @@ internal sealed class GameState
     internal PendingCardChoice? PendingCardChoice { get; set; }
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
+    internal CardInstance? PendingChoiceSelectedCard { get; set; }
     internal CardInstance? PendingPlayedCard { get; set; }
-    internal List<(EntityState Owner, EffectNode Effect, EntityState? Target)> PendingEffects { get; } = [];
+    internal List<(EntityState Owner, EffectNode Effect, EntityState? Target, CardInstance? SelectedCard)> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal EntityState? PendingPowerOwner { get; set; }
     internal PowerTrigger PendingPowerTrigger { get; set; }
@@ -275,6 +276,25 @@ internal sealed class GameState
         return true;
     }
 
+    internal bool IsUpgradeable(CardInstance card) => card.UpgradeLevel == 0
+        && Definition.Cards.TryGetValue(card.CardId, out var definition)
+        && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null);
+
+    internal bool UpgradeCard(GameSession session, string instanceId)
+    {
+        foreach (var pile in Enum.GetValues<CardPile>())
+        {
+            var cards = GetPile(pile);
+            var index = cards.FindIndex(card => card.InstanceId == instanceId);
+            if (index < 0 || !IsUpgradeable(cards[index])) continue;
+            var card = cards[index];
+            cards[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel + 1);
+            Emit(session, "card_upgraded", Player.Id, card.InstanceId, 1);
+            return true;
+        }
+        return false;
+    }
+
     internal List<CardInstance> GetPile(CardPile pile) => pile switch
     {
         CardPile.Draw => Player.MutableDrawPile,
@@ -288,7 +308,8 @@ internal sealed class GameState
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
-public sealed record PendingCardChoice(ChooseCardFromPileEffect Effect, IReadOnlyList<CardInstance> Options);
+internal sealed record PendingCardChoice(ChooseCardFromPileEffect Effect, IReadOnlyList<CardInstance> Options,
+    EntityState Owner, EntityState? Target, CardInstance? SelectedCard);
 public sealed record PendingCardChoiceView(string Prompt, IReadOnlyList<CardInstance> Options);
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
     IReadOnlyList<ContentId> Hand, int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,

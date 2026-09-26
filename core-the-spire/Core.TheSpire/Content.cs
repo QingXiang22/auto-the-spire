@@ -593,10 +593,18 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegative(addCards.Count);
                 break;
             case ChooseCardFromPileEffect chooseCard:
-                if (!Enum.IsDefined(chooseCard.From) || !Enum.IsDefined(chooseCard.To)
-                    || !Enum.IsDefined(chooseCard.DestinationPosition))
+                if (!Enum.IsDefined(chooseCard.From)
+                    || chooseCard.To is { } destination && !Enum.IsDefined(destination)
+                    || !Enum.IsDefined(chooseCard.DestinationPosition)
+                    || !Enum.IsDefined(chooseCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid card selection pile or destination.");
                 ArgumentException.ThrowIfNullOrWhiteSpace(chooseCard.Prompt);
+                if (chooseCard.OnSelected is { } onSelected) ValidateEffectReferences(onSelected, owner);
+                break;
+            case UpgradeCardsInPileEffect upgradeCards when !Enum.IsDefined(upgradeCards.Pile):
+                throw new InvalidOperationException($"{owner} upgrades an invalid card pile.");
+            case UpgradeCardsInPileEffect:
+            case UpgradeSelectedCardEffect:
                 break;
             case ChooseEffect choice:
                 foreach (var option in choice.Options)

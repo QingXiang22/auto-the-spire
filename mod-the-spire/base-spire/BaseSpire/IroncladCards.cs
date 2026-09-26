@@ -10,6 +10,10 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":6},{"op":"addCardsToPile","card":"base-spire:anger","pile":"discard","target":"self","inheritUpgradeFromPlayedCard":true}]}"""),
             Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"addCardsToPile","card":"base-spire:anger","pile":"discard","target":"self","inheritUpgradeFromPlayedCard":true}]}""")));
+        registry.Register(new CardDefinition(BaseSpireIds.Armaments, 1, CardType.Skill,
+            EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":5},{"op":"chooseCardFromPile","from":"hand","to":null,"prompt":"Choose a card to upgrade","filter":"upgradeable","onSelected":{"op":"upgradeSelectedCard"}}]}"""),
+            Target: TargetSelector.Self, Rarity: CardRarity.Common,
+            UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"gainBlock","amount":5},{"op":"upgradeCardsInPile","pile":"hand"}]}""")));
         registry.Register(new CardDefinition(BaseSpireIds.StrikeIronclad, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"attack","amount":6}"""), Rarity: CardRarity.Basic,
             UpgradedEffect: EffectDsl.Parse("""{"op":"attack","amount":9}""")));
@@ -75,7 +79,7 @@ internal static class IroncladCards
             Target: TargetSelector.AllOpponents, Rarity: CardRarity.Common,
             UpgradedEffect: EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"attack","amount":7,"target":"allOpponents"},{"op":"applyPower","power":"base-spire:vulnerable","amount":1,"target":"allOpponents"}]}""")));
         registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
-            [BaseSpireIds.Anger, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon, BaseSpireIds.BurningPact,
+            [BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon, BaseSpireIds.BurningPact,
                 BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.ShrugItOff,
