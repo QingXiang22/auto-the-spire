@@ -579,6 +579,11 @@ public sealed class ContentRegistry
                 break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
+            case LoseHpEffect loseHp:
+                if (!Enum.IsDefined(loseHp.Target))
+                    throw new InvalidOperationException($"{owner} has an invalid HP loss target.");
+                ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
+                break;
             case AddCardsToPileEffect addCards:
                 addCards.Card.Validate();
                 if (!_cards.ContainsKey(addCards.Card))
