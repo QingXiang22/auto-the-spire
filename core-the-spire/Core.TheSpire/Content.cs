@@ -147,6 +147,7 @@ public enum RunEventKind { Event, Ancient, Final }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainRunGoldEffect), "gainRunGold")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseRunGoldEffect), "loseRunGold")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealRunEffect), "healRun")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GainRunMaxHpEffect), "gainRunMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseRunHpEffect), "loseRunHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardToRunDeckEffect), "addCardToRunDeck")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseRunCardEffect), "chooseRunCard")]
@@ -157,6 +158,7 @@ public abstract record RunEffectNode;
 public sealed record GainRunGoldEffect(int Amount) : RunEffectNode;
 public sealed record LoseRunGoldEffect(int Amount) : RunEffectNode;
 public sealed record HealRunEffect(int Amount) : RunEffectNode;
+public sealed record GainRunMaxHpEffect(int Amount) : RunEffectNode;
 public sealed record LoseRunHpEffect(int Amount) : RunEffectNode;
 public sealed record AddCardToRunDeckEffect(ContentId Card) : RunEffectNode;
 public enum RunCardFilter { Any, Upgradeable }
@@ -682,6 +684,9 @@ public sealed class ContentRegistry
                 break;
             case HealRunEffect heal:
                 ArgumentOutOfRangeException.ThrowIfNegative(heal.Amount);
+                break;
+            case GainRunMaxHpEffect gainMaxHp:
+                ArgumentOutOfRangeException.ThrowIfNegative(gainMaxHp.Amount);
                 break;
             case LoseRunHpEffect loseHp:
                 ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
