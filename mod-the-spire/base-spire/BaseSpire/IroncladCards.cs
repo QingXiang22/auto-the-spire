@@ -39,6 +39,9 @@ internal static class IroncladCards
         registry.Register(new CardDefinition(BaseSpireIds.Barricade, 3, CardType.Power,
             new ApplyPowerEffect(BaseSpireIds.BarricadePower, 1), Target: TargetSelector.Self,
             Rarity: CardRarity.Rare, UpgradedCost: 2));
+        registry.Register(new CardDefinition(BaseSpireIds.Entrench, 2, CardType.Skill,
+            new GainBlockFromCurrentBlockEffect(), Target: TargetSelector.Self,
+            Rarity: CardRarity.Event, UpgradedCost: 1));
         registry.Register(new CardDefinition(BaseSpireIds.BodySlam, 1, CardType.Attack,
             EffectDsl.Parse("""{"op":"attackUsingBlock"}"""),
             Target: TargetSelector.SelectedTarget, Rarity: CardRarity.Common,

@@ -7,6 +7,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackUsingBlockEffect), "attackUsingBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockFromCurrentBlockEffect), "gainBlockFromCurrentBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DrawCardsEffect), "drawCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveCardEffect), "moveCard")]
@@ -37,6 +38,7 @@ public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null) : EffectNode;
+public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DrawCardsEffect(int Amount) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
@@ -195,6 +197,12 @@ internal static class EffectExecutor
                         : block.Amount;
                     owner.Block += blockAmount;
                     state.Emit(session, "block", owner.Id, owner.Id, blockAmount);
+                    break;
+                case GainBlockFromCurrentBlockEffect blockFromBlock:
+                    ArgumentOutOfRangeException.ThrowIfNegative(blockFromBlock.Multiplier);
+                    var gainedBlock = owner.Block * blockFromBlock.Multiplier;
+                    owner.Block += gainedBlock;
+                    state.Emit(session, "block", owner.Id, owner.Id, gainedBlock);
                     break;
                 case ApplyPowerEffect power:
                     if (power.Target == TargetSelector.AllOpponents)
