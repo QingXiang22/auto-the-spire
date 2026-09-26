@@ -54,6 +54,7 @@ public static class BaseSpireIds
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
     public static readonly ContentId Shrink = ContentId.Parse("base-spire:shrink");
     public static readonly ContentId Slimed = ContentId.Parse("base-spire:slimed");
+    public static readonly ContentId Dazed = ContentId.Parse("base-spire:dazed");
     public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -97,6 +98,9 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
         IroncladCards.Register(registry);
+        registry.Register(new CardDefinition(BaseSpireIds.Dazed, 0, CardType.Status,
+            new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
+            Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));
 
         var ritual = deadlyEnemies ? 6 : 5;
         var attack = deadlyEnemies ? 3 : 1;
