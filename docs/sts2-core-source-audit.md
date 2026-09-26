@@ -13,7 +13,7 @@
 | 战斗运行态 | `Core/Combat/CombatState.cs`, `Core/Entities/Players/PlayerCombatState.cs` | 战斗侧轮、玩家回合、行动阶段是不同概念；战斗牌区、资源和参与者状态分开保存。 | `GameState`、`PlayerCombatState`、`EntityState` 和战斗观察；支持有序多敌实例、按敌行动序列轮流行动、逐敌意图观察与显式选敌。Hook/状态枚举仍只覆盖切片。 | 多敌基础模型已实现；回合和内容覆盖待扩展 |
 | 仪式与力量 | `Core/Models/Powers/RitualPower.cs`, `StrengthPower.cs` | 敌方刚获得仪式时设置标记；阵营回合结束先跳过一次，后续触发力量。力量通过伤害修正参与攻击。 | `PowerDefinition` 触发阶段和跳过首次触发标志；敌方仪式测试验证第 2 次攻击 3、第 3 次攻击 8。 | 首轮已读；切片已实现 |
 | 祭仪教徒遭遇 | `Core/Models/Encounters/CultistsNormal.cs`, `Core/Models/Monsters/CalcifiedCultist.cs`, `DampCultist.cs` | `CultistsNormal` 按 Calcified Cultist、Damp Cultist 顺序生成两只怪。Calcified 初始 HP 普通 38–41 / ToughEnemies 39–42，行动是 Ritual(2) 后循环攻击 9 / DeadlyEnemies 11；Damp 普通 HP 52–54 / ToughEnemies 51–53，Ritual(5) 后循环攻击 1 / DeadlyEnemies 3。各自 Ritual 跳过施加时的 enemy side end，首次力量在下一次 enemy side end 生效。 | `base-spire` 注册两个怪物和原版 `CultistsNormal` encounter；`GameState` 保存有序多敌实例，各怪物轮流执行自己的行动序列，敌方回合结束后逐个触发其 powers；观察投影包含各敌生命/意图，选敌动作可指定实例。普通三回合总受伤 0/10/17，Deadly + Tough 的 HP 范围与攻击意图已验证。尚未覆盖其余原版怪物 AI/钩子。 | 此真实 encounter 首轮行为已映射；怪物库待扩展 |
-| Act 遭遇队列 | `Core/Models/ActModel.cs`, `Core/Helpers/GrabBag.cs`, `Core/Rooms/RoomSet.cs`, `Core/Runs/RunManager.cs` | Act 初始化按弱遭遇数量生成 weak normal 前缀，再补齐常规 normal 队列、生成固定数量 elite 队列、抽取 boss；grab bag 等权抽取并移除，优先回避与上一个遭遇重复或共享 tag，找不到候选时退化为普通抽取。RoomSet 按访问计数循环 normal/elite 队列。 | `EncounterPools.cs` 把 pool 引用与遭遇元数据分开；registry build 校验 ID、房间类别与 weak 标记。run 初始化按 `up_front` 流生成队列，选择房间时记录 encounter ID，选择后可直接建立对应战斗。合成 Act 覆盖确定性、weak 前缀、普通/elite 分类、标签/重复约束、队列循环和启动接缝。暂未配置真实 Act 池、精确源计数/全量内容、第二 boss 规则。 | 队列框架与消费接缝已实现；真实池数据和逐 seed 对照待做 |
+| Act 房间内容生成 | `Core/Models/ActModel.cs`, `Core/Helpers/GrabBag.cs`, `Core/Rooms/RoomSet.cs`, `Core/Runs/RunManager.cs` | Run 先洗牌共享 Ancient 并按随机数量分给后续 Acts；每幕依次洗牌 act/shared Event 列表、生成 weak/regular/elite 队列、抽 Boss、抽本幕 Ancient。grab bag 等权抽取并移除，优先回避与前一遭遇重复或共享 tag，无可选项时回退普通抽取。RoomSet 按访问计数循环房间队列；Event 优先选未访问项，耗尽后允许重复。 | `ActRoomContentState` 集中持有每幕 Event/Ancient/Encounter 选择，并按该 RNG 调用顺序生成。registry 校验 event/ancient ID 类型和 encounter 池分类；房间视图暴露选中的 Event/Ancient/Encounter ID。合成测试验证事件唯一优先、耗尽后循环、同 seed 重放，以及含共享 Ancient、Event、elite bag、Boss 和 act Ancient 时 `up_front` 的调用数。缺完整 base-spire 池、Event 条件与效果、第二 Boss 规则。 | 配置驱动的房间内容生成框架已实现；原版内容和逐 seed 对照待做 |
 | 铁甲战士起始内容 | `Core/Models/Characters/Ironclad.cs`, `Core/Models/Cards/StrikeIronclad.cs`, `DefendIronclad.cs`, `Bash.cs`, `Core/Models/Relics/BurningBlood.cs` | 铁甲战士开局生命 80、金币 99，卡组为 5 Strike、4 Defend、1 Bash，起始遗物为 Burning Blood；胜利后若存活则回复 6 生命。基础卡数值分别为 Strike 6、Defend 5、Bash 8 + Vulnerable 2。 | `base-spire` 注册完整起始数据及 Burning Blood；战斗胜利后的回血由 `IRunHook` 调用 `RunHookContext.Heal` 实现，并验证死亡时不触发、治疗不超过最大生命。 | 初始角色规则首轮已读；起始遗物切片已实现 |
 | 伤害与易伤 | `Core/Commands/DamageCmd.cs`, `Core/Commands/PowerCmd.cs`, `Core/Models/Powers/VulnerablePower.cs`, `Core/MonsterMoves/Intents/AttackIntent.cs` | 伤害由命令及修正 Hook 结算；易伤是 powered attack 的 1.5 倍乘算并按阵营阶段衰减；意图伤害属于当前状态的投影。 | 内核切片实现 Strength 加算、Vulnerable 乘算和敌方意图预览。尚未实现完整伤害属性、格挡顺序、取整与所有 Hook。 | 首轮已读；需精确对照 |
 | 敌人初始生命 | `Core/Entities/Creatures/Creature.cs` | 怪物初始化先设初值，`SetUniqueMonsterHpValue` 再依据传入 RNG 从 `[min,max]` 选择，并尝试避免同侧怪物生命重复。 | `CombatEnvironment.Start` 允许夹具指定 HP；未指定时用会话的 `encounter-hp` 流在闭区间选择。该流名尚未证明等于原版调用方所传流。 | 首轮已读；部分映射 |
@@ -32,7 +32,7 @@
 | Glory | 13 / 2 | DevotedSculptorWeak, ScrollsOfBitingWeak, TurretOperatorWeak | AxebotsNormal, ConstructMenagerieNormal, FabricatorNormal, FrogKnightNormal, GlobeHeadNormal, OwlMagistrateNormal, ScrollsOfBitingNormal, SlimedBerserkerNormal, TheLostAndForgottenNormal | KnightsElite, MechaKnightElite, SoulNexusElite | AeonglassBoss, QueenBoss, TestSubjectBoss |
 | Underdocks | 15 / 3 | CorpseSlugsWeak, SeapunkWeak, SludgeSpinnerWeak, ToadpolesWeak | CorpseSlugsNormal, CultistsNormal, FossilStalkerNormal, GremlinMercNormal, HauntedShipNormal, LivingFogNormal, PunchConstructNormal, SeapunkNormal, SewerClamNormal, TwoTailedRatsNormal | PhantasmalGardenersElite, SkulkingColonyElite, TerrorEelElite | LagavulinMatriarchBoss, SoulFyshBoss, WaterfallGiantBoss |
 
-精确 seed 对齐还依赖先行的 `RunManager.GenerateRooms()` 逻辑：它先对共享 Ancients 洗牌并分配到 Acts，随后每幕 `GenerateRooms()` 先洗牌 Event 列表、再生成 normal/elite/boss/Ancient 选择。当前模拟只复现遭遇池部分的调用顺序，所以队列可重放，但随机流调用计数与原版完整房间生成尚未对齐。
+精确 seed 对齐依赖传入与原版相同且顺序一致的完整内容池。核心现在复现共享 Ancient 分配与每幕 Event → Encounter 队列 → Boss → Ancient 的调用顺序；但 `base-spire` 尚未填充源清单中的全部内容，且未实现解锁/可用性筛选、教程发现顺序和第二 Boss，因此实际原版遭遇 ID 仍不能 seed 对齐。当前合成测试验证的是配置队列顺序与随机调用计数，不是完整源清单的差分。
 
 ## 后续深读顺序
 
@@ -48,7 +48,7 @@
 - 当前战斗内核是用于验证边界的首版切片，未达到原版战斗等价。特定角色遗物、反应式 Hook、多人协作、完整卡牌区域规则、敌人意图选择、Ascension 配置和伤害类型都待实现。
 - `base-spire` 中现有状态/效果 primitive 是内核测试语义，不代表可直接无误迁移所有原版机制。
 - 目前 `RandomStreams` 复现 RNG 算法与确定性命名流基础，但尚未复现原版全部种子派生、RNG 分类、玩家槽种子和存档计数器语义。
-- `Runs.cs` 提供通用整局流转和可嵌套房间栈；`CombatEnvironment.StartEncounterForRun` 按指定的注册遭遇从 run 牌组及共享 `shuffle` 流构造多敌战斗，`RunEnvironment.CompleteCombat` 将终局生命回写并完成当前战斗房间。尚未实现各 Act 的原版 Encounter 池生成/轮换、原版事件队列或真实怪物初始化。
+- `Runs.cs` / `ActRoomContent.cs` 提供通用整局流转、可嵌套房间栈、配置驱动的事件/遭遇队列及选择视图；`CombatEnvironment.StartCurrentEncounterForRun` 按房间已选遭遇从 run 牌组及共享 `shuffle` 流构造多敌战斗，`RunEnvironment.CompleteCombat` 将终局生命回写并完成当前战斗房间。尚未实现原版全量池数据、事件选项与结算、运行内容可用性筛选或真实怪物初始化。
 - 当前完整性范围是单人玩法到胜负、快照内全部原版内容默认全解锁；账号级元进度、多人、UI/音画和平台服务排除。
 
 ## 整局规则迁移队列

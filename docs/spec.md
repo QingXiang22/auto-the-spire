@@ -35,7 +35,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 - `base-spire` 依赖内核提供的注册与扩展接口；其他 mod 依赖内核，也可显式依赖 `base-spire` 中的内容 ID。
 - `net-the-spire` 提供统一协议，分别实现模拟后端（调用内核及已组合规则包）和真实游戏后端（连接外部游戏）。`ai-the-spire` 只使用协议接口；`sts2/` 是对照资料，不成为内核的编译依赖。
 
-统一协议的首批操作是启动或重置会话、获取观察与合法动作、提交一个玩家决策、读取结果与后端能力。模拟后端可接受测试场景与种子；真实游戏后端只能声明自己实际支持的重置和控制能力。规则包组合发生在启动会话前，同一会话的规则集版本保持固定。Core 提供通用整局地图流转、地图访问历史和 Unknown 房间解析；`base-spire` 已按恢复源码迁移单人标准地图生成流程及赔率配置。Act 可声明 normal weak/regular、elite、boss encounter 池；`ContentRegistry.Build()` 校验遭遇存在且房间类别/weak 标记匹配，队列在 run 初始化时从 `up_front` 流生成，并在房间进入时将选中的 encounter ID 放入可观察房间帧。`StartCurrentEncounterForRun` 可直接消费该选择。生成实现等权 grab bag、相邻重复/tag 回避和无可用项时的源逻辑回退；普通及 elite 队列按生成顺序循环，boss 暂时固定为本幕生成的一个 encounter。`CombatEnvironment.StartEncounterForRun` 从整局牌组用共享 `shuffle` 流洗牌、抽 5 张并建立多敌战斗；`RunEnvironment.CompleteCombat` 将终局战斗生命和结果写回整局并执行房间结算。`base-spire` 已注册由 Calcified Cultist 与 Damp Cultist 组成的 `CultistsNormal` encounter，但还没有足够的原版遭遇库来配置真实 Act 池，因此此机制由合成内容验证。遭遇队列虽使用同一命名随机流，但目前生成顺序未包含原版在其前面的共享 Ancient 与 Event 队列抽取，不能宣称同 seed 的 encounter ID 已与原版对齐。
+统一协议的首批操作是启动或重置会话、获取观察与合法动作、提交一个玩家决策、读取结果与后端能力。模拟后端可接受测试场景与种子；真实游戏后端只能声明自己实际支持的重置和控制能力。规则包组合发生在启动会话前，同一会话的规则集版本保持固定。Core 提供通用整局地图流转、地图访问历史和 Unknown 房间解析；`base-spire` 已按恢复源码迁移单人标准地图生成流程及赔率配置。Act 可声明 normal weak/regular、elite、boss encounter 池，以及 act-local/shared Event 和 Ancient ID 池；`ContentRegistry.Build()` 校验 ID 存在及事件类别。核心按原版顺序在 `up_front` 流上洗牌共享 Ancient、分配至后续 Acts、洗牌 Event 池、生成 encounter 队列与 Boss、抽取本幕 Ancient。进入事件房时，选中的 Event ID 出现在可观察房间帧；单局未访问过的事件会优先出队，耗尽后允许重复。encounter 同样在房间帧中暴露并可直接启动战斗。遭遇池实现等权 grab bag、相邻重复/tag 回避、源逻辑回退和队列轮换；Boss 暂时固定为本幕生成的一个 encounter。测试验证了这一配置驱动的调用计数顺序与 seed 重放。`base-spire` 尚未注册原版完整事件/遭遇/Ancient 池，且 Event 的具体选项与结算效果尚未实现，因此真实内容 seed 仍未和原版对齐。
 
 ## 3. 规则定义、游戏运行态和外部视图
 
@@ -77,7 +77,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 
 ### 4.2 其他场景
 
-事件、商店、休息、奖励和路线选择场景先保留独立类型与决策接口，再逐步补全各自的库存、选项、局部变量及结算规则。房间可压栈与出栈；首个纵向实现以战斗为重点。原版 [`StandardActMap`](../sts2/src/Core/Map/StandardActMap.cs) 通过路径生成、节点类型分配、限制检查和后处理构图，且 [`RunManager.GenerateMap`](../sts2/src/Core/Runs/RunManager.cs) 提供地图修改 hook。因此 `base-spire` 的地图内容应包含参数和生成器实现或受控扩展，不能预设一份静态 JSON 足以表达原版地图。
+事件、商店、休息、奖励和路线选择场景先保留独立类型与决策接口，再逐步补全各自的库存、选项、局部变量及结算规则。Run 事件池当前提供 Event/Ancient 内容定义、按源顺序生成和可观察 ID 选择，但事件选项与状态效果仍由后续 DSL/房间规则迭代实现。房间可压栈与出栈；首个纵向实现以战斗为重点。原版 [`StandardActMap`](../sts2/src/Core/Map/StandardActMap.cs) 通过路径生成、节点类型分配、限制检查和后处理构图，且 [`RunManager.GenerateMap`](../sts2/src/Core/Runs/RunManager.cs) 提供地图修改 hook。因此 `base-spire` 的地图内容应包含参数和生成器实现或受控扩展，不能预设一份静态 JSON 足以表达原版地图。
 
 ## 5. 决策边界与效果结算
 
@@ -136,7 +136,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 
-后续按审计索引继续补足原版 Architect/事件队列、真实 Act encounter 内容及双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化、非战斗房间和完整内容库。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
+后续按审计索引继续补足原版 Architect 与事件选项/结算、真实 Act encounter/Event/Ancient 内容池及其可用性筛选、双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化和非战斗房间。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
 
 ## 9. 待验证事项
 
