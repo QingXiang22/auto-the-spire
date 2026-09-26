@@ -16,6 +16,8 @@ public static class BaseSpireIds
     public static readonly ContentId ShrinkerBeetle = ContentId.Parse("base-spire:shrinker-beetle");
     public static readonly ContentId ShrinkerBeetleWeak = ContentId.Parse("base-spire:shrinker-beetle-weak");
     public static readonly ContentId OvergrowthCrawlers = ContentId.Parse("base-spire:overgrowth-crawlers");
+    public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
+    public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
@@ -118,6 +120,27 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new EncounterDefinition(BaseSpireIds.OvergrowthCrawlers, RunRoomType.Monster,
             [BaseSpireIds.ShrinkerBeetle, BaseSpireIds.FuzzyWurmCrawler],
             tags: [ContentId.Parse("base-spire:shrinker"), ContentId.Parse("base-spire:crawler")]));
+
+        var nibbitButt = ContentId.Parse("base-spire:nibbit-butt");
+        var nibbitSlice = ContentId.Parse("base-spire:nibbit-slice");
+        var nibbitHiss = ContentId.Parse("base-spire:nibbit-hiss");
+        var nibbitSliceDamage = deadlyEnemies ? 7 : 6;
+        var nibbitSliceBlock = toughEnemies ? 6 : 5;
+        var nibbitHissStrength = deadlyEnemies ? 3 : 2;
+        registry.Register(new EnemyDefinition(BaseSpireIds.Nibbit,
+            toughEnemies ? 44 : 42, toughEnemies ? 48 : 46,
+            [
+                new EnemyActionDefinition(nibbitButt, new AttackEffect(12), IntentKind.Attack,
+                    12, NextActionId: nibbitSlice),
+                new EnemyActionDefinition(nibbitSlice,
+                    new SequenceEffect([new AttackEffect(nibbitSliceDamage), new GainBlockEffect(nibbitSliceBlock)]),
+                    IntentKind.Attack, nibbitSliceDamage, NextActionId: nibbitHiss),
+                new EnemyActionDefinition(nibbitHiss, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
+                    AppliedPower: BaseSpireIds.Strength, AppliedPowerAmount: nibbitHissStrength,
+                    NextActionId: nibbitButt)
+            ]));
+        registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsWeak, RunRoomType.Monster,
+            [BaseSpireIds.Nibbit], isWeak: true, tags: [ContentId.Parse("base-spire:nibbit")]));
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
