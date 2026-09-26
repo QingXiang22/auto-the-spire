@@ -143,9 +143,10 @@ internal sealed class GameState
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
     public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0))
-        && PendingChoice is null && PendingCardChoice is null && PendingEffects.Count == 0;
+        && PendingChoice is null && PendingCardChoice is null && PendingCardSetChoice is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }
     internal PendingCardChoice? PendingCardChoice { get; set; }
+    internal PendingCardSetChoice? PendingCardSetChoice { get; set; }
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
     internal CardInstance? PendingChoiceSelectedCard { get; set; }
@@ -154,6 +155,7 @@ internal sealed class GameState
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal int FlushHookIndex { get; set; }
     internal HashSet<string> TemporarilyRetainedCards { get; } = new(StringComparer.Ordinal);
+    internal bool PreFlushShouldFlush { get; set; }
     internal IReadOnlyList<CardInstance> FlushedCards { get; set; } = [];
     internal IReadOnlyList<CardInstance> RetainedCards { get; set; } = [];
     internal EntityState? PendingPowerOwner { get; set; }
@@ -350,7 +352,20 @@ public sealed record GameEvent(int Sequence, string Type, string Source, string 
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal sealed record PendingCardChoice(ChooseCardFromPileEffect Effect, IReadOnlyList<CardInstance> Options,
     EntityState Owner, EntityState? Target, CardInstance? SelectedCard);
+internal sealed class PendingCardSetChoice(ChooseCardsFromPileEffect effect, IEnumerable<CardInstance> options,
+    EntityState owner, EntityState? target, CardInstance? selectedCard, int maxChoices)
+{
+    public ChooseCardsFromPileEffect Effect { get; } = effect;
+    public List<CardInstance> Options { get; } = options.ToList();
+    public EntityState Owner { get; } = owner;
+    public EntityState? Target { get; } = target;
+    public CardInstance? SelectedCard { get; } = selectedCard;
+    public int MaxChoices { get; } = maxChoices;
+    public List<CardInstance> Selected { get; } = [];
+}
 public sealed record PendingCardChoiceView(string Prompt, IReadOnlyList<CardInstance> Options);
+public sealed record PendingCardSetChoiceView(string Prompt, IReadOnlyList<CardInstance> Options,
+    IReadOnlyList<CardInstance> Selected, int MinChoices, int MaxChoices);
 public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, int PlayerBlock, int Energy,
     IReadOnlyList<ContentId> Hand, IReadOnlyDictionary<ContentId, int> PlayerPowers,
     int EnemyHp, int EnemyMaxHp, int EnemyBlock, int EnemyStrength,
@@ -360,13 +375,15 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile,
     IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
     IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
-    IReadOnlyList<CardInstance> PlayPileInstances, PendingCardChoiceView? PendingCardChoice);
+    IReadOnlyList<CardInstance> PlayPileInstances, PendingCardChoiceView? PendingCardChoice,
+    PendingCardSetChoiceView? PendingCardSetChoice);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;
 public sealed record EndTurnAction : PlayerAction;
 public sealed record ChooseOptionAction(int OptionIndex) : PlayerAction;
 public sealed record ChooseCardAction(string CardInstanceId) : PlayerAction;
+public sealed record ConfirmCardSelectionAction : PlayerAction;
 
 public sealed record StepResult(CombatObservation Observation, IReadOnlyList<GameEvent> Events, bool NeedsChoice);
 

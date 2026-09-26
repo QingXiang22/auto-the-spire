@@ -1182,6 +1182,64 @@ public sealed class CombatSliceTests
         Assert.Equal(new[] { retainedCard.InstanceId }, hook.RetainedCards.Select(card => card.InstanceId));
     }
 
+    public void WellLaidPlansAllowsSelectingUpToItsPowerAmountOrConfirmingNone()
+    {
+        Assert.Equal(new ChooseCardsFromPileEffect(CardPile.Hand, "Choose cards", 0, 2,
+                CardSelectionFilter.NotRetained, new RetainSelectedCardEffect()),
+            EffectDsl.Parse("""{"op":"chooseCardsFromPile","from":"hand","prompt":"Choose cards","minChoices":0,"maxChoices":2,"filter":"notRetained","onSelected":{"op":"retainSelectedCard"}}"""));
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(69, "ironclad", 56, 65,
+            [BaseSpireIds.WellLaidPlans, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        var hand = state.State.Player.HandInstances.ToArray();
+
+        var paused = env.Step(state, new EndTurnAction());
+        var choice = paused.Observation.PendingCardSetChoice!;
+        Assert.Equal(0, choice.MinChoices);
+        Assert.Equal(1, choice.MaxChoices);
+        Assert.Equal(2, choice.Options.Count);
+        Assert.Contains(env.LegalActions(state), action => action is ConfirmCardSelectionAction);
+
+        env.Step(state, new ChooseCardAction(hand[0].InstanceId));
+        Assert.Equal(1, state.State.PendingCardSetChoice!.Selected.Count);
+        Assert.Contains(env.LegalActions(state), action => action is ConfirmCardSelectionAction);
+        env.Step(state, new ConfirmCardSelectionAction());
+
+        Assert.Contains(state.State.Player.HandInstances, card => card.InstanceId == hand[0].InstanceId);
+        Assert.Contains(state.State.Events, gameEvent => gameEvent.Type == "card_retained"
+            && gameEvent.Target == hand[0].InstanceId);
+        Assert.Contains(state.State.Events, gameEvent => gameEvent.Type == "card_moved"
+            && gameEvent.Target == hand[1].InstanceId);
+
+        var skip = env.Start(70, "ironclad", 56, 65,
+            [BaseSpireIds.WellLaidPlans, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        env.Step(skip, new PlayCardAction(0, skip.State.Player.Id));
+        var skippedCards = skip.State.Player.HandInstances.ToArray();
+        env.Step(skip, new EndTurnAction());
+        env.Step(skip, new ConfirmCardSelectionAction());
+        Assert.Equal(2, skip.State.Events.Count(gameEvent => gameEvent.Type == "card_moved"
+            && skippedCards.Any(skipped => skipped.InstanceId == gameEvent.Target)));
+
+        var upgraded = env.Start(71, "ironclad", 56, 65,
+            [BaseSpireIds.WellLaidPlans, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        var plans = upgraded.State.Player.MutableHand[0];
+        upgraded.State.Player.MutableHand[0] = new CardInstance(plans.InstanceId, plans.CardId, upgradeLevel: 1);
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
+        var upgradeCards = upgraded.State.Player.HandInstances.ToArray();
+        var upgradedChoice = env.Step(upgraded, new EndTurnAction()).Observation.PendingCardSetChoice!;
+        Assert.Equal(2, upgradedChoice.MaxChoices);
+        env.Step(upgraded, new ChooseCardAction(upgradeCards[0].InstanceId));
+        env.Step(upgraded, new ChooseCardAction(upgradeCards[1].InstanceId));
+        Assert.Equal(1, env.LegalActions(upgraded).Count(action => action is ConfirmCardSelectionAction));
+        Assert.False(env.LegalActions(upgraded).Any(action => action is ChooseCardAction));
+        env.Step(upgraded, new ConfirmCardSelectionAction());
+        Assert.Equal(2, upgraded.State.Events.Count(gameEvent => gameEvent.Type == "card_retained"
+            && upgradeCards.Any(card => card.InstanceId == gameEvent.Target)));
+    }
+
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2446,6 +2504,7 @@ internal static class Program
         tests.RetainedCardInstancesStayInHandAcrossEnemyTurn();
         tests.HandCleanupHooksCanSuppressEtherealAndFlush();
         tests.BeforeFlushHookCanPauseToRetainASelectedCardAndAfterFlushSeesTheResult();
+        tests.WellLaidPlansAllowsSelectingUpToItsPowerAmountOrConfirmingNone();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
