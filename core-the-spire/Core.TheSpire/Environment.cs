@@ -197,7 +197,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             ? state.CalculateDamage(primary.Creature, state.Player.Creature, next.IntentDamage)
             : 0;
         return new CombatObservation(state.Turn, state.Player.Creature.Hp, state.Player.Creature.MaxHp,
-            state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(), primary.Creature.Hp,
+            state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(),
+            new Dictionary<ContentId, int>(state.Player.Creature.Powers), primary.Creature.Hp,
             primary.Creature.MaxHp, primary.Creature.Block, primary.Creature.Strength, next.Intent, intentDamage,
             new Dictionary<ContentId, int>(primary.Creature.Powers), state.IsTerminal,
             state.PendingChoice is { } choice ? new PendingChoiceView(choice.Prompt, choice.Options.Select(option => option.Label).ToArray()) : null,
