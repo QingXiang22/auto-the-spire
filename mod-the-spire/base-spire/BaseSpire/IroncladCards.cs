@@ -33,7 +33,8 @@ internal static class IroncladCards
             EffectDsl.Parse("""{"op":"attack","amount":32}"""), Rarity: CardRarity.Uncommon,
             UpgradedEffect: EffectDsl.Parse("""{"op":"attack","amount":42}""")));
         registry.Register(new CardDefinition(BaseSpireIds.BodySlam, 1, CardType.Attack,
-            new AttackUsingBlockEffect(), Target: TargetSelector.SelectedTarget, Rarity: CardRarity.Common,
+            EffectDsl.Parse("""{"op":"attackUsingBlock"}"""),
+            Target: TargetSelector.SelectedTarget, Rarity: CardRarity.Common,
             UpgradedCost: 0));
         registry.Register(new CardDefinition(BaseSpireIds.BurningPact, 1, CardType.Skill,
             EffectDsl.Parse("""{"op":"sequence","effects":[{"op":"chooseCardFromPile","from":"hand","to":"exhaust","prompt":"Choose a card to exhaust","destinationPosition":"bottom"},{"op":"drawCards","amount":2}]}"""),
