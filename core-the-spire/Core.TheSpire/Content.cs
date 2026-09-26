@@ -587,6 +587,9 @@ public sealed class ContentRegistry
             case RandomAttackEffect randomAttack:
                 ArgumentOutOfRangeException.ThrowIfNegative(randomAttack.Amount);
                 break;
+            case AttackUsingBlockEffect attackUsingBlock when !Enum.IsDefined(attackUsingBlock.Target)
+                || attackUsingBlock.Target == TargetSelector.RandomEnemy:
+                throw new InvalidOperationException($"{owner} has an invalid block-based attack target.");
             case AddCardsToPileEffect addCards:
                 addCards.Card.Validate();
                 if (!_cards.ContainsKey(addCards.Card))

@@ -38,7 +38,8 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
-        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon,
+        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Bloodletting,
+                BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam,
                 BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
                 BaseSpireIds.DemonForm, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
                 BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
@@ -50,6 +51,7 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Armaments].Rarity);
+        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.BodySlam].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Headbutt].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.TrueGrit].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.SwordBoomerang].Rarity);
@@ -1001,6 +1003,33 @@ public sealed class CombatSliceTests
         env.Step(attacksOnly, new PlayCardAction(0, attacksOnly.State.Player.Id));
         Assert.Equal(0, attacksOnly.State.Player.Creature.Block);
         Assert.Equal(0, attacksOnly.State.Player.ExhaustPileInstances.Count);
+    }
+
+    public void BodySlamUsesCurrentBlockAsAttackDamageAndUpgradesItsCost()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(59, "ironclad", 56, 65, [BaseSpireIds.BodySlam],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        state.State.Player.Creature.Block = 8;
+        state.State.Player.Creature.Strength = 2;
+        env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+
+        Assert.Equal(43, state.State.Enemy.Hp);
+        Assert.Equal(8, state.State.Player.Creature.Block);
+        Assert.Equal(2, state.State.Player.Energy);
+
+        var upgraded = env.Start(60, "ironclad", 56, 65, [BaseSpireIds.BodySlam],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("fixture-body-slam-upgraded",
+            BaseSpireIds.BodySlam, upgradeLevel: 1);
+        upgraded.State.Player.Creature.Block = 6;
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+
+        Assert.Equal(47, upgraded.State.Enemy.Hp);
+        Assert.Equal(6, upgraded.State.Player.Creature.Block);
+        Assert.Equal(3, upgraded.State.Player.Energy);
+        Assert.Equal(0, Build(new BaseSpirePackage()).Cards[BaseSpireIds.BodySlam]
+            .ResolveCost(new CardInstance("fixture-body-slam-cost", BaseSpireIds.BodySlam, upgradeLevel: 1)));
     }
 
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
@@ -2203,6 +2232,7 @@ internal static class Program
         tests.TrueGritUsesSeededRandomExhaustAndUpgradedPlayerChoice();
         tests.SwordBoomerangRandomizesEveryHitAndReplaysTheTargetSequence();
         tests.SecondWindProcessesEveryNonAttackHandCardInOrder();
+        tests.BodySlamUsesCurrentBlockAsAttackDamageAndUpgradesItsCost();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2245,7 +2275,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 52 gameplay checks.");
+        Console.WriteLine("Passed 53 gameplay checks.");
     }
 }
 

@@ -11,6 +11,7 @@ public static class BaseSpireIds
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
+    public static readonly ContentId BodySlam = ContentId.Parse("base-spire:body-slam");
     public static readonly ContentId Bloodletting = ContentId.Parse("base-spire:bloodletting");
     public static readonly ContentId BurningPact = ContentId.Parse("base-spire:burning-pact");
     public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");
