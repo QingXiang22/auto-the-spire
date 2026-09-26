@@ -11,6 +11,8 @@ public static class BaseSpireIds
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
     public static readonly ContentId CalcifiedCultist = ContentId.Parse("base-spire:calcified-cultist");
     public static readonly ContentId CultistsNormal = ContentId.Parse("base-spire:cultists-normal");
+    public static readonly ContentId FuzzyWurmCrawler = ContentId.Parse("base-spire:fuzzy-wurm-crawler");
+    public static readonly ContentId FuzzyWurmCrawlerWeak = ContentId.Parse("base-spire:fuzzy-wurm-crawler-weak");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
@@ -71,6 +73,23 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             toughEnemies ? 39 : 38, toughEnemies ? 42 : 41, [calcifiedIncantation, calcifiedDarkStrike]));
         registry.Register(new EncounterDefinition(BaseSpireIds.CultistsNormal, RunRoomType.Monster,
             [BaseSpireIds.CalcifiedCultist, BaseSpireIds.DampCultist]));
+
+        var crawlerDamage = deadlyEnemies ? 6 : 4;
+        var firstAcidGoop = ContentId.Parse("base-spire:fuzzy-wurm-first-acid-goop");
+        var inhale = ContentId.Parse("base-spire:fuzzy-wurm-inhale");
+        var acidGoop = ContentId.Parse("base-spire:fuzzy-wurm-acid-goop");
+        registry.Register(new EnemyDefinition(BaseSpireIds.FuzzyWurmCrawler,
+            toughEnemies ? 58 : 55, toughEnemies ? 59 : 57,
+            [
+                new EnemyActionDefinition(firstAcidGoop, new AttackEffect(crawlerDamage), IntentKind.Attack,
+                    crawlerDamage, NextActionId: inhale),
+                new EnemyActionDefinition(inhale, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
+                    AppliedPower: BaseSpireIds.Strength, AppliedPowerAmount: 7, NextActionId: acidGoop),
+                new EnemyActionDefinition(acidGoop, new AttackEffect(crawlerDamage), IntentKind.Attack,
+                    crawlerDamage, NextActionId: firstAcidGoop)
+            ]));
+        registry.Register(new EncounterDefinition(BaseSpireIds.FuzzyWurmCrawlerWeak, RunRoomType.Monster,
+            [BaseSpireIds.FuzzyWurmCrawler], isWeak: true, tags: [ContentId.Parse("base-spire:crawler")]));
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());

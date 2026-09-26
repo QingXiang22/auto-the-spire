@@ -29,7 +29,9 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     bool SkipFirstTriggerWhenAppliedToPlayer = false);
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     bool Exhaust = false, TargetSelector Target = TargetSelector.FirstEnemy);
-public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent, int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0);
+public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent,
+    int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
+    ContentId? NextActionId = null);
 public enum RunEventKind { Event, Ancient }
 
 public sealed record RunEventDefinition(ContentId Id, RunEventKind Kind = RunEventKind.Event)
@@ -70,19 +72,44 @@ public sealed class EncounterDefinition
 }
 public sealed record EnemyDefinition
 {
-    public EnemyDefinition(ContentId id, int minHp, int maxHp, IReadOnlyList<EnemyActionDefinition> actions, bool loopLastAction = true)
+    private readonly IReadOnlyDictionary<ContentId, int> _actionIndexes;
+
+    public EnemyDefinition(ContentId id, int minHp, int maxHp, IReadOnlyList<EnemyActionDefinition> actions,
+        bool loopLastAction = true, ContentId? startingActionId = null)
     {
+        id.Validate();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minHp);
+        if (maxHp < minHp) throw new ArgumentOutOfRangeException(nameof(maxHp));
+        ArgumentNullException.ThrowIfNull(actions);
+        var copiedActions = actions.ToArray();
+        if (copiedActions.Any(action => action is null))
+            throw new ArgumentException("Enemy actions cannot be null.", nameof(actions));
+        foreach (var action in copiedActions) action.Id.Validate();
+        var indexes = copiedActions.Select((action, index) => (action.Id, index))
+            .ToDictionary(pair => pair.Id, pair => pair.index);
+        foreach (var action in copiedActions)
+        {
+            if (action.NextActionId is { } next && !indexes.ContainsKey(next))
+                throw new ArgumentException($"Enemy action '{action.Id}' references unknown successor '{next}'.", nameof(actions));
+        }
+        var startId = startingActionId ?? copiedActions.FirstOrDefault()?.Id;
+        if (startId is { } starting && !indexes.ContainsKey(starting))
+            throw new ArgumentException($"Starting action '{starting}' is not in the enemy action graph.", nameof(startingActionId));
         Id = id;
         MinHp = minHp;
         MaxHp = maxHp;
-        Actions = Array.AsReadOnly(actions.ToArray());
+        Actions = Array.AsReadOnly(copiedActions);
         LoopLastAction = loopLastAction;
+        StartingActionIndex = startId is { } value ? indexes[value] : 0;
+        _actionIndexes = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(indexes);
     }
     public ContentId Id { get; }
     public int MinHp { get; }
     public int MaxHp { get; }
     public IReadOnlyList<EnemyActionDefinition> Actions { get; }
     public bool LoopLastAction { get; }
+    public int StartingActionIndex { get; }
+    internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
 }
 
 public enum CardType { Attack, Skill, Power }
