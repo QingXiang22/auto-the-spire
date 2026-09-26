@@ -15,6 +15,8 @@ public sealed class RuleHookContext
 
     public int GetInt(string key, int defaultValue = 0) => _session.State.GetModInt(_modId, key, defaultValue);
     public void SetInt(string key, int value) => _session.State.SetModInt(_modId, key, value);
+    public int GetPowerAmount(string entityId, ContentId powerId) =>
+        _session.State.GetPowerAmount(entityId, powerId);
 }
 
 public interface ICustomEffectHandler

@@ -726,4 +726,6 @@ public interface IRuleHook
 {
     ContentId Id { get; }
     void OnEvent(RuleHookContext context, GameEvent gameEvent);
+    bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
+    bool ShouldFlush(RuleHookContext context, string playerId) => true;
 }

@@ -1128,6 +1128,36 @@ public sealed class CombatSliceTests
         Assert.True(state.State.Player.ExhaustPileInstances.All(card => card.InstanceId != retainedInstanceId));
     }
 
+    public void HandCleanupHooksCanSuppressEtherealAndFlush()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        registry.AddPackage(new TestHookPackage(new HandCleanupHook(BaseSpireIds.Dazed, suppressFlush: false)));
+        var env = new CombatEnvironment(registry.Build());
+        var state = env.Start(66, "ironclad", 56, 65, [BaseSpireIds.Dazed, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), drawPile: Enumerable.Repeat(BaseSpireIds.DefendIronclad, 5));
+
+        env.Step(state, new EndTurnAction());
+
+        Assert.Equal(0, state.State.Player.ExhaustPileInstances.Count);
+        Assert.Contains(state.State.Player.DiscardPileInstances, card => card.CardId == BaseSpireIds.Dazed);
+
+        registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        registry.AddPackage(new TestHookPackage(new HandCleanupHook(null, suppressFlush: false,
+            suppressFlushPower: BaseSpireIds.FeelNoPain)));
+        env = new CombatEnvironment(registry.Build());
+        state = env.Start(67, "ironclad", 56, 65,
+            [BaseSpireIds.FeelNoPain, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        var handBefore = state.State.Player.HandInstances.Select(card => card.InstanceId).ToArray();
+
+        env.Step(state, new EndTurnAction());
+
+        Assert.True(handBefore.All(instanceId => state.State.Player.HandInstances.Any(card => card.InstanceId == instanceId)));
+    }
+
     public void BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2163,6 +2193,27 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class HandCleanupHook(ContentId? suppressedEtherealCard, bool suppressFlush,
+        ContentId? suppressFlushPower = null) : IRuleHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("hand-cleanup-hook:rules");
+
+        public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+        public bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) =>
+            card.CardId != suppressedEtherealCard;
+
+        public bool ShouldFlush(RuleHookContext context, string playerId) => !suppressFlush
+            && (suppressFlushPower is not { } power || context.GetPowerAmount(playerId, power) == 0);
+    }
+
+    private sealed class TestHookPackage(IRuleHook hook) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("hand-cleanup-hook", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(hook);
+    }
+
     private sealed class MultiEnemyPackage(CardDefinition card, params EnemyDefinition[] enemies) : IRulePackage
     {
         public PackageInfo Info { get; } = new("multi-enemy-fixture", "1.0.0");
@@ -2349,6 +2400,7 @@ internal static class Program
         tests.FeelNoPainTriggersAfterChosenAndPlayedCardsExhaust();
         tests.EtherealCardsExhaustBeforeEnemyTurnAndTriggerPowers();
         tests.RetainedCardInstancesStayInHandAcrossEnemyTurn();
+        tests.HandCleanupHooksCanSuppressEtherealAndFlush();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
@@ -2391,7 +2443,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 57 gameplay checks.");
+        Console.WriteLine("Passed 58 gameplay checks.");
     }
 }
 
