@@ -309,7 +309,7 @@ public sealed class CombatSliceTests
             new MapPointDefinition("unknown", 1, 3, MapPointType.Unknown, ["boss"]),
             new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
         ]);
-        var act = new ActDefinition(ContentId.Parse("test-fixture:act"), _ => map, _ => RunRoomType.Event);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:act"), _ => map, (_, _) => RunRoomType.Event);
         var environment = new RunEnvironment(new RunDefinition(ContentId.Parse("test-fixture:run"), [act]),
             BaseSpireContent.Ironclad());
 
@@ -509,6 +509,55 @@ public sealed class CombatSliceTests
         Assert.Equal(RunRoomType.Event, thirdUnknown.CurrentRoom!.Value);
     }
 
+    public void ShopHistoryBlacklistsShopFromTheNextUnknownRoom()
+    {
+        var map = new ActMapDefinition("ancient", "boss",
+        [
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["shop"]),
+            new MapPointDefinition("shop", 1, 3, MapPointType.Shop, ["unknown"]),
+            new MapPointDefinition("unknown", 2, 3, MapPointType.Unknown, ["boss"]),
+            new MapPointDefinition("boss", 3, 3, MapPointType.Boss, [])
+        ]);
+        var odds = new UnknownRoomOddsDefinition(
+        [
+            new UnknownRoomOddsEntry(RunRoomType.Monster, 0.1f),
+            new UnknownRoomOddsEntry(RunRoomType.Elite, -1f),
+            new UnknownRoomOddsEntry(RunRoomType.Treasure, 0.02f),
+            new UnknownRoomOddsEntry(RunRoomType.Shop, 0.03f)
+        ]);
+        var run = new RunDefinition(ContentId.Parse("test-fixture:shop-blacklist-run"),
+            [new ActDefinition(ContentId.Parse("test-fixture:shop-blacklist-act"), _ => map)], odds);
+        var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
+        var seed = FindSeedForUnknownRolls(first => first > 0.12f && first <= 0.15f, _ => true);
+        var session = environment.Start(seed);
+        var opening = environment.Observe(session);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, opening));
+        var shop = environment.Step(session, new ChooseMapPointAction("shop"));
+        Assert.Equal(RunRoomType.Shop, shop.CurrentRoom!.Value);
+        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, shop));
+        var unknown = environment.Step(session, new ChooseMapPointAction("unknown"));
+        Assert.Equal(RunRoomType.Event, unknown.CurrentRoom!.Value);
+        Assert.Equal(new[] { "ancient", "shop", "unknown" }.AsEnumerable(),
+            unknown.VisitedMapPoints.Select(visit => visit.PointId));
+
+        var shopChildrenMap = new ActMapDefinition("entry", "end",
+        [
+            new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["unknown"]),
+            new MapPointDefinition("unknown", 1, 3, MapPointType.Unknown, ["shop-left", "shop-right"]),
+            new MapPointDefinition("shop-left", 2, 2, MapPointType.Shop, ["end"]),
+            new MapPointDefinition("shop-right", 2, 4, MapPointType.Shop, ["end"]),
+            new MapPointDefinition("end", 3, 3, MapPointType.Boss, [])
+        ]);
+        var childrenRun = new RunDefinition(ContentId.Parse("test-fixture:shop-children-blacklist-run"),
+            [new ActDefinition(ContentId.Parse("test-fixture:shop-children-blacklist-act"), _ => shopChildrenMap)], odds);
+        var childrenEnvironment = new RunEnvironment(childrenRun, BaseSpireContent.Ironclad());
+        var childrenSession = childrenEnvironment.Start(seed);
+        childrenEnvironment.CompleteRoom(childrenSession,
+            RunResult(RunOutcome.RoomCleared, childrenEnvironment.Observe(childrenSession)));
+        var childrenUnknown = childrenEnvironment.Step(childrenSession, new ChooseMapPointAction("unknown"));
+        Assert.Equal(RunRoomType.Event, childrenUnknown.CurrentRoom!.Value);
+    }
+
     private static string FindSeedForUnknownRolls(Func<float, bool> firstCondition, Func<float, bool> secondCondition,
         Func<float, bool>? thirdCondition = null)
     {
@@ -695,7 +744,8 @@ internal static class Program
         tests.BaseSpireStandardRunUsesItsActMapGenerators();
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
-        Console.WriteLine("Passed 24 gameplay checks.");
+        tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
+        Console.WriteLine("Passed 25 gameplay checks.");
     }
 }
 

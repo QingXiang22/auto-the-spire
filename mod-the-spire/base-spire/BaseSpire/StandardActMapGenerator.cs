@@ -9,7 +9,7 @@ public static class BaseSpireMapGenerator
 
     public static RunDefinition CreateStandardRun() => CreateStandardRun(null);
 
-    public static RunDefinition CreateStandardRun(Func<SeededRandom, RunRoomType>? resolveUnknownRoom)
+    public static RunDefinition CreateStandardRun(Func<SeededRandom, IReadOnlySet<RunRoomType>, RunRoomType>? resolveUnknownRoom)
     {
         return new RunDefinition(BaseSpireIds.StandardRun,
         [
@@ -25,7 +25,8 @@ public static class BaseSpireMapGenerator
         ]) : null);
     }
 
-    public static ActDefinition CreateUnderdocksAct(Func<SeededRandom, RunRoomType>? resolveUnknownRoom = null)
+    public static ActDefinition CreateUnderdocksAct(
+        Func<SeededRandom, IReadOnlySet<RunRoomType>, RunRoomType>? resolveUnknownRoom = null)
     {
         return new ActDefinition(BaseSpireIds.UnderdocksAct, GenerateUnderdocks, resolveUnknownRoom);
     }
