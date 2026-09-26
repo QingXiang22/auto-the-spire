@@ -41,6 +41,14 @@ public sealed class CombatSliceTests
         Assert.Equal(new[] { BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash }.AsEnumerable(),
             definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
+        Assert.Equal(new AttackEffect(9), definition.Cards[BaseSpireIds.StrikeIronclad]
+            .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
+        Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
+            .ResolveEffect(new CardInstance("test:defend+", BaseSpireIds.DefendIronclad, 1)));
+        var upgradedBash = (SequenceEffect)definition.Cards[BaseSpireIds.Bash]
+            .ResolveEffect(new CardInstance("test:bash+", BaseSpireIds.Bash, 1));
+        Assert.Equal(new AttackEffect(10), upgradedBash.Effects[0]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 3, TargetSelector.FirstEnemy), upgradedBash.Effects[1]);
         Assert.Throws<ArgumentException>(() => new CardPoolDefinition(ContentId.Parse("test:duplicate-pool"),
             [BaseSpireIds.Bash, BaseSpireIds.Bash]));
         var invalidPoolRegistry = new ContentRegistry();
