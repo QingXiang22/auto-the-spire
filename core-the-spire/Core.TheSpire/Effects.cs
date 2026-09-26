@@ -16,6 +16,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardsFromPileEffect), "chooseCardsFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomlyMoveCardFromPileEffect), "randomlyMoveCardFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ForEachCardInPileEffect), "forEachCardInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveSelectedCardToPileEffect), "moveSelectedCardToPile")]
@@ -43,6 +44,8 @@ public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Cou
     TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
 public sealed record ChooseCardFromPileEffect(CardPile From, CardPile? To, string Prompt,
     CardPilePosition DestinationPosition = CardPilePosition.Top,
+    CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
+public sealed record ChooseCardsFromPileEffect(CardPile From, string Prompt, int MinChoices, int MaxChoices,
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
 public sealed record RandomlyMoveCardFromPileEffect(CardPile From, CardPile To,
     CardSelectionFilter Filter = CardSelectionFilter.Any) : EffectNode;
@@ -130,7 +133,8 @@ internal static class EffectExecutor
     private static void Drain(GameSession session)
     {
         var state = session.State;
-        while (state.PendingChoice is null && state.PendingCardChoice is null && state.PendingEffects.Count > 0)
+        while (state.PendingChoice is null && state.PendingCardChoice is null
+            && state.PendingCardSetChoice is null && state.PendingEffects.Count > 0)
         {
             var index = state.PendingEffects.Count - 1;
             var (owner, effect, target, selectedCard) = state.PendingEffects[index];
@@ -241,6 +245,20 @@ internal static class EffectExecutor
                         .Where(card => state.MatchesCardSelectionFilter(card, chooseCard.Filter)).ToArray();
                     if (options.Length > 0)
                         state.PendingCardChoice = new PendingCardChoice(chooseCard, options, owner, target, selectedCard);
+                    break;
+                case ChooseCardsFromPileEffect chooseCards:
+                    if (chooseCards.MinChoices < 0 || chooseCards.MaxChoices < chooseCards.MinChoices)
+                        throw new InvalidOperationException("Card selection bounds are invalid.");
+                    var multiOptions = state.GetPile(chooseCards.From)
+                        .Where(card => state.MatchesCardSelectionFilter(card, chooseCards.Filter)).ToArray();
+                    if (multiOptions.Length > 0 && chooseCards.MaxChoices > 0)
+                    {
+                        var maximum = Math.Min(chooseCards.MaxChoices, multiOptions.Length);
+                        if (chooseCards.MinChoices > maximum)
+                            throw new InvalidOperationException("Not enough cards satisfy the required selection count.");
+                        state.PendingCardSetChoice = new PendingCardSetChoice(chooseCards, multiOptions,
+                            owner, target, selectedCard, maximum);
+                    }
                     break;
                 case RandomlyMoveCardFromPileEffect randomCard:
                     var randomOptions = state.GetPile(randomCard.From)

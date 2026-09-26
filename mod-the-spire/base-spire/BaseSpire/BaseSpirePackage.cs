@@ -26,6 +26,8 @@ public static class BaseSpireIds
     public static readonly ContentId BattleTrance = ContentId.Parse("base-spire:battle-trance");
     public static readonly ContentId NoDrawPower = ContentId.Parse("base-spire:no-draw");
     public static readonly ContentId FeelNoPain = ContentId.Parse("base-spire:feel-no-pain");
+    public static readonly ContentId WellLaidPlans = ContentId.Parse("base-spire:well-laid-plans");
+    public static readonly ContentId WellLaidPlansPower = ContentId.Parse("base-spire:well-laid-plans-power");
     public static readonly ContentId SwordBoomerang = ContentId.Parse("base-spire:sword-boomerang");
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
@@ -88,6 +90,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             Role: PowerRole.NoDraw, DecrementOnTrigger: true));
         registry.Register(new PowerDefinition(BaseSpireIds.FeelNoPain, PowerTrigger.AfterCardExhausted,
             TriggerRuleEffect: EffectDsl.Parse("""{"op":"gainBlock","amount":1,"perPowerStack":"base-spire:feel-no-pain"}""")));
+        registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
+        registry.Register(new WellLaidPlansHook());
         registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
             BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
@@ -98,6 +102,10 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
         IroncladCards.Register(registry);
+        registry.Register(new CardDefinition(BaseSpireIds.WellLaidPlans, 1, CardType.Power,
+            new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1), Target: TargetSelector.Self,
+            Rarity: CardRarity.Uncommon,
+            UpgradedEffect: new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 2)));
         registry.Register(new CardDefinition(BaseSpireIds.Dazed, 0, CardType.Status,
             new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
             Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));

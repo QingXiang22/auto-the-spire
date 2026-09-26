@@ -621,6 +621,15 @@ public sealed class ContentRegistry
                 ArgumentException.ThrowIfNullOrWhiteSpace(chooseCard.Prompt);
                 if (chooseCard.OnSelected is { } onSelected) ValidateEffectReferences(onSelected, owner);
                 break;
+            case ChooseCardsFromPileEffect chooseCards:
+                if (!Enum.IsDefined(chooseCards.From) || !Enum.IsDefined(chooseCards.Filter))
+                    throw new InvalidOperationException($"{owner} has an invalid multi-card selection pile or filter.");
+                ArgumentException.ThrowIfNullOrWhiteSpace(chooseCards.Prompt);
+                ArgumentOutOfRangeException.ThrowIfNegative(chooseCards.MinChoices);
+                if (chooseCards.MaxChoices < chooseCards.MinChoices)
+                    throw new InvalidOperationException($"{owner} has invalid multi-card selection bounds.");
+                if (chooseCards.OnSelected is { } eachSelected) ValidateEffectReferences(eachSelected, owner);
+                break;
             case RandomlyMoveCardFromPileEffect randomCard:
                 if (!Enum.IsDefined(randomCard.From) || !Enum.IsDefined(randomCard.To)
                     || !Enum.IsDefined(randomCard.Filter))
@@ -730,7 +739,7 @@ public interface IRuleHook
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
     EffectNode? BeforeFlush(RuleHookContext context, string playerId) => null;
-    EffectNode? BeforeFlushLate(RuleHookContext context, string playerId) => null;
+    EffectNode? BeforeFlushLate(RuleHookContext context, string playerId, bool shouldFlush) => null;
     EffectNode? AfterFlush(RuleHookContext context, string playerId,
         IReadOnlyList<CardInstance> flushedCards, IReadOnlyList<CardInstance> retainedCards) => null;
 }
