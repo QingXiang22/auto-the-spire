@@ -4,6 +4,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SequenceEffect), "sequence")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackEffect), "attack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomAttackEffect), "randomAttack")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AttackUsingBlockEffect), "attackUsingBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
@@ -30,6 +31,7 @@ public sealed record SequenceEffect : EffectNode
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
+public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -124,6 +126,20 @@ internal static class EffectExecutor
                         state.Emit(session, "random_attack_target", owner.Id, victim.Id, randomAttack.Amount);
                         ApplyAttack(session, owner, victim, randomAttack.Amount);
                     }
+                    break;
+                case AttackUsingBlockEffect attackUsingBlock:
+                    var blockBasedDamage = owner.Block;
+                    if (attackUsingBlock.Target == TargetSelector.AllOpponents)
+                    {
+                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, blockBasedDamage);
+                        else
+                            foreach (var enemy in state.Enemies)
+                                if (enemy.Creature.Hp > 0)
+                                    ApplyAttack(session, owner, enemy.Creature, blockBasedDamage);
+                    }
+                    else
+                        ApplyAttack(session, owner,
+                            ResolveSingleTarget(state, owner, target, attackUsingBlock.Target), blockBasedDamage);
                     break;
                 case LoseHpEffect loseHp:
                     if (loseHp.Amount < 0) throw new InvalidOperationException("HP loss cannot be negative.");
