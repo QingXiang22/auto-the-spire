@@ -70,7 +70,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 2. **参与者**：玩家、敌人与其他可行动实体的身份、生命、格挡、状态及层数、战斗属性、存活状态、实体级扩展数据。
 3. **卡牌区域**：每名玩家的抽牌堆、手牌、弃牌堆、消耗堆、出牌区；各区域持有有序的卡牌实例。局外牌组另存于玩家长期状态。
 4. **资源**：每名玩家的当前能量、星星等由规则集定义的资源；其他机制所需的战斗实例状态可扩展。
-5. **敌人行为**：已选定的下一行动、行动状态机当前位置与局部记忆、目标及行为选择所需数据。原版使用 [`MonsterMoveStateMachine`](../sts2/src/Core/MonsterMoves/MonsterMoveStateMachine/MonsterMoveStateMachine.cs)。
+5. **敌人行为**：已选定的下一行动、行动状态机当前位置与局部记忆、目标及行为选择所需数据。原版使用 [`MonsterMoveStateMachine`](../sts2/src/Core/MonsterMoves/MonsterMoveStateMachine/MonsterMoveStateMachine.cs)。内核敌人动作以有向图描述，边存于动作定义；条件分支、随机选择和运行时记忆由后续扩展，不把行为压成只支持循环尾动作的列表。
 6. **结算上下文**：待结算效果、触发事件和未完成的玩家选择。
 
 敌人的**已选定行动**与**显示给玩家的攻击意图**是不同概念。外部视图中展示的伤害应按真实《杀戮尖塔 2》的实际行为生成；展示逻辑由视图／适配层隔离，不将显示数字当作攻击效果的原始定义。具体预测和展示规则需要与真实游戏对照。
@@ -132,7 +132,7 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
-8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动序列并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。`base-spire` 的 `CultistsNormal` 组合及两名祭仪教徒的三回合行为已有源码参数校验。Act 遭遇池定义、分类校验、seeded 队列生成、相邻标签回避、轮换及从房间选择直接启动遭遇的接缝已实现并由合成 Act 测试。真实 Act 内容池、source 的双 boss 选择、多怪物完整 AI 和怪物生命唯一化算法仍未完成。
+8. **遭遇与整局战斗接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；整局可按 encounter 定义启动战斗并在胜负时回写。`base-spire` 已验证 `CultistsNormal` 与 Overgrowth 的 `FuzzyWurmCrawlerWeak`，后者用有向动作图复现 Attack → Inhale(+7 Strength) → Attack → 回到首个 Attack，并覆盖 Deadly/Tough 参数。Act 遭遇池与房间内容生成、分类校验、seeded 队列和访问选择也已由合成 Act 测试。真实 Act 内容池、条件/随机 AI、source 的双 boss 选择和怪物生命唯一化算法仍未完成。
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 

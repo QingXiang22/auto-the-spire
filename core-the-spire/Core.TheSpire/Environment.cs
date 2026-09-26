@@ -116,7 +116,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
         foreach (var (spawn, enemyDefinition, entityId) in prepared)
         {
             var hp = spawn.Hp ?? rng.Get("encounter-hp").NextInt(enemyDefinition.MinHp, enemyDefinition.MaxHp + 1);
-            combatEnemies.Add(new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition));
+            combatEnemies.Add(new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition)
+            {
+                ActionIndex = enemyDefinition.StartingActionIndex
+            });
         }
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, hand, drawPile),
@@ -314,10 +317,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     foreach (var enemy in state.Enemies)
                     {
                         var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
-                        enemy.ActionIndex = currentAction.Id == enemy.Definition.Actions[^1].Id
-                            && enemy.Definition.LoopLastAction
-                            ? enemy.Definition.Actions.Count - 1
-                            : Math.Min(enemy.ActionIndex + 1, enemy.Definition.Actions.Count - 1);
+                        enemy.ActionIndex = currentAction.NextActionId is { } nextActionId
+                            ? enemy.Definition.GetActionIndex(nextActionId)
+                            : currentAction.Id == enemy.Definition.Actions[^1].Id && enemy.Definition.LoopLastAction
+                                ? enemy.Definition.Actions.Count - 1
+                                : Math.Min(enemy.ActionIndex + 1, enemy.Definition.Actions.Count - 1);
                     }
                     state.CurrentEnemyIndex = 0;
                     state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;

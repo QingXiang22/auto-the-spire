@@ -111,6 +111,47 @@ public sealed class CombatSliceTests
         Assert.True(deadlyAttackIntents.SequenceEqual([11, 3]));
     }
 
+    public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
+    {
+        var actionId = ContentId.Parse("action-graph-test:start");
+        var missingActionId = ContentId.Parse("action-graph-test:missing");
+        Assert.Throws<ArgumentException>(() => new EnemyDefinition(ContentId.Parse("action-graph-test:enemy"), 1, 1,
+        [
+            new EnemyActionDefinition(actionId, new AttackEffect(1), IntentKind.Attack,
+                NextActionId: missingActionId)
+        ]));
+
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(207, "ironclad", 56, 65, [], BaseSpireIds.FuzzyWurmCrawlerWeak);
+        Assert.True(environment.Observe(session).Enemies[0].Hp is >= 55 and <= 57);
+        Assert.Equal(IntentKind.Attack, environment.Observe(session).Intent);
+        Assert.Equal(4, environment.Observe(session).IntentDamage);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(52, environment.Observe(session).PlayerHp);
+        Assert.Equal(IntentKind.Buff, environment.Observe(session).Intent);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(7, session.State.Enemies[0].Creature.Strength);
+        Assert.Equal(IntentKind.Attack, environment.Observe(session).Intent);
+        Assert.Equal(11, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(41, environment.Observe(session).PlayerHp);
+        Assert.Equal(11, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(30, environment.Observe(session).PlayerHp);
+        Assert.Equal(IntentKind.Buff, environment.Observe(session).Intent);
+
+        var toughDeadlyEnvironment = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true, toughEnemies: true)));
+        var toughDeadly = toughDeadlyEnvironment.StartEncounter(208, "ironclad", 56, 65, [], BaseSpireIds.FuzzyWurmCrawlerWeak);
+        Assert.True(toughDeadlyEnvironment.Observe(toughDeadly).Enemies[0].Hp is >= 58 and <= 59);
+        Assert.Equal(6, toughDeadlyEnvironment.Observe(toughDeadly).IntentDamage);
+        toughDeadlyEnvironment.Step(toughDeadly, new EndTurnAction());
+        toughDeadlyEnvironment.Step(toughDeadly, new EndTurnAction());
+        Assert.Equal(7, toughDeadly.State.Enemies[0].Creature.Strength);
+        Assert.Equal(13, toughDeadlyEnvironment.Observe(toughDeadly).IntentDamage);
+    }
+
     public void PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide()
     {
         var env = new CombatEnvironment(Build(new IncomingVulnerablePackage()));
@@ -1273,6 +1314,7 @@ internal static class Program
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
+        tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
         tests.SameSeedAndActionsProduceSameTrace();
         tests.NamedRandomStreamsAreDeterministicAndCountCalls();
@@ -1303,7 +1345,7 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
-        Console.WriteLine("Passed 35 gameplay checks.");
+        Console.WriteLine("Passed 36 gameplay checks.");
     }
 }
 
