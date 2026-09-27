@@ -451,10 +451,12 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile,
     IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
     IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
-    IReadOnlyList<CardInstance> PlayPileInstances, PendingCardSelectionView? PendingCardSelection);
+    IReadOnlyList<CardInstance> PlayPileInstances, IReadOnlyList<ContentId> Potions,
+    PendingCardSelectionView? PendingCardSelection);
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;
+public sealed record UsePotionAction(int PotionIndex, string? TargetId = null) : PlayerAction;
 public sealed record EndTurnAction : PlayerAction;
 public sealed record ChooseOptionAction(int OptionIndex) : PlayerAction;
 public sealed record ChooseCardAction(string CardInstanceId) : PlayerAction;

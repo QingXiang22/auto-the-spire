@@ -40,6 +40,17 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     }
 }
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
+public enum PotionRarity { Common, Uncommon, Rare }
+public sealed record PotionDefinition(ContentId Id, PotionRarity Rarity, EffectNode Effect,
+    TargetSelector Target = TargetSelector.Self)
+{
+    public void Validate()
+    {
+        Id.Validate();
+        if (!Enum.IsDefined(Rarity) || !Enum.IsDefined(Target))
+            throw new ArgumentException("Potion rarity and target must be recognized values.");
+    }
+}
 public enum CardCostKind { Fixed, X }
 public enum RunRelicRarity { None, Starter, Common, Uncommon, Rare, Shop, Event, Ancient, Boss }
 public enum RunRelicPool { Shared, Player }
@@ -487,6 +498,7 @@ public interface IRulePackage
 public sealed class ContentRegistry
 {
     private readonly Dictionary<ContentId, CardDefinition> _cards = [];
+    private readonly Dictionary<ContentId, PotionDefinition> _potions = [];
     private readonly Dictionary<ContentId, CardPoolDefinition> _cardPools = [];
     private readonly Dictionary<ContentId, RelicDefinition> _relics = [];
     private readonly Dictionary<ContentId, EnemyDefinition> _enemies = [];
@@ -507,6 +519,7 @@ public sealed class ContentRegistry
         if (_packages.Any(p => p.Id == package.Info.Id))
             throw new InvalidOperationException($"Package '{package.Info.Id}' is already loaded.");
         var cardsBefore = new Dictionary<ContentId, CardDefinition>(_cards);
+        var potionsBefore = new Dictionary<ContentId, PotionDefinition>(_potions);
         var cardPoolsBefore = new Dictionary<ContentId, CardPoolDefinition>(_cardPools);
         var relicsBefore = new Dictionary<ContentId, RelicDefinition>(_relics);
         var enemiesBefore = new Dictionary<ContentId, EnemyDefinition>(_enemies);
@@ -527,6 +540,7 @@ public sealed class ContentRegistry
         catch
         {
             Restore(_cards, cardsBefore);
+            Restore(_potions, potionsBefore);
             Restore(_cardPools, cardPoolsBefore);
             Restore(_relics, relicsBefore);
             Restore(_enemies, enemiesBefore);
@@ -544,6 +558,12 @@ public sealed class ContentRegistry
     }
 
     public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
+    public void Register(PotionDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        AddUnique(_potions, definition.Id, definition, "potion");
+    }
     public void Register(CardPoolDefinition definition) => AddUnique(_cardPools, definition.Id, definition, "card pool");
     public void Register(RelicDefinition definition)
     {
@@ -641,6 +661,8 @@ public sealed class ContentRegistry
             if (card.UpgradedEffect is { } upgradedEffect)
                 ValidateEffectReferences(upgradedEffect, $"Upgraded card '{card.Id}'");
         }
+        foreach (var potion in _potions.Values)
+            ValidateEffectReferences(potion.Effect, $"Potion '{potion.Id}'");
         foreach (var pool in _cardPools.Values)
             foreach (var cardId in pool.Cards)
                 if (!_cards.ContainsKey(cardId))
@@ -656,6 +678,9 @@ public sealed class ContentRegistry
             foreach (var relicId in character.StartingRelics)
                 if (!_relics.ContainsKey(relicId))
                     throw new InvalidOperationException($"Character '{character.Id}' starts with unknown relic '{relicId}'.");
+            foreach (var potionId in character.StartingPotions)
+                if (!_potions.ContainsKey(potionId))
+                    throw new InvalidOperationException($"Character '{character.Id}' starts with unknown potion '{potionId}'.");
         }
         foreach (var relic in _relics.Values)
             foreach (var characterId in relic.CharacterPoolIds ?? Array.Empty<ContentId>())
@@ -701,6 +726,7 @@ public sealed class ContentRegistry
         return new GameDefinition(
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
+            new ReadOnlyDictionary<ContentId, PotionDefinition>(new Dictionary<ContentId, PotionDefinition>(_potions)),
             new ReadOnlyDictionary<ContentId, CardPoolDefinition>(new Dictionary<ContentId, CardPoolDefinition>(_cardPools)),
             new ReadOnlyDictionary<ContentId, RelicDefinition>(new Dictionary<ContentId, RelicDefinition>(_relics)),
             new ReadOnlyDictionary<ContentId, EnemyDefinition>(new Dictionary<ContentId, EnemyDefinition>(_enemies)),
@@ -917,6 +943,7 @@ public sealed class ContentRegistry
 public sealed class GameDefinition
 {
     internal GameDefinition(PackageInfo[] packages, IReadOnlyDictionary<ContentId, CardDefinition> cards,
+        IReadOnlyDictionary<ContentId, PotionDefinition> potions,
         IReadOnlyDictionary<ContentId, CardPoolDefinition> cardPools,
         IReadOnlyDictionary<ContentId, RelicDefinition> relics,
         IReadOnlyDictionary<ContentId, EnemyDefinition> enemies, IReadOnlyDictionary<ContentId, EncounterDefinition> encounters,
@@ -929,6 +956,7 @@ public sealed class GameDefinition
     {
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
+        Potions = potions;
         CardPools = cardPools;
         Relics = relics;
         Enemies = enemies;
@@ -946,6 +974,7 @@ public sealed class GameDefinition
 
     public IReadOnlyList<PackageInfo> Packages { get; }
     public IReadOnlyDictionary<ContentId, CardDefinition> Cards { get; }
+    public IReadOnlyDictionary<ContentId, PotionDefinition> Potions { get; }
     public IReadOnlyDictionary<ContentId, CardPoolDefinition> CardPools { get; }
     public IReadOnlyDictionary<ContentId, RelicDefinition> Relics { get; }
     public IReadOnlyDictionary<ContentId, EnemyDefinition> Enemies { get; }

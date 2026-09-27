@@ -58,6 +58,7 @@ public static class BaseSpireIds
     public static readonly ContentId SlimesWeak = ContentId.Parse("base-spire:slimes-weak");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
+    public static readonly ContentId FirePotion = ContentId.Parse("base-spire:fire-potion");
     public static readonly ContentId Weak = ContentId.Parse("base-spire:weak");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
     public static readonly ContentId Shrink = ContentId.Parse("base-spire:shrink");
@@ -115,6 +116,9 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
+        registry.Register(new PotionDefinition(BaseSpireIds.FirePotion, PotionRarity.Common,
+            new AttackEffect(20, TargetSelector.SelectedTarget,
+                DamageProperties.Move | DamageProperties.Unpowered), TargetSelector.SelectedTarget));
         registry.Register(BaseSpireContent.Ironclad());
         registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,
