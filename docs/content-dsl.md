@@ -31,6 +31,8 @@ Card definitions may declare `tags = [Strike]`. A tag is a namespaced content ID
 
 `applyScaledPower(Power, base, perCount, count=..., target=...)` reuses the same runtime count sources as `scaledAttack`. The count reads the selected combat target even when the Power is applied to `self`. Dominate uses this after adding Vulnerable to the enemy; Molten Fist uses it after damage only if the enemy survives and remains Vulnerable.
 
+A Power declaration may use `trigger = afterCardPlayed` with `whenCardType = attack` and a compiled effect. Its effect runs after the played card finishes, before that card leaves the play pile. `removeAfterPlayerTurnEnd = true` expires the Power after player turn-end Power effects and before enemies act. Rage uses these rules; Feel No Pain now declares its exhaust trigger and stack-scaled block in `.spire` as well. A resumed card choice dispatches the played-card trigger once. Exhaust triggers receive the exhausted card instance as effect context, including cards moved by a bulk pile effect.
+
 Difficulty values use `variants(default=..., deadly=..., tough=..., deadlyTough=...)` and `range(min, max)`. The configured profile resolves them during package compilation. For example:
 
 ```text
@@ -48,7 +50,8 @@ The move names produce stable action IDs. `intent` and displayed damage are deri
 
 ## Current source of truth
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 50 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 48 of the source's 87 cards and is generated from compiled card definitions with eligible rarities.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 51 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 49 of the source's 87 cards and is generated from compiled card definitions with eligible rarities.
+- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
 
@@ -58,7 +61,7 @@ Enemy behaviors in the current roster exercise fixed cycles, a one-time opening 
 
 The nine enemies are the roster currently modeled by this repository; this is not a claim that the full original game's monster catalog has been imported. The source audit identifies substantial gameplay still to implement, including monsters not yet registered here, role-specific behavior in the encounter source, conditional action state, and move-log cooldown rules. Those should be authored in this DSL when their source semantics are implemented. They should not be approximated by changing the state machine to match one content fixture.
 
-The remaining Ironclad cards expose several shared language needs. Rampage and Thrash change values on a particular card instance, while Stomp changes its cost during a turn; these call for declared instance variables and cost modifiers with explicit reset rules. Rage and Dark Embrace respond to card events, including the difference between normal and Ethereal exhaustion; a Power declaration needs filtered triggers and enough event context to preserve the original timing. Stone Armor's Plating uses a turn-boundary phase before damage effects, and Howl from Beyond automatically plays from the exhaust pile. Primal Force transforms card instances. Tank and Demonic Shield declare multiplayer constraints even though the current training slice runs single-player combat. These source cases should drive the next core contracts rather than receive individual native card handlers.
+The remaining Ironclad cards expose several shared language needs. Rampage and Thrash change values on a particular card instance, while Stomp changes its cost during a turn; these call for declared instance variables and cost modifiers with explicit reset rules. Rage's filtered card-play trigger is now modeled; Dark Embrace additionally distinguishes normal exhaustion from Ethereal exhaustion and defers draws until after the hand flush. Stone Armor's Plating uses a turn-boundary phase before damage effects, and Howl from Beyond automatically plays from the exhaust pile. Primal Force transforms card instances. Tank and Demonic Shield declare multiplayer constraints even though the current training slice runs single-player combat. These source cases should drive the next core contracts rather than receive individual native card handlers.
 
 The current Ironclad pool is derived from eligible card rarities in one dedicated source file. Before mixed-character content or third-party pool extensions are imported, the DSL needs explicit pool membership and mode eligibility; rarity alone cannot express either rule. The original `IroncladCardPool` explicitly lists 87 members, which remains the coverage reference. Account unlock progress is outside this project's scope, so all otherwise eligible original cards are treated as unlocked.
 

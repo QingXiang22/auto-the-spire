@@ -20,6 +20,8 @@ public static class BaseSpireIds
     public static readonly ContentId Conflagration = ContentId.Parse("base-spire:conflagration");
     public static readonly ContentId Dominate = ContentId.Parse("base-spire:dominate");
     public static readonly ContentId MoltenFist = ContentId.Parse("base-spire:molten-fist");
+    public static readonly ContentId Rage = ContentId.Parse("base-spire:rage");
+    public static readonly ContentId RagePower = ContentId.Parse("base-spire:rage-power");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
@@ -139,6 +141,16 @@ public static class BaseSpireContent
         return SpireCombatBehaviorDslCompiler.Compile(package, profile);
     }
 
+    public static IReadOnlyList<PowerDefinition> LoadIroncladPowers()
+    {
+        const string resourceName = "BaseSpire.ContentSource.ironclad-powers.spire";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/ironclad-powers.spire");
+        return SpireCombatBehaviorDslCompiler.Compile(package).Powers;
+    }
+
     public static IReadOnlyList<StateVariableDefinition> LoadStateDefinitions()
     {
         const string resourceName = "BaseSpire.ContentSource.state.spire";
@@ -206,8 +218,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
                 new GainBlockEffect(3, BaseSpireIds.SelfFormingClayPower),
                 new RemovePowerEffect(BaseSpireIds.SelfFormingClayPower)
             ])));
-        registry.Register(new PowerDefinition(BaseSpireIds.FeelNoPain, PowerTrigger.AfterCardExhausted,
-            TriggerRuleEffect: EffectDsl.Parse("""{"op":"gainBlock","amount":1,"perPowerStack":"base-spire:feel-no-pain"}""")));
+        foreach (var power in BaseSpireContent.LoadIroncladPowers()) registry.Register(power);
         registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
         registry.Register(new WellLaidPlansHook());
         registry.Register(new PowerDefinition(BaseSpireIds.BarricadePower));

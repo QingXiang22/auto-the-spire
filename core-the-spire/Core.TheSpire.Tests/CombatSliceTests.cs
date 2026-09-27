@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(48, ironcladPool.Count);
+        Assert.Equal(49, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -437,7 +437,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(50, cards.Count);
+        Assert.Equal(51, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
@@ -791,6 +791,70 @@ public sealed class CombatSliceTests
         env.Step(upgraded, new PlayCardAction(0));
         Assert.Equal(new[] { 43, 30 }, upgraded.State.Enemies.Select(enemy => enemy.Creature.Hp));
         Assert.Equal(10, upgraded.State.Events.Count(gameEvent => gameEvent.Type == "damage"));
+    }
+
+    public void RageTriggersOnlyAfterAttackCardsAndExpiresAtPlayerTurnEnd()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var ragePower = definition.Powers[BaseSpireIds.RagePower];
+        Assert.Equal(PowerTrigger.AfterCardPlayed, ragePower.Trigger);
+        Assert.Equal(CardType.Attack, ragePower.TriggerCardType);
+        Assert.True(ragePower.RemoveAfterPlayerTurnEnd);
+        Assert.Equal(new GainBlockEffect(1, BaseSpireIds.RagePower), ragePower.TriggerRuleEffect);
+        Assert.Equal(new GainBlockEffect(1, BaseSpireIds.FeelNoPain),
+            definition.Powers[BaseSpireIds.FeelNoPain].TriggerRuleEffect);
+
+        var env = new CombatEnvironment(definition);
+        var state = env.Start(78, "ironclad", 56, 65,
+            [BaseSpireIds.Rage, BaseSpireIds.DefendIronclad, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        Assert.Equal(3, state.State.Player.Creature.PowerAmount(BaseSpireIds.RagePower));
+        Assert.Equal(0, state.State.Player.Creature.Block);
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        Assert.Equal(5, state.State.Player.Creature.Block);
+        env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+        Assert.Equal(8, state.State.Player.Creature.Block);
+        env.Step(state, new EndTurnAction());
+        Assert.Equal(0, state.State.Player.Creature.PowerAmount(BaseSpireIds.RagePower));
+
+        var upgraded = env.Start(79, "ironclad", 56, 65,
+            [BaseSpireIds.Rage, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("rage+", BaseSpireIds.Rage, 1);
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+        Assert.Equal(5, upgraded.State.Player.Creature.Block);
+
+        var exhaustingAttack = env.Start(81, "ironclad", 56, 65,
+            [BaseSpireIds.Rage, BaseSpireIds.MoltenFist],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(exhaustingAttack, new PlayCardAction(0, exhaustingAttack.State.Player.Id));
+        env.Step(exhaustingAttack, new PlayCardAction(0, exhaustingAttack.State.Enemy.Id));
+        var events = exhaustingAttack.State.Events.ToArray();
+        var rageBlockIndex = Array.FindIndex(events, gameEvent => gameEvent.Type == "block"
+            && gameEvent.Amount == 3);
+        var exhaustIndex = Array.FindIndex(events, gameEvent => gameEvent.Type == "card_exhausted");
+        Assert.True(rageBlockIndex >= 0 && exhaustIndex > rageBlockIndex);
+    }
+
+    public void AfterCardPlayedPowerResumesOnceAfterCardChoice()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(80, "ironclad", 56, 65,
+            [BaseSpireIds.Rage, BaseSpireIds.Headbutt],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        var discarded = new CardInstance("rage-headbutt-choice", BaseSpireIds.DefendIronclad);
+        state.State.Player.MutableDiscardPile.Add(discarded);
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        var paused = env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+        Assert.True(paused.NeedsChoice);
+        Assert.Equal(0, state.State.Player.Creature.Block);
+        env.Step(state, new ChooseCardAction(discarded.InstanceId));
+        Assert.Equal(3, state.State.Player.Creature.Block);
+        Assert.Equal(1, state.State.Events.Count(gameEvent => gameEvent.Type == "block"
+            && gameEvent.Amount == 3));
+        Assert.True(state.State.PendingCardPlay is null);
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -4175,6 +4239,8 @@ internal static class Program
         tests.FightMeGrantsStrengthAfterItsTwoHits();
         tests.CountScaledPowerEffectsUseTheSelectedTargetsCurrentStacks();
         tests.ConflagrationRepeatsAreaDamageAcrossLivingEnemies();
+        tests.RageTriggersOnlyAfterAttackCardsAndExpiresAtPlayerTurnEnd();
+        tests.AfterCardPlayedPowerResumesOnceAfterCardChoice();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
