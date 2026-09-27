@@ -1,10 +1,12 @@
-# Content DSL
+# Prototype JSON content loader
 
-## Goals and compilation boundary
+> **Status:** implementation experiment, not the target DSL specification. The file-per-runtime-definition approach mirrors the current core records and does not yet realize the intended DSL benefits. The target language and authoring model are described in [content-dsl-design.md](content-dsl-design.md). Do not expand this JSON shape by mechanically migrating more definitions; use it only as a comparison/compatibility fixture while the target DSL is designed and evaluated.
 
-Content files describe reusable game rules. They do not execute arbitrary C# and do not mutate combat state directly. The loader compiles files into the immutable definitions already consumed by `ContentRegistry`; the state machine remains responsible for ordering, random streams, validation, and player observations. This keeps mod content data-driven while keeping runtime rule execution typed and reviewable.
+## Current prototype behavior
 
-The first vertical slice covers enemy and encounter content. Enemy documents describe health ranges, action intent, effect trees, fixed/weighted/conditional action transitions, and difficulty-selected values. Encounter documents describe ordered fixed enemy lists, independently sampled slots with optional within-group uniqueness, and weighted correlated full formations. The loader compiles these documents into the same typed definitions used by hand-written packages, so the combat and RNG semantics remain centralized in the core.
+The current JSON loader parses enemy and encounter records and compiles them into the immutable definitions consumed by `ContentRegistry`. Runtime ordering, random streams, and observations remain in the existing core state machine. This section documents what currently exists; it is not a commitment to retain these authoring shapes.
+
+The prototype covers enemy and encounter content. Its current format explicitly stores action edges, intent damage, per-action transitions, encounter slots, and formations. These duplications are the evidence for redesigning the authoring abstraction described in [content-dsl-design.md](content-dsl-design.md).
 
 ## Enemy document, version 1
 
