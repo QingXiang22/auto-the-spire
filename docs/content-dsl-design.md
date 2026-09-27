@@ -198,6 +198,8 @@ encounter NibbitsNormal {
 
 These examples preserve source distinctions: Twig Medium's Pokey Pounce can repeat at most twice consecutively; Sticky Shot cannot repeat immediately. The source uses equal default weights, with branch eligibility filtered by the move log. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from the number of living enemies. Because these roles only select the initial move, the compiler can specialize them into the encounter's starting-move mapping; no role field needs to be carried through combat state. If later content reads a role during combat, the typed rule model will instead require explicit per-enemy metadata. Slice's attack and block intents are both inferred from effects, including their independent Deadly/Tough values.
 
+For the current core API, that specialization lowers to `EncounterDefinition.StartingActionsByEnemyIndex`. The numeric slot key is compiler output only; source authors use `alone`, `front`, and `back`. This is a deliberate example of compile-time specialization avoiding extra runtime state while retaining source-level meaning and source-location diagnostics.
+
 Behavior lowering must retain only history needed by declared filters. For the examples above, the runtime needs the current behavior location and enough recent move identity to test `previous(sticky_shot)`; it should not retain an unbounded action log unless a content rule asks for longer cooldown or use-once history.
 
 ## Effects, intent, and state-machine boundary
