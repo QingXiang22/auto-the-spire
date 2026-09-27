@@ -354,4 +354,76 @@ package base-spire {
     play = repeatForX(attack(5, target=allEnemies))
     upgradedPlay = repeatForX(attack(8, target=allEnemies))
   }
+
+  card BloodWall {
+    type = skill
+    rarity = common
+    cost = 2
+    target = self
+    play = sequence(loseHp(2), gainBlock(16))
+    upgradedPlay = sequence(loseHp(2), gainBlock(20))
+  }
+
+  card Brand {
+    type = skill
+    rarity = rare
+    cost = 0
+    target = self
+    play = sequence(
+      loseHp(1),
+      chooseCard(from=hand, to=exhaust, prompt="Choose a card to exhaust"),
+      applyPower(Strength, 1, target=self)
+    )
+    upgradedPlay = sequence(
+      loseHp(1),
+      chooseCard(from=hand, to=exhaust, prompt="Choose a card to exhaust"),
+      applyPower(Strength, 2, target=self)
+    )
+  }
+
+  card Cinder {
+    type = attack
+    rarity = common
+    cost = 2
+    target = enemy
+    play = sequence(attack(18), randomMoveCard(from=hand, to=exhaust))
+    upgradedPlay = sequence(attack(24), randomMoveCard(from=hand, to=exhaust))
+  }
+
+  card EvilEye {
+    type = skill
+    rarity = uncommon
+    cost = 1
+    target = self
+    play = if(cardExhaustedThisTurn(), repeat(2, gainBlock(8)), else=gainBlock(8))
+    upgradedPlay = if(cardExhaustedThisTurn(), repeat(2, gainBlock(11)), else=gainBlock(11))
+  }
+
+  card ForgottenRitual {
+    type = skill
+    rarity = uncommon
+    cost = 1
+    target = self
+    keywords = [exhaust]
+    play = if(cardExhaustedThisTurn(), modifyEnergy(3))
+    upgradedPlay = if(cardExhaustedThisTurn(), modifyEnergy(4))
+  }
+
+  card PactsEnd {
+    type = attack
+    rarity = rare
+    cost = 0
+    target = allEnemies
+    play = if(pileCountAtLeast(exhaust, 3), attack(17, target=allEnemies))
+    upgradedPlay = if(pileCountAtLeast(exhaust, 3), attack(23, target=allEnemies))
+  }
+
+  card Taunt {
+    type = skill
+    rarity = uncommon
+    cost = 1
+    target = enemy
+    play = sequence(gainBlock(7), applyPower(Vulnerable, 1, target=target))
+    upgradedPlay = sequence(gainBlock(8), applyPower(Vulnerable, 2, target=target))
+  }
 }
