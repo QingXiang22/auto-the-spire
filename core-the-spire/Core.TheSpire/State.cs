@@ -113,6 +113,37 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     }
 }
 
+internal readonly record struct EnemyActionEvaluationContext(GameState state, EnemyCombatState enemy, int enemyIndex)
+{
+    public int GetMetric(EnemyActionMetric metric)
+    {
+        var player = state.Player.Creature;
+        var creature = enemy.Creature;
+        return metric switch
+        {
+            EnemyActionMetric.Turn => state.Turn,
+            EnemyActionMetric.EnemyIndex => enemyIndex,
+            EnemyActionMetric.EnemyHp => creature.Hp,
+            EnemyActionMetric.EnemyMaxHp => creature.MaxHp,
+            EnemyActionMetric.EnemyHpPercent => creature.MaxHp == 0 ? 0 : (int)((long)creature.Hp * 100 / creature.MaxHp),
+            EnemyActionMetric.EnemyBlock => creature.Block,
+            EnemyActionMetric.PlayerHp => player.Hp,
+            EnemyActionMetric.PlayerMaxHp => player.MaxHp,
+            EnemyActionMetric.PlayerHpPercent => player.MaxHp == 0 ? 0 : (int)((long)player.Hp * 100 / player.MaxHp),
+            EnemyActionMetric.PlayerBlock => player.Block,
+            EnemyActionMetric.LivingEnemies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0),
+            _ => throw new ArgumentOutOfRangeException(nameof(metric))
+        };
+    }
+
+    public int GetPower(EnemyActionSide side, ContentId powerId) => side switch
+    {
+        EnemyActionSide.Enemy => enemy.Creature.PowerAmount(powerId),
+        EnemyActionSide.Player => state.Player.Creature.PowerAmount(powerId),
+        _ => throw new ArgumentOutOfRangeException(nameof(side))
+    };
+}
+
 internal sealed class GameState
 {
     private readonly List<GameEvent> _events = [];

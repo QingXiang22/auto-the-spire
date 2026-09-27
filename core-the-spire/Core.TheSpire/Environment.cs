@@ -153,14 +153,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             var hp = spawn.Hp ?? ChooseUniqueEnemyHp(enemyDefinition, chosenEnemyHp, rng.Get("niche"));
             chosenEnemyHp.Add(hp);
-            var actionIndex = spawn.StartingActionOverride is { } actionId
-                ? enemyDefinition.GetActionIndex(actionId)
-                : enemyDefinition.ResolveStartingActionIndex(rng.Get("enemy-ai"));
             var enemy = new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition)
             {
-                ActionIndex = actionIndex
+                ActionIndex = enemyDefinition.StartingActionIndex
             };
-            enemy.SelectAction(enemyDefinition.Actions[actionIndex].Id);
             combatEnemies.Add(enemy);
         }
         var handInstances = hand.ToArray();
@@ -175,6 +171,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances),
             combatEnemies);
+        for (var enemyIndex = 0; enemyIndex < combatEnemies.Count; enemyIndex++)
+        {
+            var enemy = combatEnemies[enemyIndex];
+            enemy.ActionIndex = prepared[enemyIndex].Spawn.StartingActionOverride is { } actionId
+                ? enemy.Definition.GetActionIndex(actionId)
+                : enemy.Definition.ResolveStartingActionIndex(
+                    new EnemyActionEvaluationContext(state, enemy, enemyIndex), rng.Get("enemy-ai"));
+            enemy.SelectAction(enemy.Definition.Actions[enemy.ActionIndex].Id);
+        }
         return new GameSession(state, rng);
     }
 
@@ -540,12 +545,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterEnemyTurnEnd);
                     break;
                 case EndTurnResolutionStage.AdvanceEnemyAction:
-                    foreach (var enemy in state.Enemies)
+                    for (var enemyIndex = 0; enemyIndex < state.Enemies.Count; enemyIndex++)
                     {
+                        var enemy = state.Enemies[enemyIndex];
                         if (enemy.Creature.Hp <= 0) continue;
                         var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
                         enemy.ActionIndex = enemy.Definition.ResolveNextActionIndex(currentAction.Id,
-                            enemy.LastActionId, enemy.ConsecutiveActionCount, session.Random.Get("enemy-ai"));
+                            enemy.LastActionId, enemy.ConsecutiveActionCount,
+                            new EnemyActionEvaluationContext(state, enemy, enemyIndex),
+                            session.Random.Get("enemy-ai"));
                         enemy.SelectAction(enemy.Definition.Actions[enemy.ActionIndex].Id);
                     }
                     state.CurrentEnemyIndex = 0;

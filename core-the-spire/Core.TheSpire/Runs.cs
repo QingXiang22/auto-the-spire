@@ -1095,7 +1095,7 @@ public sealed class RunEnvironment
 
     private static bool IsRunConditionMet(RunCondition condition, RunState state) => condition switch
     {
-        RunMetricCondition metric => CompareRunMetric(ReadRunMetric(metric.Metric, state),
+        RunMetricCondition metric => ConditionEvaluation.Compare(ReadRunMetric(metric.Metric, state),
             metric.Comparison, metric.Threshold),
         HasRunRelicCondition hasRelic => state.Relics.Contains(hasRelic.Relic),
         HasRunPotionCondition hasPotion => state.Potions.Contains(hasPotion.Potion),
@@ -1114,16 +1114,6 @@ public sealed class RunEnvironment
         RunMetric.PotionCount => state.Potions.Count(potion => potion.HasValue),
         RunMetric.EmptyPotionSlots => state.Potions.Count(potion => potion is null),
         _ => throw new ArgumentOutOfRangeException(nameof(metric))
-    };
-
-    private static bool CompareRunMetric(int value, RunComparison comparison, int threshold) => comparison switch
-    {
-        RunComparison.Equal => value == threshold,
-        RunComparison.AtLeast => value >= threshold,
-        RunComparison.AtMost => value <= threshold,
-        RunComparison.GreaterThan => value > threshold,
-        RunComparison.LessThan => value < threshold,
-        _ => throw new ArgumentOutOfRangeException(nameof(comparison))
     };
 
     private IReadOnlyList<CardInstance> GetRunCardCandidates(RunState state, ChooseRunCardEffect selection) =>

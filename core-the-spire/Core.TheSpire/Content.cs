@@ -149,13 +149,16 @@ public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, Inte
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
     ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
     EnemyActionTransition? Transition = null);
-public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null);
+public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null,
+    EnemyActionCondition? Condition = null);
 public enum EnemyActionRepeatPolicy { Allow, PreventImmediateRepeat }
+public enum EnemyActionSelectionMode { WeightedRandom, FirstMatchingCondition }
 
 public sealed record EnemyActionTransition
 {
     public EnemyActionTransition(IEnumerable<EnemyActionChoice> choices,
-        EnemyActionRepeatPolicy repeatPolicy = EnemyActionRepeatPolicy.Allow)
+        EnemyActionRepeatPolicy repeatPolicy = EnemyActionRepeatPolicy.Allow,
+        EnemyActionSelectionMode selectionMode = EnemyActionSelectionMode.WeightedRandom)
     {
         ArgumentNullException.ThrowIfNull(choices);
         var copiedChoices = choices.ToArray();
@@ -169,6 +172,12 @@ public sealed record EnemyActionTransition
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxUses);
         }
         if (!Enum.IsDefined(repeatPolicy)) throw new ArgumentOutOfRangeException(nameof(repeatPolicy));
+        if (!Enum.IsDefined(selectionMode)) throw new ArgumentOutOfRangeException(nameof(selectionMode));
+        if (selectionMode == EnemyActionSelectionMode.FirstMatchingCondition
+            && (copiedChoices.All(choice => choice.Condition is null)
+                || copiedChoices.Any(choice => choice.Weight != 1 || choice.MaxConsecutiveUses is not null)
+                || repeatPolicy != EnemyActionRepeatPolicy.Allow))
+            throw new ArgumentException("First-match transitions require conditions and cannot use weights or repeat limits.", nameof(choices));
         if (repeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
             && copiedChoices.Select(choice => choice.ActionId).Distinct().Count() < 2)
             throw new ArgumentException("PreventImmediateRepeat needs at least two distinct actions.", nameof(choices));
@@ -185,10 +194,12 @@ public sealed record EnemyActionTransition
             throw new ArgumentOutOfRangeException(nameof(choices), "Transition weights exceed supported range.");
         Choices = Array.AsReadOnly(copiedChoices);
         RepeatPolicy = repeatPolicy;
+        SelectionMode = selectionMode;
     }
 
     public IReadOnlyList<EnemyActionChoice> Choices { get; }
     public EnemyActionRepeatPolicy RepeatPolicy { get; }
+    public EnemyActionSelectionMode SelectionMode { get; }
 }
 public enum RunEventKind { Event, Ancient, Final }
 
@@ -235,6 +246,84 @@ public sealed record CustomRunEffect(ContentId Handler, System.Text.Json.JsonEle
 public abstract record RunCondition;
 public enum RunMetric { Gold, Hp, MaxHp, DeckSize, PotionCount, EmptyPotionSlots }
 public enum RunComparison { Equal, AtLeast, AtMost, GreaterThan, LessThan }
+internal static class ConditionEvaluation
+{
+    public static bool Compare(int value, RunComparison comparison, int threshold) => comparison switch
+    {
+        RunComparison.Equal => value == threshold,
+        RunComparison.AtLeast => value >= threshold,
+        RunComparison.AtMost => value <= threshold,
+        RunComparison.GreaterThan => value > threshold,
+        RunComparison.LessThan => value < threshold,
+        _ => throw new ArgumentOutOfRangeException(nameof(comparison))
+    };
+}
+public enum EnemyActionMetric { Turn, EnemyIndex, EnemyHp, EnemyMaxHp, EnemyHpPercent, EnemyBlock, PlayerHp, PlayerMaxHp, PlayerHpPercent, PlayerBlock, LivingEnemies }
+public enum EnemyActionSide { Enemy, Player }
+
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyMetricCondition), "metric")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyPowerCondition), "power")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AllEnemyCondition), "all")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AnyEnemyCondition), "any")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(NotEnemyCondition), "not")]
+public abstract record EnemyActionCondition
+{
+    internal abstract bool Evaluate(EnemyActionEvaluationContext context);
+}
+
+public sealed record EnemyMetricCondition(EnemyActionMetric Metric, RunComparison Comparison, int Value)
+    : EnemyActionCondition
+{
+    internal override bool Evaluate(EnemyActionEvaluationContext context) =>
+        ConditionEvaluation.Compare(context.GetMetric(Metric), Comparison, Value);
+}
+
+public sealed record EnemyPowerCondition(EnemyActionSide Side, ContentId PowerId, RunComparison Comparison, int Value)
+    : EnemyActionCondition
+{
+    internal override bool Evaluate(EnemyActionEvaluationContext context) =>
+        ConditionEvaluation.Compare(context.GetPower(Side, PowerId), Comparison, Value);
+}
+
+public sealed record AllEnemyCondition : EnemyActionCondition
+{
+    public AllEnemyCondition(IReadOnlyList<EnemyActionCondition> conditions)
+    {
+        ArgumentNullException.ThrowIfNull(conditions);
+        var copiedConditions = conditions.ToArray();
+        if (copiedConditions.Length == 0 || copiedConditions.Any(condition => condition is null))
+            throw new ArgumentException("An all condition needs at least one non-null condition.", nameof(conditions));
+        Conditions = Array.AsReadOnly(copiedConditions);
+    }
+
+    public IReadOnlyList<EnemyActionCondition> Conditions { get; }
+    internal override bool Evaluate(EnemyActionEvaluationContext context) => Conditions.All(condition => condition.Evaluate(context));
+}
+
+public sealed record AnyEnemyCondition : EnemyActionCondition
+{
+    public AnyEnemyCondition(IReadOnlyList<EnemyActionCondition> conditions)
+    {
+        ArgumentNullException.ThrowIfNull(conditions);
+        var copiedConditions = conditions.ToArray();
+        if (copiedConditions.Length == 0 || copiedConditions.Any(condition => condition is null))
+            throw new ArgumentException("An any condition needs at least one non-null condition.", nameof(conditions));
+        Conditions = Array.AsReadOnly(copiedConditions);
+    }
+
+    public IReadOnlyList<EnemyActionCondition> Conditions { get; }
+    internal override bool Evaluate(EnemyActionEvaluationContext context) => Conditions.Any(condition => condition.Evaluate(context));
+}
+
+public sealed record NotEnemyCondition : EnemyActionCondition
+{
+    public NotEnemyCondition(EnemyActionCondition condition) =>
+        Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+
+    public EnemyActionCondition Condition { get; }
+    internal override bool Evaluate(EnemyActionEvaluationContext context) => !Condition.Evaluate(context);
+}
 public sealed record RunMetricCondition(RunMetric Metric, RunComparison Comparison, int Threshold) : RunCondition;
 public sealed record HasRunRelicCondition(ContentId Relic) : RunCondition;
 public sealed record HasRunPotionCondition(ContentId Potion) : RunCondition;
@@ -529,27 +618,36 @@ public sealed record EnemyDefinition
     public EnemyActionTransition? StartingTransition { get; }
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
 
-    internal int ResolveStartingActionIndex(SeededRandom random) => StartingTransition is { } transition
-        ? ResolveTransitionIndex(transition, null, 0, random)
+    internal int ResolveStartingActionIndex(EnemyActionEvaluationContext context, SeededRandom random) => StartingTransition is { } transition
+        ? ResolveTransitionIndex(transition, null, 0, context, random)
         : StartingActionIndex;
 
     internal int ResolveNextActionIndex(ContentId currentActionId, ContentId? lastActionId,
-        int consecutiveActionCount, SeededRandom random)
+        int consecutiveActionCount, EnemyActionEvaluationContext context, SeededRandom random)
     {
         var current = Actions[GetActionIndex(currentActionId)];
         if (current.NextActionId is { } next) return GetActionIndex(next);
         if (current.Transition is { } transition)
-            return ResolveTransitionIndex(transition, lastActionId, consecutiveActionCount, random);
+            return ResolveTransitionIndex(transition, lastActionId, consecutiveActionCount, context, random);
         return currentActionId == Actions[^1].Id && LoopLastAction
             ? Actions.Count - 1
             : Math.Min(GetActionIndex(currentActionId) + 1, Actions.Count - 1);
     }
 
     private int ResolveTransitionIndex(EnemyActionTransition transition, ContentId? lastActionId,
-        int consecutiveActionCount, SeededRandom random)
+        int consecutiveActionCount, EnemyActionEvaluationContext context, SeededRandom random)
     {
+        if (transition.SelectionMode == EnemyActionSelectionMode.FirstMatchingCondition)
+        {
+            foreach (var choice in transition.Choices)
+                if (choice.Condition is null || choice.Condition.Evaluate(context))
+                    return GetActionIndex(choice.ActionId);
+            throw new InvalidOperationException("Enemy conditional transition has no matching action for the current combat state.");
+        }
+
         var choices = transition.Choices.Where(choice =>
         {
+            if (choice.Condition is { } condition && !condition.Evaluate(context)) return false;
             var maximumConsecutiveUses = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
                 ? 1
                 : choice.MaxConsecutiveUses;
@@ -557,7 +655,7 @@ public sealed record EnemyDefinition
             return consecutiveActionCount < maximumConsecutiveUses.Value;
         }).ToArray();
         if (choices.Length == 0)
-            throw new InvalidOperationException("Enemy transition has no eligible action choices.");
+            throw new InvalidOperationException("Enemy transition has no eligible action choices for the current combat state.");
         var roll = random.NextInt(choices.Sum(choice => choice.Weight));
         foreach (var choice in choices)
         {
@@ -728,8 +826,17 @@ public sealed class ContentRegistry
         {
             if (action.AppliedPower is { } powerId && !_powers.ContainsKey(powerId))
                 throw new InvalidOperationException($"Enemy action '{action.Id}' references unknown power '{powerId}'.");
+            if (action.Transition is { } transition)
+                foreach (var choice in transition.Choices)
+                    if (choice.Condition is { } condition)
+                        ValidateEnemyActionCondition(condition, $"Enemy action '{action.Id}' transition");
             ValidateEffectReferences(action.Effect, $"Enemy action '{action.Id}'");
         }
+        foreach (var enemy in _enemies.Values)
+        if (enemy.StartingTransition is { } transition)
+            foreach (var choice in transition.Choices)
+                if (choice.Condition is { } condition)
+                    ValidateEnemyActionCondition(condition, $"Enemy '{enemy.Id}' starting transition");
         foreach (var card in _cards.Values)
         {
             card.Id.Validate();
@@ -946,6 +1053,39 @@ public sealed class ContentRegistry
                 break;
             default:
                 throw new InvalidOperationException($"{owner} uses an unsupported run condition '{condition.GetType().Name}'.");
+        }
+    }
+
+    private void ValidateEnemyActionCondition(EnemyActionCondition condition, string owner)
+    {
+        switch (condition)
+        {
+            case EnemyMetricCondition metric:
+                if (!Enum.IsDefined(metric.Metric) || !Enum.IsDefined(metric.Comparison))
+                    throw new InvalidOperationException($"{owner} has an invalid enemy metric condition.");
+                break;
+            case EnemyPowerCondition power when !_powers.ContainsKey(power.PowerId):
+                throw new InvalidOperationException($"{owner} checks unknown power '{power.PowerId}'.");
+            case EnemyPowerCondition power:
+                power.PowerId.Validate();
+                if (!Enum.IsDefined(power.Side) || !Enum.IsDefined(power.Comparison))
+                    throw new InvalidOperationException($"{owner} has an invalid enemy power condition.");
+                break;
+            case AllEnemyCondition all when all.Conditions.Count == 0:
+                throw new InvalidOperationException($"{owner} has an empty all condition.");
+            case AllEnemyCondition all:
+                foreach (var nested in all.Conditions) ValidateEnemyActionCondition(nested, owner);
+                break;
+            case AnyEnemyCondition any when any.Conditions.Count == 0:
+                throw new InvalidOperationException($"{owner} has an empty any condition.");
+            case AnyEnemyCondition any:
+                foreach (var nested in any.Conditions) ValidateEnemyActionCondition(nested, owner);
+                break;
+            case NotEnemyCondition not:
+                ValidateEnemyActionCondition(not.Condition, owner);
+                break;
+            default:
+                throw new InvalidOperationException($"{owner} uses unsupported enemy condition '{condition.GetType().Name}'.");
         }
     }
 
