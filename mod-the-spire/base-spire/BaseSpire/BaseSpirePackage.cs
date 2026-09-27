@@ -10,6 +10,10 @@ public static class BaseSpireIds
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
     public static readonly ContentId Break = ContentId.Parse("base-spire:break");
     public static readonly ContentId Breakthrough = ContentId.Parse("base-spire:breakthrough");
+    public static readonly ContentId AshenStrike = ContentId.Parse("base-spire:ashen-strike");
+    public static readonly ContentId Bully = ContentId.Parse("base-spire:bully");
+    public static readonly ContentId Dismantle = ContentId.Parse("base-spire:dismantle");
+    public static readonly ContentId NotYet = ContentId.Parse("base-spire:not-yet");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");

@@ -426,4 +426,42 @@ package base-spire {
     play = sequence(gainBlock(7), applyPower(Vulnerable, 1, target=target))
     upgradedPlay = sequence(gainBlock(8), applyPower(Vulnerable, 2, target=target))
   }
+
+  card AshenStrike {
+    type = attack
+    rarity = uncommon
+    cost = 1
+    target = enemy
+    play = scaledAttack(6, 3, count=pileCount(exhaust))
+    upgradedPlay = scaledAttack(6, 4, count=pileCount(exhaust))
+  }
+
+  card Bully {
+    type = attack
+    rarity = uncommon
+    cost = 0
+    target = enemy
+    play = scaledAttack(4, 2, count=targetPowerAmount(Vulnerable))
+    upgradedPlay = scaledAttack(4, 3, count=targetPowerAmount(Vulnerable))
+  }
+
+  card Dismantle {
+    type = attack
+    rarity = uncommon
+    cost = 1
+    target = enemy
+    play = if(hasPower(Vulnerable, target=target), repeat(2, attack(8)), else=attack(8))
+    upgradedPlay = if(hasPower(Vulnerable, target=target), repeat(2, attack(10)), else=attack(10))
+  }
+
+  card NotYet {
+    type = skill
+    rarity = rare
+    cost = 2
+    target = self
+    keywords = [exhaust]
+    canGenerateInCombat = false
+    play = heal(10)
+    upgradedPlay = heal(13)
+  }
 }

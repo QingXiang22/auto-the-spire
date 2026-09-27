@@ -27,7 +27,8 @@ public static class SpireCombatDslCompiler
         {
             var properties = ReadProperties(declaration);
             RequireOnlyProperties(declaration, properties,
-                "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay");
+                "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay",
+                "canGenerateInCombat");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -51,7 +52,9 @@ public static class SpireCombatDslCompiler
                 ? CompileEffect(upgradedPlayNode)
                 : null;
             return new CardDefinition(Id(declaration.Name), cost, type, play, keywords, target, rarity,
-                upgradedPlay, upgradedCost, costKind);
+                upgradedPlay, upgradedCost, costKind,
+                properties.TryGetValue("canGenerateInCombat", out var canGenerateNode)
+                    ? Boolean(canGenerateNode) : true);
         }
 
         private EffectNode CompileEffect(DslValueNode node)
@@ -70,6 +73,11 @@ public static class SpireCombatDslCompiler
                 case "attack":
                     CheckShape(call, 1, 1, "target");
                     return new AttackEffect(Integer(Argument(call, 0)), OptionalTarget(call, "target", TargetSelector.SelectedTarget));
+                case "scaledAttack":
+                    CheckShape(call, 2, 2, "count", "target");
+                    return new ScaledAttackEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
+                        CompileAttackCount(RequiredArgument(call, "count")),
+                        OptionalTarget(call, "target", TargetSelector.SelectedTarget));
                 case "attackUsingBlock":
                     CheckShape(call, 0, 0, "target");
                     return new AttackUsingBlockEffect(OptionalTarget(call, "target", TargetSelector.SelectedTarget));
@@ -170,8 +178,9 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 0, 0);
                     return new TargetAlivePredicate();
                 case "hasPower":
-                    CheckShape(call, 1, 1);
-                    return new HasPowerPredicate(Id(Name(Argument(call, 0))));
+                    CheckShape(call, 1, 1, "target");
+                    return new HasPowerPredicate(Id(Name(Argument(call, 0))),
+                        OptionalTarget(call, "target", TargetSelector.Self));
                 case "energyAtLeast":
                     CheckShape(call, 1, 1);
                     return new EnergyAtLeastPredicate(Integer(Argument(call, 0)));
@@ -184,6 +193,22 @@ public static class SpireCombatDslCompiler
                         Integer(Argument(call, 1)));
                 default:
                     throw Error(call.Location, $"Unknown combat predicate '{call.Name}'.");
+            }
+        }
+
+        private AttackCountSource CompileAttackCount(DslValueNode node)
+        {
+            var call = RequireCall(node);
+            switch (call.Name)
+            {
+                case "pileCount":
+                    CheckShape(call, 1, 1);
+                    return new PileCardCountSource(EnumValue<CardPile>(Argument(call, 0)));
+                case "targetPowerAmount":
+                    CheckShape(call, 1, 1);
+                    return new TargetPowerCountSource(Id(Name(Argument(call, 0))));
+                default:
+                    throw Error(call.Location, $"Unknown attack count source '{call.Name}'.");
             }
         }
 
