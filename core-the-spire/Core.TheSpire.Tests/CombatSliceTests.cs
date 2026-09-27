@@ -3865,6 +3865,8 @@ public sealed class CombatSliceTests
     public void BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot()
     {
         var definition = Build(new BaseSpirePackage());
+        Assert.Equal(new AttackEffect(20, TargetSelector.SelectedTarget, DamageProperties.Unpowered),
+            definition.Potions[BaseSpireIds.FirePotion].Effect);
         var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
         var run = runEnvironment.Start(822);
         run.State.Relics.Add(BaseSpireIds.Vajra);
@@ -3877,6 +3879,10 @@ public sealed class CombatSliceTests
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
         var enemyId = combat.State.Enemy.Id;
         var startingEnemyHp = combat.State.Enemy.Hp;
+        combat.State.ApplyPower(combat, combat.State.Player.Creature, BaseSpireIds.Weak, 2,
+            combat.State.Player.Creature);
+        combat.State.ApplyPower(combat, combat.State.Enemy, BaseSpireIds.Vulnerable, 2,
+            combat.State.Player.Creature);
         var usePotion = new UsePotionAction(2, enemyId);
 
         Assert.True(combatEnvironment.LegalActions(combat).Contains(usePotion));
@@ -3889,6 +3895,122 @@ public sealed class CombatSliceTests
         Assert.Equal(null, combatEnvironment.Observe(combat).Potions[2]);
         Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 20);
         Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "potion_used");
+    }
+
+    public void FlexPotionReusesTemporaryStrengthAcrossPotionsAndCards()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(827);
+        run.State.Deck.Clear();
+        var setup = new CardInstance("flex-setup", BaseSpireIds.SetupStrike);
+        var strike = new CardInstance("flex-strike", BaseSpireIds.StrikeIronclad);
+        run.State.Deck.Add(setup);
+        run.State.Deck.Add(strike);
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.FlexPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.FlexPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.StrengthPotion));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        var environment = new CombatEnvironment(definition);
+        var combat = environment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        combat.State.Player.MutableHand.Clear();
+        combat.State.Player.MutableHand.Add(setup);
+        combat.State.Player.MutableHand.Add(strike);
+        var startingHp = combat.State.Enemy.Hp;
+
+        environment.Step(combat, new UsePotionAction(2, combat.State.Player.Id));
+        environment.Step(combat, new UsePotionAction(0, combat.State.Player.Id));
+        environment.Step(combat, new UsePotionAction(1, combat.State.Player.Id));
+        Assert.Equal(3, combat.State.Player.Energy);
+        Assert.True(run.State.Potions.All(potion => potion is null));
+        Assert.Equal(10, environment.Observe(combat).PlayerPowers[BaseSpireIds.FlexPotionPower]);
+        Assert.Equal(12, combat.State.Player.Creature.Strength);
+        environment.Step(combat, new PlayCardAction(0, combat.State.Enemy.Id));
+        Assert.Equal(startingHp - 19, combat.State.Enemy.Hp);
+        Assert.Equal(14, combat.State.Player.Creature.Strength);
+        environment.Step(combat, new PlayCardAction(0, combat.State.Enemy.Id));
+        Assert.Equal(startingHp - 39, combat.State.Enemy.Hp);
+
+        environment.Step(combat, new EndTurnAction());
+        var powers = environment.Observe(combat).PlayerPowers;
+        Assert.Equal(2, powers[BaseSpireIds.Strength]);
+        Assert.False(powers.ContainsKey(BaseSpireIds.FlexPotionPower));
+        Assert.False(powers.ContainsKey(BaseSpireIds.SetupStrikePower));
+    }
+
+    public void MigratedPotionDslUpgradesHandAndAppliesEffectsToTheirDeclaredTargets()
+    {
+        var definition = Build(new BaseSpirePackage());
+        Assert.Equal(6, BaseSpireContent.LoadPotions().Count);
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(828);
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BlessingOfTheForge));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BeetleJuice));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        var environment = new CombatEnvironment(definition);
+        var combat = environment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        environment.Step(combat, new UsePotionAction(0, combat.State.Player.Id));
+        Assert.Equal(12, combat.State.Player.Creature.Block);
+        Assert.Equal(0, combat.State.Enemy.Block);
+        environment.Step(combat, new UsePotionAction(1, combat.State.Player.Id));
+        Assert.True(combat.State.Player.HandInstances.All(card => card.UpgradeLevel == 1));
+        environment.Step(combat, new UsePotionAction(2, combat.State.Enemy.Id));
+        Assert.Equal(4, combat.State.Enemy.PowerAmount(BaseSpireIds.Shrink));
+        Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Shrink));
+        Assert.Equal(3, combat.State.Player.Energy);
+    }
+
+    public void PotionDslValidatesUsageFlagsAndCrossPackageReferences()
+    {
+        const string source = """
+            package potion-mod {
+              potion Training {
+                rarity = uncommon usage = combatOnly target = self
+                inSharedPool = false characterPools = ["base-spire:ironclad"]
+                canGenerateInCombat = false
+                use = applyPower("base-spire:strength", 3, target=self)
+              }
+            }
+            """;
+        static IReadOnlyList<PotionDefinition> Compile(string text) =>
+            SpireCombatDslCompiler.CompilePotions(DslSourceParser.Parse(text, "potions.spire"));
+        var potion = Compile(source).Single();
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Strength, 3, TargetSelector.Self), potion.Effect);
+        Assert.Equal(BaseSpireIds.Ironclad, potion.CharacterPoolIds!.Single());
+        Assert.False(potion.InSharedPool);
+        Assert.False(potion.CanBeGeneratedInCombat);
+        var definition = Build(new BaseSpirePackage(), new PotionDslFixturePackage(source));
+        Assert.Contains(definition.PotionPoolFor(BaseSpireIds.Ironclad), item => item.Id == potion.Id);
+        Assert.Throws<InvalidOperationException>(() => Build(new BaseSpirePackage(),
+            new PotionDslFixturePackage(source.Replace("base-spire:ironclad", "missing:character"))));
+        Assert.Throws<InvalidOperationException>(() => Build(new BaseSpirePackage(),
+            new PotionDslFixturePackage(source.Replace("base-spire:strength", "missing:power"))));
+        Assert.Throws<DslSourceException>(() => Compile(source.Replace("combatOnly", "anyTime")));
+        Assert.Throws<DslSourceException>(() => Compile(source.Replace("usage = combatOnly", "")));
+        Assert.Throws<DslSourceException>(() => Compile(source.Replace("inSharedPool = false", "inSharedPool = true")));
+        Assert.Throws<DslSourceException>(() => Compile(source.Replace("use =", "unknown =")));
+        const string attackSource = """
+            package potion-mod {
+              potion Attack { rarity = common usage = combatOnly target = enemy
+                use = attack(4, properties=[unpowered, unblockable]) }
+            }
+            """;
+        Assert.Equal(new AttackEffect(4, TargetSelector.SelectedTarget,
+            DamageProperties.Unpowered | DamageProperties.Unblockable), Compile(attackSource).Single().Effect);
+        Assert.Throws<DslSourceException>(() => Compile(attackSource.Replace("unblockable", "unpowered")));
+        Assert.Throws<DslSourceException>(() => Compile(attackSource.Replace("unblockable", "unknown")));
+        Assert.Throws<DslSourceException>(() => Compile(attackSource.Replace("[unpowered, unblockable]", "unpowered")));
+    }
+
+    private sealed class PotionDslFixturePackage(string source) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("potion-mod", "1.0.0");
+        public void Register(ContentRegistry registry)
+        {
+            foreach (var potion in SpireCombatDslCompiler.CompilePotions(DslSourceParser.Parse(source)))
+                registry.Register(potion);
+        }
     }
 
     public void PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity()
@@ -4515,6 +4637,9 @@ internal static class Program
         tests.BasePaperPhrogAddsTwentyFivePercentToPoweredDamageAgainstVulnerableEnemies();
         tests.BaseRuinedHelmetDoublesTheFirstStrengthApplicationEachCombat();
         tests.BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot();
+        tests.FlexPotionReusesTemporaryStrengthAcrossPotionsAndCards();
+        tests.MigratedPotionDslUpgradesHandAndAppliesEffectsToTheirDeclaredTargets();
+        tests.PotionDslValidatesUsageFlagsAndCrossPackageReferences();
         tests.PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity();
         tests.PotionCapacityChangesPreserveSlotsAndPotionBeltAddsTwoSlots();
         tests.PotionGenerationEffectUsesItsOwnRngAndFillsOpenSlotsWithoutDuplicates();

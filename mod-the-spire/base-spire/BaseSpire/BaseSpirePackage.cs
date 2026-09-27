@@ -93,6 +93,8 @@ public static class BaseSpireIds
     public static readonly ContentId FirePotion = ContentId.Parse("base-spire:fire-potion");
     public static readonly ContentId BlockPotion = ContentId.Parse("base-spire:block-potion");
     public static readonly ContentId StrengthPotion = ContentId.Parse("base-spire:strength-potion");
+    public static readonly ContentId FlexPotion = ContentId.Parse("base-spire:flex-potion");
+    public static readonly ContentId FlexPotionPower = ContentId.Parse("base-spire:flex-potion-power");
     public static readonly ContentId BlessingOfTheForge = ContentId.Parse("base-spire:blessing-of-the-forge");
     public static readonly ContentId BeetleJuice = ContentId.Parse("base-spire:beetle-juice");
     public static readonly ContentId Weak = ContentId.Parse("base-spire:weak");
@@ -159,6 +161,26 @@ public static class BaseSpireContent
         return SpireCombatBehaviorDslCompiler.Compile(package).Powers;
     }
 
+    public static IReadOnlyList<PotionDefinition> LoadPotions()
+    {
+        const string resourceName = "BaseSpire.ContentSource.potions.spire";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        return SpireCombatDslCompiler.CompilePotions(
+            DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/potions.spire"));
+    }
+
+    public static IReadOnlyList<PowerDefinition> LoadPotionPowers()
+    {
+        const string resourceName = "BaseSpire.ContentSource.potion-powers.spire";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        return SpireCombatBehaviorDslCompiler.Compile(
+            DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/potion-powers.spire")).Powers;
+    }
+
     public static IReadOnlyList<StateVariableDefinition> LoadStateDefinitions()
     {
         const string resourceName = "BaseSpire.ContentSource.state.spire";
@@ -203,18 +225,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
-        registry.Register(new PotionDefinition(BaseSpireIds.FirePotion, PotionRarity.Common,
-            new AttackEffect(20, TargetSelector.SelectedTarget,
-                DamageProperties.Move | DamageProperties.Unpowered), TargetSelector.SelectedTarget));
-        registry.Register(new PotionDefinition(BaseSpireIds.BlockPotion, PotionRarity.Common,
-            new GainBlockEffect(12)));
-        registry.Register(new PotionDefinition(BaseSpireIds.StrengthPotion, PotionRarity.Common,
-            new ApplyPowerEffect(BaseSpireIds.Strength, 2)));
-        registry.Register(new PotionDefinition(BaseSpireIds.BlessingOfTheForge, PotionRarity.Uncommon,
-            new UpgradeCardsInPileEffect(CardPile.Hand)));
-        registry.Register(new PotionDefinition(BaseSpireIds.BeetleJuice, PotionRarity.Rare,
-            new ApplyPowerEffect(BaseSpireIds.Shrink, 4, TargetSelector.SelectedTarget),
-            TargetSelector.SelectedTarget));
+        foreach (var potion in BaseSpireContent.LoadPotions()) registry.Register(potion);
         registry.Register(BaseSpireContent.Ironclad());
         registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,
@@ -227,6 +238,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
                 new RemovePowerEffect(BaseSpireIds.SelfFormingClayPower)
             ])));
         foreach (var power in BaseSpireContent.LoadIroncladPowers()) registry.Register(power);
+        foreach (var power in BaseSpireContent.LoadPotionPowers()) registry.Register(power);
         registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
         registry.Register(new WellLaidPlansHook());
         registry.Register(new PowerDefinition(BaseSpireIds.BarricadePower));

@@ -6,7 +6,7 @@ This document describes the current authoring boundary for `core-the-spire` and 
 
 The package DSL has three shared building blocks:
 
-- **Declarations:** cards, Powers, enemies, and their stable package-scoped names.
+- **Declarations:** cards, combat potions, Powers, enemies, and their stable package-scoped names.
 - **Expressions:** effects such as `attack`, `applyPower`, `gainBlock`, and `addCards`.
 - **Behavior composition:** named enemy moves connected by `cycle`, `loop`, `startWith`, and random choice expressions.
 
@@ -56,11 +56,37 @@ enemy DampCultist {
 
 The move names produce stable action IDs. `intent` and displayed damage are derived from the effect tree when the compiler can determine them. This keeps attack intent damage aligned with the action executed by the core.
 
+## Combat potion contract
+
+Potions use the same effect compiler and execution queue as cards and Powers:
+
+```text
+package base-spire {
+  potion FirePotion {
+    rarity = common
+    usage = combatOnly
+    target = enemy
+    use = attack(20, target=target, properties=[unpowered])
+  }
+  potion FlexPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    use = applyPower(FlexPotionPower, 5, target=self)
+  }
+}
+```
+
+`rarity`, `usage`, `target`, and `use` are required. This slice accepts only `usage = combatOnly`; unsupported usage is rejected during compilation. Declaration targets use `self`, `enemy`, `firstEnemy`, `allEnemies`, or `randomEnemy`, as for cards; effect targets use `target` for the selected enemy. Optional metadata is `inSharedPool` (default true), `characterPools` (local or quoted qualified character IDs; requires `inSharedPool = false`), and `canGenerateInCombat` (default true). The registry validates referenced characters and Powers. `applyPower` also accepts a quoted qualified Power ID. Original `AnyPlayer` targets project to `self` in the single-player model; multiplayer targeting is not implemented.
+
+`attack` accepts an optional `properties` list of damage flags (`move`, `unpowered`, `unblockable`, `skipHurtAnimation`). Omission defaults to `[move]`; an empty list means no flags. Fire Potion explicitly uses `[unpowered]`, matching its source without adding the Move flag. Block Potion currently uses `gainBlock(12)`; source block properties and their full modifier pipeline remain outside this slice.
+
 ## Current source of truth
 
 - [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 55 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 53 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
 - [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers the Pyre maximum-energy and Cruelty vulnerable-damage modifiers, and the Setup Strike/Mangle Power lifecycles.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
+- [`potions.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire) declares Fire, Block, Strength, Blessing of the Forge, Beetle Juice, and Flex Potion; [`potion-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potion-powers.spire) declares Flex Potion's temporary Strength lifecycle.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
 
 Enemy behaviors in the current roster exercise fixed cycles, a one-time opening move, repeated moves, random choices without immediate repeats, and consecutive-use limits. Gameplay tests exercise normal and Deadly/Tough profiles through the real compiled package. JSON enemy definitions and their separate loading path have been removed; encounters remain JSON.
