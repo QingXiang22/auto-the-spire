@@ -148,7 +148,7 @@ internal sealed class GameState
 {
     private readonly List<GameEvent> _events = [];
     private readonly IReadOnlyList<GameEvent> _eventView;
-    private readonly Dictionary<string, Dictionary<string, int>> _modInts = new(StringComparer.Ordinal);
+    private readonly ScopedIntState _modInts = new();
 
     internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
     {
@@ -307,16 +307,9 @@ internal sealed class GameState
         throw new KeyNotFoundException($"Unknown combat entity '{entityId}'.");
     }
 
-    internal int GetModInt(string modId, string key, int defaultValue) =>
-        _modInts.TryGetValue(modId, out var values) ? values.GetValueOrDefault(key, defaultValue) : defaultValue;
+    internal int GetModInt(string modId, string key, int defaultValue) => _modInts.Get(modId, key, defaultValue);
 
-    internal void SetModInt(string modId, string key, int value)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        if (!_modInts.TryGetValue(modId, out var values))
-            _modInts.Add(modId, values = new Dictionary<string, int>(StringComparer.Ordinal));
-        values[key] = value;
-    }
+    internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
 
     internal void Draw(GameSession session, int count)
     {

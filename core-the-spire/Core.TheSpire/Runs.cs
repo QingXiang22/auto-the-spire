@@ -352,17 +352,21 @@ public readonly record struct CardRewardOdds(float RareChance, float UncommonCha
 public sealed class RunHookContext
 {
     private readonly RunState _state;
+    private readonly string _modId;
 
     internal RunHookContext(RunState state, ContentId hookId)
     {
         _state = state;
         HookId = hookId;
+        _modId = hookId.Value[..hookId.Value.IndexOf(':')];
     }
 
     public ContentId HookId { get; }
     public int Hp => _state.Hp;
     public int MaxHp => _state.MaxHp;
     public bool HasRelic(ContentId relic) => _state.Relics.Contains(relic);
+    public int GetInt(string key, int defaultValue = 0) => _state.GetModInt(_modId, key, defaultValue);
+    public void SetInt(string key, int value) => _state.SetModInt(_modId, key, value);
 
     public void Heal(int amount)
     {
@@ -388,6 +392,7 @@ public sealed class RunHookContext
 
 internal sealed class RunState
 {
+    private readonly ScopedIntState _modInts = new();
     public RunState(RunDefinition definition, CharacterDefinition character, RandomStreams random,
         IReadOnlyDictionary<ContentId, EncounterDefinition>? encounters = null,
         IReadOnlyDictionary<ContentId, RunEventDefinition>? runEvents = null,
@@ -503,6 +508,8 @@ internal sealed class RunState
     public GameSession? ActiveCombat { get; set; }
     public RunRoomType? CurrentRoom => RoomStack.Count == 0 ? null : RoomStack[^1].RoomType;
     public ContentId? CurrentEncounterId => RoomStack.Count == 0 ? null : RoomStack[^1].EncounterId;
+    internal int GetModInt(string modId, string key, int defaultValue = 0) => _modInts.Get(modId, key, defaultValue);
+    internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
     public IReadOnlyList<EncounterEnemySelection> CurrentEncounterSelections =>
         RoomStack.Count == 0 ? Array.Empty<EncounterEnemySelection>() : RoomStack[^1].EnemySelections;
 
@@ -731,7 +738,9 @@ public sealed class RunEnvironment
 
     private RunObservation ObserveState(RunState state)
     {
-        return new RunObservation(state.Character.Id, state.Hp, state.MaxHp, state.Gold,
+        var activePlayer = state.ActiveCombat?.State.Player.Creature;
+        return new RunObservation(state.Character.Id, activePlayer?.Hp ?? state.Hp,
+            activePlayer?.MaxHp ?? state.MaxHp, state.Gold,
             Array.AsReadOnly(state.Deck.Select(card => card.CardId).ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,

@@ -797,6 +797,52 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ChooseMapPoint, afterRunEffect.Phase);
     }
 
+    public void ModVariablesKeepRunAndCombatLifetimesSeparate()
+    {
+        var definition = Build(new BaseSpirePackage(), new TrainingModPackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(9);
+        run.State.Deck.Clear();
+        for (var i = 0; i < 5; i++)
+            run.State.Deck.Add(new CardInstance($"practice-{i}", ContentId.Parse("training-mod:practice-card")));
+
+        var afterEvent = runEnvironment.Step(run,
+            new ChooseRunEventOptionAction(TrainingModPackage.TrainingAncientFightOptionId));
+        Assert.Equal(RunPhase.ResolveRoom, afterEvent.Phase);
+        Assert.Equal(1, run.State.GetModInt("training-mod", "ancient-visits"));
+        Assert.Equal(0, run.State.GetModInt("other-mod", "ancient-visits"));
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartCurrentEncounterForRun(run);
+        Assert.Equal(1, run.State.GetModInt("training-mod", "combats-started"));
+        var runHpBeforeCombatDamage = run.State.Hp;
+        combat.State.Player.Creature.Hp = 42;
+        Assert.Equal(42, runEnvironment.Observe(run).Hp);
+        Assert.Equal(runHpBeforeCombatDamage, run.State.Hp);
+        Assert.Equal(0, combat.State.GetModInt("training-mod", "ancient-visits", 0));
+        Assert.Equal(0, run.State.GetModInt("training-mod", "practice-card-uses"));
+
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(1, combat.State.GetModInt("training-mod", "practice-card-uses", 0));
+        Assert.Equal(1, combat.State.GetModInt("training-mod", "observed-ancient-visits", 0));
+        Assert.Equal(1, run.State.GetModInt("training-mod", "practice-card-uses"));
+        Assert.Equal(1, run.State.GetModInt("training-mod", "play-count"));
+        Assert.Equal(0, run.State.GetModInt("other-mod", "play-count"));
+
+        var standalone = combatEnvironment.Start(9, "ironclad", 56, 65,
+            [ContentId.Parse("training-mod:practice-card")], BaseSpireIds.DampCultist.ToString());
+        var context = new EffectExecutionContext(standalone, standalone.State.Player.Creature, null,
+            ContentId.Parse("training-mod:grant-block"));
+        Assert.False(context.IsRunOwned);
+        Assert.Throws<InvalidOperationException>(() => context.GetRunInt("ancient-visits"));
+        combatEnvironment.Step(standalone, new PlayCardAction(0, standalone.State.Player.Id));
+        Assert.Equal(1, standalone.State.GetModInt("training-mod", "practice-card-uses", 0));
+        Assert.Equal(1, run.State.GetModInt("training-mod", "practice-card-uses"));
+
+        var freshRun = runEnvironment.Start(9);
+        Assert.Equal(0, freshRun.State.GetModInt("training-mod", "ancient-visits"));
+    }
+
     public void LegalActionsRejectUnaffordableCardAndInvalidHandIndex()
     {
         var env = new CombatEnvironment(Build(new SyntheticCombatPackage()));
@@ -3775,6 +3821,7 @@ internal static class Program
         tests.DuplicateContentIdRequiresExplicitOverride();
         tests.FailedPackageRegistrationRollsBackPartialChanges();
         tests.IndependentModCanOverrideContentAndObserveHooks();
+        tests.ModVariablesKeepRunAndCombatLifetimesSeparate();
         tests.LegalActionsRejectUnaffordableCardAndInvalidHandIndex();
         tests.ChoicePausesAndResumesTheRemainingEffectSequence();
         tests.ChoiceDuringEnemyTurnResumesTheTurnScheduler();

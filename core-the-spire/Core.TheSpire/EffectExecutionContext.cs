@@ -15,6 +15,13 @@ public sealed class RuleHookContext
 
     public int GetInt(string key, int defaultValue = 0) => _session.State.GetModInt(_modId, key, defaultValue);
     public void SetInt(string key, int value) => _session.State.SetModInt(_modId, key, value);
+    public bool IsRunOwned => _session.RunOwner is not null;
+    public int GetRunInt(string key, int defaultValue = 0) =>
+        (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
+        .GetModInt(_modId, key, defaultValue);
+    public void SetRunInt(string key, int value) =>
+        (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
+        .SetModInt(_modId, key, value);
     public int GetPowerAmount(string entityId, ContentId powerId) =>
         _session.State.GetPowerAmount(entityId, powerId);
     public int PlayerHp => _session.State.Player.Creature.Hp;
@@ -66,6 +73,13 @@ public sealed class EffectExecutionContext
     public int? TargetHp => _target?.Hp;
     public int GetInt(string key, int defaultValue = 0) => _session.State.GetModInt(_modId, key, defaultValue);
     public void SetInt(string key, int value) => _session.State.SetModInt(_modId, key, value);
+    public bool IsRunOwned => _session.RunOwner is not null;
+    public int GetRunInt(string key, int defaultValue = 0) =>
+        (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
+        .GetModInt(_modId, key, defaultValue);
+    public void SetRunInt(string key, int value) =>
+        (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
+        .SetModInt(_modId, key, value);
 
     public void Execute(EffectNode effect) => EffectExecutor.Execute(_session, _owner, effect, _target);
     public void DealDamage(int amount) => Execute(new AttackEffect(amount));
