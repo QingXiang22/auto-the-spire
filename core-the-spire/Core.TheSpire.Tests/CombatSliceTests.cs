@@ -711,7 +711,7 @@ public sealed class CombatSliceTests
         var afterCombatObservation = environment.Observe(session);
         Assert.Equal(79, afterCombatObservation.Hp);
         Assert.Equal(120, afterCombatObservation.Gold);
-        Assert.Equal(ContentId.Parse("base-spire:fire-potion"), afterCombatObservation.Potions.Single());
+        Assert.Equal(ContentId.Parse("base-spire:fire-potion"), afterCombatObservation.Potions.OfType<ContentId>().Single());
         Assert.Equal(RunPhase.ChooseMapPoint, environment.Observe(session).Phase);
 
         environment.Step(session, new ChooseMapPointAction("boss"));
@@ -738,7 +738,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.Terminal, won.Phase);
         Assert.Equal(10, won.Deck.Count);
         Assert.Equal(BaseSpireIds.BurningBlood, won.Relics.Single());
-        Assert.Equal(ContentId.Parse("base-spire:fire-potion"), won.Potions.Single());
+        Assert.Equal(ContentId.Parse("base-spire:fire-potion"), won.Potions.OfType<ContentId>().Single());
     }
 
     public void SinglePlayerRunDefeatIsTerminal()
@@ -1624,11 +1624,11 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveRewards, completed.Phase);
         Assert.Equal(RunRoomType.Monster, completed.CurrentRoom!.Value);
         Assert.Equal(encounterId, completed.RoomStack[^1].EncounterId!.Value);
-        var goldReward = completed.RoomStack[^1].Rewards.Single();
+        var goldReward = completed.RoomStack[^1].Rewards.Single(reward => reward.Kind == RunRewardKind.Gold);
         Assert.Equal(RunRewardKind.Gold, goldReward.Kind);
         Assert.True(goldReward.Amount is >= 10 and <= 20);
-        Assert.Equal(1, runSession.State.Random.Get("rewards").Counter);
-        Assert.Equal(2, runEnvironment.LegalActions(runSession).Count);
+        Assert.Equal(4, runSession.State.Random.Get("rewards").Counter);
+        Assert.Contains(runEnvironment.LegalActions(runSession), action => action is ClaimGoldRewardAction);
         Assert.True(completed.VisitedMapPoints[^1].RoomTypes.SequenceEqual(
             [RunRoomType.Event, RunRoomType.Monster]));
         Assert.Equal(60, completed.Hp);
@@ -1641,8 +1641,9 @@ public sealed class CombatSliceTests
             new ClaimGoldRewardAction("test-fixture:unknown-gold")));
         var claimed = runEnvironment.Step(runSession, claimAction);
         Assert.Equal(50 + goldReward.Amount, claimed.Gold);
+        if (claimed.RoomStack[^1].Rewards.Count > 0)
+            claimed = runEnvironment.Step(runSession, new SkipRewardSetAction());
         Assert.False(claimed.RoomStack[^1].Rewards.Any());
-        Assert.Throws<InvalidOperationException>(() => runEnvironment.Step(runSession, new SkipRewardSetAction()));
         var returnedToEvent = runEnvironment.Step(runSession, new ProceedAfterRewardsAction());
         Assert.Equal(RunPhase.ResolveRoom, returnedToEvent.Phase);
         Assert.Equal(RunRoomType.Event, returnedToEvent.CurrentRoom!.Value);
@@ -1656,7 +1657,6 @@ public sealed class CombatSliceTests
         var finalBossRewards = runEnvironment.CompleteCombat(runSession, finalBossCombat);
         Assert.Equal(RunPhase.ResolveRewards, finalBossRewards.Phase);
         Assert.False(finalBossRewards.RoomStack[^1].Rewards.Any());
-        Assert.True(runEnvironment.LegalActions(runSession).Single() is ProceedAfterRewardsAction);
         Assert.Equal(RunPhase.ResolveFinalEvent,
             runEnvironment.Step(runSession, new ProceedAfterRewardsAction()).Phase);
 
@@ -1671,7 +1671,8 @@ public sealed class CombatSliceTests
 
         combatEnvironment.Step(replayCombat, new PlayCardAction(upgradedHandIndex, enemyId.ToString()));
         var replayReward = runEnvironment.CompleteCombat(replayRun, replayCombat);
-        Assert.Equal(goldReward.Amount, replayReward.RoomStack[^1].Rewards.Single().Amount);
+        Assert.Equal(goldReward.Amount, replayReward.RoomStack[^1].Rewards
+            .Single(reward => reward.Kind == RunRewardKind.Gold).Amount);
         Assert.Throws<InvalidOperationException>(() => runEnvironment.CompleteRoom(replayRun,
             RunResult(RunOutcome.RoomCleared, replayReward)));
         var skipped = runEnvironment.Step(replayRun, new SkipRewardSetAction());
@@ -2858,23 +2859,94 @@ public sealed class CombatSliceTests
         var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
         var run = runEnvironment.Start(822);
         run.State.Relics.Add(BaseSpireIds.Vajra);
-        run.State.Potions.Add(BaseSpireIds.FirePotion);
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.StrengthPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.FirePotion));
         runEnvironment.PushSubRoom(run, RunRoomType.Monster);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
         var enemyId = combat.State.Enemy.Id;
         var startingEnemyHp = combat.State.Enemy.Hp;
-        var usePotion = new UsePotionAction(0, enemyId);
+        var usePotion = new UsePotionAction(2, enemyId);
 
         Assert.True(combatEnvironment.LegalActions(combat).Contains(usePotion));
-        Assert.Equal(BaseSpireIds.FirePotion, combatEnvironment.Observe(combat).Potions.Single());
+        Assert.Equal((ContentId?)BaseSpireIds.FirePotion, combatEnvironment.Observe(combat).Potions[2]);
         combatEnvironment.Step(combat, usePotion);
 
         Assert.Equal(startingEnemyHp - 20, combat.State.Enemy.Hp);
-        Assert.Equal(0, combatEnvironment.Observe(combat).Potions.Count);
+        Assert.Equal((ContentId?)BaseSpireIds.BlockPotion, combatEnvironment.Observe(combat).Potions[0]);
+        Assert.Equal((ContentId?)BaseSpireIds.StrengthPotion, combatEnvironment.Observe(combat).Potions[1]);
+        Assert.Equal(null, combatEnvironment.Observe(combat).Potions[2]);
         Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 20);
         Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "potion_used");
+    }
+
+    public void PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity()
+    {
+        var definition = Build(new BaseSpirePackage(), new PotionRewardFixturePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var combatEnvironment = new CombatEnvironment(definition);
+
+        var run = runEnvironment.Start(823);
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.FirePotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
+        var observation = CompletePotionRewardCombat(runEnvironment, combatEnvironment, run);
+        Assert.Equal(0.3f, run.State.PotionRewardChance);
+        var potionReward = observation.RoomStack[^1].Rewards
+            .Single(reward => reward.Kind == RunRewardKind.Potion);
+        Assert.True(potionReward.PotionId.HasValue);
+        var claimed = runEnvironment.Step(run, new ClaimPotionRewardAction(potionReward.Id));
+        Assert.Equal(potionReward.PotionId, claimed.Potions[2]);
+        Assert.True(claimed.Potions.All(potion => potion.HasValue));
+
+        var fullRun = runEnvironment.Start(824);
+        Assert.True(fullRun.State.TryAddPotion(BaseSpireIds.FirePotion));
+        Assert.True(fullRun.State.TryAddPotion(BaseSpireIds.BlockPotion));
+        Assert.True(fullRun.State.TryAddPotion(BaseSpireIds.StrengthPotion));
+        var fullInventoryRewards = CompletePotionRewardCombat(runEnvironment, combatEnvironment, fullRun);
+        Assert.False(runEnvironment.LegalActions(fullRun).Any(action => action is ClaimPotionRewardAction));
+        Assert.Contains(runEnvironment.LegalActions(fullRun), action => action is SkipRewardSetAction);
+        Assert.True(fullInventoryRewards.RoomStack[^1].Rewards.Any(reward => reward.Kind == RunRewardKind.Potion));
+    }
+
+    private static RunObservation CompletePotionRewardCombat(RunEnvironment runEnvironment,
+        CombatEnvironment combatEnvironment, RunSession run)
+    {
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        var frame = run.State.RoomStack[^1];
+        run.State.RoomStack[^1] = frame with { EncounterId = PotionRewardFixturePackage.EncounterId };
+        var combat = combatEnvironment.StartForRun(run, PotionRewardFixturePackage.EnemyId.ToString());
+        combat.State.Enemy.Hp = 1;
+        combat.State.Player.MutableHand.Clear();
+        combat.State.Player.MutableHand.Add(new CardInstance($"potion-reward-strike-{run.State.Random.Get("rewards").Counter}",
+            BaseSpireIds.StrikeIronclad));
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Enemy.Id));
+        return runEnvironment.CompleteCombat(run, combat);
+    }
+
+    private sealed class PotionRewardFixturePackage : IRulePackage
+    {
+        public static readonly ContentId EnemyId = ContentId.Parse("potion-reward-fixture:enemy");
+        public static readonly ContentId EncounterId = ContentId.Parse("potion-reward-fixture:encounter");
+        public PackageInfo Info { get; } = new("potion-reward-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(new EnemyDefinition(EnemyId, 1, 1,
+                [new EnemyActionDefinition(ContentId.Parse("potion-reward-fixture:idle"),
+                    new GainBlockEffect(0), IntentKind.None)]));
+            registry.Register(new EncounterDefinition(EncounterId, RunRoomType.Monster, [EnemyId],
+                minGoldReward: 1, maxGoldReward: 1));
+            registry.Register(new ForcePotionRewardHook());
+        }
+    }
+
+    private sealed class ForcePotionRewardHook : IRunHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("potion-reward-fixture:force-hook");
+        public void AfterCombatVictory(RunHookContext context) { }
+        public bool ShouldForcePotionReward(RunObservation observation, RunRoomType roomType) => true;
     }
 
     private sealed class RuinedHelmetStrengthFixturePackage : IRulePackage
@@ -3260,6 +3332,7 @@ internal static class Program
         tests.BasePaperPhrogAddsTwentyFivePercentToPoweredDamageAgainstVulnerableEnemies();
         tests.BaseRuinedHelmetDoublesTheFirstStrengthApplicationEachCombat();
         tests.BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot();
+        tests.PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();

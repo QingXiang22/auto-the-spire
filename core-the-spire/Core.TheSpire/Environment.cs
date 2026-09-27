@@ -283,7 +283,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             for (var potionIndex = 0; potionIndex < runOwner.State.Potions.Count; potionIndex++)
             {
-                var potion = definition.Potions[runOwner.State.Potions[potionIndex]];
+                if (runOwner.State.Potions[potionIndex] is not { } potionId) continue;
+                var potion = definition.Potions[potionId];
                 switch (potion.Target)
                 {
                     case TargetSelector.Self:
@@ -386,11 +387,13 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             var run = session.RunOwner?.State
                 ?? throw new InvalidOperationException("Potions can only be used in a run combat.");
-            var potionId = run.Potions[usePotion.PotionIndex];
+            var potionId = run.Potions[usePotion.PotionIndex]
+                ?? throw new InvalidOperationException("The selected potion slot is empty.");
             var potion = definition.Potions[potionId];
             var target = usePotion.TargetId == state.Player.Id ? state.Player.Creature
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == usePotion.TargetId);
-            run.Potions.RemoveAt(usePotion.PotionIndex);
+            if (!run.TryUsePotion(usePotion.PotionIndex, out _))
+                throw new InvalidOperationException("The selected potion is no longer available.");
             state.Emit(session, "potion_used", state.Player.Id, state.Player.Id, usePotion.PotionIndex);
             EffectExecutor.Execute(session, state.Player.Creature, potion.Effect, target);
         }

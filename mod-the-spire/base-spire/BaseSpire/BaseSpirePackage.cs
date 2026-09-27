@@ -59,6 +59,10 @@ public static class BaseSpireIds
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId FirePotion = ContentId.Parse("base-spire:fire-potion");
+    public static readonly ContentId BlockPotion = ContentId.Parse("base-spire:block-potion");
+    public static readonly ContentId StrengthPotion = ContentId.Parse("base-spire:strength-potion");
+    public static readonly ContentId BlessingOfTheForge = ContentId.Parse("base-spire:blessing-of-the-forge");
+    public static readonly ContentId BeetleJuice = ContentId.Parse("base-spire:beetle-juice");
     public static readonly ContentId Weak = ContentId.Parse("base-spire:weak");
     public static readonly ContentId Vulnerable = ContentId.Parse("base-spire:vulnerable");
     public static readonly ContentId Shrink = ContentId.Parse("base-spire:shrink");
@@ -119,6 +123,15 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PotionDefinition(BaseSpireIds.FirePotion, PotionRarity.Common,
             new AttackEffect(20, TargetSelector.SelectedTarget,
                 DamageProperties.Move | DamageProperties.Unpowered), TargetSelector.SelectedTarget));
+        registry.Register(new PotionDefinition(BaseSpireIds.BlockPotion, PotionRarity.Common,
+            new GainBlockEffect(12)));
+        registry.Register(new PotionDefinition(BaseSpireIds.StrengthPotion, PotionRarity.Common,
+            new ApplyPowerEffect(BaseSpireIds.Strength, 2)));
+        registry.Register(new PotionDefinition(BaseSpireIds.BlessingOfTheForge, PotionRarity.Uncommon,
+            new UpgradeCardsInPileEffect(CardPile.Hand)));
+        registry.Register(new PotionDefinition(BaseSpireIds.BeetleJuice, PotionRarity.Rare,
+            new ApplyPowerEffect(BaseSpireIds.Shrink, 4, TargetSelector.SelectedTarget),
+            TargetSelector.SelectedTarget));
         registry.Register(BaseSpireContent.Ironclad());
         registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,

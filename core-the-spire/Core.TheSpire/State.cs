@@ -451,7 +451,7 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IReadOnlyList<ContentId> ExhaustPile, IReadOnlyList<ContentId> PlayPile,
     IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
     IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
-    IReadOnlyList<CardInstance> PlayPileInstances, IReadOnlyList<ContentId> Potions,
+    IReadOnlyList<CardInstance> PlayPileInstances, IReadOnlyList<ContentId?> Potions,
     PendingCardSelectionView? PendingCardSelection);
 
 public abstract record PlayerAction;
