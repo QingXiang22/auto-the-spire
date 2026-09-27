@@ -13,6 +13,7 @@ public sealed record SpireProfiledInteger(IReadOnlyDictionary<string, SpireInteg
 public enum SpireEffectTarget { Self, Player, Enemy, SelectedEnemy }
 public enum SpireCardPile { Draw, Hand, Discard, Exhaust }
 public enum SpireCardType { Attack, Skill, Power, Status }
+public enum SpireCardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
 [Flags]
 public enum SpireCardKeyword { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8 }
 public enum SpirePowerTrigger { None, PlayerTurnStart, PlayerTurnEnd, EnemyTurnEnd, CardExhausted }
@@ -46,8 +47,9 @@ public sealed record SpireStartByRoleBehavior(IReadOnlyDictionary<string, string
 public sealed record SpireEnemyMove(string Name, SpireEffectExpression Effect, DslSourceLocation Location);
 public sealed record SpireEnemyModel(string Name, SpireIntegerExpression Hp, IReadOnlyList<SpireEnemyMove> Moves,
     SpireEnemyBehavior Behavior, DslSourceLocation Location);
-public sealed record SpireCardModel(string Name, int Cost, SpireCardType Type, SpireCardKeyword Keywords,
-    SpireEffectTarget? Target, SpireEffectExpression PlayEffect, DslSourceLocation Location);
+public sealed record SpireCardModel(string Name, int Cost, SpireCardType Type, SpireCardRarity Rarity,
+    SpireCardKeyword Keywords, SpireEffectTarget Target, SpireEffectExpression PlayEffect,
+    DslSourceLocation Location);
 public sealed record SpirePowerModel(string Name, SpirePowerTrigger Trigger, SpirePowerRole Role,
     SpireEffectExpression? Effect, SpireEffectTarget? SkipFirstWhenAppliedTo, DslSourceLocation Location);
 public sealed record SpireEncounterSlot(IReadOnlyList<string> EnemyChoices, bool IsRandom,
@@ -247,18 +249,17 @@ public static class SpireSemanticCompiler
         private SpireCardModel CompileCard(DslDeclarationNode declaration)
         {
             var properties = Properties(declaration);
-            EnsureProperties(declaration, properties, "type", "cost", "keywords", "target", "play");
+            EnsureProperties(declaration, properties, "type", "cost", "rarity", "keywords", "target", "play");
             var type = ParseEnum<SpireCardType>(Required(properties, "type", declaration.Location));
             var cost = IntegerLiteral(Required(properties, "cost", declaration.Location));
             if (cost < 0) throw Error(declaration.Location, "Card cost cannot be negative.");
+            var rarity = ParseEnum<SpireCardRarity>(Required(properties, "rarity", declaration.Location));
             var keywords = properties.TryGetValue("keywords", out var keywordNode)
                 ? CompileKeywords(keywordNode)
                 : SpireCardKeyword.None;
-            SpireEffectTarget? target = properties.TryGetValue("target", out var targetNode)
-                ? CompileTarget(targetNode)
-                : null;
+            var target = CompileTarget(Required(properties, "target", declaration.Location));
             var effect = CompileEffect(Required(properties, "play", declaration.Location));
-            return new SpireCardModel(declaration.Name, cost, type, keywords, target, effect, declaration.Location);
+            return new SpireCardModel(declaration.Name, cost, type, rarity, keywords, target, effect, declaration.Location);
         }
 
         private SpirePowerModel CompilePower(DslDeclarationNode declaration)
@@ -505,7 +506,7 @@ public static class SpireSemanticCompiler
             "player" => SpireEffectTarget.Player,
             "enemy" => SpireEffectTarget.Enemy,
             "target" => SpireEffectTarget.SelectedEnemy,
-            _ => throw Error(node.Location, "Target must be self, player, or enemy.")
+            _ => throw Error(node.Location, "Target must be self, player, enemy, or target.")
         };
 
         private static SpireCardKeyword CompileKeywords(DslValueNode node)
