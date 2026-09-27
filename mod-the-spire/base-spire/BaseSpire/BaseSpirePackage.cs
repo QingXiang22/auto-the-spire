@@ -64,6 +64,9 @@ public static class BaseSpireIds
     public static readonly ContentId Slimed = ContentId.Parse("base-spire:slimed");
     public static readonly ContentId Dazed = ContentId.Parse("base-spire:dazed");
     public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
+    public static readonly ContentId Anchor = ContentId.Parse("base-spire:anchor");
+    public static readonly ContentId Vajra = ContentId.Parse("base-spire:vajra");
+    public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
     public static readonly ContentId GloryAct = ContentId.Parse("base-spire:glory-act");
@@ -88,6 +91,11 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
 
     public void Register(ContentRegistry registry)
     {
+        registry.Register(new RelicDefinition(BaseSpireIds.BurningBlood, RunRelicRarity.Starter, InSharedPool: false));
+        registry.Register(new RelicDefinition(BaseSpireIds.Anchor, RunRelicRarity.Common));
+        registry.Register(new RelicDefinition(BaseSpireIds.Vajra, RunRelicRarity.Common));
+        registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
+            InSharedPool: false, IsFallback: true, IsStackable: true));
         registry.Register(BaseSpireContent.Ironclad());
         registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,
@@ -253,6 +261,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         ], isWeak: true, tags: [ContentId.Parse("base-spire:slime")]));
 
         registry.Register(new BurningBloodRunHook());
+        registry.Register(new AnchorRunHook());
+        registry.Register(new VajraRunHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
@@ -288,6 +298,26 @@ internal sealed class BurningBloodRunHook : IRunHook
     {
         if (context.Hp > 0 && context.HasRelic(BaseSpireIds.BurningBlood))
             context.Heal(6);
+    }
+}
+
+internal sealed class AnchorRunHook : IRunHook
+{
+    public ContentId Id { get; } = ContentId.Parse("base-spire:anchor-hook");
+    public void AfterCombatVictory(RunHookContext context) { }
+    public void AfterCombatStarted(RunHookContext context)
+    {
+        if (context.HasRelic(BaseSpireIds.Anchor)) context.GainBlock(10);
+    }
+}
+
+internal sealed class VajraRunHook : IRunHook
+{
+    public ContentId Id { get; } = ContentId.Parse("base-spire:vajra-hook");
+    public void AfterCombatVictory(RunHookContext context) { }
+    public void AfterCombatStarted(RunHookContext context)
+    {
+        if (context.HasRelic(BaseSpireIds.Vajra)) context.ApplyPower(BaseSpireIds.Strength, 1);
     }
 }
 

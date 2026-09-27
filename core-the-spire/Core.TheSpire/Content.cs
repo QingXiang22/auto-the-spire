@@ -41,6 +41,20 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
 }
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
 public enum CardCostKind { Fixed, X }
+public enum RunRelicRarity { None, Starter, Common, Uncommon, Rare, Shop, Event, Ancient, Boss }
+public enum RunRelicPool { Shared, Player }
+
+public sealed record RelicDefinition(ContentId Id, RunRelicRarity Rarity, bool InSharedPool = true,
+    bool IsFallback = false, bool IsStackable = false)
+{
+    public void Validate()
+    {
+        Id.Validate();
+        if (!Enum.IsDefined(Rarity)) throw new ArgumentOutOfRangeException(nameof(Rarity));
+        if (IsFallback && (InSharedPool || Rarity != RunRelicRarity.None))
+            throw new ArgumentException("A fallback relic must be outside reward pools and use the None rarity.");
+    }
+}
 
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     CardKeywords Keywords = CardKeywords.None, TargetSelector Target = TargetSelector.FirstEnemy,
@@ -461,6 +475,7 @@ public sealed class ContentRegistry
 {
     private readonly Dictionary<ContentId, CardDefinition> _cards = [];
     private readonly Dictionary<ContentId, CardPoolDefinition> _cardPools = [];
+    private readonly Dictionary<ContentId, RelicDefinition> _relics = [];
     private readonly Dictionary<ContentId, EnemyDefinition> _enemies = [];
     private readonly Dictionary<ContentId, EncounterDefinition> _encounters = [];
     private readonly Dictionary<ContentId, RunEventDefinition> _runEvents = [];
@@ -480,6 +495,7 @@ public sealed class ContentRegistry
             throw new InvalidOperationException($"Package '{package.Info.Id}' is already loaded.");
         var cardsBefore = new Dictionary<ContentId, CardDefinition>(_cards);
         var cardPoolsBefore = new Dictionary<ContentId, CardPoolDefinition>(_cardPools);
+        var relicsBefore = new Dictionary<ContentId, RelicDefinition>(_relics);
         var enemiesBefore = new Dictionary<ContentId, EnemyDefinition>(_enemies);
         var encountersBefore = new Dictionary<ContentId, EncounterDefinition>(_encounters);
         var runEventsBefore = new Dictionary<ContentId, RunEventDefinition>(_runEvents);
@@ -499,6 +515,7 @@ public sealed class ContentRegistry
         {
             Restore(_cards, cardsBefore);
             Restore(_cardPools, cardPoolsBefore);
+            Restore(_relics, relicsBefore);
             Restore(_enemies, enemiesBefore);
             Restore(_encounters, encountersBefore);
             Restore(_runEvents, runEventsBefore);
@@ -515,6 +532,12 @@ public sealed class ContentRegistry
 
     public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
     public void Register(CardPoolDefinition definition) => AddUnique(_cardPools, definition.Id, definition, "card pool");
+    public void Register(RelicDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        AddUnique(_relics, definition.Id, definition, "relic");
+    }
     public void Register(EnemyDefinition definition) => AddUnique(_enemies, definition.Id, definition, "enemy");
     public void Register(EncounterDefinition definition) => AddUnique(_encounters, definition.Id, definition, "encounter");
     public void Register(RunEventDefinition definition)
@@ -567,6 +590,8 @@ public sealed class ContentRegistry
     {
         if (_packages.Count == 0)
             throw new InvalidOperationException("At least one rules package must be loaded.");
+        if (_relics.Values.Count(relic => relic.IsFallback) > 1)
+            throw new InvalidOperationException("Only one fallback relic may be registered.");
         foreach (var encounter in _encounters.Values)
         {
             foreach (var enemyId in encounter.EnemySlots.SelectMany(slot => slot.EnemyChoices).Distinct())
@@ -615,6 +640,9 @@ public sealed class ContentRegistry
             foreach (var poolId in character.CardPools)
                 if (!_cardPools.ContainsKey(poolId))
                     throw new InvalidOperationException($"Character '{character.Id}' references unknown card pool '{poolId}'.");
+            foreach (var relicId in character.StartingRelics)
+                if (!_relics.ContainsKey(relicId))
+                    throw new InvalidOperationException($"Character '{character.Id}' starts with unknown relic '{relicId}'.");
         }
         foreach (var power in _powers.Values)
         {
@@ -657,6 +685,7 @@ public sealed class ContentRegistry
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
             new ReadOnlyDictionary<ContentId, CardPoolDefinition>(new Dictionary<ContentId, CardPoolDefinition>(_cardPools)),
+            new ReadOnlyDictionary<ContentId, RelicDefinition>(new Dictionary<ContentId, RelicDefinition>(_relics)),
             new ReadOnlyDictionary<ContentId, EnemyDefinition>(new Dictionary<ContentId, EnemyDefinition>(_enemies)),
             new ReadOnlyDictionary<ContentId, EncounterDefinition>(new Dictionary<ContentId, EncounterDefinition>(_encounters)),
             new ReadOnlyDictionary<ContentId, RunEventDefinition>(new Dictionary<ContentId, RunEventDefinition>(_runEvents)),
@@ -858,6 +887,7 @@ public sealed class GameDefinition
 {
     internal GameDefinition(PackageInfo[] packages, IReadOnlyDictionary<ContentId, CardDefinition> cards,
         IReadOnlyDictionary<ContentId, CardPoolDefinition> cardPools,
+        IReadOnlyDictionary<ContentId, RelicDefinition> relics,
         IReadOnlyDictionary<ContentId, EnemyDefinition> enemies, IReadOnlyDictionary<ContentId, EncounterDefinition> encounters,
         IReadOnlyDictionary<ContentId, RunEventDefinition> runEvents,
         IReadOnlyDictionary<ContentId, PowerDefinition> powers,
@@ -869,6 +899,7 @@ public sealed class GameDefinition
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
         CardPools = cardPools;
+        Relics = relics;
         Enemies = enemies;
         Encounters = encounters;
         RunEvents = runEvents;
@@ -885,6 +916,7 @@ public sealed class GameDefinition
     public IReadOnlyList<PackageInfo> Packages { get; }
     public IReadOnlyDictionary<ContentId, CardDefinition> Cards { get; }
     public IReadOnlyDictionary<ContentId, CardPoolDefinition> CardPools { get; }
+    public IReadOnlyDictionary<ContentId, RelicDefinition> Relics { get; }
     public IReadOnlyDictionary<ContentId, EnemyDefinition> Enemies { get; }
     public IReadOnlyDictionary<ContentId, EncounterDefinition> Encounters { get; }
     public IReadOnlyDictionary<ContentId, RunEventDefinition> RunEvents { get; }
