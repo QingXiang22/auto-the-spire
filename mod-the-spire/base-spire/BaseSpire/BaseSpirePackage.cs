@@ -97,6 +97,24 @@ public static class BaseSpireContent
     public static CharacterDefinition Ironclad() => new(BaseSpireIds.Ironclad, IroncladStartingMaxHp,
         IroncladStartingGold, IroncladStarterDeck(), [BaseSpireIds.BurningBlood],
         cardPools: [BaseSpireIds.IroncladCardPool]);
+
+    public static EnemyDefinition LoadEnemy(string fileName, ContentVariantProfile profile = default)
+    {
+        var resourceName = $"BaseSpire.Content.{fileName}";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        return ContentDsl.ParseEnemy(reader.ReadToEnd(), profile);
+    }
+
+    public static IReadOnlyList<EncounterDefinition> LoadEncounters(string fileName)
+    {
+        var resourceName = $"BaseSpire.Content.{fileName}";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        return ContentDsl.ParseEncounters(reader.ReadToEnd());
+    }
 }
 
 public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemies = false) : IRulePackage
@@ -229,41 +247,9 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             [BaseSpireIds.ShrinkerBeetle, BaseSpireIds.FuzzyWurmCrawler],
             tags: [ContentId.Parse("base-spire:shrinker"), ContentId.Parse("base-spire:crawler")]));
 
-        var nibbitButt = ContentId.Parse("base-spire:nibbit-butt");
-        var nibbitSlice = ContentId.Parse("base-spire:nibbit-slice");
-        var nibbitHiss = ContentId.Parse("base-spire:nibbit-hiss");
-        var nibbitSliceDamage = deadlyEnemies ? 7 : 6;
-        var nibbitSliceBlock = toughEnemies ? 6 : 5;
-        var nibbitHissStrength = deadlyEnemies ? 3 : 2;
-        var nibbitStartingTransition = new EnemyActionTransition([
-            new EnemyActionChoice(nibbitButt, Condition: new EnemyMetricCondition(
-                EnemyActionMetric.LivingEnemies, RunComparison.Equal, 1)),
-            new EnemyActionChoice(nibbitHiss, Condition: new EnemyMetricCondition(
-                EnemyActionMetric.EnemyIndex, RunComparison.Equal, 1)),
-            new EnemyActionChoice(nibbitSlice, Condition: new EnemyMetricCondition(
-                EnemyActionMetric.EnemyIndex, RunComparison.Equal, 0)),
-            new EnemyActionChoice(nibbitButt)
-        ], selectionMode: EnemyActionSelectionMode.FirstMatchingCondition);
-        registry.Register(new EnemyDefinition(BaseSpireIds.Nibbit,
-            toughEnemies ? 44 : 42, toughEnemies ? 48 : 46,
-            [
-                new EnemyActionDefinition(nibbitButt, new AttackEffect(12), IntentKind.Attack,
-                    12, NextActionId: nibbitSlice),
-                new EnemyActionDefinition(nibbitSlice,
-                    new SequenceEffect([new AttackEffect(nibbitSliceDamage), new GainBlockEffect(nibbitSliceBlock)]),
-                    IntentKind.Attack, nibbitSliceDamage, NextActionId: nibbitHiss),
-                new EnemyActionDefinition(nibbitHiss, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
-                    AppliedPower: BaseSpireIds.Strength, AppliedPowerAmount: nibbitHissStrength,
-                    NextActionId: nibbitButt)
-            ], startingTransition: nibbitStartingTransition));
-        registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsWeak, RunRoomType.Monster,
-            [BaseSpireIds.Nibbit], isWeak: true, tags: [ContentId.Parse("base-spire:nibbit")]));
-        registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsNormal, RunRoomType.Monster,
-            [BaseSpireIds.Nibbit, BaseSpireIds.Nibbit], tags: [ContentId.Parse("base-spire:nibbit")]));
+        registry.Register(BaseSpireContent.LoadEnemy("nibbit.enemy.json",
+            new ContentVariantProfile(deadlyEnemies, toughEnemies)));
 
-        var smallSlimeChoices = new[] { BaseSpireIds.LeafSlimeSmall, BaseSpireIds.TwigSlimeSmall };
-        var mediumSlimeChoices = new[] { BaseSpireIds.LeafSlimeMedium, BaseSpireIds.TwigSlimeMedium };
-        var smallSlimeGroup = ContentId.Parse("base-spire:distinct-small-slimes");
         registry.Register(new EnemyDefinition(BaseSpireIds.LeafSlimeSmall,
             toughEnemies ? 12 : 11, toughEnemies ? 16 : 15,
             CreateLeafSmallActions(deadlyEnemies), startingTransition: CreateNoRepeatSlimeOpening()));
@@ -301,23 +287,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
                     IntentKind.Debuff, Transition: twigMediumTransition)
             ], startingActionId: twigMediumSticky));
 
-        registry.Register(EncounterDefinition.WithEnemySlots(BaseSpireIds.SlimesWeak, RunRoomType.Monster,
-        [
-            EncounterEnemySlot.ChooseOne(smallSlimeChoices, smallSlimeGroup),
-            EncounterEnemySlot.ChooseOne(mediumSlimeChoices),
-            EncounterEnemySlot.ChooseOne(smallSlimeChoices, smallSlimeGroup)
-        ], isWeak: true, tags: [ContentId.Parse("base-spire:slime")]));
-        registry.Register(EncounterDefinition.WithFormations(BaseSpireIds.SlimesNormal, RunRoomType.Monster,
-        [
-            new EncounterFormationChoice([
-                BaseSpireIds.TwigSlimeMedium, BaseSpireIds.LeafSlimeMedium,
-                BaseSpireIds.LeafSlimeSmall, BaseSpireIds.TwigSlimeSmall
-            ]),
-            new EncounterFormationChoice([
-                BaseSpireIds.TwigSlimeMedium, BaseSpireIds.LeafSlimeMedium,
-                BaseSpireIds.TwigSlimeSmall, BaseSpireIds.LeafSlimeSmall
-            ])
-        ], tags: [ContentId.Parse("base-spire:slime")]));
+        foreach (var encounter in BaseSpireContent.LoadEncounters("base-spire.encounters.json"))
+            registry.Register(encounter);
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(new AnchorRunHook());

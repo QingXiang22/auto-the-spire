@@ -8,4 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Content\*.enemy.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Content\*.encounters.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
+  </ItemGroup>
 </Project>
