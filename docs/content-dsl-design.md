@@ -173,9 +173,9 @@ enemy Nibbit {
     when formation_role == front -> start slice
     otherwise -> start butt
   moves: {
-    butt: attack player for 12
-    slice: attack player for damage(default: 6, when DeadlyEnemies: 7); gain 5 block
-      intent: attack, defend 5
+    butt: attack player for damage(default: 12, when DeadlyEnemies: 13)
+    slice: attack player for damage(default: 6, when DeadlyEnemies: 7);
+      gain block(default: 5, when ToughEnemies: 6)
     hiss: apply Strength with stacks(default: 2, when DeadlyEnemies: 3) to self
   }
   after: cycle butt -> slice -> hiss -> butt
@@ -196,7 +196,7 @@ encounter NibbitsNormal {
 }
 ```
 
-These examples preserve source distinctions: Twig Medium's Clump Shot has weight 2 and can repeat; Sticky Shot has weight 1 and cannot repeat immediately. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from enemy count or array index. Its Slice move projects both attack and block intents.
+These examples preserve source distinctions: Twig Medium's Clump Shot has weight 2 and can repeat; Sticky Shot has weight 1 and cannot repeat immediately. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from enemy count or array index. The effects let the projection derive both Slice's attack and block intents, including their independent Deadly/Tough values.
 
 Behavior lowering must retain only history needed by declared filters. For the examples above, the runtime needs the current behavior location and enough recent move identity to test `previous(sticky_shot)`; it should not retain an unbounded action log unless a content rule asks for longer cooldown or use-once history.
 

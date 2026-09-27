@@ -7,9 +7,9 @@
     "actions": [
       {
         "id": "base-spire:nibbit-butt",
-        "effect": { "op": "attack", "amount": 12 },
+        "effect": { "op": "attack", "amount": { "$variant": { "default": 12, "deadly": 13 } } },
         "intent": "attack",
-        "intentDamage": 12,
+        "intentDamage": { "$variant": { "default": 12, "deadly": 13 } },
         "nextActionId": "base-spire:nibbit-slice"
       },
       {
