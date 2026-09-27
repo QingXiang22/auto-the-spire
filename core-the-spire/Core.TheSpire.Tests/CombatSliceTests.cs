@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(48, ironcladPool.Count);
+        Assert.Equal(49, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(50, cards.Count);
+        Assert.Equal(51, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(49, pool.Count);
+        Assert.Equal(50, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -477,6 +477,54 @@ public sealed class CombatSliceTests
         var unknownPoolRegistry = new ContentRegistry();
         unknownPoolRegistry.AddPackage(new UnknownPoolCardPackage());
         Assert.Throws<InvalidOperationException>(() => unknownPoolRegistry.Build());
+    }
+
+    public void SpiteRepeatsAfterPlayerHpLossAndResetsOnTheNextTurn()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var spite = definition.Cards[BaseSpireIds.Spite];
+        Assert.Equal(CardRarity.Uncommon, spite.Rarity);
+        Assert.Equal(new IfEffect(new PlayerLostHpThisTurnPredicate(),
+            new RepeatEffect(2, new AttackEffect(5, TargetSelector.SelectedTarget)),
+            new AttackEffect(5, TargetSelector.SelectedTarget)), spite.Effect);
+
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(76, "ironclad", 56, 65,
+            [BaseSpireIds.Spite, BaseSpireIds.Bloodletting, BaseSpireIds.Spite, BaseSpireIds.Spite],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53, drawPile: [BaseSpireIds.Spite]);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(48, session.State.Enemy.Hp);
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.Equal(53, session.State.Player.Creature.Hp);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(38, session.State.Enemy.Hp);
+        session.State.Player.MutableHand[0] = new CardInstance("spite+", BaseSpireIds.Spite, 1);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(23, session.State.Enemy.Hp);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(2, session.State.Turn);
+        var nextSpiteIndex = session.State.Player.Hand.ToList().IndexOf(BaseSpireIds.Spite);
+        Assert.True(nextSpiteIndex >= 0);
+        environment.Step(session, new PlayCardAction(nextSpiteIndex, session.State.Enemy.Id));
+        Assert.Equal(18, session.State.Enemy.Hp);
+
+        var blocked = environment.Start(77, "ironclad", 56, 65, [],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [BaseSpireIds.DefendIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Spite]);
+        environment.Step(blocked, new EndTurnAction());
+        for (var i = 0; i < 2; i++)
+        {
+            var defendIndex = blocked.State.Player.Hand.ToList().IndexOf(BaseSpireIds.DefendIronclad);
+            Assert.True(defendIndex >= 0);
+            environment.Step(blocked, new PlayCardAction(defendIndex, blocked.State.Player.Id));
+        }
+        environment.Step(blocked, new EndTurnAction());
+        Assert.Equal(56, blocked.State.Player.Creature.Hp);
+        var blockedSpiteIndex = blocked.State.Player.Hand.ToList().IndexOf(BaseSpireIds.Spite);
+        Assert.True(blockedSpiteIndex >= 0);
+        environment.Step(blocked, new PlayCardAction(blockedSpiteIndex, blocked.State.Enemy.Id));
+        Assert.Equal(48, blocked.State.Enemy.Hp);
     }
 
     public void SourceBackedIroncladCardsUseSharedEffectsInCombat()
@@ -4266,6 +4314,7 @@ internal static class Program
         tests.EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds();
         tests.SpireCardDslCompilesTheCurrentIroncladCardSet();
         tests.CardPoolMembershipIsExplicitAndModsCanExtendExistingPools();
+        tests.SpiteRepeatsAfterPlayerHpLossAndResetsOnTheNextTurn();
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();

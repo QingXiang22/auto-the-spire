@@ -1324,7 +1324,7 @@ public sealed class ContentRegistry
     {
         switch (predicate)
         {
-            case TargetAlivePredicate or CardExhaustedThisTurnPredicate:
+            case TargetAlivePredicate or CardExhaustedThisTurnPredicate or PlayerLostHpThisTurnPredicate:
                 break;
             case HasPowerPredicate hasPower when !_powers.ContainsKey(hasPower.Power):
                 throw new InvalidOperationException($"{owner} checks unknown power '{hasPower.Power}'.");
