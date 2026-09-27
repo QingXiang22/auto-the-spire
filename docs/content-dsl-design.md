@@ -26,11 +26,19 @@ The content language describes *what rules mean*. The core owns *when rules run*
 
 ## Proposed package syntax
 
-The concrete parser/format remains open. The examples use an indentation-based notation to show the intended abstractions, not a promise that this exact punctuation is final. The language should be readable in code review and should not require authors to understand JSON polymorphism.
+The first concrete syntax slice is implemented as a package-oriented `.spire` format. It uses `package name { ... }`, domain declarations (`card`, `power`, `enemy`, `encounter`), `name = expression` properties, lists, and named/positional calls. The parser preserves source locations in a generic syntax tree. This establishes punctuation and basic composition only; the declarations and operators are not yet type-checked or compiled to runtime content. The remaining examples in this document describe intended semantics and may use a more readable pseudocode notation until the semantic model is implemented.
 
 A package is organized into domain modules (for example `combat/ironclad`, `enemies/overgrowth`, and `acts/overgrowth`) rather than one file per runtime record. A module can declare shared values and related definitions together. Imports and namespaces make dependencies explicit. Duplicate IDs are errors by default; mods must state whether they add a definition, replace one, or patch named fields/actions. Patch precedence and provenance are resolved once during package composition and exposed in diagnostics.
 
 The source language has four author-facing declaration kinds, regardless of eventual file syntax: reusable values/profiles, content definitions, behavior/effect expressions, and package patches. It does not expose runtime fields such as action-array indexes, current action indexes, `NextActionId`, or internal enum names. A source module may contain many related definitions.
+
+### Current source fixture
+
+[`combat.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/combat.spire) is the first unified source model for original content. It puts card and Power definitions, enemy effect/behavior declarations, and encounter lineups in one package-oriented module. It deliberately exercises reuse and composition: enemies refer to the same `Ritual` and `Slimed` definitions; effects compose with calls such as `sequence(...)`; behaviors use named patterns such as `cycle(...)`, `chooseWithoutRepeat(...)`, and `chooseWithLimits(...)`; and encounters express either role-based spawns, independent slots, or correlated formations.
+
+The current parser only proves that this source is syntactically readable and that useful source locations survive parsing. The fixture is not authoritative at runtime yet: `base-spire` still loads its existing compiled definitions. The immediate design gate is to define a typed semantic model that can validate and compile the fixture. Only after that model is stable should runtime state-machine capabilities be added to satisfy content that cannot yet be represented.
+
+The `.spire` prototype currently supports `#` comments, strings, signed integer/decimal literals, booleans, names, lists, calls, positional and named call arguments, nested declarations, and properties. It does not yet support imports, package patches, ranges as syntax, infix expressions, multiline effect blocks, or semantic validation. The parser's generic call node is a syntax convenience, not a runtime instruction.
 
 ### Semantic model and compilation boundary
 
