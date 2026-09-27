@@ -193,11 +193,13 @@ public sealed class CharacterDefinition
 {
     public CharacterDefinition(ContentId id, int maxHp, int startingGold,
         IEnumerable<ContentId> startingDeck, IEnumerable<ContentId>? startingRelics = null,
-        IEnumerable<ContentId>? startingPotions = null, IEnumerable<ContentId>? cardPools = null)
+        IEnumerable<ContentId>? startingPotions = null, IEnumerable<ContentId>? cardPools = null,
+        int potionCapacity = 3)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxHp);
         ArgumentOutOfRangeException.ThrowIfNegative(startingGold);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(potionCapacity);
         ArgumentNullException.ThrowIfNull(startingDeck);
         Id = id;
         MaxHp = maxHp;
@@ -205,6 +207,9 @@ public sealed class CharacterDefinition
         StartingDeck = Array.AsReadOnly(startingDeck.ToArray());
         StartingRelics = Array.AsReadOnly(startingRelics?.ToArray() ?? []);
         StartingPotions = Array.AsReadOnly(startingPotions?.ToArray() ?? []);
+        if (StartingPotions.Count > potionCapacity)
+            throw new ArgumentException("Starting potions exceed the configured potion capacity.", nameof(startingPotions));
+        PotionCapacity = potionCapacity;
         CardPools = ActDefinition.CopyIds(cardPools, nameof(cardPools));
     }
 
@@ -214,6 +219,7 @@ public sealed class CharacterDefinition
     public IReadOnlyList<ContentId> StartingDeck { get; }
     public IReadOnlyList<ContentId> StartingRelics { get; }
     public IReadOnlyList<ContentId> StartingPotions { get; }
+    public int PotionCapacity { get; }
     public IReadOnlyList<ContentId> CardPools { get; }
 }
 
@@ -254,6 +260,7 @@ public sealed record ChooseRunEventOptionAction(ContentId OptionId) : PlayerActi
 public sealed record ChooseRunCardAction(string CardInstanceId) : PlayerAction;
 public sealed record SkipRunCardSelectionAction : PlayerAction;
 public sealed record ClaimGoldRewardAction(string RewardId) : PlayerAction;
+public sealed record ClaimPotionRewardAction(string RewardId) : PlayerAction;
 public sealed record SkipRewardSetAction : PlayerAction;
 public sealed record OpenTreasureChestAction : PlayerAction;
 public sealed record ClaimRelicRewardAction(string RewardId) : PlayerAction;
@@ -267,9 +274,9 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
 public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
     IReadOnlyList<RunRoomType> RoomTypes);
 
-public enum RunRewardKind { Gold, Card, Relic }
+public enum RunRewardKind { Gold, Card, Relic, Potion }
 public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
-    IReadOnlyList<CardInstance> CardOptions, ContentId? RelicId = null);
+    IReadOnlyList<CardInstance> CardOptions, ContentId? RelicId = null, ContentId? PotionId = null);
 public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
 public sealed record RunEventOptionView(ContentId Id, string Label);
 public sealed record PendingRunCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Candidates, bool CanSkip);
@@ -279,7 +286,7 @@ public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, 
     IReadOnlyList<RunRewardView> Rewards, IReadOnlyList<RunEventOptionView> EventOptions);
 
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
-    IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId> Potions,
+    IReadOnlyList<ContentId> Deck, IReadOnlyList<ContentId> Relics, IReadOnlyList<ContentId?> Potions,
     int ActIndex, string CurrentPointId, MapPointType? CurrentMapPointType,
     RunRoomType? CurrentRoom,
     RunPhase Phase, RunStatus Status, IReadOnlyList<MapPointView> Map, IReadOnlyList<RunMapVisitView> VisitedMapPoints,
@@ -289,7 +296,7 @@ public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int 
 public sealed class RunRoomResult
 {
     public RunRoomResult(RunOutcome outcome, int hp, int maxHp, int gold,
-        IEnumerable<ContentId> deck, IEnumerable<ContentId> relics, IEnumerable<ContentId>? potions = null,
+        IEnumerable<ContentId> deck, IEnumerable<ContentId> relics, IEnumerable<ContentId?>? potions = null,
         IEnumerable<CardInstance>? deckInstances = null)
     {
         ArgumentNullException.ThrowIfNull(deck);
@@ -318,7 +325,7 @@ public sealed class RunRoomResult
     public IReadOnlyList<ContentId> Deck { get; }
     public IReadOnlyList<CardInstance> DeckInstances { get; }
     public IReadOnlyList<ContentId> Relics { get; }
-    public IReadOnlyList<ContentId> Potions { get; }
+    public IReadOnlyList<ContentId?> Potions { get; }
 }
 
 public interface IRunHook
@@ -327,6 +334,7 @@ public interface IRunHook
     void AfterCombatVictory(RunHookContext context);
     void AfterRelicObtained(RunHookContext context, ContentId relicId) { }
     void AfterCombatStarted(RunHookContext context) { }
+    bool ShouldForcePotionReward(RunObservation observation, RunRoomType roomType) => false;
     IReadOnlySet<RunRoomType> ModifyUnknownRoomTypes(RunObservation observation,
         IReadOnlySet<RunRoomType> roomTypes) => roomTypes;
     float ModifyUnknownOddsIncrease(RunObservation observation, RunRoomType roomType, float increase) => increase;
@@ -380,7 +388,8 @@ internal sealed class RunState
     public RunState(RunDefinition definition, CharacterDefinition character, RandomStreams random,
         IReadOnlyDictionary<ContentId, EncounterDefinition>? encounters = null,
         IReadOnlyDictionary<ContentId, RunEventDefinition>? runEvents = null,
-        IReadOnlyDictionary<ContentId, RelicDefinition>? relicDefinitions = null)
+        IReadOnlyDictionary<ContentId, RelicDefinition>? relicDefinitions = null,
+        IReadOnlyDictionary<ContentId, PotionDefinition>? potionDefinitions = null)
     {
         Definition = definition;
         Character = character;
@@ -391,6 +400,7 @@ internal sealed class RunState
         Encounters = encounters;
         RunEvents = runEvents;
         RelicDefinitions = relicDefinitions;
+        PotionDefinitions = potionDefinitions;
         FallbackRelicId = relicDefinitions?.Values.SingleOrDefault(relic => relic.IsFallback)?.Id;
         Hp = character.MaxHp;
         MaxHp = character.MaxHp;
@@ -399,7 +409,9 @@ internal sealed class RunState
             new CardInstance($"run-card-{index:D4}", cardId)).ToList();
         NextEventCardInstanceId = Deck.Count;
         Relics = [.. character.StartingRelics];
-        Potions = [.. character.StartingPotions];
+        PotionCapacity = character.PotionCapacity;
+        Potions = Enumerable.Repeat<ContentId?>(null, PotionCapacity).ToList();
+        for (var i = 0; i < character.StartingPotions.Count; i++) Potions[i] = character.StartingPotions[i];
         SharedRelicBags = new Dictionary<RunRelicRarity, List<ContentId>>();
         PlayerRelicBags = new Dictionary<RunRelicRarity, List<ContentId>>();
         if (relicDefinitions is not null)
@@ -462,6 +474,7 @@ internal sealed class RunState
     public IReadOnlyDictionary<ContentId, EncounterDefinition>? Encounters { get; }
     public IReadOnlyDictionary<ContentId, RunEventDefinition>? RunEvents { get; }
     public IReadOnlyDictionary<ContentId, RelicDefinition>? RelicDefinitions { get; }
+    public IReadOnlyDictionary<ContentId, PotionDefinition>? PotionDefinitions { get; }
     public ContentId? FallbackRelicId { get; }
     public Dictionary<RunRelicRarity, List<ContentId>> SharedRelicBags { get; }
     public Dictionary<RunRelicRarity, List<ContentId>> PlayerRelicBags { get; }
@@ -475,7 +488,9 @@ internal sealed class RunState
     public int Gold { get; set; }
     public List<CardInstance> Deck { get; }
     public List<ContentId> Relics { get; }
-    public List<ContentId> Potions { get; }
+    public List<ContentId?> Potions { get; }
+    public int PotionCapacity { get; }
+    public float PotionRewardChance { get; set; } = 0.4f;
     public int ActIndex { get; set; }
     public ActMapDefinition Map { get; set; }
     public IReadOnlyList<MapPointView> MapView { get; set; }
@@ -504,6 +519,39 @@ internal sealed class RunState
         foreach (var bag in SharedRelicBags.Values) bag.Remove(relicId);
         foreach (var bag in PlayerRelicBags.Values) bag.Remove(relicId);
     }
+
+    public int FindEmptyPotionSlot() => Potions.FindIndex(potion => potion is null);
+
+    public bool TryAddPotion(ContentId potionId)
+    {
+        var slot = FindEmptyPotionSlot();
+        if (slot < 0) return false;
+        Potions[slot] = potionId;
+        return true;
+    }
+
+    public bool TryUsePotion(int slot, out ContentId potionId)
+    {
+        if ((uint)slot >= (uint)Potions.Count || Potions[slot] is not { } potion)
+        {
+            potionId = default;
+            return false;
+        }
+        Potions[slot] = null;
+        potionId = potion;
+        return true;
+    }
+
+    public void ReplacePotions(IEnumerable<ContentId?> potions)
+    {
+        var slots = potions.ToArray();
+        if (slots.Length > Potions.Count)
+            throw new ArgumentException("Potion inventory exceeds the player's potion capacity.", nameof(potions));
+        Potions.Clear();
+        Potions.AddRange(slots);
+        while (Potions.Count < PotionCapacity) Potions.Add(null);
+    }
+
     public ContentId? CurrentEventId => RoomStack.Count == 0 ? null : RoomStack[^1].EventId;
     public ContentId? SelectEncounter(RunRoomType roomType) => roomType is RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss
         ? ActIndex < RoomContentStates.Count ? RoomContentStates[ActIndex]?.NextEncounter(roomType) : null
@@ -572,7 +620,7 @@ internal sealed record PendingRunCardSelectionState(ChooseRunCardEffect Selectio
     bool IsFinalEvent);
 
 internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount,
-    IReadOnlyList<CardInstance>? CardOptions = null, ContentId? RelicId = null);
+    IReadOnlyList<CardInstance>? CardOptions = null, ContentId? RelicId = null, ContentId? PotionId = null);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -586,13 +634,15 @@ public sealed class RunEnvironment
     private readonly IReadOnlyDictionary<ContentId, CardPoolDefinition>? _cardPools;
     private readonly IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> _customRunEffects;
     private readonly IReadOnlyDictionary<ContentId, RelicDefinition>? _relicDefinitions;
+    private readonly IReadOnlyDictionary<ContentId, PotionDefinition>? _potionDefinitions;
 
     public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
         IEnumerable<CardDefinition>? cards = null, IEnumerable<CardPoolDefinition>? cardPools = null,
         IEnumerable<EncounterDefinition>? encounters = null,
         IEnumerable<RunEventDefinition>? runEvents = null,
         IEnumerable<ICustomRunEffectHandler>? customRunEffects = null,
-        IEnumerable<RelicDefinition>? relicDefinitions = null)
+        IEnumerable<RelicDefinition>? relicDefinitions = null,
+        IEnumerable<PotionDefinition>? potionDefinitions = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _character = character ?? throw new ArgumentNullException(nameof(character));
@@ -604,6 +654,7 @@ public sealed class RunEnvironment
         _customRunEffects = new ReadOnlyDictionary<ContentId, ICustomRunEffectHandler>(
             customRunEffects?.ToDictionary(handler => handler.Id) ?? []);
         _relicDefinitions = relicDefinitions?.ToDictionary(relic => relic.Id);
+        _potionDefinitions = potionDefinitions?.ToDictionary(potion => potion.Id);
     }
 
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
@@ -615,19 +666,20 @@ public sealed class RunEnvironment
         _cardPools = gameDefinition.CardPools;
         _customRunEffects = gameDefinition.CustomRunEffects;
         _relicDefinitions = gameDefinition.Relics;
+        _potionDefinitions = gameDefinition.Potions;
     }
 
     public RunSession Start(uint seed)
     {
         return new RunSession(new RunState(_definition, _character, new RandomStreams(seed),
-            _encounters, _runEvents, _relicDefinitions));
+            _encounters, _runEvents, _relicDefinitions, _potionDefinitions));
     }
 
     public RunSession Start(string seed)
     {
         ArgumentNullException.ThrowIfNull(seed);
         return new RunSession(new RunState(_definition, _character, RandomStreams.FromStringSeed(seed),
-            _encounters, _runEvents, _relicDefinitions));
+            _encounters, _runEvents, _relicDefinitions, _potionDefinitions));
     }
 
     public RunObservation Observe(RunSession session)
@@ -653,7 +705,7 @@ public sealed class RunEnvironment
         frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
         Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
-            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId)).ToArray()),
+            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId, reward.PotionId)).ToArray()),
         Array.AsReadOnly(frame.EventOptions.Select(option => new RunEventOptionView(option.Id, option.Label)).ToArray()));
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
@@ -691,6 +743,8 @@ public sealed class RunEnvironment
                         RunRewardKind.Card => reward.CardOptions!.Select(card =>
                             (PlayerAction)new ClaimCardRewardAction(reward.Id, card.InstanceId)).ToArray(),
                         RunRewardKind.Relic => [(PlayerAction)new ClaimRelicRewardAction(reward.Id)],
+                        RunRewardKind.Potion when state.Potions.Any(potion => potion is null) =>
+                            [(PlayerAction)new ClaimPotionRewardAction(reward.Id)],
                         _ => Array.Empty<PlayerAction>()
                     })
                     .Append(new SkipRewardSetAction()).ToArray();
@@ -1078,11 +1132,16 @@ public sealed class RunEnvironment
             || !encounter.ShouldGiveRewards)
             return false;
 
-        if (frame.RoomType != RunRoomType.Boss || state.ActIndex != state.Definition.Acts.Count - 1)
-        {
-            var amount = state.RewardRandom.NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
-            frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
-        }
+        if (frame.RoomType == RunRoomType.Boss && state.ActIndex >= state.Definition.Acts.Count - 1)
+            return true;
+
+        var shouldGivePotion = _potionDefinitions is { Count: > 0 }
+            && RollForPotionReward(state, frame.RoomType, observation);
+        var amount = state.RewardRandom.NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
+        frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
+        if (shouldGivePotion && RollPotion(state) is { } potionId)
+            frame.Rewards.Add(new RunRewardState($"{encounterId}:potion", RunRewardKind.Potion,
+                0, PotionId: potionId));
         if (_cards is not null && _cardPools is not null && state.Character.CardPools.Count > 0)
         {
             var options = CardRewardGenerator.Generate(state, _cards, _cardPools, _runHooks, observation);
@@ -1094,6 +1153,34 @@ public sealed class RunEnvironment
             frame.Rewards.Add(new RunRewardState($"{encounterId}:relic", RunRewardKind.Relic, 0,
                 RelicId: relicId));
         return true;
+    }
+
+    private bool RollForPotionReward(RunState state, RunRoomType roomType, RunObservation observation)
+    {
+        var forced = _runHooks.Any(hook => hook.ShouldForcePotionReward(observation, roomType));
+        var bonus = roomType == RunRoomType.Elite ? 0.125f : 0f;
+        var roll = state.RewardRandom.NextFloat();
+        if (forced || roll < state.PotionRewardChance + bonus)
+        {
+            state.PotionRewardChance -= 0.1f;
+            return true;
+        }
+        state.PotionRewardChance += 0.1f;
+        return false;
+    }
+
+    private ContentId? RollPotion(RunState state)
+    {
+        var random = state.RewardRandom;
+        var rarityRoll = random.NextFloat();
+        var rarity = rarityRoll <= 0.1f ? PotionRarity.Rare
+            : rarityRoll <= 0.35f ? PotionRarity.Uncommon : PotionRarity.Common;
+        var potions = _potionDefinitions!.Values.Where(potion => potion.Rarity == rarity)
+            .OrderBy(potion => potion.Id.Value, StringComparer.Ordinal).ToArray();
+        if (potions.Length == 0)
+            potions = _potionDefinitions.Values.OrderBy(potion => potion.Id.Value, StringComparer.Ordinal).ToArray();
+        if (potions.Length == 0) return null;
+        return potions[random.NextInt(potions.Length)].Id;
     }
 
     private static RunRelicRarity RollRelicRarity(SeededRandom random)
@@ -1125,6 +1212,18 @@ public sealed class RunEnvironment
                 option.InstanceId == claimCard.CardInstanceId)
                 ?? throw new InvalidOperationException($"Card option '{claimCard.CardInstanceId}' is not available.");
             state.Deck.Add(card);
+            frame.Rewards.Remove(reward);
+            return Observe(session);
+        }
+        if (action is ClaimPotionRewardAction claimPotion)
+        {
+            var reward = frame.Rewards.SingleOrDefault(item =>
+                item.Id == claimPotion.RewardId && item.Kind == RunRewardKind.Potion)
+                ?? throw new InvalidOperationException($"Potion reward '{claimPotion.RewardId}' is not available.");
+            var potionId = reward.PotionId
+                ?? throw new InvalidOperationException($"Potion reward '{claimPotion.RewardId}' has no potion.");
+            if (!state.TryAddPotion(potionId))
+                throw new InvalidOperationException("The player's potion inventory is full.");
             frame.Rewards.Remove(reward);
             return Observe(session);
         }
@@ -1209,8 +1308,7 @@ public sealed class RunEnvironment
         state.Deck.AddRange(result.DeckInstances);
         state.Relics.Clear();
         state.Relics.AddRange(result.Relics);
-        state.Potions.Clear();
-        state.Potions.AddRange(result.Potions);
+        state.ReplacePotions(result.Potions);
     }
 
     private static HashSet<RunRoomType> BuildRoomTypeBlacklist(RunState state, MapPointDefinition point)
@@ -1258,4 +1356,5 @@ public sealed class RunEnvironment
         ArgumentNullException.ThrowIfNull(gameDefinition);
         return gameDefinition.Characters.TryGetValue(id, out var character) ? character : throw new KeyNotFoundException($"Unknown character '{id}'.");
     }
+
 }
