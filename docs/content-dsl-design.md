@@ -121,9 +121,10 @@ The DSL needs a small behavior algebra rather than a bespoke graph format for ev
 
 - `sequence { A; B; repeat }` for fixed cycles.
 - `start A; then sequence { ... }` for fixed openings.
-- `choose { A, B }` for weighted/random choice.
-- `choose without_repeat { A, B }` for immediate-repeat prevention.
-- `choose with_limits { A at_most 2_in_a_row; B at_most 1_in_a_row }` for bounded consecutive actions.
+- `loop { choose { A, B } }` for repeated weighted/random choice.
+- `loop { choose without_repeat { A, B } }` for repeated choice with immediate-repeat prevention.
+- Per-candidate weights and repeat/cooldown filters, such as `A weight 2; B weight 1 unless previous(B)`.
+- `choose with_limits { A at_most 2_in_a_row; B at_most 1_in_a_row }` only when the source actually declares these limits.
 - `when condition -> behavior; otherwise -> behavior` for deterministic branches, evaluated in source order.
 - `choose one formation from [...]` for one correlated draw over complete formations.
 
@@ -132,37 +133,72 @@ Examples:
 ```text
 enemy LeafSlimeSmall {
   hp: default: 11..15, when ToughEnemies: 12..16
-  behavior: choose without_repeat {
-    tackle: attack player for damage(default: 3, when DeadlyEnemies: 4)
-    goop: add 1 Slimed to player.discard
+  behavior: loop {
+    choose without_repeat {
+      tackle: attack player for damage(default: 3, when DeadlyEnemies: 4)
+      goop: add 1 Slimed to player.discard
+    }
+  }
+}
+
+enemy TwigSlimeSmall {
+  hp: default: 7..11, when ToughEnemies: 8..12
+  behavior: loop { tackle: attack player for damage(default: 4, when DeadlyEnemies: 5) }
+}
+
+enemy LeafSlimeMedium {
+  hp: default: 32..35, when ToughEnemies: 33..36
+  behavior: start sticky_shot; then sequence {
+    clump_shot: attack player for damage(default: 8, when DeadlyEnemies: 9)
+    sticky_shot: add 2 Slimed to player.discard
+    repeat
   }
 }
 
 enemy TwigSlimeMedium {
-  hp: default: 26..29, when ToughEnemies: 27..29
-  behavior: start sticky_shot; then choose with_limits {
-    clump_shot at_most 2_in_a_row: attack player for damage(default: 11, when DeadlyEnemies: 12)
-    sticky_shot at_most 1_in_a_row: add 1 Slimed to player.discard
+  hp: default: 26..28, when ToughEnemies: 27..29
+  behavior: start sticky_shot; then loop {
+    choose weighted {
+      pokey_pounce weight 2: attack player for damage(default: 11, when DeadlyEnemies: 12)
+      sticky_shot weight 1 unless previous(sticky_shot): add 1 Slimed to player.discard
+    }
   }
 }
 
 enemy Nibbit {
   hp: default: 42..46, when ToughEnemies: 44..48
   behavior:
-    when living_enemies == 1 -> start butt
-    when enemy_position == 1 -> start hiss
-    when enemy_position == 0 -> start slice
+    when formation_role == alone -> start butt
+    when formation_role == back -> start hiss
+    when formation_role == front -> start slice
     otherwise -> start butt
   moves: {
     butt: attack player for 12
     slice: attack player for damage(default: 6, when DeadlyEnemies: 7); gain 5 block
+      intent: attack, defend 5
     hiss: apply Strength with stacks(default: 2, when DeadlyEnemies: 3) to self
   }
   after: cycle butt -> slice -> hiss -> butt
 }
+
+encounter NibbitsWeak {
+  room: monster
+  weak: true
+  tags: [Nibbit]
+  lineup: [Nibbit as alone]
+}
+
+encounter NibbitsNormal {
+  room: monster
+  slots: [front, back]
+  tags: [Nibbit]
+  lineup: [Nibbit as front, Nibbit as back]
+}
 ```
 
-Behavior lowering must retain relevant history only. For the patterns above, the runtime needs a current move, prior move/count for repetition limits, and any explicitly declared counters; it should not retain an unbounded action log unless a rule asks for it.
+These examples preserve source distinctions: Twig Medium's Clump Shot has weight 2 and can repeat; Sticky Shot has weight 1 and cannot repeat immediately. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from enemy count or array index. Its Slice move projects both attack and block intents.
+
+Behavior lowering must retain only history needed by declared filters. For the examples above, the runtime needs the current behavior location and enough recent move identity to test `previous(sticky_shot)`; it should not retain an unbounded action log unless a content rule asks for longer cooldown or use-once history.
 
 ## Effects, intent, and state-machine boundary
 
@@ -178,6 +214,7 @@ The state machine owns phase order and resumes paused effects. DSL hooks attach 
 encounter SlimesWeak {
   room: monster
   weak: true
+  tags: [Slimes]
   formation {
     first_small = choose [LeafSlimeSmall, TwigSlimeSmall]
     medium = choose [LeafSlimeMedium, TwigSlimeMedium]
@@ -188,6 +225,7 @@ encounter SlimesWeak {
 
 encounter SlimesNormal {
   room: monster
+  tags: [Slimes]
   choose one formation {
     [TwigSlimeMedium, LeafSlimeMedium, LeafSlimeSmall, TwigSlimeSmall]
     [TwigSlimeMedium, LeafSlimeMedium, TwigSlimeSmall, LeafSlimeSmall]
