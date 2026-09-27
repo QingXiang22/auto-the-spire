@@ -13,6 +13,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DrawCardsEffect), "drawCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveCardEffect), "moveCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnergyEffect), "modifyEnergy")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GeneratePotionEffect), "generatePotion")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseEffect), "choose")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
@@ -65,6 +66,7 @@ public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
+public sealed record GeneratePotionEffect(int Count = 1) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
     [System.Text.Json.Serialization.JsonConstructor]
@@ -345,6 +347,9 @@ internal static class EffectExecutor
                     state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);
                     state.Emit(session, "energy", state.Player.Id, state.Player.Id, energy.Amount);
                     break;
+                case GeneratePotionEffect generatePotion:
+                    GeneratePotions(session, owner, generatePotion.Count);
+                    break;
                 case ChooseEffect choice:
                     if (choice.Options.Count == 0) throw new InvalidOperationException("A choice must have at least one option.");
                     state.PendingChoice = choice;
@@ -390,6 +395,32 @@ internal static class EffectExecutor
         TargetSelector.SelectedTarget => selected ?? OpponentOf(state, owner),
         _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect requires one target.")
     };
+
+    private static void GeneratePotions(GameSession session, EntityState owner, int count)
+    {
+        var state = session.State;
+        if (owner != state.Player.Creature)
+            throw new InvalidOperationException("Potions can only be generated for the player.");
+        var run = session.RunOwner?.State
+            ?? throw new InvalidOperationException("Potion generation requires an active run inventory.");
+        var available = state.Definition.PotionPoolFor(run.Character.Id)
+            .Where(potion => potion.CanBeGeneratedInCombat)
+            .ToList();
+        var random = run.Random.Get("combat-potion-generation");
+        for (var i = 0; i < count && run.FindEmptyPotionSlot() >= 0; i++)
+        {
+            var rarityRoll = random.NextFloat();
+            var rarity = rarityRoll <= 0.1f ? PotionRarity.Rare
+                : rarityRoll <= 0.35f ? PotionRarity.Uncommon : PotionRarity.Common;
+            var rarityPool = available.Where(potion => potion.Rarity == rarity).ToArray();
+            if (rarityPool.Length == 0)
+                throw new InvalidOperationException($"No combat-generated {rarity} potion is registered for '{run.Character.Id}'.");
+            var potion = rarityPool[random.NextInt(rarityPool.Length)];
+            available.Remove(potion);
+            if (!run.TryAddPotion(potion.Id)) break;
+            state.Emit(session, "potion_generated", state.Player.Id, potion.Id.Value, 1);
+        }
+    }
 
     private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount,
         DamageProperties properties = DamageProperties.Move)

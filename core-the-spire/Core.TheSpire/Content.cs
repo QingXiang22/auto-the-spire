@@ -43,7 +43,7 @@ public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, To
 public enum PotionRarity { Common, Uncommon, Rare }
 public sealed record PotionDefinition(ContentId Id, PotionRarity Rarity, EffectNode Effect,
     TargetSelector Target = TargetSelector.Self, bool InSharedPool = true,
-    IReadOnlyList<ContentId>? CharacterPoolIds = null)
+    IReadOnlyList<ContentId>? CharacterPoolIds = null, bool CanBeGeneratedInCombat = true)
 {
     public void Validate()
     {
@@ -924,6 +924,9 @@ public sealed class ContentRegistry
             case RepeatEffect repeat:
                 ArgumentOutOfRangeException.ThrowIfNegative(repeat.Count);
                 ValidateEffectReferences(repeat.Effect, owner);
+                break;
+            case GeneratePotionEffect generatePotion:
+                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(generatePotion.Count);
                 break;
             case RepeatForXCostEffect repeatForX:
                 ValidateEffectReferences(repeatForX.Effect, owner);
