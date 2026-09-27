@@ -405,16 +405,19 @@ internal sealed class RunState
         if (relicDefinitions is not null)
         {
             var relicPoolRandom = random.Get("up_front");
-            foreach (var rarity in new[] { RunRelicRarity.Common, RunRelicRarity.Uncommon, RunRelicRarity.Rare })
+            var rewardRarities = new[]
+                { RunRelicRarity.Common, RunRelicRarity.Uncommon, RunRelicRarity.Rare, RunRelicRarity.Shop };
+            foreach (var rarity in rewardRarities)
             {
                 var bag = relicDefinitions.Values.Where(relic => relic.InSharedPool && relic.Rarity == rarity)
                     .Select(relic => relic.Id).OrderBy(id => id.Value, StringComparer.Ordinal).ToList();
                 relicPoolRandom.Shuffle(bag);
                 SharedRelicBags.Add(rarity, bag);
             }
-            foreach (var rarity in new[] { RunRelicRarity.Common, RunRelicRarity.Uncommon, RunRelicRarity.Rare })
+            foreach (var rarity in rewardRarities)
             {
-                var bag = relicDefinitions.Values.Where(relic => relic.InSharedPool && relic.Rarity == rarity)
+                var bag = relicDefinitions.Values.Where(relic => relic.Rarity == rarity
+                        && (relic.InSharedPool || relic.CharacterPoolIds?.Contains(character.Id) == true))
                     .Select(relic => relic.Id).OrderBy(id => id.Value, StringComparer.Ordinal).ToList();
                 relicPoolRandom.Shuffle(bag);
                 PlayerRelicBags.Add(rarity, bag);
