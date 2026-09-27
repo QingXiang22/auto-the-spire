@@ -473,13 +473,16 @@ public sealed class CombatSliceTests
         Assert.Equal(2, semanticPackage.Powers.Count);
         Assert.Equal(4, semanticPackage.Encounters.Count);
         var semanticStrike = semanticPackage.Cards.Single(card => card.Name == "StrikeIronclad");
-        Assert.True(semanticStrike.PlayEffect is SpireAttackExpression
+        Assert.True(semanticStrike.Rarity == SpireCardRarity.Basic
+            && semanticStrike.PlayEffect is SpireAttackExpression
         {
             Target: SpireEffectTarget.SelectedEnemy,
             Damage: SpireUpgradedInteger { BaseValue: 6, UpgradedValue: 9 }
         });
         var semanticSlimed = semanticPackage.Cards.Single(card => card.Name == "Slimed");
-        Assert.True(semanticSlimed.Keywords == SpireCardKeyword.Exhaust
+        Assert.True(semanticSlimed.Rarity == SpireCardRarity.Status
+            && semanticSlimed.Target == SpireEffectTarget.Self
+            && semanticSlimed.Keywords == SpireCardKeyword.Exhaust
             && semanticSlimed.PlayEffect is SpireDrawCardsExpression { Count: 1 });
         var semanticRitual = semanticPackage.Powers.Single(power => power.Name == "Ritual");
         Assert.True(semanticRitual.Trigger == SpirePowerTrigger.EnemyTurnEnd

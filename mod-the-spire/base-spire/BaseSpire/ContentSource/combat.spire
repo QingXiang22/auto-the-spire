@@ -12,13 +12,16 @@ package base-spire {
   card Slimed {
     type = status
     cost = 1
+    rarity = status
     keywords = [exhaust]
+    target = self
     play = draw(1)
   }
 
   card StrikeIronclad {
     type = attack
     cost = 1
+    rarity = basic
     target = enemy
     play = attack(target, damage=upgrades(base=6, upgraded=9))
   }
