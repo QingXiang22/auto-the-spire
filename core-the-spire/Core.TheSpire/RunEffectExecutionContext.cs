@@ -20,6 +20,10 @@ public sealed class RunEffectExecutionContext
     public int Hp => _state.Hp;
     public int MaxHp => _state.MaxHp;
     public int Gold => _state.Gold;
+    public int GetInt(string key, int defaultValue = 0) =>
+        _state.GetModInt(HandlerId.Value[..HandlerId.Value.IndexOf(':')], key, defaultValue);
+    public void SetInt(string key, int value) =>
+        _state.SetModInt(HandlerId.Value[..HandlerId.Value.IndexOf(':')], key, value);
 
     public void GainGold(int amount) => RunEffectCommands.GainGold(_state, amount);
     public void Heal(int amount) => RunEffectCommands.Heal(_state, amount);
