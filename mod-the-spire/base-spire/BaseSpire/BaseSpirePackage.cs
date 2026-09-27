@@ -250,42 +250,13 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(BaseSpireContent.LoadEnemy("nibbit.enemy.json",
             new ContentVariantProfile(deadlyEnemies, toughEnemies)));
 
-        registry.Register(new EnemyDefinition(BaseSpireIds.LeafSlimeSmall,
-            toughEnemies ? 12 : 11, toughEnemies ? 16 : 15,
-            CreateLeafSmallActions(deadlyEnemies), startingTransition: CreateNoRepeatSlimeOpening()));
-        registry.Register(new EnemyDefinition(BaseSpireIds.TwigSlimeSmall,
-            toughEnemies ? 8 : 7, toughEnemies ? 12 : 11,
-            [new EnemyActionDefinition(ContentId.Parse("base-spire:twig-small-tackle"),
-                new AttackEffect(deadlyEnemies ? 5 : 4), IntentKind.Attack, deadlyEnemies ? 5 : 4)]));
-
-        var leafMediumClump = ContentId.Parse("base-spire:leaf-medium-clump-shot");
-        var leafMediumSticky = ContentId.Parse("base-spire:leaf-medium-sticky-shot");
-        registry.Register(new EnemyDefinition(BaseSpireIds.LeafSlimeMedium,
-            toughEnemies ? 33 : 32, toughEnemies ? 36 : 35,
-            [
-                new EnemyActionDefinition(leafMediumClump, new AttackEffect(deadlyEnemies ? 9 : 8),
-                    IntentKind.Attack, deadlyEnemies ? 9 : 8, NextActionId: leafMediumSticky),
-                new EnemyActionDefinition(leafMediumSticky,
-                    new AddCardsToPileEffect(BaseSpireIds.Slimed, CardPile.Discard, 2),
-                    IntentKind.Debuff, NextActionId: leafMediumClump)
-            ], startingActionId: leafMediumSticky));
-
-        var twigMediumClump = ContentId.Parse("base-spire:twig-medium-clump-shot");
-        var twigMediumSticky = ContentId.Parse("base-spire:twig-medium-sticky-shot");
-        var twigMediumTransition = new EnemyActionTransition(
-        [
-            new EnemyActionChoice(twigMediumClump, MaxConsecutiveUses: 2),
-            new EnemyActionChoice(twigMediumSticky, MaxConsecutiveUses: 1)
-        ]);
-        registry.Register(new EnemyDefinition(BaseSpireIds.TwigSlimeMedium,
-            toughEnemies ? 27 : 26, toughEnemies ? 29 : 29,
-            [
-                new EnemyActionDefinition(twigMediumClump, new AttackEffect(deadlyEnemies ? 12 : 11),
-                    IntentKind.Attack, deadlyEnemies ? 12 : 11, Transition: twigMediumTransition),
-                new EnemyActionDefinition(twigMediumSticky,
-                    new AddCardsToPileEffect(BaseSpireIds.Slimed, CardPile.Discard, 1),
-                    IntentKind.Debuff, Transition: twigMediumTransition)
-            ], startingActionId: twigMediumSticky));
+        foreach (var fileName in new[]
+        {
+            "leaf-slime-small.enemy.json", "twig-slime-small.enemy.json",
+            "leaf-slime-medium.enemy.json", "twig-slime-medium.enemy.json"
+        })
+            registry.Register(BaseSpireContent.LoadEnemy(fileName,
+                new ContentVariantProfile(deadlyEnemies, toughEnemies)));
 
         foreach (var encounter in BaseSpireContent.LoadEncounters("base-spire.encounters.json"))
             registry.Register(encounter);
@@ -301,28 +272,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PaperPhrogHook());
         registry.Register(new RuinedHelmetHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
-    }
-
-    private static EnemyActionDefinition[] CreateLeafSmallActions(bool deadlyEnemies)
-    {
-        var tackle = ContentId.Parse("base-spire:leaf-small-tackle");
-        var goop = ContentId.Parse("base-spire:leaf-small-goop");
-        var transitions = CreateNoRepeatSlimeOpening();
-        return
-        [
-            new EnemyActionDefinition(tackle, new AttackEffect(deadlyEnemies ? 4 : 3), IntentKind.Attack,
-                deadlyEnemies ? 4 : 3, Transition: transitions),
-            new EnemyActionDefinition(goop, new AddCardsToPileEffect(BaseSpireIds.Slimed, CardPile.Discard),
-                IntentKind.Debuff, Transition: transitions)
-        ];
-    }
-
-    private static EnemyActionTransition CreateNoRepeatSlimeOpening()
-    {
-        var tackle = ContentId.Parse("base-spire:leaf-small-tackle");
-        var goop = ContentId.Parse("base-spire:leaf-small-goop");
-        var choices = new[] { new EnemyActionChoice(tackle), new EnemyActionChoice(goop) };
-        return new EnemyActionTransition(choices, EnemyActionRepeatPolicy.PreventImmediateRepeat);
     }
 
 }
