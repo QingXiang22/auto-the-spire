@@ -2827,6 +2827,41 @@ public sealed class CombatSliceTests
             && gameEvent.Source == combat.State.Player.Id && gameEvent.Target == enemyId && gameEvent.Amount == 10);
     }
 
+    public void BaseRuinedHelmetDoublesTheFirstStrengthApplicationEachCombat()
+    {
+        var definition = Build(new BaseSpirePackage(), new RuinedHelmetStrengthFixturePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(821);
+        run.State.Relics.Add(BaseSpireIds.RuinedHelmet);
+        run.State.Deck.Clear();
+        run.State.Deck.Add(new CardInstance("ruined-helmet-first-strength", RuinedHelmetStrengthFixturePackage.StrengthCard));
+        run.State.Deck.Add(new CardInstance("ruined-helmet-second-strength", RuinedHelmetStrengthFixturePackage.StrengthCard));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        combat.State.Player.MutableHand.Clear();
+        combat.State.Player.MutableHand.Add(new CardInstance("ruined-helmet-first-strength", RuinedHelmetStrengthFixturePackage.StrengthCard));
+        combat.State.Player.MutableHand.Add(new CardInstance("ruined-helmet-second-strength", RuinedHelmetStrengthFixturePackage.StrengthCard));
+
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+
+        Assert.Equal(6, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+        Assert.Equal(new[] { 4, 2 }, combat.State.Events.Where(gameEvent => gameEvent.Type == "power"
+            && gameEvent.Target == combat.State.Player.Id).Select(gameEvent => gameEvent.Amount));
+    }
+
+    private sealed class RuinedHelmetStrengthFixturePackage : IRulePackage
+    {
+        public static readonly ContentId StrengthCard = ContentId.Parse("ruined-helmet-fixture:strength-card");
+        public PackageInfo Info { get; } = new("ruined-helmet-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new CardDefinition(StrengthCard, 0,
+            CardType.Skill, new ApplyPowerEffect(BaseSpireIds.Strength, 2), Target: TargetSelector.Self,
+            Rarity: CardRarity.Basic));
+    }
+
     private sealed class DemonTongueFixturePackage : IRulePackage
     {
         public static readonly ContentId SelfDamageCard = ContentId.Parse("demon-tongue-fixture:self-damage");
@@ -3198,6 +3233,7 @@ internal static class Program
         tests.BaseRedSkullTracksCombatHealingAndHpLossAcrossItsThreshold();
         tests.BaseDemonTongueHealsOnlyForFirstPlayerSideHitEachTurn();
         tests.BasePaperPhrogAddsTwentyFivePercentToPoweredDamageAgainstVulnerableEnemies();
+        tests.BaseRuinedHelmetDoublesTheFirstStrengthApplicationEachCombat();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();

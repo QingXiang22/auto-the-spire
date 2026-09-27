@@ -202,6 +202,9 @@ internal sealed class GameState
     {
         if (!Definition.Powers.TryGetValue(power, out var definition))
             throw new InvalidOperationException($"Unknown power '{power}'.");
+        foreach (var hook in Definition.Hooks)
+            amount = hook.ModifyPowerAmountReceived(new RuleHookContext(session, hook.Id), power,
+                definition.Role, owner.Id, applier.Id, amount);
         var newAmount = owner.PowerAmount(power) + amount;
         if (newAmount == 0)
         {

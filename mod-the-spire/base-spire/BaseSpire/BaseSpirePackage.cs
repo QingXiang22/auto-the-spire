@@ -72,6 +72,7 @@ public static class BaseSpireIds
     public static readonly ContentId RedSkull = ContentId.Parse("base-spire:red-skull");
     public static readonly ContentId DemonTongue = ContentId.Parse("base-spire:demon-tongue");
     public static readonly ContentId PaperPhrog = ContentId.Parse("base-spire:paper-phrog");
+    public static readonly ContentId RuinedHelmet = ContentId.Parse("base-spire:ruined-helmet");
     public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -109,6 +110,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.DemonTongue, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.PaperPhrog, RunRelicRarity.Uncommon,
+            InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
+        registry.Register(new RelicDefinition(BaseSpireIds.RuinedHelmet, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
@@ -289,6 +292,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RedSkullHook());
         registry.Register(new DemonTongueHook());
         registry.Register(new PaperPhrogHook());
+        registry.Register(new RuinedHelmetHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
@@ -430,6 +434,26 @@ internal sealed class PaperPhrogHook : IRuleHook
         && (properties & DamageProperties.Unpowered) == 0
             ? currentMultiplier + 0.25m
             : currentMultiplier;
+}
+
+internal sealed class RuinedHelmetHook : IRuleHook
+{
+    private const string UsedThisCombatKey = "ruined-helmet-used-this-combat";
+
+    public ContentId Id { get; } = ContentId.Parse("base-spire:ruined-helmet-hook");
+    public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+    public int ModifyPowerAmountReceived(RuleHookContext context, ContentId powerId, PowerRole powerRole,
+        string targetId, string applierId, int amount)
+    {
+        if (amount <= 0 || powerRole != PowerRole.Strength
+            || !context.IsPlayerCreature(targetId)
+            || !context.HasRelic(BaseSpireIds.RuinedHelmet)
+            || context.GetInt(UsedThisCombatKey) != 0) return amount;
+
+        context.SetInt(UsedThisCombatKey, 1);
+        return amount * 2;
+    }
 }
 
 public sealed class SyntheticCombatPackage : IRulePackage

@@ -970,6 +970,8 @@ public interface IRuleHook
     /// <summary>Transforms the multiplier used when a powered move hits a Vulnerable creature.</summary>
     decimal ModifyVulnerableMultiplier(RuleHookContext context, string dealerId, string targetId,
         DamageProperties properties, decimal currentMultiplier) => currentMultiplier;
+    int ModifyPowerAmountReceived(RuleHookContext context, ContentId powerId, PowerRole powerRole,
+        string targetId, string applierId, int amount) => amount;
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
     bool ShouldClearBlock(RuleHookContext context, string creatureId) => true;
