@@ -245,7 +245,9 @@ internal sealed class GameState
         foreach (var hook in Definition.Hooks)
             amount = hook.ModifyPowerAmountReceived(new RuleHookContext(session, hook.Id), power,
                 definition.Role, owner.Id, applier.Id, amount);
-        var newAmount = owner.PowerAmount(power) + amount;
+        if (amount != 0 && definition.OnStackChange is { } adjustment)
+            ApplyPower(session, owner, adjustment.Power, checked(amount * adjustment.AmountPerStack), applier);
+        var newAmount = checked(owner.PowerAmount(power) + amount);
         if (newAmount == 0)
         {
             owner.MutablePowers.Remove(power);
@@ -402,17 +404,26 @@ internal sealed class GameState
         return false;
     }
 
-    internal void DecrementPower(EntityState owner, ContentId powerId)
+    internal int DecrementPower(GameSession session, EntityState owner, ContentId powerId)
     {
-        if (!owner.MutablePowers.TryGetValue(powerId, out var amount)) return;
-        if (amount <= 1)
+        if (!owner.MutablePowers.TryGetValue(powerId, out var amount)) return 0;
+        var definition = Definition.Powers[powerId];
+        var delta = -1;
+        foreach (var hook in Definition.Hooks)
+            delta = hook.ModifyPowerAmountReceived(new RuleHookContext(session, hook.Id), powerId,
+                definition.Role, owner.Id, owner.Id, delta);
+        var newAmount = checked(amount + delta);
+        if (newAmount == 0)
         {
             owner.MutablePowers.Remove(powerId);
             owner.MutablePowerAppliers.Remove(powerId);
             owner.SkipNextPowerTriggers.Remove(powerId);
         }
-        else owner.MutablePowers[powerId] = amount - 1;
-        if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength--;
+        else owner.MutablePowers[powerId] = newAmount;
+        if (definition.Role == PowerRole.Strength) owner.Strength += delta;
+        if (delta != 0 && definition.OnStackChange is { } adjustment)
+            ApplyPower(session, owner, adjustment.Power, checked(delta * adjustment.AmountPerStack), owner);
+        return delta;
     }
 
     internal int RemovePower(EntityState owner, ContentId powerId)
@@ -424,6 +435,15 @@ internal sealed class GameState
         owner.SkipNextPowerTriggers.Remove(powerId);
         if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength -= amount;
         return amount;
+    }
+
+    internal void ExpirePower(GameSession session, EntityState owner, ContentId powerId)
+    {
+        var amount = RemovePower(owner, powerId);
+        if (amount == 0) return;
+        Emit(session, "power_removed", owner.Id, owner.Id, amount);
+        if (Definition.Powers[powerId].OnExpire is { } adjustment)
+            ApplyPower(session, owner, adjustment.Power, checked(amount * adjustment.AmountPerStack), owner);
     }
 
     internal int Heal(GameSession session, EntityState healer, EntityState target, int amount)

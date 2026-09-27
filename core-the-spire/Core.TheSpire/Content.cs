@@ -24,12 +24,15 @@ public readonly record struct ContentId(string Value)
 }
 
 public sealed record PackageInfo(string Id, string Version);
+public sealed record PowerStackAdjustment(ContentId Power, int AmountPerStack);
 public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerTrigger.None, ContentId? TriggerEffect = null,
     bool SkipFirstTriggerWhenAppliedToEnemy = false, PowerRole Role = PowerRole.None, bool DecrementOnTrigger = false,
     bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
     bool RemoveWhenApplierDies = false, EffectNode? TriggerRuleEffect = null,
     CardType? TriggerCardType = null, bool RemoveAfterPlayerTurnEnd = false,
-    int MaxEnergyPerStack = 0, int VulnerableMultiplierPercentPerStack = 0)
+    int MaxEnergyPerStack = 0, int VulnerableMultiplierPercentPerStack = 0,
+    PowerStackAdjustment? OnStackChange = null, PowerStackAdjustment? OnExpire = null,
+    bool RemoveAfterOwnerTurnEnd = false)
 {
     public void Validate()
     {
@@ -42,6 +45,13 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             throw new ArgumentException("A card-type filter requires a card event trigger.");
         if (OutgoingDamageMultiplier is < 0m)
             throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
+        foreach (var adjustment in new[] { OnStackChange, OnExpire })
+            if (adjustment is not null)
+            {
+                adjustment.Power.Validate();
+                if (adjustment.AmountPerStack == 0)
+                    throw new ArgumentException("A lifecycle power adjustment requires a nonzero multiplier.");
+            }
     }
 }
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
@@ -987,6 +997,20 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
             if (power.TriggerRuleEffect is { } triggerEffect)
                 ValidateEffectReferences(triggerEffect, $"Power '{power.Id}' trigger");
+            foreach (var adjustment in new[] { power.OnStackChange, power.OnExpire })
+                if (adjustment is not null && !_powers.ContainsKey(adjustment.Power))
+                    throw new InvalidOperationException($"Power '{power.Id}' references unknown lifecycle power '{adjustment.Power}'.");
+        }
+        foreach (var power in _powers.Values)
+        {
+            var visited = new HashSet<ContentId>();
+            var current = power;
+            while (current.OnStackChange is { } adjustment)
+            {
+                if (!visited.Add(current.Id))
+                    throw new InvalidOperationException($"Power '{power.Id}' has a recursive stack-change link.");
+                current = _powers[adjustment.Power];
+            }
         }
         foreach (var runEvent in _runEvents.Values)
         foreach (var page in runEvent.Pages.Values)
@@ -1297,6 +1321,8 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} decrements unknown power '{decrementPower.Power}'.");
             case RemovePowerEffect removePower when !_powers.ContainsKey(removePower.Power):
                 throw new InvalidOperationException($"{owner} removes unknown power '{removePower.Power}'.");
+            case ExpirePowerEffect expirePower when !_powers.ContainsKey(expirePower.Power):
+                throw new InvalidOperationException($"{owner} expires unknown power '{expirePower.Power}'.");
             case ChooseEffect choice:
                 foreach (var option in choice.Options)
                     if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);

@@ -30,6 +30,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowerEffect), "removePower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ExpirePowerEffect), "expirePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
@@ -78,6 +79,7 @@ public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
+public sealed record ExpirePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record GeneratePotionEffect(int Count = 1) : EffectNode;
@@ -372,15 +374,17 @@ internal static class EffectExecutor
                     state.Emit(session, "card_retained", owner.Id, selectedCard.InstanceId, 1);
                     break;
                 case DecrementPowerEffect decrementPower:
-                    var previousAmount = owner.PowerAmount(decrementPower.Power);
-                    state.DecrementPower(owner, decrementPower.Power);
-                    if (previousAmount > 0)
-                        state.Emit(session, "power", owner.Id, owner.Id, -1);
+                    var stackDelta = state.DecrementPower(session, owner, decrementPower.Power);
+                    if (stackDelta != 0)
+                        state.Emit(session, "power", owner.Id, owner.Id, stackDelta);
                     break;
                 case RemovePowerEffect removePower:
                     var removedAmount = state.RemovePower(owner, removePower.Power);
                     if (removedAmount != 0)
                         state.Emit(session, "power_removed", owner.Id, owner.Id, removedAmount);
+                    break;
+                case ExpirePowerEffect expirePower:
+                    state.ExpirePower(session, owner, expirePower.Power);
                     break;
                 case ModifyEnergyEffect energy:
                     state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);

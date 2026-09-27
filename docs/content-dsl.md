@@ -58,14 +58,30 @@ The move names produce stable action IDs. `intent` and displayed damage are deri
 
 ## Current source of truth
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 53 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 51 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
-- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers and the Pyre maximum-energy and Cruelty vulnerable-damage modifiers.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 55 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 53 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
+- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers the Pyre maximum-energy and Cruelty vulnerable-damage modifiers, and the Setup Strike/Mangle Power lifecycles.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
 
 Enemy behaviors in the current roster exercise fixed cycles, a one-time opening move, repeated moves, random choices without immediate repeats, and consecutive-use limits. Gameplay tests exercise normal and Deadly/Tough profiles through the real compiled package. JSON enemy definitions and their separate loading path have been removed; encounters remain JSON.
 
-## Scope still open
+## Power lifecycle contract
+
+Temporary modifiers are authored as lifecycle declarations, with no card-specific runtime handler:
+
+```text
+power SetupStrikePower {
+  onStackChange = grantPower(Strength, stackDelta)
+  onExpire = grantPower(Strength, negativeSourceStacks)
+  removeAfterOwnerTurnEnd = true
+}
+```
+
+`onStackChange` receives the signed delta after amount-modifying hooks, including subsequent applications and decrementing stacks. Its first supported operation is `grantPower(Power, stackDelta)` or `negativeStackDelta`, applying the adjustment to the same owner. `onExpire` uses `sourceStacks` or `negativeSourceStacks`, capturing the remaining amount before removal. Expiration occurs during the holder's side-end Power queue, before subsequent enemy actions for a player and after enemy actions for a monster. Ordinary `removePower` does not invoke expiration; this matches the distinct removal and side-end restoration operations in the recovered TemporaryStrengthPower source. Lifecycle references must resolve in the composite registry, and recursive stack-change links are rejected at build time.
+
+Setup Strike and Mangle use opposite signs of this same contract. Strength remains a separate observable Power, so its own amount-modifying hooks still run. Copying temporary modifiers together with their already-applied Strength, as done by Misery, requires a separate suppression contract and remains open.
+
+## Remaining content
 
 The nine enemies are the roster currently modeled by this repository; this is not a claim that the full original game's monster catalog has been imported. The source audit identifies substantial gameplay still to implement, including monsters not yet registered here, role-specific behavior in the encounter source, conditional action state, and move-log cooldown rules. Those should be authored in this DSL when their source semantics are implemented. They should not be approximated by changing the state machine to match one content fixture.
 

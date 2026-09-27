@@ -608,7 +608,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.PendingPowerOwner = owner;
         state.PendingPowerTrigger = trigger;
         state.PendingPowerQueue = owner.Powers
-            .Where(pair => state.Definition.Powers[pair.Key].Trigger == trigger)
+            .Where(pair => state.Definition.Powers[pair.Key].Trigger == trigger
+                || (state.Definition.Powers[pair.Key].RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, trigger)))
             .Select(pair => pair.Key)
             .ToList();
         state.PendingPowerIndex = 0;
@@ -624,13 +625,17 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             var powerId = queue[state.PendingPowerIndex++];
             if (!owner.Powers.TryGetValue(powerId, out var amount)) continue;
-            if (owner.SkipNextPowerTriggers.Remove(powerId)) continue;
             var power = state.Definition.Powers[powerId];
             var triggerEffects = new List<EffectNode>();
-            if (power.TriggerEffect is { } triggerPower)
-                triggerEffects.Add(new ApplyPowerEffect(triggerPower, amount, TargetSelector.Self));
-            if (power.TriggerRuleEffect is { } triggerRule) triggerEffects.Add(triggerRule);
-            if (power.DecrementOnTrigger) triggerEffects.Add(new DecrementPowerEffect(powerId));
+            if (power.Trigger == state.PendingPowerTrigger && !owner.SkipNextPowerTriggers.Remove(powerId))
+            {
+                if (power.TriggerEffect is { } triggerPower)
+                    triggerEffects.Add(new ApplyPowerEffect(triggerPower, amount, TargetSelector.Self));
+                if (power.TriggerRuleEffect is { } triggerRule) triggerEffects.Add(triggerRule);
+                if (power.DecrementOnTrigger) triggerEffects.Add(new DecrementPowerEffect(powerId));
+            }
+            if (power.RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, state.PendingPowerTrigger))
+                triggerEffects.Add(new ExpirePowerEffect(powerId));
             if (triggerEffects.Count > 0)
                 EffectExecutor.Execute(session, owner, new SequenceEffect(triggerEffects));
         }
@@ -640,6 +645,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.PendingPowerIndex = 0;
         return true;
     }
+
+    private static bool IsOwnerTurnEnd(EntityState owner, PowerTrigger trigger) => trigger ==
+        (owner.IsEnemy ? PowerTrigger.AfterEnemyTurnEnd : PowerTrigger.AfterPlayerTurnEnd);
 
     private static bool RunFlushHooks(GameSession session)
     {

@@ -26,6 +26,10 @@ public static class BaseSpireIds
     public static readonly ContentId PyrePower = ContentId.Parse("base-spire:pyre-power");
     public static readonly ContentId Cruelty = ContentId.Parse("base-spire:cruelty");
     public static readonly ContentId CrueltyPower = ContentId.Parse("base-spire:cruelty-power");
+    public static readonly ContentId SetupStrike = ContentId.Parse("base-spire:setup-strike");
+    public static readonly ContentId SetupStrikePower = ContentId.Parse("base-spire:setup-strike-power");
+    public static readonly ContentId Mangle = ContentId.Parse("base-spire:mangle");
+    public static readonly ContentId ManglePower = ContentId.Parse("base-spire:mangle-power");
     public static readonly ContentId RagePower = ContentId.Parse("base-spire:rage-power");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");

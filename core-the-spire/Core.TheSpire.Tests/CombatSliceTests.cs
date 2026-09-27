@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(51, ironcladPool.Count);
+        Assert.Equal(53, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(53, cards.Count);
+        Assert.Equal(55, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(52, pool.Count);
+        Assert.Equal(54, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -582,6 +582,152 @@ public sealed class CombatSliceTests
         environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Player.Id));
         environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Enemy.Id));
         Assert.Equal(47, noVulnerable.State.Enemy.Hp);
+    }
+
+    public void SetupStrikeStacksTemporaryStrengthAndPreservesPermanentStrengthAtExpiry()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(83, "ironclad", 56, 65,
+            [BaseSpireIds.SetupStrike, BaseSpireIds.SetupStrike, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        session.State.ApplyPower(session, session.State.Player.Creature, BaseSpireIds.Strength, 2,
+            session.State.Player.Creature);
+        session.State.Player.MutableHand[1] = new CardInstance("setup-strike+", BaseSpireIds.SetupStrike, 1);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(44, session.State.Enemy.Hp);
+        Assert.Equal(4, session.State.Player.Creature.Strength);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(31, session.State.Enemy.Hp);
+        Assert.Equal(5, session.State.Player.Creature.PowerAmount(BaseSpireIds.SetupStrikePower));
+        Assert.Equal(7, environment.Observe(session).PlayerPowers[BaseSpireIds.Strength]);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(18, session.State.Enemy.Hp);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(2, session.State.Player.Creature.Strength);
+        Assert.Equal(2, environment.Observe(session).PlayerPowers[BaseSpireIds.Strength]);
+        Assert.False(session.State.Player.Creature.Powers.ContainsKey(BaseSpireIds.SetupStrikePower));
+        Assert.True(session.State.Definition.Cards[BaseSpireIds.SetupStrike].Tags.Contains(BaseSpireIds.StrikeTag));
+    }
+
+    public void MangleSuppressesEnemyStrengthThroughItsActionThenRestoresIt()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var darkStrike = ContentId.Parse("base-spire:damp-cultist-dark-strike");
+        var session = environment.StartEncounter(84, "ironclad", 56, 65, [BaseSpireIds.Mangle],
+            [new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString(), 53, StartingActionOverride: darkStrike)]);
+        session.State.ApplyPower(session, session.State.Enemy, BaseSpireIds.Strength, 4,
+            session.State.Enemy);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(38, session.State.Enemy.Hp);
+        Assert.Equal(-6, session.State.Enemy.Strength);
+        Assert.Equal(0, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(56, session.State.Player.Creature.Hp);
+        Assert.Equal(4, session.State.Enemy.Strength);
+        Assert.Equal(4, session.State.Enemy.PowerAmount(BaseSpireIds.Strength));
+        Assert.False(session.State.Enemy.Powers.ContainsKey(BaseSpireIds.ManglePower));
+        Assert.Equal(5, environment.Observe(session).IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(51, session.State.Player.Creature.Hp);
+
+        var upgraded = environment.StartEncounter(85, "ironclad", 56, 65, [BaseSpireIds.Mangle],
+            [new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString(), 53, StartingActionOverride: darkStrike)]);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("mangle+", BaseSpireIds.Mangle, 1);
+        environment.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+        Assert.Equal(33, upgraded.State.Enemy.Hp);
+        Assert.Equal(-15, upgraded.State.Enemy.Strength);
+        environment.Step(upgraded, new EndTurnAction());
+        Assert.Equal(0, upgraded.State.Enemy.Strength);
+        Assert.Equal(56, upgraded.State.Player.Creature.Hp);
+
+        var lethal = environment.Start(86, "ironclad", 56, 65, [BaseSpireIds.Mangle],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 15);
+        environment.Step(lethal, new PlayCardAction(0, lethal.State.Enemy.Id));
+        Assert.True(lethal.State.IsTerminal);
+        Assert.False(lethal.State.Events.Any(gameEvent => gameEvent.Type == "power"));
+    }
+
+    public void PowerLifecycleUsesSignedDeltasAndRejectsRecursiveLinks()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(87, "ironclad", 56, 65, [], BaseSpireIds.DampCultist.ToString());
+        var player = session.State.Player.Creature;
+        session.State.ApplyPower(session, player, BaseSpireIds.Strength, 2, player);
+        session.State.ApplyPower(session, player, BaseSpireIds.SetupStrikePower, 4, player);
+        session.State.DecrementPower(session, player, BaseSpireIds.SetupStrikePower);
+        Assert.Equal(3, player.PowerAmount(BaseSpireIds.SetupStrikePower));
+        Assert.Equal(5, player.Strength);
+        session.State.ExpirePower(session, player, BaseSpireIds.SetupStrikePower);
+        Assert.Equal(2, player.Strength);
+        session.State.ExpirePower(session, player, BaseSpireIds.SetupStrikePower);
+        Assert.Equal(2, player.Strength);
+        session.State.ApplyPower(session, player, BaseSpireIds.SetupStrikePower, 3, player);
+        session.State.ApplyPower(session, player, BaseSpireIds.SetupStrikePower, -3, player);
+        Assert.Equal(2, player.Strength);
+        Assert.False(player.Powers.ContainsKey(BaseSpireIds.SetupStrikePower));
+        session.State.ApplyPower(session, player, BaseSpireIds.SetupStrikePower, 4, player);
+        session.State.RemovePower(player, BaseSpireIds.SetupStrikePower);
+        Assert.Equal(6, player.Strength);
+
+        var modifiedEnvironment = new CombatEnvironment(Build(new BaseSpirePackage(),
+            new TestHookPackage(new TemporaryStackDeltaHook())));
+        var modified = modifiedEnvironment.Start(89, "ironclad", 56, 65, [], BaseSpireIds.DampCultist.ToString());
+        var modifiedPlayer = modified.State.Player.Creature;
+        modified.State.ApplyPower(modified, modifiedPlayer, BaseSpireIds.SetupStrikePower, 4, modifiedPlayer);
+        EffectExecutor.Execute(modified, modifiedPlayer, new DecrementPowerEffect(BaseSpireIds.SetupStrikePower));
+        Assert.Equal(2, modifiedPlayer.PowerAmount(BaseSpireIds.SetupStrikePower));
+        Assert.Equal(2, modifiedPlayer.Strength);
+        Assert.True(modified.State.Events.Any(gameEvent => gameEvent.Type == "power" && gameEvent.Amount == -2));
+        modified.State.ExpirePower(modified, modifiedPlayer, BaseSpireIds.SetupStrikePower);
+        Assert.Equal(0, modifiedPlayer.Strength);
+
+        static ContentRegistry CompileRegistry(string source)
+        {
+            var registry = new ContentRegistry();
+            registry.AddPackage(new PowerLifecycleFixturePackage(source));
+            return registry;
+        }
+        var qualified = CompileRegistry("""
+            package lifecycle {
+              power Strength { role = strength }
+              power Temporary {
+                onStackChange = grantPower("lifecycle:strength", stackDelta)
+                onExpire = grantPower(Strength, negativeSourceStacks)
+                removeAfterOwnerTurnEnd = true
+              }
+            }
+            """).Build();
+        Assert.Equal(new PowerStackAdjustment(ContentId.Parse("lifecycle:strength"), 1),
+            qualified.Powers[ContentId.Parse("lifecycle:temporary")].OnStackChange);
+        Assert.Throws<InvalidOperationException>(() => CompileRegistry("""
+            package lifecycle {
+              power A { onStackChange = grantPower(B, stackDelta) }
+              power B { onStackChange = grantPower(A, negativeStackDelta) }
+            }
+            """).Build());
+        Assert.Throws<InvalidOperationException>(() => CompileRegistry(
+            "package lifecycle { power A { onExpire = grantPower(Missing, sourceStacks) } }").Build());
+        Assert.Throws<DslSourceException>(() => CompileRegistry(
+            "package lifecycle { power A { onStackChange = grantPower(A, sourceStacks) } }"));
+    }
+
+    public void PowerExpiryWaitsForItsTurnEndChoiceAndUsesRemainingStacks()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage(), new PowerExpiryChoicePackage()));
+        var session = environment.Start(88, "ironclad", 56, 65, [], BaseSpireIds.DampCultist.ToString());
+        var player = session.State.Player.Creature;
+        session.State.ApplyPower(session, player, PowerExpiryChoicePackage.PowerId, 3, player);
+        var paused = environment.Step(session, new EndTurnAction());
+        Assert.True(paused.NeedsChoice);
+        Assert.Equal(1, session.State.Turn);
+        Assert.Equal(3, player.Strength);
+        Assert.Equal(3, player.PowerAmount(PowerExpiryChoicePackage.PowerId));
+        environment.Step(session, new ChooseOptionAction(0));
+        Assert.Equal(2, session.State.Turn);
+        Assert.Equal(0, player.Strength);
+        Assert.False(player.Powers.ContainsKey(PowerExpiryChoicePackage.PowerId));
+        Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "power_removed"
+            && gameEvent.Source == player.Id && gameEvent.Amount == 2));
     }
 
     public void SourceBackedIroncladCardsUseSharedEffectsInCombat()
@@ -4219,6 +4365,39 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class TemporaryStackDeltaHook : IRuleHook
+    {
+        public ContentId Id { get; } = ContentId.Parse("lifecycle-test:delta-hook");
+        public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+        public int ModifyPowerAmountReceived(RuleHookContext context, ContentId powerId, PowerRole powerRole,
+            string targetId, string applierId, int amount) =>
+            powerId == BaseSpireIds.SetupStrikePower && amount < 0 ? amount * 2 : amount;
+    }
+
+    private sealed class PowerLifecycleFixturePackage(string source) : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("lifecycle", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var content = SpireCombatBehaviorDslCompiler.Compile(DslSourceParser.Parse(source, "lifecycle.spire"));
+            foreach (var power in content.Powers) registry.Register(power);
+        }
+    }
+
+    private sealed class PowerExpiryChoicePackage : IRulePackage
+    {
+        public static readonly ContentId PowerId = ContentId.Parse("expiry-choice:temporary");
+        public PackageInfo Info { get; } = new("expiry-choice", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new PowerDefinition(PowerId,
+            PowerTrigger.AfterPlayerTurnEnd,
+            TriggerRuleEffect: new ChooseEffect("Reduce temporary strength", [
+                new ChoiceOption("Reduce", new ApplyPowerEffect(PowerId, -1))]),
+            OnStackChange: new PowerStackAdjustment(BaseSpireIds.Strength, 1),
+            OnExpire: new PowerStackAdjustment(BaseSpireIds.Strength, -1), RemoveAfterOwnerTurnEnd: true));
+    }
+
     private sealed class CardPoolExtensionPackage : IRulePackage
     {
         public static readonly ContentId CardId = ContentId.Parse("pool-extension:training-strike");
@@ -4374,6 +4553,10 @@ internal static class Program
         tests.SpiteRepeatsAfterPlayerHpLossAndResetsOnTheNextTurn();
         tests.PyreIncreasesTheNextTurnsMaximumEnergyThroughItsPower();
         tests.CrueltyAddsItsStacksToPoweredAttacksAgainstVulnerableTargets();
+        tests.SetupStrikeStacksTemporaryStrengthAndPreservesPermanentStrengthAtExpiry();
+        tests.MangleSuppressesEnemyStrengthThroughItsActionThenRestoresIt();
+        tests.PowerLifecycleUsesSignedDeltasAndRejectsRecursiveLinks();
+        tests.PowerExpiryWaitsForItsTurnEndChoiceAndUsesRemainingStacks();
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();

@@ -616,4 +616,25 @@ package base-spire {
     play = applyPower(CrueltyPower, 25, target=self)
     upgradedPlay = applyPower(CrueltyPower, 50, target=self)
   }
+
+  card SetupStrike {
+    pools = [IroncladCardPool]
+    tags = [Strike]
+    type = attack
+    rarity = common
+    cost = 1
+    target = enemy
+    play = sequence(attack(7), applyPower(SetupStrikePower, 2, target=self))
+    upgradedPlay = sequence(attack(9), applyPower(SetupStrikePower, 3, target=self))
+  }
+
+  card Mangle {
+    pools = [IroncladCardPool]
+    type = attack
+    rarity = rare
+    cost = 3
+    target = enemy
+    play = sequence(attack(15), if(targetAlive(), applyPower(ManglePower, 10, target=target)))
+    upgradedPlay = sequence(attack(20), if(targetAlive(), applyPower(ManglePower, 15, target=target)))
+  }
 }

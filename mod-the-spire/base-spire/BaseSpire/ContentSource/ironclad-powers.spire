@@ -18,4 +18,16 @@ package base-spire {
   power CrueltyPower {
     vulnerableMultiplierPercentPerStack = 1
   }
+
+  power SetupStrikePower {
+    onStackChange = grantPower(Strength, stackDelta)
+    onExpire = grantPower(Strength, negativeSourceStacks)
+    removeAfterOwnerTurnEnd = true
+  }
+
+  power ManglePower {
+    onStackChange = grantPower(Strength, negativeStackDelta)
+    onExpire = grantPower(Strength, sourceStacks)
+    removeAfterOwnerTurnEnd = true
+  }
 }
