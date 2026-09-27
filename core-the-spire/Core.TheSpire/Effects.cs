@@ -34,7 +34,8 @@ public sealed record SequenceEffect : EffectNode
     public SequenceEffect(IReadOnlyList<EffectNode> effects) => Effects = Array.AsReadOnly(effects.ToArray());
     public IReadOnlyList<EffectNode> Effects { get; }
 }
-public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
+public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy,
+    DamageProperties Properties = DamageProperties.Move) : EffectNode;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -78,6 +79,8 @@ public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
+[Flags]
+public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 4, SkipHurtAnimation = 8 }
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
 public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained }
@@ -151,12 +154,14 @@ internal static class EffectExecutor
                 case AttackEffect attack:
                     if (attack.Target == TargetSelector.AllOpponents)
                     {
-                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount);
+                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount, attack.Properties);
                         else
                             foreach (var enemy in state.Enemies)
-                                if (enemy.Creature.Hp > 0) ApplyAttack(session, owner, enemy.Creature, attack.Amount);
+                                if (enemy.Creature.Hp > 0)
+                                    ApplyAttack(session, owner, enemy.Creature, attack.Amount, attack.Properties);
                     }
-                    else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target), attack.Amount);
+                    else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target),
+                        attack.Amount, attack.Properties);
                     break;
                 case RandomAttackEffect randomAttack:
                     if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
@@ -371,12 +376,15 @@ internal static class EffectExecutor
         _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect requires one target.")
     };
 
-    private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount)
+    private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount,
+        DamageProperties properties = DamageProperties.Move)
     {
         if (victim.Hp <= 0) return;
         var state = session.State;
-        var rawDamage = state.CalculateDamage(owner, victim, amount);
-        var absorbed = Math.Min(victim.Block, rawDamage);
+        var rawDamage = state.CalculateDamage(owner, victim, amount, properties);
+        var absorbed = (properties & DamageProperties.Unblockable) != 0
+            ? 0
+            : Math.Min(victim.Block, rawDamage);
         victim.Block -= absorbed;
         var damage = Math.Min(victim.Hp, rawDamage - absorbed);
         victim.Hp -= damage;
