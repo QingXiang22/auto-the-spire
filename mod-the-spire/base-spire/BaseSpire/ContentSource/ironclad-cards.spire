@@ -54,6 +54,24 @@ package base-spire {
     upgradedPlay = sequence(attack(10), applyPower(Vulnerable, 3, target=target))
   }
 
+  card Break {
+    type = attack
+    rarity = ancient
+    cost = 1
+    target = enemy
+    play = sequence(attack(20), applyPower(Vulnerable, 5, target=target))
+    upgradedPlay = sequence(attack(30), applyPower(Vulnerable, 7, target=target))
+  }
+
+  card Breakthrough {
+    type = attack
+    rarity = common
+    cost = 1
+    target = allEnemies
+    play = sequence(loseHp(1), attack(9, target=allEnemies))
+    upgradedPlay = sequence(loseHp(1), attack(13, target=allEnemies))
+  }
+
   card BattleTrance {
     type = skill
     rarity = uncommon
@@ -173,6 +191,15 @@ package base-spire {
       attack(12),
       chooseCard(from=discard, to=draw, prompt="Choose a card from discard", destinationPosition=top)
     )
+  }
+
+  card Hemokinesis {
+    type = attack
+    rarity = uncommon
+    cost = 1
+    target = enemy
+    play = sequence(loseHp(2), attack(15))
+    upgradedPlay = sequence(loseHp(2), attack(20))
   }
 
   card IronWave {
@@ -306,6 +333,16 @@ package base-spire {
       gainBlock(9),
       chooseCard(from=hand, to=exhaust, prompt="Choose a card to exhaust")
     )
+  }
+
+  card Tremble {
+    type = skill
+    rarity = common
+    cost = 1
+    target = enemy
+    keywords = [exhaust]
+    play = applyPower(Vulnerable, 3, target=target)
+    upgradedPlay = applyPower(Vulnerable, 4, target=target)
   }
 
   card Whirlwind {

@@ -4,16 +4,9 @@ namespace BaseSpire;
 
 internal static class IroncladCardPool
 {
-    public static void Register(ContentRegistry registry) => registry.Register(new CardPoolDefinition(
-        BaseSpireIds.IroncladCardPool,
-        [
-            BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
-            BaseSpireIds.BattleTrance, BaseSpireIds.Bloodletting, BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam,
-            BaseSpireIds.BurningPact, BaseSpireIds.Clothesline, BaseSpireIds.DefendIronclad,
-            BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
-            BaseSpireIds.Impervious, BaseSpireIds.IronWave, BaseSpireIds.Offering, BaseSpireIds.PommelStrike,
-            BaseSpireIds.SecondWind, BaseSpireIds.ShrugItOff, BaseSpireIds.StrikeIronclad,
-            BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap, BaseSpireIds.TrueGrit,
-            BaseSpireIds.TwinStrike, BaseSpireIds.Uppercut, BaseSpireIds.Whirlwind
-        ]));
+    public static void Register(ContentRegistry registry, IReadOnlyList<CardDefinition> cards) =>
+        registry.Register(new CardPoolDefinition(BaseSpireIds.IroncladCardPool,
+            cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
+                    or CardRarity.Uncommon or CardRarity.Rare or CardRarity.Ancient)
+                .Select(card => card.Id).ToArray()));
 }
