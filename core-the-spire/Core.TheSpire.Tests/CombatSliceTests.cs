@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(49, ironcladPool.Count);
+        Assert.Equal(50, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(51, cards.Count);
+        Assert.Equal(52, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(50, pool.Count);
+        Assert.Equal(51, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -525,6 +525,30 @@ public sealed class CombatSliceTests
         Assert.True(blockedSpiteIndex >= 0);
         environment.Step(blocked, new PlayCardAction(blockedSpiteIndex, blocked.State.Enemy.Id));
         Assert.Equal(48, blocked.State.Enemy.Hp);
+    }
+
+    public void PyreIncreasesTheNextTurnsMaximumEnergyThroughItsPower()
+    {
+        var definition = Build(new BaseSpirePackage());
+        Assert.Equal(1, definition.Powers[BaseSpireIds.PyrePower].MaxEnergyPerStack);
+        var environment = new CombatEnvironment(definition);
+        var normal = environment.Start(78, "ironclad", 56, 65, [BaseSpireIds.Pyre],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        Assert.Equal(3, environment.Observe(normal).MaxEnergy);
+        environment.Step(normal, new PlayCardAction(0, normal.State.Player.Id));
+        Assert.Equal(1, normal.State.Player.Energy);
+        Assert.Equal(4, environment.Observe(normal).MaxEnergy);
+        environment.Step(normal, new EndTurnAction());
+        Assert.Equal(4, environment.Observe(normal).Energy);
+
+        var upgraded = environment.Start(79, "ironclad", 56, 65, [BaseSpireIds.Pyre],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("pyre+", BaseSpireIds.Pyre, 1);
+        environment.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
+        Assert.Equal(2, upgraded.State.Player.Creature.PowerAmount(BaseSpireIds.PyrePower));
+        Assert.Equal(5, environment.Observe(upgraded).MaxEnergy);
+        environment.Step(upgraded, new EndTurnAction());
+        Assert.Equal(5, environment.Observe(upgraded).Energy);
     }
 
     public void SourceBackedIroncladCardsUseSharedEffectsInCombat()
@@ -4315,6 +4339,7 @@ internal static class Program
         tests.SpireCardDslCompilesTheCurrentIroncladCardSet();
         tests.CardPoolMembershipIsExplicitAndModsCanExtendExistingPools();
         tests.SpiteRepeatsAfterPlayerHpLossAndResetsOnTheNextTurn();
+        tests.PyreIncreasesTheNextTurnsMaximumEnergyThroughItsPower();
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();

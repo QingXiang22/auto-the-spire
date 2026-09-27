@@ -40,7 +40,7 @@ public static class SpireCombatBehaviorDslCompiler
         {
             var properties = Properties(declaration, "Power");
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
-                "role", "whenCardType", "removeAfterPlayerTurnEnd");
+                "role", "whenCardType", "removeAfterPlayerTurnEnd", "maxEnergyPerStack");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -71,7 +71,9 @@ public static class SpireCombatBehaviorDslCompiler
             return new PowerDefinition(Id(declaration.Name), trigger, triggerPower,
                 skipEnemy, role, SkipFirstTriggerWhenAppliedToPlayer: skipPlayer,
                 TriggerRuleEffect: triggerRuleEffect, TriggerCardType: triggerCardType,
-                RemoveAfterPlayerTurnEnd: OptionalBoolean(properties, "removeAfterPlayerTurnEnd"));
+                RemoveAfterPlayerTurnEnd: OptionalBoolean(properties, "removeAfterPlayerTurnEnd"),
+                MaxEnergyPerStack: properties.TryGetValue("maxEnergyPerStack", out var maxEnergyNode)
+                    ? Integer(maxEnergyNode) : 0);
         }
 
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)
