@@ -381,6 +381,8 @@ public sealed class RunHookContext
         EffectExecutor.Execute(combat, combat.State.Player.Creature,
             new ApplyPowerEffect(power, amount, TargetSelector.Self));
     }
+
+    public void ChangePotionCapacity(int amount) => _state.ChangePotionCapacity(amount);
 }
 
 internal sealed class RunState
@@ -489,7 +491,7 @@ internal sealed class RunState
     public List<CardInstance> Deck { get; }
     public List<ContentId> Relics { get; }
     public List<ContentId?> Potions { get; }
-    public int PotionCapacity { get; }
+    public int PotionCapacity { get; private set; }
     public float PotionRewardChance { get; set; } = 0.4f;
     public int ActIndex { get; set; }
     public ActMapDefinition Map { get; set; }
@@ -550,6 +552,30 @@ internal sealed class RunState
         Potions.Clear();
         Potions.AddRange(slots);
         while (Potions.Count < PotionCapacity) Potions.Add(null);
+    }
+
+    public void ChangePotionCapacity(int amount)
+    {
+        var newCapacity = checked(PotionCapacity + amount);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newCapacity);
+        if (newCapacity == PotionCapacity) return;
+        if (newCapacity > PotionCapacity)
+        {
+            Potions.AddRange(Enumerable.Repeat<ContentId?>(null, newCapacity - PotionCapacity));
+            PotionCapacity = newCapacity;
+            return;
+        }
+
+        for (var slot = Potions.Count - 1; slot >= newCapacity; slot--)
+        {
+            if (Potions[slot] is { } potion)
+            {
+                var openSlot = Potions.FindIndex(0, newCapacity, item => item is null);
+                if (openSlot >= 0) Potions[openSlot] = potion;
+            }
+            Potions.RemoveAt(slot);
+        }
+        PotionCapacity = newCapacity;
     }
 
     public ContentId? CurrentEventId => RoomStack.Count == 0 ? null : RoomStack[^1].EventId;
