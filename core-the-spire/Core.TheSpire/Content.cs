@@ -42,13 +42,24 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
 public enum PotionRarity { Common, Uncommon, Rare }
 public sealed record PotionDefinition(ContentId Id, PotionRarity Rarity, EffectNode Effect,
-    TargetSelector Target = TargetSelector.Self)
+    TargetSelector Target = TargetSelector.Self, bool InSharedPool = true,
+    IReadOnlyList<ContentId>? CharacterPoolIds = null)
 {
     public void Validate()
     {
         Id.Validate();
         if (!Enum.IsDefined(Rarity) || !Enum.IsDefined(Target))
             throw new ArgumentException("Potion rarity and target must be recognized values.");
+        if (CharacterPoolIds is { Count: 0 })
+            throw new ArgumentException("A character potion pool must name at least one character.");
+        if (CharacterPoolIds is not null)
+        {
+            foreach (var characterId in CharacterPoolIds) characterId.Validate();
+            if (CharacterPoolIds.Distinct().Count() != CharacterPoolIds.Count)
+                throw new ArgumentException("A character potion pool cannot list a character more than once.");
+            if (InSharedPool)
+                throw new ArgumentException("A potion cannot be both a shared potion and a character-pool potion.");
+        }
     }
 }
 public enum CardCostKind { Fixed, X }
@@ -686,6 +697,10 @@ public sealed class ContentRegistry
             foreach (var characterId in relic.CharacterPoolIds ?? Array.Empty<ContentId>())
                 if (!_characters.ContainsKey(characterId))
                     throw new InvalidOperationException($"Relic '{relic.Id}' references unknown character pool '{characterId}'.");
+        foreach (var potion in _potions.Values)
+            foreach (var characterId in potion.CharacterPoolIds ?? Array.Empty<ContentId>())
+                if (!_characters.ContainsKey(characterId))
+                    throw new InvalidOperationException($"Potion '{potion.Id}' references unknown character pool '{characterId}'.");
         foreach (var power in _powers.Values)
         {
             if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
@@ -988,6 +1003,15 @@ public sealed class GameDefinition
     internal IReadOnlyList<IRuleHook> Hooks { get; }
     internal IReadOnlyList<IRunHook> RunHooks { get; }
     public string Version { get; }
+
+    public IReadOnlyList<PotionDefinition> PotionPoolFor(ContentId characterId)
+    {
+        if (!Characters.ContainsKey(characterId))
+            throw new KeyNotFoundException($"Unknown character '{characterId}'.");
+        return Array.AsReadOnly(Potions.Values
+            .Where(potion => potion.InSharedPool || potion.CharacterPoolIds?.Contains(characterId) == true)
+            .OrderBy(potion => potion.Id.Value, StringComparer.Ordinal).ToArray());
+    }
 }
 
 public interface IRuleHook

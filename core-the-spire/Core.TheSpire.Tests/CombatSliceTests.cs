@@ -2885,6 +2885,10 @@ public sealed class CombatSliceTests
     public void PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity()
     {
         var definition = Build(new BaseSpirePackage(), new PotionRewardFixturePackage());
+        var ironcladPotions = definition.PotionPoolFor(BaseSpireIds.Ironclad);
+        Assert.Contains(ironcladPotions, potion => potion.Id == BaseSpireIds.BeetleJuice);
+        Assert.False(ironcladPotions.Any(potion =>
+            potion.Id == PotionRewardFixturePackage.ForeignCharacterPotionId));
         var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
         var combatEnvironment = new CombatEnvironment(definition);
 
@@ -2929,10 +2933,16 @@ public sealed class CombatSliceTests
     {
         public static readonly ContentId EnemyId = ContentId.Parse("potion-reward-fixture:enemy");
         public static readonly ContentId EncounterId = ContentId.Parse("potion-reward-fixture:encounter");
+        public static readonly ContentId ForeignCharacterId = ContentId.Parse("potion-reward-fixture:foreign-character");
+        public static readonly ContentId ForeignCharacterPotionId = ContentId.Parse("potion-reward-fixture:foreign-potion");
         public PackageInfo Info { get; } = new("potion-reward-fixture", "1.0.0");
 
         public void Register(ContentRegistry registry)
         {
+            registry.Register(new CharacterDefinition(ForeignCharacterId, 60, 99,
+                [BaseSpireIds.StrikeIronclad]));
+            registry.Register(new PotionDefinition(ForeignCharacterPotionId, PotionRarity.Rare,
+                new GainBlockEffect(1), InSharedPool: false, CharacterPoolIds: [ForeignCharacterId]));
             registry.Register(new EnemyDefinition(EnemyId, 1, 1,
                 [new EnemyActionDefinition(ContentId.Parse("potion-reward-fixture:idle"),
                     new GainBlockEffect(0), IntentKind.None)]));
