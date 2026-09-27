@@ -523,6 +523,7 @@ public sealed class CombatSliceTests
         var definition = Build(new BaseSpirePackage());
         var environment = new CombatEnvironment(definition);
         var session = environment.StartEncounter(212, "ironclad", 80, 80, [], BaseSpireIds.NibbitsWeak);
+        Assert.Equal(0, session.Random.Get("enemy-ai").Counter);
         Assert.True(environment.Observe(session).Enemies[0].Hp is >= 42 and <= 46);
         Assert.Equal(12, environment.Observe(session).IntentDamage);
 

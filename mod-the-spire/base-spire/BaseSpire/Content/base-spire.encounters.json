@@ -31,13 +31,20 @@
       "roomType": "monster",
       "enemyIds": ["base-spire:nibbit"],
       "isWeak": true,
-      "tags": ["base-spire:nibbit"]
+      "tags": ["base-spire:nibbit"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:nibbit-butt"
+      }
     },
     {
       "id": "base-spire:nibbits-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:nibbit", "base-spire:nibbit"],
-      "tags": ["base-spire:nibbit"]
+      "tags": ["base-spire:nibbit"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:nibbit-slice",
+        "1": "base-spire:nibbit-hiss"
+      }
     },
     {
       "id": "base-spire:slimes-weak",
