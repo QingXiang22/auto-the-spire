@@ -1789,7 +1789,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
         Assert.Equal(RunEventFixturePackage.EventId,
             observation.RoomStack[^1].EventId!.Value);
-        Assert.Equal(11, observation.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(12, observation.RoomStack[^1].EventOptions.Count);
         Assert.False(observation.RoomStack[^1].EventOptions.Single(option =>
             option.Id == RunEventFixturePackage.PredicateOptionId).IsEnabled);
         Assert.False(observation.RoomStack[^1].EventOptions.Single(option =>
@@ -1821,8 +1821,28 @@ public sealed class CombatSliceTests
             option.Id == RunEventFixturePackage.PredicateOptionId).IsEnabled);
         Assert.Contains(environment.LegalActions(predicateRun), action => action ==
             new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId));
-        Assert.Equal(101, environment.Step(predicateRun,
-            new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId)).Gold);
+        var transitioned = environment.Step(predicateRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId));
+        Assert.Equal(RunPhase.ResolveEvent, transitioned.Phase);
+        Assert.Equal(RunEventFixturePackage.ContinuationPageId, transitioned.RoomStack[^1].EventPageId);
+        Assert.Equal("Continuation page", transitioned.RoomStack[^1].EventPageDescription);
+        Assert.Equal(1, transitioned.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(101, transitioned.Gold);
+        var completedEvent = environment.Step(predicateRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.ContinueOptionId));
+        Assert.Equal(RunPhase.ChooseMapPoint, completedEvent.Phase);
+        Assert.Equal(103, completedEvent.Gold);
+
+        var pageAfterSelectionRun = environment.Start(421);
+        var selectionPending = environment.Step(pageAfterSelectionRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.SelectionTransitionOptionId));
+        Assert.Equal(RunPhase.ResolveEventCardSelection, selectionPending.Phase);
+        var selectedInstanceId = selectionPending.PendingRunCardSelection!.Candidates[0].InstanceId;
+        var selectionTransitioned = environment.Step(pageAfterSelectionRun,
+            new ChooseRunCardAction(selectedInstanceId));
+        Assert.Equal(RunPhase.ResolveEvent, selectionTransitioned.Phase);
+        Assert.Equal(RunEventFixturePackage.ContinuationPageId, selectionTransitioned.RoomStack[^1].EventPageId);
+        Assert.Equal(1, selectionTransitioned.DeckInstances.Count);
 
         var upgradeRun = environment.Start(421);
         var upgradePending = environment.Step(upgradeRun,
@@ -2664,6 +2684,9 @@ public sealed class CombatSliceTests
         public static readonly ContentId RemoveOptionId = ContentId.Parse("run-event-fixture:remove-option");
         public static readonly ContentId OptionalRemoveOptionId = ContentId.Parse("run-event-fixture:optional-remove-option");
         public static readonly ContentId PredicateOptionId = ContentId.Parse("run-event-fixture:predicate-option");
+        public static readonly ContentId ContinuationPageId = ContentId.Parse("run-event-fixture:continuation-page");
+        public static readonly ContentId ContinueOptionId = ContentId.Parse("run-event-fixture:continue-option");
+        public static readonly ContentId SelectionTransitionOptionId = ContentId.Parse("run-event-fixture:selection-transition-option");
 
         public PackageInfo Info { get; } = new("run-event-fixture", "1.0.0");
 
@@ -2693,8 +2716,10 @@ public sealed class CombatSliceTests
                 InSharedPool: false, IsFallback: true, IsStackable: true));
             registry.Register(new CardDefinition(CardId, 1, CardType.Attack, new AttackEffect(5),
                 Rarity: CardRarity.Basic, UpgradedEffect: new AttackEffect(8)));
-            registry.Register(new RunEventDefinition(EventId, RunEventKind.Ancient,
+            registry.Register(new RunEventDefinition(EventId, RunEventKind.Ancient, EventId,
             [
+                new RunEventPageDefinition(EventId, "Initial page",
+                [
                 new RunEventOptionDefinition(TradeOptionId, "Trade gold for a card",
                     [new LoseRunGoldEffect(8), new AddCardToRunDeckEffect(CardId)]),
                 new RunEventOptionDefinition(GoldOptionId, "Find gold",
@@ -2726,7 +2751,16 @@ public sealed class CombatSliceTests
                             new RunMetricCondition(RunMetric.Hp, RunComparison.AtLeast, 20),
                             new RunMetricCondition(RunMetric.Hp, RunComparison.LessThan, 5)
                         ])
-                    ]))
+                    ]), nextPageId: ContinuationPageId),
+                new RunEventOptionDefinition(SelectionTransitionOptionId, "Select then continue",
+                    [new ChooseRunCardEffect("Choose a card to remove", RunCardFilter.Any,
+                        false, new RemoveSelectedRunCardEffect())], nextPageId: ContinuationPageId)
+                ]),
+                new RunEventPageDefinition(ContinuationPageId, "Continuation page",
+                [
+                    new RunEventOptionDefinition(ContinueOptionId, "Finish event",
+                        [new GainRunGoldEffect(2)])
+                ])
             ]));
             registry.Register(new RunEventDefinition(FinalEventId, RunEventKind.Final,
             [

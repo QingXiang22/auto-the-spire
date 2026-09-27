@@ -282,7 +282,8 @@ public sealed record RunEventOptionView(ContentId Id, string Label, bool IsEnabl
 public sealed record PendingRunCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Candidates, bool CanSkip);
 
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<ContentId> EnemyIds,
+    ContentId? EncounterId, ContentId? EventId, ContentId? EventPageId, string? EventPageDescription,
+    IReadOnlyList<ContentId> EnemyIds,
     IReadOnlyList<RunRewardView> Rewards, IReadOnlyList<RunEventOptionView> EventOptions);
 
 public sealed record RunObservation(ContentId Character, int Hp, int MaxHp, int Gold,
@@ -453,7 +454,8 @@ internal sealed class RunState
         {
             CurrentMapPointType = MapPointType.Ancient;
             RoomStack.Add(new RunRoomFrame(RunRoomType.Event, entryPoint.Id, false, null,
-                RoomContentStates[ActIndex]?.AncientEventId, [],
+                RoomContentStates[ActIndex]?.AncientEventId,
+                GetInitialEventPageId(RoomContentStates[ActIndex]?.AncientEventId), [],
                 GetEventOptions(RoomContentStates[ActIndex]?.AncientEventId)));
             Phase = RoomStack[^1].EventOptions.Count > 0 ? RunPhase.ResolveEvent : RunPhase.ResolveRoom;
             VisitHistory.Add(new RunMapVisitView(ActIndex, entryPoint.Id, entryPoint.Type,
@@ -591,13 +593,25 @@ internal sealed class RunState
             ? runEvent.Options
             : Array.Empty<RunEventOptionDefinition>();
 
+    public ContentId? GetInitialEventPageId(ContentId? eventId) =>
+        eventId is { } id && RunEvents is not null && RunEvents.TryGetValue(id, out var runEvent)
+            ? runEvent.InitialPageId
+            : null;
+
+    public RunEventPageDefinition GetEventPage(ContentId eventId, ContentId pageId) =>
+        RunEvents is not null && RunEvents.TryGetValue(eventId, out var runEvent)
+            && runEvent.Pages.TryGetValue(pageId, out var page)
+                ? page
+                : throw new KeyNotFoundException($"Unknown event page '{eventId}/{pageId}'.");
+
     public RunRoomFrame CreateRoomFrame(RunRoomType roomType, string? mapPointId, ContentId? eventId)
     {
         var encounterId = SelectEncounter(roomType);
         var enemySelections = encounterId is { } id && Encounters is not null && Encounters.TryGetValue(id, out var encounter)
             ? encounter.SelectEnemies(Random.Get("encounter-enemies"))
             : Array.Empty<EncounterEnemySelection>();
-        return new RunRoomFrame(roomType, mapPointId, false, encounterId, eventId, enemySelections,
+        return new RunRoomFrame(roomType, mapPointId, false, encounterId, eventId,
+            GetInitialEventPageId(eventId), enemySelections,
             GetEventOptions(eventId));
     }
 
@@ -635,7 +649,8 @@ public sealed class RunSession
 }
 
 internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
-    ContentId? EncounterId, ContentId? EventId, IReadOnlyList<EncounterEnemySelection> EnemySelections,
+    ContentId? EncounterId, ContentId? EventId, ContentId? EventPageId,
+    IReadOnlyList<EncounterEnemySelection> EnemySelections,
     IReadOnlyList<RunEventOptionDefinition> EventOptions)
 {
     public List<RunRewardState> Rewards { get; } = [];
@@ -643,7 +658,7 @@ internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bo
 
 internal sealed record PendingRunCardSelectionState(ChooseRunCardEffect Selection,
     IReadOnlyList<CardInstance> Candidates, IReadOnlyList<RunEffectNode> RemainingEffects,
-    bool IsFinalEvent);
+    bool IsFinalEvent, ContentId? NextPageId);
 
 internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount,
     IReadOnlyList<CardInstance>? CardOptions = null, ContentId? RelicId = null, ContentId? PotionId = null);
@@ -728,7 +743,10 @@ public sealed class RunEnvironment
     }
 
     private RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame, RunState state) => new(
-        frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
+        frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId, frame.EventPageId,
+        frame.EventId is { } eventId && frame.EventPageId is { } pageId
+            ? state.GetEventPage(eventId, pageId).Description
+            : null,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
         Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
             reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId, reward.PotionId)).ToArray()),
@@ -897,11 +915,11 @@ public sealed class RunEnvironment
 
         var frame = state.RoomStack[^1];
         var option = frame.EventOptions.Single(candidate => candidate.Id == choose.OptionId);
-        return ExecuteRunEventEffects(session, frame, option.Effects, frame.IsFinalEvent);
+        return ExecuteRunEventEffects(session, frame, option.Effects, frame.IsFinalEvent, option.NextPageId);
     }
 
     private RunObservation ExecuteRunEventEffects(RunSession session, RunRoomFrame frame,
-        IReadOnlyList<RunEffectNode> effects, bool isFinalEvent)
+        IReadOnlyList<RunEffectNode> effects, bool isFinalEvent, ContentId? nextPageId = null)
     {
         var state = session.State;
         for (var index = 0; index < effects.Count; index++)
@@ -916,7 +934,7 @@ public sealed class RunEnvironment
                     throw new InvalidOperationException("The event card selection has no available cards.");
                 }
                 state.PendingRunCardSelection = new PendingRunCardSelectionState(chooseCard,
-                    candidates, Array.AsReadOnly(effects.Skip(index + 1).ToArray()), isFinalEvent);
+                    candidates, Array.AsReadOnly(effects.Skip(index + 1).ToArray()), isFinalEvent, nextPageId);
                 state.Phase = RunPhase.ResolveEventCardSelection;
                 return Observe(session);
             }
@@ -929,6 +947,23 @@ public sealed class RunEnvironment
                 return Observe(session);
             }
             if (state.Status == RunStatus.Won) return Observe(session);
+        }
+
+        if (nextPageId is { } pageId)
+        {
+            if (frame.EventId is not { } eventId)
+                throw new InvalidOperationException("Only an active run event can transition to another page.");
+            var page = state.GetEventPage(eventId, pageId);
+            if (page.Options.Count == 0)
+            {
+                if (isFinalEvent)
+                    throw new InvalidOperationException("A final event cannot transition to an empty page.");
+                return FinishCompletedRoom(session, frame);
+            }
+            var updatedFrame = frame with { EventPageId = page.Id, EventOptions = page.Options };
+            state.RoomStack[^1] = updatedFrame;
+            state.Phase = isFinalEvent ? RunPhase.ResolveFinalEvent : RunPhase.ResolveEvent;
+            return Observe(session);
         }
 
         if (isFinalEvent)
@@ -946,7 +981,8 @@ public sealed class RunEnvironment
         {
             state.PendingRunCardSelection = null;
             state.Phase = pending.IsFinalEvent ? RunPhase.ResolveFinalEvent : RunPhase.ResolveEvent;
-            return ExecuteRunEventEffects(session, frame, pending.RemainingEffects, pending.IsFinalEvent);
+            return ExecuteRunEventEffects(session, frame, pending.RemainingEffects, pending.IsFinalEvent,
+                pending.NextPageId);
         }
         if (action is not ChooseRunCardAction choose
             || !pending.Candidates.Any(card => card.InstanceId == choose.CardInstanceId))
@@ -965,7 +1001,8 @@ public sealed class RunEnvironment
             return Observe(session);
         }
         if (state.Status == RunStatus.Won) return Observe(session);
-        return ExecuteRunEventEffects(session, frame, pending.RemainingEffects, pending.IsFinalEvent);
+        return ExecuteRunEventEffects(session, frame, pending.RemainingEffects, pending.IsFinalEvent,
+            pending.NextPageId);
     }
 
     private void ApplyRunEventEffect(RunState state, RunRoomFrame frame,
@@ -1339,7 +1376,7 @@ public sealed class RunEnvironment
                 var finalEventId = state.Definition.FinalEventId;
                 var finalEventOptions = state.GetEventOptions(finalEventId);
                 state.RoomStack.Add(new RunRoomFrame(RunRoomType.Event, null, true, null,
-                    finalEventId, [], finalEventOptions));
+                    finalEventId, state.GetInitialEventPageId(finalEventId), [], finalEventOptions));
                 state.Phase = RunPhase.ResolveFinalEvent;
                 return Observe(session);
             }

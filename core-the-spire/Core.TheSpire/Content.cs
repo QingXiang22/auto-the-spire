@@ -251,7 +251,7 @@ public sealed record NotRunCondition(RunCondition Condition) : RunCondition;
 public sealed record RunEventOptionDefinition
 {
     public RunEventOptionDefinition(ContentId id, string label, IEnumerable<RunEffectNode>? effects = null,
-        RunCondition? requirement = null)
+        RunCondition? requirement = null, ContentId? nextPageId = null)
     {
         id.Validate();
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
@@ -262,35 +262,76 @@ public sealed record RunEventOptionDefinition
             throw new ArgumentException("Run event effects cannot contain null values.", nameof(effects));
         Effects = Array.AsReadOnly(copiedEffects);
         Requirement = requirement;
+        if (nextPageId is { } pageId) pageId.Validate();
+        NextPageId = nextPageId;
     }
 
     public ContentId Id { get; }
     public string Label { get; }
     public IReadOnlyList<RunEffectNode> Effects { get; }
     public RunCondition? Requirement { get; }
+    public ContentId? NextPageId { get; }
+}
+
+public sealed record RunEventPageDefinition
+{
+    public RunEventPageDefinition(ContentId id, string description,
+        IEnumerable<RunEventOptionDefinition> options)
+    {
+        id.Validate();
+        ArgumentException.ThrowIfNullOrWhiteSpace(description);
+        ArgumentNullException.ThrowIfNull(options);
+        var copiedOptions = options.ToArray();
+        if (copiedOptions.Any(option => option is null))
+            throw new ArgumentException("Run event page options cannot contain null values.", nameof(options));
+        if (copiedOptions.Select(option => option.Id).Distinct().Count() != copiedOptions.Length)
+            throw new ArgumentException("Run event option IDs must be unique within a page.", nameof(options));
+        Id = id;
+        Description = description;
+        Options = Array.AsReadOnly(copiedOptions);
+    }
+
+    public ContentId Id { get; }
+    public string Description { get; }
+    public IReadOnlyList<RunEventOptionDefinition> Options { get; }
 }
 
 public sealed record RunEventDefinition
 {
     public RunEventDefinition(ContentId id, RunEventKind kind = RunEventKind.Event,
         IEnumerable<RunEventOptionDefinition>? options = null)
+        : this(id, kind, id, [new RunEventPageDefinition(id, id.Value, options ?? [])])
+    {
+    }
+
+    public RunEventDefinition(ContentId id, RunEventKind kind, ContentId initialPageId,
+        IEnumerable<RunEventPageDefinition> pages)
     {
         id.Validate();
+        initialPageId.Validate();
         if (!Enum.IsDefined(kind)) throw new ArgumentOutOfRangeException(nameof(kind));
         Id = id;
         Kind = kind;
-        var copiedOptions = options?.ToArray() ?? [];
-        if (copiedOptions.Any(option => option is null))
-            throw new ArgumentException("Run event options cannot contain null values.", nameof(options));
-        if (copiedOptions.Select(option => option.Id).Distinct().Count() != copiedOptions.Length)
-            throw new ArgumentException("Run event option IDs must be unique.", nameof(options));
-        if (kind == RunEventKind.Final && copiedOptions.Length == 0)
-            throw new ArgumentException("A final event needs at least one option.", nameof(options));
-        Options = Array.AsReadOnly(copiedOptions);
+        ArgumentNullException.ThrowIfNull(pages);
+        var copiedPages = pages.ToArray();
+        if (copiedPages.Length == 0 || copiedPages.Any(page => page is null))
+            throw new ArgumentException("A run event must define at least one page.", nameof(pages));
+        if (copiedPages.Select(page => page.Id).Distinct().Count() != copiedPages.Length)
+            throw new ArgumentException("Run event page IDs must be unique.", nameof(pages));
+        if (copiedPages.All(page => page.Id != initialPageId))
+            throw new ArgumentException("The initial run event page must be defined.", nameof(initialPageId));
+        if (kind == RunEventKind.Final && copiedPages.Single(page => page.Id == initialPageId).Options.Count == 0)
+            throw new ArgumentException("A final event needs at least one option.", nameof(pages));
+        InitialPageId = initialPageId;
+        Pages = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, RunEventPageDefinition>(
+            copiedPages.ToDictionary(page => page.Id));
+        Options = Pages[initialPageId].Options;
     }
 
     public ContentId Id { get; }
     public RunEventKind Kind { get; }
+    public ContentId InitialPageId { get; }
+    public IReadOnlyDictionary<ContentId, RunEventPageDefinition> Pages { get; }
     public IReadOnlyList<RunEventOptionDefinition> Options { get; }
 
     public void Validate()
@@ -739,15 +780,20 @@ public sealed class ContentRegistry
                 ValidateEffectReferences(triggerEffect, $"Power '{power.Id}' trigger");
         }
         foreach (var runEvent in _runEvents.Values)
-        foreach (var option in runEvent.Options)
+        foreach (var page in runEvent.Pages.Values)
+        foreach (var option in page.Options)
         {
+            if (option.NextPageId is { } nextPageId && !runEvent.Pages.ContainsKey(nextPageId))
+                throw new InvalidOperationException($"Run event '{runEvent.Id}' option '{option.Id}' references unknown page '{nextPageId}'.");
             if (option.Effects.Count(effect => effect is ChooseRunCardEffect) > 1)
                 throw new InvalidOperationException($"Run event '{runEvent.Id}' option '{option.Id}' can select one card at a time.");
             var winEffectCount = option.Effects.Count(effect => effect is WinRunEffect);
             var endsWithWin = option.Effects.LastOrDefault() is WinRunEffect;
-            if (runEvent.Kind == RunEventKind.Final && (winEffectCount != 1 || !endsWithWin))
+            if (runEvent.Kind == RunEventKind.Final && option.NextPageId is null
+                && (winEffectCount != 1 || !endsWithWin))
                 throw new InvalidOperationException($"Final event '{runEvent.Id}' option '{option.Id}' must end with WinRunEffect.");
-            if (runEvent.Kind != RunEventKind.Final && option.Effects.Any(effect => effect is WinRunEffect))
+            if ((runEvent.Kind != RunEventKind.Final || option.NextPageId is not null)
+                && option.Effects.Any(effect => effect is WinRunEffect))
                 throw new InvalidOperationException($"Only a final event option can win the run ('{runEvent.Id}/{option.Id}').");
             if (option.Requirement is { } requirement)
                 ValidateRunConditionReferences(requirement, $"Run event '{runEvent.Id}' option '{option.Id}'");
