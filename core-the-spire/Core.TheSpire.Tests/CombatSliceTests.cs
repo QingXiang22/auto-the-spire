@@ -45,6 +45,9 @@ public sealed class CombatSliceTests
         Assert.Equal(RunRelicRarity.Common, definition.Relics[BaseSpireIds.RedSkull].Rarity);
         Assert.True(definition.Relics[BaseSpireIds.RedSkull].CharacterPoolIds!
             .Contains(BaseSpireIds.Ironclad));
+        Assert.Equal(RunRelicRarity.Rare, definition.Relics[BaseSpireIds.DemonTongue].Rarity);
+        Assert.True(definition.Relics[BaseSpireIds.DemonTongue].CharacterPoolIds!
+            .Contains(BaseSpireIds.Ironclad));
         Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
                 BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
@@ -2764,6 +2767,46 @@ public sealed class CombatSliceTests
         combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
         Assert.Equal(39, combat.State.Player.Creature.Hp);
         Assert.Equal(3, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+    }
+
+    public void BaseDemonTongueHealsOnlyForFirstPlayerSideHitEachTurn()
+    {
+        var definition = Build(new BaseSpirePackage(), new DemonTongueFixturePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(819);
+        run.State.Hp = 40;
+        run.State.Relics.Add(BaseSpireIds.DemonTongue);
+        run.State.Deck.Clear();
+        run.State.Deck.Add(new CardInstance("demon-tongue-first-hit", DemonTongueFixturePackage.SelfDamageCard));
+        run.State.Deck.Add(new CardInstance("demon-tongue-second-hit", DemonTongueFixturePackage.SelfDamageCard));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(40, combat.State.Player.Creature.Hp);
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "heal" && gameEvent.Amount == 4);
+
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(36, combat.State.Player.Creature.Hp);
+        Assert.Equal(1, combat.State.Events.Count(gameEvent => gameEvent.Type == "heal"));
+
+        combatEnvironment.Step(combat, new EndTurnAction());
+        combat.State.Player.MutableHand.Add(new CardInstance("demon-tongue-next-turn",
+            DemonTongueFixturePackage.SelfDamageCard));
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(36, combat.State.Player.Creature.Hp);
+        Assert.Equal(2, combat.State.Events.Count(gameEvent => gameEvent.Type == "heal"));
+    }
+
+    private sealed class DemonTongueFixturePackage : IRulePackage
+    {
+        public static readonly ContentId SelfDamageCard = ContentId.Parse("demon-tongue-fixture:self-damage");
+        public PackageInfo Info { get; } = new("demon-tongue-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new CardDefinition(SelfDamageCard, 0,
+            CardType.Attack, new AttackEffect(4, TargetSelector.Self), Target: TargetSelector.Self,
+            Rarity: CardRarity.Basic));
     }
 
     private sealed class RedSkullHealFixturePackage : IRulePackage

@@ -19,6 +19,8 @@ public sealed class RuleHookContext
         _session.State.GetPowerAmount(entityId, powerId);
     public int PlayerHp => _session.State.Player.Creature.Hp;
     public int PlayerMaxHp => _session.State.Player.Creature.MaxHp;
+    public int Turn => _session.State.Turn;
+    public bool IsPlayerTurn => _session.State.IsPlayerTurn;
     /// <summary>Checks the owning run's relics; returns false for standalone combat sessions.</summary>
     public bool HasRelic(ContentId relicId) =>
         _session.RunOwner?.State.Relics.Contains(relicId) == true;

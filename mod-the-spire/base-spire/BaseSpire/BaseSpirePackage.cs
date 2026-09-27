@@ -70,6 +70,7 @@ public static class BaseSpireIds
     public static readonly ContentId SelfFormingClay = ContentId.Parse("base-spire:self-forming-clay");
     public static readonly ContentId SelfFormingClayPower = ContentId.Parse("base-spire:self-forming-clay-power");
     public static readonly ContentId RedSkull = ContentId.Parse("base-spire:red-skull");
+    public static readonly ContentId DemonTongue = ContentId.Parse("base-spire:demon-tongue");
     public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -103,6 +104,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.SelfFormingClay, RunRelicRarity.Uncommon,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.RedSkull, RunRelicRarity.Common,
+            InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
+        registry.Register(new RelicDefinition(BaseSpireIds.DemonTongue, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
@@ -281,6 +284,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new CharonsAshesHook());
         registry.Register(new SelfFormingClayHook());
         registry.Register(new RedSkullHook());
+        registry.Register(new DemonTongueHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
@@ -385,6 +389,26 @@ internal sealed class RedSkullHook : IRuleHook
         context.SetInt(StrengthActiveKey, shouldBeActive ? 1 : 0);
         return new GameEventEffect(
             new ApplyPowerEffect(BaseSpireIds.Strength, shouldBeActive ? 3 : -3), GameEventActor.Player);
+    }
+}
+
+internal sealed class DemonTongueHook : IRuleHook
+{
+    private const string LastTriggeredTurnKey = "demon-tongue-last-triggered-turn";
+
+    public ContentId Id { get; } = ContentId.Parse("base-spire:demon-tongue-hook");
+    public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+    public GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent)
+    {
+        if (gameEvent.Type != "damage" || gameEvent.Amount <= 0
+            || !context.IsPlayerCreature(gameEvent.Target)
+            || !context.IsPlayerTurn
+            || !context.HasRelic(BaseSpireIds.DemonTongue)) return null;
+        if (context.GetInt(LastTriggeredTurnKey, -1) == context.Turn) return null;
+
+        context.SetInt(LastTriggeredTurnKey, context.Turn);
+        return new GameEventEffect(new HealEffect(gameEvent.Amount), GameEventActor.Target);
     }
 }
 
