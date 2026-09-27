@@ -151,7 +151,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var chosenEnemyHp = new HashSet<int>();
         foreach (var (spawn, enemyDefinition, entityId) in prepared)
         {
-            var hp = spawn.Hp ?? ChooseUniqueEnemyHp(enemyDefinition, chosenEnemyHp, rng.Get("encounter-hp"));
+            var hp = spawn.Hp ?? ChooseUniqueEnemyHp(enemyDefinition, chosenEnemyHp, rng.Get("niche"));
             chosenEnemyHp.Add(hp);
             var actionIndex = spawn.StartingActionOverride is { } actionId
                 ? enemyDefinition.GetActionIndex(actionId)

@@ -506,7 +506,7 @@ public sealed class CombatSliceTests
         Assert.Equal(6, hp.Length);
         Assert.Equal(5, hp.Take(5).Distinct().Count());
         Assert.True(hp.All(value => value is >= 42 and <= 46));
-        Assert.Equal(6, session.Random.Get("encounter-hp").Counter);
+        Assert.Equal(6, session.Random.Get("niche").Counter);
 
         var replay = environment.StartEncounter(20260927, "ironclad", 80, 80, [], spawns);
         Assert.Equal(hp, replay.State.Enemies.Select(enemy => enemy.Creature.Hp));
