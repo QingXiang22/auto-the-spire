@@ -17,6 +17,9 @@ public sealed class RuleHookContext
     public void SetInt(string key, int value) => _session.State.SetModInt(_modId, key, value);
     public int GetPowerAmount(string entityId, ContentId powerId) =>
         _session.State.GetPowerAmount(entityId, powerId);
+    /// <summary>Checks the owning run's relics; returns false for standalone combat sessions.</summary>
+    public bool HasRelic(ContentId relicId) =>
+        _session.RunOwner?.State.Relics.Contains(relicId) == true;
 }
 
 public interface ICustomEffectHandler

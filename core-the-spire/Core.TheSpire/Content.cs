@@ -788,6 +788,13 @@ public sealed class ContentRegistry
             case SequenceEffect sequence:
                 foreach (var child in sequence.Effects) ValidateEffectReferences(child, owner);
                 break;
+            case AttackEffect attack:
+                ArgumentOutOfRangeException.ThrowIfNegative(attack.Amount);
+                if (!Enum.IsDefined(attack.Target)
+                    || (attack.Properties & ~(DamageProperties.Move | DamageProperties.Unpowered
+                        | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) != 0)
+                    throw new InvalidOperationException($"{owner} has invalid attack damage properties or target.");
+                break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
             case LoseHpEffect loseHp:
@@ -951,6 +958,8 @@ public interface IRuleHook
 {
     ContentId Id { get; }
     void OnEvent(RuleHookContext context, GameEvent gameEvent);
+    /// <summary>Returns an effect to queue after this event; its actor is the event source entity, or the player if absent.</summary>
+    EffectNode? OnEventEffect(RuleHookContext context, GameEvent gameEvent) => null;
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
     bool ShouldClearBlock(RuleHookContext context, string creatureId) => true;

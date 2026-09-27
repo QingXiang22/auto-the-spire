@@ -66,6 +66,7 @@ public static class BaseSpireIds
     public static readonly ContentId BurningBlood = ContentId.Parse("base-spire:burning-blood");
     public static readonly ContentId Anchor = ContentId.Parse("base-spire:anchor");
     public static readonly ContentId Vajra = ContentId.Parse("base-spire:vajra");
+    public static readonly ContentId CharonsAshes = ContentId.Parse("base-spire:charons-ashes");
     public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -94,6 +95,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.BurningBlood, RunRelicRarity.Starter, InSharedPool: false));
         registry.Register(new RelicDefinition(BaseSpireIds.Anchor, RunRelicRarity.Common));
         registry.Register(new RelicDefinition(BaseSpireIds.Vajra, RunRelicRarity.Common));
+        registry.Register(new RelicDefinition(BaseSpireIds.CharonsAshes, RunRelicRarity.Rare,
+            InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
         registry.Register(BaseSpireContent.Ironclad());
@@ -263,6 +266,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new BurningBloodRunHook());
         registry.Register(new AnchorRunHook());
         registry.Register(new VajraRunHook());
+        registry.Register(new CharonsAshesHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
@@ -319,6 +323,17 @@ internal sealed class VajraRunHook : IRunHook
     {
         if (context.HasRelic(BaseSpireIds.Vajra)) context.ApplyPower(BaseSpireIds.Strength, 1);
     }
+}
+
+internal sealed class CharonsAshesHook : IRuleHook
+{
+    public ContentId Id { get; } = ContentId.Parse("base-spire:charons-ashes-hook");
+    public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+    public EffectNode? OnEventEffect(RuleHookContext context, GameEvent gameEvent) =>
+        gameEvent.Type == "card_exhausted" && context.HasRelic(BaseSpireIds.CharonsAshes)
+            ? EffectDsl.Parse("""{"op":"attack","amount":3,"target":"allOpponents","properties":"unpowered"}""")
+            : null;
 }
 
 public sealed class SyntheticCombatPackage : IRulePackage

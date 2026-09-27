@@ -38,6 +38,9 @@ public sealed class CombatSliceTests
         Assert.Equal(4, BaseSpireContent.IroncladStarterDeck().Count(id => id == BaseSpireIds.DefendIronclad));
         var ironclad = definition.Characters[BaseSpireIds.Ironclad];
         Assert.Equal(BaseSpireIds.IroncladCardPool, ironclad.CardPools.Single());
+        Assert.Equal(RunRelicRarity.Rare, definition.Relics[BaseSpireIds.CharonsAshes].Rarity);
+        Assert.True(definition.Relics[BaseSpireIds.CharonsAshes].CharacterPoolIds!
+            .Contains(BaseSpireIds.Ironclad));
         Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
                 BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
@@ -2705,6 +2708,9 @@ public sealed class CombatSliceTests
         var run = runEnvironment.Start(817);
         run.State.Relics.Add(BaseSpireIds.Anchor);
         run.State.Relics.Add(BaseSpireIds.Vajra);
+        run.State.Relics.Add(BaseSpireIds.CharonsAshes);
+        run.State.Deck.Clear();
+        run.State.Deck.Add(new CardInstance("run-offering", BaseSpireIds.Offering));
         runEnvironment.PushSubRoom(run, RunRoomType.Monster);
 
         var combatEnvironment = new CombatEnvironment(definition);
@@ -2712,6 +2718,10 @@ public sealed class CombatSliceTests
 
         Assert.Equal(10, combat.State.Player.Creature.Block);
         Assert.Equal(1, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+        var enemyHp = combat.State.Enemy.Hp;
+        var result = combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(enemyHp - 3, combat.State.Enemy.Hp);
+        Assert.Contains(result.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 3);
     }
 
     private sealed class CardRewardOddsHook : IRunHook

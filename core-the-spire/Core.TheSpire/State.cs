@@ -167,7 +167,25 @@ internal sealed class GameState
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount);
         _events.Add(gameEvent);
-        foreach (var hook in Definition.Hooks) hook.OnEvent(new RuleHookContext(session, hook.Id), gameEvent);
+        List<EffectNode>? effects = null;
+        foreach (var hook in Definition.Hooks)
+        {
+            var context = new RuleHookContext(session, hook.Id);
+            hook.OnEvent(context, gameEvent);
+            if (hook.OnEventEffect(context, gameEvent) is { } effect)
+                (effects ??= []).Add(effect);
+        }
+        if (effects is { Count: > 0 })
+        {
+            var owner = FindCreature(source) ?? Player.Creature;
+            PendingEffects.Add((owner, new SequenceEffect(effects), null, null));
+        }
+    }
+
+    private EntityState? FindCreature(string id)
+    {
+        if (Player.Id == id) return Player.Creature;
+        return Enemies.Select(enemy => enemy.Creature).FirstOrDefault(creature => creature.Id == id);
     }
 
     internal void ApplyPower(GameSession session, EntityState owner, ContentId power, int amount, EntityState applier)
@@ -195,17 +213,24 @@ internal sealed class GameState
         Emit(session, "power", applier.Id, owner.Id, amount);
     }
 
-    internal int CalculateDamage(EntityState dealer, EntityState target, int baseDamage)
+    internal int CalculateDamage(EntityState dealer, EntityState target, int baseDamage,
+        DamageProperties properties = DamageProperties.Move)
     {
-        var damage = Math.Max(0, baseDamage + dealer.Strength);
+        var isPoweredMove = (properties & DamageProperties.Move) != 0
+            && (properties & DamageProperties.Unpowered) == 0;
+        var damage = Math.Max(0, baseDamage + (isPoweredMove ? dealer.Strength : 0));
         decimal multiplier = 1m;
-        foreach (var (powerId, amount) in dealer.Powers)
+        if (isPoweredMove)
         {
-            if (amount != 0 && Definition.Powers[powerId].OutgoingDamageMultiplier is { } factor)
-                multiplier *= factor;
+            foreach (var (powerId, amount) in dealer.Powers)
+            {
+                if (amount != 0 && Definition.Powers[powerId].OutgoingDamageMultiplier is { } factor)
+                    multiplier *= factor;
+            }
         }
         damage = (int)decimal.Floor(damage * multiplier);
-        if (HasPowerRole(target, PowerRole.Vulnerable)) damage = (int)MathF.Floor(damage * 1.5f);
+        if (isPoweredMove && HasPowerRole(target, PowerRole.Vulnerable))
+            damage = (int)MathF.Floor(damage * 1.5f);
         return Math.Max(0, damage);
     }
 
