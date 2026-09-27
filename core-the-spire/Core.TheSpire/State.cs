@@ -223,7 +223,7 @@ internal sealed class GameState
         Emit(session, "power", applier.Id, owner.Id, amount);
     }
 
-    internal int CalculateDamage(EntityState dealer, EntityState target, int baseDamage,
+    internal int CalculateDamage(GameSession session, EntityState dealer, EntityState target, int baseDamage,
         DamageProperties properties = DamageProperties.Move)
     {
         var isPoweredMove = (properties & DamageProperties.Move) != 0
@@ -240,7 +240,13 @@ internal sealed class GameState
         }
         damage = (int)decimal.Floor(damage * multiplier);
         if (isPoweredMove && HasPowerRole(target, PowerRole.Vulnerable))
-            damage = (int)MathF.Floor(damage * 1.5f);
+        {
+            decimal vulnerableMultiplier = 1.5m;
+            foreach (var hook in Definition.Hooks)
+                vulnerableMultiplier = hook.ModifyVulnerableMultiplier(
+                    new RuleHookContext(session, hook.Id), dealer.Id, target.Id, properties, vulnerableMultiplier);
+            damage = (int)decimal.Floor(damage * vulnerableMultiplier);
+        }
         return Math.Max(0, damage);
     }
 

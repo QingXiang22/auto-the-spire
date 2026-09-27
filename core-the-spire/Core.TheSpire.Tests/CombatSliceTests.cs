@@ -2799,6 +2799,34 @@ public sealed class CombatSliceTests
         Assert.Equal(2, combat.State.Events.Count(gameEvent => gameEvent.Type == "heal"));
     }
 
+    public void BasePaperPhrogAddsTwentyFivePercentToPoweredDamageAgainstVulnerableEnemies()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(820);
+        run.State.Relics.Add(BaseSpireIds.PaperPhrog);
+        run.State.Deck.Clear();
+        run.State.Deck.Add(new CardInstance("paper-phrog-bash", BaseSpireIds.Bash));
+        run.State.Deck.Add(new CardInstance("paper-phrog-strike", BaseSpireIds.StrikeIronclad));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        combat.State.Player.MutableHand.Clear();
+        combat.State.Player.MutableHand.Add(new CardInstance("paper-phrog-bash", BaseSpireIds.Bash));
+        combat.State.Player.MutableHand.Add(new CardInstance("paper-phrog-strike", BaseSpireIds.StrikeIronclad));
+        var enemyId = combat.State.Enemy.Id;
+        var startingEnemyHp = combat.State.Enemy.Hp;
+
+        combatEnvironment.Step(combat, new PlayCardAction(0, enemyId));
+        Assert.Equal(2, combat.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        combatEnvironment.Step(combat, new PlayCardAction(0, enemyId));
+
+        Assert.Equal(startingEnemyHp - 18, combat.State.Enemy.Hp);
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "damage"
+            && gameEvent.Source == combat.State.Player.Id && gameEvent.Target == enemyId && gameEvent.Amount == 10);
+    }
+
     private sealed class DemonTongueFixturePackage : IRulePackage
     {
         public static readonly ContentId SelfDamageCard = ContentId.Parse("demon-tongue-fixture:self-damage");
@@ -3167,6 +3195,9 @@ internal static class Program
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();
+        tests.BaseRedSkullTracksCombatHealingAndHpLossAcrossItsThreshold();
+        tests.BaseDemonTongueHealsOnlyForFirstPlayerSideHitEachTurn();
+        tests.BasePaperPhrogAddsTwentyFivePercentToPoweredDamageAgainstVulnerableEnemies();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();

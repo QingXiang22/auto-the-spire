@@ -192,16 +192,17 @@ public sealed class CombatEnvironment(GameDefinition definition)
         .SingleOrDefault(e => e.Id.Value == enemyId || e.Id.ToString() == enemyId)
         ?? throw new KeyNotFoundException($"Unknown enemy '{enemyId}'.");
 
-    public CombatObservation Observe(GameSession session) => Observe(session.State);
+    public CombatObservation Observe(GameSession session) => ObserveSession(session);
 
-    private CombatObservation Observe(GameState state)
+    private CombatObservation ObserveSession(GameSession session)
     {
+        var state = session.State;
         var primary = state.FirstLivingEnemy is { } living
             ? state.Enemies.Single(enemy => ReferenceEquals(enemy.Creature, living))
             : state.Enemies[0];
         var next = primary.Definition.Actions[Math.Min(primary.ActionIndex, primary.Definition.Actions.Count - 1)];
         var intentDamage = next.Intent == IntentKind.Attack
-            ? state.CalculateDamage(primary.Creature, state.Player.Creature, next.IntentDamage)
+            ? state.CalculateDamage(session, primary.Creature, state.Player.Creature, next.IntentDamage)
             : 0;
         return new CombatObservation(state.Turn, state.Player.Creature.Hp, state.Player.Creature.MaxHp,
             state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(),
@@ -209,7 +210,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             primary.Creature.MaxHp, primary.Creature.Block, primary.Creature.Strength, next.Intent, intentDamage,
             new Dictionary<ContentId, int>(primary.Creature.Powers), state.IsTerminal,
             state.PendingChoice is { } choice ? new PendingChoiceView(choice.Prompt, choice.Options.Select(option => option.Label).ToArray()) : null,
-            Array.AsReadOnly(state.Enemies.Select(enemy => ObserveEnemy(state, enemy)).ToArray()),
+            Array.AsReadOnly(state.Enemies.Select(enemy => ObserveEnemy(session, enemy)).ToArray()),
             state.Player.DrawPile.ToArray(), state.Player.DiscardPile.ToArray(),
             state.Player.ExhaustPile.ToArray(), state.Player.PlayPile.ToArray(),
             state.Player.HandInstances.ToArray(), state.Player.DrawPileInstances.ToArray(),
@@ -226,11 +227,12 @@ public sealed class CombatEnvironment(GameDefinition definition)
             });
     }
 
-    private static EnemyCombatObservation ObserveEnemy(GameState state, EnemyCombatState enemy)
+    private static EnemyCombatObservation ObserveEnemy(GameSession session, EnemyCombatState enemy)
     {
+        var state = session.State;
         var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
         var damage = action.Intent == IntentKind.Attack
-            ? state.CalculateDamage(enemy.Creature, state.Player.Creature, action.IntentDamage)
+            ? state.CalculateDamage(session, enemy.Creature, state.Player.Creature, action.IntentDamage)
             : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
             enemy.Creature.Block, enemy.Creature.Strength, action.Intent, damage,
@@ -373,7 +375,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.EndTurnStage = EndTurnResolutionStage.PlayerHandCleanup;
             ContinueEndTurn(session);
         }
-        return new StepResult(Observe(state), state.Events.Skip(firstEvent).ToArray(),
+        return new StepResult(ObserveSession(session), state.Events.Skip(firstEvent).ToArray(),
             state.PendingChoice is not null || state.PendingCardSelection is not null);
     }
 
