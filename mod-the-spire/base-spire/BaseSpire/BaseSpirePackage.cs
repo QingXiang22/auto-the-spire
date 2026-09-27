@@ -234,6 +234,15 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         var nibbitSliceDamage = deadlyEnemies ? 7 : 6;
         var nibbitSliceBlock = toughEnemies ? 6 : 5;
         var nibbitHissStrength = deadlyEnemies ? 3 : 2;
+        var nibbitStartingTransition = new EnemyActionTransition([
+            new EnemyActionChoice(nibbitButt, Condition: new EnemyMetricCondition(
+                EnemyActionMetric.LivingEnemies, RunComparison.Equal, 1)),
+            new EnemyActionChoice(nibbitHiss, Condition: new EnemyMetricCondition(
+                EnemyActionMetric.EnemyIndex, RunComparison.Equal, 1)),
+            new EnemyActionChoice(nibbitSlice, Condition: new EnemyMetricCondition(
+                EnemyActionMetric.EnemyIndex, RunComparison.Equal, 0)),
+            new EnemyActionChoice(nibbitButt)
+        ], selectionMode: EnemyActionSelectionMode.FirstMatchingCondition);
         registry.Register(new EnemyDefinition(BaseSpireIds.Nibbit,
             toughEnemies ? 44 : 42, toughEnemies ? 48 : 46,
             [
@@ -245,16 +254,11 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
                 new EnemyActionDefinition(nibbitHiss, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
                     AppliedPower: BaseSpireIds.Strength, AppliedPowerAmount: nibbitHissStrength,
                     NextActionId: nibbitButt)
-            ]));
+            ], startingTransition: nibbitStartingTransition));
         registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsWeak, RunRoomType.Monster,
             [BaseSpireIds.Nibbit], isWeak: true, tags: [ContentId.Parse("base-spire:nibbit")]));
         registry.Register(new EncounterDefinition(BaseSpireIds.NibbitsNormal, RunRoomType.Monster,
-            [BaseSpireIds.Nibbit, BaseSpireIds.Nibbit], tags: [ContentId.Parse("base-spire:nibbit")],
-            startingActionsByEnemyIndex: new Dictionary<int, ContentId>
-            {
-                [0] = nibbitSlice,
-                [1] = nibbitHiss
-            }));
+            [BaseSpireIds.Nibbit, BaseSpireIds.Nibbit], tags: [ContentId.Parse("base-spire:nibbit")]));
 
         var smallSlimeChoices = new[] { BaseSpireIds.LeafSlimeSmall, BaseSpireIds.TwigSlimeSmall };
         var mediumSlimeChoices = new[] { BaseSpireIds.LeafSlimeMedium, BaseSpireIds.TwigSlimeMedium };

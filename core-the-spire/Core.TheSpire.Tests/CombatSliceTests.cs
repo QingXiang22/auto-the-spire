@@ -389,6 +389,36 @@ public sealed class CombatSliceTests
             EnemyActionRepeatPolicy.PreventImmediateRepeat));
     }
 
+    public void EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState()
+    {
+        var serializedCondition = System.Text.Json.JsonSerializer.Serialize<EnemyActionCondition>(
+            new AllEnemyCondition([
+                new EnemyMetricCondition(EnemyActionMetric.Turn, RunComparison.AtLeast, 1),
+                new NotEnemyCondition(new EnemyPowerCondition(EnemyActionSide.Player,
+                    ContentId.Parse("conditional-enemy:focus"), RunComparison.AtLeast, 1))
+            ]));
+        Assert.Equal(serializedCondition, System.Text.Json.JsonSerializer.Serialize(
+            System.Text.Json.JsonSerializer.Deserialize<EnemyActionCondition>(serializedCondition)));
+
+        var definition = Build(new ConditionalEnemyTransitionPackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(305, "ironclad", 100, 100, [], [
+            new CombatEnemySpawn("conditional-enemy:enemy"),
+            new CombatEnemySpawn("conditional-enemy:enemy")
+        ]);
+
+        Assert.Equal(3, environment.Observe(session).Enemies[0].IntentDamage);
+        Assert.Equal(5, environment.Observe(session).Enemies[1].IntentDamage);
+        Assert.Equal(0, session.Random.Get("enemy-ai").Counter);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(92, environment.Observe(session).PlayerHp);
+        Assert.Equal(ContentId.Parse("conditional-enemy:low-health-branch"),
+            session.State.Enemies[0].Definition.Actions[session.State.Enemies[0].ActionIndex].Id);
+        Assert.Equal(7, environment.Observe(session).Enemies[0].IntentDamage);
+        Assert.Equal(0, session.Random.Get("enemy-ai").Counter);
+    }
+
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
     {
         var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -3404,6 +3434,42 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class ConditionalEnemyTransitionPackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("conditional-enemy", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var focusPower = ContentId.Parse("conditional-enemy:focus");
+            var opener = ContentId.Parse("conditional-enemy:opener");
+            var fallback = ContentId.Parse("conditional-enemy:fallback");
+            var lowHealth = ContentId.Parse("conditional-enemy:low-health-branch");
+            var highHealth = ContentId.Parse("conditional-enemy:high-health-branch");
+            registry.Register(new PowerDefinition(focusPower));
+            var startingTransition = new EnemyActionTransition([
+                new EnemyActionChoice(opener, Condition: new EnemyMetricCondition(
+                    EnemyActionMetric.EnemyIndex, RunComparison.Equal, 0)),
+                new EnemyActionChoice(fallback)
+            ], selectionMode: EnemyActionSelectionMode.FirstMatchingCondition);
+            var healthTransition = new EnemyActionTransition([
+                new EnemyActionChoice(lowHealth, Condition: new AllEnemyCondition([
+                    new EnemyMetricCondition(EnemyActionMetric.PlayerHp, RunComparison.AtMost, 97),
+                    new NotEnemyCondition(new EnemyPowerCondition(EnemyActionSide.Player, focusPower,
+                        RunComparison.AtLeast, 1))
+                ])),
+                new EnemyActionChoice(highHealth)
+            ], selectionMode: EnemyActionSelectionMode.FirstMatchingCondition);
+            registry.Register(new EnemyDefinition(ContentId.Parse("conditional-enemy:enemy"), 20, 20,
+            [
+                new EnemyActionDefinition(opener, new AttackEffect(3), IntentKind.Attack, 3,
+                    Transition: healthTransition),
+                new EnemyActionDefinition(fallback, new AttackEffect(5), IntentKind.Attack, 5),
+                new EnemyActionDefinition(lowHealth, new AttackEffect(7), IntentKind.Attack, 7),
+                new EnemyActionDefinition(highHealth, new AttackEffect(9), IntentKind.Attack, 9)
+            ], startingTransition: startingTransition));
+        }
+    }
+
     private sealed class ChoiceCardPackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("choice-test", "1.0.0");
@@ -3559,6 +3625,7 @@ internal static class Program
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
+        tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();
