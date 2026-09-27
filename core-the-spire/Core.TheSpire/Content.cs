@@ -221,9 +221,37 @@ public sealed record UpgradeSelectedRunCardEffect : RunEffectNode;
 public sealed record WinRunEffect : RunEffectNode;
 public sealed record CustomRunEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : RunEffectNode;
 
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RunMetricCondition), "metric")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(HasRunRelicCondition), "hasRelic")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(HasRunPotionCondition), "hasPotion")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AllRunCondition), "all")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AnyRunCondition), "any")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(NotRunCondition), "not")]
+public abstract record RunCondition;
+public enum RunMetric { Gold, Hp, MaxHp, DeckSize, PotionCount, EmptyPotionSlots }
+public enum RunComparison { Equal, AtLeast, AtMost, GreaterThan, LessThan }
+public sealed record RunMetricCondition(RunMetric Metric, RunComparison Comparison, int Threshold) : RunCondition;
+public sealed record HasRunRelicCondition(ContentId Relic) : RunCondition;
+public sealed record HasRunPotionCondition(ContentId Potion) : RunCondition;
+public sealed record AllRunCondition : RunCondition
+{
+    [System.Text.Json.Serialization.JsonConstructor]
+    public AllRunCondition(IReadOnlyList<RunCondition> conditions) => Conditions = Array.AsReadOnly(conditions.ToArray());
+    public IReadOnlyList<RunCondition> Conditions { get; }
+}
+public sealed record AnyRunCondition : RunCondition
+{
+    [System.Text.Json.Serialization.JsonConstructor]
+    public AnyRunCondition(IReadOnlyList<RunCondition> conditions) => Conditions = Array.AsReadOnly(conditions.ToArray());
+    public IReadOnlyList<RunCondition> Conditions { get; }
+}
+public sealed record NotRunCondition(RunCondition Condition) : RunCondition;
+
 public sealed record RunEventOptionDefinition
 {
-    public RunEventOptionDefinition(ContentId id, string label, IEnumerable<RunEffectNode>? effects = null)
+    public RunEventOptionDefinition(ContentId id, string label, IEnumerable<RunEffectNode>? effects = null,
+        RunCondition? requirement = null)
     {
         id.Validate();
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
@@ -233,11 +261,13 @@ public sealed record RunEventOptionDefinition
         if (copiedEffects.Any(effect => effect is null))
             throw new ArgumentException("Run event effects cannot contain null values.", nameof(effects));
         Effects = Array.AsReadOnly(copiedEffects);
+        Requirement = requirement;
     }
 
     public ContentId Id { get; }
     public string Label { get; }
     public IReadOnlyList<RunEffectNode> Effects { get; }
+    public RunCondition? Requirement { get; }
 }
 
 public sealed record RunEventDefinition
@@ -719,6 +749,8 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"Final event '{runEvent.Id}' option '{option.Id}' must end with WinRunEffect.");
             if (runEvent.Kind != RunEventKind.Final && option.Effects.Any(effect => effect is WinRunEffect))
                 throw new InvalidOperationException($"Only a final event option can win the run ('{runEvent.Id}/{option.Id}').");
+            if (option.Requirement is { } requirement)
+                ValidateRunConditionReferences(requirement, $"Run event '{runEvent.Id}' option '{option.Id}'");
             foreach (var effect in option.Effects)
                 ValidateRunEffectReferences(effect, $"Run event '{runEvent.Id}' option '{option.Id}'");
         }
@@ -819,6 +851,39 @@ public sealed class ContentRegistry
                 break;
             default:
                 throw new InvalidOperationException($"{owner} uses unsupported run effect '{effect.GetType().Name}'.");
+        }
+    }
+
+    private void ValidateRunConditionReferences(RunCondition condition, string owner)
+    {
+        switch (condition)
+        {
+            case RunMetricCondition metric:
+                if (!Enum.IsDefined(metric.Metric) || !Enum.IsDefined(metric.Comparison))
+                    throw new InvalidOperationException($"{owner} has an invalid run metric condition.");
+                ArgumentOutOfRangeException.ThrowIfNegative(metric.Threshold);
+                break;
+            case HasRunRelicCondition hasRelic when !_relics.ContainsKey(hasRelic.Relic):
+                throw new InvalidOperationException($"{owner} checks unknown relic '{hasRelic.Relic}'.");
+            case HasRunRelicCondition hasRelic:
+                hasRelic.Relic.Validate();
+                break;
+            case HasRunPotionCondition hasPotion when !_potions.ContainsKey(hasPotion.Potion):
+                throw new InvalidOperationException($"{owner} checks unknown potion '{hasPotion.Potion}'.");
+            case HasRunPotionCondition hasPotion:
+                hasPotion.Potion.Validate();
+                break;
+            case AllRunCondition all:
+                foreach (var nested in all.Conditions) ValidateRunConditionReferences(nested, owner);
+                break;
+            case AnyRunCondition any:
+                foreach (var nested in any.Conditions) ValidateRunConditionReferences(nested, owner);
+                break;
+            case NotRunCondition not:
+                ValidateRunConditionReferences(not.Condition, owner);
+                break;
+            default:
+                throw new InvalidOperationException($"{owner} uses an unsupported run condition '{condition.GetType().Name}'.");
         }
     }
 

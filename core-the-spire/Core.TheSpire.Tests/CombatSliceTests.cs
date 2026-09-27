@@ -1753,6 +1753,14 @@ public sealed class CombatSliceTests
 
     public void RunEventOptionsExposeLegalChoicesAndApplyDeclarativeRunEffects()
     {
+        var conditionDsl = new AllRunCondition([
+            new RunMetricCondition(RunMetric.Gold, RunComparison.AtLeast, 100),
+            new NotRunCondition(new RunMetricCondition(RunMetric.Hp, RunComparison.Equal, 0))
+        ]);
+        var serializedCondition = System.Text.Json.JsonSerializer.Serialize<RunCondition>(conditionDsl);
+        Assert.Equal(serializedCondition, System.Text.Json.JsonSerializer.Serialize(
+            System.Text.Json.JsonSerializer.Deserialize<RunCondition>(serializedCondition)));
+
         var cardEffect = EffectDsl.ParseRun(
             """{"op":"addCardToRunDeck","card":"run-event-fixture:card"}""");
         Assert.Equal(new AddCardToRunDeckEffect(RunEventFixturePackage.CardId), cardEffect);
@@ -1781,13 +1789,19 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
         Assert.Equal(RunEventFixturePackage.EventId,
             observation.RoomStack[^1].EventId!.Value);
-        Assert.Equal(10, observation.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(11, observation.RoomStack[^1].EventOptions.Count);
+        Assert.False(observation.RoomStack[^1].EventOptions.Single(option =>
+            option.Id == RunEventFixturePackage.PredicateOptionId).IsEnabled);
+        Assert.False(observation.RoomStack[^1].EventOptions.Single(option =>
+            option.Id == RunEventFixturePackage.UnaffordableOptionId).IsEnabled);
 
         var legalActions = environment.LegalActions(run);
         Assert.Contains(legalActions, action => action ==
             new ChooseRunEventOptionAction(RunEventFixturePackage.TradeOptionId));
         Assert.False(legalActions.Any(action => action ==
             new ChooseRunEventOptionAction(RunEventFixturePackage.UnaffordableOptionId)));
+        Assert.False(legalActions.Any(action => action ==
+            new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId)));
         Assert.Throws<InvalidOperationException>(() => environment.Step(run,
             new ChooseRunEventOptionAction(ContentId.Parse("run-event-fixture:unknown-option"))));
 
@@ -1798,6 +1812,17 @@ public sealed class CombatSliceTests
         Assert.Equal(3, result.DeckInstances.Count);
         Assert.Equal(RunEventFixturePackage.CardId, result.DeckInstances[^1].CardId);
         Assert.Equal("run-event-card-0002", result.DeckInstances[^1].InstanceId);
+
+        var predicateRun = environment.Start(421);
+        predicateRun.State.Hp = 20;
+        predicateRun.State.Gold = 100;
+        var predicateObservation = environment.Observe(predicateRun);
+        Assert.True(predicateObservation.RoomStack[^1].EventOptions.Single(option =>
+            option.Id == RunEventFixturePackage.PredicateOptionId).IsEnabled);
+        Assert.Contains(environment.LegalActions(predicateRun), action => action ==
+            new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId));
+        Assert.Equal(101, environment.Step(predicateRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId)).Gold);
 
         var upgradeRun = environment.Start(421);
         var upgradePending = environment.Step(upgradeRun,
@@ -2638,6 +2663,7 @@ public sealed class CombatSliceTests
         public static readonly ContentId UpgradeOptionId = ContentId.Parse("run-event-fixture:upgrade-option");
         public static readonly ContentId RemoveOptionId = ContentId.Parse("run-event-fixture:remove-option");
         public static readonly ContentId OptionalRemoveOptionId = ContentId.Parse("run-event-fixture:optional-remove-option");
+        public static readonly ContentId PredicateOptionId = ContentId.Parse("run-event-fixture:predicate-option");
 
         public PackageInfo Info { get; } = new("run-event-fixture", "1.0.0");
 
@@ -2692,7 +2718,15 @@ public sealed class CombatSliceTests
                         false, new RemoveSelectedRunCardEffect())]),
                 new RunEventOptionDefinition(OptionalRemoveOptionId, "Optionally remove a card",
                     [new ChooseRunCardEffect("Choose a card to remove", RunCardFilter.Any,
-                        true, new RemoveSelectedRunCardEffect()), new GainRunGoldEffect(1)])
+                        true, new RemoveSelectedRunCardEffect()), new GainRunGoldEffect(1)]),
+                new RunEventOptionDefinition(PredicateOptionId, "A predicate-gated option",
+                    [new GainRunGoldEffect(1)], new AllRunCondition([
+                        new RunMetricCondition(RunMetric.Gold, RunComparison.AtLeast, 100),
+                        new AnyRunCondition([
+                            new RunMetricCondition(RunMetric.Hp, RunComparison.AtLeast, 20),
+                            new RunMetricCondition(RunMetric.Hp, RunComparison.LessThan, 5)
+                        ])
+                    ]))
             ]));
             registry.Register(new RunEventDefinition(FinalEventId, RunEventKind.Final,
             [
