@@ -105,16 +105,17 @@ public static class BaseSpireContent
             ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
         using var reader = new System.IO.StreamReader(stream);
         var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/ironclad-cards.spire");
-        return SpireCardDslCompiler.Compile(package);
+        return SpireCombatDslCompiler.CompileCards(package);
     }
 
-    public static EnemyDefinition LoadEnemy(string fileName, ContentVariantProfile profile = default)
+    public static SpireCombatBehaviorContent LoadEnemyBehavior(ContentVariantProfile profile = default)
     {
-        var resourceName = $"BaseSpire.Content.{fileName}";
+        const string resourceName = "BaseSpire.ContentSource.enemies.spire";
         using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
         using var reader = new System.IO.StreamReader(stream);
-        return ContentDsl.ParseEnemy(reader.ReadToEnd(), profile);
+        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
+        return SpireCombatBehaviorDslCompiler.Compile(package, profile);
     }
 
     public static IReadOnlyList<EncounterDefinition> LoadEncounters(string fileName)
@@ -180,8 +181,9 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new WellLaidPlansHook());
         registry.Register(new PowerDefinition(BaseSpireIds.BarricadePower));
         registry.Register(new BarricadeHook());
-        registry.Register(new PowerDefinition(BaseSpireIds.Ritual, PowerTrigger.AfterEnemyTurnEnd,
-            BaseSpireIds.Strength, SkipFirstTriggerWhenAppliedToEnemy: true));
+        var enemyContent = BaseSpireContent.LoadEnemyBehavior(new ContentVariantProfile(deadlyEnemies, toughEnemies));
+        foreach (var power in enemyContent.Powers) registry.Register(power);
+        foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
             Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true));
         registry.Register(new PowerDefinition(BaseSpireIds.Weak, PowerTrigger.AfterEnemyTurnEnd,
@@ -198,19 +200,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new CardDefinition(BaseSpireIds.Dazed, 0, CardType.Status,
             new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
             Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));
-
-        registry.Register(BaseSpireContent.LoadEnemy("nibbit.enemy.json",
-            new ContentVariantProfile(deadlyEnemies, toughEnemies)));
-
-        foreach (var fileName in new[]
-        {
-            "damp-cultist.enemy.json", "calcified-cultist.enemy.json",
-            "fuzzy-wurm-crawler.enemy.json", "shrinker-beetle.enemy.json",
-            "leaf-slime-small.enemy.json", "twig-slime-small.enemy.json",
-            "leaf-slime-medium.enemy.json", "twig-slime-medium.enemy.json"
-        })
-            registry.Register(BaseSpireContent.LoadEnemy(fileName,
-                new ContentVariantProfile(deadlyEnemies, toughEnemies)));
 
         foreach (var encounter in BaseSpireContent.LoadEncounters("base-spire.encounters.json"))
             registry.Register(encounter);

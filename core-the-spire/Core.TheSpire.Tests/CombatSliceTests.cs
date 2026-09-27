@@ -419,14 +419,8 @@ public sealed class CombatSliceTests
         Assert.Equal(0, session.Random.Get("enemy-ai").Counter);
     }
 
-    public void ContentDslRejectsUnsupportedSchemasAndUnresolvedVariants()
+    public void EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds()
     {
-        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEnemy(
-            """{"schemaVersion":2,"enemy":{}}"""));
-        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEnemy(
-            """{"schemaVersion":1,"enemy":{"id":"dsl-fixture:enemy","minHp":{"$variant":{"tough":1}},"maxHp":1,"actions":[]}}"""));
-        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEnemy(
-            """{"schemaVersion":1,"enemy":{"id":"dsl-fixture:enemy","minHp":{"$variant":{"normal":1}},"maxHp":1,"actions":[]}}"""));
         Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEncounters(
             """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":[],"formations":[] }]}"""));
         Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEncounters(
@@ -445,7 +439,7 @@ public sealed class CombatSliceTests
         var package = DslSourceParser.Parse(source, "base-spire/ironclad-cards.spire");
 
         Assert.Equal("base-spire", package.Name);
-        var cards = SpireCardDslCompiler.Compile(package);
+        var cards = SpireCombatDslCompiler.CompileCards(package);
         Assert.Equal(30, cards.Count);
         Assert.Equal(30, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
@@ -472,11 +466,63 @@ public sealed class CombatSliceTests
         var invalid = DslSourceParser.Parse(
             "package broken { card Bad { type = attack rarity = common cost = 1 target = enemy play = madeUp() } }",
             "broken.spire");
-        Assert.Throws<DslSourceException>(() => SpireCardDslCompiler.Compile(invalid));
+        Assert.Throws<DslSourceException>(() => SpireCombatDslCompiler.CompileCards(invalid));
 
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
         Assert.Equal(4, parseError.Location.Line);
+    }
+
+    public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
+    {
+        using var stream = typeof(BaseSpirePackage).Assembly.GetManifestResourceStream(
+            "BaseSpire.ContentSource.enemies.spire");
+        Assert.True(stream is not null);
+        using var reader = new StreamReader(stream!);
+        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
+        var content = SpireCombatBehaviorDslCompiler.Compile(package);
+
+        Assert.Equal(1, content.Powers.Count);
+        Assert.Equal(9, content.Enemies.Count);
+        Assert.Equal(9, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
+        Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
+
+        var ritual = content.Powers.Single(power => power.Id == BaseSpireIds.Ritual);
+        Assert.Equal(PowerTrigger.AfterEnemyTurnEnd, ritual.Trigger);
+        Assert.Equal(BaseSpireIds.Strength, ritual.TriggerEffect);
+        Assert.True(ritual.SkipFirstTriggerWhenAppliedToEnemy);
+
+        var cultist = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.DampCultist);
+        Assert.Equal(52, cultist.MinHp);
+        Assert.Equal(54, cultist.MaxHp);
+        Assert.Equal(ContentId.Parse("base-spire:damp-cultist-incantation"), cultist.Actions[0].Id);
+        Assert.Equal(ContentId.Parse("base-spire:damp-cultist-dark-strike"), cultist.Actions[0].NextActionId);
+        Assert.Equal(cultist.Actions[1].Id, cultist.Actions[1].NextActionId);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Ritual, 5), cultist.Actions[0].Effect);
+        Assert.Equal(new AttackEffect(1, TargetSelector.FirstEnemy), cultist.Actions[1].Effect);
+
+        var deadlyTough = SpireCombatBehaviorDslCompiler.Compile(package,
+            new ContentVariantProfile(DeadlyEnemies: true, ToughEnemies: true));
+        var toughCultist = deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.DampCultist);
+        Assert.Equal(51, toughCultist.MinHp);
+        Assert.Equal(53, toughCultist.MaxHp);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Ritual, 6), toughCultist.Actions[0].Effect);
+        Assert.Equal(new AttackEffect(3, TargetSelector.FirstEnemy), toughCultist.Actions[1].Effect);
+
+        var leafSmall = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.LeafSlimeSmall);
+        Assert.Equal(EnemyActionRepeatPolicy.PreventImmediateRepeat,
+            leafSmall.StartingTransition!.RepeatPolicy);
+        Assert.True(leafSmall.Actions.All(action => action.Transition == leafSmall.StartingTransition));
+        var twigMedium = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.TwigSlimeMedium);
+        Assert.True(twigMedium.Actions.Any(action => action.Id == ContentId.Parse("base-spire:twig-medium-sticky-shot")));
+        Assert.True(twigMedium.Actions.SelectMany(action => action.Transition!.Choices)
+            .Any(choice => choice.MaxConsecutiveUses == 2));
+
+        var invalid = DslSourceParser.Parse(
+            "package broken { enemy Bad { hp = range(1, 2) moves = actions(badHit = attack(1, target=player)) behavior = loop(missing) } }",
+            "broken.spire");
+        Assert.Throws<DslSourceException>(() => SpireCombatBehaviorDslCompiler.Compile(invalid));
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -3715,8 +3761,9 @@ internal static class Program
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
-        tests.ContentDslRejectsUnsupportedSchemasAndUnresolvedVariants();
+        tests.EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds();
         tests.SpireCardDslCompilesTheCompleteIroncladCombatCardSet();
+        tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();

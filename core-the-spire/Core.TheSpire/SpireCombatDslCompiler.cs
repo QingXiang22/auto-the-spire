@@ -2,14 +2,15 @@ using System.Text;
 
 namespace CoreTheSpire;
 
-/// <summary>Compiles card declarations and combat effects once, before the combat core is created.</summary>
-public static class SpireCardDslCompiler
+/// <summary>Compiles combat DSL declarations and effects once, before the combat core is created.</summary>
+public static class SpireCombatDslCompiler
 {
-    private sealed class Compiler(DslPackageNode package)
+    private sealed class Compiler(DslPackageNode package, ContentVariantProfile profile = default)
     {
         private readonly string _packageName = package.Name;
+        private readonly ContentVariantProfile _profile = profile;
 
-        public IReadOnlyList<CardDefinition> Compile()
+        public IReadOnlyList<CardDefinition> CompileCards()
         {
             var cards = package.Members.OfType<DslDeclarationNode>().ToArray();
             if (cards.Length != package.Members.Count)
@@ -55,6 +56,7 @@ public static class SpireCardDslCompiler
 
         private EffectNode CompileEffect(DslValueNode node)
         {
+            node = ResolveVariants(node);
             var call = RequireCall(node);
             switch (call.Name)
             {
@@ -155,6 +157,41 @@ public static class SpireCardDslCompiler
             }
         }
 
+        private DslValueNode ResolveVariants(DslValueNode node)
+        {
+            if (node is DslCallNode { Name: "variants" } variants)
+            {
+                if (variants.Arguments.Any(argument => argument.Name is null))
+                    throw Error(variants.Location, "variants requires named alternatives.");
+                if (variants.Arguments.Select(argument => argument.Name).Distinct(StringComparer.Ordinal).Count()
+                    != variants.Arguments.Count)
+                    throw Error(variants.Location, "Variant alternatives must be unique.");
+                var choices = variants.Arguments.ToDictionary(argument => argument.Name!, argument => argument.Value,
+                    StringComparer.Ordinal);
+                var allowed = new HashSet<string>(["default", "deadly", "tough", "deadlyTough"], StringComparer.Ordinal);
+                if (choices.Keys.Any(key => !allowed.Contains(key)))
+                    throw Error(variants.Location, "Unknown difficulty variant.");
+                var preferred = _profile switch
+                {
+                    { DeadlyEnemies: true, ToughEnemies: true } => new[] { "deadlyTough", "deadly", "tough", "default" },
+                    { DeadlyEnemies: true } => ["deadly", "default"],
+                    { ToughEnemies: true } => ["tough", "default"],
+                    _ => ["default"]
+                };
+                foreach (var key in preferred)
+                    if (choices.TryGetValue(key, out var selected)) return ResolveVariants(selected);
+                throw Error(variants.Location, "No difficulty variant matches the configured content profile.");
+            }
+            if (node is DslCallNode call)
+                return call with { Arguments = call.Arguments.Select(argument =>
+                    argument with { Value = ResolveVariants(argument.Value) }).ToArray() };
+            if (node is DslListNode list)
+                return list with { Items = list.Items.Select(ResolveVariants).ToArray() };
+            return node;
+        }
+
+        public EffectNode CompileStandaloneEffect(DslValueNode node) => CompileEffect(node);
+
         private CardKeywords ParseKeywords(DslValueNode node)
         {
             if (node is not DslListNode list) throw Error(node.Location, "Card keywords must be a list.");
@@ -188,6 +225,7 @@ public static class SpireCardDslCompiler
         private static TargetSelector ParseEffectTarget(DslValueNode node) => Name(node) switch
         {
             "self" => TargetSelector.Self,
+            "player" => TargetSelector.FirstEnemy,
             "target" => TargetSelector.SelectedTarget,
             "firstEnemy" => TargetSelector.FirstEnemy,
             "allEnemies" => TargetSelector.AllOpponents,
@@ -327,9 +365,17 @@ public static class SpireCardDslCompiler
         private static DslSourceException Error(DslSourceLocation location, string message) => new(location, message);
     }
 
-    public static IReadOnlyList<CardDefinition> Compile(DslPackageNode package)
+    public static IReadOnlyList<CardDefinition> CompileCards(DslPackageNode package)
     {
         ArgumentNullException.ThrowIfNull(package);
-        return new Compiler(package).Compile();
+        return new Compiler(package).CompileCards();
+    }
+
+    public static EffectNode CompileEffect(DslPackageNode package, DslValueNode expression,
+        ContentVariantProfile profile = default)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+        ArgumentNullException.ThrowIfNull(expression);
+        return new Compiler(package, profile).CompileStandaloneEffect(expression);
     }
 }

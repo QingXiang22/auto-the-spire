@@ -52,9 +52,9 @@ The source parser produces a location-aware syntax tree. The package compiler ch
 
 ## Implementation status
 
-`ironclad-cards.spire` is currently authoritative for the 30 Ironclad combat cards and Slimed. `SpireCardDslCompiler` compiles those declarations directly into the existing immutable `CardDefinition` and `EffectNode` types, and `BaseSpirePackage` loads the compiled results. Card effects therefore pass through the existing combat lifecycle, including legal targeting and suspended choices. The parser/compiler run during package construction, never during a combat step.
+`ironclad-cards.spire` is authoritative for the 30 Ironclad combat cards and Slimed. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `SpireCombatDslCompiler` compiles card declarations and their shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
 
-The older `combat.spire` file remains a syntax and enemy-content prototype; its card declarations were removed to avoid a second source for the same content. Enemy definitions and behavior are still loaded through the existing runtime content path. The card migration does not yet claim that all combat content is DSL-authored.
+Enemy source exercises fixed cycles, an opening move followed by a loop, random choices without immediate repeats, and consecutive-use limits. Difficulty values resolve once from the configured profile. The old JSON enemy files and their parser have been removed. Encounter lineups and Nibbit slot-specific starting actions still use JSON. The nine registered enemies are only the current project roster, not the complete original game's monster catalog; see [content-dsl.md](content-dsl.md) for remaining scope.
 
 ## Completion gate for the first combat package
 
@@ -62,4 +62,4 @@ The older `combat.spire` file remains a syntax and enemy-content prototype; its 
 - Every used effect operator compiles to a typed core effect. Unknown operators, wrong argument types, and unresolved card/Power names fail with source locations.
 - DSL-compiled card definitions drive the existing core combat lifecycle and pass the same gameplay checks as the previous definitions.
 - Multi-enemy tests prove selected-target cards can hit either enemy; area and random-target cards retain their distinct target behavior.
-- Enemy behavior examples compile from named moves and preserve ordering, repeat limits, and RNG draws. This is a later increment after the card package is stable.
+- Enemy behavior compiles from named moves and preserves the distinction between a one-time opening move, a loop, and a cycle. The full monster roster still needs migration and behavior coverage.

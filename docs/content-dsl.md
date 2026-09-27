@@ -1,61 +1,42 @@
-# Prototype JSON content loader
+# Combat content DSL
 
-> **Status:** implementation experiment, not the target DSL specification. The file-per-runtime-definition approach mirrors the current core records and does not yet realize the intended DSL benefits. The target language and authoring model are described in [content-dsl-design.md](content-dsl-design.md). Do not expand this JSON shape by mechanically migrating more definitions; use it only as a comparison/compatibility fixture while the target DSL is designed and evaluated.
+This document describes the current authoring boundary for `core-the-spire` and `base-spire`. The language declares combat content; the core owns execution order, legal actions, power timing, target resolution, and RNG streams. Source is parsed and compiled while packages are built. Combat steps consume typed definitions and do not interpret DSL syntax.
 
-## Current prototype behavior
+## Authoring model
 
-The current JSON loader parses enemy and encounter records and compiles them into the immutable definitions consumed by `ContentRegistry`. Runtime ordering, random streams, and observations remain in the existing core state machine. This section documents what currently exists; it is not a commitment to retain these authoring shapes.
+The package DSL has three shared building blocks:
 
-The prototype covers enemy and encounter content. Its current format explicitly stores action edges, intent damage, per-action transitions, encounter slots, and formations. These duplications are the evidence for redesigning the authoring abstraction described in [content-dsl-design.md](content-dsl-design.md).
+- **Declarations:** cards, Powers, enemies, and their stable package-scoped names.
+- **Expressions:** effects such as `attack`, `applyPower`, `gainBlock`, and `addCards`.
+- **Behavior composition:** named enemy moves connected by `cycle`, `loop`, `startWith`, and random choice expressions.
 
-## Enemy document, version 1
+An enemy's effect and its behavior remain separate. For example, an attack expression says what the move does; `startWith(..., then=loop(...))` says when that move is selected. The compiler lowers both to the current typed `EffectNode`, `PowerDefinition`, and `EnemyDefinition` model. The combat state machine is refined only when a source behavior cannot be represented faithfully.
 
-An enemy is a single JSON document with `schemaVersion: 1` and an `enemy` object. IDs always use the package namespace. An action keeps three concepts explicit:
+Difficulty values use `variants(default=..., deadly=..., tough=..., deadlyTough=...)` and `range(min, max)`. The configured profile resolves them during package compilation. For example:
 
-- `intent` is the player-facing projection.
-- `effect` is the rule operation, expressed using the existing Effect DSL.
-- `nextActionId` or `transition` describes the state-machine edge. These are mutually exclusive.
-
-`startingActionId` and `startingTransition` choose the initial state. Weighted transitions use the enemy AI random stream and can declare repeat restrictions. `firstMatchingCondition` transitions evaluate choices in file order and do not draw randomness; an unconditional final choice acts as a fallback.
-
-Integer fields may use `{"$variant":{"default":N,"deadly":N,"tough":N,"deadlyTough":N}}`. The loader selects the most specific value available for the active difficulty profile, then compiles the document into ordinary integer-valued core definitions. Variant selection is a package-load operation, not a per-turn interpreter feature.
-
-Conditions are typed data nodes (`metric`, `power`, `all`, `any`, `not`). Effects are typed data nodes (`sequence`, `attack`, `applyPower`, and the other registered operators). Unknown operators, unresolved IDs, unsupported schema versions, and invalid transition graphs fail during content loading or `ContentRegistry.Build()`.
-
-## Example: Nibbit
-
-```json
-{
-  "schemaVersion": 1,
-  "enemy": {
-    "id": "base-spire:nibbit",
-    "minHp": {"$variant": {"default": 42, "tough": 44}},
-    "maxHp": {"$variant": {"default": 46, "tough": 48}},
-    "actions": [
-      {
-        "id": "base-spire:nibbit-butt",
-        "effect": {"op": "attack", "amount": 12},
-        "intent": "attack",
-        "intentDamage": 12,
-        "nextActionId": "base-spire:nibbit-slice"
-      }
-    ]
-  }
+```text
+enemy DampCultist {
+  hp = variants(default=range(52, 54), tough=range(51, 53))
+  moves = actions(
+    dampCultistIncantation = applyPower(Ritual, variants(default=5, deadly=6), target=self),
+    dampCultistDarkStrike = attack(variants(default=1, deadly=3), target=player)
+  )
+  behavior = startWith(dampCultistIncantation, then=loop(dampCultistDarkStrike))
 }
 ```
 
-The checked-in [Nibbit document](../mod-the-spire/base-spire/BaseSpire/Content/nibbit.enemy.json) contains its three-action cycle, difficulty variants, and Alone/Front starting conditions. Eight more documents define the Damp and Calcified Cultists, the small and medium Leaf/Twig Slimes, Fuzzy Wurm Crawler, and Shrinker Beetle. They exercise fixed action edges, random choices with immediate-repeat prevention, consecutive-use limits, starting actions, difficulty values, applied Powers and targets, attacks, and adding status cards to a pile. The combat tests load these through the same embedded-resource path used by `base-spire` and verify their action timing and normal, tough, and deadly values against the source audit. The cultists' ordered normal encounter is also data-driven; Ritual's delayed first trigger remains a core Power rule. Fuzzy Wurm weak, Shrinker Beetle weak, and Overgrowth Crawlers lineups also come from the encounter DSL.
+The move names produce stable action IDs. `intent` and displayed damage are derived from the effect tree when the compiler can determine them. This keeps attack intent damage aligned with the action executed by the core.
 
-## Encounter documents, version 1
+## Current source of truth
 
-An encounter document has `schemaVersion: 1` and an `encounters` array. Every encounter defines exactly one content source:
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares all 30 currently registered Ironclad combat cards, including upgrades, costs, targeting, keywords, and effects.
+- [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
+- `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
 
-- `enemyIds` is an ordered, fixed lineup and permits repeated IDs.
-- `enemySlots` defines one candidate set per position. `chooseRandomly` marks a sampled slot; `uniqueChoiceGroup` prevents duplicate picks among slots sharing that group. Each sampled slot uses the encounter RNG in slot order.
-- `formations` defines correlated complete lineups. One weighted formation is selected with one encounter RNG draw, preserving relationships between positions.
+Enemy behaviors in the current roster exercise fixed cycles, a one-time opening move, repeated moves, random choices without immediate repeats, and consecutive-use limits. Gameplay tests exercise normal and Deadly/Tough profiles through the real compiled package. JSON enemy definitions and their separate loading path have been removed; encounters remain JSON.
 
-All enemy references, encounter IDs, and room types are validated when the package content registry is built. The checked-in [base-spire encounter document](../mod-the-spire/base-spire/BaseSpire/Content/base-spire.encounters.json) demonstrates each source: Nibbit fixed lineups, the weak slime's random slots with distinct small slimes, and normal slimes' correlated formations. Existing gameplay checks assert lineup composition and random draw counts through the real package loader.
+## Scope still open
 
-## Deliberate boundary
+The nine enemies are the roster currently modeled by this repository; this is not a claim that the full original game's monster catalog has been imported. The source audit identifies substantial gameplay still to implement, including monsters not yet registered here, role-specific behavior in the encounter source, conditional action state, and move-log cooldown rules. Those should be authored in this DSL when their source semantics are implemented. They should not be approximated by changing the state machine to match one content fixture.
 
-The DSL describes game content, not transport or UI details. External adapters map intents to observations and player decisions to actions. Rules that need behavior outside the registered operators use a named C# extension handler; a content document cannot inject code. JSON content assets and custom handlers are composed by the package before `ContentRegistry.Build()`.
+Mod package composition, explicit replace/patch precedence, source provenance, and performance benchmarks remain open. The current compiler is a first semantic slice rather than the final mod API.
