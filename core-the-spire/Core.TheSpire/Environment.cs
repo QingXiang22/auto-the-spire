@@ -216,6 +216,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.Player.HandInstances.ToArray(), state.Player.DrawPileInstances.ToArray(),
             state.Player.DiscardPileInstances.ToArray(), state.Player.ExhaustPileInstances.ToArray(),
             state.Player.PlayPileInstances.ToArray(),
+            Array.AsReadOnly(session.RunOwner?.State.Potions.ToArray() ?? []),
             state.PendingCardSelection switch
             {
                 PendingCardChoice cardChoice => new PendingCardChoiceView(cardChoice.Effect.Prompt,
@@ -239,10 +240,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
             new Dictionary<ContentId, int>(enemy.Creature.Powers));
     }
 
-    public IReadOnlyList<PlayerAction> LegalActions(GameSession session) => LegalActions(session.State);
+    public IReadOnlyList<PlayerAction> LegalActions(GameSession session) => LegalActionsForSession(session);
 
-    private IReadOnlyList<PlayerAction> LegalActions(GameState state)
+    private IReadOnlyList<PlayerAction> LegalActionsForSession(GameSession session)
     {
+        var state = session.State;
         if (state.PendingCardSelection is PendingCardChoice cardChoice)
             return cardChoice.Options.Select(card => (PlayerAction)new ChooseCardAction(card.InstanceId)).ToArray();
         if (state.PendingCardSelection is PendingCardSetChoice cardSetChoice)
@@ -276,6 +278,32 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 actions.Add(new PlayCardAction(i));
             else
                 actions.Add(new PlayCardAction(i, enemies.FirstOrDefault()?.Creature.Id));
+        }
+        if (session.RunOwner is { } runOwner)
+        {
+            for (var potionIndex = 0; potionIndex < runOwner.State.Potions.Count; potionIndex++)
+            {
+                var potion = definition.Potions[runOwner.State.Potions[potionIndex]];
+                switch (potion.Target)
+                {
+                    case TargetSelector.Self:
+                        actions.Add(new UsePotionAction(potionIndex, state.Player.Id));
+                        break;
+                    case TargetSelector.SelectedTarget:
+                        actions.AddRange(enemies.Select(enemy => new UsePotionAction(potionIndex, enemy.Creature.Id)));
+                        break;
+                    case TargetSelector.FirstEnemy:
+                        if (enemies.FirstOrDefault() is { } firstEnemy)
+                            actions.Add(new UsePotionAction(potionIndex, firstEnemy.Creature.Id));
+                        break;
+                    case TargetSelector.AllOpponents:
+                    case TargetSelector.RandomEnemy:
+                        actions.Add(new UsePotionAction(potionIndex));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(potion.Target));
+                }
+            }
         }
         return actions;
     }
@@ -349,12 +377,24 @@ public sealed class CombatEnvironment(GameDefinition definition)
             EffectExecutor.Resume(session);
             ResumeChoiceContinuation(session);
         }
-        else if (!LegalActions(state).Any(a => a == action))
+        else if (!LegalActionsForSession(session).Any(a => a == action))
         {
             throw new InvalidOperationException("Action is not legal in the current state.");
         }
 
-        if (action is PlayCardAction play)
+        if (action is UsePotionAction usePotion)
+        {
+            var run = session.RunOwner?.State
+                ?? throw new InvalidOperationException("Potions can only be used in a run combat.");
+            var potionId = run.Potions[usePotion.PotionIndex];
+            var potion = definition.Potions[potionId];
+            var target = usePotion.TargetId == state.Player.Id ? state.Player.Creature
+                : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == usePotion.TargetId);
+            run.Potions.RemoveAt(usePotion.PotionIndex);
+            state.Emit(session, "potion_used", state.Player.Id, state.Player.Id, usePotion.PotionIndex);
+            EffectExecutor.Execute(session, state.Player.Creature, potion.Effect, target);
+        }
+        else if (action is PlayCardAction play)
         {
             var cardInstance = state.Player.HandInstances[play.HandIndex];
             var card = definition.Cards[cardInstance.CardId];

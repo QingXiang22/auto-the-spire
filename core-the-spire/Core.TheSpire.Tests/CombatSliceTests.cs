@@ -2852,6 +2852,31 @@ public sealed class CombatSliceTests
             && gameEvent.Target == combat.State.Player.Id).Select(gameEvent => gameEvent.Amount));
     }
 
+    public void BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(822);
+        run.State.Relics.Add(BaseSpireIds.Vajra);
+        run.State.Potions.Add(BaseSpireIds.FirePotion);
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        var enemyId = combat.State.Enemy.Id;
+        var startingEnemyHp = combat.State.Enemy.Hp;
+        var usePotion = new UsePotionAction(0, enemyId);
+
+        Assert.True(combatEnvironment.LegalActions(combat).Contains(usePotion));
+        Assert.Equal(BaseSpireIds.FirePotion, combatEnvironment.Observe(combat).Potions.Single());
+        combatEnvironment.Step(combat, usePotion);
+
+        Assert.Equal(startingEnemyHp - 20, combat.State.Enemy.Hp);
+        Assert.Equal(0, combatEnvironment.Observe(combat).Potions.Count);
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 20);
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "potion_used");
+    }
+
     private sealed class RuinedHelmetStrengthFixturePackage : IRulePackage
     {
         public static readonly ContentId StrengthCard = ContentId.Parse("ruined-helmet-fixture:strength-card");
@@ -3234,6 +3259,7 @@ internal static class Program
         tests.BaseDemonTongueHealsOnlyForFirstPlayerSideHitEachTurn();
         tests.BasePaperPhrogAddsTwentyFivePercentToPoweredDamageAgainstVulnerableEnemies();
         tests.BaseRuinedHelmetDoublesTheFirstStrengthApplicationEachCombat();
+        tests.BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
