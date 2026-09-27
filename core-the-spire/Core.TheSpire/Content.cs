@@ -1192,20 +1192,17 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.AmountPerCount);
                 if (scaled.Target is not (TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} has an invalid scaled attack target.");
-                switch (scaled.Count)
-                {
-                    case PileCardCountSource pile when !Enum.IsDefined(pile.Pile):
-                        throw new InvalidOperationException($"{owner} counts an invalid card pile.");
-                    case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
-                        throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
-                    case TaggedCardCountSource tag:
-                        tag.Tag.Validate();
-                        break;
-                    case PileCardCountSource or TargetPowerCountSource:
-                        break;
-                    default:
-                        throw new InvalidOperationException($"{owner} has an unsupported attack count source.");
-                }
+                ValidateCombatCountSource(scaled.Count, owner);
+                break;
+            case ApplyScaledPowerEffect scaledPower:
+                if (!_powers.ContainsKey(scaledPower.Power))
+                    throw new InvalidOperationException($"{owner} applies unknown power '{scaledPower.Power}'.");
+                ArgumentOutOfRangeException.ThrowIfNegative(scaledPower.BaseAmount);
+                ArgumentOutOfRangeException.ThrowIfNegative(scaledPower.AmountPerCount);
+                if (scaledPower.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget
+                    or TargetSelector.FirstEnemy))
+                    throw new InvalidOperationException($"{owner} has an invalid scaled power target.");
+                ValidateCombatCountSource(scaledPower.Count, owner);
                 break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
@@ -1330,6 +1327,24 @@ public sealed class ContentRegistry
                 break;
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported effect predicate '{predicate.GetType().Name}'.");
+        }
+    }
+
+    private void ValidateCombatCountSource(CombatCountSource source, string owner)
+    {
+        switch (source)
+        {
+            case PileCardCountSource pile when !Enum.IsDefined(pile.Pile):
+                throw new InvalidOperationException($"{owner} counts an invalid card pile.");
+            case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
+                throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
+            case TaggedCardCountSource tag:
+                tag.Tag.Validate();
+                break;
+            case PileCardCountSource or TargetPowerCountSource:
+                break;
+            default:
+                throw new InvalidOperationException($"{owner} has an unsupported combat count source.");
         }
     }
 

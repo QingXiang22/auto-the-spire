@@ -78,7 +78,7 @@ public static class SpireCombatDslCompiler
                 case "scaledAttack":
                     CheckShape(call, 2, 2, "count", "target");
                     return new ScaledAttackEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
-                        CompileAttackCount(RequiredArgument(call, "count")),
+                        CompileCombatCount(RequiredArgument(call, "count")),
                         OptionalTarget(call, "target", TargetSelector.SelectedTarget));
                 case "attackUsingBlock":
                     CheckShape(call, 0, 0, "target");
@@ -90,6 +90,12 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 2, 2, "target");
                     return new ApplyPowerEffect(Id(Name(Argument(call, 0))), Integer(Argument(call, 1)),
                         OptionalTarget(call, "target", TargetSelector.SelectedTarget));
+                case "applyScaledPower":
+                    CheckShape(call, 3, 3, "count", "target");
+                    return new ApplyScaledPowerEffect(Id(Name(Argument(call, 0))),
+                        Integer(Argument(call, 1)), Integer(Argument(call, 2)),
+                        CompileCombatCount(RequiredArgument(call, "count")),
+                        OptionalTarget(call, "target", TargetSelector.Self));
                 case "gainBlock":
                     CheckShape(call, 1, 1, "perPowerStack");
                     var perPower = OptionalArgument(call, "perPowerStack");
@@ -198,7 +204,7 @@ public static class SpireCombatDslCompiler
             }
         }
 
-        private AttackCountSource CompileAttackCount(DslValueNode node)
+        private CombatCountSource CompileCombatCount(DslValueNode node)
         {
             var call = RequireCall(node);
             switch (call.Name)

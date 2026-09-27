@@ -495,4 +495,47 @@ package base-spire {
       applyPower(Strength, 1, target=target)
     )
   }
+
+  card Conflagration {
+    type = attack
+    rarity = rare
+    cost = 1
+    target = allEnemies
+    play = repeat(4, attack(2, target=allEnemies))
+    upgradedPlay = repeat(5, attack(2, target=allEnemies))
+  }
+
+  card Dominate {
+    type = skill
+    rarity = uncommon
+    cost = 1
+    target = enemy
+    keywords = [exhaust]
+    play = sequence(
+      applyPower(Vulnerable, 1, target=target),
+      applyScaledPower(Strength, 0, 1, count=targetPowerAmount(Vulnerable), target=self)
+    )
+    upgradedPlay = sequence(
+      applyPower(Vulnerable, 2, target=target),
+      applyScaledPower(Strength, 0, 1, count=targetPowerAmount(Vulnerable), target=self)
+    )
+  }
+
+  card MoltenFist {
+    type = attack
+    rarity = common
+    cost = 1
+    target = enemy
+    keywords = [exhaust]
+    play = sequence(
+      attack(10),
+      if(targetAlive(), if(hasPower(Vulnerable, target=target),
+        applyScaledPower(Vulnerable, 0, 1, count=targetPowerAmount(Vulnerable), target=target)))
+    )
+    upgradedPlay = sequence(
+      attack(14),
+      if(targetAlive(), if(hasPower(Vulnerable, target=target),
+        applyScaledPower(Vulnerable, 0, 1, count=targetPowerAmount(Vulnerable), target=target)))
+    )
+  }
 }

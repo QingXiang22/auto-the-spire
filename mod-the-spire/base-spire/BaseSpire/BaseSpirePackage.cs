@@ -17,6 +17,9 @@ public static class BaseSpireIds
     public static readonly ContentId PerfectedStrike = ContentId.Parse("base-spire:perfected-strike");
     public static readonly ContentId FightMe = ContentId.Parse("base-spire:fight-me");
     public static readonly ContentId StrikeTag = ContentId.Parse("base-spire:strike");
+    public static readonly ContentId Conflagration = ContentId.Parse("base-spire:conflagration");
+    public static readonly ContentId Dominate = ContentId.Parse("base-spire:dominate");
+    public static readonly ContentId MoltenFist = ContentId.Parse("base-spire:molten-fist");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
