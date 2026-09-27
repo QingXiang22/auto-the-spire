@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-内容 DSL 当前覆盖 Nibbit、Damp/Calcified Cultist 与四种 Leaf/Twig Slime 的敌人定义，以及 CultistsNormal、Nibbits 和 Slimes 遭遇。敌人与遭遇 JSON 只编译到现有类型定义；测试仍通过 `ContentRegistry.Build()`、遭遇启动和原有战斗状态机校验动作图、引用与 RNG 行为。该范围是 DSL 垂直切片，不代表 `base-spire` 全部内容已数据化。
+内容 DSL 当前覆盖 Nibbit、Damp/Calcified Cultist、四种 Leaf/Twig Slime、Fuzzy Wurm Crawler 和 Shrinker Beetle 的敌人定义，以及 CultistsNormal、Nibbits、Slimes、Fuzzy Wurm weak、Shrinker Beetle weak 和 Overgrowth Crawlers 遭遇。敌人与遭遇 JSON 只编译到现有类型定义；测试仍通过 `ContentRegistry.Build()`、遭遇启动和原有战斗状态机校验动作图、引用与 RNG 行为。该范围是 DSL 垂直切片，不代表 `base-spire` 全部内容已数据化。
 
 ## 已读与当前实现依据
 
