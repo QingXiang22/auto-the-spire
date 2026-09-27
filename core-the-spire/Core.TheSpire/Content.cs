@@ -865,6 +865,8 @@ public sealed class ContentRegistry
                 break;
             case DecrementPowerEffect decrementPower when !_powers.ContainsKey(decrementPower.Power):
                 throw new InvalidOperationException($"{owner} decrements unknown power '{decrementPower.Power}'.");
+            case RemovePowerEffect removePower when !_powers.ContainsKey(removePower.Power):
+                throw new InvalidOperationException($"{owner} removes unknown power '{removePower.Power}'.");
             case ChooseEffect choice:
                 foreach (var option in choice.Options)
                     if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);
@@ -958,8 +960,8 @@ public interface IRuleHook
 {
     ContentId Id { get; }
     void OnEvent(RuleHookContext context, GameEvent gameEvent);
-    /// <summary>Returns an effect to queue after this event; its actor is the event source entity, or the player if absent.</summary>
-    EffectNode? OnEventEffect(RuleHookContext context, GameEvent gameEvent) => null;
+    /// <summary>Returns an effect to queue after this event with an actor selected from the event.</summary>
+    GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent) => null;
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
     bool ShouldClearBlock(RuleHookContext context, string creatureId) => true;

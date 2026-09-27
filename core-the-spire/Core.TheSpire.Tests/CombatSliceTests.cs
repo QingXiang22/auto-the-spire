@@ -41,6 +41,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunRelicRarity.Rare, definition.Relics[BaseSpireIds.CharonsAshes].Rarity);
         Assert.True(definition.Relics[BaseSpireIds.CharonsAshes].CharacterPoolIds!
             .Contains(BaseSpireIds.Ironclad));
+        Assert.Equal(RunRelicRarity.Uncommon, definition.Relics[BaseSpireIds.SelfFormingClay].Rarity);
         Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
                 BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
@@ -2709,6 +2710,7 @@ public sealed class CombatSliceTests
         run.State.Relics.Add(BaseSpireIds.Anchor);
         run.State.Relics.Add(BaseSpireIds.Vajra);
         run.State.Relics.Add(BaseSpireIds.CharonsAshes);
+        run.State.Relics.Add(BaseSpireIds.SelfFormingClay);
         run.State.Deck.Clear();
         run.State.Deck.Add(new CardInstance("run-offering", BaseSpireIds.Offering));
         runEnvironment.PushSubRoom(run, RunRoomType.Monster);
@@ -2722,6 +2724,18 @@ public sealed class CombatSliceTests
         var result = combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
         Assert.Equal(enemyHp - 3, combat.State.Enemy.Hp);
         Assert.Contains(result.Events, gameEvent => gameEvent.Type == "damage" && gameEvent.Amount == 3);
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(9, combat.State.Player.Creature.Block);
+        Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
+        combat.State.Player.Creature.Hp = 1;
+        combat.State.Player.Creature.Block = 0;
+        combat.State.Enemy.Strength = 10;
+        combat.State.EnemyActionIndex = 1;
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(0, combat.State.Player.Creature.Hp);
+        Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
     }
 
     private sealed class CardRewardOddsHook : IRunHook
