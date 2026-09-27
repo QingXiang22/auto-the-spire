@@ -13,12 +13,12 @@ public sealed class RuleHookContext
         _modId = hookId.Value[..hookId.Value.IndexOf(':')];
     }
 
-    public int GetInt(string key, int defaultValue = 0) => _session.State.GetModInt(_modId, key, defaultValue);
+    public int GetInt(string key) => _session.State.ReadModInt(_modId, key);
     public void SetInt(string key, int value) => _session.State.SetModInt(_modId, key, value);
     public bool IsRunOwned => _session.RunOwner is not null;
-    public int GetRunInt(string key, int defaultValue = 0) =>
+    public int GetRunInt(string key) =>
         (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
-        .GetModInt(_modId, key, defaultValue);
+        .ReadModInt(_modId, key);
     public void SetRunInt(string key, int value) =>
         (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
         .SetModInt(_modId, key, value);
@@ -71,12 +71,12 @@ public sealed class EffectExecutionContext
     public string? TargetId => _target?.Id;
     public int OwnerHp => _owner.Hp;
     public int? TargetHp => _target?.Hp;
-    public int GetInt(string key, int defaultValue = 0) => _session.State.GetModInt(_modId, key, defaultValue);
+    public int GetInt(string key) => _session.State.ReadModInt(_modId, key);
     public void SetInt(string key, int value) => _session.State.SetModInt(_modId, key, value);
     public bool IsRunOwned => _session.RunOwner is not null;
-    public int GetRunInt(string key, int defaultValue = 0) =>
+    public int GetRunInt(string key) =>
         (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
-        .GetModInt(_modId, key, defaultValue);
+        .ReadModInt(_modId, key);
     public void SetRunInt(string key, int value) =>
         (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
         .SetModInt(_modId, key, value);

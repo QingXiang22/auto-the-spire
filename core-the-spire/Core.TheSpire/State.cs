@@ -148,11 +148,12 @@ internal sealed class GameState
 {
     private readonly List<GameEvent> _events = [];
     private readonly IReadOnlyList<GameEvent> _eventView;
-    private readonly ScopedIntState _modInts = new();
+    private readonly ScopedIntState _modInts;
 
     internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
     {
         Definition = definition;
+        _modInts = new ScopedIntState(definition.StateVariables, StateVariableScope.Combat);
         Player = player;
         Enemies = enemies.ToList();
         if (Enemies.Count == 0) throw new ArgumentException("A combat encounter needs at least one enemy.", nameof(enemies));
@@ -308,6 +309,7 @@ internal sealed class GameState
     }
 
     internal int GetModInt(string modId, string key, int defaultValue) => _modInts.Get(modId, key, defaultValue);
+    internal int ReadModInt(string modId, string key) => _modInts.GetDeclared(modId, key);
 
     internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
 

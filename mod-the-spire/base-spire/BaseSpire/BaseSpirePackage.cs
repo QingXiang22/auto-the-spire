@@ -118,6 +118,15 @@ public static class BaseSpireContent
         return SpireCombatBehaviorDslCompiler.Compile(package, profile);
     }
 
+    public static IReadOnlyList<StateVariableDefinition> LoadStateDefinitions()
+    {
+        const string resourceName = "BaseSpire.ContentSource.state.spire";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        return SpireStateDslCompiler.Compile(DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/state.spire"));
+    }
+
     public static IReadOnlyList<EncounterDefinition> LoadEncounters(string fileName)
     {
         var resourceName = $"BaseSpire.Content.{fileName}";
@@ -134,6 +143,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
 
     public void Register(ContentRegistry registry)
     {
+        foreach (var stateVariable in BaseSpireContent.LoadStateDefinitions()) registry.Register(stateVariable);
         registry.Register(new RelicDefinition(BaseSpireIds.BurningBlood, RunRelicRarity.Starter, InSharedPool: false));
         registry.Register(new RelicDefinition(BaseSpireIds.Anchor, RunRelicRarity.Common));
         registry.Register(new RelicDefinition(BaseSpireIds.Vajra, RunRelicRarity.Common));
@@ -322,7 +332,7 @@ internal sealed class DemonTongueHook : IRuleHook
             || !context.IsPlayerCreature(gameEvent.Target)
             || !context.IsPlayerTurn
             || !context.HasRelic(BaseSpireIds.DemonTongue)) return null;
-        if (context.GetInt(LastTriggeredTurnKey, -1) == context.Turn) return null;
+        if (context.GetInt(LastTriggeredTurnKey) == context.Turn) return null;
 
         context.SetInt(LastTriggeredTurnKey, context.Turn);
         return new GameEventEffect(new HealEffect(gameEvent.Amount), GameEventActor.Target);

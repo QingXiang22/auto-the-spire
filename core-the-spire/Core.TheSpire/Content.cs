@@ -753,11 +753,13 @@ public sealed class ContentRegistry
     private readonly Dictionary<ContentId, PowerDefinition> _powers = [];
     private readonly Dictionary<ContentId, CharacterDefinition> _characters = [];
     private readonly Dictionary<ContentId, RunDefinition> _runs = [];
+    private readonly Dictionary<StateVariableKey, StateVariableDefinition> _stateVariables = [];
     private readonly Dictionary<ContentId, ICustomEffectHandler> _customEffects = [];
     private readonly Dictionary<ContentId, ICustomRunEffectHandler> _customRunEffects = [];
     private readonly List<IRuleHook> _hooks = [];
     private readonly List<IRunHook> _runHooks = [];
     private readonly List<PackageInfo> _packages = [];
+    private string? _registeringPackageId;
 
     public void AddPackage(IRulePackage package)
     {
@@ -774,12 +776,14 @@ public sealed class ContentRegistry
         var powersBefore = new Dictionary<ContentId, PowerDefinition>(_powers);
         var charactersBefore = new Dictionary<ContentId, CharacterDefinition>(_characters);
         var runsBefore = new Dictionary<ContentId, RunDefinition>(_runs);
+        var stateVariablesBefore = new Dictionary<StateVariableKey, StateVariableDefinition>(_stateVariables);
         var customEffectsBefore = new Dictionary<ContentId, ICustomEffectHandler>(_customEffects);
         var customRunEffectsBefore = new Dictionary<ContentId, ICustomRunEffectHandler>(_customRunEffects);
         var hookCountBefore = _hooks.Count;
         var runHookCountBefore = _runHooks.Count;
         try
         {
+            _registeringPackageId = package.Info.Id;
             package.Register(this);
             _packages.Add(package.Info);
         }
@@ -795,12 +799,14 @@ public sealed class ContentRegistry
             Restore(_powers, powersBefore);
             Restore(_characters, charactersBefore);
             Restore(_runs, runsBefore);
+            Restore(_stateVariables, stateVariablesBefore);
             Restore(_customEffects, customEffectsBefore);
             Restore(_customRunEffects, customRunEffectsBefore);
             _hooks.RemoveRange(hookCountBefore, _hooks.Count - hookCountBefore);
             _runHooks.RemoveRange(runHookCountBefore, _runHooks.Count - runHookCountBefore);
             throw;
         }
+        finally { _registeringPackageId = null; }
     }
 
     public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
@@ -833,6 +839,16 @@ public sealed class ContentRegistry
     }
     public void Register(CharacterDefinition definition) => AddUnique(_characters, definition.Id, definition, "character");
     public void Register(RunDefinition definition) => AddUnique(_runs, definition.Id, definition, "run");
+    public void Register(StateVariableDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        if (_registeringPackageId is { } packageId
+            && !definition.Id.Value.StartsWith(packageId + ":", StringComparison.Ordinal))
+            throw new InvalidOperationException($"Package '{packageId}' cannot declare another package's state variable '{definition.Id}'.");
+        if (!_stateVariables.TryAdd(definition.Key, definition))
+            throw new InvalidOperationException($"Duplicate state variable '{definition.Id}' in scope '{definition.Scope}'.");
+    }
     public void Register(IRuleHook hook)
     {
         ArgumentNullException.ThrowIfNull(hook);
@@ -1001,6 +1017,8 @@ public sealed class ContentRegistry
             new ReadOnlyDictionary<ContentId, PowerDefinition>(new Dictionary<ContentId, PowerDefinition>(_powers)),
             new ReadOnlyDictionary<ContentId, CharacterDefinition>(new Dictionary<ContentId, CharacterDefinition>(_characters)),
             new ReadOnlyDictionary<ContentId, RunDefinition>(new Dictionary<ContentId, RunDefinition>(_runs)),
+            new ReadOnlyDictionary<StateVariableKey, StateVariableDefinition>(
+                new Dictionary<StateVariableKey, StateVariableDefinition>(_stateVariables)),
             new ReadOnlyDictionary<ContentId, ICustomEffectHandler>(new Dictionary<ContentId, ICustomEffectHandler>(_customEffects)),
             new ReadOnlyDictionary<ContentId, ICustomRunEffectHandler>(new Dictionary<ContentId, ICustomRunEffectHandler>(_customRunEffects)),
             _hooks.ToArray(), _runHooks.ToArray());
@@ -1280,7 +1298,8 @@ public sealed class ContentRegistry
         items[id] = definition;
     }
 
-    private static void Restore<T>(Dictionary<ContentId, T> target, Dictionary<ContentId, T> snapshot)
+    private static void Restore<TKey, TValue>(Dictionary<TKey, TValue> target,
+        Dictionary<TKey, TValue> snapshot) where TKey : notnull
     {
         target.Clear();
         foreach (var (id, definition) in snapshot) target.Add(id, definition);
@@ -1297,6 +1316,7 @@ public sealed class GameDefinition
         IReadOnlyDictionary<ContentId, RunEventDefinition> runEvents,
         IReadOnlyDictionary<ContentId, PowerDefinition> powers,
         IReadOnlyDictionary<ContentId, CharacterDefinition> characters, IReadOnlyDictionary<ContentId, RunDefinition> runs,
+        IReadOnlyDictionary<StateVariableKey, StateVariableDefinition> stateVariables,
         IReadOnlyDictionary<ContentId, ICustomEffectHandler> customEffects,
         IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> customRunEffects,
         IRuleHook[] hooks, IRunHook[] runHooks)
@@ -1312,6 +1332,7 @@ public sealed class GameDefinition
         Powers = powers;
         Characters = characters;
         Runs = runs;
+        StateVariables = stateVariables;
         CustomEffects = customEffects;
         CustomRunEffects = customRunEffects;
         Hooks = Array.AsReadOnly(hooks);
@@ -1330,6 +1351,7 @@ public sealed class GameDefinition
     public IReadOnlyDictionary<ContentId, PowerDefinition> Powers { get; }
     public IReadOnlyDictionary<ContentId, CharacterDefinition> Characters { get; }
     public IReadOnlyDictionary<ContentId, RunDefinition> Runs { get; }
+    public IReadOnlyDictionary<StateVariableKey, StateVariableDefinition> StateVariables { get; }
     internal IReadOnlyDictionary<ContentId, ICustomEffectHandler> CustomEffects { get; }
     internal IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> CustomRunEffects { get; }
     internal IReadOnlyList<IRuleHook> Hooks { get; }

@@ -756,6 +756,8 @@ public sealed class CombatSliceTests
         Assert.False(definition.Characters.ContainsKey(ContentId.Parse("partial-mod:character")));
         Assert.False(definition.Runs.ContainsKey(ContentId.Parse("partial-mod:run")));
         Assert.False(definition.RunEvents.ContainsKey(ContentId.Parse("partial-mod:event")));
+        Assert.False(definition.StateVariables.ContainsKey(new StateVariableKey(
+            ContentId.Parse("partial-mod:orphan-state"), StateVariableScope.Run)));
         Assert.False(definition.RunHooks.Any(hook => hook.Id == ContentId.Parse("test-fixture:counting-run-hook")));
     }
 
@@ -815,6 +817,12 @@ public sealed class CombatSliceTests
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartCurrentEncounterForRun(run);
         Assert.Equal(1, run.State.GetModInt("training-mod", "combats-started"));
+        Assert.Equal(-1, combat.State.GetModInt("base-spire", "demon-tongue-last-triggered-turn", 999));
+        var ownedContext = new EffectExecutionContext(combat, combat.State.Player.Creature, null,
+            ContentId.Parse("training-mod:grant-block"));
+        Assert.Throws<InvalidOperationException>(() => ownedContext.GetInt("ancient-visits"));
+        Assert.Throws<InvalidOperationException>(() => ownedContext.GetRunInt("observed-ancient-visits"));
+        Assert.Throws<InvalidOperationException>(() => ownedContext.SetInt("undeclared", 1));
         var runHpBeforeCombatDamage = run.State.Hp;
         combat.State.Player.Creature.Hp = 42;
         Assert.Equal(42, runEnvironment.Observe(run).Hp);
@@ -841,6 +849,33 @@ public sealed class CombatSliceTests
 
         var freshRun = runEnvironment.Start(9);
         Assert.Equal(0, freshRun.State.GetModInt("training-mod", "ancient-visits"));
+    }
+
+    public void StateDslDefinesScopedDefaultsAndRejectsInvalidDeclarations()
+    {
+        var source = DslSourceParser.Parse("""
+            package example-mod {
+              state Counter { scope = run type = int default = 7 }
+              state Counter { scope = combat type = int default = -1 }
+            }
+            """, "state-test.spire");
+        var definitions = SpireStateDslCompiler.Compile(source);
+        Assert.Equal(2, definitions.Count);
+        Assert.Equal(definitions[0].Id, definitions[1].Id);
+        Assert.Equal(StateVariableScope.Run, definitions[0].Scope);
+        Assert.Equal(StateVariableScope.Combat, definitions[1].Scope);
+        Assert.Equal(7, definitions[0].DefaultInt);
+        Assert.Equal(-1, definitions[1].DefaultInt);
+
+        Assert.Throws<DslSourceException>(() => SpireStateDslCompiler.Compile(DslSourceParser.Parse(
+            "package x { state Value { scope = room type = int } }", "bad-scope.spire")));
+        Assert.Throws<DslSourceException>(() => SpireStateDslCompiler.Compile(DslSourceParser.Parse(
+            "package x { state Value { scope = run type = string } }", "bad-type.spire")));
+        Assert.Throws<DslSourceException>(() => SpireStateDslCompiler.Compile(DslSourceParser.Parse(
+            "package x { state Value { scope = run type = int default = true } }", "bad-default.spire")));
+        Assert.Throws<DslSourceException>(() => SpireStateDslCompiler.Compile(DslSourceParser.Parse(
+            "package x { state Value { scope = run type = int } state Value { scope = run type = int } }",
+            "duplicate.spire")));
     }
 
     public void LegalActionsRejectUnaffordableCardAndInvalidHandIndex()
@@ -3673,6 +3708,8 @@ public sealed class CombatSliceTests
             registry.Register(new CharacterDefinition(ContentId.Parse("partial-mod:character"), 60, 50, []));
             registry.Register(new RunDefinition(ContentId.Parse("partial-mod:run"),
                 [new ActDefinition(ContentId.Parse("partial-mod:act"), _ => throw new NotSupportedException())]));
+            registry.Register(new StateVariableDefinition(ContentId.Parse("partial-mod:orphan-state"),
+                StateVariableScope.Run, StateVariableType.Int, 5));
             registry.Register(new CardDefinition(ContentId.Parse("test-fixture:strike"), 0, CardType.Attack, new AttackEffect(99)));
         }
     }
@@ -3822,6 +3859,7 @@ internal static class Program
         tests.FailedPackageRegistrationRollsBackPartialChanges();
         tests.IndependentModCanOverrideContentAndObserveHooks();
         tests.ModVariablesKeepRunAndCombatLifetimesSeparate();
+        tests.StateDslDefinesScopedDefaultsAndRejectsInvalidDeclarations();
         tests.LegalActionsRejectUnaffordableCardAndInvalidHandIndex();
         tests.ChoicePausesAndResumesTheRemainingEffectSequence();
         tests.ChoiceDuringEnemyTurnResumesTheTurnScheduler();

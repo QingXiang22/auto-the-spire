@@ -14,6 +14,13 @@ public sealed class TrainingModPackage : IRulePackage
 
     public void Register(ContentRegistry registry)
     {
+        const string stateResource = "TrainingMod.state.spire";
+        using (var stream = typeof(TrainingModPackage).Assembly.GetManifestResourceStream(stateResource)
+            ?? throw new InvalidOperationException($"Missing training mod resource '{stateResource}'."))
+        using (var reader = new System.IO.StreamReader(stream))
+            foreach (var variable in SpireStateDslCompiler.Compile(
+                DslSourceParser.Parse(reader.ReadToEnd(), "training-mod/state.spire")))
+                registry.Register(variable);
         registry.Override(new CardDefinition(BaseSpireIds.StrikeIronclad, 1, CardType.Attack, new AttackEffect(7)));
         registry.Register(new CardDefinition(ContentId.Parse("training-mod:practice-card"), 0, CardType.Skill,
             EffectDsl.Parse("""{"op":"custom","handler":"training-mod:grant-block","payload":{"amount":2}}"""),
