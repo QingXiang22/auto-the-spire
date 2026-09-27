@@ -13,7 +13,7 @@
         "intentDamage": { "$variant": { "default": 11, "deadly": 12 } },
         "transition": {
           "choices": [
-            { "actionId": "base-spire:twig-medium-clump-shot", "maxConsecutiveUses": 2 },
+            { "actionId": "base-spire:twig-medium-clump-shot", "weight": 2 },
             { "actionId": "base-spire:twig-medium-sticky-shot", "maxConsecutiveUses": 1 }
           ]
         }
@@ -24,7 +24,7 @@
         "intent": "debuff",
         "transition": {
           "choices": [
-            { "actionId": "base-spire:twig-medium-clump-shot", "maxConsecutiveUses": 2 },
+            { "actionId": "base-spire:twig-medium-clump-shot", "weight": 2 },
             { "actionId": "base-spire:twig-medium-sticky-shot", "maxConsecutiveUses": 1 }
           ]
         }

@@ -494,18 +494,25 @@ public sealed class CombatSliceTests
         Assert.Equal(2, leafMedium.State.Player.Hand.Count(card => card == BaseSpireIds.Slimed));
         Assert.Equal(8, environment.Observe(leafMedium).IntentDamage);
 
-        var twigMedium = environment.Start(405, "ironclad", 1000, 1000, [], BaseSpireIds.TwigSlimeMedium.ToString());
-        Assert.Equal(IntentKind.Debuff, environment.Observe(twigMedium).Intent);
-        var history = new List<ContentId>();
-        for (var turn = 0; turn < 18; turn++)
-        {
-            environment.Step(twigMedium, new EndTurnAction());
-            history.Add(twigMedium.State.Enemies[0].Definition.Actions[twigMedium.State.Enemies[0].ActionIndex].Id);
-        }
         var clumpAction = ContentId.Parse("base-spire:twig-medium-clump-shot");
-        Assert.True(history.Zip(history.Skip(1)).Any(pair => pair.First == clumpAction && pair.Second == clumpAction));
-        Assert.False(history.Zip(history.Skip(1)).Zip(history.Skip(2), (pair, third) =>
-            pair.First == clumpAction && pair.Second == clumpAction && third == clumpAction).Any(run => run));
+        var stickyAction = ContentId.Parse("base-spire:twig-medium-sticky-shot");
+        var sawThreeConsecutiveClumps = false;
+        for (uint seed = 405; seed < 421; seed++)
+        {
+            var twigMedium = environment.Start(seed, "ironclad", 1000, 1000, [], BaseSpireIds.TwigSlimeMedium.ToString());
+            Assert.Equal(IntentKind.Debuff, environment.Observe(twigMedium).Intent);
+            var history = new List<ContentId>();
+            for (var turn = 0; turn < 24; turn++)
+            {
+                environment.Step(twigMedium, new EndTurnAction());
+                history.Add(twigMedium.State.Enemies[0].Definition.Actions[twigMedium.State.Enemies[0].ActionIndex].Id);
+            }
+            Assert.False(history.Zip(history.Skip(1)).Any(pair =>
+                pair.First == stickyAction && pair.Second == stickyAction));
+            sawThreeConsecutiveClumps |= history.Zip(history.Skip(1)).Zip(history.Skip(2), (pair, third) =>
+                pair.First == clumpAction && pair.Second == clumpAction && third == clumpAction).Any(run => run);
+        }
+        Assert.True(sawThreeConsecutiveClumps);
     }
 
     public void BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle()
