@@ -35,7 +35,6 @@ public static class BaseSpireIds
     public static readonly ContentId PactsEnd = ContentId.Parse("base-spire:pacts-end");
     public static readonly ContentId Taunt = ContentId.Parse("base-spire:taunt");
     public static readonly ContentId BurningPact = ContentId.Parse("base-spire:burning-pact");
-    public static readonly ContentId Clothesline = ContentId.Parse("base-spire:clothesline");
     public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");
     public static readonly ContentId DemonFormPower = ContentId.Parse("base-spire:demon-form-power");
     public static readonly ContentId Headbutt = ContentId.Parse("base-spire:headbutt");
@@ -235,7 +234,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
 
         var ironcladCards = BaseSpireContent.LoadIroncladCards();
         foreach (var card in ironcladCards) registry.Register(card);
-        IroncladCardPool.Register(registry, ironcladCards);
+        IroncladCardPool.Register(registry);
         registry.Register(new CardDefinition(BaseSpireIds.WellLaidPlans, 1, CardType.Power,
             new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1), Target: TargetSelector.Self,
             Rarity: CardRarity.Uncommon,

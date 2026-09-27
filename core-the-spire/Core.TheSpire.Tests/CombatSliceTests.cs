@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(49, ironcladPool.Count);
+        Assert.Equal(48, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -58,6 +58,7 @@ public sealed class CombatSliceTests
         Assert.True(ironcladPool.Contains(BaseSpireIds.Tremble));
         Assert.False(ironcladPool.Contains(BaseSpireIds.Entrench));
         Assert.False(ironcladPool.Contains(BaseSpireIds.Slimed));
+        Assert.False(definition.Cards.ContainsKey(ContentId.Parse("base-spire:clothesline")));
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Armaments].Rarity);
@@ -70,7 +71,6 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.SwordBoomerang].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.SecondWind].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Bloodletting].Rarity);
-        Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Clothesline].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.IronWave].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Inflame].Rarity);
         Assert.Equal(CardRarity.Uncommon, definition.Cards[BaseSpireIds.Uppercut].Rarity);
@@ -127,10 +127,6 @@ public sealed class CombatSliceTests
             .ResolveEffect(new CardInstance("test:uppercut+", BaseSpireIds.Uppercut, 1));
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 2, TargetSelector.SelectedTarget), upgradedUppercut.Effects[1]);
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 2, TargetSelector.SelectedTarget), upgradedUppercut.Effects[2]);
-        var upgradedClothesline = (SequenceEffect)definition.Cards[BaseSpireIds.Clothesline]
-            .ResolveEffect(new CardInstance("test:clothesline+", BaseSpireIds.Clothesline, 1));
-        Assert.Equal(new AttackEffect(14, TargetSelector.SelectedTarget), upgradedClothesline.Effects[0]);
-        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 3, TargetSelector.SelectedTarget), upgradedClothesline.Effects[1]);
         Assert.Equal(new AttackEffect(9, TargetSelector.SelectedTarget), definition.Cards[BaseSpireIds.StrikeIronclad]
             .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
         Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
@@ -206,12 +202,6 @@ public sealed class CombatSliceTests
         Assert.Equal(54, uppercut.State.Player.Creature.Hp);
         Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Weak));
         Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
-
-        var clothesline = env.Start(26, "ironclad", 56, 65, [BaseSpireIds.Clothesline],
-            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
-        env.Step(clothesline, new PlayCardAction(0, clothesline.State.Enemy.Id));
-        Assert.Equal(41, clothesline.State.Enemy.Hp);
-        Assert.Equal(2, clothesline.State.Enemy.PowerAmount(BaseSpireIds.Weak));
     }
 
     public void BaseDampCultistNormalValuesMatchSourceRules()
@@ -437,11 +427,10 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(51, cards.Count);
+        Assert.Equal(50, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
-                or CardRarity.Uncommon or CardRarity.Rare or CardRarity.Ancient)
+        Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
             .Select(card => card.Id), pool);
         Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
         Assert.Equal(BaseSpireIds.StrikeTag, cards.Single(card => card.Id == BaseSpireIds.StrikeIronclad)
@@ -474,6 +463,20 @@ public sealed class CombatSliceTests
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
         Assert.Equal(4, parseError.Location.Line);
+    }
+
+    public void CardPoolMembershipIsExplicitAndModsCanExtendExistingPools()
+    {
+        var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
+        var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
+        Assert.Equal(49, pool.Count);
+        Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
+        Assert.False(pool.Contains(BaseSpireIds.Entrench));
+        Assert.False(pool.Contains(BaseSpireIds.Slimed));
+
+        var unknownPoolRegistry = new ContentRegistry();
+        unknownPoolRegistry.AddPackage(new UnknownPoolCardPackage());
+        Assert.Throws<InvalidOperationException>(() => unknownPoolRegistry.Build());
     }
 
     public void SourceBackedIroncladCardsUseSharedEffectsInCombat()
@@ -2873,7 +2876,7 @@ public sealed class CombatSliceTests
 
     public void CombatEncounterSupportsMultipleEnemiesAndSelectedTargets()
     {
-        var card = Build(new BaseSpirePackage()).Cards[BaseSpireIds.StrikeIronclad];
+        var card = Build(new BaseSpirePackage()).Cards[BaseSpireIds.StrikeIronclad] with { PoolIds = [] };
         var cardId = BaseSpireIds.StrikeIronclad;
         var firstEnemyId = ContentId.Parse("test-fixture:first-foe");
         var secondEnemyId = ContentId.Parse("test-fixture:second-foe");
@@ -4111,6 +4114,38 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class CardPoolExtensionPackage : IRulePackage
+    {
+        public static readonly ContentId CardId = ContentId.Parse("pool-extension:training-strike");
+        public PackageInfo Info { get; } = new("pool-extension", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var source = DslSourceParser.Parse("""
+                package pool-extension {
+                  card TrainingStrike {
+                    pools = ["base-spire:ironclad-card-pool"]
+                    type = attack
+                    rarity = common
+                    cost = 1
+                    target = enemy
+                    play = attack(6)
+                  }
+                }
+                """, "pool-extension.spire");
+            registry.Register(SpireCombatDslCompiler.CompileCards(source).Single());
+        }
+    }
+
+    private sealed class UnknownPoolCardPackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("unknown-pool-card", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new CardDefinition(
+            ContentId.Parse("unknown-pool-card:card"), 0, CardType.Skill, new GainBlockEffect(1))
+            { PoolIds = [ContentId.Parse("unknown-pool-card:missing")] });
+    }
+
     private sealed class IncomingVulnerablePackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("incoming-vulnerable-test", "1.0.0");
@@ -4230,6 +4265,7 @@ internal static class Program
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
         tests.EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds();
         tests.SpireCardDslCompilesTheCurrentIroncladCardSet();
+        tests.CardPoolMembershipIsExplicitAndModsCanExtendExistingPools();
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();
