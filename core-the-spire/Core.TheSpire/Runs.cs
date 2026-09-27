@@ -651,7 +651,7 @@ public sealed class RunSession
 internal sealed record RunRoomFrame(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
     ContentId? EncounterId, ContentId? EventId, ContentId? EventPageId,
     IReadOnlyList<EncounterEnemySelection> EnemySelections,
-    IReadOnlyList<RunEventOptionDefinition> EventOptions)
+    IReadOnlyList<RunEventOptionDefinition> EventOptions, bool ResumeParentAfter = true)
 {
     public List<RunRewardState> Rewards { get; } = [];
 }
@@ -922,6 +922,7 @@ public sealed class RunEnvironment
         IReadOnlyList<RunEffectNode> effects, bool isFinalEvent, ContentId? nextPageId = null)
     {
         var state = session.State;
+        var roomDepth = state.RoomStack.Count;
         for (var index = 0; index < effects.Count; index++)
         {
             var effect = effects[index];
@@ -940,6 +941,7 @@ public sealed class RunEnvironment
             }
 
             ApplyRunEventEffect(state, frame, effect, selectedCard: null);
+            if (state.RoomStack.Count > roomDepth) return Observe(session);
             if (state.Hp == 0)
             {
                 state.Status = RunStatus.Lost;
@@ -1031,6 +1033,18 @@ public sealed class RunEnvironment
                 case AddCardToRunDeckEffect addCard:
                     RunEffectCommands.AddCardToDeck(state, addCard.Card);
                     break;
+                case EnterRunCombatEffect enterCombat:
+                    if (frame.EventId is null)
+                        throw new InvalidOperationException("An event combat can only be entered from a run event.");
+                    var encounter = state.Encounters is not null
+                        && state.Encounters.TryGetValue(enterCombat.EncounterId, out var selectedEncounter)
+                            ? selectedEncounter
+                            : throw new InvalidOperationException($"Unknown encounter '{enterCombat.EncounterId}'.");
+                    var enemySelections = encounter.SelectEnemies(state.Random.Get("encounter-enemies"));
+                    state.RoomStack.Add(new RunRoomFrame(encounter.RoomType, null, false, encounter.Id,
+                        null, null, enemySelections, [], enterCombat.ResumeEventAfterCombat));
+                    state.Phase = RunPhase.ResolveRoom;
+                    break;
                 case CustomRunEffect custom:
                     if (!_customRunEffects.TryGetValue(custom.Handler, out var handler))
                         throw new InvalidOperationException($"Unknown custom run effect '{custom.Handler}'.");
@@ -1120,7 +1134,7 @@ public sealed class RunEnvironment
     {
         ArgumentNullException.ThrowIfNull(session);
         var state = session.State;
-        if (state.Status != RunStatus.InProgress || state.Phase is not (RunPhase.ResolveRoom or RunPhase.ResolveFinalEvent)
+        if (state.Status != RunStatus.InProgress || state.Phase is not (RunPhase.ResolveRoom or RunPhase.ResolveEvent or RunPhase.ResolveFinalEvent)
             || state.RoomStack.Count == 0 || state.ActiveCombat is not null)
             throw new InvalidOperationException("A sub-room can only be entered from an active room.");
         if (roomType == RunRoomType.Unassigned)
@@ -1364,7 +1378,11 @@ public sealed class RunEnvironment
         state.RoomStack.RemoveAt(state.RoomStack.Count - 1);
         if (state.RoomStack.Count > 0)
         {
-            state.Phase = state.RoomStack[^1].IsFinalEvent ? RunPhase.ResolveFinalEvent : RunPhase.ResolveRoom;
+            var parentFrame = state.RoomStack[^1];
+            if (!completedFrame.ResumeParentAfter && parentFrame.EventId is not null && !parentFrame.IsFinalEvent)
+                return FinishCompletedRoom(session, parentFrame);
+            state.Phase = parentFrame.IsFinalEvent ? RunPhase.ResolveFinalEvent
+                : parentFrame.EventId is not null ? RunPhase.ResolveEvent : RunPhase.ResolveRoom;
             return Observe(session);
         }
 
