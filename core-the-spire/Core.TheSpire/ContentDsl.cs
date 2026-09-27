@@ -6,34 +6,10 @@ namespace CoreTheSpire;
 
 public readonly record struct ContentVariantProfile(bool DeadlyEnemies = false, bool ToughEnemies = false);
 
-/// <summary>Loads declarative content documents and compiles them into validated core definitions.</summary>
+/// <summary>Loads encounter configuration and compiles it into validated core definitions.</summary>
 public static class ContentDsl
 {
     private static readonly JsonSerializerOptions Options = DslJson.CreateOptions();
-
-    private sealed record EnemyTransitionData(IReadOnlyList<EnemyActionChoice> Choices,
-        EnemyActionRepeatPolicy RepeatPolicy = EnemyActionRepeatPolicy.Allow,
-        EnemyActionSelectionMode SelectionMode = EnemyActionSelectionMode.WeightedRandom)
-    {
-        public EnemyActionTransition Compile() => new(Choices, RepeatPolicy, SelectionMode);
-    }
-
-    private sealed record EnemyActionData(ContentId Id, EffectNode Effect, IntentKind Intent,
-        int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
-        ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
-        EnemyTransitionData? Transition = null)
-    {
-        public EnemyActionDefinition Compile() => new(Id, Effect, Intent, IntentDamage,
-            AppliedPower, AppliedPowerAmount, NextActionId, AppliedPowerTarget, Transition?.Compile());
-    }
-
-    private sealed record EnemyDocumentData(ContentId Id, int MinHp, int MaxHp,
-        IReadOnlyList<EnemyActionData> Actions, bool LoopLastAction = true,
-        ContentId? StartingActionId = null, EnemyTransitionData? StartingTransition = null)
-    {
-        public EnemyDefinition Compile() => new(Id, MinHp, MaxHp, Actions.Select(action => action.Compile()).ToArray(), LoopLastAction,
-            StartingActionId, StartingTransition?.Compile());
-    }
 
     private sealed record EncounterFormationData(IReadOnlyList<ContentId> EnemyIds, int Weight = 1)
     {
@@ -75,24 +51,6 @@ public static class ContentDsl
         }
     }
 
-    public static EnemyDefinition ParseEnemy(string json, ContentVariantProfile profile = default)
-    {
-        var document = JsonNode.Parse(json) as JsonObject
-            ?? throw new JsonException("Enemy content must be a JSON object.");
-        foreach (var key in document.Select(property => property.Key))
-            if (key is not ("schemaVersion" or "enemy"))
-                throw new JsonException($"Unknown enemy content document field '{key}'.");
-        if (document["schemaVersion"]?.GetValue<int>() != 1)
-            throw new JsonException("Unsupported or missing content schemaVersion; expected 1.");
-        if (document["enemy"] is not JsonObject enemy)
-            throw new JsonException("Enemy content must contain an 'enemy' object.");
-
-        var compiledEnemy = ResolveVariants(enemy, profile) as JsonObject
-            ?? throw new JsonException("The compiled enemy content is not an object.");
-        return (JsonSerializer.Deserialize<EnemyDocumentData>(compiledEnemy.ToJsonString(), Options)
-            ?? throw new JsonException("Enemy content produced no definition.")).Compile();
-    }
-
     public static IReadOnlyList<EncounterDefinition> ParseEncounters(string json)
     {
         var document = JsonNode.Parse(json) as JsonObject
@@ -118,50 +76,6 @@ public static class ContentDsl
         return Array.AsReadOnly(definitions);
     }
 
-    private static JsonNode? ResolveVariants(JsonNode? node, ContentVariantProfile profile)
-    {
-        if (node is JsonObject objectNode)
-        {
-            if (objectNode.Count == 1 && objectNode["$variant"] is JsonObject variants)
-            {
-                var selected = SelectVariant(variants, profile);
-                return ResolveVariants(selected?.DeepClone(), profile);
-            }
-
-            var resolvedObject = new JsonObject();
-            foreach (var (key, value) in objectNode)
-                resolvedObject.Add(key, ResolveVariants(value?.DeepClone(), profile));
-            return resolvedObject;
-        }
-
-        if (node is JsonArray arrayNode)
-        {
-            var resolvedArray = new JsonArray();
-            foreach (var value in arrayNode)
-                resolvedArray.Add(ResolveVariants(value?.DeepClone(), profile));
-            return resolvedArray;
-        }
-
-        return node?.DeepClone();
-    }
-
-    private static JsonNode SelectVariant(JsonObject variants, ContentVariantProfile profile)
-    {
-        var allowed = new HashSet<string>(["default", "deadly", "tough", "deadlyTough"], StringComparer.Ordinal);
-        foreach (var key in variants.Select(property => property.Key))
-            if (!allowed.Contains(key)) throw new JsonException($"Unknown difficulty variant '{key}'.");
-
-        var keys = profile switch
-        {
-            { DeadlyEnemies: true, ToughEnemies: true } => new[] { "deadlyTough", "deadly", "tough", "default" },
-            { DeadlyEnemies: true } => ["deadly", "default"],
-            { ToughEnemies: true } => ["tough", "default"],
-            _ => ["default"]
-        };
-        foreach (var key in keys)
-            if (variants[key] is { } value) return value;
-        throw new JsonException($"No difficulty variant matches profile (deadly={profile.DeadlyEnemies}, tough={profile.ToughEnemies}).");
-    }
 }
 
 internal static class DslJson

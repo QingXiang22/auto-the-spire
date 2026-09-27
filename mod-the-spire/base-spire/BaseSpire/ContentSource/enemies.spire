@@ -1,0 +1,98 @@
+package base-spire {
+  power Ritual {
+    trigger = afterEnemyTurnEnd
+    effect = grantPower(Strength, sourceStacks)
+    skipFirstWhenAppliedToEnemy = true
+  }
+
+  enemy DampCultist {
+    hp = variants(default=range(52, 54), tough=range(51, 53))
+    moves = actions(
+      dampCultistIncantation = applyPower(Ritual, variants(default=5, deadly=6), target=self),
+      dampCultistDarkStrike = attack(variants(default=1, deadly=3), target=player)
+    )
+    behavior = startWith(dampCultistIncantation, then=loop(dampCultistDarkStrike))
+  }
+
+  enemy CalcifiedCultist {
+    hp = variants(default=range(38, 41), tough=range(39, 42))
+    moves = actions(
+      calcifiedCultistIncantation = applyPower(Ritual, 2, target=self),
+      calcifiedCultistDarkStrike = attack(variants(default=9, deadly=11), target=player)
+    )
+    behavior = startWith(calcifiedCultistIncantation, then=loop(calcifiedCultistDarkStrike))
+  }
+
+  enemy FuzzyWurmCrawler {
+    hp = variants(default=range(55, 57), tough=range(58, 59))
+    moves = actions(
+      fuzzyWurmFirstAcidGoop = attack(variants(default=4, deadly=6), target=player),
+      fuzzyWurmInhale = applyPower(Strength, 7, target=self),
+      fuzzyWurmAcidGoop = attack(variants(default=4, deadly=6), target=player)
+    )
+    behavior = cycle(fuzzyWurmFirstAcidGoop, fuzzyWurmInhale, fuzzyWurmAcidGoop)
+  }
+
+  enemy ShrinkerBeetle {
+    hp = variants(default=range(38, 40), tough=range(40, 42))
+    moves = actions(
+      shrinkerBeetleShrink = applyPower(Shrink, -1, target=player),
+      shrinkerBeetleChomp = attack(variants(default=7, deadly=8), target=player),
+      shrinkerBeetleStomp = attack(variants(default=13, deadly=14), target=player)
+    )
+    behavior = startWith(shrinkerBeetleShrink,
+      then=cycle(shrinkerBeetleChomp, shrinkerBeetleStomp))
+  }
+
+  enemy Nibbit {
+    hp = variants(default=range(42, 46), tough=range(44, 48))
+    moves = actions(
+      nibbitButt = attack(variants(default=12, deadly=13), target=player),
+      nibbitSlice = sequence(
+        attack(variants(default=6, deadly=7), target=player),
+        gainBlock(variants(default=5, tough=6))
+      ),
+      nibbitHiss = applyPower(Strength, variants(default=2, deadly=3), target=self)
+    )
+    behavior = cycle(nibbitButt, nibbitSlice, nibbitHiss)
+  }
+
+  enemy LeafSlimeSmall {
+    hp = variants(default=range(11, 15), tough=range(12, 16))
+    moves = actions(
+      leafSmallTackle = attack(variants(default=3, deadly=4), target=player),
+      leafSmallGoop = addCards(Slimed, pile=discard, target=player)
+    )
+    behavior = loop(chooseWithoutRepeat(leafSmallTackle, leafSmallGoop))
+  }
+
+  enemy TwigSlimeSmall {
+    hp = variants(default=range(7, 11), tough=range(8, 12))
+    moves = actions(
+      twigSmallTackle = attack(variants(default=4, deadly=5), target=player)
+    )
+    behavior = loop(twigSmallTackle)
+  }
+
+  enemy LeafSlimeMedium {
+    hp = variants(default=range(32, 35), tough=range(33, 36))
+    moves = actions(
+      leafMediumClumpShot = attack(variants(default=8, deadly=9), target=player),
+      leafMediumStickyShot = addCards(Slimed, pile=discard, count=2, target=player)
+    )
+    behavior = startWith(leafMediumStickyShot,
+      then=cycle(leafMediumClumpShot, leafMediumStickyShot))
+  }
+
+  enemy TwigSlimeMedium {
+    hp = variants(default=range(26, 29), tough=range(27, 29))
+    moves = actions(
+      twigMediumClumpShot = attack(variants(default=11, deadly=12), target=player),
+      twigMediumStickyShot = addCards(Slimed, pile=discard, target=player)
+    )
+    behavior = startWith(twigMediumStickyShot, then=loop(chooseWithLimits(
+      candidate(twigMediumClumpShot, maxConsecutive=2),
+      candidate(twigMediumStickyShot, maxConsecutive=1)
+    )))
+  }
+}
