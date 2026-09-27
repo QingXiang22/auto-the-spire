@@ -1,0 +1,320 @@
+package base-spire {
+  card Anger {
+    type = attack
+    rarity = common
+    cost = 0
+    target = enemy
+    play = sequence(
+      attack(6),
+      addCards(Anger, pile=discard, target=self, inheritUpgradeFromPlayedCard=true)
+    )
+    upgradedPlay = sequence(
+      attack(8),
+      addCards(Anger, pile=discard, target=self, inheritUpgradeFromPlayedCard=true)
+    )
+  }
+
+  card Armaments {
+    type = skill
+    rarity = common
+    cost = 1
+    target = self
+    play = sequence(
+      gainBlock(5),
+      chooseCard(from=hand, to=none, prompt="Choose a card to upgrade", filter=upgradeable,
+        onSelected=upgradeSelectedCard())
+    )
+    upgradedPlay = sequence(gainBlock(5), upgradeCards(pile=hand))
+  }
+
+  card StrikeIronclad {
+    type = attack
+    rarity = basic
+    cost = 1
+    target = enemy
+    play = attack(6)
+    upgradedPlay = attack(9)
+  }
+
+  card DefendIronclad {
+    type = skill
+    rarity = basic
+    cost = 1
+    target = self
+    play = gainBlock(5)
+    upgradedPlay = gainBlock(8)
+  }
+
+  card Bash {
+    type = attack
+    rarity = basic
+    cost = 2
+    target = enemy
+    play = sequence(attack(8), applyPower(Vulnerable, 2, target=target))
+    upgradedPlay = sequence(attack(10), applyPower(Vulnerable, 3, target=target))
+  }
+
+  card BattleTrance {
+    type = skill
+    rarity = uncommon
+    cost = 0
+    target = self
+    play = sequence(draw(3), applyPower(NoDraw, 1, target=self))
+    upgradedPlay = sequence(draw(4), applyPower(NoDraw, 1, target=self))
+  }
+
+  card Bloodletting {
+    type = skill
+    rarity = common
+    cost = 0
+    target = self
+    play = sequence(loseHp(3), modifyEnergy(2))
+    upgradedPlay = sequence(loseHp(3), modifyEnergy(3))
+  }
+
+  card Bludgeon {
+    type = attack
+    rarity = uncommon
+    cost = 3
+    target = enemy
+    play = attack(32)
+    upgradedPlay = attack(42)
+  }
+
+  card Barricade {
+    type = power
+    rarity = rare
+    cost = 3
+    upgradedCost = 2
+    target = self
+    play = applyPower(BarricadePower, 1, target=self)
+  }
+
+  card Entrench {
+    type = skill
+    rarity = event
+    cost = 2
+    upgradedCost = 1
+    target = self
+    play = gainBlockFromCurrentBlock()
+  }
+
+  card BodySlam {
+    type = attack
+    rarity = common
+    cost = 1
+    upgradedCost = 0
+    target = enemy
+    play = attackUsingBlock(target=target)
+  }
+
+  card BurningPact {
+    type = skill
+    rarity = uncommon
+    cost = 1
+    target = self
+    keywords = [exhaust]
+    play = sequence(
+      chooseCard(from=hand, to=exhaust, prompt="Choose a card to exhaust"),
+      draw(2)
+    )
+    upgradedPlay = sequence(
+      chooseCard(from=hand, to=exhaust, prompt="Choose a card to exhaust"),
+      draw(3)
+    )
+  }
+
+  card Clothesline {
+    type = attack
+    rarity = common
+    cost = 2
+    target = enemy
+    play = sequence(attack(12), applyPower(Weak, 2, target=target))
+    upgradedPlay = sequence(attack(14), applyPower(Weak, 3, target=target))
+  }
+
+  card Slimed {
+    type = status
+    rarity = status
+    cost = 1
+    target = self
+    keywords = [exhaust]
+    play = draw(1)
+  }
+
+  card DemonForm {
+    type = power
+    rarity = rare
+    cost = 3
+    target = self
+    play = applyPower(DemonFormPower, 2, target=self)
+    upgradedPlay = applyPower(DemonFormPower, 3, target=self)
+  }
+
+  card FeelNoPain {
+    type = power
+    rarity = uncommon
+    cost = 1
+    target = self
+    play = applyPower(FeelNoPain, 3, target=self)
+    upgradedPlay = applyPower(FeelNoPain, 4, target=self)
+  }
+
+  card Headbutt {
+    type = attack
+    rarity = common
+    cost = 1
+    target = enemy
+    play = sequence(
+      attack(9),
+      chooseCard(from=discard, to=draw, prompt="Choose a card from discard", destinationPosition=top)
+    )
+    upgradedPlay = sequence(
+      attack(12),
+      chooseCard(from=discard, to=draw, prompt="Choose a card from discard", destinationPosition=top)
+    )
+  }
+
+  card IronWave {
+    type = attack
+    rarity = common
+    cost = 1
+    target = enemy
+    play = sequence(gainBlock(5), attack(5))
+    upgradedPlay = sequence(gainBlock(7), attack(7))
+  }
+
+  card Offering {
+    type = skill
+    rarity = rare
+    cost = 0
+    target = self
+    keywords = [exhaust]
+    play = sequence(loseHp(6), modifyEnergy(2), draw(3))
+    upgradedPlay = sequence(loseHp(6), modifyEnergy(2), draw(5))
+  }
+
+  card Inflame {
+    type = power
+    rarity = uncommon
+    cost = 1
+    target = self
+    play = applyPower(Strength, 2, target=self)
+    upgradedPlay = applyPower(Strength, 3, target=self)
+  }
+
+  card Impervious {
+    type = skill
+    rarity = rare
+    cost = 2
+    target = self
+    keywords = [exhaust]
+    play = gainBlock(30)
+    upgradedPlay = gainBlock(40)
+  }
+
+  card PommelStrike {
+    type = attack
+    rarity = common
+    cost = 1
+    target = enemy
+    play = sequence(attack(9), draw(1))
+    upgradedPlay = sequence(attack(10), draw(2))
+  }
+
+  card ShrugItOff {
+    type = skill
+    rarity = common
+    cost = 1
+    target = self
+    play = sequence(gainBlock(8), draw(1))
+    upgradedPlay = sequence(gainBlock(11), draw(1))
+  }
+
+  card SecondWind {
+    type = skill
+    rarity = uncommon
+    cost = 1
+    target = self
+    play = forEachCard(from=hand, filter=nonAttack, effect=sequence(
+      moveSelectedCard(from=hand, to=exhaust),
+      gainBlock(5)
+    ))
+    upgradedPlay = forEachCard(from=hand, filter=nonAttack, effect=sequence(
+      moveSelectedCard(from=hand, to=exhaust),
+      gainBlock(7)
+    ))
+  }
+
+  card SwordBoomerang {
+    type = attack
+    rarity = common
+    cost = 1
+    target = randomEnemy
+    play = repeat(3, randomAttack(3))
+    upgradedPlay = repeat(4, randomAttack(3))
+  }
+
+  card TwinStrike {
+    type = attack
+    rarity = common
+    cost = 1
+    target = enemy
+    play = repeat(2, attack(5))
+    upgradedPlay = repeat(2, attack(7))
+  }
+
+  card Uppercut {
+    type = attack
+    rarity = uncommon
+    cost = 2
+    target = enemy
+    play = sequence(
+      attack(13),
+      applyPower(Weak, 1, target=target),
+      applyPower(Vulnerable, 1, target=target)
+    )
+    upgradedPlay = sequence(
+      attack(13),
+      applyPower(Weak, 2, target=target),
+      applyPower(Vulnerable, 2, target=target)
+    )
+  }
+
+  card Thunderclap {
+    type = attack
+    rarity = common
+    cost = 1
+    target = allEnemies
+    play = sequence(
+      attack(4, target=allEnemies),
+      applyPower(Vulnerable, 1, target=allEnemies)
+    )
+    upgradedPlay = sequence(
+      attack(7, target=allEnemies),
+      applyPower(Vulnerable, 1, target=allEnemies)
+    )
+  }
+
+  card TrueGrit {
+    type = skill
+    rarity = common
+    cost = 1
+    target = self
+    play = sequence(gainBlock(7), randomMoveCard(from=hand, to=exhaust))
+    upgradedPlay = sequence(
+      gainBlock(9),
+      chooseCard(from=hand, to=exhaust, prompt="Choose a card to exhaust")
+    )
+  }
+
+  card Whirlwind {
+    type = attack
+    rarity = uncommon
+    cost = 0
+    costKind = x
+    target = allEnemies
+    play = repeatForX(attack(5, target=allEnemies))
+    upgradedPlay = repeatForX(attack(8, target=allEnemies))
+  }
+}

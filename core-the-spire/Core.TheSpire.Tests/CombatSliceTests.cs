@@ -85,14 +85,14 @@ public sealed class CombatSliceTests
         Assert.Equal(CardRarity.Rare, definition.Cards[BaseSpireIds.Impervious].Rarity);
         Assert.Contains(definition.CardPools[BaseSpireIds.IroncladCardPool].Cards,
             id => id == BaseSpireIds.Impervious);
-        Assert.Equal(new AttackEffect(42), definition.Cards[BaseSpireIds.Bludgeon]
+        Assert.Equal(new AttackEffect(42, TargetSelector.SelectedTarget), definition.Cards[BaseSpireIds.Bludgeon]
             .ResolveEffect(new CardInstance("test:bludgeon+", BaseSpireIds.Bludgeon, 1)));
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.DemonFormPower, 3, TargetSelector.Self),
             definition.Cards[BaseSpireIds.DemonForm]
                 .ResolveEffect(new CardInstance("test:demon-form+", BaseSpireIds.DemonForm, 1)));
         var upgradedHeadbutt = (SequenceEffect)definition.Cards[BaseSpireIds.Headbutt]
             .ResolveEffect(new CardInstance("test:headbutt+", BaseSpireIds.Headbutt, 1));
-        Assert.Equal(new AttackEffect(12), upgradedHeadbutt.Effects[0]);
+        Assert.Equal(new AttackEffect(12, TargetSelector.SelectedTarget), upgradedHeadbutt.Effects[0]);
         Assert.Equal(new ChooseCardFromPileEffect(CardPile.Discard, CardPile.Draw,
             "Choose a card from discard", CardPilePosition.Top), upgradedHeadbutt.Effects[1]);
         var upgradedBurningPact = (SequenceEffect)definition.Cards[BaseSpireIds.BurningPact]
@@ -113,35 +113,35 @@ public sealed class CombatSliceTests
         var upgradedIronWave = (SequenceEffect)definition.Cards[BaseSpireIds.IronWave]
             .ResolveEffect(new CardInstance("test:iron-wave+", BaseSpireIds.IronWave, 1));
         Assert.Equal(new GainBlockEffect(7), upgradedIronWave.Effects[0]);
-        Assert.Equal(new AttackEffect(7), upgradedIronWave.Effects[1]);
+        Assert.Equal(new AttackEffect(7, TargetSelector.SelectedTarget), upgradedIronWave.Effects[1]);
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Strength, 3, TargetSelector.Self),
             definition.Cards[BaseSpireIds.Inflame].ResolveEffect(new CardInstance("test:inflame+", BaseSpireIds.Inflame, 1)));
         var upgradedPommel = (SequenceEffect)definition.Cards[BaseSpireIds.PommelStrike]
             .ResolveEffect(new CardInstance("test:pommel+", BaseSpireIds.PommelStrike, 1));
-        Assert.Equal(new AttackEffect(10), upgradedPommel.Effects[0]);
+        Assert.Equal(new AttackEffect(10, TargetSelector.SelectedTarget), upgradedPommel.Effects[0]);
         Assert.Equal(new DrawCardsEffect(2), upgradedPommel.Effects[1]);
         var upgradedShrug = (SequenceEffect)definition.Cards[BaseSpireIds.ShrugItOff]
             .ResolveEffect(new CardInstance("test:shrug+", BaseSpireIds.ShrugItOff, 1));
         Assert.Equal(new GainBlockEffect(11), upgradedShrug.Effects[0]);
         Assert.Equal(new DrawCardsEffect(1), upgradedShrug.Effects[1]);
-        Assert.Equal(new RepeatEffect(2, new AttackEffect(7)),
+        Assert.Equal(new RepeatEffect(2, new AttackEffect(7, TargetSelector.SelectedTarget)),
             definition.Cards[BaseSpireIds.TwinStrike].ResolveEffect(new CardInstance("test:twin+", BaseSpireIds.TwinStrike, 1)));
         var upgradedUppercut = (SequenceEffect)definition.Cards[BaseSpireIds.Uppercut]
             .ResolveEffect(new CardInstance("test:uppercut+", BaseSpireIds.Uppercut, 1));
-        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 2, TargetSelector.FirstEnemy), upgradedUppercut.Effects[1]);
-        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 2, TargetSelector.FirstEnemy), upgradedUppercut.Effects[2]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 2, TargetSelector.SelectedTarget), upgradedUppercut.Effects[1]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 2, TargetSelector.SelectedTarget), upgradedUppercut.Effects[2]);
         var upgradedClothesline = (SequenceEffect)definition.Cards[BaseSpireIds.Clothesline]
             .ResolveEffect(new CardInstance("test:clothesline+", BaseSpireIds.Clothesline, 1));
         Assert.Equal(new AttackEffect(14, TargetSelector.SelectedTarget), upgradedClothesline.Effects[0]);
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Weak, 3, TargetSelector.SelectedTarget), upgradedClothesline.Effects[1]);
-        Assert.Equal(new AttackEffect(9), definition.Cards[BaseSpireIds.StrikeIronclad]
+        Assert.Equal(new AttackEffect(9, TargetSelector.SelectedTarget), definition.Cards[BaseSpireIds.StrikeIronclad]
             .ResolveEffect(new CardInstance("test:strike+", BaseSpireIds.StrikeIronclad, 1)));
         Assert.Equal(new GainBlockEffect(8), definition.Cards[BaseSpireIds.DefendIronclad]
             .ResolveEffect(new CardInstance("test:defend+", BaseSpireIds.DefendIronclad, 1)));
         var upgradedBash = (SequenceEffect)definition.Cards[BaseSpireIds.Bash]
             .ResolveEffect(new CardInstance("test:bash+", BaseSpireIds.Bash, 1));
-        Assert.Equal(new AttackEffect(10), upgradedBash.Effects[0]);
-        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 3, TargetSelector.FirstEnemy), upgradedBash.Effects[1]);
+        Assert.Equal(new AttackEffect(10, TargetSelector.SelectedTarget), upgradedBash.Effects[0]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 3, TargetSelector.SelectedTarget), upgradedBash.Effects[1]);
         Assert.Throws<ArgumentException>(() => new CardPoolDefinition(ContentId.Parse("test:duplicate-pool"),
             [BaseSpireIds.Bash, BaseSpireIds.Bash]));
         var invalidPoolRegistry = new ContentRegistry();
@@ -435,110 +435,44 @@ public sealed class CombatSliceTests
             """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]},{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]}] }"""));
     }
 
-    public void SpireSourceParserReadsTheUnifiedBaseSpireModel()
+    public void SpireCardDslCompilesTheCompleteIroncladCombatCardSet()
     {
         using var stream = typeof(BaseSpirePackage).Assembly.GetManifestResourceStream(
-            "BaseSpire.ContentSource.combat.spire");
+            "BaseSpire.ContentSource.ironclad-cards.spire");
         Assert.True(stream is not null);
         using var reader = new StreamReader(stream!);
         var source = reader.ReadToEnd();
-        var package = DslSourceParser.Parse(source, "base-spire/combat.spire");
+        var package = DslSourceParser.Parse(source, "base-spire/ironclad-cards.spire");
 
         Assert.Equal("base-spire", package.Name);
-        var declarations = package.Members.OfType<DslDeclarationNode>().ToArray();
-        Assert.True(declarations.Any(declaration => declaration.Kind == "card" && declaration.Name == "StrikeIronclad"));
-        Assert.True(declarations.Any(declaration => declaration.Kind == "power" && declaration.Name == "Ritual"));
-        Assert.True(declarations.Count(declaration => declaration.Kind == "enemy") >= 5);
-        Assert.True(declarations.Any(declaration => declaration.Kind == "encounter" && declaration.Name == "SlimesWeak"));
+        var cards = SpireCardDslCompiler.Compile(package);
+        Assert.Equal(30, cards.Count);
+        Assert.Equal(30, cards.Select(card => card.Id).Distinct().Count());
+        var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
+        Assert.True(pool.All(id => cards.Any(card => card.Id == id)));
+        Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
 
-        var nibbit = declarations.Single(declaration => declaration.Kind == "enemy" && declaration.Name == "Nibbit");
-        var behavior = nibbit.Members.OfType<DslPropertyNode>().Single(property => property.Name == "behavior");
-        Assert.True(behavior.Value is DslCallNode { Name: "startByRole" });
+        var strike = cards.Single(card => card.Id == BaseSpireIds.StrikeIronclad);
+        Assert.Equal(TargetSelector.SelectedTarget, strike.Target);
+        Assert.Equal(new AttackEffect(6, TargetSelector.SelectedTarget), strike.Effect);
+        Assert.Equal(new AttackEffect(9, TargetSelector.SelectedTarget), strike.UpgradedEffect);
+        var thunderclap = cards.Single(card => card.Id == BaseSpireIds.Thunderclap);
+        Assert.Equal(TargetSelector.AllOpponents, thunderclap.Target);
+        var whirlwind = cards.Single(card => card.Id == BaseSpireIds.Whirlwind);
+        Assert.Equal(CardCostKind.X, whirlwind.CostKind);
+        Assert.True(whirlwind.Effect is RepeatForXCostEffect
+            { Effect: AttackEffect { Amount: 5, Target: TargetSelector.AllOpponents } });
 
-        var cultist = declarations.Single(declaration => declaration.Kind == "enemy" && declaration.Name == "DampCultist");
-        var cultistBehavior = cultist.Members.OfType<DslPropertyNode>()
-            .Single(property => property.Name == "behavior").Value;
-        Assert.True(cultistBehavior is DslCallNode { Name: "cycle", Arguments.Count: 2 } cycle
-            && cycle.Arguments.All(argument => argument.Value is DslNameNode));
+        var compiledByPackage = Build(new BaseSpirePackage()).Cards;
+        Assert.True(cards.All(card => compiledByPackage.ContainsKey(card.Id)));
+        Assert.Equal(strike.ResolveEffect(new CardInstance("dsl-strike", strike.Id)),
+            compiledByPackage[strike.Id].ResolveEffect(new CardInstance("runtime-strike", strike.Id)));
+        Assert.Equal(whirlwind.CostKind, compiledByPackage[whirlwind.Id].CostKind);
 
-        var twigSlime = declarations.Single(declaration => declaration.Kind == "enemy" && declaration.Name == "TwigSlimeSmall");
-        var twigBehavior = twigSlime.Members.OfType<DslPropertyNode>()
-            .Single(property => property.Name == "behavior").Value;
-        Assert.True(twigBehavior is DslCallNode { Name: "loop", Arguments.Count: 1 } loop
-            && loop.Arguments[0].Value is DslNameNode { Name: "tackle" });
-
-        var semanticPackage = SpireSemanticCompiler.Compile(package);
-        Assert.Equal(6, semanticPackage.Enemies.Count);
-        Assert.Equal(2, semanticPackage.Cards.Count);
-        Assert.Equal(2, semanticPackage.Powers.Count);
-        Assert.Equal(4, semanticPackage.Encounters.Count);
-        var semanticStrike = semanticPackage.Cards.Single(card => card.Name == "StrikeIronclad");
-        Assert.True(semanticStrike.Rarity == SpireCardRarity.Basic
-            && semanticStrike.PlayEffect is SpireAttackExpression
-        {
-            Target: SpireEffectTarget.SelectedEnemy,
-            Damage: SpireUpgradedInteger { BaseValue: 6, UpgradedValue: 9 }
-        });
-        var semanticSlimed = semanticPackage.Cards.Single(card => card.Name == "Slimed");
-        Assert.True(semanticSlimed.Rarity == SpireCardRarity.Status
-            && semanticSlimed.Target == SpireEffectTarget.Self
-            && semanticSlimed.Keywords == SpireCardKeyword.Exhaust
-            && semanticSlimed.PlayEffect is SpireDrawCardsExpression { Count: 1 });
-        var semanticRitual = semanticPackage.Powers.Single(power => power.Name == "Ritual");
-        Assert.True(semanticRitual.Trigger == SpirePowerTrigger.EnemyTurnEnd
-            && semanticRitual.SkipFirstWhenAppliedTo == SpireEffectTarget.Enemy
-            && semanticRitual.Effect is SpireGrantPowerExpression
-            {
-                Power: "Strength",
-                Amount: SpireStacksFromSelf
-            });
-        var semanticNibbit = semanticPackage.Enemies.Single(enemy => enemy.Name == "Nibbit");
-        Assert.True(semanticNibbit.Behavior is SpireStartByRoleBehavior
-        {
-            StartingMoves: var starts
-        } && starts["alone"] == "butt" && starts["front"] == "slice" && starts["back"] == "hiss");
-        var semanticCultist = semanticPackage.Enemies.Single(enemy => enemy.Name == "DampCultist");
-        Assert.True(semanticCultist.Behavior is SpireCycleBehavior { Moves.Count: 2 });
-        Assert.True(semanticCultist.Moves.Single(move => move.Name == "incantation").Effect
-            is SpireApplyPowerExpression { Power: "Ritual", Amount: SpireIntegerLiteral { Value: 5 } });
-        Assert.True(semanticCultist.Hp is SpireProfiledInteger { Values: var cultistHp }
-            && cultistHp["default"] is SpireIntegerRange { Minimum: 52, Maximum: 54 }
-            && cultistHp["tough"] is SpireIntegerRange { Minimum: 51, Maximum: 53 });
-
-        var leafSlime = semanticPackage.Enemies.Single(enemy => enemy.Name == "LeafSlimeSmall");
-        Assert.True(leafSlime.Behavior is SpireLoopBehavior
-        {
-            Selection: SpireChoiceSelection { PreventImmediateRepeat: true, Choices.Count: 2 }
-        });
-        var twigMedium = semanticPackage.Enemies.Single(enemy => enemy.Name == "TwigSlimeMedium");
-        Assert.True(twigMedium.Behavior is SpireStartWithBehavior
-        {
-            FirstMove: "stickyShot",
-            Then: SpireLoopBehavior
-            {
-                Selection: SpireChoiceSelection
-                {
-                    Choices: [
-                        SpireMoveChoice { Move: "pokeyPounce", MaxConsecutiveUses: 2 },
-                        SpireMoveChoice { Move: "stickyShot", MaxConsecutiveUses: 1 }
-                    ]
-                }
-            }
-        });
-
-        var weakSlimes = semanticPackage.Encounters.Single(encounter => encounter.Name == "SlimesWeak");
-        Assert.True(weakSlimes.Slots.Count == 3
-            && weakSlimes.Slots[0].RememberAs == "small"
-            && weakSlimes.Slots[2].Excluding == "small");
-        var normalSlimes = semanticPackage.Encounters.Single(encounter => encounter.Name == "SlimesNormal");
-        Assert.True(normalSlimes.Formations.Count == 2
-            && normalSlimes.Formations[0].Enemies.Count == 4
-            && normalSlimes.Formations[1].Enemies.Count == 4);
-
-        var unknownMove = DslSourceParser.Parse(source.Replace("loop(tackle)", "loop(missingMove)",
-            StringComparison.Ordinal), "broken.spire");
-        var semanticError = Assert.Throws<DslSourceException>(() => SpireSemanticCompiler.Compile(unknownMove));
-        Assert.True(semanticError.Message.Contains("Unknown enemy move 'missingMove'", StringComparison.Ordinal));
+        var invalid = DslSourceParser.Parse(
+            "package broken { card Bad { type = attack rarity = common cost = 1 target = enemy play = madeUp() } }",
+            "broken.spire");
+        Assert.Throws<DslSourceException>(() => SpireCardDslCompiler.Compile(invalid));
 
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
@@ -2428,12 +2362,12 @@ public sealed class CombatSliceTests
 
     public void CombatEncounterSupportsMultipleEnemiesAndSelectedTargets()
     {
-        var cardId = ContentId.Parse("test-fixture:focused-strike");
+        var card = Build(new BaseSpirePackage()).Cards[BaseSpireIds.StrikeIronclad];
+        var cardId = BaseSpireIds.StrikeIronclad;
         var firstEnemyId = ContentId.Parse("test-fixture:first-foe");
         var secondEnemyId = ContentId.Parse("test-fixture:second-foe");
         var package = new MultiEnemyPackage(
-            new CardDefinition(cardId, 1, CardType.Attack,
-                new AttackEffect(9, TargetSelector.SelectedTarget), Target: TargetSelector.SelectedTarget),
+            card,
             new EnemyDefinition(firstEnemyId, 10, 10,
             [
                 new EnemyActionDefinition(ContentId.Parse("test-fixture:first-hit"),
@@ -2462,7 +2396,7 @@ public sealed class CombatSliceTests
         environment.Step(session, new PlayCardAction(0, $"{secondEnemyId}#2"));
         var afterTargetedAttack = environment.Observe(session);
         Assert.Equal(10, afterTargetedAttack.Enemies[0].Hp);
-        Assert.Equal(1, afterTargetedAttack.Enemies[1].Hp);
+        Assert.Equal(4, afterTargetedAttack.Enemies[1].Hp);
         var enemyTurn = environment.Step(session, new EndTurnAction());
         Assert.Equal(13, enemyTurn.Observation.PlayerHp);
         Assert.Equal(2, enemyTurn.Events.Count(gameEvent => gameEvent.Type == "enemy_action"));
@@ -3782,7 +3716,7 @@ internal static class Program
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
         tests.ContentDslRejectsUnsupportedSchemasAndUnresolvedVariants();
-        tests.SpireSourceParserReadsTheUnifiedBaseSpireModel();
+        tests.SpireCardDslCompilesTheCompleteIroncladCombatCardSet();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();
