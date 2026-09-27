@@ -98,6 +98,16 @@ public static class BaseSpireContent
         IroncladStartingGold, IroncladStarterDeck(), [BaseSpireIds.BurningBlood],
         cardPools: [BaseSpireIds.IroncladCardPool]);
 
+    public static IReadOnlyList<CardDefinition> LoadIroncladCards()
+    {
+        const string resourceName = "BaseSpire.ContentSource.ironclad-cards.spire";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/ironclad-cards.spire");
+        return SpireCardDslCompiler.Compile(package);
+    }
+
     public static EnemyDefinition LoadEnemy(string fileName, ContentVariantProfile profile = default)
     {
         var resourceName = $"BaseSpire.Content.{fileName}";
@@ -179,7 +189,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
-        IroncladCards.Register(registry);
+        foreach (var card in BaseSpireContent.LoadIroncladCards()) registry.Register(card);
+        IroncladCardPool.Register(registry);
         registry.Register(new CardDefinition(BaseSpireIds.WellLaidPlans, 1, CardType.Power,
             new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1), Target: TargetSelector.Self,
             Rarity: CardRarity.Uncommon,
