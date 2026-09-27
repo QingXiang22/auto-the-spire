@@ -33,39 +33,6 @@
         "appliedPowerAmount": { "$variant": { "default": 2, "deadly": 3 } },
         "nextActionId": "base-spire:nibbit-butt"
       }
-    ],
-    "startingTransition": {
-      "selectionMode": "firstMatchingCondition",
-      "choices": [
-        {
-          "actionId": "base-spire:nibbit-butt",
-          "condition": {
-            "test": "metric",
-            "metric": "livingEnemies",
-            "comparison": "equal",
-            "value": 1
-          }
-        },
-        {
-          "actionId": "base-spire:nibbit-hiss",
-          "condition": {
-            "test": "metric",
-            "metric": "enemyIndex",
-            "comparison": "equal",
-            "value": 1
-          }
-        },
-        {
-          "actionId": "base-spire:nibbit-slice",
-          "condition": {
-            "test": "metric",
-            "metric": "enemyIndex",
-            "comparison": "equal",
-            "value": 0
-          }
-        },
-        { "actionId": "base-spire:nibbit-butt" }
-      ]
-    }
+    ]
   }
 }

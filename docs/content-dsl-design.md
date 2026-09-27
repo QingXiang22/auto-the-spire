@@ -196,7 +196,7 @@ encounter NibbitsNormal {
 }
 ```
 
-These examples preserve source distinctions: Twig Medium's Pokey Pounce can repeat at most twice consecutively; Sticky Shot cannot repeat immediately. The source uses equal default weights, with branch eligibility filtered by the move log. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from enemy count or array index. The effects let the projection derive both Slice's attack and block intents, including their independent Deadly/Tough values.
+These examples preserve source distinctions: Twig Medium's Pokey Pounce can repeat at most twice consecutively; Sticky Shot cannot repeat immediately. The source uses equal default weights, with branch eligibility filtered by the move log. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from the number of living enemies. Because these roles only select the initial move, the compiler can specialize them into the encounter's starting-move mapping; no role field needs to be carried through combat state. If later content reads a role during combat, the typed rule model will instead require explicit per-enemy metadata. Slice's attack and block intents are both inferred from effects, including their independent Deadly/Tough values.
 
 Behavior lowering must retain only history needed by declared filters. For the examples above, the runtime needs the current behavior location and enough recent move identity to test `previous(sticky_shot)`; it should not retain an unbounded action log unless a content rule asks for longer cooldown or use-once history.
 
@@ -243,7 +243,7 @@ The examples above are the acceptance model, not a reason to immediately add mor
 | --- | --- |
 | `moves: loop` / `sequence` | What exact turn phase chooses a move, executes its effect, and advances the behavior cursor? |
 | `choose without_repeat` / `with_limits` | Which compact history is required, what is the candidate filtering order, and when is the enemy RNG consumed? |
-| `when ... -> start` | Which facts are visible when the initial move is chosen, especially for multi-enemy encounters? |
+| `when formation_role ... -> start` | Can each encounter placement resolve the branch to a starting move at compile time, or must that role remain runtime state? |
 | `apply Ritual(5)` | When does a newly applied Power first trigger, and is the skip-first behavior part of Ritual or a generic Power lifetime rule? |
 | `attack ... for damage(...)` | Which damage modifiers are applied, how are values rounded, and how do observation and execution share the result? |
 | `choose ... excluding ...` | Is a choice made at encounter-room creation or combat start, which named RNG stream is used, and where is the result stored? |
