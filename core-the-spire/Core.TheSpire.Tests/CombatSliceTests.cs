@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(39, ironcladPool.Count);
+        Assert.Equal(43, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -437,7 +437,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(41, cards.Count);
+        Assert.Equal(45, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
@@ -623,6 +623,66 @@ public sealed class CombatSliceTests
         var conditional = new IfEffect(new PileCountAtLeastPredicate(CardPile.Exhaust, 3),
             new AttackEffect(17, TargetSelector.AllOpponents));
         Assert.Equal(conditional, EffectDsl.Parse(EffectDsl.Serialize(conditional)));
+    }
+
+    public void ScaledAttacksAndTargetPredicatesUseLiveCombatState()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var env = new CombatEnvironment(definition);
+
+        var ashen = env.Start(63, "ironclad", 56, 65, [BaseSpireIds.AshenStrike],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        ashen.State.Player.MutableExhaustPile.Add(new CardInstance("ashen-exhaust-1", BaseSpireIds.Dazed));
+        ashen.State.Player.MutableExhaustPile.Add(new CardInstance("ashen-exhaust-2", BaseSpireIds.Dazed));
+        env.Step(ashen, new PlayCardAction(0, ashen.State.Enemy.Id));
+        Assert.Equal(41, ashen.State.Enemy.Hp);
+
+        var upgradedAshen = env.Start(64, "ironclad", 56, 65, [BaseSpireIds.AshenStrike],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgradedAshen.State.Player.MutableHand[0] = new CardInstance("ashen+", BaseSpireIds.AshenStrike, 1);
+        upgradedAshen.State.Player.MutableExhaustPile.Add(new CardInstance("ashen+-exhaust", BaseSpireIds.Dazed));
+        env.Step(upgradedAshen, new PlayCardAction(0, upgradedAshen.State.Enemy.Id));
+        Assert.Equal(43, upgradedAshen.State.Enemy.Hp);
+
+        var bully = env.Start(65, "ironclad", 56, 65, [BaseSpireIds.Bully],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        bully.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 2;
+        env.Step(bully, new PlayCardAction(0, bully.State.Enemy.Id));
+        Assert.Equal(41, bully.State.Enemy.Hp);
+
+        var dismantle = env.Start(66, "ironclad", 56, 65, [BaseSpireIds.Dismantle],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        dismantle.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 2;
+        env.Step(dismantle, new PlayCardAction(0, dismantle.State.Enemy.Id));
+        Assert.Equal(29, dismantle.State.Enemy.Hp);
+        Assert.Equal(2, dismantle.State.Events.Count(gameEvent => gameEvent.Type == "damage"));
+
+        var noVulnerable = env.Start(67, "ironclad", 56, 65, [BaseSpireIds.Dismantle],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Enemy.Id));
+        Assert.Equal(45, noVulnerable.State.Enemy.Hp);
+        Assert.Equal(1, noVulnerable.State.Events.Count(gameEvent => gameEvent.Type == "damage"));
+
+        var scaled = definition.Cards[BaseSpireIds.Bully].Effect;
+        Assert.Equal(scaled, EffectDsl.Parse(EffectDsl.Serialize(scaled)));
+        Assert.Equal(new HasPowerPredicate(BaseSpireIds.Vulnerable, TargetSelector.SelectedTarget),
+            ((IfEffect)definition.Cards[BaseSpireIds.Dismantle].Effect).Predicate);
+    }
+
+    public void NotYetHealsAndKeepsItsCombatGenerationRestriction()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var card = definition.Cards[BaseSpireIds.NotYet];
+        Assert.False(card.CanBeGeneratedInCombat);
+        Assert.Equal(new HealEffect(13, TargetSelector.Self),
+            card.ResolveEffect(new CardInstance("not-yet+", BaseSpireIds.NotYet, 1)));
+
+        var env = new CombatEnvironment(definition);
+        var state = env.Start(68, "ironclad", 40, 65, [BaseSpireIds.NotYet],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        Assert.Equal(50, state.State.Player.Creature.Hp);
+        Assert.Equal(BaseSpireIds.NotYet, state.State.Player.ExhaustPile.Single());
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -4001,6 +4061,8 @@ internal static class Program
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();
+        tests.ScaledAttacksAndTargetPredicatesUseLiveCombatState();
+        tests.NotYetHealsAndKeepsItsCombatGenerationRestriction();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();

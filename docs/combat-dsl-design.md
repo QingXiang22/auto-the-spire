@@ -18,12 +18,14 @@ Card targeting metadata controls which player actions are legal. An effect such 
 
 The first Ironclad card set needs these shared operations:
 
-- Damage and defense: `attack`, `attackUsingBlock`, `randomAttack`, `gainBlock`, `gainBlockFromCurrentBlock`, `loseHp`.
+- Damage and defense: `attack`, `scaledAttack`, `attackUsingBlock`, `randomAttack`, `gainBlock`, `gainBlockFromCurrentBlock`, `loseHp`.
 - Powers and resources: `applyPower`, `draw`, `modifyEnergy`.
 - Piles and cards: `addCards`, `chooseCard`, `chooseCards`, `randomMoveCard`, `forEachCard`, `moveSelectedCard`, `upgradeSelectedCard`, `upgradeCards`.
 - Composition: `sequence`, `repeat`, `repeatForX`, and `if(predicate, then, else=...)`.
 
-The first combat predicates are `targetAlive()`, `hasPower(Power)`, `energyAtLeast(n)`, `cardExhaustedThisTurn()`, and `pileCountAtLeast(pile, n)`. Predicates are checked when the effect executes. `cardExhaustedThisTurn()` reads a turn-scoped summary in combat state rather than scanning the entire event log on every play; `pileCountAtLeast` reads the current pile. Evil Eye, Forgotten Ritual, and Pact's End exercise these conditions in source-backed definitions.
+The first combat predicates are `targetAlive()`, `hasPower(Power, target=...)`, `energyAtLeast(n)`, `cardExhaustedThisTurn()`, and `pileCountAtLeast(pile, n)`. Predicates are checked when the effect executes. `hasPower` defaults to the acting entity and can inspect the selected target. `cardExhaustedThisTurn()` reads a turn-scoped summary in combat state rather than scanning the entire event log on every play; `pileCountAtLeast` reads the current pile. Evil Eye, Forgotten Ritual, Pact's End, and Dismantle exercise these conditions in source-backed definitions.
+
+`scaledAttack(base, perCount, count=pileCount(pile))` and `scaledAttack(base, perCount, count=targetPowerAmount(Power))` calculate base damage when the attack executes. The result then enters the same Strength, Weak, Vulnerable, and block calculation as `attack`. Ashen Strike and Bully use these count sources. The count expression is compiled to a typed node; it does not perform text lookup in combat.
 
 `chooseCard` and `chooseCards` are declarative suspension points. The core validates a choice, stores the continuation, and resumes the remaining effect sequence. The DSL does not define a second scheduler. Hooks that need custom native behavior remain named C# handlers attached to typed Power or card events.
 
@@ -54,7 +56,7 @@ The source parser produces a location-aware syntax tree. The package compiler ch
 
 ## Implementation status
 
-`ironclad-cards.spire` is authoritative for 41 currently modeled card definitions associated with Ironclad combat, including Entrench and Slimed. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `SpireCombatDslCompiler` compiles card declarations and their shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
+`ironclad-cards.spire` is authoritative for 45 currently modeled card definitions associated with Ironclad combat, including Entrench and Slimed; 43 belong to the 87-card original Ironclad pool. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `SpireCombatDslCompiler` compiles card declarations and their shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
 
 Enemy source exercises fixed cycles, an opening move followed by a loop, random choices without immediate repeats, and consecutive-use limits. Difficulty values resolve once from the configured profile. The old JSON enemy files and their parser have been removed. Encounter lineups and Nibbit slot-specific starting actions still use JSON. The nine registered enemies are only the current project roster, not the complete original game's monster catalog; see [content-dsl.md](content-dsl.md) for remaining scope.
 

@@ -94,7 +94,7 @@ public sealed record RelicDefinition(ContentId Id, RunRelicRarity Rarity, bool I
 public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, EffectNode Effect,
     CardKeywords Keywords = CardKeywords.None, TargetSelector Target = TargetSelector.FirstEnemy,
     CardRarity Rarity = CardRarity.Common, EffectNode? UpgradedEffect = null, int? UpgradedCost = null,
-    CardCostKind CostKind = CardCostKind.Fixed)
+    CardCostKind CostKind = CardCostKind.Fixed, bool CanBeGeneratedInCombat = true)
 {
     public bool HasEnergyXCost => CostKind == CardCostKind.X;
 
@@ -1183,6 +1183,23 @@ public sealed class ContentRegistry
                         | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) != 0)
                     throw new InvalidOperationException($"{owner} has invalid attack damage properties or target.");
                 break;
+            case ScaledAttackEffect scaled:
+                ArgumentOutOfRangeException.ThrowIfNegative(scaled.BaseAmount);
+                ArgumentOutOfRangeException.ThrowIfNegative(scaled.AmountPerCount);
+                if (scaled.Target is not (TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
+                    throw new InvalidOperationException($"{owner} has an invalid scaled attack target.");
+                switch (scaled.Count)
+                {
+                    case PileCardCountSource pile when !Enum.IsDefined(pile.Pile):
+                        throw new InvalidOperationException($"{owner} counts an invalid card pile.");
+                    case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
+                        throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
+                    case PileCardCountSource or TargetPowerCountSource:
+                        break;
+                    default:
+                        throw new InvalidOperationException($"{owner} has an unsupported attack count source.");
+                }
+                break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
             case LoseHpEffect loseHp:
@@ -1292,6 +1309,9 @@ public sealed class ContentRegistry
                 break;
             case HasPowerPredicate hasPower when !_powers.ContainsKey(hasPower.Power):
                 throw new InvalidOperationException($"{owner} checks unknown power '{hasPower.Power}'.");
+            case HasPowerPredicate hasPower when hasPower.Target is not
+                (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy):
+                throw new InvalidOperationException($"{owner} checks power on an invalid target.");
             case HasPowerPredicate:
                 break;
             case EnergyAtLeastPredicate energy:

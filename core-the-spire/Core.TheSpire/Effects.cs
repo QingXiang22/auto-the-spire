@@ -3,6 +3,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SequenceEffect), "sequence")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackEffect), "attack")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ScaledAttackEffect), "scaledAttack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomAttackEffect), "randomAttack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackUsingBlockEffect), "attackUsingBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
@@ -39,6 +40,14 @@ public sealed record SequenceEffect : EffectNode
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy,
     DamageProperties Properties = DamageProperties.Move) : EffectNode;
+public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, AttackCountSource Count,
+    TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
+[System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PileCardCountSource), "pile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
+public abstract record AttackCountSource;
+public sealed record PileCardCountSource(CardPile Pile) : AttackCountSource;
+public sealed record TargetPowerCountSource(ContentId Power) : AttackCountSource;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -100,7 +109,7 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCountAtLeastPredicate), "pileCountAtLeast")]
 public abstract record EffectPredicate;
 public sealed record TargetAlivePredicate : EffectPredicate;
-public sealed record HasPowerPredicate(ContentId Power) : EffectPredicate;
+public sealed record HasPowerPredicate(ContentId Power, TargetSelector Target = TargetSelector.Self) : EffectPredicate;
 public sealed record EnergyAtLeastPredicate(int Amount) : EffectPredicate;
 public sealed record CardExhaustedThisTurnPredicate : EffectPredicate;
 public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : EffectPredicate;
@@ -174,6 +183,17 @@ internal static class EffectExecutor
                     }
                     else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target),
                         attack.Amount, attack.Properties);
+                    break;
+                case ScaledAttackEffect scaledAttack:
+                    var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
+                    var count = scaledAttack.Count switch
+                    {
+                        PileCardCountSource pile => state.GetPile(pile.Pile).Count,
+                        TargetPowerCountSource power => scaledVictim.PowerAmount(power.Power),
+                        _ => throw new InvalidOperationException("Unsupported attack count source.")
+                    };
+                    ApplyAttack(session, owner, scaledVictim,
+                        checked(scaledAttack.BaseAmount + scaledAttack.AmountPerCount * count));
                     break;
                 case RandomAttackEffect randomAttack:
                     if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
@@ -365,7 +385,8 @@ internal static class EffectExecutor
                     var condition = conditional.Predicate switch
                     {
                         TargetAlivePredicate => (target ?? OpponentOf(state, owner)).Hp > 0,
-                        HasPowerPredicate hasPower => owner.PowerAmount(hasPower.Power) > 0,
+                        HasPowerPredicate hasPower => ResolveSingleTarget(state, owner, target, hasPower.Target)
+                            .PowerAmount(hasPower.Power) > 0,
                         EnergyAtLeastPredicate energy => state.Player.Energy >= energy.Amount,
                         CardExhaustedThisTurnPredicate => state.LastPlayerCardExhaustTurn == state.Turn,
                         PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
