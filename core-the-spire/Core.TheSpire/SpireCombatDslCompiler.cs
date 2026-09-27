@@ -23,6 +23,41 @@ public static class SpireCombatDslCompiler
             return Array.AsReadOnly(compiled);
         }
 
+        public IReadOnlyList<PotionDefinition> CompilePotions()
+        {
+            var potions = package.Members.OfType<DslDeclarationNode>().ToArray();
+            if (potions.Length != package.Members.Count)
+                throw Error(package.Location, "A potion package can contain potion declarations only.");
+            foreach (var potion in potions)
+                if (potion.Kind != "potion") throw Error(potion.Location, $"Expected a potion declaration, found '{potion.Kind}'.");
+            var compiled = potions.Select(CompilePotion).ToArray();
+            if (compiled.Select(potion => potion.Id).Distinct().Count() != compiled.Length)
+                throw Error(package.Location, "Potion IDs must be unique within a package.");
+            return Array.AsReadOnly(compiled);
+        }
+
+        private PotionDefinition CompilePotion(DslDeclarationNode declaration)
+        {
+            var properties = ReadProperties(declaration);
+            RequireOnlyProperties(declaration, properties, "rarity", "usage", "target", "use",
+                "inSharedPool", "characterPools", "canGenerateInCombat");
+            var usage = Required(properties, "usage", declaration.Location);
+            if (Name(usage) != "combatOnly")
+                throw Error(usage.Location, "Only combatOnly potion usage is supported.");
+            var characterPools = properties.TryGetValue("characterPools", out var poolsNode)
+                ? ParseIds(poolsNode, "characterPools") : null;
+            var potion = new PotionDefinition(Id(declaration.Name),
+                EnumValue<PotionRarity>(Required(properties, "rarity", declaration.Location)),
+                CompileEffect(Required(properties, "use", declaration.Location)),
+                ParseTarget(Required(properties, "target", declaration.Location)),
+                properties.TryGetValue("inSharedPool", out var sharedNode) ? Boolean(sharedNode) : true,
+                characterPools,
+                properties.TryGetValue("canGenerateInCombat", out var generationNode) ? Boolean(generationNode) : true);
+            try { potion.Validate(); }
+            catch (ArgumentException exception) { throw Error(declaration.Location, exception.Message); }
+            return potion;
+        }
+
         private CardDefinition CompileCard(DslDeclarationNode declaration)
         {
             var properties = ReadProperties(declaration);
@@ -75,8 +110,11 @@ public static class SpireCombatDslCompiler
                     return new IfEffect(CompilePredicate(Argument(call, 0)), CompileEffect(Argument(call, 1)),
                         OptionalEffect(call, "else"));
                 case "attack":
-                    CheckShape(call, 1, 1, "target");
-                    return new AttackEffect(Integer(Argument(call, 0)), OptionalTarget(call, "target", TargetSelector.SelectedTarget));
+                    CheckShape(call, 1, 1, "target", "properties");
+                    return new AttackEffect(Integer(Argument(call, 0)),
+                        OptionalTarget(call, "target", TargetSelector.SelectedTarget),
+                        OptionalArgument(call, "properties") is { } damageProperties
+                            ? ParseDamageProperties(damageProperties) : DamageProperties.Move);
                 case "scaledAttack":
                     CheckShape(call, 2, 2, "count", "target");
                     return new ScaledAttackEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
@@ -90,7 +128,7 @@ public static class SpireCombatDslCompiler
                     return new RandomAttackEffect(Integer(Argument(call, 0)));
                 case "applyPower":
                     CheckShape(call, 2, 2, "target");
-                    return new ApplyPowerEffect(Id(Name(Argument(call, 0))), Integer(Argument(call, 1)),
+                    return new ApplyPowerEffect(ReferenceId(Argument(call, 0)), Integer(Argument(call, 1)),
                         OptionalTarget(call, "target", TargetSelector.SelectedTarget));
                 case "applyScaledPower":
                     CheckShape(call, 3, 3, "count", "target");
@@ -285,11 +323,25 @@ public static class SpireCombatDslCompiler
 
         private IReadOnlyList<ContentId> ParseIds(DslValueNode node, string property)
         {
-            if (node is not DslListNode list) throw Error(node.Location, $"Card {property} must be a list.");
+            if (node is not DslListNode list) throw Error(node.Location, $"{property} must be a list.");
             var ids = list.Items.Select(ReferenceId).ToArray();
             if (ids.Distinct().Count() != ids.Length)
-                throw Error(node.Location, $"Card {property} must be unique.");
+                throw Error(node.Location, $"{property} must be unique.");
             return Array.AsReadOnly(ids);
+        }
+
+        private static DamageProperties ParseDamageProperties(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Damage properties must be a list.");
+            var properties = DamageProperties.None;
+            foreach (var item in list.Items)
+            {
+                var property = EnumValue<DamageProperties>(item);
+                if (property == DamageProperties.None || (properties & property) != 0)
+                    throw Error(item.Location, "Damage properties must be unique nonzero flags.");
+                properties |= property;
+            }
+            return properties;
         }
 
         private ContentId ReferenceId(DslValueNode node) => node switch
@@ -306,7 +358,7 @@ public static class SpireCombatDslCompiler
             "firstEnemy" => TargetSelector.FirstEnemy,
             "allEnemies" => TargetSelector.AllOpponents,
             "randomEnemy" => TargetSelector.RandomEnemy,
-            _ => throw Error(node.Location, "Card target must be self, enemy, firstEnemy, allEnemies, or randomEnemy.")
+            _ => throw Error(node.Location, "Content target must be self, enemy, firstEnemy, allEnemies, or randomEnemy.")
         };
 
         private static TargetSelector ParseEffectTarget(DslValueNode node) => Name(node) switch
@@ -382,9 +434,9 @@ public static class SpireCombatDslCompiler
             foreach (var member in declaration.Members)
             {
                 if (member is not DslPropertyNode property)
-                    throw Error(member.Location, "Card declarations can contain properties only.");
+                    throw Error(member.Location, $"{declaration.Kind} declarations can contain properties only.");
                 if (!properties.TryAdd(property.Name, property.Value))
-                    throw Error(property.Location, $"Duplicate card property '{property.Name}'.");
+                    throw Error(property.Location, $"Duplicate {declaration.Kind} property '{property.Name}'.");
             }
             return properties;
         }
@@ -395,13 +447,13 @@ public static class SpireCombatDslCompiler
             var allowedSet = allowed.ToHashSet(StringComparer.Ordinal);
             foreach (var property in declaration.Members.OfType<DslPropertyNode>())
                 if (!allowedSet.Contains(property.Name))
-                    throw Error(property.Location, $"Unknown card property '{property.Name}'.");
+                    throw Error(property.Location, $"Unknown {declaration.Kind} property '{property.Name}'.");
         }
 
         private static DslValueNode Required(IReadOnlyDictionary<string, DslValueNode> properties,
             string name, DslSourceLocation location) => properties.TryGetValue(name, out var value)
             ? value
-            : throw Error(location, $"Missing required card property '{name}'.");
+            : throw Error(location, $"Missing required property '{name}'.");
 
         private static DslCallNode RequireCall(DslValueNode node) => node is DslCallNode call
             ? call
@@ -456,6 +508,12 @@ public static class SpireCombatDslCompiler
     {
         ArgumentNullException.ThrowIfNull(package);
         return new Compiler(package).CompileCards();
+    }
+
+    public static IReadOnlyList<PotionDefinition> CompilePotions(DslPackageNode package)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+        return new Compiler(package).CompilePotions();
     }
 
     public static EffectNode CompileEffect(DslPackageNode package, DslValueNode expression,
