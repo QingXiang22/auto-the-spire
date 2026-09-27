@@ -20,6 +20,11 @@ public sealed class RuleHookContext
     /// <summary>Checks the owning run's relics; returns false for standalone combat sessions.</summary>
     public bool HasRelic(ContentId relicId) =>
         _session.RunOwner?.State.Relics.Contains(relicId) == true;
+    public bool IsPlayerCreature(string creatureId) => _session.State.Player.Id == creatureId;
+    public bool IsAliveCreature(string creatureId) =>
+        _session.State.Player.Id == creatureId
+            ? _session.State.Player.Creature.Hp > 0
+            : _session.State.Enemies.Any(enemy => enemy.Creature.Id == creatureId && enemy.Creature.Hp > 0);
 }
 
 public interface ICustomEffectHandler

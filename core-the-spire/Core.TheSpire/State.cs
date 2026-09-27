@@ -167,18 +167,28 @@ internal sealed class GameState
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount);
         _events.Add(gameEvent);
-        List<EffectNode>? effects = null;
+        List<(EntityState Owner, EffectNode Effect)>? effects = null;
         foreach (var hook in Definition.Hooks)
         {
             var context = new RuleHookContext(session, hook.Id);
             hook.OnEvent(context, gameEvent);
-            if (hook.OnEventEffect(context, gameEvent) is { } effect)
-                (effects ??= []).Add(effect);
+            if (hook.OnEventEffect(context, gameEvent) is { } eventEffect)
+            {
+                var owner = eventEffect.Actor switch
+                {
+                    GameEventActor.Source => FindCreature(source) ?? Player.Creature,
+                    GameEventActor.Target => FindCreature(target)
+                        ?? throw new InvalidOperationException($"Event '{type}' has no creature target '{target}'."),
+                    GameEventActor.Player => Player.Creature,
+                    _ => throw new ArgumentOutOfRangeException(nameof(eventEffect.Actor))
+                };
+                (effects ??= []).Add((owner, eventEffect.Effect));
+            }
         }
         if (effects is { Count: > 0 })
         {
-            var owner = FindCreature(source) ?? Player.Creature;
-            PendingEffects.Add((owner, new SequenceEffect(effects), null, null));
+            for (var i = effects.Count - 1; i >= 0; i--)
+                PendingEffects.Add((effects[i].Owner, effects[i].Effect, null, null));
         }
     }
 
@@ -242,11 +252,8 @@ internal sealed class GameState
         {
             if (!Definition.Powers[powerId].RemoveWhenApplierDies || !sourceIds.Remove(applierId)) continue;
             if (sourceIds.Count > 0) continue;
-            var amount = owner.PowerAmount(powerId);
-            owner.MutablePowerAppliers.Remove(powerId);
-            owner.MutablePowers.Remove(powerId);
-            owner.SkipNextPowerTriggers.Remove(powerId);
-            Emit(session, "power_removed", applierId, owner.Id, amount);
+            var amount = RemovePower(owner, powerId);
+            if (amount != 0) Emit(session, "power_removed", applierId, owner.Id, amount);
         }
     }
 
@@ -359,6 +366,17 @@ internal sealed class GameState
         }
         else owner.MutablePowers[powerId] = amount - 1;
         if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength--;
+    }
+
+    internal int RemovePower(EntityState owner, ContentId powerId)
+    {
+        var amount = owner.PowerAmount(powerId);
+        if (amount == 0) return 0;
+        owner.MutablePowers.Remove(powerId);
+        owner.MutablePowerAppliers.Remove(powerId);
+        owner.SkipNextPowerTriggers.Remove(powerId);
+        if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength -= amount;
+        return amount;
     }
 
     internal List<CardInstance> GetPile(CardPile pile) => pile switch

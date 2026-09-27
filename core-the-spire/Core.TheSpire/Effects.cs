@@ -25,6 +25,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowerEffect), "removePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
@@ -59,6 +60,7 @@ public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
+public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
 public sealed record ChooseEffect : EffectNode
@@ -81,6 +83,8 @@ public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElemen
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
 [Flags]
 public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 4, SkipHurtAnimation = 8 }
+public enum GameEventActor { Source, Target, Player }
+public sealed record GameEventEffect(EffectNode Effect, GameEventActor Actor = GameEventActor.Source);
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
 public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained }
@@ -325,6 +329,11 @@ internal static class EffectExecutor
                     state.DecrementPower(owner, decrementPower.Power);
                     if (previousAmount > 0)
                         state.Emit(session, "power", owner.Id, owner.Id, -1);
+                    break;
+                case RemovePowerEffect removePower:
+                    var removedAmount = state.RemovePower(owner, removePower.Power);
+                    if (removedAmount != 0)
+                        state.Emit(session, "power_removed", owner.Id, owner.Id, removedAmount);
                     break;
                 case ModifyEnergyEffect energy:
                     state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);

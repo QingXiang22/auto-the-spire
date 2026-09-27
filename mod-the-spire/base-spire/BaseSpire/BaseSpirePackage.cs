@@ -67,6 +67,8 @@ public static class BaseSpireIds
     public static readonly ContentId Anchor = ContentId.Parse("base-spire:anchor");
     public static readonly ContentId Vajra = ContentId.Parse("base-spire:vajra");
     public static readonly ContentId CharonsAshes = ContentId.Parse("base-spire:charons-ashes");
+    public static readonly ContentId SelfFormingClay = ContentId.Parse("base-spire:self-forming-clay");
+    public static readonly ContentId SelfFormingClayPower = ContentId.Parse("base-spire:self-forming-clay-power");
     public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -97,6 +99,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.Vajra, RunRelicRarity.Common));
         registry.Register(new RelicDefinition(BaseSpireIds.CharonsAshes, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
+        registry.Register(new RelicDefinition(BaseSpireIds.SelfFormingClay, RunRelicRarity.Uncommon,
+            InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
         registry.Register(BaseSpireContent.Ironclad());
@@ -105,6 +109,11 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             BaseSpireIds.Strength));
         registry.Register(new PowerDefinition(BaseSpireIds.NoDrawPower, PowerTrigger.AfterPlayerTurnEnd,
             Role: PowerRole.NoDraw, DecrementOnTrigger: true));
+        registry.Register(new PowerDefinition(BaseSpireIds.SelfFormingClayPower, PowerTrigger.AfterPlayerTurnStart,
+            TriggerRuleEffect: new SequenceEffect([
+                new GainBlockEffect(3, BaseSpireIds.SelfFormingClayPower),
+                new RemovePowerEffect(BaseSpireIds.SelfFormingClayPower)
+            ])));
         registry.Register(new PowerDefinition(BaseSpireIds.FeelNoPain, PowerTrigger.AfterCardExhausted,
             TriggerRuleEffect: EffectDsl.Parse("""{"op":"gainBlock","amount":1,"perPowerStack":"base-spire:feel-no-pain"}""")));
         registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
@@ -267,6 +276,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new AnchorRunHook());
         registry.Register(new VajraRunHook());
         registry.Register(new CharonsAshesHook());
+        registry.Register(new SelfFormingClayHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
@@ -330,9 +340,24 @@ internal sealed class CharonsAshesHook : IRuleHook
     public ContentId Id { get; } = ContentId.Parse("base-spire:charons-ashes-hook");
     public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
 
-    public EffectNode? OnEventEffect(RuleHookContext context, GameEvent gameEvent) =>
+    public GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent) =>
         gameEvent.Type == "card_exhausted" && context.HasRelic(BaseSpireIds.CharonsAshes)
-            ? EffectDsl.Parse("""{"op":"attack","amount":3,"target":"allOpponents","properties":"unpowered"}""")
+            ? new GameEventEffect(EffectDsl.Parse(
+                """{"op":"attack","amount":3,"target":"allOpponents","properties":"unpowered"}"""))
+            : null;
+}
+
+internal sealed class SelfFormingClayHook : IRuleHook
+{
+    public ContentId Id { get; } = ContentId.Parse("base-spire:self-forming-clay-hook");
+    public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+    public GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent) =>
+        gameEvent.Type == "damage" && gameEvent.Amount > 0
+        && context.IsPlayerCreature(gameEvent.Target)
+        && context.IsAliveCreature(gameEvent.Target)
+        && context.HasRelic(BaseSpireIds.SelfFormingClay)
+            ? new GameEventEffect(new ApplyPowerEffect(BaseSpireIds.SelfFormingClayPower, 3), GameEventActor.Target)
             : null;
 }
 
