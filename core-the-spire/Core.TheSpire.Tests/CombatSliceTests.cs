@@ -1868,6 +1868,50 @@ public sealed class CombatSliceTests
         var customRunEffectResult = environment.Step(customRunEffectRun,
             new ChooseRunEventOptionAction(RunEventFixturePackage.CustomRunEffectOptionId));
         Assert.Equal(14, customRunEffectResult.Gold);
+
+        var treasureRun = environment.Start(426);
+        environment.Step(treasureRun, new ChooseRunEventOptionAction(RunEventFixturePackage.GoldOptionId));
+        var enteredTreasure = environment.Step(treasureRun, new ChooseMapPointAction("treasure"));
+        Assert.Equal(RunPhase.ResolveTreasure, enteredTreasure.Phase);
+        Assert.Contains(environment.LegalActions(treasureRun), action => action is OpenTreasureChestAction);
+        var goldBeforeChest = enteredTreasure.Gold;
+        var openedChest = environment.Step(treasureRun, new OpenTreasureChestAction());
+        Assert.True(openedChest.Gold - goldBeforeChest is >= 42 and <= 52);
+        Assert.Equal(RunPhase.ResolveRewards, openedChest.Phase);
+        var relicReward = openedChest.RoomStack[^1].Rewards.Single(reward => reward.Kind == RunRewardKind.Relic);
+        Assert.True(relicReward.RelicId.HasValue);
+        var claimedRelic = environment.Step(treasureRun, new ClaimRelicRewardAction(relicReward.Id));
+        Assert.True(claimedRelic.Relics.Contains(relicReward.RelicId!.Value));
+        Assert.Equal(0, claimedRelic.RoomStack[^1].Rewards.Count);
+        var claimedRelicRarity = definition.Relics[relicReward.RelicId.Value].Rarity;
+        Assert.False(treasureRun.State.TakeRelic(claimedRelicRarity, RunRelicPool.Player) == relicReward.RelicId);
+        environment.Step(treasureRun, new ProceedAfterRewardsAction());
+
+        var skippedTreasureRun = environment.Start(427);
+        environment.Step(skippedTreasureRun, new ChooseRunEventOptionAction(RunEventFixturePackage.GoldOptionId));
+        environment.Step(skippedTreasureRun, new ChooseMapPointAction("treasure"));
+        var skippedChest = environment.Step(skippedTreasureRun, new OpenTreasureChestAction());
+        var skippedRelic = skippedChest.RoomStack[^1].Rewards.Single(reward => reward.Kind == RunRewardKind.Relic);
+        environment.Step(skippedTreasureRun, new SkipRewardSetAction());
+        var afterSkippingRelic = environment.Step(skippedTreasureRun, new ProceedAfterRewardsAction());
+        Assert.False(afterSkippingRelic.Relics.Contains(skippedRelic.RelicId!.Value));
+        var skippedRelicRarity = definition.Relics[skippedRelic.RelicId.Value].Rarity;
+        Assert.Equal(skippedRelic.RelicId,
+            skippedTreasureRun.State.TakeRelic(skippedRelicRarity, RunRelicPool.Player));
+
+        var eliteRun = environment.Start(428);
+        environment.Step(eliteRun, new ChooseRunEventOptionAction(RunEventFixturePackage.GoldOptionId));
+        environment.Step(eliteRun, new ChooseMapPointAction("boss"));
+        environment.PushSubRoom(eliteRun, RunRoomType.Elite);
+        eliteRun.State.BindEncounterToCurrentRoom(definition.Encounters[RunEventFixturePackage.EliteEncounterId]);
+        var eliteCombatEnvironment = new CombatEnvironment(definition);
+        var eliteCombat = eliteCombatEnvironment.StartCurrentEncounterForRun(eliteRun);
+        eliteCombatEnvironment.Step(eliteCombat, new PlayCardAction(0, eliteCombat.State.Enemy.Id));
+        var eliteRewards = environment.CompleteCombat(eliteRun, eliteCombat);
+        var eliteRelic = eliteRewards.RoomStack[^1].Rewards.Single(reward => reward.Kind == RunRewardKind.Relic);
+        Assert.True(eliteRelic.RelicId.HasValue);
+        environment.Step(eliteRun, new ClaimRelicRewardAction(eliteRelic.Id));
+        Assert.True(eliteRun.State.Relics.Contains(eliteRelic.RelicId!.Value));
     }
 
     public void ActEncounterPoolsAreDeterministicAndSelectCombatRoomEncounters()
@@ -2556,6 +2600,12 @@ public sealed class CombatSliceTests
         public static readonly ContentId EventId = ContentId.Parse("run-event-fixture:ancient");
         public static readonly ContentId FinalEventId = ContentId.Parse("run-event-fixture:final-event");
         public static readonly ContentId CardId = ContentId.Parse("run-event-fixture:card");
+        public static readonly ContentId EliteEnemyId = ContentId.Parse("run-event-fixture:elite-enemy");
+        public static readonly ContentId EliteEncounterId = ContentId.Parse("run-event-fixture:elite-encounter");
+        public static readonly ContentId CommonRelicId = ContentId.Parse("run-event-fixture:common-relic");
+        public static readonly ContentId UncommonRelicId = ContentId.Parse("run-event-fixture:uncommon-relic");
+        public static readonly ContentId RareRelicId = ContentId.Parse("run-event-fixture:rare-relic");
+        public static readonly ContentId FallbackRelicId = ContentId.Parse("run-event-fixture:circlet");
         public static readonly ContentId TradeOptionId = ContentId.Parse("run-event-fixture:trade");
         public static readonly ContentId GoldOptionId = ContentId.Parse("run-event-fixture:gold");
         public static readonly ContentId MaxHpOptionId = ContentId.Parse("run-event-fixture:max-hp");
@@ -2576,13 +2626,23 @@ public sealed class CombatSliceTests
             registry.Register(new GainGoldRunEffectHandler());
             var map = new ActMapDefinition("entry", "boss",
             [
-                new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["boss"]),
-                new MapPointDefinition("boss", 1, 3, MapPointType.Boss, [])
+                new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["treasure", "boss"]),
+                new MapPointDefinition("treasure", 1, 2, MapPointType.Treasure, ["boss"]),
+                new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
             ]);
             registry.Register(new RunDefinition(RunId,
                 [new ActDefinition(ActId, _ => map, ancientIds: [EventId])],
                 finalEventId: FinalEventId));
             registry.Register(new CharacterDefinition(CharacterId, 30, 10, [CardId, CardId]));
+            registry.Register(new EnemyDefinition(EliteEnemyId, 1, 1,
+                [new EnemyActionDefinition(ContentId.Parse("run-event-fixture:elite-wait"),
+                    new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff)]));
+            registry.Register(new EncounterDefinition(EliteEncounterId, RunRoomType.Elite, [EliteEnemyId]));
+            registry.Register(new RelicDefinition(CommonRelicId, RunRelicRarity.Common));
+            registry.Register(new RelicDefinition(UncommonRelicId, RunRelicRarity.Uncommon));
+            registry.Register(new RelicDefinition(RareRelicId, RunRelicRarity.Rare));
+            registry.Register(new RelicDefinition(FallbackRelicId, RunRelicRarity.None,
+                InSharedPool: false, IsFallback: true, IsStackable: true));
             registry.Register(new CardDefinition(CardId, 1, CardType.Attack, new AttackEffect(5),
                 Rarity: CardRarity.Basic, UpgradedEffect: new AttackEffect(8)));
             registry.Register(new RunEventDefinition(EventId, RunEventKind.Ancient,
@@ -2625,6 +2685,22 @@ public sealed class CombatSliceTests
             public void Execute(RunEffectExecutionContext context, System.Text.Json.JsonElement payload) =>
                 context.GainGold(payload.GetProperty("amount").GetInt32());
         }
+    }
+
+    public void BaseAnchorAndVajraApplyTheirCombatStartEffects()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(817);
+        run.State.Relics.Add(BaseSpireIds.Anchor);
+        run.State.Relics.Add(BaseSpireIds.Vajra);
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+
+        Assert.Equal(10, combat.State.Player.Creature.Block);
+        Assert.Equal(1, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
     }
 
     private sealed class CardRewardOddsHook : IRunHook
@@ -2969,6 +3045,7 @@ internal static class Program
         var tests = new CombatSliceTests();
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
+        tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();

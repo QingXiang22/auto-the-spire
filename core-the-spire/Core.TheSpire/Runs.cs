@@ -4,7 +4,7 @@ namespace CoreTheSpire;
 
 public enum MapPointType { Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient, Start }
 public enum RunRoomType { Unassigned, Monster, Elite, Boss, Treasure, Shop, Event, RestSite, Map }
-public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveEvent, ResolveEventCardSelection, ResolveRestSite, ResolveRewards, ResolveFinalEvent, Terminal }
+public enum RunPhase { ChooseMapPoint, ResolveRoom, ResolveEvent, ResolveEventCardSelection, ResolveRestSite, ResolveTreasure, ResolveRewards, ResolveFinalEvent, Terminal }
 public enum RunOutcome { RoomCleared, PlayerDefeated, RunWon }
 public enum RunStatus { InProgress, Won, Lost }
 
@@ -255,6 +255,8 @@ public sealed record ChooseRunCardAction(string CardInstanceId) : PlayerAction;
 public sealed record SkipRunCardSelectionAction : PlayerAction;
 public sealed record ClaimGoldRewardAction(string RewardId) : PlayerAction;
 public sealed record SkipRewardSetAction : PlayerAction;
+public sealed record OpenTreasureChestAction : PlayerAction;
+public sealed record ClaimRelicRewardAction(string RewardId) : PlayerAction;
 public sealed record ProceedAfterRewardsAction : PlayerAction;
 public sealed record RestSiteHealAction : PlayerAction;
 public sealed record RestSiteUpgradeCardAction(string CardInstanceId) : PlayerAction;
@@ -265,9 +267,9 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
 public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
     IReadOnlyList<RunRoomType> RoomTypes);
 
-public enum RunRewardKind { Gold, Card }
+public enum RunRewardKind { Gold, Card, Relic }
 public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
-    IReadOnlyList<CardInstance> CardOptions);
+    IReadOnlyList<CardInstance> CardOptions, ContentId? RelicId = null);
 public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
 public sealed record RunEventOptionView(ContentId Id, string Label);
 public sealed record PendingRunCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Candidates, bool CanSkip);
@@ -323,11 +325,14 @@ public interface IRunHook
 {
     ContentId Id { get; }
     void AfterCombatVictory(RunHookContext context);
+    void AfterRelicObtained(RunHookContext context, ContentId relicId) { }
+    void AfterCombatStarted(RunHookContext context) { }
     IReadOnlySet<RunRoomType> ModifyUnknownRoomTypes(RunObservation observation,
         IReadOnlySet<RunRoomType> roomTypes) => roomTypes;
     float ModifyUnknownOddsIncrease(RunObservation observation, RunRoomType roomType, float increase) => increase;
     CardRewardOdds ModifyCardRewardOdds(RunObservation observation, RunRoomType roomType,
         CardRewardOdds odds) => odds;
+    bool ShouldGenerateTreasure(RunObservation observation) => true;
     int ModifyRestSiteHealAmount(RunObservation observation, int amount) => amount;
     void AfterRestSiteHeal(RunHookContext context) { }
     void AfterRestSiteSmith(RunHookContext context) { }
@@ -355,21 +360,38 @@ public sealed class RunHookContext
         ArgumentOutOfRangeException.ThrowIfNegative(amount);
         _state.Hp = Math.Min(_state.MaxHp, _state.Hp + amount);
     }
+
+    public void GainBlock(int amount)
+    {
+        var combat = _state.ActiveCombat ?? throw new InvalidOperationException("There is no active combat for this run hook.");
+        EffectExecutor.Execute(combat, combat.State.Player.Creature, new GainBlockEffect(amount));
+    }
+
+    public void ApplyPower(ContentId power, int amount)
+    {
+        var combat = _state.ActiveCombat ?? throw new InvalidOperationException("There is no active combat for this run hook.");
+        EffectExecutor.Execute(combat, combat.State.Player.Creature,
+            new ApplyPowerEffect(power, amount, TargetSelector.Self));
+    }
 }
 
 internal sealed class RunState
 {
     public RunState(RunDefinition definition, CharacterDefinition character, RandomStreams random,
         IReadOnlyDictionary<ContentId, EncounterDefinition>? encounters = null,
-        IReadOnlyDictionary<ContentId, RunEventDefinition>? runEvents = null)
+        IReadOnlyDictionary<ContentId, RunEventDefinition>? runEvents = null,
+        IReadOnlyDictionary<ContentId, RelicDefinition>? relicDefinitions = null)
     {
         Definition = definition;
         Character = character;
         Random = random;
         RewardRandom = random.Get("rewards");
+        TreasureRelicRandom = random.Get("treasure_room_relics");
         CardRarityOdds = new CardRarityOddsState();
         Encounters = encounters;
         RunEvents = runEvents;
+        RelicDefinitions = relicDefinitions;
+        FallbackRelicId = relicDefinitions?.Values.SingleOrDefault(relic => relic.IsFallback)?.Id;
         Hp = character.MaxHp;
         MaxHp = character.MaxHp;
         Gold = character.StartingGold;
@@ -378,6 +400,26 @@ internal sealed class RunState
         NextEventCardInstanceId = Deck.Count;
         Relics = [.. character.StartingRelics];
         Potions = [.. character.StartingPotions];
+        SharedRelicBags = new Dictionary<RunRelicRarity, List<ContentId>>();
+        PlayerRelicBags = new Dictionary<RunRelicRarity, List<ContentId>>();
+        if (relicDefinitions is not null)
+        {
+            var relicPoolRandom = random.Get("up_front");
+            foreach (var rarity in new[] { RunRelicRarity.Common, RunRelicRarity.Uncommon, RunRelicRarity.Rare })
+            {
+                var bag = relicDefinitions.Values.Where(relic => relic.InSharedPool && relic.Rarity == rarity)
+                    .Select(relic => relic.Id).OrderBy(id => id.Value, StringComparer.Ordinal).ToList();
+                relicPoolRandom.Shuffle(bag);
+                SharedRelicBags.Add(rarity, bag);
+            }
+            foreach (var rarity in new[] { RunRelicRarity.Common, RunRelicRarity.Uncommon, RunRelicRarity.Rare })
+            {
+                var bag = relicDefinitions.Values.Where(relic => relic.InSharedPool && relic.Rarity == rarity)
+                    .Select(relic => relic.Id).OrderBy(id => id.Value, StringComparer.Ordinal).ToList();
+                relicPoolRandom.Shuffle(bag);
+                PlayerRelicBags.Add(rarity, bag);
+            }
+        }
         UnknownRoomOdds = definition.UnknownRoomOdds is null ? null : new UnknownRoomOddsState(definition.UnknownRoomOdds);
         RoomContentStates = ActRoomContentState.Generate(definition, Random.Get("up_front"), encounters, runEvents);
         Map = GenerateMap(0);
@@ -411,10 +453,15 @@ internal sealed class RunState
     public CharacterDefinition Character { get; }
     public RandomStreams Random { get; }
     public SeededRandom RewardRandom { get; }
+    public SeededRandom TreasureRelicRandom { get; }
     public CardRarityOddsState CardRarityOdds { get; }
     public int NextRewardCardInstanceId { get; set; }
     public IReadOnlyDictionary<ContentId, EncounterDefinition>? Encounters { get; }
     public IReadOnlyDictionary<ContentId, RunEventDefinition>? RunEvents { get; }
+    public IReadOnlyDictionary<ContentId, RelicDefinition>? RelicDefinitions { get; }
+    public ContentId? FallbackRelicId { get; }
+    public Dictionary<RunRelicRarity, List<ContentId>> SharedRelicBags { get; }
+    public Dictionary<RunRelicRarity, List<ContentId>> PlayerRelicBags { get; }
     public int NextEventCardInstanceId { get; set; }
     public PendingRunCardSelectionState? PendingRunCardSelection { get; set; }
     public UnknownRoomOddsState? UnknownRoomOdds { get; }
@@ -436,6 +483,24 @@ internal sealed class RunState
     public ContentId? CurrentEncounterId => RoomStack.Count == 0 ? null : RoomStack[^1].EncounterId;
     public IReadOnlyList<EncounterEnemySelection> CurrentEncounterSelections =>
         RoomStack.Count == 0 ? Array.Empty<EncounterEnemySelection>() : RoomStack[^1].EnemySelections;
+
+    public ContentId? TakeRelic(RunRelicRarity rarity, RunRelicPool pool)
+    {
+        if (!Enum.IsDefined(pool)) throw new ArgumentOutOfRangeException(nameof(pool));
+        var bags = pool == RunRelicPool.Shared ? SharedRelicBags : PlayerRelicBags;
+        if (!bags.TryGetValue(rarity, out var bag)) return FallbackRelicId;
+        var index = bag.FindIndex(id => !Relics.Contains(id));
+        if (index < 0) return FallbackRelicId;
+        var relicId = bag[index];
+        bag.RemoveAt(index);
+        return relicId;
+    }
+
+    public void RemoveRelicFromBags(ContentId relicId)
+    {
+        foreach (var bag in SharedRelicBags.Values) bag.Remove(relicId);
+        foreach (var bag in PlayerRelicBags.Values) bag.Remove(relicId);
+    }
     public ContentId? CurrentEventId => RoomStack.Count == 0 ? null : RoomStack[^1].EventId;
     public ContentId? SelectEncounter(RunRoomType roomType) => roomType is RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss
         ? ActIndex < RoomContentStates.Count ? RoomContentStates[ActIndex]?.NextEncounter(roomType) : null
@@ -504,7 +569,7 @@ internal sealed record PendingRunCardSelectionState(ChooseRunCardEffect Selectio
     bool IsFinalEvent);
 
 internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount,
-    IReadOnlyList<CardInstance>? CardOptions = null);
+    IReadOnlyList<CardInstance>? CardOptions = null, ContentId? RelicId = null);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -517,12 +582,14 @@ public sealed class RunEnvironment
     private readonly IReadOnlyDictionary<ContentId, CardDefinition>? _cards;
     private readonly IReadOnlyDictionary<ContentId, CardPoolDefinition>? _cardPools;
     private readonly IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> _customRunEffects;
+    private readonly IReadOnlyDictionary<ContentId, RelicDefinition>? _relicDefinitions;
 
     public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
         IEnumerable<CardDefinition>? cards = null, IEnumerable<CardPoolDefinition>? cardPools = null,
         IEnumerable<EncounterDefinition>? encounters = null,
         IEnumerable<RunEventDefinition>? runEvents = null,
-        IEnumerable<ICustomRunEffectHandler>? customRunEffects = null)
+        IEnumerable<ICustomRunEffectHandler>? customRunEffects = null,
+        IEnumerable<RelicDefinition>? relicDefinitions = null)
     {
         _definition = definition ?? throw new ArgumentNullException(nameof(definition));
         _character = character ?? throw new ArgumentNullException(nameof(character));
@@ -533,6 +600,7 @@ public sealed class RunEnvironment
         _runEvents = runEvents?.ToDictionary(runEvent => runEvent.Id);
         _customRunEffects = new ReadOnlyDictionary<ContentId, ICustomRunEffectHandler>(
             customRunEffects?.ToDictionary(handler => handler.Id) ?? []);
+        _relicDefinitions = relicDefinitions?.ToDictionary(relic => relic.Id);
     }
 
     public RunEnvironment(GameDefinition gameDefinition, ContentId runId, ContentId characterId)
@@ -543,17 +611,20 @@ public sealed class RunEnvironment
         _cards = gameDefinition.Cards;
         _cardPools = gameDefinition.CardPools;
         _customRunEffects = gameDefinition.CustomRunEffects;
+        _relicDefinitions = gameDefinition.Relics;
     }
 
     public RunSession Start(uint seed)
     {
-        return new RunSession(new RunState(_definition, _character, new RandomStreams(seed), _encounters, _runEvents));
+        return new RunSession(new RunState(_definition, _character, new RandomStreams(seed),
+            _encounters, _runEvents, _relicDefinitions));
     }
 
     public RunSession Start(string seed)
     {
         ArgumentNullException.ThrowIfNull(seed);
-        return new RunSession(new RunState(_definition, _character, RandomStreams.FromStringSeed(seed), _encounters, _runEvents));
+        return new RunSession(new RunState(_definition, _character, RandomStreams.FromStringSeed(seed),
+            _encounters, _runEvents, _relicDefinitions));
     }
 
     public RunObservation Observe(RunSession session)
@@ -579,7 +650,7 @@ public sealed class RunEnvironment
         frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
         Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
-            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>())).ToArray()),
+            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId)).ToArray()),
         Array.AsReadOnly(frame.EventOptions.Select(option => new RunEventOptionView(option.Id, option.Label)).ToArray()));
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
@@ -616,10 +687,14 @@ public sealed class RunEnvironment
                         RunRewardKind.Gold => [(PlayerAction)new ClaimGoldRewardAction(reward.Id)],
                         RunRewardKind.Card => reward.CardOptions!.Select(card =>
                             (PlayerAction)new ClaimCardRewardAction(reward.Id, card.InstanceId)).ToArray(),
+                        RunRewardKind.Relic => [(PlayerAction)new ClaimRelicRewardAction(reward.Id)],
                         _ => Array.Empty<PlayerAction>()
                     })
                     .Append(new SkipRewardSetAction()).ToArray();
         }
+        if (state.Phase == RunPhase.ResolveTreasure && state.RoomStack.Count > 0
+            && state.RoomStack[^1].RoomType == RunRoomType.Treasure)
+            return [new OpenTreasureChestAction()];
         if (state.Phase == RunPhase.ResolveRestSite && state.RoomStack.Count > 0
             && state.RoomStack[^1].RoomType == RunRoomType.RestSite)
         {
@@ -641,6 +716,8 @@ public sealed class RunEnvironment
         var state = session.State;
         if (state.Phase == RunPhase.ResolveRewards)
             return ResolveRewardAction(session, action);
+        if (state.Phase == RunPhase.ResolveTreasure)
+            return OpenTreasureChest(session, action);
         if (state.Phase == RunPhase.ResolveEvent)
             return ResolveRunEventAction(session, action);
         if (state.Phase == RunPhase.ResolveEventCardSelection)
@@ -665,6 +742,33 @@ public sealed class RunEnvironment
         state.Phase = RunPhase.ResolveRoom;
         if (frame.EventOptions.Count > 0) state.Phase = RunPhase.ResolveEvent;
         if (roomType == RunRoomType.RestSite) state.Phase = RunPhase.ResolveRestSite;
+        if (roomType == RunRoomType.Treasure) state.Phase = RunPhase.ResolveTreasure;
+        return Observe(session);
+    }
+
+    private RunObservation OpenTreasureChest(RunSession session, PlayerAction action)
+    {
+        var state = session.State;
+        if (state.RoomStack.Count == 0 || state.RoomStack[^1].RoomType != RunRoomType.Treasure
+            || action is not OpenTreasureChestAction || !LegalActions(session).Contains(action))
+            throw new InvalidOperationException("There is no unopened treasure chest.");
+
+        var observation = Observe(session);
+        if (_runHooks.All(hook => hook.ShouldGenerateTreasure(observation)))
+        {
+            var gold = state.RewardRandom.NextInt(42, 53);
+            state.Gold = checked(state.Gold + gold);
+            var rarityRoll = state.TreasureRelicRandom.NextFloat();
+            var rarity = rarityRoll < 0.5f ? RunRelicRarity.Common
+                : rarityRoll < 0.83f ? RunRelicRarity.Uncommon : RunRelicRarity.Rare;
+            if (state.TakeRelic(rarity, RunRelicPool.Shared) is { } relicId)
+                state.RoomStack[^1].Rewards.Add(new RunRewardState("treasure:relic",
+                    RunRewardKind.Relic, 0, RelicId: relicId));
+        }
+
+        if (state.RoomStack[^1].Rewards.Count == 0)
+            return FinishCompletedRoom(session, state.RoomStack[^1]);
+        state.Phase = RunPhase.ResolveRewards;
         return Observe(session);
     }
 
@@ -982,7 +1086,18 @@ public sealed class RunEnvironment
             if (options.Count > 0)
                 frame.Rewards.Add(new RunRewardState($"{encounterId}:cards", RunRewardKind.Card, 0, options));
         }
+        if (frame.RoomType == RunRoomType.Elite
+            && state.TakeRelic(RollRelicRarity(state.RewardRandom), RunRelicPool.Player) is { } relicId)
+            frame.Rewards.Add(new RunRewardState($"{encounterId}:relic", RunRewardKind.Relic, 0,
+                RelicId: relicId));
         return true;
+    }
+
+    private static RunRelicRarity RollRelicRarity(SeededRandom random)
+    {
+        var roll = random.NextFloat();
+        return roll < 0.5f ? RunRelicRarity.Common
+            : roll < 0.83f ? RunRelicRarity.Uncommon : RunRelicRarity.Rare;
     }
 
     private RunObservation ResolveRewardAction(RunSession session, PlayerAction action)
@@ -1008,6 +1123,24 @@ public sealed class RunEnvironment
                 ?? throw new InvalidOperationException($"Card option '{claimCard.CardInstanceId}' is not available.");
             state.Deck.Add(card);
             frame.Rewards.Remove(reward);
+            return Observe(session);
+        }
+        if (action is ClaimRelicRewardAction claimRelic)
+        {
+            var reward = frame.Rewards.SingleOrDefault(item =>
+                item.Id == claimRelic.RewardId && item.Kind == RunRewardKind.Relic)
+                ?? throw new InvalidOperationException($"Relic reward '{claimRelic.RewardId}' is not available.");
+            var relicId = reward.RelicId
+                ?? throw new InvalidOperationException($"Relic reward '{claimRelic.RewardId}' has no relic.");
+            var isStackable = _relicDefinitions?.TryGetValue(relicId, out var relicDefinition) == true
+                && relicDefinition.IsStackable;
+            if (state.Relics.Contains(relicId) && !isStackable)
+                throw new InvalidOperationException($"Relic '{relicId}' is already owned.");
+            state.Relics.Add(relicId);
+            if (!isStackable) state.RemoveRelicFromBags(relicId);
+            frame.Rewards.Remove(reward);
+            foreach (var hook in _runHooks)
+                hook.AfterRelicObtained(new RunHookContext(state, hook.Id), relicId);
             return Observe(session);
         }
         if (action is SkipRewardSetAction && frame.Rewards.Count > 0)

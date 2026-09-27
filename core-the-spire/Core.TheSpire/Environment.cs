@@ -64,6 +64,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             shuffledDeck.Take(5), spawns, shuffledDeck.Skip(5));
         session.RunOwner = runSession;
         run.ActiveCombat = session;
+        foreach (var hook in definition.RunHooks)
+            hook.AfterCombatStarted(new RunHookContext(run, hook.Id));
         return session;
     }
 
