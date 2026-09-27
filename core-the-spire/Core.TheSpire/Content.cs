@@ -967,6 +967,9 @@ public interface IRuleHook
     void OnEvent(RuleHookContext context, GameEvent gameEvent);
     /// <summary>Returns an effect to queue after this event with an actor selected from the event.</summary>
     GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent) => null;
+    /// <summary>Transforms the multiplier used when a powered move hits a Vulnerable creature.</summary>
+    decimal ModifyVulnerableMultiplier(RuleHookContext context, string dealerId, string targetId,
+        DamageProperties properties, decimal currentMultiplier) => currentMultiplier;
     bool ShouldEtherealTrigger(RuleHookContext context, CardInstance card) => true;
     bool ShouldFlush(RuleHookContext context, string playerId) => true;
     bool ShouldClearBlock(RuleHookContext context, string creatureId) => true;
