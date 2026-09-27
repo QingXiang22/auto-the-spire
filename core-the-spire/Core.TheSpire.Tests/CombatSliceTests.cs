@@ -419,6 +419,22 @@ public sealed class CombatSliceTests
         Assert.Equal(0, session.Random.Get("enemy-ai").Counter);
     }
 
+    public void ContentDslRejectsUnsupportedSchemasAndUnresolvedVariants()
+    {
+        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEnemy(
+            """{"schemaVersion":2,"enemy":{}}"""));
+        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEnemy(
+            """{"schemaVersion":1,"enemy":{"id":"dsl-fixture:enemy","minHp":{"$variant":{"tough":1}},"maxHp":1,"actions":[]}}"""));
+        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEnemy(
+            """{"schemaVersion":1,"enemy":{"id":"dsl-fixture:enemy","minHp":{"$variant":{"normal":1}},"maxHp":1,"actions":[]}}"""));
+        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEncounters(
+            """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":[],"formations":[] }]}"""));
+        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEncounters(
+            """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemySlots":[{"enemyChoices":["dsl-fixture:enemy"],"uniqueChoiceGroup":"dsl-fixture:group"}]}]}"""));
+        Assert.Throws<System.Text.Json.JsonException>(() => ContentDsl.ParseEncounters(
+            """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]},{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]}] }"""));
+    }
+
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
     {
         var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -3641,6 +3657,7 @@ internal static class Program
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
+        tests.ContentDslRejectsUnsupportedSchemasAndUnresolvedVariants();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();

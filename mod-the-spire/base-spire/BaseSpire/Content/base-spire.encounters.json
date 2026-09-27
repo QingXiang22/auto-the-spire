@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "encounters": [
+    {
+      "id": "base-spire:nibbits-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:nibbit"],
+      "isWeak": true,
+      "tags": ["base-spire:nibbit"]
+    },
+    {
+      "id": "base-spire:nibbits-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:nibbit", "base-spire:nibbit"],
+      "tags": ["base-spire:nibbit"]
+    },
+    {
+      "id": "base-spire:slimes-weak",
+      "roomType": "monster",
+      "enemySlots": [
+        {
+          "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-small-slimes"
+        },
+        {
+          "enemyChoices": ["base-spire:leaf-slime-medium", "base-spire:twig-slime-medium"],
+          "chooseRandomly": true
+        },
+        {
+          "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-small-slimes"
+        }
+      ],
+      "isWeak": true,
+      "tags": ["base-spire:slime"]
+    },
+    {
+      "id": "base-spire:slimes-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": [
+            "base-spire:twig-slime-medium",
+            "base-spire:leaf-slime-medium",
+            "base-spire:leaf-slime-small",
+            "base-spire:twig-slime-small"
+          ]
+        },
+        {
+          "enemyIds": [
+            "base-spire:twig-slime-medium",
+            "base-spire:leaf-slime-medium",
+            "base-spire:twig-slime-small",
+            "base-spire:leaf-slime-small"
+          ]
+        }
+      ],
+      "tags": ["base-spire:slime"]
+    }
+  ]
+}
