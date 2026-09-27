@@ -454,6 +454,18 @@ public sealed class CombatSliceTests
         var behavior = nibbit.Members.OfType<DslPropertyNode>().Single(property => property.Name == "behavior");
         Assert.True(behavior.Value is DslCallNode { Name: "startByRole" });
 
+        var cultist = declarations.Single(declaration => declaration.Kind == "enemy" && declaration.Name == "DampCultist");
+        var cultistBehavior = cultist.Members.OfType<DslPropertyNode>()
+            .Single(property => property.Name == "behavior").Value;
+        Assert.True(cultistBehavior is DslCallNode { Name: "cycle", Arguments.Count: 2 } cycle
+            && cycle.Arguments.All(argument => argument.Value is DslNameNode));
+
+        var twigSlime = declarations.Single(declaration => declaration.Kind == "enemy" && declaration.Name == "TwigSlimeSmall");
+        var twigBehavior = twigSlime.Members.OfType<DslPropertyNode>()
+            .Single(property => property.Name == "behavior").Value;
+        Assert.True(twigBehavior is DslCallNode { Name: "loop", Arguments.Count: 1 } loop
+            && loop.Arguments[0].Value is DslNameNode { Name: "tackle" });
+
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
         Assert.Equal(4, parseError.Location.Line);

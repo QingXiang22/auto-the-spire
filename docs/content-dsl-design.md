@@ -40,6 +40,21 @@ The current parser only proves that this source is syntactically readable and th
 
 The `.spire` prototype currently supports `#` comments, strings, signed integer/decimal literals, booleans, names, lists, calls, positional and named call arguments, nested declarations, and properties. It does not yet support imports, package patches, ranges as syntax, infix expressions, multiline effect blocks, or semantic validation. The parser's generic call node is a syntax convenience, not a runtime instruction.
 
+### Semantic expression categories
+
+The type checker must distinguish four expression categories even though the parser initially represents each as a generic call or name:
+
+| Category | Describes | Examples from the source model |
+| --- | --- | --- |
+| Content reference | A named definition in the current or imported package | `Ritual`, `Slimed`, `Nibbit` |
+| Value expression | A value selected from upgrade or difficulty context | `range(52, 54)`, `variants(default=..., tough=...)`, `upgrades(base=6, upgraded=9)` |
+| Effect expression | An ordered operation that changes game state | `attack(...)`, `applyPower(...)`, `sequence(...)`, `draw(...)` |
+| Behavior or lineup expression | A choice over named moves or enemy formations | `cycle(incantation, darkStrike)`, `chooseWithoutRepeat(...)`, `chooseFormation(...)` |
+
+Effects belong to cards, powers, or named enemy moves. Enemy behavior selects named moves; it should not inline a second copy of a move's effect. Encounter lineups select enemy references and roles; they do not define enemy effects. This separation lets a compiler type-check each language without making the execution engine interpret the source syntax. It also makes patches target semantic units such as a move or lineup slot.
+
+The local name rule for this first package is: an unqualified name resolves within the declaring package, then imports, with ambiguity rejected. The compiler will turn it into a namespaced content ID. Names used as enum-like literals (`self`, `player`, `enemy`, `front`) are interpreted by the expected argument type, never resolved as content IDs by spelling alone.
+
 ### Semantic model and compilation boundary
 
 The compiler should lower source through three named stages:

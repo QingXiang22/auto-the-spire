@@ -21,10 +21,11 @@ package base-spire {
 
   enemy DampCultist {
     hp = variants(default=range(52, 54), tough=range(51, 53))
-    behavior = cycle(
-      action(incantation, applyPower(Ritual, 5, self)),
-      action(darkStrike, attack(player, variants(default=1, deadly=3)))
+    moves = actions(
+      incantation = applyPower(Ritual, 5, self),
+      darkStrike = attack(player, variants(default=1, deadly=3))
     )
+    behavior = cycle(incantation, darkStrike)
   }
 
   enemy Nibbit {
@@ -56,7 +57,8 @@ package base-spire {
 
   enemy TwigSlimeSmall {
     hp = variants(default=range(7, 11), tough=range(8, 12))
-    behavior = loop(attack(player, variants(default=4, deadly=5)))
+    moves = actions(tackle = attack(player, variants(default=4, deadly=5)))
+    behavior = loop(tackle)
   }
 
   enemy LeafSlimeMedium {
