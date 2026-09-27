@@ -2,6 +2,11 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:cultists-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:calcified-cultist", "base-spire:damp-cultist"]
+    },
+    {
       "id": "base-spire:nibbits-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:nibbit"],

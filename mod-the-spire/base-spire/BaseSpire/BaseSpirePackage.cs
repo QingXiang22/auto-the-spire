@@ -188,26 +188,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
             Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));
 
-        var ritual = deadlyEnemies ? 6 : 5;
-        var attack = deadlyEnemies ? 3 : 1;
-        var incantation = new EnemyActionDefinition(ContentId.Parse("base-spire:damp-cultist-incantation"),
-            new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff, AppliedPower: BaseSpireIds.Ritual, AppliedPowerAmount: ritual);
-        var darkStrike = new EnemyActionDefinition(ContentId.Parse("base-spire:damp-cultist-dark-strike"),
-            new AttackEffect(attack, TargetSelector.FirstEnemy), IntentKind.Attack, IntentDamage: attack);
-        registry.Register(new EnemyDefinition(BaseSpireIds.DampCultist,
-            toughEnemies ? 51 : 52, toughEnemies ? 53 : 54, [incantation, darkStrike]));
-
-        var calcifiedAttack = deadlyEnemies ? 11 : 9;
-        var calcifiedIncantation = new EnemyActionDefinition(ContentId.Parse("base-spire:calcified-cultist-incantation"),
-            new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
-            AppliedPower: BaseSpireIds.Ritual, AppliedPowerAmount: 2);
-        var calcifiedDarkStrike = new EnemyActionDefinition(ContentId.Parse("base-spire:calcified-cultist-dark-strike"),
-            new AttackEffect(calcifiedAttack), IntentKind.Attack, IntentDamage: calcifiedAttack);
-        registry.Register(new EnemyDefinition(BaseSpireIds.CalcifiedCultist,
-            toughEnemies ? 39 : 38, toughEnemies ? 42 : 41, [calcifiedIncantation, calcifiedDarkStrike]));
-        registry.Register(new EncounterDefinition(BaseSpireIds.CultistsNormal, RunRoomType.Monster,
-            [BaseSpireIds.CalcifiedCultist, BaseSpireIds.DampCultist]));
-
         var crawlerDamage = deadlyEnemies ? 6 : 4;
         var firstAcidGoop = ContentId.Parse("base-spire:fuzzy-wurm-first-acid-goop");
         var inhale = ContentId.Parse("base-spire:fuzzy-wurm-inhale");
@@ -252,6 +232,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
 
         foreach (var fileName in new[]
         {
+            "damp-cultist.enemy.json", "calcified-cultist.enemy.json",
             "leaf-slime-small.enemy.json", "twig-slime-small.enemy.json",
             "leaf-slime-medium.enemy.json", "twig-slime-medium.enemy.json"
         })
