@@ -56,6 +56,7 @@ public static class BaseSpireIds
     public static readonly ContentId LeafSlimeMedium = ContentId.Parse("base-spire:leaf-slime-medium");
     public static readonly ContentId TwigSlimeMedium = ContentId.Parse("base-spire:twig-slime-medium");
     public static readonly ContentId SlimesWeak = ContentId.Parse("base-spire:slimes-weak");
+    public static readonly ContentId SlimesNormal = ContentId.Parse("base-spire:slimes-normal");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId FirePotion = ContentId.Parse("base-spire:fire-potion");
@@ -306,6 +307,17 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             EncounterEnemySlot.ChooseOne(mediumSlimeChoices),
             EncounterEnemySlot.ChooseOne(smallSlimeChoices, smallSlimeGroup)
         ], isWeak: true, tags: [ContentId.Parse("base-spire:slime")]));
+        registry.Register(EncounterDefinition.WithFormations(BaseSpireIds.SlimesNormal, RunRoomType.Monster,
+        [
+            new EncounterFormationChoice([
+                BaseSpireIds.TwigSlimeMedium, BaseSpireIds.LeafSlimeMedium,
+                BaseSpireIds.LeafSlimeSmall, BaseSpireIds.TwigSlimeSmall
+            ]),
+            new EncounterFormationChoice([
+                BaseSpireIds.TwigSlimeMedium, BaseSpireIds.LeafSlimeMedium,
+                BaseSpireIds.TwigSlimeSmall, BaseSpireIds.LeafSlimeSmall
+            ])
+        ], tags: [ContentId.Parse("base-spire:slime")]));
 
         registry.Register(new BurningBloodRunHook());
         registry.Register(new AnchorRunHook());

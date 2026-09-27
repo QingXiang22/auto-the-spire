@@ -448,16 +448,41 @@ public sealed class EncounterDefinition
     private EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<EncounterEnemySlot> enemySlots,
         bool isWeak, IEnumerable<ContentId>? tags,
         IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex,
-        bool shouldGiveRewards, int? minGoldReward, int? maxGoldReward)
+        bool shouldGiveRewards, int? minGoldReward, int? maxGoldReward,
+        IEnumerable<EncounterFormationChoice>? formations = null)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(enemySlots);
         var slots = enemySlots.ToArray();
+        var copiedFormations = formations?.ToArray() ?? [];
         if (roomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss))
             throw new ArgumentOutOfRangeException(nameof(roomType), "Encounters must be Monster, Elite, or Boss rooms.");
-        if (slots.Length == 0) throw new ArgumentException("An encounter must contain at least one enemy.", nameof(enemySlots));
         if (slots.Any(slot => slot is null)) throw new ArgumentException("Encounter slots cannot be null.", nameof(enemySlots));
-        ValidateChoiceGroups(slots);
+        if (copiedFormations.Any(formation => formation is null))
+            throw new ArgumentException("Encounter formations cannot be null.", nameof(formations));
+        if (copiedFormations.Length > 0)
+        {
+            if (slots.Length != 0)
+                throw new ArgumentException("An encounter must use fixed slots or complete formations, not both.", nameof(enemySlots));
+            if (copiedFormations.Select(formation => formation.EnemyIds.Count).Distinct().Count() != 1)
+                throw new ArgumentException("Encounter formation choices must contain the same number of enemies.", nameof(formations));
+            long totalWeight = 0;
+            try
+            {
+                foreach (var formation in copiedFormations) totalWeight = checked(totalWeight + formation.Weight);
+            }
+            catch (OverflowException)
+            {
+                throw new ArgumentOutOfRangeException(nameof(formations), "Formation weights exceed supported range.");
+            }
+            if (totalWeight > int.MaxValue)
+                throw new ArgumentOutOfRangeException(nameof(formations), "Formation weights exceed supported range.");
+        }
+        else
+        {
+            if (slots.Length == 0) throw new ArgumentException("An encounter must contain at least one enemy.", nameof(enemySlots));
+            ValidateChoiceGroups(slots);
+        }
         var encounterTags = tags?.ToArray() ?? [];
         foreach (var tag in encounterTags) tag.Validate();
         var startingActions = startingActionsByEnemyIndex is null
@@ -465,13 +490,15 @@ public sealed class EncounterDefinition
             : new Dictionary<int, ContentId>(startingActionsByEnemyIndex);
         foreach (var (enemyIndex, actionId) in startingActions)
         {
-            if (enemyIndex < 0 || enemyIndex >= slots.Length)
+            var slotCount = copiedFormations.Length > 0 ? copiedFormations[0].EnemyIds.Count : slots.Length;
+            if (enemyIndex < 0 || enemyIndex >= slotCount)
                 throw new ArgumentOutOfRangeException(nameof(startingActionsByEnemyIndex), "Starting action index must refer to an enemy in this encounter.");
             actionId.Validate();
         }
         Id = id;
         RoomType = roomType;
         EnemySlots = Array.AsReadOnly(slots);
+        Formations = Array.AsReadOnly(copiedFormations);
         IsWeak = isWeak;
         ShouldGiveRewards = shouldGiveRewards;
         var defaultGold = roomType switch
@@ -492,6 +519,10 @@ public sealed class EncounterDefinition
     public ContentId Id { get; }
     public RunRoomType RoomType { get; }
     public IReadOnlyList<EncounterEnemySlot> EnemySlots { get; }
+    public IReadOnlyList<EncounterFormationChoice> Formations { get; }
+    public IReadOnlyList<ContentId> PossibleEnemyIds => Formations.Count > 0
+        ? Array.AsReadOnly(Formations.SelectMany(formation => formation.EnemyIds).Distinct().ToArray())
+        : Array.AsReadOnly(EnemySlots.SelectMany(slot => slot.EnemyChoices).Distinct().ToArray());
     public bool IsWeak { get; }
     public bool ShouldGiveRewards { get; }
     public int MinGoldReward { get; }
@@ -506,9 +537,36 @@ public sealed class EncounterDefinition
         new(id, roomType, enemySlots, isWeak, tags, startingActionsByEnemyIndex,
             shouldGiveRewards, minGoldReward, maxGoldReward);
 
+    public static EncounterDefinition WithFormations(ContentId id, RunRoomType roomType,
+        IEnumerable<EncounterFormationChoice> formations, bool isWeak = false, IEnumerable<ContentId>? tags = null,
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
+        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null) =>
+        new(id, roomType, Array.Empty<EncounterEnemySlot>(), isWeak, tags, startingActionsByEnemyIndex,
+            shouldGiveRewards, minGoldReward, maxGoldReward, formations);
+
     public IReadOnlyList<EncounterEnemySelection> SelectEnemies(SeededRandom random)
     {
         ArgumentNullException.ThrowIfNull(random);
+        if (Formations.Count > 0)
+        {
+            var totalWeight = Formations.Sum(formation => formation.Weight);
+            var roll = random.NextInt(totalWeight);
+            EncounterFormationChoice? selectedFormation = null;
+            foreach (var formation in Formations)
+            {
+                if (roll < formation.Weight)
+                {
+                    selectedFormation = formation;
+                    break;
+                }
+                roll -= formation.Weight;
+            }
+            if (selectedFormation is null)
+                throw new InvalidOperationException($"Encounter '{Id}' formation selection exceeded its total weight.");
+            return Array.AsReadOnly(selectedFormation.EnemyIds.Select((enemyId, index) =>
+                new EncounterEnemySelection(enemyId,
+                    StartingActionsByEnemyIndex.TryGetValue(index, out var overrideId) ? overrideId : null)).ToArray());
+        }
         var selectedByGroup = new Dictionary<ContentId, HashSet<ContentId>>();
         var selected = new EncounterEnemySelection[EnemySlots.Count];
         for (var i = 0; i < EnemySlots.Count; i++)
@@ -532,6 +590,10 @@ public sealed class EncounterDefinition
         }
         return Array.AsReadOnly(selected);
     }
+
+    internal IReadOnlyList<ContentId> GetPossibleEnemyIdsAtSlot(int index) => Formations.Count > 0
+        ? Array.AsReadOnly(Formations.Select(formation => formation.EnemyIds[index]).Distinct().ToArray())
+        : EnemySlots[index].EnemyChoices;
 
     private static EncounterEnemySlot[] ToFixedSlots(IEnumerable<ContentId> enemyIds)
     {
@@ -811,12 +873,12 @@ public sealed class ContentRegistry
             throw new InvalidOperationException("Only one fallback relic may be registered.");
         foreach (var encounter in _encounters.Values)
         {
-            foreach (var enemyId in encounter.EnemySlots.SelectMany(slot => slot.EnemyChoices).Distinct())
+            foreach (var enemyId in encounter.PossibleEnemyIds)
                 if (!_enemies.ContainsKey(enemyId))
                     throw new InvalidOperationException($"Encounter '{encounter.Id}' references unknown enemy '{enemyId}'.");
             foreach (var (enemyIndex, actionId) in encounter.StartingActionsByEnemyIndex)
             {
-                foreach (var enemyId in encounter.EnemySlots[enemyIndex].EnemyChoices)
+                foreach (var enemyId in encounter.GetPossibleEnemyIdsAtSlot(enemyIndex))
                     if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
                         throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
             }
