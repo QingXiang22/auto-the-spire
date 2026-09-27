@@ -30,6 +30,7 @@ package base-spire {
   card StrikeIronclad {
     type = attack
     rarity = basic
+    tags = [Strike]
     cost = 1
     target = enemy
     play = attack(6)
@@ -243,6 +244,7 @@ package base-spire {
   card PommelStrike {
     type = attack
     rarity = common
+    tags = [Strike]
     cost = 1
     target = enemy
     play = sequence(attack(9), draw(1))
@@ -285,6 +287,7 @@ package base-spire {
   card TwinStrike {
     type = attack
     rarity = common
+    tags = [Strike]
     cost = 1
     target = enemy
     play = repeat(2, attack(5))
@@ -430,6 +433,7 @@ package base-spire {
   card AshenStrike {
     type = attack
     rarity = uncommon
+    tags = [Strike]
     cost = 1
     target = enemy
     play = scaledAttack(6, 3, count=pileCount(exhaust))
@@ -463,5 +467,32 @@ package base-spire {
     canGenerateInCombat = false
     play = heal(10)
     upgradedPlay = heal(13)
+  }
+
+  card PerfectedStrike {
+    type = attack
+    rarity = common
+    tags = [Strike]
+    cost = 2
+    target = enemy
+    play = scaledAttack(6, 2, count=cardsWithTag(Strike))
+    upgradedPlay = scaledAttack(6, 3, count=cardsWithTag(Strike))
+  }
+
+  card FightMe {
+    type = attack
+    rarity = uncommon
+    cost = 2
+    target = enemy
+    play = sequence(
+      repeat(2, attack(5)),
+      applyPower(Strength, 3, target=self),
+      applyPower(Strength, 1, target=target)
+    )
+    upgradedPlay = sequence(
+      repeat(2, attack(6)),
+      applyPower(Strength, 4, target=self),
+      applyPower(Strength, 1, target=target)
+    )
   }
 }

@@ -28,7 +28,7 @@ public static class SpireCombatDslCompiler
             var properties = ReadProperties(declaration);
             RequireOnlyProperties(declaration, properties,
                 "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay",
-                "canGenerateInCombat");
+                "canGenerateInCombat", "tags");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -51,10 +51,12 @@ public static class SpireCombatDslCompiler
             var upgradedPlay = properties.TryGetValue("upgradedPlay", out var upgradedPlayNode)
                 ? CompileEffect(upgradedPlayNode)
                 : null;
+            var tags = properties.TryGetValue("tags", out var tagsNode)
+                ? ParseTags(tagsNode) : Array.Empty<ContentId>();
             return new CardDefinition(Id(declaration.Name), cost, type, play, keywords, target, rarity,
                 upgradedPlay, upgradedCost, costKind,
                 properties.TryGetValue("canGenerateInCombat", out var canGenerateNode)
-                    ? Boolean(canGenerateNode) : true);
+                    ? Boolean(canGenerateNode) : true) { Tags = tags };
         }
 
         private EffectNode CompileEffect(DslValueNode node)
@@ -207,6 +209,9 @@ public static class SpireCombatDslCompiler
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1);
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))));
+                case "cardsWithTag":
+                    CheckShape(call, 1, 1);
+                    return new TaggedCardCountSource(TagId(Argument(call, 0)));
                 default:
                     throw Error(call.Location, $"Unknown attack count source '{call.Name}'.");
             }
@@ -266,6 +271,22 @@ public static class SpireCombatDslCompiler
             }
             return keywords;
         }
+
+        private IReadOnlyList<ContentId> ParseTags(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Card tags must be a list.");
+            var tags = list.Items.Select(TagId).ToArray();
+            if (tags.Distinct().Count() != tags.Length)
+                throw Error(node.Location, "Card tags must be unique.");
+            return Array.AsReadOnly(tags);
+        }
+
+        private ContentId TagId(DslValueNode node) => node switch
+        {
+            DslNameNode name => Id(name.Name),
+            DslStringNode text => ContentId.Parse(text.Value),
+            _ => throw Error(node.Location, "Card tag must be a local name or qualified ID string.")
+        };
 
         private static TargetSelector ParseTarget(DslValueNode node) => Name(node) switch
         {

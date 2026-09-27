@@ -45,9 +45,11 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Atta
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCardCountSource), "pile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TaggedCardCountSource), "taggedCards")]
 public abstract record AttackCountSource;
 public sealed record PileCardCountSource(CardPile Pile) : AttackCountSource;
 public sealed record TargetPowerCountSource(ContentId Power) : AttackCountSource;
+public sealed record TaggedCardCountSource(ContentId Tag) : AttackCountSource;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -116,6 +118,8 @@ public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : Effec
 
 internal static class EffectExecutor
 {
+    private static readonly CardPile[] AllCardPiles = Enum.GetValues<CardPile>();
+
     public static void Execute(GameSession session, EntityState owner, EffectNode effect, EntityState? target = null,
         CardInstance? selectedCard = null)
     {
@@ -190,6 +194,9 @@ internal static class EffectExecutor
                     {
                         PileCardCountSource pile => state.GetPile(pile.Pile).Count,
                         TargetPowerCountSource power => scaledVictim.PowerAmount(power.Power),
+                        TaggedCardCountSource tag => AllCardPiles
+                            .Sum(pile => state.GetPile(pile).Count(card =>
+                                state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
                         _ => throw new InvalidOperationException("Unsupported attack count source.")
                     };
                     ApplyAttack(session, owner, scaledVictim,

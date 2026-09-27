@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(43, ironcladPool.Count);
+        Assert.Equal(45, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -437,13 +437,17 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(45, cards.Count);
+        Assert.Equal(47, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
                 or CardRarity.Uncommon or CardRarity.Rare or CardRarity.Ancient)
             .Select(card => card.Id), pool);
         Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
+        Assert.Equal(BaseSpireIds.StrikeTag, cards.Single(card => card.Id == BaseSpireIds.StrikeIronclad)
+            .Tags.Single());
+        Assert.True(cards.Single(card => card.Id == BaseSpireIds.PerfectedStrike).Effect is
+            ScaledAttackEffect { Count: TaggedCardCountSource });
 
         var strike = cards.Single(card => card.Id == BaseSpireIds.StrikeIronclad);
         Assert.Equal(TargetSelector.SelectedTarget, strike.Target);
@@ -683,6 +687,58 @@ public sealed class CombatSliceTests
         env.Step(state, new PlayCardAction(0, state.State.Player.Id));
         Assert.Equal(50, state.State.Player.Creature.Hp);
         Assert.Equal(BaseSpireIds.NotYet, state.State.Player.ExhaustPile.Single());
+    }
+
+    public void PerfectedStrikeCountsTaggedCardsAcrossAllFiveCombatPiles()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var env = new CombatEnvironment(definition);
+        var state = env.Start(69, "ironclad", 56, 65,
+            [BaseSpireIds.PerfectedStrike, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [BaseSpireIds.PommelStrike]);
+        state.State.Player.MutableDiscardPile.Add(new CardInstance("tagged-discard", BaseSpireIds.TwinStrike));
+        state.State.Player.MutableExhaustPile.Add(new CardInstance("tagged-exhaust", BaseSpireIds.AshenStrike));
+        env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+        Assert.Equal(37, state.State.Enemy.Hp);
+        Assert.Equal(BaseSpireIds.StrikeTag, definition.Cards[BaseSpireIds.PerfectedStrike].Tags.Single());
+
+        var upgraded = env.Start(70, "ironclad", 56, 65, [BaseSpireIds.PerfectedStrike],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("perfected+", BaseSpireIds.PerfectedStrike, 1);
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+        Assert.Equal(44, upgraded.State.Enemy.Hp);
+        Assert.Equal(definition.Cards[BaseSpireIds.PerfectedStrike].Effect,
+            EffectDsl.Parse(EffectDsl.Serialize(definition.Cards[BaseSpireIds.PerfectedStrike].Effect)));
+
+        var crossPackageTag = DslSourceParser.Parse(
+            "package fixture { card Tagged { type = attack rarity = common cost = 1 target = enemy " +
+            "tags = [\"base-spire:strike\"] play = scaledAttack(1, 1, " +
+            "count=cardsWithTag(\"base-spire:strike\")) } }", "tagged.spire");
+        var tagged = SpireCombatDslCompiler.CompileCards(crossPackageTag).Single();
+        Assert.Equal(BaseSpireIds.StrikeTag, tagged.Tags.Single());
+        Assert.Equal(new TaggedCardCountSource(BaseSpireIds.StrikeTag),
+            ((ScaledAttackEffect)tagged.Effect).Count);
+    }
+
+    public void FightMeGrantsStrengthAfterItsTwoHits()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(71, "ironclad", 56, 65, [BaseSpireIds.FightMe],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+        Assert.Equal(43, state.State.Enemy.Hp);
+        Assert.Equal(2, state.State.Events.Count(gameEvent => gameEvent.Type == "damage"));
+        Assert.Equal(3, state.State.Player.Creature.Strength);
+        Assert.Equal(1, state.State.Enemy.Strength);
+
+        var upgraded = env.Start(72, "ironclad", 56, 65, [BaseSpireIds.FightMe],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("fight-me+", BaseSpireIds.FightMe, 1);
+        env.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+        Assert.Equal(41, upgraded.State.Enemy.Hp);
+        Assert.Equal(4, upgraded.State.Player.Creature.Strength);
+        Assert.Equal(1, upgraded.State.Enemy.Strength);
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -4063,6 +4119,8 @@ internal static class Program
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();
         tests.ScaledAttacksAndTargetPredicatesUseLiveCombatState();
         tests.NotYetHealsAndKeepsItsCombatGenerationRestriction();
+        tests.PerfectedStrikeCountsTaggedCardsAcrossAllFiveCombatPiles();
+        tests.FightMeGrantsStrengthAfterItsTwoHits();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
