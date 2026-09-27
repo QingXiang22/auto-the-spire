@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "enemy": {
+    "id": "base-spire:leaf-slime-small",
+    "minHp": { "$variant": { "default": 11, "tough": 12 } },
+    "maxHp": { "$variant": { "default": 15, "tough": 16 } },
+    "startingTransition": {
+      "repeatPolicy": "preventImmediateRepeat",
+      "choices": [
+        { "actionId": "base-spire:leaf-small-tackle" },
+        { "actionId": "base-spire:leaf-small-goop" }
+      ]
+    },
+    "actions": [
+      {
+        "id": "base-spire:leaf-small-tackle",
+        "effect": { "op": "attack", "amount": { "$variant": { "default": 3, "deadly": 4 } } },
+        "intent": "attack",
+        "intentDamage": { "$variant": { "default": 3, "deadly": 4 } },
+        "transition": {
+          "repeatPolicy": "preventImmediateRepeat",
+          "choices": [
+            { "actionId": "base-spire:leaf-small-tackle" },
+            { "actionId": "base-spire:leaf-small-goop" }
+          ]
+        }
+      },
+      {
+        "id": "base-spire:leaf-small-goop",
+        "effect": { "op": "addCardsToPile", "card": "base-spire:slimed", "pile": "discard" },
+        "intent": "debuff",
+        "transition": {
+          "repeatPolicy": "preventImmediateRepeat",
+          "choices": [
+            { "actionId": "base-spire:leaf-small-tackle" },
+            { "actionId": "base-spire:leaf-small-goop" }
+          ]
+        }
+      }
+    ]
+  }
+}

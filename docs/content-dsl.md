@@ -42,7 +42,7 @@ Conditions are typed data nodes (`metric`, `power`, `all`, `any`, `not`). Effect
 }
 ```
 
-The full checked-in [Nibbit document](../mod-the-spire/base-spire/BaseSpire/Content/nibbit.enemy.json) contains its three-action cycle, difficulty variants, and Alone/Front starting conditions. The combat tests load it through the same embedded-resource path used by `base-spire` and verify normal, tough, and deadly behavior against the source audit.
+The checked-in [Nibbit document](../mod-the-spire/base-spire/BaseSpire/Content/nibbit.enemy.json) contains its three-action cycle, difficulty variants, and Alone/Front starting conditions. Four more documents define the small and medium Leaf/Twig Slimes. They exercise fixed action edges, random choices with immediate-repeat prevention, consecutive-use limits, starting actions, difficulty values, attacks, and adding status cards to a pile. The combat tests load these through the same embedded-resource path used by `base-spire` and verify their action timing and normal, tough, and deadly values against the source audit.
 
 ## Encounter documents, version 1
 
