@@ -204,6 +204,7 @@ public enum RunEventKind { Event, Ancient, Final }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemoveSelectedRunCardEffect), "removeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedRunCardEffect), "upgradeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(WinRunEffect), "winRun")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GainRunRelicEffect), "gainRunRelic")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnterRunCombatEffect), "enterRunCombat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomRunEffect), "customRun")]
 public abstract record RunEffectNode;
@@ -220,6 +221,7 @@ public sealed record ChooseRunCardEffect(string Prompt, RunCardFilter Filter, bo
 public sealed record RemoveSelectedRunCardEffect : RunEffectNode;
 public sealed record UpgradeSelectedRunCardEffect : RunEffectNode;
 public sealed record WinRunEffect : RunEffectNode;
+public sealed record GainRunRelicEffect(ContentId RelicId) : RunEffectNode;
 public sealed record EnterRunCombatEffect(ContentId EncounterId, bool ResumeEventAfterCombat = true) : RunEffectNode;
 public sealed record CustomRunEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : RunEffectNode;
 
@@ -891,6 +893,11 @@ public sealed class ContentRegistry
             case RemoveSelectedRunCardEffect or UpgradeSelectedRunCardEffect:
                 break;
             case WinRunEffect:
+                break;
+            case GainRunRelicEffect gainRelic:
+                gainRelic.RelicId.Validate();
+                if (!_relics.ContainsKey(gainRelic.RelicId))
+                    throw new InvalidOperationException($"{owner} grants unknown relic '{gainRelic.RelicId}'.");
                 break;
             case EnterRunCombatEffect enterCombat:
                 enterCombat.EncounterId.Validate();

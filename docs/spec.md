@@ -81,7 +81,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../st
 
 ### 4.2 其他场景
 
-事件、商店、休息、奖励和路线选择场景保留独立决策接口，并逐步补全各自的库存、选项、局部变量及结算规则。当前营火流程已进入 run 状态机：单人提供最大生命 30% 治疗或升级一张可升级牌，规则 hook 可调整治疗并响应选择。Run 事件池提供 Event/Ancient 内容定义、按源顺序生成和可观察 ID 选择；RunEventDefinition 可组织多个带描述的页面，选项可转场并保留整局状态；事件选项可声明组合式 RunCondition（run 指标比较、遗物/药水持有、All/Any/Not），观察视图暴露 IsEnabled，合法动作与观察共用同一条件判定；RunEffect DSL 支持金币、治疗、失血、最大生命增减、加入卡牌，以及暂停续接的单牌升级/移除选择。`enterRunCombat` 可从事件压入声明式 encounter；战斗结束后可恢复事件原页面和后续选项，也可按内容配置结束父事件，二者共用通用房间栈及 `CombatEnvironment` 接缝。已提供受控的 C# 自定义 run 效果 handler 供 mod 扩展；原版事件条件和完整效果仍待迁移。房间可压栈与出栈；原版 [`StandardActMap`](../sts2/src/Core/Map/StandardActMap.cs) 通过路径生成、节点类型分配、限制检查和后处理构图，且 [`RunManager.GenerateMap`](../sts2/src/Core/Runs/RunManager.cs) 提供地图修改 hook。因此 `base-spire` 的地图内容应包含参数和生成器实现或受控扩展，不能预设一份静态 JSON 足以表达原版地图。
+事件、商店、休息、奖励和路线选择场景保留独立决策接口，并逐步补全各自的库存、选项、局部变量及结算规则。当前营火流程已进入 run 状态机：单人提供最大生命 30% 治疗或升级一张可升级牌，规则 hook 可调整治疗并响应选择。Run 事件池提供 Event/Ancient 内容定义、按源顺序生成和可观察 ID 选择；RunEventDefinition 可组织多个带描述的页面，选项可转场并保留整局状态；事件选项可声明组合式 RunCondition（run 指标比较、遗物/药水持有、All/Any/Not），观察视图暴露 IsEnabled，合法动作与观察共用同一条件判定；RunEffect DSL 支持金币、治疗、失血、最大生命增减、加入卡牌、授予已注册遗物，以及暂停续接的单牌升级/移除选择。`enterRunCombat` 可从事件压入声明式 encounter；战斗结束后可恢复事件原页面和后续选项，也可按内容配置结束父事件，二者共用通用房间栈及 `CombatEnvironment` 接缝。已提供受控的 C# 自定义 run 效果 handler 供 mod 扩展；原版事件条件和完整效果仍待迁移。房间可压栈与出栈；原版 [`StandardActMap`](../sts2/src/Core/Map/StandardActMap.cs) 通过路径生成、节点类型分配、限制检查和后处理构图，且 [`RunManager.GenerateMap`](../sts2/src/Core/Runs/RunManager.cs) 提供地图修改 hook。因此 `base-spire` 的地图内容应包含参数和生成器实现或受控扩展，不能预设一份静态 JSON 足以表达原版地图。
 
 ## 5. 决策边界与效果结算
 

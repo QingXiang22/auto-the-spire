@@ -1033,6 +1033,13 @@ public sealed class RunEnvironment
                 case AddCardToRunDeckEffect addCard:
                     RunEffectCommands.AddCardToDeck(state, addCard.Card);
                     break;
+                case GainRunRelicEffect gainRelic:
+                    if (state.Relics.Contains(gainRelic.RelicId)
+                        && state.RelicDefinitions?.TryGetValue(gainRelic.RelicId, out var heldRelic) == true
+                        && !heldRelic.IsStackable)
+                        throw new InvalidOperationException($"Unique relic '{gainRelic.RelicId}' is already owned.");
+                    state.Relics.Add(gainRelic.RelicId);
+                    break;
                 case EnterRunCombatEffect enterCombat:
                     if (frame.EventId is null)
                         throw new InvalidOperationException("An event combat can only be entered from a run event.");
