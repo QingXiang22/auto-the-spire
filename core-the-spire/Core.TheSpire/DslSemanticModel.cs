@@ -5,16 +5,25 @@ namespace CoreTheSpire;
 public abstract record SpireIntegerExpression;
 public sealed record SpireIntegerLiteral(int Value) : SpireIntegerExpression;
 public sealed record SpireIntegerRange(int Minimum, int Maximum) : SpireIntegerExpression;
+public sealed record SpireUpgradedInteger(int BaseValue, int UpgradedValue) : SpireIntegerExpression;
+public sealed record SpireStacksFromSelf : SpireIntegerExpression;
 public sealed record SpireProfiledInteger(IReadOnlyDictionary<string, SpireIntegerExpression> Values)
     : SpireIntegerExpression;
 
-public enum SpireEffectTarget { Self, Player, Enemy }
+public enum SpireEffectTarget { Self, Player, Enemy, SelectedEnemy }
 public enum SpireCardPile { Draw, Hand, Discard, Exhaust }
+public enum SpireCardType { Attack, Skill, Power, Status }
+[Flags]
+public enum SpireCardKeyword { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8 }
+public enum SpirePowerTrigger { None, PlayerTurnStart, PlayerTurnEnd, EnemyTurnEnd, CardExhausted }
+public enum SpirePowerRole { None, Strength }
+public enum SpireRoomType { Monster, Elite, Boss }
 
 public abstract record SpireEffectExpression;
 public sealed record SpireAttackExpression(SpireEffectTarget Target, SpireIntegerExpression Damage) : SpireEffectExpression;
 public sealed record SpireApplyPowerExpression(string Power, SpireIntegerExpression Amount, SpireEffectTarget Target)
     : SpireEffectExpression;
+public sealed record SpireGrantPowerExpression(string Power, SpireIntegerExpression Amount) : SpireEffectExpression;
 public sealed record SpireGainBlockExpression(SpireIntegerExpression Amount) : SpireEffectExpression;
 public sealed record SpireAddCardsExpression(string Card, int Count, SpireCardPile Pile, SpireEffectTarget Target)
     : SpireEffectExpression;
@@ -37,7 +46,19 @@ public sealed record SpireStartByRoleBehavior(IReadOnlyDictionary<string, string
 public sealed record SpireEnemyMove(string Name, SpireEffectExpression Effect, DslSourceLocation Location);
 public sealed record SpireEnemyModel(string Name, SpireIntegerExpression Hp, IReadOnlyList<SpireEnemyMove> Moves,
     SpireEnemyBehavior Behavior, DslSourceLocation Location);
-public sealed record SpireSemanticPackage(string Name, IReadOnlyList<SpireEnemyModel> Enemies);
+public sealed record SpireCardModel(string Name, int Cost, SpireCardType Type, SpireCardKeyword Keywords,
+    SpireEffectTarget? Target, SpireEffectExpression PlayEffect, DslSourceLocation Location);
+public sealed record SpirePowerModel(string Name, SpirePowerTrigger Trigger, SpirePowerRole Role,
+    SpireEffectExpression? Effect, SpireEffectTarget? SkipFirstWhenAppliedTo, DslSourceLocation Location);
+public sealed record SpireEncounterSlot(IReadOnlyList<string> EnemyChoices, bool IsRandom,
+    string? StartingRole, string? RememberAs, string? Excluding);
+public sealed record SpireEncounterFormation(IReadOnlyList<string> Enemies);
+public sealed record SpireEncounterModel(string Name, SpireRoomType Room, bool IsWeak,
+    IReadOnlyList<string> Tags, IReadOnlyList<SpireEncounterSlot> Slots,
+    IReadOnlyList<SpireEncounterFormation> Formations, DslSourceLocation Location);
+public sealed record SpireSemanticPackage(string Name, IReadOnlyList<SpireCardModel> Cards,
+    IReadOnlyList<SpirePowerModel> Powers, IReadOnlyList<SpireEnemyModel> Enemies,
+    IReadOnlyList<SpireEncounterModel> Encounters);
 
 /// <summary>Type-checks enemy values, effects, behaviors, and their references without lowering to runtime state.</summary>
 public static class SpireSemanticCompiler
@@ -46,13 +67,19 @@ public static class SpireSemanticCompiler
     {
         private readonly DslPackageNode _syntax;
         private readonly IReadOnlyDictionary<string, string> _declarations;
+        private readonly IReadOnlyList<DslDeclarationNode> _cards;
+        private readonly IReadOnlyList<DslDeclarationNode> _powers;
         private readonly IReadOnlyList<DslDeclarationNode> _enemies;
+        private readonly IReadOnlyList<DslDeclarationNode> _encounters;
 
         public Compiler(DslPackageNode syntax)
         {
             _syntax = syntax;
             var declarations = new Dictionary<string, string>(StringComparer.Ordinal);
+            var cards = new List<DslDeclarationNode>();
+            var powers = new List<DslDeclarationNode>();
             var enemies = new List<DslDeclarationNode>();
+            var encounters = new List<DslDeclarationNode>();
             foreach (var member in syntax.Members)
             {
                 if (member is not DslDeclarationNode declaration)
@@ -61,16 +88,198 @@ public static class SpireSemanticCompiler
                     throw Error(declaration.Location, $"Unknown declaration kind '{declaration.Kind}'.");
                 if (!declarations.TryAdd(declaration.Name, declaration.Kind))
                     throw Error(declaration.Location, $"Duplicate content name '{declaration.Name}'.");
+                if (declaration.Kind == "card") cards.Add(declaration);
+                if (declaration.Kind == "power") powers.Add(declaration);
                 if (declaration.Kind == "enemy") enemies.Add(declaration);
+                if (declaration.Kind == "encounter") encounters.Add(declaration);
             }
             _declarations = declarations;
+            _cards = cards;
+            _powers = powers;
             _enemies = enemies;
+            _encounters = encounters;
         }
 
         public SpireSemanticPackage Compile()
         {
+            var cards = _cards.Select(CompileCard).ToArray();
+            var powers = _powers.Select(CompilePower).ToArray();
             var enemies = _enemies.Select(CompileEnemy).ToArray();
-            return new SpireSemanticPackage(_syntax.Name, Array.AsReadOnly(enemies));
+            var enemiesByName = enemies.ToDictionary(enemy => enemy.Name, StringComparer.Ordinal);
+            var encounters = _encounters.Select(declaration => CompileEncounter(declaration, enemiesByName)).ToArray();
+            return new SpireSemanticPackage(_syntax.Name, Array.AsReadOnly(cards), Array.AsReadOnly(powers),
+                Array.AsReadOnly(enemies), Array.AsReadOnly(encounters));
+        }
+
+        private SpireEncounterModel CompileEncounter(DslDeclarationNode declaration,
+            IReadOnlyDictionary<string, SpireEnemyModel> enemies)
+        {
+            var properties = Properties(declaration);
+            EnsureProperties(declaration, properties, "room", "weak", "tags", "lineup");
+            var room = ParseRoom(Required(properties, "room", declaration.Location));
+            var isWeak = properties.TryGetValue("weak", out var weakNode) && Boolean(weakNode);
+            var tags = properties.TryGetValue("tags", out var tagsNode)
+                ? NameList(tagsNode)
+                : Array.Empty<string>();
+            var lineup = Required(properties, "lineup", declaration.Location);
+            IReadOnlyList<SpireEncounterSlot> slots;
+            IReadOnlyList<SpireEncounterFormation> formations;
+            var aliases = new HashSet<string>(StringComparer.Ordinal);
+            if (lineup is DslListNode slotList)
+            {
+                slots = Array.AsReadOnly(slotList.Items.Select(item =>
+                    CompileEncounterSlot(item, enemies, aliases)).ToArray());
+                if (slots.Count == 0) throw Error(lineup.Location, "An encounter lineup cannot be empty.");
+                formations = Array.Empty<SpireEncounterFormation>();
+            }
+            else
+            {
+                var formationCall = RequireCall(lineup, "chooseFormation");
+                if (formationCall.Arguments.Count == 0 || formationCall.Arguments.Any(argument => argument.Name is not null))
+                    throw Error(formationCall.Location, "chooseFormation expects one or more positional enemy lists.");
+                formations = Array.AsReadOnly(formationCall.Arguments.Select(argument =>
+                    CompileFormation(argument.Value, enemies)).ToArray());
+                if (formations.Select(formation => formation.Enemies.Count).Distinct().Count() != 1)
+                    throw Error(formationCall.Location, "Formation choices must have the same number of enemies.");
+                slots = Array.Empty<SpireEncounterSlot>();
+            }
+            return new SpireEncounterModel(declaration.Name, room, isWeak,
+                Array.AsReadOnly(tags.ToArray()), slots, formations, declaration.Location);
+        }
+
+        private SpireEncounterSlot CompileEncounterSlot(DslValueNode node,
+            IReadOnlyDictionary<string, SpireEnemyModel> enemies, ISet<string> aliases)
+        {
+            var call = RequireCall(node);
+            if (call.Name == "spawn")
+            {
+                if (call.Arguments.Count is < 1 or > 2 || call.Arguments[0].Name is not null
+                    || (call.Arguments.Count == 2 && call.Arguments[1].Name != "role"))
+                    throw Error(call.Location, "spawn expects an enemy and optional role.");
+                var enemy = Name(call.Arguments[0].Value);
+                RequireEnemy(enemy, call.Arguments[0].Value.Location, enemies);
+                var role = call.Arguments.Count == 2 ? Name(call.Arguments[1].Value) : null;
+                if (role is not null) ValidateRole(enemy, role, call.Arguments[1].Value.Location, enemies);
+                return new SpireEncounterSlot([enemy], false, role, null, null);
+            }
+
+            if (call.Name != "choose") throw Error(call.Location, "Encounter slots use spawn(...) or choose(...).");
+            if (call.Arguments.Count is < 1 or > 3 || call.Arguments[0].Name is not null)
+                throw Error(call.Location, "choose expects an enemy list with optional rememberAs or excluding.");
+            var choices = NameList(call.Arguments[0].Value);
+            if (choices.Count == 0) throw Error(call.Location, "An encounter choice needs at least one enemy.");
+            if (choices.Distinct(StringComparer.Ordinal).Count() != choices.Count)
+                throw Error(call.Location, "An encounter choice cannot repeat an enemy.");
+            foreach (var choice in choices) RequireEnemy(choice, call.Location, enemies);
+            string? rememberAs = null;
+            string? excluding = null;
+            foreach (var argument in call.Arguments.Skip(1))
+            {
+                if (argument.Name == "rememberAs" && rememberAs is null)
+                    rememberAs = Name(argument.Value);
+                else if (argument.Name == "excluding" && excluding is null)
+                    excluding = Name(argument.Value);
+                else
+                    throw Error(argument.Location, "choose accepts one rememberAs or excluding argument.");
+            }
+            if (rememberAs is not null && excluding is not null)
+                throw Error(call.Location, "A choice cannot remember and exclude at the same time.");
+            if (rememberAs is not null && !aliases.Add(rememberAs))
+                throw Error(call.Location, $"Choice alias '{rememberAs}' is already defined.");
+            if (excluding is not null && !aliases.Contains(excluding))
+                throw Error(call.Location, $"Choice excludes unknown or later alias '{excluding}'.");
+            return new SpireEncounterSlot(Array.AsReadOnly(choices.ToArray()), true, null, rememberAs, excluding);
+        }
+
+        private SpireEncounterFormation CompileFormation(DslValueNode node,
+            IReadOnlyDictionary<string, SpireEnemyModel> enemies)
+        {
+            var names = NameList(node);
+            if (names.Count == 0) throw Error(node.Location, "A formation cannot be empty.");
+            foreach (var name in names) RequireEnemy(name, node.Location, enemies);
+            return new SpireEncounterFormation(Array.AsReadOnly(names.ToArray()));
+        }
+
+        private static void RequireEnemy(string name, DslSourceLocation location,
+            IReadOnlyDictionary<string, SpireEnemyModel> enemies)
+        {
+            if (!enemies.ContainsKey(name)) throw Error(location, $"Unknown enemy reference '{name}'.");
+        }
+
+        private static void ValidateRole(string enemyName, string role, DslSourceLocation location,
+            IReadOnlyDictionary<string, SpireEnemyModel> enemies)
+        {
+            if (role is not ("alone" or "front" or "back"))
+                throw Error(location, $"Unknown formation role '{role}'.");
+            var behavior = enemies[enemyName].Behavior;
+            if (!HasStartingRole(behavior, role))
+                throw Error(location, $"Enemy '{enemyName}' has no starting behavior for role '{role}'.");
+        }
+
+        private static bool HasStartingRole(SpireEnemyBehavior behavior, string role) => behavior switch
+        {
+            SpireStartByRoleBehavior start => start.StartingMoves.ContainsKey(role),
+            SpireStartWithBehavior start => HasStartingRole(start.Then, role),
+            _ => false
+        };
+
+        private static SpireRoomType ParseRoom(DslValueNode node) => Name(node) switch
+        {
+            "monster" => SpireRoomType.Monster,
+            "elite" => SpireRoomType.Elite,
+            "boss" => SpireRoomType.Boss,
+            _ => throw Error(node.Location, "Room must be monster, elite, or boss.")
+        };
+
+        private static bool Boolean(DslValueNode node) => node is DslBooleanNode value
+            ? value.Value
+            : throw Error(node.Location, "Expected a boolean.");
+
+        private static IReadOnlyList<string> NameList(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Expected a list of names.");
+            var names = list.Items.Select(Name).ToArray();
+            if (names.Distinct(StringComparer.Ordinal).Count() != names.Length)
+                throw Error(node.Location, "A name list cannot contain duplicates.");
+            return Array.AsReadOnly(names);
+        }
+
+        private SpireCardModel CompileCard(DslDeclarationNode declaration)
+        {
+            var properties = Properties(declaration);
+            EnsureProperties(declaration, properties, "type", "cost", "keywords", "target", "play");
+            var type = ParseEnum<SpireCardType>(Required(properties, "type", declaration.Location));
+            var cost = IntegerLiteral(Required(properties, "cost", declaration.Location));
+            if (cost < 0) throw Error(declaration.Location, "Card cost cannot be negative.");
+            var keywords = properties.TryGetValue("keywords", out var keywordNode)
+                ? CompileKeywords(keywordNode)
+                : SpireCardKeyword.None;
+            SpireEffectTarget? target = properties.TryGetValue("target", out var targetNode)
+                ? CompileTarget(targetNode)
+                : null;
+            var effect = CompileEffect(Required(properties, "play", declaration.Location));
+            return new SpireCardModel(declaration.Name, cost, type, keywords, target, effect, declaration.Location);
+        }
+
+        private SpirePowerModel CompilePower(DslDeclarationNode declaration)
+        {
+            var properties = Properties(declaration);
+            EnsureProperties(declaration, properties, "trigger", "role", "effect", "skipFirstWhenAppliedTo");
+            var trigger = properties.TryGetValue("trigger", out var triggerNode)
+                ? ParsePowerTrigger(triggerNode)
+                : SpirePowerTrigger.None;
+            var role = properties.TryGetValue("role", out var roleNode)
+                ? ParsePowerRole(roleNode)
+                : SpirePowerRole.None;
+            var effect = properties.TryGetValue("effect", out var effectNode)
+                ? CompileEffect(effectNode)
+                : null;
+            SpireEffectTarget? skipFirst = properties.TryGetValue("skipFirstWhenAppliedTo", out var skipNode)
+                ? CompileTarget(skipNode)
+                : null;
+            if ((trigger == SpirePowerTrigger.None) != (effect is null))
+                throw Error(declaration.Location, "A triggered Power needs both trigger and effect properties.");
+            return new SpirePowerModel(declaration.Name, trigger, role, effect, skipFirst, declaration.Location);
         }
 
         private SpireEnemyModel CompileEnemy(DslDeclarationNode declaration)
@@ -143,6 +352,14 @@ public static class SpireSemanticCompiler
                     RequireReference(power, "power", call.Arguments[0].Value.Location);
                     return new SpireApplyPowerExpression(power, CompileInteger(call.Arguments[1].Value),
                         CompileTarget(call.Arguments[2].Value));
+                case "grantPower":
+                    RequireArgumentCount(call, 2);
+                    var grantedPower = Name(call.Arguments[0].Value);
+                    RequireReference(grantedPower, "power", call.Arguments[0].Value.Location);
+                    var amount = call.Arguments[1].Value is DslNameNode { Name: "stacksFromSelf" }
+                        ? new SpireStacksFromSelf()
+                        : CompileInteger(call.Arguments[1].Value);
+                    return new SpireGrantPowerExpression(grantedPower, amount);
                 case "gainBlock":
                     RequireArgumentCount(call, 1);
                     return new SpireGainBlockExpression(CompileInteger(call.Arguments[0].Value));
@@ -253,6 +470,11 @@ public static class SpireSemanticCompiler
                     if (minimum < 0 || maximum < minimum)
                         throw Error(call.Location, "Integer ranges must satisfy 0 <= minimum <= maximum.");
                     return new SpireIntegerRange(minimum, maximum);
+                case "upgrades":
+                    var baseValue = IntegerLiteral(NamedArgument(call, "base"));
+                    var upgradedValue = IntegerLiteral(NamedArgument(call, "upgraded"));
+                    EnsureOnlyNamedArguments(call, "base", "upgraded");
+                    return new SpireUpgradedInteger(baseValue, upgradedValue);
                 case "variants":
                     var values = new Dictionary<string, SpireIntegerExpression>(StringComparer.Ordinal);
                     foreach (var argument in call.Arguments)
@@ -282,8 +504,53 @@ public static class SpireSemanticCompiler
             "self" => SpireEffectTarget.Self,
             "player" => SpireEffectTarget.Player,
             "enemy" => SpireEffectTarget.Enemy,
+            "target" => SpireEffectTarget.SelectedEnemy,
             _ => throw Error(node.Location, "Target must be self, player, or enemy.")
         };
+
+        private static SpireCardKeyword CompileKeywords(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Card keywords must be a list.");
+            var result = SpireCardKeyword.None;
+            foreach (var item in list.Items)
+            {
+                var keyword = Name(item) switch
+                {
+                    "exhaust" => SpireCardKeyword.Exhaust,
+                    "ethereal" => SpireCardKeyword.Ethereal,
+                    "unplayable" => SpireCardKeyword.Unplayable,
+                    "retain" => SpireCardKeyword.Retain,
+                    _ => throw Error(item.Location, "Unknown card keyword.")
+                };
+                if ((result & keyword) != 0) throw Error(item.Location, $"Duplicate keyword '{keyword}'.");
+                result |= keyword;
+            }
+            return result;
+        }
+
+        private static SpirePowerTrigger ParsePowerTrigger(DslValueNode node) => Name(node) switch
+        {
+            "playerTurnStart" => SpirePowerTrigger.PlayerTurnStart,
+            "playerTurnEnd" => SpirePowerTrigger.PlayerTurnEnd,
+            "enemyTurnEnd" => SpirePowerTrigger.EnemyTurnEnd,
+            "cardExhausted" => SpirePowerTrigger.CardExhausted,
+            _ => throw Error(node.Location, "Unknown Power trigger.")
+        };
+
+        private static SpirePowerRole ParsePowerRole(DslValueNode node) => Name(node) switch
+        {
+            "strength" => SpirePowerRole.Strength,
+            _ => throw Error(node.Location, "Unknown Power role.")
+        };
+
+        private static T ParseEnum<T>(DslValueNode node) where T : struct, Enum
+        {
+            var text = Name(node);
+            if (Enum.TryParse<T>(text, ignoreCase: true, out var value)
+                && Enum.GetNames<T>().Any(name => string.Equals(name, text, StringComparison.OrdinalIgnoreCase)))
+                return value;
+            throw Error(node.Location, $"Unknown {typeof(T).Name} value '{text}'.");
+        }
 
         private static SpireCardPile CompilePile(DslValueNode node) => Name(node) switch
         {
@@ -329,8 +596,30 @@ public static class SpireSemanticCompiler
         }
 
         private static DslValueNode NamedArgument(DslCallNode call, string name) =>
-            call.Arguments.SingleOrDefault(argument => argument.Name == name)?.Value
-            ?? throw Error(call.Location, $"'{call.Name}' requires argument '{name}'.");
+            call.Arguments.Where(argument => argument.Name == name).Select(argument => argument.Value).ToArray() switch
+            {
+                [var value] => value,
+                [] => throw Error(call.Location, $"'{call.Name}' requires argument '{name}'."),
+                _ => throw Error(call.Location, $"'{call.Name}' repeats argument '{name}'.")
+            };
+
+        private static void EnsureOnlyNamedArguments(DslCallNode call, params string[] allowed)
+        {
+            if (call.Arguments.Any(argument => argument.Name is null || !allowed.Contains(argument.Name, StringComparer.Ordinal)))
+                throw Error(call.Location, $"'{call.Name}' expects named arguments: {string.Join(", ", allowed)}.");
+        }
+
+        private static void EnsureProperties(DslDeclarationNode declaration,
+            IReadOnlyDictionary<string, DslValueNode> properties, params string[] allowed)
+        {
+            var allowedSet = allowed.ToHashSet(StringComparer.Ordinal);
+            foreach (var property in declaration.Members.OfType<DslPropertyNode>())
+                if (!allowedSet.Contains(property.Name))
+                    throw Error(property.Location, $"Unknown {declaration.Kind} property '{property.Name}'.");
+            foreach (var member in declaration.Members)
+                if (member is not DslPropertyNode)
+                    throw Error(member.Location, $"{declaration.Kind} declarations can contain properties only.");
+        }
 
         private static int IntegerLiteral(DslValueNode node)
         {

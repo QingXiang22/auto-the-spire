@@ -469,6 +469,26 @@ public sealed class CombatSliceTests
 
         var semanticPackage = SpireSemanticCompiler.Compile(package);
         Assert.Equal(6, semanticPackage.Enemies.Count);
+        Assert.Equal(2, semanticPackage.Cards.Count);
+        Assert.Equal(2, semanticPackage.Powers.Count);
+        Assert.Equal(4, semanticPackage.Encounters.Count);
+        var semanticStrike = semanticPackage.Cards.Single(card => card.Name == "StrikeIronclad");
+        Assert.True(semanticStrike.PlayEffect is SpireAttackExpression
+        {
+            Target: SpireEffectTarget.SelectedEnemy,
+            Damage: SpireUpgradedInteger { BaseValue: 6, UpgradedValue: 9 }
+        });
+        var semanticSlimed = semanticPackage.Cards.Single(card => card.Name == "Slimed");
+        Assert.True(semanticSlimed.Keywords == SpireCardKeyword.Exhaust
+            && semanticSlimed.PlayEffect is SpireDrawCardsExpression { Count: 1 });
+        var semanticRitual = semanticPackage.Powers.Single(power => power.Name == "Ritual");
+        Assert.True(semanticRitual.Trigger == SpirePowerTrigger.EnemyTurnEnd
+            && semanticRitual.SkipFirstWhenAppliedTo == SpireEffectTarget.Enemy
+            && semanticRitual.Effect is SpireGrantPowerExpression
+            {
+                Power: "Strength",
+                Amount: SpireStacksFromSelf
+            });
         var semanticNibbit = semanticPackage.Enemies.Single(enemy => enemy.Name == "Nibbit");
         Assert.True(semanticNibbit.Behavior is SpireStartByRoleBehavior
         {
@@ -502,6 +522,15 @@ public sealed class CombatSliceTests
                 }
             }
         });
+
+        var weakSlimes = semanticPackage.Encounters.Single(encounter => encounter.Name == "SlimesWeak");
+        Assert.True(weakSlimes.Slots.Count == 3
+            && weakSlimes.Slots[0].RememberAs == "small"
+            && weakSlimes.Slots[2].Excluding == "small");
+        var normalSlimes = semanticPackage.Encounters.Single(encounter => encounter.Name == "SlimesNormal");
+        Assert.True(normalSlimes.Formations.Count == 2
+            && normalSlimes.Formations[0].Enemies.Count == 4
+            && normalSlimes.Formations[1].Enemies.Count == 4);
 
         var unknownMove = DslSourceParser.Parse(source.Replace("loop(tackle)", "loop(missingMove)",
             StringComparison.Ordinal), "broken.spire");
