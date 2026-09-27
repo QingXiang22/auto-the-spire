@@ -544,6 +544,9 @@ public sealed class CombatSliceTests
         Assert.Equal(6, toughDeadly.Observe(altered).Enemies[0].Block);
         toughDeadly.Step(altered, new EndTurnAction());
         Assert.Equal(3, altered.State.Enemies[0].Creature.Strength);
+        var deadlyAlone = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true)));
+        var deadlyOpening = deadlyAlone.StartEncounter(216, "ironclad", 80, 80, [], BaseSpireIds.NibbitsWeak);
+        Assert.Equal(13, deadlyAlone.Observe(deadlyOpening).IntentDamage);
 
         var pair = environment.StartEncounter(214, "ironclad", 80, 80, [], BaseSpireIds.NibbitsNormal);
         Assert.Equal(0, pair.Random.Get("enemy-ai").Counter);
