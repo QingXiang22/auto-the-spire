@@ -30,6 +30,36 @@ The concrete parser/format remains open. The examples use an indentation-based n
 
 A package is organized into domain modules (for example `combat/ironclad`, `enemies/overgrowth`, and `acts/overgrowth`) rather than one file per runtime record. A module can declare shared values and related definitions together. Imports and namespaces make dependencies explicit. Duplicate IDs are errors by default; mods must state whether they add a definition, replace one, or patch named fields/actions. Patch precedence and provenance are resolved once during package composition and exposed in diagnostics.
 
+The source language has four author-facing declaration kinds, regardless of eventual file syntax: reusable values/profiles, content definitions, behavior/effect expressions, and package patches. It does not expose runtime fields such as action-array indexes, current action indexes, `NextActionId`, or internal enum names. A source module may contain many related definitions.
+
+### Semantic model and compilation boundary
+
+The compiler should lower source through three named stages:
+
+1. **Package graph:** parse declarations, imports, IDs, source locations, and explicit add/replace/patch operations.
+2. **Typed rule model:** resolve names and types; normalize difficulty/upgrade values; expand reusable definitions; validate targets, behavior branches, and effect capabilities. This model keeps behavior expressions distinct from effect expressions and observation hints.
+3. **Execution plan:** lower the typed model to compact immutable plans consumed by the core. No DSL parser, JSON node, content name lookup, or reflection runs inside `step`.
+
+Conceptually, the rule model has `Effect = Sequence | Attack | ApplyPower | AddCard | ...`, `Behavior = Cycle | StartThen | Choose | Branch | ...`, and `Projection = InferredIntent | ExplicitHint`. A package build fails with source-located diagnostics if an expression cannot be typed or compiled. The execution plan is data plus typed operation tags/delegates; the final representation is selected by representative throughput and allocation benchmarks.
+
+Difficulty selectors are orthogonal to card upgrades. A value may provide a default and named overrides; profile resolution picks the most specific applicable override once at package compilation, with a documented fallback to default. Upgraded card values resolve from card instance upgrade level and must not be confused with difficulty profiles.
+
+Random expressions declare candidate order, weighting, stream category, and draw grouping. Evaluating a lineup in listed order means each selection is encountered in that order; a correlated formation is one selection over whole lineups. The compiler may not silently reorder or merge random draws. Whether a one-candidate selection consumes a draw is defined by the named random operation and pinned by a call-count test.
+
+For the source model, `DeadlyEnemies` and `ToughEnemies` are profile facts. A conditional value lists `default` plus zero or more `when <condition>` branches. At compile time, matching branches with the greatest number of constrained facts win; equally specific matches are a compile error unless they provide the same value. Thus an explicit `when DeadlyEnemies and ToughEnemies` handles the combined profile, otherwise a single-flag value may be used before `default`. Each random expression has a semantic stream default (`enemy_behavior`, `encounter_lineup`, `card_selection`, etc.); authors only override it when source evidence requires a different stream. The final names map to actual core random streams during lowering.
+
+The minimum authoring forms used by the acceptance models are therefore:
+
+```text
+damage(default: number, when condition: number, ...)
+apply Power with stacks(value) to target
+attack target for damage-expression
+choose [candidate, ...] [excluding prior-choice] [weighted by expression]
+when condition -> behavior
+```
+
+Concrete delimiters and indentation rules can change without changing these semantic contracts.
+
 ```text
 package base-spire
 
@@ -49,26 +79,41 @@ card Slimed {
 card StrikeIronclad {
   type: attack
   cost: 1
-  play: attack selected_enemy for damage(base 6, upgraded 9)
+  play: attack selected_enemy for damage(upgrade 0: 6, upgrade 1: 9)
 }
 
 value CultistHp {
-  normal: 52..54
-  tough: 51..53
+  default: 52..54
+  when ToughEnemies: 51..53
 }
 
 enemy DampCultist {
   hp: CultistHp
   moves: loop {
-    incantation: apply Ritual(5) to self
-    dark_strike: attack player for damage(1)
+    incantation: apply Ritual with stacks(5) to self
+    dark_strike: attack player for damage(default: 1, when DeadlyEnemies: 3)
   }
 }
 ```
 
-This models the original Damp Cultist cycle without explicitly encoding two action nodes and two transition edges. The Dark Strike's base damage is 1 normally and 3 with `DeadlyEnemies`; its HP range is independently changed by `ToughEnemies`. Difficulty settings are named package profiles, not an untyped object substitution scattered through arbitrary fields.
+This models the original Damp Cultist cycle without explicitly encoding two action nodes and two transition edges. The Dark Strike's base damage is 1 normally and 3 with `DeadlyEnemies`; its HP range is independently changed by `ToughEnemies`. Named rule selectors express the original modifiers, and profile resolution is defined in one compiler stage rather than as untyped object substitution at arbitrary fields.
 
 Strike and Slimed use the same effect vocabulary even though one is a player card and one is an enemy-created status card. Cost payment, target validation, pile movement, and the post-play window are core lifecycle rules; their content only declares cost, keywords, and effect.
+
+A mod can patch a named semantic unit without copying the whole definition:
+
+```text
+package training-balance
+depends base-spire
+
+patch enemy base-spire:DampCultist {
+  replace move dark_strike {
+    attack player for damage(default: 2, when DeadlyEnemies: 4)
+  }
+}
+```
+
+The patch identifies both the target content and the move it replaces. Package composition must reject a missing target, an ambiguous patch, or two unordered replacements; it must not depend on file discovery order.
 
 ## Behavior patterns and action semantics
 
@@ -86,23 +131,23 @@ Examples:
 
 ```text
 enemy LeafSlimeSmall {
-  hp: normal 11..15, tough 12..16
+  hp: default: 11..15, when ToughEnemies: 12..16
   behavior: choose without_repeat {
-    tackle: attack player for damage(normal 3, deadly 4)
+    tackle: attack player for damage(default: 3, when DeadlyEnemies: 4)
     goop: add 1 Slimed to player.discard
   }
 }
 
 enemy TwigSlimeMedium {
-  hp: normal 26..29, tough 27..29
+  hp: default: 26..29, when ToughEnemies: 27..29
   behavior: start sticky_shot; then choose with_limits {
-    clump_shot at_most 2_in_a_row: attack player for damage(normal 11, deadly 12)
+    clump_shot at_most 2_in_a_row: attack player for damage(default: 11, when DeadlyEnemies: 12)
     sticky_shot at_most 1_in_a_row: add 1 Slimed to player.discard
   }
 }
 
 enemy Nibbit {
-  hp: normal 42..46, tough 44..48
+  hp: default: 42..46, when ToughEnemies: 44..48
   behavior:
     when living_enemies == 1 -> start butt
     when enemy_position == 1 -> start hiss
@@ -110,8 +155,8 @@ enemy Nibbit {
     otherwise -> start butt
   moves: {
     butt: attack player for 12
-    slice: attack player for damage(normal 6, deadly 7); gain 5 block
-    hiss: apply Strength(2, deadly 3) to self
+    slice: attack player for damage(default: 6, when DeadlyEnemies: 7); gain 5 block
+    hiss: apply Strength with stacks(default: 2, when DeadlyEnemies: 3) to self
   }
   after: cycle butt -> slice -> hiss -> butt
 }
