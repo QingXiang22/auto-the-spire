@@ -63,6 +63,10 @@ public static class SpireCombatDslCompiler
                 case "sequence":
                     CheckShape(call, 0, int.MaxValue);
                     return new SequenceEffect(Positional(call).Select(argument => CompileEffect(argument.Value)).ToArray());
+                case "if":
+                    CheckShape(call, 2, 2, "else");
+                    return new IfEffect(CompilePredicate(Argument(call, 0)), CompileEffect(Argument(call, 1)),
+                        OptionalEffect(call, "else"));
                 case "attack":
                     CheckShape(call, 1, 1, "target");
                     return new AttackEffect(Integer(Argument(call, 0)), OptionalTarget(call, "target", TargetSelector.SelectedTarget));
@@ -154,6 +158,32 @@ public static class SpireCombatDslCompiler
                     return new RetainSelectedCardEffect();
                 default:
                     throw Error(call.Location, $"Unknown combat effect '{call.Name}'.");
+            }
+        }
+
+        private EffectPredicate CompilePredicate(DslValueNode node)
+        {
+            var call = RequireCall(node);
+            switch (call.Name)
+            {
+                case "targetAlive":
+                    CheckShape(call, 0, 0);
+                    return new TargetAlivePredicate();
+                case "hasPower":
+                    CheckShape(call, 1, 1);
+                    return new HasPowerPredicate(Id(Name(Argument(call, 0))));
+                case "energyAtLeast":
+                    CheckShape(call, 1, 1);
+                    return new EnergyAtLeastPredicate(Integer(Argument(call, 0)));
+                case "cardExhaustedThisTurn":
+                    CheckShape(call, 0, 0);
+                    return new CardExhaustedThisTurnPredicate();
+                case "pileCountAtLeast":
+                    CheckShape(call, 2, 2);
+                    return new PileCountAtLeastPredicate(EnumValue<CardPile>(Argument(call, 0)),
+                        Integer(Argument(call, 1)));
+                default:
+                    throw Error(call.Location, $"Unknown combat predicate '{call.Name}'.");
             }
         }
 

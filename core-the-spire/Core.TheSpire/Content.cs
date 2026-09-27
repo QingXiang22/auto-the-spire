@@ -1265,6 +1265,7 @@ public sealed class ContentRegistry
                     if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);
                 break;
             case IfEffect conditional:
+                ValidateEffectPredicate(conditional.Predicate, owner);
                 ValidateEffectReferences(conditional.Then, owner);
                 if (conditional.Else is { } elseEffect) ValidateEffectReferences(elseEffect, owner);
                 break;
@@ -1280,6 +1281,28 @@ public sealed class ContentRegistry
                 break;
             case CustomEffect custom when !_customEffects.ContainsKey(custom.Handler):
                 throw new InvalidOperationException($"{owner} references unknown custom effect '{custom.Handler}'.");
+        }
+    }
+
+    private void ValidateEffectPredicate(EffectPredicate predicate, string owner)
+    {
+        switch (predicate)
+        {
+            case TargetAlivePredicate or CardExhaustedThisTurnPredicate:
+                break;
+            case HasPowerPredicate hasPower when !_powers.ContainsKey(hasPower.Power):
+                throw new InvalidOperationException($"{owner} checks unknown power '{hasPower.Power}'.");
+            case HasPowerPredicate:
+                break;
+            case EnergyAtLeastPredicate energy:
+                ArgumentOutOfRangeException.ThrowIfNegative(energy.Amount);
+                break;
+            case PileCountAtLeastPredicate pile:
+                if (!Enum.IsDefined(pile.Pile) || pile.Count < 0)
+                    throw new InvalidOperationException($"{owner} has an invalid pile-count condition.");
+                break;
+            default:
+                throw new InvalidOperationException($"{owner} has an unsupported effect predicate '{predicate.GetType().Name}'.");
         }
     }
 

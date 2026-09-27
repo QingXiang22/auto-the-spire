@@ -15,6 +15,13 @@ public static class BaseSpireIds
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
     public static readonly ContentId BodySlam = ContentId.Parse("base-spire:body-slam");
     public static readonly ContentId Bloodletting = ContentId.Parse("base-spire:bloodletting");
+    public static readonly ContentId BloodWall = ContentId.Parse("base-spire:blood-wall");
+    public static readonly ContentId Brand = ContentId.Parse("base-spire:brand");
+    public static readonly ContentId Cinder = ContentId.Parse("base-spire:cinder");
+    public static readonly ContentId EvilEye = ContentId.Parse("base-spire:evil-eye");
+    public static readonly ContentId ForgottenRitual = ContentId.Parse("base-spire:forgotten-ritual");
+    public static readonly ContentId PactsEnd = ContentId.Parse("base-spire:pacts-end");
+    public static readonly ContentId Taunt = ContentId.Parse("base-spire:taunt");
     public static readonly ContentId BurningPact = ContentId.Parse("base-spire:burning-pact");
     public static readonly ContentId Clothesline = ContentId.Parse("base-spire:clothesline");
     public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");

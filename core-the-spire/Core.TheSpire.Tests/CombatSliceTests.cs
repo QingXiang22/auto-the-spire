@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(32, ironcladPool.Count);
+        Assert.Equal(39, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -437,7 +437,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(34, cards.Count);
+        Assert.Equal(41, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
@@ -520,6 +520,109 @@ public sealed class CombatSliceTests
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 4, TargetSelector.SelectedTarget),
             definition.Cards[BaseSpireIds.Tremble]
                 .ResolveEffect(new CardInstance("tremble+", BaseSpireIds.Tremble, 1)));
+    }
+
+    public void SourceBackedIroncladCardsComposeLossChoiceAndPower()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var env = new CombatEnvironment(definition);
+
+        var bloodWall = env.Start(55, "ironclad", 56, 65, [BaseSpireIds.BloodWall],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(bloodWall, new PlayCardAction(0, bloodWall.State.Player.Id));
+        Assert.Equal(54, bloodWall.State.Player.Creature.Hp);
+        Assert.Equal(16, bloodWall.State.Player.Creature.Block);
+        Assert.Equal(new GainBlockEffect(20), ((SequenceEffect)definition.Cards[BaseSpireIds.BloodWall]
+            .ResolveEffect(new CardInstance("blood-wall+", BaseSpireIds.BloodWall, 1))).Effects[1]);
+
+        var brand = env.Start(56, "ironclad", 56, 65,
+            [BaseSpireIds.Brand, BaseSpireIds.StrikeIronclad], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        var strike = brand.State.Player.HandInstances[1];
+        env.Step(brand, new PlayCardAction(0, brand.State.Player.Id));
+        Assert.Equal(55, brand.State.Player.Creature.Hp);
+        Assert.True(brand.State.PendingCardSelection is PendingCardChoice);
+        Assert.Equal(0, brand.State.Player.Creature.Strength);
+        env.Step(brand, new ChooseCardAction(strike.InstanceId));
+        Assert.Equal(strike.InstanceId, brand.State.Player.ExhaustPileInstances.Single().InstanceId);
+        Assert.Equal(1, brand.State.Player.Creature.Strength);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Strength, 2, TargetSelector.Self),
+            ((SequenceEffect)definition.Cards[BaseSpireIds.Brand]
+                .ResolveEffect(new CardInstance("brand+", BaseSpireIds.Brand, 1))).Effects[2]);
+
+        var cinder = env.Start(57, "ironclad", 56, 65,
+            [BaseSpireIds.Cinder, BaseSpireIds.DefendIronclad], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(cinder, new PlayCardAction(0, cinder.State.Enemy.Id));
+        Assert.Equal(35, cinder.State.Enemy.Hp);
+        Assert.Equal(BaseSpireIds.DefendIronclad, cinder.State.Player.ExhaustPile.Single());
+        Assert.Equal(new AttackEffect(24, TargetSelector.SelectedTarget),
+            ((SequenceEffect)definition.Cards[BaseSpireIds.Cinder]
+                .ResolveEffect(new CardInstance("cinder+", BaseSpireIds.Cinder, 1))).Effects[0]);
+
+        var taunt = env.Start(58, "ironclad", 56, 65, [BaseSpireIds.Taunt],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(taunt, new PlayCardAction(0, taunt.State.Enemy.Id));
+        Assert.Equal(7, taunt.State.Player.Creature.Block);
+        Assert.Equal(1, taunt.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        var upgradedTaunt = (SequenceEffect)definition.Cards[BaseSpireIds.Taunt]
+            .ResolveEffect(new CardInstance("taunt+", BaseSpireIds.Taunt, 1));
+        Assert.Equal(new GainBlockEffect(8), upgradedTaunt.Effects[0]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 2, TargetSelector.SelectedTarget),
+            upgradedTaunt.Effects[1]);
+    }
+
+    public void SourceBackedConditionalCardsUseTurnHistoryAndPileCounts()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var env = new CombatEnvironment(definition);
+        var evilEye = env.Start(59, "ironclad", 56, 65,
+            [BaseSpireIds.EvilEye, BaseSpireIds.Tremble, BaseSpireIds.EvilEye],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [BaseSpireIds.EvilEye]);
+        env.Step(evilEye, new PlayCardAction(0, evilEye.State.Player.Id));
+        Assert.Equal(8, evilEye.State.Player.Creature.Block);
+        env.Step(evilEye, new PlayCardAction(0, evilEye.State.Enemy.Id));
+        Assert.Equal(1, evilEye.State.Player.ExhaustPile.Count);
+        env.Step(evilEye, new PlayCardAction(0, evilEye.State.Player.Id));
+        Assert.Equal(24, evilEye.State.Player.Creature.Block);
+        env.Step(evilEye, new EndTurnAction());
+        Assert.Equal(2, evilEye.State.Turn);
+        var nextEvilEye = evilEye.State.Player.HandInstances
+            .Select((card, index) => (card, index))
+            .First(item => item.card.CardId == BaseSpireIds.EvilEye).index;
+        env.Step(evilEye, new PlayCardAction(nextEvilEye, evilEye.State.Player.Id));
+        Assert.Equal(8, evilEye.State.Player.Creature.Block);
+
+        var ritualWithoutExhaust = env.Start(60, "ironclad", 56, 65,
+            [BaseSpireIds.ForgottenRitual], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(ritualWithoutExhaust, new PlayCardAction(0, ritualWithoutExhaust.State.Player.Id));
+        Assert.Equal(2, ritualWithoutExhaust.State.Player.Energy);
+        Assert.Equal(BaseSpireIds.ForgottenRitual, ritualWithoutExhaust.State.Player.ExhaustPile.Single());
+        var ritualWithExhaust = env.Start(61, "ironclad", 56, 65,
+            [BaseSpireIds.Tremble, BaseSpireIds.ForgottenRitual],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        env.Step(ritualWithExhaust, new PlayCardAction(0, ritualWithExhaust.State.Enemy.Id));
+        env.Step(ritualWithExhaust, new PlayCardAction(0, ritualWithExhaust.State.Player.Id));
+        Assert.Equal(4, ritualWithExhaust.State.Player.Energy);
+        Assert.True(definition.Cards[BaseSpireIds.ForgottenRitual]
+            .ResolveEffect(new CardInstance("ritual+", BaseSpireIds.ForgottenRitual, 1))
+            is IfEffect { Then: ModifyEnergyEffect { Amount: 4 } });
+
+        var pactsEnd = env.Start(62, "ironclad", 56, 65,
+            [BaseSpireIds.PactsEnd, BaseSpireIds.PactsEnd],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        pactsEnd.State.Player.MutableExhaustPile.Add(new CardInstance("exhaust-1", BaseSpireIds.Dazed));
+        pactsEnd.State.Player.MutableExhaustPile.Add(new CardInstance("exhaust-2", BaseSpireIds.Dazed));
+        env.Step(pactsEnd, new PlayCardAction(0));
+        Assert.Equal(53, pactsEnd.State.Enemy.Hp);
+        pactsEnd.State.Player.MutableExhaustPile.Add(new CardInstance("exhaust-3", BaseSpireIds.Dazed));
+        env.Step(pactsEnd, new PlayCardAction(0));
+        Assert.Equal(36, pactsEnd.State.Enemy.Hp);
+        Assert.True(definition.Cards[BaseSpireIds.PactsEnd]
+            .ResolveEffect(new CardInstance("pacts-end+", BaseSpireIds.PactsEnd, 1))
+            is IfEffect { Then: AttackEffect { Amount: 23, Target: TargetSelector.AllOpponents } });
+        var conditional = new IfEffect(new PileCountAtLeastPredicate(CardPile.Exhaust, 3),
+            new AttackEffect(17, TargetSelector.AllOpponents));
+        Assert.Equal(conditional, EffectDsl.Parse(EffectDsl.Serialize(conditional)));
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -3896,6 +3999,8 @@ internal static class Program
         tests.EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds();
         tests.SpireCardDslCompilesTheCurrentIroncladCardSet();
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
+        tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
+        tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();

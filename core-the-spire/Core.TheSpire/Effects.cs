@@ -96,10 +96,14 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyAtLeastPredicate), "energyAtLeast")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CardExhaustedThisTurnPredicate), "cardExhaustedThisTurn")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PileCountAtLeastPredicate), "pileCountAtLeast")]
 public abstract record EffectPredicate;
 public sealed record TargetAlivePredicate : EffectPredicate;
 public sealed record HasPowerPredicate(ContentId Power) : EffectPredicate;
 public sealed record EnergyAtLeastPredicate(int Amount) : EffectPredicate;
+public sealed record CardExhaustedThisTurnPredicate : EffectPredicate;
+public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : EffectPredicate;
 
 internal static class EffectExecutor
 {
@@ -363,7 +367,9 @@ internal static class EffectExecutor
                         TargetAlivePredicate => (target ?? OpponentOf(state, owner)).Hp > 0,
                         HasPowerPredicate hasPower => owner.PowerAmount(hasPower.Power) > 0,
                         EnergyAtLeastPredicate energy => state.Player.Energy >= energy.Amount,
-                        _ => false
+                        CardExhaustedThisTurnPredicate => state.LastPlayerCardExhaustTurn == state.Turn,
+                        PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
+                        _ => throw new InvalidOperationException($"Unsupported effect predicate '{conditional.Predicate.GetType().Name}'.")
                     };
                     if (condition) state.PendingEffects.Add((owner, conditional.Then, target, selectedCard));
                     else if (conditional.Else is not null) state.PendingEffects.Add((owner, conditional.Else, target, selectedCard));

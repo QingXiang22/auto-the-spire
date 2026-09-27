@@ -166,6 +166,7 @@ internal sealed class GameState
     public EntityState Enemy => Enemies[0].Creature;
     public EnemyDefinition EnemyDefinition => Enemies[0].Definition;
     public int Turn { get; internal set; } = 1;
+    internal int LastPlayerCardExhaustTurn { get; private set; }
     public int EnemyActionIndex
     {
         get => Enemies[0].ActionIndex;
@@ -199,6 +200,8 @@ internal sealed class GameState
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount);
         _events.Add(gameEvent);
+        if (type == "card_exhausted" && source == Player.Id)
+            LastPlayerCardExhaustTurn = Turn;
         List<(EntityState Owner, EffectNode Effect)>? effects = null;
         foreach (var hook in Definition.Hooks)
         {
