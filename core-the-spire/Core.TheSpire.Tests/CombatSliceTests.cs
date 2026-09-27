@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(50, ironcladPool.Count);
+        Assert.Equal(51, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(52, cards.Count);
+        Assert.Equal(53, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(51, pool.Count);
+        Assert.Equal(52, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -549,6 +549,39 @@ public sealed class CombatSliceTests
         Assert.Equal(5, environment.Observe(upgraded).MaxEnergy);
         environment.Step(upgraded, new EndTurnAction());
         Assert.Equal(5, environment.Observe(upgraded).Energy);
+    }
+
+    public void CrueltyAddsItsStacksToPoweredAttacksAgainstVulnerableTargets()
+    {
+        var definition = Build(new BaseSpirePackage());
+        Assert.Equal(1, definition.Powers[BaseSpireIds.CrueltyPower].VulnerableMultiplierPercentPerStack);
+        var environment = new CombatEnvironment(definition);
+        var normal = environment.Start(80, "ironclad", 56, 65,
+            [BaseSpireIds.Cruelty, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        normal.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 1;
+        environment.Step(normal, new PlayCardAction(0, normal.State.Player.Id));
+        Assert.Equal(25, normal.State.Player.Creature.PowerAmount(BaseSpireIds.CrueltyPower));
+        Assert.Equal(6, normal.State.CalculateDamage(normal, normal.State.Player.Creature,
+            normal.State.Enemy, 6, DamageProperties.Unpowered));
+        environment.Step(normal, new PlayCardAction(0, normal.State.Enemy.Id));
+        Assert.Equal(43, normal.State.Enemy.Hp);
+
+        var upgraded = environment.Start(81, "ironclad", 56, 65,
+            [BaseSpireIds.Cruelty, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        upgraded.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 1;
+        upgraded.State.Player.MutableHand[0] = new CardInstance("cruelty+", BaseSpireIds.Cruelty, 1);
+        environment.Step(upgraded, new PlayCardAction(0, upgraded.State.Player.Id));
+        environment.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
+        Assert.Equal(41, upgraded.State.Enemy.Hp);
+
+        var noVulnerable = environment.Start(82, "ironclad", 56, 65,
+            [BaseSpireIds.Cruelty, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Player.Id));
+        environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Enemy.Id));
+        Assert.Equal(47, noVulnerable.State.Enemy.Hp);
     }
 
     public void SourceBackedIroncladCardsUseSharedEffectsInCombat()
@@ -4340,6 +4373,7 @@ internal static class Program
         tests.CardPoolMembershipIsExplicitAndModsCanExtendExistingPools();
         tests.SpiteRepeatsAfterPlayerHpLossAndResetsOnTheNextTurn();
         tests.PyreIncreasesTheNextTurnsMaximumEnergyThroughItsPower();
+        tests.CrueltyAddsItsStacksToPoweredAttacksAgainstVulnerableTargets();
         tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SourceBackedIroncladCardsComposeLossChoiceAndPower();
         tests.SourceBackedConditionalCardsUseTurnHistoryAndPileCounts();

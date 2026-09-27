@@ -14,4 +14,8 @@ package base-spire {
   power PyrePower {
     maxEnergyPerStack = 1
   }
+
+  power CrueltyPower {
+    vulnerableMultiplierPercentPerStack = 1
+  }
 }

@@ -285,6 +285,10 @@ internal sealed class GameState
         if (isPoweredMove && HasPowerRole(target, PowerRole.Vulnerable))
         {
             decimal vulnerableMultiplier = 1.5m;
+            if (dealer != target)
+                foreach (var (powerId, amount) in dealer.Powers)
+                    vulnerableMultiplier += Definition.Powers[powerId].VulnerableMultiplierPercentPerStack
+                        * amount / 100m;
             foreach (var hook in Definition.Hooks)
                 vulnerableMultiplier = hook.ModifyVulnerableMultiplier(
                     new RuleHookContext(session, hook.Id), dealer.Id, target.Id, properties, vulnerableMultiplier);
