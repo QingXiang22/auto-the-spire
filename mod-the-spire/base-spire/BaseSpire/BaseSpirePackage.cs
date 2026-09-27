@@ -79,6 +79,7 @@ public static class BaseSpireIds
     public static readonly ContentId PaperPhrog = ContentId.Parse("base-spire:paper-phrog");
     public static readonly ContentId RuinedHelmet = ContentId.Parse("base-spire:ruined-helmet");
     public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
+    public static readonly ContentId PotionBelt = ContentId.Parse("base-spire:potion-belt");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
     public static readonly ContentId GloryAct = ContentId.Parse("base-spire:glory-act");
@@ -106,6 +107,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.BurningBlood, RunRelicRarity.Starter, InSharedPool: false));
         registry.Register(new RelicDefinition(BaseSpireIds.Anchor, RunRelicRarity.Common));
         registry.Register(new RelicDefinition(BaseSpireIds.Vajra, RunRelicRarity.Common));
+        registry.Register(new RelicDefinition(BaseSpireIds.PotionBelt, RunRelicRarity.Uncommon));
         registry.Register(new RelicDefinition(BaseSpireIds.CharonsAshes, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.SelfFormingClay, RunRelicRarity.Uncommon,
@@ -304,6 +306,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new BurningBloodRunHook());
         registry.Register(new AnchorRunHook());
         registry.Register(new VajraRunHook());
+        registry.Register(new PotionBeltRunHook());
         registry.Register(new CharonsAshesHook());
         registry.Register(new SelfFormingClayHook());
         registry.Register(new RedSkullHook());
@@ -365,6 +368,16 @@ internal sealed class VajraRunHook : IRunHook
     public void AfterCombatStarted(RunHookContext context)
     {
         if (context.HasRelic(BaseSpireIds.Vajra)) context.ApplyPower(BaseSpireIds.Strength, 1);
+    }
+}
+
+internal sealed class PotionBeltRunHook : IRunHook
+{
+    public ContentId Id { get; } = ContentId.Parse("base-spire:potion-belt-hook");
+    public void AfterCombatVictory(RunHookContext context) { }
+    public void AfterRelicObtained(RunHookContext context, ContentId relicId)
+    {
+        if (relicId == BaseSpireIds.PotionBelt) context.ChangePotionCapacity(2);
     }
 }
 

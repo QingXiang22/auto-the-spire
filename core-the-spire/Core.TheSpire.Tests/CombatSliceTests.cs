@@ -2914,6 +2914,34 @@ public sealed class CombatSliceTests
         Assert.True(fullInventoryRewards.RoomStack[^1].Rewards.Any(reward => reward.Kind == RunRewardKind.Potion));
     }
 
+    public void PotionCapacityChangesPreserveSlotsAndPotionBeltAddsTwoSlots()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(825);
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.FirePotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.StrengthPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BeetleJuice));
+        Assert.True(run.State.TryUsePotion(1, out _));
+        run.State.ChangePotionCapacity(2);
+        Assert.Equal(5, run.State.PotionCapacity);
+        Assert.Equal(5, run.State.Potions.Count);
+        Assert.Equal(null, run.State.Potions[1]);
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.FirePotion));
+        Assert.True(run.State.TryUsePotion(1, out _));
+
+        run.State.ChangePotionCapacity(-2);
+        Assert.Equal(3, run.State.PotionCapacity);
+        Assert.Equal(3, run.State.Potions.Count);
+        Assert.Equal(BaseSpireIds.FirePotion, run.State.Potions[1]);
+
+        var hook = definition.RunHooks.Single(candidate => candidate.Id ==
+            ContentId.Parse("base-spire:potion-belt-hook"));
+        hook.AfterRelicObtained(new RunHookContext(run.State, hook.Id), BaseSpireIds.PotionBelt);
+        Assert.Equal(5, run.State.PotionCapacity);
+    }
+
     private static RunObservation CompletePotionRewardCombat(RunEnvironment runEnvironment,
         CombatEnvironment combatEnvironment, RunSession run)
     {
@@ -3343,6 +3371,7 @@ internal static class Program
         tests.BaseRuinedHelmetDoublesTheFirstStrengthApplicationEachCombat();
         tests.BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot();
         tests.PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity();
+        tests.PotionCapacityChangesPreserveSlotsAndPotionBeltAddsTwoSlots();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
