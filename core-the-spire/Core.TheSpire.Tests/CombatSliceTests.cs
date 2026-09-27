@@ -434,6 +434,21 @@ public sealed class CombatSliceTests
         Assert.True(environment.Observe(encounter).Enemies.Select(enemy => (enemy.Id, enemy.Intent, enemy.IntentDamage))
             .SequenceEqual(environment.Observe(replay).Enemies.Select(enemy => (enemy.Id, enemy.Intent, enemy.IntentDamage))));
 
+        var normalCompositions = new HashSet<string>(StringComparer.Ordinal);
+        for (uint seed = 0; seed < 8; seed++)
+        {
+            var normal = environment.StartEncounter(seed, "ironclad", 80, 80, [], BaseSpireIds.SlimesNormal);
+            var normalIds = environment.Observe(normal).Enemies.Select(enemy => enemy.Id.Split('#')[0]).ToArray();
+            Assert.Equal(4, normalIds.Length);
+            Assert.Equal(BaseSpireIds.TwigSlimeMedium.Value, normalIds[0]);
+            Assert.Equal(BaseSpireIds.LeafSlimeMedium.Value, normalIds[1]);
+            Assert.True(normalIds.Skip(2).ToHashSet(StringComparer.Ordinal).SetEquals([
+                BaseSpireIds.LeafSlimeSmall.Value, BaseSpireIds.TwigSlimeSmall.Value]));
+            Assert.Equal(1, normal.Random.Get("encounter-enemies").Counter);
+            normalCompositions.Add(string.Join(',', normalIds.Skip(2)));
+        }
+        Assert.Equal(2, normalCompositions.Count);
+
         GameSession? goopSession = null;
         for (uint seed = 0; seed < 32; seed++)
         {

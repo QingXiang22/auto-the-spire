@@ -31,3 +31,21 @@ public sealed class EncounterEnemySlot
 }
 
 public sealed record EncounterEnemySelection(ContentId EnemyId, ContentId? StartingActionOverride);
+
+/// <summary>A complete ordered enemy lineup selected as one correlated encounter outcome.</summary>
+public sealed record EncounterFormationChoice
+{
+    public EncounterFormationChoice(IEnumerable<ContentId> enemyIds, int weight = 1)
+    {
+        ArgumentNullException.ThrowIfNull(enemyIds);
+        var copiedIds = enemyIds.ToArray();
+        if (copiedIds.Length == 0) throw new ArgumentException("An encounter formation cannot be empty.", nameof(enemyIds));
+        foreach (var enemyId in copiedIds) enemyId.Validate();
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(weight);
+        EnemyIds = Array.AsReadOnly(copiedIds);
+        Weight = weight;
+    }
+
+    public IReadOnlyList<ContentId> EnemyIds { get; }
+    public int Weight { get; }
+}
