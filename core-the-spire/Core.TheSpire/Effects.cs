@@ -11,6 +11,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockFromCurrentBlockEffect), "gainBlockFromCurrentBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyScaledPowerEffect), "applyScaledPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DrawCardsEffect), "drawCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveCardEffect), "moveCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnergyEffect), "modifyEnergy")]
@@ -40,16 +41,16 @@ public sealed record SequenceEffect : EffectNode
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy,
     DamageProperties Properties = DamageProperties.Move) : EffectNode;
-public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, AttackCountSource Count,
+public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, CombatCountSource Count,
     TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCardCountSource), "pile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TaggedCardCountSource), "taggedCards")]
-public abstract record AttackCountSource;
-public sealed record PileCardCountSource(CardPile Pile) : AttackCountSource;
-public sealed record TargetPowerCountSource(ContentId Power) : AttackCountSource;
-public sealed record TaggedCardCountSource(ContentId Tag) : AttackCountSource;
+public abstract record CombatCountSource;
+public sealed record PileCardCountSource(CardPile Pile) : CombatCountSource;
+public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
+public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -57,6 +58,8 @@ public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelect
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null) : EffectNode;
 public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
+    CombatCountSource Count, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DrawCardsEffect(int Amount) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
@@ -190,17 +193,9 @@ internal static class EffectExecutor
                     break;
                 case ScaledAttackEffect scaledAttack:
                     var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
-                    var count = scaledAttack.Count switch
-                    {
-                        PileCardCountSource pile => state.GetPile(pile.Pile).Count,
-                        TargetPowerCountSource power => scaledVictim.PowerAmount(power.Power),
-                        TaggedCardCountSource tag => AllCardPiles
-                            .Sum(pile => state.GetPile(pile).Count(card =>
-                                state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
-                        _ => throw new InvalidOperationException("Unsupported attack count source.")
-                    };
                     ApplyAttack(session, owner, scaledVictim,
-                        checked(scaledAttack.BaseAmount + scaledAttack.AmountPerCount * count));
+                        ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
+                            scaledAttack.AmountPerCount, scaledAttack.Count));
                     break;
                 case RandomAttackEffect randomAttack:
                     if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
@@ -264,6 +259,12 @@ internal static class EffectExecutor
                     }
                     else
                         state.ApplyPower(session, ResolveSingleTarget(state, owner, target, power.Target), power.Power, power.Amount, owner);
+                    break;
+                case ApplyScaledPowerEffect scaledPower:
+                    var powerAmount = ScaledAmount(state, owner, target, scaledPower.BaseAmount,
+                        scaledPower.AmountPerCount, scaledPower.Count);
+                    state.ApplyPower(session, ResolveSingleTarget(state, owner, target, scaledPower.Target),
+                        scaledPower.Power, powerAmount, owner);
                     break;
                 case DrawCardsEffect draw:
                     state.Draw(session, draw.Amount);
@@ -429,6 +430,20 @@ internal static class EffectExecutor
         TargetSelector.SelectedTarget => selected ?? OpponentOf(state, owner),
         _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect requires one target.")
     };
+
+    private static int ScaledAmount(GameState state, EntityState owner, EntityState? selectedTarget, int baseAmount,
+        int amountPerCount, CombatCountSource source)
+    {
+        var count = source switch
+        {
+            PileCardCountSource pile => state.GetPile(pile.Pile).Count,
+            TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),
+            TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
+                .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
+            _ => throw new InvalidOperationException("Unsupported combat count source.")
+        };
+        return checked(baseAmount + amountPerCount * count);
+    }
 
     private static void GeneratePotions(GameSession session, EntityState owner, int count)
     {

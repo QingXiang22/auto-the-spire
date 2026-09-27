@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(45, ironcladPool.Count);
+        Assert.Equal(48, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -437,7 +437,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(47, cards.Count);
+        Assert.Equal(50, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
@@ -739,6 +739,58 @@ public sealed class CombatSliceTests
         Assert.Equal(41, upgraded.State.Enemy.Hp);
         Assert.Equal(4, upgraded.State.Player.Creature.Strength);
         Assert.Equal(1, upgraded.State.Enemy.Strength);
+    }
+
+    public void CountScaledPowerEffectsUseTheSelectedTargetsCurrentStacks()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var env = new CombatEnvironment(definition);
+        var dominate = env.Start(73, "ironclad", 56, 65, [BaseSpireIds.Dominate],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        dominate.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 2;
+        env.Step(dominate, new PlayCardAction(0, dominate.State.Enemy.Id));
+        Assert.Equal(3, dominate.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        Assert.Equal(3, dominate.State.Player.Creature.Strength);
+        Assert.Equal(BaseSpireIds.Dominate, dominate.State.Player.ExhaustPile.Single());
+
+        var molten = env.Start(74, "ironclad", 56, 65, [BaseSpireIds.MoltenFist],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        molten.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 2;
+        env.Step(molten, new PlayCardAction(0, molten.State.Enemy.Id));
+        Assert.Equal(38, molten.State.Enemy.Hp);
+        Assert.Equal(4, molten.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        Assert.Equal(BaseSpireIds.MoltenFist, molten.State.Player.ExhaustPile.Single());
+
+        var killed = env.Start(75, "ironclad", 56, 65, [BaseSpireIds.MoltenFist],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 10);
+        killed.State.Enemy.MutablePowers[BaseSpireIds.Vulnerable] = 2;
+        env.Step(killed, new PlayCardAction(0, killed.State.Enemy.Id));
+        Assert.Equal(0, killed.State.Enemy.Hp);
+        Assert.False(killed.State.Events.Any(gameEvent => gameEvent.Type == "power"
+            && gameEvent.Target == killed.State.Enemy.Id));
+
+        var scaled = ((SequenceEffect)definition.Cards[BaseSpireIds.Dominate].Effect).Effects[1];
+        Assert.Equal(scaled, EffectDsl.Parse(EffectDsl.Serialize(scaled)));
+    }
+
+    public void ConflagrationRepeatsAreaDamageAcrossLivingEnemies()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var enemies = new[]
+        {
+            new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString(), Hp: 53),
+            new CombatEnemySpawn(BaseSpireIds.CalcifiedCultist.ToString(), Hp: 40)
+        };
+        var state = env.StartEncounter(76, "ironclad", 56, 65, [BaseSpireIds.Conflagration], enemies);
+        env.Step(state, new PlayCardAction(0));
+        Assert.Equal(new[] { 45, 32 }, state.State.Enemies.Select(enemy => enemy.Creature.Hp));
+        Assert.Equal(8, state.State.Events.Count(gameEvent => gameEvent.Type == "damage"));
+
+        var upgraded = env.StartEncounter(77, "ironclad", 56, 65, [BaseSpireIds.Conflagration], enemies);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("conflagration+", BaseSpireIds.Conflagration, 1);
+        env.Step(upgraded, new PlayCardAction(0));
+        Assert.Equal(new[] { 43, 30 }, upgraded.State.Enemies.Select(enemy => enemy.Creature.Hp));
+        Assert.Equal(10, upgraded.State.Events.Count(gameEvent => gameEvent.Type == "damage"));
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -4121,6 +4173,8 @@ internal static class Program
         tests.NotYetHealsAndKeepsItsCombatGenerationRestriction();
         tests.PerfectedStrikeCountsTaggedCardsAcrossAllFiveCombatPiles();
         tests.FightMeGrantsStrengthAfterItsTwoHits();
+        tests.CountScaledPowerEffectsUseTheSelectedTargetsCurrentStacks();
+        tests.ConflagrationRepeatsAreaDamageAcrossLivingEnemies();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
