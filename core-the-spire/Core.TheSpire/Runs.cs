@@ -1135,7 +1135,7 @@ public sealed class RunEnvironment
         if (frame.RoomType == RunRoomType.Boss && state.ActIndex >= state.Definition.Acts.Count - 1)
             return true;
 
-        var shouldGivePotion = _potionDefinitions is { Count: > 0 }
+        var shouldGivePotion = GetPotionOptions(state).Any()
             && RollForPotionReward(state, frame.RoomType, observation);
         var amount = state.RewardRandom.NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
         frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
@@ -1175,13 +1175,18 @@ public sealed class RunEnvironment
         var rarityRoll = random.NextFloat();
         var rarity = rarityRoll <= 0.1f ? PotionRarity.Rare
             : rarityRoll <= 0.35f ? PotionRarity.Uncommon : PotionRarity.Common;
-        var potions = _potionDefinitions!.Values.Where(potion => potion.Rarity == rarity)
+        var pool = GetPotionOptions(state).ToArray();
+        var potions = pool.Where(potion => potion.Rarity == rarity)
             .OrderBy(potion => potion.Id.Value, StringComparer.Ordinal).ToArray();
         if (potions.Length == 0)
-            potions = _potionDefinitions.Values.OrderBy(potion => potion.Id.Value, StringComparer.Ordinal).ToArray();
+            potions = pool.OrderBy(potion => potion.Id.Value, StringComparer.Ordinal).ToArray();
         if (potions.Length == 0) return null;
         return potions[random.NextInt(potions.Length)].Id;
     }
+
+    private IEnumerable<PotionDefinition> GetPotionOptions(RunState state) =>
+        (_potionDefinitions?.Values ?? Array.Empty<PotionDefinition>())
+        .Where(potion => potion.InSharedPool || potion.CharacterPoolIds?.Contains(state.Character.Id) == true);
 
     private static RunRelicRarity RollRelicRarity(SeededRandom random)
     {
