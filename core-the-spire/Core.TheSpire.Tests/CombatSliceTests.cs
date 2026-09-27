@@ -441,7 +441,8 @@ public sealed class CombatSliceTests
             "BaseSpire.ContentSource.combat.spire");
         Assert.True(stream is not null);
         using var reader = new StreamReader(stream!);
-        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/combat.spire");
+        var source = reader.ReadToEnd();
+        var package = DslSourceParser.Parse(source, "base-spire/combat.spire");
 
         Assert.Equal("base-spire", package.Name);
         var declarations = package.Members.OfType<DslDeclarationNode>().ToArray();
@@ -465,6 +466,47 @@ public sealed class CombatSliceTests
             .Single(property => property.Name == "behavior").Value;
         Assert.True(twigBehavior is DslCallNode { Name: "loop", Arguments.Count: 1 } loop
             && loop.Arguments[0].Value is DslNameNode { Name: "tackle" });
+
+        var semanticPackage = SpireSemanticCompiler.Compile(package);
+        Assert.Equal(6, semanticPackage.Enemies.Count);
+        var semanticNibbit = semanticPackage.Enemies.Single(enemy => enemy.Name == "Nibbit");
+        Assert.True(semanticNibbit.Behavior is SpireStartByRoleBehavior
+        {
+            StartingMoves: var starts
+        } && starts["alone"] == "butt" && starts["front"] == "slice" && starts["back"] == "hiss");
+        var semanticCultist = semanticPackage.Enemies.Single(enemy => enemy.Name == "DampCultist");
+        Assert.True(semanticCultist.Behavior is SpireCycleBehavior { Moves.Count: 2 });
+        Assert.True(semanticCultist.Moves.Single(move => move.Name == "incantation").Effect
+            is SpireApplyPowerExpression { Power: "Ritual", Amount: SpireIntegerLiteral { Value: 5 } });
+        Assert.True(semanticCultist.Hp is SpireProfiledInteger { Values: var cultistHp }
+            && cultistHp["default"] is SpireIntegerRange { Minimum: 52, Maximum: 54 }
+            && cultistHp["tough"] is SpireIntegerRange { Minimum: 51, Maximum: 53 });
+
+        var leafSlime = semanticPackage.Enemies.Single(enemy => enemy.Name == "LeafSlimeSmall");
+        Assert.True(leafSlime.Behavior is SpireLoopBehavior
+        {
+            Selection: SpireChoiceSelection { PreventImmediateRepeat: true, Choices.Count: 2 }
+        });
+        var twigMedium = semanticPackage.Enemies.Single(enemy => enemy.Name == "TwigSlimeMedium");
+        Assert.True(twigMedium.Behavior is SpireStartWithBehavior
+        {
+            FirstMove: "stickyShot",
+            Then: SpireLoopBehavior
+            {
+                Selection: SpireChoiceSelection
+                {
+                    Choices: [
+                        SpireMoveChoice { Move: "pokeyPounce", MaxConsecutiveUses: 2 },
+                        SpireMoveChoice { Move: "stickyShot", MaxConsecutiveUses: 1 }
+                    ]
+                }
+            }
+        });
+
+        var unknownMove = DslSourceParser.Parse(source.Replace("loop(tackle)", "loop(missingMove)",
+            StringComparison.Ordinal), "broken.spire");
+        var semanticError = Assert.Throws<DslSourceException>(() => SpireSemanticCompiler.Compile(unknownMove));
+        Assert.True(semanticError.Message.Contains("Unknown enemy move 'missingMove'", StringComparison.Ordinal));
 
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
