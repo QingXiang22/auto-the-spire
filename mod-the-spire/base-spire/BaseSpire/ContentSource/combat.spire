@@ -1,4 +1,8 @@
 package base-spire {
+  power Strength {
+    role = strength
+  }
+
   power Ritual {
     trigger = enemyTurnEnd
     effect = grantPower(Strength, stacksFromSelf)
