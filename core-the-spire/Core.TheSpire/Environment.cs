@@ -66,6 +66,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         run.ActiveCombat = session;
         foreach (var hook in definition.RunHooks)
             hook.AfterCombatStarted(new RunHookContext(run, hook.Id));
+        session.State.Emit(session, "combat_started", session.State.Player.Id, session.State.Player.Id, 0);
+        EffectExecutor.Resume(session);
         return session;
     }
 
@@ -110,7 +112,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var instanceIndex = 0;
         var handInstances = handCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
         var drawInstances = drawCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
-        return StartWithInstances(rng, playerId, playerHp, playerMaxHp, handInstances, enemies, drawInstances);
+        var session = StartWithInstances(rng, playerId, playerHp, playerMaxHp, handInstances, enemies, drawInstances);
+        session.State.Emit(session, "combat_started", session.State.Player.Id, session.State.Player.Id, 0);
+        EffectExecutor.Resume(session);
+        return session;
     }
 
     private GameSession StartWithInstances(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,

@@ -802,6 +802,11 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an invalid HP loss target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
                 break;
+            case HealEffect heal:
+                if (!Enum.IsDefined(heal.Target))
+                    throw new InvalidOperationException($"{owner} has an invalid heal target.");
+                ArgumentOutOfRangeException.ThrowIfNegative(heal.Amount);
+                break;
             case RandomAttackEffect randomAttack:
                 ArgumentOutOfRangeException.ThrowIfNegative(randomAttack.Amount);
                 break;
