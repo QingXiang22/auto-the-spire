@@ -97,6 +97,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     CardCostKind CostKind = CardCostKind.Fixed, bool CanBeGeneratedInCombat = true)
 {
     public bool HasEnergyXCost => CostKind == CardCostKind.X;
+    public IReadOnlyList<ContentId> Tags { get; init; } = Array.Empty<ContentId>();
 
     public EffectNode ResolveEffect(CardInstance instance)
     {
@@ -918,6 +919,9 @@ public sealed class ContentRegistry
         foreach (var card in _cards.Values)
         {
             card.Id.Validate();
+            if (card.Tags is null || card.Tags.Distinct().Count() != card.Tags.Count)
+                throw new InvalidOperationException($"Card '{card.Id}' has null or duplicate tags.");
+            foreach (var tag in card.Tags) tag.Validate();
             if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity)
                 || !Enum.IsDefined(card.CostKind))
                 throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, rarity, or cost kind.");
@@ -1194,6 +1198,9 @@ public sealed class ContentRegistry
                         throw new InvalidOperationException($"{owner} counts an invalid card pile.");
                     case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
                         throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
+                    case TaggedCardCountSource tag:
+                        tag.Tag.Validate();
+                        break;
                     case PileCardCountSource or TargetPowerCountSource:
                         break;
                     default:
