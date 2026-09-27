@@ -124,7 +124,7 @@ The DSL needs a small behavior algebra rather than a bespoke graph format for ev
 - `loop { choose { A, B } }` for repeated weighted/random choice.
 - `loop { choose without_repeat { A, B } }` for repeated choice with immediate-repeat prevention.
 - Per-candidate weights and repeat/cooldown filters, such as `A weight 2; B weight 1 unless previous(B)`.
-- `choose with_limits { A at_most 2_in_a_row; B at_most 1_in_a_row }` only when the source actually declares these limits.
+- `choose with_limits { A at_most 2_in_a_row; B at_most 1_in_a_row }` for source rules with consecutive-use limits.
 - `when condition -> behavior; otherwise -> behavior` for deterministic branches, evaluated in source order.
 - `choose one formation from [...]` for one correlated draw over complete formations.
 
@@ -158,9 +158,9 @@ enemy LeafSlimeMedium {
 enemy TwigSlimeMedium {
   hp: default: 26..28, when ToughEnemies: 27..29
   behavior: start sticky_shot; then loop {
-    choose weighted {
-      pokey_pounce weight 2: attack player for damage(default: 11, when DeadlyEnemies: 12)
-      sticky_shot weight 1 unless previous(sticky_shot): add 1 Slimed to player.discard
+    choose with_limits {
+      pokey_pounce at_most 2_in_a_row: attack player for damage(default: 11, when DeadlyEnemies: 12)
+      sticky_shot at_most 1_in_a_row: add 1 Slimed to player.discard
     }
   }
 }
@@ -196,7 +196,7 @@ encounter NibbitsNormal {
 }
 ```
 
-These examples preserve source distinctions: Twig Medium's Clump Shot has weight 2 and can repeat; Sticky Shot has weight 1 and cannot repeat immediately. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from enemy count or array index. The effects let the projection derive both Slice's attack and block intents, including their independent Deadly/Tough values.
+These examples preserve source distinctions: Twig Medium's Pokey Pounce can repeat at most twice consecutively; Sticky Shot cannot repeat immediately. The source uses equal default weights, with branch eligibility filtered by the move log. Nibbit's Alone/Front/Back branch is declared by encounter roles, matching the source encounter setup, rather than inferred from enemy count or array index. The effects let the projection derive both Slice's attack and block intents, including their independent Deadly/Tough values.
 
 Behavior lowering must retain only history needed by declared filters. For the examples above, the runtime needs the current behavior location and enough recent move identity to test `previous(sticky_shot)`; it should not retain an unbounded action log unless a content rule asks for longer cooldown or use-once history.
 

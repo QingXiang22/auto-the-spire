@@ -496,7 +496,7 @@ public sealed class CombatSliceTests
 
         var clumpAction = ContentId.Parse("base-spire:twig-medium-clump-shot");
         var stickyAction = ContentId.Parse("base-spire:twig-medium-sticky-shot");
-        var sawThreeConsecutiveClumps = false;
+        var sawTwoConsecutiveClumps = false;
         for (uint seed = 405; seed < 421; seed++)
         {
             var twigMedium = environment.Start(seed, "ironclad", 1000, 1000, [], BaseSpireIds.TwigSlimeMedium.ToString());
@@ -509,10 +509,13 @@ public sealed class CombatSliceTests
             }
             Assert.False(history.Zip(history.Skip(1)).Any(pair =>
                 pair.First == stickyAction && pair.Second == stickyAction));
-            sawThreeConsecutiveClumps |= history.Zip(history.Skip(1)).Zip(history.Skip(2), (pair, third) =>
-                pair.First == clumpAction && pair.Second == clumpAction && third == clumpAction).Any(run => run);
+            var clumpRuns = history.Zip(history.Skip(1)).Zip(history.Skip(2), (pair, third) =>
+                pair.First == clumpAction && pair.Second == clumpAction && third == clumpAction);
+            Assert.False(clumpRuns.Any(run => run));
+            sawTwoConsecutiveClumps |= history.Zip(history.Skip(1)).Any(pair =>
+                pair.First == clumpAction && pair.Second == clumpAction);
         }
-        Assert.True(sawThreeConsecutiveClumps);
+        Assert.True(sawTwoConsecutiveClumps);
     }
 
     public void BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle()
