@@ -1870,6 +1870,10 @@ public sealed class CombatSliceTests
         Assert.Equal(14, customRunEffectResult.Gold);
 
         var treasureRun = environment.Start(426);
+        Assert.False(treasureRun.State.SharedRelicBags[RunRelicRarity.Common]
+            .Contains(RunEventFixturePackage.CharacterPoolRelicId));
+        Assert.True(treasureRun.State.PlayerRelicBags[RunRelicRarity.Common]
+            .Contains(RunEventFixturePackage.CharacterPoolRelicId));
         environment.Step(treasureRun, new ChooseRunEventOptionAction(RunEventFixturePackage.GoldOptionId));
         var enteredTreasure = environment.Step(treasureRun, new ChooseMapPointAction("treasure"));
         Assert.Equal(RunPhase.ResolveTreasure, enteredTreasure.Phase);
@@ -1883,8 +1887,10 @@ public sealed class CombatSliceTests
         var claimedRelic = environment.Step(treasureRun, new ClaimRelicRewardAction(relicReward.Id));
         Assert.True(claimedRelic.Relics.Contains(relicReward.RelicId!.Value));
         Assert.Equal(0, claimedRelic.RoomStack[^1].Rewards.Count);
-        var claimedRelicRarity = definition.Relics[relicReward.RelicId.Value].Rarity;
-        Assert.False(treasureRun.State.TakeRelic(claimedRelicRarity, RunRelicPool.Player) == relicReward.RelicId);
+        Assert.False(treasureRun.State.SharedRelicBags[definition.Relics[relicReward.RelicId.Value].Rarity]
+            .Contains(relicReward.RelicId.Value));
+        Assert.False(treasureRun.State.PlayerRelicBags[definition.Relics[relicReward.RelicId.Value].Rarity]
+            .Contains(relicReward.RelicId.Value));
         environment.Step(treasureRun, new ProceedAfterRewardsAction());
 
         var skippedTreasureRun = environment.Start(427);
@@ -1896,8 +1902,10 @@ public sealed class CombatSliceTests
         var afterSkippingRelic = environment.Step(skippedTreasureRun, new ProceedAfterRewardsAction());
         Assert.False(afterSkippingRelic.Relics.Contains(skippedRelic.RelicId!.Value));
         var skippedRelicRarity = definition.Relics[skippedRelic.RelicId.Value].Rarity;
-        Assert.Equal(skippedRelic.RelicId,
-            skippedTreasureRun.State.TakeRelic(skippedRelicRarity, RunRelicPool.Player));
+        Assert.False(skippedTreasureRun.State.SharedRelicBags[skippedRelicRarity]
+            .Contains(skippedRelic.RelicId.Value));
+        Assert.True(skippedTreasureRun.State.PlayerRelicBags[skippedRelicRarity]
+            .Contains(skippedRelic.RelicId.Value));
 
         var eliteRun = environment.Start(428);
         environment.Step(eliteRun, new ChooseRunEventOptionAction(RunEventFixturePackage.GoldOptionId));
@@ -2603,6 +2611,7 @@ public sealed class CombatSliceTests
         public static readonly ContentId EliteEnemyId = ContentId.Parse("run-event-fixture:elite-enemy");
         public static readonly ContentId EliteEncounterId = ContentId.Parse("run-event-fixture:elite-encounter");
         public static readonly ContentId CommonRelicId = ContentId.Parse("run-event-fixture:common-relic");
+        public static readonly ContentId CharacterPoolRelicId = ContentId.Parse("run-event-fixture:character-pool-relic");
         public static readonly ContentId UncommonRelicId = ContentId.Parse("run-event-fixture:uncommon-relic");
         public static readonly ContentId RareRelicId = ContentId.Parse("run-event-fixture:rare-relic");
         public static readonly ContentId FallbackRelicId = ContentId.Parse("run-event-fixture:circlet");
@@ -2639,6 +2648,8 @@ public sealed class CombatSliceTests
                     new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff)]));
             registry.Register(new EncounterDefinition(EliteEncounterId, RunRoomType.Elite, [EliteEnemyId]));
             registry.Register(new RelicDefinition(CommonRelicId, RunRelicRarity.Common));
+            registry.Register(new RelicDefinition(CharacterPoolRelicId, RunRelicRarity.Common,
+                InSharedPool: false, CharacterPoolIds: [CharacterId]));
             registry.Register(new RelicDefinition(UncommonRelicId, RunRelicRarity.Uncommon));
             registry.Register(new RelicDefinition(RareRelicId, RunRelicRarity.Rare));
             registry.Register(new RelicDefinition(FallbackRelicId, RunRelicRarity.None,

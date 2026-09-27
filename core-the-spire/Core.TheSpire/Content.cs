@@ -45,7 +45,7 @@ public enum RunRelicRarity { None, Starter, Common, Uncommon, Rare, Shop, Event,
 public enum RunRelicPool { Shared, Player }
 
 public sealed record RelicDefinition(ContentId Id, RunRelicRarity Rarity, bool InSharedPool = true,
-    bool IsFallback = false, bool IsStackable = false)
+    bool IsFallback = false, bool IsStackable = false, IReadOnlyList<ContentId>? CharacterPoolIds = null)
 {
     public void Validate()
     {
@@ -53,6 +53,19 @@ public sealed record RelicDefinition(ContentId Id, RunRelicRarity Rarity, bool I
         if (!Enum.IsDefined(Rarity)) throw new ArgumentOutOfRangeException(nameof(Rarity));
         if (IsFallback && (InSharedPool || Rarity != RunRelicRarity.None))
             throw new ArgumentException("A fallback relic must be outside reward pools and use the None rarity.");
+        if (CharacterPoolIds is { Count: 0 })
+            throw new ArgumentException("A character relic pool must name at least one character.");
+        if (CharacterPoolIds is not null)
+        {
+            foreach (var characterId in CharacterPoolIds) characterId.Validate();
+            if (CharacterPoolIds.Distinct().Count() != CharacterPoolIds.Count)
+                throw new ArgumentException("A character relic pool cannot list a character more than once.");
+            if (InSharedPool)
+                throw new ArgumentException("A relic cannot be both a shared relic and a character-pool relic.");
+            if (IsFallback || Rarity is not (RunRelicRarity.Common or RunRelicRarity.Uncommon
+                or RunRelicRarity.Rare or RunRelicRarity.Shop))
+                throw new ArgumentException("Character-pool relics must use a reward rarity and cannot be fallback relics.");
+        }
     }
 }
 
@@ -644,6 +657,10 @@ public sealed class ContentRegistry
                 if (!_relics.ContainsKey(relicId))
                     throw new InvalidOperationException($"Character '{character.Id}' starts with unknown relic '{relicId}'.");
         }
+        foreach (var relic in _relics.Values)
+            foreach (var characterId in relic.CharacterPoolIds ?? Array.Empty<ContentId>())
+                if (!_characters.ContainsKey(characterId))
+                    throw new InvalidOperationException($"Relic '{relic.Id}' references unknown character pool '{characterId}'.");
         foreach (var power in _powers.Values)
         {
             if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
