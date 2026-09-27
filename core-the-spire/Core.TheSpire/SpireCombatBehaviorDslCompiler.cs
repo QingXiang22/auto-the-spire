@@ -41,7 +41,7 @@ public static class SpireCombatBehaviorDslCompiler
             var properties = Properties(declaration, "Power");
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
                 "role", "whenCardType", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
-                "vulnerableMultiplierPercentPerStack");
+                "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -76,7 +76,29 @@ public static class SpireCombatBehaviorDslCompiler
                 MaxEnergyPerStack: properties.TryGetValue("maxEnergyPerStack", out var maxEnergyNode)
                     ? Integer(maxEnergyNode) : 0,
                 VulnerableMultiplierPercentPerStack: properties.TryGetValue("vulnerableMultiplierPercentPerStack",
-                    out var vulnerableBonusNode) ? Integer(vulnerableBonusNode) : 0);
+                    out var vulnerableBonusNode) ? Integer(vulnerableBonusNode) : 0,
+                OnStackChange: properties.TryGetValue("onStackChange", out var stackChangeNode)
+                    ? CompileStackAdjustment(stackChangeNode, "stackDelta", "negativeStackDelta") : null,
+                OnExpire: properties.TryGetValue("onExpire", out var expireNode)
+                    ? CompileStackAdjustment(expireNode, "sourceStacks", "negativeSourceStacks") : null,
+                RemoveAfterOwnerTurnEnd: OptionalBoolean(properties, "removeAfterOwnerTurnEnd"));
+        }
+
+        private PowerStackAdjustment CompileStackAdjustment(DslValueNode node, string positive, string negative)
+        {
+            var call = RequireCall(node);
+            if (call.Name != "grantPower") throw Error(call.Location, "Power lifecycle operations require grantPower.");
+            CheckShape(call, 2);
+            var power = Argument(call, 0) switch
+            {
+                DslNameNode name => Id(name.Name),
+                DslStringNode text => ContentId.Parse(text.Value),
+                var other => throw Error(other.Location, "Power reference must be a local name or qualified ID string.")
+            };
+            var source = Name(Argument(call, 1));
+            if (source != positive && source != negative)
+                throw Error(Argument(call, 1).Location, $"Expected {positive} or {negative}.");
+            return new PowerStackAdjustment(power, source == positive ? 1 : -1);
         }
 
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)
