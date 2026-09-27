@@ -2,6 +2,26 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:fuzzy-wurm-crawler-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:fuzzy-wurm-crawler"],
+      "isWeak": true,
+      "tags": ["base-spire:crawler"]
+    },
+    {
+      "id": "base-spire:shrinker-beetle-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:shrinker-beetle"],
+      "isWeak": true,
+      "tags": ["base-spire:shrinker"]
+    },
+    {
+      "id": "base-spire:overgrowth-crawlers",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:shrinker-beetle", "base-spire:fuzzy-wurm-crawler"],
+      "tags": ["base-spire:shrinker", "base-spire:crawler"]
+    },
+    {
       "id": "base-spire:cultists-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:calcified-cultist", "base-spire:damp-cultist"]

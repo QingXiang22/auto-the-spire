@@ -188,51 +188,13 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
             Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));
 
-        var crawlerDamage = deadlyEnemies ? 6 : 4;
-        var firstAcidGoop = ContentId.Parse("base-spire:fuzzy-wurm-first-acid-goop");
-        var inhale = ContentId.Parse("base-spire:fuzzy-wurm-inhale");
-        var acidGoop = ContentId.Parse("base-spire:fuzzy-wurm-acid-goop");
-        registry.Register(new EnemyDefinition(BaseSpireIds.FuzzyWurmCrawler,
-            toughEnemies ? 58 : 55, toughEnemies ? 59 : 57,
-            [
-                new EnemyActionDefinition(firstAcidGoop, new AttackEffect(crawlerDamage), IntentKind.Attack,
-                    crawlerDamage, NextActionId: inhale),
-                new EnemyActionDefinition(inhale, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
-                    AppliedPower: BaseSpireIds.Strength, AppliedPowerAmount: 7, NextActionId: acidGoop),
-                new EnemyActionDefinition(acidGoop, new AttackEffect(crawlerDamage), IntentKind.Attack,
-                    crawlerDamage, NextActionId: firstAcidGoop)
-            ]));
-        registry.Register(new EncounterDefinition(BaseSpireIds.FuzzyWurmCrawlerWeak, RunRoomType.Monster,
-            [BaseSpireIds.FuzzyWurmCrawler], isWeak: true, tags: [ContentId.Parse("base-spire:crawler")]));
-
-        var shrink = ContentId.Parse("base-spire:shrinker-beetle-shrink");
-        var chomp = ContentId.Parse("base-spire:shrinker-beetle-chomp");
-        var stomp = ContentId.Parse("base-spire:shrinker-beetle-stomp");
-        var chompDamage = deadlyEnemies ? 8 : 7;
-        var stompDamage = deadlyEnemies ? 14 : 13;
-        registry.Register(new EnemyDefinition(BaseSpireIds.ShrinkerBeetle,
-            toughEnemies ? 40 : 38, toughEnemies ? 42 : 40,
-            [
-                new EnemyActionDefinition(shrink, new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff,
-                    AppliedPower: BaseSpireIds.Shrink, AppliedPowerAmount: -1,
-                    NextActionId: chomp, AppliedPowerTarget: TargetSelector.FirstEnemy),
-                new EnemyActionDefinition(chomp, new AttackEffect(chompDamage), IntentKind.Attack,
-                    chompDamage, NextActionId: stomp),
-                new EnemyActionDefinition(stomp, new AttackEffect(stompDamage), IntentKind.Attack,
-                    stompDamage, NextActionId: chomp)
-            ]));
-        registry.Register(new EncounterDefinition(BaseSpireIds.ShrinkerBeetleWeak, RunRoomType.Monster,
-            [BaseSpireIds.ShrinkerBeetle], isWeak: true, tags: [ContentId.Parse("base-spire:shrinker")]));
-        registry.Register(new EncounterDefinition(BaseSpireIds.OvergrowthCrawlers, RunRoomType.Monster,
-            [BaseSpireIds.ShrinkerBeetle, BaseSpireIds.FuzzyWurmCrawler],
-            tags: [ContentId.Parse("base-spire:shrinker"), ContentId.Parse("base-spire:crawler")]));
-
         registry.Register(BaseSpireContent.LoadEnemy("nibbit.enemy.json",
             new ContentVariantProfile(deadlyEnemies, toughEnemies)));
 
         foreach (var fileName in new[]
         {
             "damp-cultist.enemy.json", "calcified-cultist.enemy.json",
+            "fuzzy-wurm-crawler.enemy.json", "shrinker-beetle.enemy.json",
             "leaf-slime-small.enemy.json", "twig-slime-small.enemy.json",
             "leaf-slime-medium.enemy.json", "twig-slime-medium.enemy.json"
         })

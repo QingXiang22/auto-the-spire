@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "enemy": {
+    "id": "base-spire:fuzzy-wurm-crawler",
+    "minHp": { "$variant": { "default": 55, "tough": 58 } },
+    "maxHp": { "$variant": { "default": 57, "tough": 59 } },
+    "actions": [
+      {
+        "id": "base-spire:fuzzy-wurm-first-acid-goop",
+        "effect": { "op": "attack", "amount": { "$variant": { "default": 4, "deadly": 6 } } },
+        "intent": "attack",
+        "intentDamage": { "$variant": { "default": 4, "deadly": 6 } },
+        "nextActionId": "base-spire:fuzzy-wurm-inhale"
+      },
+      {
+        "id": "base-spire:fuzzy-wurm-inhale",
+        "effect": { "op": "sequence", "effects": [] },
+        "intent": "buff",
+        "appliedPower": "base-spire:strength",
+        "appliedPowerAmount": 7,
+        "nextActionId": "base-spire:fuzzy-wurm-acid-goop"
+      },
+      {
+        "id": "base-spire:fuzzy-wurm-acid-goop",
+        "effect": { "op": "attack", "amount": { "$variant": { "default": 4, "deadly": 6 } } },
+        "intent": "attack",
+        "intentDamage": { "$variant": { "default": 4, "deadly": 6 } },
+        "nextActionId": "base-spire:fuzzy-wurm-first-acid-goop"
+      }
+    ]
+  }
+}
