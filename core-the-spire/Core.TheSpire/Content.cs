@@ -28,7 +28,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     bool SkipFirstTriggerWhenAppliedToEnemy = false, PowerRole Role = PowerRole.None, bool DecrementOnTrigger = false,
     bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
     bool RemoveWhenApplierDies = false, EffectNode? TriggerRuleEffect = null,
-    CardType? TriggerCardType = null, bool RemoveAfterPlayerTurnEnd = false)
+    CardType? TriggerCardType = null, bool RemoveAfterPlayerTurnEnd = false,
+    int MaxEnergyPerStack = 0)
 {
     public void Validate()
     {

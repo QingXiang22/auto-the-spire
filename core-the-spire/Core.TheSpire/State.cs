@@ -162,6 +162,8 @@ internal sealed class GameState
 
     public GameDefinition Definition { get; }
     public PlayerCombatState Player { get; }
+    public int PlayerMaxEnergy => Math.Max(0, checked(3 + Player.Creature.Powers.Sum(power =>
+        checked(Definition.Powers[power.Key].MaxEnergyPerStack * power.Value))));
     public List<EnemyCombatState> Enemies { get; }
     public EntityState Enemy => Enemies[0].Creature;
     public EnemyDefinition EnemyDefinition => Enemies[0].Definition;
@@ -485,7 +487,10 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     IReadOnlyList<CardInstance> HandInstances, IReadOnlyList<CardInstance> DrawPileInstances,
     IReadOnlyList<CardInstance> DiscardPileInstances, IReadOnlyList<CardInstance> ExhaustPileInstances,
     IReadOnlyList<CardInstance> PlayPileInstances, IReadOnlyList<ContentId?> Potions,
-    PendingCardSelectionView? PendingCardSelection);
+    PendingCardSelectionView? PendingCardSelection)
+{
+    public int MaxEnergy { get; init; }
+}
 
 public abstract record PlayerAction;
 public sealed record PlayCardAction(int HandIndex, string? TargetId = null) : PlayerAction;

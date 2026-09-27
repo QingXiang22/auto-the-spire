@@ -10,4 +10,8 @@ package base-spire {
     effect = gainBlock(1, perPowerStack=RagePower)
     removeAfterPlayerTurnEnd = true
   }
+
+  power PyrePower {
+    maxEnergyPerStack = 1
+  }
 }

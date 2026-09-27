@@ -230,7 +230,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     cardSetChoice.Options.ToArray(), cardSetChoice.Selected.ToArray(),
                     cardSetChoice.Effect.MinChoices, cardSetChoice.MaxChoices),
                 _ => null
-            });
+            }) { MaxEnergy = state.PlayerMaxEnergy };
     }
 
     private static EnemyCombatObservation ObserveEnemy(GameSession session, EnemyCombatState enemy)
@@ -581,7 +581,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     if (!state.IsTerminal)
                     {
                         state.Turn++;
-                        state.Player.Energy = 3;
+                        state.Player.Energy = state.PlayerMaxEnergy;
                         if (state.Definition.Hooks.All(hook => hook.ShouldClearBlock(
                             new RuleHookContext(session, hook.Id), state.Player.Id)))
                             state.Player.Creature.Block = 0;
