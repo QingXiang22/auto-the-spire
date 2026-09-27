@@ -2942,6 +2942,30 @@ public sealed class CombatSliceTests
         Assert.Equal(5, run.State.PotionCapacity);
     }
 
+    public void PotionGenerationEffectUsesItsOwnRngAndFillsOpenSlotsWithoutDuplicates()
+    {
+        Assert.True(EffectDsl.Parse("""{"op":"generatePotion","count":2}""") is GeneratePotionEffect { Count: 2 });
+        var definition = Build(new BaseSpirePackage(), new PotionGenerationFixturePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(826);
+        Assert.True(run.State.TryAddPotion(PotionGenerationFixturePackage.GeneratorPotionId));
+        Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        var rewardsCounter = run.State.Random.Get("rewards").Counter;
+
+        combatEnvironment.Step(combat,
+            new UsePotionAction(0, combat.State.Player.Id));
+
+        var generated = run.State.Potions.OfType<ContentId>().ToArray();
+        Assert.Equal(3, generated.Length);
+        Assert.Equal(generated.Length, generated.Distinct().Count());
+        Assert.Equal(4, run.State.Random.Get("combat-potion-generation").Counter);
+        Assert.Equal(rewardsCounter, run.State.Random.Get("rewards").Counter);
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "potion_generated");
+    }
+
     private static RunObservation CompletePotionRewardCombat(RunEnvironment runEnvironment,
         CombatEnvironment combatEnvironment, RunSession run)
     {
@@ -2978,6 +3002,15 @@ public sealed class CombatSliceTests
                 minGoldReward: 1, maxGoldReward: 1));
             registry.Register(new ForcePotionRewardHook());
         }
+    }
+
+    private sealed class PotionGenerationFixturePackage : IRulePackage
+    {
+        public static readonly ContentId GeneratorPotionId = ContentId.Parse("potion-generation-fixture:generator");
+        public PackageInfo Info { get; } = new("potion-generation-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new PotionDefinition(
+            GeneratorPotionId, PotionRarity.Common, new GeneratePotionEffect(2)));
     }
 
     private sealed class ForcePotionRewardHook : IRunHook
@@ -3372,6 +3405,7 @@ internal static class Program
         tests.BaseFirePotionUsesUnpoweredDamageAndConsumesItsRunInventorySlot();
         tests.PotionRewardUsesPityOddsAndRespectsFixedInventoryCapacity();
         tests.PotionCapacityChangesPreserveSlotsAndPotionBeltAddsTwoSlots();
+        tests.PotionGenerationEffectUsesItsOwnRngAndFillsOpenSlotsWithoutDuplicates();
         tests.BludgeonAndDemonFormUseRegisteredCardAndPlayerTurnStartRules();
         tests.AngerCreatesAnIndependentCopyAndPreservesPlayedUpgradeLevel();
         tests.HeadbuttPausesForAnExactCardInstanceAndMovesItToDrawPileTop();
