@@ -278,7 +278,7 @@ public enum RunRewardKind { Gold, Card, Relic, Potion }
 public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
     IReadOnlyList<CardInstance> CardOptions, ContentId? RelicId = null, ContentId? PotionId = null);
 public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
-public sealed record RunEventOptionView(ContentId Id, string Label);
+public sealed record RunEventOptionView(ContentId Id, string Label, bool IsEnabled = true);
 public sealed record PendingRunCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Candidates, bool CanSkip);
 
 public sealed record RunRoomFrameView(RunRoomType RoomType, string? MapPointId, bool IsFinalEvent,
@@ -714,25 +714,26 @@ public sealed class RunEnvironment
         return ObserveState(session.State);
     }
 
-    private static RunObservation ObserveState(RunState state)
+    private RunObservation ObserveState(RunState state)
     {
         return new RunObservation(state.Character.Id, state.Hp, state.MaxHp, state.Gold,
             Array.AsReadOnly(state.Deck.Select(card => card.CardId).ToArray()), Array.AsReadOnly(state.Relics.ToArray()),
             Array.AsReadOnly(state.Potions.ToArray()), state.ActIndex,
             state.CurrentPointId, state.CurrentMapPointType, state.CurrentRoom,
             state.Phase, state.Status, state.MapView, Array.AsReadOnly(state.VisitHistory.ToArray()),
-            Array.AsReadOnly(state.RoomStack.Select(ObserveRoomFrame).ToArray()),
+            Array.AsReadOnly(state.RoomStack.Select(frame => ObserveRoomFrame(frame, state)).ToArray()),
             Array.AsReadOnly(state.Deck.ToArray()), state.PendingRunCardSelection is { } pending
                 ? new PendingRunCardSelectionView(pending.Selection.Prompt, pending.Candidates, pending.Selection.CanSkip)
                 : null);
     }
 
-    private static RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame) => new(
+    private RunRoomFrameView ObserveRoomFrame(RunRoomFrame frame, RunState state) => new(
         frame.RoomType, frame.MapPointId, frame.IsFinalEvent, frame.EncounterId, frame.EventId,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
         Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
             reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId, reward.PotionId)).ToArray()),
-        Array.AsReadOnly(frame.EventOptions.Select(option => new RunEventOptionView(option.Id, option.Label)).ToArray()));
+        Array.AsReadOnly(frame.EventOptions.Select(option => new RunEventOptionView(option.Id, option.Label,
+            IsEventOptionLegal(option, state))).ToArray()));
 
     public IReadOnlyList<PlayerAction> LegalActions(RunSession session)
     {
@@ -1020,6 +1021,7 @@ public sealed class RunEnvironment
 
     private bool IsEventOptionLegal(RunEventOptionDefinition option, RunState state)
     {
+        if (option.Requirement is { } requirement && !IsRunConditionMet(requirement, state)) return false;
         long gold = state.Gold;
         foreach (var effect in option.Effects)
         {
@@ -1032,6 +1034,39 @@ public sealed class RunEnvironment
         }
         return true;
     }
+
+    private static bool IsRunConditionMet(RunCondition condition, RunState state) => condition switch
+    {
+        RunMetricCondition metric => CompareRunMetric(ReadRunMetric(metric.Metric, state),
+            metric.Comparison, metric.Threshold),
+        HasRunRelicCondition hasRelic => state.Relics.Contains(hasRelic.Relic),
+        HasRunPotionCondition hasPotion => state.Potions.Contains(hasPotion.Potion),
+        AllRunCondition all => all.Conditions.All(nested => IsRunConditionMet(nested, state)),
+        AnyRunCondition any => any.Conditions.Any(nested => IsRunConditionMet(nested, state)),
+        NotRunCondition not => !IsRunConditionMet(not.Condition, state),
+        _ => throw new InvalidOperationException($"Unsupported run condition '{condition.GetType().Name}'.")
+    };
+
+    private static int ReadRunMetric(RunMetric metric, RunState state) => metric switch
+    {
+        RunMetric.Gold => state.Gold,
+        RunMetric.Hp => state.Hp,
+        RunMetric.MaxHp => state.MaxHp,
+        RunMetric.DeckSize => state.Deck.Count,
+        RunMetric.PotionCount => state.Potions.Count(potion => potion.HasValue),
+        RunMetric.EmptyPotionSlots => state.Potions.Count(potion => potion is null),
+        _ => throw new ArgumentOutOfRangeException(nameof(metric))
+    };
+
+    private static bool CompareRunMetric(int value, RunComparison comparison, int threshold) => comparison switch
+    {
+        RunComparison.Equal => value == threshold,
+        RunComparison.AtLeast => value >= threshold,
+        RunComparison.AtMost => value <= threshold,
+        RunComparison.GreaterThan => value > threshold,
+        RunComparison.LessThan => value < threshold,
+        _ => throw new ArgumentOutOfRangeException(nameof(comparison))
+    };
 
     private IReadOnlyList<CardInstance> GetRunCardCandidates(RunState state, ChooseRunCardEffect selection) =>
         Array.AsReadOnly(state.Deck.Where(card => selection.Filter switch
