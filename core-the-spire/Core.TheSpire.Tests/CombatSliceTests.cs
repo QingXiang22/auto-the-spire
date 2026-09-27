@@ -1779,6 +1779,8 @@ public sealed class CombatSliceTests
         Assert.Equal(new WinRunEffect(), EffectDsl.ParseRun("""{"op":"winRun"}"""));
         var enterCombat = new EnterRunCombatEffect(RunEventFixturePackage.EventEncounterId, false);
         Assert.Equal(enterCombat, EffectDsl.ParseRun(EffectDsl.Serialize(enterCombat)));
+        var gainRelic = new GainRunRelicEffect(RunEventFixturePackage.CommonRelicId);
+        Assert.Equal(gainRelic, EffectDsl.ParseRun(EffectDsl.Serialize(gainRelic)));
 
         var registry = new ContentRegistry();
         registry.AddPackage(new RunEventFixturePackage());
@@ -1791,7 +1793,7 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, observation.Phase);
         Assert.Equal(RunEventFixturePackage.EventId,
             observation.RoomStack[^1].EventId!.Value);
-        Assert.Equal(12, observation.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(13, observation.RoomStack[^1].EventOptions.Count);
         Assert.False(observation.RoomStack[^1].EventOptions.Single(option =>
             option.Id == RunEventFixturePackage.PredicateOptionId).IsEnabled);
         Assert.False(observation.RoomStack[^1].EventOptions.Single(option =>
@@ -1814,6 +1816,11 @@ public sealed class CombatSliceTests
         Assert.Equal(3, result.DeckInstances.Count);
         Assert.Equal(RunEventFixturePackage.CardId, result.DeckInstances[^1].CardId);
         Assert.Equal("run-event-card-0002", result.DeckInstances[^1].InstanceId);
+
+        var relicRun = environment.Start(421);
+        var relicResult = environment.Step(relicRun,
+            new ChooseRunEventOptionAction(RunEventFixturePackage.RelicOptionId));
+        Assert.True(relicResult.Relics.Contains(RunEventFixturePackage.CommonRelicId));
 
         var predicateRun = environment.Start(421);
         predicateRun.State.Hp = 20;
@@ -2706,6 +2713,7 @@ public sealed class CombatSliceTests
         public static readonly ContentId RareRelicId = ContentId.Parse("run-event-fixture:rare-relic");
         public static readonly ContentId FallbackRelicId = ContentId.Parse("run-event-fixture:circlet");
         public static readonly ContentId TradeOptionId = ContentId.Parse("run-event-fixture:trade");
+        public static readonly ContentId RelicOptionId = ContentId.Parse("run-event-fixture:gain-relic");
         public static readonly ContentId GoldOptionId = ContentId.Parse("run-event-fixture:gold");
         public static readonly ContentId MaxHpOptionId = ContentId.Parse("run-event-fixture:max-hp");
         public static readonly ContentId MaxHpLossOptionId = ContentId.Parse("run-event-fixture:max-hp-loss");
@@ -2763,6 +2771,8 @@ public sealed class CombatSliceTests
             [
                 new RunEventPageDefinition(EventId, "Initial page",
                 [
+                new RunEventOptionDefinition(RelicOptionId, "Find a relic",
+                    [new GainRunRelicEffect(CommonRelicId)]),
                 new RunEventOptionDefinition(TradeOptionId, "Trade gold for a card",
                     [new LoseRunGoldEffect(8), new AddCardToRunDeckEffect(CardId)]),
                 new RunEventOptionDefinition(GoldOptionId, "Find gold",
