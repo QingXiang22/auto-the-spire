@@ -40,7 +40,7 @@ The move names produce stable action IDs. `intent` and displayed damage are deri
 
 ## Current source of truth
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares all 30 currently registered Ironclad combat cards, including upgrades, costs, targeting, keywords, and effects.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 34 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool is generated from compiled card definitions with eligible rarities.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
 

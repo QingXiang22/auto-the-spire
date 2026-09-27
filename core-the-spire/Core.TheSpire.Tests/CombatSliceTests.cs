@@ -48,19 +48,16 @@ public sealed class CombatSliceTests
         Assert.Equal(RunRelicRarity.Rare, definition.Relics[BaseSpireIds.DemonTongue].Rarity);
         Assert.True(definition.Relics[BaseSpireIds.DemonTongue].CharacterPoolIds!
             .Contains(BaseSpireIds.Ironclad));
-        Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
-                BaseSpireIds.BattleTrance,
-                BaseSpireIds.Bloodletting,
-                BaseSpireIds.Bludgeon, BaseSpireIds.BodySlam,
-                BaseSpireIds.BurningPact, BaseSpireIds.Clothesline, BaseSpireIds.DefendIronclad,
-                BaseSpireIds.DemonForm, BaseSpireIds.FeelNoPain, BaseSpireIds.Headbutt, BaseSpireIds.Inflame,
-                BaseSpireIds.Impervious, BaseSpireIds.IronWave, BaseSpireIds.Offering,
-                BaseSpireIds.PommelStrike, BaseSpireIds.SecondWind,
-                BaseSpireIds.ShrugItOff,
-                BaseSpireIds.StrikeIronclad, BaseSpireIds.SwordBoomerang, BaseSpireIds.Thunderclap,
-                BaseSpireIds.TrueGrit, BaseSpireIds.TwinStrike,
-                BaseSpireIds.Uppercut, BaseSpireIds.Whirlwind }.AsEnumerable(),
-            definition.CardPools[BaseSpireIds.IroncladCardPool].Cards);
+        var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
+        Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
+        Assert.Equal(32, ironcladPool.Count);
+        Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
+        Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
+        Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
+        Assert.True(ironcladPool.Contains(BaseSpireIds.Hemokinesis));
+        Assert.True(ironcladPool.Contains(BaseSpireIds.Tremble));
+        Assert.False(ironcladPool.Contains(BaseSpireIds.Entrench));
+        Assert.False(ironcladPool.Contains(BaseSpireIds.Slimed));
         Assert.Equal(CardRarity.Basic, definition.Cards[BaseSpireIds.StrikeIronclad].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Anger].Rarity);
         Assert.Equal(CardRarity.Common, definition.Cards[BaseSpireIds.Armaments].Rarity);
@@ -429,7 +426,7 @@ public sealed class CombatSliceTests
             """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]},{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]}] }"""));
     }
 
-    public void SpireCardDslCompilesTheCompleteIroncladCombatCardSet()
+    public void SpireCardDslCompilesTheCurrentIroncladCardSet()
     {
         using var stream = typeof(BaseSpirePackage).Assembly.GetManifestResourceStream(
             "BaseSpire.ContentSource.ironclad-cards.spire");
@@ -440,10 +437,12 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(30, cards.Count);
-        Assert.Equal(30, cards.Select(card => card.Id).Distinct().Count());
+        Assert.Equal(34, cards.Count);
+        Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.True(pool.All(id => cards.Any(card => card.Id == id)));
+        Assert.Equal(cards.Where(card => card.Rarity is CardRarity.Basic or CardRarity.Common
+                or CardRarity.Uncommon or CardRarity.Rare or CardRarity.Ancient)
+            .Select(card => card.Id), pool);
         Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
 
         var strike = cards.Single(card => card.Id == BaseSpireIds.StrikeIronclad);
@@ -471,6 +470,56 @@ public sealed class CombatSliceTests
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
         Assert.Equal(4, parseError.Location.Line);
+    }
+
+    public void SourceBackedIroncladCardsUseSharedEffectsInCombat()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var breakthrough = environment.StartEncounter(51, "ironclad", 56, 65,
+            [BaseSpireIds.Breakthrough],
+            [new CombatEnemySpawn(BaseSpireIds.DampCultist.ToString()),
+                new CombatEnemySpawn(BaseSpireIds.CalcifiedCultist.ToString())]);
+        var enemyHp = breakthrough.State.Enemies.Select(enemy => enemy.Creature.Hp).ToArray();
+        environment.Step(breakthrough, new PlayCardAction(0));
+        Assert.Equal(55, breakthrough.State.Player.Creature.Hp);
+        for (var i = 0; i < enemyHp.Length; i++)
+            Assert.Equal(enemyHp[i] - 9, breakthrough.State.Enemies[i].Creature.Hp);
+        var upgradedBreakthrough = definition.Cards[BaseSpireIds.Breakthrough]
+            .ResolveEffect(new CardInstance("breakthrough+", BaseSpireIds.Breakthrough, 1));
+        Assert.True(upgradedBreakthrough is SequenceEffect { Effects.Count: 2 });
+        Assert.Equal(new AttackEffect(13, TargetSelector.AllOpponents),
+            ((SequenceEffect)upgradedBreakthrough).Effects[1]);
+
+        var hemokinesis = environment.Start(52, "ironclad", 56, 65, [BaseSpireIds.Hemokinesis],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        environment.Step(hemokinesis, new PlayCardAction(0, hemokinesis.State.Enemy.Id));
+        Assert.Equal(54, hemokinesis.State.Player.Creature.Hp);
+        Assert.Equal(38, hemokinesis.State.Enemy.Hp);
+        var upgradedHemokinesis = definition.Cards[BaseSpireIds.Hemokinesis]
+            .ResolveEffect(new CardInstance("hemokinesis+", BaseSpireIds.Hemokinesis, 1));
+        Assert.Equal(new AttackEffect(20, TargetSelector.SelectedTarget),
+            ((SequenceEffect)upgradedHemokinesis).Effects[1]);
+
+        var breakCombat = environment.Start(53, "ironclad", 56, 65, [BaseSpireIds.Break],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        environment.Step(breakCombat, new PlayCardAction(0, breakCombat.State.Enemy.Id));
+        Assert.Equal(33, breakCombat.State.Enemy.Hp);
+        Assert.Equal(5, breakCombat.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        var upgradedBreak = (SequenceEffect)definition.Cards[BaseSpireIds.Break]
+            .ResolveEffect(new CardInstance("break+", BaseSpireIds.Break, 1));
+        Assert.Equal(new AttackEffect(30, TargetSelector.SelectedTarget), upgradedBreak.Effects[0]);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 7, TargetSelector.SelectedTarget),
+            upgradedBreak.Effects[1]);
+
+        var tremble = environment.Start(54, "ironclad", 56, 65, [BaseSpireIds.Tremble],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        environment.Step(tremble, new PlayCardAction(0, tremble.State.Enemy.Id));
+        Assert.Equal(3, tremble.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
+        Assert.Equal(BaseSpireIds.Tremble, tremble.State.Player.ExhaustPile.Single());
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Vulnerable, 4, TargetSelector.SelectedTarget),
+            definition.Cards[BaseSpireIds.Tremble]
+                .ResolveEffect(new CardInstance("tremble+", BaseSpireIds.Tremble, 1)));
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -3845,7 +3894,8 @@ internal static class Program
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
         tests.EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds();
-        tests.SpireCardDslCompilesTheCompleteIroncladCombatCardSet();
+        tests.SpireCardDslCompilesTheCurrentIroncladCardSet();
+        tests.SourceBackedIroncladCardsUseSharedEffectsInCombat();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();

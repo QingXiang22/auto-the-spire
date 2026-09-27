@@ -8,6 +8,8 @@ public static class BaseSpireIds
     public static readonly ContentId StrikeIronclad = ContentId.Parse("base-spire:strike-ironclad");
     public static readonly ContentId DefendIronclad = ContentId.Parse("base-spire:defend-ironclad");
     public static readonly ContentId Bash = ContentId.Parse("base-spire:bash");
+    public static readonly ContentId Break = ContentId.Parse("base-spire:break");
+    public static readonly ContentId Breakthrough = ContentId.Parse("base-spire:breakthrough");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");
     public static readonly ContentId Bludgeon = ContentId.Parse("base-spire:bludgeon");
@@ -18,6 +20,7 @@ public static class BaseSpireIds
     public static readonly ContentId DemonForm = ContentId.Parse("base-spire:demon-form");
     public static readonly ContentId DemonFormPower = ContentId.Parse("base-spire:demon-form-power");
     public static readonly ContentId Headbutt = ContentId.Parse("base-spire:headbutt");
+    public static readonly ContentId Hemokinesis = ContentId.Parse("base-spire:hemokinesis");
     public static readonly ContentId Offering = ContentId.Parse("base-spire:offering");
     public static readonly ContentId IronWave = ContentId.Parse("base-spire:iron-wave");
     public static readonly ContentId Inflame = ContentId.Parse("base-spire:inflame");
@@ -38,6 +41,7 @@ public static class BaseSpireIds
     public static readonly ContentId TwinStrike = ContentId.Parse("base-spire:twin-strike");
     public static readonly ContentId Uppercut = ContentId.Parse("base-spire:uppercut");
     public static readonly ContentId Thunderclap = ContentId.Parse("base-spire:thunderclap");
+    public static readonly ContentId Tremble = ContentId.Parse("base-spire:tremble");
     public static readonly ContentId TrueGrit = ContentId.Parse("base-spire:true-grit");
     public static readonly ContentId IroncladCardPool = ContentId.Parse("base-spire:ironclad-card-pool");
     public static readonly ContentId DampCultist = ContentId.Parse("base-spire:damp-cultist");
@@ -201,8 +205,9 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
 
-        foreach (var card in BaseSpireContent.LoadIroncladCards()) registry.Register(card);
-        IroncladCardPool.Register(registry);
+        var ironcladCards = BaseSpireContent.LoadIroncladCards();
+        foreach (var card in ironcladCards) registry.Register(card);
+        IroncladCardPool.Register(registry, ironcladCards);
         registry.Register(new CardDefinition(BaseSpireIds.WellLaidPlans, 1, CardType.Power,
             new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1), Target: TargetSelector.Self,
             Rarity: CardRarity.Uncommon,
