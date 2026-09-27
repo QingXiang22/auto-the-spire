@@ -107,7 +107,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.BurningBlood, RunRelicRarity.Starter, InSharedPool: false));
         registry.Register(new RelicDefinition(BaseSpireIds.Anchor, RunRelicRarity.Common));
         registry.Register(new RelicDefinition(BaseSpireIds.Vajra, RunRelicRarity.Common));
-        registry.Register(new RelicDefinition(BaseSpireIds.PotionBelt, RunRelicRarity.Uncommon));
+        registry.Register(new RelicDefinition(BaseSpireIds.PotionBelt, RunRelicRarity.Common));
         registry.Register(new RelicDefinition(BaseSpireIds.CharonsAshes, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.SelfFormingClay, RunRelicRarity.Uncommon,
