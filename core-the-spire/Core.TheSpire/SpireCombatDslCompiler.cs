@@ -197,6 +197,9 @@ public static class SpireCombatDslCompiler
                 case "cardExhaustedThisTurn":
                     CheckShape(call, 0, 0);
                     return new CardExhaustedThisTurnPredicate();
+                case "playerLostHpThisTurn":
+                    CheckShape(call, 0, 0);
+                    return new PlayerLostHpThisTurnPredicate();
                 case "pileCountAtLeast":
                     CheckShape(call, 2, 2);
                     return new PileCountAtLeastPredicate(EnumValue<CardPile>(Argument(call, 0)),

@@ -21,6 +21,7 @@ public static class BaseSpireIds
     public static readonly ContentId Dominate = ContentId.Parse("base-spire:dominate");
     public static readonly ContentId MoltenFist = ContentId.Parse("base-spire:molten-fist");
     public static readonly ContentId Rage = ContentId.Parse("base-spire:rage");
+    public static readonly ContentId Spite = ContentId.Parse("base-spire:spite");
     public static readonly ContentId RagePower = ContentId.Parse("base-spire:rage-power");
     public static readonly ContentId Anger = ContentId.Parse("base-spire:anger");
     public static readonly ContentId Armaments = ContentId.Parse("base-spire:armaments");

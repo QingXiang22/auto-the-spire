@@ -25,6 +25,8 @@ An enemy's effect and its behavior remain separate. For example, an attack expre
 
 Effects may branch on a compiled predicate at execution time. For example, `if(cardExhaustedThisTurn(), repeat(2, gainBlock(8)), else=gainBlock(8))` models Evil Eye. `pileCountAtLeast(exhaust, 3)` models Pact's End. The first predicate reads a turn-scoped combat summary, and the second reads the current pile; neither requires a card-specific runtime branch.
 
+`playerLostHpThisTurn()` reads whether the player has lost positive HP to damage or direct HP loss during the current turn. Blocked hits do not set it. Spite uses this predicate to choose one hit or two hits (three when upgraded); it resets when the next player turn begins.
+
 `scaledAttack(base, perCount, count=pileCount(exhaust))` and `scaledAttack(base, perCount, count=targetPowerAmount(Vulnerable))` read combat data when damage resolves, then use the ordinary attack damage pipeline. `hasPower(Vulnerable, target=target)` lets a condition inspect the selected enemy rather than the acting player. Card metadata may set `canGenerateInCombat = false`; Not Yet records that source restriction, though a general combat card-generation operator has not been added yet.
 
 Card definitions may declare `tags = [Strike]`. A tag is a namespaced content ID; a local name uses the current package, and a quoted full ID such as `"base-spire:strike"` lets a mod refer to another package's tag. `cardsWithTag(Strike)` counts matching card instances across hand, draw, discard, exhaust, and play piles. Perfected Strike uses this count, including its own card instance after it enters the play pile.
@@ -52,7 +54,7 @@ The move names produce stable action IDs. `intent` and displayed damage are deri
 
 ## Current source of truth
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 50 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 48 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 51 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 49 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
 - [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
