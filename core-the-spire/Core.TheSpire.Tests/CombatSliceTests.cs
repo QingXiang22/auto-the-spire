@@ -1777,6 +1777,8 @@ public sealed class CombatSliceTests
             false, new UpgradeSelectedRunCardEffect());
         Assert.Equal(chooseCard, EffectDsl.ParseRun(EffectDsl.Serialize(chooseCard)));
         Assert.Equal(new WinRunEffect(), EffectDsl.ParseRun("""{"op":"winRun"}"""));
+        var enterCombat = new EnterRunCombatEffect(RunEventFixturePackage.EventEncounterId, false);
+        Assert.Equal(enterCombat, EffectDsl.ParseRun(EffectDsl.Serialize(enterCombat)));
 
         var registry = new ContentRegistry();
         registry.AddPackage(new RunEventFixturePackage());
@@ -1826,12 +1828,44 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ResolveEvent, transitioned.Phase);
         Assert.Equal(RunEventFixturePackage.ContinuationPageId, transitioned.RoomStack[^1].EventPageId);
         Assert.Equal("Continuation page", transitioned.RoomStack[^1].EventPageDescription);
-        Assert.Equal(1, transitioned.RoomStack[^1].EventOptions.Count);
+        Assert.Equal(3, transitioned.RoomStack[^1].EventOptions.Count);
         Assert.Equal(101, transitioned.Gold);
         var completedEvent = environment.Step(predicateRun,
             new ChooseRunEventOptionAction(RunEventFixturePackage.ContinueOptionId));
         Assert.Equal(RunPhase.ChooseMapPoint, completedEvent.Phase);
         Assert.Equal(103, completedEvent.Gold);
+
+        static RunObservation ResolveEventCombat(ContentRegistry registry, bool resumeEvent)
+        {
+            var runEnvironment = new RunEnvironment(registry.Build(), RunEventFixturePackage.RunId,
+                RunEventFixturePackage.CharacterId);
+            var runSession = runEnvironment.Start(421);
+            runSession.State.Gold = 100;
+            runEnvironment.Step(runSession,
+                new ChooseRunEventOptionAction(RunEventFixturePackage.PredicateOptionId));
+            var combatOption = resumeEvent
+                ? RunEventFixturePackage.ResumeCombatOptionId
+                : RunEventFixturePackage.EndingCombatOptionId;
+            var enteringCombat = runEnvironment.Step(runSession,
+                new ChooseRunEventOptionAction(combatOption));
+            Assert.Equal(RunPhase.ResolveRoom, enteringCombat.Phase);
+            Assert.Equal(2, enteringCombat.RoomStack.Count);
+
+            var combatEnvironment = new CombatEnvironment(registry.Build());
+            var combat = combatEnvironment.StartCurrentEncounterForRun(runSession);
+            Assert.Equal(1, combat.State.Enemies.Count);
+            combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Enemies[0].Creature.Id));
+            var afterCombat = runEnvironment.CompleteCombat(runSession, combat);
+            Assert.Equal(resumeEvent ? RunPhase.ResolveEvent : RunPhase.ChooseMapPoint, afterCombat.Phase);
+            Assert.Equal(resumeEvent ? 1 : 0, afterCombat.RoomStack.Count);
+            return afterCombat;
+        }
+
+        var resumedEvent = ResolveEventCombat(registry, resumeEvent: true);
+        Assert.Equal(RunEventFixturePackage.ContinuationPageId, resumedEvent.RoomStack[^1].EventPageId);
+        Assert.Contains(resumedEvent.RoomStack[^1].EventOptions,
+            option => option.Id == RunEventFixturePackage.ContinueOptionId);
+        ResolveEventCombat(registry, resumeEvent: false);
 
         var pageAfterSelectionRun = environment.Start(421);
         var selectionPending = environment.Step(pageAfterSelectionRun,
@@ -2686,6 +2720,10 @@ public sealed class CombatSliceTests
         public static readonly ContentId PredicateOptionId = ContentId.Parse("run-event-fixture:predicate-option");
         public static readonly ContentId ContinuationPageId = ContentId.Parse("run-event-fixture:continuation-page");
         public static readonly ContentId ContinueOptionId = ContentId.Parse("run-event-fixture:continue-option");
+        public static readonly ContentId ResumeCombatOptionId = ContentId.Parse("run-event-fixture:resume-combat");
+        public static readonly ContentId EndingCombatOptionId = ContentId.Parse("run-event-fixture:ending-combat");
+        public static readonly ContentId EventEnemyId = ContentId.Parse("run-event-fixture:event-enemy");
+        public static readonly ContentId EventEncounterId = ContentId.Parse("run-event-fixture:event-encounter");
         public static readonly ContentId SelectionTransitionOptionId = ContentId.Parse("run-event-fixture:selection-transition-option");
 
         public PackageInfo Info { get; } = new("run-event-fixture", "1.0.0");
@@ -2707,6 +2745,11 @@ public sealed class CombatSliceTests
                 [new EnemyActionDefinition(ContentId.Parse("run-event-fixture:elite-wait"),
                     new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.Buff)]));
             registry.Register(new EncounterDefinition(EliteEncounterId, RunRoomType.Elite, [EliteEnemyId]));
+            registry.Register(new EnemyDefinition(EventEnemyId, 1, 1,
+                [new EnemyActionDefinition(ContentId.Parse("run-event-fixture:event-wait"),
+                    new SequenceEffect(Array.Empty<EffectNode>()), IntentKind.None)]));
+            registry.Register(new EncounterDefinition(EventEncounterId, RunRoomType.Monster, [EventEnemyId],
+                shouldGiveRewards: false));
             registry.Register(new RelicDefinition(CommonRelicId, RunRelicRarity.Common));
             registry.Register(new RelicDefinition(CharacterPoolRelicId, RunRelicRarity.Common,
                 InSharedPool: false, CharacterPoolIds: [CharacterId]));
@@ -2759,7 +2802,11 @@ public sealed class CombatSliceTests
                 new RunEventPageDefinition(ContinuationPageId, "Continuation page",
                 [
                     new RunEventOptionDefinition(ContinueOptionId, "Finish event",
-                        [new GainRunGoldEffect(2)])
+                        [new GainRunGoldEffect(2)]),
+                    new RunEventOptionDefinition(ResumeCombatOptionId, "Fight and return",
+                        [new EnterRunCombatEffect(EventEncounterId)]),
+                    new RunEventOptionDefinition(EndingCombatOptionId, "Fight and leave event",
+                        [new EnterRunCombatEffect(EventEncounterId, ResumeEventAfterCombat: false)])
                 ])
             ]));
             registry.Register(new RunEventDefinition(FinalEventId, RunEventKind.Final,

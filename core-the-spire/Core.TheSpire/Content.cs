@@ -204,6 +204,7 @@ public enum RunEventKind { Event, Ancient, Final }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemoveSelectedRunCardEffect), "removeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedRunCardEffect), "upgradeSelectedRunCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(WinRunEffect), "winRun")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EnterRunCombatEffect), "enterRunCombat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomRunEffect), "customRun")]
 public abstract record RunEffectNode;
 public sealed record GainRunGoldEffect(int Amount) : RunEffectNode;
@@ -219,6 +220,7 @@ public sealed record ChooseRunCardEffect(string Prompt, RunCardFilter Filter, bo
 public sealed record RemoveSelectedRunCardEffect : RunEffectNode;
 public sealed record UpgradeSelectedRunCardEffect : RunEffectNode;
 public sealed record WinRunEffect : RunEffectNode;
+public sealed record EnterRunCombatEffect(ContentId EncounterId, bool ResumeEventAfterCombat = true) : RunEffectNode;
 public sealed record CustomRunEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : RunEffectNode;
 
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
@@ -889,6 +891,13 @@ public sealed class ContentRegistry
             case RemoveSelectedRunCardEffect or UpgradeSelectedRunCardEffect:
                 break;
             case WinRunEffect:
+                break;
+            case EnterRunCombatEffect enterCombat:
+                enterCombat.EncounterId.Validate();
+                if (!_encounters.TryGetValue(enterCombat.EncounterId, out var encounter))
+                    throw new InvalidOperationException($"{owner} starts unknown encounter '{enterCombat.EncounterId}'.");
+                if (encounter.RoomType is not (RunRoomType.Monster or RunRoomType.Elite or RunRoomType.Boss))
+                    throw new InvalidOperationException($"{owner} cannot start non-combat encounter '{encounter.Id}'.");
                 break;
             case CustomRunEffect custom when !_customRunEffects.ContainsKey(custom.Handler):
                 throw new InvalidOperationException($"{owner} references unknown custom run effect '{custom.Handler}'.");
