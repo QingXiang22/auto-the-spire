@@ -379,6 +379,15 @@ internal sealed class GameState
         return amount;
     }
 
+    internal int Heal(GameSession session, EntityState healer, EntityState target, int amount)
+    {
+        var healed = Math.Min(amount, target.MaxHp - target.Hp);
+        if (healed <= 0) return 0;
+        target.Hp += healed;
+        Emit(session, "heal", healer.Id, target.Id, healed);
+        return healed;
+    }
+
     internal List<CardInstance> GetPile(CardPile pile) => pile switch
     {
         CardPile.Draw => Player.MutableDrawPile,

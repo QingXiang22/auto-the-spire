@@ -69,6 +69,7 @@ public static class BaseSpireIds
     public static readonly ContentId CharonsAshes = ContentId.Parse("base-spire:charons-ashes");
     public static readonly ContentId SelfFormingClay = ContentId.Parse("base-spire:self-forming-clay");
     public static readonly ContentId SelfFormingClayPower = ContentId.Parse("base-spire:self-forming-clay-power");
+    public static readonly ContentId RedSkull = ContentId.Parse("base-spire:red-skull");
     public static readonly ContentId Circlet = ContentId.Parse("base-spire:circlet");
     public static readonly ContentId OvergrowthAct = ContentId.Parse("base-spire:overgrowth-act");
     public static readonly ContentId HiveAct = ContentId.Parse("base-spire:hive-act");
@@ -100,6 +101,8 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new RelicDefinition(BaseSpireIds.CharonsAshes, RunRelicRarity.Rare,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.SelfFormingClay, RunRelicRarity.Uncommon,
+            InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
+        registry.Register(new RelicDefinition(BaseSpireIds.RedSkull, RunRelicRarity.Common,
             InSharedPool: false, CharacterPoolIds: [BaseSpireIds.Ironclad]));
         registry.Register(new RelicDefinition(BaseSpireIds.Circlet, RunRelicRarity.None,
             InSharedPool: false, IsFallback: true, IsStackable: true));
@@ -277,6 +280,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new VajraRunHook());
         registry.Register(new CharonsAshesHook());
         registry.Register(new SelfFormingClayHook());
+        registry.Register(new RedSkullHook());
         registry.Register(BaseSpireMapGenerator.CreateStandardRun());
     }
 
@@ -359,6 +363,29 @@ internal sealed class SelfFormingClayHook : IRuleHook
         && context.HasRelic(BaseSpireIds.SelfFormingClay)
             ? new GameEventEffect(new ApplyPowerEffect(BaseSpireIds.SelfFormingClayPower, 3), GameEventActor.Target)
             : null;
+}
+
+internal sealed class RedSkullHook : IRuleHook
+{
+    private const string StrengthActiveKey = "red-skull-strength-active";
+
+    public ContentId Id { get; } = ContentId.Parse("base-spire:red-skull-hook");
+    public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+
+    public GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent)
+    {
+        if (!context.HasRelic(BaseSpireIds.RedSkull)) return null;
+        var isHpChange = gameEvent.Type is "damage" or "hp_loss" or "heal";
+        if (gameEvent.Type != "combat_started"
+            && (!isHpChange || !context.IsPlayerCreature(gameEvent.Target))) return null;
+
+        var active = context.GetInt(StrengthActiveKey) != 0;
+        var shouldBeActive = context.PlayerHp * 2 <= context.PlayerMaxHp;
+        if (active == shouldBeActive) return null;
+        context.SetInt(StrengthActiveKey, shouldBeActive ? 1 : 0);
+        return new GameEventEffect(
+            new ApplyPowerEffect(BaseSpireIds.Strength, shouldBeActive ? 3 : -3), GameEventActor.Player);
+    }
 }
 
 public sealed class SyntheticCombatPackage : IRulePackage

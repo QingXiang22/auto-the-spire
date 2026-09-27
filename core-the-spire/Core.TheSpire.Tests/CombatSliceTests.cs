@@ -42,6 +42,9 @@ public sealed class CombatSliceTests
         Assert.True(definition.Relics[BaseSpireIds.CharonsAshes].CharacterPoolIds!
             .Contains(BaseSpireIds.Ironclad));
         Assert.Equal(RunRelicRarity.Uncommon, definition.Relics[BaseSpireIds.SelfFormingClay].Rarity);
+        Assert.Equal(RunRelicRarity.Common, definition.Relics[BaseSpireIds.RedSkull].Rarity);
+        Assert.True(definition.Relics[BaseSpireIds.RedSkull].CharacterPoolIds!
+            .Contains(BaseSpireIds.Ironclad));
         Assert.Equal(new[] { BaseSpireIds.Anger, BaseSpireIds.Armaments, BaseSpireIds.Bash, BaseSpireIds.Barricade,
                 BaseSpireIds.BattleTrance,
                 BaseSpireIds.Bloodletting,
@@ -2524,10 +2527,10 @@ public sealed class CombatSliceTests
     private static PendingCardSetChoiceView? MultiCardChoice(CombatObservation observation) =>
         observation.PendingCardSelection as PendingCardSetChoiceView;
 
-    private static GameDefinition Build(IRulePackage package)
+    private static GameDefinition Build(params IRulePackage[] packages)
     {
         var registry = new ContentRegistry();
-        registry.AddPackage(package);
+        foreach (var package in packages) registry.AddPackage(package);
         return registry.Build();
     }
 
@@ -2736,6 +2739,46 @@ public sealed class CombatSliceTests
         combatEnvironment.Step(combat, new EndTurnAction());
         Assert.Equal(0, combat.State.Player.Creature.Hp);
         Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
+    }
+
+    public void BaseRedSkullTracksCombatHealingAndHpLossAcrossItsThreshold()
+    {
+        var definition = Build(new BaseSpirePackage(), new RedSkullHealFixturePackage());
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(818);
+        run.State.Hp = 40;
+        run.State.Relics.Add(BaseSpireIds.RedSkull);
+        run.State.Deck.Clear();
+        run.State.Deck.Add(new CardInstance("red-skull-heal", RedSkullHealFixturePackage.HealCard));
+        run.State.Deck.Add(new CardInstance("red-skull-hp-loss", RedSkullHealFixturePackage.HpLossCard));
+        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
+        Assert.Equal(3, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(41, combat.State.Player.Creature.Hp);
+        Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+
+        combatEnvironment.Step(combat, new PlayCardAction(0, combat.State.Player.Id));
+        Assert.Equal(39, combat.State.Player.Creature.Hp);
+        Assert.Equal(3, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+    }
+
+    private sealed class RedSkullHealFixturePackage : IRulePackage
+    {
+        public static readonly ContentId HealCard = ContentId.Parse("red-skull-fixture:heal");
+        public static readonly ContentId HpLossCard = ContentId.Parse("red-skull-fixture:hp-loss");
+        public PackageInfo Info { get; } = new("red-skull-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            registry.Register(new CardDefinition(HealCard, 0, CardType.Skill,
+                new HealEffect(1), Target: TargetSelector.Self, Rarity: CardRarity.Basic));
+            registry.Register(new CardDefinition(HpLossCard, 0, CardType.Skill,
+                new LoseHpEffect(2), Target: TargetSelector.Self, Rarity: CardRarity.Basic));
+        }
     }
 
     private sealed class CardRewardOddsHook : IRunHook

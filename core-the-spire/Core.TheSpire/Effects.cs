@@ -6,6 +6,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomAttackEffect), "randomAttack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackUsingBlockEffect), "attackUsingBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(HealEffect), "heal")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockFromCurrentBlockEffect), "gainBlockFromCurrentBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
@@ -40,6 +41,7 @@ public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSele
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null) : EffectNode;
 public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -200,6 +202,10 @@ internal static class EffectExecutor
                     hpLossTarget.Hp -= hpLost;
                     state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost);
                     if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
+                    break;
+                case HealEffect heal:
+                    if (heal.Amount < 0) throw new InvalidOperationException("Healing cannot be negative.");
+                    state.Heal(session, owner, ResolveSingleTarget(state, owner, target, heal.Target), heal.Amount);
                     break;
                 case GainBlockEffect block:
                     var blockAmount = block.PerPowerStack is { } perPowerStack
