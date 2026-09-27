@@ -1,0 +1,115 @@
+package base-spire {
+  power Ritual {
+    trigger = enemyTurnEnd
+    effect = grantPower(Strength, stacksFromSelf)
+    skipFirstWhenAppliedTo = enemy
+  }
+
+  card Slimed {
+    type = status
+    cost = 1
+    keywords = [exhaust]
+    play = draw(1)
+  }
+
+  card StrikeIronclad {
+    type = attack
+    cost = 1
+    target = enemy
+    play = attack(target, damage=upgrades(base=6, upgraded=9))
+  }
+
+  enemy DampCultist {
+    hp = variants(default=range(52, 54), tough=range(51, 53))
+    behavior = cycle(
+      action(incantation, applyPower(Ritual, 5, self)),
+      action(darkStrike, attack(player, variants(default=1, deadly=3)))
+    )
+  }
+
+  enemy Nibbit {
+    hp = variants(default=range(42, 46), tough=range(44, 48))
+    moves = actions(
+      butt = attack(player, variants(default=12, deadly=13)),
+      slice = sequence(
+        attack(player, variants(default=6, deadly=7)),
+        gainBlock(variants(default=5, tough=6))
+      ),
+      hiss = applyPower(Strength, variants(default=2, deadly=3), self)
+    )
+    behavior = startByRole(
+      alone=butt,
+      front=slice,
+      back=hiss,
+      then=cycle(butt, slice, hiss)
+    )
+  }
+
+  enemy LeafSlimeSmall {
+    hp = variants(default=range(11, 15), tough=range(12, 16))
+    moves = actions(
+      tackle = attack(player, variants(default=3, deadly=4)),
+      goop = addCard(Slimed, discard, player)
+    )
+    behavior = loop(chooseWithoutRepeat(tackle, goop))
+  }
+
+  enemy TwigSlimeSmall {
+    hp = variants(default=range(7, 11), tough=range(8, 12))
+    behavior = loop(attack(player, variants(default=4, deadly=5)))
+  }
+
+  enemy LeafSlimeMedium {
+    hp = variants(default=range(32, 35), tough=range(33, 36))
+    moves = actions(
+      clumpShot = attack(player, variants(default=8, deadly=9)),
+      stickyShot = addCards(Slimed, 2, discard, player)
+    )
+    behavior = startWith(stickyShot, cycle(clumpShot, stickyShot))
+  }
+
+  enemy TwigSlimeMedium {
+    hp = variants(default=range(26, 28), tough=range(27, 29))
+    moves = actions(
+      pokeyPounce = attack(player, variants(default=11, deadly=12)),
+      stickyShot = addCard(Slimed, discard, player)
+    )
+    behavior = startWith(stickyShot, loop(chooseWithLimits(
+      candidate(pokeyPounce, maxConsecutive=2),
+      candidate(stickyShot, maxConsecutive=1)
+    )))
+  }
+
+  encounter NibbitsWeak {
+    room = monster
+    weak = true
+    tags = [Nibbit]
+    lineup = [spawn(Nibbit, role=alone)]
+  }
+
+  encounter NibbitsNormal {
+    room = monster
+    tags = [Nibbit]
+    lineup = [spawn(Nibbit, role=front), spawn(Nibbit, role=back)]
+  }
+
+  encounter SlimesWeak {
+    room = monster
+    weak = true
+    tags = [Slimes]
+    lineup = [
+      choose([LeafSlimeSmall, TwigSlimeSmall], rememberAs=small),
+      choose([LeafSlimeMedium, TwigSlimeMedium]),
+      choose([LeafSlimeSmall, TwigSlimeSmall], excluding=small)
+    ]
+  }
+
+  encounter SlimesNormal {
+    room = monster
+    tags = [Slimes]
+    lineup = chooseFormation(
+      [TwigSlimeMedium, LeafSlimeMedium, LeafSlimeSmall, TwigSlimeSmall],
+      [TwigSlimeMedium, LeafSlimeMedium, TwigSlimeSmall, LeafSlimeSmall]
+    )
+  }
+}

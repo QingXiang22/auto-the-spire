@@ -435,6 +435,30 @@ public sealed class CombatSliceTests
             """{"schemaVersion":1,"encounters":[{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]},{"id":"dsl-fixture:encounter","roomType":"monster","enemyIds":["dsl-fixture:enemy"]}] }"""));
     }
 
+    public void SpireSourceParserReadsTheUnifiedBaseSpireModel()
+    {
+        using var stream = typeof(BaseSpirePackage).Assembly.GetManifestResourceStream(
+            "BaseSpire.ContentSource.combat.spire");
+        Assert.True(stream is not null);
+        using var reader = new StreamReader(stream!);
+        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/combat.spire");
+
+        Assert.Equal("base-spire", package.Name);
+        var declarations = package.Members.OfType<DslDeclarationNode>().ToArray();
+        Assert.True(declarations.Any(declaration => declaration.Kind == "card" && declaration.Name == "StrikeIronclad"));
+        Assert.True(declarations.Any(declaration => declaration.Kind == "power" && declaration.Name == "Ritual"));
+        Assert.True(declarations.Count(declaration => declaration.Kind == "enemy") >= 5);
+        Assert.True(declarations.Any(declaration => declaration.Kind == "encounter" && declaration.Name == "SlimesWeak"));
+
+        var nibbit = declarations.Single(declaration => declaration.Kind == "enemy" && declaration.Name == "Nibbit");
+        var behavior = nibbit.Members.OfType<DslPropertyNode>().Single(property => property.Name == "behavior");
+        Assert.True(behavior.Value is DslCallNode { Name: "startByRole" });
+
+        var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
+            "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));
+        Assert.Equal(4, parseError.Location.Line);
+    }
+
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
     {
         var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -3672,6 +3696,7 @@ internal static class Program
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
         tests.ContentDslRejectsUnsupportedSchemasAndUnresolvedVariants();
+        tests.SpireSourceParserReadsTheUnifiedBaseSpireModel();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();
