@@ -1,5 +1,6 @@
 package base-spire {
   card Anger {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 0
@@ -15,6 +16,7 @@ package base-spire {
   }
 
   card Armaments {
+    pools = [IroncladCardPool]
     type = skill
     rarity = common
     cost = 1
@@ -28,6 +30,7 @@ package base-spire {
   }
 
   card StrikeIronclad {
+    pools = [IroncladCardPool]
     type = attack
     rarity = basic
     tags = [Strike]
@@ -38,6 +41,7 @@ package base-spire {
   }
 
   card DefendIronclad {
+    pools = [IroncladCardPool]
     type = skill
     rarity = basic
     cost = 1
@@ -47,6 +51,7 @@ package base-spire {
   }
 
   card Bash {
+    pools = [IroncladCardPool]
     type = attack
     rarity = basic
     cost = 2
@@ -56,6 +61,7 @@ package base-spire {
   }
 
   card Break {
+    pools = [IroncladCardPool]
     type = attack
     rarity = ancient
     cost = 1
@@ -65,6 +71,7 @@ package base-spire {
   }
 
   card Breakthrough {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -74,6 +81,7 @@ package base-spire {
   }
 
   card BattleTrance {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 0
@@ -83,6 +91,7 @@ package base-spire {
   }
 
   card Bloodletting {
+    pools = [IroncladCardPool]
     type = skill
     rarity = common
     cost = 0
@@ -92,6 +101,7 @@ package base-spire {
   }
 
   card Bludgeon {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 3
@@ -101,6 +111,7 @@ package base-spire {
   }
 
   card Barricade {
+    pools = [IroncladCardPool]
     type = power
     rarity = rare
     cost = 3
@@ -119,6 +130,7 @@ package base-spire {
   }
 
   card BodySlam {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -128,6 +140,7 @@ package base-spire {
   }
 
   card BurningPact {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 1
@@ -143,15 +156,6 @@ package base-spire {
     )
   }
 
-  card Clothesline {
-    type = attack
-    rarity = common
-    cost = 2
-    target = enemy
-    play = sequence(attack(12), applyPower(Weak, 2, target=target))
-    upgradedPlay = sequence(attack(14), applyPower(Weak, 3, target=target))
-  }
-
   card Slimed {
     type = status
     rarity = status
@@ -162,6 +166,7 @@ package base-spire {
   }
 
   card DemonForm {
+    pools = [IroncladCardPool]
     type = power
     rarity = rare
     cost = 3
@@ -171,6 +176,7 @@ package base-spire {
   }
 
   card FeelNoPain {
+    pools = [IroncladCardPool]
     type = power
     rarity = uncommon
     cost = 1
@@ -180,6 +186,7 @@ package base-spire {
   }
 
   card Headbutt {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -195,6 +202,7 @@ package base-spire {
   }
 
   card Hemokinesis {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 1
@@ -204,6 +212,7 @@ package base-spire {
   }
 
   card IronWave {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -213,6 +222,7 @@ package base-spire {
   }
 
   card Offering {
+    pools = [IroncladCardPool]
     type = skill
     rarity = rare
     cost = 0
@@ -223,6 +233,7 @@ package base-spire {
   }
 
   card Inflame {
+    pools = [IroncladCardPool]
     type = power
     rarity = uncommon
     cost = 1
@@ -232,6 +243,7 @@ package base-spire {
   }
 
   card Impervious {
+    pools = [IroncladCardPool]
     type = skill
     rarity = rare
     cost = 2
@@ -242,6 +254,7 @@ package base-spire {
   }
 
   card PommelStrike {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     tags = [Strike]
@@ -252,6 +265,7 @@ package base-spire {
   }
 
   card ShrugItOff {
+    pools = [IroncladCardPool]
     type = skill
     rarity = common
     cost = 1
@@ -261,6 +275,7 @@ package base-spire {
   }
 
   card SecondWind {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 1
@@ -276,6 +291,7 @@ package base-spire {
   }
 
   card SwordBoomerang {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -285,6 +301,7 @@ package base-spire {
   }
 
   card TwinStrike {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     tags = [Strike]
@@ -295,6 +312,7 @@ package base-spire {
   }
 
   card Uppercut {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 2
@@ -312,6 +330,7 @@ package base-spire {
   }
 
   card Thunderclap {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -327,6 +346,7 @@ package base-spire {
   }
 
   card TrueGrit {
+    pools = [IroncladCardPool]
     type = skill
     rarity = common
     cost = 1
@@ -339,6 +359,7 @@ package base-spire {
   }
 
   card Tremble {
+    pools = [IroncladCardPool]
     type = skill
     rarity = common
     cost = 1
@@ -349,6 +370,7 @@ package base-spire {
   }
 
   card Whirlwind {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 0
@@ -359,6 +381,7 @@ package base-spire {
   }
 
   card BloodWall {
+    pools = [IroncladCardPool]
     type = skill
     rarity = common
     cost = 2
@@ -368,6 +391,7 @@ package base-spire {
   }
 
   card Brand {
+    pools = [IroncladCardPool]
     type = skill
     rarity = rare
     cost = 0
@@ -385,6 +409,7 @@ package base-spire {
   }
 
   card Cinder {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 2
@@ -394,6 +419,7 @@ package base-spire {
   }
 
   card EvilEye {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 1
@@ -403,6 +429,7 @@ package base-spire {
   }
 
   card ForgottenRitual {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 1
@@ -413,6 +440,7 @@ package base-spire {
   }
 
   card PactsEnd {
+    pools = [IroncladCardPool]
     type = attack
     rarity = rare
     cost = 0
@@ -422,6 +450,7 @@ package base-spire {
   }
 
   card Taunt {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 1
@@ -431,6 +460,7 @@ package base-spire {
   }
 
   card AshenStrike {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     tags = [Strike]
@@ -441,6 +471,7 @@ package base-spire {
   }
 
   card Bully {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 0
@@ -450,6 +481,7 @@ package base-spire {
   }
 
   card Dismantle {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 1
@@ -459,6 +491,7 @@ package base-spire {
   }
 
   card NotYet {
+    pools = [IroncladCardPool]
     type = skill
     rarity = rare
     cost = 2
@@ -470,6 +503,7 @@ package base-spire {
   }
 
   card PerfectedStrike {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     tags = [Strike]
@@ -480,6 +514,7 @@ package base-spire {
   }
 
   card FightMe {
+    pools = [IroncladCardPool]
     type = attack
     rarity = uncommon
     cost = 2
@@ -497,6 +532,7 @@ package base-spire {
   }
 
   card Conflagration {
+    pools = [IroncladCardPool]
     type = attack
     rarity = rare
     cost = 1
@@ -506,6 +542,7 @@ package base-spire {
   }
 
   card Dominate {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 1
@@ -522,6 +559,7 @@ package base-spire {
   }
 
   card MoltenFist {
+    pools = [IroncladCardPool]
     type = attack
     rarity = common
     cost = 1
@@ -540,6 +578,7 @@ package base-spire {
   }
 
   card Rage {
+    pools = [IroncladCardPool]
     type = skill
     rarity = uncommon
     cost = 0

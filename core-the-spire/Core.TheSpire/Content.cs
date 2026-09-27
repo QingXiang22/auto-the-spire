@@ -102,6 +102,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
 {
     public bool HasEnergyXCost => CostKind == CardCostKind.X;
     public IReadOnlyList<ContentId> Tags { get; init; } = Array.Empty<ContentId>();
+    public IReadOnlyList<ContentId> PoolIds { get; init; } = Array.Empty<ContentId>();
 
     public EffectNode ResolveEffect(CardInstance instance)
     {
@@ -927,6 +928,11 @@ public sealed class ContentRegistry
             if (card.Tags is null || card.Tags.Distinct().Count() != card.Tags.Count)
                 throw new InvalidOperationException($"Card '{card.Id}' has null or duplicate tags.");
             foreach (var tag in card.Tags) tag.Validate();
+            if (card.PoolIds is null || card.PoolIds.Distinct().Count() != card.PoolIds.Count)
+                throw new InvalidOperationException($"Card '{card.Id}' has null or duplicate pool memberships.");
+            foreach (var poolId in card.PoolIds)
+                if (!_cardPools.ContainsKey(poolId))
+                    throw new InvalidOperationException($"Card '{card.Id}' references unknown card pool '{poolId}'.");
             if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity)
                 || !Enum.IsDefined(card.CostKind))
                 throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, rarity, or cost kind.");
@@ -947,6 +953,10 @@ public sealed class ContentRegistry
             foreach (var cardId in pool.Cards)
                 if (!_cards.ContainsKey(cardId))
                     throw new InvalidOperationException($"Card pool '{pool.Id}' references unknown card '{cardId}'.");
+        var resolvedCardPools = _cardPools.ToDictionary(pair => pair.Key, pair =>
+            new CardPoolDefinition(pair.Key, pair.Value.Cards.Concat(_cards.Values
+                .Where(card => card.PoolIds.Contains(pair.Key) && !pair.Value.Cards.Contains(card.Id))
+                .Select(card => card.Id))));
         foreach (var character in _characters.Values)
         {
             foreach (var cardId in character.StartingDeck)
@@ -1018,7 +1028,7 @@ public sealed class ContentRegistry
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
             new ReadOnlyDictionary<ContentId, PotionDefinition>(new Dictionary<ContentId, PotionDefinition>(_potions)),
-            new ReadOnlyDictionary<ContentId, CardPoolDefinition>(new Dictionary<ContentId, CardPoolDefinition>(_cardPools)),
+            new ReadOnlyDictionary<ContentId, CardPoolDefinition>(resolvedCardPools),
             new ReadOnlyDictionary<ContentId, RelicDefinition>(new Dictionary<ContentId, RelicDefinition>(_relics)),
             new ReadOnlyDictionary<ContentId, EnemyDefinition>(new Dictionary<ContentId, EnemyDefinition>(_enemies)),
             new ReadOnlyDictionary<ContentId, EncounterDefinition>(new Dictionary<ContentId, EncounterDefinition>(_encounters)),
