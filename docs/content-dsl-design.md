@@ -46,6 +46,12 @@ card Slimed {
   play: draw 1
 }
 
+card StrikeIronclad {
+  type: attack
+  cost: 1
+  play: attack selected_enemy for damage(base 6, upgraded 9)
+}
+
 value CultistHp {
   normal: 52..54
   tough: 51..53
@@ -61,6 +67,8 @@ enemy DampCultist {
 ```
 
 This models the original Damp Cultist cycle without explicitly encoding two action nodes and two transition edges. The Dark Strike's base damage is 1 normally and 3 with `DeadlyEnemies`; its HP range is independently changed by `ToughEnemies`. Difficulty settings are named package profiles, not an untyped object substitution scattered through arbitrary fields.
+
+Strike and Slimed use the same effect vocabulary even though one is a player card and one is an enemy-created status card. Cost payment, target validation, pile movement, and the post-play window are core lifecycle rules; their content only declares cost, keywords, and effect.
 
 ## Behavior patterns and action semantics
 
@@ -143,6 +151,22 @@ encounter SlimesNormal {
 ```
 
 The weak lineup expresses three sequential draws directly: small, medium, then a different small. Compilation must preserve this declared draw order and test its RNG call count. The normal lineup chooses a whole formation with one draw, so small-enemy ordering stays correlated.
+
+## What the original-content models require from the machine
+
+The examples above are the acceptance model, not a reason to immediately add more runtime fields. They imply these candidate machine semantics, which should be confirmed against source before implementation:
+
+| DSL concept | Runtime question to answer before changing the state machine |
+| --- | --- |
+| `moves: loop` / `sequence` | What exact turn phase chooses a move, executes its effect, and advances the behavior cursor? |
+| `choose without_repeat` / `with_limits` | Which compact history is required, what is the candidate filtering order, and when is the enemy RNG consumed? |
+| `when ... -> start` | Which facts are visible when the initial move is chosen, especially for multi-enemy encounters? |
+| `apply Ritual(5)` | When does a newly applied Power first trigger, and is the skip-first behavior part of Ritual or a generic Power lifetime rule? |
+| `attack ... for damage(...)` | Which damage modifiers are applied, how are values rounded, and how do observation and execution share the result? |
+| `choose ... excluding ...` | Is a choice made at encounter-room creation or combat start, which named RNG stream is used, and where is the result stored? |
+| `play` card effect | In what order are legality, energy payment, target selection, card movement, effect execution, and hooks processed? |
+
+Resolve these questions through source mapping and executable examples before making the machine more granular. A demonstrated need can then be added to a small typed runtime contract, with replay, observation, and legal-action tests.
 
 ## Content-domain coverage
 
