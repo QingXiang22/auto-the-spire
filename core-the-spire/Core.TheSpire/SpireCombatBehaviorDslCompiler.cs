@@ -39,28 +39,39 @@ public static class SpireCombatBehaviorDslCompiler
         private PowerDefinition CompilePower(DslDeclarationNode declaration)
         {
             var properties = Properties(declaration, "Power");
-            Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer", "role");
+            Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
+                "role", "whenCardType", "removeAfterPlayerTurnEnd");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
             ContentId? triggerPower = null;
+            EffectNode? triggerRuleEffect = null;
             if (properties.TryGetValue("effect", out var effectNode))
             {
                 var call = RequireCall(effectNode);
-                if (call.Name != "grantPower")
-                    throw Error(call.Location, "A triggered Power effect must use grantPower(power, sourceStacks).");
-                CheckShape(call, 2);
-                if (Name(Argument(call, 1)) != "sourceStacks")
-                    throw Error(Argument(call, 1).Location, "grantPower currently requires sourceStacks as its amount.");
-                triggerPower = Id(Name(Argument(call, 0)));
+                if (call.Name == "grantPower")
+                {
+                    CheckShape(call, 2);
+                    if (Name(Argument(call, 1)) != "sourceStacks")
+                        throw Error(Argument(call, 1).Location, "grantPower requires sourceStacks as its amount.");
+                    triggerPower = Id(Name(Argument(call, 0)));
+                }
+                else triggerRuleEffect = SpireCombatDslCompiler.CompileEffect(package, effectNode, profile);
             }
             var skipEnemy = OptionalBoolean(properties, "skipFirstWhenAppliedToEnemy");
             var skipPlayer = OptionalBoolean(properties, "skipFirstWhenAppliedToPlayer");
             var role = properties.TryGetValue("role", out var roleNode)
                 ? EnumValue<PowerRole>(roleNode)
                 : PowerRole.None;
+            var triggerCardType = properties.TryGetValue("whenCardType", out var cardTypeNode)
+                ? EnumValue<CardType>(cardTypeNode) : (CardType?)null;
+            if (triggerCardType is not null && trigger is not
+                (PowerTrigger.AfterCardPlayed or PowerTrigger.AfterCardExhausted))
+                throw Error(cardTypeNode!.Location, "whenCardType requires a card event trigger.");
             return new PowerDefinition(Id(declaration.Name), trigger, triggerPower,
-                skipEnemy, role, SkipFirstTriggerWhenAppliedToPlayer: skipPlayer);
+                skipEnemy, role, SkipFirstTriggerWhenAppliedToPlayer: skipPlayer,
+                TriggerRuleEffect: triggerRuleEffect, TriggerCardType: triggerCardType,
+                RemoveAfterPlayerTurnEnd: OptionalBoolean(properties, "removeAfterPlayerTurnEnd"));
         }
 
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)

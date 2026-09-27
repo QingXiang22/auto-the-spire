@@ -1,0 +1,13 @@
+package base-spire {
+  power FeelNoPain {
+    trigger = afterCardExhausted
+    effect = gainBlock(1, perPowerStack=FeelNoPain)
+  }
+
+  power RagePower {
+    trigger = afterCardPlayed
+    whenCardType = attack
+    effect = gainBlock(1, perPowerStack=RagePower)
+    removeAfterPlayerTurnEnd = true
+  }
+}

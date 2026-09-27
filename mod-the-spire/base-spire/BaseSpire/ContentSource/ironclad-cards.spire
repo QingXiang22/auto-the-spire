@@ -538,4 +538,13 @@ package base-spire {
         applyScaledPower(Vulnerable, 0, 1, count=targetPowerAmount(Vulnerable), target=target)))
     )
   }
+
+  card Rage {
+    type = skill
+    rarity = uncommon
+    cost = 0
+    target = self
+    play = applyPower(RagePower, 3, target=self)
+    upgradedPlay = applyPower(RagePower, 5, target=self)
+  }
 }

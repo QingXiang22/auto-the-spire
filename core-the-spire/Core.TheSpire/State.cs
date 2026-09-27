@@ -440,7 +440,8 @@ internal sealed class GameState
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState;
-internal sealed record PendingCardPlay(CardInstance Card, int XEnergy);
+internal sealed record PendingCardPlay(CardInstance Card, int XEnergy, EntityState? Target = null,
+    bool AfterPlayedDispatched = false);
 internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
     EntityState owner, EntityState? target, CardInstance? selectedCard) : PendingCardSelectionState
 {
@@ -515,6 +516,7 @@ internal enum EndTurnResolutionStage
     FlushHand,
     AfterFlushHooks,
     PlayerTurnEndPowers,
+    ExpirePlayerPowers,
     EnemyAction,
     ApplyEnemyActionPower,
     EnemyTurnEndPowers,

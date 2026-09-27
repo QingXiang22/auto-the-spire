@@ -410,9 +410,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var xEnergy = card.HasEnergyXCost ? state.Player.Energy : 0;
             state.Player.Energy = card.HasEnergyXCost ? 0 : state.Player.Energy - card.ResolveCost(cardInstance);
             state.Player.MutablePlayPile.Add(cardInstance);
-            state.PendingCardPlay = new PendingCardPlay(cardInstance, xEnergy);
             var selectedTarget = play.TargetId == state.Player.Id ? state.Player.Creature
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
+            state.PendingCardPlay = new PendingCardPlay(cardInstance, xEnergy, selectedTarget);
             state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
             EffectExecutor.Execute(session, state.Player.Creature, card.ResolveEffect(cardInstance), selectedTarget);
             if (state.PendingChoice is null && state.PendingCardSelection is null) FinalizePlayedCard(session);
@@ -433,6 +433,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
         if (state.PendingCardPlay is not { } cardPlay) return;
         var cardInstance = cardPlay.Card;
         var card = state.Definition.Cards[cardInstance.CardId];
+        if (!cardPlay.AfterPlayedDispatched)
+        {
+            state.PendingCardPlay = cardPlay with { AfterPlayedDispatched = true };
+            EffectExecutor.QueuePowerTriggerEffects(session, state.Player.Creature,
+                PowerTrigger.AfterCardPlayed, cardPlay.Target, cardInstance);
+            EffectExecutor.Resume(session);
+            if (state.PendingChoice is not null || state.PendingCardSelection is not null) return;
+        }
         if ((card.Keywords & CardKeywords.Exhaust) != 0)
         {
             state.Player.MutablePlayPile.Remove(cardInstance);
@@ -488,8 +496,18 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     FlushPlayerHand(session);
                     break;
                 case EndTurnResolutionStage.PlayerTurnEndPowers:
-                    state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
+                    state.EndTurnStage = EndTurnResolutionStage.ExpirePlayerPowers;
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnEnd);
+                    break;
+                case EndTurnResolutionStage.ExpirePlayerPowers:
+                    foreach (var powerId in state.Player.Creature.Powers.Keys
+                        .Where(id => state.Definition.Powers[id].RemoveAfterPlayerTurnEnd).ToArray())
+                    {
+                        var removed = state.RemovePower(state.Player.Creature, powerId);
+                        if (removed != 0)
+                            state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed);
+                    }
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
                     break;
                 case EndTurnResolutionStage.EnemyAction:
                     if (state.Player.Creature.Hp <= 0)

@@ -137,25 +137,28 @@ internal static class EffectExecutor
     {
         var state = session.State;
         state.Emit(session, "card_exhausted", owner.Id, card.InstanceId, 1);
-        QueuePowerTriggerEffects(session, owner, PowerTrigger.AfterCardExhausted);
+        QueuePowerTriggerEffects(session, owner, PowerTrigger.AfterCardExhausted, selectedCard: card);
     }
 
     internal static void QueuePowerTriggerEffects(GameSession session, EntityState owner, PowerTrigger trigger,
         EntityState? target = null, CardInstance? selectedCard = null)
     {
         var state = session.State;
-        var effects = BuildPowerTriggerEffects(state, owner, trigger);
+        var effects = BuildPowerTriggerEffects(state, owner, trigger, selectedCard);
         if (effects.Count > 0)
             state.PendingEffects.Add((owner, new SequenceEffect(effects), target, selectedCard));
     }
 
-    private static List<EffectNode> BuildPowerTriggerEffects(GameState state, EntityState owner, PowerTrigger trigger)
+    private static List<EffectNode> BuildPowerTriggerEffects(GameState state, EntityState owner, PowerTrigger trigger,
+        CardInstance? eventCard = null)
     {
         var effects = new List<EffectNode>();
         foreach (var powerId in owner.Powers.Keys.ToArray())
         {
             var definition = state.Definition.Powers[powerId];
             if (definition.Trigger != trigger) continue;
+            if (definition.TriggerCardType is { } cardType && (eventCard is null
+                || state.Definition.Cards[eventCard.CardId].Type != cardType)) continue;
             if (owner.SkipNextPowerTriggers.Remove(powerId)) continue;
             if (definition.TriggerEffect is { } triggeredPower)
                 effects.Add(new ApplyPowerEffect(triggeredPower, owner.PowerAmount(powerId), TargetSelector.Self));
@@ -271,19 +274,21 @@ internal static class EffectExecutor
                     break;
                 case MoveCardEffect move:
                     var movedCards = state.MoveCards(move.From, move.To, move.Count);
-                    var moveTriggerEffects = new List<EffectNode>();
+                    var moveTriggerEffects = new List<(CardInstance Card, EffectNode Effect)>();
                     foreach (var movedCard in movedCards)
                     {
                         state.Emit(session, "card_moved", owner.Id, movedCard.InstanceId, 1);
                         if (move.To == CardPile.Exhaust && move.From != CardPile.Exhaust)
                         {
                             state.Emit(session, "card_exhausted", state.Player.Id, movedCard.InstanceId, 1);
-                            moveTriggerEffects.AddRange(BuildPowerTriggerEffects(state, state.Player.Creature,
-                                PowerTrigger.AfterCardExhausted));
+                            foreach (var triggered in BuildPowerTriggerEffects(state, state.Player.Creature,
+                                PowerTrigger.AfterCardExhausted, movedCard))
+                                moveTriggerEffects.Add((movedCard, triggered));
                         }
                     }
-                    if (moveTriggerEffects.Count > 0)
-                        state.PendingEffects.Add((state.Player.Creature, new SequenceEffect(moveTriggerEffects), null, null));
+                    for (var i = moveTriggerEffects.Count - 1; i >= 0; i--)
+                        state.PendingEffects.Add((state.Player.Creature, moveTriggerEffects[i].Effect,
+                            null, moveTriggerEffects[i].Card));
                     break;
                 case AddCardsToPileEffect addCards:
                     if (addCards.Count < 0) throw new InvalidOperationException("Added card count cannot be negative.");

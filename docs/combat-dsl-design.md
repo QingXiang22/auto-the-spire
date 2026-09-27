@@ -31,6 +31,8 @@ Cards may declare namespaced `tags`; `count=cardsWithTag(Strike)` counts matchin
 
 `applyScaledPower` shares the compiled count source with `scaledAttack`. The count reads the selected target while the Power destination remains an independent argument. Dominate applies Vulnerable before reading the updated amount to grant player Strength; Molten Fist reads surviving enemy Vulnerable after damage. Conflagration uses `repeat` over an area attack.
 
+Power declarations now accept a compiled effect, a card-event trigger with optional `whenCardType`, and `removeAfterPlayerTurnEnd`. The core dispatches `afterCardPlayed` after the card effect completes and before the card leaves the play pile, including when the effect paused for a choice. Rage demonstrates an Attack filter and turn-end expiry. Feel No Pain uses a source declaration for its card-exhaustion trigger.
+
 `chooseCard` and `chooseCards` are declarative suspension points. The core validates a choice, stores the continuation, and resumes the remaining effect sequence. The DSL does not define a second scheduler. Hooks that need custom native behavior remain named C# handlers attached to typed Power or card events.
 
 ## Source form
@@ -60,7 +62,7 @@ The source parser produces a location-aware syntax tree. The package compiler ch
 
 ## Implementation status
 
-`ironclad-cards.spire` is authoritative for 50 currently modeled card definitions associated with Ironclad combat, including Entrench and Slimed; 48 belong to the 87-card original Ironclad pool. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `SpireCombatDslCompiler` compiles card declarations and their shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
+`ironclad-cards.spire` is authoritative for 51 currently modeled card definitions associated with Ironclad combat, including Entrench and Slimed; 49 belong to the 87-card original Ironclad pool. `ironclad-powers.spire` declares Rage and Feel No Pain Power behavior. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `SpireCombatDslCompiler` compiles card declarations and their shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
 
 Enemy source exercises fixed cycles, an opening move followed by a loop, random choices without immediate repeats, and consecutive-use limits. Difficulty values resolve once from the configured profile. The old JSON enemy files and their parser have been removed. Encounter lineups and Nibbit slot-specific starting actions still use JSON. The nine registered enemies are only the current project roster, not the complete original game's monster catalog; see [content-dsl.md](content-dsl.md) for remaining scope.
 

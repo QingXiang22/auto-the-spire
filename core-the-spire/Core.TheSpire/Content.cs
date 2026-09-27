@@ -27,7 +27,8 @@ public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerTrigger.None, ContentId? TriggerEffect = null,
     bool SkipFirstTriggerWhenAppliedToEnemy = false, PowerRole Role = PowerRole.None, bool DecrementOnTrigger = false,
     bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
-    bool RemoveWhenApplierDies = false, EffectNode? TriggerRuleEffect = null)
+    bool RemoveWhenApplierDies = false, EffectNode? TriggerRuleEffect = null,
+    CardType? TriggerCardType = null, bool RemoveAfterPlayerTurnEnd = false)
 {
     public void Validate()
     {
@@ -35,6 +36,9 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
         if (TriggerEffect is { } triggerEffect) triggerEffect.Validate();
         if (!Enum.IsDefined(Trigger) || !Enum.IsDefined(Role))
             throw new ArgumentException("Power trigger and role must be recognized values.");
+        if (TriggerCardType is { } cardType && (!Enum.IsDefined(cardType)
+            || Trigger is not (PowerTrigger.AfterCardPlayed or PowerTrigger.AfterCardExhausted)))
+            throw new ArgumentException("A card-type filter requires a card event trigger.");
         if (OutgoingDamageMultiplier is < 0m)
             throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
     }
@@ -733,7 +737,8 @@ public enum CardType { Attack, Skill, Power, Status }
 [Flags]
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8 }
 public enum IntentKind { None, Attack, Buff, Debuff }
-public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted }
+public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
+    AfterCardPlayed }
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
 
 public interface IRulePackage
