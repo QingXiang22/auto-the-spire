@@ -10,6 +10,17 @@ The package DSL has three shared building blocks:
 - **Expressions:** effects such as `attack`, `applyPower`, `gainBlock`, and `addCards`.
 - **Behavior composition:** named enemy moves connected by `cycle`, `loop`, `startWith`, and random choice expressions.
 
+State declarations use the same `.spire` syntax and are compiled before a session starts. The first schema supports integer values in `run` and `combat` scopes; a variable's ID and scope jointly identify it, so one name may have distinct values in the two scopes:
+
+```text
+package training-mod {
+  state PracticeCardUses { scope = run type = int default = 0 }
+  state PracticeCardUses { scope = combat type = int default = 0 }
+}
+```
+
+The core initializes declared defaults and rejects undeclared or wrong-scope accesses from mod effect and hook contexts. These declarations do not yet add variable reads or writes to the effect DSL; custom handlers provide the current bridge. Visibility, persistence, and more value types remain to be specified.
+
 An enemy's effect and its behavior remain separate. For example, an attack expression says what the move does; `startWith(..., then=loop(...))` says when that move is selected. The compiler lowers both to the current typed `EffectNode`, `PowerDefinition`, and `EnemyDefinition` model. The combat state machine is refined only when a source behavior cannot be represented faithfully.
 
 Difficulty values use `variants(default=..., deadly=..., tough=..., deadlyTough=...)` and `range(min, max)`. The configured profile resolves them during package compilation. For example:

@@ -365,7 +365,7 @@ public sealed class RunHookContext
     public int Hp => _state.Hp;
     public int MaxHp => _state.MaxHp;
     public bool HasRelic(ContentId relic) => _state.Relics.Contains(relic);
-    public int GetInt(string key, int defaultValue = 0) => _state.GetModInt(_modId, key, defaultValue);
+    public int GetInt(string key) => _state.ReadModInt(_modId, key);
     public void SetInt(string key, int value) => _state.SetModInt(_modId, key, value);
 
     public void Heal(int amount)
@@ -392,14 +392,16 @@ public sealed class RunHookContext
 
 internal sealed class RunState
 {
-    private readonly ScopedIntState _modInts = new();
+    private readonly ScopedIntState _modInts;
     public RunState(RunDefinition definition, CharacterDefinition character, RandomStreams random,
         IReadOnlyDictionary<ContentId, EncounterDefinition>? encounters = null,
         IReadOnlyDictionary<ContentId, RunEventDefinition>? runEvents = null,
         IReadOnlyDictionary<ContentId, RelicDefinition>? relicDefinitions = null,
-        IReadOnlyDictionary<ContentId, PotionDefinition>? potionDefinitions = null)
+        IReadOnlyDictionary<ContentId, PotionDefinition>? potionDefinitions = null,
+        IReadOnlyDictionary<StateVariableKey, StateVariableDefinition>? stateVariables = null)
     {
         Definition = definition;
+        _modInts = new ScopedIntState(stateVariables, StateVariableScope.Run);
         Character = character;
         Random = random;
         RewardRandom = random.Get("rewards");
@@ -509,6 +511,7 @@ internal sealed class RunState
     public RunRoomType? CurrentRoom => RoomStack.Count == 0 ? null : RoomStack[^1].RoomType;
     public ContentId? CurrentEncounterId => RoomStack.Count == 0 ? null : RoomStack[^1].EncounterId;
     internal int GetModInt(string modId, string key, int defaultValue = 0) => _modInts.Get(modId, key, defaultValue);
+    internal int ReadModInt(string modId, string key) => _modInts.GetDeclared(modId, key);
     internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
     public IReadOnlyList<EncounterEnemySelection> CurrentEncounterSelections =>
         RoomStack.Count == 0 ? Array.Empty<EncounterEnemySelection>() : RoomStack[^1].EnemySelections;
@@ -683,6 +686,7 @@ public sealed class RunEnvironment
     private readonly IReadOnlyDictionary<ContentId, ICustomRunEffectHandler> _customRunEffects;
     private readonly IReadOnlyDictionary<ContentId, RelicDefinition>? _relicDefinitions;
     private readonly IReadOnlyDictionary<ContentId, PotionDefinition>? _potionDefinitions;
+    private readonly IReadOnlyDictionary<StateVariableKey, StateVariableDefinition>? _stateVariables;
 
     public RunEnvironment(RunDefinition definition, CharacterDefinition character, IEnumerable<IRunHook>? runHooks = null,
         IEnumerable<CardDefinition>? cards = null, IEnumerable<CardPoolDefinition>? cardPools = null,
@@ -715,19 +719,20 @@ public sealed class RunEnvironment
         _customRunEffects = gameDefinition.CustomRunEffects;
         _relicDefinitions = gameDefinition.Relics;
         _potionDefinitions = gameDefinition.Potions;
+        _stateVariables = gameDefinition.StateVariables;
     }
 
     public RunSession Start(uint seed)
     {
         return new RunSession(new RunState(_definition, _character, new RandomStreams(seed),
-            _encounters, _runEvents, _relicDefinitions, _potionDefinitions));
+            _encounters, _runEvents, _relicDefinitions, _potionDefinitions, _stateVariables));
     }
 
     public RunSession Start(string seed)
     {
         ArgumentNullException.ThrowIfNull(seed);
         return new RunSession(new RunState(_definition, _character, RandomStreams.FromStringSeed(seed),
-            _encounters, _runEvents, _relicDefinitions, _potionDefinitions));
+            _encounters, _runEvents, _relicDefinitions, _potionDefinitions, _stateVariables));
     }
 
     public RunObservation Observe(RunSession session)

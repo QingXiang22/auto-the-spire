@@ -8,4 +8,7 @@
     <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <ProjectReference Include="../../base-spire/BaseSpire/BaseSpire.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="state.spire" LogicalName="TrainingMod.state.spire" />
+  </ItemGroup>
 </Project>
