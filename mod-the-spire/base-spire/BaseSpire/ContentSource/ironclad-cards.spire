@@ -606,4 +606,14 @@ package base-spire {
     play = applyPower(PyrePower, 1, target=self)
     upgradedPlay = applyPower(PyrePower, 2, target=self)
   }
+
+  card Cruelty {
+    pools = [IroncladCardPool]
+    type = power
+    rarity = rare
+    cost = 1
+    target = self
+    play = applyPower(CrueltyPower, 25, target=self)
+    upgradedPlay = applyPower(CrueltyPower, 50, target=self)
+  }
 }

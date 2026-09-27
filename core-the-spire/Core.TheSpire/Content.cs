@@ -29,7 +29,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
     bool RemoveWhenApplierDies = false, EffectNode? TriggerRuleEffect = null,
     CardType? TriggerCardType = null, bool RemoveAfterPlayerTurnEnd = false,
-    int MaxEnergyPerStack = 0)
+    int MaxEnergyPerStack = 0, int VulnerableMultiplierPercentPerStack = 0)
 {
     public void Validate()
     {

@@ -37,6 +37,8 @@ Cards declare reward-pool membership with `pools = [IroncladCardPool]`. Pool ref
 
 A Power may declare `maxEnergyPerStack = 1`. The core sums the active stacks when resetting energy at the start of each player turn, and the combat observation exposes the resulting maximum. Pyre grants one stack, or two when upgraded; playing it changes the maximum immediately but does not refill current energy.
 
+A Power may declare `vulnerableMultiplierPercentPerStack = 1`. Each stack adds one percentage point to its owner's powered attack multiplier against a Vulnerable opponent. Cruelty applies 25 stacks, or 50 when upgraded. The modifier composes with other Vulnerable multiplier hooks and is used by both actual damage and intent calculation.
+
 A Power declaration may use `trigger = afterCardPlayed` with `whenCardType = attack` and a compiled effect. Its effect runs after the played card finishes, before that card leaves the play pile. `removeAfterPlayerTurnEnd = true` expires the Power after player turn-end Power effects and before enemies act. Rage uses these rules; Feel No Pain now declares its exhaust trigger and stack-scaled block in `.spire` as well. A resumed card choice dispatches the played-card trigger once. Exhaust triggers receive the exhausted card instance as effect context, including cards moved by a bulk pile effect.
 
 Difficulty values use `variants(default=..., deadly=..., tough=..., deadlyTough=...)` and `range(min, max)`. The configured profile resolves them during package compilation. For example:
@@ -56,8 +58,8 @@ The move names produce stable action IDs. `intent` and displayed damage are deri
 
 ## Current source of truth
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 52 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 50 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
-- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers and the Pyre maximum-energy modifier.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 53 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 51 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
+- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers and the Pyre maximum-energy and Cruelty vulnerable-damage modifiers.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
 
