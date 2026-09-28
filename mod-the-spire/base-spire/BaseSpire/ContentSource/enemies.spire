@@ -102,6 +102,13 @@ package base-spire {
     effect = attack(6, target=firstEnemy, properties=[unpowered])
   }
 
+  power SuckPower {
+    events = [event(type=damage, owner=source, positiveAmount=true,
+      require=[move], exclude=[unpowered],
+      effect=applyScaledPower(Strength, 0, 1,
+        count=targetPowerAmount(SuckPower, target=self), target=self))]
+  }
+
   power Burrowed {
     preventsBlockClear = true
     events = [event(type=block_broken, owner=target, ownerTurnOnly=false,
@@ -783,6 +790,24 @@ package base-spire {
       )
     )
     behavior = cycle(globeHeadShockingSlap, globeHeadThunderStrike, globeHeadGalvanicBurst)
+  }
+
+  enemy FossilStalker {
+    hp = variants(default=range(51, 53), tough=range(54, 56))
+    startingPowers = [power(SuckPower, 3)]
+    moves = actions(
+      fossilStalkerTackle = sequence(
+        attack(variants(default=9, deadly=11), target=player),
+        applyPower(Frail, 1, target=player)
+      ),
+      fossilStalkerLatch = attack(variants(default=12, deadly=14), target=player),
+      fossilStalkerLash = repeat(2, attack(variants(default=3, deadly=4), target=player))
+    )
+    behavior = graph(start=fossilStalkerLatch, edges=[
+      edge(fossilStalkerLatch, chooseWithoutRepeat(fossilStalkerLatch, fossilStalkerTackle, fossilStalkerLash)),
+      edge(fossilStalkerTackle, chooseWithoutRepeat(fossilStalkerLatch, fossilStalkerTackle, fossilStalkerLash)),
+      edge(fossilStalkerLash, chooseWithoutRepeat(fossilStalkerLatch, fossilStalkerTackle, fossilStalkerLash))
+    ])
   }
 
   enemy SlimedBerserker {
