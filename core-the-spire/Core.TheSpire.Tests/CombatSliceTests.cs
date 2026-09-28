@@ -211,6 +211,17 @@ public sealed class CombatSliceTests
             Assert.True(definition.Encounters[encounterId].IsWeak);
         foreach (var encounterId in pool.BossEncounters)
             Assert.Equal(RunRoomType.Boss, definition.Encounters[encounterId].RoomType);
+
+        var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+        var run = runEnvironment.Start(1234);
+        Assert.Equal(RunPhase.ChooseMapPoint, runEnvironment.Observe(run).Phase);
+        var firstMapChoice = runEnvironment.LegalActions(run).OfType<ChooseMapPointAction>().First();
+        var inMonsterRoom = runEnvironment.Step(run, firstMapChoice);
+        Assert.True(inMonsterRoom.RoomStack[^1].EncounterId.HasValue);
+
+        var combatEnvironment = new CombatEnvironment(definition);
+        var combat = combatEnvironment.StartCurrentEncounterForRun(run);
+        Assert.True(combatEnvironment.Observe(combat).Enemies.Count > 0);
     }
 
     public void BaseStrikeBashAndVulnerableUseRegisteredRules()
