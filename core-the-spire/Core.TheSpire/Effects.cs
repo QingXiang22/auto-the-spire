@@ -41,6 +41,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCardVariableEffect), "modifyCardVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AccumulateCardDamageEffect), "accumulateCardDamage")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnemyVariableEffect), "modifyEnemyVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainMaxHpEffect), "gainMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseMaxHpEffect), "loseMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
@@ -152,6 +153,8 @@ public sealed record AccumulateCardDamageEffect(ContentId Variable,
 public enum PowerVariableOperation { Add, Set }
 public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
     TargetSelector Target = TargetSelector.Self, PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
+public sealed record ModifyEnemyVariableEffect(ContentId Variable, int Amount,
+    PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
 public sealed record GainMaxHpEffect(int Amount) : EffectNode;
 public sealed record LoseMaxHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DowngradeSelectedCardEffect : EffectNode;
@@ -721,6 +724,22 @@ internal static class EffectExecutor
                     variableOwner.ModifyPowerVariable(variable.Power, variable.Variable, variable.Amount, variable.Operation);
                     state.Emit(session, "power_variable_modified", owner.Id, variableOwner.Id, variable.Amount,
                         affectedPower: variable.Power);
+                    break;
+                case ModifyEnemyVariableEffect variable:
+                    var actingEnemyForVariable = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == owner.Id)
+                        ?? throw new InvalidOperationException("Modifying an enemy variable requires an enemy action owner.");
+                    var oldEnemyVariable = actingEnemyForVariable.GetVariable(variable.Variable);
+                    actingEnemyForVariable.SetVariable(variable.Variable, variable.Operation switch
+                    {
+                        PowerVariableOperation.Add => checked(oldEnemyVariable + variable.Amount),
+                        PowerVariableOperation.Set => variable.Amount,
+                        _ => throw new ArgumentOutOfRangeException(nameof(variable.Operation))
+                    });
+                    state.Emit(session, "enemy_variable_modified", owner.Id, owner.Id,
+                        variable.Operation == PowerVariableOperation.Add ? variable.Amount
+                            : actingEnemyForVariable.GetVariable(variable.Variable) - oldEnemyVariable,
+                        exactAmount: actingEnemyForVariable.GetVariable(variable.Variable),
+                        affectedVariable: variable.Variable);
                     break;
                 case GainMaxHpEffect gainMaxHp:
                     state.GainMaxHp(session, gainMaxHp.Amount);

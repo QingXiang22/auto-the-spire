@@ -357,7 +357,9 @@ public static class SpireCombatBehaviorDslCompiler
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)
         {
             var properties = Properties(declaration, "Enemy");
-            Only(properties, "hp", "moves", "behavior", "startingPowers", "startingBlock");
+            Only(properties, "hp", "moves", "behavior", "startingPowers", "startingBlock", "variables");
+            var variables = properties.TryGetValue("variables", out var variablesNode)
+                ? CompileEnemyVariables(variablesNode) : Array.Empty<EnemyVariableDefinition>();
             var (minHp, maxHp) = HpRange(Required(properties, "hp", declaration.Location));
             var moves = RequireCall(Required(properties, "moves", declaration.Location));
             if (moves.Name != "actions") throw Error(moves.Location, "Enemy moves must use actions(name = effect, ...).");
@@ -419,13 +421,118 @@ public static class SpireCombatBehaviorDslCompiler
                 actions[i] = new EnemyActionDefinition(actionIds[moveName], effect, intent, damage,
                     NextActionId: nextActionId, Transition: transition);
             }
+            ValidateEnemyVariableReferences(behaviorPlan.StartingTransition, actions,
+                variables.Select(variable => variable.Id).ToHashSet(), declaration.Location);
             return new EnemyDefinition(Id(declaration.Name), minHp, maxHp, actions,
                 startingActionId: behaviorPlan.StartingTransition is null ? actionIds[behaviorPlan.StartMove] : null,
                 startingTransition: behaviorPlan.StartingTransition,
                 startingPowers: properties.TryGetValue("startingPowers", out var startingPowersNode)
                     ? CompileStartingPowers(startingPowersNode) : null,
                 startingBlock: properties.TryGetValue("startingBlock", out var startingBlockNode)
-                    ? Integer(SelectVariant(startingBlockNode)) : 0);
+                    ? Integer(SelectVariant(startingBlockNode)) : 0,
+                variables: variables);
+        }
+
+        private void ValidateEnemyVariableReferences(EnemyActionTransition? startingTransition,
+            IReadOnlyList<EnemyActionDefinition> actions, IReadOnlySet<ContentId> declaredVariables,
+            DslSourceLocation location)
+        {
+            if (startingTransition is not null)
+                ValidateTransitionVariables(startingTransition, declaredVariables, location);
+            foreach (var action in actions)
+            {
+                if (action.Transition is not null)
+                    ValidateTransitionVariables(action.Transition, declaredVariables, location);
+                ValidateEffectVariables(action.Effect, declaredVariables, location);
+            }
+        }
+
+        private void ValidateTransitionVariables(EnemyActionTransition transition,
+            IReadOnlySet<ContentId> declaredVariables, DslSourceLocation location)
+        {
+            foreach (var choice in transition.Choices)
+                if (choice.Condition is { } condition)
+                    ValidateConditionVariables(condition, declaredVariables, location);
+        }
+
+        private void ValidateConditionVariables(EnemyActionCondition condition,
+            IReadOnlySet<ContentId> declaredVariables, DslSourceLocation location)
+        {
+            switch (condition)
+            {
+                case EnemyVariableCondition variable when !declaredVariables.Contains(variable.VariableId):
+                    throw new DslSourceException(location,
+                        $"Enemy behavior reads undeclared instance variable '{variable.VariableId}'.");
+                case AllEnemyCondition all:
+                    foreach (var nested in all.Conditions)
+                        ValidateConditionVariables(nested, declaredVariables, location);
+                    break;
+                case AnyEnemyCondition any:
+                    foreach (var nested in any.Conditions)
+                        ValidateConditionVariables(nested, declaredVariables, location);
+                    break;
+                case NotEnemyCondition not:
+                    ValidateConditionVariables(not.Condition, declaredVariables, location);
+                    break;
+            }
+        }
+
+        private void ValidateEffectVariables(EffectNode effect, IReadOnlySet<ContentId> declaredVariables,
+            DslSourceLocation location)
+        {
+            switch (effect)
+            {
+                case ModifyEnemyVariableEffect variable when !declaredVariables.Contains(variable.Variable):
+                    throw new DslSourceException(location,
+                        $"Enemy behavior modifies undeclared instance variable '{variable.Variable}'.");
+                case SequenceEffect sequence:
+                    foreach (var child in sequence.Effects)
+                        ValidateEffectVariables(child, declaredVariables, location);
+                    break;
+                case IfEffect conditional:
+                    ValidateEffectVariables(conditional.Then, declaredVariables, location);
+                    if (conditional.Else is { } elseEffect)
+                        ValidateEffectVariables(elseEffect, declaredVariables, location);
+                    break;
+                case RepeatEffect repeat:
+                    ValidateEffectVariables(repeat.Effect, declaredVariables, location);
+                    break;
+                case RepeatForCountEffect repeat:
+                    ValidateEffectVariables(repeat.Effect, declaredVariables, location);
+                    break;
+                case WithCountEffect binding:
+                    ValidateEffectVariables(binding.Effect, declaredVariables, location);
+                    break;
+                case ChooseEffect choice:
+                    foreach (var option in choice.Options)
+                        if (option.Effect is { } optionEffect)
+                            ValidateEffectVariables(optionEffect, declaredVariables, location);
+                    break;
+                case AttackEffect attack when attack.OnFatal is not null:
+                    ValidateEffectVariables(attack.OnFatal, declaredVariables, location);
+                    break;
+                case ScaledAttackEffect attack when attack.OnFatal is not null:
+                    ValidateEffectVariables(attack.OnFatal, declaredVariables, location);
+                    break;
+            }
+        }
+
+        private IReadOnlyList<EnemyVariableDefinition> CompileEnemyVariables(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Enemy variables must be a list.");
+            var variables = list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "variable")
+                    throw Error(call.Location, "Enemy variables use variable(Name, initialValue).");
+                CheckShape(call, 2);
+                return new EnemyVariableDefinition(Id(Name(Argument(call, 0))),
+                    Integer(Argument(call, 1)));
+            }).ToArray();
+            if (variables.Select(variable => variable.Id).Distinct().Count() != variables.Length)
+                throw Error(node.Location, "An enemy cannot declare duplicate variables.");
+            return Array.AsReadOnly(variables);
         }
 
         private (DslValueNode Effect, IntentKind? Intent) CompileEnemyAction(DslValueNode source)
@@ -683,6 +790,12 @@ public static class SpireCombatBehaviorDslCompiler
                 return new EnemyPowerCondition(EnumValue<EnemyActionSide>(Argument(condition, 0)),
                     Id(Name(Argument(condition, 1))), EnumValue<RunComparison>(Argument(condition, 2)),
                     Integer(Argument(condition, 3)));
+            }
+            if (condition.Name == "variable")
+            {
+                CheckShape(condition, 3);
+                return new EnemyVariableCondition(Id(Name(Argument(condition, 0))),
+                    EnumValue<RunComparison>(Argument(condition, 1)), Integer(Argument(condition, 2)));
             }
             if (condition.Name is "all" or "any")
             {

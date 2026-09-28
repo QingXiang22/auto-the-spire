@@ -150,6 +150,8 @@ internal sealed class CardInstanceIdView(List<CardInstance> cards) : IReadOnlyLi
 
 internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition definition)
 {
+    private readonly Dictionary<ContentId, int> _variables = definition.Variables
+        .ToDictionary(variable => variable.Id, variable => variable.DefaultInt);
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
     public int ActionIndex { get; set; }
@@ -159,6 +161,17 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     public int ConsecutiveActionCount { get; private set; }
     private readonly Dictionary<ContentId, int> _actionUseCounts = [];
     public IReadOnlyDictionary<ContentId, int> ActionUseCounts => _actionUseCounts;
+    public IReadOnlyDictionary<ContentId, int> Variables => _variables;
+
+    public int GetVariable(ContentId id) => _variables.TryGetValue(id, out var value)
+        ? value : throw new InvalidOperationException($"Enemy variable '{id}' is not declared by '{Definition.Id}'.");
+
+    public void SetVariable(ContentId id, int value)
+    {
+        if (!_variables.ContainsKey(id))
+            throw new InvalidOperationException($"Enemy variable '{id}' is not declared by '{Definition.Id}'.");
+        _variables[id] = value;
+    }
 
     public int ActionUseCount(ContentId actionId) => _actionUseCounts.GetValueOrDefault(actionId);
 
@@ -202,6 +215,7 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
     };
 
     public int GetActionUseCount(ContentId actionId) => enemy.ActionUseCount(actionId);
+    public int GetVariable(ContentId variableId) => enemy.GetVariable(variableId);
 }
 
 internal sealed class GameState
@@ -289,10 +303,11 @@ internal sealed class GameState
     internal void Emit(GameSession session, string type, string source, string target, int amount,
         DamageProperties properties = DamageProperties.None, CardInstance? cardSource = null,
         bool causedByEtherealExhaustion = false, ContentId? affectedPower = null,
-        decimal? exactAmount = null)
+        decimal? exactAmount = null, ContentId? affectedVariable = null)
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
-            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId, exactAmount);
+            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId,
+            exactAmount, affectedVariable);
         _events.Add(gameEvent);
         if (type == "player_turn_start") _playerTurnEventStartSequence = gameEvent.Sequence + 1;
         if (type == "card_exhausted" && source == Player.Id)
@@ -757,7 +772,7 @@ internal sealed class GameState
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
     DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null,
     bool CausedByEtherealExhaustion = false, ContentId? AffectedPower = null,
-    long? CardPlayExecutionId = null, decimal? ExactAmount = null);
+    long? CardPlayExecutionId = null, decimal? ExactAmount = null, ContentId? AffectedVariable = null);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {
