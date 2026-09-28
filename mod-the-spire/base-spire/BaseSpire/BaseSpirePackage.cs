@@ -182,12 +182,27 @@ public static class BaseSpireContent
 
     public static SpireCombatBehaviorContent LoadEnemyBehavior(ContentVariantProfile profile = default)
     {
-        const string resourceName = "BaseSpire.ContentSource.enemies.spire";
-        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
-        using var reader = new System.IO.StreamReader(stream);
-        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
-        return SpireCombatBehaviorDslCompiler.Compile(package, profile);
+        const string resourcePrefix = "BaseSpire.ContentSource.enemies";
+        var assembly = typeof(BaseSpireContent).Assembly;
+        var sources = assembly.GetManifestResourceNames()
+            .Where(name => name.StartsWith(resourcePrefix, StringComparison.Ordinal)
+                && name.EndsWith(".spire", StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .Select(name =>
+            {
+                using var stream = assembly.GetManifestResourceStream(name)
+                    ?? throw new InvalidOperationException($"Missing base-spire content resource '{name}'.");
+                using var reader = new System.IO.StreamReader(stream);
+                return SpireCombatBehaviorDslCompiler.Compile(
+                    DslSourceParser.Parse(reader.ReadToEnd(), name), profile);
+            })
+            .ToArray();
+        if (sources.Length == 0)
+            throw new InvalidOperationException("No base-spire enemy behavior source files were embedded.");
+        return new SpireCombatBehaviorContent(
+            sources.SelectMany(source => source.Powers).ToArray(),
+            sources.SelectMany(source => source.Enemies).ToArray(),
+            sources.SelectMany(source => source.Afflictions).ToArray());
     }
 
     public static IReadOnlyList<PowerDefinition> LoadIroncladPowers()
