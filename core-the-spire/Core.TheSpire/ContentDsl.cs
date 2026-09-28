@@ -41,7 +41,8 @@ public static class ContentDsl
         IReadOnlyList<EncounterFormationData>? Formations = null, bool IsWeak = false,
         IReadOnlyList<ContentId>? Tags = null,
         IReadOnlyDictionary<int, ContentId>? StartingActionsByEnemyIndex = null,
-        bool ShouldGiveRewards = true, int? MinGoldReward = null, int? MaxGoldReward = null)
+        bool ShouldGiveRewards = true, int? MinGoldReward = null, int? MaxGoldReward = null,
+        IReadOnlyDictionary<int, IReadOnlyList<ContentId>>? StartingActionChoicesByEnemyIndex = null)
     {
         public EncounterDefinition Compile()
         {
@@ -50,12 +51,15 @@ public static class ContentDsl
                 throw new JsonException("An encounter must define exactly one of enemyIds, enemySlots, or formations.");
             if (EnemyIds is not null)
                 return new EncounterDefinition(Id, RoomType, EnemyIds, IsWeak, Tags,
-                    StartingActionsByEnemyIndex, ShouldGiveRewards, MinGoldReward, MaxGoldReward);
+                    StartingActionsByEnemyIndex, ShouldGiveRewards, MinGoldReward, MaxGoldReward,
+                    StartingActionChoicesByEnemyIndex);
             if (EnemySlots is not null)
                 return EncounterDefinition.WithEnemySlots(Id, RoomType, EnemySlots.Select(slot => slot.Compile()),
-                    IsWeak, Tags, StartingActionsByEnemyIndex, ShouldGiveRewards, MinGoldReward, MaxGoldReward);
+                    IsWeak, Tags, StartingActionsByEnemyIndex, ShouldGiveRewards, MinGoldReward, MaxGoldReward,
+                    StartingActionChoicesByEnemyIndex);
             return EncounterDefinition.WithFormations(Id, RoomType, Formations!.Select(formation => formation.Compile()),
-                IsWeak, Tags, StartingActionsByEnemyIndex, ShouldGiveRewards, MinGoldReward, MaxGoldReward);
+                IsWeak, Tags, StartingActionsByEnemyIndex, ShouldGiveRewards, MinGoldReward, MaxGoldReward,
+                StartingActionChoicesByEnemyIndex);
         }
     }
 

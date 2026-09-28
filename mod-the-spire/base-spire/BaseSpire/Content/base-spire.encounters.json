@@ -12,6 +12,32 @@
       "enemyIds": ["base-spire:phrog-parasite"]
     },
     {
+      "id": "base-spire:exoskeletons-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],
+      "isWeak": true,
+      "tags": ["base-spire:exoskeletons"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:exoskeleton-skitter",
+        "1": "base-spire:exoskeleton-mandibles",
+        "2": "base-spire:exoskeleton-enrage"
+      }
+    },
+    {
+      "id": "base-spire:exoskeletons-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],
+      "tags": ["base-spire:exoskeletons"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:exoskeleton-skitter",
+        "1": "base-spire:exoskeleton-mandibles",
+        "2": "base-spire:exoskeleton-enrage"
+      },
+      "startingActionChoicesByEnemyIndex": {
+        "3": ["base-spire:exoskeleton-skitter", "base-spire:exoskeleton-mandibles"]
+      }
+    },
+    {
       "id": "base-spire:fuzzy-wurm-crawler-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:fuzzy-wurm-crawler"],
