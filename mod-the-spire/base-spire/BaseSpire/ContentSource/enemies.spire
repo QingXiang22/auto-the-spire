@@ -147,4 +147,36 @@ package base-spire {
     )
     behavior = startWith(trackerTrack, then=loop(trackerHounds))
   }
+
+  enemy BowlbugEgg {
+    hp = variants(default=range(21, 22), tough=range(23, 24))
+    moves = actions(
+      bowlbugEggBite = sequence(
+        attack(variants(default=7, deadly=8), target=player),
+        gainBlock(variants(default=7, deadly=8))
+      )
+    )
+    behavior = loop(bowlbugEggBite)
+  }
+
+  enemy BowlbugNectar {
+    hp = variants(default=range(35, 38), tough=range(36, 39))
+    moves = actions(
+      bowlbugNectarThrash = attack(3, target=player),
+      bowlbugNectarBuff = applyPower(Strength, variants(default=15, deadly=16), target=self),
+      bowlbugNectarThrashAgain = attack(3, target=player)
+    )
+    behavior = startWith(bowlbugNectarThrash,
+      then=startWith(bowlbugNectarBuff, then=loop(bowlbugNectarThrashAgain)))
+  }
+
+  enemy BowlbugSilk {
+    hp = variants(default=range(40, 43), tough=range(41, 44))
+    moves = actions(
+      bowlbugSilkThrash = repeat(2, attack(variants(default=4, deadly=5), target=player)),
+      bowlbugSilkToxicSpit = applyPower(Weak, 1, target=player)
+    )
+    behavior = startWith(bowlbugSilkToxicSpit,
+      then=cycle(bowlbugSilkThrash, bowlbugSilkToxicSpit))
+  }
 }
