@@ -854,6 +854,26 @@ package base-spire {
     behavior = cycle(corpseSlugWhipSlap, corpseSlugGlomp, corpseSlugGoop)
   }
 
+  enemy SludgeSpinner {
+    hp = variants(default=range(37, 39), tough=range(41, 42))
+    moves = actions(
+      sludgeSpinnerOilSpray = sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        applyPower(Weak, 1, target=player)
+      ),
+      sludgeSpinnerSlam = attack(variants(default=11, deadly=12), target=player),
+      sludgeSpinnerRage = sequence(
+        attack(variants(default=6, deadly=7), target=player),
+        applyPower(Strength, 3, target=self)
+      )
+    )
+    behavior = graph(start=sludgeSpinnerOilSpray, edges=[
+      edge(sludgeSpinnerOilSpray, chooseWithoutRepeat(sludgeSpinnerOilSpray, sludgeSpinnerSlam, sludgeSpinnerRage)),
+      edge(sludgeSpinnerSlam, chooseWithoutRepeat(sludgeSpinnerOilSpray, sludgeSpinnerSlam, sludgeSpinnerRage)),
+      edge(sludgeSpinnerRage, chooseWithoutRepeat(sludgeSpinnerOilSpray, sludgeSpinnerSlam, sludgeSpinnerRage))
+    ])
+  }
+
   enemy SlimedBerserker {
     hp = variants(default=range(261, 261), tough=range(281, 281))
     moves = actions(

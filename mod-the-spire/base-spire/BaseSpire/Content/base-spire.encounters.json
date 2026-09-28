@@ -23,6 +23,12 @@
       "tags": ["base-spire:slugs"]
     },
     {
+      "id": "base-spire:sludge-spinner-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:sludge-spinner"],
+      "isWeak": true
+    },
+    {
       "id": "base-spire:bygone-effigy-elite",
       "roomType": "elite",
       "enemyIds": ["base-spire:bygone-effigy"]
