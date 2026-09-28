@@ -1100,6 +1100,7 @@ internal static class EffectExecutor
         if (victim.Hp <= 0) return;
         var state = session.State;
         var rawDamage = state.CalculateDamage(session, owner, victim, amount, properties);
+        state.Emit(session, "before_damage", owner.Id, victim.Id, (int)rawDamage, properties, cardSource);
         var absorbed = (properties & DamageProperties.Unblockable) != 0
             ? 0
             : Math.Min(victim.Block, rawDamage);

@@ -55,6 +55,13 @@ package base-spire {
     damageCapPerStack = 1
   }
 
+  power Thorns {
+    events = [event(type=before_damage, owner=target, ownerTurnOnly=false, positiveAmount=true,
+      require=[move], exclude=[unpowered],
+      effect=scaledAttack(0, 1, count=targetPowerAmount(Thorns, target=self),
+        target=target, properties=[unpowered]))]
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -618,5 +625,18 @@ package base-spire {
       )
     )
     behavior = cycle(myteToxic, myteBite, myteSuck)
+  }
+
+  enemy SpinyToad {
+    hp = variants(default=range(116, 119), tough=range(121, 124))
+    moves = actions(
+      spinyToadSpikes = applyPower(Thorns, 5, target=self),
+      spinyToadExplosion = sequence(
+        attack(variants(default=23, deadly=25), target=player),
+        applyPower(Thorns, -5, target=self)
+      ),
+      spinyToadLash = attack(variants(default=17, deadly=19), target=player)
+    )
+    behavior = cycle(spinyToadSpikes, spinyToadExplosion, spinyToadLash)
   }
 }
