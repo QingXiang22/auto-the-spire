@@ -103,6 +103,12 @@
       "enemyIds": ["base-spire:sewer-clam"]
     },
     {
+      "id": "base-spire:snapping-jaxfruit-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:snapping-jaxfruit", "base-spire:flyconid"],
+      "tags": ["base-spire:mushroom"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

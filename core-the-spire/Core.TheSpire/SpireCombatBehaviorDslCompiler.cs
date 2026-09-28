@@ -440,6 +440,30 @@ public static class SpireCombatBehaviorDslCompiler
                 return new BehaviorPlan(first, nextMoves, transitions);
             }
 
+            if (behavior.Name == "startWithChoice")
+            {
+                if (behavior.Arguments.Count != 2 || behavior.Arguments[0].Name is not null
+                    || behavior.Arguments[1].Name != "then")
+                    throw Error(behavior.Location,
+                        "startWithChoice requires startWithChoice(choice, then=behavior).");
+                var opening = CompileBehavior(RequireCall(behavior.Arguments[0].Value));
+                if (opening.StartingTransition is null)
+                    throw Error(behavior.Arguments[0].Location,
+                        "startWithChoice requires a weighted or no-repeat choice as its opening behavior.");
+                var after = CompileBehavior(RequireCall(behavior.Arguments[1].Value));
+                if (after.StartingTransition is not null)
+                    throw Error(behavior.Arguments[1].Location,
+                        "startWithChoice's follow-up behavior cannot declare another opening choice.");
+                foreach (var choice in opening.StartingTransition.Choices)
+                {
+                    var name = choice.ActionId.Value;
+                    if (!after.NextMoves.ContainsKey(name) && !after.Transitions.ContainsKey(name))
+                        throw Error(behavior.Arguments[1].Location,
+                            $"Opening move '{name}' must be part of the follow-up behavior.");
+                }
+                return after with { StartingTransition = opening.StartingTransition };
+            }
+
             if (behavior.Name == "loop")
             {
                 if (behavior.Arguments.Count != 1 || behavior.Arguments[0].Name is not null)
