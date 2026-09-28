@@ -23,6 +23,8 @@ The core initializes declared defaults and rejects undeclared or wrong-scope acc
 
 An enemy's effect and its behavior remain separate. For example, an attack expression says what the move does; `startWith(..., then=loop(...))` says when that move is selected. The compiler lowers both to the current typed `EffectNode`, `PowerDefinition`, and `EnemyDefinition` model. The combat state machine is refined only when a source behavior cannot be represented faithfully.
 
+Enemy declarations may set `startingPowers = [power(Ritual, 5)]`. The core applies these Power stacks when it creates the enemy, before selecting its initial move. Amounts may use the configured difficulty variants. This is shared enemy data, not a monster-specific setup handler.
+
 Effects may branch on a compiled predicate at execution time. For example, `if(cardExhaustedThisTurn(), repeat(2, gainBlock(8)), else=gainBlock(8))` models Evil Eye. `pileCountAtLeast(exhaust, 3)` models Pact's End. The first predicate reads a turn-scoped combat summary, and the second reads the current pile; neither requires a card-specific runtime branch.
 
 `playerLostHpThisTurn()` reads whether the player has lost positive HP to damage or direct HP loss during the current turn. Blocked hits do not set it. Spite uses this predicate to choose one hit or two hits (three when upgraded); it resets when the next player turn begins.

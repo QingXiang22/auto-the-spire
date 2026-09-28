@@ -68,6 +68,8 @@ Enemy source exercises fixed cycles, an opening move followed by a loop, random 
 
 The five Ruby Raiders are now source-authored enemy definitions. Their HP and attack values use the tough/deadly variant profile, with shared cycles for axe swings, the brute's strength setup, the crossbow's reload, and the tracker's Frail plus repeated attack. The Ruby Raiders encounter selects three distinct members from that five-enemy pool. Frail's block reduction is a Power-declared multiplier on powered block gains rather than a monster-specific branch.
 
+Enemy definitions can now declare `startingPowers`; the combat environment applies these after constructing the state and before resolving starting-action conditions. This gives the content model a reusable way to express source `AfterAddedToRoom` Power setup.
+
 Manual play, automatic draw-pile play, and replay share nested card frames with lifecycle continuations on the existing effect stack. Cascade and Havoc author batch reservation; One-Two Punch authors a count modifier. Drum of Battle authors its own exhaust callback and upgrade override. The engine resolves the current instance before each execution rather than caching its upgraded effect across a choice. See [content-dsl.md](content-dsl.md) for phase and callback boundaries.
 
 ## Completion gate for the first combat package

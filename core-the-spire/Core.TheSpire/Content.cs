@@ -338,6 +338,7 @@ public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, Inte
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
     ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
     EnemyActionTransition? Transition = null);
+public sealed record EnemyStartingPower(ContentId Power, int Amount);
 public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null,
     EnemyActionCondition? Condition = null);
 public enum EnemyActionRepeatPolicy { Allow, PreventImmediateRepeat }
@@ -810,13 +811,22 @@ public sealed record EnemyDefinition
 
     public EnemyDefinition(ContentId id, int minHp, int maxHp, IReadOnlyList<EnemyActionDefinition> actions,
         bool loopLastAction = true, ContentId? startingActionId = null,
-        EnemyActionTransition? startingTransition = null)
+        EnemyActionTransition? startingTransition = null,
+        IEnumerable<EnemyStartingPower>? startingPowers = null)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minHp);
         if (maxHp < minHp) throw new ArgumentOutOfRangeException(nameof(maxHp));
         ArgumentNullException.ThrowIfNull(actions);
         var copiedActions = actions.ToArray();
+        var copiedStartingPowers = startingPowers?.ToArray() ?? [];
+        foreach (var power in copiedStartingPowers)
+        {
+            power.Power.Validate();
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(power.Amount);
+        }
+        if (copiedStartingPowers.Select(power => power.Power).Distinct().Count() != copiedStartingPowers.Length)
+            throw new ArgumentException("Enemy starting Powers cannot be duplicated.", nameof(startingPowers));
         if (copiedActions.Any(action => action is null))
             throw new ArgumentException("Enemy actions cannot be null.", nameof(actions));
         foreach (var action in copiedActions)
@@ -858,6 +868,7 @@ public sealed record EnemyDefinition
         LoopLastAction = loopLastAction;
         StartingActionIndex = startId is { } value ? indexes[value] : 0;
         StartingTransition = startingTransition;
+        StartingPowers = Array.AsReadOnly(copiedStartingPowers);
         _actionIndexes = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(indexes);
     }
     public ContentId Id { get; }
@@ -867,6 +878,7 @@ public sealed record EnemyDefinition
     public bool LoopLastAction { get; }
     public int StartingActionIndex { get; }
     public EnemyActionTransition? StartingTransition { get; }
+    public IReadOnlyList<EnemyStartingPower> StartingPowers { get; }
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
 
     internal int ResolveStartingActionIndex(EnemyActionEvaluationContext context, SeededRandom random) => StartingTransition is { } transition
@@ -1094,6 +1106,10 @@ public sealed class ContentRegistry
                         throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
             }
         }
+        foreach (var enemy in _enemies.Values)
+        foreach (var startingPower in enemy.StartingPowers)
+            if (!_powers.ContainsKey(startingPower.Power))
+                throw new InvalidOperationException($"Enemy '{enemy.Id}' starts with unknown power '{startingPower.Power}'.");
         foreach (var enemy in _enemies.Values)
         foreach (var action in enemy.Actions)
         {

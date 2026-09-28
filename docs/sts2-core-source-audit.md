@@ -18,6 +18,8 @@
 
 本轮继续核对 Ruby Raiders：[`AxeRubyRaider.cs`](../sts2/src/Core/Models/Monsters/AxeRubyRaider.cs)、[`AssassinRubyRaider.cs`](../sts2/src/Core/Models/Monsters/AssassinRubyRaider.cs)、[`BruteRubyRaider.cs`](../sts2/src/Core/Models/Monsters/BruteRubyRaider.cs)、[`CrossbowRubyRaider.cs`](../sts2/src/Core/Models/Monsters/CrossbowRubyRaider.cs) 与 [`TrackerRubyRaider.cs`](../sts2/src/Core/Models/Monsters/TrackerRubyRaider.cs)。五者 HP 与 Deadly/Tough 数值已导入 DSL；攻击、格挡、加力量、上脆弱和多段攻击使用共享效果。Tracker 所需 Frail 作为通用 Power 用 block gain multiplier 表达，倍率只作用于 powered block，时长在敌方回合结束递减。遇敌编队按源码从五者中无重复抽取三者。
 
+敌人定义此前缺少入场 Power 数据。现增加通用 `startingPowers` 字段，并在怪物 AI 起始动作解析前应用；后续迁移 `AfterAddedToRoom` 只授予初始 Power 的原版怪物可直接复用，不需要新增怪物分支。
+
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 
 [`SetupStrike.cs`](../sts2/src/Core/Models/Cards/SetupStrike.cs) 先攻击 7（升级 9），再获得 2（升级 3）点临时力量并带 Strike 标签；[`Mangle.cs`](../sts2/src/Core/Models/Cards/Mangle.cs) 先攻击 15（升级 20），再使目标临时失去 10（升级 15）点力量。两者的 Power 同源于 [`TemporaryStrengthPower.cs`](../sts2/src/Core/Models/Powers/TemporaryStrengthPower.cs)：层数变化驱动实际 Strength Power，持有者所在一侧结束后移除临时状态并反向施加其剩余层数。DSL 生命周期操作复用同一核心队列，测试覆盖叠加、升级、永久力量保留、怪物行动后恢复、致死后不施加、层数递减、直接移除与到期的差别、暂停续接及循环引用拒绝。原版 Misery 的 IgnoreNextInstance 复制抑制与完整模型 Hook 顺序仍未复刻。
