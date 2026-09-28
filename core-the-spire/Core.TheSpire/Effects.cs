@@ -1227,10 +1227,7 @@ internal static class EffectExecutor
             allowedCount = Math.Min(allowedCount, availableSlots.Count);
         var startingPowers = summon.StartingPowers ?? definition.StartingPowers;
         if (summon.AdditionalStartingPowers is { Count: > 0 } additionalPowers)
-            startingPowers = startingPowers.Concat(additionalPowers)
-                .GroupBy(power => power.Power)
-                .Select(group => new EnemyStartingPower(group.Key, group.Sum(power => power.Amount)))
-                .ToArray();
+            startingPowers = startingPowers.Concat(additionalPowers).ToArray();
         var spawned = new List<(string InstanceId, EnemyCombatState State)>(allowedCount);
         for (var i = 0; i < allowedCount; i++)
         {
