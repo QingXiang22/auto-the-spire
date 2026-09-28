@@ -35,6 +35,12 @@ public sealed class SeededRandom
 
     public float NextFloat() => (float)NextDouble();
 
+    public float NextFloat(float maxExclusive)
+    {
+        if (maxExclusive < 0f) throw new ArgumentOutOfRangeException(nameof(maxExclusive));
+        return (float)(NextDouble() * maxExclusive);
+    }
+
     public void Shuffle<T>(IList<T> values)
     {
         for (var i = values.Count - 1; i > 0; i--)
