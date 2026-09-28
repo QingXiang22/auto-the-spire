@@ -785,13 +785,13 @@ public sealed class EncounterDefinition
             }
             if (selectedFormation is null)
                 throw new InvalidOperationException($"Encounter '{Id}' formation selection exceeded its total weight.");
-            return SelectSlots(selectedFormation.EnemySlots, random);
+            return SelectSlots(selectedFormation.EnemySlots, random, selectedFormation.StartingActionsByEnemyIndex);
         }
         return SelectSlots(EnemySlots, random);
     }
 
     private IReadOnlyList<EncounterEnemySelection> SelectSlots(IReadOnlyList<EncounterEnemySlot> slots,
-        SeededRandom random)
+        SeededRandom random, IReadOnlyDictionary<int, ContentId>? formationStartingActions = null)
     {
         var selectedByGroup = new Dictionary<ContentId, HashSet<ContentId>>();
         var selected = new EncounterEnemySelection[slots.Count];
@@ -810,7 +810,9 @@ public sealed class EncounterDefinition
                 throw new InvalidOperationException($"Encounter '{Id}' has no enemy choices left for slot {i}.");
             var enemyId = slot.ChooseRandomly ? candidates[random.NextInt(candidates.Count)] : candidates[0];
             groupSelection?.Add(enemyId);
-            ContentId? startingAction = StartingActionsByEnemyIndex.TryGetValue(i, out var overrideId) ? overrideId : null;
+            ContentId? startingAction = formationStartingActions?.TryGetValue(i, out var formationOverride) == true
+                ? formationOverride
+                : StartingActionsByEnemyIndex.TryGetValue(i, out var overrideId) ? overrideId : null;
             StartingActionChoicesByEnemyIndex.TryGetValue(i, out var startingChoices);
             selected[i] = new EncounterEnemySelection(enemyId, startingAction, startingChoices);
         }
@@ -1165,6 +1167,11 @@ public sealed class ContentRegistry
             foreach (var actionId in choices)
                 if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
                     throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action choice '{actionId}' to enemy '{enemyId}'.");
+            foreach (var formation in encounter.Formations)
+            foreach (var (enemyIndex, actionId) in formation.StartingActionsByEnemyIndex)
+            foreach (var enemyId in formation.EnemySlots[enemyIndex].EnemyChoices)
+                if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
+                    throw new InvalidOperationException($"Encounter '{encounter.Id}' formation assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
         }
         foreach (var enemy in _enemies.Values)
         foreach (var startingPower in enemy.StartingPowers)
@@ -1723,6 +1730,12 @@ public sealed class ContentRegistry
                 break;
             case GainMaxHpEffect gainMaxHp:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainMaxHp.Amount);
+                break;
+            case LoseMaxHpEffect loseMaxHp:
+                ArgumentOutOfRangeException.ThrowIfNegative(loseMaxHp.Amount);
+                if (loseMaxHp.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget
+                    or TargetSelector.FirstEnemy))
+                    throw new InvalidOperationException($"{owner} has an invalid maximum HP loss target.");
                 break;
             case ModifySelectedCardCostEffect cost:
                 cost.Modifier.Validate();
