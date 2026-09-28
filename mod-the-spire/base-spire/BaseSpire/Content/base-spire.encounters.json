@@ -128,6 +128,11 @@
       "enemyIds": ["base-spire:punch-construct"]
     },
     {
+      "id": "base-spire:mawler-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:mawler"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

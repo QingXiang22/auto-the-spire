@@ -148,11 +148,17 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     public int ActionIndex { get; set; }
     public ContentId? LastActionId { get; private set; }
     public int ConsecutiveActionCount { get; private set; }
+    private readonly Dictionary<ContentId, int> _actionUseCounts = [];
+    public IReadOnlyDictionary<ContentId, int> ActionUseCounts => _actionUseCounts;
+
+    public int ActionUseCount(ContentId actionId) => _actionUseCounts.GetValueOrDefault(actionId);
 
     public void SelectAction(ContentId actionId)
     {
         ConsecutiveActionCount = LastActionId == actionId ? ConsecutiveActionCount + 1 : 1;
         LastActionId = actionId;
+        if (Definition.LimitedActionIds.Contains(actionId))
+            _actionUseCounts[actionId] = checked(ActionUseCount(actionId) + 1);
     }
 }
 
@@ -185,6 +191,8 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
         EnemyActionSide.Player => state.Player.Creature.PowerAmount(powerId),
         _ => throw new ArgumentOutOfRangeException(nameof(side))
     };
+
+    public int GetActionUseCount(ContentId actionId) => enemy.ActionUseCount(actionId);
 }
 
 internal sealed class GameState

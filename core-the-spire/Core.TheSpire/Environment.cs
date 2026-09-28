@@ -6,6 +6,8 @@ public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? In
 public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Block, int Strength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers)
 {
+    public IReadOnlyDictionary<ContentId, int> ActionUseCounts { get; init; }
+        = new Dictionary<ContentId, int>();
     public IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PowerVariables { get; init; }
         = new Dictionary<ContentId, IReadOnlyDictionary<ContentId, int>>();
 }
@@ -278,6 +280,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             enemy.Creature.Block, enemy.Creature.Strength, action.Intent, damage,
             new Dictionary<ContentId, int>(enemy.Creature.Powers))
         {
+            ActionUseCounts = new Dictionary<ContentId, int>(enemy.ActionUseCounts),
             PowerVariables = enemy.Creature.PowerVariableSnapshot()
         };
     }

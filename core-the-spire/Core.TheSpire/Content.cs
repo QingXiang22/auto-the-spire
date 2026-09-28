@@ -341,7 +341,7 @@ public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, Inte
     EnemyActionTransition? Transition = null);
 public sealed record EnemyStartingPower(ContentId Power, int Amount);
 public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null,
-    EnemyActionCondition? Condition = null);
+    EnemyActionCondition? Condition = null, int? MaxUsesPerCombat = null);
 public enum EnemyActionRepeatPolicy { Allow, PreventImmediateRepeat }
 public enum EnemyActionSelectionMode { WeightedRandom, FirstMatchingCondition }
 
@@ -361,6 +361,8 @@ public sealed record EnemyActionTransition
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(choice.Weight);
             if (choice.MaxConsecutiveUses is { } maxUses)
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxUses);
+            if (choice.MaxUsesPerCombat is { } maxTotalUses)
+                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxTotalUses);
         }
         if (!Enum.IsDefined(repeatPolicy)) throw new ArgumentOutOfRangeException(nameof(repeatPolicy));
         if (!Enum.IsDefined(selectionMode)) throw new ArgumentOutOfRangeException(nameof(selectionMode));
@@ -809,6 +811,7 @@ public sealed class EncounterDefinition
 public sealed record EnemyDefinition
 {
     private readonly IReadOnlyDictionary<ContentId, int> _actionIndexes;
+    private readonly IReadOnlySet<ContentId> _limitedActionIds;
 
     public EnemyDefinition(ContentId id, int minHp, int maxHp, IReadOnlyList<EnemyActionDefinition> actions,
         bool loopLastAction = true, ContentId? startingActionId = null,
@@ -859,6 +862,11 @@ public sealed record EnemyDefinition
         foreach (var choice in startTransition.Choices)
             if (!indexes.ContainsKey(choice.ActionId))
                 throw new ArgumentException($"Enemy starting transition references unknown action '{choice.ActionId}'.", nameof(startingTransition));
+        var limitedActionIds = copiedActions.SelectMany(action => action.Transition?.Choices ?? [])
+            .Concat(startingTransition?.Choices ?? [])
+            .Where(choice => choice.MaxUsesPerCombat is not null)
+            .Select(choice => choice.ActionId)
+            .ToHashSet();
         var startId = startingActionId ?? copiedActions.FirstOrDefault()?.Id;
         if (startId is { } starting && !indexes.ContainsKey(starting))
             throw new ArgumentException($"Starting action '{starting}' is not in the enemy action graph.", nameof(startingActionId));
@@ -870,6 +878,7 @@ public sealed record EnemyDefinition
         StartingActionIndex = startId is { } value ? indexes[value] : 0;
         StartingTransition = startingTransition;
         StartingPowers = Array.AsReadOnly(copiedStartingPowers);
+        _limitedActionIds = limitedActionIds;
         _actionIndexes = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(indexes);
     }
     public ContentId Id { get; }
@@ -880,6 +889,7 @@ public sealed record EnemyDefinition
     public int StartingActionIndex { get; }
     public EnemyActionTransition? StartingTransition { get; }
     public IReadOnlyList<EnemyStartingPower> StartingPowers { get; }
+    internal IReadOnlySet<ContentId> LimitedActionIds => _limitedActionIds;
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
 
     internal int ResolveStartingActionIndex(EnemyActionEvaluationContext context, SeededRandom random) => StartingTransition is { } transition
@@ -904,7 +914,9 @@ public sealed record EnemyDefinition
         if (transition.SelectionMode == EnemyActionSelectionMode.FirstMatchingCondition)
         {
             foreach (var choice in transition.Choices)
-                if (choice.Condition is null || choice.Condition.Evaluate(context))
+                if ((choice.Condition is null || choice.Condition.Evaluate(context))
+                    && (choice.MaxUsesPerCombat is not { } maxTotalUses
+                        || context.GetActionUseCount(choice.ActionId) < maxTotalUses))
                     return GetActionIndex(choice.ActionId);
             throw new InvalidOperationException("Enemy conditional transition has no matching action for the current combat state.");
         }
@@ -912,6 +924,8 @@ public sealed record EnemyDefinition
         var choices = transition.Choices.Where(choice =>
         {
             if (choice.Condition is { } condition && !condition.Evaluate(context)) return false;
+            if (choice.MaxUsesPerCombat is { } maximumTotalUses
+                && context.GetActionUseCount(choice.ActionId) >= maximumTotalUses) return false;
             var maximumConsecutiveUses = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
                 ? 1
                 : choice.MaxConsecutiveUses;

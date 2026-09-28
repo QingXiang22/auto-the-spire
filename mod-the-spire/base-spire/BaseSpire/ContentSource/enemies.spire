@@ -292,4 +292,18 @@ package base-spire {
     )
     behavior = cycle(punchConstructReady, punchConstructFastPunch, punchConstructStrongPunch)
   }
+
+  enemy Mawler {
+    hp = variants(default=range(76, 76), tough=range(72, 72))
+    moves = actions(
+      mawlerRipAndTear = attack(variants(default=14, deadly=16), target=player),
+      mawlerRoar = applyPower(Vulnerable, 3, target=player),
+      mawlerClaw = repeat(2, attack(variants(default=4, deadly=5), target=player))
+    )
+    behavior = startWith(mawlerClaw, then=chooseWithLimits(
+      candidate(mawlerRipAndTear, maxConsecutive=1),
+      candidate(mawlerRoar, maxUsesPerCombat=1),
+      candidate(mawlerClaw, maxConsecutive=1)
+    ))
+  }
 }
