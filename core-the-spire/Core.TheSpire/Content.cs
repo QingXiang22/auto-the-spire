@@ -796,13 +796,15 @@ public sealed class EncounterDefinition
             }
             if (selectedFormation is null)
                 throw new InvalidOperationException($"Encounter '{Id}' formation selection exceeded its total weight.");
-            return SelectSlots(selectedFormation.EnemySlots, random, selectedFormation.StartingActionsByEnemyIndex);
+            return SelectSlots(selectedFormation.EnemySlots, random, selectedFormation.StartingActionsByEnemyIndex,
+                selectedFormation.SlotIndices, selectedFormation.SlotCount);
         }
         return SelectSlots(EnemySlots, random);
     }
 
     private IReadOnlyList<EncounterEnemySelection> SelectSlots(IReadOnlyList<EncounterEnemySlot> slots,
-        SeededRandom random, IReadOnlyDictionary<int, ContentId>? formationStartingActions = null)
+        SeededRandom random, IReadOnlyDictionary<int, ContentId>? formationStartingActions = null,
+        IReadOnlyList<int>? slotIndices = null, int? slotCount = null)
     {
         var selectedByGroup = new Dictionary<ContentId, HashSet<ContentId>>();
         var selected = new EncounterEnemySelection[slots.Count];
@@ -825,7 +827,8 @@ public sealed class EncounterDefinition
                 ? formationOverride
                 : StartingActionsByEnemyIndex.TryGetValue(i, out var overrideId) ? overrideId : null;
             StartingActionChoicesByEnemyIndex.TryGetValue(i, out var startingChoices);
-            selected[i] = new EncounterEnemySelection(enemyId, startingAction, startingChoices);
+            selected[i] = new EncounterEnemySelection(enemyId, startingAction, startingChoices,
+                slotIndices?[i] ?? i, slotCount);
         }
         return Array.AsReadOnly(selected);
     }
@@ -1754,6 +1757,8 @@ public sealed class ContentRegistry
                     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumLivingEnemies);
                 if (summon.MaximumEnemyCount is { } maximumEnemies)
                     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumEnemies);
+                if (!Enum.IsDefined(summon.SlotPlacement))
+                    throw new InvalidOperationException($"{owner} has an invalid summon slot placement.");
                 if (summon.StartingAction is { } startingAction
                     && !_enemies[summon.Enemy].Actions.Any(action => action.Id == startingAction))
                     throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with unknown starting action '{startingAction}'.");

@@ -1038,7 +1038,7 @@ package base-spire {
         applyPower(Frail, 1, target=player)
       ),
       twoTailedRatCallForBackup = sequence(
-        summonEnemy(TwoTailedRat, maxEnemies=5),
+        summonEnemy(TwoTailedRat, maxEnemies=5, slot=LastAvailable),
         modifyCombatState(TwoTailedRatBackupCalls, 1)
       )
     )

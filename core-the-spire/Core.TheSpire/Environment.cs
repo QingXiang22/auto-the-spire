@@ -1,11 +1,13 @@
 namespace CoreTheSpire;
 
 public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? InstanceId = null,
-    ContentId? StartingActionOverride = null, IReadOnlyList<ContentId>? StartingActionChoices = null);
+    ContentId? StartingActionOverride = null, IReadOnlyList<ContentId>? StartingActionChoices = null,
+    int? SlotIndex = null, int? TotalSlotCount = null);
 
 public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Block, int Strength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers)
 {
+    public int SlotIndex { get; init; }
     public IReadOnlyDictionary<ContentId, int> ActionUseCounts { get; init; }
         = new Dictionary<ContentId, int>();
     public IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PowerVariables { get; init; }
@@ -40,7 +42,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         return StartForRun(runSession, selections
             .Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
                 StartingActionOverride: selection.StartingActionOverride,
-                StartingActionChoices: selection.StartingActionChoices)).ToArray());
+                StartingActionChoices: selection.StartingActionChoices,
+                SlotIndex: selection.SlotIndex, TotalSlotCount: selection.TotalSlotCount)).ToArray());
     }
 
     public GameSession StartCurrentEncounterForRun(RunSession runSession)
@@ -121,7 +124,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         return Start(random, playerId, playerHp, playerMaxHp, hand,
             selections.Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
                 StartingActionOverride: selection.StartingActionOverride,
-                StartingActionChoices: selection.StartingActionChoices)), drawPile: null, characterId);
+                StartingActionChoices: selection.StartingActionChoices,
+                SlotIndex: selection.SlotIndex, TotalSlotCount: selection.TotalSlotCount)), drawPile: null, characterId);
     }
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
@@ -150,11 +154,22 @@ public sealed class CombatEnvironment(GameDefinition definition)
         if (enemySpawns.Length == 0) throw new ArgumentException("A combat encounter needs at least one enemy.", nameof(enemies));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(playerMaxHp);
         if (playerHp < 0 || playerHp > playerMaxHp) throw new ArgumentOutOfRangeException(nameof(playerHp));
-        var prepared = new (CombatEnemySpawn Spawn, EnemyDefinition Definition, string InstanceId)[enemySpawns.Length];
+        var declaredSlotCounts = enemySpawns.Where(spawn => spawn.TotalSlotCount is not null)
+            .Select(spawn => spawn.TotalSlotCount!.Value).Distinct().ToArray();
+        if (declaredSlotCounts.Length > 1)
+            throw new ArgumentException("Combat enemy spawns must agree on the total slot count.", nameof(enemies));
+        var totalSlotCount = declaredSlotCounts.Length == 0 ? (int?)null : declaredSlotCounts[0];
+        if (totalSlotCount is <= 0) throw new ArgumentOutOfRangeException(nameof(enemies));
+        var slotIndexes = new HashSet<int>();
+        var prepared = new (CombatEnemySpawn Spawn, EnemyDefinition Definition, string InstanceId, int SlotIndex)[enemySpawns.Length];
         var instanceIds = new HashSet<string>(StringComparer.Ordinal);
         for (var i = 0; i < enemySpawns.Length; i++)
         {
             var spawn = enemySpawns[i];
+            var slotIndex = spawn.SlotIndex ?? i;
+            if (slotIndex < 0 || (totalSlotCount is { } capacity && slotIndex >= capacity)
+                || !slotIndexes.Add(slotIndex))
+                throw new ArgumentException("Combat enemy spawn slots must be unique indexes within the encounter capacity.", nameof(enemies));
             var enemyDefinition = FindEnemy(spawn.EnemyId);
             if (enemyDefinition.Actions.Count == 0)
                 throw new InvalidOperationException($"Enemy '{spawn.EnemyId}' has no actions.");
@@ -174,18 +189,19 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 throw new ArgumentException($"Enemy '{spawn.EnemyId}' has invalid starting action choices.", nameof(enemies));
             if (spawn.StartingActionOverride is not null && spawn.StartingActionChoices is not null)
                 throw new ArgumentException("A combat enemy cannot have both a fixed starting action and starting action choices.", nameof(enemies));
-            prepared[i] = (spawn, enemyDefinition, entityId);
+            prepared[i] = (spawn, enemyDefinition, entityId, slotIndex);
         }
 
         var combatEnemies = new List<EnemyCombatState>(enemySpawns.Length);
         var chosenEnemyHp = new HashSet<int>();
-        foreach (var (spawn, enemyDefinition, entityId) in prepared)
+        foreach (var (spawn, enemyDefinition, entityId, slotIndex) in prepared)
         {
             var hp = spawn.Hp ?? ChooseUniqueEnemyHp(enemyDefinition, chosenEnemyHp, rng.Get("niche"));
             chosenEnemyHp.Add(hp);
             var enemy = new EnemyCombatState(new EntityState(entityId, true, hp, hp), enemyDefinition)
             {
-                ActionIndex = enemyDefinition.StartingActionIndex
+                ActionIndex = enemyDefinition.StartingActionIndex,
+                SlotIndex = slotIndex
             };
             enemy.Creature.Block = enemyDefinition.StartingBlock;
             combatEnemies.Add(enemy);
@@ -205,7 +221,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances, characterId),
-            combatEnemies);
+            combatEnemies, totalSlotCount);
         var session = new GameSession(state, rng);
         foreach (var enemy in combatEnemies)
             foreach (var startingPower in enemy.Definition.StartingPowers)
@@ -293,7 +309,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             ActionUseCounts = new Dictionary<ContentId, int>(enemy.ActionUseCounts),
             PowerVariables = enemy.Creature.PowerVariableSnapshot(),
-            Variables = new Dictionary<ContentId, int>(enemy.Variables)
+            Variables = new Dictionary<ContentId, int>(enemy.Variables),
+            SlotIndex = enemy.SlotIndex
         };
     }
 
@@ -601,21 +618,21 @@ public sealed class CombatEnvironment(GameDefinition definition)
                             state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed);
                     }
                     state.EndTurnStage = EndTurnResolutionStage.EnemyOwnerTurnStartPowers;
-                    state.EnemyTurnParticipantCount = state.Enemies.Count;
+                    state.CaptureEnemyTurnParticipants();
                     state.CurrentEnemyIndex = 0;
                     state.CardPlayHistory.Reset();
                     break;
                 case EndTurnResolutionStage.EnemyOwnerTurnStartPowers:
-                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipantCount
-                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipants.Count
+                        && state.EnemyTurnParticipants[state.CurrentEnemyIndex].Creature.Hp <= 0)
                         state.CurrentEnemyIndex++;
-                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipantCount)
+                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipants.Count)
                     {
                         state.CurrentEnemyIndex = 0;
                         state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
                         break;
                     }
-                    var startingEnemy = state.Enemies[state.CurrentEnemyIndex++];
+                    var startingEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex++];
                     BeginPowerQueue(state, startingEnemy.Creature, PowerTrigger.AfterOwnerTurnStart);
                     break;
                 case EndTurnResolutionStage.EnemyAction:
@@ -624,16 +641,16 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
                         break;
                     }
-                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipantCount
-                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipants.Count
+                        && state.EnemyTurnParticipants[state.CurrentEnemyIndex].Creature.Hp <= 0)
                         state.CurrentEnemyIndex++;
-                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipantCount)
+                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipants.Count)
                     {
                         state.CurrentEnemyIndex = 0;
                         state.EndTurnStage = EndTurnResolutionStage.EnemyTurnEndPowers;
                         break;
                     }
-                    var actingEnemy = state.Enemies[state.CurrentEnemyIndex];
+                    var actingEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex];
                     if (!actingEnemy.Creature.Powers.Any(power => power.Value > 0
                         && state.Definition.Powers[power.Key].PreventsBlockClear))
                         actingEnemy.Creature.Block = 0;
@@ -654,7 +671,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     EffectExecutor.Execute(session, actingEnemy.Creature, action.Effect, state.Player.Creature);
                     break;
                 case EndTurnResolutionStage.ApplyEnemyActionPower:
-                    var currentEnemy = state.Enemies[state.CurrentEnemyIndex];
+                    var currentEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex];
                     var selectedAction = currentEnemy.Definition.Actions[currentEnemy.ActionIndex];
                     state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
                     if (selectedAction.AppliedPower is { } appliedPower)
@@ -668,21 +685,21 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     state.CurrentEnemyIndex++;
                     break;
                 case EndTurnResolutionStage.EnemyTurnEndPowers:
-                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipantCount
-                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipants.Count
+                        && state.EnemyTurnParticipants[state.CurrentEnemyIndex].Creature.Hp <= 0)
                         state.CurrentEnemyIndex++;
-                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipantCount)
+                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipants.Count)
                     {
                         state.CurrentEnemyIndex = 0;
                         state.EndTurnStage = EndTurnResolutionStage.PlayerEnemySideEndPowers;
                         break;
                     }
-                    var endedEnemy = state.Enemies[state.CurrentEnemyIndex];
+                    var endedEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex];
                     state.EndTurnStage = EndTurnResolutionStage.EnemyOwnerTurnEndPowers;
                     BeginPowerQueue(state, endedEnemy.Creature, PowerTrigger.AfterEnemyTurnEnd);
                     break;
                 case EndTurnResolutionStage.EnemyOwnerTurnEndPowers:
-                    var ownerEndedEnemy = state.Enemies[state.CurrentEnemyIndex++];
+                    var ownerEndedEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex++];
                     state.EndTurnStage = EndTurnResolutionStage.EnemyTurnEndPowers;
                     BeginPowerQueue(state, ownerEndedEnemy.Creature, PowerTrigger.AfterOwnerTurnEnd);
                     break;
@@ -691,14 +708,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterEnemyTurnEnd);
                     break;
                 case EndTurnResolutionStage.AdvanceEnemyAction:
-                    for (var enemyIndex = 0; enemyIndex < state.EnemyTurnParticipantCount; enemyIndex++)
+                    for (var enemyIndex = 0; enemyIndex < state.EnemyTurnParticipants.Count; enemyIndex++)
                     {
-                        var enemy = state.Enemies[enemyIndex];
+                        var enemy = state.EnemyTurnParticipants[enemyIndex];
                         if (enemy.Creature.Hp <= 0) continue;
                         var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
                         enemy.ActionIndex = enemy.Definition.ResolveNextActionIndex(currentAction.Id,
                             enemy.LastActionId, enemy.ConsecutiveActionCount,
-                            new EnemyActionEvaluationContext(state, enemy, enemyIndex),
+                            new EnemyActionEvaluationContext(state, enemy, state.Enemies.IndexOf(enemy)),
                             session.Random.Get("enemy-ai"));
                         enemy.SelectAction(enemy.Definition.Actions[enemy.ActionIndex].Id);
                     }

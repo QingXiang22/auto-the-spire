@@ -31,16 +31,18 @@ public static class ContentDsl
 
     private sealed record EncounterFormationData(IReadOnlyList<ContentId>? EnemyIds = null, int Weight = 1,
         IReadOnlyList<EncounterSlotData>? EnemySlots = null,
-        IReadOnlyDictionary<int, ContentId>? StartingActionsByEnemyIndex = null)
+        IReadOnlyDictionary<int, ContentId>? StartingActionsByEnemyIndex = null,
+        int? SlotCount = null, IReadOnlyList<int>? SlotIndices = null)
     {
         public EncounterFormationChoice Compile()
         {
             if ((EnemyIds is null) == (EnemySlots is null))
                 throw new JsonException("A formation must define exactly one of enemyIds or enemySlots.");
             return EnemyIds is not null
-                ? new EncounterFormationChoice(EnemyIds, Weight, StartingActionsByEnemyIndex)
+                ? new EncounterFormationChoice(EnemyIds, Weight, StartingActionsByEnemyIndex,
+                    SlotCount, SlotIndices)
                 : new EncounterFormationChoice(EnemySlots!.Select(slot => slot.Compile()), Weight,
-                    StartingActionsByEnemyIndex);
+                    StartingActionsByEnemyIndex, SlotCount, SlotIndices);
         }
     }
 

@@ -156,6 +156,7 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     private long _actionSelectionCount;
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
+    public int SlotIndex { get; set; }
     public int ActionIndex { get; set; }
     public bool SkipNextAction { get; set; }
     public ContentId? StartingActionOverride { get; set; }
@@ -252,12 +253,15 @@ internal sealed class GameState
     internal HashSet<string> ProcessedTurnEndHandCardIds { get; } = [];
     internal List<string> TurnEndHandCardIds { get; } = [];
 
-    internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
+    internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies,
+        int? totalEnemySlots = null)
     {
         Definition = definition;
         _modInts = new ScopedIntState(definition.StateVariables, StateVariableScope.Combat);
         Player = player;
         Enemies = enemies.ToList();
+        TotalEnemySlots = totalEnemySlots;
+        Enemies.Sort((left, right) => left.SlotIndex.CompareTo(right.SlotIndex));
         if (Enemies.Count == 0) throw new ArgumentException("A combat encounter needs at least one enemy.", nameof(enemies));
         _eventView = _events.AsReadOnly();
     }
@@ -267,6 +271,17 @@ internal sealed class GameState
     public int PlayerMaxEnergy => Math.Max(0, checked(3 + Player.Creature.Powers.Sum(power =>
         checked(Definition.Powers[power.Key].MaxEnergyPerStack * power.Value))));
     public List<EnemyCombatState> Enemies { get; }
+    internal int? TotalEnemySlots { get; }
+    internal IReadOnlyList<int> AvailableEnemySlots => TotalEnemySlots is { } total
+        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot)).ToArray()
+        : Array.Empty<int>();
+    internal void AddEnemy(EnemyCombatState enemy)
+    {
+        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex))
+            throw new InvalidOperationException($"Enemy slot {enemy.SlotIndex} is already occupied.");
+        var index = Enemies.FindIndex(candidate => candidate.SlotIndex > enemy.SlotIndex);
+        Enemies.Insert(index < 0 ? Enemies.Count : index, enemy);
+    }
     public EntityState Enemy => Enemies[0].Creature;
     public EnemyDefinition EnemyDefinition => Enemies[0].Definition;
     public int Turn { get; internal set; } = 1;
@@ -279,7 +294,12 @@ internal sealed class GameState
         internal set => Enemies[0].ActionIndex = value;
     }
     public int CurrentEnemyIndex { get; internal set; }
-    internal int EnemyTurnParticipantCount { get; set; }
+    internal List<EnemyCombatState> EnemyTurnParticipants { get; } = [];
+    internal void CaptureEnemyTurnParticipants()
+    {
+        EnemyTurnParticipants.Clear();
+        EnemyTurnParticipants.AddRange(Enemies);
+    }
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
     internal long NextCardPlayExecutionId() => checked(++_nextCardPlayExecutionId);

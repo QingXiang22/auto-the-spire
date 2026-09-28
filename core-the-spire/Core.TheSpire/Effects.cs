@@ -205,9 +205,10 @@ internal sealed record AutoPlayRandomCardsContinuationEffect(AutoPlayRandomCards
 internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
+public enum SummonSlotPlacement { NextAvailable, FirstAvailable, LastAvailable }
 public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null,
     IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null,
-    int? MaximumEnemyCount = null) : EffectNode;
+    int? MaximumEnemyCount = null, SummonSlotPlacement SlotPlacement = SummonSlotPlacement.NextAvailable) : EffectNode;
 public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
@@ -1148,6 +1149,9 @@ internal static class EffectExecutor
                 Math.Max(0, maximumLiving - state.Enemies.Count(enemy => enemy.Creature.Hp > 0)));
         if (summon.MaximumEnemyCount is { } maximumTotal)
             allowedCount = Math.Min(allowedCount, Math.Max(0, maximumTotal - state.Enemies.Count));
+        var availableSlots = state.AvailableEnemySlots.ToList();
+        if (state.TotalEnemySlots is not null)
+            allowedCount = Math.Min(allowedCount, availableSlots.Count);
         var startingPowers = summon.StartingPowers ?? definition.StartingPowers;
         var spawned = new List<(string InstanceId, EnemyCombatState State)>(allowedCount);
         for (var i = 0; i < allowedCount; i++)
@@ -1156,13 +1160,24 @@ internal static class EffectExecutor
             var hp = definition.MinHp + (hpRange == 1 ? 0 : session.Random.Get("niche").NextInt(hpRange));
             var instanceId = state.NextSummonedEnemyInstanceId(definition.Id);
             var startingAction = summon.StartingAction ?? definition.Actions[definition.StartingActionIndex].Id;
+            var slotIndex = state.TotalEnemySlots is null
+                ? state.Enemies.Max(enemy => enemy.SlotIndex) + 1
+                : summon.SlotPlacement switch
+                {
+                    SummonSlotPlacement.NextAvailable or SummonSlotPlacement.FirstAvailable => availableSlots[0],
+                    SummonSlotPlacement.LastAvailable => availableSlots[^1],
+                    _ => throw new InvalidOperationException($"Unknown summon slot placement '{summon.SlotPlacement}'.")
+                };
+            if (state.TotalEnemySlots is not null)
+                availableSlots.Remove(slotIndex);
             var enemy = new EnemyCombatState(new EntityState(instanceId, true, hp, hp), definition)
             {
                 ActionIndex = definition.GetActionIndex(startingAction),
-                StartingActionOverride = summon.StartingAction
+                StartingActionOverride = summon.StartingAction,
+                SlotIndex = slotIndex
             };
             enemy.Creature.Block = definition.StartingBlock;
-            state.Enemies.Add(enemy);
+            state.AddEnemy(enemy);
             spawned.Add((instanceId, enemy));
         }
 
