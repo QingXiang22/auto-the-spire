@@ -3,6 +3,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "op")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SequenceEffect), "sequence")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackEffect), "attack")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AttackCardVariableEffect), "attackCardVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ScaledAttackEffect), "scaledAttack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomAttackEffect), "randomAttack")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackUsingBlockEffect), "attackUsingBlock")]
@@ -38,6 +39,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifySelectedCardCostEffect), "modifySelectedCardCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCardVariableEffect), "modifyCardVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AccumulateCardDamageEffect), "accumulateCardDamage")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainMaxHpEffect), "gainMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
@@ -58,6 +60,9 @@ public sealed record SequenceEffect : EffectNode
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy,
     DamageProperties Properties = DamageProperties.Move, EffectNode? OnFatal = null) : EffectNode;
+public sealed record AttackCardVariableEffect(ContentId Variable, int HitCount = 1,
+    TargetSelector Target = TargetSelector.SelectedTarget,
+    DamageProperties Properties = DamageProperties.Move) : EffectNode;
 public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, CombatCountSource Count,
     TargetSelector Target = TargetSelector.SelectedTarget,
     DamageProperties Properties = DamageProperties.Move, EffectNode? OnFatal = null) : EffectNode;
@@ -74,6 +79,7 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerEventAmountCountSource), "takePowerEventAmount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerTurnEventAmountCountSource), "takePowerTurnEventAmount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ProductCombatCountSource), "product")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(BlockCountSource), "block")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
@@ -87,6 +93,7 @@ public sealed record PowerVariableCountSource(ContentId Power, ContentId Variabl
 public sealed record TakePowerEventAmountCountSource(ContentId Power, CardContext Card = CardContext.Played) : CombatCountSource;
 public sealed record TakePowerTurnEventAmountCountSource(ContentId Power) : CombatCountSource;
 public sealed record ProductCombatCountSource(CombatCountSource Left, CombatCountSource Right) : CombatCountSource;
+public sealed record BlockCountSource(TargetSelector Target = TargetSelector.Self) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power, TargetSelector Target = TargetSelector.SelectedTarget) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -113,7 +120,7 @@ public sealed record ChooseCardFromPileEffect(CardPile From, CardPile? To, strin
 public sealed record ChooseCardsFromPileEffect(CardPile From, string Prompt, int MinChoices, int MaxChoices,
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
 public sealed record RandomlyMoveCardFromPileEffect(CardPile From, CardPile To,
-    CardSelectionFilter Filter = CardSelectionFilter.Any) : EffectNode;
+    CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? AfterMove = null) : EffectNode;
 public sealed record RandomlyMoveCardsEffect(CardPile From, CardPile To, int Count = 1,
     ScaledCombatAmount? CalculatedCount = null, CardSelectionFilter Filter = CardSelectionFilter.Any,
     EffectNode? AfterMove = null) : EffectNode;
@@ -124,15 +131,19 @@ internal sealed record RandomMoveCardsAfterEffect(CardPile From, CardPile To,
     IReadOnlyList<CardInstance> Cards, int Index, CardSelectionFilter Filter, EffectNode? AfterMove,
     EntityState? Target, CardInstance? ParentSelectedCard, EffectCountScope? Counts,
     CardInstance MovedCard) : EffectNode;
+internal sealed record RandomMoveSingleAfterEffect(CardPile From, CardPile To, EffectNode? AfterMove,
+    EntityState? Target, CardInstance? Card, EffectCountScope? Counts) : EffectNode;
 public sealed record ForEachCardInPileEffect(CardPile From, CardSelectionFilter Filter, EffectNode Effect) : EffectNode;
 public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
     CardPilePosition DestinationPosition = CardPilePosition.Bottom) : EffectNode;
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
-public sealed record ModifyCardVariableEffect(ContentId Variable, int Amount,
+public sealed record ModifyCardVariableEffect(ContentId Variable, decimal Amount,
     CardContext Card = CardContext.Played, CardVariableOperation Operation = CardVariableOperation.Add,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
+public sealed record AccumulateCardDamageEffect(ContentId Variable,
+    CardContext TargetCard = CardContext.Played, CardContext SourceCard = CardContext.Selected) : EffectNode;
 public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
     TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainMaxHpEffect(int Amount) : EffectNode;
@@ -362,6 +373,21 @@ internal static class EffectExecutor
                     else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target),
                         attack.Amount, attack.Properties, selectedCard, attack.OnFatal);
                     break;
+                case AttackCardVariableEffect dynamicAttack:
+                    if (dynamicAttack.HitCount < 0) throw new InvalidOperationException("Dynamic attack hit count cannot be negative.");
+                    var damageCard = CombatCardVariables.ResolveCard(state, CardContext.Played, selectedCard);
+                    var dynamicAmount = CombatCardVariables.Read(state, dynamicAttack.Variable,
+                        CardContext.Played, selectedCard);
+                    for (var hit = 0; hit < dynamicAttack.HitCount; hit++)
+                    {
+                        var victims = dynamicAttack.Target == TargetSelector.AllOpponents
+                            ? owner.IsEnemy ? new[] { state.Player.Creature }
+                                : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray()
+                            : new[] { ResolveSingleTarget(state, owner, target, dynamicAttack.Target) };
+                        foreach (var victim in victims)
+                            ApplyAttack(session, owner, victim, dynamicAmount, dynamicAttack.Properties, damageCard);
+                    }
+                    break;
                 case ScaledAttackEffect scaledAttack:
                     var scaledVictims = scaledAttack.Target == TargetSelector.AllOpponents
                         ? owner.IsEnemy
@@ -539,12 +565,22 @@ internal static class EffectExecutor
                     if (randomOptions.Length > 0)
                     {
                         var randomOption = randomOptions[session.Random.Get("card-selection").NextInt(randomOptions.Length)];
+                        var afterRandomMoveIndex = state.PendingEffects.Count;
                         if (!state.MoveCard(randomCard.From, randomCard.To, randomOption.InstanceId, CardPilePosition.Bottom))
                             throw new InvalidOperationException("The randomly selected card is no longer in its source pile.");
                         state.Emit(session, "random_card_choice", owner.Id, randomOption.InstanceId, 1);
-                        if (randomCard.To == CardPile.Exhaust && randomCard.From != CardPile.Exhaust)
-                            QueueCardExhaustion(session, state.Player.Creature, randomOption);
+                        state.PendingEffects.Insert(afterRandomMoveIndex, new(owner,
+                            new RandomMoveSingleAfterEffect(randomCard.From, randomCard.To,
+                                randomCard.AfterMove, target, randomOption, counts), target, randomOption, counts));
                     }
+                    break;
+                case RandomMoveSingleAfterEffect singleMove:
+                    if (singleMove.To == CardPile.Exhaust && singleMove.From != CardPile.Exhaust
+                        && singleMove.Card is { } exhaustedCard)
+                        QueueCardExhaustion(session, state.Player.Creature, exhaustedCard);
+                    if (singleMove.AfterMove is { } afterSingleMove && singleMove.Card is { } selectedMoveCard)
+                        state.PendingEffects.Add(new(owner, afterSingleMove, singleMove.Target,
+                            selectedMoveCard, singleMove.Counts));
                     break;
                 case RandomlyMoveCardsEffect randomCards:
                     var randomMoveCount = randomCards.CalculatedCount is { } calculatedMoveCount
@@ -580,6 +616,8 @@ internal static class EffectExecutor
                                 moved.Index + 1, moved.Filter, moved.AfterMove, moved.Target,
                                 moved.ParentSelectedCard, moved.Counts), moved.Target,
                             moved.ParentSelectedCard, moved.Counts));
+                    if (moved.To == CardPile.Exhaust && moved.From != CardPile.Exhaust)
+                        QueueCardExhaustion(session, state.Player.Creature, moved.MovedCard);
                     if (moved.AfterMove is { } afterMove)
                         state.PendingEffects.Add(new(owner, afterMove, moved.Target, moved.MovedCard, moved.Counts));
                     break;
@@ -618,6 +656,13 @@ internal static class EffectExecutor
                             calculatedVariable.PerCount, calculatedVariable.Count, counts, selectedCard) : variable.Amount;
                     CombatCardVariables.Modify(session, CombatCardVariables.ResolveCard(state, variable.Card, selectedCard),
                         variable.Variable, variable.Operation, variableAmount);
+                    break;
+                case AccumulateCardDamageEffect accumulateDamage:
+                    var damageSource = CombatCardVariables.ResolveCard(state, accumulateDamage.SourceCard, selectedCard);
+                    var damageTarget = CombatCardVariables.ResolveCard(state, accumulateDamage.TargetCard, selectedCard);
+                    var calculatedCardDamage = ResolveCardDamageValue(session, owner, damageSource);
+                    CombatCardVariables.Modify(session, damageTarget, accumulateDamage.Variable,
+                        CardVariableOperation.Add, calculatedCardDamage);
                     break;
                 case ModifyPowerVariableEffect variable:
                     var variableOwner = ResolveSingleTarget(state, owner, target, variable.Target);
@@ -756,10 +801,75 @@ internal static class EffectExecutor
     };
 
     private static int ScaledAmount(GameState state, EntityState owner, EntityState? selectedTarget, int baseAmount,
-        int amountPerCount, CombatCountSource source, EffectCountScope? counts = null, CardInstance? selectedCard = null)
+        int amountPerCount, CombatCountSource source, EffectCountScope? counts = null, CardInstance? selectedCard = null,
+        CardInstance? playedCardOverride = null)
     {
-        var count = ResolveCombatCount(state, owner, selectedTarget, source, counts, selectedCard);
+        var count = ResolveCombatCount(state, owner, selectedTarget, source, counts, selectedCard, playedCardOverride);
         return checked(baseAmount + amountPerCount * count);
+    }
+
+    private static decimal ResolveCardDamageValue(GameSession session, EntityState owner, CardInstance card)
+    {
+        var state = session.State;
+        var definition = state.Definition.Cards[card.CardId];
+        decimal baseDamage;
+        if (definition.DamageValueVariable is { } variable)
+            baseDamage = CombatCardVariables.Read(state, variable, CardContext.Played, card, card);
+        else if (card.UpgradeLevel > 0 && definition.UpgradedDamageValue is { } upgradedDamage)
+            baseDamage = upgradedDamage;
+        else if (card.UpgradeLevel == 0 && definition.DamageValue is { } normalDamage)
+            baseDamage = normalDamage;
+        else if (card.UpgradeLevel > 0 && definition.UpgradedCalculatedDamageValue is { } upgradedCalculated)
+            baseDamage = ScaledAmount(state, owner, null, upgradedCalculated.BaseAmount,
+                upgradedCalculated.PerCount, upgradedCalculated.Count, null, card, card);
+        else if (definition.CalculatedDamageValue is { } calculated)
+            baseDamage = ScaledAmount(state, owner, null, calculated.BaseAmount,
+                calculated.PerCount, calculated.Count, null, card, card);
+        else
+            baseDamage = FindCardDamageValue(state, owner, definition.ResolveEffect(card), card, null) ?? 0m;
+        return state.ModifyCardDamageValue(session, owner, baseDamage, DamageProperties.Move);
+    }
+
+    private static decimal? FindCardDamageValue(GameState state, EntityState owner, EffectNode effect,
+        CardInstance card, EffectCountScope? counts)
+    {
+        switch (effect)
+        {
+            case AttackCardVariableEffect dynamicAttack:
+                return CombatCardVariables.Read(state, dynamicAttack.Variable, CardContext.Played, card, card);
+            case AttackEffect attack:
+                return attack.Amount;
+            case ScaledAttackEffect scaled:
+                return ScaledAmount(state, owner, null, scaled.BaseAmount, scaled.AmountPerCount,
+                    scaled.Count, counts, card, card);
+            case RandomAttackEffect random when random.CalculatedAmount is { } calculated:
+                return ScaledAmount(state, owner, null, calculated.BaseAmount, calculated.PerCount,
+                    calculated.Count, counts, card, card);
+            case RandomAttackEffect random:
+                return random.Amount;
+            case AttackUsingBlockEffect:
+                return owner.Block;
+            case SequenceEffect sequence:
+                foreach (var child in sequence.Effects)
+                    if (FindCardDamageValue(state, owner, child, card, counts) is { } damage) return damage;
+                return null;
+            case RepeatEffect repeat:
+                return FindCardDamageValue(state, owner, repeat.Effect, card, counts);
+            case RepeatForCountEffect repeat:
+                return FindCardDamageValue(state, owner, repeat.Effect, card, counts);
+            case RepeatForXCostEffect repeat:
+                return FindCardDamageValue(state, owner, repeat.Effect, card, counts);
+            case WithCountEffect binding:
+                var captured = ResolveCombatCount(state, owner, null, binding.Count, counts, card, card);
+                return FindCardDamageValue(state, owner, binding.Effect, card,
+                    new EffectCountScope(binding.Name, captured, counts));
+            case IfEffect conditional:
+                return FindCardDamageValue(state, owner, conditional.Then, card, counts)
+                    ?? (conditional.Else is { } elseEffect
+                        ? FindCardDamageValue(state, owner, elseEffect, card, counts) : null);
+            default:
+                return null;
+        }
     }
 
     private static void QueueNextDrawUntil(GameSession session, EntityState owner, CardType continueWhileType,
@@ -785,7 +895,8 @@ internal static class EffectExecutor
     }
 
     private static int ResolveCombatCount(GameState state, EntityState owner, EntityState? selectedTarget,
-        CombatCountSource source, EffectCountScope? counts, CardInstance? selectedCard)
+        CombatCountSource source, EffectCountScope? counts, CardInstance? selectedCard,
+        CardInstance? playedCardOverride = null)
     {
         return source switch
         {
@@ -795,20 +906,22 @@ internal static class EffectExecutor
             PlayerHpLossCountSource => state.PlayerHpLossCount,
             EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
             CardPlaysThisTurnCountSource plays => state.CardPlayHistory.Count(plays.Type, plays.Phase),
-            CardVariableCountSource variable => CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard),
+            CardVariableCountSource variable => decimal.ToInt32(decimal.Floor(
+                CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard, playedCardOverride))),
             PowerVariableCountSource variable => ResolveSingleTarget(state, owner, selectedTarget, variable.Target)
                 .PowerVariable(variable.Power, variable.Variable),
             TakePowerEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power,
                 CombatCardVariables.ResolveCard(state, deferred.Card, selectedCard).InstanceId),
             TakePowerTurnEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power, null),
+            BlockCountSource block => ResolveSingleTarget(state, owner, selectedTarget, block.Target).Block,
             SavedCountSource saved => counts?.Resolve(saved.Name)
                 ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
             TargetPowerCountSource power => ResolveSingleTarget(state, owner, selectedTarget, power.Target).PowerAmount(power.Power),
             TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
                 .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
             ProductCombatCountSource product => checked(
-                ResolveCombatCount(state, owner, selectedTarget, product.Left, counts, selectedCard)
-                * ResolveCombatCount(state, owner, selectedTarget, product.Right, counts, selectedCard)),
+                ResolveCombatCount(state, owner, selectedTarget, product.Left, counts, selectedCard, playedCardOverride)
+                * ResolveCombatCount(state, owner, selectedTarget, product.Right, counts, selectedCard, playedCardOverride)),
             _ => throw new InvalidOperationException("Unsupported combat count source.")
         };
     }
@@ -913,7 +1026,7 @@ internal static class EffectExecutor
         }
     }
 
-    private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount,
+    private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, decimal amount,
         DamageProperties properties = DamageProperties.Move, CardInstance? cardSource = null,
         EffectNode? onFatal = null)
     {

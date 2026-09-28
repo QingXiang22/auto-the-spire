@@ -66,7 +66,8 @@ public static class SpireCombatDslCompiler
                 "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust",
                 "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
                 "afterCardPlayed", "upgradedAfterCardPlayed", "afterAutoPostPlay",
-                "upgradedAfterAutoPostPlay", "variables");
+                "upgradedAfterAutoPostPlay", "variables", "damageVariable", "damageValue",
+                "upgradedDamageValue");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -86,6 +87,9 @@ public static class SpireCombatDslCompiler
                 ? ParseKeywords(keywordsNode)
                 : CardKeywords.None;
             var play = CompileEffect(Required(properties, "play", declaration.Location));
+            if (properties.ContainsKey("damageVariable") && (properties.ContainsKey("damageValue")
+                || properties.ContainsKey("upgradedDamageValue")))
+                throw Error(declaration.Location, "A card cannot define damageVariable together with damageValue.");
             var upgradedPlay = properties.TryGetValue("upgradedPlay", out var upgradedPlayNode)
                 ? CompileEffect(upgradedPlayNode)
                 : null;
@@ -99,6 +103,16 @@ public static class SpireCombatDslCompiler
                     ? Boolean(canGenerateNode) : true)
             {
                 Tags = tags, PoolIds = pools,
+                DamageValueVariable = properties.TryGetValue("damageVariable", out var damageVariableNode)
+                    ? ReferenceId(damageVariableNode) : null,
+                DamageValue = properties.TryGetValue("damageValue", out var damageValueNode)
+                    && damageValueNode is DslNumberNode ? DecimalValue(damageValueNode) : null,
+                UpgradedDamageValue = properties.TryGetValue("upgradedDamageValue", out var upgradedDamageValueNode)
+                    && upgradedDamageValueNode is DslNumberNode ? DecimalValue(upgradedDamageValueNode) : null,
+                CalculatedDamageValue = properties.TryGetValue("damageValue", out damageValueNode)
+                    && damageValueNode is not DslNumberNode ? CompileScaledAmount(damageValueNode) : null,
+                UpgradedCalculatedDamageValue = properties.TryGetValue("upgradedDamageValue", out upgradedDamageValueNode)
+                    && upgradedDamageValueNode is not DslNumberNode ? CompileScaledAmount(upgradedDamageValueNode) : null,
                 UpgradedKeywords = properties.TryGetValue("upgradedKeywords", out var upgradedKeywordsNode)
                     ? ParseKeywords(upgradedKeywordsNode) : CardKeywords.None,
                 Variables = properties.TryGetValue("variables", out var variablesNode)
@@ -140,6 +154,13 @@ public static class SpireCombatDslCompiler
                         OptionalArgument(call, "properties") is { } damageProperties
                             ? ParseDamageProperties(damageProperties) : DamageProperties.Move,
                         OptionalEffect(call, "onFatal"));
+                case "attackVariable":
+                    CheckShape(call, 1, 1, "target", "hits", "properties");
+                    return new AttackCardVariableEffect(ReferenceId(Argument(call, 0)),
+                        OptionalInteger(call, "hits", 1),
+                        OptionalTarget(call, "target", TargetSelector.SelectedTarget),
+                        OptionalArgument(call, "properties") is { } variableAttackProperties
+                            ? ParseDamageProperties(variableAttackProperties) : DamageProperties.Move);
                 case "scaledAttack":
                     CheckShape(call, 2, 2, "count", "target", "properties", "onFatal");
                     return new ScaledAttackEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
@@ -274,11 +295,12 @@ public static class SpireCombatDslCompiler
                         Integer(RequiredArgument(call, "maxChoices")),
                         OptionalEnum(call, "filter", CardSelectionFilter.Any), OptionalEffect(call, "onSelected"));
                 case "randomMoveCard":
-                    CheckShape(call, 0, 0, "from", "to", "filter");
+                    CheckShape(call, 0, 0, "from", "to", "filter", "after");
                     return new RandomlyMoveCardFromPileEffect(
                         EnumValue<CardPile>(RequiredArgument(call, "from")),
                         EnumValue<CardPile>(RequiredArgument(call, "to")),
-                        OptionalEnum(call, "filter", CardSelectionFilter.Any));
+                        OptionalEnum(call, "filter", CardSelectionFilter.Any),
+                        OptionalEffect(call, "after"));
                 case "randomMoveCards":
                     CheckShape(call, 0, 0, "from", "to", "count", "filter", "after");
                     var randomMoveCountNode = OptionalArgument(call, "count");
@@ -313,10 +335,15 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 2, 2, "card", "operation");
                     var variableAmount = Argument(call, 1);
                     return new ModifyCardVariableEffect(ReferenceId(Argument(call, 0)),
-                        variableAmount is DslNumberNode ? Integer(variableAmount) : 0,
+                        variableAmount is DslNumberNode ? DecimalValue(variableAmount) : 0,
                         OptionalEnum(call, "card", CardContext.Played),
                         OptionalEnum(call, "operation", CardVariableOperation.Add),
                         variableAmount is DslNumberNode ? null : CompileScaledAmount(variableAmount));
+                case "accumulateCardDamage":
+                    CheckShape(call, 1, 1, "target", "source");
+                    return new AccumulateCardDamageEffect(ReferenceId(Argument(call, 0)),
+                        OptionalEnum(call, "target", CardContext.Played),
+                        OptionalEnum(call, "source", CardContext.Selected));
                 case "modifyPowerVariable":
                     CheckShape(call, 3, 3, "target");
                     return new ModifyPowerVariableEffect(Id(Name(Argument(call, 0))),
@@ -412,8 +439,8 @@ public static class SpireCombatDslCompiler
                 var call = RequireCall(item);
                 if (call.Name != "variable") throw Error(call.Location, "Expected variable(Name, initialValue).");
                 CheckShape(call, 2, 2, "upgraded", "preserveOnDowngrade");
-                return new CardVariableDefinition(ReferenceId(Argument(call, 0)), Integer(Argument(call, 1)),
-                    OptionalArgument(call, "upgraded") is { } upgraded ? Integer(upgraded) : null,
+                return new CardVariableDefinition(ReferenceId(Argument(call, 0)), DecimalValue(Argument(call, 1)),
+                    OptionalArgument(call, "upgraded") is { } upgraded ? DecimalValue(upgraded) : null,
                     OptionalBoolean(call, "preserveOnDowngrade", false));
             }).ToArray();
             if (variables.Select(variable => variable.Id).Distinct().Count() != variables.Length)
@@ -476,6 +503,9 @@ public static class SpireCombatDslCompiler
                 case "energyX":
                     CheckShape(call, 0, 0);
                     return new EnergyXCountSource();
+                case "block":
+                    CheckShape(call, 0, 0, "target");
+                    return new BlockCountSource(OptionalTarget(call, "target", TargetSelector.Self));
                 case "savedCount":
                     CheckShape(call, 1, 1);
                     return new SavedCountSource(StringValue(Argument(call, 0)));
@@ -712,6 +742,10 @@ public static class SpireCombatDslCompiler
         private static int Integer(DslValueNode node) => node is DslNumberNode number && number.TryGetInt32(out var value)
             ? value
             : throw Error(node.Location, "Expected a 32-bit integer.");
+
+        private static decimal DecimalValue(DslValueNode node) => node is DslNumberNode number && number.TryGetDecimal(out var value)
+            ? value
+            : throw Error(node.Location, "Expected a decimal number.");
 
         private static string StringValue(DslValueNode node) => node is DslStringNode text
             ? text.Value

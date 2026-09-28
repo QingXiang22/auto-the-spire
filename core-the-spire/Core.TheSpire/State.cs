@@ -261,10 +261,11 @@ internal sealed class GameState
 
     internal void Emit(GameSession session, string type, string source, string target, int amount,
         DamageProperties properties = DamageProperties.None, CardInstance? cardSource = null,
-        bool causedByEtherealExhaustion = false, ContentId? affectedPower = null)
+        bool causedByEtherealExhaustion = false, ContentId? affectedPower = null,
+        decimal? exactAmount = null)
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
-            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId);
+            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId, exactAmount);
         _events.Add(gameEvent);
         if (type == "player_turn_start") _playerTurnEventStartSequence = gameEvent.Sequence + 1;
         if (type == "card_exhausted" && source == Player.Id)
@@ -394,22 +395,25 @@ internal sealed class GameState
         Emit(session, "max_hp", player.Id, player.Id, amount);
     }
 
-    internal int CalculateDamage(GameSession session, EntityState dealer, EntityState target, int baseDamage,
+    internal decimal ModifyCardDamageValue(GameSession session, EntityState dealer, decimal baseDamage,
+        DamageProperties properties)
+    {
+        var isPoweredMove = (properties & DamageProperties.Move) != 0
+            && (properties & DamageProperties.Unpowered) == 0;
+        var damage = isPoweredMove ? Math.Max(0m, baseDamage + dealer.Strength) : Math.Max(0m, baseDamage);
+        if (isPoweredMove)
+            foreach (var (powerId, amount) in dealer.Powers)
+                if (amount != 0 && Definition.Powers[powerId].OutgoingDamageMultiplier is { } factor)
+                    damage *= factor;
+        return damage;
+    }
+
+    internal int CalculateDamage(GameSession session, EntityState dealer, EntityState target, decimal baseDamage,
         DamageProperties properties = DamageProperties.Move)
     {
         var isPoweredMove = (properties & DamageProperties.Move) != 0
             && (properties & DamageProperties.Unpowered) == 0;
-        var damage = Math.Max(0, baseDamage + (isPoweredMove ? dealer.Strength : 0));
-        decimal multiplier = 1m;
-        if (isPoweredMove)
-        {
-            foreach (var (powerId, amount) in dealer.Powers)
-            {
-                if (amount != 0 && Definition.Powers[powerId].OutgoingDamageMultiplier is { } factor)
-                    multiplier *= factor;
-            }
-        }
-        damage = (int)decimal.Floor(damage * multiplier);
+        var damage = (int)decimal.Floor(ModifyCardDamageValue(session, dealer, baseDamage, properties));
         if (isPoweredMove && HasPowerRole(target, PowerRole.Vulnerable))
         {
             decimal vulnerableMultiplier = 1.5m;
@@ -703,7 +707,7 @@ internal sealed class GameState
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
     DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null,
     bool CausedByEtherealExhaustion = false, ContentId? AffectedPower = null,
-    long? CardPlayExecutionId = null);
+    long? CardPlayExecutionId = null, decimal? ExactAmount = null);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {

@@ -32,6 +32,8 @@ public sealed record DslNumberNode(string Literal, DslSourceLocation Location) :
 {
     public bool TryGetInt32(out int value) => int.TryParse(Literal, NumberStyles.AllowLeadingSign,
         CultureInfo.InvariantCulture, out value);
+    public bool TryGetDecimal(out decimal value) => decimal.TryParse(Literal, NumberStyles.Float,
+        CultureInfo.InvariantCulture, out value);
 }
 public sealed record DslBooleanNode(bool Value, DslSourceLocation Location) : DslValueNode(Location);
 public sealed record DslListNode(IReadOnlyList<DslValueNode> Items, DslSourceLocation Location)

@@ -120,6 +120,8 @@ package base-spire {
   card FiendFire {
     pools = [IroncladCardPool]
     type = attack rarity = rare cost = 2 target = enemy keywords = [exhaust]
+    damageValue = 7
+    upgradedDamageValue = 10
     play = withCount("handSize", count=pileCount(hand), effect=sequence(
       forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
       repeatForCount(0, 1, count=savedCount("handSize"), effect=attack(7))
@@ -327,6 +329,7 @@ package base-spire {
     cost = 1
     upgradedCost = 0
     target = enemy
+    damageValue = scaled(0, 1, count=block(target=self))
     play = attackUsingBlock(target=target)
   }
 
@@ -657,6 +660,8 @@ package base-spire {
     tags = [Strike]
     cost = 1
     target = enemy
+    damageValue = scaled(6, 3, count=pileCount(exhaust))
+    upgradedDamageValue = scaled(6, 4, count=pileCount(exhaust))
     play = scaledAttack(6, 3, count=pileCount(exhaust))
     upgradedPlay = scaledAttack(6, 4, count=pileCount(exhaust))
   }
@@ -667,6 +672,8 @@ package base-spire {
     rarity = uncommon
     cost = 0
     target = enemy
+    damageValue = 4
+    upgradedDamageValue = 4
     play = scaledAttack(4, 2, count=targetPowerAmount(Vulnerable))
     upgradedPlay = scaledAttack(4, 3, count=targetPowerAmount(Vulnerable))
   }
@@ -700,6 +707,8 @@ package base-spire {
     tags = [Strike]
     cost = 2
     target = enemy
+    damageValue = scaled(6, 2, count=cardsWithTag(Strike))
+    upgradedDamageValue = scaled(6, 3, count=cardsWithTag(Strike))
     play = scaledAttack(6, 2, count=cardsWithTag(Strike))
     upgradedPlay = scaledAttack(6, 3, count=cardsWithTag(Strike))
   }
@@ -874,6 +883,8 @@ package base-spire {
     cost = 1
     target = enemy
     canGenerateInCombat = false
+    damageValue = 10
+    upgradedDamageValue = 12
     play = attack(10, onFatal=gainMaxHp(3))
     upgradedPlay = attack(12, onFatal=gainMaxHp(4))
   }
@@ -896,6 +907,19 @@ package base-spire {
     upgradedCost = 1
     target = self
     play = applyPower(UnmovablePower, 1, target=self)
+  }
+
+  card Thrash {
+    pools = [IroncladCardPool]
+    type = attack
+    rarity = rare
+    cost = 1
+    target = enemy
+    damageVariable = Damage
+    variables = [variable(Damage, 4, upgraded=6, preserveOnDowngrade=true)]
+    play = sequence(repeat(2, attackVariable(Damage)),
+      randomMoveCard(from=hand, to=exhaust, filter=attack,
+        after=accumulateCardDamage(Damage)))
   }
 
   card Stampede {

@@ -187,7 +187,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (!definition.Cards.ContainsKey(card.CardId))
                 throw new KeyNotFoundException($"Unknown combat card '{card.CardId}'.");
             foreach (var offset in card.VariableOffsets)
-                definition.Cards[card.CardId].ResolveVariable(card, offset.Variable);
+                definition.Cards[card.CardId].ResolveDecimalVariable(card, offset.Variable);
         }
 
         var state = new GameState(definition,
