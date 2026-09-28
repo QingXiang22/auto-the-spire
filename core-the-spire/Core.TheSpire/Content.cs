@@ -987,7 +987,7 @@ public sealed record EnemyDefinition
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
-public enum IntentKind { None, Attack, Buff, Debuff }
+public enum IntentKind { None, Attack, Buff, Debuff, Stun }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);

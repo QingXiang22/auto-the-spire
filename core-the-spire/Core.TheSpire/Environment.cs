@@ -284,11 +284,12 @@ public sealed class CombatEnvironment(GameDefinition definition)
     {
         var state = session.State;
         var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
-        var damage = action.Intent == IntentKind.Attack
+        var intent = enemy.SkipNextAction ? IntentKind.Stun : action.Intent;
+        var damage = intent == IntentKind.Attack
             ? state.CalculateDamage(session, enemy.Creature, state.Player.Creature, action.IntentDamage)
             : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
-            enemy.Creature.Block, enemy.Creature.Strength, action.Intent, damage,
+            enemy.Creature.Block, enemy.Creature.Strength, intent, damage,
             new Dictionary<ContentId, int>(enemy.Creature.Powers))
         {
             ActionUseCounts = new Dictionary<ContentId, int>(enemy.ActionUseCounts),
@@ -621,6 +622,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     if (!actingEnemy.Creature.Powers.Any(power => power.Value > 0
                         && state.Definition.Powers[power.Key].PreventsBlockClear))
                         actingEnemy.Creature.Block = 0;
+                    if (actingEnemy.SkipNextAction)
+                    {
+                        actingEnemy.SkipNextAction = false;
+                        state.Emit(session, "enemy_action", actingEnemy.Creature.Id, state.Player.Id,
+                            (int)IntentKind.Stun);
+                        state.CurrentEnemyIndex++;
+                        break;
+                    }
                     var action = actingEnemy.Definition.Actions[actingEnemy.ActionIndex];
                     state.Emit(session, "enemy_action", actingEnemy.Creature.Id, state.Player.Id, (int)action.Intent);
                     state.EndTurnStage = EndTurnResolutionStage.ApplyEnemyActionPower;

@@ -55,6 +55,15 @@ package base-spire {
     effect = summonEnemy(Wriggler, count=4, startingAction=wrigglerSpawned)
   }
 
+  power RavenousPower {
+    events = [event(type=ally_death, owner=target, positiveAmount=true, ownerTurnOnly=false,
+      effect=sequence(
+        applyScaledPower(Strength, 0, 1,
+          count=targetPowerAmount(RavenousPower, target=self), target=self),
+        stun(target=self)
+      ))]
+  }
+
   power HardToKill {
     damageCapPerStack = 1
   }
@@ -832,6 +841,17 @@ package base-spire {
         candidate(scrollOfBitingChew, maxConsecutive=2)
       ))
     ])
+  }
+
+  enemy CorpseSlug {
+    hp = variants(default=range(25, 27), tough=range(27, 29))
+    startingPowers = [power(RavenousPower, variants(default=4, deadly=5))]
+    moves = actions(
+      corpseSlugWhipSlap = repeat(2, attack(3, target=player)),
+      corpseSlugGlomp = attack(variants(default=8, deadly=9), target=player),
+      corpseSlugGoop = applyPower(Frail, 2, target=player)
+    )
+    behavior = cycle(corpseSlugWhipSlap, corpseSlugGlomp, corpseSlugGoop)
   }
 
   enemy SlimedBerserker {

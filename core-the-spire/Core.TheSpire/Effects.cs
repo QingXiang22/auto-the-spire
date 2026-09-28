@@ -53,6 +53,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ExpirePowerEffect), "expirePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SummonEnemyEffect), "summonEnemy")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(StunEnemyEffect), "stunEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -195,6 +196,7 @@ internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNo
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null) : EffectNode;
+public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
@@ -314,6 +316,16 @@ internal static class EffectExecutor
             {
                 case SummonEnemyEffect summon:
                     QueueSummonedEnemies(session, owner, summon);
+                    break;
+                case StunEnemyEffect stun:
+                    var stunnedCreature = ResolveSingleTarget(state, owner, target, stun.Target);
+                    var stunnedEnemy = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == stunnedCreature.Id)
+                        ?? throw new InvalidOperationException("Stun requires an enemy target.");
+                    if (stunnedEnemy.Creature.Hp > 0)
+                    {
+                        stunnedEnemy.SkipNextAction = true;
+                        state.Emit(session, "enemy_stunned", owner.Id, stunnedEnemy.Creature.Id, 1);
+                    }
                     break;
                 case InitializeSummonedEnemiesEffect initialize:
                     foreach (var instanceId in initialize.InstanceIds)
@@ -1135,6 +1147,10 @@ internal static class EffectExecutor
         {
             state.RemovePowersAppliedBy(session, victim.Id);
             QueuePowerTriggerEffects(session, victim, PowerTrigger.AfterOwnerDeath, owner, cardSource);
+            if (victim.IsEnemy)
+                foreach (var ally in state.Enemies.Select(enemy => enemy.Creature)
+                    .Where(ally => ally.Id != victim.Id && ally.Hp > 0))
+                    state.Emit(session, "ally_death", victim.Id, ally.Id, 1, properties, cardSource);
         }
     }
 
