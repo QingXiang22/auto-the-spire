@@ -154,6 +154,11 @@
       }
     },
     {
+      "id": "base-spire:frog-knight-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:frog-knight"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

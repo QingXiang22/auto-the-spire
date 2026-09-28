@@ -494,6 +494,38 @@ public static class SpireCombatBehaviorDslCompiler
                 return CompileBehavior(RequireCall(behavior.Arguments[0].Value));
             }
 
+            if (behavior.Name == "chooseByCondition")
+            {
+                if (behavior.Arguments.Count < 2 || behavior.Arguments.Any(argument => argument.Name is not null))
+                    throw Error(behavior.Location, "chooseByCondition requires at least two positional candidate(move, when=condition) expressions.");
+                var choices = new List<EnemyActionChoice>();
+                var names = new List<string>();
+                foreach (var argument in behavior.Arguments)
+                {
+                    var candidate = RequireCall(argument.Value);
+                    if (candidate.Name != "candidate" || candidate.Arguments.Count is < 2 or > 3
+                        || candidate.Arguments[0].Name is not null || candidate.Arguments[1].Name != "when")
+                        throw Error(candidate.Location, "Conditional choices use candidate(move, when=condition, maxUsesPerCombat=n).");
+                    if (candidate.Arguments.Count == 3 && candidate.Arguments[2].Name != "maxUsesPerCombat")
+                        throw Error(candidate.Arguments[2].Location, "Conditional choices accept maxUsesPerCombat as their only optional property.");
+                    var moveName = Name(candidate.Arguments[0].Value);
+                    names.Add(moveName);
+                    var maxUses = candidate.Arguments.Count == 3 ? Integer(candidate.Arguments[2].Value) : (int?)null;
+                    if (maxUses is <= 0)
+                        throw Error(candidate.Arguments[2].Location, "maxUsesPerCombat must be positive.");
+                    choices.Add(new EnemyActionChoice(Id(moveName),
+                        Condition: CompileEnemyCondition(RequireCall(candidate.Arguments[1].Value)),
+                        MaxUsesPerCombat: maxUses));
+                }
+                if (choices.Select(choice => choice.ActionId).Distinct().Count() != choices.Count)
+                    throw Error(behavior.Location, "Conditional behavior choices must be unique.");
+                var transition = new EnemyActionTransition(choices,
+                    selectionMode: EnemyActionSelectionMode.FirstMatchingCondition);
+                var transitions = names.ToDictionary(name => name, _ => transition, StringComparer.Ordinal);
+                return new BehaviorPlan(names[0], new Dictionary<string, string>(StringComparer.Ordinal),
+                    transitions, transition);
+            }
+
             if (behavior.Name is "chooseWithoutRepeat" or "chooseWithLimits")
             {
                 var choiceNames = new List<(string Name, int Weight, int? MaxConsecutive, int? MaxUses)>();
@@ -590,12 +622,43 @@ public static class SpireCombatBehaviorDslCompiler
 
                 var choicePlan = CompileBehavior(RequireCall(destination));
                 if (choicePlan.StartingTransition is null)
-                    throw Error(destination.Location, "A graph edge choice must use chooseWithoutRepeat or chooseWithLimits.");
+                    throw Error(destination.Location, "A graph edge choice must use a choice behavior.");
                 transitions.Add(from, choicePlan.StartingTransition);
             }
 
             return new BehaviorPlan(startMove, nextMoves, transitions,
                 RequiresExplicitTransitions: true);
+        }
+
+        private EnemyActionCondition CompileEnemyCondition(DslCallNode condition)
+        {
+            if (condition.Name == "metric")
+            {
+                CheckShape(condition, 3);
+                return new EnemyMetricCondition(EnumValue<EnemyActionMetric>(Argument(condition, 0)),
+                    EnumValue<RunComparison>(Argument(condition, 1)), Integer(SelectVariant(Argument(condition, 2))));
+            }
+            if (condition.Name == "power")
+            {
+                CheckShape(condition, 4);
+                return new EnemyPowerCondition(EnumValue<EnemyActionSide>(Argument(condition, 0)),
+                    Id(Name(Argument(condition, 1))), EnumValue<RunComparison>(Argument(condition, 2)),
+                    Integer(Argument(condition, 3)));
+            }
+            if (condition.Name is "all" or "any")
+            {
+                CheckShape(condition, 1);
+                if (Argument(condition, 0) is not DslListNode conditions || conditions.Items.Count == 0)
+                    throw Error(condition.Location, $"{condition.Name} requires a nonempty condition list.");
+                var compiled = conditions.Items.Select(item => CompileEnemyCondition(RequireCall(item))).ToArray();
+                return condition.Name == "all" ? new AllEnemyCondition(compiled) : new AnyEnemyCondition(compiled);
+            }
+            if (condition.Name == "not")
+            {
+                CheckShape(condition, 1);
+                return new NotEnemyCondition(CompileEnemyCondition(RequireCall(Argument(condition, 0))));
+            }
+            throw Error(condition.Location, $"Unsupported enemy condition '{condition.Name}'.");
         }
 
 
