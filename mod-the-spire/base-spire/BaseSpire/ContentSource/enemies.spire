@@ -306,4 +306,17 @@ package base-spire {
       candidate(mawlerClaw, maxConsecutive=1)
     ))
   }
+
+  enemy Seapunk {
+    hp = variants(default=range(47, 49), tough=range(44, 46))
+    moves = actions(
+      seapunkSeaKick = attack(variants(default=11, deadly=13), target=player),
+      seapunkSpinningKick = repeat(4, attack(2, target=player)),
+      seapunkBubbleBurp = sequence(
+        gainBlock(variants(default=7, tough=8)),
+        applyPower(Strength, variants(default=1, deadly=2), target=self)
+      )
+    )
+    behavior = cycle(seapunkSeaKick, seapunkSpinningKick, seapunkBubbleBurp)
+  }
 }

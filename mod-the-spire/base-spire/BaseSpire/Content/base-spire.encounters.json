@@ -133,6 +133,19 @@
       "enemyIds": ["base-spire:mawler"]
     },
     {
+      "id": "base-spire:seapunk-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:seapunk"],
+      "isWeak": true,
+      "tags": ["base-spire:seapunk"]
+    },
+    {
+      "id": "base-spire:seapunk-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:calcified-cultist", "base-spire:seapunk"],
+      "tags": ["base-spire:seapunk"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
