@@ -179,7 +179,9 @@ public static class SpireCombatDslCompiler
                         OptionalTarget(call, "target", TargetSelector.Self));
                 case "draw":
                     CheckShape(call, 1, 1);
-                    return new DrawCardsEffect(Integer(Argument(call, 0)));
+                    var drawAmount = Argument(call, 0);
+                    return drawAmount is DslNumberNode ? new DrawCardsEffect(Integer(drawAmount))
+                        : new DrawCardsEffect(0, CompileScaledAmount(drawAmount));
                 case "modifyEnergy":
                     CheckShape(call, 1, 1);
                     var energyAmount = Argument(call, 0);
@@ -439,6 +441,13 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 1, 1, "card");
                     return new TakePowerEventAmountCountSource(Id(Name(Argument(call, 0))),
                         OptionalEnum(call, "card", CardContext.Played));
+                case "takePowerTurnEventAmount":
+                    CheckShape(call, 1, 1);
+                    return new TakePowerTurnEventAmountCountSource(Id(Name(Argument(call, 0))));
+                case "product":
+                    CheckShape(call, 2, 2);
+                    return new ProductCombatCountSource(CompileCombatCount(Argument(call, 0)),
+                        CompileCombatCount(Argument(call, 1)));
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1, "target");
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))),

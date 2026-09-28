@@ -113,7 +113,8 @@ public static class SpireCombatBehaviorDslCompiler
                 foreach (var argument in call.Arguments)
                 {
                     if (argument.Name is not ("type" or "owner" or "effect" or "require"
-                        or "exclude" or "positiveAmount" or "ownerTurnOnly" or "deferToCardPlayed"))
+                        or "exclude" or "positiveAmount" or "ownerTurnOnly" or "deferToCardPlayed"
+                        or "deferToOwnerTurnEnd" or "accumulate" or "causedByEthereal"))
                         throw Error(argument.Location, $"Unknown Power event argument '{argument.Name}'.");
                     if (!arguments.TryAdd(argument.Name!, argument.Value))
                         throw Error(argument.Location, $"Duplicate Power event argument '{argument.Name}'.");
@@ -138,11 +139,23 @@ public static class SpireCombatBehaviorDslCompiler
                     && deferNode is DslBooleanNode { Value: true };
                 if (deferNode is not null and not DslBooleanNode)
                     throw Error(deferNode.Location, "Power event deferToCardPlayed must be a boolean.");
+                var deferToOwnerTurnEnd = arguments.TryGetValue("deferToOwnerTurnEnd", out var deferTurnNode)
+                    && deferTurnNode is DslBooleanNode { Value: true };
+                if (deferTurnNode is not null and not DslBooleanNode)
+                    throw Error(deferTurnNode.Location, "Power event deferToOwnerTurnEnd must be a boolean.");
+                var accumulation = arguments.TryGetValue("accumulate", out var accumulationNode)
+                    ? EnumValue<PowerEventAccumulationMode>(accumulationNode)
+                    : PowerEventAccumulationMode.PowerStacks;
+                bool? causedByEthereal = arguments.TryGetValue("causedByEthereal", out var etherealNode)
+                    ? etherealNode is DslBooleanNode etherealBoolean
+                        ? etherealBoolean.Value
+                        : throw Error(etherealNode.Location, "Power event causedByEthereal must be a boolean.")
+                    : null;
                 if (owner is not (GameEventActor.Source or GameEventActor.Target))
                     throw Error(Required(arguments, "owner", call.Location).Location,
                         "A Power event owner must be source or target.");
                 return new PowerEventSubscription(eventType, owner, effect, required, excluded, positive,
-                    ownerTurnOnly, defer);
+                    ownerTurnOnly, defer, deferToOwnerTurnEnd, accumulation, causedByEthereal);
             }).ToArray());
         }
 

@@ -64,6 +64,8 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlaysThisTurnCountSource), "cardPlaysThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardVariableCountSource), "cardVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerEventAmountCountSource), "takePowerEventAmount")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerTurnEventAmountCountSource), "takePowerTurnEventAmount")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ProductCombatCountSource), "product")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
@@ -73,6 +75,8 @@ public sealed record CardPlaysThisTurnCountSource(CardType? Type = null,
     CardPlayHistoryPhase Phase = CardPlayHistoryPhase.Finished) : CombatCountSource;
 public sealed record CardVariableCountSource(ContentId Variable, CardContext Card = CardContext.Played) : CombatCountSource;
 public sealed record TakePowerEventAmountCountSource(ContentId Power, CardContext Card = CardContext.Played) : CombatCountSource;
+public sealed record TakePowerTurnEventAmountCountSource(ContentId Power) : CombatCountSource;
+public sealed record ProductCombatCountSource(CombatCountSource Left, CombatCountSource Right) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power, TargetSelector Target = TargetSelector.SelectedTarget) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -86,7 +90,7 @@ public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : Effec
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
     CombatCountSource Count, TargetSelector Target = TargetSelector.Self) : EffectNode;
-public sealed record DrawCardsEffect(int Amount) : EffectNode;
+public sealed record DrawCardsEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
     TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
@@ -147,10 +151,13 @@ public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, Ran
 public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 4, SkipHurtAnimation = 8 }
 public enum GameEventActor { Source, Target, Player }
 public sealed record GameEventEffect(EffectNode Effect, GameEventActor Actor = GameEventActor.Source);
+public enum PowerEventAccumulationMode { EventCount, PowerStacks }
 public sealed record PowerEventSubscription(string EventType, GameEventActor Owner, EffectNode Effect,
     DamageProperties RequiredProperties = DamageProperties.None,
     DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true,
-    bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false);
+    bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false,
+    bool DeferUntilOwnerTurnEnd = false, PowerEventAccumulationMode Accumulation = PowerEventAccumulationMode.PowerStacks,
+    bool? CausedByEtherealExhaustion = null);
 internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
@@ -188,10 +195,12 @@ internal static class EffectExecutor
 
     public static void Resume(GameSession session) => Drain(session);
 
-    internal static void QueueCardExhaustion(GameSession session, EntityState owner, CardInstance card)
+    internal static void QueueCardExhaustion(GameSession session, EntityState owner, CardInstance card,
+        bool causedByEtherealExhaustion = false)
     {
         var state = session.State;
-        state.Emit(session, "card_exhausted", owner.Id, card.InstanceId, 1);
+        state.Emit(session, "card_exhausted", owner.Id, card.InstanceId, 1,
+            cardSource: card, causedByEtherealExhaustion: causedByEtherealExhaustion);
         var effects = BuildExhaustTriggerEffects(state, owner, card);
         if (effects.Count > 0) state.PendingEffects.Add(new(owner, new SequenceEffect(effects), null, card));
     }
@@ -377,7 +386,11 @@ internal static class EffectExecutor
                             scaledPower.Power, powerAmount, owner);
                     break;
                 case DrawCardsEffect draw:
-                    state.Draw(session, draw.Amount);
+                    var drawAmount = draw.CalculatedAmount is { } calculatedDraw
+                        ? ScaledAmount(state, owner, target, calculatedDraw.BaseAmount,
+                            calculatedDraw.PerCount, calculatedDraw.Count, counts, selectedCard)
+                        : draw.Amount;
+                    state.Draw(session, drawAmount);
                     break;
                 case MoveCardEffect move:
                     var movedCards = state.MoveCards(move.From, move.To, move.Count);
@@ -607,7 +620,14 @@ internal static class EffectExecutor
     private static int ScaledAmount(GameState state, EntityState owner, EntityState? selectedTarget, int baseAmount,
         int amountPerCount, CombatCountSource source, EffectCountScope? counts = null, CardInstance? selectedCard = null)
     {
-        var count = source switch
+        var count = ResolveCombatCount(state, owner, selectedTarget, source, counts, selectedCard);
+        return checked(baseAmount + amountPerCount * count);
+    }
+
+    private static int ResolveCombatCount(GameState state, EntityState owner, EntityState? selectedTarget,
+        CombatCountSource source, EffectCountScope? counts, CardInstance? selectedCard)
+    {
+        return source switch
         {
             PileCardCountSource pile => pile.Type is { } type
                 ? state.GetPile(pile.Pile).Count(card => state.Definition.Cards[card.CardId].Type == type)
@@ -618,14 +638,17 @@ internal static class EffectExecutor
             CardVariableCountSource variable => CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard),
             TakePowerEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power,
                 CombatCardVariables.ResolveCard(state, deferred.Card, selectedCard).InstanceId),
+            TakePowerTurnEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power, null),
             SavedCountSource saved => counts?.Resolve(saved.Name)
                 ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
             TargetPowerCountSource power => ResolveSingleTarget(state, owner, selectedTarget, power.Target).PowerAmount(power.Power),
             TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
                 .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
+            ProductCombatCountSource product => checked(
+                ResolveCombatCount(state, owner, selectedTarget, product.Left, counts, selectedCard)
+                * ResolveCombatCount(state, owner, selectedTarget, product.Right, counts, selectedCard)),
             _ => throw new InvalidOperationException("Unsupported combat count source.")
         };
-        return checked(baseAmount + amountPerCount * count);
     }
 
     private static void ReserveAutoPlayBatch(GameSession session, EntityState owner, EntityState? target,
