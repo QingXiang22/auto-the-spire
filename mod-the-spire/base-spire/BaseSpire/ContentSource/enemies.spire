@@ -14,6 +14,8 @@ package base-spire {
       effect=decrementPower(SlipperyPower))]
   }
 
+  power IllusionPower {}
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -378,5 +380,39 @@ package base-spire {
       )
     )
     behavior = startWith(hauntedShipHaunt, then=cycle(hauntedShipSwipe, hauntedShipStomp))
+  }
+
+  enemy EyeWithTeeth {
+    hp = variants(default=range(6, 6))
+    startingPowers = [power(IllusionPower, 1)]
+    moves = actions(
+      eyeWithTeethDistract = addCards(Dazed, count=3, pile=discard, target=player)
+    )
+    behavior = loop(eyeWithTeethDistract)
+  }
+
+  enemy Fogmog {
+    hp = variants(default=range(74, 74), tough=range(78, 78))
+    moves = actions(
+      fogmogIllusion = summonEnemy(EyeWithTeeth),
+      fogmogSwipe = sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        applyPower(Strength, 1, target=self)
+      ),
+      fogmogSwipeRandom = sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        applyPower(Strength, 1, target=self)
+      ),
+      fogmogHeadbutt = attack(variants(default=14, deadly=16), target=player)
+    )
+    behavior = graph(start=fogmogIllusion, edges=[
+      edge(fogmogIllusion, fogmogSwipe),
+      edge(fogmogSwipe, chooseWithLimits(
+        candidate(fogmogSwipeRandom, weight=2, maxConsecutive=1),
+        candidate(fogmogHeadbutt, weight=3, maxConsecutive=1)
+      )),
+      edge(fogmogSwipeRandom, fogmogHeadbutt),
+      edge(fogmogHeadbutt, fogmogSwipe)
+    ])
   }
 }

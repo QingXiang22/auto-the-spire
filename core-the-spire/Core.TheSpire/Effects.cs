@@ -50,6 +50,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowerEffect), "removePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ExpirePowerEffect), "expirePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SummonEnemyEffect), "summonEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -187,6 +188,8 @@ internal sealed record AutoPlayRandomCardsContinuationEffect(AutoPlayRandomCards
 internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
+public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1) : EffectNode;
+internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
 [Flags]
@@ -295,6 +298,22 @@ internal static class EffectExecutor
             state.PendingEffects.RemoveAt(index);
             switch (effect)
             {
+                case SummonEnemyEffect summon:
+                    QueueSummonedEnemies(session, owner, summon);
+                    break;
+                case InitializeSummonedEnemiesEffect initialize:
+                    foreach (var instanceId in initialize.InstanceIds)
+                    {
+                        var enemyIndex = state.Enemies.FindIndex(enemy =>
+                            StringComparer.Ordinal.Equals(enemy.Creature.Id, instanceId));
+                        if (enemyIndex < 0) continue;
+                        var summoned = state.Enemies[enemyIndex];
+                        summoned.ActionIndex = summoned.Definition.ResolveStartingActionIndex(
+                            new EnemyActionEvaluationContext(state, summoned, enemyIndex),
+                            session.Random.Get("enemy-ai"));
+                        summoned.SelectAction(summoned.Definition.Actions[summoned.ActionIndex].Id);
+                    }
+                    break;
                 case EmitGameEventEffect emit:
                     state.Emit(session, emit.Type, emit.Source, emit.Target, emit.Amount);
                     break;
@@ -1000,6 +1019,35 @@ internal static class EffectExecutor
         state.Player.MutablePlayPile.Add(card);
         state.Emit(session, "card_moved", owner.Id, card.InstanceId, 1);
         state.PendingEffects.Add(new(owner, new BeginAutoCardEffect(card, effect.ForceExhaust), null, card));
+    }
+
+    private static void QueueSummonedEnemies(GameSession session, EntityState owner, SummonEnemyEffect summon)
+    {
+        var state = session.State;
+        if (!state.Definition.Enemies.TryGetValue(summon.Enemy, out var definition))
+            throw new InvalidOperationException($"Unknown summoned enemy '{summon.Enemy}'.");
+        var spawned = new List<(string InstanceId, EnemyCombatState State)>(summon.Count);
+        for (var i = 0; i < summon.Count; i++)
+        {
+            var hpRange = checked(definition.MaxHp - definition.MinHp + 1);
+            var hp = definition.MinHp + (hpRange == 1 ? 0 : session.Random.Get("niche").NextInt(hpRange));
+            var instanceId = state.NextSummonedEnemyInstanceId(definition.Id);
+            var enemy = new EnemyCombatState(new EntityState(instanceId, true, hp, hp), definition)
+            {
+                ActionIndex = definition.StartingActionIndex
+            };
+            state.Enemies.Add(enemy);
+            spawned.Add((instanceId, enemy));
+        }
+
+        state.PendingEffects.Add(new(owner,
+            new InitializeSummonedEnemiesEffect(spawned.Select(enemy => enemy.InstanceId).ToArray()), null, null));
+        foreach (var (_, enemy) in spawned)
+        {
+            state.Emit(session, "enemy_summoned", owner.Id, enemy.Creature.Id, 1);
+            foreach (var startingPower in enemy.Definition.StartingPowers)
+                state.ApplyPower(session, enemy.Creature, startingPower.Power, startingPower.Amount, enemy.Creature);
+        }
     }
 
     private static void GeneratePotions(GameSession session, EntityState owner, int count)
