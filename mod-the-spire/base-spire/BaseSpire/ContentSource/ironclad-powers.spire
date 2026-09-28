@@ -158,7 +158,7 @@ package base-spire {
   }
 
   power HellraiserPower {
-    events = [event(type=draw, owner=source, cardTag=Strike,
+    events = [event(type=draw, owner=source, phase=early, cardTag=Strike,
       effect=autoPlaySelectedCard(from=hand))]
   }
 

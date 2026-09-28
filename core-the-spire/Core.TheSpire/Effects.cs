@@ -226,12 +226,14 @@ public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 
 public enum GameEventActor { Source, Target, Player }
 public sealed record GameEventEffect(EffectNode Effect, GameEventActor Actor = GameEventActor.Source);
 public enum PowerEventAccumulationMode { EventCount, PowerStacks }
+public enum PowerEventPhase { Early, Normal }
 public sealed record PowerEventSubscription(string EventType, GameEventActor Owner, EffectNode Effect,
     DamageProperties RequiredProperties = DamageProperties.None,
     DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true,
     bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false,
     bool DeferUntilOwnerTurnEnd = false, PowerEventAccumulationMode Accumulation = PowerEventAccumulationMode.PowerStacks,
-    bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null, ContentId? CardTag = null);
+    bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null, ContentId? CardTag = null,
+    PowerEventPhase Phase = PowerEventPhase.Normal);
 internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect, string? EventCardInstanceId = null) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom, Random }

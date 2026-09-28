@@ -675,6 +675,27 @@ public sealed class CombatSliceTests
         Assert.Equal(0, state.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
     }
 
+    public void HellraiserDslAutoPlaysStrikeAsItIsDrawn()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage(), new DrawPhaseFixturePackage()));
+        var state = env.Start(28, "ironclad", 56, 65, [BaseSpireIds.Hellraiser],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad]);
+        state.State.ApplyPower(state, state.State.Player.Creature,
+            DrawPhaseFixturePackage.AfterDrawStrength, 1, state.State.Player.Creature);
+
+        env.Step(state, new PlayCardAction(0, state.State.Player.Id));
+        var strike = state.State.Player.MutableDrawPile[0];
+        state.State.Draw(state, 1);
+
+        Assert.Equal(47, state.State.Enemy.Hp);
+        Assert.Equal(2, state.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+        Assert.False(state.State.Player.HandInstances.Any(card => card.InstanceId == strike.InstanceId));
+        Assert.Contains(state.State.Player.DiscardPileInstances, card => card.InstanceId == strike.InstanceId);
+        Assert.Contains(state.State.Events, gameEvent => gameEvent.Type == "draw"
+            && gameEvent.CardSourceInstanceId == strike.InstanceId);
+    }
+
     public void BaseDampCultistNormalValuesMatchSourceRules()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -5822,6 +5843,27 @@ public sealed class CombatSliceTests
             ]), new GainBlockEffect(2) })));
     }
 
+    private sealed class DrawPhaseFixturePackage : IRulePackage
+    {
+        public static readonly ContentId AfterDrawStrength = ContentId.Parse("draw-phase:after-draw-strength");
+        public PackageInfo Info { get; } = new("draw-phase", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            const string source = """
+                package draw-phase {
+                  power AfterDrawStrength {
+                    events = [event(type=draw, owner=source, phase=normal,
+                      effect=applyPower("base-spire:strength", 2, target=self))]
+                  }
+                }
+                """;
+            var package = DslSourceParser.Parse(source, "draw-phase/powers.spire");
+            foreach (var power in SpireCombatBehaviorDslCompiler.Compile(package).Powers)
+                registry.Register(power);
+        }
+    }
+
     private sealed class PartialFailurePackage : IRulePackage
     {
         public PackageInfo Info { get; } = new("partial-mod", "1.0.0");
@@ -6044,6 +6086,7 @@ internal static class Program
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.SharedWeakPowerDslReducesOutgoingPoweredDamage();
         tests.SelfFormingClayPowerDslGrantsBlockThenExpires();
+        tests.HellraiserDslAutoPlaysStrikeAsItIsDrawn();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();

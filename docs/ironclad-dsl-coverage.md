@@ -36,7 +36,7 @@ For a calculated amount that should be one command, `modifyEnergy(scaled(base, p
 
 `autoPlay` reserves a draw-pile batch before executing it, including shuffle as needed. `autoPlayRandomCards` selects again from the live source pile after each nested play; `autoPlaySelectedCard` moves the selected instance from a chosen pile into the common card lifecycle. Cascade uses the captured `energyX()` count; Havoc requests forced exhaustion; Stampede uses live random hand selection; Howl from Beyond replays its selected exhausted instance at the after-auto-post-play phase. One-Two Punch consumes a stack during count resolution; Free Attack consumption remains before each execution. Result placement and exhaustion dispatch happen once.
 
-Drum of Battle uses `onExhaust` / `upgradedOnExhaust`, shared with direct pile moves, played exhaustion, and forced automatic exhaustion. An upgrade can change only the callback. Own-entry, before-/after-play, and after-auto-post-play card declarations are implemented; draw-triggered automatic play, deferred Ethereal draw, and exact model Hook ordering remain open.
+Drum of Battle uses `onExhaust` / `upgradedOnExhaust`, shared with direct pile moves, played exhaustion, and forced automatic exhaustion. An upgrade can change only the callback. Own-entry, before-/after-play, after-auto-post-play, and early/normal Power event declarations are implemented. Hellraiser's early draw reaction is verified to finish its automatic Strike play before a normal draw reaction. Deferred Ethereal draw, source-wide model listener ordering beyond these event phases, and exact model Hook ordering remain open.
 
 ## Implemented slice: captured counts and combat generation
 
