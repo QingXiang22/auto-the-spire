@@ -92,6 +92,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 || !ValidDamageProperties(subscription.ExcludedProperties))
                 throw new ArgumentException("A Power event subscription requires a source/target owner and non-overlapping damage property filters.");
             subscription.AffectedPower?.Validate();
+            subscription.CardTag?.Validate();
         }
         foreach (var subscription in Lifecycle)
         {
@@ -1179,6 +1180,9 @@ public sealed class ContentRegistry
             {
                 if (subscription.AffectedPower is { } affectedPower && !_powers.ContainsKey(affectedPower))
                     throw new InvalidOperationException($"Power '{power.Id}' filters an unknown affected Power '{affectedPower}'.");
+                if (subscription.CardTag is { } cardTag
+                    && !_cards.Values.Any(card => card.Tags.Contains(cardTag)))
+                    throw new InvalidOperationException($"Power '{power.Id}' filters unknown card tag '{cardTag}'.");
                 ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' event '{subscription.EventType}'");
             }
             foreach (var subscription in power.Lifecycle)

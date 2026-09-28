@@ -103,6 +103,7 @@ public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int
 public sealed record DrawCardsEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record DrawUntilCardTypeEffect(CardType ContinueWhileType) : EffectNode;
 internal sealed record DrawUntilContinuationEffect(CardType ContinueWhileType, CardType LastDrawnType) : EffectNode;
+internal sealed record DrawCardsContinuationEffect(int Remaining) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
     TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
@@ -187,8 +188,8 @@ public sealed record PowerEventSubscription(string EventType, GameEventActor Own
     DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true,
     bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false,
     bool DeferUntilOwnerTurnEnd = false, PowerEventAccumulationMode Accumulation = PowerEventAccumulationMode.PowerStacks,
-    bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null);
-internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect) : EffectNode;
+    bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null, ContentId? CardTag = null);
+internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect, string? EventCardInstanceId = null) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
 public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Attack }
@@ -305,7 +306,11 @@ internal static class EffectExecutor
                     break;
                 case PowerEventEffect powerEvent:
                     if (owner.PowerAmount(powerEvent.Power) > 0)
-                        state.PendingEffects.Add(new(owner, powerEvent.Effect, target, selectedCard, counts));
+                    {
+                        var eventCard = powerEvent.EventCardInstanceId is { } eventCardId
+                            ? state.FindCombatCard(eventCardId) : selectedCard;
+                        state.PendingEffects.Add(new(owner, powerEvent.Effect, target, eventCard, counts));
+                    }
                     break;
                 case PlaceGeneratedCardEffect generatedCard:
                     CombatCardGeneration.Place(session, generatedCard);
@@ -452,7 +457,13 @@ internal static class EffectExecutor
                         ? ScaledAmount(state, owner, target, calculatedDraw.BaseAmount,
                             calculatedDraw.PerCount, calculatedDraw.Count, counts, selectedCard)
                         : draw.Amount;
-                    state.Draw(session, drawAmount);
+                    if (drawAmount < 0) throw new InvalidOperationException("Draw count cannot be negative.");
+                    if (drawAmount > 0)
+                        QueueNextDraw(session, owner, drawAmount);
+                    break;
+                case DrawCardsContinuationEffect draw:
+                    if (draw.Remaining > 0)
+                        QueueNextDraw(session, owner, draw.Remaining);
                     break;
                 case DrawUntilCardTypeEffect drawUntil:
                     QueueNextDrawUntil(session, owner, drawUntil.ContinueWhileType, target, selectedCard, counts);
@@ -753,6 +764,16 @@ internal static class EffectExecutor
         var drawnType = state.Definition.Cards[drawnCard.CardId].Type;
         state.PendingEffects.Insert(continuationIndex, new(owner,
             new DrawUntilContinuationEffect(continueWhileType, drawnType), target, selectedCard, counts));
+    }
+
+    private static void QueueNextDraw(GameSession session, EntityState owner, int remaining)
+    {
+        var state = session.State;
+        var continuationIndex = state.PendingEffects.Count;
+        var drawnCard = state.DrawOne(session);
+        if (drawnCard is null) return;
+        state.PendingEffects.Insert(continuationIndex,
+            new(owner, new DrawCardsContinuationEffect(remaining - 1), null, null));
     }
 
     private static int ResolveCombatCount(GameState state, EntityState owner, EntityState? selectedTarget,

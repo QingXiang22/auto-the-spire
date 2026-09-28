@@ -878,6 +878,16 @@ package base-spire {
     upgradedPlay = attack(12, onFatal=gainMaxHp(4))
   }
 
+  card Hellraiser {
+    pools = [IroncladCardPool]
+    type = power
+    rarity = rare
+    cost = 2
+    upgradedCost = 1
+    target = self
+    play = applyPower(HellraiserPower, 1, target=self)
+  }
+
   card Stampede {
     pools = [IroncladCardPool]
     type = power

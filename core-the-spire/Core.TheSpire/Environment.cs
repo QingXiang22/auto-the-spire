@@ -651,7 +651,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     break;
                 case EndTurnResolutionStage.PlayerOwnerTurnStartPowers:
                     state.EndTurnStage = EndTurnResolutionStage.None;
-                    if (!state.IsTerminal) state.Draw(session, 5);
+                    if (!state.IsTerminal) EffectExecutor.Execute(session, state.Player.Creature, new DrawCardsEffect(5));
                     return;
                 default:
                     throw new ArgumentOutOfRangeException();
