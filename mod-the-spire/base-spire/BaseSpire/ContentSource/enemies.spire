@@ -532,6 +532,18 @@ package base-spire {
     behavior = loop(eyeWithTeethDistract)
   }
 
+  enemy GasBomb {
+    hp = variants(default=range(7, 7), tough=range(8, 8))
+    startingPowers = [power(Minion, 1)]
+    moves = actions(
+      gasBombExplode = action(intent=DeathBlow, effect=sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        kill(target=self)
+      ))
+    )
+    behavior = loop(gasBombExplode)
+  }
+
   enemy Fogmog {
     hp = variants(default=range(74, 74), tough=range(78, 78))
     moves = actions(

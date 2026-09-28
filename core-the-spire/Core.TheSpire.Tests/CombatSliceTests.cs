@@ -250,6 +250,50 @@ public sealed class CombatSliceTests
         Assert.Equal(83, ordinary.State.Player.Creature.MaxHp);
     }
 
+    public void GasBombUsesDeathBlowIntentExplodesOnceAndMinionBlocksFeedBonus()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var gasBombId = ContentId.Parse("base-spire:gas-bomb");
+        var encounter = environment.Start(923, "ironclad", 56, 65, [], gasBombId.ToString());
+        var opening = environment.Observe(encounter).Enemies.Single();
+        Assert.Equal(7, opening.Hp);
+        Assert.Equal(IntentKind.DeathBlow, opening.Intent);
+        Assert.Equal(8, opening.IntentDamage);
+        Assert.Equal(1, opening.Powers[ContentId.Parse("base-spire:minion")]);
+
+        var explosion = environment.Step(encounter, new EndTurnAction());
+        Assert.Equal(48, explosion.Observation.PlayerHp);
+        Assert.Equal(0, explosion.Observation.Enemies.Single().Hp);
+        Assert.True(explosion.Observation.IsTerminal);
+
+        var feed = ContentId.Parse("base-spire:feed");
+        var feedEncounter = environment.Start(924, "ironclad", 56, 65, [feed], gasBombId.ToString());
+        environment.Step(feedEncounter, new PlayCardAction(0, feedEncounter.State.Enemy.Id));
+        Assert.Equal(0, feedEncounter.State.Enemy.Hp);
+        Assert.Equal(65, feedEncounter.State.Player.Creature.MaxHp);
+
+        var allyEncounter = environment.StartEncounter(926, "ironclad", 56, 65, [],
+            [new CombatEnemySpawn(gasBombId.ToString()),
+                new CombatEnemySpawn("base-spire:corpse-slug")]);
+        var bombInstance = allyEncounter.State.Enemies[0].Creature.Id;
+        var slugInstance = allyEncounter.State.Enemies[1].Creature.Id;
+        var allyDeath = environment.Step(allyEncounter, new EndTurnAction());
+        var slugObservation = allyDeath.Observation.Enemies.Single(enemy => enemy.Id == slugInstance);
+        Assert.Equal(4, slugObservation.Strength);
+        Assert.Contains(allyDeath.Events, gameEvent => gameEvent.Type == "ally_death"
+            && gameEvent.Source == bombInstance && gameEvent.Target == slugInstance);
+        Assert.Contains(allyDeath.Events, gameEvent => gameEvent.Type == "enemy_action_skipped"
+            && gameEvent.Target == slugInstance);
+
+        var deadlyDefinition = Build(new BaseSpirePackage(deadlyEnemies: true));
+        var deadlyEnvironment = new CombatEnvironment(deadlyDefinition);
+        var deadly = deadlyEnvironment.Start(925, "ironclad", 56, 65, [], gasBombId.ToString());
+        var deadlyOpening = deadlyEnvironment.Observe(deadly).Enemies.Single();
+        Assert.Equal(7, deadlyOpening.Hp);
+        Assert.Equal(9, deadlyOpening.IntentDamage);
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -2463,12 +2507,13 @@ public sealed class CombatSliceTests
 
     public void JsonEffectDslBuildsTypedRuntimeTree()
     {
-        const string source = """{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"}]}""";
+        const string source = """{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"},{"op":"kill","target":"self"}]}""";
         var parsed = EffectDsl.Parse(source);
         var roundTrip = EffectDsl.Parse(EffectDsl.Serialize(parsed));
         Assert.True(parsed is SequenceEffect);
-        Assert.True(roundTrip is SequenceEffect { Effects.Count: 2 });
+        Assert.True(roundTrip is SequenceEffect { Effects.Count: 3 });
         Assert.True(((SequenceEffect)roundTrip).Effects[1] is ApplyPowerEffect { Power.Value: "base-spire:vulnerable", Amount: 2 });
+        Assert.True(((SequenceEffect)roundTrip).Effects[2] is KillEffect { Target: TargetSelector.Self });
     }
 
     public void DuplicateContentIdRequiresExplicitOverride()
@@ -5809,6 +5854,7 @@ internal static class Program
         tests.BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase();
         tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
         tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();
+        tests.GasBombUsesDeathBlowIntentExplodesOnceAndMinionBlocksFeedBonus();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();

@@ -1042,7 +1042,7 @@ public sealed record EnemyVariableDefinition(ContentId Id, int DefaultInt = 0);
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
-public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon }
+public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon, DeathBlow }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
@@ -1739,6 +1739,8 @@ public sealed class ContentRegistry
                 break;
             case StunEnemyEffect stun when !IsSingleEffectTarget(stun.Target):
                 throw new InvalidOperationException($"{owner} stuns an enemy with an invalid target.");
+            case KillEffect kill when !IsSingleEffectTarget(kill.Target):
+                throw new InvalidOperationException($"{owner} kills an entity with an invalid target.");
             case AttackUsingBlockEffect attackUsingBlock when !IsSingleOrOpponentGroupTarget(attackUsingBlock.Target):
                 throw new InvalidOperationException($"{owner} has an invalid block-based attack target.");
             case AddCardsToPileEffect addCards:

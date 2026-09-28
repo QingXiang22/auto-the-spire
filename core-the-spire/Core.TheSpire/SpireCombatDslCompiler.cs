@@ -293,6 +293,9 @@ public static class SpireCombatDslCompiler
                 case "stun":
                     CheckShape(call, 0, 0, "target");
                     return new StunEnemyEffect(OptionalTarget(call, "target", TargetSelector.Self));
+                case "kill":
+                    CheckShape(call, 0, 0, "target");
+                    return new KillEffect(OptionalTarget(call, "target", TargetSelector.Self));
                 case "setEnemyHealth":
                     CheckShape(call, 1, 1);
                     var healthRange = RequireCall(Argument(call, 0));
