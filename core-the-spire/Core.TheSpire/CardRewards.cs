@@ -85,7 +85,7 @@ internal static class CardRewardGenerator
             blacklist.Add(selected.Id);
             var upgradeRoll = (decimal)(float)random.NextDouble();
             var upgradeLevel = 0;
-            if (selected.UpgradedEffect is not null || selected.UpgradedCost is not null)
+            if (selected.HasUpgrade)
             {
                 var upgradeOdds = selected.Rarity == CardRarity.Rare ? 0m : state.ActIndex * 0.125m;
                 if (upgradeRoll <= upgradeOdds) upgradeLevel = 1;

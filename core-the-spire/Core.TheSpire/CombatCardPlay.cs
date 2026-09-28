@@ -1,7 +1,7 @@
 namespace CoreTheSpire;
 
 // These continuation nodes are created by the lifecycle, never by content packages.
-internal enum CardPlayPhase { Initialize, BeforePlay, Effects, AfterPlay, Complete }
+internal enum CardPlayPhase { Initialize, BeforePlay, StartPlay, Effects, AfterPlay, Complete }
 internal sealed record CardPlayPhaseEffect(CardPlayFrame Frame, CardPlayPhase Phase) : EffectNode;
 internal sealed record BeginAutoCardEffect(CardInstance Card, bool ForceExhaust) : EffectNode;
 
@@ -62,6 +62,7 @@ internal static class CombatCardPlay
         var frame = continuation.Frame;
         if (!ReferenceEquals(state.CurrentCardPlay, frame))
             throw new InvalidOperationException("Card-play continuations must complete in nested order.");
+        if (state.Player.Creature.Hp <= 0 && continuation.Phase != CardPlayPhase.Complete) return;
         switch (continuation.Phase)
         {
             case CardPlayPhase.Initialize:
@@ -71,6 +72,7 @@ internal static class CombatCardPlay
                 {
                     QueuePhase(state, frame, CardPlayPhase.AfterPlay);
                     QueuePhase(state, frame, CardPlayPhase.Effects);
+                    QueuePhase(state, frame, CardPlayPhase.StartPlay);
                     QueuePhase(state, frame, CardPlayPhase.BeforePlay);
                 }
                 foreach (var power in consumedPowers)
@@ -80,7 +82,11 @@ internal static class CombatCardPlay
                 }
                 break;
             case CardPlayPhase.BeforePlay:
+                CombatCardEvents.QueuePlayListeners(state, frame, afterPlay: false);
                 CombatCardRules.BeforePlay(session, frame.Card);
+                break;
+            case CardPlayPhase.StartPlay:
+                state.CardPlayHistory.Record(state.Definition.Cards[frame.Card.CardId].Type, CardPlayHistoryPhase.Started);
                 state.Emit(session, frame.IsAutoPlay ? "auto_play" : "play", state.Player.Id,
                     frame.Target?.Id ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
                 break;
@@ -90,6 +96,8 @@ internal static class CombatCardPlay
                     .ResolveEffect(current), frame.Target, current));
                 break;
             case CardPlayPhase.AfterPlay:
+                state.CardPlayHistory.Record(state.Definition.Cards[frame.Card.CardId].Type, CardPlayHistoryPhase.Finished);
+                CombatCardEvents.QueuePlayListeners(state, frame, afterPlay: true);
                 EffectExecutor.QueuePowerTriggerEffects(session, state.Player.Creature,
                     PowerTrigger.AfterCardPlayed, frame.Target, state.CardInPlay(frame));
                 break;

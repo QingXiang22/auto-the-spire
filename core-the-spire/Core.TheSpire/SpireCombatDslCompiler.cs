@@ -63,7 +63,9 @@ public static class SpireCombatDslCompiler
             var properties = ReadProperties(declaration);
             RequireOnlyProperties(declaration, properties,
                 "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay",
-                "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust");
+                "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust",
+                "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
+                "afterCardPlayed", "upgradedAfterCardPlayed");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -98,7 +100,14 @@ public static class SpireCombatDslCompiler
                 Tags = tags, PoolIds = pools,
                 OnExhaust = properties.TryGetValue("onExhaust", out var exhaustNode) ? CompileEffect(exhaustNode) : null,
                 UpgradedOnExhaust = properties.TryGetValue("upgradedOnExhaust", out var upgradedExhaustNode)
-                    ? CompileEffect(upgradedExhaustNode) : null
+                    ? CompileEffect(upgradedExhaustNode) : null,
+                OnEnterCombat = properties.TryGetValue("onEnterCombat", out var entryNode) ? CompileEffect(entryNode) : null,
+                UpgradedOnEnterCombat = properties.TryGetValue("upgradedOnEnterCombat", out var upgradedEntryNode)
+                    ? CompileEffect(upgradedEntryNode) : null,
+                BeforeCardPlayed = CompilePlayListener(properties, "beforeCardPlayed"),
+                UpgradedBeforeCardPlayed = CompilePlayListener(properties, "upgradedBeforeCardPlayed"),
+                AfterCardPlayed = CompilePlayListener(properties, "afterCardPlayed"),
+                UpgradedAfterCardPlayed = CompilePlayListener(properties, "upgradedAfterCardPlayed")
             };
         }
 
@@ -187,7 +196,7 @@ public static class SpireCombatDslCompiler
                         autoCount is DslNumberNode ? null : CompileScaledAmount(autoCount));
                 case "addCards":
                     CheckShape(call, 1, 1, "pile", "count", "target", "inheritUpgradeFromPlayedCard");
-                    return new AddCardsToPileEffect(Id(Name(Argument(call, 0))),
+                    return new AddCardsToPileEffect(ReferenceId(Argument(call, 0)),
                         EnumValue<CardPile>(RequiredArgument(call, "pile")), OptionalInteger(call, "count", 1),
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
@@ -200,7 +209,7 @@ public static class SpireCombatDslCompiler
                         generationCount is DslNumberNode ? null : CompileScaledAmount(generationCount),
                         OptionalArgument(call, "type") is { } generatedType ? EnumValue<CardType>(generatedType) : null,
                         OptionalBoolean(call, "distinct", false),
-                        OptionalArgument(call, "cost") is { } generatedCost ? CompileCostModifier(generatedCost) : null);
+                        OptionalArgument(call, "cost") is { } generatedCost ? CompileCostModifier(generatedCost).Modifier : null);
                 case "choose":
                     CheckShape(call, 0, 0, "prompt", "options");
                     if (RequiredArgument(call, "options") is not DslListNode choiceOptions)
@@ -252,7 +261,8 @@ public static class SpireCombatDslCompiler
                     return new UpgradeSelectedCardEffect();
                 case "modifySelectedCardCost":
                     CheckShape(call, 1, 1);
-                    return new ModifySelectedCardCostEffect(CompileCostModifier(Argument(call, 0)));
+                    var localCost = CompileCostModifier(Argument(call, 0), allowCalculated: true);
+                    return new ModifySelectedCardCostEffect(localCost.Modifier, localCost.CalculatedAmount);
                 case "transformSelectedCard":
                     CheckShape(call, 1, 1, "from", "upgraded");
                     return new TransformSelectedCardEffect(ReferenceId(Argument(call, 0)),
@@ -295,6 +305,9 @@ public static class SpireCombatDslCompiler
                 case "playerLostHpThisTurn":
                     CheckShape(call, 0, 0);
                     return new PlayerLostHpThisTurnPredicate();
+                case "selectedCardIsClone":
+                    CheckShape(call, 0, 0);
+                    return new SelectedCardIsClonePredicate();
                 case "pileCountAtLeast":
                     CheckShape(call, 2, 2);
                     return new PileCountAtLeastPredicate(EnumValue<CardPile>(Argument(call, 0)),
@@ -304,7 +317,18 @@ public static class SpireCombatDslCompiler
             }
         }
 
-        private CardCostModifier CompileCostModifier(DslValueNode node)
+        private CardPlayListener? CompilePlayListener(IReadOnlyDictionary<string, DslValueNode> properties, string name)
+        {
+            if (!properties.TryGetValue(name, out var node)) return null;
+            var call = RequireCall(node);
+            if (call.Name != "cardEvent") throw Error(call.Location, "Expected cardEvent(effect=..., whenCardType=...).");
+            CheckShape(call, 0, 0, "effect", "whenCardType");
+            return new CardPlayListener(CompileEffect(RequiredArgument(call, "effect")),
+                OptionalArgument(call, "whenCardType") is { } type ? EnumValue<CardType>(type) : null);
+        }
+
+        private (CardCostModifier Modifier, ScaledCombatAmount? CalculatedAmount) CompileCostModifier(DslValueNode node,
+            bool allowCalculated = false)
         {
             var call = RequireCall(node);
             if (call.Name != "costModifier") throw Error(call.Location, "Expected costModifier(amount, expires=[...]).");
@@ -313,11 +337,15 @@ public static class SpireCombatDslCompiler
                 throw Error(call.Location, "Cost modifier expirations must be a nonempty list.");
             var boundary = expirations.Items.Aggregate((CardCostExpiration)0,
                 (flags, item) => flags | EnumValue<CardCostExpiration>(item));
-            var modifier = new CardCostModifier(Integer(Argument(call, 0)),
+            var amountNode = Argument(call, 0);
+            if (!allowCalculated && amountNode is not DslNumberNode)
+                throw Error(amountNode.Location, "Calculated cost modifiers require modifySelectedCardCost.");
+            var calculated = amountNode is DslNumberNode ? null : CompileScaledAmount(amountNode);
+            var modifier = new CardCostModifier(amountNode is DslNumberNode ? Integer(amountNode) : 0,
                 OptionalEnum(call, "operation", CardCostOperation.Set), boundary,
                 OptionalBoolean(call, "reduceOnly", false));
             modifier.Validate();
-            return modifier;
+            return (modifier, calculated);
         }
 
         private ScaledCombatAmount CompileScaledAmount(DslValueNode node)
@@ -347,6 +375,11 @@ public static class SpireCombatDslCompiler
                 case "savedCount":
                     CheckShape(call, 1, 1);
                     return new SavedCountSource(StringValue(Argument(call, 0)));
+                case "cardPlaysThisTurn":
+                    CheckShape(call, 0, 0, "type", "phase");
+                    return new CardPlaysThisTurnCountSource(
+                        OptionalArgument(call, "type") is { } playedType ? EnumValue<CardType>(playedType) : null,
+                        OptionalEnum(call, "phase", CardPlayHistoryPhase.Finished));
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1);
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))));

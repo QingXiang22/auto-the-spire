@@ -1,4 +1,17 @@
 package base-spire {
+  card Stomp {
+    pools = [IroncladCardPool]
+    type = attack rarity = uncommon cost = 3 target = allEnemies
+    play = attack(12, target=allEnemies)
+    upgradedPlay = attack(15, target=allEnemies)
+    onEnterCombat = if(selectedCardIsClone(), sequence(), else=
+      modifySelectedCardCost(costModifier(
+        scaled(0, -1, count=cardPlaysThisTurn(type=attack, phase=finished)),
+        operation=add, expires=[turnEnd])))
+    beforeCardPlayed = cardEvent(whenCardType=attack, effect=
+      modifySelectedCardCost(costModifier(-1, operation=add, expires=[turnEnd])))
+  }
+
   card InfernalBlade {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]

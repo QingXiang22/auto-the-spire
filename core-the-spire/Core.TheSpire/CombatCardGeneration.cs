@@ -37,13 +37,18 @@ internal static class CombatCardGeneration
             var card = effect.Distinct ? options[i] : options[random.NextInt(options.Length)];
             var instance = state.Player.CreateGeneratedCard(card.Id);
             if (effect.Upgraded && state.IsUpgradeable(instance))
-                instance = new CardInstance(instance.InstanceId, instance.CardId, 1);
+                instance = instance.WithUpgradeLevel(1);
             if (effect.Cost is { } cost)
-                instance = new CardInstance(instance.InstanceId, instance.CardId, instance.UpgradeLevel, [cost]);
+                instance = instance.WithCostModifiers([cost]);
             generated[i] = instance;
         }
-        for (var i = generated.Length - 1; i >= 0; i--)
-            state.PendingEffects.Add(new(owner, new PlaceGeneratedCardEffect(generated[i], effect.Pile), null, generated[i]));
+        QueuePlacements(state, generated, effect.Pile);
+    }
+
+    internal static void QueuePlacements(GameState state, IReadOnlyList<CardInstance> cards, CardPile pile)
+    {
+        for (var i = cards.Count - 1; i >= 0; i--)
+            state.PendingEffects.Add(new(state.Player.Creature, new PlaceGeneratedCardEffect(cards[i], pile), null, cards[i]));
     }
 
     internal static void Place(GameSession session, PlaceGeneratedCardEffect effect)
@@ -51,6 +56,8 @@ internal static class CombatCardGeneration
         var state = session.State;
         if (state.Player.Creature.Hp <= 0 || state.FirstLivingEnemy is null) return;
         state.GetPile(effect.Pile).Add(effect.Card);
-        state.Emit(session, "card_generated", state.Player.Id, effect.Card.InstanceId, 1);
+        state.PendingEffects.Add(new(state.Player.Creature,
+            new EmitGameEventEffect("card_generated", state.Player.Id, effect.Card.InstanceId, 1), null, effect.Card));
+        CombatCardEvents.QueueEntry(state, effect.Card);
     }
 }

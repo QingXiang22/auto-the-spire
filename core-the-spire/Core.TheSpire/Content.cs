@@ -134,6 +134,28 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public IReadOnlyList<ContentId> PoolIds { get; init; } = Array.Empty<ContentId>();
     public EffectNode? OnExhaust { get; init; }
     public EffectNode? UpgradedOnExhaust { get; init; }
+    public EffectNode? OnEnterCombat { get; init; }
+    public EffectNode? UpgradedOnEnterCombat { get; init; }
+    public CardPlayListener? BeforeCardPlayed { get; init; }
+    public CardPlayListener? UpgradedBeforeCardPlayed { get; init; }
+    public CardPlayListener? AfterCardPlayed { get; init; }
+    public CardPlayListener? UpgradedAfterCardPlayed { get; init; }
+    public bool HasUpgrade => UpgradedEffect is not null || UpgradedCost is not null || UpgradedOnExhaust is not null
+        || UpgradedOnEnterCombat is not null || UpgradedBeforeCardPlayed is not null || UpgradedAfterCardPlayed is not null;
+
+    public EffectNode? ResolveEnterEffect(CardInstance instance)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        return instance.UpgradeLevel > 0 ? UpgradedOnEnterCombat ?? OnEnterCombat : OnEnterCombat;
+    }
+
+    public CardPlayListener? ResolvePlayListener(CardInstance instance, bool afterPlay)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        var ordinary = afterPlay ? AfterCardPlayed : BeforeCardPlayed;
+        var upgraded = afterPlay ? UpgradedAfterCardPlayed : UpgradedBeforeCardPlayed;
+        return instance.UpgradeLevel > 0 ? upgraded ?? ordinary : ordinary;
+    }
 
     public EffectNode? ResolveExhaustEffect(CardInstance instance)
     {
@@ -157,7 +179,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
 public sealed record CardInstance
 {
     public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0,
-        IReadOnlyList<CardCostModifier>? costModifiers = null)
+        IReadOnlyList<CardCostModifier>? costModifiers = null, bool isClone = false)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         cardId.Validate();
@@ -165,6 +187,7 @@ public sealed record CardInstance
         InstanceId = instanceId;
         CardId = cardId;
         UpgradeLevel = upgradeLevel;
+        IsClone = isClone;
         var modifiers = costModifiers?.ToArray() ?? [];
         foreach (var modifier in modifiers) modifier.Validate();
         CostModifiers = modifiers.Length == 0 ? Array.Empty<CardCostModifier>() : Array.AsReadOnly(modifiers);
@@ -174,6 +197,11 @@ public sealed record CardInstance
     public ContentId CardId { get; }
     public int UpgradeLevel { get; }
     public IReadOnlyList<CardCostModifier> CostModifiers { get; }
+    public bool IsClone { get; }
+
+    internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone);
+    internal CardInstance WithCostModifiers(IReadOnlyList<CardCostModifier> modifiers) =>
+        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone);
 }
 
 public sealed class CardPoolDefinition
@@ -991,6 +1019,17 @@ public sealed class ContentRegistry
             if (card.OnExhaust is { } exhaustEffect) ValidateEffectReferences(exhaustEffect, $"Card '{card.Id}' exhaust effect");
             if (card.UpgradedOnExhaust is { } upgradedExhaust)
                 ValidateEffectReferences(upgradedExhaust, $"Upgraded card '{card.Id}' exhaust effect");
+            if (card.OnEnterCombat is { } entryEffect) ValidateEffectReferences(entryEffect, $"Card '{card.Id}' entry effect");
+            if (card.UpgradedOnEnterCombat is { } upgradedEntry)
+                ValidateEffectReferences(upgradedEntry, $"Upgraded card '{card.Id}' entry effect");
+            foreach (var listener in new[] { card.BeforeCardPlayed, card.UpgradedBeforeCardPlayed,
+                card.AfterCardPlayed, card.UpgradedAfterCardPlayed })
+            {
+                if (listener is null) continue;
+                if (listener.WhenCardType is { } type && !Enum.IsDefined(type))
+                    throw new InvalidOperationException($"Card '{card.Id}' listens to an invalid card type.");
+                ValidateEffectReferences(listener.Effect, $"Card '{card.Id}' play listener");
+            }
         }
         foreach (var potion in _potions.Values)
             ValidateEffectReferences(potion.Effect, $"Potion '{potion.Id}'");
@@ -1360,6 +1399,8 @@ public sealed class ContentRegistry
                 break;
             case ModifySelectedCardCostEffect cost:
                 cost.Modifier.Validate();
+                if (cost.CalculatedAmount is { } calculatedCost)
+                    ValidateCombatCountSource(calculatedCost.Count, owner, counts);
                 break;
             case TransformSelectedCardEffect transform:
                 transform.Card.Validate();
@@ -1427,7 +1468,7 @@ public sealed class ContentRegistry
     {
         switch (predicate)
         {
-            case TargetAlivePredicate or CardExhaustedThisTurnPredicate or PlayerLostHpThisTurnPredicate:
+            case TargetAlivePredicate or CardExhaustedThisTurnPredicate or PlayerLostHpThisTurnPredicate or SelectedCardIsClonePredicate:
                 break;
             case HasPowerPredicate hasPower when !_powers.ContainsKey(hasPower.Power):
                 throw new InvalidOperationException($"{owner} checks unknown power '{hasPower.Power}'.");
@@ -1462,6 +1503,10 @@ public sealed class ContentRegistry
                 ArgumentException.ThrowIfNullOrWhiteSpace(saved.Name);
                 if (counts?.Contains(saved.Name) != true)
                     throw new InvalidOperationException($"{owner} reads unbound count '{saved.Name}'.");
+                break;
+            case CardPlaysThisTurnCountSource plays:
+                if (!Enum.IsDefined(plays.Phase) || plays.Type is { } historyType && !Enum.IsDefined(historyType))
+                    throw new InvalidOperationException($"{owner} counts an invalid card-play history phase or type.");
                 break;
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
@@ -1513,6 +1558,8 @@ public sealed class GameDefinition
     {
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
+        HasBeforeCardPlayListeners = cards.Values.Any(card => card.BeforeCardPlayed is not null || card.UpgradedBeforeCardPlayed is not null);
+        HasAfterCardPlayListeners = cards.Values.Any(card => card.AfterCardPlayed is not null || card.UpgradedAfterCardPlayed is not null);
         Potions = potions;
         CardPools = cardPools;
         Relics = relics;
@@ -1532,6 +1579,8 @@ public sealed class GameDefinition
 
     public IReadOnlyList<PackageInfo> Packages { get; }
     public IReadOnlyDictionary<ContentId, CardDefinition> Cards { get; }
+    internal bool HasBeforeCardPlayListeners { get; }
+    internal bool HasAfterCardPlayListeners { get; }
     public IReadOnlyDictionary<ContentId, PotionDefinition> Potions { get; }
     public IReadOnlyDictionary<ContentId, CardPoolDefinition> CardPools { get; }
     public IReadOnlyDictionary<ContentId, RelicDefinition> Relics { get; }
