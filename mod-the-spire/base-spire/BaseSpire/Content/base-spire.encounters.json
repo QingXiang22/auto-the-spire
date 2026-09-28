@@ -12,6 +12,16 @@
       "enemyIds": ["base-spire:phrog-parasite"]
     },
     {
+      "id": "base-spire:mytes-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:myte", "base-spire:myte"],
+      "tags": ["base-spire:workers"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:myte-toxic",
+        "1": "base-spire:myte-suck"
+      }
+    },
+    {
       "id": "base-spire:exoskeletons-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],

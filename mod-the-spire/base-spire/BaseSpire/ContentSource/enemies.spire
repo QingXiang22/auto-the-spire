@@ -606,4 +606,17 @@ package base-spire {
       edge(exoskeletonEnrage, chooseWithoutRepeat(exoskeletonSkitter, exoskeletonMandibles))
     ])
   }
+
+  enemy Myte {
+    hp = variants(default=range(61, 67), tough=range(64, 69))
+    moves = actions(
+      myteToxic = addCards(Toxic, pile=hand, count=2, target=player),
+      myteBite = attack(variants(default=13, deadly=15), target=player),
+      myteSuck = sequence(
+        attack(variants(default=4, deadly=6), target=player),
+        applyPower(Strength, variants(default=2, deadly=3), target=self)
+      )
+    )
+    behavior = cycle(myteToxic, myteBite, myteSuck)
+  }
 }
