@@ -123,4 +123,23 @@ package base-spire {
     onExpire = grantPower(Strength, sourceStacks)
     removeAfterOwnerTurnEnd = true
   }
+
+  power CrimsonMantlePower {
+    variables = [variable(SelfDamage, 0)]
+    on = [trigger(event=afterOwnerTurnStart, effect=sequence(
+      scaledAttack(0, 1, count=powerVariable(CrimsonMantlePower, SelfDamage),
+        target=self, properties=[unblockable, unpowered]),
+      gainBlock(1, perPowerStack=CrimsonMantlePower)
+    ))]
+  }
+
+  power InfernoPower {
+    variables = [variable(SelfDamage, 0)]
+    on = [trigger(event=afterOwnerTurnStart,
+      effect=scaledAttack(0, 1, count=powerVariable(InfernoPower, SelfDamage),
+        target=self, properties=[unblockable, unpowered]))]
+    events = [event(type=damage, owner=target, ownerTurnOnly=true,
+      effect=scaledAttack(0, 1, count=targetPowerAmount(InfernoPower, target=self),
+        target=allEnemies, properties=[unpowered]))]
+  }
 }

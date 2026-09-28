@@ -5,6 +5,7 @@ using System.Collections;
 internal sealed class EntityState
 {
     private readonly Dictionary<ContentId, int> _powers = [];
+    private readonly Dictionary<(ContentId Power, ContentId Variable), int> _powerVariables = [];
     private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
     private readonly Dictionary<(ContentId Power, string? ScopeId), int> _powerEventAmounts = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
@@ -29,6 +30,30 @@ internal sealed class EntityState
     internal Dictionary<ContentId, HashSet<string>> MutablePowerAppliers => _powerAppliers;
     internal HashSet<ContentId> SkipNextPowerTriggers { get; } = [];
     public int PowerAmount(ContentId id) => _powers.GetValueOrDefault(id);
+    internal int PowerVariable(ContentId power, ContentId variable) =>
+        _powerVariables.GetValueOrDefault((power, variable));
+    internal IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PowerVariableSnapshot() =>
+        _powerVariables.GroupBy(pair => pair.Key.Power).ToDictionary(
+            group => group.Key,
+            group => (IReadOnlyDictionary<ContentId, int>)new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(
+                group.ToDictionary(pair => pair.Key.Variable, pair => pair.Value)));
+    internal void InitializePowerVariables(PowerDefinition definition)
+    {
+        foreach (var variable in definition.Variables)
+            _powerVariables.TryAdd((definition.Id, variable.Id), variable.InitialValue);
+    }
+    internal void ModifyPowerVariable(ContentId power, ContentId variable, int amount)
+    {
+        var key = (power, variable);
+        if (!_powerVariables.ContainsKey(key))
+            throw new InvalidOperationException($"Power variable '{power}.{variable}' is not active.");
+        _powerVariables[key] = checked(_powerVariables[key] + amount);
+    }
+    internal void ClearPowerVariables(ContentId power)
+    {
+        foreach (var key in _powerVariables.Keys.Where(key => key.Power == power).ToArray())
+            _powerVariables.Remove(key);
+    }
     internal void AccumulatePowerEventAmount(ContentId power, string? scopeId, int amount)
     {
         var key = (power, scopeId);
@@ -322,17 +347,20 @@ internal sealed class GameState
                 definition.Role, owner.Id, applier.Id, amount);
         if (amount != 0 && definition.OnStackChange is { } adjustment)
             ApplyPower(session, owner, adjustment.Power, checked(amount * adjustment.AmountPerStack), applier);
-        var newAmount = checked(owner.PowerAmount(power) + amount);
+        var previousAmount = owner.PowerAmount(power);
+        var newAmount = checked(previousAmount + amount);
         if (newAmount == 0)
         {
             owner.MutablePowers.Remove(power);
             owner.MutablePowerAppliers.Remove(power);
             owner.SkipNextPowerTriggers.Remove(power);
             owner.ClearPowerEventAmounts(power);
+            owner.ClearPowerVariables(power);
         }
         else
         {
             owner.MutablePowers[power] = newAmount;
+            if (previousAmount == 0) owner.InitializePowerVariables(definition);
             if (!owner.MutablePowerAppliers.TryGetValue(power, out var appliers))
                 owner.MutablePowerAppliers.Add(power, appliers = []);
             appliers.Add(applier.Id);
@@ -586,6 +614,7 @@ internal sealed class GameState
             owner.MutablePowerAppliers.Remove(powerId);
             owner.SkipNextPowerTriggers.Remove(powerId);
             owner.ClearPowerEventAmounts(powerId);
+            owner.ClearPowerVariables(powerId);
         }
         else owner.MutablePowers[powerId] = newAmount;
         if (definition.Role == PowerRole.Strength) owner.Strength += delta;
@@ -602,6 +631,7 @@ internal sealed class GameState
         owner.MutablePowerAppliers.Remove(powerId);
         owner.SkipNextPowerTriggers.Remove(powerId);
         owner.ClearPowerEventAmounts(powerId);
+        owner.ClearPowerVariables(powerId);
         if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength -= amount;
         return amount;
     }
@@ -690,6 +720,8 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     public int MaxEnergy { get; init; }
     public ContentId? CharacterId { get; init; }
     public IReadOnlyList<CardPlayPreview> HandPlayPreviews { get; init; } = Array.Empty<CardPlayPreview>();
+    public IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PlayerPowerVariables { get; init; }
+        = new Dictionary<ContentId, IReadOnlyDictionary<ContentId, int>>();
 }
 
 public abstract record PlayerAction;

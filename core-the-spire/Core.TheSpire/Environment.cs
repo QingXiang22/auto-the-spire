@@ -4,7 +4,11 @@ public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? In
     ContentId? StartingActionOverride = null);
 
 public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Block, int Strength,
-    IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers);
+    IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers)
+{
+    public IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PowerVariables { get; init; }
+        = new Dictionary<ContentId, IReadOnlyDictionary<ContentId, int>>();
+}
 
 public sealed class CombatEnvironment(GameDefinition definition)
 {
@@ -253,7 +257,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             MaxEnergy = state.PlayerMaxEnergy,
             CharacterId = state.Player.CharacterId,
             HandPlayPreviews = Array.AsReadOnly(state.Player.HandInstances
-                .Select(card => CombatCardRules.Preview(state, card)).ToArray())
+                .Select(card => CombatCardRules.Preview(state, card)).ToArray()),
+            PlayerPowerVariables = state.Player.Creature.PowerVariableSnapshot()
         };
     }
 
@@ -266,7 +271,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
             : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
             enemy.Creature.Block, enemy.Creature.Strength, action.Intent, damage,
-            new Dictionary<ContentId, int>(enemy.Creature.Powers));
+            new Dictionary<ContentId, int>(enemy.Creature.Powers))
+        {
+            PowerVariables = enemy.Creature.PowerVariableSnapshot()
+        };
     }
 
     public IReadOnlyList<PlayerAction> LegalActions(GameSession session) => LegalActionsForSession(session);

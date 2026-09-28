@@ -842,4 +842,28 @@ package base-spire {
       modifyCardVariable(ExtraDamage, 9)
     )
   }
+
+  card CrimsonMantle {
+    pools = [IroncladCardPool]
+    type = power
+    rarity = rare
+    cost = 1
+    target = self
+    play = sequence(applyPower(CrimsonMantlePower, 8, target=self),
+      modifyPowerVariable(CrimsonMantlePower, SelfDamage, 1))
+    upgradedPlay = sequence(applyPower(CrimsonMantlePower, 10, target=self),
+      modifyPowerVariable(CrimsonMantlePower, SelfDamage, 1))
+  }
+
+  card Inferno {
+    pools = [IroncladCardPool]
+    type = power
+    rarity = uncommon
+    cost = 1
+    target = self
+    play = sequence(applyPower(InfernoPower, 6, target=self),
+      modifyPowerVariable(InfernoPower, SelfDamage, 1))
+    upgradedPlay = sequence(applyPower(InfernoPower, 9, target=self),
+      modifyPowerVariable(InfernoPower, SelfDamage, 1))
+  }
 }

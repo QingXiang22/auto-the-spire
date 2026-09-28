@@ -298,6 +298,11 @@ public static class SpireCombatDslCompiler
                         OptionalEnum(call, "card", CardContext.Played),
                         OptionalEnum(call, "operation", CardVariableOperation.Add),
                         variableAmount is DslNumberNode ? null : CompileScaledAmount(variableAmount));
+                case "modifyPowerVariable":
+                    CheckShape(call, 3, 3, "target");
+                    return new ModifyPowerVariableEffect(Id(Name(Argument(call, 0))),
+                        Id(Name(Argument(call, 1))), Integer(Argument(call, 2)),
+                        OptionalTarget(call, "target", TargetSelector.Self));
                 case "downgradeSelectedCard":
                     CheckShape(call, 0, 0);
                     return new DowngradeSelectedCardEffect();
@@ -461,6 +466,10 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 1, 1, "card");
                     return new CardVariableCountSource(ReferenceId(Argument(call, 0)),
                         OptionalEnum(call, "card", CardContext.Played));
+                case "powerVariable":
+                    CheckShape(call, 2, 2, "target");
+                    return new PowerVariableCountSource(Id(Name(Argument(call, 0))),
+                        Id(Name(Argument(call, 1))), OptionalTarget(call, "target", TargetSelector.Self));
                 case "takePowerEventAmount":
                     CheckShape(call, 1, 1, "card");
                     return new TakePowerEventAmountCountSource(Id(Name(Argument(call, 0))),
