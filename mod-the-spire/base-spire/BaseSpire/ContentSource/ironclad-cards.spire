@@ -877,4 +877,26 @@ package base-spire {
     play = attack(10, onFatal=gainMaxHp(3))
     upgradedPlay = attack(12, onFatal=gainMaxHp(4))
   }
+
+  card Stampede {
+    pools = [IroncladCardPool]
+    type = power
+    rarity = uncommon
+    cost = 2
+    upgradedCost = 1
+    target = self
+    play = applyPower(StampedePower, 1, target=self)
+  }
+
+  card HowlFromBeyond {
+    pools = [IroncladCardPool]
+    type = attack
+    rarity = uncommon
+    cost = 3
+    target = allEnemies
+    play = attack(18, target=allEnemies)
+    upgradedPlay = attack(24, target=allEnemies)
+    afterAutoPostPlay = autoPlaySelectedCard(from=exhaust)
+    upgradedAfterAutoPostPlay = autoPlaySelectedCard(from=exhaust)
+  }
 }

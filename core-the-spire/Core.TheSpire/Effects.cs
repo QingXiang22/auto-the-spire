@@ -25,6 +25,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForCountEffect), "repeatForCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(WithCountEffect), "withCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AutoPlayCardsEffect), "autoPlayCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AutoPlayRandomCardsEffect), "autoPlayRandomCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AutoPlaySelectedCardEffect), "autoPlaySelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForXCostEffect), "repeatForXCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
@@ -166,6 +168,11 @@ public sealed record RepeatForCountEffect(int BaseCount, int PerCount, CombatCou
 public sealed record WithCountEffect(string Name, CombatCountSource Count, EffectNode Effect) : EffectNode;
 public sealed record AutoPlayCardsEffect(CardPile From, int Count, CardPilePosition Position = CardPilePosition.Top,
     bool ForceExhaust = false, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
+public sealed record AutoPlayRandomCardsEffect(CardPile From, int Count, CardType? Type = null,
+    bool ForceExhaust = false, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
+public sealed record AutoPlaySelectedCardEffect(CardPile From = CardPile.Exhaust, bool ForceExhaust = false) : EffectNode;
+internal sealed record AutoPlayRandomCardsContinuationEffect(AutoPlayRandomCardsEffect Effect, int Remaining) : EffectNode;
+internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
@@ -282,6 +289,11 @@ internal static class EffectExecutor
                 case CardEnteredCombatEffect entry:
                     CombatCardEvents.Enter(session, entry.InstanceId);
                     break;
+                case CardAfterAutoPostPlayEffect postPlay:
+                    if (state.FindCombatCard(postPlay.InstanceId) is { } postPlayCard
+                        && state.Definition.Cards[postPlayCard.CardId].ResolveAfterAutoPostPlayEffect(postPlayCard) is { } postPlayEffect)
+                        state.PendingEffects.Add(new(state.Player.Creature, postPlayEffect, null, postPlayCard));
+                    break;
                 case CardListenerEffect listener:
                     CombatCardEvents.ExecuteListener(session, listener, target);
                     break;
@@ -309,6 +321,23 @@ internal static class EffectExecutor
                     break;
                 case AutoPlayCardsEffect autoPlay:
                     ReserveAutoPlayBatch(session, owner, target, autoPlay, counts, selectedCard);
+                    break;
+                case AutoPlayRandomCardsEffect randomAutoPlay:
+                    var randomAutoPlayCount = randomAutoPlay.CalculatedCount is { } calculatedAutoPlay
+                        ? ScaledAmount(state, owner, target, calculatedAutoPlay.BaseAmount,
+                            calculatedAutoPlay.PerCount, calculatedAutoPlay.Count, counts, selectedCard)
+                        : randomAutoPlay.Count;
+                    if (randomAutoPlayCount < 0)
+                        throw new InvalidOperationException("Automatic play count cannot be negative.");
+                    QueueRandomAutoPlay(session, owner, target, randomAutoPlay, randomAutoPlayCount,
+                        selectedCard, counts);
+                    break;
+                case AutoPlayRandomCardsContinuationEffect randomAutoPlay:
+                    QueueRandomAutoPlay(session, owner, target, randomAutoPlay.Effect, randomAutoPlay.Remaining,
+                        selectedCard, counts);
+                    break;
+                case AutoPlaySelectedCardEffect selectedAutoPlay:
+                    QueueSelectedAutoPlay(session, owner, selectedCard, selectedAutoPlay);
                     break;
                 case SequenceEffect sequence:
                     for (var i = sequence.Effects.Count - 1; i >= 0; i--)
@@ -781,6 +810,52 @@ internal static class EffectExecutor
         }
         for (var i = reserved.Count - 1; i >= 0; i--)
             state.PendingEffects.Add(new(owner, new BeginAutoCardEffect(reserved[i], effect.ForceExhaust), null, reserved[i]));
+    }
+
+    private static void QueueRandomAutoPlay(GameSession session, EntityState owner, EntityState? target,
+        AutoPlayRandomCardsEffect effect, int remaining, CardInstance? selectedCard, EffectCountScope? counts)
+    {
+        var state = session.State;
+        if (remaining <= 0 || owner != state.Player.Creature || owner.Hp <= 0 || state.FirstLivingEnemy is null)
+            return;
+        if (!Enum.IsDefined(effect.From) || effect.From == CardPile.Play)
+            throw new InvalidOperationException("Random automatic play requires a selectable card pile.");
+        var candidates = state.GetPile(effect.From).Where(card =>
+        {
+            var definition = state.Definition.Cards[card.CardId];
+            return (effect.Type is null || definition.Type == effect.Type)
+                && (definition.ResolveKeywords(card) & CardKeywords.Unplayable) == 0;
+        }).ToArray();
+        if (candidates.Length == 0) return;
+        var card = candidates[session.Random.Get("card-selection").NextInt(candidates.Length)];
+        var source = state.GetPile(effect.From);
+        var index = source.FindIndex(candidate => candidate.InstanceId == card.InstanceId);
+        if (index < 0) throw new InvalidOperationException("The randomly selected card left its source pile.");
+        source.RemoveAt(index);
+        state.Player.MutablePlayPile.Add(card);
+        state.Emit(session, "random_card_choice", owner.Id, card.InstanceId, 1);
+        state.Emit(session, "card_moved", owner.Id, card.InstanceId, 1);
+        if (remaining > 1)
+            state.PendingEffects.Add(new(owner,
+                new AutoPlayRandomCardsContinuationEffect(effect, remaining - 1), target, selectedCard, counts));
+        state.PendingEffects.Add(new(owner, new BeginAutoCardEffect(card, effect.ForceExhaust), target, card));
+    }
+
+    private static void QueueSelectedAutoPlay(GameSession session, EntityState owner, CardInstance? card,
+        AutoPlaySelectedCardEffect effect)
+    {
+        if (card is null) throw new InvalidOperationException("Automatic play requires a selected card context.");
+        var state = session.State;
+        if (owner != state.Player.Creature || owner.Hp <= 0 || state.FirstLivingEnemy is null) return;
+        if (!Enum.IsDefined(effect.From) || effect.From == CardPile.Play)
+            throw new InvalidOperationException("Automatic play requires a selectable card pile.");
+        var source = state.GetPile(effect.From);
+        var index = source.FindIndex(candidate => candidate.InstanceId == card.InstanceId);
+        if (index < 0) return;
+        source.RemoveAt(index);
+        state.Player.MutablePlayPile.Add(card);
+        state.Emit(session, "card_moved", owner.Id, card.InstanceId, 1);
+        state.PendingEffects.Add(new(owner, new BeginAutoCardEffect(card, effect.ForceExhaust), null, card));
     }
 
     private static void GeneratePotions(GameSession session, EntityState owner, int count)

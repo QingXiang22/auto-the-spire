@@ -142,4 +142,10 @@ package base-spire {
       effect=scaledAttack(0, 1, count=targetPowerAmount(InfernoPower, target=self),
         target=allEnemies, properties=[unpowered]))]
   }
+
+  power StampedePower {
+    on = [trigger(event=afterAutoPostPlayPhaseEntered,
+      effect=autoPlayRandomCards(from=hand,
+        count=scaled(0, 1, count=targetPowerAmount(StampedePower, target=self)), type=attack))]
+  }
 }

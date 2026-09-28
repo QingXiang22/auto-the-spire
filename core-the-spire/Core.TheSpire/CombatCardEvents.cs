@@ -41,6 +41,18 @@ internal static class CombatCardEvents
         for (var i = cards.Length - 1; i >= 0; i--) QueueEntry(state, cards[i]);
     }
 
+    internal static void QueueAfterAutoPostPlay(GameState state)
+    {
+        var cards = ListenerPiles.SelectMany(state.GetPile).Where(card =>
+        {
+            var definition = state.Definition.Cards[card.CardId];
+            return definition.AfterAutoPostPlay is not null || definition.UpgradedAfterAutoPostPlay is not null;
+        }).ToArray();
+        for (var i = cards.Length - 1; i >= 0; i--)
+            state.PendingEffects.Add(new(state.Player.Creature,
+                new CardAfterAutoPostPlayEffect(cards[i].InstanceId), null, cards[i]));
+    }
+
     internal static void QueueEntry(GameState state, CardInstance card)
     {
         var definition = state.Definition.Cards[card.CardId];

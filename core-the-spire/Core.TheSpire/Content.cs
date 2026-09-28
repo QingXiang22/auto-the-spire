@@ -98,7 +98,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             if (!Enum.IsDefined(subscription.Trigger)
                 || subscription.Trigger is PowerTrigger.None or PowerTrigger.AfterCardPlayed
                     or PowerTrigger.AfterCardExhausted)
-                throw new ArgumentException("Power lifecycle subscriptions require a turn boundary trigger.");
+                throw new ArgumentException("Power lifecycle subscriptions require a combat phase trigger.");
             if (subscription.Effect is null)
                 throw new ArgumentException("Power lifecycle subscriptions require an effect.");
         }
@@ -182,6 +182,8 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public IReadOnlyList<CardVariableDefinition> Variables { get; init; } = Array.Empty<CardVariableDefinition>();
     public EffectNode? OnExhaust { get; init; }
     public EffectNode? UpgradedOnExhaust { get; init; }
+    public EffectNode? AfterAutoPostPlay { get; init; }
+    public EffectNode? UpgradedAfterAutoPostPlay { get; init; }
     public CardKeywords UpgradedKeywords { get; init; }
     public EffectNode? OnEnterCombat { get; init; }
     public EffectNode? UpgradedOnEnterCombat { get; init; }
@@ -192,6 +194,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public bool HasUpgrade => UpgradedEffect is not null || UpgradedCost is not null
         || UpgradedKeywords != CardKeywords.None || UpgradedOnExhaust is not null
         || UpgradedOnEnterCombat is not null || UpgradedBeforeCardPlayed is not null || UpgradedAfterCardPlayed is not null
+        || UpgradedAfterAutoPostPlay is not null
         || Variables.Any(variable => variable.UpgradedValue is not null);
 
     public int ResolveVariable(CardInstance instance, ContentId variableId)
@@ -221,6 +224,12 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     {
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
         return instance.UpgradeLevel > 0 ? UpgradedOnExhaust ?? OnExhaust : OnExhaust;
+    }
+
+    public EffectNode? ResolveAfterAutoPostPlayEffect(CardInstance instance)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        return instance.UpgradeLevel > 0 ? UpgradedAfterAutoPostPlay ?? AfterAutoPostPlay : AfterAutoPostPlay;
     }
 
     public EffectNode ResolveEffect(CardInstance instance)
@@ -888,7 +897,7 @@ public enum CardType { Attack, Skill, Power, Status }
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
-    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart }
+    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
 public sealed record DamageModifierSubscription(decimal Multiplier,
     DamageProperties RequiredProperties = DamageProperties.None,
@@ -1111,6 +1120,10 @@ public sealed class ContentRegistry
             if (card.OnEnterCombat is { } entryEffect) ValidateEffectReferences(entryEffect, $"Card '{card.Id}' entry effect");
             if (card.UpgradedOnEnterCombat is { } upgradedEntry)
                 ValidateEffectReferences(upgradedEntry, $"Upgraded card '{card.Id}' entry effect");
+            if (card.AfterAutoPostPlay is { } postPlay)
+                ValidateEffectReferences(postPlay, $"Card '{card.Id}' after auto post-play");
+            if (card.UpgradedAfterAutoPostPlay is { } upgradedPostPlay)
+                ValidateEffectReferences(upgradedPostPlay, $"Upgraded card '{card.Id}' after auto post-play");
             foreach (var listener in new[] { card.BeforeCardPlayed, card.UpgradedBeforeCardPlayed,
                 card.AfterCardPlayed, card.UpgradedAfterCardPlayed })
             {
@@ -1623,6 +1636,18 @@ public sealed class ContentRegistry
                 if (autoPlay.From != CardPile.Draw || !Enum.IsDefined(autoPlay.Position))
                     throw new InvalidOperationException($"{owner} has an unsupported automatic-play source or position.");
                 if (autoPlay.CalculatedCount is { } count) ValidateCombatCountSource(count.Count, owner, counts);
+                break;
+            case AutoPlayRandomCardsEffect randomAutoPlay:
+                ArgumentOutOfRangeException.ThrowIfNegative(randomAutoPlay.Count);
+                if (!Enum.IsDefined(randomAutoPlay.From) || randomAutoPlay.From == CardPile.Play
+                    || randomAutoPlay.Type is { } randomType && !Enum.IsDefined(randomType))
+                    throw new InvalidOperationException($"{owner} has an invalid random automatic-play source or type.");
+                if (randomAutoPlay.CalculatedCount is { } randomCount)
+                    ValidateCombatCountSource(randomCount.Count, owner, counts);
+                break;
+            case AutoPlaySelectedCardEffect selectedAutoPlay:
+                if (!Enum.IsDefined(selectedAutoPlay.From) || selectedAutoPlay.From == CardPile.Play)
+                    throw new InvalidOperationException($"{owner} has an invalid selected automatic-play source.");
                 break;
             case RepeatForXCostEffect repeatForX:
                 ValidateEffectReferences(repeatForX.Effect, owner, counts);
