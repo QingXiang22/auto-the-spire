@@ -36,6 +36,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifySelectedCardCostEffect), "modifySelectedCardCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCardVariableEffect), "modifyCardVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CloneCardEffect), "cloneCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TransformSelectedCardEffect), "transformSelectedCard")]
@@ -66,6 +67,7 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SavedCountSource), "savedCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlaysThisTurnCountSource), "cardPlaysThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardVariableCountSource), "cardVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PowerVariableCountSource), "powerVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerEventAmountCountSource), "takePowerEventAmount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerTurnEventAmountCountSource), "takePowerTurnEventAmount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ProductCombatCountSource), "product")]
@@ -77,6 +79,8 @@ public sealed record SavedCountSource(string Name) : CombatCountSource;
 public sealed record CardPlaysThisTurnCountSource(CardType? Type = null,
     CardPlayHistoryPhase Phase = CardPlayHistoryPhase.Finished) : CombatCountSource;
 public sealed record CardVariableCountSource(ContentId Variable, CardContext Card = CardContext.Played) : CombatCountSource;
+public sealed record PowerVariableCountSource(ContentId Power, ContentId Variable,
+    TargetSelector Target = TargetSelector.Self) : CombatCountSource;
 public sealed record TakePowerEventAmountCountSource(ContentId Power, CardContext Card = CardContext.Played) : CombatCountSource;
 public sealed record TakePowerTurnEventAmountCountSource(ContentId Power) : CombatCountSource;
 public sealed record ProductCombatCountSource(CombatCountSource Left, CombatCountSource Right) : CombatCountSource;
@@ -125,6 +129,8 @@ public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier,
 public sealed record ModifyCardVariableEffect(ContentId Variable, int Amount,
     CardContext Card = CardContext.Played, CardVariableOperation Operation = CardVariableOperation.Add,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
+public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
+    TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DowngradeSelectedCardEffect : EffectNode;
 public sealed record CloneCardEffect(CardContext Card = CardContext.Played, CardPile Pile = CardPile.Hand,
     int Count = 1, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
@@ -319,10 +325,16 @@ internal static class EffectExecutor
                         attack.Amount, attack.Properties, selectedCard);
                     break;
                 case ScaledAttackEffect scaledAttack:
-                    var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
-                    ApplyAttack(session, owner, scaledVictim,
-                        ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
-                            scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard), scaledAttack.Properties, selectedCard);
+                    var scaledVictims = scaledAttack.Target == TargetSelector.AllOpponents
+                        ? owner.IsEnemy
+                            ? new[] { state.Player.Creature }
+                            : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray()
+                        : new[] { ResolveSingleTarget(state, owner, target, scaledAttack.Target) };
+                    foreach (var scaledVictim in scaledVictims)
+                        ApplyAttack(session, owner, scaledVictim,
+                            ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
+                                scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard),
+                            scaledAttack.Properties, selectedCard);
                     break;
                 case RandomAttackEffect randomAttack:
                     var randomAmount = randomAttack.CalculatedAmount is { } calculatedRandomAttack
@@ -555,6 +567,12 @@ internal static class EffectExecutor
                     CombatCardVariables.Modify(session, CombatCardVariables.ResolveCard(state, variable.Card, selectedCard),
                         variable.Variable, variable.Operation, variableAmount);
                     break;
+                case ModifyPowerVariableEffect variable:
+                    var variableOwner = ResolveSingleTarget(state, owner, target, variable.Target);
+                    variableOwner.ModifyPowerVariable(variable.Power, variable.Variable, variable.Amount);
+                    state.Emit(session, "power_variable_modified", owner.Id, variableOwner.Id, variable.Amount,
+                        affectedPower: variable.Power);
+                    break;
                 case DowngradeSelectedCardEffect:
                     CombatCardVariables.Downgrade(session, CombatCardVariables.ResolveCard(state, CardContext.Selected, selectedCard));
                     break;
@@ -713,6 +731,8 @@ internal static class EffectExecutor
             EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
             CardPlaysThisTurnCountSource plays => state.CardPlayHistory.Count(plays.Type, plays.Phase),
             CardVariableCountSource variable => CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard),
+            PowerVariableCountSource variable => ResolveSingleTarget(state, owner, selectedTarget, variable.Target)
+                .PowerVariable(variable.Power, variable.Variable),
             TakePowerEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power,
                 CombatCardVariables.ResolveCard(state, deferred.Card, selectedCard).InstanceId),
             TakePowerTurnEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power, null),

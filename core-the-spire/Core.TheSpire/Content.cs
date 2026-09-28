@@ -25,6 +25,7 @@ public readonly record struct ContentId(string Value)
 
 public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerStackAdjustment(ContentId Power, int AmountPerStack);
+public sealed record PowerVariableDefinition(ContentId Id, int InitialValue);
 public sealed record CardPlayRule(CardType Type, int? Cost = null, CardPile? ResultPile = null,
     bool ConsumeOnPlay = false, int ExtraPlays = 0, bool ConsumeOnPlayCount = false)
 {
@@ -53,6 +54,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
+    public IReadOnlyList<PowerVariableDefinition> Variables { get; init; } = Array.Empty<PowerVariableDefinition>();
 
     public void Validate()
     {
@@ -73,6 +75,11 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 if (adjustment.AmountPerStack == 0)
                     throw new ArgumentException("A lifecycle power adjustment requires a nonzero multiplier.");
             }
+        ArgumentNullException.ThrowIfNull(Variables);
+        if (Variables.Select(variable => variable.Id).Distinct().Count() != Variables.Count)
+            throw new ArgumentException("A Power cannot declare duplicate variables.");
+        foreach (var variable in Variables)
+            variable.Id.Validate();
         foreach (var subscription in Events)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(subscription.EventType);
@@ -1147,6 +1154,9 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"Potion '{potion.Id}' references unknown character pool '{characterId}'.");
         foreach (var power in _powers.Values)
         {
+            if (power.Variables is null || power.Variables.Select(variable => variable.Id).Distinct().Count() != power.Variables.Count)
+                throw new InvalidOperationException($"Power '{power.Id}' has null or duplicate variable declarations.");
+            foreach (var variable in power.Variables) variable.Id.Validate();
             if (power.TriggerEffect is { } effect && !_powers.ContainsKey(effect))
                 throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
             if (power.TriggerRuleEffect is { } triggerEffect)
@@ -1406,7 +1416,8 @@ public sealed class ContentRegistry
             case ScaledAttackEffect scaled:
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.BaseAmount);
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.AmountPerCount);
-                if (scaled.Target is not (TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
+                if (scaled.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget
+                    or TargetSelector.FirstEnemy or TargetSelector.AllOpponents))
                     throw new InvalidOperationException($"{owner} has an invalid scaled attack target.");
                 if (!ValidDamageProperties(scaled.Properties))
                     throw new InvalidOperationException($"{owner} has invalid scaled attack properties.");
@@ -1543,6 +1554,11 @@ public sealed class ContentRegistry
                 if (variable.CalculatedAmount is { } variableAmount)
                     ValidateCombatCountSource(variableAmount.Count, owner, counts);
                 break;
+            case ModifyPowerVariableEffect variable:
+                ValidatePowerVariableReference(variable.Power, variable.Variable, owner);
+                if (variable.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
+                    throw new InvalidOperationException($"{owner} modifies a Power variable on an invalid target.");
+                break;
             case ModifySelectedCardCostEffect cost:
                 cost.Modifier.Validate();
                 if (cost.CalculatedAmount is { } calculatedCost)
@@ -1665,6 +1681,11 @@ public sealed class ContentRegistry
             case CardVariableCountSource variable:
                 ValidateCardVariableReference(variable.Variable, variable.Card, owner);
                 break;
+            case PowerVariableCountSource variable:
+                ValidatePowerVariableReference(variable.Power, variable.Variable, owner);
+                if (variable.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
+                    throw new InvalidOperationException($"{owner} reads a Power variable on an invalid target.");
+                break;
             case TakePowerEventAmountCountSource deferred when !_powers.ContainsKey(deferred.Power):
                 throw new InvalidOperationException($"{owner} reads deferred event amount for unknown power '{deferred.Power}'.");
             case TakePowerEventAmountCountSource deferred when !Enum.IsDefined(deferred.Card):
@@ -1690,6 +1711,14 @@ public sealed class ContentRegistry
         variable.Validate();
         if (!Enum.IsDefined(card) || !_cards.Values.Any(definition => definition.Variables.Any(value => value.Id == variable)))
             throw new InvalidOperationException($"{owner} references an invalid card context or undeclared variable '{variable}'.");
+    }
+
+    private void ValidatePowerVariableReference(ContentId power, ContentId variable, string owner)
+    {
+        variable.Validate();
+        if (!_powers.TryGetValue(power, out var definition)
+            || !definition.Variables.Any(value => value.Id == variable))
+            throw new InvalidOperationException($"{owner} references undeclared Power variable '{power}.{variable}'.");
     }
 
     private static void AddUnique<T>(Dictionary<ContentId, T> items, ContentId id, T definition, string kind)

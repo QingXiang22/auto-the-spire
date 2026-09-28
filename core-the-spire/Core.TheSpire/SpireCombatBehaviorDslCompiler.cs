@@ -53,7 +53,7 @@ public static class SpireCombatBehaviorDslCompiler
                 "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
                 "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on",
-                "incomingDamageModifiers");
+                "incomingDamageModifiers", "variables");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -104,8 +104,26 @@ public static class SpireCombatBehaviorDslCompiler
                 Lifecycle = properties.TryGetValue("on", out var lifecycleNode)
                     ? CompilePowerLifecycle(lifecycleNode) : Array.Empty<PowerLifecycleSubscription>(),
                 IncomingDamageModifiers = properties.TryGetValue("incomingDamageModifiers", out var damageModifiersNode)
-                    ? CompileDamageModifiers(damageModifiersNode) : Array.Empty<DamageModifierSubscription>()
+                    ? CompileDamageModifiers(damageModifiersNode) : Array.Empty<DamageModifierSubscription>(),
+                Variables = properties.TryGetValue("variables", out var variablesNode)
+                    ? CompilePowerVariables(variablesNode) : Array.Empty<PowerVariableDefinition>()
             };
+        }
+
+        private IReadOnlyList<PowerVariableDefinition> CompilePowerVariables(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Power variables must be a list.");
+            var variables = list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "variable") throw Error(call.Location, "Power variables use variable(Name, initialValue).");
+                CheckShape(call, 2);
+                return new PowerVariableDefinition(Id(Name(Argument(call, 0))), Integer(Argument(call, 1)));
+            }).ToArray();
+            if (variables.Select(variable => variable.Id).Distinct().Count() != variables.Length)
+                throw Error(node.Location, "A Power cannot declare duplicate variables.");
+            return Array.AsReadOnly(variables);
         }
 
         private IReadOnlyList<DamageModifierSubscription> CompileDamageModifiers(DslValueNode node)
