@@ -335,6 +335,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             var instance = state.Player.HandInstances[i];
             var card = definition.Cards[instance.CardId];
+            if (card.MultiplayerOnly) continue;
             if ((card.ResolveKeywords(instance) & CardKeywords.Unplayable) != 0) continue;
             if (CombatCardRules.Preview(state, instance).EnergyToSpend > state.Player.Energy) continue;
             if (card.Target == TargetSelector.Self)

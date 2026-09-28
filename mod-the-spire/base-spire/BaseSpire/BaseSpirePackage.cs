@@ -121,6 +121,9 @@ public static class BaseSpireIds
     public static readonly ContentId SlimesNormal = ContentId.Parse("base-spire:slimes-normal");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
     public static readonly ContentId Rampart = ContentId.Parse("base-spire:rampart");
+    public static readonly ContentId DemonicShield = ContentId.Parse("base-spire:demonic-shield");
+    public static readonly ContentId Tank = ContentId.Parse("base-spire:tank");
+    public static readonly ContentId TankPower = ContentId.Parse("base-spire:tank-power");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId FirePotion = ContentId.Parse("base-spire:fire-potion");
     public static readonly ContentId BlockPotion = ContentId.Parse("base-spire:block-potion");

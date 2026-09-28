@@ -1,4 +1,21 @@
 package base-spire {
+  card DemonicShield {
+    type = skill rarity = uncommon cost = 0 target = anyAlly
+    keywords = [exhaust]
+    removedUpgradedKeywords = [exhaust]
+    multiplayerOnly = true
+    play = sequence(
+      loseHp(1, target=self, properties=[move, unpowered, unblockable]),
+      gainBlockFromCurrentBlock(target=target)
+    )
+  }
+
+  card Tank {
+    type = power rarity = rare cost = 1 upgradedCost = 0 target = self
+    multiplayerOnly = true
+    play = applyPower(TankPower, 1)
+  }
+
   card Toxic {
     type = status
     rarity = status

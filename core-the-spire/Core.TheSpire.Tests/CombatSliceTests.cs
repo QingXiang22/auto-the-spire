@@ -681,12 +681,30 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(70, cards.Count);
+        Assert.Equal(93, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
             .Select(card => card.Id), pool);
+        Assert.Equal(87, pool.Count + cards.Count(card => card.MultiplayerOnly));
         Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
+        var demonicShield = cards.Single(card => card.Id == BaseSpireIds.DemonicShield);
+        Assert.True(demonicShield.MultiplayerOnly);
+        Assert.Equal(2, cards.Count(card => card.MultiplayerOnly));
+        Assert.Equal(TargetSelector.SelectedTarget, demonicShield.Target);
+        Assert.Equal(CardKeywords.Exhaust,
+            demonicShield.ResolveKeywords(new CardInstance("demonic-shield", demonicShield.Id)));
+        Assert.Equal(CardKeywords.None,
+            demonicShield.ResolveKeywords(new CardInstance("demonic-shield+", demonicShield.Id, upgradeLevel: 1)));
+        var demonicShieldEffect = demonicShield.Effect as SequenceEffect;
+        Assert.True(demonicShieldEffect is not null);
+        Assert.Equal(DamageProperties.Move | DamageProperties.Unpowered | DamageProperties.Unblockable,
+            ((LoseHpEffect)demonicShieldEffect!.Effects[0]).Properties);
+        Assert.Equal(new GainBlockFromCurrentBlockEffect(Target: TargetSelector.SelectedTarget),
+            demonicShieldEffect.Effects[1]);
+        Assert.False(pool.Contains(demonicShield.Id));
+        Assert.True(cards.Single(card => card.Id == BaseSpireIds.Tank).MultiplayerOnly);
+        Assert.False(pool.Contains(BaseSpireIds.Tank));
         Assert.Equal(BaseSpireIds.StrikeTag, cards.Single(card => card.Id == BaseSpireIds.StrikeIronclad)
             .Tags.Single());
         Assert.True(cards.Single(card => card.Id == BaseSpireIds.PerfectedStrike).Effect is
@@ -704,10 +722,17 @@ public sealed class CombatSliceTests
             { Effect: AttackEffect { Amount: 5, Target: TargetSelector.AllOpponents } });
 
         var compiledByPackage = Build(new BaseSpirePackage()).Cards;
+        var packageDefinition = Build(new BaseSpirePackage());
         Assert.True(cards.All(card => compiledByPackage.ContainsKey(card.Id)));
+        Assert.Equal(2m, packageDefinition.Powers[BaseSpireIds.TankPower].IncomingDamageModifiers.Single().Multiplier);
         Assert.Equal(strike.ResolveEffect(new CardInstance("dsl-strike", strike.Id)),
             compiledByPackage[strike.Id].ResolveEffect(new CardInstance("runtime-strike", strike.Id)));
         Assert.Equal(whirlwind.CostKind, compiledByPackage[whirlwind.Id].CostKind);
+
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var unavailable = environment.StartEncounter(902, "ironclad", 56, 65,
+            [BaseSpireIds.Tank, BaseSpireIds.DemonicShield], BaseSpireIds.TurretOperatorWeak);
+        Assert.False(environment.LegalActions(unavailable).Any(action => action is PlayCardAction));
 
         var invalid = DslSourceParser.Parse(
             "package broken { card Bad { type = attack rarity = common cost = 1 target = enemy play = madeUp() } }",

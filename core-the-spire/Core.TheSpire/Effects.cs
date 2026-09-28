@@ -106,12 +106,14 @@ public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
 public sealed record RandomAttackEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null,
     DamageProperties Properties = DamageProperties.Move) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
-public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self,
+    DamageProperties Properties = DamageProperties.None) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
     DamageProperties? Properties = null, TargetSelector Target = TargetSelector.Self,
     ContentId? OnlyEnemy = null) : EffectNode;
-public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : EffectNode;
+public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1,
+    TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
     CombatCountSource Count, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -508,7 +510,7 @@ internal static class EffectExecutor
                     var hpLost = Math.Min(hpLossTarget.Hp, loseHp.Amount);
                     hpLossTarget.Hp -= hpLost;
                     state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost,
-                        DamageProperties.None, selectedCard);
+                        loseHp.Properties, selectedCard);
                     if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
                     if (wasAliveBeforeHpLoss && hpLossTarget.Hp == 0)
                         QueuePowerTriggerEffects(session, hpLossTarget, PowerTrigger.AfterOwnerDeath, owner, selectedCard);
@@ -540,11 +542,15 @@ internal static class EffectExecutor
                     var gainedBlock = owner.Block * blockFromBlock.Multiplier;
                     var currentBlockProperties = selectedCard is not null || owner.IsEnemy
                         ? DamageProperties.Move : DamageProperties.None;
-                    gainedBlock = state.ModifyBlockGain(owner, gainedBlock, currentBlockProperties);
-                    owner.Block += gainedBlock;
-                    state.Emit(session, "block", owner.Id, owner.Id, gainedBlock,
-                        properties: currentBlockProperties,
-                        cardSource: selectedCard);
+                    foreach (var recipient in ResolveMultipleTargets(state, owner, target, blockFromBlock.Target))
+                    {
+                        if (recipient.Hp <= 0) continue;
+                        var recipientBlock = state.ModifyBlockGain(recipient, gainedBlock, currentBlockProperties);
+                        recipient.Block += recipientBlock;
+                        state.Emit(session, "block", owner.Id, recipient.Id, recipientBlock,
+                            properties: currentBlockProperties,
+                            cardSource: selectedCard);
+                    }
                     break;
                 case ApplyPowerEffect power:
                     foreach (var recipient in ResolveMultipleTargets(state, owner, target, power.Target))

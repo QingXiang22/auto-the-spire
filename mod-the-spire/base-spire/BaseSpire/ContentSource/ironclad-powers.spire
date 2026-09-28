@@ -1,4 +1,8 @@
 package base-spire {
+  power TankPower {
+    incomingDamageModifiers = [modifier(multiplier=2, require=[move], exclude=[unpowered])]
+  }
+
   power OneTwoPunchPower {
     cardRule = cardRule(type=attack, extraPlays=1, consumeOnPlayCount=true)
     removeAfterOwnerTurnEnd = true
