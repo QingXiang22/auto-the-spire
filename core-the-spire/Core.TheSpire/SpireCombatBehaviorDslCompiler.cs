@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 
 namespace CoreTheSpire;
@@ -51,7 +52,8 @@ public static class SpireCombatBehaviorDslCompiler
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
                 "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
-                "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on");
+                "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on",
+                "incomingDamageModifiers");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -100,8 +102,42 @@ public static class SpireCombatBehaviorDslCompiler
                 Events = properties.TryGetValue("events", out var eventsNode)
                     ? CompilePowerEvents(eventsNode) : Array.Empty<PowerEventSubscription>(),
                 Lifecycle = properties.TryGetValue("on", out var lifecycleNode)
-                    ? CompilePowerLifecycle(lifecycleNode) : Array.Empty<PowerLifecycleSubscription>()
+                    ? CompilePowerLifecycle(lifecycleNode) : Array.Empty<PowerLifecycleSubscription>(),
+                IncomingDamageModifiers = properties.TryGetValue("incomingDamageModifiers", out var damageModifiersNode)
+                    ? CompileDamageModifiers(damageModifiersNode) : Array.Empty<DamageModifierSubscription>()
             };
+        }
+
+        private IReadOnlyList<DamageModifierSubscription> CompileDamageModifiers(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Incoming damage modifiers must be a list.");
+            return Array.AsReadOnly(list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "modifier" || call.Arguments.Any(argument => argument.Name is null))
+                    throw Error(call.Location, "Damage modifiers require modifier(multiplier=..., require=..., exclude=..., sourcePower=...).");
+                var arguments = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+                foreach (var argument in call.Arguments)
+                {
+                    if (argument.Name is not ("multiplier" or "require" or "exclude" or "sourcePower"))
+                        throw Error(argument.Location, $"Unknown damage modifier argument '{argument.Name}'.");
+                    if (!arguments.TryAdd(argument.Name!, argument.Value))
+                        throw Error(argument.Location, $"Duplicate damage modifier argument '{argument.Name}'.");
+                }
+                var multiplierNode = Required(arguments, "multiplier", call.Location);
+                if (multiplierNode is not DslNumberNode number
+                    || !decimal.TryParse(number.Literal, NumberStyles.Number, CultureInfo.InvariantCulture,
+                        out var multiplier))
+                    throw Error(multiplierNode.Location, "Damage modifier multiplier must be a decimal number.");
+                var required = arguments.TryGetValue("require", out var requiredNode)
+                    ? ParseDamageProperties(requiredNode) : DamageProperties.None;
+                var excluded = arguments.TryGetValue("exclude", out var excludedNode)
+                    ? ParseDamageProperties(excludedNode) : DamageProperties.None;
+                var sourcePower = arguments.TryGetValue("sourcePower", out var sourcePowerNode)
+                    ? Id(Name(sourcePowerNode)) : (ContentId?)null;
+                return new DamageModifierSubscription(multiplier, required, excluded, sourcePower);
+            }).ToArray());
         }
 
         private IReadOnlyList<PowerLifecycleSubscription> CompilePowerLifecycle(DslValueNode node)

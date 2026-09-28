@@ -52,6 +52,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public bool PreventEnergyGain { get; init; }
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
+    public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
 
     public void Validate()
     {
@@ -95,6 +96,15 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
         }
         if (Lifecycle.Select(subscription => subscription.Trigger).Distinct().Count() != Lifecycle.Count)
             throw new ArgumentException("A Power can define only one lifecycle effect per trigger.");
+        foreach (var modifier in IncomingDamageModifiers)
+        {
+            if (modifier.Multiplier < 0m
+                || (modifier.RequiredProperties & modifier.ExcludedProperties) != 0
+                || !ValidDamageProperties(modifier.RequiredProperties)
+                || !ValidDamageProperties(modifier.ExcludedProperties))
+                throw new ArgumentException("Incoming damage modifiers require a nonnegative multiplier and valid, non-overlapping property filters.");
+            modifier.RequiredSourcePower?.Validate();
+        }
     }
 
     private static bool ValidDamageProperties(DamageProperties properties) =>
@@ -872,6 +882,10 @@ public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
+public sealed record DamageModifierSubscription(decimal Multiplier,
+    DamageProperties RequiredProperties = DamageProperties.None,
+    DamageProperties ExcludedProperties = DamageProperties.None,
+    ContentId? RequiredSourcePower = null);
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
 
 public interface IRulePackage
@@ -1145,6 +1159,9 @@ public sealed class ContentRegistry
             }
             foreach (var subscription in power.Lifecycle)
                 ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' lifecycle '{subscription.Trigger}'");
+            foreach (var modifier in power.IncomingDamageModifiers)
+                if (modifier.RequiredSourcePower is { } requiredPower && !_powers.ContainsKey(requiredPower))
+                    throw new InvalidOperationException($"Power '{power.Id}' requires unknown source Power '{requiredPower}' for its damage modifier.");
             foreach (var adjustment in new[] { power.OnStackChange, power.OnExpire })
                 if (adjustment is not null && !_powers.ContainsKey(adjustment.Power))
                     throw new InvalidOperationException($"Power '{power.Id}' references unknown lifecycle power '{adjustment.Power}'.");
