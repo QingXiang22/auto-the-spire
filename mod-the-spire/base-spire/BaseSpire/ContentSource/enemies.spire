@@ -390,13 +390,13 @@ package base-spire {
     )
     behavior = startWithChoice(
       chooseWithLimits(
-        candidate(flyconidFrailSpores, weight=2),
-        candidate(flyconidSmash, weight=1)
+        candidate(flyconidFrailSpores, weight=2, cooldown=2),
+        candidate(flyconidSmash, weight=1, cooldown=1)
       ),
       then=chooseWithLimits(
-        candidate(flyconidVulnerableSpores, weight=3, maxConsecutive=1),
-        candidate(flyconidFrailSpores, weight=2, maxConsecutive=1),
-        candidate(flyconidSmash, weight=3, maxConsecutive=1)
+        candidate(flyconidVulnerableSpores, weight=3, cooldown=3),
+        candidate(flyconidFrailSpores, weight=2, cooldown=2),
+        candidate(flyconidSmash, weight=3, cooldown=1)
       )
     )
   }

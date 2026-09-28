@@ -2114,6 +2114,50 @@ public sealed class CombatSliceTests
         Assert.True(sawTwoConsecutiveClumps);
     }
 
+    public void BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var vulnerableSpores = ContentId.Parse("base-spire:flyconid-vulnerable-spores");
+        var frailSpores = ContentId.Parse("base-spire:flyconid-frail-spores");
+        var smash = ContentId.Parse("base-spire:flyconid-smash");
+        var zeroWeightFallbackCount = 0;
+
+        for (uint seed = 1000; seed < 1012; seed++)
+        {
+            var session = environment.Start(seed, "ironclad", 100_000, 100_000, [],
+                "base-spire:flyconid");
+            var enemy = session.State.Enemies.Single(enemy => enemy.Definition.Id == ContentId.Parse("base-spire:flyconid"));
+            var history = new List<ContentId>();
+            for (var turn = 0; turn < 40; turn++)
+            {
+                var selected = enemy.Definition.Actions[enemy.ActionIndex].Id;
+                ContentId?[] eligible = history.Count == 0
+                    ? [frailSpores, smash]
+                    : new[]
+                {
+                    history.TakeLast(3).Contains(vulnerableSpores) ? (ContentId?)null : vulnerableSpores,
+                    history.TakeLast(2).Contains(frailSpores) ? (ContentId?)null : frailSpores,
+                    history.TakeLast(1).Contains(smash) ? (ContentId?)null : smash
+                };
+                if (selected != vulnerableSpores && selected != frailSpores && selected != smash)
+                    throw new InvalidOperationException($"Unexpected Flyconid move '{selected}'.");
+                var possible = eligible.Where(action => action is not null).Select(action => action!.Value).ToArray();
+                if (possible.Length == 0)
+                {
+                    Assert.Equal(vulnerableSpores, selected);
+                    zeroWeightFallbackCount++;
+                }
+                else
+                    Assert.True(possible.Contains(selected));
+                history.Add(selected);
+                var randomCallsBefore = session.Random.Get("enemy-ai").Counter;
+                environment.Step(session, new EndTurnAction());
+                Assert.Equal(randomCallsBefore + 1, session.Random.Get("enemy-ai").Counter);
+            }
+        }
+        Assert.True(zeroWeightFallbackCount > 0);
+    }
+
     public void BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle()
     {
         var definition = Build(new BaseSpirePackage());
@@ -5625,6 +5669,7 @@ internal static class Program
         tests.AfterCardPlayedPowerResumesOnceAfterCardChoice();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
+        tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
         tests.MultipleMonstersPreferDistinctInitialHpWhenRangesAllow();
         tests.PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide();
