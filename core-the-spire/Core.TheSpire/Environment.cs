@@ -488,10 +488,24 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     FlushPlayerHand(session);
                     break;
                 case EndTurnResolutionStage.PlayerTurnEndPowers:
-                    state.EndTurnStage = EndTurnResolutionStage.ExpirePlayerPowers;
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyPlayerSideEndPowers;
+                    state.CurrentEnemyIndex = 0;
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnEnd);
                     state.ExpireCardCosts(session, CardCostExpiration.TurnEnd);
                     EffectExecutor.Resume(session);
+                    break;
+                case EndTurnResolutionStage.EnemyPlayerSideEndPowers:
+                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                        state.CurrentEnemyIndex++;
+                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    {
+                        state.CurrentEnemyIndex = 0;
+                        state.EndTurnStage = EndTurnResolutionStage.ExpirePlayerPowers;
+                        break;
+                    }
+                    var enemyWithEndPower = state.Enemies[state.CurrentEnemyIndex++];
+                    BeginPowerQueue(state, enemyWithEndPower.Creature, PowerTrigger.AfterPlayerTurnEnd);
                     break;
                 case EndTurnResolutionStage.ExpirePlayerPowers:
                     foreach (var powerId in state.Player.Creature.Powers.Keys
@@ -605,7 +619,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.PendingPowerTrigger = trigger;
         state.PendingPowerQueue = owner.Powers
             .Where(pair => state.Definition.Powers[pair.Key].Trigger == trigger
-                || (state.Definition.Powers[pair.Key].RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, trigger)))
+                || (state.Definition.Powers[pair.Key].RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, trigger))
+                || (state.Definition.Powers[pair.Key].RemoveAfterOpponentTurnEnd && IsOpponentTurnEnd(owner, trigger)))
             .Select(pair => pair.Key)
             .ToList();
         state.PendingPowerIndex = 0;
@@ -632,6 +647,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             }
             if (power.RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, state.PendingPowerTrigger))
                 triggerEffects.Add(new ExpirePowerEffect(powerId));
+            if (power.RemoveAfterOpponentTurnEnd && IsOpponentTurnEnd(owner, state.PendingPowerTrigger))
+                triggerEffects.Add(new ExpirePowerEffect(powerId));
             if (triggerEffects.Count > 0)
                 EffectExecutor.Execute(session, owner, new SequenceEffect(triggerEffects));
         }
@@ -644,6 +661,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
     private static bool IsOwnerTurnEnd(EntityState owner, PowerTrigger trigger) => trigger ==
         (owner.IsEnemy ? PowerTrigger.AfterEnemyTurnEnd : PowerTrigger.AfterPlayerTurnEnd);
+
+    private static bool IsOpponentTurnEnd(EntityState owner, PowerTrigger trigger) => trigger ==
+        (owner.IsEnemy ? PowerTrigger.AfterPlayerTurnEnd : PowerTrigger.AfterEnemyTurnEnd);
 
     private static bool RunFlushHooks(GameSession session)
     {

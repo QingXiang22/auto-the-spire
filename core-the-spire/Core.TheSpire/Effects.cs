@@ -52,7 +52,8 @@ public sealed record SequenceEffect : EffectNode
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy,
     DamageProperties Properties = DamageProperties.Move) : EffectNode;
 public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, CombatCountSource Count,
-    TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
+    TargetSelector Target = TargetSelector.SelectedTarget,
+    DamageProperties Properties = DamageProperties.Move) : EffectNode;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCardCountSource), "pile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
@@ -73,7 +74,8 @@ public sealed record CardVariableCountSource(ContentId Variable, CardContext Car
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power, TargetSelector Target = TargetSelector.SelectedTarget) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
-public sealed record RandomAttackEffect(int Amount) : EffectNode;
+public sealed record RandomAttackEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null,
+    DamageProperties Properties = DamageProperties.Move) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -143,6 +145,10 @@ public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, Ran
 public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 4, SkipHurtAnimation = 8 }
 public enum GameEventActor { Source, Target, Player }
 public sealed record GameEventEffect(EffectNode Effect, GameEventActor Actor = GameEventActor.Source);
+public sealed record PowerEventSubscription(string EventType, GameEventActor Owner, EffectNode Effect,
+    DamageProperties RequiredProperties = DamageProperties.None,
+    DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true);
+internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
 public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Attack }
@@ -248,6 +254,10 @@ internal static class EffectExecutor
                 case BeginAutoCardEffect autoCard:
                     CombatCardPlay.QueueAutomatic(session, autoCard.Card, autoCard.ForceExhaust);
                     break;
+                case PowerEventEffect powerEvent:
+                    if (owner.PowerAmount(powerEvent.Power) > 0)
+                        state.PendingEffects.Add(new(owner, powerEvent.Effect, target, selectedCard, counts));
+                    break;
                 case PlaceGeneratedCardEffect generatedCard:
                     CombatCardGeneration.Place(session, generatedCard);
                     break;
@@ -283,18 +293,22 @@ internal static class EffectExecutor
                     var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
                     ApplyAttack(session, owner, scaledVictim,
                         ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
-                            scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard));
+                            scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard), scaledAttack.Properties);
                     break;
                 case RandomAttackEffect randomAttack:
-                    if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
+                    var randomAmount = randomAttack.CalculatedAmount is { } calculatedRandomAttack
+                        ? ScaledAmount(state, owner, target, calculatedRandomAttack.BaseAmount,
+                            calculatedRandomAttack.PerCount, calculatedRandomAttack.Count, counts, selectedCard)
+                        : randomAttack.Amount;
+                    if (randomAmount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
                     var opponents = owner.IsEnemy
                         ? state.Player.Creature.Hp > 0 ? new[] { state.Player.Creature } : []
                         : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray();
                     if (opponents.Length > 0)
                     {
                         var victim = opponents[session.Random.Get("card-targets").NextInt(opponents.Length)];
-                        state.Emit(session, "random_attack_target", owner.Id, victim.Id, randomAttack.Amount);
-                        ApplyAttack(session, owner, victim, randomAttack.Amount);
+                        state.Emit(session, "random_attack_target", owner.Id, victim.Id, randomAmount);
+                        ApplyAttack(session, owner, victim, randomAmount, randomAttack.Properties);
                     }
                     break;
                 case AttackUsingBlockEffect attackUsingBlock:
@@ -670,7 +684,7 @@ internal static class EffectExecutor
         victim.Block -= absorbed;
         var damage = Math.Min(victim.Hp, rawDamage - absorbed);
         victim.Hp -= damage;
-        state.Emit(session, "damage", owner.Id, victim.Id, damage);
+        state.Emit(session, "damage", owner.Id, victim.Id, damage, properties);
         if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
     }
 

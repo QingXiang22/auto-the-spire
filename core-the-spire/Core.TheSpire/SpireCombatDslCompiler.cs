@@ -135,16 +135,22 @@ public static class SpireCombatDslCompiler
                         OptionalArgument(call, "properties") is { } damageProperties
                             ? ParseDamageProperties(damageProperties) : DamageProperties.Move);
                 case "scaledAttack":
-                    CheckShape(call, 2, 2, "count", "target");
+                    CheckShape(call, 2, 2, "count", "target", "properties");
                     return new ScaledAttackEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
                         CompileCombatCount(RequiredArgument(call, "count")),
-                        OptionalTarget(call, "target", TargetSelector.SelectedTarget));
+                        OptionalTarget(call, "target", TargetSelector.SelectedTarget),
+                        OptionalArgument(call, "properties") is { } scaledProperties
+                            ? ParseDamageProperties(scaledProperties) : DamageProperties.Move);
                 case "attackUsingBlock":
                     CheckShape(call, 0, 0, "target");
                     return new AttackUsingBlockEffect(OptionalTarget(call, "target", TargetSelector.SelectedTarget));
                 case "randomAttack":
-                    CheckShape(call, 1, 1);
-                    return new RandomAttackEffect(Integer(Argument(call, 0)));
+                    CheckShape(call, 1, 1, "properties");
+                    var randomDamage = Argument(call, 0);
+                    return new RandomAttackEffect(randomDamage is DslNumberNode ? Integer(randomDamage) : 0,
+                        randomDamage is DslNumberNode ? null : CompileScaledAmount(randomDamage),
+                        OptionalArgument(call, "properties") is { } randomProperties
+                            ? ParseDamageProperties(randomProperties) : DamageProperties.Move);
                 case "applyPower":
                     CheckShape(call, 2, 2, "target");
                     return new ApplyPowerEffect(ReferenceId(Argument(call, 0)), Integer(Argument(call, 1)),
