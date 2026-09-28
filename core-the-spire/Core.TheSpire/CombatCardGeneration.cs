@@ -10,24 +10,36 @@ internal static class CombatCardGeneration
         if (owner != state.Player.Creature)
             throw new InvalidOperationException("Combat cards can only be generated for the player.");
         ArgumentOutOfRangeException.ThrowIfNegative(count);
-        if (count == 0) return;
+        effect.Cost?.Validate();
+        if (count == 0 && !effect.Distinct) return;
         var characterId = state.Player.CharacterId
             ?? throw new InvalidOperationException("Combat card generation requires an explicit character identity.");
         var character = state.Definition.Characters[characterId];
         var options = character.CardPools.SelectMany(pool => state.Definition.CardPools[pool].Cards)
             .Distinct().Select(id => state.Definition.Cards[id])
             .Where(card => card.CanBeGeneratedInCombat
-                && card.Rarity is not (CardRarity.Basic or CardRarity.Ancient or CardRarity.Event)).ToArray();
+                && card.Rarity is not (CardRarity.Basic or CardRarity.Ancient or CardRarity.Event)
+                && (effect.Type is null || card.Type == effect.Type)).ToArray();
         if (options.Length == 0)
+        {
+            if (effect.Distinct) return;
             throw new InvalidOperationException($"Character '{characterId}' has no eligible combat-generation cards.");
+        }
         var random = session.Random.Get("combat-card-generation");
+        if (effect.Distinct)
+        {
+            random.Shuffle(options);
+            count = Math.Min(count, options.Length);
+        }
         var generated = new CardInstance[count];
         for (var i = 0; i < count; i++)
         {
-            var card = options[random.NextInt(options.Length)];
+            var card = effect.Distinct ? options[i] : options[random.NextInt(options.Length)];
             var instance = state.Player.CreateGeneratedCard(card.Id);
             if (effect.Upgraded && state.IsUpgradeable(instance))
                 instance = new CardInstance(instance.InstanceId, instance.CardId, 1);
+            if (effect.Cost is { } cost)
+                instance = new CardInstance(instance.InstanceId, instance.CardId, instance.UpgradeLevel, [cost]);
             generated[i] = instance;
         }
         for (var i = generated.Length - 1; i >= 0; i--)

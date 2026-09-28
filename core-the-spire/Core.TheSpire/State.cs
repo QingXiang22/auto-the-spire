@@ -395,6 +395,7 @@ internal sealed class GameState
     {
         CardSelectionFilter.Any => true,
         CardSelectionFilter.Upgradeable => IsUpgradeable(card),
+        CardSelectionFilter.Attack => Definition.Cards[card.CardId].Type == CardType.Attack,
         CardSelectionFilter.NonAttack => Definition.Cards.TryGetValue(card.CardId, out var definition)
             && definition.Type != CardType.Attack,
         CardSelectionFilter.NotRetained => (Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) == 0
@@ -410,11 +411,70 @@ internal sealed class GameState
             var index = cards.FindIndex(card => card.InstanceId == instanceId);
             if (index < 0 || !IsUpgradeable(cards[index])) continue;
             var card = cards[index];
-            cards[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel + 1);
+            var upgraded = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel + 1, card.CostModifiers);
+            var definition = Definition.Cards[card.CardId];
+            if (definition.ResolveCost(upgraded) < definition.ResolveCost(card))
+            {
+                var newBase = definition.ResolveCost(upgraded);
+                upgraded = new CardInstance(card.InstanceId, card.CardId, upgraded.UpgradeLevel,
+                    card.CostModifiers.Select(modifier => modifier.Operation == CardCostOperation.Set
+                        && modifier.Amount > newBase ? modifier with { Amount = newBase } : modifier).ToArray());
+            }
+            cards[index] = upgraded;
             Emit(session, "card_upgraded", Player.Id, card.InstanceId, 1);
             return true;
         }
         return false;
+    }
+
+    internal void ModifyCardCost(GameSession session, string instanceId, CardCostModifier modifier)
+    {
+        modifier.Validate();
+        foreach (var pile in Enum.GetValues<CardPile>())
+        {
+            var cards = GetPile(pile);
+            var index = cards.FindIndex(card => card.InstanceId == instanceId);
+            if (index < 0) continue;
+            var card = cards[index];
+            cards[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel,
+                [.. card.CostModifiers, modifier]);
+            Emit(session, "card_cost_modified", Player.Id, instanceId, modifier.Amount);
+            return;
+        }
+        throw new InvalidOperationException("The selected card is no longer in combat.");
+    }
+
+    internal void ExpireCardCosts(GameSession session, CardCostExpiration boundary, string? instanceId = null)
+    {
+        foreach (var pile in Enum.GetValues<CardPile>())
+        {
+            var cards = GetPile(pile);
+            for (var index = 0; index < cards.Count; index++)
+            {
+                var card = cards[index];
+                if (instanceId is not null && card.InstanceId != instanceId) continue;
+                if (!card.CostModifiers.Any(modifier => (modifier.Expires & boundary) != 0)) continue;
+                var remaining = card.CostModifiers.Where(modifier => (modifier.Expires & boundary) == 0).ToArray();
+                cards[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel, remaining);
+                Emit(session, "card_cost_expired", Player.Id, card.InstanceId, card.CostModifiers.Count - remaining.Length);
+            }
+        }
+    }
+
+    internal void TransformCard(GameSession session, string instanceId, TransformSelectedCardEffect effect)
+    {
+        if (!Enum.IsDefined(effect.From) || effect.From == CardPile.Play)
+            throw new InvalidOperationException("Transformation cannot replace an active play-pile card.");
+        var pile = GetPile(effect.From);
+        var index = pile.FindIndex(card => card.InstanceId == instanceId);
+        if (index < 0) throw new InvalidOperationException("The selected card is no longer in its source pile.");
+        if (Player.Creature.Hp <= 0 || FirstLivingEnemy is null) return;
+        var replacement = Player.CreateGeneratedCard(effect.Card);
+        if (effect.Upgraded && IsUpgradeable(replacement))
+            replacement = new CardInstance(replacement.InstanceId, replacement.CardId, 1);
+        pile[index] = replacement;
+        TemporarilyRetainedCards.Remove(instanceId);
+        Emit(session, "card_transformed", instanceId, replacement.InstanceId, 1);
     }
 
     internal int DecrementPower(GameSession session, EntityState owner, ContentId powerId)

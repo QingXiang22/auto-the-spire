@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(63, ironcladPool.Count);
+        Assert.Equal(65, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(65, cards.Count);
+        Assert.Equal(68, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(64, pool.Count);
+        Assert.Equal(66, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -5426,6 +5426,15 @@ internal static class Program
         tests.UnknownMapPointOddsAdaptAfterEachRoll();
         tests.UnknownMapOddsResetWhenTheActChanges();
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
+        var instanceTests = new CardInstanceDslTests();
+        instanceTests.InfernalBladeInstallsFreeCostBeforeInsertionAndClearsItAfterPlaying();
+        instanceTests.DistinctGenerationShufflesTheWholeFilteredPoolBeforeTaking();
+        instanceTests.LocalCostsComposeAndSurviveMovesAndCostReducingUpgrade();
+        instanceTests.FreeCostPersistsThroughReplayAndExhaustChoiceThenExpires();
+        instanceTests.TurnCostCleanupWaitsForFlushChoiceAndCoversAllCombatPiles();
+        instanceTests.PrimalForceTransformsOnlyOriginalHandAttacksInPlaceWithFreshIdentity();
+        instanceTests.InstanceDslRejectsInvalidCostsAndTransformationReferences();
+        instanceTests.ControlledNativeEffectsPreserveSelectedCardContext();
         Console.WriteLine("All gameplay checks passed.");
     }
 }

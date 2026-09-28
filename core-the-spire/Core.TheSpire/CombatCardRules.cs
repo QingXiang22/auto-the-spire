@@ -9,6 +9,8 @@ internal static class CombatCardRules
     {
         var card = state.Definition.Cards[instance.CardId];
         var energy = card.HasEnergyXCost ? state.Player.Energy : card.ResolveCost(instance);
+        if (!card.HasEnergyXCost)
+            foreach (var modifier in instance.CostModifiers) energy = modifier.Apply(energy);
         CardPile? result = card.Type == CardType.Power ? null
             : (card.Keywords & CardKeywords.Exhaust) != 0 ? CardPile.Exhaust : CardPile.Discard;
         foreach (var power in state.Player.Creature.Powers)
@@ -18,7 +20,7 @@ internal static class CombatCardRules
             if (!card.HasEnergyXCost && rule.Cost is { } cost) energy = cost;
             if (rule.ResultPile is { } pile) result = pile;
         }
-        return new CardPlayPreview(instance.InstanceId, energy, card.HasEnergyXCost ? energy : 0, result);
+        return new CardPlayPreview(instance.InstanceId, Math.Max(0, energy), card.HasEnergyXCost ? energy : 0, result);
     }
 
     public static void BeforePlay(GameSession session, CardInstance instance)

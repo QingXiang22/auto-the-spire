@@ -59,14 +59,16 @@ public sealed class EffectExecutionContext
     private readonly EntityState? _target;
     private readonly string _modId;
     private readonly EffectCountScope? _counts;
+    private readonly CardInstance? _selectedCard;
 
     internal EffectExecutionContext(GameSession session, EntityState owner, EntityState? target, ContentId handlerId,
-        EffectCountScope? counts = null)
+        EffectCountScope? counts = null, CardInstance? selectedCard = null)
     {
         _session = session;
         _owner = owner;
         _target = target;
         _counts = counts;
+        _selectedCard = selectedCard;
         _modId = handlerId.Value[..handlerId.Value.IndexOf(':')];
     }
 
@@ -84,7 +86,7 @@ public sealed class EffectExecutionContext
         (_session.RunOwner?.State ?? throw new InvalidOperationException("This combat has no owning run."))
         .SetModInt(_modId, key, value);
 
-    public void Execute(EffectNode effect) => EffectExecutor.Execute(_session, _owner, effect, _target, counts: _counts);
+    public void Execute(EffectNode effect) => EffectExecutor.Execute(_session, _owner, effect, _target, _selectedCard, _counts);
     public void DealDamage(int amount) => Execute(new AttackEffect(amount));
     public void GainBlock(int amount) => Execute(new GainBlockEffect(amount));
     public void ApplyPower(ContentId power, int amount, TargetSelector target = TargetSelector.Self) =>

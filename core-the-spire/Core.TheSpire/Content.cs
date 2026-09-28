@@ -156,7 +156,8 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
 
 public sealed record CardInstance
 {
-    public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0)
+    public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0,
+        IReadOnlyList<CardCostModifier>? costModifiers = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         cardId.Validate();
@@ -164,11 +165,15 @@ public sealed record CardInstance
         InstanceId = instanceId;
         CardId = cardId;
         UpgradeLevel = upgradeLevel;
+        var modifiers = costModifiers?.ToArray() ?? [];
+        foreach (var modifier in modifiers) modifier.Validate();
+        CostModifiers = modifiers.Length == 0 ? Array.Empty<CardCostModifier>() : Array.AsReadOnly(modifiers);
     }
 
     public string InstanceId { get; }
     public ContentId CardId { get; }
     public int UpgradeLevel { get; }
+    public IReadOnlyList<CardCostModifier> CostModifiers { get; }
 }
 
 public sealed class CardPoolDefinition
@@ -1353,6 +1358,16 @@ public sealed class ContentRegistry
             case UpgradeSelectedCardEffect:
             case RetainSelectedCardEffect:
                 break;
+            case ModifySelectedCardCostEffect cost:
+                cost.Modifier.Validate();
+                break;
+            case TransformSelectedCardEffect transform:
+                transform.Card.Validate();
+                if (!_cards.ContainsKey(transform.Card))
+                    throw new InvalidOperationException($"{owner} transforms into unknown card '{transform.Card}'.");
+                if (!Enum.IsDefined(transform.From) || transform.From == CardPile.Play)
+                    throw new InvalidOperationException($"{owner} transforms from an unsupported source pile.");
+                break;
             case DecrementPowerEffect decrementPower when !_powers.ContainsKey(decrementPower.Power):
                 throw new InvalidOperationException($"{owner} decrements unknown power '{decrementPower.Power}'.");
             case RemovePowerEffect removePower when !_powers.ContainsKey(removePower.Power):
@@ -1381,6 +1396,9 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} generates cards into an invalid pile.");
                 if (generateCards.CalculatedCount is { } generatedCount)
                     ValidateCombatCountSource(generatedCount.Count, owner, counts);
+                if (generateCards.Type is { } generatedType && !Enum.IsDefined(generatedType))
+                    throw new InvalidOperationException($"{owner} generates an invalid card type.");
+                generateCards.Cost?.Validate();
                 break;
             case ModifyEnergyEffect { CalculatedAmount: { } amount }:
                 ValidateCombatCountSource(amount.Count, owner, counts);

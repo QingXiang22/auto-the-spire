@@ -1,4 +1,26 @@
 package base-spire {
+  card InfernalBlade {
+    pools = [IroncladCardPool]
+    type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]
+    upgradedCost = 0
+    play = generateCards(count=1, type=attack, distinct=true,
+      cost=costModifier(0, expires=[turnEnd, played]))
+  }
+
+  card PrimalForce {
+    pools = [IroncladCardPool]
+    type = skill rarity = rare cost = 0 target = self
+    play = forEachCard(from=hand, filter=attack, effect=transformSelectedCard(GiantRock, from=hand))
+    upgradedPlay = forEachCard(from=hand, filter=attack,
+      effect=transformSelectedCard(GiantRock, from=hand, upgraded=true))
+  }
+
+  card GiantRock {
+    type = attack rarity = token cost = 1 target = enemy
+    play = attack(16)
+    upgradedPlay = attack(20)
+  }
+
   card Stoke {
     pools = [IroncladCardPool]
     type = skill rarity = rare cost = 1 target = self
