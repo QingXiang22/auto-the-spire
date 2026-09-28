@@ -129,18 +129,20 @@ public static class SpireCombatDslCompiler
                     return new IfEffect(CompilePredicate(Argument(call, 0)), CompileEffect(Argument(call, 1)),
                         OptionalEffect(call, "else"));
                 case "attack":
-                    CheckShape(call, 1, 1, "target", "properties");
+                    CheckShape(call, 1, 1, "target", "properties", "onFatal");
                     return new AttackEffect(Integer(Argument(call, 0)),
                         OptionalTarget(call, "target", TargetSelector.SelectedTarget),
                         OptionalArgument(call, "properties") is { } damageProperties
-                            ? ParseDamageProperties(damageProperties) : DamageProperties.Move);
+                            ? ParseDamageProperties(damageProperties) : DamageProperties.Move,
+                        OptionalEffect(call, "onFatal"));
                 case "scaledAttack":
-                    CheckShape(call, 2, 2, "count", "target", "properties");
+                    CheckShape(call, 2, 2, "count", "target", "properties", "onFatal");
                     return new ScaledAttackEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
                         CompileCombatCount(RequiredArgument(call, "count")),
                         OptionalTarget(call, "target", TargetSelector.SelectedTarget),
                         OptionalArgument(call, "properties") is { } scaledProperties
-                            ? ParseDamageProperties(scaledProperties) : DamageProperties.Move);
+                            ? ParseDamageProperties(scaledProperties) : DamageProperties.Move,
+                        OptionalEffect(call, "onFatal"));
                 case "attackUsingBlock":
                     CheckShape(call, 0, 0, "target");
                     return new AttackUsingBlockEffect(OptionalTarget(call, "target", TargetSelector.SelectedTarget));
@@ -303,6 +305,9 @@ public static class SpireCombatDslCompiler
                     return new ModifyPowerVariableEffect(Id(Name(Argument(call, 0))),
                         Id(Name(Argument(call, 1))), Integer(Argument(call, 2)),
                         OptionalTarget(call, "target", TargetSelector.Self));
+                case "gainMaxHp":
+                    CheckShape(call, 1, 1);
+                    return new GainMaxHpEffect(Integer(Argument(call, 0)));
                 case "downgradeSelectedCard":
                     CheckShape(call, 0, 0);
                     return new DowngradeSelectedCardEffect();

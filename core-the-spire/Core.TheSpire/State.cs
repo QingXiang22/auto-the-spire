@@ -22,7 +22,7 @@ internal sealed class EntityState
     public string Id { get; }
     public bool IsEnemy { get; }
     public int Hp { get; internal set; }
-    public int MaxHp { get; }
+    public int MaxHp { get; internal set; }
     public int Block { get; internal set; }
     public int Strength { get; internal set; }
     public IReadOnlyDictionary<ContentId, int> Powers => _powerView;
@@ -370,6 +370,18 @@ internal sealed class GameState
             || !owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToPlayer))
             owner.SkipNextPowerTriggers.Add(power);
         Emit(session, "power", applier.Id, owner.Id, amount, affectedPower: power);
+    }
+
+    internal void GainMaxHp(GameSession session, int amount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+        if (amount == 0) return;
+        if (session.RunOwner is { } runOwner)
+            RunEffectCommands.GainMaxHp(runOwner.State, amount);
+        var player = Player.Creature;
+        player.MaxHp = checked(player.MaxHp + amount);
+        player.Hp = checked(player.Hp + amount);
+        Emit(session, "max_hp", player.Id, player.Id, amount);
     }
 
     internal int CalculateDamage(GameSession session, EntityState dealer, EntityState target, int baseDamage,

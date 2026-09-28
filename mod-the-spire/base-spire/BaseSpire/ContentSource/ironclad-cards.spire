@@ -866,4 +866,15 @@ package base-spire {
     upgradedPlay = sequence(applyPower(InfernoPower, 9, target=self),
       modifyPowerVariable(InfernoPower, SelfDamage, 1))
   }
+
+  card Feed {
+    pools = [IroncladCardPool]
+    type = attack
+    rarity = rare
+    cost = 1
+    target = enemy
+    canGenerateInCombat = false
+    play = attack(10, onFatal=gainMaxHp(3))
+    upgradedPlay = attack(12, onFatal=gainMaxHp(4))
+  }
 }
