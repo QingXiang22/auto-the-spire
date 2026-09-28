@@ -212,4 +212,38 @@ package base-spire {
     )
     behavior = cycle(sewerClamJet, sewerClamPressurize)
   }
+
+  enemy SnappingJaxfruit {
+    hp = variants(default=range(34, 36), tough=range(31, 33))
+    moves = actions(
+      snappingJaxfruitEnergyOrb = sequence(
+        attack(variants(default=3, deadly=4), target=player),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = loop(snappingJaxfruitEnergyOrb)
+  }
+
+  enemy Flyconid {
+    hp = variants(default=range(51, 53), tough=range(47, 49))
+    moves = actions(
+      flyconidVulnerableSpores = applyPower(Vulnerable, 2, target=player),
+      flyconidFrailSpores = sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        applyPower(Frail, 2, target=player)
+      ),
+      flyconidSmash = attack(variants(default=11, deadly=12), target=player)
+    )
+    behavior = startWithChoice(
+      chooseWithLimits(
+        candidate(flyconidFrailSpores, weight=2),
+        candidate(flyconidSmash, weight=1)
+      ),
+      then=chooseWithLimits(
+        candidate(flyconidVulnerableSpores, weight=3, maxConsecutive=1),
+        candidate(flyconidFrailSpores, weight=2, maxConsecutive=1),
+        candidate(flyconidSmash, weight=3, maxConsecutive=1)
+      )
+    )
+  }
 }
