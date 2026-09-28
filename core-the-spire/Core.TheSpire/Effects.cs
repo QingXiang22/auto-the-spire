@@ -450,21 +450,23 @@ internal static class EffectExecutor
                     var blockAmount = block.PerPowerStack is { } perPowerStack
                         ? block.Amount * owner.PowerAmount(perPowerStack)
                         : block.Amount;
-                    blockAmount = state.ModifyBlockGain(owner, blockAmount);
+                    var blockProperties = selectedCard is not null || owner.IsEnemy
+                        ? DamageProperties.Move : DamageProperties.None;
+                    blockAmount = state.ModifyBlockGain(owner, blockAmount, blockProperties);
                     owner.Block += blockAmount;
                     state.Emit(session, "block", owner.Id, owner.Id, blockAmount,
-                        properties: selectedCard is not null || owner.IsEnemy
-                            ? DamageProperties.Move : DamageProperties.None,
+                        properties: blockProperties,
                         cardSource: selectedCard);
                     break;
                 case GainBlockFromCurrentBlockEffect blockFromBlock:
                     ArgumentOutOfRangeException.ThrowIfNegative(blockFromBlock.Multiplier);
                     var gainedBlock = owner.Block * blockFromBlock.Multiplier;
-                    gainedBlock = state.ModifyBlockGain(owner, gainedBlock);
+                    var currentBlockProperties = selectedCard is not null || owner.IsEnemy
+                        ? DamageProperties.Move : DamageProperties.None;
+                    gainedBlock = state.ModifyBlockGain(owner, gainedBlock, currentBlockProperties);
                     owner.Block += gainedBlock;
                     state.Emit(session, "block", owner.Id, owner.Id, gainedBlock,
-                        properties: selectedCard is not null || owner.IsEnemy
-                            ? DamageProperties.Move : DamageProperties.None,
+                        properties: currentBlockProperties,
                         cardSource: selectedCard);
                     break;
                 case ApplyPowerEffect power:

@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。铁甲战士相关的 74 张已建模卡牌和当前已注册的九种怪物现由 `.spire` 内容编译，其中 71 张属于源码中的 87 张 Ironclad 卡池；遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。铁甲战士相关的 74 张已建模卡牌和当前已注册的十四种怪物现由 `.spire` 内容编译，其中 71 张属于源码中的 87 张 Ironclad 卡池；遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -15,6 +15,8 @@
 本轮核对 [`AshenStrike.cs`](../sts2/src/Core/Models/Cards/AshenStrike.cs) 与 [`Bully.cs`](../sts2/src/Core/Models/Cards/Bully.cs) 的 `CalculatedDamageVar`：分别是基础值 6 加每张消耗牌 3（升级 4）、基础值 4 加目标每层易伤 2（升级 3）。共享 `scaledAttack` 在结算时读取计数并走普通伤害管线。[`Dismantle.cs`](../sts2/src/Core/Models/Cards/Dismantle.cs) 对易伤目标攻击两次，否则一次；升级单次基础伤害从 8 到 10。[`NotYet.cs`](../sts2/src/Core/Models/Cards/NotYet.cs) 回复 10（升级 13）、消耗自身，声明 `CanBeGeneratedInCombat=false`。卡牌生成 DSL 尚未实现，这一标记目前保存在定义中供后续生成规则使用。
 
 继续跟踪 [`Thrash.cs`](../sts2/src/Core/Models/Cards/Thrash.cs) 后确认，它选择手牌 Attack 时读取 `CalculatedDamage.Calculate(null)`，否则读取 `Damage.BaseValue` 或 `OstyDamage.BaseValue`，然后应用持有者侧的 `Hook.ModifyDamage` 并消耗该牌。因此伤害展示/效果 AST 不能代替源卡牌的规范动态变量：Bully 在 `null` 目标下贡献 4（不是对当前易伤目标重新计算后的值），Ashen Strike 与 Perfected Strike 使用各自的计算动态变量，Body Slam 使用当前格挡，Fiend Fire 使用每击 7/10 的 Damage 基值。DSL 现用 `damageVariable`、`damageValue` 和升级值字段独立描述该投影；Thrash 则通过共享读取逻辑消费它。
+
+本轮继续核对 Ruby Raiders：[`AxeRubyRaider.cs`](../sts2/src/Core/Models/Monsters/AxeRubyRaider.cs)、[`AssassinRubyRaider.cs`](../sts2/src/Core/Models/Monsters/AssassinRubyRaider.cs)、[`BruteRubyRaider.cs`](../sts2/src/Core/Models/Monsters/BruteRubyRaider.cs)、[`CrossbowRubyRaider.cs`](../sts2/src/Core/Models/Monsters/CrossbowRubyRaider.cs) 与 [`TrackerRubyRaider.cs`](../sts2/src/Core/Models/Monsters/TrackerRubyRaider.cs)。五者 HP 与 Deadly/Tough 数值已导入 DSL；攻击、格挡、加力量、上脆弱和多段攻击使用共享效果。Tracker 所需 Frail 作为通用 Power 用 block gain multiplier 表达，倍率只作用于 powered block，时长在敌方回合结束递减。遇敌编队按源码从五者中无重复抽取三者。
 
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 

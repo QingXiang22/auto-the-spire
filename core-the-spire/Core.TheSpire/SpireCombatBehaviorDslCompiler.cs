@@ -53,7 +53,7 @@ public static class SpireCombatBehaviorDslCompiler
                 "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
                 "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on",
-                "incomingDamageModifiers", "blockGainModifiers", "variables", "preventsFatal");
+                "incomingDamageModifiers", "blockGainModifiers", "blockGainMultiplier", "variables", "preventsFatal");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -108,6 +108,8 @@ public static class SpireCombatBehaviorDslCompiler
                     ? CompileDamageModifiers(damageModifiersNode) : Array.Empty<DamageModifierSubscription>(),
                 BlockGainModifiers = properties.TryGetValue("blockGainModifiers", out var blockModifiersNode)
                     ? CompileBlockGainModifiers(blockModifiersNode) : Array.Empty<BlockGainModifierSubscription>(),
+                BlockGainMultiplier = properties.TryGetValue("blockGainMultiplier", out var blockGainMultiplierNode)
+                    ? DecimalValue(blockGainMultiplierNode) : null,
                 Variables = properties.TryGetValue("variables", out var variablesNode)
                     ? CompilePowerVariables(variablesNode) : Array.Empty<PowerVariableDefinition>()
             };
@@ -522,12 +524,21 @@ public static class SpireCombatBehaviorDslCompiler
                     if (description.Intent != IntentKind.None) return description;
                 }
             }
+            if (effect is RepeatEffect repeat)
+            {
+                var repeated = DescribeIntent(repeat.Effect);
+                if (repeated.Intent == IntentKind.Attack)
+                    return (IntentKind.Attack, checked(repeated.IntentDamage * repeat.Count));
+            }
             return effect switch
             {
                 AttackEffect attack => (IntentKind.Attack, attack.Amount),
                 RandomAttackEffect attack => (IntentKind.Attack, attack.Amount),
+                ApplyPowerEffect { Target: TargetSelector.SelectedTarget or TargetSelector.FirstEnemy } =>
+                    (IntentKind.Debuff, 0),
                 ApplyPowerEffect => (IntentKind.Buff, 0),
                 AddCardsToPileEffect => (IntentKind.Debuff, 0),
+                GainBlockEffect or GainBlockFromCurrentBlockEffect => (IntentKind.Buff, 0),
                 _ => (IntentKind.None, 0)
             };
         }
@@ -577,6 +588,11 @@ public static class SpireCombatBehaviorDslCompiler
         private static int Integer(DslValueNode node) => node is DslNumberNode number && number.TryGetInt32(out var value)
             ? value
             : throw Error(node.Location, "Expected a 32-bit integer.");
+
+        private static decimal DecimalValue(DslValueNode node) => node is DslNumberNode number
+            && decimal.TryParse(number.Literal, NumberStyles.Number, CultureInfo.InvariantCulture, out var value)
+                ? value
+                : throw Error(node.Location, "Expected a decimal number.");
 
         private static string Name(DslValueNode node) => node is DslNameNode name
             ? name.Name

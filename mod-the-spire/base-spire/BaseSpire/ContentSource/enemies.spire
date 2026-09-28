@@ -1,4 +1,11 @@
 package base-spire {
+  power Frail {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+    skipFirstWhenAppliedToPlayer = true
+    blockGainMultiplier = 0.75
+  }
+
   power Ritual {
     trigger = afterEnemyTurnEnd
     effect = grantPower(Strength, sourceStacks)
@@ -94,5 +101,50 @@ package base-spire {
       candidate(twigMediumClumpShot, maxConsecutive=2),
       candidate(twigMediumStickyShot, maxConsecutive=1)
     )))
+  }
+
+  enemy AxeRubyRaider {
+    hp = variants(default=range(20, 22), tough=range(21, 23))
+    moves = actions(
+      axeSwingOne = sequence(attack(variants(default=5, deadly=6), target=player),
+        gainBlock(variants(default=5, deadly=6))),
+      axeSwingTwo = sequence(attack(variants(default=5, deadly=6), target=player),
+        gainBlock(variants(default=5, deadly=6))),
+      axeBigSwing = attack(variants(default=12, deadly=13), target=player)
+    )
+    behavior = cycle(axeSwingOne, axeSwingTwo, axeBigSwing)
+  }
+
+  enemy AssassinRubyRaider {
+    hp = variants(default=range(18, 23), tough=range(19, 24))
+    moves = actions(assassinKillshot = attack(variants(default=10, deadly=11), target=player))
+    behavior = loop(assassinKillshot)
+  }
+
+  enemy BruteRubyRaider {
+    hp = variants(default=range(30, 33), tough=range(31, 34))
+    moves = actions(
+      bruteBeat = attack(variants(default=7, deadly=8), target=player),
+      bruteRoar = applyPower(Strength, 3, target=self)
+    )
+    behavior = cycle(bruteBeat, bruteRoar)
+  }
+
+  enemy CrossbowRubyRaider {
+    hp = variants(default=range(18, 21), tough=range(19, 22))
+    moves = actions(
+      crossbowFire = attack(variants(default=14, deadly=16), target=player),
+      crossbowReload = gainBlock(3)
+    )
+    behavior = startWith(crossbowReload, then=cycle(crossbowFire, crossbowReload))
+  }
+
+  enemy TrackerRubyRaider {
+    hp = variants(default=range(21, 25), tough=range(22, 26))
+    moves = actions(
+      trackerTrack = applyPower(Frail, 2, target=player),
+      trackerHounds = repeat(variants(default=8, deadly=9), attack(1, target=player))
+    )
+    behavior = startWith(trackerTrack, then=loop(trackerHounds))
   }
 }

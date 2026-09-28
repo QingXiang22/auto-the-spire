@@ -90,6 +90,46 @@
         }
       ],
       "tags": ["base-spire:slime"]
+    },
+    {
+      "id": "base-spire:ruby-raiders-normal",
+      "roomType": "monster",
+      "enemySlots": [
+        {
+          "enemyChoices": [
+            "base-spire:axe-ruby-raider",
+            "base-spire:assassin-ruby-raider",
+            "base-spire:brute-ruby-raider",
+            "base-spire:crossbow-ruby-raider",
+            "base-spire:tracker-ruby-raider"
+          ],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-ruby-raiders"
+        },
+        {
+          "enemyChoices": [
+            "base-spire:axe-ruby-raider",
+            "base-spire:assassin-ruby-raider",
+            "base-spire:brute-ruby-raider",
+            "base-spire:crossbow-ruby-raider",
+            "base-spire:tracker-ruby-raider"
+          ],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-ruby-raiders"
+        },
+        {
+          "enemyChoices": [
+            "base-spire:axe-ruby-raider",
+            "base-spire:assassin-ruby-raider",
+            "base-spire:brute-ruby-raider",
+            "base-spire:crossbow-ruby-raider",
+            "base-spire:tracker-ruby-raider"
+          ],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-ruby-raiders"
+        }
+      ],
+      "tags": ["base-spire:ruby-raider"]
     }
   ]
 }

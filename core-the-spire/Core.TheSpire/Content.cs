@@ -60,6 +60,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
     public IReadOnlyList<BlockGainModifierSubscription> BlockGainModifiers { get; init; } = Array.Empty<BlockGainModifierSubscription>();
+    public decimal? BlockGainMultiplier { get; init; }
     public IReadOnlyList<PowerVariableDefinition> Variables { get; init; } = Array.Empty<PowerVariableDefinition>();
 
     public void Validate()
@@ -74,6 +75,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             throw new ArgumentException("A card-type filter requires a card event trigger.");
         if (OutgoingDamageMultiplier is < 0m)
             throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
+        if (BlockGainMultiplier is < 0m)
+            throw new ArgumentOutOfRangeException(nameof(BlockGainMultiplier));
         foreach (var adjustment in new[] { OnStackChange, OnExpire })
             if (adjustment is not null)
             {
