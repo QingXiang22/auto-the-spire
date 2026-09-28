@@ -30,6 +30,27 @@ public sealed class CombatSliceTests
         Assert.Equal(45, state.State.Player.Creature.Hp);
     }
 
+    public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var fullyBlocked = environment.Start(123, "ironclad", 80, 80,
+            [BaseSpireIds.StrikeIronclad], "base-spire:inklet");
+        fullyBlocked.State.Enemy.Block = 6;
+
+        environment.Step(fullyBlocked, new PlayCardAction(0, fullyBlocked.State.Enemy.Id));
+
+        Assert.Equal(1, fullyBlocked.State.Enemy.PowerAmount(ContentId.Parse("base-spire:slippery-power")));
+
+        var partiallyBlocked = environment.Start(123, "ironclad", 80, 80,
+            [BaseSpireIds.StrikeIronclad], "base-spire:inklet");
+        partiallyBlocked.State.Enemy.Block = 5;
+
+        environment.Step(partiallyBlocked, new PlayCardAction(0, partiallyBlocked.State.Enemy.Id));
+
+        Assert.Equal(0, partiallyBlocked.State.Enemy.PowerAmount(ContentId.Parse("base-spire:slippery-power")));
+    }
+
     public void BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues()
     {
         var definition = Build(new BaseSpirePackage(deadlyEnemies: true));
