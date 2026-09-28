@@ -58,6 +58,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ExpirePowerEffect), "expirePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SummonEnemyEffect), "summonEnemy")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SummonRandomEnemyEffect), "summonRandomEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(StunEnemyEffect), "stunEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SetEnemyHealthEffect), "setEnemyHealth")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
@@ -215,7 +216,12 @@ public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElemen
 public enum SummonSlotPlacement { NextAvailable, FirstAvailable, LastAvailable }
 public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null,
     IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null,
-    int? MaximumEnemyCount = null, SummonSlotPlacement SlotPlacement = SummonSlotPlacement.NextAvailable) : EffectNode;
+    int? MaximumEnemyCount = null, SummonSlotPlacement SlotPlacement = SummonSlotPlacement.NextAvailable,
+    IReadOnlyList<EnemyStartingPower>? AdditionalStartingPowers = null) : EffectNode;
+public sealed record SummonRandomEnemyEffect(IReadOnlyList<ContentId> Enemies,
+    IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null,
+    bool AvoidPreviousFromOwner = false, SummonSlotPlacement SlotPlacement = SummonSlotPlacement.NextAvailable,
+    IReadOnlyList<EnemyStartingPower>? AdditionalStartingPowers = null) : EffectNode;
 public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
@@ -359,6 +365,26 @@ internal static class EffectExecutor
             {
                 case SummonEnemyEffect summon:
                     QueueSummonedEnemies(session, owner, summon);
+                    break;
+                case SummonRandomEnemyEffect summonRandom:
+                    var eligible = summonRandom.Enemies;
+                    if (summonRandom.AvoidPreviousFromOwner)
+                    {
+                        var previous = state.Events.LastOrDefault(gameEvent => gameEvent.Type == "enemy_summoned"
+                            && gameEvent.Source == owner.Id);
+                        if (previous is not null)
+                        {
+                            var previousEnemy = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == previous.Target);
+                            if (previousEnemy is not null && eligible.Count > 1)
+                                eligible = eligible.Where(enemyId => enemyId != previousEnemy.Definition.Id).ToArray();
+                        }
+                    }
+                    var selectedEnemy = eligible[session.Random.Get("enemy-ai").NextInt(eligible.Count)];
+                    QueueSummonedEnemies(session, owner, new SummonEnemyEffect(selectedEnemy,
+                        StartingPowers: summonRandom.StartingPowers,
+                        MaximumLivingEnemyCount: summonRandom.MaximumLivingEnemyCount,
+                        SlotPlacement: summonRandom.SlotPlacement,
+                        AdditionalStartingPowers: summonRandom.AdditionalStartingPowers));
                     break;
                 case StunEnemyEffect stun:
                     var stunnedCreature = ResolveSingleTarget(state, owner, target, stun.Target);
@@ -1200,6 +1226,11 @@ internal static class EffectExecutor
         if (state.TotalEnemySlots is not null)
             allowedCount = Math.Min(allowedCount, availableSlots.Count);
         var startingPowers = summon.StartingPowers ?? definition.StartingPowers;
+        if (summon.AdditionalStartingPowers is { Count: > 0 } additionalPowers)
+            startingPowers = startingPowers.Concat(additionalPowers)
+                .GroupBy(power => power.Power)
+                .Select(group => new EnemyStartingPower(group.Key, group.Sum(power => power.Amount)))
+                .ToArray();
         var spawned = new List<(string InstanceId, EnemyCombatState State)>(allowedCount);
         for (var i = 0; i < allowedCount; i++)
         {

@@ -1822,6 +1822,27 @@ public sealed class ContentRegistry
                             throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with unknown starting Power '{startingPower.Power}'.");
                     }
                 }
+                ValidateSummonStartingPowers(summon.AdditionalStartingPowers, owner);
+                break;
+            case SummonRandomEnemyEffect summonRandom:
+                if (summonRandom.Enemies.Count < 2 || summonRandom.Enemies.Distinct().Count() != summonRandom.Enemies.Count)
+                    throw new InvalidOperationException($"{owner} must choose at least two distinct summoned enemies.");
+                foreach (var enemyId in summonRandom.Enemies)
+                    if (!_enemies.ContainsKey(enemyId))
+                        throw new InvalidOperationException($"{owner} randomly summons unknown enemy '{enemyId}'.");
+                if (summonRandom.MaximumLivingEnemyCount is { } randomMaximumLiving)
+                    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(randomMaximumLiving);
+                if (!Enum.IsDefined(summonRandom.SlotPlacement))
+                    throw new InvalidOperationException($"{owner} has an invalid random summon slot placement.");
+                if (summonRandom.StartingPowers is { } randomSummonPowers)
+                    foreach (var startingPower in randomSummonPowers)
+                    {
+                        startingPower.Power.Validate();
+                        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(startingPower.Amount);
+                        if (!_powers.ContainsKey(startingPower.Power))
+                            throw new InvalidOperationException($"{owner} summons with unknown starting Power '{startingPower.Power}'.");
+                    }
+                ValidateSummonStartingPowers(summonRandom.AdditionalStartingPowers, owner);
                 break;
             case SetEnemyHealthEffect setHealth:
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(setHealth.Minimum);
@@ -2014,6 +2035,18 @@ public sealed class ContentRegistry
                 break;
             case CustomEffect custom when !_customEffects.ContainsKey(custom.Handler):
                 throw new InvalidOperationException($"{owner} references unknown custom effect '{custom.Handler}'.");
+        }
+    }
+
+    private void ValidateSummonStartingPowers(IReadOnlyList<EnemyStartingPower>? powers, string owner)
+    {
+        if (powers is null) return;
+        foreach (var startingPower in powers)
+        {
+            startingPower.Power.Validate();
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(startingPower.Amount);
+            if (!_powers.ContainsKey(startingPower.Power))
+                throw new InvalidOperationException($"{owner} summons with unknown starting Power '{startingPower.Power}'.");
         }
     }
 

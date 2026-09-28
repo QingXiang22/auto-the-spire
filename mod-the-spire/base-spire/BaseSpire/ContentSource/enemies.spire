@@ -179,6 +179,12 @@ package base-spire {
     skipFirstWhenAppliedToEnemy = true
   }
 
+  power HighVoltage {
+    trigger = afterEnemyTurnEnd
+    effect = applyScaledPower(Strength, 0, 1,
+      count=targetPowerAmount(HighVoltage, target=self), target=self)
+  }
+
   affliction Smog {
     addKeywords = [Unplayable]
   }
@@ -1121,5 +1127,59 @@ package base-spire {
       candidate(twoTailedRatScreechMove, weight=1, cooldown=3, when=not(condition(SummonAvailable))),
       candidate(twoTailedRatCallForBackup, weight=9, maxUsesPerCombat=1, when=condition(SummonAvailable))
     )
+  }
+
+  enemy Fabricator {
+    hp = variants(default=range(150, 150), tough=range(155, 155))
+    moves = actions(
+      fabricatorMakeBots = sequence(
+        summonRandomEnemy([Guardbot, Noisebot], avoidPrevious=true,
+          additionalPowers=[power(Minion, 1)], maxLivingEnemies=5),
+        summonRandomEnemy([Zapbot, Stabbot], avoidPrevious=true,
+          additionalPowers=[power(Minion, 1)], maxLivingEnemies=5)
+      ),
+      fabricatorStrike = sequence(
+        attack(variants(default=18, deadly=21), target=player),
+        summonRandomEnemy([Zapbot, Stabbot], avoidPrevious=true,
+          additionalPowers=[power(Minion, 1)], maxLivingEnemies=5)
+      ),
+      fabricatorDisintegrate = attack(variants(default=11, deadly=13), target=player)
+    )
+    behavior = chooseWithLimits(
+      candidate(fabricatorMakeBots, when=metric(LivingAllies, LessThan, 4)),
+      candidate(fabricatorStrike, when=metric(LivingAllies, LessThan, 4)),
+      candidate(fabricatorDisintegrate, when=metric(LivingAllies, AtLeast, 4))
+    )
+  }
+
+  enemy Zapbot {
+    hp = variants(default=range(18, 23), tough=range(19, 24))
+    moves = actions(zapbotAttack = attack(variants(default=14, deadly=15), target=player))
+    behavior = loop(zapbotAttack)
+    startingPowers = [power(HighVoltage, 2)]
+  }
+
+  enemy Stabbot {
+    hp = variants(default=range(18, 23), tough=range(19, 24))
+    moves = actions(stabbotAttack = sequence(
+      attack(variants(default=11, deadly=12), target=player),
+      applyPower(Frail, 1, target=player)
+    ))
+    behavior = loop(stabbotAttack)
+  }
+
+  enemy Guardbot {
+    hp = variants(default=range(16, 20), tough=range(17, 21))
+    moves = actions(guardbotGuard = gainBlock(15, target=otherAllies, onlyEnemy=Fabricator))
+    behavior = loop(guardbotGuard)
+  }
+
+  enemy Noisebot {
+    hp = variants(default=range(18, 23), tough=range(19, 24))
+    moves = actions(noisebotConfuse = sequence(
+      addCards(Dazed, pile=discard, target=self, position=Random),
+      addCards(Dazed, pile=draw, target=self, position=Random)
+    ))
+    behavior = loop(noisebotConfuse)
   }
 }
