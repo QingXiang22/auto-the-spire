@@ -547,6 +547,28 @@ public sealed class CombatSliceTests
         static int[] Trace(CombatEnvironment combat, uint seed)
         {
             var session = combat.Start(seed, "ironclad", 100, 100, [], "random-enemy:enemy");
+            var expectedRandom = new RandomStreams(seed).Get("enemy-ai");
+            var branch = new[] { (Damage: 1, Weight: 1), (Damage: 2, Weight: 2), (Damage: 3, Weight: 3) };
+            var expectedDamages = new List<int>();
+            int? previousDamage = null;
+            for (var i = 0; i < 9; i++)
+            {
+                var eligible = branch.Where(choice => choice.Damage != previousDamage).ToArray();
+                var roll = expectedRandom.NextFloat(eligible.Sum(choice => (float)choice.Weight));
+                var expectedDamage = eligible[^1].Damage;
+                foreach (var choice in eligible)
+                {
+                    roll -= choice.Weight;
+                    if (roll <= 0f)
+                    {
+                        expectedDamage = choice.Damage;
+                        break;
+                    }
+                }
+                expectedDamages.Add(expectedDamage);
+                previousDamage = expectedDamage;
+            }
+
             var damages = new List<int> { combat.Observe(session).IntentDamage };
             for (var i = 0; i < 8; i++)
             {
@@ -554,6 +576,7 @@ public sealed class CombatSliceTests
                 damages.Add(combat.Observe(session).IntentDamage);
             }
             Assert.Equal(9, session.Random.Get("enemy-ai").Counter);
+            Assert.Equal(expectedDamages.AsEnumerable(), damages.AsEnumerable());
             return damages.ToArray();
         }
 

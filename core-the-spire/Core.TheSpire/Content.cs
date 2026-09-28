@@ -991,11 +991,11 @@ public sealed record EnemyDefinition
             _ = random.NextFloat();
             return GetActionIndex(transition.Choices[0].ActionId);
         }
-        var roll = random.NextInt(choices.Sum(choice => choice.Weight));
+        var roll = random.NextFloat(choices.Sum(choice => (float)choice.Weight));
         foreach (var choice in choices)
         {
-            if (roll < choice.Weight) return GetActionIndex(choice.ActionId);
             roll -= choice.Weight;
+            if (roll <= 0f) return GetActionIndex(choice.ActionId);
         }
         throw new InvalidOperationException("Enemy transition weight selection failed.");
     }
