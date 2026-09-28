@@ -97,6 +97,13 @@ package base-spire {
       sourcePower=Vulnerable)]
   }
 
+  power AggressionPower {
+    on = [trigger(event=afterOwnerTurnStart,
+      effect=randomMoveCards(from=discard, to=hand,
+        count=scaled(0, 1, count=targetPowerAmount(AggressionPower, target=self)),
+        filter=attack, after=upgradeSelectedCard()))]
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }
