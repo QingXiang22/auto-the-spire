@@ -457,19 +457,20 @@ internal sealed class RunState
         RoomStack.Clear();
         CurrentPointId = Map.StartPointId;
         var entryPoint = Map.Points[CurrentPointId];
-        if (entryPoint.Type == MapPointType.Ancient)
+        var ancientEventId = RoomContentStates[ActIndex]?.AncientEventId;
+        if (entryPoint.Type == MapPointType.Ancient && ancientEventId is { } selectedAncient)
         {
             CurrentMapPointType = MapPointType.Ancient;
             RoomStack.Add(new RunRoomFrame(RunRoomType.Event, entryPoint.Id, false, null,
-                RoomContentStates[ActIndex]?.AncientEventId,
-                GetInitialEventPageId(RoomContentStates[ActIndex]?.AncientEventId), [],
-                GetEventOptions(RoomContentStates[ActIndex]?.AncientEventId)));
+                selectedAncient, GetInitialEventPageId(selectedAncient), [],
+                GetEventOptions(selectedAncient)));
             Phase = RoomStack[^1].EventOptions.Count > 0 ? RunPhase.ResolveEvent : RunPhase.ResolveRoom;
             VisitHistory.Add(new RunMapVisitView(ActIndex, entryPoint.Id, entryPoint.Type,
                 Array.AsReadOnly(new[] { RunRoomType.Event })));
         }
         else
         {
+            // An Ancient start without an assigned event must expose its route rather than stall the run.
             CurrentMapPointType = null;
             Phase = RunPhase.ChooseMapPoint;
         }
