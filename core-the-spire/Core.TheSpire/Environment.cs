@@ -653,8 +653,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         break;
                     }
                     var actingEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex];
-                    if (!actingEnemy.Creature.Powers.Any(power => power.Value > 0
-                        && state.Definition.Powers[power.Key].PreventsBlockClear))
+                    if (ShouldClearBlock(session, actingEnemy.Creature))
                         actingEnemy.Creature.Block = 0;
                     if (actingEnemy.SkipNextAction)
                     {
@@ -730,8 +729,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         state.Turn++;
                         state.CardPlayHistory.Reset();
                         state.Player.Energy = state.PlayerMaxEnergy;
-                        if (state.Definition.Hooks.All(hook => hook.ShouldClearBlock(
-                            new RuleHookContext(session, hook.Id), state.Player.Id)))
+                        if (ShouldClearBlock(session, state.Player.Creature))
                             state.Player.Creature.Block = 0;
                         state.IsPlayerTurn = true;
                         state.Emit(session, "player_turn_start", state.Player.Id, state.Player.Id, state.Turn);
@@ -891,6 +889,16 @@ public sealed class CombatEnvironment(GameDefinition definition)
         foreach (var card in flushed) state.Emit(session, "card_moved", state.Player.Id, card.InstanceId, 1);
         state.EndTurnStage = EndTurnResolutionStage.AfterFlushHooks;
         state.FlushHookIndex = 0;
+    }
+
+    private static bool ShouldClearBlock(GameSession session, EntityState creature)
+    {
+        var state = session.State;
+        if (creature.Powers.Any(power => power.Value > 0
+            && state.Definition.Powers[power.Key].PreventsBlockClear))
+            return false;
+        return state.Definition.Hooks.All(hook => hook.ShouldClearBlock(
+            new RuleHookContext(session, hook.Id), creature.Id));
     }
 
     private static bool ShouldFlush(GameSession session) => session.State.Definition.Hooks.All(hook =>

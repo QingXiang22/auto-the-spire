@@ -285,8 +285,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         foreach (var power in BaseSpireContent.LoadPotionPowers()) registry.Register(power);
         registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
         registry.Register(new WellLaidPlansHook());
-        registry.Register(new PowerDefinition(BaseSpireIds.BarricadePower));
-        registry.Register(new BarricadeHook());
         var enemyContent = BaseSpireContent.LoadEnemyBehavior(new ContentVariantProfile(deadlyEnemies, toughEnemies));
         foreach (var affliction in enemyContent.Afflictions) registry.Register(affliction);
         foreach (var power in enemyContent.Powers) registry.Register(power);

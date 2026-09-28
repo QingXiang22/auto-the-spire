@@ -3421,6 +3421,7 @@ public sealed class CombatSliceTests
         var state = env.Start(72, "ironclad", 56, 65, [BaseSpireIds.Barricade],
             BaseSpireIds.DampCultist.ToString());
         var barricade = state.State.Definition.Cards[BaseSpireIds.Barricade];
+        Assert.True(state.State.Definition.Powers[BaseSpireIds.BarricadePower].PreventsBlockClear);
         Assert.Equal(3, barricade.ResolveCost(new CardInstance("barricade-basic", BaseSpireIds.Barricade)));
         Assert.Equal(2, barricade.ResolveCost(new CardInstance("barricade-upgraded", BaseSpireIds.Barricade, 1)));
         env.Step(state, new PlayCardAction(0, state.State.Player.Id));
