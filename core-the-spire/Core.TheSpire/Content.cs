@@ -215,6 +215,8 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public EffectNode? AfterAutoPostPlay { get; init; }
     public EffectNode? UpgradedAfterAutoPostPlay { get; init; }
     public CardKeywords UpgradedKeywords { get; init; }
+    public CardKeywords RemovedUpgradedKeywords { get; init; }
+    public bool MultiplayerOnly { get; init; }
     public EffectNode? OnEnterCombat { get; init; }
     public EffectNode? UpgradedOnEnterCombat { get; init; }
     public CardPlayListener? BeforeCardPlayed { get; init; }
@@ -222,7 +224,8 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public CardPlayListener? AfterCardPlayed { get; init; }
     public CardPlayListener? UpgradedAfterCardPlayed { get; init; }
     public bool HasUpgrade => UpgradedEffect is not null || UpgradedCost is not null
-        || UpgradedKeywords != CardKeywords.None || UpgradedOnExhaust is not null
+        || UpgradedKeywords != CardKeywords.None || RemovedUpgradedKeywords != CardKeywords.None
+        || UpgradedOnExhaust is not null
         || UpgradedOnEnterCombat is not null || UpgradedBeforeCardPlayed is not null || UpgradedAfterCardPlayed is not null
         || UpgradedAfterAutoPostPlay is not null
         || Variables.Any(variable => variable.UpgradedValue is not null);
@@ -280,7 +283,9 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public CardKeywords ResolveKeywords(CardInstance instance)
     {
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
-        return instance.UpgradeLevel > 0 ? Keywords | UpgradedKeywords : Keywords;
+        return instance.UpgradeLevel > 0
+            ? (Keywords | UpgradedKeywords) & ~RemovedUpgradedKeywords
+            : Keywords;
     }
 
 }
@@ -1240,6 +1245,8 @@ public sealed class ContentRegistry
             foreach (var poolId in card.PoolIds)
                 if (!_cardPools.ContainsKey(poolId))
                     throw new InvalidOperationException($"Card '{card.Id}' references unknown card pool '{poolId}'.");
+            if (card.MultiplayerOnly && card.PoolIds.Count > 0)
+                throw new InvalidOperationException($"Multiplayer-only card '{card.Id}' cannot belong to a single-player card pool.");
             if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target)
                 || card.Target == TargetSelector.OtherAllies || !Enum.IsDefined(card.Rarity)
                 || !Enum.IsDefined(card.CostKind))
@@ -1251,7 +1258,10 @@ public sealed class ContentRegistry
             if ((card.Keywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
                 | CardKeywords.Retain | CardKeywords.Innate)) != 0
                 || (card.UpgradedKeywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
-                    | CardKeywords.Retain | CardKeywords.Innate)) != 0)
+                    | CardKeywords.Retain | CardKeywords.Innate)) != 0
+                || (card.RemovedUpgradedKeywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal
+                    | CardKeywords.Unplayable | CardKeywords.Retain | CardKeywords.Innate)) != 0
+                || (card.UpgradedKeywords & card.RemovedUpgradedKeywords) != 0)
                 throw new InvalidOperationException($"Card '{card.Id}' contains unsupported keywords.");
             if (card.DamageValueVariable is { } damageVariable
                 && !card.Variables.Any(variable => variable.Id == damageVariable))
@@ -1290,6 +1300,8 @@ public sealed class ContentRegistry
             foreach (var cardId in pool.Cards)
                 if (!_cards.ContainsKey(cardId))
                     throw new InvalidOperationException($"Card pool '{pool.Id}' references unknown card '{cardId}'.");
+                else if (_cards[cardId].MultiplayerOnly)
+                    throw new InvalidOperationException($"Card pool '{pool.Id}' includes multiplayer-only card '{cardId}'.");
         var resolvedCardPools = _cardPools.ToDictionary(pair => pair.Key, pair =>
             new CardPoolDefinition(pair.Key, pair.Value.Cards.Concat(_cards.Values
                 .Where(card => card.PoolIds.Contains(pair.Key) && !pair.Value.Cards.Contains(card.Id))
@@ -1639,6 +1651,8 @@ public sealed class ContentRegistry
                 if (!IsSingleEffectTarget(loseHp.Target))
                     throw new InvalidOperationException($"{owner} has an invalid HP loss target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
+                if (!ValidDamageProperties(loseHp.Properties))
+                    throw new InvalidOperationException($"{owner} has invalid HP loss properties.");
                 break;
             case HealEffect heal:
                 if (!IsSingleEffectTarget(heal.Target))
@@ -1687,6 +1701,9 @@ public sealed class ContentRegistry
                 break;
             case GainBlockFromCurrentBlockEffect gainBlockFromBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlockFromBlock.Multiplier);
+                if (!IsSingleOrOpponentGroupTarget(gainBlockFromBlock.Target)
+                    && gainBlockFromBlock.Target != TargetSelector.OtherAllies)
+                    throw new InvalidOperationException($"{owner} gains block from current block with an invalid target.");
                 break;
             case StunEnemyEffect stun when !IsSingleEffectTarget(stun.Target):
                 throw new InvalidOperationException($"{owner} stuns an enemy with an invalid target.");

@@ -67,7 +67,7 @@ public static class SpireCombatDslCompiler
                 "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
                 "afterCardPlayed", "upgradedAfterCardPlayed", "afterAutoPostPlay",
                 "upgradedAfterAutoPostPlay", "turnEndInHand", "variables", "damageVariable", "damageValue",
-                "upgradedDamageValue");
+                "upgradedDamageValue", "removedUpgradedKeywords", "multiplayerOnly");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -115,6 +115,10 @@ public static class SpireCombatDslCompiler
                     && upgradedDamageValueNode is not DslNumberNode ? CompileScaledAmount(upgradedDamageValueNode) : null,
                 UpgradedKeywords = properties.TryGetValue("upgradedKeywords", out var upgradedKeywordsNode)
                     ? ParseKeywords(upgradedKeywordsNode) : CardKeywords.None,
+                RemovedUpgradedKeywords = properties.TryGetValue("removedUpgradedKeywords", out var removedUpgradedKeywordsNode)
+                    ? ParseKeywords(removedUpgradedKeywordsNode) : CardKeywords.None,
+                MultiplayerOnly = properties.TryGetValue("multiplayerOnly", out var multiplayerOnlyNode)
+                    && Boolean(multiplayerOnlyNode),
                 Variables = properties.TryGetValue("variables", out var variablesNode)
                     ? CompileCardVariables(variablesNode) : Array.Empty<CardVariableDefinition>(),
                 OnExhaust = properties.TryGetValue("onExhaust", out var exhaustNode) ? CompileEffect(exhaustNode) : null,
@@ -202,12 +206,15 @@ public static class SpireCombatDslCompiler
                         OptionalTarget(call, "target", TargetSelector.Self),
                         onlyEnemy is null ? null : Id(Name(onlyEnemy)));
                 case "gainBlockFromCurrentBlock":
-                    CheckShape(call, 0, 0, "multiplier");
-                    return new GainBlockFromCurrentBlockEffect(OptionalInteger(call, "multiplier", 1));
-                case "loseHp":
-                    CheckShape(call, 1, 1, "target");
-                    return new LoseHpEffect(Integer(Argument(call, 0)),
+                    CheckShape(call, 0, 0, "multiplier", "target");
+                    return new GainBlockFromCurrentBlockEffect(OptionalInteger(call, "multiplier", 1),
                         OptionalTarget(call, "target", TargetSelector.Self));
+                case "loseHp":
+                    CheckShape(call, 1, 1, "target", "properties");
+                    return new LoseHpEffect(Integer(Argument(call, 0)),
+                        OptionalTarget(call, "target", TargetSelector.Self),
+                        OptionalArgument(call, "properties") is { } hpLossPropertiesNode
+                            ? ParseDamageProperties(hpLossPropertiesNode) : DamageProperties.None);
                 case "heal":
                     CheckShape(call, 1, 1, "target");
                     return new HealEffect(Integer(Argument(call, 0)),
@@ -703,7 +710,7 @@ public static class SpireCombatDslCompiler
         private static TargetSelector ParseTarget(DslValueNode node) => Name(node) switch
         {
             "self" => TargetSelector.Self,
-            "enemy" => TargetSelector.SelectedTarget,
+            "enemy" or "anyAlly" => TargetSelector.SelectedTarget,
             "firstEnemy" => TargetSelector.FirstEnemy,
             "allEnemies" => TargetSelector.AllOpponents,
             "randomEnemy" => TargetSelector.RandomEnemy,
