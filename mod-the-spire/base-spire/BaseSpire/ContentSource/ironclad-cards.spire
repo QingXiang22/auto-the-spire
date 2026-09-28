@@ -54,6 +54,13 @@ package base-spire {
     upgradedPlay = applyPower(ViciousPower, 2)
   }
 
+  card StoneArmor {
+    pools = [IroncladCardPool]
+    type = power rarity = uncommon cost = 1 target = self
+    play = applyPower(PlatingPower, 4)
+    upgradedPlay = applyPower(PlatingPower, 6)
+  }
+
   card InfernalBlade {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]
