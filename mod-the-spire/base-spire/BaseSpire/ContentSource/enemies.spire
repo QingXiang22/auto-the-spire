@@ -366,4 +366,17 @@ package base-spire {
       edge(frogKnightBeetleCharge, frogKnightTongueLash)
     ])
   }
+
+  enemy HauntedShip {
+    hp = variants(default=range(63, 63), tough=range(67, 67))
+    moves = actions(
+      hauntedShipSwipe = attack(variants(default=13, deadly=14), target=player),
+      hauntedShipStomp = repeat(3, attack(variants(default=4, deadly=5), target=player)),
+      hauntedShipHaunt = sequence(
+        applyPower(Weak, 3, target=player),
+        addCards(Dazed, count=5, pile=discard, target=player)
+      )
+    )
+    behavior = startWith(hauntedShipHaunt, then=cycle(hauntedShipSwipe, hauntedShipStomp))
+  }
 }
