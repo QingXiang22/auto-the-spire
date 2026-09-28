@@ -193,6 +193,8 @@ internal sealed class GameState
     private readonly List<GameEvent> _events = [];
     private readonly IReadOnlyList<GameEvent> _eventView;
     private readonly ScopedIntState _modInts;
+    private long _nextCardPlayExecutionId;
+    private int _playerTurnEventStartSequence;
 
     internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
     {
@@ -223,6 +225,7 @@ internal sealed class GameState
     public int CurrentEnemyIndex { get; internal set; }
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
+    internal long NextCardPlayExecutionId() => checked(++_nextCardPlayExecutionId);
     public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0))
         && PendingChoice is null && PendingCardSelection is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }
@@ -261,8 +264,9 @@ internal sealed class GameState
         bool causedByEtherealExhaustion = false, ContentId? affectedPower = null)
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
-            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower);
+            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId);
         _events.Add(gameEvent);
+        if (type == "player_turn_start") _playerTurnEventStartSequence = gameEvent.Sequence + 1;
         if (type == "card_exhausted" && source == Player.Id)
             LastPlayerCardExhaustTurn = Turn;
         if ((type is "damage" or "hp_loss") && target == Player.Id && amount > 0)
@@ -576,6 +580,29 @@ internal sealed class GameState
         }
     }
 
+    internal int ModifyBlockGain(EntityState owner, int amount)
+    {
+        if (amount <= 0) return amount;
+        var currentPlayId = CurrentCardPlay?.ExecutionId;
+        foreach (var (powerId, powerAmount) in owner.Powers.ToArray())
+        {
+            if (powerAmount <= 0) continue;
+            foreach (var modifier in Definition.Powers[powerId].BlockGainModifiers)
+            {
+                if (modifier.PlayerOnly && owner.IsEnemy) continue;
+                var earlierEntries = _events.Count(gameEvent =>
+                    gameEvent.Sequence >= _playerTurnEventStartSequence
+                    && gameEvent.Type == "block" && gameEvent.Amount > 0 && gameEvent.Target == owner.Id
+                    && (gameEvent.Properties & modifier.RequiredProperties) == modifier.RequiredProperties
+                    && (gameEvent.Properties & modifier.ExcludedProperties) == 0
+                    && gameEvent.CardPlayExecutionId != currentPlayId);
+                if (earlierEntries < checked(powerAmount * modifier.PriorEntriesPerPowerStack))
+                    amount = checked(amount * modifier.Multiplier);
+            }
+        }
+        return amount;
+    }
+
     internal CardInstance? DrawOne(GameSession session)
     {
         if (HasPowerRole(Player.Creature, PowerRole.NoDraw)
@@ -675,14 +702,15 @@ internal sealed class GameState
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
     DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null,
-    bool CausedByEtherealExhaustion = false, ContentId? AffectedPower = null);
+    bool CausedByEtherealExhaustion = false, ContentId? AffectedPower = null,
+    long? CardPlayExecutionId = null);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {
     internal EffectCountScope? Counts { get; init; }
 }
 internal sealed record CardPlayFrame(CardInstance Card, int XEnergy, EntityState? Target,
-    CardPile? ResultPile, bool IsAutoPlay);
+    CardPile? ResultPile, bool IsAutoPlay, long ExecutionId = 0);
 internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
     EntityState owner, EntityState? target, CardInstance? selectedCard) : PendingCardSelectionState
 {

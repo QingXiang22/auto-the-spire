@@ -49,6 +49,7 @@ internal static class CombatCardPlay
 
     private static void QueueFrame(GameState state, CardPlayFrame frame)
     {
+        frame = frame with { ExecutionId = state.NextCardPlayExecutionId() };
         state.CardPlayFrames.Add(frame);
         QueuePhase(state, frame, CardPlayPhase.Initialize);
     }
