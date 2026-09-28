@@ -311,6 +311,11 @@ public static class SpireCombatDslCompiler
                     return new SummonRandomEnemyEffect(randomEnemyIds, randomStartingPowers, randomMaxLiving,
                         OptionalBoolean(call, "avoidPrevious", false),
                         OptionalEnum(call, "slot", SummonSlotPlacement.NextAvailable), randomAdditionalPowers);
+                case "respawnSelf":
+                    CheckShape(call, 1, 1, "startingAction");
+                    var respawnStartingAction = OptionalArgument(call, "startingAction");
+                    return new RespawnSelfEffect(ReferenceId(Argument(call, 0)),
+                        respawnStartingAction is null ? null : ReferenceId(respawnStartingAction));
                 case "stun":
                     CheckShape(call, 0, 0, "target");
                     return new StunEnemyEffect(OptionalTarget(call, "target", TargetSelector.Self));

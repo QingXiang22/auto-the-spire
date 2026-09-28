@@ -548,6 +548,17 @@
       ]
     },
     {
+      "id": "base-spire:axebots-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:axebot", "base-spire:axebot"],
+          "slotCount": 2,
+          "slotIndices": [0, 1]
+        }
+      ]
+    },
+    {
       "id": "base-spire:two-tailed-rats-normal",
       "roomType": "monster",
       "formations": [

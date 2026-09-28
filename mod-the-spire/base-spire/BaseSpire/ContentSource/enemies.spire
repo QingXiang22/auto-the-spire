@@ -185,6 +185,11 @@ package base-spire {
       count=targetPowerAmount(HighVoltage, target=self), target=self)
   }
 
+  power Stock {
+    trigger = afterOwnerDeath
+    effect = respawnSelf(Stock, startingAction=axebotBootUp)
+  }
+
   affliction Smog {
     addKeywords = [Unplayable]
   }
@@ -1149,6 +1154,50 @@ package base-spire {
       candidate(fabricatorMakeBots, when=metric(LivingAllies, LessThan, 4)),
       candidate(fabricatorStrike, when=metric(LivingAllies, LessThan, 4)),
       candidate(fabricatorDisintegrate, when=metric(LivingAllies, AtLeast, 4))
+    )
+  }
+
+  enemy Axebot {
+    hp = variants(default=range(40, 44), tough=range(42, 46))
+    startingPowers = [power(Stock, 2)]
+    moves = actions(
+      axebotBootUp = sequence(gainBlock(10), applyPower(Strength, 1, target=self)),
+      axebotOneTwo = repeat(2, attack(variants(default=5, deadly=6), target=player)),
+      axebotSharpen = applyPower(Strength, 4, target=self),
+      axebotHammerUppercut = sequence(
+        attack(variants(default=8, deadly=10), target=player),
+        applyPower(Weak, 1, target=player),
+        applyPower(Frail, 1, target=player)
+      )
+    )
+    behavior = startWithChoice(
+      chooseWithLimits(
+        candidate(axebotOneTwo, weight=2),
+        candidate(axebotSharpen, weight=1, cooldown=1),
+        candidate(axebotHammerUppercut, weight=2)
+      ),
+      then=graph(start=axebotOneTwo, edges=[
+        edge(axebotBootUp, chooseWithLimits(
+          candidate(axebotOneTwo, weight=2),
+          candidate(axebotSharpen, weight=1, cooldown=1),
+          candidate(axebotHammerUppercut, weight=2)
+        )),
+        edge(axebotOneTwo, chooseWithLimits(
+          candidate(axebotOneTwo, weight=2),
+          candidate(axebotSharpen, weight=1, cooldown=1),
+          candidate(axebotHammerUppercut, weight=2)
+        )),
+        edge(axebotSharpen, chooseWithLimits(
+          candidate(axebotOneTwo, weight=2),
+          candidate(axebotSharpen, weight=1, cooldown=1),
+          candidate(axebotHammerUppercut, weight=2)
+        )),
+        edge(axebotHammerUppercut, chooseWithLimits(
+          candidate(axebotOneTwo, weight=2),
+          candidate(axebotSharpen, weight=1, cooldown=1),
+          candidate(axebotHammerUppercut, weight=2)
+        ))
+      ])
     )
   }
 

@@ -912,6 +912,37 @@ public sealed class CombatSliceTests
         Assert.True(sawDoubleSummon);
     }
 
+    public void AxebotStockRespawnsInItsSlotWithADecrementedCounter()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(214, "ironclad", 56, 65, [], BaseSpireIds.AxebotsNormal);
+        Assert.Equal(2, session.State.Enemies.Count);
+        Assert.True(new[] { 0, 1 }.SequenceEqual(session.State.Enemies.Select(enemy => enemy.SlotIndex)));
+        var axebot = session.State.Enemies[0];
+        Assert.Equal(2, axebot.Creature.PowerAmount(ContentId.Parse("base-spire:stock")));
+
+        for (var expectedStock = 1; expectedStock >= 0; expectedStock--)
+        {
+            var slot = axebot.SlotIndex;
+            EffectExecutor.Execute(session, session.State.Player.Creature,
+                new AttackEffect(1000, TargetSelector.SelectedTarget), axebot.Creature);
+            axebot = session.State.Enemies.Single(enemy => enemy.Creature.Hp > 0 && enemy.SlotIndex == slot);
+            Assert.Equal(expectedStock, axebot.Creature.PowerAmount(ContentId.Parse("base-spire:stock")));
+            Assert.Equal(ContentId.Parse("base-spire:axebot-boot-up"),
+                axebot.Definition.Actions[axebot.ActionIndex].Id);
+            EffectExecutor.Execute(session, axebot.Creature,
+                axebot.Definition.Actions[axebot.ActionIndex].Effect);
+            Assert.Equal(10, axebot.Creature.Block);
+            Assert.Equal(1, axebot.Creature.PowerAmount(BaseSpireIds.Strength));
+        }
+
+        var bodiesBeforeFinalDeath = session.State.Enemies.Count;
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(1000, TargetSelector.SelectedTarget), axebot.Creature);
+        Assert.Equal(bodiesBeforeFinalDeath, session.State.Enemies.Count);
+        Assert.Equal(0, axebot.Creature.Hp);
+    }
+
     public void EnemyActionPowerReferencesAreValidatedWhenBuildingContent()
     {
         var registry = new ContentRegistry();
@@ -2450,9 +2481,9 @@ public sealed class CombatSliceTests
         var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
         var content = SpireCombatBehaviorDslCompiler.Compile(package);
 
-        Assert.Equal(30, content.Powers.Count);
-        Assert.Equal(68, content.Enemies.Count);
-        Assert.Equal(68, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(31, content.Powers.Count);
+        Assert.Equal(69, content.Enemies.Count);
+        Assert.Equal(69, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -6176,6 +6207,7 @@ internal static class Program
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();
         tests.FabricatorSummonsRandomBotsWithinReusedFormationSlots();
+        tests.AxebotStockRespawnsInItsSlotWithADecrementedCounter();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.BaseTurretOperatorEncounterUsesAllyTargetingAndLivingAllyConditions();
