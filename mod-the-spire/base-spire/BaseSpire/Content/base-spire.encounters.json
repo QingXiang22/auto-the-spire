@@ -239,6 +239,17 @@
       }
     },
     {
+      "id": "base-spire:toadpoles-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:toadpole", "base-spire:toadpole"],
+      "isWeak": true,
+      "tags": ["base-spire:toadpoles"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:toadpole-spiken",
+        "1": "base-spire:toadpole-whirl"
+      }
+    },
+    {
       "id": "base-spire:frog-knight-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:frog-knight"]

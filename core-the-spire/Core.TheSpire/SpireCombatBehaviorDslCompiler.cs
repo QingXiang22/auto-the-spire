@@ -717,11 +717,15 @@ public static class SpireCombatBehaviorDslCompiler
         {
             if (effect is SequenceEffect sequence)
             {
+                (IntentKind Intent, int IntentDamage) fallback = (IntentKind.None, 0);
                 foreach (var child in sequence.Effects)
                 {
                     var description = DescribeIntent(child);
-                    if (description.Intent != IntentKind.None) return description;
+                    if (description.Intent == IntentKind.Attack) return description;
+                    if (fallback.Intent == IntentKind.None && description.Intent != IntentKind.None)
+                        fallback = description;
                 }
+                return fallback;
             }
             if (effect is RepeatEffect repeat)
             {

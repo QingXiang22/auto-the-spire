@@ -745,6 +745,23 @@ package base-spire {
     ])
   }
 
+  enemy Toadpole {
+    hp = variants(default=range(21, 25), tough=range(22, 26))
+    moves = actions(
+      toadpoleSpiken = applyPower(Thorns, 2, target=self),
+      toadpoleSpikeSpit = sequence(
+        applyPower(Thorns, -2, target=self),
+        repeat(3, attack(variants(default=3, deadly=4), target=player))
+      ),
+      toadpoleWhirl = attack(variants(default=7, deadly=8), target=player)
+    )
+    behavior = graph(start=toadpoleSpiken, edges=[
+      edge(toadpoleSpiken, toadpoleSpikeSpit),
+      edge(toadpoleSpikeSpit, toadpoleWhirl),
+      edge(toadpoleWhirl, toadpoleSpiken)
+    ])
+  }
+
   enemy SlimedBerserker {
     hp = variants(default=range(261, 261), tough=range(281, 281))
     moves = actions(
