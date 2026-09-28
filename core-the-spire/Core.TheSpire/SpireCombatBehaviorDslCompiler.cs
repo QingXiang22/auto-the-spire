@@ -415,7 +415,7 @@ public static class SpireCombatBehaviorDslCompiler
                 if (source.Intent is { } explicitIntent)
                 {
                     intent = explicitIntent;
-                    if (intent != IntentKind.Attack)
+                    if (intent is not (IntentKind.Attack or IntentKind.DeathBlow))
                     {
                         damage = 0;
                         hitCount = 1;

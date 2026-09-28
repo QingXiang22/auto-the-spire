@@ -9,6 +9,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AttackUsingBlockEffect), "attackUsingBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealEffect), "heal")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(KillEffect), "kill")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockFromCurrentBlockEffect), "gainBlockFromCurrentBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
@@ -110,6 +111,7 @@ public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelect
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self,
     DamageProperties Properties = DamageProperties.None) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
     DamageProperties? Properties = null, TargetSelector Target = TargetSelector.Self,
     ContentId? OnlyEnemy = null) : EffectNode;
@@ -341,6 +343,14 @@ internal static class EffectExecutor
                         state.Emit(session, "enemy_stunned", owner.Id, stunnedEnemy.Creature.Id, 1);
                     }
                     break;
+                case KillEffect kill:
+                    var killedCreature = ResolveSingleTarget(state, owner, target, kill.Target);
+                    if (killedCreature.Hp > 0)
+                    {
+                        killedCreature.Hp = 0;
+                        CompleteDeath(session, killedCreature, owner, selectedCard, DamageProperties.None);
+                    }
+                    break;
                 case SetEnemyHealthEffect setHealth:
                     if (owner.IsEnemy is false)
                         throw new InvalidOperationException("Setting enemy health requires an enemy action owner.");
@@ -516,9 +526,8 @@ internal static class EffectExecutor
                     hpLossTarget.Hp -= hpLost;
                     state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost,
                         loseHp.Properties, selectedCard);
-                    if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
                     if (wasAliveBeforeHpLoss && hpLossTarget.Hp == 0)
-                        QueuePowerTriggerEffects(session, hpLossTarget, PowerTrigger.AfterOwnerDeath, owner, selectedCard);
+                        CompleteDeath(session, hpLossTarget, owner, selectedCard, loseHp.Properties);
                     break;
                 case HealEffect heal:
                     if (heal.Amount < 0) throw new InvalidOperationException("Healing cannot be negative.");
@@ -1242,14 +1251,19 @@ internal static class EffectExecutor
         if (rawDamage > 0 && absorbed == rawDamage)
             state.Emit(session, "fully_blocked", owner.Id, victim.Id, (int)rawDamage, properties, cardSource);
         if (victim.Hp == 0)
-        {
-            state.RemovePowersAppliedBy(session, victim.Id);
-            QueuePowerTriggerEffects(session, victim, PowerTrigger.AfterOwnerDeath, owner, cardSource);
-            if (victim.IsEnemy)
-                foreach (var ally in state.Enemies.Select(enemy => enemy.Creature)
-                    .Where(ally => ally.Id != victim.Id && ally.Hp > 0))
-                    state.Emit(session, "ally_death", victim.Id, ally.Id, 1, properties, cardSource);
-        }
+            CompleteDeath(session, victim, owner, cardSource, properties);
+    }
+
+    private static void CompleteDeath(GameSession session, EntityState victim, EntityState source,
+        CardInstance? cardSource, DamageProperties properties)
+    {
+        var state = session.State;
+        state.RemovePowersAppliedBy(session, victim.Id);
+        QueuePowerTriggerEffects(session, victim, PowerTrigger.AfterOwnerDeath, source, cardSource);
+        if (victim.IsEnemy)
+            foreach (var ally in state.Enemies.Select(enemy => enemy.Creature)
+                .Where(ally => ally.Id != victim.Id && ally.Hp > 0))
+                state.Emit(session, "ally_death", victim.Id, ally.Id, 1, properties, cardSource);
     }
 
     private static void LoseMaxHp(GameSession session, EntityState source, EntityState target, int amount)

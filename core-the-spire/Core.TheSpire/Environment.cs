@@ -302,7 +302,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = session.State;
         var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
         var intent = enemy.SkipNextAction ? IntentKind.Stun : action.Intent;
-        var damage = intent == IntentKind.Attack ? CalculateIntentDamage(session, enemy, action) : 0;
+        var damage = intent is IntentKind.Attack or IntentKind.DeathBlow
+            ? CalculateIntentDamage(session, enemy, action) : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
             enemy.Creature.Block, enemy.Creature.Strength, intent, damage,
             new Dictionary<ContentId, int>(enemy.Creature.Powers))
@@ -317,7 +318,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
     private static int CalculateIntentDamage(GameSession session, EnemyCombatState enemy,
         EnemyActionDefinition action)
     {
-        if (action.Intent != IntentKind.Attack || action.IntentHitCount <= 0) return 0;
+        if (action.Intent is not (IntentKind.Attack or IntentKind.DeathBlow)
+            || action.IntentHitCount <= 0) return 0;
         var state = session.State;
         var perHit = action.IntentDamage / action.IntentHitCount;
         var damage = 0;
