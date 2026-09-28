@@ -477,6 +477,9 @@ internal sealed class GameState
             }
         }
         damage = (int)decimal.Floor(damage * incomingMultiplier);
+        foreach (var (powerId, amount) in target.Powers)
+            if (amount > 0 && Definition.Powers[powerId].DamageCapPerStack is { } capPerStack)
+                damage = Math.Min(damage, checked(capPerStack * amount));
         return Math.Max(0, damage);
     }
 

@@ -30,7 +30,8 @@ public sealed class EncounterEnemySlot
         new(enemyChoices, chooseRandomly: true, uniqueChoiceGroup);
 }
 
-public sealed record EncounterEnemySelection(ContentId EnemyId, ContentId? StartingActionOverride);
+public sealed record EncounterEnemySelection(ContentId EnemyId, ContentId? StartingActionOverride,
+    IReadOnlyList<ContentId>? StartingActionChoices = null);
 
 /// <summary>A complete ordered enemy lineup selected as one correlated encounter outcome.</summary>
 public sealed record EncounterFormationChoice

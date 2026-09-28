@@ -63,6 +63,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
     public IReadOnlyList<BlockGainModifierSubscription> BlockGainModifiers { get; init; } = Array.Empty<BlockGainModifierSubscription>();
     public decimal? BlockGainMultiplier { get; init; }
+    public int? DamageCapPerStack { get; init; }
     public IReadOnlyList<PowerVariableDefinition> Variables { get; init; } = Array.Empty<PowerVariableDefinition>();
 
     public void Validate()
@@ -79,6 +80,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
         if (BlockGainMultiplier is < 0m)
             throw new ArgumentOutOfRangeException(nameof(BlockGainMultiplier));
+        if (DamageCapPerStack is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(DamageCapPerStack));
         foreach (var adjustment in new[] { OnStackChange, OnExpire })
             if (adjustment is not null)
             {
@@ -634,9 +637,11 @@ public sealed class EncounterDefinition
     public EncounterDefinition(ContentId id, RunRoomType roomType, IEnumerable<ContentId> enemyIds,
         bool isWeak = false, IEnumerable<ContentId>? tags = null,
         IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
-        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null)
+        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null,
+        IReadOnlyDictionary<int, IReadOnlyList<ContentId>>? startingActionChoicesByEnemyIndex = null)
         : this(id, roomType, ToFixedSlots(enemyIds), isWeak, tags, startingActionsByEnemyIndex,
-            shouldGiveRewards, minGoldReward, maxGoldReward)
+            shouldGiveRewards, minGoldReward, maxGoldReward,
+            startingActionChoicesByEnemyIndex: startingActionChoicesByEnemyIndex)
     {
     }
 
@@ -644,7 +649,8 @@ public sealed class EncounterDefinition
         bool isWeak, IEnumerable<ContentId>? tags,
         IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex,
         bool shouldGiveRewards, int? minGoldReward, int? maxGoldReward,
-        IEnumerable<EncounterFormationChoice>? formations = null)
+        IEnumerable<EncounterFormationChoice>? formations = null,
+        IReadOnlyDictionary<int, IReadOnlyList<ContentId>>? startingActionChoicesByEnemyIndex = null)
     {
         id.Validate();
         ArgumentNullException.ThrowIfNull(enemySlots);
@@ -689,6 +695,21 @@ public sealed class EncounterDefinition
                 throw new ArgumentOutOfRangeException(nameof(startingActionsByEnemyIndex), "Starting action index must refer to an enemy in this encounter.");
             actionId.Validate();
         }
+        var startingActionChoices = startingActionChoicesByEnemyIndex?.ToDictionary(
+            pair => pair.Key, pair => (IReadOnlyList<ContentId>)Array.AsReadOnly(pair.Value.ToArray()))
+            ?? new Dictionary<int, IReadOnlyList<ContentId>>();
+        foreach (var (enemyIndex, choices) in startingActionChoices)
+        {
+            var slotCount = copiedFormations.Length > 0
+                ? copiedFormations.Max(formation => formation.EnemySlots.Count) : slots.Length;
+            if (enemyIndex < 0 || enemyIndex >= slotCount)
+                throw new ArgumentOutOfRangeException(nameof(startingActionChoicesByEnemyIndex), "Starting action choice index must refer to an enemy in this encounter.");
+            if (startingActions.ContainsKey(enemyIndex))
+                throw new ArgumentException("An encounter slot cannot define both a fixed starting action and starting action choices.", nameof(startingActionChoicesByEnemyIndex));
+            if (choices.Count < 2 || choices.Distinct().Count() != choices.Count)
+                throw new ArgumentException("Random starting action choices need at least two unique actions.", nameof(startingActionChoicesByEnemyIndex));
+            foreach (var action in choices) action.Validate();
+        }
         Id = id;
         RoomType = roomType;
         EnemySlots = Array.AsReadOnly(slots);
@@ -708,6 +729,7 @@ public sealed class EncounterDefinition
             throw new ArgumentOutOfRangeException(nameof(minGoldReward), "Gold reward bounds must satisfy 0 <= min <= max.");
         Tags = Array.AsReadOnly(encounterTags);
         StartingActionsByEnemyIndex = new ReadOnlyDictionary<int, ContentId>(startingActions);
+        StartingActionChoicesByEnemyIndex = new ReadOnlyDictionary<int, IReadOnlyList<ContentId>>(startingActionChoices);
     }
 
     public ContentId Id { get; }
@@ -724,20 +746,24 @@ public sealed class EncounterDefinition
     public int MaxGoldReward { get; }
     public IReadOnlyList<ContentId> Tags { get; }
     public IReadOnlyDictionary<int, ContentId> StartingActionsByEnemyIndex { get; }
+    public IReadOnlyDictionary<int, IReadOnlyList<ContentId>> StartingActionChoicesByEnemyIndex { get; }
 
     public static EncounterDefinition WithEnemySlots(ContentId id, RunRoomType roomType,
         IEnumerable<EncounterEnemySlot> enemySlots, bool isWeak = false, IEnumerable<ContentId>? tags = null,
         IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
-        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null) =>
+        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null,
+        IReadOnlyDictionary<int, IReadOnlyList<ContentId>>? startingActionChoicesByEnemyIndex = null) =>
         new(id, roomType, enemySlots, isWeak, tags, startingActionsByEnemyIndex,
-            shouldGiveRewards, minGoldReward, maxGoldReward);
+            shouldGiveRewards, minGoldReward, maxGoldReward,
+            startingActionChoicesByEnemyIndex: startingActionChoicesByEnemyIndex);
 
     public static EncounterDefinition WithFormations(ContentId id, RunRoomType roomType,
         IEnumerable<EncounterFormationChoice> formations, bool isWeak = false, IEnumerable<ContentId>? tags = null,
         IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
-        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null) =>
+        bool shouldGiveRewards = true, int? minGoldReward = null, int? maxGoldReward = null,
+        IReadOnlyDictionary<int, IReadOnlyList<ContentId>>? startingActionChoicesByEnemyIndex = null) =>
         new(id, roomType, Array.Empty<EncounterEnemySlot>(), isWeak, tags, startingActionsByEnemyIndex,
-            shouldGiveRewards, minGoldReward, maxGoldReward, formations);
+            shouldGiveRewards, minGoldReward, maxGoldReward, formations, startingActionChoicesByEnemyIndex);
 
     public IReadOnlyList<EncounterEnemySelection> SelectEnemies(SeededRandom random)
     {
@@ -784,8 +810,8 @@ public sealed class EncounterDefinition
             var enemyId = slot.ChooseRandomly ? candidates[random.NextInt(candidates.Count)] : candidates[0];
             groupSelection?.Add(enemyId);
             ContentId? startingAction = StartingActionsByEnemyIndex.TryGetValue(i, out var overrideId) ? overrideId : null;
-            selected[i] = new EncounterEnemySelection(enemyId,
-                startingAction);
+            StartingActionChoicesByEnemyIndex.TryGetValue(i, out var startingChoices);
+            selected[i] = new EncounterEnemySelection(enemyId, startingAction, startingChoices);
         }
         return Array.AsReadOnly(selected);
     }
@@ -1133,6 +1159,11 @@ public sealed class ContentRegistry
                     if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
                         throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action '{actionId}' to enemy '{enemyId}'.");
             }
+            foreach (var (enemyIndex, choices) in encounter.StartingActionChoicesByEnemyIndex)
+            foreach (var enemyId in encounter.GetPossibleEnemyIdsAtSlot(enemyIndex))
+            foreach (var actionId in choices)
+                if (!_enemies[enemyId].Actions.Any(action => action.Id == actionId))
+                    throw new InvalidOperationException($"Encounter '{encounter.Id}' assigns unknown starting action choice '{actionId}' to enemy '{enemyId}'.");
         }
         foreach (var enemy in _enemies.Values)
         foreach (var startingPower in enemy.StartingPowers)

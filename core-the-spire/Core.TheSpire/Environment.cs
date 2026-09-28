@@ -1,7 +1,7 @@
 namespace CoreTheSpire;
 
 public sealed record CombatEnemySpawn(string EnemyId, int? Hp = null, string? InstanceId = null,
-    ContentId? StartingActionOverride = null);
+    ContentId? StartingActionOverride = null, IReadOnlyList<ContentId>? StartingActionChoices = null);
 
 public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Block, int Strength,
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers)
@@ -37,7 +37,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var selections = runSession.State.CurrentEncounterSelections;
         return StartForRun(runSession, selections
             .Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
-                StartingActionOverride: selection.StartingActionOverride)).ToArray());
+                StartingActionOverride: selection.StartingActionOverride,
+                StartingActionChoices: selection.StartingActionChoices)).ToArray());
     }
 
     public GameSession StartCurrentEncounterForRun(RunSession runSession)
@@ -117,7 +118,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var selections = encounter.SelectEnemies(random.Get("encounter-enemies"));
         return Start(random, playerId, playerHp, playerMaxHp, hand,
             selections.Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
-                StartingActionOverride: selection.StartingActionOverride)), drawPile: null, characterId);
+                StartingActionOverride: selection.StartingActionOverride,
+                StartingActionChoices: selection.StartingActionChoices)), drawPile: null, characterId);
     }
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
@@ -164,6 +166,12 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (spawn.StartingActionOverride is { } startingAction
                 && !enemyDefinition.Actions.Any(action => action.Id == startingAction))
                 throw new ArgumentException($"Enemy '{spawn.EnemyId}' has no action '{startingAction}'.", nameof(enemies));
+            if (spawn.StartingActionChoices is { } startChoices
+                && (startChoices.Count < 2 || startChoices.Distinct().Count() != startChoices.Count
+                    || startChoices.Any(actionId => !enemyDefinition.Actions.Any(action => action.Id == actionId))))
+                throw new ArgumentException($"Enemy '{spawn.EnemyId}' has invalid starting action choices.", nameof(enemies));
+            if (spawn.StartingActionOverride is not null && spawn.StartingActionChoices is not null)
+                throw new ArgumentException("A combat enemy cannot have both a fixed starting action and starting action choices.", nameof(enemies));
             prepared[i] = (spawn, enemyDefinition, entityId);
         }
 
@@ -206,6 +214,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var enemy = combatEnemies[enemyIndex];
             enemy.ActionIndex = prepared[enemyIndex].Spawn.StartingActionOverride is { } actionId
                 ? enemy.Definition.GetActionIndex(actionId)
+                : prepared[enemyIndex].Spawn.StartingActionChoices is { } choices
+                    ? enemy.Definition.GetActionIndex(choices[rng.Get("enemy-ai").NextInt(choices.Count)])
                 : enemy.Definition.ResolveStartingActionIndex(
                     new EnemyActionEvaluationContext(state, enemy, enemyIndex), rng.Get("enemy-ai"));
             enemy.SelectAction(enemy.Definition.Actions[enemy.ActionIndex].Id);
