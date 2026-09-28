@@ -109,6 +109,12 @@ package base-spire {
         count=targetPowerAmount(SuckPower, target=self), target=self))]
   }
 
+  power PaperCutsPower {
+    events = [event(type=damage, owner=source, positiveAmount=true,
+      require=[move], exclude=[unpowered],
+      effect=loseMaxHp(2, target=player))]
+  }
+
   power Burrowed {
     preventsBlockClear = true
     events = [event(type=block_broken, owner=target, ownerTurnOnly=false,
@@ -807,6 +813,24 @@ package base-spire {
       edge(fossilStalkerLatch, chooseWithoutRepeat(fossilStalkerLatch, fossilStalkerTackle, fossilStalkerLash)),
       edge(fossilStalkerTackle, chooseWithoutRepeat(fossilStalkerLatch, fossilStalkerTackle, fossilStalkerLash)),
       edge(fossilStalkerLash, chooseWithoutRepeat(fossilStalkerLatch, fossilStalkerTackle, fossilStalkerLash))
+    ])
+  }
+
+  enemy ScrollOfBiting {
+    hp = variants(default=range(30, 37), tough=range(33, 39))
+    startingPowers = [power(PaperCutsPower, 2)]
+    moves = actions(
+      scrollOfBitingChomp = attack(variants(default=14, deadly=16), target=player),
+      scrollOfBitingChew = repeat(2, attack(variants(default=5, deadly=6), target=player)),
+      scrollOfBitingMoreTeeth = applyPower(Strength, 2, target=self)
+    )
+    behavior = graph(start=scrollOfBitingChomp, edges=[
+      edge(scrollOfBitingChomp, scrollOfBitingMoreTeeth),
+      edge(scrollOfBitingMoreTeeth, scrollOfBitingChew),
+      edge(scrollOfBitingChew, chooseWithLimits(
+        candidate(scrollOfBitingChomp, maxConsecutive=1),
+        candidate(scrollOfBitingChew, maxConsecutive=2)
+      ))
     ])
   }
 

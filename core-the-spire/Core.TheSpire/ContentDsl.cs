@@ -12,15 +12,17 @@ public static class ContentDsl
     private static readonly JsonSerializerOptions Options = DslJson.CreateOptions();
 
     private sealed record EncounterFormationData(IReadOnlyList<ContentId>? EnemyIds = null, int Weight = 1,
-        IReadOnlyList<EncounterSlotData>? EnemySlots = null)
+        IReadOnlyList<EncounterSlotData>? EnemySlots = null,
+        IReadOnlyDictionary<int, ContentId>? StartingActionsByEnemyIndex = null)
     {
         public EncounterFormationChoice Compile()
         {
             if ((EnemyIds is null) == (EnemySlots is null))
                 throw new JsonException("A formation must define exactly one of enemyIds or enemySlots.");
             return EnemyIds is not null
-                ? new EncounterFormationChoice(EnemyIds, Weight)
-                : new EncounterFormationChoice(EnemySlots!.Select(slot => slot.Compile()), Weight);
+                ? new EncounterFormationChoice(EnemyIds, Weight, StartingActionsByEnemyIndex)
+                : new EncounterFormationChoice(EnemySlots!.Select(slot => slot.Compile()), Weight,
+                    StartingActionsByEnemyIndex);
         }
     }
 

@@ -36,13 +36,15 @@ public sealed record EncounterEnemySelection(ContentId EnemyId, ContentId? Start
 /// <summary>A complete ordered enemy lineup selected as one correlated encounter outcome.</summary>
 public sealed record EncounterFormationChoice
 {
-    public EncounterFormationChoice(IEnumerable<ContentId> enemyIds, int weight = 1)
+    public EncounterFormationChoice(IEnumerable<ContentId> enemyIds, int weight = 1,
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
         : this(enemyIds?.Select(EncounterEnemySlot.Fixed)
-            ?? throw new ArgumentNullException(nameof(enemyIds)), weight)
+            ?? throw new ArgumentNullException(nameof(enemyIds)), weight, startingActionsByEnemyIndex)
     {
     }
 
-    public EncounterFormationChoice(IEnumerable<EncounterEnemySlot> enemySlots, int weight = 1)
+    public EncounterFormationChoice(IEnumerable<EncounterEnemySlot> enemySlots, int weight = 1,
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
     {
         ArgumentNullException.ThrowIfNull(enemySlots);
         var copiedSlots = enemySlots.ToArray();
@@ -50,11 +52,23 @@ public sealed record EncounterFormationChoice
         if (copiedSlots.Any(slot => slot is null)) throw new ArgumentException("Encounter formation slots cannot be null.", nameof(enemySlots));
         EncounterDefinition.ValidateChoiceGroups(copiedSlots);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(weight);
+        var startingActions = startingActionsByEnemyIndex is null
+            ? new Dictionary<int, ContentId>()
+            : new Dictionary<int, ContentId>(startingActionsByEnemyIndex);
+        foreach (var (enemyIndex, actionId) in startingActions)
+        {
+            if (enemyIndex < 0 || enemyIndex >= copiedSlots.Length)
+                throw new ArgumentOutOfRangeException(nameof(startingActionsByEnemyIndex),
+                    "Formation starting action index must refer to an enemy in the formation.");
+            actionId.Validate();
+        }
         EnemySlots = Array.AsReadOnly(copiedSlots);
         Weight = weight;
+        StartingActionsByEnemyIndex = new System.Collections.ObjectModel.ReadOnlyDictionary<int, ContentId>(startingActions);
     }
 
     public IReadOnlyList<EncounterEnemySlot> EnemySlots { get; }
+    public IReadOnlyDictionary<int, ContentId> StartingActionsByEnemyIndex { get; }
     public IReadOnlyList<ContentId> EnemyIds => EnemySlots.All(slot => !slot.ChooseRandomly)
         ? Array.AsReadOnly(EnemySlots.Select(slot => slot.EnemyChoices[0]).ToArray())
         : throw new InvalidOperationException("A formation with random slots does not have one fixed enemy lineup.");

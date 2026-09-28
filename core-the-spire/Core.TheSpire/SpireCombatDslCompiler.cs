@@ -364,6 +364,10 @@ public static class SpireCombatDslCompiler
                 case "gainMaxHp":
                     CheckShape(call, 1, 1);
                     return new GainMaxHpEffect(Integer(Argument(call, 0)));
+                case "loseMaxHp":
+                    CheckShape(call, 1, 1, "target");
+                    return new LoseMaxHpEffect(Integer(Argument(call, 0)),
+                        OptionalTarget(call, "target", TargetSelector.Self));
                 case "downgradeSelectedCard":
                     CheckShape(call, 0, 0);
                     return new DowngradeSelectedCardEffect();

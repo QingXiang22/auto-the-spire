@@ -42,6 +42,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AccumulateCardDamageEffect), "accumulateCardDamage")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainMaxHpEffect), "gainMaxHp")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(LoseMaxHpEffect), "loseMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CloneCardEffect), "cloneCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TransformSelectedCardEffect), "transformSelectedCard")]
@@ -151,6 +152,7 @@ public enum PowerVariableOperation { Add, Set }
 public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
     TargetSelector Target = TargetSelector.Self, PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
 public sealed record GainMaxHpEffect(int Amount) : EffectNode;
+public sealed record LoseMaxHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DowngradeSelectedCardEffect : EffectNode;
 public sealed record CloneCardEffect(CardContext Card = CardContext.Played, CardPile Pile = CardPile.Hand,
     int Count = 1, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
@@ -711,6 +713,10 @@ internal static class EffectExecutor
                 case GainMaxHpEffect gainMaxHp:
                     state.GainMaxHp(session, gainMaxHp.Amount);
                     break;
+                case LoseMaxHpEffect loseMaxHp:
+                    if (loseMaxHp.Amount < 0) throw new InvalidOperationException("Maximum HP loss cannot be negative.");
+                    LoseMaxHp(session, owner, ResolveSingleTarget(state, owner, target, loseMaxHp.Target), loseMaxHp.Amount);
+                    break;
                 case DowngradeSelectedCardEffect:
                     CombatCardVariables.Downgrade(session, CombatCardVariables.ResolveCard(state, CardContext.Selected, selectedCard));
                     break;
@@ -1130,6 +1136,24 @@ internal static class EffectExecutor
             state.RemovePowersAppliedBy(session, victim.Id);
             QueuePowerTriggerEffects(session, victim, PowerTrigger.AfterOwnerDeath, owner, cardSource);
         }
+    }
+
+    private static void LoseMaxHp(GameSession session, EntityState source, EntityState target, int amount)
+    {
+        if (amount == 0) return;
+        var previousMaxHp = target.MaxHp;
+        var rawMaxHp = (long)previousMaxHp - amount;
+        if (rawMaxHp < target.Hp)
+            ApplyAttack(session, source, target, target.Hp - rawMaxHp,
+                DamageProperties.Unblockable | DamageProperties.Unpowered);
+        target.MaxHp = (int)Math.Max(1L, rawMaxHp);
+        if (ReferenceEquals(target, session.State.Player.Creature) && session.RunOwner is { } runOwner)
+        {
+            runOwner.State.MaxHp = target.MaxHp;
+            runOwner.State.Hp = target.Hp;
+        }
+        session.State.Emit(session, "max_hp", source.Id, target.Id, target.MaxHp - previousMaxHp,
+            DamageProperties.Unpowered);
     }
 
     private static EntityState OpponentOf(GameState state, EntityState owner) => owner.IsEnemy

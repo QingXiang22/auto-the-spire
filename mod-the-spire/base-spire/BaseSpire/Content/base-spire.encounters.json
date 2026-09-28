@@ -250,6 +250,72 @@
       }
     },
     {
+      "id": "base-spire:scrolls-of-biting-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "tags": ["base-spire:scrolls"],
+      "formations": [
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chomp",
+            "1": "base-spire:scroll-of-biting-chew",
+            "2": "base-spire:scroll-of-biting-more-teeth"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chew",
+            "1": "base-spire:scroll-of-biting-more-teeth",
+            "2": "base-spire:scroll-of-biting-chomp"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-more-teeth",
+            "1": "base-spire:scroll-of-biting-chomp",
+            "2": "base-spire:scroll-of-biting-chew"
+          }
+        }
+      ]
+    },
+    {
+      "id": "base-spire:scrolls-of-biting-normal",
+      "roomType": "monster",
+      "tags": ["base-spire:scrolls"],
+      "formations": [
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chomp",
+            "1": "base-spire:scroll-of-biting-chew",
+            "2": "base-spire:scroll-of-biting-more-teeth",
+            "3": "base-spire:scroll-of-biting-more-teeth"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chew",
+            "1": "base-spire:scroll-of-biting-more-teeth",
+            "2": "base-spire:scroll-of-biting-chomp",
+            "3": "base-spire:scroll-of-biting-more-teeth"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-more-teeth",
+            "1": "base-spire:scroll-of-biting-chomp",
+            "2": "base-spire:scroll-of-biting-chew",
+            "3": "base-spire:scroll-of-biting-more-teeth"
+          }
+        }
+      ]
+    },
+    {
       "id": "base-spire:globe-head-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:globe-head"]
