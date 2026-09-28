@@ -372,7 +372,7 @@ internal sealed class GameState
             LastPlayerHpLossTurn = Turn;
             PlayerHpLossCount = checked(PlayerHpLossCount + 1);
         }
-        List<(EntityState Owner, EffectNode Effect, EntityState? Target)>? effects = null;
+        List<(EntityState Owner, EffectNode Effect, EntityState? Target, PowerEventPhase Phase)>? effects = null;
         foreach (var hook in Definition.Hooks)
         {
             var context = new RuleHookContext(session, hook.Id);
@@ -387,7 +387,7 @@ internal sealed class GameState
                     GameEventActor.Player => Player.Creature,
                     _ => throw new ArgumentOutOfRangeException(nameof(eventEffect.Actor))
                 };
-                (effects ??= []).Add((owner, eventEffect.Effect, null));
+                (effects ??= []).Add((owner, eventEffect.Effect, null, PowerEventPhase.Normal));
             }
         }
         foreach (var actor in Enemies.Select(enemy => enemy.Creature).Append(Player.Creature))
@@ -428,13 +428,13 @@ internal sealed class GameState
                 var otherId = subscription.Owner == GameEventActor.Source ? target : source;
                 (effects ??= []).Add((actor,
                     new PowerEventEffect(powerId, subscription.Effect, gameEvent.CardSourceInstanceId),
-                    FindCreature(otherId)));
+                    FindCreature(otherId), subscription.Phase));
             }
         }
         if (effects is { Count: > 0 })
         {
-            for (var i = effects.Count - 1; i >= 0; i--)
-                PendingEffects.Add(new(effects[i].Owner, effects[i].Effect, effects[i].Target, null));
+            foreach (var effect in effects.OrderBy(effect => effect.Phase).Reverse())
+                PendingEffects.Add(new(effect.Owner, effect.Effect, effect.Target, null));
         }
     }
 
