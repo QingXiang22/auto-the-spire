@@ -646,6 +646,21 @@ public sealed class CombatSliceTests
         Assert.Equal(0, uppercut.State.Enemy.PowerAmount(BaseSpireIds.Vulnerable));
     }
 
+    public void SharedWeakPowerDslReducesOutgoingPoweredDamage()
+    {
+        var definition = Build(new BaseSpirePackage());
+        Assert.Equal(0.75m, definition.Powers[BaseSpireIds.Weak].OutgoingDamageMultiplier);
+
+        var env = new CombatEnvironment(definition);
+        var state = env.Start(26, "ironclad", 56, 65, [BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        state.State.ApplyPower(state, state.State.Player.Creature, BaseSpireIds.Weak, 1,
+            state.State.Enemy);
+        env.Step(state, new PlayCardAction(0, state.State.Enemy.Id));
+
+        Assert.Equal(49, state.State.Enemy.Hp);
+    }
+
     public void BaseDampCultistNormalValuesMatchSourceRules()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -6013,6 +6028,7 @@ internal static class Program
         tests.WhirlwindSpendsXEnergyAndRepeatsAnAoEAttack();
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
+        tests.SharedWeakPowerDslReducesOutgoingPoweredDamage();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
