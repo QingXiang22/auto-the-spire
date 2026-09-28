@@ -223,6 +223,15 @@ public static class BaseSpireContent
         using var reader = new System.IO.StreamReader(stream);
         return ContentDsl.ParseEncounters(reader.ReadToEnd());
     }
+
+    public static IReadOnlyDictionary<ContentId, ActEncounterPoolDefinition> LoadActEncounterPools(string fileName)
+    {
+        var resourceName = $"BaseSpire.Content.{fileName}";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        return ContentDsl.ParseActEncounterPools(reader.ReadToEnd());
+    }
 }
 
 public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemies = false) : IRulePackage

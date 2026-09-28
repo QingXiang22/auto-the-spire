@@ -194,6 +194,25 @@ public sealed class CombatSliceTests
         Assert.Equal(6, state.State.Enemy.Strength);
     }
 
+    public void StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var pool = definition.Runs[BaseSpireIds.StandardRun].Acts[0].EncounterPool;
+
+        Assert.True(pool is not null);
+        if (pool is null) throw new InvalidOperationException("Overgrowth encounter pool is missing.");
+        Assert.Equal(15, pool.NormalRoomCount);
+        Assert.Equal(3, pool.WeakNormalRoomCount);
+        Assert.Equal(12, pool.RegularEncounters.Count);
+        Assert.Equal(4, pool.WeakNormalEncounters.Count);
+        Assert.Equal(3, pool.EliteEncounters.Count);
+        Assert.Equal(1, pool.BossEncounters.Count);
+        foreach (var encounterId in pool.WeakNormalEncounters)
+            Assert.True(definition.Encounters[encounterId].IsWeak);
+        foreach (var encounterId in pool.BossEncounters)
+            Assert.Equal(RunRoomType.Boss, definition.Encounters[encounterId].RoomType);
+    }
+
     public void BaseStrikeBashAndVulnerableUseRegisteredRules()
     {
         var definition = Build(new BaseSpirePackage());
@@ -5351,6 +5370,7 @@ internal static class Program
         var tests = new CombatSliceTests();
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
+        tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();
         tests.BaseRedSkullTracksCombatHealingAndHpLossAcrossItsThreshold();
         tests.BaseDemonTongueHealsOnlyForFirstPlayerSideHitEachTurn();

@@ -10,6 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Content\*.encounters.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Content\*.acts.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
     <EmbeddedResource Include="ContentSource\*.spire" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
