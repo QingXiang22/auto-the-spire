@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(66, ironcladPool.Count);
+        Assert.Equal(67, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(69, cards.Count);
+        Assert.Equal(70, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(67, pool.Count);
+        Assert.Equal(68, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -5446,6 +5446,14 @@ internal static class Program
         cardEvents.CallbackDefinitionsRejectUnboundValuesAndInvalidHistoryFilters();
         cardEvents.HistoryRemainsPlayerScopedDuringFlushAndClearsOnEnemySide();
         cardEvents.InitialEntryExtensionsHaveTheirRunOwnerAndSelectedInstance();
+        var cardVariables = new CardVariableDslTests();
+        cardVariables.RampageGrowthSurvivesTurnsUpgradeAndDowngrade();
+        cardVariables.RampageReplaysReadGrowthFromThePreviousExecution();
+        cardVariables.PlayedSelectedAndCapturedValuesSurviveChoicesAndNestedFrames();
+        cardVariables.DefinitionUpgradeValuesAndSetOffsetsShareOneInstance();
+        cardVariables.ClonesCopyCurrentValuesAndCostsAndThenChangeIndependently();
+        cardVariables.StompCloneRetainsDiscountWithoutReinitializingAndAngerClonesCosts();
+        cardVariables.CardVariableAndCloneDefinitionsRejectInvalidInputsAndRoundTrip();
         Console.WriteLine("All gameplay checks passed.");
     }
 }

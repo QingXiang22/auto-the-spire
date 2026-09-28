@@ -132,6 +132,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public bool HasEnergyXCost => CostKind == CardCostKind.X;
     public IReadOnlyList<ContentId> Tags { get; init; } = Array.Empty<ContentId>();
     public IReadOnlyList<ContentId> PoolIds { get; init; } = Array.Empty<ContentId>();
+    public IReadOnlyList<CardVariableDefinition> Variables { get; init; } = Array.Empty<CardVariableDefinition>();
     public EffectNode? OnExhaust { get; init; }
     public EffectNode? UpgradedOnExhaust { get; init; }
     public EffectNode? OnEnterCombat { get; init; }
@@ -141,7 +142,17 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public CardPlayListener? AfterCardPlayed { get; init; }
     public CardPlayListener? UpgradedAfterCardPlayed { get; init; }
     public bool HasUpgrade => UpgradedEffect is not null || UpgradedCost is not null || UpgradedOnExhaust is not null
-        || UpgradedOnEnterCombat is not null || UpgradedBeforeCardPlayed is not null || UpgradedAfterCardPlayed is not null;
+        || UpgradedOnEnterCombat is not null || UpgradedBeforeCardPlayed is not null || UpgradedAfterCardPlayed is not null
+        || Variables.Any(variable => variable.UpgradedValue is not null);
+
+    public int ResolveVariable(CardInstance instance, ContentId variableId)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        var variable = Variables.FirstOrDefault(variable => variable.Id == variableId)
+            ?? throw new InvalidOperationException($"Card '{Id}' does not declare variable '{variableId}'.");
+        var initial = instance.UpgradeLevel > 0 ? variable.UpgradedValue ?? variable.InitialValue : variable.InitialValue;
+        return checked(initial + instance.VariableOffsets.FirstOrDefault(value => value.Variable == variableId).Offset);
+    }
 
     public EffectNode? ResolveEnterEffect(CardInstance instance)
     {
@@ -179,7 +190,8 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
 public sealed record CardInstance
 {
     public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0,
-        IReadOnlyList<CardCostModifier>? costModifiers = null, bool isClone = false)
+        IReadOnlyList<CardCostModifier>? costModifiers = null, bool isClone = false,
+        IReadOnlyList<CardVariableOffset>? variableOffsets = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         cardId.Validate();
@@ -191,6 +203,14 @@ public sealed record CardInstance
         var modifiers = costModifiers?.ToArray() ?? [];
         foreach (var modifier in modifiers) modifier.Validate();
         CostModifiers = modifiers.Length == 0 ? Array.Empty<CardCostModifier>() : Array.AsReadOnly(modifiers);
+        var offsets = variableOffsets?.ToArray() ?? [];
+        if (offsets.Length > 0)
+        {
+            foreach (var offset in offsets) offset.Variable.Validate();
+            if (offsets.Select(value => value.Variable).Distinct().Count() != offsets.Length)
+                throw new ArgumentException("A card instance cannot contain duplicate variable offsets.", nameof(variableOffsets));
+        }
+        VariableOffsets = offsets.Length == 0 ? Array.Empty<CardVariableOffset>() : Array.AsReadOnly(offsets);
     }
 
     public string InstanceId { get; }
@@ -198,10 +218,13 @@ public sealed record CardInstance
     public int UpgradeLevel { get; }
     public IReadOnlyList<CardCostModifier> CostModifiers { get; }
     public bool IsClone { get; }
+    public IReadOnlyList<CardVariableOffset> VariableOffsets { get; }
 
-    internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone);
+    internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone, VariableOffsets);
     internal CardInstance WithCostModifiers(IReadOnlyList<CardCostModifier> modifiers) =>
-        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone);
+        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets);
+    internal CardInstance WithVariableOffsets(IReadOnlyList<CardVariableOffset> offsets) =>
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets);
 }
 
 public sealed class CardPoolDefinition
@@ -995,6 +1018,9 @@ public sealed class ContentRegistry
         foreach (var card in _cards.Values)
         {
             card.Id.Validate();
+            if (card.Variables is null || card.Variables.Select(variable => variable.Id).Distinct().Count() != card.Variables.Count)
+                throw new InvalidOperationException($"Card '{card.Id}' has null or duplicate variable declarations.");
+            foreach (var variable in card.Variables) variable.Id.Validate();
             if (card.Tags is null || card.Tags.Distinct().Count() != card.Tags.Count)
                 throw new InvalidOperationException($"Card '{card.Id}' has null or duplicate tags.");
             foreach (var tag in card.Tags) tag.Validate();
@@ -1395,7 +1421,19 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} upgrades an invalid card pile.");
             case UpgradeCardsInPileEffect:
             case UpgradeSelectedCardEffect:
+            case DowngradeSelectedCardEffect:
             case RetainSelectedCardEffect:
+                break;
+            case CloneCardEffect clone:
+                if (!Enum.IsDefined(clone.Card) || !Enum.IsDefined(clone.Pile) || clone.Pile == CardPile.Play || clone.Count < 0)
+                    throw new InvalidOperationException($"{owner} has an invalid combat clone context, destination or count.");
+                break;
+            case ModifyCardVariableEffect variable:
+                ValidateCardVariableReference(variable.Variable, variable.Card, owner);
+                if (!Enum.IsDefined(variable.Operation))
+                    throw new InvalidOperationException($"{owner} has an unsupported card variable operation.");
+                if (variable.CalculatedAmount is { } variableAmount)
+                    ValidateCombatCountSource(variableAmount.Count, owner, counts);
                 break;
             case ModifySelectedCardCostEffect cost:
                 cost.Modifier.Validate();
@@ -1508,6 +1546,9 @@ public sealed class ContentRegistry
                 if (!Enum.IsDefined(plays.Phase) || plays.Type is { } historyType && !Enum.IsDefined(historyType))
                     throw new InvalidOperationException($"{owner} counts an invalid card-play history phase or type.");
                 break;
+            case CardVariableCountSource variable:
+                ValidateCardVariableReference(variable.Variable, variable.Card, owner);
+                break;
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;
@@ -1516,6 +1557,13 @@ public sealed class ContentRegistry
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported combat count source.");
         }
+    }
+
+    private void ValidateCardVariableReference(ContentId variable, CardContext card, string owner)
+    {
+        variable.Validate();
+        if (!Enum.IsDefined(card) || !_cards.Values.Any(definition => definition.Variables.Any(value => value.Id == variable)))
+            throw new InvalidOperationException($"{owner} references an invalid card context or undeclared variable '{variable}'.");
     }
 
     private static void AddUnique<T>(Dictionary<ContentId, T> items, ContentId id, T definition, string kind)
