@@ -159,6 +159,11 @@
       "enemyIds": ["base-spire:frog-knight"]
     },
     {
+      "id": "base-spire:haunted-ship-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:haunted-ship"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

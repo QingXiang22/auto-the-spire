@@ -470,16 +470,16 @@ public static class SpireCombatBehaviorDslCompiler
                     throw Error(behavior.Arguments[0].Location,
                         "startWithChoice requires a weighted or no-repeat choice as its opening behavior.");
                 var after = CompileBehavior(RequireCall(behavior.Arguments[1].Value));
-                if (after.StartingTransition is not null)
-                    throw Error(behavior.Arguments[1].Location,
-                        "startWithChoice's follow-up behavior cannot declare another opening choice.");
                 foreach (var choice in opening.StartingTransition.Choices)
                 {
-                    var name = choice.ActionId.Value;
-                    if (!after.NextMoves.ContainsKey(name) && !after.Transitions.ContainsKey(name))
+                    var isInFollowUp = after.NextMoves.Keys.Concat(after.NextMoves.Values)
+                        .Concat(after.Transitions.Keys).Any(name => Id(name) == choice.ActionId);
+                    if (!isInFollowUp)
                         throw Error(behavior.Arguments[1].Location,
-                            $"Opening move '{name}' must be part of the follow-up behavior.");
+                            $"Opening move '{choice.ActionId}' must be part of the follow-up behavior.");
                 }
+                // A choice used as the follow-up behavior contributes outgoing transitions
+                // for each of its candidate actions; only its opening transition is replaced.
                 return after with { StartingTransition = opening.StartingTransition };
             }
 

@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；29 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；30 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -40,7 +40,9 @@
 
 [`Inklet.cs`](../sts2/src/Core/Models/Monsters/Inklet.cs) 的三段 3/4 Jab 后，在 10/11 Piercing Gaze 与三段 2/3 Whirlwind 中随机选择且不连续重复；这两招之后都回到 Jab。`InkletsNormal` 的中位怪物以 Whirlwind 开场。新增 `graph(start=..., edges=[...])` 显式表达固定边与随机边汇合；`SlipperyPower` 则在持有者实际失去生命时消耗一层。
 
-[`FrogKnight.cs`](../sts2/src/Core/Models/Monsters/FrogKnight.cs) 的普通遭遇有 191 HP、15 层 Plating；Tough 难度分别为 199 和 19。它从 Tongue Lash 开始，依序接 Strike Down Evil、For the Queen；之后若低于半血且尚未使用 Beetle Charge，则执行一次 35/40 点充能攻击，再回到 Tongue Lash。否则继续 Tongue Lash 循环。`chooseByCondition` 将有序条件转移与 `maxUsesPerCombat` 组合表达；半血阈值当前按通用整数百分比指标计算。
+[`FrogKnight.cs`](../sts2/src/Core/Models/Monsters/FrogKnight.cs) 的普通遭遇有 191 HP、15 层 Plating；Tough 难度分别为 199 和 19。它从 Tongue Lash 开始，依序接 Strike Down Evil、For the Queen；之后若低于半血且尚未使用 Beetle Charge，则执行一次 35/40 点充能攻击，再回到 Tongue Lash。否则继续 Tongue Lash 循环。`chooseByCondition` 将有序条件转移与 `maxUsesPerCombat` 组合表达；不同难度的半血阈值按源码的整数除法精确表示。
+
+[`HauntedShip.cs`](../sts2/src/Core/Models/Monsters/HauntedShip.cs) 以 Haunt 开场，给玩家施加 3 层 Weak 并向弃牌堆放入 5 张 Dazed，随后循环 Swipe（13/14）与三段 Stomp（每段 4/5）。HP 为 63，Tough 为 67。它验证了既有的序列效果、状态牌生成和开场动作加循环图组合；单体普通遭遇已加入 JSON。
 
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 
