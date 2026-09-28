@@ -1,4 +1,14 @@
 package base-spire {
+  card Toxic {
+    type = status
+    rarity = status
+    cost = 1
+    target = self
+    keywords = [exhaust, unplayable]
+    play = sequence()
+    turnEndInHand = attack(5, target=self, properties=[move, unpowered])
+  }
+
   card Infection {
     type = status
     rarity = status
