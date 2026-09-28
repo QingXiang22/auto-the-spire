@@ -92,6 +92,12 @@
       "tags": ["base-spire:slime"]
     },
     {
+      "id": "base-spire:devoted-sculptor-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:devoted-sculptor"],
+      "isWeak": true
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

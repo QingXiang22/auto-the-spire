@@ -179,4 +179,27 @@ package base-spire {
     behavior = startWith(bowlbugSilkToxicSpit,
       then=cycle(bowlbugSilkThrash, bowlbugSilkToxicSpit))
   }
+
+  enemy DevotedSculptor {
+    hp = variants(default=range(162, 162), tough=range(172, 172))
+    moves = actions(
+      sculptorForbiddenIncantation = applyPower(Ritual, 9, target=self),
+      sculptorSavage = attack(variants(default=12, deadly=15), target=player)
+    )
+    behavior = startWith(sculptorForbiddenIncantation, then=loop(sculptorSavage))
+  }
+
+  enemy FlailKnight {
+    hp = variants(default=range(101, 101), tough=range(108, 108))
+    moves = actions(
+      flailKnightWarChant = applyPower(Strength, 3, target=self),
+      flailKnightFlail = repeat(2, attack(variants(default=9, deadly=10), target=player)),
+      flailKnightRam = attack(variants(default=15, deadly=17), target=player)
+    )
+    behavior = startWith(flailKnightRam, then=chooseWithLimits(
+      candidate(flailKnightWarChant, weight=1, maxConsecutive=1),
+      candidate(flailKnightFlail, weight=2),
+      candidate(flailKnightRam, weight=2)
+    ))
+  }
 }
