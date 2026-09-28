@@ -30,6 +30,41 @@ public sealed class CombatSliceTests
         Assert.Equal(45, state.State.Player.Creature.Hp);
     }
 
+    public void EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage(), new EnemyVariableFixturePackage()));
+        var session = environment.StartEncounter(918, "ironclad", 56, 65, [],
+            ContentId.Parse("enemy-variable-fixture:encounter"));
+        var enemies = environment.Observe(session).Enemies;
+        var calls = ContentId.Parse("enemy-variable-fixture:calls");
+        Assert.Equal(2, enemies.Count);
+        Assert.Equal(0, enemies[0].Variables[calls]);
+        Assert.Equal(0, enemies[1].Variables[calls]);
+        session.State.Enemies[0].SetVariable(calls, 5);
+
+        environment.Step(session, new EndTurnAction());
+        enemies = environment.Observe(session).Enemies;
+        Assert.Equal(6, enemies[0].Variables[calls]);
+        Assert.Equal(1, enemies[1].Variables[calls]);
+        Assert.Equal(2, enemies[0].IntentDamage);
+        Assert.Equal(1, enemies[1].IntentDamage);
+        Assert.Contains(session.State.Events, gameEvent => gameEvent.Type == "enemy_variable_modified"
+            && gameEvent.Target == enemies[1].Id && gameEvent.Amount == 1
+            && gameEvent.AffectedVariable == calls);
+
+        var invalid = DslSourceParser.Parse("""
+            package invalid-enemy-state {
+              enemy Counter {
+                hp = range(10, 10)
+                moves = actions(hit = attack(1, target=player))
+                behavior = graph(start=hit, edges=[edge(hit,
+                  chooseByCondition(candidate(hit, when=variable(Missing, Equal, 0))))])
+              }
+            }
+            """, "invalid-enemy-state.spire");
+        Assert.Throws<DslSourceException>(() => SpireCombatBehaviorDslCompiler.Compile(invalid));
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -4265,6 +4300,41 @@ public sealed class CombatSliceTests
             ContentId.Parse("test-fixture:strike"), 0, CardType.Attack, new AttackEffect(99)));
     }
 
+    private sealed class EnemyVariableFixturePackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("enemy-variable-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var source = DslSourceParser.Parse("""
+                package enemy-variable-fixture {
+                  enemy Counter {
+                    hp = range(10, 10)
+                    variables = [variable(Calls, 0)]
+                    moves = actions(
+                      count = action(intent=Buff, effect=modifyEnemyVariable(Calls, 1)),
+                      hit = attack(1, target=player),
+                      finish = attack(2, target=player)
+                    )
+                    behavior = graph(start=count, edges=[
+                      edge(count, chooseByCondition(
+                        candidate(hit, when=variable(Calls, LessThan, 2)),
+                        candidate(finish, when=variable(Calls, AtLeast, 2))
+                      )),
+                      edge(hit, count),
+                      edge(finish, finish)
+                    ])
+                  }
+                }
+                """, "enemy-variable-fixture.spire");
+            var content = SpireCombatBehaviorDslCompiler.Compile(source);
+            foreach (var enemy in content.Enemies) registry.Register(enemy);
+            registry.Register(new EncounterDefinition(ContentId.Parse("enemy-variable-fixture:encounter"),
+                RunRoomType.Monster, [ContentId.Parse("enemy-variable-fixture:counter"),
+                    ContentId.Parse("enemy-variable-fixture:counter")]));
+        }
+    }
+
     private sealed class TestRunPackage(RunDefinition run) : IRulePackage
     {
         public PackageInfo Info { get; } = new("run-fixture", "1.0.0");
@@ -5380,6 +5450,7 @@ internal static class Program
     {
         var tests = new CombatSliceTests();
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
+        tests.EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();

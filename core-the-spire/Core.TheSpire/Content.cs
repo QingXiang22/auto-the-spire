@@ -463,6 +463,7 @@ public enum EnemyActionSide { Enemy, Player }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyMetricCondition), "metric")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyPowerCondition), "power")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyVariableCondition), "variable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AllEnemyCondition), "all")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AnyEnemyCondition), "any")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(NotEnemyCondition), "not")]
@@ -853,7 +854,8 @@ public sealed record EnemyDefinition
         bool loopLastAction = true, ContentId? startingActionId = null,
         EnemyActionTransition? startingTransition = null,
         IEnumerable<EnemyStartingPower>? startingPowers = null,
-        int startingBlock = 0)
+        int startingBlock = 0,
+        IEnumerable<EnemyVariableDefinition>? variables = null)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minHp);
@@ -862,6 +864,12 @@ public sealed record EnemyDefinition
         ArgumentNullException.ThrowIfNull(actions);
         var copiedActions = actions.ToArray();
         var copiedStartingPowers = startingPowers?.ToArray() ?? [];
+        var copiedVariables = variables?.ToArray() ?? [];
+        if (copiedVariables.Any(variable => variable is null))
+            throw new ArgumentException("Enemy variables cannot contain null entries.", nameof(variables));
+        foreach (var variable in copiedVariables) variable.Id.Validate();
+        if (copiedVariables.Select(variable => variable.Id).Distinct().Count() != copiedVariables.Length)
+            throw new ArgumentException("Enemy variables cannot be duplicated.", nameof(variables));
         foreach (var power in copiedStartingPowers)
         {
             power.Power.Validate();
@@ -916,6 +924,7 @@ public sealed record EnemyDefinition
         StartingActionIndex = startId is { } value ? indexes[value] : 0;
         StartingTransition = startingTransition;
         StartingPowers = Array.AsReadOnly(copiedStartingPowers);
+        Variables = Array.AsReadOnly(copiedVariables);
         StartingBlock = startingBlock;
         _limitedActionIds = limitedActionIds;
         _actionIndexes = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(indexes);
@@ -928,6 +937,7 @@ public sealed record EnemyDefinition
     public int StartingActionIndex { get; }
     public EnemyActionTransition? StartingTransition { get; }
     public IReadOnlyList<EnemyStartingPower> StartingPowers { get; }
+    public IReadOnlyList<EnemyVariableDefinition> Variables { get; }
     public int StartingBlock { get; }
     internal IReadOnlySet<ContentId> LimitedActionIds => _limitedActionIds;
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
@@ -983,6 +993,16 @@ public sealed record EnemyDefinition
         throw new InvalidOperationException("Enemy transition weight selection failed.");
     }
 }
+
+public sealed record EnemyVariableCondition(ContentId VariableId, RunComparison Comparison, int Value)
+    : EnemyActionCondition
+{
+    internal override bool Evaluate(EnemyActionEvaluationContext context) =>
+        ConditionEvaluation.Compare(context.GetVariable(VariableId), Comparison, Value);
+}
+
+/// <summary>Integer state owned by one enemy combat instance.</summary>
+public sealed record EnemyVariableDefinition(ContentId Id, int DefaultInt = 0);
 
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
@@ -1509,6 +1529,14 @@ public sealed class ContentRegistry
                 if (!Enum.IsDefined(power.Side) || !Enum.IsDefined(power.Comparison))
                     throw new InvalidOperationException($"{owner} has an invalid enemy power condition.");
                 break;
+            case EnemyVariableCondition variable when !_enemies.Values
+                .Any(enemy => enemy.Variables.Any(declared => declared.Id == variable.VariableId)):
+                throw new InvalidOperationException($"{owner} checks undeclared enemy variable '{variable.VariableId}'.");
+            case EnemyVariableCondition variable:
+                variable.VariableId.Validate();
+                if (!Enum.IsDefined(variable.Comparison))
+                    throw new InvalidOperationException($"{owner} has an invalid enemy variable comparison.");
+                break;
             case AllEnemyCondition all when all.Conditions.Count == 0:
                 throw new InvalidOperationException($"{owner} has an empty all condition.");
             case AllEnemyCondition all:
@@ -1727,6 +1755,13 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} uses an invalid Power variable operation.");
                 if (variable.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} modifies a Power variable on an invalid target.");
+                break;
+            case ModifyEnemyVariableEffect variable:
+                variable.Variable.Validate();
+                if (!_enemies.Values.Any(enemy => enemy.Variables.Any(declared => declared.Id == variable.Variable)))
+                    throw new InvalidOperationException($"{owner} modifies undeclared enemy variable '{variable.Variable}'.");
+                if (!Enum.IsDefined(variable.Operation))
+                    throw new InvalidOperationException($"{owner} uses an invalid enemy variable operation.");
                 break;
             case GainMaxHpEffect gainMaxHp:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainMaxHp.Amount);
