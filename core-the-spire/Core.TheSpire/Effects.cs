@@ -57,11 +57,14 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerHpLossCountSource), "playerHpLossCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyXCountSource), "energyX")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SavedCountSource), "savedCount")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlaysThisTurnCountSource), "cardPlaysThisTurn")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
 public sealed record EnergyXCountSource : CombatCountSource;
 public sealed record SavedCountSource(string Name) : CombatCountSource;
+public sealed record CardPlaysThisTurnCountSource(CardType? Type = null,
+    CardPlayHistoryPhase Phase = CardPlayHistoryPhase.Finished) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -89,7 +92,8 @@ public sealed record ForEachCardInPileEffect(CardPile From, CardSelectionFilter 
 public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
     CardPilePosition DestinationPosition = CardPilePosition.Bottom) : EffectNode;
 public sealed record UpgradeSelectedCardEffect : EffectNode;
-public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier) : EffectNode;
+public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier,
+    ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record TransformSelectedCardEffect(ContentId Card, CardPile From, bool Upgraded = false) : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
@@ -137,6 +141,7 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Atta
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyAtLeastPredicate), "energyAtLeast")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardExhaustedThisTurnPredicate), "cardExhaustedThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerLostHpThisTurnPredicate), "playerLostHpThisTurn")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SelectedCardIsClonePredicate), "selectedCardIsClone")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCountAtLeastPredicate), "pileCountAtLeast")]
 public abstract record EffectPredicate;
 public sealed record TargetAlivePredicate : EffectPredicate;
@@ -144,6 +149,7 @@ public sealed record HasPowerPredicate(ContentId Power, TargetSelector Target = 
 public sealed record EnergyAtLeastPredicate(int Amount) : EffectPredicate;
 public sealed record CardExhaustedThisTurnPredicate : EffectPredicate;
 public sealed record PlayerLostHpThisTurnPredicate : EffectPredicate;
+public sealed record SelectedCardIsClonePredicate : EffectPredicate;
 public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : EffectPredicate;
 
 internal static class EffectExecutor
@@ -214,6 +220,15 @@ internal static class EffectExecutor
             state.PendingEffects.RemoveAt(index);
             switch (effect)
             {
+                case EmitGameEventEffect emit:
+                    state.Emit(session, emit.Type, emit.Source, emit.Target, emit.Amount);
+                    break;
+                case CardEnteredCombatEffect entry:
+                    CombatCardEvents.Enter(session, entry.InstanceId);
+                    break;
+                case CardListenerEffect listener:
+                    CombatCardEvents.ExecuteListener(session, listener, target);
+                    break;
                 case CardPlayPhaseEffect phase:
                     CombatCardPlay.Continue(session, phase);
                     break;
@@ -351,13 +366,14 @@ internal static class EffectExecutor
                     var cardOwner = ResolveSingleTarget(state, owner, target, addCards.Target);
                     if (!ReferenceEquals(cardOwner, state.Player.Creature))
                         throw new InvalidOperationException("Combat card piles are only modeled for the player.");
-                    var destination = state.GetPile(addCards.Pile);
                     var playedFrame = state.CurrentCardPlay;
                     var upgradeLevel = addCards.InheritUpgradeFromPlayedCard && playedFrame is not null
                         ? state.CardInPlay(playedFrame).UpgradeLevel : 0;
-                    for (var i = 0; i < addCards.Count; i++)
-                        destination.Add(state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel));
-                    state.Emit(session, "cards_added", owner.Id, cardOwner.Id, addCards.Count);
+                    var addedInstances = Enumerable.Range(0, addCards.Count)
+                        .Select(_ => state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel)).ToArray();
+                    state.PendingEffects.Add(new(owner,
+                        new EmitGameEventEffect("cards_added", owner.Id, cardOwner.Id, addCards.Count), target, selectedCard, counts));
+                    CombatCardGeneration.QueuePlacements(state, addedInstances, addCards.Pile);
                     break;
                 case ChooseCardFromPileEffect chooseCard:
                     var options = state.GetPile(chooseCard.From)
@@ -416,7 +432,10 @@ internal static class EffectExecutor
                 case ModifySelectedCardCostEffect cost:
                     if (selectedCard is null)
                         throw new InvalidOperationException("A local cost modifier requires a selected card.");
-                    state.ModifyCardCost(session, selectedCard.InstanceId, cost.Modifier);
+                    var modifier = cost.CalculatedAmount is { } calculatedCost
+                        ? cost.Modifier with { Amount = ScaledAmount(state, owner, target, calculatedCost.BaseAmount,
+                            calculatedCost.PerCount, calculatedCost.Count, counts) } : cost.Modifier;
+                    state.ModifyCardCost(session, selectedCard.InstanceId, modifier);
                     break;
                 case TransformSelectedCardEffect transformation:
                     if (selectedCard is null)
@@ -478,6 +497,8 @@ internal static class EffectExecutor
                         EnergyAtLeastPredicate energy => state.Player.Energy >= energy.Amount,
                         CardExhaustedThisTurnPredicate => state.LastPlayerCardExhaustTurn == state.Turn,
                         PlayerLostHpThisTurnPredicate => state.LastPlayerHpLossTurn == state.Turn,
+                        SelectedCardIsClonePredicate => selectedCard?.IsClone
+                            ?? throw new InvalidOperationException("Clone predicates require a selected card context."),
                         PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
                         _ => throw new InvalidOperationException($"Unsupported effect predicate '{conditional.Predicate.GetType().Name}'.")
                     };
@@ -532,6 +553,7 @@ internal static class EffectExecutor
                 : state.GetPile(pile.Pile).Count,
             PlayerHpLossCountSource => state.PlayerHpLossCount,
             EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
+            CardPlaysThisTurnCountSource plays => state.CardPlayHistory.Count(plays.Type, plays.Phase),
             SavedCountSource saved => counts?.Resolve(saved.Name)
                 ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
             TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),

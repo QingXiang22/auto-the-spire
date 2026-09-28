@@ -4,6 +4,7 @@ namespace BaseSpire;
 
 public static class BaseSpireIds
 {
+    public static readonly ContentId Stomp = ContentId.Parse("base-spire:stomp");
     public static readonly ContentId InfernalBlade = ContentId.Parse("base-spire:infernal-blade");
     public static readonly ContentId PrimalForce = ContentId.Parse("base-spire:primal-force");
     public static readonly ContentId GiantRock = ContentId.Parse("base-spire:giant-rock");

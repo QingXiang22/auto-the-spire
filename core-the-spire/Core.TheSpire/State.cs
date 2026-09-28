@@ -190,6 +190,7 @@ internal sealed class GameState
     internal CardInstance? PendingChoiceSelectedCard { get; set; }
     internal EffectCountScope? PendingChoiceCounts { get; set; }
     internal List<CardPlayFrame> CardPlayFrames { get; } = [];
+    internal CardPlayHistory CardPlayHistory { get; } = new();
     internal CardPlayFrame? CurrentCardPlay => CardPlayFrames.Count == 0 ? null : CardPlayFrames[^1];
     internal CardInstance CardInPlay(CardPlayFrame frame) =>
         Player.PlayPileInstances.FirstOrDefault(card => card.InstanceId == frame.Card.InstanceId) ?? frame.Card;
@@ -389,7 +390,7 @@ internal sealed class GameState
 
     internal bool IsUpgradeable(CardInstance card) => card.UpgradeLevel == 0
         && Definition.Cards.TryGetValue(card.CardId, out var definition)
-        && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null || definition.UpgradedOnExhaust is not null);
+        && definition.HasUpgrade;
 
     internal bool MatchesCardSelectionFilter(CardInstance card, CardSelectionFilter filter) => filter switch
     {
@@ -411,13 +412,12 @@ internal sealed class GameState
             var index = cards.FindIndex(card => card.InstanceId == instanceId);
             if (index < 0 || !IsUpgradeable(cards[index])) continue;
             var card = cards[index];
-            var upgraded = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel + 1, card.CostModifiers);
+            var upgraded = card.WithUpgradeLevel(card.UpgradeLevel + 1);
             var definition = Definition.Cards[card.CardId];
             if (definition.ResolveCost(upgraded) < definition.ResolveCost(card))
             {
                 var newBase = definition.ResolveCost(upgraded);
-                upgraded = new CardInstance(card.InstanceId, card.CardId, upgraded.UpgradeLevel,
-                    card.CostModifiers.Select(modifier => modifier.Operation == CardCostOperation.Set
+                upgraded = upgraded.WithCostModifiers(card.CostModifiers.Select(modifier => modifier.Operation == CardCostOperation.Set
                         && modifier.Amount > newBase ? modifier with { Amount = newBase } : modifier).ToArray());
             }
             cards[index] = upgraded;
@@ -430,14 +430,14 @@ internal sealed class GameState
     internal void ModifyCardCost(GameSession session, string instanceId, CardCostModifier modifier)
     {
         modifier.Validate();
+        if (modifier.Operation == CardCostOperation.Add && modifier.Amount == 0) return;
         foreach (var pile in Enum.GetValues<CardPile>())
         {
             var cards = GetPile(pile);
             var index = cards.FindIndex(card => card.InstanceId == instanceId);
             if (index < 0) continue;
             var card = cards[index];
-            cards[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel,
-                [.. card.CostModifiers, modifier]);
+            cards[index] = card.WithCostModifiers([.. card.CostModifiers, modifier]);
             Emit(session, "card_cost_modified", Player.Id, instanceId, modifier.Amount);
             return;
         }
@@ -455,7 +455,7 @@ internal sealed class GameState
                 if (instanceId is not null && card.InstanceId != instanceId) continue;
                 if (!card.CostModifiers.Any(modifier => (modifier.Expires & boundary) != 0)) continue;
                 var remaining = card.CostModifiers.Where(modifier => (modifier.Expires & boundary) == 0).ToArray();
-                cards[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel, remaining);
+                cards[index] = card.WithCostModifiers(remaining);
                 Emit(session, "card_cost_expired", Player.Id, card.InstanceId, card.CostModifiers.Count - remaining.Length);
             }
         }
@@ -471,10 +471,12 @@ internal sealed class GameState
         if (Player.Creature.Hp <= 0 || FirstLivingEnemy is null) return;
         var replacement = Player.CreateGeneratedCard(effect.Card);
         if (effect.Upgraded && IsUpgradeable(replacement))
-            replacement = new CardInstance(replacement.InstanceId, replacement.CardId, 1);
+            replacement = replacement.WithUpgradeLevel(1);
         pile[index] = replacement;
         TemporarilyRetainedCards.Remove(instanceId);
-        Emit(session, "card_transformed", instanceId, replacement.InstanceId, 1);
+        PendingEffects.Add(new(Player.Creature,
+            new EmitGameEventEffect("card_transformed", instanceId, replacement.InstanceId, 1), null, replacement));
+        CombatCardEvents.QueueEntry(this, replacement);
     }
 
     internal int DecrementPower(GameSession session, EntityState owner, ContentId powerId)

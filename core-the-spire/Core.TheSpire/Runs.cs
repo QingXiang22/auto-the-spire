@@ -818,7 +818,7 @@ public sealed class RunEnvironment
             if (_cards is not null)
                 choices.AddRange(state.Deck.Where(instance => instance.UpgradeLevel == 0
                         && _cards.TryGetValue(instance.CardId, out var card)
-                        && (card.UpgradedEffect is not null || card.UpgradedCost is not null))
+                        && card.HasUpgrade)
                     .Select(instance => (PlayerAction)new RestSiteUpgradeCardAction(instance.InstanceId)));
             return Array.AsReadOnly(choices.ToArray());
         }
@@ -1136,7 +1136,7 @@ public sealed class RunEnvironment
             RunCardFilter.Any => true,
             RunCardFilter.Upgradeable => card.UpgradeLevel == 0 && _cards is not null
                 && _cards.TryGetValue(card.CardId, out var definition)
-                && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null),
+                && definition.HasUpgrade,
             _ => false
         }).ToArray());
 

@@ -67,7 +67,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         run.ActiveCombat = session;
         foreach (var hook in definition.RunHooks)
             hook.AfterCombatStarted(new RunHookContext(run, hook.Id));
-        session.State.Emit(session, "combat_started", session.State.Player.Id, session.State.Player.Id, 0);
+        CombatCardEvents.QueueInitialEntries(session);
         EffectExecutor.Resume(session);
         return session;
     }
@@ -117,7 +117,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var handInstances = handCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
         var drawInstances = drawCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
         var session = StartWithInstances(rng, playerId, playerHp, playerMaxHp, handInstances, enemies, drawInstances, characterId);
-        session.State.Emit(session, "combat_started", session.State.Player.Id, session.State.Player.Id, 0);
+        CombatCardEvents.QueueInitialEntries(session);
         EffectExecutor.Resume(session);
         return session;
     }
@@ -491,6 +491,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                             state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed);
                     }
                     state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
+                    state.CardPlayHistory.Reset();
                     break;
                 case EndTurnResolutionStage.EnemyAction:
                     if (state.Player.Creature.Hp <= 0)
@@ -564,6 +565,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     if (!state.IsTerminal)
                     {
                         state.Turn++;
+                        state.CardPlayHistory.Reset();
                         state.Player.Energy = state.PlayerMaxEnergy;
                         if (state.Definition.Hooks.All(hook => hook.ShouldClearBlock(
                             new RuleHookContext(session, hook.Id), state.Player.Id)))
