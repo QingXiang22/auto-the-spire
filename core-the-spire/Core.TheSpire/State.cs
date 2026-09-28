@@ -700,6 +700,7 @@ internal enum EndTurnResolutionStage
     PlayerOwnerTurnEndPowers,
     EnemyPlayerSideEndPowers,
     ExpirePlayerPowers,
+    EnemyOwnerTurnStartPowers,
     EnemyAction,
     ApplyEnemyActionPower,
     EnemyTurnEndPowers,
@@ -707,5 +708,6 @@ internal enum EndTurnResolutionStage
     PlayerEnemySideEndPowers,
     AdvanceEnemyAction,
     StartPlayerTurn,
-    PlayerTurnStartPowers
+    PlayerTurnStartPowers,
+    PlayerOwnerTurnStartPowers
 }

@@ -84,9 +84,10 @@ package base-spire {
   }
 
   power PlatingPower {
-    trigger = afterOwnerTurnEnd
-    effect = gainBlock(1, perPowerStack=PlatingPower)
-    decrementOnTrigger = true
+    on = [
+      trigger(event=afterOwnerTurnStart, effect=decrementPower(PlatingPower)),
+      trigger(event=afterOwnerTurnEnd, effect=gainBlock(1, perPowerStack=PlatingPower))
+    ]
   }
 
   power PyrePower {

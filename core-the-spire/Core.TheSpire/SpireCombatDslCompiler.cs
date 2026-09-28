@@ -300,6 +300,15 @@ public static class SpireCombatDslCompiler
                 case "upgradeCards":
                     CheckShape(call, 0, 0, "pile");
                     return new UpgradeCardsInPileEffect(EnumValue<CardPile>(RequiredArgument(call, "pile")));
+                case "decrementPower":
+                    CheckShape(call, 1, 1);
+                    return new DecrementPowerEffect(ReferenceId(Argument(call, 0)));
+                case "removePower":
+                    CheckShape(call, 1, 1);
+                    return new RemovePowerEffect(ReferenceId(Argument(call, 0)));
+                case "expirePower":
+                    CheckShape(call, 1, 1);
+                    return new ExpirePowerEffect(ReferenceId(Argument(call, 0)));
                 case "repeat":
                     CheckShape(call, 2, 2);
                     return new RepeatEffect(Integer(Argument(call, 0)), CompileEffect(Argument(call, 1)));

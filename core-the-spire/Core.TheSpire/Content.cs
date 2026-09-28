@@ -51,6 +51,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public CardPlayRule? CardRule { get; init; }
     public bool PreventEnergyGain { get; init; }
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
+    public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
 
     public void Validate()
     {
@@ -83,6 +84,17 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 throw new ArgumentException("A Power event subscription requires a source/target owner and non-overlapping damage property filters.");
             subscription.AffectedPower?.Validate();
         }
+        foreach (var subscription in Lifecycle)
+        {
+            if (!Enum.IsDefined(subscription.Trigger)
+                || subscription.Trigger is PowerTrigger.None or PowerTrigger.AfterCardPlayed
+                    or PowerTrigger.AfterCardExhausted)
+                throw new ArgumentException("Power lifecycle subscriptions require a turn boundary trigger.");
+            if (subscription.Effect is null)
+                throw new ArgumentException("Power lifecycle subscriptions require an effect.");
+        }
+        if (Lifecycle.Select(subscription => subscription.Trigger).Distinct().Count() != Lifecycle.Count)
+            throw new ArgumentException("A Power can define only one lifecycle effect per trigger.");
     }
 
     private static bool ValidDamageProperties(DamageProperties properties) =>
@@ -858,7 +870,8 @@ public enum CardType { Attack, Skill, Power, Status }
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
-    AfterCardPlayed, AfterOwnerTurnEnd }
+    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart }
+public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
 
 public interface IRulePackage
@@ -1130,6 +1143,8 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"Power '{power.Id}' filters an unknown affected Power '{affectedPower}'.");
                 ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' event '{subscription.EventType}'");
             }
+            foreach (var subscription in power.Lifecycle)
+                ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' lifecycle '{subscription.Trigger}'");
             foreach (var adjustment in new[] { power.OnStackChange, power.OnExpire })
                 if (adjustment is not null && !_powers.ContainsKey(adjustment.Power))
                     throw new InvalidOperationException($"Power '{power.Id}' references unknown lifecycle power '{adjustment.Power}'.");
