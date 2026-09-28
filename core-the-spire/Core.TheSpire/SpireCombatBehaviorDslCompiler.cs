@@ -51,7 +51,7 @@ public static class SpireCombatBehaviorDslCompiler
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
                 "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
-                "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events");
+                "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -98,8 +98,37 @@ public static class SpireCombatBehaviorDslCompiler
                 CardRule = properties.TryGetValue("cardRule", out var cardRuleNode) ? CompileCardRule(cardRuleNode) : null,
                 PreventEnergyGain = OptionalBoolean(properties, "preventEnergyGain"),
                 Events = properties.TryGetValue("events", out var eventsNode)
-                    ? CompilePowerEvents(eventsNode) : Array.Empty<PowerEventSubscription>()
+                    ? CompilePowerEvents(eventsNode) : Array.Empty<PowerEventSubscription>(),
+                Lifecycle = properties.TryGetValue("on", out var lifecycleNode)
+                    ? CompilePowerLifecycle(lifecycleNode) : Array.Empty<PowerLifecycleSubscription>()
             };
+        }
+
+        private IReadOnlyList<PowerLifecycleSubscription> CompilePowerLifecycle(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Power lifecycle hooks must be a list.");
+            return Array.AsReadOnly(list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "trigger" || call.Arguments.Any(argument => argument.Name is null))
+                    throw Error(call.Location, "Power lifecycle entries require trigger(event=..., effect=...).");
+                var arguments = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+                foreach (var argument in call.Arguments)
+                {
+                    if (argument.Name is not ("event" or "effect"))
+                        throw Error(argument.Location, $"Unknown Power lifecycle argument '{argument.Name}'.");
+                    if (!arguments.TryAdd(argument.Name!, argument.Value))
+                        throw Error(argument.Location, $"Duplicate Power lifecycle argument '{argument.Name}'.");
+                }
+                var trigger = EnumValue<PowerTrigger>(Required(arguments, "event", call.Location));
+                if (trigger is not (PowerTrigger.AfterOwnerTurnStart or PowerTrigger.AfterOwnerTurnEnd))
+                    throw Error(Required(arguments, "event", call.Location).Location,
+                        "Power lifecycle hooks currently support afterOwnerTurnStart and afterOwnerTurnEnd.");
+                return new PowerLifecycleSubscription(trigger,
+                    SpireCombatDslCompiler.CompileEffect(_package,
+                        Required(arguments, "effect", call.Location), _profile));
+            }).ToArray());
         }
 
         private IReadOnlyList<PowerEventSubscription> CompilePowerEvents(DslValueNode node)

@@ -520,8 +520,22 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         if (removed != 0)
                             state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed);
                     }
-                    state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyOwnerTurnStartPowers;
+                    state.CurrentEnemyIndex = 0;
                     state.CardPlayHistory.Reset();
+                    break;
+                case EndTurnResolutionStage.EnemyOwnerTurnStartPowers:
+                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                        state.CurrentEnemyIndex++;
+                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    {
+                        state.CurrentEnemyIndex = 0;
+                        state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
+                        break;
+                    }
+                    var startingEnemy = state.Enemies[state.CurrentEnemyIndex++];
+                    BeginPowerQueue(state, startingEnemy.Creature, PowerTrigger.AfterOwnerTurnStart);
                     break;
                 case EndTurnResolutionStage.EnemyAction:
                     if (state.Player.Creature.Hp <= 0)
@@ -615,6 +629,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     state.EndTurnStage = EndTurnResolutionStage.None;
                     return;
                 case EndTurnResolutionStage.PlayerTurnStartPowers:
+                    state.EndTurnStage = EndTurnResolutionStage.PlayerOwnerTurnStartPowers;
+                    BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterOwnerTurnStart);
+                    break;
+                case EndTurnResolutionStage.PlayerOwnerTurnStartPowers:
                     state.EndTurnStage = EndTurnResolutionStage.None;
                     if (!state.IsTerminal) state.Draw(session, 5);
                     return;
@@ -630,6 +648,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.PendingPowerTrigger = trigger;
         state.PendingPowerQueue = owner.Powers
             .Where(pair => state.Definition.Powers[pair.Key].Trigger == trigger
+                || state.Definition.Powers[pair.Key].Lifecycle.Any(subscription => subscription.Trigger == trigger)
                 || (state.Definition.Powers[pair.Key].RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, trigger))
                 || (state.Definition.Powers[pair.Key].RemoveAfterOpponentTurnEnd && IsOpponentTurnEnd(owner, trigger)))
             .Select(pair => pair.Key)
@@ -649,13 +668,21 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (!owner.Powers.TryGetValue(powerId, out var amount)) continue;
             var power = state.Definition.Powers[powerId];
             var triggerEffects = new List<EffectNode>();
-            if (power.Trigger == state.PendingPowerTrigger && !owner.SkipNextPowerTriggers.Remove(powerId))
+            var hasTrigger = power.Trigger == state.PendingPowerTrigger;
+            var lifecycleEffects = power.Lifecycle
+                .Where(subscription => subscription.Trigger == state.PendingPowerTrigger)
+                .Select(subscription => subscription.Effect).ToArray();
+            var skipTrigger = (hasTrigger || lifecycleEffects.Length > 0)
+                && owner.SkipNextPowerTriggers.Remove(powerId);
+            if (hasTrigger && !skipTrigger)
             {
                 if (power.TriggerEffect is { } triggerPower)
                     triggerEffects.Add(new ApplyPowerEffect(triggerPower, amount, TargetSelector.Self));
                 if (power.TriggerRuleEffect is { } triggerRule) triggerEffects.Add(triggerRule);
                 if (power.DecrementOnTrigger) triggerEffects.Add(new DecrementPowerEffect(powerId));
             }
+            if (!skipTrigger)
+                triggerEffects.AddRange(lifecycleEffects);
             if (power.RemoveAfterOwnerTurnEnd && IsOwnerTurnEnd(owner, state.PendingPowerTrigger))
                 triggerEffects.Add(new ExpirePowerEffect(powerId));
             if (power.RemoveAfterOpponentTurnEnd && IsOpponentTurnEnd(owner, state.PendingPowerTrigger))

@@ -237,6 +237,8 @@ internal static class EffectExecutor
                 effects.Add(new ApplyPowerEffect(triggeredPower, owner.PowerAmount(powerId), TargetSelector.Self));
             if (definition.TriggerRuleEffect is { } triggerEffect) effects.Add(triggerEffect);
             if (definition.DecrementOnTrigger) effects.Add(new DecrementPowerEffect(powerId));
+            foreach (var lifecycle in definition.Lifecycle.Where(subscription => subscription.Trigger == trigger))
+                effects.Add(lifecycle.Effect);
         }
         return effects;
     }
