@@ -1600,6 +1600,10 @@ public sealed class ContentRegistry
             case CardVariableCountSource variable:
                 ValidateCardVariableReference(variable.Variable, variable.Card, owner);
                 break;
+            case TakePowerEventAmountCountSource deferred when !_powers.ContainsKey(deferred.Power):
+                throw new InvalidOperationException($"{owner} reads deferred event amount for unknown power '{deferred.Power}'.");
+            case TakePowerEventAmountCountSource deferred when !Enum.IsDefined(deferred.Card):
+                throw new InvalidOperationException($"{owner} reads deferred event amount with an invalid card context.");
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;

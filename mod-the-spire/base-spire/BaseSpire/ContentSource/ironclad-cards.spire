@@ -33,6 +33,13 @@ package base-spire {
     upgradedPlay = applyPower(JuggernautPower, 8)
   }
 
+  card Rupture {
+    pools = [IroncladCardPool]
+    type = power rarity = uncommon cost = 1 target = self
+    play = applyPower(RupturePower, 1)
+    upgradedPlay = applyPower(RupturePower, 2)
+  }
+
   card InfernalBlade {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]

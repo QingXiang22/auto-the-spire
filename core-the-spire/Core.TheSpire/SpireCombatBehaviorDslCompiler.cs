@@ -113,7 +113,7 @@ public static class SpireCombatBehaviorDslCompiler
                 foreach (var argument in call.Arguments)
                 {
                     if (argument.Name is not ("type" or "owner" or "effect" or "require"
-                        or "exclude" or "positiveAmount"))
+                        or "exclude" or "positiveAmount" or "ownerTurnOnly" or "deferToCardPlayed"))
                         throw Error(argument.Location, $"Unknown Power event argument '{argument.Name}'.");
                     if (!arguments.TryAdd(argument.Name!, argument.Value))
                         throw Error(argument.Location, $"Duplicate Power event argument '{argument.Name}'.");
@@ -130,10 +130,19 @@ public static class SpireCombatBehaviorDslCompiler
                     || positiveNode is DslBooleanNode { Value: true };
                 if (positiveNode is not null and not DslBooleanNode)
                     throw Error(positiveNode.Location, "Power event positiveAmount must be a boolean.");
+                var ownerTurnOnly = !arguments.TryGetValue("ownerTurnOnly", out var ownerTurnNode)
+                    || ownerTurnNode is DslBooleanNode { Value: true };
+                if (ownerTurnNode is not null and not DslBooleanNode)
+                    throw Error(ownerTurnNode.Location, "Power event ownerTurnOnly must be a boolean.");
+                var defer = arguments.TryGetValue("deferToCardPlayed", out var deferNode)
+                    && deferNode is DslBooleanNode { Value: true };
+                if (deferNode is not null and not DslBooleanNode)
+                    throw Error(deferNode.Location, "Power event deferToCardPlayed must be a boolean.");
                 if (owner is not (GameEventActor.Source or GameEventActor.Target))
                     throw Error(Required(arguments, "owner", call.Location).Location,
                         "A Power event owner must be source or target.");
-                return new PowerEventSubscription(eventType, owner, effect, required, excluded, positive);
+                return new PowerEventSubscription(eventType, owner, effect, required, excluded, positive,
+                    ownerTurnOnly, defer);
             }).ToArray());
         }
 

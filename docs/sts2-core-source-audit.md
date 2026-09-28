@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。铁甲战士相关的 73 张已建模卡牌和当前已注册的九种怪物现由 `.spire` 内容编译，其中 70 张属于源码中的 87 张 Ironclad 卡池；遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。铁甲战士相关的 74 张已建模卡牌和当前已注册的九种怪物现由 `.spire` 内容编译，其中 71 张属于源码中的 87 张 Ironclad 卡池；遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -38,7 +38,7 @@
 
 [`OneTwoPunchPower.cs`](../sts2/src/Core/Models/Powers/OneTwoPunchPower.cs) 在确定 Attack 执行次数时增加一次并消费一层；FreeAttackPower 在每次执行前消费，因此重复打出可消费两层 Free Attack。DSL `cardRule` 描述这两个不同阶段，效果、生成牌与打出后 Power 每次执行，支付与放置各一次。测试覆盖升级给两张牌各多执行一次、Rage 触发、Anger 生成升级副本、连续两次选牌暂停和暂停期间升级。
 
-[`DrumOfBattle.cs`](../sts2/src/Core/Models/Cards/DrumOfBattle.cs) 打出抽两张，消耗时获得 2 能量（升级 3）；升级不改变普通打出效果。已用通用 onExhaust / upgradedOnExhaust 回调表达，并由自动消耗和批量牌堆移动检查验证。原版全模型 Hook 顺序及消耗回调自身 GeneratePlayCount 修改仍未迁入，当前声明的自身回调每次消耗执行一次。当前卡池迁入 70/87 张，仍有 17 张待实现。
+[`DrumOfBattle.cs`](../sts2/src/Core/Models/Cards/DrumOfBattle.cs) 打出抽两张，消耗时获得 2 能量（升级 3）；升级不改变普通打出效果。已用通用 onExhaust / upgradedOnExhaust 回调表达，并由自动消耗和批量牌堆移动检查验证。原版全模型 Hook 顺序及消耗回调自身 GeneratePlayCount 修改仍未迁入，当前声明的自身回调每次消耗执行一次。当前卡池迁入 71/87 张，仍有 16 张待实现。
 
 ## 已读与当前实现依据
 
