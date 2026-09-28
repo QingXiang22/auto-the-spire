@@ -453,12 +453,12 @@ public static class SpireCombatBehaviorDslCompiler
 
             if (behavior.Name is "chooseWithoutRepeat" or "chooseWithLimits")
             {
-                var choiceNames = new List<(string Name, int MaxConsecutive)>();
+                var choiceNames = new List<(string Name, int Weight, int? MaxConsecutive)>();
                 if (behavior.Name == "chooseWithoutRepeat")
                 {
                     if (behavior.Arguments.Count == 0 || behavior.Arguments.Any(argument => argument.Name is not null))
                         throw Error(behavior.Location, "chooseWithoutRepeat requires positional move names.");
-                    choiceNames.AddRange(behavior.Arguments.Select(argument => (Name(argument.Value), 0)));
+                    choiceNames.AddRange(behavior.Arguments.Select(argument => (Name(argument.Value), 1, (int?)null)));
                 }
                 else
                 {
@@ -466,19 +466,30 @@ public static class SpireCombatBehaviorDslCompiler
                     {
                         if (argument.Name is not null) throw Error(argument.Location, "chooseWithLimits takes candidate(...) expressions.");
                         var candidate = RequireCall(argument.Value);
-                        if (candidate.Name != "candidate" || candidate.Arguments.Count != 2
-                            || candidate.Arguments[0].Name is not null || candidate.Arguments[1].Name != "maxConsecutive")
-                            throw Error(candidate.Location, "Each limited choice must be candidate(move, maxConsecutive=n).");
+                        if (candidate.Name != "candidate" || candidate.Arguments.Count is < 1 or > 3
+                            || candidate.Arguments[0].Name is not null)
+                            throw Error(candidate.Location, "Choices use candidate(move, weight=n, maxConsecutive=n).");
+                        var candidateProperties = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+                        foreach (var property in candidate.Arguments.Skip(1))
+                        {
+                            if (property.Name is not ("weight" or "maxConsecutive")
+                                || !candidateProperties.TryAdd(property.Name, property.Value))
+                                throw Error(property.Location, "Candidates accept unique weight and maxConsecutive values.");
+                        }
                         var name = Name(candidate.Arguments[0].Value);
-                        var max = Integer(candidate.Arguments[1].Value);
-                        if (max <= 0) throw Error(candidate.Arguments[1].Location, "maxConsecutive must be positive.");
-                        choiceNames.Add((name, max));
+                        int? max = candidateProperties.TryGetValue("maxConsecutive", out var maxNode)
+                            ? Integer(maxNode) : null;
+                        if (max is <= 0) throw Error(maxNode!.Location, "maxConsecutive must be positive.");
+                        var weight = candidateProperties.TryGetValue("weight", out var weightNode)
+                            ? Integer(weightNode) : 1;
+                        if (weight <= 0) throw Error(weightNode?.Location ?? candidate.Location, "Candidate weight must be positive.");
+                        choiceNames.Add((name, weight, max));
                     }
                 }
                 if (choiceNames.Select(choice => choice.Name).Distinct(StringComparer.Ordinal).Count() != choiceNames.Count)
                     throw Error(behavior.Location, "Random behavior choices must be unique.");
-                var choices = choiceNames.Select(choice => new EnemyActionChoice(Id(choice.Name),
-                    MaxConsecutiveUses: choice.MaxConsecutive == 0 ? null : choice.MaxConsecutive)).ToArray();
+                var choices = choiceNames.Select(choice => new EnemyActionChoice(Id(choice.Name), choice.Weight,
+                    MaxConsecutiveUses: choice.MaxConsecutive)).ToArray();
                 if (choices.Length < 2)
                     throw Error(behavior.Location, "A random behavior needs at least two choices.");
                 var transition = new EnemyActionTransition(choices,
