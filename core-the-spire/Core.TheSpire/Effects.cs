@@ -31,6 +31,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ForEachCardInPileEffect), "forEachCardInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveSelectedCardToPileEffect), "moveSelectedCardToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ModifySelectedCardCostEffect), "modifySelectedCardCost")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TransformSelectedCardEffect), "transformSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowerEffect), "removePower")]
@@ -87,6 +89,8 @@ public sealed record ForEachCardInPileEffect(CardPile From, CardSelectionFilter 
 public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
     CardPilePosition DestinationPosition = CardPilePosition.Bottom) : EffectNode;
 public sealed record UpgradeSelectedCardEffect : EffectNode;
+public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier) : EffectNode;
+public sealed record TransformSelectedCardEffect(ContentId Card, CardPile From, bool Upgraded = false) : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
@@ -95,7 +99,8 @@ public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record GeneratePotionEffect(int Count = 1) : EffectNode;
 public sealed record GenerateCombatCardsEffect(int Count, CardPile Pile = CardPile.Hand, bool Upgraded = false,
-    ScaledCombatAmount? CalculatedCount = null) : EffectNode;
+    ScaledCombatAmount? CalculatedCount = null, CardType? Type = null, bool Distinct = false,
+    CardCostModifier? Cost = null) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
     [System.Text.Json.Serialization.JsonConstructor]
@@ -125,7 +130,7 @@ public enum GameEventActor { Source, Target, Player }
 public sealed record GameEventEffect(EffectNode Effect, GameEventActor Actor = GameEventActor.Source);
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
-public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained }
+public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Attack }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
@@ -217,6 +222,9 @@ internal static class EffectExecutor
                     break;
                 case PlaceGeneratedCardEffect generatedCard:
                     CombatCardGeneration.Place(session, generatedCard);
+                    break;
+                case ExpireCardCostEffect costExpiry:
+                    state.ExpireCardCosts(session, costExpiry.Boundary, costExpiry.InstanceId);
                     break;
                 case GenerateCombatCardsEffect generation:
                     var generatedCount = generation.CalculatedCount is { } calculatedGeneration
@@ -405,6 +413,16 @@ internal static class EffectExecutor
                         throw new InvalidOperationException("Upgrading a selected card requires a card selection context.");
                     state.UpgradeCard(session, selectedCard.InstanceId);
                     break;
+                case ModifySelectedCardCostEffect cost:
+                    if (selectedCard is null)
+                        throw new InvalidOperationException("A local cost modifier requires a selected card.");
+                    state.ModifyCardCost(session, selectedCard.InstanceId, cost.Modifier);
+                    break;
+                case TransformSelectedCardEffect transformation:
+                    if (selectedCard is null)
+                        throw new InvalidOperationException("Transformation requires a selected card.");
+                    state.TransformCard(session, selectedCard.InstanceId, transformation);
+                    break;
                 case UpgradeCardsInPileEffect upgradeCards:
                     var upgradedCount = 0;
                     foreach (var card in state.GetPile(upgradeCards.Pile).ToArray())
@@ -487,7 +505,7 @@ internal static class EffectExecutor
                 case CustomEffect custom:
                     if (!state.Definition.CustomEffects.TryGetValue(custom.Handler, out var handler))
                         throw new InvalidOperationException($"Unknown custom effect handler '{custom.Handler}'.");
-                    handler.Execute(new EffectExecutionContext(session, owner, target, handler.Id, counts), custom.Payload);
+                    handler.Execute(new EffectExecutionContext(session, owner, target, handler.Id, counts, selectedCard), custom.Payload);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported effect node: {effect.GetType().Name}");

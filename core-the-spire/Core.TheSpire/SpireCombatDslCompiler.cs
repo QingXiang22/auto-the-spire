@@ -192,12 +192,15 @@ public static class SpireCombatDslCompiler
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
                 case "generateCards":
-                    CheckShape(call, 0, 0, "count", "pile", "upgraded");
+                    CheckShape(call, 0, 0, "count", "pile", "upgraded", "type", "distinct", "cost");
                     var generationCount = RequiredArgument(call, "count");
                     return new GenerateCombatCardsEffect(
                         generationCount is DslNumberNode ? Integer(generationCount) : 0,
                         OptionalEnum(call, "pile", CardPile.Hand), OptionalBoolean(call, "upgraded", false),
-                        generationCount is DslNumberNode ? null : CompileScaledAmount(generationCount));
+                        generationCount is DslNumberNode ? null : CompileScaledAmount(generationCount),
+                        OptionalArgument(call, "type") is { } generatedType ? EnumValue<CardType>(generatedType) : null,
+                        OptionalBoolean(call, "distinct", false),
+                        OptionalArgument(call, "cost") is { } generatedCost ? CompileCostModifier(generatedCost) : null);
                 case "choose":
                     CheckShape(call, 0, 0, "prompt", "options");
                     if (RequiredArgument(call, "options") is not DslListNode choiceOptions)
@@ -247,6 +250,13 @@ public static class SpireCombatDslCompiler
                 case "upgradeSelectedCard":
                     CheckShape(call, 0, 0);
                     return new UpgradeSelectedCardEffect();
+                case "modifySelectedCardCost":
+                    CheckShape(call, 1, 1);
+                    return new ModifySelectedCardCostEffect(CompileCostModifier(Argument(call, 0)));
+                case "transformSelectedCard":
+                    CheckShape(call, 1, 1, "from", "upgraded");
+                    return new TransformSelectedCardEffect(ReferenceId(Argument(call, 0)),
+                        EnumValue<CardPile>(RequiredArgument(call, "from")), OptionalBoolean(call, "upgraded", false));
                 case "upgradeCards":
                     CheckShape(call, 0, 0, "pile");
                     return new UpgradeCardsInPileEffect(EnumValue<CardPile>(RequiredArgument(call, "pile")));
@@ -292,6 +302,22 @@ public static class SpireCombatDslCompiler
                 default:
                     throw Error(call.Location, $"Unknown combat predicate '{call.Name}'.");
             }
+        }
+
+        private CardCostModifier CompileCostModifier(DslValueNode node)
+        {
+            var call = RequireCall(node);
+            if (call.Name != "costModifier") throw Error(call.Location, "Expected costModifier(amount, expires=[...]).");
+            CheckShape(call, 1, 1, "operation", "expires", "reduceOnly");
+            if (RequiredArgument(call, "expires") is not DslListNode expirations || expirations.Items.Count == 0)
+                throw Error(call.Location, "Cost modifier expirations must be a nonempty list.");
+            var boundary = expirations.Items.Aggregate((CardCostExpiration)0,
+                (flags, item) => flags | EnumValue<CardCostExpiration>(item));
+            var modifier = new CardCostModifier(Integer(Argument(call, 0)),
+                OptionalEnum(call, "operation", CardCostOperation.Set), boundary,
+                OptionalBoolean(call, "reduceOnly", false));
+            modifier.Validate();
+            return modifier;
         }
 
         private ScaledCombatAmount CompileScaledAmount(DslValueNode node)

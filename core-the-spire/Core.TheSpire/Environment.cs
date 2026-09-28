@@ -479,6 +479,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 case EndTurnResolutionStage.PlayerTurnEndPowers:
                     state.EndTurnStage = EndTurnResolutionStage.ExpirePlayerPowers;
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnEnd);
+                    state.ExpireCardCosts(session, CardCostExpiration.TurnEnd);
+                    EffectExecutor.Resume(session);
                     break;
                 case EndTurnResolutionStage.ExpirePlayerPowers:
                     foreach (var powerId in state.Player.Creature.Powers.Keys

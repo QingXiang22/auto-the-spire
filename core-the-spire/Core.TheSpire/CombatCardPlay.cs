@@ -95,6 +95,9 @@ internal static class CombatCardPlay
                 break;
             case CardPlayPhase.Complete:
                 state.CardPlayFrames.RemoveAt(state.CardPlayFrames.Count - 1);
+                if (state.CardInPlay(frame).CostModifiers.Any(modifier => (modifier.Expires & CardCostExpiration.Played) != 0))
+                    state.PendingEffects.Add(new(state.Player.Creature,
+                        new ExpireCardCostEffect(frame.Card.InstanceId, CardCostExpiration.Played), null, null));
                 PlaceCard(session, frame.Card, frame.ResultPile);
                 break;
             default:
