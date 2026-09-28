@@ -696,6 +696,7 @@ internal sealed class GameState
             owner.SkipNextPowerTriggers.Remove(powerId);
             owner.ClearPowerEventAmounts(powerId);
             owner.ClearPowerVariables(powerId);
+            Emit(session, "power_removed", owner.Id, owner.Id, amount, affectedPower: powerId);
         }
         else owner.MutablePowers[powerId] = newAmount;
         if (definition.Role == PowerRole.Strength) owner.Strength += delta;

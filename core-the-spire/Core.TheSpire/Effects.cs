@@ -48,6 +48,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowerEffect), "removePower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SetEnemyActionEffect), "setEnemyAction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ExpirePowerEffect), "expirePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SummonEnemyEffect), "summonEnemy")]
@@ -103,7 +104,8 @@ public sealed record RandomAttackEffect(int Amount, ScaledCombatAmount? Calculat
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
-public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null) : EffectNode;
+public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
+    DamageProperties? Properties = null) : EffectNode;
 public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
@@ -156,6 +158,7 @@ public sealed record TransformSelectedCardEffect(ContentId Card, CardPile From, 
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
+public sealed record SetEnemyActionEffect(ContentId Action) : EffectNode;
 public sealed record ExpirePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
@@ -483,8 +486,8 @@ internal static class EffectExecutor
                     var blockAmount = block.PerPowerStack is { } perPowerStack
                         ? block.Amount * owner.PowerAmount(perPowerStack)
                         : block.Amount;
-                    var blockProperties = selectedCard is not null || owner.IsEnemy
-                        ? DamageProperties.Move : DamageProperties.None;
+                    var blockProperties = block.Properties ?? (selectedCard is not null || owner.IsEnemy
+                        ? DamageProperties.Move : DamageProperties.None);
                     blockAmount = state.ModifyBlockGain(owner, blockAmount, blockProperties);
                     owner.Block += blockAmount;
                     state.Emit(session, "block", owner.Id, owner.Id, blockAmount,
@@ -754,6 +757,13 @@ internal static class EffectExecutor
                     if (removedAmount != 0)
                         state.Emit(session, "power_removed", owner.Id, owner.Id, removedAmount,
                             affectedPower: removePower.Power);
+                    break;
+                case SetEnemyActionEffect setEnemyAction:
+                    var actingEnemy = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == owner.Id)
+                        ?? throw new InvalidOperationException("Setting an enemy action requires an enemy Power owner.");
+                    var actionIndex = actingEnemy.Definition.GetActionIndex(setEnemyAction.Action);
+                    actingEnemy.ActionIndex = actionIndex;
+                    actingEnemy.SelectAction(setEnemyAction.Action);
                     break;
                 case ExpirePowerEffect expirePower:
                     state.ExpirePower(session, owner, expirePower.Power);

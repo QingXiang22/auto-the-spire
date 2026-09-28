@@ -1611,6 +1611,10 @@ public sealed class ContentRegistry
                 break;
             case GainBlockEffect gainBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlock.Amount);
+                if (gainBlock.Properties is { } blockProperties
+                    && (blockProperties & ~(DamageProperties.Move | DamageProperties.Unpowered
+                        | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) != 0)
+                    throw new InvalidOperationException($"{owner} gains block with invalid damage properties.");
                 if (gainBlock.PerPowerStack is { } blockPower && !_powers.ContainsKey(blockPower))
                     throw new InvalidOperationException($"{owner} scales block by unknown power '{blockPower}'.");
                 break;
@@ -1735,6 +1739,11 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} decrements unknown power '{decrementPower.Power}'.");
             case RemovePowerEffect removePower when !_powers.ContainsKey(removePower.Power):
                 throw new InvalidOperationException($"{owner} removes unknown power '{removePower.Power}'.");
+            case SetEnemyActionEffect setEnemyAction:
+                setEnemyAction.Action.Validate();
+                if (!_enemies.Values.Any(enemy => enemy.Actions.Any(action => action.Id == setEnemyAction.Action)))
+                    throw new InvalidOperationException($"{owner} sets unknown enemy action '{setEnemyAction.Action}'.");
+                break;
             case ExpirePowerEffect expirePower when !_powers.ContainsKey(expirePower.Power):
                 throw new InvalidOperationException($"{owner} expires unknown power '{expirePower.Power}'.");
             case ChooseEffect choice:

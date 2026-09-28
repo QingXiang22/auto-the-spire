@@ -62,6 +62,18 @@ package base-spire {
         target=target, properties=[unpowered]))]
   }
 
+  power Slumber {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+    events = [event(type=damage, owner=target, ownerTurnOnly=false, positiveAmount=true,
+      effect=decrementPower(Slumber))]
+  }
+
+  power Plating {
+    events = [event(type=power_removed, owner=target, ownerTurnOnly=false, power=Slumber,
+      effect=sequence(removePower(Plating), setEnemyAction(slumberingBeetleRollout)))]
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -638,5 +650,25 @@ package base-spire {
       spinyToadLash = attack(variants(default=17, deadly=19), target=player)
     )
     behavior = cycle(spinyToadSpikes, spinyToadExplosion, spinyToadLash)
+  }
+
+  enemy SlumberingBeetle {
+    hp = variants(default=range(86, 86), tough=range(89, 89))
+    startingBlock = variants(default=15, tough=18)
+    startingPowers = [power(Plating, variants(default=15, tough=18)), power(Slumber, 3)]
+    moves = actions(
+      slumberingBeetleSnore = gainBlock(variants(default=15, tough=18), properties=[unpowered]),
+      slumberingBeetleRollout = sequence(
+        attack(variants(default=16, deadly=18), target=player),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = graph(start=slumberingBeetleSnore, edges=[
+      edge(slumberingBeetleSnore, chooseByCondition(
+        candidate(slumberingBeetleSnore, when=power(enemy, Slumber, greaterThan, 0)),
+        candidate(slumberingBeetleRollout, when=power(enemy, Slumber, equal, 0))
+      )),
+      edge(slumberingBeetleRollout, slumberingBeetleRollout)
+    ])
   }
 }
