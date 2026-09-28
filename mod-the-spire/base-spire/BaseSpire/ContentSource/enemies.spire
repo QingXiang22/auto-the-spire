@@ -18,6 +18,16 @@ package base-spire {
       effect=decrementPower(SlipperyPower))]
   }
 
+  power ImbalancedPower {
+    events = [event(type=fully_blocked, owner=source, positiveAmount=true, ownerTurnOnly=false,
+      effect=applyPower(OffBalance, 1, target=self))]
+  }
+
+  power OffBalance {
+    events = [event(type=enemy_action_skipped, owner=target, ownerTurnOnly=false,
+      effect=removePower(OffBalance))]
+  }
+
   power IllusionPower {}
 
   power SoarPower {
@@ -902,5 +912,24 @@ package base-spire {
       vantomPrepare = applyPower(Strength, 2, target=self)
     )
     behavior = cycle(vantomInkBlot, vantomInkyLance, vantomDismember, vantomPrepare)
+  }
+
+  enemy BowlbugRock {
+    hp = variants(default=range(45, 48), tough=range(46, 49))
+    startingPowers = [power(ImbalancedPower, 1)]
+    moves = actions(
+      bowlbugRockHeadbutt = sequence(
+        attack(variants(default=15, deadly=16), target=player),
+        if(hasPower(OffBalance, target=self), stun(target=self))
+      ),
+      bowlbugRockDizzy = action(intent=Stun, effect=sequence())
+    )
+    behavior = graph(start=bowlbugRockHeadbutt, edges=[
+      edge(bowlbugRockHeadbutt, chooseByCondition(
+        candidate(bowlbugRockDizzy, when=power(enemy, OffBalance, greaterThan, 0)),
+        candidate(bowlbugRockHeadbutt, when=power(enemy, OffBalance, equal, 0))
+      )),
+      edge(bowlbugRockDizzy, bowlbugRockHeadbutt)
+    ])
   }
 }

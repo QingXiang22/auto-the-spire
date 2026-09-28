@@ -51,6 +51,30 @@ public sealed class CombatSliceTests
         Assert.Equal(0, partiallyBlocked.State.Enemy.PowerAmount(ContentId.Parse("base-spire:slippery-power")));
     }
 
+    public void BowlbugRockStunsWhenItsAttackIsFullyBlockedAndRecoversAfterSkippedAction()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(41, "ironclad", 80, 80,
+            [BaseSpireIds.Impervious], ContentId.Parse("base-spire:bowlbugs-weak"));
+        var rockId = session.State.Enemies.Single(enemy =>
+            enemy.Definition.Id == ContentId.Parse("base-spire:bowlbug-rock")).Creature.Id;
+
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        var attackTurn = environment.Step(session, new EndTurnAction());
+
+        var rockAfterAttack = attackTurn.Observation.Enemies.Single(enemy => enemy.Id == rockId);
+        Assert.Equal(IntentKind.Stun, rockAfterAttack.Intent);
+        Assert.Contains(attackTurn.Events, gameEvent => gameEvent.Type == "fully_blocked"
+            && gameEvent.Source == rockId && gameEvent.Amount > 0);
+
+        var skippedTurn = environment.Step(session, new EndTurnAction());
+        Assert.Contains(skippedTurn.Events, gameEvent => gameEvent.Type == "enemy_action_skipped"
+            && gameEvent.Target == rockId);
+        Assert.Equal(0, skippedTurn.Observation.Enemies.Single(enemy => enemy.Id == rockId)
+            .Powers.GetValueOrDefault(ContentId.Parse("base-spire:off-balance")));
+    }
+
     public void BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues()
     {
         var definition = Build(new BaseSpirePackage(deadlyEnemies: true));
