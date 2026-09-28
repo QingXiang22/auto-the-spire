@@ -44,6 +44,11 @@
       "tags": ["base-spire:burrower"]
     },
     {
+      "id": "base-spire:slimed-berserker-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:slimed-berserker"]
+    },
+    {
       "id": "base-spire:exoskeletons-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],

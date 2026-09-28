@@ -744,4 +744,19 @@ package base-spire {
       edge(tunnelerDizzy, tunnelerBite)
     ])
   }
+
+  enemy SlimedBerserker {
+    hp = variants(default=range(261, 261), tough=range(281, 281))
+    moves = actions(
+      slimedBerserkerVomitIchor = addCards(Slimed, pile=discard, count=10, target=player),
+      slimedBerserkerFuriousPummeling = repeat(4, attack(variants(default=4, deadly=5), target=player)),
+      slimedBerserkerLeechingHug = sequence(
+        applyPower(Weak, 3, target=player),
+        applyPower(Strength, 3, target=self)
+      ),
+      slimedBerserkerSmother = attack(variants(default=30, deadly=33), target=player)
+    )
+    behavior = cycle(slimedBerserkerVomitIchor, slimedBerserkerFuriousPummeling,
+      slimedBerserkerLeechingHug, slimedBerserkerSmother)
+  }
 }
