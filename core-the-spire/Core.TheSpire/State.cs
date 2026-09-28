@@ -584,7 +584,7 @@ internal sealed class GameState
         }
     }
 
-    internal int ModifyBlockGain(EntityState owner, int amount)
+    internal int ModifyBlockGain(EntityState owner, int amount, DamageProperties properties)
     {
         if (amount <= 0) return amount;
         var currentPlayId = CurrentCardPlay?.ExecutionId;
@@ -603,6 +603,9 @@ internal sealed class GameState
                 if (earlierEntries < checked(powerAmount * modifier.PriorEntriesPerPowerStack))
                     amount = checked(amount * modifier.Multiplier);
             }
+            if ((properties & DamageProperties.Move) != 0
+                && Definition.Powers[powerId].BlockGainMultiplier is { } multiplier)
+                amount = decimal.ToInt32(decimal.Floor(amount * multiplier));
         }
         return amount;
     }
