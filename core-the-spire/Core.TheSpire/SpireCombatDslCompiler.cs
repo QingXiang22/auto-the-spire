@@ -256,6 +256,11 @@ public static class SpireCombatDslCompiler
                         EnumValue<CardPile>(RequiredArgument(call, "pile")), OptionalInteger(call, "count", 1),
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
+                case "summonEnemy":
+                    CheckShape(call, 1, 1, "count");
+                    var summonCount = OptionalInteger(call, "count", 1);
+                    if (summonCount <= 0) throw Error(call.Location, "Summoned enemy count must be positive.");
+                    return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount);
                 case "generateCards":
                     CheckShape(call, 0, 0, "count", "pile", "upgraded", "type", "distinct", "cost");
                     var generationCount = RequiredArgument(call, "count");

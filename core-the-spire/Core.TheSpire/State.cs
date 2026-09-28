@@ -202,6 +202,7 @@ internal sealed class GameState
     private readonly IReadOnlyList<GameEvent> _eventView;
     private readonly ScopedIntState _modInts;
     private long _nextCardPlayExecutionId;
+    private int _nextSummonedEnemyId;
     private int _playerTurnEventStartSequence;
 
     internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
@@ -234,6 +235,13 @@ internal sealed class GameState
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
     internal long NextCardPlayExecutionId() => checked(++_nextCardPlayExecutionId);
+    internal string NextSummonedEnemyInstanceId(ContentId enemyId)
+    {
+        string instanceId;
+        do instanceId = $"{enemyId}#summoned-{_nextSummonedEnemyId++}";
+        while (Enemies.Any(enemy => StringComparer.Ordinal.Equals(enemy.Creature.Id, instanceId)));
+        return instanceId;
+    }
     public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0))
         && PendingChoice is null && PendingCardSelection is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }

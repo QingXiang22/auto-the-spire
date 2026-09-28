@@ -1577,6 +1577,11 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an invalid card destination or target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(addCards.Count);
                 break;
+            case SummonEnemyEffect summon:
+                if (!_enemies.ContainsKey(summon.Enemy))
+                    throw new InvalidOperationException($"{owner} summons unknown enemy '{summon.Enemy}'.");
+                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(summon.Count);
+                break;
             case ChooseCardFromPileEffect chooseCard:
                 if (!Enum.IsDefined(chooseCard.From)
                     || chooseCard.To is { } destination && !Enum.IsDefined(destination)

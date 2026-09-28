@@ -164,6 +164,11 @@
       "enemyIds": ["base-spire:haunted-ship"]
     },
     {
+      "id": "base-spire:fogmog-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:fogmog"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
