@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；33 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；34 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -47,6 +47,8 @@
 [`Fogmog.cs`](../sts2/src/Core/Models/Monsters/Fogmog.cs) 以 Illusion 开场召唤 Eye with Teeth；之后执行 Swipe（8/9，获得 1 力量）并按 2:3 权重选择同效果 Swipe 或 Headbutt（14/16），两者再回到循环。Fogmog HP 为 74，Tough 为 78。新增的通用 `summonEnemy` 效果将新敌人加入当前战斗，应用其初始 Power，并使用同一 seed 的 enemy-AI 流选择初始行动。Eye with Teeth 有 6 HP、1 层 Illusion Power，循环将 3 张 Dazed 放入玩家弃牌堆。原版的非战斗视觉/Doombound 存在行为不在当前战斗切片中。
 
 [`OwlMagistrate.cs`](../sts2/src/Core/Models/Monsters/OwlMagistrate.cs) 普通 HP 231、Tough 247，循环 Scrutiny（16/17）、六段 Peck Assault（每段 4）、Judicial Flight 和 Verdict（33/36 并施加 4 层 Vulnerable）。飞行期间通过通用 `SoarPower` 将 powered 攻击伤害减半；Verdict 结算后移除 Soar。单体普通遭遇已登记。
+
+[`LouseProgenitor.cs`](../sts2/src/Core/Models/Monsters/LouseProgenitor.cs) HP 为 134–136（Tough 138–141），以 Curl Up 提供的 14（Tough 18）点格挡开场，循环 Web（9/10 并施加 2 层 Frail）、Curl and Grow（获得 14/18 格挡与 5 点力量）、Pounce（14/16）。DSL 新增通用敌人 `startingBlock` 字段，与 `startingPowers` 一样在初始行动确定前应用；Curl Up 的可视化状态未纳入模拟状态。
 
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 

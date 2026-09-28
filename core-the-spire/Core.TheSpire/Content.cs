@@ -816,11 +816,13 @@ public sealed record EnemyDefinition
     public EnemyDefinition(ContentId id, int minHp, int maxHp, IReadOnlyList<EnemyActionDefinition> actions,
         bool loopLastAction = true, ContentId? startingActionId = null,
         EnemyActionTransition? startingTransition = null,
-        IEnumerable<EnemyStartingPower>? startingPowers = null)
+        IEnumerable<EnemyStartingPower>? startingPowers = null,
+        int startingBlock = 0)
     {
         id.Validate();
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(minHp);
         if (maxHp < minHp) throw new ArgumentOutOfRangeException(nameof(maxHp));
+        ArgumentOutOfRangeException.ThrowIfNegative(startingBlock);
         ArgumentNullException.ThrowIfNull(actions);
         var copiedActions = actions.ToArray();
         var copiedStartingPowers = startingPowers?.ToArray() ?? [];
@@ -878,6 +880,7 @@ public sealed record EnemyDefinition
         StartingActionIndex = startId is { } value ? indexes[value] : 0;
         StartingTransition = startingTransition;
         StartingPowers = Array.AsReadOnly(copiedStartingPowers);
+        StartingBlock = startingBlock;
         _limitedActionIds = limitedActionIds;
         _actionIndexes = new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, int>(indexes);
     }
@@ -889,6 +892,7 @@ public sealed record EnemyDefinition
     public int StartingActionIndex { get; }
     public EnemyActionTransition? StartingTransition { get; }
     public IReadOnlyList<EnemyStartingPower> StartingPowers { get; }
+    public int StartingBlock { get; }
     internal IReadOnlySet<ContentId> LimitedActionIds => _limitedActionIds;
     internal int GetActionIndex(ContentId actionId) => _actionIndexes[actionId];
 

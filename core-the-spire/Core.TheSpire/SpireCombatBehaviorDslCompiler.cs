@@ -345,7 +345,7 @@ public static class SpireCombatBehaviorDslCompiler
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)
         {
             var properties = Properties(declaration, "Enemy");
-            Only(properties, "hp", "moves", "behavior", "startingPowers");
+            Only(properties, "hp", "moves", "behavior", "startingPowers", "startingBlock");
             var (minHp, maxHp) = HpRange(Required(properties, "hp", declaration.Location));
             var moves = RequireCall(Required(properties, "moves", declaration.Location));
             if (moves.Name != "actions") throw Error(moves.Location, "Enemy moves must use actions(name = effect, ...).");
@@ -405,7 +405,9 @@ public static class SpireCombatBehaviorDslCompiler
                 startingActionId: behaviorPlan.StartingTransition is null ? actionIds[behaviorPlan.StartMove] : null,
                 startingTransition: behaviorPlan.StartingTransition,
                 startingPowers: properties.TryGetValue("startingPowers", out var startingPowersNode)
-                    ? CompileStartingPowers(startingPowersNode) : null);
+                    ? CompileStartingPowers(startingPowersNode) : null,
+                startingBlock: properties.TryGetValue("startingBlock", out var startingBlockNode)
+                    ? Integer(SelectVariant(startingBlockNode)) : 0);
         }
 
         private IReadOnlyList<EnemyStartingPower> CompileStartingPowers(DslValueNode node)

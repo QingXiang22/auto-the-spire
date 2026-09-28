@@ -177,6 +177,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             {
                 ActionIndex = enemyDefinition.StartingActionIndex
             };
+            enemy.Creature.Block = enemyDefinition.StartingBlock;
             combatEnemies.Add(enemy);
         }
         var handInstances = hand.ToArray();

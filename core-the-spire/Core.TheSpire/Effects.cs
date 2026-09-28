@@ -1036,6 +1036,7 @@ internal static class EffectExecutor
             {
                 ActionIndex = definition.StartingActionIndex
             };
+            enemy.Creature.Block = definition.StartingBlock;
             state.Enemies.Add(enemy);
             spawned.Add((instanceId, enemy));
         }
