@@ -96,7 +96,7 @@
 
 [`CorruptionPower.cs`](../sts2/src/Core/Models/Powers/CorruptionPower.cs) 与 [`FreeAttackPower.cs`](../sts2/src/Core/Models/Powers/FreeAttackPower.cs) 由通用 `cardRule` 表达；[`CardEnergyCost.cs`](../sts2/src/Core/Entities/Cards/CardEnergyCost.cs) 的 X 费路径直接使用当前能量，因此费用覆盖只作用于固定费用。`CardModel.OnPlayWrapper` 在效果前计算结果牌堆，`GetResultPileTypeForCardPlay` 使 Power 牌离开战斗，普通牌在完成后进入弃牌堆；本轮修正了此前推迟至回合末弃牌的简化。测试验证零能量 Skill 打出、选择期间保持出牌堆、快照去向、消耗触发一次、免费 Attack 消费及 X 费保留。
 
-[`ExpectAFight.cs`](../sts2/src/Core/Models/Cards/ExpectAFight.cs) 先按手牌 Attack 数量一次获得能量，再施加 NoEnergyGainPower，升级只减费用；[`TearAsunder.cs`](../sts2/src/Core/Models/Cards/TearAsunder.cs) 的次数为 1 加全战斗玩家正数 UnblockedDamage 事件数，单击 5（升级 7）。已核对剩余 34 张卡的玩法成员及关联 Power，并归纳自动打牌、卡牌事件、生成/变形、持续状态等共用语义，见 [DSL 覆盖索引](ironclad-dsl-coverage.md)。其中十三张已迁入，20 张仍待实现；两张多人限定牌不能进入单人奖励/生成池，约束元数据尚待实现。
+[`ExpectAFight.cs`](../sts2/src/Core/Models/Cards/ExpectAFight.cs) 先按手牌 Attack 数量一次获得能量，再施加 NoEnergyGainPower，升级只减费用；[`TearAsunder.cs`](../sts2/src/Core/Models/Cards/TearAsunder.cs) 的次数为 1 加全战斗玩家正数 UnblockedDamage 事件数，单击 5（升级 7）。源码卡池列出的 87 张 Ironclad 卡均已有 DSL 声明，85 张进入单人卡池，Demonic Shield 与 Tank 保留多人限定标记。仍需按 [DSL 覆盖索引](ironclad-dsl-coverage.md) 继续做效果逐项差分、补充多人运行态及完整 Hook/RNG 时序；不能把“有 DSL 声明”视作源行为全量验证。
 
 [`Cascade.cs`](../sts2/src/Core/Models/Cards/Cascade.cs)、[`Havoc.cs`](../sts2/src/Core/Models/Cards/Havoc.cs) 共用 [`CardPileCmd.AutoPlayFromDrawPile`](../sts2/src/Core/Commands/CardPileCmd.cs)：先洗牌并把候选整批移入出牌堆，再顺序调用 [`CardCmd.AutoPlay`](../sts2/src/Core/Commands/CardCmd.cs)。后者不支付能量，X 牌捕获当前能量，AnyEnemy 使用 CombatTargets RNG，无法打出的牌直接移动至弃牌/消耗堆。本轮引入共享的嵌套打牌帧和效果栈阶段节点，删除原来的单槽 PendingCardPlay 与环境中的单独完成路径。测试覆盖预留后抽牌、洗牌、三层暂停恢复、父子 X 隔离、Power 去向、无法打出的状态牌和自动 X 牌重复执行。原版完整 ShouldPlay / BeforeCardAutoPlayed Hook、手牌/消耗堆自动选牌与自动回合末阶段仍待接入。
 
