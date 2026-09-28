@@ -75,6 +75,13 @@ package base-spire {
     upgradedPlay = sequence(gainBlock(8), applyPower(ColossusPower, 1))
   }
 
+  card Aggression {
+    pools = [IroncladCardPool]
+    type = power rarity = rare cost = 1 target = self
+    play = applyPower(AggressionPower, 1)
+    upgradedKeywords = [innate]
+  }
+
   card InfernalBlade {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]

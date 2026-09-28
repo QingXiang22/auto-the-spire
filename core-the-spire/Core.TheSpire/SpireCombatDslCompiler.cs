@@ -260,6 +260,17 @@ public static class SpireCombatDslCompiler
                         EnumValue<CardPile>(RequiredArgument(call, "from")),
                         EnumValue<CardPile>(RequiredArgument(call, "to")),
                         OptionalEnum(call, "filter", CardSelectionFilter.Any));
+                case "randomMoveCards":
+                    CheckShape(call, 0, 0, "from", "to", "count", "filter", "after");
+                    var randomMoveCountNode = OptionalArgument(call, "count");
+                    return new RandomlyMoveCardsEffect(
+                        EnumValue<CardPile>(RequiredArgument(call, "from")),
+                        EnumValue<CardPile>(RequiredArgument(call, "to")),
+                        randomMoveCountNode is DslNumberNode ? Integer(randomMoveCountNode) : 1,
+                        randomMoveCountNode is not null and not DslNumberNode
+                            ? CompileScaledAmount(randomMoveCountNode) : null,
+                        OptionalEnum(call, "filter", CardSelectionFilter.Any),
+                        OptionalEffect(call, "after"));
                 case "forEachCard":
                     CheckShape(call, 0, 0, "from", "filter", "effect");
                     return new ForEachCardInPileEffect(

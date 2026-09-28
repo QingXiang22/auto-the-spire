@@ -30,6 +30,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardsFromPileEffect), "chooseCardsFromPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RandomlyMoveCardFromPileEffect), "randomlyMoveCardFromPile")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RandomlyMoveCardsEffect), "randomlyMoveCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ForEachCardInPileEffect), "forEachCardInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveSelectedCardToPileEffect), "moveSelectedCardToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
@@ -105,6 +106,16 @@ public sealed record ChooseCardsFromPileEffect(CardPile From, string Prompt, int
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
 public sealed record RandomlyMoveCardFromPileEffect(CardPile From, CardPile To,
     CardSelectionFilter Filter = CardSelectionFilter.Any) : EffectNode;
+public sealed record RandomlyMoveCardsEffect(CardPile From, CardPile To, int Count = 1,
+    ScaledCombatAmount? CalculatedCount = null, CardSelectionFilter Filter = CardSelectionFilter.Any,
+    EffectNode? AfterMove = null) : EffectNode;
+internal sealed record RandomMoveCardsBatchEffect(CardPile From, CardPile To,
+    IReadOnlyList<CardInstance> Cards, int Index, CardSelectionFilter Filter, EffectNode? AfterMove,
+    EntityState? Target, CardInstance? ParentSelectedCard, EffectCountScope? Counts) : EffectNode;
+internal sealed record RandomMoveCardsAfterEffect(CardPile From, CardPile To,
+    IReadOnlyList<CardInstance> Cards, int Index, CardSelectionFilter Filter, EffectNode? AfterMove,
+    EntityState? Target, CardInstance? ParentSelectedCard, EffectCountScope? Counts,
+    CardInstance MovedCard) : EffectNode;
 public sealed record ForEachCardInPileEffect(CardPile From, CardSelectionFilter Filter, EffectNode Effect) : EffectNode;
 public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
     CardPilePosition DestinationPosition = CardPilePosition.Bottom) : EffectNode;
@@ -470,6 +481,43 @@ internal static class EffectExecutor
                         if (randomCard.To == CardPile.Exhaust && randomCard.From != CardPile.Exhaust)
                             QueueCardExhaustion(session, state.Player.Creature, randomOption);
                     }
+                    break;
+                case RandomlyMoveCardsEffect randomCards:
+                    var randomMoveCount = randomCards.CalculatedCount is { } calculatedMoveCount
+                        ? ScaledAmount(state, owner, target, calculatedMoveCount.BaseAmount,
+                            calculatedMoveCount.PerCount, calculatedMoveCount.Count, counts, selectedCard)
+                        : randomCards.Count;
+                    if (randomMoveCount < 0) throw new InvalidOperationException("Random move count cannot be negative.");
+                    var moveOptions = state.GetPile(randomCards.From)
+                        .Where(card => state.MatchesCardSelectionFilter(card, randomCards.Filter)).ToList();
+                    session.Random.Get("card-selection").Shuffle(moveOptions);
+                    var selectedForMove = moveOptions.Take(randomMoveCount).ToArray();
+                    if (selectedForMove.Length > 0)
+                        state.PendingEffects.Add(new(owner,
+                            new RandomMoveCardsBatchEffect(randomCards.From, randomCards.To, selectedForMove,
+                                0, randomCards.Filter, randomCards.AfterMove, target, selectedCard, counts),
+                            target, selectedCard, counts));
+                    break;
+                case RandomMoveCardsBatchEffect batch:
+                    var cardToMove = batch.Cards[batch.Index];
+                    var afterMoveIndex = state.PendingEffects.Count;
+                    if (!state.MoveCard(batch.From, batch.To, cardToMove.InstanceId, CardPilePosition.Bottom))
+                        throw new InvalidOperationException("A randomly selected card is no longer in its source pile.");
+                    state.Emit(session, "random_card_choice", owner.Id, cardToMove.InstanceId, 1);
+                    state.PendingEffects.Insert(afterMoveIndex, new(owner,
+                        new RandomMoveCardsAfterEffect(batch.From, batch.To, batch.Cards, batch.Index,
+                            batch.Filter, batch.AfterMove, batch.Target, batch.ParentSelectedCard,
+                            batch.Counts, cardToMove), batch.Target, batch.ParentSelectedCard, batch.Counts));
+                    break;
+                case RandomMoveCardsAfterEffect moved:
+                    if (moved.Index + 1 < moved.Cards.Count)
+                        state.PendingEffects.Add(new(owner,
+                            new RandomMoveCardsBatchEffect(moved.From, moved.To, moved.Cards,
+                                moved.Index + 1, moved.Filter, moved.AfterMove, moved.Target,
+                                moved.ParentSelectedCard, moved.Counts), moved.Target,
+                            moved.ParentSelectedCard, moved.Counts));
+                    if (moved.AfterMove is { } afterMove)
+                        state.PendingEffects.Add(new(owner, afterMove, moved.Target, moved.MovedCard, moved.Counts));
                     break;
                 case ForEachCardInPileEffect eachCard:
                     var matchingCards = state.GetPile(eachCard.From)

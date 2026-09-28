@@ -1500,6 +1500,19 @@ public sealed class ContentRegistry
                     || !Enum.IsDefined(randomCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid random card selection pile or filter.");
                 break;
+            case RandomlyMoveCardsEffect randomCards:
+                if (!Enum.IsDefined(randomCards.From) || !Enum.IsDefined(randomCards.To)
+                    || !Enum.IsDefined(randomCards.Filter))
+                    throw new InvalidOperationException($"{owner} has invalid random multi-card selection settings.");
+                ArgumentOutOfRangeException.ThrowIfNegative(randomCards.Count);
+                if (randomCards.CalculatedCount is { } calculatedMoveCount)
+                {
+                    ArgumentOutOfRangeException.ThrowIfNegative(calculatedMoveCount.BaseAmount);
+                    ArgumentOutOfRangeException.ThrowIfNegative(calculatedMoveCount.PerCount);
+                    ValidateCombatCountSource(calculatedMoveCount.Count, owner, counts);
+                }
+                if (randomCards.AfterMove is { } afterMove) ValidateEffectReferences(afterMove, owner, counts);
+                break;
             case ForEachCardInPileEffect eachCard:
                 if (!Enum.IsDefined(eachCard.From) || !Enum.IsDefined(eachCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid card iteration pile or filter.");
