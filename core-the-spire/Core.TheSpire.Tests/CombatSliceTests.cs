@@ -5805,6 +5805,7 @@ internal static class Program
         tests.EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations();
         tests.CombatStateDslSharesValuesAcrossEnemiesAndExposesThemToObservations();
         tests.BaseTwoTailedRatsUseSharedBehaviorConditionsAndCorrelatedOpeners();
+        tests.BowlbugRockStunsWhenItsAttackIsFullyBlockedAndRecoversAfterSkippedAction();
         tests.BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase();
         tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
         tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();
