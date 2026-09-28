@@ -15,7 +15,8 @@ public static class SpireCombatBehaviorDslCompiler
         private sealed record BehaviorPlan(string StartMove,
             IReadOnlyDictionary<string, string> NextMoves,
             IReadOnlyDictionary<string, EnemyActionTransition> Transitions,
-            EnemyActionTransition? StartingTransition = null);
+            EnemyActionTransition? StartingTransition = null,
+            bool RequiresExplicitTransitions = false);
 
         private readonly DslPackageNode _package;
         private readonly string _packageName;
@@ -357,6 +358,19 @@ public static class SpireCombatBehaviorDslCompiler
             var behaviorPlan = CompileBehavior(behavior);
             var moveByName = moves.Arguments.ToDictionary(argument => argument.Name!, argument => argument.Value,
                 StringComparer.Ordinal);
+            var referencedChoiceIds = behaviorPlan.Transitions.Values
+                .SelectMany(transition => transition.Choices)
+                .Concat(behaviorPlan.StartingTransition?.Choices ?? [])
+                .Select(choice => choice.ActionId)
+                .Distinct()
+                .ToArray();
+            foreach (var choiceId in referencedChoiceIds)
+                if (!moveByName.Keys.Any(moveName => Id(moveName) == choiceId))
+                    throw Error(behavior.Location, $"Enemy behavior references unknown move '{choiceId}'.");
+            if (behaviorPlan.RequiresExplicitTransitions)
+            foreach (var moveName in moveByName.Keys)
+                if (!behaviorPlan.NextMoves.ContainsKey(moveName) && !behaviorPlan.Transitions.ContainsKey(moveName))
+                    throw Error(behavior.Location, $"Graph behavior is missing an outgoing edge for '{moveName}'.");
             var usedMoves = behaviorPlan.NextMoves.Keys
                 .Concat(behaviorPlan.NextMoves.Values)
                 .Concat(behaviorPlan.Transitions.Keys)
@@ -426,6 +440,8 @@ public static class SpireCombatBehaviorDslCompiler
                     new Dictionary<string, EnemyActionTransition>(StringComparer.Ordinal));
             }
 
+            if (behavior.Name == "graph") return CompileGraph(behavior);
+
             if (behavior.Name == "startWith")
             {
                 if (behavior.Arguments.Count != 2 || behavior.Arguments[0].Name is not null
@@ -439,7 +455,8 @@ public static class SpireCombatBehaviorDslCompiler
                     nextMoves[first] = after.StartMove;
                 else
                     transitions[first] = after.StartingTransition;
-                return new BehaviorPlan(first, nextMoves, transitions);
+                return new BehaviorPlan(first, nextMoves, transitions,
+                    RequiresExplicitTransitions: after.RequiresExplicitTransitions);
             }
 
             if (behavior.Name == "startWithChoice")
@@ -536,6 +553,49 @@ public static class SpireCombatBehaviorDslCompiler
             }
 
             throw Error(behavior.Location, $"Unsupported enemy behavior '{behavior.Name}'.");
+        }
+
+        private BehaviorPlan CompileGraph(DslCallNode behavior)
+        {
+            var properties = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+            foreach (var argument in behavior.Arguments)
+            {
+                if (argument.Name is not ("start" or "edges") || !properties.TryAdd(argument.Name, argument.Value))
+                    throw Error(argument.Location, "graph accepts unique start and edges properties.");
+            }
+            if (properties.Count != 2)
+                throw Error(behavior.Location, "graph requires start=move and edges=[edge(...), ...].");
+            var startMove = Name(properties["start"]);
+            if (properties["edges"] is not DslListNode edges || edges.Items.Count == 0)
+                throw Error(properties["edges"].Location, "graph edges must be a nonempty list.");
+
+            var nextMoves = new Dictionary<string, string>(StringComparer.Ordinal);
+            var transitions = new Dictionary<string, EnemyActionTransition>(StringComparer.Ordinal);
+            foreach (var edgeNode in edges.Items)
+            {
+                var edge = RequireCall(edgeNode);
+                if (edge.Name != "edge" || edge.Arguments.Count != 2
+                    || edge.Arguments.Any(argument => argument.Name is not null))
+                    throw Error(edge.Location, "Graph edges use edge(fromMove, toMoveOrChoice).");
+                var from = Name(edge.Arguments[0].Value);
+                if (nextMoves.ContainsKey(from) || transitions.ContainsKey(from))
+                    throw Error(edge.Location, $"Graph move '{from}' has more than one outgoing edge.");
+
+                var destination = edge.Arguments[1].Value;
+                if (destination is DslNameNode fixedMove)
+                {
+                    nextMoves.Add(from, fixedMove.Name);
+                    continue;
+                }
+
+                var choicePlan = CompileBehavior(RequireCall(destination));
+                if (choicePlan.StartingTransition is null)
+                    throw Error(destination.Location, "A graph edge choice must use chooseWithoutRepeat or chooseWithLimits.");
+                transitions.Add(from, choicePlan.StartingTransition);
+            }
+
+            return new BehaviorPlan(startMove, nextMoves, transitions,
+                RequiresExplicitTransitions: true);
         }
 
 

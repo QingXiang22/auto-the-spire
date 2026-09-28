@@ -9,6 +9,11 @@ package base-spire {
       count=targetPowerAmount(TerritorialPower, target=self), target=self)
   }
 
+  power SlipperyPower {
+    events = [event(type=hp_loss, owner=target, positiveAmount=true,
+      effect=decrementPower(SlipperyPower))]
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -318,5 +323,23 @@ package base-spire {
       )
     )
     behavior = cycle(seapunkSeaKick, seapunkSpinningKick, seapunkBubbleBurp)
+  }
+
+  enemy Inklet {
+    hp = variants(default=range(12, 18), tough=range(11, 17))
+    startingPowers = [power(SlipperyPower, 1)]
+    moves = actions(
+      inkletJab = attack(variants(default=3, deadly=4), target=player),
+      inkletWhirlwind = repeat(3, attack(variants(default=2, deadly=3), target=player)),
+      inkletPiercingGaze = attack(variants(default=10, deadly=11), target=player)
+    )
+    behavior = graph(start=inkletJab, edges=[
+      edge(inkletJab, chooseWithLimits(
+        candidate(inkletPiercingGaze, maxConsecutive=1),
+        candidate(inkletWhirlwind, maxConsecutive=1)
+      )),
+      edge(inkletPiercingGaze, inkletJab),
+      edge(inkletWhirlwind, inkletJab)
+    ])
   }
 }

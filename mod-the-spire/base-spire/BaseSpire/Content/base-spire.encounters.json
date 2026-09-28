@@ -146,6 +146,14 @@
       "tags": ["base-spire:seapunk"]
     },
     {
+      "id": "base-spire:inklets-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:inklet", "base-spire:inklet", "base-spire:inklet"],
+      "startingActionsByEnemyIndex": {
+        "1": "base-spire:inklet-whirlwind"
+      }
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
