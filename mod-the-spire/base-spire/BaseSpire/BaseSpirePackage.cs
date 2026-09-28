@@ -196,6 +196,16 @@ public static class BaseSpireContent
         return SpireCombatBehaviorDslCompiler.Compile(package).Powers;
     }
 
+    public static IReadOnlyList<PowerDefinition> LoadSharedPowers()
+    {
+        const string resourceName = "BaseSpire.ContentSource.shared-powers.spire";
+        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
+        using var reader = new System.IO.StreamReader(stream);
+        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/shared-powers.spire");
+        return SpireCombatBehaviorDslCompiler.Compile(package).Powers;
+    }
+
     public static IReadOnlyList<PotionDefinition> LoadPotions()
     {
         const string resourceName = "BaseSpire.ContentSource.potions.spire";
@@ -271,11 +281,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             InSharedPool: false, IsFallback: true, IsStackable: true));
         foreach (var potion in BaseSpireContent.LoadPotions()) registry.Register(potion);
         registry.Register(BaseSpireContent.Ironclad());
-        registry.Register(new PowerDefinition(BaseSpireIds.Strength, Role: PowerRole.Strength));
-        registry.Register(new PowerDefinition(BaseSpireIds.DemonFormPower, PowerTrigger.AfterPlayerTurnStart,
-            BaseSpireIds.Strength));
-        registry.Register(new PowerDefinition(BaseSpireIds.NoDrawPower, PowerTrigger.AfterPlayerTurnEnd,
-            Role: PowerRole.NoDraw, DecrementOnTrigger: true));
         registry.Register(new PowerDefinition(BaseSpireIds.SelfFormingClayPower, PowerTrigger.AfterPlayerTurnStart,
             TriggerRuleEffect: new SequenceEffect([
                 new GainBlockEffect(3, BaseSpireIds.SelfFormingClayPower),
@@ -283,18 +288,13 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             ])));
         foreach (var power in BaseSpireContent.LoadIroncladPowers()) registry.Register(power);
         foreach (var power in BaseSpireContent.LoadPotionPowers()) registry.Register(power);
+        foreach (var power in BaseSpireContent.LoadSharedPowers()) registry.Register(power);
         registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
         registry.Register(new WellLaidPlansHook());
         var enemyContent = BaseSpireContent.LoadEnemyBehavior(new ContentVariantProfile(deadlyEnemies, toughEnemies));
         foreach (var affliction in enemyContent.Afflictions) registry.Register(affliction);
         foreach (var power in enemyContent.Powers) registry.Register(power);
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
-        registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
-            Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true)
-            { IsDebuff = true });
-        registry.Register(new PowerDefinition(BaseSpireIds.Weak, PowerTrigger.AfterEnemyTurnEnd,
-            DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true, OutgoingDamageMultiplier: 0.75m)
-            { IsDebuff = true });
         registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
             OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true) { IsDebuff = true });
 
