@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；19 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；20 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -23,6 +23,8 @@
 本轮读取 [`BowlbugEgg.cs`](../sts2/src/Core/Models/Monsters/BowlbugEgg.cs)、[`BowlbugNectar.cs`](../sts2/src/Core/Models/Monsters/BowlbugNectar.cs) 和 [`BowlbugSilk.cs`](../sts2/src/Core/Models/Monsters/BowlbugSilk.cs)，迁入其普通/Tough HP、Deadly 攻击数值、行动循环、Egg 的攻击后格挡、Nectar 的 15/16 力量强化，以及 Silk 的两段攻击和虚弱效果。Bowlbug Rock 的失衡/眩晕条件依赖受完全格挡攻击后的状态转移，留待通用敌人状态与跳过行动语义支持后再迁，未用近似循环冒充原版行为。
 
 随后读取 [`DevotedSculptor.cs`](../sts2/src/Core/Models/Monsters/DevotedSculptor.cs) 与 [`FlailKnight.cs`](../sts2/src/Core/Models/Monsters/FlailKnight.cs)。Sculptor 先施加 Ritual 9，之后每回合攻击 12/15；其弱遭遇已接入 encounter JSON。Flail Knight HP 为 101（Tough 108），开场 Ram 15/17；之后从 War Chant、两段 Flail 9/10、Ram 中按 1:2:2 权重选择，War Chant 不允许连续出现。`candidate(weight=..., maxConsecutive=...)` 将权重与动作限制表达为通用行为 DSL 数据。
+
+[`SewerClam.cs`](../sts2/src/Core/Models/Monsters/SewerClam.cs) 的入场 Plating 为 8（Tough 9），HP 为 58（Tough 56）；它以 Jet 10/11 开场，随后循环施加 4 力量与攻击。定义复用通用 `startingPowers` 和 `PlatingPower` 生命周期，并将单体遭遇写入 encounter JSON。
 
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 
