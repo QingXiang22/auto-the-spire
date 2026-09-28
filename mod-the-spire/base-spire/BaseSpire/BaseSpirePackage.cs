@@ -272,11 +272,13 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         foreach (var power in enemyContent.Powers) registry.Register(power);
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,
-            Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true));
+            Role: PowerRole.Vulnerable, DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true)
+            { IsDebuff = true });
         registry.Register(new PowerDefinition(BaseSpireIds.Weak, PowerTrigger.AfterEnemyTurnEnd,
-            DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true, OutgoingDamageMultiplier: 0.75m));
+            DecrementOnTrigger: true, SkipFirstTriggerWhenAppliedToPlayer: true, OutgoingDamageMultiplier: 0.75m)
+            { IsDebuff = true });
         registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
-            OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true));
+            OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true) { IsDebuff = true });
 
         var ironcladCards = BaseSpireContent.LoadIroncladCards();
         foreach (var card in ironcladCards) registry.Register(card);
