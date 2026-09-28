@@ -227,6 +227,7 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
     public bool ActionUsedWithinCooldown(ContentId actionId, int cooldown) =>
         enemy.ActionUsedWithinCooldown(actionId, cooldown);
     public int GetVariable(ContentId variableId) => enemy.GetVariable(variableId);
+    public int GetCombatStateVariable(ContentId variableId) => state.ReadCombatState(variableId);
 }
 
 internal sealed class GameState
@@ -540,6 +541,19 @@ internal sealed class GameState
     internal int ReadModInt(string modId, string key) => _modInts.GetDeclared(modId, key);
 
     internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
+    internal int ReadCombatState(ContentId id)
+    {
+        id.Validate();
+        var separator = id.Value.IndexOf(':');
+        return _modInts.GetDeclared(id.Value[..separator], id.Value[(separator + 1)..]);
+    }
+    internal void SetCombatState(ContentId id, int value)
+    {
+        id.Validate();
+        var separator = id.Value.IndexOf(':');
+        _modInts.Set(id.Value[..separator], id.Value[(separator + 1)..], value);
+    }
+    internal IReadOnlyDictionary<ContentId, int> CombatStateVariables => _modInts.Snapshot();
 
     internal void EnsureDrawPile(GameSession session)
     {
@@ -839,6 +853,8 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     public IReadOnlyList<CardPlayPreview> HandPlayPreviews { get; init; } = Array.Empty<CardPlayPreview>();
     public IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PlayerPowerVariables { get; init; }
         = new Dictionary<ContentId, IReadOnlyDictionary<ContentId, int>>();
+    public IReadOnlyDictionary<ContentId, int> CombatVariables { get; init; }
+        = new Dictionary<ContentId, int>();
 }
 
 public abstract record PlayerAction;

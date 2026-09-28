@@ -276,7 +276,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
             CharacterId = state.Player.CharacterId,
             HandPlayPreviews = Array.AsReadOnly(state.Player.HandInstances
                 .Select(card => CombatCardRules.Preview(state, card)).ToArray()),
-            PlayerPowerVariables = state.Player.Creature.PowerVariableSnapshot()
+            PlayerPowerVariables = state.Player.Creature.PowerVariableSnapshot(),
+            CombatVariables = state.CombatStateVariables
         };
     }
 

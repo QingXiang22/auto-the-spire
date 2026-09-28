@@ -42,6 +42,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AccumulateCardDamageEffect), "accumulateCardDamage")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnemyVariableEffect), "modifyEnemyVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCombatStateEffect), "modifyCombatState")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainMaxHpEffect), "gainMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseMaxHpEffect), "loseMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
@@ -158,6 +159,8 @@ public enum PowerVariableOperation { Add, Set }
 public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
     TargetSelector Target = TargetSelector.Self, PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
 public sealed record ModifyEnemyVariableEffect(ContentId Variable, int Amount,
+    PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
+public sealed record ModifyCombatStateEffect(ContentId Variable, int Amount,
     PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
 public sealed record GainMaxHpEffect(int Amount) : EffectNode;
 public sealed record LoseMaxHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
@@ -762,6 +765,19 @@ internal static class EffectExecutor
                             : actingEnemyForVariable.GetVariable(variable.Variable) - oldEnemyVariable,
                         exactAmount: actingEnemyForVariable.GetVariable(variable.Variable),
                         affectedVariable: variable.Variable);
+                    break;
+                case ModifyCombatStateEffect variable:
+                    var oldStateValue = state.ReadCombatState(variable.Variable);
+                    var newStateValue = variable.Operation switch
+                    {
+                        PowerVariableOperation.Add => checked(oldStateValue + variable.Amount),
+                        PowerVariableOperation.Set => variable.Amount,
+                        _ => throw new InvalidOperationException($"Invalid combat state operation '{variable.Operation}'.")
+                    };
+                    state.SetCombatState(variable.Variable, newStateValue);
+                    state.Emit(session, "combat_state_modified", owner.Id, owner.Id,
+                        variable.Operation == PowerVariableOperation.Add ? variable.Amount : newStateValue - oldStateValue,
+                        exactAmount: newStateValue, affectedVariable: variable.Variable);
                     break;
                 case GainMaxHpEffect gainMaxHp:
                     state.GainMaxHp(session, gainMaxHp.Amount);
