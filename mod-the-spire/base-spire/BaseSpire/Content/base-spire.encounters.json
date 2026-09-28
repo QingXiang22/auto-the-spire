@@ -151,16 +151,16 @@
       "roomType": "monster",
       "enemySlots": [
         {
-          "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+          "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
           "chooseRandomly": true,
           "uniqueChoiceGroup": "base-spire:distinct-small-slimes"
         },
         {
-          "enemyChoices": ["base-spire:leaf-slime-medium", "base-spire:twig-slime-medium"],
+          "enemyChoices": ["base-spire:leaf-slime-m", "base-spire:twig-slime-m"],
           "chooseRandomly": true
         },
         {
-          "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+          "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
           "chooseRandomly": true,
           "uniqueChoiceGroup": "base-spire:distinct-small-slimes"
         }
@@ -174,18 +174,18 @@
       "formations": [
         {
           "enemyIds": [
-            "base-spire:twig-slime-medium",
-            "base-spire:leaf-slime-medium",
-            "base-spire:leaf-slime-small",
-            "base-spire:twig-slime-small"
+            "base-spire:twig-slime-m",
+            "base-spire:leaf-slime-m",
+            "base-spire:leaf-slime-s",
+            "base-spire:twig-slime-s"
           ]
         },
         {
           "enemyIds": [
-            "base-spire:twig-slime-medium",
-            "base-spire:leaf-slime-medium",
-            "base-spire:twig-slime-small",
-            "base-spire:leaf-slime-small"
+            "base-spire:twig-slime-m",
+            "base-spire:leaf-slime-m",
+            "base-spire:twig-slime-s",
+            "base-spire:leaf-slime-s"
           ]
         }
       ],
@@ -213,7 +213,7 @@
       "roomType": "monster",
       "enemySlots": [
         {
-          "enemyChoices": ["base-spire:leaf-slime-medium", "base-spire:twig-slime-medium"],
+          "enemyChoices": ["base-spire:leaf-slime-m", "base-spire:twig-slime-m"],
           "chooseRandomly": true
         },
         { "enemyChoices": ["base-spire:flyconid"] }
@@ -411,7 +411,7 @@
           "weight": 1,
           "enemySlots": [
             {
-              "enemyChoices": ["base-spire:leaf-slime-medium", "base-spire:twig-slime-medium"],
+              "enemyChoices": ["base-spire:leaf-slime-m", "base-spire:twig-slime-m"],
               "chooseRandomly": true
             },
             { "enemyChoices": ["base-spire:slithering-strangler"] }
@@ -421,11 +421,11 @@
           "weight": 1,
           "enemySlots": [
             {
-              "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+              "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
               "chooseRandomly": true
             },
             {
-              "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+              "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
               "chooseRandomly": true
             },
             { "enemyChoices": ["base-spire:slithering-strangler"] }

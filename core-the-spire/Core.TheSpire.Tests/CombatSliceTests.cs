@@ -2530,10 +2530,10 @@ public sealed class CombatSliceTests
         var encounter = environment.StartEncounter(401, "ironclad", 80, 80, [], BaseSpireIds.SlimesWeak);
         var enemyIds = environment.Observe(encounter).Enemies.Select(enemy => enemy.Id.Split('#')[0]).ToArray();
         Assert.Equal(3, enemyIds.Length);
-        Assert.True(enemyIds[0] is "base-spire:leaf-slime-small" or "base-spire:twig-slime-small");
-        Assert.True(enemyIds[2] is "base-spire:leaf-slime-small" or "base-spire:twig-slime-small");
+        Assert.True(enemyIds[0] is "base-spire:leaf-slime-s" or "base-spire:twig-slime-s");
+        Assert.True(enemyIds[2] is "base-spire:leaf-slime-s" or "base-spire:twig-slime-s");
         Assert.True(enemyIds[0] != enemyIds[2]);
-        Assert.True(enemyIds[1] is "base-spire:leaf-slime-medium" or "base-spire:twig-slime-medium");
+        Assert.True(enemyIds[1] is "base-spire:leaf-slime-m" or "base-spire:twig-slime-m");
         Assert.Equal(3, encounter.Random.Get("encounter-enemies").Counter);
         var replay = environment.StartEncounter(401, "ironclad", 80, 80, [], BaseSpireIds.SlimesWeak);
         Assert.True(environment.Observe(encounter).Enemies.Select(enemy => (enemy.Id, enemy.Intent, enemy.IntentDamage))

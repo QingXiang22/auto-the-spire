@@ -117,10 +117,10 @@ public static class BaseSpireIds
     public static readonly ContentId LivingShield = ContentId.Parse("base-spire:living-shield");
     public static readonly ContentId TurretOperator = ContentId.Parse("base-spire:turret-operator");
     public static readonly ContentId TurretOperatorWeak = ContentId.Parse("base-spire:turret-operator-weak");
-    public static readonly ContentId LeafSlimeSmall = ContentId.Parse("base-spire:leaf-slime-small");
-    public static readonly ContentId TwigSlimeSmall = ContentId.Parse("base-spire:twig-slime-small");
-    public static readonly ContentId LeafSlimeMedium = ContentId.Parse("base-spire:leaf-slime-medium");
-    public static readonly ContentId TwigSlimeMedium = ContentId.Parse("base-spire:twig-slime-medium");
+    public static readonly ContentId LeafSlimeSmall = ContentId.Parse("base-spire:leaf-slime-s");
+    public static readonly ContentId TwigSlimeSmall = ContentId.Parse("base-spire:twig-slime-s");
+    public static readonly ContentId LeafSlimeMedium = ContentId.Parse("base-spire:leaf-slime-m");
+    public static readonly ContentId TwigSlimeMedium = ContentId.Parse("base-spire:twig-slime-m");
     public static readonly ContentId SlimesWeak = ContentId.Parse("base-spire:slimes-weak");
     public static readonly ContentId SlimesNormal = ContentId.Parse("base-spire:slimes-normal");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
