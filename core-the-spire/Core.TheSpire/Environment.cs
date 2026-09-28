@@ -472,7 +472,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     {
                         state.Player.MutableHand.Remove(etherealCard);
                         state.Player.MutableExhaustPile.Add(etherealCard);
-                        EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, etherealCard);
+                        EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, etherealCard,
+                            causedByEtherealExhaustion: true);
                         EffectExecutor.Resume(session);
                         break;
                     }

@@ -6,7 +6,7 @@ internal sealed class EntityState
 {
     private readonly Dictionary<ContentId, int> _powers = [];
     private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
-    private readonly Dictionary<(ContentId Power, string CardInstanceId), int> _powerEventAmounts = [];
+    private readonly Dictionary<(ContentId Power, string? ScopeId), int> _powerEventAmounts = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
 
     public EntityState(string id, bool isEnemy, int hp, int maxHp)
@@ -29,14 +29,14 @@ internal sealed class EntityState
     internal Dictionary<ContentId, HashSet<string>> MutablePowerAppliers => _powerAppliers;
     internal HashSet<ContentId> SkipNextPowerTriggers { get; } = [];
     public int PowerAmount(ContentId id) => _powers.GetValueOrDefault(id);
-    internal void AccumulatePowerEventAmount(ContentId power, string cardInstanceId, int amount)
+    internal void AccumulatePowerEventAmount(ContentId power, string? scopeId, int amount)
     {
-        var key = (power, cardInstanceId);
+        var key = (power, scopeId);
         _powerEventAmounts[key] = checked(_powerEventAmounts.GetValueOrDefault(key) + amount);
     }
-    internal int TakePowerEventAmount(ContentId power, string cardInstanceId)
+    internal int TakePowerEventAmount(ContentId power, string? scopeId)
     {
-        var key = (power, cardInstanceId);
+        var key = (power, scopeId);
         return _powerEventAmounts.Remove(key, out var amount) ? amount : 0;
     }
     internal void ClearPowerEventAmounts(ContentId power)
@@ -232,10 +232,11 @@ internal sealed class GameState
     public IReadOnlyList<GameEvent> Events => _eventView;
 
     internal void Emit(GameSession session, string type, string source, string target, int amount,
-        DamageProperties properties = DamageProperties.None, CardInstance? cardSource = null)
+        DamageProperties properties = DamageProperties.None, CardInstance? cardSource = null,
+        bool causedByEtherealExhaustion = false)
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
-            cardSource?.InstanceId);
+            cardSource?.InstanceId, causedByEtherealExhaustion);
         _events.Add(gameEvent);
         if (type == "card_exhausted" && source == Player.Id)
             LastPlayerCardExhaustTurn = Turn;
@@ -271,7 +272,9 @@ internal sealed class GameState
                 if (!StringComparer.Ordinal.Equals(subscription.EventType, type)
                     || (subscription.RequiresPositiveAmount && gameEvent.Amount <= 0)
                     || (gameEvent.Properties & subscription.RequiredProperties) != subscription.RequiredProperties
-                    || (gameEvent.Properties & subscription.ExcludedProperties) != 0)
+                    || (gameEvent.Properties & subscription.ExcludedProperties) != 0
+                    || (subscription.CausedByEtherealExhaustion is { } causedByEthereal
+                        && gameEvent.CausedByEtherealExhaustion != causedByEthereal))
                     continue;
                 var ownerId = subscription.Owner == GameEventActor.Source ? source : target;
                 if (ownerId != actor.Id) continue;
@@ -279,7 +282,14 @@ internal sealed class GameState
                 if (subscription.DeferUntilCardPlayed && gameEvent.CardSourceInstanceId is { } cardInstanceId
                     && CardPlayFrames.Any(frame => frame.Card.InstanceId == cardInstanceId))
                 {
-                    actor.AccumulatePowerEventAmount(powerId, cardInstanceId, powerAmount);
+                    actor.AccumulatePowerEventAmount(powerId, cardInstanceId,
+                        subscription.Accumulation == PowerEventAccumulationMode.EventCount ? 1 : powerAmount);
+                    continue;
+                }
+                if (subscription.DeferUntilOwnerTurnEnd)
+                {
+                    actor.AccumulatePowerEventAmount(powerId, null,
+                        subscription.Accumulation == PowerEventAccumulationMode.EventCount ? 1 : powerAmount);
                     continue;
                 }
                 var otherId = subscription.Owner == GameEventActor.Source ? target : source;
@@ -597,7 +607,8 @@ internal sealed class GameState
 }
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
-    DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null);
+    DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null,
+    bool CausedByEtherealExhaustion = false);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {

@@ -64,6 +64,19 @@ package base-spire {
     ]
   }
 
+  power DarkEmbracePower {
+    trigger = afterPlayerTurnEnd
+    effect = draw(scaled(0, 1, count=product(
+      takePowerTurnEventAmount(DarkEmbracePower),
+      targetPowerAmount(DarkEmbracePower, target=self))))
+    events = [
+      event(type=card_exhausted, owner=source, ownerTurnOnly=false, causedByEthereal=false,
+        effect=draw(scaled(0, 1, count=targetPowerAmount(DarkEmbracePower, target=self)))),
+      event(type=card_exhausted, owner=source, ownerTurnOnly=false, causedByEthereal=true,
+        deferToOwnerTurnEnd=true, accumulate=eventCount, effect=sequence())
+    ]
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }

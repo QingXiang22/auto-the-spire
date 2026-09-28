@@ -75,6 +75,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(subscription.EventType);
             if (subscription.Owner is not (GameEventActor.Source or GameEventActor.Target)
+                || (subscription.DeferUntilCardPlayed && subscription.DeferUntilOwnerTurnEnd)
+                || !Enum.IsDefined(subscription.Accumulation)
                 || (subscription.RequiredProperties & subscription.ExcludedProperties) != 0
                 || !ValidDamageProperties(subscription.RequiredProperties)
                 || !ValidDamageProperties(subscription.ExcludedProperties))
@@ -1406,6 +1408,15 @@ public sealed class ContentRegistry
                     ValidateCombatCountSource(calculatedRandomAttack.Count, owner, counts);
                 }
                 break;
+            case DrawCardsEffect draw:
+                ArgumentOutOfRangeException.ThrowIfNegative(draw.Amount);
+                if (draw.CalculatedAmount is { } calculatedDraw)
+                {
+                    ArgumentOutOfRangeException.ThrowIfNegative(calculatedDraw.BaseAmount);
+                    ArgumentOutOfRangeException.ThrowIfNegative(calculatedDraw.PerCount);
+                    ValidateCombatCountSource(calculatedDraw.Count, owner, counts);
+                }
+                break;
             case GainBlockEffect gainBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlock.Amount);
                 if (gainBlock.PerPowerStack is { } blockPower && !_powers.ContainsKey(blockPower))
@@ -1604,6 +1615,12 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} reads deferred event amount for unknown power '{deferred.Power}'.");
             case TakePowerEventAmountCountSource deferred when !Enum.IsDefined(deferred.Card):
                 throw new InvalidOperationException($"{owner} reads deferred event amount with an invalid card context.");
+            case TakePowerTurnEventAmountCountSource deferred when !_powers.ContainsKey(deferred.Power):
+                throw new InvalidOperationException($"{owner} reads deferred turn event amount for unknown power '{deferred.Power}'.");
+            case ProductCombatCountSource product:
+                ValidateCombatCountSource(product.Left, owner, counts);
+                ValidateCombatCountSource(product.Right, owner, counts);
+                break;
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;
