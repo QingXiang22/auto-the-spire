@@ -157,7 +157,7 @@ public sealed record PowerEventSubscription(string EventType, GameEventActor Own
     DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true,
     bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false,
     bool DeferUntilOwnerTurnEnd = false, PowerEventAccumulationMode Accumulation = PowerEventAccumulationMode.PowerStacks,
-    bool? CausedByEtherealExhaustion = null);
+    bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null);
 internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
@@ -530,12 +530,14 @@ internal static class EffectExecutor
                 case DecrementPowerEffect decrementPower:
                     var stackDelta = state.DecrementPower(session, owner, decrementPower.Power);
                     if (stackDelta != 0)
-                        state.Emit(session, "power", owner.Id, owner.Id, stackDelta);
+                        state.Emit(session, "power", owner.Id, owner.Id, stackDelta,
+                            affectedPower: decrementPower.Power);
                     break;
                 case RemovePowerEffect removePower:
                     var removedAmount = state.RemovePower(owner, removePower.Power);
                     if (removedAmount != 0)
-                        state.Emit(session, "power_removed", owner.Id, owner.Id, removedAmount);
+                        state.Emit(session, "power_removed", owner.Id, owner.Id, removedAmount,
+                            affectedPower: removePower.Power);
                     break;
                 case ExpirePowerEffect expirePower:
                     state.ExpirePower(session, owner, expirePower.Power);

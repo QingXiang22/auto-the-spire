@@ -233,10 +233,10 @@ internal sealed class GameState
 
     internal void Emit(GameSession session, string type, string source, string target, int amount,
         DamageProperties properties = DamageProperties.None, CardInstance? cardSource = null,
-        bool causedByEtherealExhaustion = false)
+        bool causedByEtherealExhaustion = false, ContentId? affectedPower = null)
     {
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
-            cardSource?.InstanceId, causedByEtherealExhaustion);
+            cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower);
         _events.Add(gameEvent);
         if (type == "card_exhausted" && source == Player.Id)
             LastPlayerCardExhaustTurn = Turn;
@@ -274,7 +274,9 @@ internal sealed class GameState
                     || (gameEvent.Properties & subscription.RequiredProperties) != subscription.RequiredProperties
                     || (gameEvent.Properties & subscription.ExcludedProperties) != 0
                     || (subscription.CausedByEtherealExhaustion is { } causedByEthereal
-                        && gameEvent.CausedByEtherealExhaustion != causedByEthereal))
+                        && gameEvent.CausedByEtherealExhaustion != causedByEthereal)
+                    || (subscription.AffectedPower is { } subscribedPower
+                        && gameEvent.AffectedPower != subscribedPower))
                     continue;
                 var ownerId = subscription.Owner == GameEventActor.Source ? source : target;
                 if (ownerId != actor.Id) continue;
@@ -339,7 +341,7 @@ internal sealed class GameState
         if (amount != 0 && (owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToEnemy
             || !owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToPlayer))
             owner.SkipNextPowerTriggers.Add(power);
-        Emit(session, "power", applier.Id, owner.Id, amount);
+        Emit(session, "power", applier.Id, owner.Id, amount, affectedPower: power);
     }
 
     internal int CalculateDamage(GameSession session, EntityState dealer, EntityState target, int baseDamage,
@@ -608,7 +610,7 @@ internal sealed class GameState
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
     DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null,
-    bool CausedByEtherealExhaustion = false);
+    bool CausedByEtherealExhaustion = false, ContentId? AffectedPower = null);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {

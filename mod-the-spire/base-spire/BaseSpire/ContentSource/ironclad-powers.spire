@@ -77,6 +77,12 @@ package base-spire {
     ]
   }
 
+  power ViciousPower {
+    events = [event(type=power, owner=source, power=Vulnerable,
+      ownerTurnOnly=false,
+      effect=draw(scaled(0, 1, count=targetPowerAmount(ViciousPower, target=self))))]
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }

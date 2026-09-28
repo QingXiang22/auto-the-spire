@@ -33,7 +33,8 @@ internal static class CombatCardRules
                 && rule.Type == type)
             {
                 var delta = state.DecrementPower(session, owner, power.Key);
-                if (delta != 0) state.Emit(session, "power", owner.Id, owner.Id, delta);
+                if (delta != 0) state.Emit(session, "power", owner.Id, owner.Id, delta,
+                    affectedPower: power.Key);
             }
     }
 

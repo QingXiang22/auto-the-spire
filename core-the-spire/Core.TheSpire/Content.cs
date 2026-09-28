@@ -81,6 +81,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 || !ValidDamageProperties(subscription.RequiredProperties)
                 || !ValidDamageProperties(subscription.ExcludedProperties))
                 throw new ArgumentException("A Power event subscription requires a source/target owner and non-overlapping damage property filters.");
+            subscription.AffectedPower?.Validate();
         }
     }
 
@@ -1124,7 +1125,11 @@ public sealed class ContentRegistry
             if (power.TriggerRuleEffect is { } triggerEffect)
                 ValidateEffectReferences(triggerEffect, $"Power '{power.Id}' trigger");
             foreach (var subscription in power.Events)
+            {
+                if (subscription.AffectedPower is { } affectedPower && !_powers.ContainsKey(affectedPower))
+                    throw new InvalidOperationException($"Power '{power.Id}' filters an unknown affected Power '{affectedPower}'.");
                 ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' event '{subscription.EventType}'");
+            }
             foreach (var adjustment in new[] { power.OnStackChange, power.OnExpire })
                 if (adjustment is not null && !_powers.ContainsKey(adjustment.Power))
                     throw new InvalidOperationException($"Power '{power.Id}' references unknown lifecycle power '{adjustment.Power}'.");

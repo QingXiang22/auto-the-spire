@@ -78,7 +78,8 @@ internal static class CombatCardPlay
                 foreach (var power in consumedPowers)
                 {
                     var delta = state.DecrementPower(session, state.Player.Creature, power);
-                    if (delta != 0) state.Emit(session, "power", state.Player.Id, state.Player.Id, delta);
+                    if (delta != 0) state.Emit(session, "power", state.Player.Id, state.Player.Id, delta,
+                        affectedPower: power);
                 }
                 break;
             case CardPlayPhase.BeforePlay:
