@@ -29,4 +29,15 @@ package base-spire {
     outgoingDamageMultiplier = 0.75
     isDebuff = true
   }
+
+  power SelfFormingClayPower {
+    trigger = afterPlayerTurnStart
+    effect = sequence(gainBlock(3, target=self), removePower(SelfFormingClayPower))
+  }
+
+  power Shrink {
+    outgoingDamageMultiplier = 0.7
+    removeWhenApplierDies = true
+    isDebuff = true
+  }
 }

@@ -661,6 +661,20 @@ public sealed class CombatSliceTests
         Assert.Equal(49, state.State.Enemy.Hp);
     }
 
+    public void SelfFormingClayPowerDslGrantsBlockThenExpires()
+    {
+        var env = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = env.Start(27, "ironclad", 56, 65, [BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        state.State.ApplyPower(state, state.State.Player.Creature, BaseSpireIds.SelfFormingClayPower, 3,
+            state.State.Player.Creature);
+
+        env.Step(state, new EndTurnAction());
+
+        Assert.Equal(3, state.State.Player.Creature.Block);
+        Assert.Equal(0, state.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
+    }
+
     public void BaseDampCultistNormalValuesMatchSourceRules()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -6029,6 +6043,7 @@ internal static class Program
         tests.BloodlettingAndOfferingLoseHpWithoutConsumingBlockOrPoweringDamage();
         tests.BaseStrikeBashAndVulnerableUseRegisteredRules();
         tests.SharedWeakPowerDslReducesOutgoingPoweredDamage();
+        tests.SelfFormingClayPowerDslGrantsBlockThenExpires();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
