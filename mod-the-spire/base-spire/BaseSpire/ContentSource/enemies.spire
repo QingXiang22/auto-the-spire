@@ -1,4 +1,8 @@
 package base-spire {
+  power Dexterity {
+    role = Dexterity
+  }
+
   power Artifact {
     role = Artifact
   }
@@ -72,6 +76,24 @@ package base-spire {
   power Plating {
     events = [event(type=power_removed, owner=target, ownerTurnOnly=false, power=Slumber,
       effect=sequence(removePower(Plating), setEnemyAction(slumberingBeetleRollout)))]
+  }
+
+  power Tender {
+    isDebuff = true
+    variables = [variable(CardsPlayedThisTurn, 0)]
+    trigger = afterCardPlayed
+    effect = sequence(
+      modifyPowerVariable(Tender, CardsPlayedThisTurn, 1),
+      applyPower(Strength, -1, target=self),
+      applyPower(Dexterity, -1, target=self)
+    )
+    on = [trigger(event=afterOwnerTurnEnd, effect=sequence(
+      applyScaledPower(Strength, 0, 1,
+        count=powerVariable(Tender, CardsPlayedThisTurn, target=self), target=self),
+      applyScaledPower(Dexterity, 0, 1,
+        count=powerVariable(Tender, CardsPlayedThisTurn, target=self), target=self),
+      modifyPowerVariable(Tender, CardsPlayedThisTurn, 0, operation=Set)
+    ))]
   }
 
   power Frail {
@@ -669,6 +691,29 @@ package base-spire {
         candidate(slumberingBeetleRollout, when=power(enemy, Slumber, equal, 0))
       )),
       edge(slumberingBeetleRollout, slumberingBeetleRollout)
+    ])
+  }
+
+  enemy HunterKiller {
+    hp = variants(default=range(121, 121), tough=range(126, 126))
+    moves = actions(
+      hunterKillerGoop = applyPower(Tender, 1, target=player),
+      hunterKillerBite = attack(variants(default=17, deadly=19), target=player),
+      hunterKillerPuncture = repeat(3, attack(variants(default=7, deadly=8), target=player))
+    )
+    behavior = graph(start=hunterKillerGoop, edges=[
+      edge(hunterKillerGoop, chooseWithLimits(
+        candidate(hunterKillerBite, weight=1, maxConsecutive=1),
+        candidate(hunterKillerPuncture, weight=2)
+      )),
+      edge(hunterKillerBite, chooseWithLimits(
+        candidate(hunterKillerBite, weight=1, maxConsecutive=1),
+        candidate(hunterKillerPuncture, weight=2)
+      )),
+      edge(hunterKillerPuncture, chooseWithLimits(
+        candidate(hunterKillerBite, weight=1, maxConsecutive=1),
+        candidate(hunterKillerPuncture, weight=2)
+      ))
     ])
   }
 }

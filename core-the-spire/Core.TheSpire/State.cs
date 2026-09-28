@@ -25,6 +25,7 @@ internal sealed class EntityState
     public int MaxHp { get; internal set; }
     public int Block { get; internal set; }
     public int Strength { get; internal set; }
+    public int Dexterity { get; internal set; }
     public IReadOnlyDictionary<ContentId, int> Powers => _powerView;
     internal Dictionary<ContentId, int> MutablePowers => _powers;
     internal Dictionary<ContentId, HashSet<string>> MutablePowerAppliers => _powerAppliers;
@@ -411,6 +412,7 @@ internal sealed class GameState
             appliers.Add(applier.Id);
         }
         if (definition.Role == PowerRole.Strength) owner.Strength += amount;
+        if (definition.Role == PowerRole.Dexterity) owner.Dexterity += amount;
         if (amount != 0 && (owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToEnemy
             || !owner.IsEnemy && definition.SkipFirstTriggerWhenAppliedToPlayer))
             owner.SkipNextPowerTriggers.Add(power);
@@ -625,6 +627,8 @@ internal sealed class GameState
 
     internal int ModifyBlockGain(EntityState owner, int amount, DamageProperties properties)
     {
+        if ((properties & DamageProperties.Move) != 0 && (properties & DamageProperties.Unpowered) == 0)
+            amount = Math.Max(0, checked(amount + owner.Dexterity));
         if (amount <= 0) return amount;
         var currentPlayId = CurrentCardPlay?.ExecutionId;
         foreach (var (powerId, powerAmount) in owner.Powers.ToArray())
@@ -700,6 +704,7 @@ internal sealed class GameState
         }
         else owner.MutablePowers[powerId] = newAmount;
         if (definition.Role == PowerRole.Strength) owner.Strength += delta;
+        if (definition.Role == PowerRole.Dexterity) owner.Dexterity += delta;
         if (delta != 0 && definition.OnStackChange is { } adjustment)
             ApplyPower(session, owner, adjustment.Power, checked(delta * adjustment.AmountPerStack), owner);
         return delta;
@@ -715,6 +720,7 @@ internal sealed class GameState
         owner.ClearPowerEventAmounts(powerId);
         owner.ClearPowerVariables(powerId);
         if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength -= amount;
+        if (Definition.Powers[powerId].Role == PowerRole.Dexterity) owner.Dexterity -= amount;
         return amount;
     }
 
