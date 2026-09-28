@@ -100,7 +100,7 @@ internal static class CombatCardPlay
             case CardPlayPhase.AfterPlay:
                 state.CardPlayHistory.Record(state.Definition.Cards[frame.Card.CardId].Type, CardPlayHistoryPhase.Finished);
                 CombatCardEvents.QueuePlayListeners(state, frame, afterPlay: true);
-                EffectExecutor.QueuePowerTriggerEffects(session, state.Player.Creature,
+                EffectExecutor.QueueCombatPowerTriggerEffects(session,
                     PowerTrigger.AfterCardPlayed, frame.Target, state.CardInPlay(frame));
                 break;
             case CardPlayPhase.Complete:

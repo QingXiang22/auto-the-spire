@@ -42,12 +42,18 @@ internal sealed class EntityState
         foreach (var variable in definition.Variables)
             _powerVariables.TryAdd((definition.Id, variable.Id), variable.InitialValue);
     }
-    internal void ModifyPowerVariable(ContentId power, ContentId variable, int amount)
+    internal void ModifyPowerVariable(ContentId power, ContentId variable, int amount,
+        PowerVariableOperation operation = PowerVariableOperation.Add)
     {
         var key = (power, variable);
         if (!_powerVariables.ContainsKey(key))
             throw new InvalidOperationException($"Power variable '{power}.{variable}' is not active.");
-        _powerVariables[key] = checked(_powerVariables[key] + amount);
+        _powerVariables[key] = operation switch
+        {
+            PowerVariableOperation.Add => checked(_powerVariables[key] + amount),
+            PowerVariableOperation.Set => amount,
+            _ => throw new ArgumentOutOfRangeException(nameof(operation))
+        };
     }
     internal void ClearPowerVariables(ContentId power)
     {
@@ -462,7 +468,9 @@ internal sealed class GameState
                     || (modifier.RequiredSourcePower is { } requiredPower
                         && dealer.PowerAmount(requiredPower) <= 0))
                     continue;
-                incomingMultiplier *= modifier.Multiplier;
+                incomingMultiplier *= modifier.Multiplier + (modifier.MultiplierVariable is { } variable
+                    ? modifier.MultiplierPerVariable * target.PowerVariable(powerId, variable)
+                    : 0m);
             }
         }
         damage = (int)decimal.Floor(damage * incomingMultiplier);
