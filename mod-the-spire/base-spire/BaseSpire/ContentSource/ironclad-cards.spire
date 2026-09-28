@@ -1,4 +1,14 @@
 package base-spire {
+  card Infection {
+    type = status
+    rarity = status
+    cost = 0
+    target = self
+    keywords = [unplayable]
+    play = sequence()
+    turnEndInHand = loseHp(3, target=self)
+  }
+
   card Stomp {
     pools = [IroncladCardPool]
     type = attack rarity = uncommon cost = 3 target = allEnemies

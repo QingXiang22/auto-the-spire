@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；38 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 89 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；40 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -21,6 +21,8 @@
 敌人定义此前缺少入场 Power 数据。现增加通用 `startingPowers` 字段，并在怪物 AI 起始动作解析前应用；后续迁移 `AfterAddedToRoom` 只授予初始 Power 的原版怪物可直接复用，不需要新增怪物分支。
 
 本轮迁移 [`SlowPower.cs`](../sts2/src/Core/Models/Powers/SlowPower.cs) 与 [`BygoneEffigy.cs`](../sts2/src/Core/Models/Monsters/BygoneEffigy.cs)：慢速 Power 每打出一张牌将变量加一，回合开始时重置；只会提高受击方受到的 powered attack 伤害。为此扩展通用 Power 变量赋值操作、变量驱动的入伤倍率，并将 AfterCardPlayed 事件广播给战斗内全部 Power 持有者。Bygone 的睡眠、苏醒加 10 力量、之后每回合攻击行为以及精英遭遇均已进入 DSL/遭遇数据。
+
+本轮继续迁移 [`PhrogParasite.cs`](../sts2/src/Core/Models/Monsters/PhrogParasite.cs)、[`Wriggler.cs`](../sts2/src/Core/Models/Monsters/Wriggler.cs)、[`InfestedPower.cs`](../sts2/src/Core/Models/Powers/InfestedPower.cs) 和 [`Infection.cs`](../sts2/src/Core/Models/Cards/Infection.cs)。新增通用持牌回合末效果、Power 持有者死亡触发、召唤指定初始行动；Phrog 死亡后召唤四只 Wriggler，Wriggler 按其敌人序号走 bite/wriggle 开场分支，感染卡回合末造成 3 点 HP loss。精英遭遇只有 Phrog 开场，后续召唤完全由 DSL 效果完成。
 
 本轮读取 [`BowlbugEgg.cs`](../sts2/src/Core/Models/Monsters/BowlbugEgg.cs)、[`BowlbugNectar.cs`](../sts2/src/Core/Models/Monsters/BowlbugNectar.cs) 和 [`BowlbugSilk.cs`](../sts2/src/Core/Models/Monsters/BowlbugSilk.cs)，迁入其普通/Tough HP、Deadly 攻击数值、行动循环、Egg 的攻击后格挡、Nectar 的 15/16 力量强化，以及 Silk 的两段攻击和虚弱效果。Bowlbug Rock 的失衡/眩晕条件依赖受完全格挡攻击后的状态转移，留待通用敌人状态与跳过行动语义支持后再迁，未用近似循环冒充原版行为。
 

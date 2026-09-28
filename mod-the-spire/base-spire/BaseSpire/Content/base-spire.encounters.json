@@ -7,6 +7,11 @@
       "enemyIds": ["base-spire:bygone-effigy"]
     },
     {
+      "id": "base-spire:phrog-parasite-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:phrog-parasite"]
+    },
+    {
       "id": "base-spire:fuzzy-wurm-crawler-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:fuzzy-wurm-crawler"],

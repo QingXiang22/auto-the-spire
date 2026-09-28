@@ -46,6 +46,11 @@ package base-spire {
     isDebuff = true
   }
 
+  power Infested {
+    trigger = afterOwnerDeath
+    effect = summonEnemy(Wriggler, count=4, startingAction=wrigglerSpawned)
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -547,5 +552,39 @@ package base-spire {
       edge(bygoneWake, bygoneSlash),
       edge(bygoneSlash, bygoneSlash)
     ])
+  }
+
+  enemy Wriggler {
+    hp = variants(default=range(17, 21), tough=range(18, 22))
+    moves = actions(
+      wrigglerSpawned = sequence(),
+      wrigglerBite = attack(variants(default=6, deadly=7), target=player),
+      wrigglerWriggle = sequence(
+        addCards(Infection, pile=discard, count=1, target=player),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = graph(start=wrigglerSpawned, edges=[
+      edge(wrigglerSpawned, chooseByCondition(
+        candidate(wrigglerBite, when=any([
+          metric(EnemyIndex, Equal, 1), metric(EnemyIndex, Equal, 3)
+        ])),
+        candidate(wrigglerWriggle, when=any([
+          metric(EnemyIndex, Equal, 2), metric(EnemyIndex, Equal, 4)
+        ]))
+      )),
+      edge(wrigglerBite, wrigglerWriggle),
+      edge(wrigglerWriggle, wrigglerBite)
+    ])
+  }
+
+  enemy PhrogParasite {
+    hp = variants(default=range(61, 64), tough=range(66, 68))
+    startingPowers = [power(Infested, 1)]
+    moves = actions(
+      phrogInfect = addCards(Infection, pile=discard, count=3, target=player),
+      phrogLash = repeat(4, attack(variants(default=4, deadly=5), target=player))
+    )
+    behavior = cycle(phrogInfect, phrogLash)
   }
 }

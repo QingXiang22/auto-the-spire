@@ -189,7 +189,7 @@ internal sealed record AutoPlayRandomCardsContinuationEffect(AutoPlayRandomCards
 internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
-public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1) : EffectNode;
+public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
@@ -317,9 +317,11 @@ internal static class EffectExecutor
                             StringComparer.Ordinal.Equals(enemy.Creature.Id, instanceId));
                         if (enemyIndex < 0) continue;
                         var summoned = state.Enemies[enemyIndex];
-                        summoned.ActionIndex = summoned.Definition.ResolveStartingActionIndex(
-                            new EnemyActionEvaluationContext(state, summoned, enemyIndex),
-                            session.Random.Get("enemy-ai"));
+                        summoned.ActionIndex = summoned.StartingActionOverride is { } startingAction
+                            ? summoned.Definition.GetActionIndex(startingAction)
+                            : summoned.Definition.ResolveStartingActionIndex(
+                                new EnemyActionEvaluationContext(state, summoned, enemyIndex),
+                                session.Random.Get("enemy-ai"));
                         summoned.SelectAction(summoned.Definition.Actions[summoned.ActionIndex].Id);
                     }
                     break;
@@ -464,11 +466,14 @@ internal static class EffectExecutor
                 case LoseHpEffect loseHp:
                     if (loseHp.Amount < 0) throw new InvalidOperationException("HP loss cannot be negative.");
                     var hpLossTarget = ResolveSingleTarget(state, owner, target, loseHp.Target);
+                    var wasAliveBeforeHpLoss = hpLossTarget.Hp > 0;
                     var hpLost = Math.Min(hpLossTarget.Hp, loseHp.Amount);
                     hpLossTarget.Hp -= hpLost;
                     state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost,
                         DamageProperties.None, selectedCard);
                     if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
+                    if (wasAliveBeforeHpLoss && hpLossTarget.Hp == 0)
+                        QueuePowerTriggerEffects(session, hpLossTarget, PowerTrigger.AfterOwnerDeath, owner, selectedCard);
                     break;
                 case HealEffect heal:
                     if (heal.Amount < 0) throw new InvalidOperationException("Healing cannot be negative.");
@@ -1041,9 +1046,11 @@ internal static class EffectExecutor
             var hpRange = checked(definition.MaxHp - definition.MinHp + 1);
             var hp = definition.MinHp + (hpRange == 1 ? 0 : session.Random.Get("niche").NextInt(hpRange));
             var instanceId = state.NextSummonedEnemyInstanceId(definition.Id);
+            var startingAction = summon.StartingAction ?? definition.Actions[definition.StartingActionIndex].Id;
             var enemy = new EnemyCombatState(new EntityState(instanceId, true, hp, hp), definition)
             {
-                ActionIndex = definition.StartingActionIndex
+                ActionIndex = definition.GetActionIndex(startingAction),
+                StartingActionOverride = summon.StartingAction
             };
             enemy.Creature.Block = definition.StartingBlock;
             state.Enemies.Add(enemy);
@@ -1104,7 +1111,11 @@ internal static class EffectExecutor
         if (fatal && onFatal is not null)
             state.PendingEffects.Add(new(owner, onFatal, victim, cardSource));
         state.Emit(session, "damage", owner.Id, victim.Id, damage, properties, cardSource);
-        if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
+        if (victim.Hp == 0)
+        {
+            state.RemovePowersAppliedBy(session, victim.Id);
+            QueuePowerTriggerEffects(session, victim, PowerTrigger.AfterOwnerDeath, owner, cardSource);
+        }
     }
 
     private static EntityState OpponentOf(GameState state, EntityState owner) => owner.IsEnemy
