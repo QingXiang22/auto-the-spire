@@ -148,4 +148,9 @@ package base-spire {
       effect=autoPlayRandomCards(from=hand,
         count=scaled(0, 1, count=targetPowerAmount(StampedePower, target=self)), type=attack))]
   }
+
+  power HellraiserPower {
+    events = [event(type=draw, owner=source, cardTag=Strike,
+      effect=autoPlaySelectedCard(from=hand))]
+  }
 }

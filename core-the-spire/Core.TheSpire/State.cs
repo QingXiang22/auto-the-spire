@@ -301,7 +301,11 @@ internal sealed class GameState
                     || (subscription.CausedByEtherealExhaustion is { } causedByEthereal
                         && gameEvent.CausedByEtherealExhaustion != causedByEthereal)
                     || (subscription.AffectedPower is { } subscribedPower
-                        && gameEvent.AffectedPower != subscribedPower))
+                        && gameEvent.AffectedPower != subscribedPower)
+                    || (subscription.CardTag is { } cardTag
+                        && (gameEvent.CardSourceInstanceId is not { } eventCardId
+                            || FindCombatCard(eventCardId) is not { } eventCard
+                            || !Definition.Cards[eventCard.CardId].Tags.Contains(cardTag))))
                     continue;
                 var ownerId = subscription.Owner == GameEventActor.Source ? source : target;
                 if (ownerId != actor.Id) continue;
@@ -320,7 +324,9 @@ internal sealed class GameState
                     continue;
                 }
                 var otherId = subscription.Owner == GameEventActor.Source ? target : source;
-                (effects ??= []).Add((actor, new PowerEventEffect(powerId, subscription.Effect), FindCreature(otherId)));
+                (effects ??= []).Add((actor,
+                    new PowerEventEffect(powerId, subscription.Effect, gameEvent.CardSourceInstanceId),
+                    FindCreature(otherId)));
             }
         }
         if (effects is { Count: > 0 })
@@ -458,20 +464,6 @@ internal sealed class GameState
 
     internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
 
-    internal void Draw(GameSession session, int count)
-    {
-        if (HasPowerRole(Player.Creature, PowerRole.NoDraw)) return;
-        for (var i = 0; i < count; i++)
-        {
-            EnsureDrawPile(session);
-            if (Player.MutableDrawPile.Count == 0) return;
-            var card = Player.MutableDrawPile[0];
-            Player.MutableDrawPile.RemoveAt(0);
-            Player.MutableHand.Add(card);
-            Emit(session, "draw", Player.Id, Player.Id, 1);
-        }
-    }
-
     internal void EnsureDrawPile(GameSession session)
     {
         if (Player.MutableDrawPile.Count != 0 || Player.MutableDiscardPile.Count == 0) return;
@@ -479,6 +471,9 @@ internal sealed class GameState
         Player.MutableDrawPile.AddRange(Player.MutableDiscardPile);
         Player.MutableDiscardPile.Clear();
     }
+
+    internal void Draw(GameSession session, int count) =>
+        EffectExecutor.Execute(session, Player.Creature, new DrawCardsEffect(count));
 
     internal List<CardInstance> MoveCards(CardPile from, CardPile to, int count)
     {
@@ -583,13 +578,14 @@ internal sealed class GameState
 
     internal CardInstance? DrawOne(GameSession session)
     {
-        if (HasPowerRole(Player.Creature, PowerRole.NoDraw)) return null;
+        if (HasPowerRole(Player.Creature, PowerRole.NoDraw)
+            || Player.MutableHand.Count >= CombatLimits.MaxHandSize) return null;
         EnsureDrawPile(session);
         if (Player.MutableDrawPile.Count == 0) return null;
         var card = Player.MutableDrawPile[0];
         Player.MutableDrawPile.RemoveAt(0);
         Player.MutableHand.Add(card);
-        Emit(session, "draw", Player.Id, Player.Id, 1);
+        Emit(session, "draw", Player.Id, Player.Id, 1, cardSource: card);
         return card;
     }
 

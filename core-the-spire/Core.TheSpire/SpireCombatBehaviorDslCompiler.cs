@@ -200,7 +200,7 @@ public static class SpireCombatBehaviorDslCompiler
                 {
                     if (argument.Name is not ("type" or "owner" or "effect" or "require"
                         or "exclude" or "positiveAmount" or "ownerTurnOnly" or "deferToCardPlayed"
-                        or "deferToOwnerTurnEnd" or "accumulate" or "causedByEthereal" or "power"))
+                        or "deferToOwnerTurnEnd" or "accumulate" or "causedByEthereal" or "power" or "cardTag"))
                         throw Error(argument.Location, $"Unknown Power event argument '{argument.Name}'.");
                     if (!arguments.TryAdd(argument.Name!, argument.Value))
                         throw Error(argument.Location, $"Duplicate Power event argument '{argument.Name}'.");
@@ -239,11 +239,13 @@ public static class SpireCombatBehaviorDslCompiler
                     : null;
                 ContentId? affectedPower = arguments.TryGetValue("power", out var affectedPowerNode)
                     ? Id(Name(affectedPowerNode)) : null;
+                ContentId? cardTag = arguments.TryGetValue("cardTag", out var cardTagNode)
+                    ? Id(Name(cardTagNode)) : null;
                 if (owner is not (GameEventActor.Source or GameEventActor.Target))
                     throw Error(Required(arguments, "owner", call.Location).Location,
                         "A Power event owner must be source or target.");
                 return new PowerEventSubscription(eventType, owner, effect, required, excluded, positive,
-                    ownerTurnOnly, defer, deferToOwnerTurnEnd, accumulation, causedByEthereal, affectedPower);
+                    ownerTurnOnly, defer, deferToOwnerTurnEnd, accumulation, causedByEthereal, affectedPower, cardTag);
             }).ToArray());
         }
 
