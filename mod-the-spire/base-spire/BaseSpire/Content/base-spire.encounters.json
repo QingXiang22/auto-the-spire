@@ -37,6 +37,13 @@
       "enemyIds": ["base-spire:hunter-killer"]
     },
     {
+      "id": "base-spire:tunneler-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:tunneler"],
+      "isWeak": true,
+      "tags": ["base-spire:burrower"]
+    },
+    {
       "id": "base-spire:exoskeletons-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],

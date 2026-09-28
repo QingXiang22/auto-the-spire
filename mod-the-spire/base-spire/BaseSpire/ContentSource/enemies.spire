@@ -96,6 +96,15 @@ package base-spire {
     ))]
   }
 
+  power Burrowed {
+    preventsBlockClear = true
+    events = [event(type=block_broken, owner=target, ownerTurnOnly=false,
+      effect=sequence(
+        setEnemyAction(tunnelerDizzy),
+        removePower(Burrowed)
+      ))]
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -714,6 +723,25 @@ package base-spire {
         candidate(hunterKillerBite, weight=1, maxConsecutive=1),
         candidate(hunterKillerPuncture, weight=2)
       ))
+    ])
+  }
+
+  enemy Tunneler {
+    hp = variants(default=range(87, 87), tough=range(92, 92))
+    moves = actions(
+      tunnelerBite = attack(variants(default=13, deadly=15), target=player),
+      tunnelerBurrow = sequence(
+        applyPower(Burrowed, 1, target=self),
+        gainBlock(variants(default=32, tough=37), properties=[unpowered])
+      ),
+      tunnelerBelow = attack(variants(default=23, deadly=26), target=player),
+      tunnelerDizzy = sequence()
+    )
+    behavior = graph(start=tunnelerBite, edges=[
+      edge(tunnelerBite, tunnelerBurrow),
+      edge(tunnelerBurrow, tunnelerBelow),
+      edge(tunnelerBelow, tunnelerBelow),
+      edge(tunnelerDizzy, tunnelerBite)
     ])
   }
 }

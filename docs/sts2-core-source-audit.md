@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 90 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；45 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 90 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；46 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -33,6 +33,8 @@
 迁入 [`SlumberingBeetle.cs`](../sts2/src/Core/Models/Monsters/SlumberingBeetle.cs)、`SlumberPower.cs` 和 `PlatingPower.cs`：3 层 Slumber 在敌方回合结束与实际生命伤害时递减；消失事件由 Plating 监听，再移除 Plating 并通过 DSL `setEnemyAction` 立即切至 Rollout。临时运行核对计时醒来与受击醒来两条路径、15 格挡清除/保留、16/18 攻击及 +2 力量。新增的效果事件只暴露通用 `power_removed`，动作覆盖也通过共享战斗效果执行，没有在 C# 中添加 Beetle 专用分支。
 
 迁入 [`HunterKiller.cs`](../sts2/src/Core/Models/Monsters/HunterKiller.cs) 和 [`TenderPower.cs`](../sts2/src/Core/Models/Powers/TenderPower.cs)：Hunter Killer HP 121（Tough 126），开场施加 Tender；之后 Bite 为 17/19，Puncture 为 3×7/8，后续按 1:2 权重选择且 Bite 不连续。Tender 通过通用 Dexterity Power role 与可观察 Power 变量表达：玩家每打出一张牌就失去 1 力量和 1 敏捷，回合末按已打牌数恢复并清空计数。临时运行打出 Strike 与 Defend 后观察到力量/敏捷 −2、Tender 计数 2、Defend 格挡 4；结束回合后两项属性回到 0、计数清零。
+
+迁入 [`Tunneler.cs`](../sts2/src/Core/Models/Monsters/Tunneler.cs) 与 [`BurrowedPower.cs`](../sts2/src/Core/Models/Powers/BurrowedPower.cs)：弱遭遇按 Bite 13/15 → Burrow 获得 32/37 格挡 → Below 23/26 持续行动。Burrowed 通过 `preventsBlockClear` 跨回合保留格挡，通用 `block_broken` 事件在格挡归零时切换到一次 Dizzy 动作并移除该 Power。临时运行验证格挡留存、32 点 Bludgeon 完全打穿 32 格挡但不伤生命，以及恢复 Bite 意图。
 
 本轮读取 [`BowlbugEgg.cs`](../sts2/src/Core/Models/Monsters/BowlbugEgg.cs)、[`BowlbugNectar.cs`](../sts2/src/Core/Models/Monsters/BowlbugNectar.cs) 和 [`BowlbugSilk.cs`](../sts2/src/Core/Models/Monsters/BowlbugSilk.cs)，迁入其普通/Tough HP、Deadly 攻击数值、行动循环、Egg 的攻击后格挡、Nectar 的 15/16 力量强化，以及 Silk 的两段攻击和虚弱效果。Bowlbug Rock 的失衡/眩晕条件依赖受完全格挡攻击后的状态转移，留待通用敌人状态与跳过行动语义支持后再迁，未用近似循环冒充原版行为。
 

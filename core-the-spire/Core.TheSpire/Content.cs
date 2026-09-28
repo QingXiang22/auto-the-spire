@@ -57,6 +57,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public CardPlayRule? CardRule { get; init; }
     public bool PreventEnergyGain { get; init; }
     public bool PreventsFatal { get; init; }
+    public bool PreventsBlockClear { get; init; }
     public bool IsDebuff { get; init; }
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();

@@ -1114,7 +1114,10 @@ internal static class EffectExecutor
         var absorbed = (properties & DamageProperties.Unblockable) != 0
             ? 0
             : Math.Min(victim.Block, rawDamage);
+        var blockBeforeDamage = victim.Block;
         victim.Block -= absorbed;
+        if (blockBeforeDamage > 0 && victim.Block == 0)
+            state.Emit(session, "block_broken", owner.Id, victim.Id, blockBeforeDamage, properties, cardSource);
         var damage = Math.Min(victim.Hp, rawDamage - absorbed);
         var fatal = damage > 0 && damage == victim.Hp
             && !victim.Powers.Any(power => power.Value > 0 && state.Definition.Powers[power.Key].PreventsFatal);
