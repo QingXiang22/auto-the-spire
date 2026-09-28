@@ -58,7 +58,10 @@ internal static class CombatCardGeneration
     {
         var state = session.State;
         if (state.Player.Creature.Hp <= 0 || state.FirstLivingEnemy is null) return;
-        var pile = state.GetPile(effect.Pile);
+        var destination = effect.Pile == CardPile.Hand
+            && state.Player.HandInstances.Count >= CombatLimits.MaxHandSize
+                ? CardPile.Discard : effect.Pile;
+        var pile = state.GetPile(destination);
         switch (effect.Position)
         {
             case CardPilePosition.Top:

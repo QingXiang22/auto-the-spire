@@ -380,6 +380,23 @@ public sealed class CombatSliceTests
         Assert.Equal(4, entomancer.PowerAmount(BaseSpireIds.Strength));
     }
 
+    public void GeneratedCardsOverflowToDiscardWhenTheHandIsFull()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage(), new HandOverflowFixturePackage()));
+        var startingHand = new[] { HandOverflowFixturePackage.CardId }
+            .Concat(Enumerable.Repeat(BaseSpireIds.DefendIronclad, 9));
+        var session = environment.Start(711, "ironclad", 56, 65, startingHand,
+            BaseSpireIds.DampCultist.ToString());
+
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+
+        Assert.Equal(10, session.State.Player.HandInstances.Count);
+        Assert.Equal(1, session.State.Player.HandInstances.Count(card => card.CardId == BaseSpireIds.Dazed));
+        Assert.Equal(1, session.State.Player.DiscardPileInstances.Count(card => card.CardId == BaseSpireIds.Dazed));
+        Assert.True(session.State.Player.DiscardPileInstances.Any(card =>
+            card.CardId == HandOverflowFixturePackage.CardId));
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -5452,6 +5469,16 @@ public sealed class CombatSliceTests
             GeneratorPotionId, PotionRarity.Common, new GeneratePotionEffect(2)));
     }
 
+    private sealed class HandOverflowFixturePackage : IRulePackage
+    {
+        public static readonly ContentId CardId = ContentId.Parse("hand-overflow-fixture:fill-hand");
+        public PackageInfo Info { get; } = new("hand-overflow-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry) => registry.Register(new CardDefinition(CardId, 0,
+            CardType.Skill, new AddCardsToPileEffect(BaseSpireIds.Dazed, CardPile.Hand, 2,
+                TargetSelector.Self), Target: TargetSelector.Self, Rarity: CardRarity.Basic));
+    }
+
     private sealed class ForcePotionRewardHook : IRunHook
     {
         public ContentId Id { get; } = ContentId.Parse("potion-reward-fixture:force-hook");
@@ -5948,6 +5975,7 @@ internal static class Program
         tests.GasBombUsesDeathBlowIntentExplodesOnceAndMinionBlocksFeedBonus();
         tests.LivingFogAppliesAndClearsSmogAndSummonsBombIntoOpenEncounterSlot();
         tests.EntomancerUsesPowerEventsAndDslMoveCycle();
+        tests.GeneratedCardsOverflowToDiscardWhenTheHandIsFull();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();
