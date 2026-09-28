@@ -20,6 +20,21 @@ package base-spire {
     incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered])]
   }
 
+  power TangledPower {
+    isDebuff = true
+    removeAfterOwnerTurnEnd = true
+    cardRule = cardRule(type=attack, costDelta=1)
+  }
+
+  power ConstrictPower {
+    isDebuff = true
+    removeWhenApplierDies = true
+    on = [trigger(event=afterOwnerTurnEnd,
+      effect=scaledAttack(0, 1,
+        count=targetPowerAmount(ConstrictPower, target=self),
+        target=self, properties=[unpowered]))]
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -474,6 +489,37 @@ package base-spire {
       edge(cubexRepeaterBlast, cubexRepeaterBlastAgain),
       edge(cubexRepeaterBlastAgain, cubexExpelBlast),
       edge(cubexExpelBlast, cubexRepeaterBlast)
+    ])
+  }
+
+  enemy VineShambler {
+    hp = variants(default=range(61, 61), tough=range(64, 64))
+    moves = actions(
+      vineShamblerSwipe = repeat(2, attack(variants(default=6, deadly=7), target=player)),
+      vineShamblerGraspingVines = sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        applyPower(TangledPower, 1, target=player)
+      ),
+      vineShamblerChomp = attack(variants(default=16, deadly=18), target=player)
+    )
+    behavior = cycle(vineShamblerSwipe, vineShamblerGraspingVines, vineShamblerChomp)
+  }
+
+  enemy SlitheringStrangler {
+    hp = variants(default=range(53, 55), tough=range(54, 56))
+    moves = actions(
+      stranglerConstrict = applyPower(ConstrictPower, 3, target=player),
+      stranglerThwack = sequence(
+        attack(variants(default=7, deadly=8), target=player),
+        gainBlock(5)
+      ),
+      stranglerLash = attack(variants(default=12, deadly=13), target=player)
+    )
+    behavior = graph(start=stranglerConstrict, edges=[
+      edge(stranglerConstrict, chooseWithLimits(
+        candidate(stranglerThwack), candidate(stranglerLash))),
+      edge(stranglerThwack, stranglerConstrict),
+      edge(stranglerLash, stranglerConstrict)
     ])
   }
 }

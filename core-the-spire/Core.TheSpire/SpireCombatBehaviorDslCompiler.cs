@@ -53,7 +53,7 @@ public static class SpireCombatBehaviorDslCompiler
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
                 "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
-                "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on",
+                "removeAfterOpponentTurnEnd", "removeWhenApplierDies", "cardRule", "preventEnergyGain", "events", "on",
                 "incomingDamageModifiers", "blockGainModifiers", "blockGainMultiplier", "variables", "preventsFatal",
                 "isDebuff");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
@@ -97,7 +97,8 @@ public static class SpireCombatBehaviorDslCompiler
                 OnExpire: properties.TryGetValue("onExpire", out var expireNode)
                     ? CompileStackAdjustment(expireNode, "sourceStacks", "negativeSourceStacks") : null,
                 RemoveAfterOwnerTurnEnd: OptionalBoolean(properties, "removeAfterOwnerTurnEnd"),
-                RemoveAfterOpponentTurnEnd: OptionalBoolean(properties, "removeAfterOpponentTurnEnd"))
+                RemoveAfterOpponentTurnEnd: OptionalBoolean(properties, "removeAfterOpponentTurnEnd"),
+                RemoveWhenApplierDies: OptionalBoolean(properties, "removeWhenApplierDies"))
             {
                 CardRule = properties.TryGetValue("cardRule", out var cardRuleNode) ? CompileCardRule(cardRuleNode) : null,
                 PreventEnergyGain = OptionalBoolean(properties, "preventEnergyGain"),
@@ -309,7 +310,7 @@ public static class SpireCombatBehaviorDslCompiler
             foreach (var argument in call.Arguments)
             {
                 if (argument.Name is not ("type" or "cost" or "resultPile" or "consumeOnPlay"
-                    or "extraPlays" or "consumeOnPlayCount"))
+                    or "extraPlays" or "consumeOnPlayCount" or "costDelta"))
                     throw Error(argument.Location, $"Unknown cardRule argument '{argument.Name}'.");
                 if (!properties.TryAdd(argument.Name!, argument.Value))
                     throw Error(argument.Location, $"Duplicate cardRule argument '{argument.Name}'.");
@@ -319,7 +320,8 @@ public static class SpireCombatBehaviorDslCompiler
                 properties.TryGetValue("resultPile", out var pile) ? EnumValue<CardPile>(pile) : null,
                 OptionalBoolean(properties, "consumeOnPlay"),
                 properties.TryGetValue("extraPlays", out var plays) ? Integer(plays) : 0,
-                OptionalBoolean(properties, "consumeOnPlayCount"));
+                OptionalBoolean(properties, "consumeOnPlayCount"),
+                properties.TryGetValue("costDelta", out var costDelta) ? Integer(costDelta) : 0);
             try { rule.Validate(); }
             catch (ArgumentException exception) { throw Error(node.Location, exception.Message); }
             return rule;

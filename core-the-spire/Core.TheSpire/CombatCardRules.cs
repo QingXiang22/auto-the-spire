@@ -18,6 +18,7 @@ internal static class CombatCardRules
             if (power.Value <= 0 || state.Definition.Powers[power.Key].CardRule is not { } rule
                 || rule.Type != card.Type) continue;
             if (!card.HasEnergyXCost && rule.Cost is { } cost) energy = cost;
+            if (!card.HasEnergyXCost) energy = checked(energy + rule.CostDelta * power.Value);
             if (rule.ResultPile is { } pile) result = pile;
         }
         return new CardPlayPreview(instance.InstanceId, Math.Max(0, energy), card.HasEnergyXCost ? energy : 0, result);
