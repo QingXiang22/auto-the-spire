@@ -347,7 +347,7 @@ public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, Inte
     EnemyActionTransition? Transition = null);
 public sealed record EnemyStartingPower(ContentId Power, int Amount);
 public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null,
-    EnemyActionCondition? Condition = null, int? MaxUsesPerCombat = null);
+    EnemyActionCondition? Condition = null, int? MaxUsesPerCombat = null, int Cooldown = 0);
 public enum EnemyActionRepeatPolicy { Allow, PreventImmediateRepeat }
 public enum EnemyActionSelectionMode { WeightedRandom, FirstMatchingCondition }
 
@@ -369,14 +369,16 @@ public sealed record EnemyActionTransition
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxUses);
             if (choice.MaxUsesPerCombat is { } maxTotalUses)
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxTotalUses);
+            ArgumentOutOfRangeException.ThrowIfNegative(choice.Cooldown);
         }
         if (!Enum.IsDefined(repeatPolicy)) throw new ArgumentOutOfRangeException(nameof(repeatPolicy));
         if (!Enum.IsDefined(selectionMode)) throw new ArgumentOutOfRangeException(nameof(selectionMode));
         if (selectionMode == EnemyActionSelectionMode.FirstMatchingCondition
             && (copiedChoices.All(choice => choice.Condition is null)
                 || copiedChoices.Any(choice => choice.Weight != 1 || choice.MaxConsecutiveUses is not null)
+                || copiedChoices.Any(choice => choice.Cooldown != 0)
                 || repeatPolicy != EnemyActionRepeatPolicy.Allow))
-            throw new ArgumentException("First-match transitions require conditions and cannot use weights or repeat limits.", nameof(choices));
+            throw new ArgumentException("First-match transitions require conditions and cannot use weights, cooldowns, or repeat limits.", nameof(choices));
         if (repeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
             && copiedChoices.Select(choice => choice.ActionId).Distinct().Count() < 2)
             throw new ArgumentException("PreventImmediateRepeat needs at least two distinct actions.", nameof(choices));
@@ -976,6 +978,8 @@ public sealed record EnemyDefinition
             if (choice.Condition is { } condition && !condition.Evaluate(context)) return false;
             if (choice.MaxUsesPerCombat is { } maximumTotalUses
                 && context.GetActionUseCount(choice.ActionId) >= maximumTotalUses) return false;
+            if (context.ActionUsedWithinCooldown(choice.ActionId, choice.Cooldown))
+                return false;
             var maximumConsecutiveUses = transition.RepeatPolicy == EnemyActionRepeatPolicy.PreventImmediateRepeat
                 ? 1
                 : choice.MaxConsecutiveUses;
@@ -983,7 +987,10 @@ public sealed record EnemyDefinition
             return consecutiveActionCount < maximumConsecutiveUses.Value;
         }).ToArray();
         if (choices.Length == 0)
-            throw new InvalidOperationException("Enemy transition has no eligible action choices for the current combat state.");
+        {
+            _ = random.NextFloat();
+            return GetActionIndex(transition.Choices[0].ActionId);
+        }
         var roll = random.NextInt(choices.Sum(choice => choice.Weight));
         foreach (var choice in choices)
         {

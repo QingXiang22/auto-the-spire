@@ -152,6 +152,8 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
 {
     private readonly Dictionary<ContentId, int> _variables = definition.Variables
         .ToDictionary(variable => variable.Id, variable => variable.DefaultInt);
+    private readonly Dictionary<ContentId, long> _lastActionSelection = [];
+    private long _actionSelectionCount;
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
     public int ActionIndex { get; set; }
@@ -174,11 +176,16 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     }
 
     public int ActionUseCount(ContentId actionId) => _actionUseCounts.GetValueOrDefault(actionId);
+    public bool ActionUsedWithinCooldown(ContentId actionId, int cooldown) => cooldown > 0
+        && _lastActionSelection.TryGetValue(actionId, out var selection)
+        && _actionSelectionCount - selection < cooldown;
 
     public void SelectAction(ContentId actionId)
     {
         ConsecutiveActionCount = LastActionId == actionId ? ConsecutiveActionCount + 1 : 1;
         LastActionId = actionId;
+        _actionSelectionCount = checked(_actionSelectionCount + 1);
+        _lastActionSelection[actionId] = _actionSelectionCount;
         if (Definition.LimitedActionIds.Contains(actionId))
             _actionUseCounts[actionId] = checked(ActionUseCount(actionId) + 1);
     }
@@ -217,6 +224,8 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
     };
 
     public int GetActionUseCount(ContentId actionId) => enemy.ActionUseCount(actionId);
+    public bool ActionUsedWithinCooldown(ContentId actionId, int cooldown) =>
+        enemy.ActionUsedWithinCooldown(actionId, cooldown);
     public int GetVariable(ContentId variableId) => enemy.GetVariable(variableId);
 }
 
