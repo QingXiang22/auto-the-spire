@@ -182,6 +182,10 @@ public static class SpireCombatDslCompiler
                     var drawAmount = Argument(call, 0);
                     return drawAmount is DslNumberNode ? new DrawCardsEffect(Integer(drawAmount))
                         : new DrawCardsEffect(0, CompileScaledAmount(drawAmount));
+                case "drawUntil":
+                    CheckShape(call, 0, 0, "type");
+                    return new DrawUntilCardTypeEffect(
+                        EnumValue<CardType>(RequiredArgument(call, "type")));
                 case "modifyEnergy":
                     CheckShape(call, 1, 1);
                     var energyAmount = Argument(call, 0);

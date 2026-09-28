@@ -61,6 +61,13 @@ package base-spire {
     upgradedPlay = applyPower(PlatingPower, 6)
   }
 
+  card Pillage {
+    pools = [IroncladCardPool]
+    type = attack rarity = uncommon cost = 1 target = enemy
+    play = sequence(attack(6), drawUntil(type=attack))
+    upgradedPlay = sequence(attack(9), drawUntil(type=attack))
+  }
+
   card InfernalBlade {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]
