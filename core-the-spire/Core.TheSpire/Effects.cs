@@ -109,7 +109,8 @@ public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelect
 public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
-    DamageProperties? Properties = null) : EffectNode;
+    DamageProperties? Properties = null, TargetSelector Target = TargetSelector.Self,
+    ContentId? OnlyEnemy = null) : EffectNode;
 public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
@@ -205,7 +206,7 @@ public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self
 public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
 
-public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
+public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy, OtherAllies }
 [Flags]
 public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 4, SkipHurtAnimation = 8 }
 public enum GameEventActor { Source, Target, Player }
@@ -522,11 +523,17 @@ internal static class EffectExecutor
                         : block.Amount;
                     var blockProperties = block.Properties ?? (selectedCard is not null || owner.IsEnemy
                         ? DamageProperties.Move : DamageProperties.None);
-                    blockAmount = state.ModifyBlockGain(owner, blockAmount, blockProperties);
-                    owner.Block += blockAmount;
-                    state.Emit(session, "block", owner.Id, owner.Id, blockAmount,
-                        properties: blockProperties,
-                        cardSource: selectedCard);
+                    foreach (var recipient in ResolveMultipleTargets(state, owner, target, block.Target))
+                    {
+                        if (block.OnlyEnemy is { } onlyEnemy && !state.Enemies.Any(enemy =>
+                            enemy.Creature == recipient && enemy.Definition.Id == onlyEnemy)) continue;
+                        if (recipient.Hp <= 0) continue;
+                        var recipientBlock = state.ModifyBlockGain(recipient, blockAmount, blockProperties);
+                        recipient.Block += recipientBlock;
+                        state.Emit(session, "block", owner.Id, recipient.Id, recipientBlock,
+                            properties: blockProperties,
+                            cardSource: selectedCard);
+                    }
                     break;
                 case GainBlockFromCurrentBlockEffect blockFromBlock:
                     ArgumentOutOfRangeException.ThrowIfNegative(blockFromBlock.Multiplier);
@@ -540,16 +547,8 @@ internal static class EffectExecutor
                         cardSource: selectedCard);
                     break;
                 case ApplyPowerEffect power:
-                    if (power.Target == TargetSelector.AllOpponents)
-                    {
-                        if (owner.IsEnemy) state.ApplyPower(session, state.Player.Creature, power.Power, power.Amount, owner);
-                        else
-                            foreach (var enemy in state.Enemies)
-                                if (enemy.Creature.Hp > 0)
-                                    state.ApplyPower(session, enemy.Creature, power.Power, power.Amount, owner);
-                    }
-                    else
-                        state.ApplyPower(session, ResolveSingleTarget(state, owner, target, power.Target), power.Power, power.Amount, owner);
+                    foreach (var recipient in ResolveMultipleTargets(state, owner, target, power.Target))
+                        state.ApplyPower(session, recipient, power.Power, power.Amount, owner);
                     break;
                 case ApplyScaledPowerEffect scaledPower:
                     var powerAmount = ScaledAmount(state, owner, target, scaledPower.BaseAmount,
@@ -897,6 +896,22 @@ internal static class EffectExecutor
         TargetSelector.FirstEnemy => OpponentOf(state, owner),
         TargetSelector.SelectedTarget => selected ?? OpponentOf(state, owner),
         _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect requires one target.")
+    };
+
+    private static IEnumerable<EntityState> ResolveMultipleTargets(GameState state, EntityState owner,
+        EntityState? selected, TargetSelector selector) => selector switch
+    {
+        TargetSelector.Self => [owner],
+        TargetSelector.FirstEnemy => [OpponentOf(state, owner)],
+        TargetSelector.SelectedTarget => [selected ?? OpponentOf(state, owner)],
+        TargetSelector.AllOpponents => owner.IsEnemy
+            ? [state.Player.Creature]
+            : state.Enemies.Where(enemy => enemy.Creature.Hp > 0).Select(enemy => enemy.Creature),
+        TargetSelector.OtherAllies => owner.IsEnemy
+            ? state.Enemies.Where(enemy => enemy.Creature.Hp > 0 && enemy.Creature != owner)
+                .Select(enemy => enemy.Creature)
+            : Array.Empty<EntityState>(),
+        _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect has an invalid target selector.")
     };
 
     private static int ScaledAmount(GameState state, EntityState owner, EntityState? selectedTarget, int baseAmount,

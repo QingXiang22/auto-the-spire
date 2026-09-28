@@ -248,9 +248,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             ? state.Enemies.Single(enemy => ReferenceEquals(enemy.Creature, living))
             : state.Enemies[0];
         var next = primary.Definition.Actions[Math.Min(primary.ActionIndex, primary.Definition.Actions.Count - 1)];
-        var intentDamage = next.Intent == IntentKind.Attack
-            ? state.CalculateDamage(session, primary.Creature, state.Player.Creature, next.IntentDamage)
-            : 0;
+        var intentDamage = CalculateIntentDamage(session, primary, next);
         return new CombatObservation(state.Turn, state.Player.Creature.Hp, state.Player.Creature.MaxHp,
             state.Player.Creature.Block, state.Player.Energy, state.Player.Hand.ToArray(),
             new Dictionary<ContentId, int>(state.Player.Creature.Powers), primary.Creature.Hp,
@@ -287,9 +285,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = session.State;
         var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
         var intent = enemy.SkipNextAction ? IntentKind.Stun : action.Intent;
-        var damage = intent == IntentKind.Attack
-            ? state.CalculateDamage(session, enemy.Creature, state.Player.Creature, action.IntentDamage)
-            : 0;
+        var damage = intent == IntentKind.Attack ? CalculateIntentDamage(session, enemy, action) : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
             enemy.Creature.Block, enemy.Creature.Strength, intent, damage,
             new Dictionary<ContentId, int>(enemy.Creature.Powers))
@@ -298,6 +294,19 @@ public sealed class CombatEnvironment(GameDefinition definition)
             PowerVariables = enemy.Creature.PowerVariableSnapshot(),
             Variables = new Dictionary<ContentId, int>(enemy.Variables)
         };
+    }
+
+    private static int CalculateIntentDamage(GameSession session, EnemyCombatState enemy,
+        EnemyActionDefinition action)
+    {
+        if (action.Intent != IntentKind.Attack || action.IntentHitCount <= 0) return 0;
+        var state = session.State;
+        var perHit = action.IntentDamage / action.IntentHitCount;
+        var damage = 0;
+        for (var hit = 0; hit < action.IntentHitCount; hit++)
+            damage = checked(damage + state.CalculateDamage(session, enemy.Creature,
+                state.Player.Creature, perHit));
+        return damage;
     }
 
     public IReadOnlyList<PlayerAction> LegalActions(GameSession session) => LegalActionsForSession(session);
@@ -712,11 +721,25 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     state.EndTurnStage = EndTurnResolutionStage.None;
                     return;
                 case EndTurnResolutionStage.PlayerTurnStartPowers:
-                    state.EndTurnStage = EndTurnResolutionStage.PlayerOwnerTurnStartPowers;
-                    BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterOwnerTurnStart);
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyPlayerTurnStartPowers;
+                    state.CurrentEnemyIndex = 0;
+                    break;
+                case EndTurnResolutionStage.EnemyPlayerTurnStartPowers:
+                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                        && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
+                        state.CurrentEnemyIndex++;
+                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    {
+                        state.CurrentEnemyIndex = 0;
+                        state.EndTurnStage = EndTurnResolutionStage.PlayerOwnerTurnStartPowers;
+                        break;
+                    }
+                    var enemyAtPlayerTurnStart = state.Enemies[state.CurrentEnemyIndex++];
+                    BeginPowerQueue(state, enemyAtPlayerTurnStart.Creature, PowerTrigger.AfterPlayerTurnStart);
                     break;
                 case EndTurnResolutionStage.PlayerOwnerTurnStartPowers:
                     state.EndTurnStage = EndTurnResolutionStage.None;
+                    BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterOwnerTurnStart);
                     if (!state.IsTerminal) EffectExecutor.Execute(session, state.Player.Creature, new DrawCardsEffect(5));
                     return;
                 default:

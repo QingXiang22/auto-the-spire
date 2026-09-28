@@ -192,12 +192,15 @@ public static class SpireCombatDslCompiler
                         CompileCombatCount(RequiredArgument(call, "count")),
                         OptionalTarget(call, "target", TargetSelector.Self));
                 case "gainBlock":
-                    CheckShape(call, 1, 1, "perPowerStack", "properties");
+                    CheckShape(call, 1, 1, "perPowerStack", "properties", "target", "onlyEnemy");
                     var perPower = OptionalArgument(call, "perPowerStack");
+                    var onlyEnemy = OptionalArgument(call, "onlyEnemy");
                     return new GainBlockEffect(Integer(Argument(call, 0)),
                         perPower is null ? null : Id(Name(perPower)),
                         OptionalArgument(call, "properties") is { } blockPropertiesNode
-                            ? ParseDamageProperties(blockPropertiesNode) : null);
+                            ? ParseDamageProperties(blockPropertiesNode) : null,
+                        OptionalTarget(call, "target", TargetSelector.Self),
+                        onlyEnemy is null ? null : Id(Name(onlyEnemy)));
                 case "gainBlockFromCurrentBlock":
                     CheckShape(call, 0, 0, "multiplier");
                     return new GainBlockFromCurrentBlockEffect(OptionalInteger(call, "multiplier", 1));
@@ -715,7 +718,8 @@ public static class SpireCombatDslCompiler
             "firstEnemy" => TargetSelector.FirstEnemy,
             "allEnemies" => TargetSelector.AllOpponents,
             "randomEnemy" => TargetSelector.RandomEnemy,
-            _ => throw Error(node.Location, "Effect target must be self, target, firstEnemy, allEnemies, or randomEnemy.")
+            "otherAllies" => TargetSelector.OtherAllies,
+            _ => throw Error(node.Location, "Effect target must be self, target, firstEnemy, allEnemies, randomEnemy, or otherAllies.")
         };
 
         private TargetSelector OptionalTarget(DslCallNode call, string name, TargetSelector fallback) =>

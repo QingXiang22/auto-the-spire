@@ -406,11 +406,15 @@ public static class SpireCombatBehaviorDslCompiler
                 var source = CompileEnemyAction(moveByName[moveName]);
                 var sourceEffect = source.Effect;
                 var effect = SpireCombatDslCompiler.CompileEffect(_package, sourceEffect, _profile);
-                var (intent, damage) = DescribeIntent(effect);
+                var (intent, damage, hitCount) = DescribeIntent(effect);
                 if (source.Intent is { } explicitIntent)
                 {
                     intent = explicitIntent;
-                    if (intent != IntentKind.Attack) damage = 0;
+                    if (intent != IntentKind.Attack)
+                    {
+                        damage = 0;
+                        hitCount = 1;
+                    }
                 }
                 var transition = behaviorPlan.Transitions.TryGetValue(moveName, out var moveTransition)
                     ? moveTransition
@@ -419,7 +423,7 @@ public static class SpireCombatBehaviorDslCompiler
                     ? actionIds[nextMove]
                     : (ContentId?)null;
                 actions[i] = new EnemyActionDefinition(actionIds[moveName], effect, intent, damage,
-                    NextActionId: nextActionId, Transition: transition);
+                    NextActionId: nextActionId, Transition: transition, IntentHitCount: hitCount);
             }
             ValidateEnemyVariableReferences(behaviorPlan.StartingTransition, actions,
                 variables.Select(variable => variable.Id).ToHashSet(), declaration.Location);
@@ -856,11 +860,11 @@ public static class SpireCombatBehaviorDslCompiler
             throw Error(variants.Location, "No difficulty variant matches the configured content profile.");
         }
 
-        private static (IntentKind Intent, int IntentDamage) DescribeIntent(EffectNode effect)
+        private static (IntentKind Intent, int IntentDamage, int HitCount) DescribeIntent(EffectNode effect)
         {
             if (effect is SequenceEffect sequence)
             {
-                (IntentKind Intent, int IntentDamage) fallback = (IntentKind.None, 0);
+                (IntentKind Intent, int IntentDamage, int HitCount) fallback = (IntentKind.None, 0, 1);
                 foreach (var child in sequence.Effects)
                 {
                     var description = DescribeIntent(child);
@@ -874,18 +878,19 @@ public static class SpireCombatBehaviorDslCompiler
             {
                 var repeated = DescribeIntent(repeat.Effect);
                 if (repeated.Intent == IntentKind.Attack)
-                    return (IntentKind.Attack, checked(repeated.IntentDamage * repeat.Count));
+                    return (IntentKind.Attack, checked(repeated.IntentDamage * repeat.Count),
+                        checked(repeated.HitCount * repeat.Count));
             }
             return effect switch
             {
-                AttackEffect attack => (IntentKind.Attack, attack.Amount),
-                RandomAttackEffect attack => (IntentKind.Attack, attack.Amount),
+                AttackEffect attack => (IntentKind.Attack, attack.Amount, 1),
+                RandomAttackEffect attack => (IntentKind.Attack, attack.Amount, 1),
                 ApplyPowerEffect { Target: TargetSelector.SelectedTarget or TargetSelector.FirstEnemy } =>
-                    (IntentKind.Debuff, 0),
-                ApplyPowerEffect => (IntentKind.Buff, 0),
-                AddCardsToPileEffect => (IntentKind.Debuff, 0),
-                GainBlockEffect or GainBlockFromCurrentBlockEffect => (IntentKind.Buff, 0),
-                _ => (IntentKind.None, 0)
+                    (IntentKind.Debuff, 0, 1),
+                ApplyPowerEffect => (IntentKind.Buff, 0, 1),
+                AddCardsToPileEffect => (IntentKind.Debuff, 0, 1),
+                GainBlockEffect or GainBlockFromCurrentBlockEffect => (IntentKind.Buff, 0, 1),
+                _ => (IntentKind.None, 0, 1)
             };
         }
 

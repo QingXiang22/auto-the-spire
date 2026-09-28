@@ -141,6 +141,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     private static bool ValidDamageProperties(DamageProperties properties) =>
         (properties & ~(DamageProperties.Move | DamageProperties.Unpowered
             | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) == 0;
+
 }
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
 public enum PotionRarity { Common, Uncommon, Rare }
@@ -151,7 +152,7 @@ public sealed record PotionDefinition(ContentId Id, PotionRarity Rarity, EffectN
     public void Validate()
     {
         Id.Validate();
-        if (!Enum.IsDefined(Rarity) || !Enum.IsDefined(Target))
+        if (!Enum.IsDefined(Rarity) || !Enum.IsDefined(Target) || Target == TargetSelector.OtherAllies)
             throw new ArgumentException("Potion rarity and target must be recognized values.");
         if (CharacterPoolIds is { Count: 0 })
             throw new ArgumentException("A character potion pool must name at least one character.");
@@ -344,7 +345,7 @@ public sealed class CardPoolDefinition
 public sealed record EnemyActionDefinition(ContentId Id, EffectNode Effect, IntentKind Intent,
     int IntentDamage = 0, ContentId? AppliedPower = null, int AppliedPowerAmount = 0,
     ContentId? NextActionId = null, TargetSelector AppliedPowerTarget = TargetSelector.Self,
-    EnemyActionTransition? Transition = null);
+    EnemyActionTransition? Transition = null, int IntentHitCount = 1);
 public sealed record EnemyStartingPower(ContentId Power, int Amount);
 public sealed record EnemyActionChoice(ContentId ActionId, int Weight = 1, int? MaxConsecutiveUses = null,
     EnemyActionCondition? Condition = null, int? MaxUsesPerCombat = null, int Cooldown = 0);
@@ -885,9 +886,14 @@ public sealed record EnemyDefinition
         {
             action.Id.Validate();
             action.AppliedPower?.Validate();
-            if (!Enum.IsDefined(action.Intent) || !Enum.IsDefined(action.AppliedPowerTarget))
+            if (!Enum.IsDefined(action.Intent)
+                || action.AppliedPowerTarget is not (TargetSelector.Self or TargetSelector.FirstEnemy
+                    or TargetSelector.SelectedTarget))
                 throw new ArgumentException($"Enemy action '{action.Id}' has an unsupported intent or power target.", nameof(actions));
             ArgumentOutOfRangeException.ThrowIfNegative(action.IntentDamage);
+            ArgumentOutOfRangeException.ThrowIfNegative(action.IntentHitCount);
+            if (action.IntentHitCount > 0 && action.IntentDamage % action.IntentHitCount != 0)
+                throw new ArgumentException($"Enemy action '{action.Id}' has an intent damage total that cannot be divided across its hits.", nameof(actions));
             if (action.AppliedPower is null && action.AppliedPowerAmount != 0)
                 throw new ArgumentException($"Enemy action '{action.Id}' has a power amount without a power ID.", nameof(actions));
         }
@@ -1234,7 +1240,8 @@ public sealed class ContentRegistry
             foreach (var poolId in card.PoolIds)
                 if (!_cardPools.ContainsKey(poolId))
                     throw new InvalidOperationException($"Card '{card.Id}' references unknown card pool '{poolId}'.");
-            if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target) || !Enum.IsDefined(card.Rarity)
+            if (!Enum.IsDefined(card.Type) || !Enum.IsDefined(card.Target)
+                || card.Target == TargetSelector.OtherAllies || !Enum.IsDefined(card.Rarity)
                 || !Enum.IsDefined(card.CostKind))
                 throw new InvalidOperationException($"Card '{card.Id}' contains an unsupported type, target, rarity, or cost kind.");
             ArgumentOutOfRangeException.ThrowIfNegative(card.Cost);
@@ -1566,6 +1573,12 @@ public sealed class ContentRegistry
         (properties & ~(DamageProperties.Move | DamageProperties.Unpowered
             | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) == 0;
 
+    private static bool IsSingleEffectTarget(TargetSelector target) => target is
+        TargetSelector.Self or TargetSelector.FirstEnemy or TargetSelector.SelectedTarget;
+
+    private static bool IsSingleOrOpponentGroupTarget(TargetSelector target) =>
+        IsSingleEffectTarget(target) || target == TargetSelector.AllOpponents;
+
     private void ValidateEffectReferences(EffectNode effect, string owner, IReadOnlySet<string>? counts = null)
     {
         switch (effect)
@@ -1582,7 +1595,7 @@ public sealed class ContentRegistry
                 break;
             case AttackEffect attack:
                 ArgumentOutOfRangeException.ThrowIfNegative(attack.Amount);
-                if (!Enum.IsDefined(attack.Target)
+                if (!IsSingleOrOpponentGroupTarget(attack.Target)
                     || (attack.Properties & ~(DamageProperties.Move | DamageProperties.Unpowered
                         | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) != 0)
                     throw new InvalidOperationException($"{owner} has invalid attack damage properties or target.");
@@ -1618,13 +1631,17 @@ public sealed class ContentRegistry
                 break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
+            case ApplyPowerEffect applyPower when applyPower.Target == TargetSelector.RandomEnemy:
+                throw new InvalidOperationException($"{owner} applies a Power with an unsupported random target.");
+            case ApplyPowerEffect applyPower when !Enum.IsDefined(applyPower.Target):
+                throw new InvalidOperationException($"{owner} applies a Power with an invalid target.");
             case LoseHpEffect loseHp:
-                if (!Enum.IsDefined(loseHp.Target))
+                if (!IsSingleEffectTarget(loseHp.Target))
                     throw new InvalidOperationException($"{owner} has an invalid HP loss target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(loseHp.Amount);
                 break;
             case HealEffect heal:
-                if (!Enum.IsDefined(heal.Target))
+                if (!IsSingleEffectTarget(heal.Target))
                     throw new InvalidOperationException($"{owner} has an invalid heal target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(heal.Amount);
                 break;
@@ -1654,6 +1671,13 @@ public sealed class ContentRegistry
                 break;
             case GainBlockEffect gainBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlock.Amount);
+                if (!IsSingleOrOpponentGroupTarget(gainBlock.Target)
+                    && gainBlock.Target != TargetSelector.OtherAllies)
+                    throw new InvalidOperationException($"{owner} gains block with an invalid target.");
+                if (gainBlock.OnlyEnemy is { } onlyEnemy
+                    && (!_enemies.ContainsKey(onlyEnemy) || gainBlock.Target is not
+                        (TargetSelector.AllOpponents or TargetSelector.OtherAllies)))
+                    throw new InvalidOperationException($"{owner} filters block recipients by an invalid enemy or target.");
                 if (gainBlock.Properties is { } blockProperties
                     && (blockProperties & ~(DamageProperties.Move | DamageProperties.Unpowered
                         | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) != 0)
@@ -1664,14 +1688,15 @@ public sealed class ContentRegistry
             case GainBlockFromCurrentBlockEffect gainBlockFromBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlockFromBlock.Multiplier);
                 break;
-            case AttackUsingBlockEffect attackUsingBlock when !Enum.IsDefined(attackUsingBlock.Target)
-                || attackUsingBlock.Target == TargetSelector.RandomEnemy:
+            case StunEnemyEffect stun when !IsSingleEffectTarget(stun.Target):
+                throw new InvalidOperationException($"{owner} stuns an enemy with an invalid target.");
+            case AttackUsingBlockEffect attackUsingBlock when !IsSingleOrOpponentGroupTarget(attackUsingBlock.Target):
                 throw new InvalidOperationException($"{owner} has an invalid block-based attack target.");
             case AddCardsToPileEffect addCards:
                 addCards.Card.Validate();
                 if (!_cards.ContainsKey(addCards.Card))
                     throw new InvalidOperationException($"{owner} adds unknown card '{addCards.Card}'.");
-                if (!Enum.IsDefined(addCards.Pile) || !Enum.IsDefined(addCards.Target))
+                if (!Enum.IsDefined(addCards.Pile) || !IsSingleEffectTarget(addCards.Target))
                     throw new InvalidOperationException($"{owner} has an invalid card destination or target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(addCards.Count);
                 break;
