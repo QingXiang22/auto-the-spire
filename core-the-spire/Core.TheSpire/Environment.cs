@@ -9,8 +9,9 @@ public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Bl
 public sealed class CombatEnvironment(GameDefinition definition)
 {
     public GameSession Start(uint seed, string playerId, int playerHp, int playerMaxHp,
-        IEnumerable<ContentId> hand, string enemyId, int? enemyHp = null, IEnumerable<ContentId>? drawPile = null)
-        => Start(new RandomStreams(seed), playerId, playerHp, playerMaxHp, hand, enemyId, enemyHp, drawPile);
+        IEnumerable<ContentId> hand, string enemyId, int? enemyHp = null, IEnumerable<ContentId>? drawPile = null,
+        ContentId? characterId = null)
+        => Start(new RandomStreams(seed), playerId, playerHp, playerMaxHp, hand, enemyId, enemyHp, drawPile, characterId);
 
     /// <summary>Starts combat from an active run room, using the run deck and its shared RNG streams.</summary>
     public GameSession StartForRun(RunSession runSession, string enemyId, int? enemyHp = null)
@@ -61,7 +62,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var shuffledDeck = run.Deck.ToList();
         run.Random.Get("shuffle").Shuffle(shuffledDeck);
         var session = StartWithInstances(run.Random, run.Character.Id.ToString(), run.Hp, run.MaxHp,
-            shuffledDeck.Take(5), spawns, shuffledDeck.Skip(5));
+            shuffledDeck.Take(5), spawns, shuffledDeck.Skip(5), run.Character.Id);
         session.RunOwner = runSession;
         run.ActiveCombat = session;
         foreach (var hook in definition.RunHooks)
@@ -82,18 +83,20 @@ public sealed class CombatEnvironment(GameDefinition definition)
     }
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
-        IEnumerable<ContentId> hand, string enemyId, int? enemyHp, IEnumerable<ContentId>? drawPile)
+        IEnumerable<ContentId> hand, string enemyId, int? enemyHp, IEnumerable<ContentId>? drawPile,
+        ContentId? characterId = null)
     {
         return Start(rng, playerId, playerHp, playerMaxHp, hand,
-            [new CombatEnemySpawn(enemyId, enemyHp)], drawPile);
+            [new CombatEnemySpawn(enemyId, enemyHp)], drawPile, characterId);
     }
 
     public GameSession StartEncounter(uint seed, string playerId, int playerHp, int playerMaxHp,
-        IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile = null)
-        => Start(new RandomStreams(seed), playerId, playerHp, playerMaxHp, hand, enemies, drawPile);
+        IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile = null,
+        ContentId? characterId = null)
+        => Start(new RandomStreams(seed), playerId, playerHp, playerMaxHp, hand, enemies, drawPile, characterId);
 
     public GameSession StartEncounter(uint seed, string playerId, int playerHp, int playerMaxHp,
-        IEnumerable<ContentId> hand, ContentId encounterId)
+        IEnumerable<ContentId> hand, ContentId encounterId, ContentId? characterId = null)
     {
         if (!definition.Encounters.TryGetValue(encounterId, out var encounter))
             throw new KeyNotFoundException($"Unknown encounter '{encounterId}'.");
@@ -101,26 +104,30 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var selections = encounter.SelectEnemies(random.Get("encounter-enemies"));
         return Start(random, playerId, playerHp, playerMaxHp, hand,
             selections.Select(selection => new CombatEnemySpawn(selection.EnemyId.ToString(),
-                StartingActionOverride: selection.StartingActionOverride)), drawPile: null);
+                StartingActionOverride: selection.StartingActionOverride)), drawPile: null, characterId);
     }
 
     private GameSession Start(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
-        IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile)
+        IEnumerable<ContentId> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<ContentId>? drawPile,
+        ContentId? characterId = null)
     {
         var handCards = hand.ToArray();
         var drawCards = drawPile?.ToArray() ?? [];
         var instanceIndex = 0;
         var handInstances = handCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
         var drawInstances = drawCards.Select(card => new CardInstance($"fixture-card-{instanceIndex++}", card)).ToArray();
-        var session = StartWithInstances(rng, playerId, playerHp, playerMaxHp, handInstances, enemies, drawInstances);
+        var session = StartWithInstances(rng, playerId, playerHp, playerMaxHp, handInstances, enemies, drawInstances, characterId);
         session.State.Emit(session, "combat_started", session.State.Player.Id, session.State.Player.Id, 0);
         EffectExecutor.Resume(session);
         return session;
     }
 
     private GameSession StartWithInstances(RandomStreams rng, string playerId, int playerHp, int playerMaxHp,
-        IEnumerable<CardInstance> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<CardInstance>? drawPile)
+        IEnumerable<CardInstance> hand, IEnumerable<CombatEnemySpawn> enemies, IEnumerable<CardInstance>? drawPile,
+        ContentId? characterId = null)
     {
+        if (characterId is { } character && !definition.Characters.ContainsKey(character))
+            throw new KeyNotFoundException($"Unknown combat character '{character}'.");
         ArgumentNullException.ThrowIfNull(enemies);
         var enemySpawns = enemies.ToArray();
         if (enemySpawns.Length == 0) throw new ArgumentException("A combat encounter needs at least one enemy.", nameof(enemies));
@@ -169,7 +176,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 throw new KeyNotFoundException($"Unknown combat card '{card.CardId}'.");
 
         var state = new GameState(definition,
-            new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances),
+            new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances, characterId),
             combatEnemies);
         for (var enemyIndex = 0; enemyIndex < combatEnemies.Count; enemyIndex++)
         {
@@ -233,6 +240,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             })
         {
             MaxEnergy = state.PlayerMaxEnergy,
+            CharacterId = state.Player.CharacterId,
             HandPlayPreviews = Array.AsReadOnly(state.Player.HandInstances
                 .Select(card => CombatCardRules.Preview(state, card)).ToArray())
         };
@@ -337,7 +345,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 throw new InvalidOperationException("The selected card is no longer in its source pile.");
             state.Emit(session, "card_choice", state.Player.Id, chooseCard.CardInstanceId, 1);
             if (cardChoice.Effect.OnSelected is { } onSelected)
-                state.PendingEffects.Add((cardChoice.Owner, onSelected, cardChoice.Target, chosenCard));
+                state.PendingEffects.Add(new(cardChoice.Owner, onSelected, cardChoice.Target, chosenCard, cardChoice.Counts));
             if (cardChoice.Effect.To == CardPile.Exhaust && cardChoice.Effect.From != CardPile.Exhaust)
                 EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, chosenCard);
             EffectExecutor.Resume(session);
@@ -363,8 +371,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 if (cardSetChoice.Effect.OnSelected is { } onSelected)
                 {
                     for (var i = cardSetChoice.Selected.Count - 1; i >= 0; i--)
-                        state.PendingEffects.Add((cardSetChoice.Owner, onSelected,
-                            cardSetChoice.Target, cardSetChoice.Selected[i]));
+                        state.PendingEffects.Add(new(cardSetChoice.Owner, onSelected,
+                            cardSetChoice.Target, cardSetChoice.Selected[i], cardSetChoice.Counts));
                 }
                 EffectExecutor.Resume(session);
                 ResumeChoiceContinuation(session);
@@ -379,12 +387,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var choiceOwner = state.PendingChoiceOwner ?? state.Player.Creature;
             var choiceTarget = state.PendingChoiceTarget;
             var choiceSelectedCard = state.PendingChoiceSelectedCard;
+            var choiceCounts = state.PendingChoiceCounts;
             state.PendingChoiceOwner = null;
             state.PendingChoiceTarget = null;
             state.PendingChoiceSelectedCard = null;
+            state.PendingChoiceCounts = null;
             state.Emit(session, "choice", state.Player.Id, state.Player.Id, choose.OptionIndex);
             if (pending.Options[choose.OptionIndex].Effect is { } selectedEffect)
-                EffectExecutor.Execute(session, choiceOwner, selectedEffect, choiceTarget, choiceSelectedCard);
+                EffectExecutor.Execute(session, choiceOwner, selectedEffect, choiceTarget, choiceSelectedCard, choiceCounts);
             EffectExecutor.Resume(session);
             ResumeChoiceContinuation(session);
         }

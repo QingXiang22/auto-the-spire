@@ -171,6 +171,11 @@ public static class SpireCombatDslCompiler
                     return new RepeatForCountEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
                         CompileCombatCount(RequiredArgument(call, "count")),
                         CompileEffect(RequiredArgument(call, "effect")));
+                case "withCount":
+                    CheckShape(call, 1, 1, "count", "effect");
+                    return new WithCountEffect(StringValue(Argument(call, 0)),
+                        CompileCombatCount(RequiredArgument(call, "count")),
+                        CompileEffect(RequiredArgument(call, "effect")));
                 case "autoPlay":
                     CheckShape(call, 0, 0, "from", "count", "position", "forceExhaust");
                     var autoCount = RequiredArgument(call, "count");
@@ -186,6 +191,26 @@ public static class SpireCombatDslCompiler
                         EnumValue<CardPile>(RequiredArgument(call, "pile")), OptionalInteger(call, "count", 1),
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
+                case "generateCards":
+                    CheckShape(call, 0, 0, "count", "pile", "upgraded");
+                    var generationCount = RequiredArgument(call, "count");
+                    return new GenerateCombatCardsEffect(
+                        generationCount is DslNumberNode ? Integer(generationCount) : 0,
+                        OptionalEnum(call, "pile", CardPile.Hand), OptionalBoolean(call, "upgraded", false),
+                        generationCount is DslNumberNode ? null : CompileScaledAmount(generationCount));
+                case "choose":
+                    CheckShape(call, 0, 0, "prompt", "options");
+                    if (RequiredArgument(call, "options") is not DslListNode choiceOptions)
+                        throw Error(call.Location, "Choice options must be a list.");
+                    var compiledOptions = choiceOptions.Items.Select(node =>
+                    {
+                        var option = RequireCall(node);
+                        if (option.Name != "option") throw Error(option.Location, "Expected option(label, effect=...).");
+                        CheckShape(option, 1, 1, "effect");
+                        return new ChoiceOption(StringValue(Argument(option, 0)), OptionalEffect(option, "effect"));
+                    }).ToArray();
+                    if (compiledOptions.Length == 0) throw Error(call.Location, "A choice requires at least one option.");
+                    return new ChooseEffect(StringValue(RequiredArgument(call, "prompt")), compiledOptions);
                 case "chooseCard":
                     CheckShape(call, 0, 0, "from", "to", "prompt", "destinationPosition", "filter", "onSelected");
                     return new ChooseCardFromPileEffect(
@@ -293,6 +318,9 @@ public static class SpireCombatDslCompiler
                 case "energyX":
                     CheckShape(call, 0, 0);
                     return new EnergyXCountSource();
+                case "savedCount":
+                    CheckShape(call, 1, 1);
+                    return new SavedCountSource(StringValue(Argument(call, 0)));
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1);
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))));

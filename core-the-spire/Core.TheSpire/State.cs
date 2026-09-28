@@ -50,9 +50,10 @@ internal sealed class PlayerCombatState
     private int _nextGeneratedCardId;
 
     public PlayerCombatState(string id, int hp, int maxHp, IEnumerable<CardInstance> hand,
-        IEnumerable<CardInstance>? drawPile = null)
+        IEnumerable<CardInstance>? drawPile = null, ContentId? characterId = null)
     {
         Creature = new EntityState(id, false, hp, maxHp);
+        CharacterId = characterId;
         _hand = [.. hand];
         _drawPile = drawPile is null ? [] : [.. drawPile];
         _handView = new CardInstanceIdView(_hand);
@@ -68,6 +69,7 @@ internal sealed class PlayerCombatState
     }
 
     public EntityState Creature { get; }
+    public ContentId? CharacterId { get; }
     public string Id => Creature.Id;
     public int Energy { get; internal set; } = 3;
     public IReadOnlyList<ContentId> Hand => _handView;
@@ -186,11 +188,12 @@ internal sealed class GameState
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
     internal CardInstance? PendingChoiceSelectedCard { get; set; }
+    internal EffectCountScope? PendingChoiceCounts { get; set; }
     internal List<CardPlayFrame> CardPlayFrames { get; } = [];
     internal CardPlayFrame? CurrentCardPlay => CardPlayFrames.Count == 0 ? null : CardPlayFrames[^1];
     internal CardInstance CardInPlay(CardPlayFrame frame) =>
         Player.PlayPileInstances.FirstOrDefault(card => card.InstanceId == frame.Card.InstanceId) ?? frame.Card;
-    internal List<(EntityState Owner, EffectNode Effect, EntityState? Target, CardInstance? SelectedCard)> PendingEffects { get; } = [];
+    internal List<PendingEffect> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal int FlushHookIndex { get; set; }
     internal HashSet<string> TemporarilyRetainedCards { get; } = new(StringComparer.Ordinal);
@@ -235,7 +238,7 @@ internal sealed class GameState
         if (effects is { Count: > 0 })
         {
             for (var i = effects.Count - 1; i >= 0; i--)
-                PendingEffects.Add((effects[i].Owner, effects[i].Effect, null, null));
+                PendingEffects.Add(new(effects[i].Owner, effects[i].Effect, null, null));
         }
     }
 
@@ -478,7 +481,10 @@ internal sealed class GameState
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
-internal abstract class PendingCardSelectionState;
+internal abstract class PendingCardSelectionState
+{
+    internal EffectCountScope? Counts { get; init; }
+}
 internal sealed record CardPlayFrame(CardInstance Card, int XEnergy, EntityState? Target,
     CardPile? ResultPile, bool IsAutoPlay);
 internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
@@ -524,6 +530,7 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     PendingCardSelectionView? PendingCardSelection)
 {
     public int MaxEnergy { get; init; }
+    public ContentId? CharacterId { get; init; }
     public IReadOnlyList<CardPlayPreview> HandPlayPreviews { get; init; } = Array.Empty<CardPlayPreview>();
 }
 

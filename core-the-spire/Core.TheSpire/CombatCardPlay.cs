@@ -54,7 +54,7 @@ internal static class CombatCardPlay
     }
 
     private static void QueuePhase(GameState state, CardPlayFrame frame, CardPlayPhase phase) =>
-        state.PendingEffects.Add((state.Player.Creature, new CardPlayPhaseEffect(frame, phase), frame.Target, frame.Card));
+        state.PendingEffects.Add(new(state.Player.Creature, new CardPlayPhaseEffect(frame, phase), frame.Target, frame.Card));
 
     public static void Continue(GameSession session, CardPlayPhaseEffect continuation)
     {
@@ -86,7 +86,7 @@ internal static class CombatCardPlay
                 break;
             case CardPlayPhase.Effects:
                 var current = state.CardInPlay(frame);
-                state.PendingEffects.Add((state.Player.Creature, state.Definition.Cards[current.CardId]
+                state.PendingEffects.Add(new(state.Player.Creature, state.Definition.Cards[current.CardId]
                     .ResolveEffect(current), frame.Target, current));
                 break;
             case CardPlayPhase.AfterPlay:

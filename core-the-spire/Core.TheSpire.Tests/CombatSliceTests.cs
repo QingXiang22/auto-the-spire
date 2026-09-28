@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(61, ironcladPool.Count);
+        Assert.Equal(63, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(63, cards.Count);
+        Assert.Equal(65, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(62, pool.Count);
+        Assert.Equal(64, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -810,6 +810,263 @@ public sealed class CombatSliceTests
         EffectExecutor.Execute(bulk, bulk.State.Player.Creature, new MoveCardEffect(CardPile.Hand, CardPile.Exhaust));
         Assert.Equal(5, bulk.State.Player.Energy);
         Assert.Equal(1, bulk.State.Events.Count(gameEvent => gameEvent.Type == "energy"));
+    }
+
+    public void FiendFireCapturesOriginalHandAndCompletesExhaustCallbacksBeforeHits()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        var callbackCard = ContentId.Parse("count-fixture:draw-and-strength");
+        registry.Register(new CardDefinition(callbackCard, 0, CardType.Skill, new SequenceEffect([]),
+            Target: TargetSelector.Self)
+        {
+            OnExhaust = new SequenceEffect([new DrawCardsEffect(1),
+                new ApplyPowerEffect(BaseSpireIds.Strength, 1)])
+        });
+        var environment = new CombatEnvironment(registry.Build());
+        foreach (var upgrade in new[] { 0, 1 })
+        {
+            var session = environment.Start(112, "ironclad", 56, 65,
+                [BaseSpireIds.FiendFire, callbackCard, callbackCard],
+                BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+                drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad]);
+            if (upgrade > 0) session.State.Player.MutableHand[0] = new CardInstance("fiend+", BaseSpireIds.FiendFire, 1);
+            environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+            Assert.Equal(upgrade > 0 ? 29 : 35, session.State.Enemy.Hp);
+            Assert.Equal(1, session.State.Player.Energy);
+            Assert.Equal(2, session.State.Player.Hand.Count);
+            Assert.Equal(3, session.State.Player.ExhaustPile.Count);
+            Assert.Equal(2, session.State.Events.Count(e => e.Type == "damage"));
+            var originalExhausts = session.State.Events.Where(e => e.Type == "card_exhausted").Take(2).ToArray();
+            var callbackDraws = session.State.Events.Where(e => e.Type == "draw").ToArray();
+            Assert.True(originalExhausts[0].Sequence < callbackDraws[0].Sequence);
+            Assert.True(callbackDraws[0].Sequence < originalExhausts[1].Sequence);
+            Assert.True(originalExhausts[1].Sequence < callbackDraws[1].Sequence);
+            var firstHit = session.State.Events.First(e => e.Type == "damage").Sequence;
+            Assert.True(session.State.Events.Where(e => e.Type is "draw" or "power")
+                .All(e => e.Sequence < firstHit));
+            Assert.Equal(0, session.State.CardPlayFrames.Count);
+        }
+        var empty = environment.Start(113, "ironclad", 56, 65, [BaseSpireIds.FiendFire],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        environment.Step(empty, new PlayCardAction(0, empty.State.Enemy.Id));
+        Assert.Equal(53, empty.State.Enemy.Hp);
+        Assert.Equal(1, empty.State.Player.ExhaustPile.Count);
+        Assert.False(empty.State.Events.Any(e => e.Type == "damage"));
+    }
+
+    public void CountBindingsSurviveChoicesAndRestoreOuterLexicalScope()
+    {
+        var source = DslSourceParser.Parse("""
+            package count-fixture {
+              card Scoped { type = skill rarity = token cost = 1 target = self
+                play = withCount("n", count=pileCount(hand), effect=sequence(
+                  forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
+                  choose(prompt="Continue", options=[option("Continue", effect=
+                    modifyEnergy(scaled(0, 1, count=savedCount("n"))))]),
+                  withCount("n", count=pileCount(hand), effect=
+                    modifyEnergy(scaled(0, 1, count=savedCount("n")))),
+                  chooseCard(from=exhaust, prompt="Recover", onSelected=sequence(
+                    modifyEnergy(scaled(0, 1, count=savedCount("n"))),
+                    moveSelectedCard(from=exhaust, to=hand))),
+                  chooseCards(from=hand, prompt="Select", minChoices=1, maxChoices=1,
+                    onSelected=modifyEnergy(scaled(0, 1, count=savedCount("n")))),
+                  repeatForCount(0, 1, count=savedCount("n"), effect=gainBlock(1))
+                )) }
+            }
+            """);
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        foreach (var card in SpireCombatDslCompiler.CompileCards(source))
+            registry.Register(card with { Effect = EffectDsl.Parse(EffectDsl.Serialize(card.Effect)) });
+        var environment = new CombatEnvironment(registry.Build());
+        var session = environment.Start(114, "ironclad", 56, 65,
+            [ContentId.Parse("count-fixture:scoped"), BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString());
+        Assert.True(environment.Step(session, new PlayCardAction(0, session.State.Player.Id)).NeedsChoice);
+        Assert.Equal(2, session.State.Player.Energy);
+        Assert.True(environment.Step(session, new ChooseOptionAction(0)).NeedsChoice);
+        Assert.Equal(4, session.State.Player.Energy); // Inner hand count is zero; outer count stays two.
+        var recovered = session.State.Player.ExhaustPileInstances[0].InstanceId;
+        Assert.True(environment.Step(session, new ChooseCardAction(recovered)).NeedsChoice);
+        Assert.Equal(6, session.State.Player.Energy);
+        environment.Step(session, new ChooseCardAction(recovered));
+        var finished = environment.Step(session, new ConfirmCardSelectionAction());
+        Assert.False(finished.NeedsChoice);
+        Assert.Equal(8, session.State.Player.Energy);
+        Assert.Equal(2, session.State.Player.Creature.Block);
+        Assert.Equal(0, session.State.PendingEffects.Count);
+        Assert.True(session.State.PendingChoiceCounts is null);
+    }
+
+    public void CountBindingsStayWithParentAcrossNestedAutomaticCardChoices()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        var source = DslSourceParser.Parse("""
+            package count-fixture {
+              card Parent { type = skill rarity = token cost = 1 target = self
+                play = withCount("n", count=pileCount(hand), effect=sequence(
+                  autoPlay(from=draw, count=scaled(0, 1, count=savedCount("n"))),
+                  modifyEnergy(scaled(0, 1, count=savedCount("n"))),
+                  repeatForCount(0, 1, count=savedCount("n"), effect=gainBlock(1)))) }
+              card Child { type = skill rarity = token cost = 0 target = self
+                play = withCount("n", count=pileCount(exhaust), effect=
+                  choose(prompt="Child", options=[option("Continue", effect=
+                    modifyEnergy(scaled(0, 1, count=savedCount("n"))))])) }
+            }
+            """);
+        foreach (var card in SpireCombatDslCompiler.CompileCards(source)) registry.Register(card);
+        var environment = new CombatEnvironment(registry.Build());
+        var session = environment.Start(119, "player", 56, 65,
+            [ContentId.Parse("count-fixture:parent"), BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [ContentId.Parse("count-fixture:child"), BaseSpireIds.StrikeIronclad]);
+        Assert.True(environment.Step(session, new PlayCardAction(0, session.State.Player.Id)).NeedsChoice);
+        Assert.Equal(2, session.State.CardPlayFrames.Count);
+        Assert.Equal(2, session.State.Player.Energy);
+        var completed = environment.Step(session, new ChooseOptionAction(0));
+        Assert.False(completed.NeedsChoice);
+        Assert.Equal(4, session.State.Player.Energy);
+        Assert.Equal(2, session.State.Player.Creature.Block);
+        Assert.Equal(47, session.State.Enemy.Hp);
+        Assert.Equal(0, session.State.CardPlayFrames.Count);
+    }
+
+    public void CountBindingsRejectUnboundAndOutOfScopeReferences()
+    {
+        foreach (var effect in new EffectNode[] {
+            new RepeatForCountEffect(0, 1, new SavedCountSource("missing"), new GainBlockEffect(1)),
+            new SequenceEffect([
+                new WithCountEffect("n", new PileCardCountSource(CardPile.Hand), new GainBlockEffect(1)),
+                new ModifyEnergyEffect(0, new ScaledCombatAmount(0, 1, new SavedCountSource("n")))
+            ]),
+            new WithCountEffect("n", new SavedCountSource("n"), new GainBlockEffect(1)),
+            new WithCountEffect("n", new PileCardCountSource(CardPile.Hand),
+                new ChooseCardFromPileEffect(CardPile.Hand, null, "Choose",
+                    OnSelected: new ModifyEnergyEffect(0, new ScaledCombatAmount(0, 1, new SavedCountSource("other")))))
+        })
+        {
+            var registry = new ContentRegistry();
+            registry.AddPackage(new BaseSpirePackage());
+            registry.Register(new CardDefinition(ContentId.Parse("count-fixture:invalid"), 0, CardType.Skill, effect));
+            Assert.Throws<InvalidOperationException>(() => registry.Build());
+        }
+    }
+
+    public void StokeUsesOwnerPoolAndOriginalCountDespiteExhaustDraws()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        var drawCard = ContentId.Parse("generation-fixture:exhaust-draw");
+        registry.Register(new CardDefinition(drawCard, 0, CardType.Skill, new SequenceEffect([]),
+            Target: TargetSelector.Self) { OnExhaust = new DrawCardsEffect(1) });
+        var poolId = ContentId.Parse("generation-fixture:pool");
+        var characterId = ContentId.Parse("generation-fixture:character");
+        registry.Register(new CardPoolDefinition(poolId,
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.Corruption, BaseSpireIds.Entrench,
+                BaseSpireIds.NotYet, BaseSpireIds.Anger]));
+        registry.Register(new CharacterDefinition(characterId, 65, 0, [], cardPools: [poolId]));
+        var definition = registry.Build();
+        var stoke = definition.Cards[BaseSpireIds.Stoke];
+        registry.Override(stoke with { Effect = EffectDsl.Parse(EffectDsl.Serialize(stoke.Effect)),
+            UpgradedEffect = EffectDsl.Parse(EffectDsl.Serialize(stoke.UpgradedEffect!)) });
+        var environment = new CombatEnvironment(registry.Build());
+        foreach (var upgrade in new[] { 0, 1 })
+        {
+            var session = environment.Start(115, "arbitrary-player-id", 56, 65,
+                [BaseSpireIds.Stoke, drawCard, drawCard], BaseSpireIds.DampCultist.ToString(),
+                drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad], characterId: characterId);
+            if (upgrade > 0) session.State.Player.MutableHand[0] = new CardInstance("stoke+", BaseSpireIds.Stoke, 1);
+            var originalIds = session.State.Player.HandInstances.Skip(1).Select(c => c.InstanceId).ToArray();
+            environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+            Assert.Equal(2, session.State.Player.Energy);
+            Assert.Equal(characterId, environment.Observe(session).CharacterId!.Value);
+            Assert.Equal(4, session.State.Player.Hand.Count);
+            Assert.Equal(originalIds, session.State.Player.ExhaustPileInstances.Select(c => c.InstanceId));
+            var generated = session.State.Player.HandInstances.Where(c => c.CardId == BaseSpireIds.Anger).ToArray();
+            Assert.Equal(2, generated.Length); // Sampling with replacement permits duplicates.
+            Assert.True(generated.All(c => c.UpgradeLevel == upgrade));
+            Assert.Equal(2, generated.Select(c => c.InstanceId).Distinct().Count());
+            Assert.Equal(2, session.Random.Get("combat-card-generation").Counter);
+            var firstGenerated = session.State.Events.First(e => e.Type == "card_generated").Sequence;
+            Assert.True(session.State.Events.Where(e => e.Type is "card_exhausted" or "draw")
+                .All(e => e.Sequence < firstGenerated));
+            Assert.Equal(BaseSpireIds.Stoke, session.State.Player.DiscardPile.Single());
+        }
+        var empty = environment.Start(116, "arbitrary-player-id", 56, 65, [BaseSpireIds.Stoke],
+            BaseSpireIds.DampCultist.ToString());
+        environment.Step(empty, new PlayCardAction(0, empty.State.Player.Id));
+        Assert.Equal(0, empty.Random.Get("combat-card-generation").Counter);
+        Assert.Equal(0, empty.State.Player.Hand.Count);
+    }
+
+    public void GeneratedCardsReserveRandomBatchAndSuspendBetweenInsertionEvents()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        registry.Register(new GenerationChoiceHook());
+        var firstPool = ContentId.Parse("generation-fixture:first-pool");
+        var secondPool = ContentId.Parse("generation-fixture:second-pool");
+        var character = ContentId.Parse("generation-fixture:character");
+        registry.Register(new CardPoolDefinition(firstPool, [BaseSpireIds.Anger]));
+        registry.Register(new CardPoolDefinition(secondPool, [BaseSpireIds.Anger, BaseSpireIds.PommelStrike]));
+        registry.Register(new CharacterDefinition(character, 65, 0, [], cardPools: [firstPool, secondPool]));
+        var environment = new CombatEnvironment(registry.Build());
+        var session = environment.Start(117, "player", 56, 65, [], BaseSpireIds.DampCultist.ToString(),
+            characterId: character);
+        var expectedRandom = new RandomStreams(117).Get("combat-card-generation");
+        var expected = Enumerable.Range(0, 3).Select(_ => new[] { BaseSpireIds.Anger, BaseSpireIds.PommelStrike }
+            [expectedRandom.NextInt(2)]).ToArray();
+        EffectExecutor.Execute(session, session.State.Player.Creature, new GenerateCombatCardsEffect(3));
+        Assert.Equal(3, session.Random.Get("combat-card-generation").Counter);
+        for (var inserted = 1; inserted <= 3; inserted++)
+        {
+            Assert.True(session.State.PendingChoice is not null);
+            Assert.Equal(inserted, session.State.Player.Hand.Count);
+            Assert.Equal(inserted - 1, session.State.Player.Creature.Block);
+            environment.Step(session, new ChooseOptionAction(0));
+        }
+        Assert.Equal(expected, session.State.Player.HandInstances.Select(c => c.CardId));
+        Assert.Equal(3, session.State.Player.Creature.Block);
+        Assert.True(session.State.PendingChoice is null);
+        Assert.Equal(0, session.State.PendingEffects.Count);
+        Assert.Equal(0, session.Random.Get("shuffle").Counter);
+        Assert.Equal(0, session.Random.Get("card-targets").Counter);
+    }
+
+    private sealed class GenerationChoiceHook : IRuleHook
+    {
+        public ContentId Id => ContentId.Parse("generation-fixture:choice-hook");
+        public void OnEvent(RuleHookContext context, GameEvent gameEvent) { }
+        public GameEventEffect? OnEventEffect(RuleHookContext context, GameEvent gameEvent) =>
+            gameEvent.Type == "card_generated" ? new GameEventEffect(new ChooseEffect("Generated card",
+                [new ChoiceOption("Continue", new GainBlockEffect(1))]), GameEventActor.Player) : null;
+    }
+
+    public void CombatGenerationRequiresExplicitCharacterAndEligiblePool()
+    {
+        var registry = new ContentRegistry();
+        registry.AddPackage(new BaseSpirePackage());
+        var characterId = ContentId.Parse("generation-fixture:empty-character");
+        registry.Register(new CharacterDefinition(characterId, 65, 0, []));
+        var environment = new CombatEnvironment(registry.Build());
+        foreach (var character in new ContentId?[] { null, characterId })
+        {
+            var session = environment.Start(118, "ironclad", 56, 65, [], BaseSpireIds.DampCultist.ToString(),
+                characterId: character);
+            Assert.Throws<InvalidOperationException>(() => EffectExecutor.Execute(session,
+                session.State.Player.Creature, new GenerateCombatCardsEffect(1)));
+            Assert.Equal(0, session.Random.Get("combat-card-generation").Counter);
+            Assert.Equal(0, session.State.Player.Hand.Count);
+        }
+        Assert.Throws<KeyNotFoundException>(() => environment.Start(118, "player", 56, 65, [],
+            BaseSpireIds.DampCultist.ToString(), characterId: ContentId.Parse("generation-fixture:unknown")));
+        var invalid = new ContentRegistry();
+        invalid.AddPackage(new BaseSpirePackage());
+        invalid.Register(new CardDefinition(ContentId.Parse("generation-fixture:invalid"), 0, CardType.Skill,
+            new GenerateCombatCardsEffect(1, CardPile.Play)));
+        Assert.Throws<InvalidOperationException>(() => invalid.Build());
     }
 
     private sealed class AutoPlayContextFixturePackage : IRulePackage
@@ -5106,6 +5363,13 @@ internal static class Program
         tests.ReplayedCardCanSuspendForEachExecutionWithoutRepeatingConsumption();
         tests.ReplayResolvesAnUpgradeAppliedDuringItsFirstExecution();
         tests.DrumOfBattleExhaustCallbackUsesItsUpgradeAndWorksDuringAutomaticPlay();
+        tests.FiendFireCapturesOriginalHandAndCompletesExhaustCallbacksBeforeHits();
+        tests.CountBindingsSurviveChoicesAndRestoreOuterLexicalScope();
+        tests.CountBindingsStayWithParentAcrossNestedAutomaticCardChoices();
+        tests.CountBindingsRejectUnboundAndOutOfScopeReferences();
+        tests.StokeUsesOwnerPoolAndOriginalCountDespiteExhaustDraws();
+        tests.GeneratedCardsReserveRandomBatchAndSuspendBetweenInsertionEvents();
+        tests.CombatGenerationRequiresExplicitCharacterAndEligiblePool();
         tests.FreeAttackConsumesOnlyMatchingPlaysAndPreservesXCostSpending();
         tests.ExpectAFightCountsHandAttacksAndLocksPositiveEnergyUntilTurnEnd();
         tests.TearAsunderCountsPositiveHpLossAcrossTurnsAndRepeatCountsAreCapturedOnce();

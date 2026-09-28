@@ -24,7 +24,7 @@ The following review covers gameplay members in `sts2/src/Core/Models/Cards` and
 
 ## Implemented slice: card rules and counted composition
 
-Corruption, Unrelenting, Expect A Fight, Tear Asunder, Cascade, Havoc, One-Two Punch, and Drum of Battle now have executable DSL and gameplay checks. The source pool covers 61/87 definitions, with 26 remaining (including the two multiplayer-only cards). There are 63 card declarations in total, including Entrench and Slimed outside this pool.
+Corruption, Unrelenting, Expect A Fight, Tear Asunder, Cascade, Havoc, One-Two Punch, and Drum of Battle now have executable DSL and gameplay checks. The source pool covers 63/87 definitions, with 24 remaining (including the two multiplayer-only cards). There are 65 card declarations in total, including Entrench and Slimed outside this pool.
 
 Power DSL gains `cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)` and `consumeOnPlay=true` for a rule that spends one stack when a matching card begins. Cost override applies to fixed costs only. One core resolver supplies observations, legal actions, energy payment, and the snapshotted result pile. Rules compose in active Power order; exact original model Hook ordering remains a separate fidelity task.
 
@@ -43,3 +43,13 @@ For a calculated amount that should be one command, `modifyEnergy(scaled(base, p
 `autoPlay` reserves a draw-pile batch before executing it, including shuffle as needed. Cascade uses the captured `energyX()` count; Havoc requests forced exhaustion. Tests distinguish this reservation from sequential draw-and-play, prove child X values and parent context restoration through three nested card frames, and cover automatic X replay without extra payment. One-Two Punch consumes a stack during count resolution; Free Attack consumption remains before each execution. Result placement and exhaustion dispatch happen once.
 
 Drum of Battle uses `onExhaust` / `upgradedOnExhaust`, shared with direct pile moves, played exhaustion, and forced automatic exhaustion. An upgrade can change only the callback. General card event declarations, hand/exhaust automatic selection, post-play phase triggers, deferred Ethereal draw, and exact model Hook ordering remain open.
+
+## Implemented slice: captured counts and combat generation
+
+Fiend Fire and Stoke are authored entirely in DSL. Both bind the pre-exhaust hand count, snapshot the original instances through `forEachCard`, and finish all exhaust callbacks before their follow-up. Fiend Fire attacks 7 (upgraded 10) per original card, then exhausts itself. Stoke generates that original count from its owner's character pool, with replacement; the upgraded body upgrades generated instances. Callback draws survive in hand and do not increase either count.
+
+`withCount` / `savedCount` bindings are immutable lexical execution context. Ordinary choices, single/multiple card choices, nested scopes, and nested automatic card plays are tested. Unbound, self-referencing, and out-of-scope names fail registry validation. Queued entries remain value types to avoid allocating an object for every scheduled node.
+
+`generateCards` reserves all RNG results before insertion, deduplicates overlapping owner pools, applies `CanBeGeneratedInCombat` and source rarity exclusions, and dispatches insertion events sequentially through the existing queue. A generated-card event can pause for a choice without changing the reserved batch. Tests prove fresh instance identities, duplicate samples, upgraded generation, owner identity independent of player ID, precise random call count, zero-count behavior, and generation exclusions. Positive generation with no declared character or eligible pool fails explicitly. The complete pool and its source ordering, multiplayer eligibility, hand capacity/overflow, and full generation hooks remain open.
+
+The current pool covers 63/87 source definitions; 24 remain: Aggression, Colossus, Crimson Mantle, Dark Embrace, Demonic Shield, Feed, Flame Barrier, Hellraiser, Howl from Beyond, Infernal Blade, Inferno, Juggernaut, Juggling, Pillage, Primal Force, Rampage, Rupture, Stampede, Stomp, Stone Armor, Tank, Thrash, Unmovable, and Vicious. Infernal Blade next needs filtered/distinct generation and an instance cost override that expires at turn-end; Primal Force needs transformation with explicit instance identity semantics.

@@ -1242,12 +1242,19 @@ public sealed class ContentRegistry
         }
     }
 
-    private void ValidateEffectReferences(EffectNode effect, string owner)
+    private void ValidateEffectReferences(EffectNode effect, string owner, IReadOnlySet<string>? counts = null)
     {
         switch (effect)
         {
+            case WithCountEffect binding:
+                ArgumentException.ThrowIfNullOrWhiteSpace(binding.Name);
+                ValidateCombatCountSource(binding.Count, owner, counts);
+                var innerCounts = new HashSet<string>(counts ?? new HashSet<string>(), StringComparer.Ordinal)
+                    { binding.Name };
+                ValidateEffectReferences(binding.Effect, owner, innerCounts);
+                break;
             case SequenceEffect sequence:
-                foreach (var child in sequence.Effects) ValidateEffectReferences(child, owner);
+                foreach (var child in sequence.Effects) ValidateEffectReferences(child, owner, counts);
                 break;
             case AttackEffect attack:
                 ArgumentOutOfRangeException.ThrowIfNegative(attack.Amount);
@@ -1261,7 +1268,7 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.AmountPerCount);
                 if (scaled.Target is not (TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} has an invalid scaled attack target.");
-                ValidateCombatCountSource(scaled.Count, owner);
+                ValidateCombatCountSource(scaled.Count, owner, counts);
                 break;
             case ApplyScaledPowerEffect scaledPower:
                 if (!_powers.ContainsKey(scaledPower.Power))
@@ -1271,7 +1278,7 @@ public sealed class ContentRegistry
                 if (scaledPower.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget
                     or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} has an invalid scaled power target.");
-                ValidateCombatCountSource(scaledPower.Count, owner);
+                ValidateCombatCountSource(scaledPower.Count, owner, counts);
                 break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
@@ -1314,7 +1321,7 @@ public sealed class ContentRegistry
                     || !Enum.IsDefined(chooseCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid card selection pile or destination.");
                 ArgumentException.ThrowIfNullOrWhiteSpace(chooseCard.Prompt);
-                if (chooseCard.OnSelected is { } onSelected) ValidateEffectReferences(onSelected, owner);
+                if (chooseCard.OnSelected is { } onSelected) ValidateEffectReferences(onSelected, owner, counts);
                 break;
             case ChooseCardsFromPileEffect chooseCards:
                 if (!Enum.IsDefined(chooseCards.From) || !Enum.IsDefined(chooseCards.Filter))
@@ -1323,7 +1330,7 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegative(chooseCards.MinChoices);
                 if (chooseCards.MaxChoices < chooseCards.MinChoices)
                     throw new InvalidOperationException($"{owner} has invalid multi-card selection bounds.");
-                if (chooseCards.OnSelected is { } eachSelected) ValidateEffectReferences(eachSelected, owner);
+                if (chooseCards.OnSelected is { } eachSelected) ValidateEffectReferences(eachSelected, owner, counts);
                 break;
             case RandomlyMoveCardFromPileEffect randomCard:
                 if (!Enum.IsDefined(randomCard.From) || !Enum.IsDefined(randomCard.To)
@@ -1333,7 +1340,7 @@ public sealed class ContentRegistry
             case ForEachCardInPileEffect eachCard:
                 if (!Enum.IsDefined(eachCard.From) || !Enum.IsDefined(eachCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid card iteration pile or filter.");
-                ValidateEffectReferences(eachCard.Effect, owner);
+                ValidateEffectReferences(eachCard.Effect, owner, counts);
                 break;
             case MoveSelectedCardToPileEffect moveSelectedCard:
                 if (!Enum.IsDefined(moveSelectedCard.From) || !Enum.IsDefined(moveSelectedCard.To)
@@ -1354,37 +1361,44 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} expires unknown power '{expirePower.Power}'.");
             case ChooseEffect choice:
                 foreach (var option in choice.Options)
-                    if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner);
+                    if (option.Effect is { } optionEffect) ValidateEffectReferences(optionEffect, owner, counts);
                 break;
             case IfEffect conditional:
                 ValidateEffectPredicate(conditional.Predicate, owner);
-                ValidateEffectReferences(conditional.Then, owner);
-                if (conditional.Else is { } elseEffect) ValidateEffectReferences(elseEffect, owner);
+                ValidateEffectReferences(conditional.Then, owner, counts);
+                if (conditional.Else is { } elseEffect) ValidateEffectReferences(elseEffect, owner, counts);
                 break;
             case RepeatEffect repeat:
                 ArgumentOutOfRangeException.ThrowIfNegative(repeat.Count);
-                ValidateEffectReferences(repeat.Effect, owner);
+                ValidateEffectReferences(repeat.Effect, owner, counts);
                 break;
             case GeneratePotionEffect generatePotion:
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(generatePotion.Count);
                 break;
+            case GenerateCombatCardsEffect generateCards:
+                ArgumentOutOfRangeException.ThrowIfNegative(generateCards.Count);
+                if (!Enum.IsDefined(generateCards.Pile) || generateCards.Pile == CardPile.Play)
+                    throw new InvalidOperationException($"{owner} generates cards into an invalid pile.");
+                if (generateCards.CalculatedCount is { } generatedCount)
+                    ValidateCombatCountSource(generatedCount.Count, owner, counts);
+                break;
             case ModifyEnergyEffect { CalculatedAmount: { } amount }:
-                ValidateCombatCountSource(amount.Count, owner);
+                ValidateCombatCountSource(amount.Count, owner, counts);
                 break;
             case RepeatForCountEffect repeat:
                 ArgumentOutOfRangeException.ThrowIfNegative(repeat.BaseCount);
                 ArgumentOutOfRangeException.ThrowIfNegative(repeat.PerCount);
-                ValidateCombatCountSource(repeat.Count, owner);
-                ValidateEffectReferences(repeat.Effect, owner);
+                ValidateCombatCountSource(repeat.Count, owner, counts);
+                ValidateEffectReferences(repeat.Effect, owner, counts);
                 break;
             case AutoPlayCardsEffect autoPlay:
                 ArgumentOutOfRangeException.ThrowIfNegative(autoPlay.Count);
                 if (autoPlay.From != CardPile.Draw || !Enum.IsDefined(autoPlay.Position))
                     throw new InvalidOperationException($"{owner} has an unsupported automatic-play source or position.");
-                if (autoPlay.CalculatedCount is { } count) ValidateCombatCountSource(count.Count, owner);
+                if (autoPlay.CalculatedCount is { } count) ValidateCombatCountSource(count.Count, owner, counts);
                 break;
             case RepeatForXCostEffect repeatForX:
-                ValidateEffectReferences(repeatForX.Effect, owner);
+                ValidateEffectReferences(repeatForX.Effect, owner, counts);
                 break;
             case CustomEffect custom when !_customEffects.ContainsKey(custom.Handler):
                 throw new InvalidOperationException($"{owner} references unknown custom effect '{custom.Handler}'.");
@@ -1416,7 +1430,7 @@ public sealed class ContentRegistry
         }
     }
 
-    private void ValidateCombatCountSource(CombatCountSource source, string owner)
+    private void ValidateCombatCountSource(CombatCountSource source, string owner, IReadOnlySet<string>? counts = null)
     {
         switch (source)
         {
@@ -1426,6 +1440,11 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} counts an invalid card type.");
             case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
                 throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
+            case SavedCountSource saved:
+                ArgumentException.ThrowIfNullOrWhiteSpace(saved.Name);
+                if (counts?.Contains(saved.Name) != true)
+                    throw new InvalidOperationException($"{owner} reads unbound count '{saved.Name}'.");
+                break;
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;

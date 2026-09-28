@@ -1,4 +1,30 @@
 package base-spire {
+  card Stoke {
+    pools = [IroncladCardPool]
+    type = skill rarity = rare cost = 1 target = self
+    play = withCount("handSize", count=pileCount(hand), effect=sequence(
+      forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
+      generateCards(count=scaled(0, 1, count=savedCount("handSize")))
+    ))
+    upgradedPlay = withCount("handSize", count=pileCount(hand), effect=sequence(
+      forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
+      generateCards(count=scaled(0, 1, count=savedCount("handSize")), upgraded=true)
+    ))
+  }
+
+  card FiendFire {
+    pools = [IroncladCardPool]
+    type = attack rarity = rare cost = 2 target = enemy keywords = [exhaust]
+    play = withCount("handSize", count=pileCount(hand), effect=sequence(
+      forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
+      repeatForCount(0, 1, count=savedCount("handSize"), effect=attack(7))
+    ))
+    upgradedPlay = withCount("handSize", count=pileCount(hand), effect=sequence(
+      forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
+      repeatForCount(0, 1, count=savedCount("handSize"), effect=attack(10))
+    ))
+  }
+
   card DrumOfBattle {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self
