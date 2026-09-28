@@ -65,6 +65,26 @@ public sealed class CombatSliceTests
         Assert.Throws<DslSourceException>(() => SpireCombatBehaviorDslCompiler.Compile(invalid));
     }
 
+    public void CombatStateDslSharesValuesAcrossEnemiesAndExposesThemToObservations()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage(), new SharedCombatStateFixturePackage()));
+        var session = environment.StartEncounter(9191, "ironclad", 56, 65, [],
+            ContentId.Parse("shared-state-fixture:encounter"));
+        var calls = ContentId.Parse("shared-state-fixture:backup-calls");
+        Assert.Equal(0, environment.Observe(session).CombatVariables[calls]);
+
+        environment.Step(session, new EndTurnAction());
+
+        var observation = environment.Observe(session);
+        Assert.Equal(2, observation.CombatVariables[calls]);
+        Assert.True(observation.Enemies.All(enemy => enemy.IntentDamage == 2));
+        Assert.Equal(2, session.State.GetModInt("shared-state-fixture", "backup-calls", -1));
+        Assert.Equal(2, session.State.Events.Count(gameEvent => gameEvent.Type == "combat_state_modified"));
+        var freshCombat = environment.StartEncounter(9192, "ironclad", 56, 65, [],
+            ContentId.Parse("shared-state-fixture:encounter"));
+        Assert.Equal(0, environment.Observe(freshCombat).CombatVariables[calls]);
+    }
+
     public void BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase()
     {
         var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -4548,6 +4568,46 @@ public sealed class CombatSliceTests
         }
     }
 
+    private sealed class SharedCombatStateFixturePackage : IRulePackage
+    {
+        public PackageInfo Info { get; } = new("shared-state-fixture", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var stateSource = DslSourceParser.Parse("""
+                package shared-state-fixture {
+                  state BackupCalls { scope = combat type = int default = 0 }
+                }
+                """, "shared-state-fixture-state.spire");
+            foreach (var definition in SpireStateDslCompiler.Compile(stateSource)) registry.Register(definition);
+
+            var source = DslSourceParser.Parse("""
+                package shared-state-fixture {
+                  enemy Caller {
+                    hp = range(10, 10)
+                    moves = actions(
+                      call = action(intent=Buff, effect=modifyCombatState(BackupCalls, 1)),
+                      ordinary = attack(1, target=player),
+                      coordinated = attack(2, target=player)
+                    )
+                    behavior = graph(start=call, edges=[
+                      edge(call, chooseByCondition(
+                        candidate(coordinated, when=combatState(BackupCalls, AtLeast, 1)),
+                        candidate(ordinary, when=combatState(BackupCalls, LessThan, 1))
+                      )),
+                      edge(ordinary, ordinary),
+                      edge(coordinated, coordinated)
+                    ])
+                  }
+                }
+                """, "shared-state-fixture-enemy.spire");
+            foreach (var enemy in SpireCombatBehaviorDslCompiler.Compile(source).Enemies) registry.Register(enemy);
+            registry.Register(new EncounterDefinition(ContentId.Parse("shared-state-fixture:encounter"),
+                RunRoomType.Monster, [ContentId.Parse("shared-state-fixture:caller"),
+                    ContentId.Parse("shared-state-fixture:caller")]));
+        }
+    }
+
     private sealed class TestRunPackage(RunDefinition run) : IRulePackage
     {
         public PackageInfo Info { get; } = new("run-fixture", "1.0.0");
@@ -5664,6 +5724,7 @@ internal static class Program
         var tests = new CombatSliceTests();
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations();
+        tests.CombatStateDslSharesValuesAcrossEnemiesAndExposesThemToObservations();
         tests.BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase();
         tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
         tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();

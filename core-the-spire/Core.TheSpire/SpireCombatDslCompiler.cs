@@ -398,6 +398,11 @@ public static class SpireCombatDslCompiler
                     return new ModifyEnemyVariableEffect(Id(Name(Argument(call, 0))),
                         Integer(Argument(call, 1)),
                         OptionalEnum(call, "operation", PowerVariableOperation.Add));
+                case "modifyCombatState":
+                    CheckShape(call, 2, 2, "operation");
+                    return new ModifyCombatStateEffect(Id(Name(Argument(call, 0))),
+                        Integer(Argument(call, 1)),
+                        OptionalEnum(call, "operation", PowerVariableOperation.Add));
                 case "gainMaxHp":
                     CheckShape(call, 1, 1);
                     return new GainMaxHpEffect(Integer(Argument(call, 0)));

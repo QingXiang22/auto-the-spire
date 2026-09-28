@@ -806,6 +806,12 @@ public static class SpireCombatBehaviorDslCompiler
                 return new EnemyVariableCondition(Id(Name(Argument(condition, 0))),
                     EnumValue<RunComparison>(Argument(condition, 1)), Integer(Argument(condition, 2)));
             }
+            if (condition.Name == "combatState")
+            {
+                CheckShape(condition, 3);
+                return new CombatStateVariableCondition(Id(Name(Argument(condition, 0))),
+                    EnumValue<RunComparison>(Argument(condition, 1)), Integer(Argument(condition, 2)));
+            }
             if (condition.Name is "all" or "any")
             {
                 CheckShape(condition, 1);

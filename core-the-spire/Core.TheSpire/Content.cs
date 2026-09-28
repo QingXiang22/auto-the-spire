@@ -472,6 +472,7 @@ public enum EnemyActionSide { Enemy, Player }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyMetricCondition), "metric")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyPowerCondition), "power")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyVariableCondition), "variable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CombatStateVariableCondition), "combatState")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AllEnemyCondition), "all")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AnyEnemyCondition), "any")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(NotEnemyCondition), "not")]
@@ -1019,6 +1020,13 @@ public sealed record EnemyVariableCondition(ContentId VariableId, RunComparison 
         ConditionEvaluation.Compare(context.GetVariable(VariableId), Comparison, Value);
 }
 
+public sealed record CombatStateVariableCondition(ContentId VariableId, RunComparison Comparison, int Value)
+    : EnemyActionCondition
+{
+    internal override bool Evaluate(EnemyActionEvaluationContext context) =>
+        ConditionEvaluation.Compare(context.GetCombatStateVariable(VariableId), Comparison, Value);
+}
+
 /// <summary>Integer state owned by one enemy combat instance.</summary>
 public sealed record EnemyVariableDefinition(ContentId Id, int DefaultInt = 0);
 
@@ -1563,6 +1571,14 @@ public sealed class ContentRegistry
                 if (!Enum.IsDefined(variable.Comparison))
                     throw new InvalidOperationException($"{owner} has an invalid enemy variable comparison.");
                 break;
+            case CombatStateVariableCondition variable when !_stateVariables.TryGetValue(
+                new StateVariableKey(variable.VariableId, StateVariableScope.Combat), out _):
+                throw new InvalidOperationException($"{owner} checks undeclared combat state variable '{variable.VariableId}'.");
+            case CombatStateVariableCondition variable:
+                variable.VariableId.Validate();
+                if (!Enum.IsDefined(variable.Comparison))
+                    throw new InvalidOperationException($"{owner} has an invalid combat state variable comparison.");
+                break;
             case AllEnemyCondition all when all.Conditions.Count == 0:
                 throw new InvalidOperationException($"{owner} has an empty all condition.");
             case AllEnemyCondition all:
@@ -1830,6 +1846,14 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} modifies undeclared enemy variable '{variable.Variable}'.");
                 if (!Enum.IsDefined(variable.Operation))
                     throw new InvalidOperationException($"{owner} uses an invalid enemy variable operation.");
+                break;
+            case ModifyCombatStateEffect variable when !_stateVariables.TryGetValue(
+                new StateVariableKey(variable.Variable, StateVariableScope.Combat), out _):
+                throw new InvalidOperationException($"{owner} modifies undeclared combat state variable '{variable.Variable}'.");
+            case ModifyCombatStateEffect variable:
+                variable.Variable.Validate();
+                if (!Enum.IsDefined(variable.Operation))
+                    throw new InvalidOperationException($"{owner} uses an invalid combat state operation.");
                 break;
             case GainMaxHpEffect gainMaxHp:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainMaxHp.Amount);

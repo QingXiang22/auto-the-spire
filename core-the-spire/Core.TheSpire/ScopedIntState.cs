@@ -43,4 +43,13 @@ internal sealed class ScopedIntState
             throw new InvalidOperationException($"State variable '{modId}:{key}' is not declared in this scope.");
         values[key] = value;
     }
+
+    public IReadOnlyDictionary<ContentId, int> Snapshot()
+    {
+        var snapshot = new Dictionary<ContentId, int>();
+        foreach (var (modId, values) in _values)
+            foreach (var (key, value) in values)
+                snapshot.Add(ContentId.Parse($"{modId}:{key}"), value);
+        return snapshot;
+    }
 }
