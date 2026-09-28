@@ -11,9 +11,11 @@ public static class BaseSpireMapGenerator
 
     public static RunDefinition CreateStandardRun(Func<SeededRandom, IReadOnlySet<RunRoomType>, RunRoomType>? resolveUnknownRoom)
     {
+        var encounterPools = BaseSpireContent.LoadActEncounterPools("base-spire.acts.json");
         return new RunDefinition(BaseSpireIds.StandardRun,
         [
-            new ActDefinition(BaseSpireIds.OvergrowthAct, GenerateOvergrowth, resolveUnknownRoom),
+            new ActDefinition(BaseSpireIds.OvergrowthAct, GenerateOvergrowth, resolveUnknownRoom,
+                encounterPool: encounterPools.GetValueOrDefault(BaseSpireIds.OvergrowthAct)),
             new ActDefinition(BaseSpireIds.HiveAct, GenerateHive, resolveUnknownRoom),
             new ActDefinition(BaseSpireIds.GloryAct, GenerateGlory, resolveUnknownRoom)
         ], resolveUnknownRoom is null ? new UnknownRoomOddsDefinition(

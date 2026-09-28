@@ -11,6 +11,24 @@ public static class ContentDsl
 {
     private static readonly JsonSerializerOptions Options = DslJson.CreateOptions();
 
+    private sealed record ActEncounterPoolDocumentData(int SchemaVersion,
+        IReadOnlyList<ActEncounterPoolData> ActPools);
+
+    private sealed record ActEncounterPoolData(ContentId ActId, int NormalRoomCount,
+        int WeakNormalRoomCount, int EliteQueueCount,
+        IReadOnlyList<ContentId>? WeakNormalEncounters = null,
+        IReadOnlyList<ContentId>? RegularEncounters = null,
+        IReadOnlyList<ContentId>? EliteEncounters = null,
+        IReadOnlyList<ContentId>? BossEncounters = null)
+    {
+        public ActEncounterPoolDefinition Compile() => new(
+            WeakNormalEncounters ?? throw new JsonException("Act pools require weakNormalEncounters."),
+            RegularEncounters ?? throw new JsonException("Act pools require regularEncounters."),
+            EliteEncounters ?? throw new JsonException("Act pools require eliteEncounters."),
+            BossEncounters ?? throw new JsonException("Act pools require bossEncounters."),
+            NormalRoomCount, WeakNormalRoomCount, EliteQueueCount);
+    }
+
     private sealed record EncounterFormationData(IReadOnlyList<ContentId>? EnemyIds = null, int Weight = 1,
         IReadOnlyList<EncounterSlotData>? EnemySlots = null,
         IReadOnlyDictionary<int, ContentId>? StartingActionsByEnemyIndex = null)
@@ -88,6 +106,26 @@ public static class ContentDsl
         if (definitions.Select(encounter => encounter.Id).Distinct().Count() != definitions.Length)
             throw new JsonException("Encounter IDs must be unique within a document.");
         return Array.AsReadOnly(definitions);
+    }
+
+    public static IReadOnlyDictionary<ContentId, ActEncounterPoolDefinition> ParseActEncounterPools(string json)
+    {
+        var document = JsonNode.Parse(json) as JsonObject
+            ?? throw new JsonException("Act encounter pool content must be a JSON object.");
+        foreach (var key in document.Select(property => property.Key))
+            if (key is not ("schemaVersion" or "actPools"))
+                throw new JsonException($"Unknown act encounter pool document field '{key}'.");
+        var data = JsonSerializer.Deserialize<ActEncounterPoolDocumentData>(document.ToJsonString(), Options)
+            ?? throw new JsonException("Act encounter pool content produced no definition.");
+        if (data.SchemaVersion != 1)
+            throw new JsonException("Unsupported or missing act encounter pool schemaVersion; expected 1.");
+        if (data.ActPools is null)
+            throw new JsonException("Act encounter pool content must define an 'actPools' array.");
+        foreach (var act in data.ActPools) act.ActId.Validate();
+        if (data.ActPools.Select(act => act.ActId).Distinct().Count() != data.ActPools.Count)
+            throw new JsonException("Act IDs must be unique in encounter pool content.");
+        var pools = data.ActPools.ToDictionary(act => act.ActId, act => act.Compile());
+        return new System.Collections.ObjectModel.ReadOnlyDictionary<ContentId, ActEncounterPoolDefinition>(pools);
     }
 
 }
