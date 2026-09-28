@@ -1,4 +1,8 @@
 package base-spire {
+  power BarricadePower {
+    preventsBlockClear = true
+  }
+
   power TankPower {
     incomingDamageModifiers = [modifier(multiplier=2, require=[move], exclude=[unpowered])]
   }

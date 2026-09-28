@@ -49,6 +49,8 @@ A Power may declare `vulnerableMultiplierPercentPerStack = 1`. Each stack adds o
 
 A Power may declare `blockGainMultiplier`. The core applies it once to positive block gains with `Move` properties; ordinary non-move block sources bypass it. Frail uses `0.75`, expires after the enemy side turn, and skips its first player-side tick.
 
+A Power may declare `preventsBlockClear = true` to preserve its owner's Block across turn start. Barricade uses this metadata in `ironclad-powers.spire`; it does not need a Barricade-specific C# hook.
+
 A Power declaration may use `trigger = afterCardPlayed` with `whenCardType = attack` and a compiled effect. Its effect runs after the played card finishes, before that card leaves the play pile. `removeAfterPlayerTurnEnd = true` expires the Power after player turn-end Power effects and before enemies act. Rage uses these rules; Feel No Pain now declares its exhaust trigger and stack-scaled block in `.spire` as well. A resumed card choice dispatches the played-card trigger once. Exhaust triggers receive the exhausted card instance as effect context, including cards moved by a bulk pile effect.
 
 Difficulty values use `variants(default=..., deadly=..., tough=..., deadlyTough=...)` and `range(min, max)`. The configured profile resolves them during package compilation. For example:
