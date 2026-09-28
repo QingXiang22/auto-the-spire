@@ -59,6 +59,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SummonEnemyEffect), "summonEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SummonRandomEnemyEffect), "summonRandomEnemy")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RespawnSelfEffect), "respawnSelf")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(StunEnemyEffect), "stunEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SetEnemyHealthEffect), "setEnemyHealth")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
@@ -213,7 +214,7 @@ internal sealed record AutoPlayRandomCardsContinuationEffect(AutoPlayRandomCards
 internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
-public enum SummonSlotPlacement { NextAvailable, FirstAvailable, LastAvailable }
+public enum SummonSlotPlacement { NextAvailable, FirstAvailable, LastAvailable, OwnerSlot }
 public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null,
     IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null,
     int? MaximumEnemyCount = null, SummonSlotPlacement SlotPlacement = SummonSlotPlacement.NextAvailable,
@@ -222,6 +223,7 @@ public sealed record SummonRandomEnemyEffect(IReadOnlyList<ContentId> Enemies,
     IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null,
     bool AvoidPreviousFromOwner = false, SummonSlotPlacement SlotPlacement = SummonSlotPlacement.NextAvailable,
     IReadOnlyList<EnemyStartingPower>? AdditionalStartingPowers = null) : EffectNode;
+public sealed record RespawnSelfEffect(ContentId CountdownPower, ContentId? StartingAction = null) : EffectNode;
 public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
@@ -385,6 +387,23 @@ internal static class EffectExecutor
                         MaximumLivingEnemyCount: summonRandom.MaximumLivingEnemyCount,
                         SlotPlacement: summonRandom.SlotPlacement,
                         AdditionalStartingPowers: summonRandom.AdditionalStartingPowers));
+                    break;
+                case RespawnSelfEffect respawn:
+                    var respawningEnemy = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == owner.Id)
+                        ?? throw new InvalidOperationException("respawnSelf requires an enemy action owner.");
+                    if (owner.Hp > 0) throw new InvalidOperationException("respawnSelf requires a defeated enemy.");
+                    var remainingStock = owner.PowerAmount(respawn.CountdownPower);
+                    if (remainingStock > 0)
+                    {
+                        var inheritedPowers = respawningEnemy.Definition.StartingPowers
+                            .Where(power => power.Power != respawn.CountdownPower)
+                            .Append(new EnemyStartingPower(respawn.CountdownPower, remainingStock - 1))
+                            .Where(power => power.Amount > 0)
+                            .ToArray();
+                        QueueSummonedEnemies(session, owner, new SummonEnemyEffect(respawningEnemy.Definition.Id,
+                            StartingAction: respawn.StartingAction, StartingPowers: inheritedPowers,
+                            SlotPlacement: SummonSlotPlacement.OwnerSlot));
+                    }
                     break;
                 case StunEnemyEffect stun:
                     var stunnedCreature = ResolveSingleTarget(state, owner, target, stun.Target);
@@ -1241,8 +1260,11 @@ internal static class EffectExecutor
                 {
                     SummonSlotPlacement.NextAvailable or SummonSlotPlacement.FirstAvailable => availableSlots[0],
                     SummonSlotPlacement.LastAvailable => availableSlots[^1],
+                    SummonSlotPlacement.OwnerSlot => state.Enemies.Single(enemy => enemy.Creature.Id == owner.Id).SlotIndex,
                     _ => throw new InvalidOperationException($"Unknown summon slot placement '{summon.SlotPlacement}'.")
                 };
+            if (state.TotalEnemySlots is not null && !availableSlots.Contains(slotIndex))
+                throw new InvalidOperationException($"Enemy slot {slotIndex} is not available for summon.");
             if (state.TotalEnemySlots is not null)
                 availableSlots.Remove(slotIndex);
             var enemy = new EnemyCombatState(new EntityState(instanceId, true, hp, hp), definition)

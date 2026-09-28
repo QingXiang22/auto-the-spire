@@ -1844,6 +1844,14 @@ public sealed class ContentRegistry
                     }
                 ValidateSummonStartingPowers(summonRandom.AdditionalStartingPowers, owner);
                 break;
+            case RespawnSelfEffect respawn:
+                respawn.CountdownPower.Validate();
+                if (!_powers.ContainsKey(respawn.CountdownPower))
+                    throw new InvalidOperationException($"{owner} respawns using unknown Power '{respawn.CountdownPower}'.");
+                if (respawn.StartingAction is { } respawnAction
+                    && !_enemies.Values.Any(enemy => enemy.Actions.Any(action => action.Id == respawnAction)))
+                    throw new InvalidOperationException($"{owner} respawns with unknown action '{respawnAction}'.");
+                break;
             case SetEnemyHealthEffect setHealth:
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(setHealth.Minimum);
                 if (setHealth.Maximum < setHealth.Minimum)
