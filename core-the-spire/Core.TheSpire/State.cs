@@ -273,11 +273,11 @@ internal sealed class GameState
     public List<EnemyCombatState> Enemies { get; }
     internal int? TotalEnemySlots { get; }
     internal IReadOnlyList<int> AvailableEnemySlots => TotalEnemySlots is { } total
-        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot)).ToArray()
+        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot || enemy.Creature.Hp <= 0)).ToArray()
         : Array.Empty<int>();
     internal void AddEnemy(EnemyCombatState enemy)
     {
-        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex))
+        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex && candidate.Creature.Hp > 0))
             throw new InvalidOperationException($"Enemy slot {enemy.SlotIndex} is already occupied.");
         var index = Enemies.FindIndex(candidate => candidate.SlotIndex > enemy.SlotIndex);
         Enemies.Insert(index < 0 ? Enemies.Count : index, enemy);

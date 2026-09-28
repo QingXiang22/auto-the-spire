@@ -272,12 +272,14 @@ public static class SpireCombatDslCompiler
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false),
                         OptionalEnum(call, "position", CardPilePosition.Bottom));
                 case "summonEnemy":
-                    CheckShape(call, 1, 1, "count", "startingAction", "startingPowers", "maxLivingEnemies", "maxEnemies", "slot");
+                    CheckShape(call, 1, 1, "count", "startingAction", "startingPowers", "additionalPowers", "maxLivingEnemies", "maxEnemies", "slot");
                     var summonCount = OptionalInteger(call, "count", 1);
                     if (summonCount <= 0) throw Error(call.Location, "Summoned enemy count must be positive.");
                     var startingActionNode = OptionalArgument(call, "startingAction");
                     var summonStartingPowers = OptionalArgument(call, "startingPowers") is { } summonPowersNode
                         ? CompileStartingPowers(summonPowersNode) : null;
+                    var summonAdditionalPowers = OptionalArgument(call, "additionalPowers") is { } summonAdditionalPowersNode
+                        ? CompileStartingPowers(summonAdditionalPowersNode) : null;
                     var maxLivingEnemiesNode = OptionalArgument(call, "maxLivingEnemies");
                     var maxLivingEnemies = maxLivingEnemiesNode is null ? (int?)null
                         : Integer(maxLivingEnemiesNode);
@@ -290,7 +292,25 @@ public static class SpireCombatDslCompiler
                     var slotPlacement = OptionalEnum(call, "slot", SummonSlotPlacement.NextAvailable);
                     return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount,
                         startingActionNode is null ? null : ReferenceId(startingActionNode),
-                        summonStartingPowers, maxLivingEnemies, maxEnemies, slotPlacement);
+                        summonStartingPowers, maxLivingEnemies, maxEnemies, slotPlacement, summonAdditionalPowers);
+                case "summonRandomEnemy":
+                    CheckShape(call, 1, 1, "startingPowers", "additionalPowers", "maxLivingEnemies", "avoidPrevious", "slot");
+                    if (Argument(call, 0) is not DslListNode enemyChoices || enemyChoices.Items.Count < 2)
+                        throw Error(Argument(call, 0).Location, "summonRandomEnemy requires a list of at least two enemy IDs.");
+                    var randomEnemyIds = enemyChoices.Items.Select(ReferenceId).ToArray();
+                    if (randomEnemyIds.Distinct().Count() != randomEnemyIds.Length)
+                        throw Error(enemyChoices.Location, "summonRandomEnemy choices must be unique.");
+                    var randomStartingPowers = OptionalArgument(call, "startingPowers") is { } randomPowersNode
+                        ? CompileStartingPowers(randomPowersNode) : null;
+                    var randomAdditionalPowers = OptionalArgument(call, "additionalPowers") is { } randomAdditionalPowersNode
+                        ? CompileStartingPowers(randomAdditionalPowersNode) : null;
+                    var randomMaxLivingNode = OptionalArgument(call, "maxLivingEnemies");
+                    var randomMaxLiving = randomMaxLivingNode is null ? (int?)null : Integer(randomMaxLivingNode);
+                    if (randomMaxLiving is <= 0)
+                        throw Error(call.Location, "maxLivingEnemies must be positive when specified.");
+                    return new SummonRandomEnemyEffect(randomEnemyIds, randomStartingPowers, randomMaxLiving,
+                        OptionalBoolean(call, "avoidPrevious", false),
+                        OptionalEnum(call, "slot", SummonSlotPlacement.NextAvailable), randomAdditionalPowers);
                 case "stun":
                     CheckShape(call, 0, 0, "target");
                     return new StunEnemyEffect(OptionalTarget(call, "target", TargetSelector.Self));

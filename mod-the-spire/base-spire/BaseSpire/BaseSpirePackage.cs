@@ -108,6 +108,8 @@ public static class BaseSpireIds
     public static readonly ContentId ShrinkerBeetleWeak = ContentId.Parse("base-spire:shrinker-beetle-weak");
     public static readonly ContentId OvergrowthCrawlers = ContentId.Parse("base-spire:overgrowth-crawlers");
     public static readonly ContentId ConstructMenagerieNormal = ContentId.Parse("base-spire:construct-menagerie-normal");
+    public static readonly ContentId Fabricator = ContentId.Parse("base-spire:fabricator");
+    public static readonly ContentId FabricatorNormal = ContentId.Parse("base-spire:fabricator-normal");
     public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
     public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
     public static readonly ContentId NibbitsNormal = ContentId.Parse("base-spire:nibbits-normal");

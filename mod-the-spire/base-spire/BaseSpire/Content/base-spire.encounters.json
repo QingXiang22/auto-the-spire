@@ -537,6 +537,17 @@
       "enemyIds": ["base-spire:living-shield", "base-spire:turret-operator"]
     },
     {
+      "id": "base-spire:fabricator-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:fabricator"],
+          "slotCount": 5,
+          "slotIndices": [2]
+        }
+      ]
+    },
+    {
       "id": "base-spire:two-tailed-rats-normal",
       "roomType": "monster",
       "formations": [

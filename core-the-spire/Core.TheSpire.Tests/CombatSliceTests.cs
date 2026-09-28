@@ -851,6 +851,67 @@ public sealed class CombatSliceTests
         }.SequenceEqual(state.State.Enemies.Select(enemy => enemy.Definition.Actions[enemy.ActionIndex].Id)));
     }
 
+    public void FabricatorSummonsRandomBotsWithinReusedFormationSlots()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(213, "ironclad", 56, 65, [],
+            ContentId.Parse("base-spire:fabricator-normal"));
+        Assert.Equal(1, session.State.Enemies.Count);
+        Assert.Equal(2, session.State.Enemies[0].SlotIndex);
+        Assert.Equal(5, session.State.TotalEnemySlots);
+
+        var sawDoubleSummon = false;
+        for (uint seed = 1; seed <= 32 && !sawDoubleSummon; seed++)
+        {
+            var attempt = environment.StartEncounter(seed, "ironclad", 56, 65, [],
+                ContentId.Parse("base-spire:fabricator-normal"));
+            environment.Step(attempt, new EndTurnAction());
+            var summoned = attempt.State.Events.Where(gameEvent => gameEvent.Type == "enemy_summoned").ToArray();
+            if (summoned.Length >= 2)
+            {
+                sawDoubleSummon = true;
+                var definitions = summoned.Select(gameEvent => attempt.State.Enemies
+                    .Single(enemy => enemy.Creature.Id == gameEvent.Target).Definition.Id).ToArray();
+                Assert.Equal(2, definitions.Distinct().Count());
+                Assert.True(attempt.State.Enemies.Where(enemy => enemy.Creature.Hp > 0)
+                    .Select(enemy => enemy.SlotIndex).Distinct().Count()
+                    == attempt.State.Enemies.Count(enemy => enemy.Creature.Hp > 0));
+                Assert.True(summoned.All(gameEvent => attempt.State.Enemies
+                    .Single(enemy => enemy.Creature.Id == gameEvent.Target)
+                    .Creature.PowerAmount(ContentId.Parse("base-spire:minion")) == 1));
+
+                var fabricator = attempt.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.Fabricator);
+                var botChoices = new[] { ContentId.Parse("base-spire:zapbot"), ContentId.Parse("base-spire:stabbot") };
+                EffectExecutor.Execute(attempt, fabricator.Creature,
+                    new SummonRandomEnemyEffect(botChoices, AvoidPreviousFromOwner: true));
+                EffectExecutor.Execute(attempt, fabricator.Creature,
+                    new SummonRandomEnemyEffect(botChoices, AvoidPreviousFromOwner: true));
+                var consecutive = attempt.State.Events.Where(gameEvent => gameEvent.Type == "enemy_summoned"
+                    && gameEvent.Source == fabricator.Creature.Id).TakeLast(2)
+                    .Select(gameEvent => attempt.State.Enemies.Single(enemy => enemy.Creature.Id == gameEvent.Target)
+                        .Definition.Id).ToArray();
+                Assert.Equal(2, consecutive.Distinct().Count());
+
+                var slotToFree = attempt.State.Enemies.First(enemy => enemy.Creature.Hp > 0
+                    && enemy.Definition.Id != BaseSpireIds.Fabricator).SlotIndex;
+                var occupant = attempt.State.Enemies.First(enemy => enemy.Creature.Hp > 0
+                    && enemy.SlotIndex == slotToFree);
+                occupant.Creature.Hp = 0;
+                EffectExecutor.Execute(attempt, fabricator.Creature,
+                    new SummonEnemyEffect(ContentId.Parse("base-spire:zapbot"),
+                        AdditionalStartingPowers: [new(ContentId.Parse("base-spire:minion"), 1)]));
+                var replacement = attempt.State.Enemies.Single(enemy => enemy.Creature.Hp > 0
+                    && enemy.SlotIndex == slotToFree);
+                Assert.Equal(2, replacement.Creature.PowerAmount(ContentId.Parse("base-spire:high-voltage")));
+                Assert.Equal(1, replacement.Creature.PowerAmount(ContentId.Parse("base-spire:minion")));
+                Assert.True(attempt.State.Enemies.Any(enemy => enemy.Creature.Hp > 0 && enemy.SlotIndex == slotToFree));
+                Assert.Equal(attempt.State.Enemies.Count(enemy => enemy.Creature.Hp > 0), attempt.State.Enemies
+                    .Where(enemy => enemy.Creature.Hp > 0).Select(enemy => enemy.SlotIndex).Distinct().Count());
+            }
+        }
+        Assert.True(sawDoubleSummon);
+    }
+
     public void EnemyActionPowerReferencesAreValidatedWhenBuildingContent()
     {
         var registry = new ContentRegistry();
@@ -2389,9 +2450,9 @@ public sealed class CombatSliceTests
         var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
         var content = SpireCombatBehaviorDslCompiler.Compile(package);
 
-        Assert.Equal(29, content.Powers.Count);
-        Assert.Equal(63, content.Enemies.Count);
-        Assert.Equal(63, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(30, content.Powers.Count);
+        Assert.Equal(68, content.Enemies.Count);
+        Assert.Equal(68, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -6114,6 +6175,7 @@ internal static class Program
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();
+        tests.FabricatorSummonsRandomBotsWithinReusedFormationSlots();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.BaseTurretOperatorEncounterUsesAllyTargetingAndLivingAllyConditions();
