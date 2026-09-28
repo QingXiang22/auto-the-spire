@@ -271,7 +271,7 @@ public static class SpireCombatDslCompiler
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
                 case "summonEnemy":
-                    CheckShape(call, 1, 1, "count", "startingAction", "startingPowers", "maxLivingEnemies");
+                    CheckShape(call, 1, 1, "count", "startingAction", "startingPowers", "maxLivingEnemies", "maxEnemies");
                     var summonCount = OptionalInteger(call, "count", 1);
                     if (summonCount <= 0) throw Error(call.Location, "Summoned enemy count must be positive.");
                     var startingActionNode = OptionalArgument(call, "startingAction");
@@ -282,9 +282,13 @@ public static class SpireCombatDslCompiler
                         : Integer(maxLivingEnemiesNode);
                     if (maxLivingEnemies is <= 0)
                         throw Error(call.Location, "maxLivingEnemies must be positive when specified.");
+                    var maxEnemiesNode = OptionalArgument(call, "maxEnemies");
+                    var maxEnemies = maxEnemiesNode is null ? (int?)null : Integer(maxEnemiesNode);
+                    if (maxEnemies is <= 0)
+                        throw Error(call.Location, "maxEnemies must be positive when specified.");
                     return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount,
                         startingActionNode is null ? null : ReferenceId(startingActionNode),
-                        summonStartingPowers, maxLivingEnemies);
+                        summonStartingPowers, maxLivingEnemies, maxEnemies);
                 case "stun":
                     CheckShape(call, 0, 0, "target");
                     return new StunEnemyEffect(OptionalTarget(call, "target", TargetSelector.Self));

@@ -206,7 +206,8 @@ internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNo
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null,
-    IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null) : EffectNode;
+    IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null,
+    int? MaximumEnemyCount = null) : EffectNode;
 public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
@@ -1141,9 +1142,12 @@ internal static class EffectExecutor
         var state = session.State;
         if (!state.Definition.Enemies.TryGetValue(summon.Enemy, out var definition))
             throw new InvalidOperationException($"Unknown summoned enemy '{summon.Enemy}'.");
-        var allowedCount = summon.MaximumLivingEnemyCount is { } maximum
-            ? Math.Min(summon.Count, Math.Max(0, maximum - state.Enemies.Count(enemy => enemy.Creature.Hp > 0)))
-            : summon.Count;
+        var allowedCount = summon.Count;
+        if (summon.MaximumLivingEnemyCount is { } maximumLiving)
+            allowedCount = Math.Min(allowedCount,
+                Math.Max(0, maximumLiving - state.Enemies.Count(enemy => enemy.Creature.Hp > 0)));
+        if (summon.MaximumEnemyCount is { } maximumTotal)
+            allowedCount = Math.Min(allowedCount, Math.Max(0, maximumTotal - state.Enemies.Count));
         var startingPowers = summon.StartingPowers ?? definition.StartingPowers;
         var spawned = new List<(string InstanceId, EnemyCombatState State)>(allowedCount);
         for (var i = 0; i < allowedCount; i++)

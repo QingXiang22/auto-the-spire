@@ -212,6 +212,7 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
             EnemyActionMetric.LivingEnemies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0),
             EnemyActionMetric.LivingAllies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0) -
                 (creature.Hp > 0 ? 1 : 0),
+            EnemyActionMetric.EnemyCount => state.Enemies.Count,
             _ => throw new ArgumentOutOfRangeException(nameof(metric))
         };
     }
@@ -228,6 +229,15 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
         enemy.ActionUsedWithinCooldown(actionId, cooldown);
     public int GetVariable(ContentId variableId) => enemy.GetVariable(variableId);
     public int GetCombatStateVariable(ContentId variableId) => state.ReadCombatState(variableId);
+    public bool HasAllyAction(ContentId enemyId, ContentId actionId)
+    {
+        foreach (var candidate in state.Enemies)
+            if (!ReferenceEquals(candidate, enemy) && candidate.Creature.Hp > 0
+                && candidate.Definition.Id == enemyId
+                && candidate.Definition.Actions[candidate.ActionIndex].Id == actionId)
+                return true;
+        return false;
+    }
 }
 
 internal sealed class GameState

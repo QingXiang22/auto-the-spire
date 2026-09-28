@@ -1014,4 +1014,42 @@ package base-spire {
     )
     behavior = cycle(turretOperatorUnload, turretOperatorUnloadSecond, turretOperatorReload)
   }
+
+  enemy TwoTailedRat {
+    hp = variants(default=range(17, 21), tough=range(18, 22))
+    variables = [variable(TurnsUntilSummonable, 2)]
+    conditions = [condition(SummonAvailable, all([
+      variable(TurnsUntilSummonable, AtMost, 0),
+      combatState(TwoTailedRatBackupCalls, LessThan, 3),
+      metric(EnemyCount, LessThan, 5),
+      not(allyAction(TwoTailedRat, twoTailedRatCallForBackup))
+    ]))]
+    moves = actions(
+      twoTailedRatScratchMove = sequence(
+        modifyEnemyVariable(TurnsUntilSummonable, -1),
+        attack(variants(default=8, deadly=9), target=player)
+      ),
+      twoTailedRatDiseaseBiteMove = sequence(
+        modifyEnemyVariable(TurnsUntilSummonable, -1),
+        attack(variants(default=6, deadly=7), target=player)
+      ),
+      twoTailedRatScreechMove = sequence(
+        modifyEnemyVariable(TurnsUntilSummonable, -1),
+        applyPower(Frail, 1, target=player)
+      ),
+      twoTailedRatCallForBackup = sequence(
+        summonEnemy(TwoTailedRat, maxEnemies=5),
+        modifyCombatState(TwoTailedRatBackupCalls, 1)
+      )
+    )
+    behavior = chooseWithLimits(repeat=preventImmediate,
+      candidate(twoTailedRatScratchMove, weight=1, when=condition(SummonAvailable)),
+      candidate(twoTailedRatScratchMove, weight=1, when=not(condition(SummonAvailable))),
+      candidate(twoTailedRatDiseaseBiteMove, weight=1, when=condition(SummonAvailable)),
+      candidate(twoTailedRatDiseaseBiteMove, weight=1, when=not(condition(SummonAvailable))),
+      candidate(twoTailedRatScreechMove, weight=1, cooldown=3, when=condition(SummonAvailable)),
+      candidate(twoTailedRatScreechMove, weight=1, cooldown=3, when=not(condition(SummonAvailable))),
+      candidate(twoTailedRatCallForBackup, weight=9, maxUsesPerCombat=1, when=condition(SummonAvailable))
+    )
+  }
 }
