@@ -16,6 +16,10 @@ package base-spire {
 
   power IllusionPower {}
 
+  power SoarPower {
+    incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered])]
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -414,5 +418,21 @@ package base-spire {
       edge(fogmogSwipeRandom, fogmogHeadbutt),
       edge(fogmogHeadbutt, fogmogSwipe)
     ])
+  }
+
+  enemy OwlMagistrate {
+    hp = variants(default=range(231, 231), tough=range(247, 247))
+    moves = actions(
+      owlMagistrateScrutiny = attack(variants(default=16, deadly=17), target=player),
+      owlMagistratePeckAssault = repeat(6, attack(4, target=player)),
+      owlMagistrateJudicialFlight = applyPower(SoarPower, 1, target=self),
+      owlMagistrateVerdict = sequence(
+        attack(variants(default=33, deadly=36), target=player),
+        applyPower(Vulnerable, 4, target=player),
+        removePower(SoarPower)
+      )
+    )
+    behavior = cycle(owlMagistrateScrutiny, owlMagistratePeckAssault,
+      owlMagistrateJudicialFlight, owlMagistrateVerdict)
   }
 }
