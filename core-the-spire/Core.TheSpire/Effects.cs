@@ -32,6 +32,9 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveSelectedCardToPileEffect), "moveSelectedCardToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifySelectedCardCostEffect), "modifySelectedCardCost")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCardVariableEffect), "modifyCardVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CloneCardEffect), "cloneCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TransformSelectedCardEffect), "transformSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
@@ -58,6 +61,7 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyXCountSource), "energyX")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SavedCountSource), "savedCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlaysThisTurnCountSource), "cardPlaysThisTurn")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CardVariableCountSource), "cardVariable")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
@@ -65,6 +69,7 @@ public sealed record EnergyXCountSource : CombatCountSource;
 public sealed record SavedCountSource(string Name) : CombatCountSource;
 public sealed record CardPlaysThisTurnCountSource(CardType? Type = null,
     CardPlayHistoryPhase Phase = CardPlayHistoryPhase.Finished) : CombatCountSource;
+public sealed record CardVariableCountSource(ContentId Variable, CardContext Card = CardContext.Played) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -94,6 +99,12 @@ public sealed record MoveSelectedCardToPileEffect(CardPile From, CardPile To,
 public sealed record UpgradeSelectedCardEffect : EffectNode;
 public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
+public sealed record ModifyCardVariableEffect(ContentId Variable, int Amount,
+    CardContext Card = CardContext.Played, CardVariableOperation Operation = CardVariableOperation.Add,
+    ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
+public sealed record DowngradeSelectedCardEffect : EffectNode;
+public sealed record CloneCardEffect(CardContext Card = CardContext.Played, CardPile Pile = CardPile.Hand,
+    int Count = 1) : EffectNode;
 public sealed record TransformSelectedCardEffect(ContentId Card, CardPile From, bool Upgraded = false) : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
@@ -244,11 +255,11 @@ internal static class EffectExecutor
                 case GenerateCombatCardsEffect generation:
                     var generatedCount = generation.CalculatedCount is { } calculatedGeneration
                         ? ScaledAmount(state, owner, target, calculatedGeneration.BaseAmount,
-                            calculatedGeneration.PerCount, calculatedGeneration.Count, counts) : generation.Count;
+                            calculatedGeneration.PerCount, calculatedGeneration.Count, counts, selectedCard) : generation.Count;
                     CombatCardGeneration.Queue(session, owner, generation, generatedCount);
                     break;
                 case AutoPlayCardsEffect autoPlay:
-                    ReserveAutoPlayBatch(session, owner, target, autoPlay, counts);
+                    ReserveAutoPlayBatch(session, owner, target, autoPlay, counts, selectedCard);
                     break;
                 case SequenceEffect sequence:
                     for (var i = sequence.Effects.Count - 1; i >= 0; i--)
@@ -270,7 +281,7 @@ internal static class EffectExecutor
                     var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
                     ApplyAttack(session, owner, scaledVictim,
                         ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
-                            scaledAttack.AmountPerCount, scaledAttack.Count, counts));
+                            scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard));
                     break;
                 case RandomAttackEffect randomAttack:
                     if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
@@ -337,7 +348,7 @@ internal static class EffectExecutor
                     break;
                 case ApplyScaledPowerEffect scaledPower:
                     var powerAmount = ScaledAmount(state, owner, target, scaledPower.BaseAmount,
-                        scaledPower.AmountPerCount, scaledPower.Count, counts);
+                        scaledPower.AmountPerCount, scaledPower.Count, counts, selectedCard);
                     state.ApplyPower(session, ResolveSingleTarget(state, owner, target, scaledPower.Target),
                         scaledPower.Power, powerAmount, owner);
                     break;
@@ -434,8 +445,29 @@ internal static class EffectExecutor
                         throw new InvalidOperationException("A local cost modifier requires a selected card.");
                     var modifier = cost.CalculatedAmount is { } calculatedCost
                         ? cost.Modifier with { Amount = ScaledAmount(state, owner, target, calculatedCost.BaseAmount,
-                            calculatedCost.PerCount, calculatedCost.Count, counts) } : cost.Modifier;
+                            calculatedCost.PerCount, calculatedCost.Count, counts, selectedCard) } : cost.Modifier;
                     state.ModifyCardCost(session, selectedCard.InstanceId, modifier);
+                    break;
+                case ModifyCardVariableEffect variable:
+                    var variableAmount = variable.CalculatedAmount is { } calculatedVariable
+                        ? ScaledAmount(state, owner, target, calculatedVariable.BaseAmount,
+                            calculatedVariable.PerCount, calculatedVariable.Count, counts, selectedCard) : variable.Amount;
+                    CombatCardVariables.Modify(session, CombatCardVariables.ResolveCard(state, variable.Card, selectedCard),
+                        variable.Variable, variable.Operation, variableAmount);
+                    break;
+                case DowngradeSelectedCardEffect:
+                    CombatCardVariables.Downgrade(session, CombatCardVariables.ResolveCard(state, CardContext.Selected, selectedCard));
+                    break;
+                case CloneCardEffect clone:
+                    var cloneSource = CombatCardVariables.ResolveCard(state, clone.Card, selectedCard);
+                    var clones = new CardInstance[clone.Count];
+                    for (var i = 0; i < clones.Length; i++)
+                    {
+                        var fresh = state.Player.CreateGeneratedCard(cloneSource.CardId);
+                        clones[i] = new(fresh.InstanceId, cloneSource.CardId, cloneSource.UpgradeLevel,
+                            cloneSource.CostModifiers, isClone: true, cloneSource.VariableOffsets);
+                    }
+                    CombatCardGeneration.QueuePlacements(state, clones, clone.Pile);
                     break;
                 case TransformSelectedCardEffect transformation:
                     if (selectedCard is null)
@@ -470,7 +502,7 @@ internal static class EffectExecutor
                 case ModifyEnergyEffect energy:
                     var requestedEnergy = energy.CalculatedAmount is { } calculatedEnergy
                         ? ScaledAmount(state, owner, target, calculatedEnergy.BaseAmount,
-                            calculatedEnergy.PerCount, calculatedEnergy.Count, counts) : energy.Amount;
+                            calculatedEnergy.PerCount, calculatedEnergy.Count, counts, selectedCard) : energy.Amount;
                     var energyDelta = requestedEnergy > 0 && state.Player.Creature.Powers.Any(power =>
                         power.Value > 0 && state.Definition.Powers[power.Key].PreventEnergyGain) ? 0 : requestedEnergy;
                     var previousEnergy = state.Player.Energy;
@@ -510,12 +542,12 @@ internal static class EffectExecutor
                     for (var i = 0; i < repeat.Count; i++) state.PendingEffects.Add(new(owner, repeat.Effect, target, selectedCard, counts));
                     break;
                 case WithCountEffect binding:
-                    var capturedCount = ScaledAmount(state, owner, target, 0, 1, binding.Count, counts);
+                    var capturedCount = ScaledAmount(state, owner, target, 0, 1, binding.Count, counts, selectedCard);
                     state.PendingEffects.Add(new(owner, binding.Effect, target, selectedCard,
                         new EffectCountScope(binding.Name, capturedCount, counts)));
                     break;
                 case RepeatForCountEffect repeat:
-                    var repeatCount = ScaledAmount(state, owner, target, repeat.BaseCount, repeat.PerCount, repeat.Count, counts);
+                    var repeatCount = ScaledAmount(state, owner, target, repeat.BaseCount, repeat.PerCount, repeat.Count, counts, selectedCard);
                     if (repeatCount < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
                     for (var i = 0; i < repeatCount; i++) state.PendingEffects.Add(new(owner, repeat.Effect, target, selectedCard, counts));
                     break;
@@ -544,7 +576,7 @@ internal static class EffectExecutor
     };
 
     private static int ScaledAmount(GameState state, EntityState owner, EntityState? selectedTarget, int baseAmount,
-        int amountPerCount, CombatCountSource source, EffectCountScope? counts = null)
+        int amountPerCount, CombatCountSource source, EffectCountScope? counts = null, CardInstance? selectedCard = null)
     {
         var count = source switch
         {
@@ -554,6 +586,7 @@ internal static class EffectExecutor
             PlayerHpLossCountSource => state.PlayerHpLossCount,
             EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
             CardPlaysThisTurnCountSource plays => state.CardPlayHistory.Count(plays.Type, plays.Phase),
+            CardVariableCountSource variable => CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard),
             SavedCountSource saved => counts?.Resolve(saved.Name)
                 ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
             TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),
@@ -565,14 +598,14 @@ internal static class EffectExecutor
     }
 
     private static void ReserveAutoPlayBatch(GameSession session, EntityState owner, EntityState? target,
-        AutoPlayCardsEffect effect, EffectCountScope? counts)
+        AutoPlayCardsEffect effect, EffectCountScope? counts, CardInstance? selectedCard)
     {
         var state = session.State;
         if (owner != state.Player.Creature || effect.From != CardPile.Draw || !Enum.IsDefined(effect.Position))
             throw new InvalidOperationException("Automatic play requires the player's draw pile and a supported position.");
         if (owner.Hp <= 0 || state.FirstLivingEnemy is null) return;
         var count = effect.CalculatedCount is { } calculated
-            ? ScaledAmount(state, owner, target, calculated.BaseAmount, calculated.PerCount, calculated.Count, counts)
+            ? ScaledAmount(state, owner, target, calculated.BaseAmount, calculated.PerCount, calculated.Count, counts, selectedCard)
             : effect.Count;
         if (count < 0) throw new InvalidOperationException("Automatic play count cannot be negative.");
         var reserved = new List<CardInstance>();

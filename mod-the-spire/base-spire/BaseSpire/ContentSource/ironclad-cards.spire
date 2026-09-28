@@ -128,11 +128,11 @@ package base-spire {
     target = enemy
     play = sequence(
       attack(6),
-      addCards(Anger, pile=discard, target=self, inheritUpgradeFromPlayedCard=true)
+      cloneCard(pile=discard)
     )
     upgradedPlay = sequence(
       attack(8),
-      addCards(Anger, pile=discard, target=self, inheritUpgradeFromPlayedCard=true)
+      cloneCard(pile=discard)
     )
   }
 
@@ -757,5 +757,19 @@ package base-spire {
     target = enemy
     play = sequence(attack(15), if(targetAlive(), applyPower(ManglePower, 10, target=target)))
     upgradedPlay = sequence(attack(20), if(targetAlive(), applyPower(ManglePower, 15, target=target)))
+  }
+
+  card Rampage {
+    pools = [IroncladCardPool]
+    type = attack rarity = uncommon cost = 1 target = enemy
+    variables = [variable(ExtraDamage, 0, preserveOnDowngrade=true)]
+    play = sequence(
+      scaledAttack(9, 1, count=cardVariable(ExtraDamage)),
+      modifyCardVariable(ExtraDamage, 5)
+    )
+    upgradedPlay = sequence(
+      scaledAttack(9, 1, count=cardVariable(ExtraDamage)),
+      modifyCardVariable(ExtraDamage, 9)
+    )
   }
 }

@@ -32,9 +32,6 @@ internal static class CombatCardEvents
     // Source PlayerCombatState.AllPiles order, independent of the CardPile enum's order.
     private static readonly CardPile[] ListenerPiles = [CardPile.Hand, CardPile.Draw, CardPile.Discard, CardPile.Exhaust, CardPile.Play];
 
-    private static CardInstance? Find(GameState state, string instanceId) => ListenerPiles
-        .SelectMany(state.GetPile).FirstOrDefault(card => card.InstanceId == instanceId);
-
     internal static void QueueInitialEntries(GameSession session)
     {
         var state = session.State;
@@ -54,7 +51,7 @@ internal static class CombatCardEvents
     internal static void Enter(GameSession session, string instanceId)
     {
         var state = session.State;
-        if (Find(state, instanceId) is { } card && state.Definition.Cards[card.CardId].ResolveEnterEffect(card) is { } effect)
+        if (state.FindCombatCard(instanceId) is { } card && state.Definition.Cards[card.CardId].ResolveEnterEffect(card) is { } effect)
             state.PendingEffects.Add(new(state.Player.Creature, effect, null, card));
     }
 
@@ -76,7 +73,7 @@ internal static class CombatCardEvents
     internal static void ExecuteListener(GameSession session, CardListenerEffect callback, EntityState? target)
     {
         var state = session.State;
-        if (Find(state, callback.InstanceId) is not { } card) return;
+        if (state.FindCombatCard(callback.InstanceId) is not { } card) return;
         var listener = state.Definition.Cards[card.CardId].ResolvePlayListener(card, callback.AfterPlay);
         if (listener is null || listener.WhenCardType is { } type && type != callback.PlayedType) return;
         state.PendingEffects.Add(new(state.Player.Creature, listener.Effect, target, card));

@@ -148,6 +148,7 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
 
 internal sealed class GameState
 {
+    internal static readonly CardPile[] CombatPiles = Enum.GetValues<CardPile>();
     private readonly List<GameEvent> _events = [];
     private readonly IReadOnlyList<GameEvent> _eventView;
     private readonly ScopedIntState _modInts;
@@ -194,6 +195,13 @@ internal sealed class GameState
     internal CardPlayFrame? CurrentCardPlay => CardPlayFrames.Count == 0 ? null : CardPlayFrames[^1];
     internal CardInstance CardInPlay(CardPlayFrame frame) =>
         Player.PlayPileInstances.FirstOrDefault(card => card.InstanceId == frame.Card.InstanceId) ?? frame.Card;
+    internal CardInstance? FindCombatCard(string instanceId)
+    {
+        foreach (var pile in CombatPiles)
+            foreach (var card in GetPile(pile))
+                if (card.InstanceId == instanceId) return card;
+        return null;
+    }
     internal List<PendingEffect> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal int FlushHookIndex { get; set; }

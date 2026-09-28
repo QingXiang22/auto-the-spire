@@ -65,7 +65,7 @@ public static class SpireCombatDslCompiler
                 "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay",
                 "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust",
                 "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
-                "afterCardPlayed", "upgradedAfterCardPlayed");
+                "afterCardPlayed", "upgradedAfterCardPlayed", "variables");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -98,6 +98,8 @@ public static class SpireCombatDslCompiler
                     ? Boolean(canGenerateNode) : true)
             {
                 Tags = tags, PoolIds = pools,
+                Variables = properties.TryGetValue("variables", out var variablesNode)
+                    ? CompileCardVariables(variablesNode) : Array.Empty<CardVariableDefinition>(),
                 OnExhaust = properties.TryGetValue("onExhaust", out var exhaustNode) ? CompileEffect(exhaustNode) : null,
                 UpgradedOnExhaust = properties.TryGetValue("upgradedOnExhaust", out var upgradedExhaustNode)
                     ? CompileEffect(upgradedExhaustNode) : null,
@@ -263,6 +265,21 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 1, 1);
                     var localCost = CompileCostModifier(Argument(call, 0), allowCalculated: true);
                     return new ModifySelectedCardCostEffect(localCost.Modifier, localCost.CalculatedAmount);
+                case "modifyCardVariable":
+                    CheckShape(call, 2, 2, "card", "operation");
+                    var variableAmount = Argument(call, 1);
+                    return new ModifyCardVariableEffect(ReferenceId(Argument(call, 0)),
+                        variableAmount is DslNumberNode ? Integer(variableAmount) : 0,
+                        OptionalEnum(call, "card", CardContext.Played),
+                        OptionalEnum(call, "operation", CardVariableOperation.Add),
+                        variableAmount is DslNumberNode ? null : CompileScaledAmount(variableAmount));
+                case "downgradeSelectedCard":
+                    CheckShape(call, 0, 0);
+                    return new DowngradeSelectedCardEffect();
+                case "cloneCard":
+                    CheckShape(call, 0, 0, "card", "pile", "count");
+                    return new CloneCardEffect(OptionalEnum(call, "card", CardContext.Played),
+                        OptionalEnum(call, "pile", CardPile.Hand), OptionalInteger(call, "count", 1));
                 case "transformSelectedCard":
                     CheckShape(call, 1, 1, "from", "upgraded");
                     return new TransformSelectedCardEffect(ReferenceId(Argument(call, 0)),
@@ -315,6 +332,23 @@ public static class SpireCombatDslCompiler
                 default:
                     throw Error(call.Location, $"Unknown combat predicate '{call.Name}'.");
             }
+        }
+
+        private IReadOnlyList<CardVariableDefinition> CompileCardVariables(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Card variables require a list.");
+            var variables = list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "variable") throw Error(call.Location, "Expected variable(Name, initialValue).");
+                CheckShape(call, 2, 2, "upgraded", "preserveOnDowngrade");
+                return new CardVariableDefinition(ReferenceId(Argument(call, 0)), Integer(Argument(call, 1)),
+                    OptionalArgument(call, "upgraded") is { } upgraded ? Integer(upgraded) : null,
+                    OptionalBoolean(call, "preserveOnDowngrade", false));
+            }).ToArray();
+            if (variables.Select(variable => variable.Id).Distinct().Count() != variables.Length)
+                throw Error(node.Location, "A card cannot declare duplicate variables.");
+            return Array.AsReadOnly(variables);
         }
 
         private CardPlayListener? CompilePlayListener(IReadOnlyDictionary<string, DslValueNode> properties, string name)
@@ -380,6 +414,10 @@ public static class SpireCombatDslCompiler
                     return new CardPlaysThisTurnCountSource(
                         OptionalArgument(call, "type") is { } playedType ? EnumValue<CardType>(playedType) : null,
                         OptionalEnum(call, "phase", CardPlayHistoryPhase.Finished));
+                case "cardVariable":
+                    CheckShape(call, 1, 1, "card");
+                    return new CardVariableCountSource(ReferenceId(Argument(call, 0)),
+                        OptionalEnum(call, "card", CardContext.Played));
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1);
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))));

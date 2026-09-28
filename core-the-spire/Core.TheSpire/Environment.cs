@@ -172,8 +172,12 @@ public sealed class CombatEnvironment(GameDefinition definition)
         if (allCardInstanceIds.Distinct(StringComparer.Ordinal).Count() != allCardInstanceIds.Length)
             throw new ArgumentException("Combat card instance IDs must be unique.", nameof(hand));
         foreach (var card in handInstances.Concat(drawInstances))
+        {
             if (!definition.Cards.ContainsKey(card.CardId))
                 throw new KeyNotFoundException($"Unknown combat card '{card.CardId}'.");
+            foreach (var offset in card.VariableOffsets)
+                definition.Cards[card.CardId].ResolveVariable(card, offset.Variable);
+        }
 
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances, characterId),

@@ -62,8 +62,8 @@ Power 至少有层数，并可能需要施加者、跳过首次触发等实例�
 | 约定 | 当前对应 | 后续缺口 |
 | --- | --- | --- |
 | 整局玩家与地图 | `RunState` 保存资源、牌组、地图和房间栈；战斗中整局观察读取战斗权威生命。 | 显式分出玩家/世界子对象。 |
-| 战斗参与者与调度 | `GameState`、`PlayerCombatState`、`EnemyCombatState`、`EntityState`。 | 实体/卡牌实例级 mod 状态。 |
-| 扩展变量生命周期 | `state` DSL 编译为整局/战斗整数声明；`ScopedIntState` 按默认值初始化，扩展上下文校验已声明变量。 | 可见性、保存格式、其他类型及效果 DSL 的变量操作。 |
+| 战斗参与者与调度 | `GameState`、`PlayerCombatState`、`EnemyCombatState`、`EntityState`。卡牌实例以稀疏不可变偏移记录声明的战斗变量。 | 实体级 mod 状态、更多卡变量数值类型。 |
+| 扩展变量生命周期 | `state` DSL 编译为整局/战斗整数声明；卡牌定义提供变量基值和升级值，实例只保存变化偏移；效果 DSL 可读写 played/selected 实例。 | 通用实体变量读写、保存格式、非整数卡牌数值。 |
 | 外部观察 | `RunObservation`、`CombatObservation`；意图伤害从规则计算。 | 对照真实游戏校准展示和隐藏信息。 |
 
 `ModVariablesKeepRunAndCombatLifetimesSeparate` 验证了一个跨事件与战斗的 mod 闭环：事件写整局变量，战斗读取并更新它；独立战斗和新开整局不会继承已有变量，同名变量在不同 mod 命名空间隔离。
