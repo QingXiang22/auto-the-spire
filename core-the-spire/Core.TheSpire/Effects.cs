@@ -130,7 +130,8 @@ internal sealed record DrawUntilContinuationEffect(CardType ContinueWhileType, C
 internal sealed record DrawCardsContinuationEffect(int Remaining) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
-    TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
+    TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false,
+    CardPilePosition Position = CardPilePosition.Bottom) : EffectNode;
 public sealed record ChooseCardFromPileEffect(CardPile From, CardPile? To, string Prompt,
     CardPilePosition DestinationPosition = CardPilePosition.Top,
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
@@ -233,11 +234,12 @@ public sealed record PowerEventSubscription(string EventType, GameEventActor Own
     bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null, ContentId? CardTag = null);
 internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect, string? EventCardInstanceId = null) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
-public enum CardPilePosition { Top, Bottom }
+public enum CardPilePosition { Top, Bottom, Random }
 public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Attack }
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetAlivePredicate), "targetAlive")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HasPowerPredicate), "hasPower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PowerAmountAtLeastPredicate), "powerAmountAtLeast")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyAtLeastPredicate), "energyAtLeast")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardExhaustedThisTurnPredicate), "cardExhaustedThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerLostHpThisTurnPredicate), "playerLostHpThisTurn")]
@@ -248,6 +250,8 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Atta
 public abstract record EffectPredicate;
 public sealed record TargetAlivePredicate : EffectPredicate;
 public sealed record HasPowerPredicate(ContentId Power, TargetSelector Target = TargetSelector.Self) : EffectPredicate;
+public sealed record PowerAmountAtLeastPredicate(ContentId Power, int Amount,
+    TargetSelector Target = TargetSelector.Self) : EffectPredicate;
 public sealed record EnergyAtLeastPredicate(int Amount) : EffectPredicate;
 public sealed record CardExhaustedThisTurnPredicate : EffectPredicate;
 public sealed record PlayerLostHpThisTurnPredicate : EffectPredicate;
@@ -655,7 +659,7 @@ internal static class EffectExecutor
                         .Select(_ => state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel)).ToArray();
                     state.PendingEffects.Add(new(owner,
                         new EmitGameEventEffect("cards_added", owner.Id, cardOwner.Id, addCards.Count), target, selectedCard, counts));
-                    CombatCardGeneration.QueuePlacements(state, addedInstances, addCards.Pile);
+                    CombatCardGeneration.QueuePlacements(state, addedInstances, addCards.Pile, addCards.Position);
                     break;
                 case ChooseCardFromPileEffect chooseCard:
                     var options = state.GetPile(chooseCard.From)
@@ -749,7 +753,7 @@ internal static class EffectExecutor
                     if (selectedCard is null)
                         throw new InvalidOperationException("Moving a selected card requires a card selection context.");
                     if (!state.MoveCard(moveSelectedCard.From, moveSelectedCard.To,
-                            selectedCard.InstanceId, moveSelectedCard.DestinationPosition))
+                            selectedCard.InstanceId, moveSelectedCard.DestinationPosition, session.Random.Get("shuffle")))
                         throw new InvalidOperationException("The selected card is no longer in its source pile.");
                     state.Emit(session, "card_moved", owner.Id, selectedCard.InstanceId, 1);
                     if (moveSelectedCard.To == CardPile.Exhaust && moveSelectedCard.From != CardPile.Exhaust)
@@ -909,6 +913,8 @@ internal static class EffectExecutor
                         TargetAlivePredicate => (target ?? OpponentOf(state, owner)).Hp > 0,
                         HasPowerPredicate hasPower => ResolveSingleTarget(state, owner, target, hasPower.Target)
                             .PowerAmount(hasPower.Power) > 0,
+                        PowerAmountAtLeastPredicate powerCondition => ResolveSingleTarget(state, owner, target,
+                            powerCondition.Target).PowerAmount(powerCondition.Power) >= powerCondition.Amount,
                         EnergyAtLeastPredicate energy => state.Player.Energy >= energy.Amount,
                         CardExhaustedThisTurnPredicate => state.LastPlayerCardExhaustTurn == state.Turn,
                         PlayerLostHpThisTurnPredicate => state.LastPlayerHpLossTurn == state.Turn,
@@ -1106,7 +1112,8 @@ internal static class EffectExecutor
         AutoPlayCardsEffect effect, EffectCountScope? counts, CardInstance? selectedCard)
     {
         var state = session.State;
-        if (owner != state.Player.Creature || effect.From != CardPile.Draw || !Enum.IsDefined(effect.Position))
+        if (owner != state.Player.Creature || effect.From != CardPile.Draw
+            || effect.Position is not (CardPilePosition.Top or CardPilePosition.Bottom))
             throw new InvalidOperationException("Automatic play requires the player's draw pile and a supported position.");
         if (owner.Hp <= 0 || state.FirstLivingEnemy is null) return;
         var count = effect.CalculatedCount is { } calculated

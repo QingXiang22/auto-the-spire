@@ -1792,7 +1792,8 @@ public sealed class ContentRegistry
                 addCards.Card.Validate();
                 if (!_cards.ContainsKey(addCards.Card))
                     throw new InvalidOperationException($"{owner} adds unknown card '{addCards.Card}'.");
-                if (!Enum.IsDefined(addCards.Pile) || !IsSingleEffectTarget(addCards.Target))
+                if (!Enum.IsDefined(addCards.Pile) || !IsSingleEffectTarget(addCards.Target)
+                    || !Enum.IsDefined(addCards.Position))
                     throw new InvalidOperationException($"{owner} has an invalid card destination or target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(addCards.Count);
                 break;
@@ -1991,7 +1992,8 @@ public sealed class ContentRegistry
                 break;
             case AutoPlayCardsEffect autoPlay:
                 ArgumentOutOfRangeException.ThrowIfNegative(autoPlay.Count);
-                if (autoPlay.From != CardPile.Draw || !Enum.IsDefined(autoPlay.Position))
+                if (autoPlay.From != CardPile.Draw
+                    || autoPlay.Position is not (CardPilePosition.Top or CardPilePosition.Bottom))
                     throw new InvalidOperationException($"{owner} has an unsupported automatic-play source or position.");
                 if (autoPlay.CalculatedCount is { } count) ValidateCombatCountSource(count.Count, owner, counts);
                 break;
@@ -2027,6 +2029,13 @@ public sealed class ContentRegistry
                 (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy):
                 throw new InvalidOperationException($"{owner} checks power on an invalid target.");
             case HasPowerPredicate:
+                break;
+            case PowerAmountAtLeastPredicate powerAmount when !_powers.ContainsKey(powerAmount.Power):
+                throw new InvalidOperationException($"{owner} checks unknown power '{powerAmount.Power}'.");
+            case PowerAmountAtLeastPredicate powerAmount when powerAmount.Amount < 0
+                || powerAmount.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy):
+                throw new InvalidOperationException($"{owner} has an invalid Power amount condition.");
+            case PowerAmountAtLeastPredicate:
                 break;
             case EnergyAtLeastPredicate energy:
                 ArgumentOutOfRangeException.ThrowIfNegative(energy.Amount);

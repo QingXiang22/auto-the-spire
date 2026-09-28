@@ -4,11 +4,13 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；62 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、卡牌 Affliction 生命周期及 Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；63 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、卡牌 Affliction 生命周期及 Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 [`GasBomb.cs`](../sts2/src/Core/Models/Monsters/GasBomb.cs) 是 Living Fog 遭遇召出的单次攻击敌人：普通/Tough 生命值 7/8，Deadly 攻击 9（普通 8），以 Minion Power 入场并在攻击后自毁。`kill(target=self)` 是通用实体效果，与 Attack 共用死亡 Power/盟友死亡结算；`DeathBlow` 意图保留攻击伤害投影。定向测试检查自毁、致命攻击意图及 Minion 对 Feed 奖励的抑制。该定义现由 Living Fog 的 Bloat 行动召唤，并在 `living-fog-normal` encounter 中覆盖其编队槽位行为。
 
 [`LivingFog.cs`](../sts2/src/Core/Models/Monsters/LivingFog.cs)、[`SmoggyPower.cs`](../sts2/src/Core/Models/Powers/SmoggyPower.cs) 和 [`LivingFogNormal.cs`](../sts2/src/Core/Models/Encounters/LivingFogNormal.cs) 已迁入 DSL/JSON。Living Fog 普通/Tough HP 为 80/82，依序使用 Advanced Gas、召唤 Gas Bomb 并攻击的 Bloat、Super Gas Blast，之后循环 Bloat/Super Gas Blast。Smoggy Power 在 Skill 打出后给所有 Skill 加 Smog；本回合已打过 Skill 时，新进入战斗的 Skill 也会获得 Smog；玩家 owner turn end 清除该 Affliction。Affliction 作为 CardInstance 上的可观察 ID 存储，其声明提供临时关键词；效果 DSL 可按类型批量施加和清除。遇敌阵容占据第六槽、召唤依序使用前五槽，定向测试覆盖槽位、行为、自动/手动禁止打出与回合结束清理。该 encounter 还未加入现有 Overgrowth Act 池；游戏其他 Act/遭遇池仍待迁移。
+
+[`Entomancer.cs`](../sts2/src/Core/Models/Monsters/Entomancer.cs)、[`PersonalHivePower.cs`](../sts2/src/Core/Models/Powers/PersonalHivePower.cs) 与 [`EntomancerElite.cs`](../sts2/src/Core/Models/Encounters/EntomancerElite.cs) 已迁入 DSL/JSON。Entomancer 有 145/155 HP，依序执行 7/8 次各 3 点的 Bees、18/20 点 Spear、Pheromone Spit。后者将 Personal Hive 提升至 3 层并每次获得 1 力量；达到 3 层后每次改为获得 2 力量。Personal Hive 在承受玩家 Move 攻击伤害时按层数向玩家抽牌堆随机插入 Dazed。`powerAmountAtLeast`、按 Power 层数重复和 `addCards(position=random)` 是可复用的 DSL 原语，Encounter 已登记为精英战；Hive Act 遭遇池仍待迁移。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。Flyconid 的普通候选 MoveRepeatType 冷却为 1、2、3 个最近动作，已由 `candidate(cooldown=n)` 和按动作最近选择序号实现；所有候选权重为零时遵循原版随机分支返回声明首动作的回退。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 

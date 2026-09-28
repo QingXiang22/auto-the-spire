@@ -338,6 +338,48 @@ public sealed class CombatSliceTests
         Assert.Equal(new[] { 5 }, environment.Observe(selectedEncounter).Enemies.Select(enemy => enemy.SlotIndex));
     }
 
+    public void EntomancerUsesPowerEventsAndDslMoveCycle()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var encounterId = ContentId.Parse("base-spire:entomancer-elite");
+        Assert.Equal(RunRoomType.Elite, definition.Encounters[encounterId].RoomType);
+        var session = environment.Start(519, "ironclad", 200, 200,
+            [BaseSpireIds.StrikeIronclad], "base-spire:entomancer",
+            drawPile: Enumerable.Repeat(BaseSpireIds.DefendIronclad, 3));
+        var entomancer = session.State.Enemies.Single().Creature;
+        var hivePower = ContentId.Parse("base-spire:personal-hive-power");
+        var dazed = BaseSpireIds.Dazed;
+
+        Assert.Equal(145, entomancer.Hp);
+        Assert.Equal(1, entomancer.PowerAmount(hivePower));
+        Assert.Equal(IntentKind.Attack, environment.Observe(session).Enemies.Single().Intent);
+        Assert.Equal(21, environment.Observe(session).Enemies.Single().IntentDamage);
+
+        environment.Step(session, new PlayCardAction(0, entomancer.Id));
+        Assert.Equal(1, session.State.Player.DrawPileInstances.Count(card => card.CardId == dazed));
+        Assert.Equal(4, session.State.Player.DrawPileInstances.Count);
+        Assert.Equal(1, session.Random.Get("shuffle").Counter);
+
+        environment.Step(session, new EndTurnAction()); // Bees
+        environment.Step(session, new EndTurnAction()); // Spear
+        environment.Step(session, new EndTurnAction()); // Pheromone Spit
+        Assert.Equal(2, entomancer.PowerAmount(hivePower));
+        Assert.Equal(1, entomancer.PowerAmount(BaseSpireIds.Strength));
+
+        environment.Step(session, new EndTurnAction());
+        environment.Step(session, new EndTurnAction());
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(3, entomancer.PowerAmount(hivePower));
+        Assert.Equal(2, entomancer.PowerAmount(BaseSpireIds.Strength));
+
+        environment.Step(session, new EndTurnAction());
+        environment.Step(session, new EndTurnAction());
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(3, entomancer.PowerAmount(hivePower));
+        Assert.Equal(4, entomancer.PowerAmount(BaseSpireIds.Strength));
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -2258,9 +2300,9 @@ public sealed class CombatSliceTests
         var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
         var content = SpireCombatBehaviorDslCompiler.Compile(package);
 
-        Assert.Equal(27, content.Powers.Count);
-        Assert.Equal(60, content.Enemies.Count);
-        Assert.Equal(60, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(29, content.Powers.Count);
+        Assert.Equal(63, content.Enemies.Count);
+        Assert.Equal(63, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -5905,6 +5947,7 @@ internal static class Program
         tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();
         tests.GasBombUsesDeathBlowIntentExplodesOnceAndMinionBlocksFeedBonus();
         tests.LivingFogAppliesAndClearsSmogAndSummonsBombIntoOpenEncounterSlot();
+        tests.EntomancerUsesPowerEventsAndDslMoveCycle();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();

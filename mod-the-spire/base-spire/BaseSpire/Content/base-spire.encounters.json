@@ -512,6 +512,11 @@
       ]
     },
     {
+      "id": "base-spire:entomancer-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:entomancer"]
+    },
+    {
       "id": "base-spire:ovicopter-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:ovicopter"]

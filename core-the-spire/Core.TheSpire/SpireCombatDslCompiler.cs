@@ -265,11 +265,12 @@ public static class SpireCombatDslCompiler
                     return new AutoPlaySelectedCardEffect(OptionalEnum(call, "from", CardPile.Exhaust),
                         OptionalBoolean(call, "forceExhaust", false));
                 case "addCards":
-                    CheckShape(call, 1, 1, "pile", "count", "target", "inheritUpgradeFromPlayedCard");
+                    CheckShape(call, 1, 1, "pile", "count", "target", "inheritUpgradeFromPlayedCard", "position");
                     return new AddCardsToPileEffect(ReferenceId(Argument(call, 0)),
                         EnumValue<CardPile>(RequiredArgument(call, "pile")), OptionalInteger(call, "count", 1),
                         OptionalTarget(call, "target", TargetSelector.Self),
-                        OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
+                        OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false),
+                        OptionalEnum(call, "position", CardPilePosition.Bottom));
                 case "summonEnemy":
                     CheckShape(call, 1, 1, "count", "startingAction", "startingPowers", "maxLivingEnemies", "maxEnemies", "slot");
                     var summonCount = OptionalInteger(call, "count", 1);
@@ -481,6 +482,10 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 1, 1, "target");
                     return new HasPowerPredicate(Id(Name(Argument(call, 0))),
                         OptionalTarget(call, "target", TargetSelector.Self));
+                case "powerAmountAtLeast":
+                    CheckShape(call, 2, 2, "target");
+                    return new PowerAmountAtLeastPredicate(Id(Name(Argument(call, 0))),
+                        Integer(Argument(call, 1)), OptionalTarget(call, "target", TargetSelector.Self));
                 case "energyAtLeast":
                     CheckShape(call, 1, 1);
                     return new EnergyAtLeastPredicate(Integer(Argument(call, 0)));

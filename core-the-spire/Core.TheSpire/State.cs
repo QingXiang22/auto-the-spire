@@ -623,7 +623,8 @@ internal sealed class GameState
         return moved;
     }
 
-    internal bool MoveCard(CardPile from, CardPile to, string instanceId, CardPilePosition position)
+    internal bool MoveCard(CardPile from, CardPile to, string instanceId, CardPilePosition position,
+        SeededRandom? random = null)
     {
         var source = GetPile(from);
         var index = source.FindIndex(card => card.InstanceId == instanceId);
@@ -631,8 +632,22 @@ internal sealed class GameState
         var card = source[index];
         source.RemoveAt(index);
         var destination = GetPile(to);
-        if (position == CardPilePosition.Top) destination.Insert(0, card);
-        else destination.Add(card);
+        switch (position)
+        {
+            case CardPilePosition.Top:
+                destination.Insert(0, card);
+                break;
+            case CardPilePosition.Bottom:
+                destination.Add(card);
+                break;
+            case CardPilePosition.Random:
+                var randomIndex = (random ?? throw new ArgumentNullException(nameof(random)))
+                    .NextInt(destination.Count + 1);
+                destination.Insert(randomIndex, card);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(position));
+        }
         return true;
     }
 
