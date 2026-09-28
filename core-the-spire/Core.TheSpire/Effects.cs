@@ -71,7 +71,7 @@ public sealed record CardPlaysThisTurnCountSource(CardType? Type = null,
     CardPlayHistoryPhase Phase = CardPlayHistoryPhase.Finished) : CombatCountSource;
 public sealed record CardVariableCountSource(ContentId Variable, CardContext Card = CardContext.Played) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
-public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
+public sealed record TargetPowerCountSource(ContentId Power, TargetSelector Target = TargetSelector.SelectedTarget) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
 public sealed record AttackUsingBlockEffect(TargetSelector Target = TargetSelector.SelectedTarget) : EffectNode;
@@ -104,7 +104,7 @@ public sealed record ModifyCardVariableEffect(ContentId Variable, int Amount,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record DowngradeSelectedCardEffect : EffectNode;
 public sealed record CloneCardEffect(CardContext Card = CardContext.Played, CardPile Pile = CardPile.Hand,
-    int Count = 1) : EffectNode;
+    int Count = 1, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
 public sealed record TransformSelectedCardEffect(ContentId Card, CardPile From, bool Upgraded = false) : EffectNode;
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
@@ -154,6 +154,7 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Atta
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerLostHpThisTurnPredicate), "playerLostHpThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SelectedCardIsClonePredicate), "selectedCardIsClone")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCountAtLeastPredicate), "pileCountAtLeast")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlayCountEqualsPredicate), "cardPlayCountEquals")]
 public abstract record EffectPredicate;
 public sealed record TargetAlivePredicate : EffectPredicate;
 public sealed record HasPowerPredicate(ContentId Power, TargetSelector Target = TargetSelector.Self) : EffectPredicate;
@@ -162,6 +163,7 @@ public sealed record CardExhaustedThisTurnPredicate : EffectPredicate;
 public sealed record PlayerLostHpThisTurnPredicate : EffectPredicate;
 public sealed record SelectedCardIsClonePredicate : EffectPredicate;
 public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : EffectPredicate;
+public sealed record CardPlayCountEqualsPredicate(CardType? Type, CardPlayHistoryPhase Phase, int Count) : EffectPredicate;
 
 internal static class EffectExecutor
 {
@@ -460,7 +462,11 @@ internal static class EffectExecutor
                     break;
                 case CloneCardEffect clone:
                     var cloneSource = CombatCardVariables.ResolveCard(state, clone.Card, selectedCard);
-                    var clones = new CardInstance[clone.Count];
+                    var cloneCount = clone.CalculatedCount is { } calculatedClone
+                        ? ScaledAmount(state, owner, target, calculatedClone.BaseAmount, calculatedClone.PerCount,
+                            calculatedClone.Count, counts, selectedCard) : clone.Count;
+                    if (cloneCount < 0) throw new InvalidOperationException("Combat clone count cannot be negative.");
+                    var clones = new CardInstance[cloneCount];
                     for (var i = 0; i < clones.Length; i++)
                     {
                         var fresh = state.Player.CreateGeneratedCard(cloneSource.CardId);
@@ -532,6 +538,7 @@ internal static class EffectExecutor
                         SelectedCardIsClonePredicate => selectedCard?.IsClone
                             ?? throw new InvalidOperationException("Clone predicates require a selected card context."),
                         PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
+                        CardPlayCountEqualsPredicate plays => state.CardPlayHistory.Count(plays.Type, plays.Phase) == plays.Count,
                         _ => throw new InvalidOperationException($"Unsupported effect predicate '{conditional.Predicate.GetType().Name}'.")
                     };
                     if (condition) state.PendingEffects.Add(new(owner, conditional.Then, target, selectedCard, counts));
@@ -589,7 +596,7 @@ internal static class EffectExecutor
             CardVariableCountSource variable => CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard),
             SavedCountSource saved => counts?.Resolve(saved.Name)
                 ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
-            TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),
+            TargetPowerCountSource power => ResolveSingleTarget(state, owner, selectedTarget, power.Target).PowerAmount(power.Power),
             TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
                 .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
             _ => throw new InvalidOperationException("Unsupported combat count source.")

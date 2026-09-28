@@ -22,9 +22,9 @@ internal static class CombatCardPlay
         var state = session.State;
         if (state.Player.Creature.Hp <= 0 || state.FirstLivingEnemy is null) return;
         var definition = state.Definition.Cards[card.CardId];
-        if ((definition.Keywords & CardKeywords.Unplayable) != 0)
+        if ((definition.ResolveKeywords(card) & CardKeywords.Unplayable) != 0)
         {
-            PlaceCard(session, card, forceExhaust || (definition.Keywords & CardKeywords.Exhaust) != 0
+            PlaceCard(session, card, forceExhaust || (definition.ResolveKeywords(card) & CardKeywords.Exhaust) != 0
                 ? CardPile.Exhaust : CardPile.Discard);
             return;
         }

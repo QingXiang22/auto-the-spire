@@ -12,7 +12,7 @@ internal static class CombatCardRules
         if (!card.HasEnergyXCost)
             foreach (var modifier in instance.CostModifiers) energy = modifier.Apply(energy);
         CardPile? result = card.Type == CardType.Power ? null
-            : (card.Keywords & CardKeywords.Exhaust) != 0 ? CardPile.Exhaust : CardPile.Discard;
+            : (card.ResolveKeywords(instance) & CardKeywords.Exhaust) != 0 ? CardPile.Exhaust : CardPile.Discard;
         foreach (var power in state.Player.Creature.Powers)
         {
             if (power.Value <= 0 || state.Definition.Powers[power.Key].CardRule is not { } rule

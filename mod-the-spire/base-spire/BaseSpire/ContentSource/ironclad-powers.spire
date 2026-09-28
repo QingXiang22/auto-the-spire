@@ -29,6 +29,13 @@ package base-spire {
     removeAfterPlayerTurnEnd = true
   }
 
+  power JugglingPower {
+    trigger = afterCardPlayed
+    whenCardType = attack
+    effect = if(cardPlaysThisTurn(3, type=attack, phase=started),
+      cloneCard(count=scaled(0, 1, count=targetPowerAmount(JugglingPower, target=self))))
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }

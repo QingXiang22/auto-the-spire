@@ -407,7 +407,7 @@ internal sealed class GameState
         CardSelectionFilter.Attack => Definition.Cards[card.CardId].Type == CardType.Attack,
         CardSelectionFilter.NonAttack => Definition.Cards.TryGetValue(card.CardId, out var definition)
             && definition.Type != CardType.Attack,
-        CardSelectionFilter.NotRetained => (Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) == 0
+        CardSelectionFilter.NotRetained => (Definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Retain) == 0
             && !TemporarilyRetainedCards.Contains(card.InstanceId),
         _ => false
     };
