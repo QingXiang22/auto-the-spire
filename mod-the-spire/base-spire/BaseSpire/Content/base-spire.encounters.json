@@ -123,6 +123,11 @@
       "enemyIds": ["base-spire:byrdonis"]
     },
     {
+      "id": "base-spire:punch-construct-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:punch-construct"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

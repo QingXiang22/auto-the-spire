@@ -278,4 +278,18 @@ package base-spire {
     )
     behavior = cycle(byrdonisSwoop, byrdonisPeck)
   }
+
+  enemy PunchConstruct {
+    hp = variants(default=range(60, 60), tough=range(55, 55))
+    startingPowers = [power(Artifact, 1)]
+    moves = actions(
+      punchConstructReady = gainBlock(10),
+      punchConstructFastPunch = sequence(
+        repeat(2, attack(variants(default=5, deadly=6), target=player)),
+        applyPower(Frail, 1, target=player)
+      ),
+      punchConstructStrongPunch = attack(variants(default=14, deadly=16), target=player)
+    )
+    behavior = cycle(punchConstructReady, punchConstructFastPunch, punchConstructStrongPunch)
+  }
 }
