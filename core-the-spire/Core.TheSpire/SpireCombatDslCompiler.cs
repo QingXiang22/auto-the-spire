@@ -62,7 +62,7 @@ public static class SpireCombatDslCompiler
         {
             var properties = ReadProperties(declaration);
             RequireOnlyProperties(declaration, properties,
-                "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay",
+                "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "upgradedKeywords", "play", "upgradedPlay",
                 "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust",
                 "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
                 "afterCardPlayed", "upgradedAfterCardPlayed", "variables");
@@ -98,6 +98,8 @@ public static class SpireCombatDslCompiler
                     ? Boolean(canGenerateNode) : true)
             {
                 Tags = tags, PoolIds = pools,
+                UpgradedKeywords = properties.TryGetValue("upgradedKeywords", out var upgradedKeywordsNode)
+                    ? ParseKeywords(upgradedKeywordsNode) : CardKeywords.None,
                 Variables = properties.TryGetValue("variables", out var variablesNode)
                     ? CompileCardVariables(variablesNode) : Array.Empty<CardVariableDefinition>(),
                 OnExhaust = properties.TryGetValue("onExhaust", out var exhaustNode) ? CompileEffect(exhaustNode) : null,
@@ -278,8 +280,11 @@ public static class SpireCombatDslCompiler
                     return new DowngradeSelectedCardEffect();
                 case "cloneCard":
                     CheckShape(call, 0, 0, "card", "pile", "count");
+                    var cloneCountNode = OptionalArgument(call, "count");
                     return new CloneCardEffect(OptionalEnum(call, "card", CardContext.Played),
-                        OptionalEnum(call, "pile", CardPile.Hand), OptionalInteger(call, "count", 1));
+                        OptionalEnum(call, "pile", CardPile.Hand),
+                        cloneCountNode is DslNumberNode ? Integer(cloneCountNode) : 1,
+                        cloneCountNode is not null and not DslNumberNode ? CompileScaledAmount(cloneCountNode) : null);
                 case "transformSelectedCard":
                     CheckShape(call, 1, 1, "from", "upgraded");
                     return new TransformSelectedCardEffect(ReferenceId(Argument(call, 0)),
@@ -329,6 +334,12 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 2, 2);
                     return new PileCountAtLeastPredicate(EnumValue<CardPile>(Argument(call, 0)),
                         Integer(Argument(call, 1)));
+                case "cardPlaysThisTurn":
+                    CheckShape(call, 1, 1, "type", "phase");
+                    var historyType = OptionalArgument(call, "type");
+                    return new CardPlayCountEqualsPredicate(
+                        historyType is null ? null : EnumValue<CardType>(historyType),
+                        OptionalEnum(call, "phase", CardPlayHistoryPhase.Finished), Integer(Argument(call, 0)));
                 default:
                     throw Error(call.Location, $"Unknown combat predicate '{call.Name}'.");
             }
@@ -419,8 +430,9 @@ public static class SpireCombatDslCompiler
                     return new CardVariableCountSource(ReferenceId(Argument(call, 0)),
                         OptionalEnum(call, "card", CardContext.Played));
                 case "targetPowerAmount":
-                    CheckShape(call, 1, 1);
-                    return new TargetPowerCountSource(Id(Name(Argument(call, 0))));
+                    CheckShape(call, 1, 1, "target");
+                    return new TargetPowerCountSource(Id(Name(Argument(call, 0))),
+                        OptionalTarget(call, "target", TargetSelector.SelectedTarget));
                 case "cardsWithTag":
                     CheckShape(call, 1, 1);
                     return new TaggedCardCountSource(ReferenceId(Argument(call, 0)));
@@ -476,6 +488,7 @@ public static class SpireCombatDslCompiler
                     "ethereal" => CardKeywords.Ethereal,
                     "unplayable" => CardKeywords.Unplayable,
                     "retain" => CardKeywords.Retain,
+                    "innate" => CardKeywords.Innate,
                     _ => throw Error(item.Location, "Unknown card keyword.")
                 };
                 if ((keywords & keyword) != 0) throw Error(item.Location, $"Duplicate card keyword '{keyword}'.");

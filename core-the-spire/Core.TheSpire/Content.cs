@@ -135,13 +135,15 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public IReadOnlyList<CardVariableDefinition> Variables { get; init; } = Array.Empty<CardVariableDefinition>();
     public EffectNode? OnExhaust { get; init; }
     public EffectNode? UpgradedOnExhaust { get; init; }
+    public CardKeywords UpgradedKeywords { get; init; }
     public EffectNode? OnEnterCombat { get; init; }
     public EffectNode? UpgradedOnEnterCombat { get; init; }
     public CardPlayListener? BeforeCardPlayed { get; init; }
     public CardPlayListener? UpgradedBeforeCardPlayed { get; init; }
     public CardPlayListener? AfterCardPlayed { get; init; }
     public CardPlayListener? UpgradedAfterCardPlayed { get; init; }
-    public bool HasUpgrade => UpgradedEffect is not null || UpgradedCost is not null || UpgradedOnExhaust is not null
+    public bool HasUpgrade => UpgradedEffect is not null || UpgradedCost is not null
+        || UpgradedKeywords != CardKeywords.None || UpgradedOnExhaust is not null
         || UpgradedOnEnterCombat is not null || UpgradedBeforeCardPlayed is not null || UpgradedAfterCardPlayed is not null
         || Variables.Any(variable => variable.UpgradedValue is not null);
 
@@ -184,6 +186,12 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     {
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
         return instance.UpgradeLevel > 0 ? UpgradedCost ?? Cost : Cost;
+    }
+
+    public CardKeywords ResolveKeywords(CardInstance instance)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        return instance.UpgradeLevel > 0 ? Keywords | UpgradedKeywords : Keywords;
     }
 }
 
@@ -829,7 +837,7 @@ public sealed record EnemyDefinition
 
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
-public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8 }
+public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed }
@@ -1037,7 +1045,9 @@ public sealed class ContentRegistry
             if (card.HasEnergyXCost && card.Cost != 0)
                 throw new InvalidOperationException($"X-cost card '{card.Id}' must declare a base cost of zero.");
             if ((card.Keywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
-                | CardKeywords.Retain)) != 0)
+                | CardKeywords.Retain | CardKeywords.Innate)) != 0
+                || (card.UpgradedKeywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
+                    | CardKeywords.Retain | CardKeywords.Innate)) != 0)
                 throw new InvalidOperationException($"Card '{card.Id}' contains unsupported keywords.");
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
             if (card.UpgradedEffect is { } upgradedEffect)
@@ -1427,6 +1437,8 @@ public sealed class ContentRegistry
             case CloneCardEffect clone:
                 if (!Enum.IsDefined(clone.Card) || !Enum.IsDefined(clone.Pile) || clone.Pile == CardPile.Play || clone.Count < 0)
                     throw new InvalidOperationException($"{owner} has an invalid combat clone context, destination or count.");
+                if (clone.CalculatedCount is { } calculatedClone)
+                    ValidateCombatCountSource(calculatedClone.Count, owner, counts);
                 break;
             case ModifyCardVariableEffect variable:
                 ValidateCardVariableReference(variable.Variable, variable.Card, owner);
@@ -1522,6 +1534,11 @@ public sealed class ContentRegistry
                 if (!Enum.IsDefined(pile.Pile) || pile.Count < 0)
                     throw new InvalidOperationException($"{owner} has an invalid pile-count condition.");
                 break;
+            case CardPlayCountEqualsPredicate plays:
+                if (!Enum.IsDefined(plays.Phase) || plays.Count < 0
+                    || plays.Type is { } playType && !Enum.IsDefined(playType))
+                    throw new InvalidOperationException($"{owner} has an invalid card-play history condition.");
+                break;
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported effect predicate '{predicate.GetType().Name}'.");
         }
@@ -1537,6 +1554,9 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} counts an invalid card type.");
             case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
                 throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
+            case TargetPowerCountSource power when power.Target is not
+                (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy):
+                throw new InvalidOperationException($"{owner} counts power on an invalid target.");
             case SavedCountSource saved:
                 ArgumentException.ThrowIfNullOrWhiteSpace(saved.Name);
                 if (counts?.Contains(saved.Name) != true)

@@ -61,8 +61,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
 
         var shuffledDeck = run.Deck.ToList();
         run.Random.Get("shuffle").Shuffle(shuffledDeck);
+        var innate = shuffledDeck.Where(card =>
+            (definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Innate) != 0).Take(5).ToArray();
+        var openingIds = innate.Select(card => card.InstanceId).ToHashSet(StringComparer.Ordinal);
+        var openingHand = innate.Concat(shuffledDeck.Where(card => !openingIds.Contains(card.InstanceId))
+            .Take(5 - innate.Length)).ToArray();
+        openingIds.UnionWith(openingHand.Select(card => card.InstanceId));
+        var drawPile = shuffledDeck.Where(card => !openingIds.Contains(card.InstanceId)).ToArray();
         var session = StartWithInstances(run.Random, run.Character.Id.ToString(), run.Hp, run.MaxHp,
-            shuffledDeck.Take(5), spawns, shuffledDeck.Skip(5), run.Character.Id);
+            openingHand, spawns, drawPile, run.Character.Id);
         session.RunOwner = runSession;
         run.ActiveCombat = session;
         foreach (var hook in definition.RunHooks)
@@ -288,7 +295,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         {
             var instance = state.Player.HandInstances[i];
             var card = definition.Cards[instance.CardId];
-            if ((card.Keywords & CardKeywords.Unplayable) != 0) continue;
+            if ((card.ResolveKeywords(instance) & CardKeywords.Unplayable) != 0) continue;
             if (CombatCardRules.Preview(state, instance).EnergyToSpend > state.Player.Energy) continue;
             if (card.Target == TargetSelector.Self)
                 actions.Add(new PlayCardAction(i, state.Player.Id));
@@ -458,7 +465,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     return;
                 case EndTurnResolutionStage.PlayerHandCleanup:
                     var etherealCard = state.Player.MutableHand.FirstOrDefault(card =>
-                        (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Ethereal) != 0
+                        (state.Definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Ethereal) != 0
                         && state.Definition.Hooks.All(hook => hook.ShouldEtherealTrigger(
                             new RuleHookContext(session, hook.Id), card)));
                     if (etherealCard is not null)
@@ -681,7 +688,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var retained = new List<CardInstance>();
         foreach (var card in state.Player.MutableHand)
         {
-            var hasRetainKeyword = (state.Definition.Cards[card.CardId].Keywords & CardKeywords.Retain) != 0;
+            var hasRetainKeyword = (state.Definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Retain) != 0;
             if (!shouldFlush || hasRetainKeyword || state.TemporarilyRetainedCards.Contains(card.InstanceId))
                 retained.Add(card);
             else
