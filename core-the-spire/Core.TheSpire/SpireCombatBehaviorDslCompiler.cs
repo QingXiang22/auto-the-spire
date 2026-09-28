@@ -177,9 +177,10 @@ public static class SpireCombatBehaviorDslCompiler
                         throw Error(argument.Location, $"Duplicate Power lifecycle argument '{argument.Name}'.");
                 }
                 var trigger = EnumValue<PowerTrigger>(Required(arguments, "event", call.Location));
-                if (trigger is not (PowerTrigger.AfterOwnerTurnStart or PowerTrigger.AfterOwnerTurnEnd))
+                if (trigger is not (PowerTrigger.AfterOwnerTurnStart or PowerTrigger.AfterOwnerTurnEnd
+                    or PowerTrigger.AfterAutoPostPlayPhaseEntered))
                     throw Error(Required(arguments, "event", call.Location).Location,
-                        "Power lifecycle hooks currently support afterOwnerTurnStart and afterOwnerTurnEnd.");
+                        "Power lifecycle hooks support owner turn boundaries and afterAutoPostPlayPhaseEntered.");
                 return new PowerLifecycleSubscription(trigger,
                     SpireCombatDslCompiler.CompileEffect(_package,
                         Required(arguments, "effect", call.Location), _profile));

@@ -447,7 +447,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         else if (action is EndTurnAction)
         {
             state.IsPlayerTurn = false;
-            state.EndTurnStage = EndTurnResolutionStage.PlayerHandCleanup;
+            state.EndTurnStage = EndTurnResolutionStage.AfterAutoPostPlayPowers;
+            BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterAutoPostPlayPhaseEntered);
             ContinueEndTurn(session);
         }
         return new StepResult(ObserveSession(session), state.Events.Skip(firstEvent).ToArray(),
@@ -487,6 +488,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     }
                     state.EndTurnStage = EndTurnResolutionStage.BeforeFlushHooks;
                     state.FlushHookIndex = 0;
+                    break;
+                case EndTurnResolutionStage.AfterAutoPostPlayPowers:
+                    state.EndTurnStage = EndTurnResolutionStage.AfterAutoPostPlayCards;
+                    break;
+                case EndTurnResolutionStage.AfterAutoPostPlayCards:
+                    state.EndTurnStage = EndTurnResolutionStage.PlayerHandCleanup;
+                    CombatCardEvents.QueueAfterAutoPostPlay(state);
+                    EffectExecutor.Resume(session);
                     break;
                 case EndTurnResolutionStage.BeforeFlushHooks:
                 case EndTurnResolutionStage.BeforeFlushLateHooks:

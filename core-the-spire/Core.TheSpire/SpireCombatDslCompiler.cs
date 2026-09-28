@@ -65,7 +65,8 @@ public static class SpireCombatDslCompiler
                 "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "upgradedKeywords", "play", "upgradedPlay",
                 "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust",
                 "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
-                "afterCardPlayed", "upgradedAfterCardPlayed", "variables");
+                "afterCardPlayed", "upgradedAfterCardPlayed", "afterAutoPostPlay",
+                "upgradedAfterAutoPostPlay", "variables");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -111,7 +112,11 @@ public static class SpireCombatDslCompiler
                 BeforeCardPlayed = CompilePlayListener(properties, "beforeCardPlayed"),
                 UpgradedBeforeCardPlayed = CompilePlayListener(properties, "upgradedBeforeCardPlayed"),
                 AfterCardPlayed = CompilePlayListener(properties, "afterCardPlayed"),
-                UpgradedAfterCardPlayed = CompilePlayListener(properties, "upgradedAfterCardPlayed")
+                UpgradedAfterCardPlayed = CompilePlayListener(properties, "upgradedAfterCardPlayed"),
+                AfterAutoPostPlay = properties.TryGetValue("afterAutoPostPlay", out var postPlayNode)
+                    ? CompileEffect(postPlayNode) : null,
+                UpgradedAfterAutoPostPlay = properties.TryGetValue("upgradedAfterAutoPostPlay", out var upgradedPostPlayNode)
+                    ? CompileEffect(upgradedPostPlayNode) : null
             };
         }
 
@@ -212,6 +217,18 @@ public static class SpireCombatDslCompiler
                         autoCount is DslNumberNode ? Integer(autoCount) : 0,
                         OptionalEnum(call, "position", CardPilePosition.Top), OptionalBoolean(call, "forceExhaust", false),
                         autoCount is DslNumberNode ? null : CompileScaledAmount(autoCount));
+                case "autoPlayRandomCards":
+                    CheckShape(call, 0, 0, "from", "count", "type", "forceExhaust");
+                    var randomAutoCount = RequiredArgument(call, "count");
+                    return new AutoPlayRandomCardsEffect(EnumValue<CardPile>(RequiredArgument(call, "from")),
+                        randomAutoCount is DslNumberNode ? Integer(randomAutoCount) : 0,
+                        OptionalArgument(call, "type") is { } randomAutoType ? EnumValue<CardType>(randomAutoType) : null,
+                        OptionalBoolean(call, "forceExhaust", false),
+                        randomAutoCount is DslNumberNode ? null : CompileScaledAmount(randomAutoCount));
+                case "autoPlaySelectedCard":
+                    CheckShape(call, 0, 0, "from", "forceExhaust");
+                    return new AutoPlaySelectedCardEffect(OptionalEnum(call, "from", CardPile.Exhaust),
+                        OptionalBoolean(call, "forceExhaust", false));
                 case "addCards":
                     CheckShape(call, 1, 1, "pile", "count", "target", "inheritUpgradeFromPlayedCard");
                     return new AddCardsToPileEffect(ReferenceId(Argument(call, 0)),

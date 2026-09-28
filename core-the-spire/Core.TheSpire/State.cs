@@ -763,6 +763,8 @@ internal enum EndTurnResolutionStage
 {
     None,
     PlayerHandCleanup,
+    AfterAutoPostPlayPowers,
+    AfterAutoPostPlayCards,
     BeforeFlushHooks,
     BeforeFlushLateHooks,
     FlushHand,
