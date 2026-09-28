@@ -85,6 +85,79 @@ public sealed class CombatSliceTests
         Assert.Equal(0, environment.Observe(freshCombat).CombatVariables[calls]);
     }
 
+    public void BaseTwoTailedRatsUseSharedBehaviorConditionsAndCorrelatedOpeners()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var encounter = ContentId.Parse("base-spire:two-tailed-rats-normal");
+        var backupCalls = ContentId.Parse("base-spire:two-tailed-rat-backup-calls");
+        var summonableTurns = ContentId.Parse("base-spire:turns-until-summonable");
+        var foundCall = false;
+        var moveHistory = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        void RecordMoves(CombatObservation observation)
+        {
+            foreach (var enemy in observation.Enemies.Where(enemy => enemy.Hp > 0))
+            {
+                var move = enemy.Intent switch
+                {
+                    IntentKind.Attack when enemy.IntentDamage == 8 => "scratch",
+                    IntentKind.Attack when enemy.IntentDamage == 6 => "bite",
+                    IntentKind.Debuff => "screech",
+                    IntentKind.Summon => "call",
+                    _ => "unknown"
+                };
+                if (!moveHistory.TryGetValue(enemy.Id, out var history))
+                    moveHistory.Add(enemy.Id, history = []);
+                if (history.Count > 0) Assert.False(history[^1] == move);
+                if (move == "screech") Assert.False(history.TakeLast(3).Contains(move));
+                history.Add(move);
+            }
+        }
+
+        foreach (var seed in Enumerable.Range(9300, 32).Select(value => (uint)value))
+        {
+            var session = environment.StartEncounter(seed, "ironclad", 500, 500, [], encounter);
+            var opening = environment.Observe(session).Enemies;
+            var openingMoves = opening.Select(enemy => enemy.Intent == IntentKind.Debuff
+                ? "screech"
+                : enemy.IntentDamage == 8 ? "scratch" : "bite").ToArray();
+            Assert.Equal(3, openingMoves.Distinct().Count());
+            moveHistory.Clear();
+            RecordMoves(environment.Observe(session));
+            Assert.Equal(2, opening[0].Variables[summonableTurns]);
+            Assert.Equal(0, environment.Observe(session).CombatVariables[backupCalls]);
+
+            environment.Step(session, new EndTurnAction());
+            RecordMoves(environment.Observe(session));
+            environment.Step(session, new EndTurnAction());
+            var ready = environment.Observe(session);
+            RecordMoves(ready);
+            var queuedSummons = ready.Enemies.Count(enemy => enemy.Intent == IntentKind.Summon);
+            Assert.True(queuedSummons <= 1);
+            if (queuedSummons == 0) continue;
+
+            environment.Step(session, new EndTurnAction());
+            var summoned = environment.Observe(session);
+            RecordMoves(summoned);
+            Assert.Equal(4, summoned.Enemies.Count);
+            Assert.Equal(1, summoned.CombatVariables[backupCalls]);
+            for (var turn = 0; turn < 12 && !summoned.IsTerminal; turn++)
+            {
+                environment.Step(session, new EndTurnAction());
+                summoned = environment.Observe(session);
+                RecordMoves(summoned);
+                Assert.True(summoned.Enemies.Count <= 5);
+                Assert.True(summoned.CombatVariables[backupCalls] <= 3);
+                Assert.True(summoned.Enemies.Count(enemy => enemy.Intent == IntentKind.Summon) <= 1);
+                Assert.True(summoned.Enemies.All(enemy =>
+                    enemy.ActionUseCounts.GetValueOrDefault(ContentId.Parse("base-spire:two-tailed-rat-call-for-backup")) <= 1));
+            }
+            foundCall = true;
+            break;
+        }
+
+        Assert.True(foundCall);
+    }
+
     public void BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase()
     {
         var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -2092,8 +2165,8 @@ public sealed class CombatSliceTests
         var content = SpireCombatBehaviorDslCompiler.Compile(package);
 
         Assert.Equal(27, content.Powers.Count);
-        Assert.Equal(59, content.Enemies.Count);
-        Assert.Equal(59, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(60, content.Enemies.Count);
+        Assert.Equal(60, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -5725,6 +5798,7 @@ internal static class Program
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations();
         tests.CombatStateDslSharesValuesAcrossEnemiesAndExposesThemToObservations();
+        tests.BaseTwoTailedRatsUseSharedBehaviorConditionsAndCorrelatedOpeners();
         tests.BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase();
         tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
         tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();

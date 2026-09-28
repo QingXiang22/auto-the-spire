@@ -510,6 +510,36 @@
       "roomType": "monster",
       "isWeak": true,
       "enemyIds": ["base-spire:living-shield", "base-spire:turret-operator"]
+    },
+    {
+      "id": "base-spire:two-tailed-rats-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:two-tailed-rat-scratch-move",
+            "1": "base-spire:two-tailed-rat-disease-bite-move",
+            "2": "base-spire:two-tailed-rat-screech-move"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:two-tailed-rat-disease-bite-move",
+            "1": "base-spire:two-tailed-rat-screech-move",
+            "2": "base-spire:two-tailed-rat-scratch-move"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:two-tailed-rat-screech-move",
+            "1": "base-spire:two-tailed-rat-scratch-move",
+            "2": "base-spire:two-tailed-rat-disease-bite-move"
+          }
+        }
+      ]
     }
   ]
 }

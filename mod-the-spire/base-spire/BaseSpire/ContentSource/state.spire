@@ -14,4 +14,9 @@ package base-spire {
     type = int
     default = 0
   }
+  state TwoTailedRatBackupCalls {
+    scope = combat
+    type = int
+    default = 0
+  }
 }

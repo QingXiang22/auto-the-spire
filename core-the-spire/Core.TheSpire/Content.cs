@@ -465,7 +465,7 @@ internal static class ConditionEvaluation
         _ => throw new ArgumentOutOfRangeException(nameof(comparison))
     };
 }
-public enum EnemyActionMetric { Turn, EnemyIndex, EnemyHp, EnemyMaxHp, EnemyHpPercent, EnemyBlock, PlayerHp, PlayerMaxHp, PlayerHpPercent, PlayerBlock, LivingEnemies, LivingAllies }
+public enum EnemyActionMetric { Turn, EnemyIndex, EnemyHp, EnemyMaxHp, EnemyHpPercent, EnemyBlock, PlayerHp, PlayerMaxHp, PlayerHpPercent, PlayerBlock, LivingEnemies, LivingAllies, EnemyCount }
 public enum EnemyActionSide { Enemy, Player }
 
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
@@ -473,6 +473,7 @@ public enum EnemyActionSide { Enemy, Player }
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyPowerCondition), "power")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnemyVariableCondition), "variable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CombatStateVariableCondition), "combatState")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AllyActionCondition), "allyAction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AllEnemyCondition), "all")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AnyEnemyCondition), "any")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(NotEnemyCondition), "not")]
@@ -1027,6 +1028,11 @@ public sealed record CombatStateVariableCondition(ContentId VariableId, RunCompa
         ConditionEvaluation.Compare(context.GetCombatStateVariable(VariableId), Comparison, Value);
 }
 
+public sealed record AllyActionCondition(ContentId Enemy, ContentId Action) : EnemyActionCondition
+{
+    internal override bool Evaluate(EnemyActionEvaluationContext context) => context.HasAllyAction(Enemy, Action);
+}
+
 /// <summary>Integer state owned by one enemy combat instance.</summary>
 public sealed record EnemyVariableDefinition(ContentId Id, int DefaultInt = 0);
 
@@ -1579,6 +1585,13 @@ public sealed class ContentRegistry
                 if (!Enum.IsDefined(variable.Comparison))
                     throw new InvalidOperationException($"{owner} has an invalid combat state variable comparison.");
                 break;
+            case AllyActionCondition ally when !_enemies.TryGetValue(ally.Enemy, out var allyDefinition)
+                || !allyDefinition.Actions.Any(action => action.Id == ally.Action):
+                throw new InvalidOperationException($"{owner} checks unknown ally action '{ally.Enemy}/{ally.Action}'.");
+            case AllyActionCondition ally:
+                ally.Enemy.Validate();
+                ally.Action.Validate();
+                break;
             case AllEnemyCondition all when all.Conditions.Count == 0:
                 throw new InvalidOperationException($"{owner} has an empty all condition.");
             case AllEnemyCondition all:
@@ -1739,6 +1752,8 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(summon.Count);
                 if (summon.MaximumLivingEnemyCount is { } maximumLivingEnemies)
                     ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumLivingEnemies);
+                if (summon.MaximumEnemyCount is { } maximumEnemies)
+                    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumEnemies);
                 if (summon.StartingAction is { } startingAction
                     && !_enemies[summon.Enemy].Actions.Any(action => action.Id == startingAction))
                     throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with unknown starting action '{startingAction}'.");

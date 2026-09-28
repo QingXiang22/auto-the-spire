@@ -21,6 +21,8 @@ public static class SpireCombatBehaviorDslCompiler
         private readonly DslPackageNode _package;
         private readonly string _packageName;
         private readonly ContentVariantProfile _profile;
+        private IReadOnlyDictionary<string, EnemyActionCondition> _namedEnemyConditions
+            = new Dictionary<string, EnemyActionCondition>(StringComparer.Ordinal);
 
         public Compiler(DslPackageNode package, ContentVariantProfile profile)
         {
@@ -357,9 +359,12 @@ public static class SpireCombatBehaviorDslCompiler
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)
         {
             var properties = Properties(declaration, "Enemy");
-            Only(properties, "hp", "moves", "behavior", "startingPowers", "startingBlock", "variables");
+            Only(properties, "hp", "moves", "behavior", "startingPowers", "startingBlock", "variables", "conditions");
             var variables = properties.TryGetValue("variables", out var variablesNode)
                 ? CompileEnemyVariables(variablesNode) : Array.Empty<EnemyVariableDefinition>();
+            _namedEnemyConditions = properties.TryGetValue("conditions", out var conditionsNode)
+                ? CompileEnemyConditions(conditionsNode)
+                : new Dictionary<string, EnemyActionCondition>(StringComparer.Ordinal);
             var (minHp, maxHp) = HpRange(Required(properties, "hp", declaration.Location));
             var moves = RequireCall(Required(properties, "moves", declaration.Location));
             if (moves.Name != "actions") throw Error(moves.Location, "Enemy moves must use actions(name = effect, ...).");
@@ -539,6 +544,23 @@ public static class SpireCombatBehaviorDslCompiler
             return Array.AsReadOnly(variables);
         }
 
+        private IReadOnlyDictionary<string, EnemyActionCondition> CompileEnemyConditions(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Enemy conditions require a list.");
+            var conditions = new Dictionary<string, EnemyActionCondition>(StringComparer.Ordinal);
+            _namedEnemyConditions = conditions;
+            foreach (var item in list.Items)
+            {
+                var declaration = RequireCall(item);
+                if (declaration.Name != "condition") throw Error(item.Location, "Expected condition(Name, predicate).");
+                CheckShape(declaration, 2);
+                var name = Name(Argument(declaration, 0));
+                if (!conditions.TryAdd(name, CompileEnemyCondition(RequireCall(Argument(declaration, 1)))))
+                    throw Error(declaration.Location, $"Duplicate enemy condition '{name}'.");
+            }
+            return new System.Collections.ObjectModel.ReadOnlyDictionary<string, EnemyActionCondition>(conditions);
+        }
+
         private (DslValueNode Effect, IntentKind? Intent) CompileEnemyAction(DslValueNode source)
         {
             if (source is not DslCallNode { Name: "action" } call) return (source, null);
@@ -678,30 +700,47 @@ public static class SpireCombatBehaviorDslCompiler
 
             if (behavior.Name is "chooseWithoutRepeat" or "chooseWithLimits")
             {
-                var choiceNames = new List<(string Name, int Weight, int? MaxConsecutive, int? MaxUses, int Cooldown)>();
+                var choiceNames = new List<(string Name, int Weight, int? MaxConsecutive, int? MaxUses,
+                    int Cooldown, EnemyActionCondition? Condition)>();
+                var repeatPolicy = behavior.Name == "chooseWithoutRepeat"
+                    ? EnemyActionRepeatPolicy.PreventImmediateRepeat : EnemyActionRepeatPolicy.Allow;
+                var repeatPolicySpecified = false;
                 if (behavior.Name == "chooseWithoutRepeat")
                 {
                     if (behavior.Arguments.Count == 0 || behavior.Arguments.Any(argument => argument.Name is not null))
                         throw Error(behavior.Location, "chooseWithoutRepeat requires positional move names.");
                     choiceNames.AddRange(behavior.Arguments.Select(argument =>
-                        (Name(argument.Value), 1, (int?)null, (int?)null, 0)));
+                        (Name(argument.Value), 1, (int?)null, (int?)null, 0, (EnemyActionCondition?)null)));
                 }
                 else
                 {
                     foreach (var argument in behavior.Arguments)
                     {
-                        if (argument.Name is not null) throw Error(argument.Location, "chooseWithLimits takes candidate(...) expressions.");
+                        if (argument.Name == "repeat")
+                        {
+                            if (repeatPolicySpecified)
+                                throw Error(argument.Location, "chooseWithLimits accepts repeat only once.");
+                            repeatPolicySpecified = true;
+                            repeatPolicy = Name(argument.Value) switch
+                            {
+                                "allow" => EnemyActionRepeatPolicy.Allow,
+                                "preventImmediate" => EnemyActionRepeatPolicy.PreventImmediateRepeat,
+                                var value => throw Error(argument.Location, $"Unknown repeat policy '{value}'.")
+                            };
+                            continue;
+                        }
+                        if (argument.Name is not null) throw Error(argument.Location, "chooseWithLimits accepts repeat=... and candidate(...) expressions.");
                         var candidate = RequireCall(argument.Value);
-                        if (candidate.Name != "candidate" || candidate.Arguments.Count is < 1 or > 5
+                        if (candidate.Name != "candidate" || candidate.Arguments.Count is < 1 or > 6
                             || candidate.Arguments[0].Name is not null)
-                            throw Error(candidate.Location, "Choices use candidate(move, weight=n, maxConsecutive=n, cooldown=n, maxUsesPerCombat=n).");
+                            throw Error(candidate.Location, "Choices use candidate(move, weight=n, maxConsecutive=n, cooldown=n, maxUsesPerCombat=n, when=condition).");
                         var candidateProperties = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
                         foreach (var property in candidate.Arguments.Skip(1))
                         {
-                            if (property.Name is not ("weight" or "maxConsecutive" or "maxUsesPerCombat" or "cooldown")
+                            if (property.Name is not ("weight" or "maxConsecutive" or "maxUsesPerCombat" or "cooldown" or "when")
                                 || !candidateProperties.TryAdd(property.Name, property.Value))
                                 throw Error(property.Location,
-                                    "Candidates accept unique weight, maxConsecutive, cooldown, and maxUsesPerCombat values.");
+                                    "Candidates accept unique weight, maxConsecutive, cooldown, maxUsesPerCombat, and when values.");
                         }
                         var name = Name(candidate.Arguments[0].Value);
                         int? max = candidateProperties.TryGetValue("maxConsecutive", out var maxNode)
@@ -718,23 +757,21 @@ public static class SpireCombatBehaviorDslCompiler
                         var weight = candidateProperties.TryGetValue("weight", out var weightNode)
                             ? Integer(weightNode) : 1;
                         if (weight <= 0) throw Error(weightNode?.Location ?? candidate.Location, "Candidate weight must be positive.");
-                        choiceNames.Add((name, weight, max, maxUses, cooldown));
+                        var condition = candidateProperties.TryGetValue("when", out var conditionNode)
+                            ? CompileEnemyCondition(RequireCall(conditionNode)) : null;
+                        choiceNames.Add((name, weight, max, maxUses, cooldown, condition));
                     }
                 }
-                if (choiceNames.Select(choice => choice.Name).Distinct(StringComparer.Ordinal).Count() != choiceNames.Count)
-                    throw Error(behavior.Location, "Random behavior choices must be unique.");
                 var choices = choiceNames.Select(choice => new EnemyActionChoice(Id(choice.Name), choice.Weight,
                     MaxConsecutiveUses: choice.MaxConsecutive, MaxUsesPerCombat: choice.MaxUses,
-                    Cooldown: choice.Cooldown)).ToArray();
+                    Cooldown: choice.Cooldown, Condition: choice.Condition)).ToArray();
                 if (choices.Length < 2)
                     throw Error(behavior.Location, "A random behavior needs at least two choices.");
-                var transition = new EnemyActionTransition(choices,
-                    behavior.Name == "chooseWithoutRepeat"
-                        ? EnemyActionRepeatPolicy.PreventImmediateRepeat
-                        : EnemyActionRepeatPolicy.Allow);
-                var transitions = choiceNames.Select(choice => choice.Name)
+                var transition = new EnemyActionTransition(choices, repeatPolicy);
+                var actionNames = choiceNames.Select(choice => choice.Name).Distinct(StringComparer.Ordinal).ToArray();
+                var transitions = actionNames
                     .ToDictionary(name => name, _ => transition, StringComparer.Ordinal);
-                var startMove = choiceNames[0].Name;
+                var startMove = actionNames[0];
                 return new BehaviorPlan(startMove,
                     new Dictionary<string, string>(StringComparer.Ordinal), transitions, transition);
             }
@@ -811,6 +848,19 @@ public static class SpireCombatBehaviorDslCompiler
                 CheckShape(condition, 3);
                 return new CombatStateVariableCondition(Id(Name(Argument(condition, 0))),
                     EnumValue<RunComparison>(Argument(condition, 1)), Integer(Argument(condition, 2)));
+            }
+            if (condition.Name == "allyAction")
+            {
+                CheckShape(condition, 2);
+                return new AllyActionCondition(Id(Name(Argument(condition, 0))),
+                    Id(Name(Argument(condition, 1))));
+            }
+            if (condition.Name == "condition")
+            {
+                CheckShape(condition, 1);
+                var name = Name(Argument(condition, 0));
+                return _namedEnemyConditions.TryGetValue(name, out var named)
+                    ? named : throw Error(condition.Location, $"Unknown named enemy condition '{name}'.");
             }
             if (condition.Name is "all" or "any")
             {
@@ -895,6 +945,7 @@ public static class SpireCombatBehaviorDslCompiler
                     (IntentKind.Debuff, 0, 1),
                 ApplyPowerEffect => (IntentKind.Buff, 0, 1),
                 AddCardsToPileEffect => (IntentKind.Debuff, 0, 1),
+                SummonEnemyEffect => (IntentKind.Summon, 0, 1),
                 GainBlockEffect or GainBlockFromCurrentBlockEffect => (IntentKind.Buff, 0, 1),
                 _ => (IntentKind.None, 0, 1)
             };
