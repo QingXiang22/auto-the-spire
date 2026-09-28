@@ -287,7 +287,7 @@ package base-spire {
   }
 
   enemy TwigSlimeMedium {
-    hp = variants(default=range(26, 29), tough=range(27, 29))
+    hp = variants(default=range(26, 28), tough=range(27, 29))
     moves = actions(
       twigMediumClumpShot = attack(variants(default=11, deadly=12), target=player),
       twigMediumStickyShot = addCards(Slimed, pile=discard, target=player)

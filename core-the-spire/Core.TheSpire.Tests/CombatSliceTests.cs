@@ -2514,9 +2514,14 @@ public sealed class CombatSliceTests
             leafSmall.StartingTransition!.RepeatPolicy);
         Assert.True(leafSmall.Actions.All(action => action.Transition == leafSmall.StartingTransition));
         var twigMedium = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.TwigSlimeMedium);
+        Assert.Equal(26, twigMedium.MinHp);
+        Assert.Equal(28, twigMedium.MaxHp);
         Assert.True(twigMedium.Actions.Any(action => action.Id == ContentId.Parse("base-spire:twig-medium-sticky-shot")));
         Assert.True(twigMedium.Actions.SelectMany(action => action.Transition!.Choices)
             .Any(choice => choice.MaxConsecutiveUses == 2));
+        var toughTwigMedium = deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.TwigSlimeMedium);
+        Assert.Equal(27, toughTwigMedium.MinHp);
+        Assert.Equal(29, toughTwigMedium.MaxHp);
 
         var invalid = DslSourceParser.Parse(
             "package broken { enemy Bad { hp = range(1, 2) moves = actions(badHit = attack(1, target=player)) behavior = loop(missing) } }",
