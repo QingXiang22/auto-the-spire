@@ -32,6 +32,11 @@
       "enemyIds": ["base-spire:slumbering-beetle"]
     },
     {
+      "id": "base-spire:hunter-killer-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:hunter-killer"]
+    },
+    {
       "id": "base-spire:exoskeletons-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],

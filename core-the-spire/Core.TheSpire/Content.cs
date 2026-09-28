@@ -994,7 +994,7 @@ public sealed record DamageModifierSubscription(decimal Multiplier,
     ContentId? RequiredSourcePower = null,
     ContentId? MultiplierVariable = null,
     decimal MultiplierPerVariable = 0m);
-public enum PowerRole { None, Strength, Vulnerable, NoDraw, Artifact }
+public enum PowerRole { None, Strength, Dexterity, Vulnerable, NoDraw, Artifact }
 
 public interface IRulePackage
 {
