@@ -194,6 +194,11 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public IReadOnlyList<ContentId> Tags { get; init; } = Array.Empty<ContentId>();
     public IReadOnlyList<ContentId> PoolIds { get; init; } = Array.Empty<ContentId>();
     public IReadOnlyList<CardVariableDefinition> Variables { get; init; } = Array.Empty<CardVariableDefinition>();
+    public ContentId? DamageValueVariable { get; init; }
+    public decimal? DamageValue { get; init; }
+    public decimal? UpgradedDamageValue { get; init; }
+    public ScaledCombatAmount? CalculatedDamageValue { get; init; }
+    public ScaledCombatAmount? UpgradedCalculatedDamageValue { get; init; }
     public EffectNode? OnExhaust { get; init; }
     public EffectNode? UpgradedOnExhaust { get; init; }
     public EffectNode? AfterAutoPostPlay { get; init; }
@@ -211,13 +216,16 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
         || UpgradedAfterAutoPostPlay is not null
         || Variables.Any(variable => variable.UpgradedValue is not null);
 
-    public int ResolveVariable(CardInstance instance, ContentId variableId)
+    public int ResolveVariable(CardInstance instance, ContentId variableId) =>
+        decimal.ToInt32(decimal.Floor(ResolveDecimalVariable(instance, variableId)));
+
+    public decimal ResolveDecimalVariable(CardInstance instance, ContentId variableId)
     {
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
         var variable = Variables.FirstOrDefault(variable => variable.Id == variableId)
             ?? throw new InvalidOperationException($"Card '{Id}' does not declare variable '{variableId}'.");
         var initial = instance.UpgradeLevel > 0 ? variable.UpgradedValue ?? variable.InitialValue : variable.InitialValue;
-        return checked(initial + instance.VariableOffsets.FirstOrDefault(value => value.Variable == variableId).Offset);
+        return initial + instance.VariableOffsets.FirstOrDefault(value => value.Variable == variableId).Offset;
     }
 
     public EffectNode? ResolveEnterEffect(CardInstance instance)
@@ -1125,6 +1133,13 @@ public sealed class ContentRegistry
                 || (card.UpgradedKeywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
                     | CardKeywords.Retain | CardKeywords.Innate)) != 0)
                 throw new InvalidOperationException($"Card '{card.Id}' contains unsupported keywords.");
+            if (card.DamageValueVariable is { } damageVariable
+                && !card.Variables.Any(variable => variable.Id == damageVariable))
+                throw new InvalidOperationException($"Card '{card.Id}' damage value references undeclared variable '{damageVariable}'.");
+            if (card.CalculatedDamageValue is { } calculatedDamage)
+                ValidateCombatCountSource(calculatedDamage.Count, $"Card '{card.Id}' damage value");
+            if (card.UpgradedCalculatedDamageValue is { } upgradedCalculatedDamage)
+                ValidateCombatCountSource(upgradedCalculatedDamage.Count, $"Upgraded card '{card.Id}' damage value");
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
             if (card.UpgradedEffect is { } upgradedEffect)
                 ValidateEffectReferences(upgradedEffect, $"Upgraded card '{card.Id}'");
@@ -1445,6 +1460,13 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has invalid attack damage properties or target.");
                 if (attack.OnFatal is { } attackFatal) ValidateEffectReferences(attackFatal, owner, counts);
                 break;
+            case AttackCardVariableEffect dynamicAttack:
+                if (dynamicAttack.HitCount < 0 || dynamicAttack.Target is not
+                    (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy or TargetSelector.AllOpponents)
+                    || !ValidDamageProperties(dynamicAttack.Properties))
+                    throw new InvalidOperationException($"{owner} has an invalid dynamic card attack.");
+                ValidateCardVariableReference(dynamicAttack.Variable, CardContext.Played, owner);
+                break;
             case ScaledAttackEffect scaled:
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.BaseAmount);
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.AmountPerCount);
@@ -1543,6 +1565,8 @@ public sealed class ContentRegistry
                 if (!Enum.IsDefined(randomCard.From) || !Enum.IsDefined(randomCard.To)
                     || !Enum.IsDefined(randomCard.Filter))
                     throw new InvalidOperationException($"{owner} has an invalid random card selection pile or filter.");
+                if (randomCard.AfterMove is { } afterRandomMove)
+                    ValidateEffectReferences(afterRandomMove, owner, counts);
                 break;
             case RandomlyMoveCardsEffect randomCards:
                 if (!Enum.IsDefined(randomCards.From) || !Enum.IsDefined(randomCards.To)
@@ -1586,6 +1610,11 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an unsupported card variable operation.");
                 if (variable.CalculatedAmount is { } variableAmount)
                     ValidateCombatCountSource(variableAmount.Count, owner, counts);
+                break;
+            case AccumulateCardDamageEffect accumulateDamage:
+                ValidateCardVariableReference(accumulateDamage.Variable, accumulateDamage.TargetCard, owner);
+                if (!Enum.IsDefined(accumulateDamage.SourceCard))
+                    throw new InvalidOperationException($"{owner} reads card damage from an invalid context.");
                 break;
             case ModifyPowerVariableEffect variable:
                 ValidatePowerVariableReference(variable.Power, variable.Variable, owner);
@@ -1717,6 +1746,9 @@ public sealed class ContentRegistry
             case TargetPowerCountSource power when power.Target is not
                 (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy):
                 throw new InvalidOperationException($"{owner} counts power on an invalid target.");
+            case BlockCountSource block when block.Target is not
+                (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy):
+                throw new InvalidOperationException($"{owner} reads block from an invalid target.");
             case SavedCountSource saved:
                 ArgumentException.ThrowIfNullOrWhiteSpace(saved.Name);
                 if (counts?.Contains(saved.Name) != true)
@@ -1747,7 +1779,8 @@ public sealed class ContentRegistry
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;
-            case PileCardCountSource or TargetPowerCountSource or PlayerHpLossCountSource or EnergyXCountSource:
+            case PileCardCountSource or TargetPowerCountSource or BlockCountSource
+                or PlayerHpLossCountSource or EnergyXCountSource:
                 break;
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported combat count source.");

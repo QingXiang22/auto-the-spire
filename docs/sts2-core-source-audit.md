@@ -14,6 +14,8 @@
 
 本轮核对 [`AshenStrike.cs`](../sts2/src/Core/Models/Cards/AshenStrike.cs) 与 [`Bully.cs`](../sts2/src/Core/Models/Cards/Bully.cs) 的 `CalculatedDamageVar`：分别是基础值 6 加每张消耗牌 3（升级 4）、基础值 4 加目标每层易伤 2（升级 3）。共享 `scaledAttack` 在结算时读取计数并走普通伤害管线。[`Dismantle.cs`](../sts2/src/Core/Models/Cards/Dismantle.cs) 对易伤目标攻击两次，否则一次；升级单次基础伤害从 8 到 10。[`NotYet.cs`](../sts2/src/Core/Models/Cards/NotYet.cs) 回复 10（升级 13）、消耗自身，声明 `CanBeGeneratedInCombat=false`。卡牌生成 DSL 尚未实现，这一标记目前保存在定义中供后续生成规则使用。
 
+继续跟踪 [`Thrash.cs`](../sts2/src/Core/Models/Cards/Thrash.cs) 后确认，它选择手牌 Attack 时读取 `CalculatedDamage.Calculate(null)`，否则读取 `Damage.BaseValue` 或 `OstyDamage.BaseValue`，然后应用持有者侧的 `Hook.ModifyDamage` 并消耗该牌。因此伤害展示/效果 AST 不能代替源卡牌的规范动态变量：Bully 在 `null` 目标下贡献 4（不是对当前易伤目标重新计算后的值），Ashen Strike 与 Perfected Strike 使用各自的计算动态变量，Body Slam 使用当前格挡，Fiend Fire 使用每击 7/10 的 Damage 基值。DSL 现用 `damageVariable`、`damageValue` 和升级值字段独立描述该投影；Thrash 则通过共享读取逻辑消费它。
+
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 
 [`SetupStrike.cs`](../sts2/src/Core/Models/Cards/SetupStrike.cs) 先攻击 7（升级 9），再获得 2（升级 3）点临时力量并带 Strike 标签；[`Mangle.cs`](../sts2/src/Core/Models/Cards/Mangle.cs) 先攻击 15（升级 20），再使目标临时失去 10（升级 15）点力量。两者的 Power 同源于 [`TemporaryStrengthPower.cs`](../sts2/src/Core/Models/Powers/TemporaryStrengthPower.cs)：层数变化驱动实际 Strength Power，持有者所在一侧结束后移除临时状态并反向施加其剩余层数。DSL 生命周期操作复用同一核心队列，测试覆盖叠加、升级、永久力量保留、怪物行动后恢复、致死后不施加、层数递减、直接移除与到期的差别、暂停续接及循环引用拒绝。原版 Misery 的 IgnoreNextInstance 复制抑制与完整模型 Hook 顺序仍未复刻。
@@ -38,7 +40,7 @@
 
 [`OneTwoPunchPower.cs`](../sts2/src/Core/Models/Powers/OneTwoPunchPower.cs) 在确定 Attack 执行次数时增加一次并消费一层；FreeAttackPower 在每次执行前消费，因此重复打出可消费两层 Free Attack。DSL `cardRule` 描述这两个不同阶段，效果、生成牌与打出后 Power 每次执行，支付与放置各一次。测试覆盖升级给两张牌各多执行一次、Rage 触发、Anger 生成升级副本、连续两次选牌暂停和暂停期间升级。
 
-[`DrumOfBattle.cs`](../sts2/src/Core/Models/Cards/DrumOfBattle.cs) 打出抽两张，消耗时获得 2 能量（升级 3）；升级不改变普通打出效果。已用通用 onExhaust / upgradedOnExhaust 回调表达，并由自动消耗和批量牌堆移动检查验证。原版全模型 Hook 顺序及消耗回调自身 GeneratePlayCount 修改仍未迁入，当前声明的自身回调每次消耗执行一次。当前卡池迁入 84/87 张，Demonic Shield、Tank、Thrash 尚待处理。
+[`DrumOfBattle.cs`](../sts2/src/Core/Models/Cards/DrumOfBattle.cs) 打出抽两张，消耗时获得 2 能量（升级 3）；升级不改变普通打出效果。已用通用 onExhaust / upgradedOnExhaust 回调表达，并由自动消耗和批量牌堆移动检查验证。原版全模型 Hook 顺序及消耗回调自身 GeneratePlayCount 修改仍未迁入，当前声明的自身回调每次消耗执行一次。当前卡池迁入 85/87 张，Demonic Shield 与 Tank 尚待处理。
 
 ## 已读与当前实现依据
 

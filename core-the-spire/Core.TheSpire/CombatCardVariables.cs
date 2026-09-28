@@ -2,17 +2,18 @@ namespace CoreTheSpire;
 
 public enum CardContext { Played, Selected }
 public enum CardVariableOperation { Add, Set }
-public sealed record CardVariableDefinition(ContentId Id, int InitialValue,
-    int? UpgradedValue = null, bool PreserveOnDowngrade = false);
-public readonly record struct CardVariableOffset(ContentId Variable, int Offset);
+public sealed record CardVariableDefinition(ContentId Id, decimal InitialValue,
+    decimal? UpgradedValue = null, bool PreserveOnDowngrade = false);
+public readonly record struct CardVariableOffset(ContentId Variable, decimal Offset);
 
 internal static class CombatCardVariables
 {
-    internal static CardInstance ResolveCard(GameState state, CardContext context, CardInstance? selected)
+    internal static CardInstance ResolveCard(GameState state, CardContext context, CardInstance? selected,
+        CardInstance? playedOverride = null)
     {
         var instanceId = context switch
         {
-            CardContext.Played => state.CurrentCardPlay?.Card.InstanceId,
+            CardContext.Played => playedOverride?.InstanceId ?? state.CurrentCardPlay?.Card.InstanceId,
             CardContext.Selected => selected?.InstanceId,
             _ => throw new InvalidOperationException("Unsupported card context.")
         };
@@ -21,26 +22,28 @@ internal static class CombatCardVariables
             ?? throw new InvalidOperationException($"Card '{instanceId}' is no longer in combat.");
     }
 
-    internal static int Read(GameState state, ContentId variable, CardContext context, CardInstance? selected)
+    internal static decimal Read(GameState state, ContentId variable, CardContext context, CardInstance? selected,
+        CardInstance? playedOverride = null)
     {
-        var card = ResolveCard(state, context, selected);
-        return state.Definition.Cards[card.CardId].ResolveVariable(card, variable);
+        var card = ResolveCard(state, context, selected, playedOverride);
+        return state.Definition.Cards[card.CardId].ResolveDecimalVariable(card, variable);
     }
 
     internal static void Modify(GameSession session, CardInstance card, ContentId variable,
-        CardVariableOperation operation, int amount)
+        CardVariableOperation operation, decimal amount)
     {
         var state = session.State;
         var definition = state.Definition.Cards[card.CardId];
-        var previous = definition.ResolveVariable(card, variable);
-        var next = operation == CardVariableOperation.Add ? checked(previous + amount) : amount;
+        var previous = definition.ResolveDecimalVariable(card, variable);
+        var next = operation == CardVariableOperation.Add ? previous + amount : amount;
         if (next == previous) return;
         var existingOffset = card.VariableOffsets.FirstOrDefault(value => value.Variable == variable).Offset;
-        var newOffset = checked(existingOffset + checked(next - previous));
+        var newOffset = existingOffset + (next - previous);
         var offsets = card.VariableOffsets.Where(value => value.Variable != variable).ToList();
         if (newOffset != 0) offsets.Add(new(variable, newOffset));
         Replace(state, card, card.WithVariableOffsets(offsets));
-        state.Emit(session, "card_variable_modified", variable.Value, card.InstanceId, checked(next - previous));
+        state.Emit(session, "card_variable_modified", variable.Value, card.InstanceId,
+            decimal.ToInt32(decimal.Truncate(next - previous)), exactAmount: next - previous);
     }
 
     internal static void Downgrade(GameSession session, CardInstance card)
