@@ -227,7 +227,7 @@ package base-spire {
   enemy ShrinkerBeetle {
     hp = variants(default=range(38, 40), tough=range(40, 42))
     moves = actions(
-      shrinkerBeetleShrink = applyPower(Shrink, -1, target=player),
+      shrinkerBeetleShrink = action(effect=applyPower(Shrink, -1, target=player), intent=Buff),
       shrinkerBeetleChomp = attack(variants(default=7, deadly=8), target=player),
       shrinkerBeetleStomp = attack(variants(default=13, deadly=14), target=player)
     )

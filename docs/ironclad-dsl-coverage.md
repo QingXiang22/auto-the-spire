@@ -16,7 +16,7 @@ Corruption, Unrelenting, Expect A Fight, Tear Asunder, Cascade, Havoc, One-Two P
 
 Power DSL gains `cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)` and `consumeOnPlay=true` for a rule that spends one stack when a matching card begins. Cost override applies to fixed costs only. One core resolver supplies observations, legal actions, energy payment, and the snapshotted result pile. Rules compose in active Power order; exact original model Hook ordering remains a separate fidelity task.
 
-Shared Power definitions for Strength, Demon Form, No Draw, Vulnerable, and Weak are loaded from `shared-powers.spire`. Weak's outgoing damage multiplier is now a generic Power DSL property, alongside the existing role, trigger, decrement, and debuff declarations. Self Forming Clay, Shrink, and Well-Laid Plans still have C# registrations or hooks and remain separate migration work.
+Shared Power definitions for Strength, Demon Form, No Draw, Vulnerable, Weak, Self Forming Clay, and Shrink are loaded from `shared-powers.spire`. Outgoing damage multipliers, applier-death cleanup, turn triggers, sequencing, and debuff declarations are represented in DSL. Well-Laid Plans still uses a C# hook for its player choice and remains separate migration work.
 
 Default result placement follows `CardModel.GetResultPileTypeForCardPlay`: Power cards leave combat, Exhaust cards move to exhaust, and other cards move to discard after effects and after-play triggers. The card remains in play while effects or choices are running. A run's permanent deck is unaffected by combat result placement.
 

@@ -281,11 +281,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
             InSharedPool: false, IsFallback: true, IsStackable: true));
         foreach (var potion in BaseSpireContent.LoadPotions()) registry.Register(potion);
         registry.Register(BaseSpireContent.Ironclad());
-        registry.Register(new PowerDefinition(BaseSpireIds.SelfFormingClayPower, PowerTrigger.AfterPlayerTurnStart,
-            TriggerRuleEffect: new SequenceEffect([
-                new GainBlockEffect(3, BaseSpireIds.SelfFormingClayPower),
-                new RemovePowerEffect(BaseSpireIds.SelfFormingClayPower)
-            ])));
         foreach (var power in BaseSpireContent.LoadIroncladPowers()) registry.Register(power);
         foreach (var power in BaseSpireContent.LoadPotionPowers()) registry.Register(power);
         foreach (var power in BaseSpireContent.LoadSharedPowers()) registry.Register(power);
@@ -295,9 +290,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         foreach (var affliction in enemyContent.Afflictions) registry.Register(affliction);
         foreach (var power in enemyContent.Powers) registry.Register(power);
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
-        registry.Register(new PowerDefinition(BaseSpireIds.Shrink,
-            OutgoingDamageMultiplier: 0.7m, RemoveWhenApplierDies: true) { IsDebuff = true });
-
         var ironcladCards = BaseSpireContent.LoadIroncladCards();
         foreach (var card in ironcladCards) registry.Register(card);
         IroncladCardPool.Register(registry);
