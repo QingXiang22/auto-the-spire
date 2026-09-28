@@ -36,6 +36,20 @@ package base-spire {
       cloneCard(count=scaled(0, 1, count=targetPowerAmount(JugglingPower, target=self))))
   }
 
+  power FlameBarrierPower {
+    removeAfterOpponentTurnEnd = true
+    events = [event(type=damage, owner=target, require=[move], exclude=[unpowered],
+      positiveAmount=false, effect=scaledAttack(0, 1,
+        count=targetPowerAmount(FlameBarrierPower, target=self), target=selectedTarget,
+        properties=[unpowered]))]
+  }
+
+  power JuggernautPower {
+    events = [event(type=block, owner=source,
+      effect=randomAttack(scaled(0, 1, count=targetPowerAmount(JuggernautPower, target=self)),
+        properties=[unpowered]))]
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }

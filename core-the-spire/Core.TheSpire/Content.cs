@@ -46,10 +46,11 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     CardType? TriggerCardType = null, bool RemoveAfterPlayerTurnEnd = false,
     int MaxEnergyPerStack = 0, int VulnerableMultiplierPercentPerStack = 0,
     PowerStackAdjustment? OnStackChange = null, PowerStackAdjustment? OnExpire = null,
-    bool RemoveAfterOwnerTurnEnd = false)
+    bool RemoveAfterOwnerTurnEnd = false, bool RemoveAfterOpponentTurnEnd = false)
 {
     public CardPlayRule? CardRule { get; init; }
     public bool PreventEnergyGain { get; init; }
+    public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
 
     public void Validate()
     {
@@ -70,7 +71,20 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 if (adjustment.AmountPerStack == 0)
                     throw new ArgumentException("A lifecycle power adjustment requires a nonzero multiplier.");
             }
+        foreach (var subscription in Events)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(subscription.EventType);
+            if (subscription.Owner is not (GameEventActor.Source or GameEventActor.Target)
+                || (subscription.RequiredProperties & subscription.ExcludedProperties) != 0
+                || !ValidDamageProperties(subscription.RequiredProperties)
+                || !ValidDamageProperties(subscription.ExcludedProperties))
+                throw new ArgumentException("A Power event subscription requires a source/target owner and non-overlapping damage property filters.");
+        }
     }
+
+    private static bool ValidDamageProperties(DamageProperties properties) =>
+        (properties & ~(DamageProperties.Move | DamageProperties.Unpowered
+            | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) == 0;
 }
 public enum CardRarity { None, Basic, Common, Uncommon, Rare, Ancient, Event, Token, Status, Curse, Quest }
 public enum PotionRarity { Common, Uncommon, Rare }
@@ -193,6 +207,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
         return instance.UpgradeLevel > 0 ? Keywords | UpgradedKeywords : Keywords;
     }
+
 }
 
 public sealed record CardInstance
@@ -1106,6 +1121,8 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"Power '{power.Id}' triggers unknown power '{effect}'.");
             if (power.TriggerRuleEffect is { } triggerEffect)
                 ValidateEffectReferences(triggerEffect, $"Power '{power.Id}' trigger");
+            foreach (var subscription in power.Events)
+                ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' event '{subscription.EventType}'");
             foreach (var adjustment in new[] { power.OnStackChange, power.OnExpire })
                 if (adjustment is not null && !_powers.ContainsKey(adjustment.Power))
                     throw new InvalidOperationException($"Power '{power.Id}' references unknown lifecycle power '{adjustment.Power}'.");
@@ -1322,6 +1339,10 @@ public sealed class ContentRegistry
         }
     }
 
+    private static bool ValidDamageProperties(DamageProperties properties) =>
+        (properties & ~(DamageProperties.Move | DamageProperties.Unpowered
+            | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) == 0;
+
     private void ValidateEffectReferences(EffectNode effect, string owner, IReadOnlySet<string>? counts = null)
     {
         switch (effect)
@@ -1348,6 +1369,8 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.AmountPerCount);
                 if (scaled.Target is not (TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} has an invalid scaled attack target.");
+                if (!ValidDamageProperties(scaled.Properties))
+                    throw new InvalidOperationException($"{owner} has invalid scaled attack properties.");
                 ValidateCombatCountSource(scaled.Count, owner, counts);
                 break;
             case ApplyScaledPowerEffect scaledPower:
@@ -1374,6 +1397,14 @@ public sealed class ContentRegistry
                 break;
             case RandomAttackEffect randomAttack:
                 ArgumentOutOfRangeException.ThrowIfNegative(randomAttack.Amount);
+                if (!ValidDamageProperties(randomAttack.Properties))
+                    throw new InvalidOperationException($"{owner} has invalid random attack properties.");
+                if (randomAttack.CalculatedAmount is { } calculatedRandomAttack)
+                {
+                    ArgumentOutOfRangeException.ThrowIfNegative(calculatedRandomAttack.BaseAmount);
+                    ArgumentOutOfRangeException.ThrowIfNegative(calculatedRandomAttack.PerCount);
+                    ValidateCombatCountSource(calculatedRandomAttack.Count, owner, counts);
+                }
                 break;
             case GainBlockEffect gainBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlock.Amount);

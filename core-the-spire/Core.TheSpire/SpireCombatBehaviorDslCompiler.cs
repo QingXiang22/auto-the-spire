@@ -9,27 +9,36 @@ public sealed record SpireCombatBehaviorContent(
 /// <summary>Compiles declarative Power and enemy behavior into the existing combat definitions.</summary>
 public static class SpireCombatBehaviorDslCompiler
 {
-    private sealed class Compiler(DslPackageNode package, ContentVariantProfile profile)
+    private sealed class Compiler
     {
         private sealed record BehaviorPlan(string StartMove,
             IReadOnlyDictionary<string, string> NextMoves,
             IReadOnlyDictionary<string, EnemyActionTransition> Transitions,
             EnemyActionTransition? StartingTransition = null);
 
-        private readonly string _packageName = package.Name;
+        private readonly DslPackageNode _package;
+        private readonly string _packageName;
+        private readonly ContentVariantProfile _profile;
+
+        public Compiler(DslPackageNode package, ContentVariantProfile profile)
+        {
+            _package = package;
+            _packageName = package.Name;
+            _profile = profile;
+        }
 
         public SpireCombatBehaviorContent Compile()
         {
-            var declarations = package.Members.OfType<DslDeclarationNode>().ToArray();
-            if (declarations.Length != package.Members.Count)
-                throw Error(package.Location, "A combat behavior package can contain declarations only.");
+            var declarations = _package.Members.OfType<DslDeclarationNode>().ToArray();
+            if (declarations.Length != _package.Members.Count)
+                throw Error(_package.Location, "A combat behavior package can contain declarations only.");
 
             var powers = declarations.Where(declaration => declaration.Kind == "power")
                 .Select(CompilePower).ToArray();
             var enemies = declarations.Where(declaration => declaration.Kind == "enemy")
                 .Select(CompileEnemy).ToArray();
             if (powers.Length + enemies.Length != declarations.Length)
-                throw Error(package.Location, "Combat behavior packages support power and enemy declarations only.");
+                throw Error(_package.Location, "Combat behavior packages support power and enemy declarations only.");
             EnsureUnique(powers.Select(power => power.Id), "Power");
             EnsureUnique(enemies.Select(enemy => enemy.Id), "Enemy");
             EnsureUnique(enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id), "Enemy action");
@@ -42,7 +51,7 @@ public static class SpireCombatBehaviorDslCompiler
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
                 "role", "whenCardType", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
-                "cardRule", "preventEnergyGain");
+                "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -58,7 +67,7 @@ public static class SpireCombatBehaviorDslCompiler
                         throw Error(Argument(call, 1).Location, "grantPower requires sourceStacks as its amount.");
                     triggerPower = Id(Name(Argument(call, 0)));
                 }
-                else triggerRuleEffect = SpireCombatDslCompiler.CompileEffect(package, effectNode, profile);
+                else triggerRuleEffect = SpireCombatDslCompiler.CompileEffect(_package, effectNode, _profile);
             }
             var skipEnemy = OptionalBoolean(properties, "skipFirstWhenAppliedToEnemy");
             var skipPlayer = OptionalBoolean(properties, "skipFirstWhenAppliedToPlayer");
@@ -82,11 +91,64 @@ public static class SpireCombatBehaviorDslCompiler
                     ? CompileStackAdjustment(stackChangeNode, "stackDelta", "negativeStackDelta") : null,
                 OnExpire: properties.TryGetValue("onExpire", out var expireNode)
                     ? CompileStackAdjustment(expireNode, "sourceStacks", "negativeSourceStacks") : null,
-                RemoveAfterOwnerTurnEnd: OptionalBoolean(properties, "removeAfterOwnerTurnEnd"))
+                RemoveAfterOwnerTurnEnd: OptionalBoolean(properties, "removeAfterOwnerTurnEnd"),
+                RemoveAfterOpponentTurnEnd: OptionalBoolean(properties, "removeAfterOpponentTurnEnd"))
             {
                 CardRule = properties.TryGetValue("cardRule", out var cardRuleNode) ? CompileCardRule(cardRuleNode) : null,
-                PreventEnergyGain = OptionalBoolean(properties, "preventEnergyGain")
+                PreventEnergyGain = OptionalBoolean(properties, "preventEnergyGain"),
+                Events = properties.TryGetValue("events", out var eventsNode)
+                    ? CompilePowerEvents(eventsNode) : Array.Empty<PowerEventSubscription>()
             };
+        }
+
+        private IReadOnlyList<PowerEventSubscription> CompilePowerEvents(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Power events must be a list.");
+            return Array.AsReadOnly(list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "event" || call.Arguments.Any(argument => argument.Name is null))
+                    throw Error(call.Location, "Power event entries require event(type=..., owner=..., effect=...).");
+                var arguments = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+                foreach (var argument in call.Arguments)
+                {
+                    if (argument.Name is not ("type" or "owner" or "effect" or "require"
+                        or "exclude" or "positiveAmount"))
+                        throw Error(argument.Location, $"Unknown Power event argument '{argument.Name}'.");
+                    if (!arguments.TryAdd(argument.Name!, argument.Value))
+                        throw Error(argument.Location, $"Duplicate Power event argument '{argument.Name}'.");
+                }
+                var eventType = Name(Required(arguments, "type", call.Location));
+                var owner = EnumValue<GameEventActor>(Required(arguments, "owner", call.Location));
+                var effect = SpireCombatDslCompiler.CompileEffect(_package,
+                    Required(arguments, "effect", call.Location), _profile);
+                var required = arguments.TryGetValue("require", out var requiredNode)
+                    ? ParseDamageProperties(requiredNode) : DamageProperties.None;
+                var excluded = arguments.TryGetValue("exclude", out var excludedNode)
+                    ? ParseDamageProperties(excludedNode) : DamageProperties.None;
+                var positive = !arguments.TryGetValue("positiveAmount", out var positiveNode)
+                    || positiveNode is DslBooleanNode { Value: true };
+                if (positiveNode is not null and not DslBooleanNode)
+                    throw Error(positiveNode.Location, "Power event positiveAmount must be a boolean.");
+                if (owner is not (GameEventActor.Source or GameEventActor.Target))
+                    throw Error(Required(arguments, "owner", call.Location).Location,
+                        "A Power event owner must be source or target.");
+                return new PowerEventSubscription(eventType, owner, effect, required, excluded, positive);
+            }).ToArray());
+        }
+
+        private static DamageProperties ParseDamageProperties(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Damage properties must be a list.");
+            var properties = DamageProperties.None;
+            foreach (var item in list.Items)
+            {
+                var property = EnumValue<DamageProperties>(item);
+                if (property == DamageProperties.None || (properties & property) != 0)
+                    throw Error(item.Location, "Damage properties must be unique nonzero flags.");
+                properties |= property;
+            }
+            return properties;
         }
 
         private static CardPlayRule CompileCardRule(DslValueNode node)
@@ -166,7 +228,7 @@ public static class SpireCombatBehaviorDslCompiler
             {
                 var moveName = moveNames[i];
                 var sourceEffect = moveByName[moveName];
-                var effect = SpireCombatDslCompiler.CompileEffect(package, sourceEffect, profile);
+                var effect = SpireCombatDslCompiler.CompileEffect(_package, sourceEffect, _profile);
                 var (intent, damage) = DescribeIntent(effect);
                 var transition = behaviorPlan.Transitions.TryGetValue(moveName, out var moveTransition)
                     ? moveTransition
@@ -294,7 +356,7 @@ public static class SpireCombatBehaviorDslCompiler
             var allowed = new HashSet<string>(["default", "deadly", "tough", "deadlyTough"], StringComparer.Ordinal);
             if (choices.Keys.Any(key => !allowed.Contains(key)))
                 throw Error(variants.Location, "Unknown difficulty variant.");
-            var preferred = profile switch
+            var preferred = _profile switch
             {
                 { DeadlyEnemies: true, ToughEnemies: true } => new[] { "deadlyTough", "deadly", "tough", "default" },
                 { DeadlyEnemies: true } => ["deadly", "default"],

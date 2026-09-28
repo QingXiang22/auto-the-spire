@@ -215,9 +215,10 @@ internal sealed class GameState
     internal int PendingPowerIndex { get; set; }
     public IReadOnlyList<GameEvent> Events => _eventView;
 
-    internal void Emit(GameSession session, string type, string source, string target, int amount)
+    internal void Emit(GameSession session, string type, string source, string target, int amount,
+        DamageProperties properties = DamageProperties.None)
     {
-        var gameEvent = new GameEvent(_events.Count, type, source, target, amount);
+        var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties);
         _events.Add(gameEvent);
         if (type == "card_exhausted" && source == Player.Id)
             LastPlayerCardExhaustTurn = Turn;
@@ -226,7 +227,7 @@ internal sealed class GameState
             LastPlayerHpLossTurn = Turn;
             PlayerHpLossCount = checked(PlayerHpLossCount + 1);
         }
-        List<(EntityState Owner, EffectNode Effect)>? effects = null;
+        List<(EntityState Owner, EffectNode Effect, EntityState? Target)>? effects = null;
         foreach (var hook in Definition.Hooks)
         {
             var context = new RuleHookContext(session, hook.Id);
@@ -241,13 +242,30 @@ internal sealed class GameState
                     GameEventActor.Player => Player.Creature,
                     _ => throw new ArgumentOutOfRangeException(nameof(eventEffect.Actor))
                 };
-                (effects ??= []).Add((owner, eventEffect.Effect));
+                (effects ??= []).Add((owner, eventEffect.Effect, null));
+            }
+        }
+        foreach (var actor in Enemies.Select(enemy => enemy.Creature).Append(Player.Creature))
+        foreach (var (powerId, powerAmount) in actor.Powers.ToArray())
+        {
+            if (powerAmount <= 0) continue;
+            foreach (var subscription in Definition.Powers[powerId].Events)
+            {
+                if (!StringComparer.Ordinal.Equals(subscription.EventType, type)
+                    || (subscription.RequiresPositiveAmount && gameEvent.Amount <= 0)
+                    || (gameEvent.Properties & subscription.RequiredProperties) != subscription.RequiredProperties
+                    || (gameEvent.Properties & subscription.ExcludedProperties) != 0)
+                    continue;
+                var ownerId = subscription.Owner == GameEventActor.Source ? source : target;
+                if (ownerId != actor.Id) continue;
+                var otherId = subscription.Owner == GameEventActor.Source ? target : source;
+                (effects ??= []).Add((actor, new PowerEventEffect(powerId, subscription.Effect), FindCreature(otherId)));
             }
         }
         if (effects is { Count: > 0 })
         {
             for (var i = effects.Count - 1; i >= 0; i--)
-                PendingEffects.Add(new(effects[i].Owner, effects[i].Effect, null, null));
+                PendingEffects.Add(new(effects[i].Owner, effects[i].Effect, effects[i].Target, null));
         }
     }
 
@@ -549,7 +567,8 @@ internal sealed class GameState
     };
 }
 
-public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
+public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
+    DamageProperties Properties = DamageProperties.None);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {
@@ -636,6 +655,7 @@ internal enum EndTurnResolutionStage
     FlushHand,
     AfterFlushHooks,
     PlayerTurnEndPowers,
+    EnemyPlayerSideEndPowers,
     ExpirePlayerPowers,
     EnemyAction,
     ApplyEnemyActionPower,
