@@ -184,6 +184,11 @@
       "enemyIds": ["base-spire:cubex-construct"]
     },
     {
+      "id": "base-spire:vine-shambler-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:vine-shambler"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

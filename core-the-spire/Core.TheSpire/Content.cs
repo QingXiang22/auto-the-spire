@@ -31,7 +31,8 @@ public sealed record BlockGainModifierSubscription(int Multiplier = 2,
     DamageProperties ExcludedProperties = DamageProperties.None,
     int PriorEntriesPerPowerStack = 1, bool PlayerOnly = false);
 public sealed record CardPlayRule(CardType Type, int? Cost = null, CardPile? ResultPile = null,
-    bool ConsumeOnPlay = false, int ExtraPlays = 0, bool ConsumeOnPlayCount = false)
+    bool ConsumeOnPlay = false, int ExtraPlays = 0, bool ConsumeOnPlayCount = false,
+    int CostDelta = 0)
 {
     public void Validate()
     {
@@ -40,7 +41,7 @@ public sealed record CardPlayRule(CardType Type, int? Cost = null, CardPile? Res
             throw new ArgumentException("A card-play rule requires a valid type, nonnegative cost, and discard/exhaust result pile.");
         if (ConsumeOnPlayCount && ExtraPlays == 0)
             throw new ArgumentException("Consuming a stack during play-count resolution requires extra plays.");
-        if (Cost is null && ResultPile is null && !ConsumeOnPlay && ExtraPlays == 0)
+        if (Cost is null && CostDelta == 0 && ResultPile is null && !ConsumeOnPlay && ExtraPlays == 0)
             throw new ArgumentException("A card-play rule must modify a cost, result pile, or consume a stack.");
     }
 }
