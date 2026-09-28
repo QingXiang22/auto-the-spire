@@ -452,4 +452,28 @@ package base-spire {
     )
     behavior = cycle(louseProgenitorWeb, louseProgenitorCurlAndGrow, louseProgenitorPounce)
   }
+
+  enemy CubexConstruct {
+    hp = variants(default=range(65, 65), tough=range(70, 70))
+    startingBlock = 13
+    startingPowers = [power(Artifact, 1)]
+    moves = actions(
+      cubexChargeUp = applyPower(Strength, 2, target=self),
+      cubexRepeaterBlast = sequence(
+        attack(variants(default=7, deadly=8), target=player),
+        applyPower(Strength, 2, target=self)
+      ),
+      cubexRepeaterBlastAgain = sequence(
+        attack(variants(default=7, deadly=8), target=player),
+        applyPower(Strength, 2, target=self)
+      ),
+      cubexExpelBlast = repeat(2, attack(variants(default=5, deadly=6), target=player))
+    )
+    behavior = graph(start=cubexChargeUp, edges=[
+      edge(cubexChargeUp, cubexRepeaterBlast),
+      edge(cubexRepeaterBlast, cubexRepeaterBlastAgain),
+      edge(cubexRepeaterBlastAgain, cubexExpelBlast),
+      edge(cubexExpelBlast, cubexRepeaterBlast)
+    ])
+  }
 }
