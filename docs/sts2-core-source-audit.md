@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；23 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；24 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -29,6 +29,8 @@
 [`SnappingJaxfruit.cs`](../sts2/src/Core/Models/Monsters/SnappingJaxfruit.cs) 每回合造成 3/4 点伤害后获得 2 力量。它与 [`Flyconid.cs`](../sts2/src/Core/Models/Monsters/Flyconid.cs) 组成蘑菇遭遇；Flyconid 开场只在 Frail Spores（权重 2）和 Smash（权重 1）之间选择，之后从 Vulnerable Spores、Frail Spores、Smash 按 3:2:3 加权选择且不连续重复。新增 `startWithChoice(choice, then=behavior)` 将两个阶段统一成通用转移图，未对怪物单独写运行时分支。
 
 [`Chomper.cs`](../sts2/src/Core/Models/Monsters/Chomper.cs) 以 2 层 Artifact 入场，循环两段 8/9 点攻击与向弃牌堆添加 3 张 Dazed。`ChompersNormal` 由两只 Chomper 组成，后位怪物以 Screech 开场。为使 Artifact 可复用，Power 定义增加 `isDebuff` 元数据与通用 `Artifact` 角色：正层数的负面 Power 被抵消时消耗一层 Artifact。Weak、Vulnerable、Frail、Shrink 标记为可抵消负面 Power。
+
+[`Byrdonis.cs`](../sts2/src/Core/Models/Monsters/Byrdonis.cs) 的 HP 为 90（Tough 81–84），以 Swoop 17/19 开场，之后循环 Peck 三次（3/4）与 Swoop；入场获得一层 Territorial Power，并在每个敌方回合结束按层数增加 Strength。其 Elite 遭遇也已登记。
 
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 

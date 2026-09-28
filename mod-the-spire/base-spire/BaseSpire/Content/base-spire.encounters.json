@@ -118,6 +118,11 @@
       "tags": ["base-spire:chomper"]
     },
     {
+      "id": "base-spire:byrdonis-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:byrdonis"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
