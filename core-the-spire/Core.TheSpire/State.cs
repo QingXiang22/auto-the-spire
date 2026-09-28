@@ -153,6 +153,7 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
     public int ActionIndex { get; set; }
+    public bool SkipNextAction { get; set; }
     public ContentId? StartingActionOverride { get; set; }
     public ContentId? LastActionId { get; private set; }
     public int ConsecutiveActionCount { get; private set; }

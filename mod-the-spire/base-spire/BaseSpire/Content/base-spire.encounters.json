@@ -2,6 +2,27 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:corpse-slugs-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "formations": [
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-whip-slap", "1": "base-spire:corpse-slug-glomp" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-glomp", "1": "base-spire:corpse-slug-goop" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-goop", "1": "base-spire:corpse-slug-whip-slap" } }
+      ],
+      "tags": ["base-spire:slugs"]
+    },
+    {
+      "id": "base-spire:corpse-slugs-normal",
+      "roomType": "monster",
+      "formations": [
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-whip-slap", "1": "base-spire:corpse-slug-glomp", "2": "base-spire:corpse-slug-goop" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-glomp", "1": "base-spire:corpse-slug-goop", "2": "base-spire:corpse-slug-whip-slap" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-goop", "1": "base-spire:corpse-slug-whip-slap", "2": "base-spire:corpse-slug-glomp" } }
+      ],
+      "tags": ["base-spire:slugs"]
+    },
+    {
       "id": "base-spire:bygone-effigy-elite",
       "roomType": "elite",
       "enemyIds": ["base-spire:bygone-effigy"]

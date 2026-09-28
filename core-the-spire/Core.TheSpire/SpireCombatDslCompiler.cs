@@ -267,6 +267,9 @@ public static class SpireCombatDslCompiler
                     var startingActionNode = OptionalArgument(call, "startingAction");
                     return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount,
                         startingActionNode is null ? null : ReferenceId(startingActionNode));
+                case "stun":
+                    CheckShape(call, 0, 0, "target");
+                    return new StunEnemyEffect(OptionalTarget(call, "target", TargetSelector.Self));
                 case "generateCards":
                     CheckShape(call, 0, 0, "count", "pile", "upgraded", "type", "distinct", "cost");
                     var generationCount = RequiredArgument(call, "count");
