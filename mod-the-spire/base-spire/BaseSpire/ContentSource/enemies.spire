@@ -355,7 +355,7 @@ package base-spire {
   }
 
   enemy Chomper {
-    hp = variants(default=range(63, 67), tough=range(60, 64))
+    hp = variants(default=range(60, 64), tough=range(63, 67))
     startingPowers = [power(Artifact, 2)]
     moves = actions(
       chomperClamp = repeat(2, attack(variants(default=8, deadly=9), target=player)),
