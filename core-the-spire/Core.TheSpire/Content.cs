@@ -25,6 +25,17 @@ public readonly record struct ContentId(string Value)
 
 public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerStackAdjustment(ContentId Power, int AmountPerStack);
+public sealed record CardPlayRule(CardType Type, int? Cost = null, CardPile? ResultPile = null,
+    bool ConsumeOnPlay = false)
+{
+    public void Validate()
+    {
+        if (!Enum.IsDefined(Type) || Cost is < 0 || ResultPile is not (null or CardPile.Discard or CardPile.Exhaust))
+            throw new ArgumentException("A card-play rule requires a valid type, nonnegative cost, and discard/exhaust result pile.");
+        if (Cost is null && ResultPile is null && !ConsumeOnPlay)
+            throw new ArgumentException("A card-play rule must modify a cost, result pile, or consume a stack.");
+    }
+}
 public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerTrigger.None, ContentId? TriggerEffect = null,
     bool SkipFirstTriggerWhenAppliedToEnemy = false, PowerRole Role = PowerRole.None, bool DecrementOnTrigger = false,
     bool SkipFirstTriggerWhenAppliedToPlayer = false, decimal? OutgoingDamageMultiplier = null,
@@ -34,9 +45,13 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     PowerStackAdjustment? OnStackChange = null, PowerStackAdjustment? OnExpire = null,
     bool RemoveAfterOwnerTurnEnd = false)
 {
+    public CardPlayRule? CardRule { get; init; }
+    public bool PreventEnergyGain { get; init; }
+
     public void Validate()
     {
         Id.Validate();
+        CardRule?.Validate();
         if (TriggerEffect is { } triggerEffect) triggerEffect.Validate();
         if (!Enum.IsDefined(Trigger) || !Enum.IsDefined(Role))
             throw new ArgumentException("Power trigger and role must be recognized values.");
@@ -1339,6 +1354,15 @@ public sealed class ContentRegistry
             case GeneratePotionEffect generatePotion:
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(generatePotion.Count);
                 break;
+            case ModifyEnergyEffect { CalculatedAmount: { } amount }:
+                ValidateCombatCountSource(amount.Count, owner);
+                break;
+            case RepeatForCountEffect repeat:
+                ArgumentOutOfRangeException.ThrowIfNegative(repeat.BaseCount);
+                ArgumentOutOfRangeException.ThrowIfNegative(repeat.PerCount);
+                ValidateCombatCountSource(repeat.Count, owner);
+                ValidateEffectReferences(repeat.Effect, owner);
+                break;
             case RepeatForXCostEffect repeatForX:
                 ValidateEffectReferences(repeatForX.Effect, owner);
                 break;
@@ -1378,12 +1402,14 @@ public sealed class ContentRegistry
         {
             case PileCardCountSource pile when !Enum.IsDefined(pile.Pile):
                 throw new InvalidOperationException($"{owner} counts an invalid card pile.");
+            case PileCardCountSource pile when pile.Type is { } type && !Enum.IsDefined(type):
+                throw new InvalidOperationException($"{owner} counts an invalid card type.");
             case TargetPowerCountSource power when !_powers.ContainsKey(power.Power):
                 throw new InvalidOperationException($"{owner} counts unknown power '{power.Power}'.");
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;
-            case PileCardCountSource or TargetPowerCountSource:
+            case PileCardCountSource or TargetPowerCountSource or PlayerHpLossCountSource:
                 break;
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported combat count source.");

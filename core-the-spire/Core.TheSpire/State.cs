@@ -170,6 +170,7 @@ internal sealed class GameState
     public int Turn { get; internal set; } = 1;
     internal int LastPlayerCardExhaustTurn { get; private set; }
     internal int LastPlayerHpLossTurn { get; private set; }
+    internal int PlayerHpLossCount { get; private set; }
     public int EnemyActionIndex
     {
         get => Enemies[0].ActionIndex;
@@ -206,7 +207,10 @@ internal sealed class GameState
         if (type == "card_exhausted" && source == Player.Id)
             LastPlayerCardExhaustTurn = Turn;
         if ((type is "damage" or "hp_loss") && target == Player.Id && amount > 0)
+        {
             LastPlayerHpLossTurn = Turn;
+            PlayerHpLossCount = checked(PlayerHpLossCount + 1);
+        }
         List<(EntityState Owner, EffectNode Effect)>? effects = null;
         foreach (var hook in Definition.Hooks)
         {
@@ -470,7 +474,7 @@ public sealed record GameEvent(int Sequence, string Type, string Source, string 
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState;
 internal sealed record PendingCardPlay(CardInstance Card, int XEnergy, EntityState? Target = null,
-    bool AfterPlayedDispatched = false);
+    bool AfterPlayedDispatched = false, CardPile? ResultPile = CardPile.Discard);
 internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
     EntityState owner, EntityState? target, CardInstance? selectedCard) : PendingCardSelectionState
 {
@@ -514,6 +518,7 @@ public sealed record CombatObservation(int Turn, int PlayerHp, int PlayerMaxHp, 
     PendingCardSelectionView? PendingCardSelection)
 {
     public int MaxEnergy { get; init; }
+    public IReadOnlyList<CardPlayPreview> HandPlayPreviews { get; init; } = Array.Empty<CardPlayPreview>();
 }
 
 public abstract record PlayerAction;

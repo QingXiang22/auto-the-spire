@@ -56,6 +56,29 @@ enemy DampCultist {
 
 The move names produce stable action IDs. `intent` and displayed damage are derived from the effect tree when the compiler can determine them. This keeps attack intent damage aligned with the action executed by the core.
 
+## Card-play rules and calculated values
+
+```text
+power CorruptionPower {
+  cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)
+}
+power FreeAttackPower {
+  cardRule = cardRule(type=attack, cost=0, consumeOnPlay=true)
+}
+power NoEnergyGainPower {
+  preventEnergyGain = true
+  removeAfterOwnerTurnEnd = true
+}
+```
+
+A card rule matches a definition type and can override its fixed energy cost, change its result pile to `discard` or `exhaust`, or consume one Power stack before play. At least one operation is required; unknown arguments and negative costs fail during compilation. Active rules compose in Power insertion order, with later overrides winning. Exact original Hook ordering is still pending. Cost overrides do not change X-cost payment: an X card captures and spends available energy, but its matching consume rule still runs.
+
+The same resolver produces `CombatObservation.HandPlayPreviews`, legal actions, and payment. It snapshots the destination before effects begin. The default is discard for ordinary cards, exhaust for Exhaust cards, and no combat pile for Power cards. After effects and after-play triggers complete, the instance leaves the play pile immediately. A suspended card remains in play until its continuation completes; changes to Powers during the choice do not recalculate its destination.
+
+`modifyEnergy(scaled(base, perCount, count=...))` calculates one amount and performs one energy command. `pileCount(hand, type=attack)` filters cards by definition type; Expect A Fight uses it before applying the gain lock. Positive gains respect `preventEnergyGain`; spending and next-turn energy reset remain available. Numeric `modifyEnergy(n)` stays supported.
+
+`repeatForCount(base, perCount, count=..., effect=...)` captures its count once and schedules that many effects. `playerHpLossCount()` reads positive unblocked HP-loss events across the combat, including direct HP loss and excluding fully blocked attacks. Tear Asunder uses it for hit count. The core stores a combat summary rather than scanning the event log during a play. This first calculated-value slice supports `scaled` on energy and counted repetition; full arithmetic and calculated parameters for every primitive remain future DSL work.
+
 ## Combat potion contract
 
 Potions use the same effect compiler and execution queue as cards and Powers:
@@ -83,8 +106,10 @@ package base-spire {
 
 ## Current source of truth
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 55 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 53 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
-- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers the Pyre maximum-energy and Cruelty vulnerable-damage modifiers, and the Setup Strike/Mangle Power lifecycles.
+The remaining Ironclad source semantics and shared DSL work are tracked in [ironclad-dsl-coverage.md](ironclad-dsl-coverage.md). Card-play rules and counted composition extend this language through the existing executor; they do not add a second scheduler.
+
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 59 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 57 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
+- [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers the Pyre maximum-energy and Cruelty vulnerable-damage modifiers, the Setup Strike/Mangle Power lifecycles, and Corruption/Free Attack/No Energy Gain card and resource rules.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - [`potions.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire) declares Fire, Block, Strength, Blessing of the Forge, Beetle Juice, and Flex Potion; [`potion-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potion-powers.spire) declares Flex Potion's temporary Strength lifecycle.
 - `base-spire.encounters.json` still declares encounter lineups and the Nibbit slot-specific opening actions. Encounter authoring is a separate migration step.
