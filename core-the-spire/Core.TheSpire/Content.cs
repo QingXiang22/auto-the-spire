@@ -658,8 +658,6 @@ public sealed class EncounterDefinition
         {
             if (slots.Length != 0)
                 throw new ArgumentException("An encounter must use fixed slots or complete formations, not both.", nameof(enemySlots));
-            if (copiedFormations.Select(formation => formation.EnemyIds.Count).Distinct().Count() != 1)
-                throw new ArgumentException("Encounter formation choices must contain the same number of enemies.", nameof(formations));
             long totalWeight = 0;
             try
             {
@@ -684,7 +682,8 @@ public sealed class EncounterDefinition
             : new Dictionary<int, ContentId>(startingActionsByEnemyIndex);
         foreach (var (enemyIndex, actionId) in startingActions)
         {
-            var slotCount = copiedFormations.Length > 0 ? copiedFormations[0].EnemyIds.Count : slots.Length;
+            var slotCount = copiedFormations.Length > 0
+                ? copiedFormations.Max(formation => formation.EnemySlots.Count) : slots.Length;
             if (enemyIndex < 0 || enemyIndex >= slotCount)
                 throw new ArgumentOutOfRangeException(nameof(startingActionsByEnemyIndex), "Starting action index must refer to an enemy in this encounter.");
             actionId.Validate();
@@ -715,7 +714,8 @@ public sealed class EncounterDefinition
     public IReadOnlyList<EncounterEnemySlot> EnemySlots { get; }
     public IReadOnlyList<EncounterFormationChoice> Formations { get; }
     public IReadOnlyList<ContentId> PossibleEnemyIds => Formations.Count > 0
-        ? Array.AsReadOnly(Formations.SelectMany(formation => formation.EnemyIds).Distinct().ToArray())
+        ? Array.AsReadOnly(Formations.SelectMany(formation => formation.EnemySlots)
+            .SelectMany(slot => slot.EnemyChoices).Distinct().ToArray())
         : Array.AsReadOnly(EnemySlots.SelectMany(slot => slot.EnemyChoices).Distinct().ToArray());
     public bool IsWeak { get; }
     public bool ShouldGiveRewards { get; }
@@ -757,15 +757,19 @@ public sealed class EncounterDefinition
             }
             if (selectedFormation is null)
                 throw new InvalidOperationException($"Encounter '{Id}' formation selection exceeded its total weight.");
-            return Array.AsReadOnly(selectedFormation.EnemyIds.Select((enemyId, index) =>
-                new EncounterEnemySelection(enemyId,
-                    StartingActionsByEnemyIndex.TryGetValue(index, out var overrideId) ? overrideId : null)).ToArray());
+            return SelectSlots(selectedFormation.EnemySlots, random);
         }
+        return SelectSlots(EnemySlots, random);
+    }
+
+    private IReadOnlyList<EncounterEnemySelection> SelectSlots(IReadOnlyList<EncounterEnemySlot> slots,
+        SeededRandom random)
+    {
         var selectedByGroup = new Dictionary<ContentId, HashSet<ContentId>>();
-        var selected = new EncounterEnemySelection[EnemySlots.Count];
-        for (var i = 0; i < EnemySlots.Count; i++)
+        var selected = new EncounterEnemySelection[slots.Count];
+        for (var i = 0; i < slots.Count; i++)
         {
-            var slot = EnemySlots[i];
+            var slot = slots[i];
             var candidates = slot.EnemyChoices;
             HashSet<ContentId>? groupSelection = null;
             if (slot.UniqueChoiceGroup is { } group)
@@ -786,7 +790,8 @@ public sealed class EncounterDefinition
     }
 
     internal IReadOnlyList<ContentId> GetPossibleEnemyIdsAtSlot(int index) => Formations.Count > 0
-        ? Array.AsReadOnly(Formations.Select(formation => formation.EnemyIds[index]).Distinct().ToArray())
+        ? Array.AsReadOnly(Formations.Where(formation => index < formation.EnemySlots.Count)
+            .SelectMany(formation => formation.EnemySlots[index].EnemyChoices).Distinct().ToArray())
         : EnemySlots[index].EnemyChoices;
 
     private static EncounterEnemySlot[] ToFixedSlots(IEnumerable<ContentId> enemyIds)
@@ -795,7 +800,7 @@ public sealed class EncounterDefinition
         return enemyIds.Select(EncounterEnemySlot.Fixed).ToArray();
     }
 
-    private static void ValidateChoiceGroups(IReadOnlyList<EncounterEnemySlot> slots)
+    internal static void ValidateChoiceGroups(IReadOnlyList<EncounterEnemySlot> slots)
     {
         foreach (var group in slots.Where(slot => slot.UniqueChoiceGroup is not null)
             .GroupBy(slot => slot.UniqueChoiceGroup!.Value))
@@ -959,7 +964,9 @@ public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode
 public sealed record DamageModifierSubscription(decimal Multiplier,
     DamageProperties RequiredProperties = DamageProperties.None,
     DamageProperties ExcludedProperties = DamageProperties.None,
-    ContentId? RequiredSourcePower = null);
+    ContentId? RequiredSourcePower = null,
+    ContentId? MultiplierVariable = null,
+    decimal MultiplierPerVariable = 0m);
 public enum PowerRole { None, Strength, Vulnerable, NoDraw, Artifact }
 
 public interface IRulePackage
@@ -1255,8 +1262,13 @@ public sealed class ContentRegistry
             foreach (var subscription in power.Lifecycle)
                 ValidateEffectReferences(subscription.Effect, $"Power '{power.Id}' lifecycle '{subscription.Trigger}'");
             foreach (var modifier in power.IncomingDamageModifiers)
+            {
                 if (modifier.RequiredSourcePower is { } requiredPower && !_powers.ContainsKey(requiredPower))
                     throw new InvalidOperationException($"Power '{power.Id}' requires unknown source Power '{requiredPower}' for its damage modifier.");
+                if (modifier.MultiplierVariable is { } variable
+                    && !(power.Variables ?? Array.Empty<PowerVariableDefinition>()).Any(candidate => candidate.Id == variable))
+                    throw new InvalidOperationException($"Power '{power.Id}' damage modifier references undeclared variable '{variable}'.");
+            }
             foreach (var adjustment in new[] { power.OnStackChange, power.OnExpire })
                 if (adjustment is not null && !_powers.ContainsKey(adjustment.Power))
                     throw new InvalidOperationException($"Power '{power.Id}' references unknown lifecycle power '{adjustment.Power}'.");

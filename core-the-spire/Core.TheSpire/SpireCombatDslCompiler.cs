@@ -350,10 +350,11 @@ public static class SpireCombatDslCompiler
                         OptionalEnum(call, "target", CardContext.Played),
                         OptionalEnum(call, "source", CardContext.Selected));
                 case "modifyPowerVariable":
-                    CheckShape(call, 3, 3, "target");
+                    CheckShape(call, 3, 3, "target", "operation");
                     return new ModifyPowerVariableEffect(Id(Name(Argument(call, 0))),
                         Id(Name(Argument(call, 1))), Integer(Argument(call, 2)),
-                        OptionalTarget(call, "target", TargetSelector.Self));
+                        OptionalTarget(call, "target", TargetSelector.Self),
+                        OptionalEnum(call, "operation", PowerVariableOperation.Add));
                 case "gainMaxHp":
                     CheckShape(call, 1, 1);
                     return new GainMaxHpEffect(Integer(Argument(call, 0)));

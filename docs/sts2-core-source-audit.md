@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；37 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前 88 个卡牌声明中有 85 张属于源码中的 87 张 Ironclad 卡池；38 种已注册怪物均由 `.spire` 内容编译。遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 
@@ -19,6 +19,8 @@
 本轮继续核对 Ruby Raiders：[`AxeRubyRaider.cs`](../sts2/src/Core/Models/Monsters/AxeRubyRaider.cs)、[`AssassinRubyRaider.cs`](../sts2/src/Core/Models/Monsters/AssassinRubyRaider.cs)、[`BruteRubyRaider.cs`](../sts2/src/Core/Models/Monsters/BruteRubyRaider.cs)、[`CrossbowRubyRaider.cs`](../sts2/src/Core/Models/Monsters/CrossbowRubyRaider.cs) 与 [`TrackerRubyRaider.cs`](../sts2/src/Core/Models/Monsters/TrackerRubyRaider.cs)。五者 HP 与 Deadly/Tough 数值已导入 DSL；攻击、格挡、加力量、上脆弱和多段攻击使用共享效果。Tracker 所需 Frail 作为通用 Power 用 block gain multiplier 表达，倍率只作用于 powered block，时长在敌方回合结束递减。遇敌编队按源码从五者中无重复抽取三者。
 
 敌人定义此前缺少入场 Power 数据。现增加通用 `startingPowers` 字段，并在怪物 AI 起始动作解析前应用；后续迁移 `AfterAddedToRoom` 只授予初始 Power 的原版怪物可直接复用，不需要新增怪物分支。
+
+本轮迁移 [`SlowPower.cs`](../sts2/src/Core/Models/Powers/SlowPower.cs) 与 [`BygoneEffigy.cs`](../sts2/src/Core/Models/Monsters/BygoneEffigy.cs)：慢速 Power 每打出一张牌将变量加一，回合开始时重置；只会提高受击方受到的 powered attack 伤害。为此扩展通用 Power 变量赋值操作、变量驱动的入伤倍率，并将 AfterCardPlayed 事件广播给战斗内全部 Power 持有者。Bygone 的睡眠、苏醒加 10 力量、之后每回合攻击行为以及精英遭遇均已进入 DSL/遭遇数据。
 
 本轮读取 [`BowlbugEgg.cs`](../sts2/src/Core/Models/Monsters/BowlbugEgg.cs)、[`BowlbugNectar.cs`](../sts2/src/Core/Models/Monsters/BowlbugNectar.cs) 和 [`BowlbugSilk.cs`](../sts2/src/Core/Models/Monsters/BowlbugSilk.cs)，迁入其普通/Tough HP、Deadly 攻击数值、行动循环、Egg 的攻击后格挡、Nectar 的 15/16 力量强化，以及 Silk 的两段攻击和虚弱效果。Bowlbug Rock 的失衡/眩晕条件依赖受完全格挡攻击后的状态转移，留待通用敌人状态与跳过行动语义支持后再迁，未用近似循环冒充原版行为。
 
@@ -54,7 +56,7 @@
 
 [`VineShambler.cs`](../sts2/src/Core/Models/Monsters/VineShambler.cs) HP 为 61（Tough 64），先双击 Swipe（6/7），再以 Grasping Vines 攻击（8/9）并施加 Tangled，接着 Chomp（16/18）后循环。Tangled 通过可复用的 `CardPlayRule.CostDelta` 使持有期间的所有攻击牌加费 1，并在玩家回合结束时移除；其单体原版遭遇已登记。
 
-[`SlitheringStrangler.cs`](../sts2/src/Core/Models/Monsters/SlitheringStrangler.cs) HP 为 53–55（Tough 54–56），先施加 3 层 Constrict，此后在 Thwack（7/8 并获得 5 格挡）和 Lash（12/13）间随机选择，每次后回到 Constrict。Constrict 在持有者回合结束时按当前层数造成可格挡、无力量修正的伤害，并在施加者死亡时移除。Strangler 的原版遭遇会随机选择单个 Jaxfruit、中 Slime 或两个小 Slime 作搭档，其动态阵容尚未迁入，故本次只注册敌人定义。
+[`SlitheringStrangler.cs`](../sts2/src/Core/Models/Monsters/SlitheringStrangler.cs) HP 为 53–55（Tough 54–56），先施加 3 层 Constrict，此后在 Thwack（7/8 并获得 5 格挡）和 Lash（12/13）间随机选择，每次后回到 Constrict。Constrict 在持有者回合结束时按当前层数造成可格挡、无力量修正的伤害，并在施加者死亡时移除。它的原版遭遇通过加权阵型表达三种等概率分支：单个 Snapping Jaxfruit、一个随机 Medium Slime、或两个独立随机 Small Slime，随后均加入 Strangler；阵型分支在选择其内部随机槽之前抽取，从而保留随机调用顺序。
 
 随后核对 [`PerfectedStrike.cs`](../sts2/src/Core/Models/Cards/PerfectedStrike.cs) 的 `AllCards` 加 `Strike` 标签计数：基础伤害 6，每张匹配牌额外 2（升级 3）。`core-the-spire` 的卡牌定义加入命名空间标签，`cardsWithTag` 跨手牌、抽牌、弃牌、消耗和出牌堆计数；当前出牌自身位于出牌堆，所以也计入。已迁入的 Strike Ironclad、Pommel Strike、Twin Strike、Ashen Strike 和 Perfected Strike 按源码标记为 `Strike`。[`FightMe.cs`](../sts2/src/Core/Models/Cards/FightMe.cs) 则是两次 5（升级 6）点攻击后玩家获得 3（升级 4）点力量，目标获得 1 点力量，现由已有原语组合表达。测试覆盖出牌后计算与力量施加时序。
 

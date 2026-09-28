@@ -35,6 +35,17 @@ package base-spire {
         target=self, properties=[unpowered]))]
   }
 
+  power Slow {
+    variables = [variable(SlowAmount, 0)]
+    trigger = afterCardPlayed
+    effect = modifyPowerVariable(Slow, SlowAmount, 1)
+    on = [trigger(event=afterOwnerTurnStart,
+      effect=modifyPowerVariable(Slow, SlowAmount, 0, operation=Set))]
+    incomingDamageModifiers = [modifier(multiplier=1, require=[move], exclude=[unpowered],
+      variable=SlowAmount, perVariable=0.1)]
+    isDebuff = true
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
@@ -520,6 +531,21 @@ package base-spire {
         candidate(stranglerThwack), candidate(stranglerLash))),
       edge(stranglerThwack, stranglerConstrict),
       edge(stranglerLash, stranglerConstrict)
+    ])
+  }
+
+  enemy BygoneEffigy {
+    hp = variants(default=range(127, 127), tough=range(132, 132))
+    startingPowers = [power(Slow, 1)]
+    moves = actions(
+      bygoneSleep = sequence(),
+      bygoneWake = applyPower(Strength, 10, target=self),
+      bygoneSlash = attack(variants(default=13, deadly=15), target=player)
+    )
+    behavior = graph(start=bygoneSleep, edges=[
+      edge(bygoneSleep, bygoneWake),
+      edge(bygoneWake, bygoneSlash),
+      edge(bygoneSlash, bygoneSlash)
     ])
   }
 }

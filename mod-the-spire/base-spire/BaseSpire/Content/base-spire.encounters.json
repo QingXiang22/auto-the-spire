@@ -2,6 +2,11 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:bygone-effigy-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:bygone-effigy"]
+    },
+    {
       "id": "base-spire:fuzzy-wurm-crawler-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:fuzzy-wurm-crawler"],
@@ -187,6 +192,43 @@
       "id": "base-spire:vine-shambler-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:vine-shambler"]
+    },
+    {
+      "id": "base-spire:slithering-strangler-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "weight": 1,
+          "enemySlots": [
+            { "enemyChoices": ["base-spire:snapping-jaxfruit"] },
+            { "enemyChoices": ["base-spire:slithering-strangler"] }
+          ]
+        },
+        {
+          "weight": 1,
+          "enemySlots": [
+            {
+              "enemyChoices": ["base-spire:leaf-slime-medium", "base-spire:twig-slime-medium"],
+              "chooseRandomly": true
+            },
+            { "enemyChoices": ["base-spire:slithering-strangler"] }
+          ]
+        },
+        {
+          "weight": 1,
+          "enemySlots": [
+            {
+              "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+              "chooseRandomly": true
+            },
+            {
+              "enemyChoices": ["base-spire:leaf-slime-small", "base-spire:twig-slime-small"],
+              "chooseRandomly": true
+            },
+            { "enemyChoices": ["base-spire:slithering-strangler"] }
+          ]
+        }
+      ]
     },
     {
       "id": "base-spire:ruby-raiders-normal",

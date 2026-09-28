@@ -145,8 +145,9 @@ public sealed record ModifyCardVariableEffect(ContentId Variable, decimal Amount
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record AccumulateCardDamageEffect(ContentId Variable,
     CardContext TargetCard = CardContext.Played, CardContext SourceCard = CardContext.Selected) : EffectNode;
+public enum PowerVariableOperation { Add, Set }
 public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
-    TargetSelector Target = TargetSelector.Self) : EffectNode;
+    TargetSelector Target = TargetSelector.Self, PowerVariableOperation Operation = PowerVariableOperation.Add) : EffectNode;
 public sealed record GainMaxHpEffect(int Amount) : EffectNode;
 public sealed record DowngradeSelectedCardEffect : EffectNode;
 public sealed record CloneCardEffect(CardContext Card = CardContext.Played, CardPile Pile = CardPile.Hand,
@@ -265,6 +266,14 @@ internal static class EffectExecutor
         var effects = BuildPowerTriggerEffects(state, owner, trigger, selectedCard);
         if (effects.Count > 0)
             state.PendingEffects.Add(new(owner, new SequenceEffect(effects), target, selectedCard));
+    }
+
+    internal static void QueueCombatPowerTriggerEffects(GameSession session, PowerTrigger trigger,
+        EntityState? target = null, CardInstance? selectedCard = null)
+    {
+        var state = session.State;
+        foreach (var owner in state.Enemies.Select(enemy => enemy.Creature).Append(state.Player.Creature))
+            QueuePowerTriggerEffects(session, owner, trigger, target, selectedCard);
     }
 
     private static List<EffectNode> BuildPowerTriggerEffects(GameState state, EntityState owner, PowerTrigger trigger,
@@ -687,7 +696,7 @@ internal static class EffectExecutor
                     break;
                 case ModifyPowerVariableEffect variable:
                     var variableOwner = ResolveSingleTarget(state, owner, target, variable.Target);
-                    variableOwner.ModifyPowerVariable(variable.Power, variable.Variable, variable.Amount);
+                    variableOwner.ModifyPowerVariable(variable.Power, variable.Variable, variable.Amount, variable.Operation);
                     state.Emit(session, "power_variable_modified", owner.Id, variableOwner.Id, variable.Amount,
                         affectedPower: variable.Power);
                     break;

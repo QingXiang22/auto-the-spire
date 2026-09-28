@@ -173,11 +173,11 @@ public static class SpireCombatBehaviorDslCompiler
             {
                 var call = RequireCall(item);
                 if (call.Name != "modifier" || call.Arguments.Any(argument => argument.Name is null))
-                    throw Error(call.Location, "Damage modifiers require modifier(multiplier=..., require=..., exclude=..., sourcePower=...).");
+                    throw Error(call.Location, "Damage modifiers require modifier(multiplier=..., require=..., exclude=..., sourcePower=..., variable=..., perVariable=...).");
                 var arguments = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
                 foreach (var argument in call.Arguments)
                 {
-                    if (argument.Name is not ("multiplier" or "require" or "exclude" or "sourcePower"))
+                    if (argument.Name is not ("multiplier" or "require" or "exclude" or "sourcePower" or "variable" or "perVariable"))
                         throw Error(argument.Location, $"Unknown damage modifier argument '{argument.Name}'.");
                     if (!arguments.TryAdd(argument.Name!, argument.Value))
                         throw Error(argument.Location, $"Duplicate damage modifier argument '{argument.Name}'.");
@@ -193,7 +193,14 @@ public static class SpireCombatBehaviorDslCompiler
                     ? ParseDamageProperties(excludedNode) : DamageProperties.None;
                 var sourcePower = arguments.TryGetValue("sourcePower", out var sourcePowerNode)
                     ? Id(Name(sourcePowerNode)) : (ContentId?)null;
-                return new DamageModifierSubscription(multiplier, required, excluded, sourcePower);
+                var variable = arguments.TryGetValue("variable", out var variableNode)
+                    ? Id(Name(variableNode)) : (ContentId?)null;
+                var perVariable = arguments.TryGetValue("perVariable", out var perVariableNode)
+                    ? DecimalValue(perVariableNode) : 0m;
+                if ((variable is null) != !arguments.ContainsKey("perVariable"))
+                    throw Error(call.Location, "Damage modifier variable and perVariable must be specified together.");
+                return new DamageModifierSubscription(multiplier, required, excluded, sourcePower,
+                    variable, perVariable);
             }).ToArray());
         }
 
