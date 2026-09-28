@@ -202,4 +202,14 @@ package base-spire {
       candidate(flailKnightRam, weight=2)
     ))
   }
+
+  enemy SewerClam {
+    hp = variants(default=range(58, 58), tough=range(56, 56))
+    startingPowers = [power(PlatingPower, variants(default=8, tough=9))]
+    moves = actions(
+      sewerClamPressurize = applyPower(Strength, 4, target=self),
+      sewerClamJet = attack(variants(default=10, deadly=11), target=player)
+    )
+    behavior = cycle(sewerClamJet, sewerClamPressurize)
+  }
 }

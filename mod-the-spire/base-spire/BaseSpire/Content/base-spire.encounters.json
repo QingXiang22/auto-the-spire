@@ -98,6 +98,11 @@
       "isWeak": true
     },
     {
+      "id": "base-spire:sewer-clam-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:sewer-clam"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
