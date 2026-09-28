@@ -435,6 +435,10 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 1, 1, "card");
                     return new CardVariableCountSource(ReferenceId(Argument(call, 0)),
                         OptionalEnum(call, "card", CardContext.Played));
+                case "takePowerEventAmount":
+                    CheckShape(call, 1, 1, "card");
+                    return new TakePowerEventAmountCountSource(Id(Name(Argument(call, 0))),
+                        OptionalEnum(call, "card", CardContext.Played));
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1, "target");
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))),

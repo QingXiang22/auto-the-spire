@@ -50,6 +50,20 @@ package base-spire {
         properties=[unpowered]))]
   }
 
+  power RupturePower {
+    trigger = afterCardPlayed
+    effect = applyScaledPower(Strength, 0, 1,
+      count=takePowerEventAmount(RupturePower), target=self)
+    events = [
+      event(type=damage, owner=target, ownerTurnOnly=true, deferToCardPlayed=true,
+        effect=applyScaledPower(Strength, 0, 1,
+          count=targetPowerAmount(RupturePower, target=self), target=self)),
+      event(type=hp_loss, owner=target, ownerTurnOnly=true, deferToCardPlayed=true,
+        effect=applyScaledPower(Strength, 0, 1,
+          count=targetPowerAmount(RupturePower, target=self), target=self))
+    ]
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }

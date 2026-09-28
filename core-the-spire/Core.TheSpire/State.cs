@@ -6,6 +6,7 @@ internal sealed class EntityState
 {
     private readonly Dictionary<ContentId, int> _powers = [];
     private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
+    private readonly Dictionary<(ContentId Power, string CardInstanceId), int> _powerEventAmounts = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
 
     public EntityState(string id, bool isEnemy, int hp, int maxHp)
@@ -28,6 +29,21 @@ internal sealed class EntityState
     internal Dictionary<ContentId, HashSet<string>> MutablePowerAppliers => _powerAppliers;
     internal HashSet<ContentId> SkipNextPowerTriggers { get; } = [];
     public int PowerAmount(ContentId id) => _powers.GetValueOrDefault(id);
+    internal void AccumulatePowerEventAmount(ContentId power, string cardInstanceId, int amount)
+    {
+        var key = (power, cardInstanceId);
+        _powerEventAmounts[key] = checked(_powerEventAmounts.GetValueOrDefault(key) + amount);
+    }
+    internal int TakePowerEventAmount(ContentId power, string cardInstanceId)
+    {
+        var key = (power, cardInstanceId);
+        return _powerEventAmounts.Remove(key, out var amount) ? amount : 0;
+    }
+    internal void ClearPowerEventAmounts(ContentId power)
+    {
+        foreach (var key in _powerEventAmounts.Keys.Where(key => key.Power == power).ToArray())
+            _powerEventAmounts.Remove(key);
+    }
 }
 
 internal sealed class PlayerCombatState
@@ -216,9 +232,10 @@ internal sealed class GameState
     public IReadOnlyList<GameEvent> Events => _eventView;
 
     internal void Emit(GameSession session, string type, string source, string target, int amount,
-        DamageProperties properties = DamageProperties.None)
+        DamageProperties properties = DamageProperties.None, CardInstance? cardSource = null)
     {
-        var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties);
+        var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
+            cardSource?.InstanceId);
         _events.Add(gameEvent);
         if (type == "card_exhausted" && source == Player.Id)
             LastPlayerCardExhaustTurn = Turn;
@@ -258,6 +275,13 @@ internal sealed class GameState
                     continue;
                 var ownerId = subscription.Owner == GameEventActor.Source ? source : target;
                 if (ownerId != actor.Id) continue;
+                if (subscription.OwnerTurnOnly && !IsOwnerTurn(actor)) continue;
+                if (subscription.DeferUntilCardPlayed && gameEvent.CardSourceInstanceId is { } cardInstanceId
+                    && CardPlayFrames.Any(frame => frame.Card.InstanceId == cardInstanceId))
+                {
+                    actor.AccumulatePowerEventAmount(powerId, cardInstanceId, powerAmount);
+                    continue;
+                }
                 var otherId = subscription.Owner == GameEventActor.Source ? target : source;
                 (effects ??= []).Add((actor, new PowerEventEffect(powerId, subscription.Effect), FindCreature(otherId)));
             }
@@ -275,6 +299,8 @@ internal sealed class GameState
         return Enemies.Select(enemy => enemy.Creature).FirstOrDefault(creature => creature.Id == id);
     }
 
+    private bool IsOwnerTurn(EntityState owner) => owner.IsEnemy ? !IsPlayerTurn : IsPlayerTurn;
+
     internal void ApplyPower(GameSession session, EntityState owner, ContentId power, int amount, EntityState applier)
     {
         if (!Definition.Powers.TryGetValue(power, out var definition))
@@ -290,6 +316,7 @@ internal sealed class GameState
             owner.MutablePowers.Remove(power);
             owner.MutablePowerAppliers.Remove(power);
             owner.SkipNextPowerTriggers.Remove(power);
+            owner.ClearPowerEventAmounts(power);
         }
         else
         {
@@ -519,6 +546,7 @@ internal sealed class GameState
             owner.MutablePowers.Remove(powerId);
             owner.MutablePowerAppliers.Remove(powerId);
             owner.SkipNextPowerTriggers.Remove(powerId);
+            owner.ClearPowerEventAmounts(powerId);
         }
         else owner.MutablePowers[powerId] = newAmount;
         if (definition.Role == PowerRole.Strength) owner.Strength += delta;
@@ -534,6 +562,7 @@ internal sealed class GameState
         owner.MutablePowers.Remove(powerId);
         owner.MutablePowerAppliers.Remove(powerId);
         owner.SkipNextPowerTriggers.Remove(powerId);
+        owner.ClearPowerEventAmounts(powerId);
         if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength -= amount;
         return amount;
     }
@@ -568,7 +597,7 @@ internal sealed class GameState
 }
 
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount,
-    DamageProperties Properties = DamageProperties.None);
+    DamageProperties Properties = DamageProperties.None, string? CardSourceInstanceId = null);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState
 {

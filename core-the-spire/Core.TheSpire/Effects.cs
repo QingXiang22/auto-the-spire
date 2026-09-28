@@ -63,6 +63,7 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SavedCountSource), "savedCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlaysThisTurnCountSource), "cardPlaysThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardVariableCountSource), "cardVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TakePowerEventAmountCountSource), "takePowerEventAmount")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
@@ -71,6 +72,7 @@ public sealed record SavedCountSource(string Name) : CombatCountSource;
 public sealed record CardPlaysThisTurnCountSource(CardType? Type = null,
     CardPlayHistoryPhase Phase = CardPlayHistoryPhase.Finished) : CombatCountSource;
 public sealed record CardVariableCountSource(ContentId Variable, CardContext Card = CardContext.Played) : CombatCountSource;
+public sealed record TakePowerEventAmountCountSource(ContentId Power, CardContext Card = CardContext.Played) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power, TargetSelector Target = TargetSelector.SelectedTarget) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -147,7 +149,8 @@ public enum GameEventActor { Source, Target, Player }
 public sealed record GameEventEffect(EffectNode Effect, GameEventActor Actor = GameEventActor.Source);
 public sealed record PowerEventSubscription(string EventType, GameEventActor Owner, EffectNode Effect,
     DamageProperties RequiredProperties = DamageProperties.None,
-    DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true);
+    DamageProperties ExcludedProperties = DamageProperties.None, bool RequiresPositiveAmount = true,
+    bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false);
 internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom }
@@ -280,20 +283,20 @@ internal static class EffectExecutor
                 case AttackEffect attack:
                     if (attack.Target == TargetSelector.AllOpponents)
                     {
-                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount, attack.Properties);
+                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount, attack.Properties, selectedCard);
                         else
                             foreach (var enemy in state.Enemies)
                                 if (enemy.Creature.Hp > 0)
-                                    ApplyAttack(session, owner, enemy.Creature, attack.Amount, attack.Properties);
+                                    ApplyAttack(session, owner, enemy.Creature, attack.Amount, attack.Properties, selectedCard);
                     }
                     else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target),
-                        attack.Amount, attack.Properties);
+                        attack.Amount, attack.Properties, selectedCard);
                     break;
                 case ScaledAttackEffect scaledAttack:
                     var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
                     ApplyAttack(session, owner, scaledVictim,
                         ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
-                            scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard), scaledAttack.Properties);
+                            scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard), scaledAttack.Properties, selectedCard);
                     break;
                 case RandomAttackEffect randomAttack:
                     var randomAmount = randomAttack.CalculatedAmount is { } calculatedRandomAttack
@@ -308,29 +311,33 @@ internal static class EffectExecutor
                     {
                         var victim = opponents[session.Random.Get("card-targets").NextInt(opponents.Length)];
                         state.Emit(session, "random_attack_target", owner.Id, victim.Id, randomAmount);
-                        ApplyAttack(session, owner, victim, randomAmount, randomAttack.Properties);
+                        ApplyAttack(session, owner, victim, randomAmount, randomAttack.Properties, selectedCard);
                     }
                     break;
                 case AttackUsingBlockEffect attackUsingBlock:
                     var blockBasedDamage = owner.Block;
                     if (attackUsingBlock.Target == TargetSelector.AllOpponents)
                     {
-                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, blockBasedDamage);
+                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, blockBasedDamage,
+                            DamageProperties.Move, selectedCard);
                         else
                             foreach (var enemy in state.Enemies)
                                 if (enemy.Creature.Hp > 0)
-                                    ApplyAttack(session, owner, enemy.Creature, blockBasedDamage);
+                                    ApplyAttack(session, owner, enemy.Creature, blockBasedDamage,
+                                        DamageProperties.Move, selectedCard);
                     }
                     else
                         ApplyAttack(session, owner,
-                            ResolveSingleTarget(state, owner, target, attackUsingBlock.Target), blockBasedDamage);
+                            ResolveSingleTarget(state, owner, target, attackUsingBlock.Target), blockBasedDamage,
+                            DamageProperties.Move, selectedCard);
                     break;
                 case LoseHpEffect loseHp:
                     if (loseHp.Amount < 0) throw new InvalidOperationException("HP loss cannot be negative.");
                     var hpLossTarget = ResolveSingleTarget(state, owner, target, loseHp.Target);
                     var hpLost = Math.Min(hpLossTarget.Hp, loseHp.Amount);
                     hpLossTarget.Hp -= hpLost;
-                    state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost);
+                    state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost,
+                        DamageProperties.None, selectedCard);
                     if (hpLossTarget.Hp == 0) state.RemovePowersAppliedBy(session, hpLossTarget.Id);
                     break;
                 case HealEffect heal:
@@ -365,8 +372,9 @@ internal static class EffectExecutor
                 case ApplyScaledPowerEffect scaledPower:
                     var powerAmount = ScaledAmount(state, owner, target, scaledPower.BaseAmount,
                         scaledPower.AmountPerCount, scaledPower.Count, counts, selectedCard);
-                    state.ApplyPower(session, ResolveSingleTarget(state, owner, target, scaledPower.Target),
-                        scaledPower.Power, powerAmount, owner);
+                    if (powerAmount != 0)
+                        state.ApplyPower(session, ResolveSingleTarget(state, owner, target, scaledPower.Target),
+                            scaledPower.Power, powerAmount, owner);
                     break;
                 case DrawCardsEffect draw:
                     state.Draw(session, draw.Amount);
@@ -608,6 +616,8 @@ internal static class EffectExecutor
             EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
             CardPlaysThisTurnCountSource plays => state.CardPlayHistory.Count(plays.Type, plays.Phase),
             CardVariableCountSource variable => CombatCardVariables.Read(state, variable.Variable, variable.Card, selectedCard),
+            TakePowerEventAmountCountSource deferred => owner.TakePowerEventAmount(deferred.Power,
+                CombatCardVariables.ResolveCard(state, deferred.Card, selectedCard).InstanceId),
             SavedCountSource saved => counts?.Resolve(saved.Name)
                 ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
             TargetPowerCountSource power => ResolveSingleTarget(state, owner, selectedTarget, power.Target).PowerAmount(power.Power),
@@ -673,7 +683,7 @@ internal static class EffectExecutor
     }
 
     private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount,
-        DamageProperties properties = DamageProperties.Move)
+        DamageProperties properties = DamageProperties.Move, CardInstance? cardSource = null)
     {
         if (victim.Hp <= 0) return;
         var state = session.State;
@@ -684,7 +694,7 @@ internal static class EffectExecutor
         victim.Block -= absorbed;
         var damage = Math.Min(victim.Hp, rawDamage - absorbed);
         victim.Hp -= damage;
-        state.Emit(session, "damage", owner.Id, victim.Id, damage, properties);
+        state.Emit(session, "damage", owner.Id, victim.Id, damage, properties, cardSource);
         if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
     }
 
