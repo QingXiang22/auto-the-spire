@@ -37,6 +37,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifySelectedCardCostEffect), "modifySelectedCardCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCardVariableEffect), "modifyCardVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GainMaxHpEffect), "gainMaxHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DowngradeSelectedCardEffect), "downgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CloneCardEffect), "cloneCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TransformSelectedCardEffect), "transformSelectedCard")]
@@ -54,10 +55,10 @@ public sealed record SequenceEffect : EffectNode
     public IReadOnlyList<EffectNode> Effects { get; }
 }
 public sealed record AttackEffect(int Amount, TargetSelector Target = TargetSelector.FirstEnemy,
-    DamageProperties Properties = DamageProperties.Move) : EffectNode;
+    DamageProperties Properties = DamageProperties.Move, EffectNode? OnFatal = null) : EffectNode;
 public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, CombatCountSource Count,
     TargetSelector Target = TargetSelector.SelectedTarget,
-    DamageProperties Properties = DamageProperties.Move) : EffectNode;
+    DamageProperties Properties = DamageProperties.Move, EffectNode? OnFatal = null) : EffectNode;
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCardCountSource), "pile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
@@ -131,6 +132,7 @@ public sealed record ModifyCardVariableEffect(ContentId Variable, int Amount,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record ModifyPowerVariableEffect(ContentId Power, ContentId Variable, int Amount,
     TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record GainMaxHpEffect(int Amount) : EffectNode;
 public sealed record DowngradeSelectedCardEffect : EffectNode;
 public sealed record CloneCardEffect(CardContext Card = CardContext.Played, CardPile Pile = CardPile.Hand,
     int Count = 1, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
@@ -315,14 +317,16 @@ internal static class EffectExecutor
                 case AttackEffect attack:
                     if (attack.Target == TargetSelector.AllOpponents)
                     {
-                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount, attack.Properties, selectedCard);
+                        if (owner.IsEnemy) ApplyAttack(session, owner, state.Player.Creature, attack.Amount,
+                            attack.Properties, selectedCard, attack.OnFatal);
                         else
                             foreach (var enemy in state.Enemies)
                                 if (enemy.Creature.Hp > 0)
-                                    ApplyAttack(session, owner, enemy.Creature, attack.Amount, attack.Properties, selectedCard);
+                                    ApplyAttack(session, owner, enemy.Creature, attack.Amount,
+                                        attack.Properties, selectedCard, attack.OnFatal);
                     }
                     else ApplyAttack(session, owner, ResolveSingleTarget(state, owner, target, attack.Target),
-                        attack.Amount, attack.Properties, selectedCard);
+                        attack.Amount, attack.Properties, selectedCard, attack.OnFatal);
                     break;
                 case ScaledAttackEffect scaledAttack:
                     var scaledVictims = scaledAttack.Target == TargetSelector.AllOpponents
@@ -334,7 +338,7 @@ internal static class EffectExecutor
                         ApplyAttack(session, owner, scaledVictim,
                             ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
                                 scaledAttack.AmountPerCount, scaledAttack.Count, counts, selectedCard),
-                            scaledAttack.Properties, selectedCard);
+                            scaledAttack.Properties, selectedCard, scaledAttack.OnFatal);
                     break;
                 case RandomAttackEffect randomAttack:
                     var randomAmount = randomAttack.CalculatedAmount is { } calculatedRandomAttack
@@ -573,6 +577,9 @@ internal static class EffectExecutor
                     state.Emit(session, "power_variable_modified", owner.Id, variableOwner.Id, variable.Amount,
                         affectedPower: variable.Power);
                     break;
+                case GainMaxHpEffect gainMaxHp:
+                    state.GainMaxHp(session, gainMaxHp.Amount);
+                    break;
                 case DowngradeSelectedCardEffect:
                     CombatCardVariables.Downgrade(session, CombatCardVariables.ResolveCard(state, CardContext.Selected, selectedCard));
                     break;
@@ -803,7 +810,8 @@ internal static class EffectExecutor
     }
 
     private static void ApplyAttack(GameSession session, EntityState owner, EntityState victim, int amount,
-        DamageProperties properties = DamageProperties.Move, CardInstance? cardSource = null)
+        DamageProperties properties = DamageProperties.Move, CardInstance? cardSource = null,
+        EffectNode? onFatal = null)
     {
         if (victim.Hp <= 0) return;
         var state = session.State;
@@ -813,7 +821,11 @@ internal static class EffectExecutor
             : Math.Min(victim.Block, rawDamage);
         victim.Block -= absorbed;
         var damage = Math.Min(victim.Hp, rawDamage - absorbed);
+        var fatal = damage > 0 && damage == victim.Hp
+            && !victim.Powers.Any(power => power.Value > 0 && state.Definition.Powers[power.Key].PreventsFatal);
         victim.Hp -= damage;
+        if (fatal && onFatal is not null)
+            state.PendingEffects.Add(new(owner, onFatal, victim, cardSource));
         state.Emit(session, "damage", owner.Id, victim.Id, damage, properties, cardSource);
         if (victim.Hp == 0) state.RemovePowersAppliedBy(session, victim.Id);
     }

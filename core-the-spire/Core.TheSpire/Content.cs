@@ -51,6 +51,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
 {
     public CardPlayRule? CardRule { get; init; }
     public bool PreventEnergyGain { get; init; }
+    public bool PreventsFatal { get; init; }
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
@@ -1412,6 +1413,7 @@ public sealed class ContentRegistry
                     || (attack.Properties & ~(DamageProperties.Move | DamageProperties.Unpowered
                         | DamageProperties.Unblockable | DamageProperties.SkipHurtAnimation)) != 0)
                     throw new InvalidOperationException($"{owner} has invalid attack damage properties or target.");
+                if (attack.OnFatal is { } attackFatal) ValidateEffectReferences(attackFatal, owner, counts);
                 break;
             case ScaledAttackEffect scaled:
                 ArgumentOutOfRangeException.ThrowIfNegative(scaled.BaseAmount);
@@ -1422,6 +1424,7 @@ public sealed class ContentRegistry
                 if (!ValidDamageProperties(scaled.Properties))
                     throw new InvalidOperationException($"{owner} has invalid scaled attack properties.");
                 ValidateCombatCountSource(scaled.Count, owner, counts);
+                if (scaled.OnFatal is { } scaledFatal) ValidateEffectReferences(scaledFatal, owner, counts);
                 break;
             case ApplyScaledPowerEffect scaledPower:
                 if (!_powers.ContainsKey(scaledPower.Power))
@@ -1558,6 +1561,9 @@ public sealed class ContentRegistry
                 ValidatePowerVariableReference(variable.Power, variable.Variable, owner);
                 if (variable.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} modifies a Power variable on an invalid target.");
+                break;
+            case GainMaxHpEffect gainMaxHp:
+                ArgumentOutOfRangeException.ThrowIfNegative(gainMaxHp.Amount);
                 break;
             case ModifySelectedCardCostEffect cost:
                 cost.Modifier.Validate();
