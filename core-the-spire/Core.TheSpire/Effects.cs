@@ -55,6 +55,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SummonEnemyEffect), "summonEnemy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(StunEnemyEffect), "stunEnemy")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SetEnemyHealthEffect), "setEnemyHealth")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CustomEffect), "custom")]
 public abstract record EffectNode;
 public sealed record SequenceEffect : EffectNode
@@ -198,8 +199,10 @@ internal sealed record AutoPlayRandomCardsContinuationEffect(AutoPlayRandomCards
 internal sealed record CardAfterAutoPostPlayEffect(string InstanceId) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
-public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null) : EffectNode;
+public sealed record SummonEnemyEffect(ContentId Enemy, int Count = 1, ContentId? StartingAction = null,
+    IReadOnlyList<EnemyStartingPower>? StartingPowers = null, int? MaximumLivingEnemyCount = null) : EffectNode;
 public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
 
 public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy }
@@ -329,6 +332,20 @@ internal static class EffectExecutor
                         stunnedEnemy.SkipNextAction = true;
                         state.Emit(session, "enemy_stunned", owner.Id, stunnedEnemy.Creature.Id, 1);
                     }
+                    break;
+                case SetEnemyHealthEffect setHealth:
+                    if (owner.IsEnemy is false)
+                        throw new InvalidOperationException("Setting enemy health requires an enemy action owner.");
+                    var healthRange = checked(setHealth.Maximum - setHealth.Minimum + 1);
+                    var health = setHealth.Minimum + (healthRange == 1 ? 0
+                        : session.Random.Get("niche").NextInt(healthRange));
+                    var healthOwner = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == owner.Id)
+                        ?? throw new InvalidOperationException("Setting enemy health requires an active enemy owner.");
+                    var previousHp = healthOwner.Creature.Hp;
+                    healthOwner.Creature.MaxHp = health;
+                    healthOwner.Creature.Hp = health;
+                    state.Emit(session, "enemy_health_set", owner.Id, owner.Id, health - previousHp,
+                        exactAmount: health);
                     break;
                 case InitializeSummonedEnemiesEffect initialize:
                     foreach (var instanceId in initialize.InstanceIds)
@@ -1087,8 +1104,12 @@ internal static class EffectExecutor
         var state = session.State;
         if (!state.Definition.Enemies.TryGetValue(summon.Enemy, out var definition))
             throw new InvalidOperationException($"Unknown summoned enemy '{summon.Enemy}'.");
-        var spawned = new List<(string InstanceId, EnemyCombatState State)>(summon.Count);
-        for (var i = 0; i < summon.Count; i++)
+        var allowedCount = summon.MaximumLivingEnemyCount is { } maximum
+            ? Math.Min(summon.Count, Math.Max(0, maximum - state.Enemies.Count(enemy => enemy.Creature.Hp > 0)))
+            : summon.Count;
+        var startingPowers = summon.StartingPowers ?? definition.StartingPowers;
+        var spawned = new List<(string InstanceId, EnemyCombatState State)>(allowedCount);
+        for (var i = 0; i < allowedCount; i++)
         {
             var hpRange = checked(definition.MaxHp - definition.MinHp + 1);
             var hp = definition.MinHp + (hpRange == 1 ? 0 : session.Random.Get("niche").NextInt(hpRange));
@@ -1109,7 +1130,7 @@ internal static class EffectExecutor
         foreach (var (_, enemy) in spawned)
         {
             state.Emit(session, "enemy_summoned", owner.Id, enemy.Creature.Id, 1);
-            foreach (var startingPower in enemy.Definition.StartingPowers)
+            foreach (var startingPower in startingPowers)
                 state.ApplyPower(session, enemy.Creature, startingPower.Power, startingPower.Amount, enemy.Creature);
         }
     }

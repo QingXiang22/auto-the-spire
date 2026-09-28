@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；55 种已注册怪物均由 `.spire` 内容编译。敌人实例变量已纳入行为 DSL 和观察，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；57 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、阶段生命值重设、召唤 Power 覆盖与本回合行动队列边界已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 源码核验确认 Twig Slime Medium 的 `AddBranch(moveState, 2)` 绑定 `maxRepeats` 重载，因此 Pokey 最多连续两次；Sticky 使用 `CannotRepeat`。JSON 与测试现按该语义建模。还发现 Nibbit 的 Butt 伤害漏了 DeadlyEnemies 下 13 点，已补入数据并加测试。Nibbit 源码由 Encounter 明确设置 `IsAlone` / `IsFront`。当前 JSON 原型已改为每个遭遇声明初始动作索引映射；目标 DSL 的 `alone/front/back` 角色将在编译时专门化为该映射，不进入战斗运行态。
 

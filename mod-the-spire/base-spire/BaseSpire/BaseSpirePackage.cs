@@ -101,6 +101,9 @@ public static class BaseSpireIds
     public static readonly ContentId CultistsNormal = ContentId.Parse("base-spire:cultists-normal");
     public static readonly ContentId FuzzyWurmCrawler = ContentId.Parse("base-spire:fuzzy-wurm-crawler");
     public static readonly ContentId FuzzyWurmCrawlerWeak = ContentId.Parse("base-spire:fuzzy-wurm-crawler-weak");
+    public static readonly ContentId ToughEgg = ContentId.Parse("base-spire:tough-egg");
+    public static readonly ContentId Ovicopter = ContentId.Parse("base-spire:ovicopter");
+    public static readonly ContentId OvicopterNormal = ContentId.Parse("base-spire:ovicopter-normal");
     public static readonly ContentId ShrinkerBeetle = ContentId.Parse("base-spire:shrinker-beetle");
     public static readonly ContentId ShrinkerBeetleWeak = ContentId.Parse("base-spire:shrinker-beetle-weak");
     public static readonly ContentId OvergrowthCrawlers = ContentId.Parse("base-spire:overgrowth-crawlers");
