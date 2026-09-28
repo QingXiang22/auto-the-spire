@@ -250,6 +250,11 @@
       }
     },
     {
+      "id": "base-spire:globe-head-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:globe-head"]
+    },
+    {
       "id": "base-spire:frog-knight-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:frog-knight"]

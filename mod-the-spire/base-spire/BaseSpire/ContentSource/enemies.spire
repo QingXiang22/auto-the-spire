@@ -96,6 +96,12 @@ package base-spire {
     ))]
   }
 
+  power GalvanicPower {
+    trigger = afterCardPlayed
+    whenCardType = power
+    effect = attack(6, target=firstEnemy, properties=[unpowered])
+  }
+
   power Burrowed {
     preventsBlockClear = true
     events = [event(type=block_broken, owner=target, ownerTurnOnly=false,
@@ -760,6 +766,23 @@ package base-spire {
       edge(toadpoleSpikeSpit, toadpoleWhirl),
       edge(toadpoleWhirl, toadpoleSpiken)
     ])
+  }
+
+  enemy GlobeHead {
+    hp = variants(default=range(148, 148), tough=range(158, 158))
+    startingPowers = [power(GalvanicPower, 6)]
+    moves = actions(
+      globeHeadShockingSlap = sequence(
+        attack(variants(default=13, deadly=14), target=player),
+        applyPower(Frail, 2, target=player)
+      ),
+      globeHeadThunderStrike = repeat(3, attack(variants(default=6, deadly=7), target=player)),
+      globeHeadGalvanicBurst = sequence(
+        attack(variants(default=16, deadly=17), target=player),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = cycle(globeHeadShockingSlap, globeHeadThunderStrike, globeHeadGalvanicBurst)
   }
 
   enemy SlimedBerserker {
