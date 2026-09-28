@@ -179,6 +179,11 @@
       "enemyIds": ["base-spire:louse-progenitor"]
     },
     {
+      "id": "base-spire:cubex-construct-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:cubex-construct"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
