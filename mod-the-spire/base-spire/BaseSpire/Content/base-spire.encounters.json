@@ -255,6 +255,11 @@
       "enemyIds": ["base-spire:globe-head"]
     },
     {
+      "id": "base-spire:fossil-stalker-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:fossil-stalker"]
+    },
+    {
       "id": "base-spire:frog-knight-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:frog-knight"]
