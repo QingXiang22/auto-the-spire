@@ -192,10 +192,12 @@ public static class SpireCombatDslCompiler
                         CompileCombatCount(RequiredArgument(call, "count")),
                         OptionalTarget(call, "target", TargetSelector.Self));
                 case "gainBlock":
-                    CheckShape(call, 1, 1, "perPowerStack");
+                    CheckShape(call, 1, 1, "perPowerStack", "properties");
                     var perPower = OptionalArgument(call, "perPowerStack");
                     return new GainBlockEffect(Integer(Argument(call, 0)),
-                        perPower is null ? null : Id(Name(perPower)));
+                        perPower is null ? null : Id(Name(perPower)),
+                        OptionalArgument(call, "properties") is { } blockPropertiesNode
+                            ? ParseDamageProperties(blockPropertiesNode) : null);
                 case "gainBlockFromCurrentBlock":
                     CheckShape(call, 0, 0, "multiplier");
                     return new GainBlockFromCurrentBlockEffect(OptionalInteger(call, "multiplier", 1));
@@ -385,6 +387,9 @@ public static class SpireCombatDslCompiler
                 case "removePower":
                     CheckShape(call, 1, 1);
                     return new RemovePowerEffect(ReferenceId(Argument(call, 0)));
+                case "setEnemyAction":
+                    CheckShape(call, 1, 1);
+                    return new SetEnemyActionEffect(ReferenceId(Argument(call, 0)));
                 case "expirePower":
                     CheckShape(call, 1, 1);
                     return new ExpirePowerEffect(ReferenceId(Argument(call, 0)));

@@ -27,6 +27,11 @@
       "enemyIds": ["base-spire:spiny-toad"]
     },
     {
+      "id": "base-spire:slumbering-beetle-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:slumbering-beetle"]
+    },
+    {
       "id": "base-spire:exoskeletons-weak",
       "roomType": "monster",
       "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],
