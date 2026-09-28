@@ -489,11 +489,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     FlushPlayerHand(session);
                     break;
                 case EndTurnResolutionStage.PlayerTurnEndPowers:
-                    state.EndTurnStage = EndTurnResolutionStage.EnemyPlayerSideEndPowers;
+                    state.EndTurnStage = EndTurnResolutionStage.PlayerOwnerTurnEndPowers;
                     state.CurrentEnemyIndex = 0;
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterPlayerTurnEnd);
                     state.ExpireCardCosts(session, CardCostExpiration.TurnEnd);
                     EffectExecutor.Resume(session);
+                    break;
+                case EndTurnResolutionStage.PlayerOwnerTurnEndPowers:
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyPlayerSideEndPowers;
+                    BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterOwnerTurnEnd);
                     break;
                 case EndTurnResolutionStage.EnemyPlayerSideEndPowers:
                     while (state.CurrentEnemyIndex < state.Enemies.Count
@@ -565,8 +569,14 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         state.EndTurnStage = EndTurnResolutionStage.PlayerEnemySideEndPowers;
                         break;
                     }
-                    var endedEnemy = state.Enemies[state.CurrentEnemyIndex++];
+                    var endedEnemy = state.Enemies[state.CurrentEnemyIndex];
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyOwnerTurnEndPowers;
                     BeginPowerQueue(state, endedEnemy.Creature, PowerTrigger.AfterEnemyTurnEnd);
+                    break;
+                case EndTurnResolutionStage.EnemyOwnerTurnEndPowers:
+                    var ownerEndedEnemy = state.Enemies[state.CurrentEnemyIndex++];
+                    state.EndTurnStage = EndTurnResolutionStage.EnemyTurnEndPowers;
+                    BeginPowerQueue(state, ownerEndedEnemy.Creature, PowerTrigger.AfterOwnerTurnEnd);
                     break;
                 case EndTurnResolutionStage.PlayerEnemySideEndPowers:
                     state.EndTurnStage = EndTurnResolutionStage.AdvanceEnemyAction;

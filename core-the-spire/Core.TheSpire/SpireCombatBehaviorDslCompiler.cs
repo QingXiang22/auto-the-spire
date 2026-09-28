@@ -49,7 +49,7 @@ public static class SpireCombatBehaviorDslCompiler
         {
             var properties = Properties(declaration, "Power");
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
-                "role", "whenCardType", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
+                "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
                 "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
@@ -81,6 +81,7 @@ public static class SpireCombatBehaviorDslCompiler
                 throw Error(cardTypeNode!.Location, "whenCardType requires a card event trigger.");
             return new PowerDefinition(Id(declaration.Name), trigger, triggerPower,
                 skipEnemy, role, SkipFirstTriggerWhenAppliedToPlayer: skipPlayer,
+                DecrementOnTrigger: OptionalBoolean(properties, "decrementOnTrigger"),
                 TriggerRuleEffect: triggerRuleEffect, TriggerCardType: triggerCardType,
                 RemoveAfterPlayerTurnEnd: OptionalBoolean(properties, "removeAfterPlayerTurnEnd"),
                 MaxEnergyPerStack: properties.TryGetValue("maxEnergyPerStack", out var maxEnergyNode)

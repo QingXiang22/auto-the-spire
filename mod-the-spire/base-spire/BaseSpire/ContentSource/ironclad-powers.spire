@@ -83,6 +83,12 @@ package base-spire {
       effect=draw(scaled(0, 1, count=targetPowerAmount(ViciousPower, target=self))))]
   }
 
+  power PlatingPower {
+    trigger = afterOwnerTurnEnd
+    effect = gainBlock(1, perPowerStack=PlatingPower)
+    decrementOnTrigger = true
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }

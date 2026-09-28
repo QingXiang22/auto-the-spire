@@ -858,7 +858,7 @@ public enum CardType { Attack, Skill, Power, Status }
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
-    AfterCardPlayed }
+    AfterCardPlayed, AfterOwnerTurnEnd }
 public enum PowerRole { None, Strength, Vulnerable, NoDraw }
 
 public interface IRulePackage
