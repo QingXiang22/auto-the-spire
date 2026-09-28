@@ -2474,12 +2474,7 @@ public sealed class CombatSliceTests
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
     {
-        using var stream = typeof(BaseSpirePackage).Assembly.GetManifestResourceStream(
-            "BaseSpire.ContentSource.enemies.spire");
-        Assert.True(stream is not null);
-        using var reader = new StreamReader(stream!);
-        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
-        var content = SpireCombatBehaviorDslCompiler.Compile(package);
+        var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(31, content.Powers.Count);
         Assert.Equal(69, content.Enemies.Count);
@@ -2501,7 +2496,7 @@ public sealed class CombatSliceTests
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Ritual, 5), cultist.Actions[0].Effect);
         Assert.Equal(new AttackEffect(1, TargetSelector.FirstEnemy), cultist.Actions[1].Effect);
 
-        var deadlyTough = SpireCombatBehaviorDslCompiler.Compile(package,
+        var deadlyTough = BaseSpireContent.LoadEnemyBehavior(
             new ContentVariantProfile(DeadlyEnemies: true, ToughEnemies: true));
         var toughCultist = deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.DampCultist);
         Assert.Equal(51, toughCultist.MinHp);
