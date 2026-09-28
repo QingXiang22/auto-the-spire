@@ -379,6 +379,15 @@ package base-spire {
     play = draw(1)
   }
 
+  card Wound {
+    type = status
+    rarity = status
+    cost = 0
+    target = self
+    keywords = [unplayable]
+    play = sequence()
+  }
+
   card DemonForm {
     pools = [IroncladCardPool]
     type = power

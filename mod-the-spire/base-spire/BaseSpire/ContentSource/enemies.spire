@@ -888,4 +888,19 @@ package base-spire {
     behavior = cycle(slimedBerserkerVomitIchor, slimedBerserkerFuriousPummeling,
       slimedBerserkerLeechingHug, slimedBerserkerSmother)
   }
+
+  enemy Vantom {
+    hp = variants(default=range(173, 173), tough=range(183, 183))
+    startingPowers = [power(SlipperyPower, variants(default=8, tough=9))]
+    moves = actions(
+      vantomInkBlot = attack(variants(default=7, deadly=8), target=player),
+      vantomInkyLance = repeat(2, attack(variants(default=6, deadly=7), target=player)),
+      vantomDismember = sequence(
+        attack(variants(default=26, deadly=30), target=player),
+        addCards(Wound, count=3, pile=discard, target=player)
+      ),
+      vantomPrepare = applyPower(Strength, 2, target=self)
+    )
+    behavior = cycle(vantomInkBlot, vantomInkyLance, vantomDismember, vantomPrepare)
+  }
 }

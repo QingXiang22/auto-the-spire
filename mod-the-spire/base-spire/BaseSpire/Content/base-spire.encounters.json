@@ -463,6 +463,11 @@
         }
       ],
       "tags": ["base-spire:ruby-raider"]
+    },
+    {
+      "id": "base-spire:vantom-boss",
+      "roomType": "boss",
+      "enemyIds": ["base-spire:vantom"]
     }
   ]
 }
