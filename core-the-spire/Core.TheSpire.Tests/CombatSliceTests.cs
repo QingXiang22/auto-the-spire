@@ -117,6 +117,7 @@ public sealed class CombatSliceTests
         {
             var session = environment.StartEncounter(seed, "ironclad", 500, 500, [], encounter);
             var opening = environment.Observe(session).Enemies;
+            Assert.Equal(new[] { 2, 3, 4 }, opening.Select(enemy => enemy.SlotIndex));
             var openingMoves = opening.Select(enemy => enemy.Intent == IntentKind.Debuff
                 ? "screech"
                 : enemy.IntentDamage == 8 ? "scratch" : "bite").ToArray();
@@ -139,6 +140,7 @@ public sealed class CombatSliceTests
             var summoned = environment.Observe(session);
             RecordMoves(summoned);
             Assert.Equal(4, summoned.Enemies.Count);
+            Assert.Equal(new[] { 1, 2, 3, 4 }, summoned.Enemies.Select(enemy => enemy.SlotIndex));
             Assert.Equal(1, summoned.CombatVariables[backupCalls]);
             for (var turn = 0; turn < 12 && !summoned.IsTerminal; turn++)
             {
@@ -146,6 +148,10 @@ public sealed class CombatSliceTests
                 summoned = environment.Observe(session);
                 RecordMoves(summoned);
                 Assert.True(summoned.Enemies.Count <= 5);
+                Assert.Equal(summoned.Enemies.OrderBy(enemy => enemy.SlotIndex).Select(enemy => enemy.SlotIndex),
+                    summoned.Enemies.Select(enemy => enemy.SlotIndex));
+                if (summoned.Enemies.Count == 5)
+                    Assert.Equal(Enumerable.Range(0, 5), summoned.Enemies.Select(enemy => enemy.SlotIndex));
                 Assert.True(summoned.CombatVariables[backupCalls] <= 3);
                 Assert.True(summoned.Enemies.Count(enemy => enemy.Intent == IntentKind.Summon) <= 1);
                 Assert.True(summoned.Enemies.All(enemy =>

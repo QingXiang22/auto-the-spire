@@ -517,6 +517,8 @@
       "formations": [
         {
           "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "slotCount": 5,
+          "slotIndices": [2, 3, 4],
           "startingActionsByEnemyIndex": {
             "0": "base-spire:two-tailed-rat-scratch-move",
             "1": "base-spire:two-tailed-rat-disease-bite-move",
@@ -525,6 +527,8 @@
         },
         {
           "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "slotCount": 5,
+          "slotIndices": [2, 3, 4],
           "startingActionsByEnemyIndex": {
             "0": "base-spire:two-tailed-rat-disease-bite-move",
             "1": "base-spire:two-tailed-rat-screech-move",
@@ -533,6 +537,8 @@
         },
         {
           "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "slotCount": 5,
+          "slotIndices": [2, 3, 4],
           "startingActionsByEnemyIndex": {
             "0": "base-spire:two-tailed-rat-screech-move",
             "1": "base-spire:two-tailed-rat-scratch-move",

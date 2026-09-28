@@ -31,20 +31,23 @@ public sealed class EncounterEnemySlot
 }
 
 public sealed record EncounterEnemySelection(ContentId EnemyId, ContentId? StartingActionOverride,
-    IReadOnlyList<ContentId>? StartingActionChoices = null);
+    IReadOnlyList<ContentId>? StartingActionChoices = null, int? SlotIndex = null, int? TotalSlotCount = null);
 
 /// <summary>A complete ordered enemy lineup selected as one correlated encounter outcome.</summary>
 public sealed record EncounterFormationChoice
 {
     public EncounterFormationChoice(IEnumerable<ContentId> enemyIds, int weight = 1,
-        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
+        int? slotCount = null, IReadOnlyList<int>? slotIndices = null)
         : this(enemyIds?.Select(EncounterEnemySlot.Fixed)
-            ?? throw new ArgumentNullException(nameof(enemyIds)), weight, startingActionsByEnemyIndex)
+            ?? throw new ArgumentNullException(nameof(enemyIds)), weight, startingActionsByEnemyIndex,
+            slotCount, slotIndices)
     {
     }
 
     public EncounterFormationChoice(IEnumerable<EncounterEnemySlot> enemySlots, int weight = 1,
-        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null)
+        IReadOnlyDictionary<int, ContentId>? startingActionsByEnemyIndex = null,
+        int? slotCount = null, IReadOnlyList<int>? slotIndices = null)
     {
         ArgumentNullException.ThrowIfNull(enemySlots);
         var copiedSlots = enemySlots.ToArray();
@@ -62,13 +65,23 @@ public sealed record EncounterFormationChoice
                     "Formation starting action index must refer to an enemy in the formation.");
             actionId.Validate();
         }
+        var positions = slotIndices?.ToArray() ?? Enumerable.Range(0, copiedSlots.Length).ToArray();
+        var capacity = slotCount ?? (slotIndices is null ? copiedSlots.Length : positions.Max() + 1);
+        if (capacity <= 0 || positions.Length != copiedSlots.Length
+            || positions.Any(index => index < 0 || index >= capacity)
+            || positions.Distinct().Count() != positions.Length)
+            throw new ArgumentException("Formation slot indexes must be unique positions within its positive slot count.", nameof(slotIndices));
         EnemySlots = Array.AsReadOnly(copiedSlots);
         Weight = weight;
         StartingActionsByEnemyIndex = new System.Collections.ObjectModel.ReadOnlyDictionary<int, ContentId>(startingActions);
+        SlotCount = slotCount ?? (slotIndices is null ? null : capacity);
+        SlotIndices = Array.AsReadOnly(positions);
     }
 
     public IReadOnlyList<EncounterEnemySlot> EnemySlots { get; }
     public IReadOnlyDictionary<int, ContentId> StartingActionsByEnemyIndex { get; }
+    public int? SlotCount { get; }
+    public IReadOnlyList<int> SlotIndices { get; }
     public IReadOnlyList<ContentId> EnemyIds => EnemySlots.All(slot => !slot.ChooseRandomly)
         ? Array.AsReadOnly(EnemySlots.Select(slot => slot.EnemyChoices[0]).ToArray())
         : throw new InvalidOperationException("A formation with random slots does not have one fixed enemy lineup.");
