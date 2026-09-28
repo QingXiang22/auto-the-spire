@@ -169,6 +169,11 @@
       "enemyIds": ["base-spire:fogmog"]
     },
     {
+      "id": "base-spire:owl-magistrate-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:owl-magistrate"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [
