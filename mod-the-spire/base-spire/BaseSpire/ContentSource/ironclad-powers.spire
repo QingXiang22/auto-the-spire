@@ -153,4 +153,9 @@ package base-spire {
     events = [event(type=draw, owner=source, cardTag=Strike,
       effect=autoPlaySelectedCard(from=hand))]
   }
+
+  power UnmovablePower {
+    blockGainModifiers = [modifier(multiplier=2, require=[move], priorEntriesPerStack=1,
+      playerOnly=true)]
+  }
 }

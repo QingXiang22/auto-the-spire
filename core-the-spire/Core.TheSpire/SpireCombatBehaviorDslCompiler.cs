@@ -53,7 +53,7 @@ public static class SpireCombatBehaviorDslCompiler
                 "role", "whenCardType", "decrementOnTrigger", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
                 "removeAfterOpponentTurnEnd", "cardRule", "preventEnergyGain", "events", "on",
-                "incomingDamageModifiers", "variables", "preventsFatal");
+                "incomingDamageModifiers", "blockGainModifiers", "variables", "preventsFatal");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -106,6 +106,8 @@ public static class SpireCombatBehaviorDslCompiler
                     ? CompilePowerLifecycle(lifecycleNode) : Array.Empty<PowerLifecycleSubscription>(),
                 IncomingDamageModifiers = properties.TryGetValue("incomingDamageModifiers", out var damageModifiersNode)
                     ? CompileDamageModifiers(damageModifiersNode) : Array.Empty<DamageModifierSubscription>(),
+                BlockGainModifiers = properties.TryGetValue("blockGainModifiers", out var blockModifiersNode)
+                    ? CompileBlockGainModifiers(blockModifiersNode) : Array.Empty<BlockGainModifierSubscription>(),
                 Variables = properties.TryGetValue("variables", out var variablesNode)
                     ? CompilePowerVariables(variablesNode) : Array.Empty<PowerVariableDefinition>()
             };
@@ -125,6 +127,36 @@ public static class SpireCombatBehaviorDslCompiler
             if (variables.Select(variable => variable.Id).Distinct().Count() != variables.Length)
                 throw Error(node.Location, "A Power cannot declare duplicate variables.");
             return Array.AsReadOnly(variables);
+        }
+
+        private IReadOnlyList<BlockGainModifierSubscription> CompileBlockGainModifiers(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Block gain modifiers must be a list.");
+            return Array.AsReadOnly(list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "modifier" || call.Arguments.Any(argument => argument.Name is null))
+                    throw Error(call.Location, "Block gain modifiers use modifier(multiplier=..., require=..., exclude=..., priorEntriesPerStack=..., playerOnly=...).");
+                var arguments = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+                foreach (var argument in call.Arguments)
+                {
+                    if (argument.Name is not ("multiplier" or "require" or "exclude" or "priorEntriesPerStack" or "playerOnly"))
+                        throw Error(argument.Location, $"Unknown block gain modifier argument '{argument.Name}'.");
+                    if (!arguments.TryAdd(argument.Name!, argument.Value))
+                        throw Error(argument.Location, $"Duplicate block gain modifier argument '{argument.Name}'.");
+                }
+                return new BlockGainModifierSubscription(
+                    arguments.TryGetValue("multiplier", out var multiplier) ? Integer(multiplier) : 2,
+                    arguments.TryGetValue("require", out var required) ? ParseDamageProperties(required) : DamageProperties.Move,
+                    arguments.TryGetValue("exclude", out var excluded) ? ParseDamageProperties(excluded) : DamageProperties.None,
+                    arguments.TryGetValue("priorEntriesPerStack", out var limit) ? Integer(limit) : 1,
+                    arguments.TryGetValue("playerOnly", out var playerOnlyNode)
+                        ? playerOnlyNode is DslBooleanNode playerOnlyBoolean
+                            ? playerOnlyBoolean.Value
+                            : throw Error(playerOnlyNode.Location, "Block gain modifier playerOnly must be a boolean.")
+                        : false);
+            }).ToArray());
         }
 
         private IReadOnlyList<DamageModifierSubscription> CompileDamageModifiers(DslValueNode node)

@@ -38,7 +38,7 @@
 
 [`OneTwoPunchPower.cs`](../sts2/src/Core/Models/Powers/OneTwoPunchPower.cs) 在确定 Attack 执行次数时增加一次并消费一层；FreeAttackPower 在每次执行前消费，因此重复打出可消费两层 Free Attack。DSL `cardRule` 描述这两个不同阶段，效果、生成牌与打出后 Power 每次执行，支付与放置各一次。测试覆盖升级给两张牌各多执行一次、Rage 触发、Anger 生成升级副本、连续两次选牌暂停和暂停期间升级。
 
-[`DrumOfBattle.cs`](../sts2/src/Core/Models/Cards/DrumOfBattle.cs) 打出抽两张，消耗时获得 2 能量（升级 3）；升级不改变普通打出效果。已用通用 onExhaust / upgradedOnExhaust 回调表达，并由自动消耗和批量牌堆移动检查验证。原版全模型 Hook 顺序及消耗回调自身 GeneratePlayCount 修改仍未迁入，当前声明的自身回调每次消耗执行一次。当前卡池迁入 71/87 张，仍有 16 张待实现。
+[`DrumOfBattle.cs`](../sts2/src/Core/Models/Cards/DrumOfBattle.cs) 打出抽两张，消耗时获得 2 能量（升级 3）；升级不改变普通打出效果。已用通用 onExhaust / upgradedOnExhaust 回调表达，并由自动消耗和批量牌堆移动检查验证。原版全模型 Hook 顺序及消耗回调自身 GeneratePlayCount 修改仍未迁入，当前声明的自身回调每次消耗执行一次。当前卡池迁入 84/87 张，Demonic Shield、Tank、Thrash 尚待处理。
 
 ## 已读与当前实现依据
 

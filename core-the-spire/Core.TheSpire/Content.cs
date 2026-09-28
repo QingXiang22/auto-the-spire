@@ -26,6 +26,10 @@ public readonly record struct ContentId(string Value)
 public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerStackAdjustment(ContentId Power, int AmountPerStack);
 public sealed record PowerVariableDefinition(ContentId Id, int InitialValue);
+public sealed record BlockGainModifierSubscription(int Multiplier = 2,
+    DamageProperties RequiredProperties = DamageProperties.Move,
+    DamageProperties ExcludedProperties = DamageProperties.None,
+    int PriorEntriesPerPowerStack = 1, bool PlayerOnly = false);
 public sealed record CardPlayRule(CardType Type, int? Cost = null, CardPile? ResultPile = null,
     bool ConsumeOnPlay = false, int ExtraPlays = 0, bool ConsumeOnPlayCount = false)
 {
@@ -55,6 +59,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
+    public IReadOnlyList<BlockGainModifierSubscription> BlockGainModifiers { get; init; } = Array.Empty<BlockGainModifierSubscription>();
     public IReadOnlyList<PowerVariableDefinition> Variables { get; init; } = Array.Empty<PowerVariableDefinition>();
 
     public void Validate()
@@ -113,6 +118,14 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 || !ValidDamageProperties(modifier.ExcludedProperties))
                 throw new ArgumentException("Incoming damage modifiers require a nonnegative multiplier and valid, non-overlapping property filters.");
             modifier.RequiredSourcePower?.Validate();
+        }
+        foreach (var modifier in BlockGainModifiers)
+        {
+            if (modifier.Multiplier < 0 || modifier.PriorEntriesPerPowerStack < 0
+                || (modifier.RequiredProperties & modifier.ExcludedProperties) != 0
+                || !ValidDamageProperties(modifier.RequiredProperties)
+                || !ValidDamageProperties(modifier.ExcludedProperties))
+                throw new ArgumentException("Block gain modifiers require a nonnegative multiplier, limit, and valid non-overlapping property filters.");
         }
     }
 

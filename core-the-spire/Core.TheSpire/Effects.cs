@@ -424,14 +424,22 @@ internal static class EffectExecutor
                     var blockAmount = block.PerPowerStack is { } perPowerStack
                         ? block.Amount * owner.PowerAmount(perPowerStack)
                         : block.Amount;
+                    blockAmount = state.ModifyBlockGain(owner, blockAmount);
                     owner.Block += blockAmount;
-                    state.Emit(session, "block", owner.Id, owner.Id, blockAmount);
+                    state.Emit(session, "block", owner.Id, owner.Id, blockAmount,
+                        properties: selectedCard is not null || owner.IsEnemy
+                            ? DamageProperties.Move : DamageProperties.None,
+                        cardSource: selectedCard);
                     break;
                 case GainBlockFromCurrentBlockEffect blockFromBlock:
                     ArgumentOutOfRangeException.ThrowIfNegative(blockFromBlock.Multiplier);
                     var gainedBlock = owner.Block * blockFromBlock.Multiplier;
+                    gainedBlock = state.ModifyBlockGain(owner, gainedBlock);
                     owner.Block += gainedBlock;
-                    state.Emit(session, "block", owner.Id, owner.Id, gainedBlock);
+                    state.Emit(session, "block", owner.Id, owner.Id, gainedBlock,
+                        properties: selectedCard is not null || owner.IsEnemy
+                            ? DamageProperties.Move : DamageProperties.None,
+                        cardSource: selectedCard);
                     break;
                 case ApplyPowerEffect power:
                     if (power.Target == TargetSelector.AllOpponents)

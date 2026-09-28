@@ -38,6 +38,8 @@ public static class BaseSpireIds
     public static readonly ContentId StrikeTag = ContentId.Parse("base-spire:strike");
     public static readonly ContentId Hellraiser = ContentId.Parse("base-spire:hellraiser");
     public static readonly ContentId HellraiserPower = ContentId.Parse("base-spire:hellraiser-power");
+    public static readonly ContentId Unmovable = ContentId.Parse("base-spire:unmovable");
+    public static readonly ContentId UnmovablePower = ContentId.Parse("base-spire:unmovable-power");
     public static readonly ContentId Conflagration = ContentId.Parse("base-spire:conflagration");
     public static readonly ContentId Dominate = ContentId.Parse("base-spire:dominate");
     public static readonly ContentId MoltenFist = ContentId.Parse("base-spire:molten-fist");
