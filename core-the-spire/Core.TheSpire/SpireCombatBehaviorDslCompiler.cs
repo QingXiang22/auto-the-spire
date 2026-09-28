@@ -342,7 +342,7 @@ public static class SpireCombatBehaviorDslCompiler
         private EnemyDefinition CompileEnemy(DslDeclarationNode declaration)
         {
             var properties = Properties(declaration, "Enemy");
-            Only(properties, "hp", "moves", "behavior");
+            Only(properties, "hp", "moves", "behavior", "startingPowers");
             var (minHp, maxHp) = HpRange(Required(properties, "hp", declaration.Location));
             var moves = RequireCall(Required(properties, "moves", declaration.Location));
             if (moves.Name != "actions") throw Error(moves.Location, "Enemy moves must use actions(name = effect, ...).");
@@ -387,7 +387,26 @@ public static class SpireCombatBehaviorDslCompiler
             }
             return new EnemyDefinition(Id(declaration.Name), minHp, maxHp, actions,
                 startingActionId: behaviorPlan.StartingTransition is null ? actionIds[behaviorPlan.StartMove] : null,
-                startingTransition: behaviorPlan.StartingTransition);
+                startingTransition: behaviorPlan.StartingTransition,
+                startingPowers: properties.TryGetValue("startingPowers", out var startingPowersNode)
+                    ? CompileStartingPowers(startingPowersNode) : null);
+        }
+
+        private IReadOnlyList<EnemyStartingPower> CompileStartingPowers(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Enemy startingPowers must be a list.");
+            return Array.AsReadOnly(list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "power")
+                    throw Error(call.Location, "Enemy starting Powers use power(Name, amount).");
+                CheckShape(call, 2);
+                var amountNode = SelectVariant(Argument(call, 1));
+                var amount = Integer(amountNode);
+                if (amount <= 0) throw Error(amountNode.Location, "Starting Power amounts must be positive.");
+                return new EnemyStartingPower(Id(Name(Argument(call, 0))), amount);
+            }).ToArray());
         }
 
         private BehaviorPlan CompileBehavior(DslCallNode behavior)

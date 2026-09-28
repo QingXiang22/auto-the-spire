@@ -193,6 +193,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
         var state = new GameState(definition,
             new PlayerCombatState(playerId, playerHp, playerMaxHp, handInstances, drawInstances, characterId),
             combatEnemies);
+        var session = new GameSession(state, rng);
+        foreach (var enemy in combatEnemies)
+            foreach (var startingPower in enemy.Definition.StartingPowers)
+                state.ApplyPower(session, enemy.Creature, startingPower.Power, startingPower.Amount, enemy.Creature);
+        EffectExecutor.Resume(session);
         for (var enemyIndex = 0; enemyIndex < combatEnemies.Count; enemyIndex++)
         {
             var enemy = combatEnemies[enemyIndex];
@@ -202,7 +207,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     new EnemyActionEvaluationContext(state, enemy, enemyIndex), rng.Get("enemy-ai"));
             enemy.SelectAction(enemy.Definition.Actions[enemy.ActionIndex].Id);
         }
-        return new GameSession(state, rng);
+        return session;
     }
 
     private static int ChooseUniqueEnemyHp(EnemyDefinition enemy, IReadOnlySet<int> previouslyChosenHp,
