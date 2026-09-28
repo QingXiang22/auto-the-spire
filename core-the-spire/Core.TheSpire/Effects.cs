@@ -1143,6 +1143,8 @@ internal static class EffectExecutor
         if (fatal && onFatal is not null)
             state.PendingEffects.Add(new(owner, onFatal, victim, cardSource));
         state.Emit(session, "damage", owner.Id, victim.Id, damage, properties, cardSource);
+        if (rawDamage > 0 && absorbed == rawDamage)
+            state.Emit(session, "fully_blocked", owner.Id, victim.Id, (int)rawDamage, properties, cardSource);
         if (victim.Hp == 0)
         {
             state.RemovePowersAppliedBy(session, victim.Id);

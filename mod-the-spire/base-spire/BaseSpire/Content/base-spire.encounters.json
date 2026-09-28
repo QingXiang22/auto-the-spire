@@ -468,6 +468,37 @@
       "id": "base-spire:vantom-boss",
       "roomType": "boss",
       "enemyIds": ["base-spire:vantom"]
+    },
+    {
+      "id": "base-spire:bowlbugs-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "tags": ["base-spire:workers"],
+      "enemySlots": [
+        { "enemyChoices": ["base-spire:bowlbug-rock"] },
+        {
+          "enemyChoices": ["base-spire:bowlbug-egg", "base-spire:bowlbug-nectar"],
+          "chooseRandomly": true
+        }
+      ]
+    },
+    {
+      "id": "base-spire:bowlbugs-normal",
+      "roomType": "monster",
+      "tags": ["base-spire:workers"],
+      "enemySlots": [
+        { "enemyChoices": ["base-spire:bowlbug-rock"] },
+        {
+          "enemyChoices": ["base-spire:bowlbug-egg", "base-spire:bowlbug-silk", "base-spire:bowlbug-nectar"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-bowlbug-workers"
+        },
+        {
+          "enemyChoices": ["base-spire:bowlbug-egg", "base-spire:bowlbug-silk", "base-spire:bowlbug-nectar"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-bowlbug-workers"
+        }
+      ]
     }
   ]
 }

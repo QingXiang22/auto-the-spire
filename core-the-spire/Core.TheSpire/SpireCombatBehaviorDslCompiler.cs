@@ -401,9 +401,15 @@ public static class SpireCombatBehaviorDslCompiler
             for (var i = 0; i < moveNames.Length; i++)
             {
                 var moveName = moveNames[i];
-                var sourceEffect = moveByName[moveName];
+                var source = CompileEnemyAction(moveByName[moveName]);
+                var sourceEffect = source.Effect;
                 var effect = SpireCombatDslCompiler.CompileEffect(_package, sourceEffect, _profile);
                 var (intent, damage) = DescribeIntent(effect);
+                if (source.Intent is { } explicitIntent)
+                {
+                    intent = explicitIntent;
+                    if (intent != IntentKind.Attack) damage = 0;
+                }
                 var transition = behaviorPlan.Transitions.TryGetValue(moveName, out var moveTransition)
                     ? moveTransition
                     : null;
@@ -420,6 +426,25 @@ public static class SpireCombatBehaviorDslCompiler
                     ? CompileStartingPowers(startingPowersNode) : null,
                 startingBlock: properties.TryGetValue("startingBlock", out var startingBlockNode)
                     ? Integer(SelectVariant(startingBlockNode)) : 0);
+        }
+
+        private (DslValueNode Effect, IntentKind? Intent) CompileEnemyAction(DslValueNode source)
+        {
+            if (source is not DslCallNode { Name: "action" } call) return (source, null);
+            if (call.Arguments.Any(argument => argument.Name is null))
+                throw Error(call.Location, "action accepts named effect and optional intent properties.");
+            var properties = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+            foreach (var argument in call.Arguments)
+            {
+                if (argument.Name is not ("effect" or "intent")
+                    || !properties.TryAdd(argument.Name!, argument.Value))
+                    throw Error(argument.Location, "action accepts one effect and an optional intent.");
+            }
+            if (!properties.TryGetValue("effect", out var effect))
+                throw Error(call.Location, "action requires effect=...");
+            var intent = properties.TryGetValue("intent", out var intentNode)
+                ? EnumValue<IntentKind>(intentNode) : (IntentKind?)null;
+            return (effect, intent);
         }
 
         private IReadOnlyList<EnemyStartingPower> CompileStartingPowers(DslValueNode node)

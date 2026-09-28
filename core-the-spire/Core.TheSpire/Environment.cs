@@ -625,6 +625,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     if (actingEnemy.SkipNextAction)
                     {
                         actingEnemy.SkipNextAction = false;
+                        state.Emit(session, "enemy_action_skipped", state.Player.Id,
+                            actingEnemy.Creature.Id, 1);
+                        EffectExecutor.Resume(session);
                         state.Emit(session, "enemy_action", actingEnemy.Creature.Id, state.Player.Id,
                             (int)IntentKind.Stun);
                         state.CurrentEnemyIndex++;
