@@ -41,7 +41,7 @@ internal static class CombatCardVariables
         var newOffset = existingOffset + (next - previous);
         var offsets = card.VariableOffsets.Where(value => value.Variable != variable).ToList();
         if (newOffset != 0) offsets.Add(new(variable, newOffset));
-        Replace(state, card, card.WithVariableOffsets(offsets));
+        state.ReplaceCombatCard(card, card.WithVariableOffsets(offsets));
         state.Emit(session, "card_variable_modified", variable.Value, card.InstanceId,
             decimal.ToInt32(decimal.Truncate(next - previous)), exactAmount: next - previous);
     }
@@ -52,20 +52,8 @@ internal static class CombatCardVariables
         var definition = session.State.Definition.Cards[card.CardId];
         var offsets = card.VariableOffsets.Where(value =>
             definition.Variables.Single(variable => variable.Id == value.Variable).PreserveOnDowngrade).ToArray();
-        Replace(session.State, card, card.WithUpgradeLevel(0).WithVariableOffsets(offsets));
+        session.State.ReplaceCombatCard(card, card.WithUpgradeLevel(0).WithVariableOffsets(offsets));
         session.State.Emit(session, "card_downgraded", session.State.Player.Id, card.InstanceId, card.UpgradeLevel);
     }
 
-    private static void Replace(GameState state, CardInstance current, CardInstance replacement)
-    {
-        foreach (var pile in GameState.CombatPiles)
-        {
-            var cards = state.GetPile(pile);
-            var index = cards.FindIndex(card => card.InstanceId == current.InstanceId);
-            if (index < 0) continue;
-            cards[index] = replacement;
-            return;
-        }
-        throw new InvalidOperationException($"Card '{current.InstanceId}' is no longer in combat.");
-    }
 }

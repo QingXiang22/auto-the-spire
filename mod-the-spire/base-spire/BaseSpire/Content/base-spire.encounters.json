@@ -501,6 +501,17 @@
       ]
     },
     {
+      "id": "base-spire:living-fog-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:living-fog"],
+          "slotCount": 6,
+          "slotIndices": [5]
+        }
+      ]
+    },
+    {
       "id": "base-spire:ovicopter-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:ovicopter"]

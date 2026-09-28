@@ -5,7 +5,8 @@ namespace CoreTheSpire;
 
 public sealed record SpireCombatBehaviorContent(
     IReadOnlyList<PowerDefinition> Powers,
-    IReadOnlyList<EnemyDefinition> Enemies);
+    IReadOnlyList<EnemyDefinition> Enemies,
+    IReadOnlyList<CardAfflictionDefinition> Afflictions);
 
 /// <summary>Compiles declarative Power and enemy behavior into the existing combat definitions.</summary>
 public static class SpireCombatBehaviorDslCompiler
@@ -41,12 +42,39 @@ public static class SpireCombatBehaviorDslCompiler
                 .Select(CompilePower).ToArray();
             var enemies = declarations.Where(declaration => declaration.Kind == "enemy")
                 .Select(CompileEnemy).ToArray();
-            if (powers.Length + enemies.Length != declarations.Length)
-                throw Error(_package.Location, "Combat behavior packages support power and enemy declarations only.");
+            var afflictions = declarations.Where(declaration => declaration.Kind == "affliction")
+                .Select(CompileAffliction).ToArray();
+            if (powers.Length + enemies.Length + afflictions.Length != declarations.Length)
+                throw Error(_package.Location, "Combat behavior packages support power, enemy, and affliction declarations only.");
             EnsureUnique(powers.Select(power => power.Id), "Power");
             EnsureUnique(enemies.Select(enemy => enemy.Id), "Enemy");
+            EnsureUnique(afflictions.Select(affliction => affliction.Id), "Affliction");
             EnsureUnique(enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id), "Enemy action");
-            return new SpireCombatBehaviorContent(Array.AsReadOnly(powers), Array.AsReadOnly(enemies));
+            return new SpireCombatBehaviorContent(Array.AsReadOnly(powers), Array.AsReadOnly(enemies),
+                Array.AsReadOnly(afflictions));
+        }
+
+        private CardAfflictionDefinition CompileAffliction(DslDeclarationNode declaration)
+        {
+            var properties = Properties(declaration, "Affliction");
+            Only(properties, "addKeywords");
+            var keywords = properties.TryGetValue("addKeywords", out var keywordNode)
+                ? ParseCardKeywords(keywordNode) : CardKeywords.None;
+            return new CardAfflictionDefinition(Id(declaration.Name), keywords);
+        }
+
+        private static CardKeywords ParseCardKeywords(DslValueNode node)
+        {
+            if (node is not DslListNode list) throw Error(node.Location, "Affliction keywords must be a list.");
+            var keywords = CardKeywords.None;
+            foreach (var item in list.Items)
+            {
+                var keyword = EnumValue<CardKeywords>(item);
+                if (keyword == CardKeywords.None || (keywords & keyword) != 0)
+                    throw Error(item.Location, "Affliction keywords must be unique nonzero flags.");
+                keywords |= keyword;
+            }
+            return keywords;
         }
 
         private PowerDefinition CompilePower(DslDeclarationNode declaration)
@@ -83,7 +111,8 @@ public static class SpireCombatBehaviorDslCompiler
             var triggerCardType = properties.TryGetValue("whenCardType", out var cardTypeNode)
                 ? EnumValue<CardType>(cardTypeNode) : (CardType?)null;
             if (triggerCardType is not null && trigger is not
-                (PowerTrigger.AfterCardPlayed or PowerTrigger.AfterCardExhausted))
+                (PowerTrigger.AfterCardPlayed or PowerTrigger.AfterCardExhausted
+                    or PowerTrigger.AfterCardEnteredCombat))
                 throw Error(cardTypeNode!.Location, "whenCardType requires a card event trigger.");
             return new PowerDefinition(Id(declaration.Name), trigger, triggerPower,
                 skipEnemy, role, SkipFirstTriggerWhenAppliedToPlayer: skipPlayer,
@@ -221,19 +250,23 @@ public static class SpireCombatBehaviorDslCompiler
                 var arguments = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
                 foreach (var argument in call.Arguments)
                 {
-                    if (argument.Name is not ("event" or "effect"))
+                    if (argument.Name is not ("event" or "effect" or "whenCardType"))
                         throw Error(argument.Location, $"Unknown Power lifecycle argument '{argument.Name}'.");
                     if (!arguments.TryAdd(argument.Name!, argument.Value))
                         throw Error(argument.Location, $"Duplicate Power lifecycle argument '{argument.Name}'.");
                 }
                 var trigger = EnumValue<PowerTrigger>(Required(arguments, "event", call.Location));
                 if (trigger is not (PowerTrigger.AfterOwnerTurnStart or PowerTrigger.AfterOwnerTurnEnd
-                    or PowerTrigger.AfterAutoPostPlayPhaseEntered))
+                    or PowerTrigger.AfterAutoPostPlayPhaseEntered or PowerTrigger.AfterCardEnteredCombat))
                     throw Error(Required(arguments, "event", call.Location).Location,
-                        "Power lifecycle hooks support owner turn boundaries and afterAutoPostPlayPhaseEntered.");
+                        "Power lifecycle hooks support owner turn boundaries, afterAutoPostPlayPhaseEntered, and afterCardEnteredCombat.");
+                var cardTypeNode = arguments.GetValueOrDefault("whenCardType");
+                if (cardTypeNode is not null && trigger != PowerTrigger.AfterCardEnteredCombat)
+                    throw Error(cardTypeNode.Location, "whenCardType requires the afterCardEnteredCombat trigger.");
                 return new PowerLifecycleSubscription(trigger,
                     SpireCombatDslCompiler.CompileEffect(_package,
-                        Required(arguments, "effect", call.Location), _profile));
+                        Required(arguments, "effect", call.Location), _profile),
+                    cardTypeNode is null ? null : EnumValue<CardType>(cardTypeNode));
             }).ToArray());
         }
 

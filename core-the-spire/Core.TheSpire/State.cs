@@ -330,6 +330,18 @@ internal sealed class GameState
                 if (card.InstanceId == instanceId) return card;
         return null;
     }
+    internal void ReplaceCombatCard(CardInstance current, CardInstance replacement)
+    {
+        foreach (var pile in CombatPiles)
+        {
+            var cards = GetPile(pile);
+            var index = cards.FindIndex(card => card.InstanceId == current.InstanceId);
+            if (index < 0) continue;
+            cards[index] = replacement;
+            return;
+        }
+        throw new InvalidOperationException($"Card '{current.InstanceId}' is no longer in combat.");
+    }
     internal List<PendingEffect> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal int FlushHookIndex { get; set; }

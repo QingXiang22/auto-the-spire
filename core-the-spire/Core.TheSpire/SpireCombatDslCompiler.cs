@@ -296,6 +296,14 @@ public static class SpireCombatDslCompiler
                 case "kill":
                     CheckShape(call, 0, 0, "target");
                     return new KillEffect(OptionalTarget(call, "target", TargetSelector.Self));
+                case "afflictCards":
+                    CheckShape(call, 1, 1, "type");
+                    return new AfflictCardsEffect(ReferenceId(Argument(call, 0)),
+                        OptionalArgument(call, "type") is { } afflictType ? EnumValue<CardType>(afflictType) : null);
+                case "clearAffliction":
+                    CheckShape(call, 1, 1, "type");
+                    return new ClearAfflictionEffect(ReferenceId(Argument(call, 0)),
+                        OptionalArgument(call, "type") is { } clearType ? EnumValue<CardType>(clearType) : null);
                 case "setEnemyHealth":
                     CheckShape(call, 1, 1);
                     var healthRange = RequireCall(Argument(call, 0));
@@ -494,6 +502,12 @@ public static class SpireCombatDslCompiler
                     var historyType = OptionalArgument(call, "type");
                     return new CardPlayCountEqualsPredicate(
                         historyType is null ? null : EnumValue<CardType>(historyType),
+                        OptionalEnum(call, "phase", CardPlayHistoryPhase.Finished), Integer(Argument(call, 0)));
+                case "cardPlaysThisTurnAtLeast":
+                    CheckShape(call, 1, 1, "type", "phase");
+                    var minimumHistoryType = OptionalArgument(call, "type");
+                    return new CardPlayCountAtLeastPredicate(
+                        minimumHistoryType is null ? null : EnumValue<CardType>(minimumHistoryType),
                         OptionalEnum(call, "phase", CardPlayHistoryPhase.Finished), Integer(Argument(call, 0)));
                 default:
                     throw Error(call.Location, $"Unknown combat predicate '{call.Name}'.");

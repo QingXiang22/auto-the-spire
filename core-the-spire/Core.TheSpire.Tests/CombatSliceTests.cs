@@ -294,6 +294,50 @@ public sealed class CombatSliceTests
         Assert.Equal(9, deadlyOpening.IntentDamage);
     }
 
+    public void LivingFogAppliesAndClearsSmogAndSummonsBombIntoOpenEncounterSlot()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var encounterId = ContentId.Parse("base-spire:living-fog-normal");
+        var livingFogId = ContentId.Parse("base-spire:living-fog");
+        var gasBombId = ContentId.Parse("base-spire:gas-bomb");
+        var smogId = ContentId.Parse("base-spire:smog");
+        var session = environment.StartEncounter(927, "ironclad", 56, 65, [],
+            [new CombatEnemySpawn(livingFogId.ToString(), SlotIndex: 5, TotalSlotCount: 6)],
+            Enumerable.Repeat(BaseSpireIds.DefendIronclad, 5));
+        Assert.Equal(5, environment.Observe(session).Enemies.Single().SlotIndex);
+
+        var firstEnemyTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(48, firstEnemyTurn.Observation.PlayerHp);
+        Assert.Equal(1, session.State.Player.Creature.PowerAmount(ContentId.Parse("base-spire:smoggy-power")));
+        Assert.Equal(IntentKind.Attack, firstEnemyTurn.Observation.Enemies.Single().Intent);
+
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        var remainingSkill = session.State.Player.HandInstances[0];
+        Assert.True(remainingSkill.Afflictions.Contains(smogId));
+        Assert.True((definition.Cards[remainingSkill.CardId].ResolveKeywords(remainingSkill)
+            & CardKeywords.Unplayable) != 0);
+        Assert.False(environment.LegalActions(session).Any(action => action ==
+            new PlayCardAction(0, session.State.Player.Id)));
+        Assert.Throws<InvalidOperationException>(() => environment.Step(session,
+            new PlayCardAction(0, session.State.Player.Id)));
+
+        var enteredSkill = session.State.Player.CreateGeneratedCard(BaseSpireIds.DefendIronclad);
+        session.State.Player.MutableDiscardPile.Add(enteredSkill);
+        CombatCardEvents.Enter(session, enteredSkill.InstanceId);
+        EffectExecutor.Resume(session);
+        Assert.True(session.State.FindCombatCard(enteredSkill.InstanceId)!.Afflictions.Contains(smogId));
+
+        var nextEnemyTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(2, nextEnemyTurn.Observation.Enemies.Count);
+        Assert.Equal(new[] { 0, 5 }, nextEnemyTurn.Observation.Enemies.Select(enemy => enemy.SlotIndex));
+        var allCombatCards = Enum.GetValues<CardPile>().SelectMany(session.State.GetPile);
+        Assert.False(allCombatCards.Any(card => card.Afflictions.Contains(smogId)));
+
+        var selectedEncounter = environment.StartEncounter(928, "ironclad", 56, 65, [], encounterId);
+        Assert.Equal(new[] { 5 }, environment.Observe(selectedEncounter).Enemies.Select(enemy => enemy.SlotIndex));
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -2507,13 +2551,18 @@ public sealed class CombatSliceTests
 
     public void JsonEffectDslBuildsTypedRuntimeTree()
     {
-        const string source = """{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"},{"op":"kill","target":"self"}]}""";
+        const string source = """{"op":"sequence","effects":[{"op":"attack","amount":8},{"op":"applyPower","power":"base-spire:vulnerable","amount":2,"target":"firstEnemy"},{"op":"kill","target":"self"},{"op":"afflictCards","affliction":"base-spire:smog","type":"skill"}]}""";
         var parsed = EffectDsl.Parse(source);
         var roundTrip = EffectDsl.Parse(EffectDsl.Serialize(parsed));
         Assert.True(parsed is SequenceEffect);
-        Assert.True(roundTrip is SequenceEffect { Effects.Count: 3 });
+        Assert.True(roundTrip is SequenceEffect { Effects.Count: 4 });
         Assert.True(((SequenceEffect)roundTrip).Effects[1] is ApplyPowerEffect { Power.Value: "base-spire:vulnerable", Amount: 2 });
         Assert.True(((SequenceEffect)roundTrip).Effects[2] is KillEffect { Target: TargetSelector.Self });
+        Assert.True(((SequenceEffect)roundTrip).Effects[3] is AfflictCardsEffect
+        {
+            Affliction.Value: "base-spire:smog",
+            Type: CardType.Skill
+        });
     }
 
     public void DuplicateContentIdRequiresExplicitOverride()
@@ -5855,6 +5904,7 @@ internal static class Program
         tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
         tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();
         tests.GasBombUsesDeathBlowIntentExplodesOnceAndMinionBlocksFeedBonus();
+        tests.LivingFogAppliesAndClearsSmogAndSummonsBombIntoOpenEncounterSlot();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();

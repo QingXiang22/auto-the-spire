@@ -171,6 +171,23 @@ package base-spire {
     skipFirstWhenAppliedToEnemy = true
   }
 
+  affliction Smog {
+    addKeywords = [Unplayable]
+  }
+
+  power SmoggyPower {
+    isDebuff = true
+    trigger = afterCardPlayed
+    whenCardType = Skill
+    effect = afflictCards(Smog, type=Skill)
+    on = [
+      trigger(event=afterCardEnteredCombat, whenCardType=Skill,
+        effect=if(cardPlaysThisTurnAtLeast(1, type=Skill, phase=Started),
+          afflictCards(Smog, type=Skill))),
+      trigger(event=afterOwnerTurnEnd, effect=clearAffliction(Smog, type=Skill))
+    ]
+  }
+
   enemy DampCultist {
     hp = variants(default=range(52, 54), tough=range(51, 53))
     moves = actions(
@@ -542,6 +559,25 @@ package base-spire {
       ))
     )
     behavior = loop(gasBombExplode)
+  }
+
+  enemy LivingFog {
+    hp = variants(default=range(80, 80), tough=range(82, 82))
+    moves = actions(
+      livingFogAdvancedGas = sequence(
+        attack(variants(default=8, deadly=9), target=player),
+        applyPower(SmoggyPower, 1, target=player)
+      ),
+      livingFogBloat = action(intent=Attack, effect=sequence(
+        summonEnemy(GasBomb, slot=FirstAvailable),
+        attack(variants(default=5, deadly=6), target=player)
+      )),
+      livingFogSuperGasBlast = attack(variants(default=8, deadly=9), target=player)
+    )
+    behavior = startWith(livingFogAdvancedGas, then=graph(start=livingFogBloat, edges=[
+      edge(livingFogBloat, livingFogSuperGasBlast),
+      edge(livingFogSuperGasBlast, livingFogBloat)
+    ]))
   }
 
   enemy Fogmog {
