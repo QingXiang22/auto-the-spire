@@ -109,6 +109,15 @@
       "tags": ["base-spire:mushroom"]
     },
     {
+      "id": "base-spire:chompers-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:chomper", "base-spire:chomper"],
+      "startingActionsByEnemyIndex": {
+        "1": "base-spire:chomper-screech"
+      },
+      "tags": ["base-spire:chomper"]
+    },
+    {
       "id": "base-spire:ruby-raiders-normal",
       "roomType": "monster",
       "enemySlots": [

@@ -56,6 +56,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public CardPlayRule? CardRule { get; init; }
     public bool PreventEnergyGain { get; init; }
     public bool PreventsFatal { get; init; }
+    public bool IsDebuff { get; init; }
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();
@@ -940,7 +941,7 @@ public sealed record DamageModifierSubscription(decimal Multiplier,
     DamageProperties RequiredProperties = DamageProperties.None,
     DamageProperties ExcludedProperties = DamageProperties.None,
     ContentId? RequiredSourcePower = null);
-public enum PowerRole { None, Strength, Vulnerable, NoDraw }
+public enum PowerRole { None, Strength, Vulnerable, NoDraw, Artifact }
 
 public interface IRulePackage
 {

@@ -356,6 +356,15 @@ internal sealed class GameState
         foreach (var hook in Definition.Hooks)
             amount = hook.ModifyPowerAmountReceived(new RuleHookContext(session, hook.Id), power,
                 definition.Role, owner.Id, applier.Id, amount);
+        if (amount > 0 && definition.IsDebuff)
+        {
+            foreach (var (powerId, stacks) in owner.MutablePowers)
+            {
+                if (stacks <= 0 || Definition.Powers[powerId].Role != PowerRole.Artifact) continue;
+                ApplyPower(session, owner, powerId, -1, applier);
+                return;
+            }
+        }
         if (amount != 0 && definition.OnStackChange is { } adjustment)
             ApplyPower(session, owner, adjustment.Power, checked(amount * adjustment.AmountPerStack), applier);
         var previousAmount = owner.PowerAmount(power);

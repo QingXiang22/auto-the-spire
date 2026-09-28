@@ -1,9 +1,14 @@
 package base-spire {
+  power Artifact {
+    role = Artifact
+  }
+
   power Frail {
     trigger = afterEnemyTurnEnd
     decrementOnTrigger = true
     skipFirstWhenAppliedToPlayer = true
     blockGainMultiplier = 0.75
+    isDebuff = true
   }
 
   power Ritual {
@@ -245,5 +250,15 @@ package base-spire {
         candidate(flyconidSmash, weight=3, maxConsecutive=1)
       )
     )
+  }
+
+  enemy Chomper {
+    hp = variants(default=range(63, 67), tough=range(60, 64))
+    startingPowers = [power(Artifact, 2)]
+    moves = actions(
+      chomperClamp = repeat(2, attack(variants(default=8, deadly=9), target=player)),
+      chomperScreech = addCards(Dazed, count=3, pile=discard, target=player)
+    )
+    behavior = cycle(chomperClamp, chomperScreech)
   }
 }
