@@ -590,14 +590,15 @@ public sealed class CombatEnvironment(GameDefinition definition)
                             state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed);
                     }
                     state.EndTurnStage = EndTurnResolutionStage.EnemyOwnerTurnStartPowers;
+                    state.EnemyTurnParticipantCount = state.Enemies.Count;
                     state.CurrentEnemyIndex = 0;
                     state.CardPlayHistory.Reset();
                     break;
                 case EndTurnResolutionStage.EnemyOwnerTurnStartPowers:
-                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipantCount
                         && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
                         state.CurrentEnemyIndex++;
-                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipantCount)
                     {
                         state.CurrentEnemyIndex = 0;
                         state.EndTurnStage = EndTurnResolutionStage.EnemyAction;
@@ -612,10 +613,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         state.EndTurnStage = EndTurnResolutionStage.StartPlayerTurn;
                         break;
                     }
-                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipantCount
                         && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
                         state.CurrentEnemyIndex++;
-                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipantCount)
                     {
                         state.CurrentEnemyIndex = 0;
                         state.EndTurnStage = EndTurnResolutionStage.EnemyTurnEndPowers;
@@ -656,10 +657,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     state.CurrentEnemyIndex++;
                     break;
                 case EndTurnResolutionStage.EnemyTurnEndPowers:
-                    while (state.CurrentEnemyIndex < state.Enemies.Count
+                    while (state.CurrentEnemyIndex < state.EnemyTurnParticipantCount
                         && state.Enemies[state.CurrentEnemyIndex].Creature.Hp <= 0)
                         state.CurrentEnemyIndex++;
-                    if (state.CurrentEnemyIndex >= state.Enemies.Count)
+                    if (state.CurrentEnemyIndex >= state.EnemyTurnParticipantCount)
                     {
                         state.CurrentEnemyIndex = 0;
                         state.EndTurnStage = EndTurnResolutionStage.PlayerEnemySideEndPowers;
@@ -679,7 +680,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterEnemyTurnEnd);
                     break;
                 case EndTurnResolutionStage.AdvanceEnemyAction:
-                    for (var enemyIndex = 0; enemyIndex < state.Enemies.Count; enemyIndex++)
+                    for (var enemyIndex = 0; enemyIndex < state.EnemyTurnParticipantCount; enemyIndex++)
                     {
                         var enemy = state.Enemies[enemyIndex];
                         if (enemy.Creature.Hp <= 0) continue;

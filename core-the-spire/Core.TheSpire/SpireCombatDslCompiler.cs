@@ -261,15 +261,34 @@ public static class SpireCombatDslCompiler
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
                 case "summonEnemy":
-                    CheckShape(call, 1, 1, "count", "startingAction");
+                    CheckShape(call, 1, 1, "count", "startingAction", "startingPowers", "maxLivingEnemies");
                     var summonCount = OptionalInteger(call, "count", 1);
                     if (summonCount <= 0) throw Error(call.Location, "Summoned enemy count must be positive.");
                     var startingActionNode = OptionalArgument(call, "startingAction");
+                    var summonStartingPowers = OptionalArgument(call, "startingPowers") is { } summonPowersNode
+                        ? CompileStartingPowers(summonPowersNode) : null;
+                    var maxLivingEnemiesNode = OptionalArgument(call, "maxLivingEnemies");
+                    var maxLivingEnemies = maxLivingEnemiesNode is null ? (int?)null
+                        : Integer(maxLivingEnemiesNode);
+                    if (maxLivingEnemies is <= 0)
+                        throw Error(call.Location, "maxLivingEnemies must be positive when specified.");
                     return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount,
-                        startingActionNode is null ? null : ReferenceId(startingActionNode));
+                        startingActionNode is null ? null : ReferenceId(startingActionNode),
+                        summonStartingPowers, maxLivingEnemies);
                 case "stun":
                     CheckShape(call, 0, 0, "target");
                     return new StunEnemyEffect(OptionalTarget(call, "target", TargetSelector.Self));
+                case "setEnemyHealth":
+                    CheckShape(call, 1, 1);
+                    var healthRange = RequireCall(Argument(call, 0));
+                    if (healthRange.Name != "range")
+                        throw Error(healthRange.Location, "setEnemyHealth uses range(minimum, maximum).");
+                    CheckShape(healthRange, 2, 2);
+                    var minimumHealth = Integer(Argument(healthRange, 0));
+                    var maximumHealth = Integer(Argument(healthRange, 1));
+                    if (minimumHealth <= 0 || maximumHealth < minimumHealth)
+                        throw Error(healthRange.Location, "Enemy health range is invalid.");
+                    return new SetEnemyHealthEffect(minimumHealth, maximumHealth);
                 case "generateCards":
                     CheckShape(call, 0, 0, "count", "pile", "upgraded", "type", "distinct", "cost");
                     var generationCount = RequiredArgument(call, "count");
@@ -570,6 +589,26 @@ public static class SpireCombatDslCompiler
                 default:
                     throw Error(call.Location, $"Unknown attack count source '{call.Name}'.");
             }
+        }
+
+        private IReadOnlyList<EnemyStartingPower> CompileStartingPowers(DslValueNode node)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, "Summoned enemy starting Powers must be a list.");
+            var powers = list.Items.Select(item =>
+            {
+                var call = RequireCall(item);
+                if (call.Name != "power")
+                    throw Error(call.Location, "Summoned enemy starting Powers use power(Name, amount).");
+                CheckShape(call, 2, 2);
+                var amount = Integer(ResolveVariants(Argument(call, 1)));
+                if (amount <= 0)
+                    throw Error(call.Location, "Summoned enemy starting Power amounts must be positive.");
+                return new EnemyStartingPower(ReferenceId(Argument(call, 0)), amount);
+            }).ToArray();
+            if (powers.Select(power => power.Power).Distinct().Count() != powers.Length)
+                throw Error(node.Location, "Summoned enemy starting Powers cannot be duplicated.");
+            return Array.AsReadOnly(powers);
         }
 
         private DslValueNode ResolveVariants(DslValueNode node)

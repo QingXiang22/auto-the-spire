@@ -457,7 +457,7 @@ internal static class ConditionEvaluation
         _ => throw new ArgumentOutOfRangeException(nameof(comparison))
     };
 }
-public enum EnemyActionMetric { Turn, EnemyIndex, EnemyHp, EnemyMaxHp, EnemyHpPercent, EnemyBlock, PlayerHp, PlayerMaxHp, PlayerHpPercent, PlayerBlock, LivingEnemies }
+public enum EnemyActionMetric { Turn, EnemyIndex, EnemyHp, EnemyMaxHp, EnemyHpPercent, EnemyBlock, PlayerHp, PlayerMaxHp, PlayerHpPercent, PlayerBlock, LivingEnemies, LivingAllies }
 public enum EnemyActionSide { Enemy, Player }
 
 [System.Text.Json.Serialization.JsonPolymorphic(TypeDiscriminatorPropertyName = "test")]
@@ -1007,7 +1007,7 @@ public sealed record EnemyVariableDefinition(ContentId Id, int DefaultInt = 0);
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
-public enum IntentKind { None, Attack, Buff, Debuff, Stun }
+public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
@@ -1672,9 +1672,28 @@ public sealed class ContentRegistry
                 if (!_enemies.ContainsKey(summon.Enemy))
                     throw new InvalidOperationException($"{owner} summons unknown enemy '{summon.Enemy}'.");
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(summon.Count);
+                if (summon.MaximumLivingEnemyCount is { } maximumLivingEnemies)
+                    ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maximumLivingEnemies);
                 if (summon.StartingAction is { } startingAction
                     && !_enemies[summon.Enemy].Actions.Any(action => action.Id == startingAction))
                     throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with unknown starting action '{startingAction}'.");
+                if (summon.StartingPowers is { } summonPowers)
+                {
+                    if (summonPowers.Select(power => power.Power).Distinct().Count() != summonPowers.Count)
+                        throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with duplicate starting Powers.");
+                    foreach (var startingPower in summonPowers)
+                    {
+                        startingPower.Power.Validate();
+                        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(startingPower.Amount);
+                        if (!_powers.ContainsKey(startingPower.Power))
+                            throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with unknown starting Power '{startingPower.Power}'.");
+                    }
+                }
+                break;
+            case SetEnemyHealthEffect setHealth:
+                ArgumentOutOfRangeException.ThrowIfNegativeOrZero(setHealth.Minimum);
+                if (setHealth.Maximum < setHealth.Minimum)
+                    throw new InvalidOperationException($"{owner} has an invalid enemy health range.");
                 break;
             case ChooseCardFromPileEffect chooseCard:
                 if (!Enum.IsDefined(chooseCard.From)

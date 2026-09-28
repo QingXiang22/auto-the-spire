@@ -65,6 +65,68 @@ public sealed class CombatSliceTests
         Assert.Throws<DslSourceException>(() => SpireCombatBehaviorDslCompiler.Compile(invalid));
     }
 
+    public void BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(919, "ironclad", 56, 65, [], BaseSpireIds.ToughEgg.ToString());
+        var egg = environment.Observe(session).Enemies.Single();
+        var hatchPower = ContentId.Parse("base-spire:hatch");
+        var hatchedVariable = ContentId.Parse("base-spire:hatched");
+        Assert.True(egg.Hp is >= 14 and <= 18);
+        Assert.Equal(1, egg.Powers[hatchPower]);
+        Assert.Equal(0, egg.Variables[hatchedVariable]);
+        Assert.Equal(IntentKind.Summon, egg.Intent);
+
+        var hatchTurn = environment.Step(session, new EndTurnAction());
+        egg = hatchTurn.Observation.Enemies.Single();
+        Assert.True(egg.Hp is >= 19 and <= 22);
+        Assert.Equal(0, egg.Powers.GetValueOrDefault(hatchPower));
+        Assert.Equal(1, egg.Variables[hatchedVariable]);
+        Assert.Equal(IntentKind.Attack, egg.Intent);
+        Assert.Equal(4, egg.IntentDamage);
+        Assert.Contains(hatchTurn.Events, gameEvent => gameEvent.Type == "enemy_health_set"
+            && gameEvent.Target == egg.Id && gameEvent.ExactAmount == egg.Hp);
+    }
+
+    public void BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(920, "ironclad", 80, 80, [], BaseSpireIds.OvicopterNormal);
+        Assert.Equal(IntentKind.Summon, environment.Observe(session).Enemies.Single().Intent);
+
+        environment.Step(session, new EndTurnAction());
+        var firstEnemyTurn = environment.Observe(session).Enemies;
+        Assert.Equal(4, firstEnemyTurn.Count);
+        var eggs = firstEnemyTurn.Where(enemy => enemy.Id.StartsWith(BaseSpireIds.ToughEgg.Value,
+            StringComparison.Ordinal)).ToArray();
+        Assert.Equal(3, eggs.Length);
+        Assert.True(eggs.All(egg => egg.Powers.GetValueOrDefault(ContentId.Parse("base-spire:hatch")) == 2));
+        Assert.True(eggs.All(egg => egg.Powers.GetValueOrDefault(ContentId.Parse("base-spire:minion")) == 1));
+        Assert.True(eggs.All(egg => egg.Variables.GetValueOrDefault(ContentId.Parse("base-spire:hatched")) == 0));
+        Assert.True(eggs.All(egg => egg.Hp is >= 14 and <= 18));
+
+        environment.Step(session, new EndTurnAction());
+        var secondEnemyTurn = environment.Observe(session).Enemies;
+        eggs = secondEnemyTurn.Where(enemy => enemy.Id.StartsWith(BaseSpireIds.ToughEgg.Value,
+            StringComparison.Ordinal)).ToArray();
+        Assert.True(eggs.All(egg => egg.Powers.GetValueOrDefault(ContentId.Parse("base-spire:hatch")) == 0));
+        Assert.True(eggs.All(egg => egg.Variables.GetValueOrDefault(ContentId.Parse("base-spire:hatched")) == 1));
+        Assert.True(eggs.All(egg => egg.Hp is >= 19 and <= 22));
+
+        environment.Step(session, new EndTurnAction());
+        var thirdEnemyTurn = environment.Observe(session).Enemies;
+        Assert.Equal(4, thirdEnemyTurn.Count);
+        Assert.Equal(IntentKind.Summon, thirdEnemyTurn[0].Intent);
+
+        environment.Step(session, new EndTurnAction());
+        var fourthEnemyTurn = environment.Observe(session).Enemies;
+        Assert.Equal(6, fourthEnemyTurn.Count);
+        var newlyLaidEggs = fourthEnemyTurn.Where(enemy => enemy.Id.StartsWith(BaseSpireIds.ToughEgg.Value,
+                StringComparison.Ordinal) && enemy.Powers.GetValueOrDefault(ContentId.Parse("base-spire:hatch")) == 2)
+            .ToArray();
+        Assert.Equal(2, newlyLaidEggs.Length);
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -1902,9 +1964,9 @@ public sealed class CombatSliceTests
         var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
         var content = SpireCombatBehaviorDslCompiler.Compile(package);
 
-        Assert.Equal(1, content.Powers.Count);
-        Assert.Equal(9, content.Enemies.Count);
-        Assert.Equal(9, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(26, content.Powers.Count);
+        Assert.Equal(57, content.Enemies.Count);
+        Assert.Equal(57, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -5451,6 +5513,8 @@ internal static class Program
         var tests = new CombatSliceTests();
         tests.SyntheticRitualFixtureUsesCorrectSideTurnTiming();
         tests.EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations();
+        tests.BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase();
+        tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();

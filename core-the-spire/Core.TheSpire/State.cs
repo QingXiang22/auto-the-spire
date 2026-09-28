@@ -203,6 +203,8 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
             EnemyActionMetric.PlayerHpPercent => player.MaxHp == 0 ? 0 : (int)((long)player.Hp * 100 / player.MaxHp),
             EnemyActionMetric.PlayerBlock => player.Block,
             EnemyActionMetric.LivingEnemies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0),
+            EnemyActionMetric.LivingAllies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0) -
+                (creature.Hp > 0 ? 1 : 0),
             _ => throw new ArgumentOutOfRangeException(nameof(metric))
         };
     }
@@ -257,6 +259,7 @@ internal sealed class GameState
         internal set => Enemies[0].ActionIndex = value;
     }
     public int CurrentEnemyIndex { get; internal set; }
+    internal int EnemyTurnParticipantCount { get; set; }
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
     public bool IsPlayerTurn { get; internal set; } = true;
     internal long NextCardPlayExecutionId() => checked(++_nextCardPlayExecutionId);

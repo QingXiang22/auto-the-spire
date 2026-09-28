@@ -7,6 +7,14 @@ package base-spire {
     role = Artifact
   }
 
+  power Hatch {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+  }
+
+  power Minion {
+  }
+
   power TerritorialPower {
     trigger = afterEnemyTurnEnd
     effect = applyScaledPower(Strength, 0, 1,
@@ -719,6 +727,45 @@ package base-spire {
       spinyToadLash = attack(variants(default=17, deadly=19), target=player)
     )
     behavior = cycle(spinyToadSpikes, spinyToadExplosion, spinyToadLash)
+  }
+
+  enemy ToughEgg {
+    hp = variants(default=range(14, 18), tough=range(15, 19))
+    startingPowers = [power(Hatch, 1)]
+    variables = [variable(Hatched, 0)]
+    moves = actions(
+      toughEggHatch = action(intent=Summon, effect=sequence(
+        removePower(Hatch),
+        setEnemyHealth(range(variants(default=19, tough=20), variants(default=22, tough=23))),
+        modifyEnemyVariable(Hatched, 1, operation=Set)
+      )),
+      toughEggNibble = attack(variants(default=4, deadly=5), target=player)
+    )
+    behavior = startWith(toughEggHatch, then=loop(toughEggNibble))
+  }
+
+  enemy Ovicopter {
+    hp = variants(default=range(124, 130), tough=range(126, 132))
+    moves = actions(
+      ovicopterLayEggs = action(intent=Summon, effect=summonEnemy(ToughEgg, count=3,
+        maxLivingEnemies=6, startingPowers=[power(Hatch, 2), power(Minion, 1)])),
+      ovicopterSmash = attack(variants(default=16, deadly=17), target=player),
+      ovicopterTenderizer = sequence(
+        attack(variants(default=7, deadly=8), target=player),
+        applyPower(Vulnerable, 2, target=player)
+      ),
+      ovicopterNutritionalPaste = applyPower(Strength,
+        variants(default=3, deadly=4), target=self)
+    )
+    behavior = graph(start=ovicopterLayEggs, edges=[
+      edge(ovicopterLayEggs, ovicopterSmash),
+      edge(ovicopterSmash, ovicopterTenderizer),
+      edge(ovicopterTenderizer, chooseByCondition(
+        candidate(ovicopterLayEggs, when=metric(LivingAllies, AtMost, 3)),
+        candidate(ovicopterNutritionalPaste, when=metric(LivingAllies, GreaterThan, 3))
+      )),
+      edge(ovicopterNutritionalPaste, ovicopterSmash)
+    ])
   }
 
   enemy SlumberingBeetle {
