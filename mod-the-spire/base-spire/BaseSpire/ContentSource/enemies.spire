@@ -342,4 +342,28 @@ package base-spire {
       edge(inkletWhirlwind, inkletJab)
     ])
   }
+
+  enemy FrogKnight {
+    hp = variants(default=range(191, 191), tough=range(199, 199))
+    startingPowers = [power(PlatingPower, variants(default=15, tough=19))]
+    moves = actions(
+      frogKnightForTheQueen = applyPower(Strength, 5, target=self),
+      frogKnightStrikeDownEvil = attack(variants(default=21, deadly=23), target=player),
+      frogKnightTongueLash = sequence(
+        attack(variants(default=13, deadly=14), target=player),
+        applyPower(Frail, 2, target=player)
+      ),
+      frogKnightBeetleCharge = attack(variants(default=35, deadly=40), target=player)
+    )
+    behavior = graph(start=frogKnightTongueLash, edges=[
+      edge(frogKnightTongueLash, frogKnightStrikeDownEvil),
+        edge(frogKnightStrikeDownEvil, frogKnightForTheQueen),
+        edge(frogKnightForTheQueen, chooseByCondition(
+        candidate(frogKnightBeetleCharge,
+          when=metric(EnemyHp, LessThan, variants(default=95, tough=99)), maxUsesPerCombat=1),
+        candidate(frogKnightTongueLash, when=metric(Turn, AtLeast, 0))
+      )),
+      edge(frogKnightBeetleCharge, frogKnightTongueLash)
+    ])
+  }
 }
