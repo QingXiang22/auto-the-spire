@@ -13,6 +13,7 @@ package base-spire {
   }
 
   power Minion {
+    preventsFatal = true
   }
 
   power TerritorialPower {

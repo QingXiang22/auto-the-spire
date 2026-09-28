@@ -127,6 +127,30 @@ public sealed class CombatSliceTests
         Assert.Equal(2, newlyLaidEggs.Length);
     }
 
+    public void BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var encounter = environment.StartEncounter(921, "ironclad", 80, 80, [], BaseSpireIds.OvicopterNormal);
+        environment.Step(encounter, new EndTurnAction());
+        var egg = encounter.State.Enemies.First(enemy => enemy.Creature.Id.StartsWith(BaseSpireIds.ToughEgg.Value,
+            StringComparison.Ordinal)).Creature;
+        Assert.Equal(1, egg.PowerAmount(ContentId.Parse("base-spire:minion")));
+        egg.Hp = 1;
+        var feed = ContentId.Parse("base-spire:feed");
+        encounter.State.Player.MutableHand.Add(new CardInstance("feed-minion-test", feed));
+
+        environment.Step(encounter, new PlayCardAction(0, egg.Id));
+
+        Assert.Equal(80, encounter.State.Player.Creature.MaxHp);
+        Assert.Equal(0, egg.Hp);
+
+        var ordinary = environment.Start(922, "ironclad", 80, 80, [feed],
+            BaseSpireIds.ToughEgg.ToString(), enemyHp: 1);
+        environment.Step(ordinary, new PlayCardAction(0, ordinary.State.Enemy.Id));
+        Assert.Equal(83, ordinary.State.Player.Creature.MaxHp);
+    }
+
     public void SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage()
     {
         var definition = Build(new BaseSpirePackage());
@@ -5515,6 +5539,7 @@ internal static class Program
         tests.EnemyLocalVariablesDriveDslTransitionsAndAppearInObservations();
         tests.BaseToughEggHatchesByResettingItsHealthAndSwitchingItsLocalPhase();
         tests.BaseOvicopterSummonsEggsThatHatchOnTheirNextEnemyTurn();
+        tests.BaseMinionsSuppressFatalBonusesWhileOrdinaryKillsTriggerThem();
         tests.BasePackageRegistersVanillaStartingDeckAndDeadlyCultistValues();
         tests.StandardRunLoadsOvergrowthEncounterPoolsFromBaseContent();
         tests.BaseAnchorAndVajraApplyTheirCombatStartEffects();

@@ -48,7 +48,7 @@ The current pool covers 85/87 source definitions; only the multiplayer-only Demo
 
 Power-local variables are declared with `variables = [variable(Name, initialValue)]`, read with `powerVariable(Power, Name)`, and changed with `modifyPowerVariable(Power, Name, amount)`. Values initialize when the Power becomes active, persist as its stack count changes, and clear when it is removed. Combat observations expose the active variables for the player and each enemy so policies can reason from the same state the engine uses.
 
-Attack effects accept `onFatal=...`, which runs only when the hit kills and the victim has no active Power marked `preventsFatal=true`. The `gainMaxHp` combat effect updates current combat HP and max HP, and updates the owning Run when combat began from one. Feed uses this callback and remains excluded from combat generation.
+Attack effects accept `onFatal=...`, which runs only when the hit kills and the victim has no active Power marked `preventsFatal=true`. This flag suppresses Fatal card rewards without preventing the creature from dying; Ovicopter's Minion Power uses it, so Feed cannot gain max HP from a summoned egg. The `gainMaxHp` combat effect updates current combat HP and max HP, and updates the owning Run when combat began from one. Feed uses this callback and remains excluded from combat generation.
 
 Juggling uses the shared `afterCardPlayed` Attack trigger, an exact `cardPlaysThisTurn` history predicate, dynamic clone count from the owning Power, and `upgradedKeywords = [innate]`. Run combat setup moves upgraded Innate instances into the opening hand before filling remaining slots from the shuffled deck.
 
