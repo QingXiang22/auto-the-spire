@@ -40,7 +40,7 @@ package base-spire {
     removeAfterOpponentTurnEnd = true
     events = [event(type=damage, owner=target, require=[move], exclude=[unpowered],
       positiveAmount=false, effect=scaledAttack(0, 1,
-        count=targetPowerAmount(FlameBarrierPower, target=self), target=selectedTarget,
+        count=targetPowerAmount(FlameBarrierPower, target=self), target=target,
         properties=[unpowered]))]
   }
 

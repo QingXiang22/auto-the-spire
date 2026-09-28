@@ -1806,6 +1806,8 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} reads deferred event amount with an invalid card context.");
             case TakePowerTurnEventAmountCountSource deferred when !_powers.ContainsKey(deferred.Power):
                 throw new InvalidOperationException($"{owner} reads deferred turn event amount for unknown power '{deferred.Power}'.");
+            case TakePowerEventAmountCountSource or TakePowerTurnEventAmountCountSource:
+                break;
             case ProductCombatCountSource product:
                 ValidateCombatCountSource(product.Left, owner, counts);
                 ValidateCombatCountSource(product.Right, owner, counts);
