@@ -54,7 +54,7 @@
 
 [`Byrdonis.cs`](../sts2/src/Core/Models/Monsters/Byrdonis.cs) 的 HP 为 90（Tough 81–84），以 Swoop 17/19 开场，之后循环 Peck 三次（3/4）与 Swoop；入场获得一层 Territorial Power，并在每个敌方回合结束按层数增加 Strength。其 Elite 遭遇也已登记。
 
-[`PunchConstruct.cs`](../sts2/src/Core/Models/Monsters/PunchConstruct.cs) 以 1 层 Artifact 入场，普通遭遇 HP 为 60（Tough 55），循环获得 10 格挡、两次 5/6 伤害并施加 1 层 Frail、单次 14/16 伤害。单体普通遭遇已登记；事件版随机削减生命和开场动作覆写尚未作为同一遭遇近似导入。
+[`PunchConstruct.cs`](../sts2/src/Core/Models/Monsters/PunchConstruct.cs) 以 1 层 Artifact 入场，普通遭遇 HP 为 60（Tough 55），循环获得 10 格挡、两次 5/6 伤害并施加 1 层 Frail、单次 14/16 伤害。单体普通遭遇已登记；本轮补入 `ConstructMenagerieNormal` 固定编队（一只 Punch Construct、两只 Cubex Construct），并验证开场行动与 Cubex 的 13 格挡。事件版随机削减生命和开场动作覆写尚未作为同一遭遇近似导入。
 
 [`Mawler.cs`](../sts2/src/Core/Models/Monsters/Mawler.cs) 的默认开场是 Claw 两次 4/5 点攻击；后续等权选择 Rip and Tear 14/16、施加 Vulnerable 3 的 Roar、或 Claw。Rip and Tear 与 Claw 不可连续重复，Roar 整场只出现一次。候选动作新增长度为战斗的使用次数上限，运行态仅保留被候选上限引用的行动计数。
 

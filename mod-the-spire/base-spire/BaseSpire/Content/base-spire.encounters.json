@@ -383,6 +383,15 @@
       "enemyIds": ["base-spire:cubex-construct"]
     },
     {
+      "id": "base-spire:construct-menagerie-normal",
+      "roomType": "monster",
+      "enemyIds": [
+        "base-spire:punch-construct",
+        "base-spire:cubex-construct",
+        "base-spire:cubex-construct"
+      ]
+    },
+    {
       "id": "base-spire:vine-shambler-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:vine-shambler"]

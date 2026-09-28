@@ -829,6 +829,28 @@ public sealed class CombatSliceTests
             && gameEvent.Target == "ironclad" && gameEvent.Amount == -1);
     }
 
+    public void ConstructMenagerieEncounterMatchesSourceFormation()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var state = environment.StartEncounter(212, "ironclad", 56, 65, [],
+            BaseSpireIds.ConstructMenagerieNormal);
+
+        Assert.Equal(3, state.State.Enemies.Count);
+        Assert.True(new[]
+        {
+            ContentId.Parse("base-spire:punch-construct"),
+            ContentId.Parse("base-spire:cubex-construct"),
+            ContentId.Parse("base-spire:cubex-construct")
+        }.SequenceEqual(state.State.Enemies.Select(enemy => enemy.Definition.Id)));
+        Assert.True(new[] { 0, 13, 13 }.SequenceEqual(state.State.Enemies.Select(enemy => enemy.Creature.Block)));
+        Assert.True(new[]
+        {
+            ContentId.Parse("base-spire:punch-construct-ready"),
+            ContentId.Parse("base-spire:cubex-charge-up"),
+            ContentId.Parse("base-spire:cubex-charge-up")
+        }.SequenceEqual(state.State.Enemies.Select(enemy => enemy.Definition.Actions[enemy.ActionIndex].Id)));
+    }
+
     public void EnemyActionPowerReferencesAreValidatedWhenBuildingContent()
     {
         var registry = new ContentRegistry();
@@ -6091,6 +6113,7 @@ internal static class Program
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
+        tests.ConstructMenagerieEncounterMatchesSourceFormation();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
         tests.BaseTurretOperatorEncounterUsesAllyTargetingAndLivingAllyConditions();
