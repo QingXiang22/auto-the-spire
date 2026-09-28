@@ -34,4 +34,20 @@ internal static class CombatCardRules
                 if (delta != 0) state.Emit(session, "power", owner.Id, owner.Id, delta);
             }
     }
+
+    public static (int Count, IReadOnlyList<ContentId> ConsumedPowers) ResolvePlayCount(GameState state, CardInstance instance)
+    {
+        var owner = state.Player.Creature;
+        var type = state.Definition.Cards[instance.CardId].Type;
+        var count = 1;
+        var consumed = new List<ContentId>();
+        foreach (var power in owner.Powers.ToArray())
+            if (power.Value > 0 && state.Definition.Powers[power.Key].CardRule is { ExtraPlays: > 0 } rule
+                && rule.Type == type)
+            {
+                count = checked(count + rule.ExtraPlays);
+                if (rule.ConsumeOnPlayCount) consumed.Add(power.Key);
+            }
+        return (count, consumed);
+    }
 }

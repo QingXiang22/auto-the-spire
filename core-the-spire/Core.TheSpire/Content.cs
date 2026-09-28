@@ -26,13 +26,16 @@ public readonly record struct ContentId(string Value)
 public sealed record PackageInfo(string Id, string Version);
 public sealed record PowerStackAdjustment(ContentId Power, int AmountPerStack);
 public sealed record CardPlayRule(CardType Type, int? Cost = null, CardPile? ResultPile = null,
-    bool ConsumeOnPlay = false)
+    bool ConsumeOnPlay = false, int ExtraPlays = 0, bool ConsumeOnPlayCount = false)
 {
     public void Validate()
     {
-        if (!Enum.IsDefined(Type) || Cost is < 0 || ResultPile is not (null or CardPile.Discard or CardPile.Exhaust))
+        if (!Enum.IsDefined(Type) || Cost is < 0 || ExtraPlays < 0
+            || ResultPile is not (null or CardPile.Discard or CardPile.Exhaust))
             throw new ArgumentException("A card-play rule requires a valid type, nonnegative cost, and discard/exhaust result pile.");
-        if (Cost is null && ResultPile is null && !ConsumeOnPlay)
+        if (ConsumeOnPlayCount && ExtraPlays == 0)
+            throw new ArgumentException("Consuming a stack during play-count resolution requires extra plays.");
+        if (Cost is null && ResultPile is null && !ConsumeOnPlay && ExtraPlays == 0)
             throw new ArgumentException("A card-play rule must modify a cost, result pile, or consume a stack.");
     }
 }
@@ -129,6 +132,14 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public bool HasEnergyXCost => CostKind == CardCostKind.X;
     public IReadOnlyList<ContentId> Tags { get; init; } = Array.Empty<ContentId>();
     public IReadOnlyList<ContentId> PoolIds { get; init; } = Array.Empty<ContentId>();
+    public EffectNode? OnExhaust { get; init; }
+    public EffectNode? UpgradedOnExhaust { get; init; }
+
+    public EffectNode? ResolveExhaustEffect(CardInstance instance)
+    {
+        if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
+        return instance.UpgradeLevel > 0 ? UpgradedOnExhaust ?? OnExhaust : OnExhaust;
+    }
 
     public EffectNode ResolveEffect(CardInstance instance)
     {
@@ -972,6 +983,9 @@ public sealed class ContentRegistry
             ValidateEffectReferences(card.Effect, $"Card '{card.Id}'");
             if (card.UpgradedEffect is { } upgradedEffect)
                 ValidateEffectReferences(upgradedEffect, $"Upgraded card '{card.Id}'");
+            if (card.OnExhaust is { } exhaustEffect) ValidateEffectReferences(exhaustEffect, $"Card '{card.Id}' exhaust effect");
+            if (card.UpgradedOnExhaust is { } upgradedExhaust)
+                ValidateEffectReferences(upgradedExhaust, $"Upgraded card '{card.Id}' exhaust effect");
         }
         foreach (var potion in _potions.Values)
             ValidateEffectReferences(potion.Effect, $"Potion '{potion.Id}'");
@@ -1363,6 +1377,12 @@ public sealed class ContentRegistry
                 ValidateCombatCountSource(repeat.Count, owner);
                 ValidateEffectReferences(repeat.Effect, owner);
                 break;
+            case AutoPlayCardsEffect autoPlay:
+                ArgumentOutOfRangeException.ThrowIfNegative(autoPlay.Count);
+                if (autoPlay.From != CardPile.Draw || !Enum.IsDefined(autoPlay.Position))
+                    throw new InvalidOperationException($"{owner} has an unsupported automatic-play source or position.");
+                if (autoPlay.CalculatedCount is { } count) ValidateCombatCountSource(count.Count, owner);
+                break;
             case RepeatForXCostEffect repeatForX:
                 ValidateEffectReferences(repeatForX.Effect, owner);
                 break;
@@ -1409,7 +1429,7 @@ public sealed class ContentRegistry
             case TaggedCardCountSource tag:
                 tag.Tag.Validate();
                 break;
-            case PileCardCountSource or TargetPowerCountSource or PlayerHpLossCountSource:
+            case PileCardCountSource or TargetPowerCountSource or PlayerHpLossCountSource or EnergyXCountSource:
                 break;
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported combat count source.");

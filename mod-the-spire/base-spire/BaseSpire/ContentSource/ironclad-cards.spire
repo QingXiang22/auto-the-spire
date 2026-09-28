@@ -1,4 +1,33 @@
 package base-spire {
+  card DrumOfBattle {
+    pools = [IroncladCardPool]
+    type = skill rarity = uncommon cost = 1 target = self
+    play = draw(2)
+    onExhaust = modifyEnergy(2)
+    upgradedOnExhaust = modifyEnergy(3)
+  }
+
+  card Cascade {
+    pools = [IroncladCardPool]
+    type = skill rarity = rare cost = 0 costKind = x target = self
+    play = autoPlay(from=draw, count=scaled(0, 1, count=energyX()))
+    upgradedPlay = autoPlay(from=draw, count=scaled(1, 1, count=energyX()))
+  }
+
+  card Havoc {
+    pools = [IroncladCardPool]
+    type = skill rarity = common cost = 1 target = self
+    upgradedCost = 0
+    play = autoPlay(from=draw, count=1, forceExhaust=true)
+  }
+
+  card OneTwoPunch {
+    pools = [IroncladCardPool]
+    type = skill rarity = rare cost = 1 target = self
+    play = applyPower(OneTwoPunchPower, 1, target=self)
+    upgradedPlay = applyPower(OneTwoPunchPower, 2, target=self)
+  }
+
   card Corruption {
     pools = [IroncladCardPool]
     type = power rarity = ancient cost = 3 target = self

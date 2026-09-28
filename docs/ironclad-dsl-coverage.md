@@ -2,7 +2,7 @@
 
 The source snapshot's `IroncladCardPool.GenerateAllCards()` lists 87 definitions. Pool membership, executable DSL, single-player eligibility, and source fidelity are separate checks. A declaration alone does not prove faithful execution. Unlock epochs are deliberately ignored; multiplayer restrictions still apply to gameplay pools.
 
-## Source review of the remaining 34 definitions
+## Source review of the initial 34-card gap
 
 The following review covers gameplay members in `sts2/src/Core/Models/Cards` and associated Powers, excluding presentation calls. These requirements guide shared DSL design; unimplemented rows must not be registered with empty effects or native card-specific handlers.
 
@@ -24,7 +24,7 @@ The following review covers gameplay members in `sts2/src/Core/Models/Cards` and
 
 ## Implemented slice: card rules and counted composition
 
-Corruption, Unrelenting, Expect A Fight, and Tear Asunder now have executable DSL and gameplay checks. This brings the source pool to 57/87 definitions, with 30 remaining (including the two multiplayer-only cards). There are 59 card declarations in total, including Entrench and Slimed outside this pool.
+Corruption, Unrelenting, Expect A Fight, Tear Asunder, Cascade, Havoc, One-Two Punch, and Drum of Battle now have executable DSL and gameplay checks. The source pool covers 61/87 definitions, with 26 remaining (including the two multiplayer-only cards). There are 63 card declarations in total, including Entrench and Slimed outside this pool.
 
 Power DSL gains `cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)` and `consumeOnPlay=true` for a rule that spends one stack when a matching card begins. Cost override applies to fixed costs only. One core resolver supplies observations, legal actions, energy payment, and the snapshotted result pile. Rules compose in active Power order; exact original model Hook ordering remains a separate fidelity task.
 
@@ -35,3 +35,11 @@ Default result placement follows `CardModel.GetResultPileTypeForCardPlay`: Power
 For a calculated amount that should be one command, `modifyEnergy(scaled(base, perCount, count=...))` shares the count resolver. Expect A Fight uses one resource command so it emits one energy event; repeated resource commands are a different behavior. Calculated amounts are currently exposed only on energy; expanding the value vocabulary is separate from adding content-specific runtime branches.
 
 `preventEnergyGain = true` is Power metadata checked by the common energy-gain command. It blocks positive gains, allows spending/loss, and does not prevent next-turn energy reset. Expect A Fight gains energy before applying its lock.
+
+## Implemented slice: shared card lifecycle
+
+`CombatCardPlay` creates nested card frames and puts initialize, before-play, effects, after-play, and placement continuations on the existing effect stack. Manual and automatic cards use the same path. Replay resolves the current instance's upgraded effect before each execution, so an upgrade applied during an earlier choice affects subsequent executions. Frame completion preserves that instance's current upgrade level.
+
+`autoPlay` reserves a draw-pile batch before executing it, including shuffle as needed. Cascade uses the captured `energyX()` count; Havoc requests forced exhaustion. Tests distinguish this reservation from sequential draw-and-play, prove child X values and parent context restoration through three nested card frames, and cover automatic X replay without extra payment. One-Two Punch consumes a stack during count resolution; Free Attack consumption remains before each execution. Result placement and exhaustion dispatch happen once.
+
+Drum of Battle uses `onExhaust` / `upgradedOnExhaust`, shared with direct pile moves, played exhaustion, and forced automatic exhaustion. An upgrade can change only the callback. General card event declarations, hand/exhaust automatic selection, post-play phase triggers, deferred Ethereal draw, and exact model Hook ordering remain open.

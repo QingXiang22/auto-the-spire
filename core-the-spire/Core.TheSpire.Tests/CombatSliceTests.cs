@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(57, ironcladPool.Count);
+        Assert.Equal(61, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(59, cards.Count);
+        Assert.Equal(63, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(58, pool.Count);
+        Assert.Equal(62, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -582,6 +582,255 @@ public sealed class CombatSliceTests
         environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Player.Id));
         environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Enemy.Id));
         Assert.Equal(47, noVulnerable.State.Enemy.Hp);
+    }
+
+    public void HavocAutoPlaysFreeAndHonorsForcedExhaustionAndPowerPlacement()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var attack = environment.Start(101, "ironclad", 56, 65, [BaseSpireIds.Havoc],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53, drawPile: [BaseSpireIds.Bludgeon]);
+        environment.Step(attack, new PlayCardAction(0, attack.State.Player.Id));
+        Assert.Equal(21, attack.State.Enemy.Hp);
+        Assert.Equal(2, attack.State.Player.Energy);
+        Assert.Equal(BaseSpireIds.Bludgeon, attack.State.Player.ExhaustPile.Single());
+        Assert.Equal(BaseSpireIds.Havoc, attack.State.Player.DiscardPile.Single());
+        Assert.Equal(1, attack.Random.Get("card-targets").Counter);
+        Assert.Equal(0, attack.State.CardPlayFrames.Count);
+        Assert.Equal(0, attack.State.Events.Count(gameEvent => gameEvent.Type == "draw"));
+
+        var power = environment.Start(102, "ironclad", 56, 65, [BaseSpireIds.Havoc],
+            BaseSpireIds.DampCultist.ToString(), drawPile: [BaseSpireIds.Inflame]);
+        power.State.Player.MutableHand[0] = new CardInstance("havoc+", BaseSpireIds.Havoc, 1);
+        environment.Step(power, new PlayCardAction(0, power.State.Player.Id));
+        Assert.Equal(3, power.State.Player.Energy);
+        Assert.Equal(2, power.State.Player.Creature.Strength);
+        Assert.Equal(0, power.State.Player.ExhaustPile.Count);
+        Assert.False(Enum.GetValues<CardPile>().Any(pile => power.State.GetPile(pile)
+            .Any(card => card.CardId == BaseSpireIds.Inflame)));
+        Assert.Equal(0, power.Random.Get("card-targets").Counter);
+
+        var unplayable = environment.Start(103, "ironclad", 56, 65, [BaseSpireIds.Havoc],
+            BaseSpireIds.DampCultist.ToString(), drawPile: [BaseSpireIds.Dazed]);
+        environment.Step(unplayable, new PlayCardAction(0, unplayable.State.Player.Id));
+        Assert.Equal(BaseSpireIds.Dazed, unplayable.State.Player.ExhaustPile.Single());
+        Assert.False(unplayable.State.Events.Any(gameEvent => gameEvent.Type == "auto_play"));
+    }
+
+    public void CascadeReservesItsWholeBatchBeforeCardDrawsAndSupportsZeroXUpgrade()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(104, "ironclad", 56, 65, [BaseSpireIds.Cascade],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [BaseSpireIds.PommelStrike, BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Anger]);
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.Equal(38, session.State.Enemy.Hp);
+        Assert.Equal(5, session.State.Player.Creature.Block);
+        Assert.Equal(0, session.State.Player.Energy);
+        Assert.Equal(BaseSpireIds.Anger, session.State.Player.Hand.Single());
+        Assert.Equal(3, session.State.Events.Count(gameEvent => gameEvent.Type == "auto_play"));
+        Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "draw"));
+        Assert.Equal(4, session.State.Player.DiscardPile.Count);
+        Assert.Equal(0, session.State.Player.PlayPile.Count);
+        Assert.Equal(2, session.Random.Get("card-targets").Counter);
+        foreach (var upgraded in new[] { false, true })
+        {
+            var zero = environment.Start(105, "ironclad", 56, 65, [BaseSpireIds.Cascade],
+                BaseSpireIds.DampCultist.ToString(), enemyHp: 53, drawPile: [BaseSpireIds.StrikeIronclad]);
+            zero.State.Player.Energy = 0;
+            if (upgraded) zero.State.Player.MutableHand[0] = new CardInstance("cascade+", BaseSpireIds.Cascade, 1);
+            environment.Step(zero, new PlayCardAction(0, zero.State.Player.Id));
+            Assert.Equal(upgraded ? 47 : 53, zero.State.Enemy.Hp);
+            Assert.Equal(upgraded ? 0 : 1, zero.State.Player.DrawPile.Count);
+        }
+    }
+
+    public void AutomaticPlayShufflesDuringReservationAndCapturesXWithoutSpendingEnergy()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var batch = environment.Start(112, "ironclad", 56, 65, [BaseSpireIds.Cascade],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        batch.State.Player.MutableDiscardPile.AddRange([
+            new CardInstance("auto-shuffle-strike", BaseSpireIds.StrikeIronclad),
+            new CardInstance("auto-shuffle-defend", BaseSpireIds.DefendIronclad)]);
+        environment.Step(batch, new PlayCardAction(0, batch.State.Player.Id));
+        Assert.Equal(2, batch.State.Events.Count(gameEvent => gameEvent.Type == "auto_play"));
+        Assert.Equal(3, batch.State.Player.DiscardPile.Count);
+        Assert.Equal(47, batch.State.Enemy.Hp);
+        Assert.Equal(5, batch.State.Player.Creature.Block);
+        Assert.Equal(1, batch.Random.Get("shuffle").Counter);
+
+        var x = environment.Start(113, "ironclad", 56, 65, [BaseSpireIds.Havoc],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53, drawPile: [BaseSpireIds.Whirlwind]);
+        x.State.ApplyPower(x, x.State.Player.Creature, BaseSpireIds.OneTwoPunchPower, 1, x.State.Player.Creature);
+        environment.Step(x, new PlayCardAction(0, x.State.Player.Id));
+        Assert.Equal(33, x.State.Enemy.Hp);
+        Assert.Equal(2, x.State.Player.Energy);
+        Assert.Equal(2, x.State.Events.Count(gameEvent => gameEvent.Type == "auto_play"));
+        Assert.Equal(1, x.State.Events.Count(gameEvent => gameEvent.Type == "card_exhausted"));
+        Assert.Equal(0, x.Random.Get("card-targets").Counter);
+        Assert.Equal(0, x.State.CardPlayFrames.Count);
+
+        var bottom = environment.Start(114, "ironclad", 56, 65, [], BaseSpireIds.DampCultist.ToString(),
+            drawPile: [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad]);
+        var effect = EffectDsl.Parse("""{"op":"autoPlayCards","from":"draw","count":1,"position":"bottom"}""");
+        EffectExecutor.Execute(bottom, bottom.State.Player.Creature, effect);
+        Assert.Equal(5, bottom.State.Player.Creature.Block);
+        Assert.Equal(BaseSpireIds.StrikeIronclad, bottom.State.Player.DrawPile.Single());
+        Assert.Equal(3, bottom.State.Player.Energy);
+    }
+
+    public void NestedAutoPlayChoiceRestoresParentXAndCompletesEachCardOnce()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage(), new AutoPlayContextFixturePackage()));
+        var session = environment.Start(106, "ironclad", 56, 65, [AutoPlayContextFixturePackage.CardId],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53,
+            drawPile: [BaseSpireIds.Havoc, BaseSpireIds.Whirlwind, BaseSpireIds.Headbutt, BaseSpireIds.StrikeIronclad]);
+        var discarded = new CardInstance("nested-discard-defend", BaseSpireIds.DefendIronclad);
+        session.State.Player.MutableDiscardPile.Add(discarded);
+        var paused = environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.True(paused.NeedsChoice);
+        Assert.Equal(3, session.State.CardPlayFrames.Count);
+        Assert.Equal(4, session.State.Player.PlayPile.Count);
+        Assert.Equal(0, session.State.CurrentCardPlay!.XEnergy);
+        Assert.Equal(44, session.State.Enemy.Hp);
+        var resumed = environment.Step(session, new ChooseCardAction(discarded.InstanceId));
+        Assert.False(resumed.NeedsChoice);
+        Assert.Equal(44, session.State.Enemy.Hp);
+        Assert.Equal(3, session.State.Player.Creature.Block);
+        Assert.Equal(0, session.State.Player.Energy);
+        Assert.Equal(0, session.State.CardPlayFrames.Count);
+        Assert.Equal(0, session.State.Player.PlayPile.Count);
+        Assert.Equal(BaseSpireIds.Headbutt, session.State.Player.ExhaustPile.Single());
+        Assert.Equal(3, session.State.Player.DiscardPile.Count);
+        Assert.Equal(discarded.InstanceId, session.State.Player.DrawPileInstances[0].InstanceId);
+        Assert.Equal(3, session.State.Events.Count(gameEvent => gameEvent.Type == "auto_play"));
+        Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "card_exhausted"));
+        Assert.Equal(1, session.Random.Get("card-targets").Counter);
+    }
+
+    public void OneTwoPunchReplaysEffectsAndTriggersWhilePayingAndPlacingOnce()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(107, "ironclad", 56, 65,
+            [BaseSpireIds.Rage, BaseSpireIds.OneTwoPunch, BaseSpireIds.Anger, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        session.State.Player.MutableHand[1] = new CardInstance("one-two+", BaseSpireIds.OneTwoPunch, 1);
+        var anger = new CardInstance("anger-replayed+", BaseSpireIds.Anger, 1);
+        session.State.Player.MutableHand[2] = anger;
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        session.State.ApplyPower(session, session.State.Player.Creature, BaseSpireIds.FreeAttackPower, 2,
+            session.State.Player.Creature);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(37, session.State.Enemy.Hp);
+        Assert.Equal(6, session.State.Player.Creature.Block);
+        Assert.Equal(2, session.State.Player.Energy);
+        Assert.Equal(1, session.State.Player.Creature.PowerAmount(BaseSpireIds.OneTwoPunchPower));
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(BaseSpireIds.FreeAttackPower));
+        var angers = session.State.Player.DiscardPileInstances.Where(card => card.CardId == BaseSpireIds.Anger).ToArray();
+        Assert.Equal(3, angers.Length);
+        Assert.True(angers.All(card => card.UpgradeLevel == 1));
+        Assert.Equal(3, angers.Select(card => card.InstanceId).Distinct().Count());
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(25, session.State.Enemy.Hp);
+        Assert.Equal(12, session.State.Player.Creature.Block);
+        Assert.Equal(1, session.State.Player.Energy);
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(BaseSpireIds.OneTwoPunchPower));
+        Assert.Equal(1, session.State.Player.DiscardPileInstances.Count(card => card.CardId == BaseSpireIds.StrikeIronclad));
+        Assert.Equal(0, session.State.CardPlayFrames.Count);
+
+        var expiry = environment.Start(108, "ironclad", 56, 65, [BaseSpireIds.OneTwoPunch],
+            BaseSpireIds.DampCultist.ToString());
+        environment.Step(expiry, new PlayCardAction(0, expiry.State.Player.Id));
+        environment.Step(expiry, new EndTurnAction());
+        Assert.Equal(0, expiry.State.Player.Creature.PowerAmount(BaseSpireIds.OneTwoPunchPower));
+    }
+
+    public void ReplayedCardCanSuspendForEachExecutionWithoutRepeatingConsumption()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(109, "ironclad", 56, 65, [BaseSpireIds.Headbutt],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        session.State.ApplyPower(session, session.State.Player.Creature, BaseSpireIds.OneTwoPunchPower, 1,
+            session.State.Player.Creature);
+        session.State.ApplyPower(session, session.State.Player.Creature, BaseSpireIds.RagePower, 3,
+            session.State.Player.Creature);
+        var first = new CardInstance("replay-choice-first", BaseSpireIds.DefendIronclad);
+        var second = new CardInstance("replay-choice-second", BaseSpireIds.DefendIronclad);
+        session.State.Player.MutableDiscardPile.AddRange([first, second]);
+        Assert.True(environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id)).NeedsChoice);
+        Assert.Equal(44, session.State.Enemy.Hp);
+        Assert.Equal(0, session.State.Player.Creature.Block);
+        Assert.True(environment.Step(session, new ChooseCardAction(first.InstanceId)).NeedsChoice);
+        Assert.Equal(35, session.State.Enemy.Hp);
+        Assert.Equal(3, session.State.Player.Creature.Block);
+        Assert.False(environment.Step(session, new ChooseCardAction(second.InstanceId)).NeedsChoice);
+        Assert.Equal(6, session.State.Player.Creature.Block);
+        Assert.Equal(2, session.State.Player.Energy);
+        Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "power" && gameEvent.Amount == -1));
+        Assert.Equal(BaseSpireIds.Headbutt, session.State.Player.DiscardPile.Single());
+    }
+
+    public void ReplayResolvesAnUpgradeAppliedDuringItsFirstExecution()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage(), new AutoPlayContextFixturePackage()));
+        var session = environment.Start(115, "ironclad", 56, 65,
+            [AutoPlayContextFixturePackage.UpgradingCardId], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        session.State.ApplyPower(session, session.State.Player.Creature, BaseSpireIds.OneTwoPunchPower, 1,
+            session.State.Player.Creature);
+        var card = session.State.Player.HandInstances.Single();
+        Assert.True(environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id)).NeedsChoice);
+        Assert.Equal(52, session.State.Enemy.Hp);
+        var resumed = environment.Step(session, new ChooseCardAction(card.InstanceId));
+        Assert.False(resumed.NeedsChoice);
+        Assert.Equal(49, session.State.Enemy.Hp);
+        Assert.Equal(1, session.State.Player.DiscardPileInstances.Single().UpgradeLevel);
+        Assert.Equal(0, session.State.CardPlayFrames.Count);
+    }
+
+    public void DrumOfBattleExhaustCallbackUsesItsUpgradeAndWorksDuringAutomaticPlay()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        foreach (var upgraded in new[] { false, true })
+        {
+            var session = environment.Start(110, "ironclad", 56, 65, [BaseSpireIds.Havoc],
+                BaseSpireIds.DampCultist.ToString(),
+                drawPile: [BaseSpireIds.DrumOfBattle, BaseSpireIds.DefendIronclad, BaseSpireIds.StrikeIronclad]);
+            if (upgraded) session.State.Player.MutableDrawPile[0] = new CardInstance("drum+", BaseSpireIds.DrumOfBattle, 1);
+            environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+            Assert.Equal(upgraded ? 5 : 4, session.State.Player.Energy);
+            Assert.Equal(2, session.State.Player.Hand.Count);
+            Assert.Equal(BaseSpireIds.DrumOfBattle, session.State.Player.ExhaustPile.Single());
+            Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "energy"));
+            Assert.Equal(upgraded ? 3 : 2, session.State.Events.Single(gameEvent => gameEvent.Type == "energy").Amount);
+        }
+        var bulk = environment.Start(111, "ironclad", 56, 65, [BaseSpireIds.DrumOfBattle],
+            BaseSpireIds.DampCultist.ToString());
+        Assert.True(bulk.State.IsUpgradeable(bulk.State.Player.HandInstances[0]));
+        EffectExecutor.Execute(bulk, bulk.State.Player.Creature, new MoveCardEffect(CardPile.Hand, CardPile.Exhaust));
+        Assert.Equal(5, bulk.State.Player.Energy);
+        Assert.Equal(1, bulk.State.Events.Count(gameEvent => gameEvent.Type == "energy"));
+    }
+
+    private sealed class AutoPlayContextFixturePackage : IRulePackage
+    {
+        public static readonly ContentId CardId = ContentId.Parse("autoplay-context:parent-x");
+        public static readonly ContentId UpgradingCardId = ContentId.Parse("autoplay-context:upgrade-during-play");
+        public PackageInfo Info { get; } = new("autoplay-context", "1.0.0");
+        public void Register(ContentRegistry registry)
+        {
+            var source = DslSourceParser.Parse("""
+                package autoplay-context {
+                  card ParentX { type = skill rarity = token cost = 0 costKind = x target = self
+                    play = sequence(autoPlay(from=draw, count=2), repeatForX(gainBlock(1))) }
+                  card UpgradeDuringPlay { type = attack rarity = token cost = 1 target = enemy
+                    play = sequence(attack(1), chooseCard(from=play, prompt="Upgrade this card",
+                      filter=upgradeable, onSelected=upgradeSelectedCard()))
+                    upgradedPlay = attack(3) }
+                }
+                """);
+            foreach (var card in SpireCombatDslCompiler.CompileCards(source)) registry.Register(card);
+        }
     }
 
     public void CorruptionSharesCostRulesAndSnapshotsExhaustionAcrossCardChoices()
@@ -1274,7 +1523,7 @@ public sealed class CombatSliceTests
         Assert.Equal(3, state.State.Player.Creature.Block);
         Assert.Equal(1, state.State.Events.Count(gameEvent => gameEvent.Type == "block"
             && gameEvent.Amount == 3));
-        Assert.True(state.State.PendingCardPlay is null);
+        Assert.True(state.State.CurrentCardPlay is null);
     }
 
     public void SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster()
@@ -4849,6 +5098,14 @@ internal static class Program
         tests.CrueltyAddsItsStacksToPoweredAttacksAgainstVulnerableTargets();
         tests.SetupStrikeStacksTemporaryStrengthAndPreservesPermanentStrengthAtExpiry();
         tests.CorruptionSharesCostRulesAndSnapshotsExhaustionAcrossCardChoices();
+        tests.HavocAutoPlaysFreeAndHonorsForcedExhaustionAndPowerPlacement();
+        tests.CascadeReservesItsWholeBatchBeforeCardDrawsAndSupportsZeroXUpgrade();
+        tests.AutomaticPlayShufflesDuringReservationAndCapturesXWithoutSpendingEnergy();
+        tests.NestedAutoPlayChoiceRestoresParentXAndCompletesEachCardOnce();
+        tests.OneTwoPunchReplaysEffectsAndTriggersWhilePayingAndPlacingOnce();
+        tests.ReplayedCardCanSuspendForEachExecutionWithoutRepeatingConsumption();
+        tests.ReplayResolvesAnUpgradeAppliedDuringItsFirstExecution();
+        tests.DrumOfBattleExhaustCallbackUsesItsUpgradeAndWorksDuringAutomaticPlay();
         tests.FreeAttackConsumesOnlyMatchingPlaysAndPreservesXCostSpending();
         tests.ExpectAFightCountsHandAttacksAndLocksPositiveEnergyUntilTurnEnd();
         tests.TearAsunderCountsPositiveHpLossAcrossTurnsAndRepeatCountsAreCapturedOnce();

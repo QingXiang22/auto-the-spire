@@ -410,19 +410,10 @@ public sealed class CombatEnvironment(GameDefinition definition)
         else if (action is PlayCardAction play)
         {
             var cardInstance = state.Player.HandInstances[play.HandIndex];
-            var card = definition.Cards[cardInstance.CardId];
-            var preview = CombatCardRules.Preview(state, cardInstance);
-            state.Player.MutableHand.RemoveAt(play.HandIndex);
-            state.Player.Energy -= preview.EnergyToSpend;
-            state.Player.MutablePlayPile.Add(cardInstance);
             var selectedTarget = play.TargetId == state.Player.Id ? state.Player.Creature
                 : state.Enemies.Select(enemy => enemy.Creature).FirstOrDefault(enemy => enemy.Id == play.TargetId);
-            state.PendingCardPlay = new PendingCardPlay(cardInstance, preview.XEnergy, selectedTarget,
-                ResultPile: preview.ResultPile);
-            CombatCardRules.BeforePlay(session, cardInstance);
-            state.Emit(session, "play", state.Player.Id, play.TargetId ?? state.FirstLivingEnemy?.Id ?? state.Enemy.Id, 0);
-            EffectExecutor.Execute(session, state.Player.Creature, card.ResolveEffect(cardInstance), selectedTarget);
-            if (state.PendingChoice is null && state.PendingCardSelection is null) FinalizePlayedCard(session);
+            CombatCardPlay.QueueManual(session, cardInstance, selectedTarget);
+            EffectExecutor.Resume(session);
         }
         else if (action is EndTurnAction)
         {
@@ -434,35 +425,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
             state.PendingChoice is not null || state.PendingCardSelection is not null);
     }
 
-    private static void FinalizePlayedCard(GameSession session)
-    {
-        var state = session.State;
-        if (state.PendingCardPlay is not { } cardPlay) return;
-        var cardInstance = cardPlay.Card;
-        if (!cardPlay.AfterPlayedDispatched)
-        {
-            state.PendingCardPlay = cardPlay with { AfterPlayedDispatched = true };
-            EffectExecutor.QueuePowerTriggerEffects(session, state.Player.Creature,
-                PowerTrigger.AfterCardPlayed, cardPlay.Target, cardInstance);
-            EffectExecutor.Resume(session);
-            if (state.PendingChoice is not null || state.PendingCardSelection is not null) return;
-        }
-        state.Player.MutablePlayPile.Remove(cardInstance);
-        state.PendingCardPlay = null;
-        if (cardPlay.ResultPile is { } resultPile) state.GetPile(resultPile).Add(cardInstance);
-        if (cardPlay.ResultPile == CardPile.Exhaust)
-        {
-            EffectExecutor.QueueCardExhaustion(session, state.Player.Creature, cardInstance);
-            EffectExecutor.Resume(session);
-        }
-    }
-
     private static void ResumeChoiceContinuation(GameSession session)
     {
         var state = session.State;
         if (state.PendingChoice is not null || state.PendingCardSelection is not null) return;
         if (state.EndTurnStage != EndTurnResolutionStage.None) ContinueEndTurn(session);
-        else FinalizePlayedCard(session);
     }
 
     private static void ContinueEndTurn(GameSession session)

@@ -20,8 +20,8 @@ The first Ironclad card set needs these shared operations:
 
 - Damage and defense: `attack`, `scaledAttack`, `attackUsingBlock`, `randomAttack`, `gainBlock`, `gainBlockFromCurrentBlock`, `loseHp`.
 - Powers and resources: `applyPower`, `draw`, `modifyEnergy`.
-- Piles and cards: `addCards`, `chooseCard`, `chooseCards`, `randomMoveCard`, `forEachCard`, `moveSelectedCard`, `upgradeSelectedCard`, `upgradeCards`.
-- Composition: `sequence`, `repeat`, `repeatForX`, and `if(predicate, then, else=...)`.
+- Piles and cards: `addCards`, `autoPlay`, `chooseCard`, `chooseCards`, `randomMoveCard`, `forEachCard`, `moveSelectedCard`, `upgradeSelectedCard`, `upgradeCards`.
+- Composition: `sequence`, `repeat`, `repeatForX`, `repeatForCount`, and `if(predicate, then, else=...)`.
 
 The first combat predicates are `targetAlive()`, `hasPower(Power, target=...)`, `energyAtLeast(n)`, `cardExhaustedThisTurn()`, and `pileCountAtLeast(pile, n)`. Predicates are checked when the effect executes. `hasPower` defaults to the acting entity and can inspect the selected target. `cardExhaustedThisTurn()` reads a turn-scoped summary in combat state rather than scanning the entire event log on every play; `pileCountAtLeast` reads the current pile. Evil Eye, Forgotten Ritual, Pact's End, and Dismantle exercise these conditions in source-backed definitions.
 
@@ -62,9 +62,11 @@ The source parser produces a location-aware syntax tree. The package compiler ch
 
 ## Implementation status
 
-`ironclad-cards.spire` is authoritative for 59 currently modeled card definitions associated with Ironclad combat, including Entrench and Slimed; 57 belong to the 87-card original Ironclad pool through explicit `pools` declarations. `ironclad-powers.spire` declares Rage, Feel No Pain, Pyre, Cruelty, Setup Strike, Mangle, Corruption, Free Attack, and No Energy Gain Power behavior. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `potions.spire` declares six combat potions, and `potion-powers.spire` declares Flex Potion's temporary Strength lifecycle. `SpireCombatDslCompiler` compiles card and potion declarations with shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
+`ironclad-cards.spire` is authoritative for 63 currently modeled card definitions associated with Ironclad combat, including Entrench and Slimed; 61 belong to the 87-card original Ironclad pool through explicit `pools` declarations. `ironclad-powers.spire` declares Rage, Feel No Pain, Pyre, Cruelty, Setup Strike, Mangle, Corruption, Free Attack, No Energy Gain, and One-Two Punch Power behavior. `enemies.spire` is authoritative for Ritual and the nine enemy definitions currently registered by `base-spire`. `potions.spire` declares six combat potions, and `potion-powers.spire` declares Flex Potion's temporary Strength lifecycle. `SpireCombatDslCompiler` compiles card and potion declarations with shared effect expressions; `SpireCombatBehaviorDslCompiler` compiles Powers, enemies, variants, and move behavior. Both produce the typed definitions consumed by the existing combat lifecycle. Parsing and compilation happen while building the content package, never during a combat step.
 
 Enemy source exercises fixed cycles, an opening move followed by a loop, random choices without immediate repeats, and consecutive-use limits. Difficulty values resolve once from the configured profile. The old JSON enemy files and their parser have been removed. Encounter lineups and Nibbit slot-specific starting actions still use JSON. The nine registered enemies are only the current project roster, not the complete original game's monster catalog; see [content-dsl.md](content-dsl.md) for remaining scope.
+
+Manual play, automatic draw-pile play, and replay share nested card frames with lifecycle continuations on the existing effect stack. Cascade and Havoc author batch reservation; One-Two Punch authors a count modifier. Drum of Battle authors its own exhaust callback and upgrade override. The engine resolves the current instance before each execution rather than caching its upgraded effect across a choice. See [content-dsl.md](content-dsl.md) for phase and callback boundaries.
 
 ## Completion gate for the first combat package
 

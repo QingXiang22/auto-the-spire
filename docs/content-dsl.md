@@ -79,6 +79,18 @@ The same resolver produces `CombatObservation.HandPlayPreviews`, legal actions, 
 
 `repeatForCount(base, perCount, count=..., effect=...)` captures its count once and schedules that many effects. `playerHpLossCount()` reads positive unblocked HP-loss events across the combat, including direct HP loss and excluding fully blocked attacks. Tear Asunder uses it for hit count. The core stores a combat summary rather than scanning the event log during a play. This first calculated-value slice supports `scaled` on energy and counted repetition; full arithmetic and calculated parameters for every primitive remain future DSL work.
 
+## Automatic play and replay contract
+
+`autoPlay(from=draw, count=1, position=top, forceExhaust=true)` reserves a batch into the play pile before executing its cards in order. Draw-pile exhaustion can shuffle discard while reserving, using the existing shuffle stream. This operation does not draw to hand and does not fire draw events. Top and bottom selection are supported in this slice; hand/exhaust selection and draw-triggered automatic play remain later extensions.
+
+`count=scaled(0, 1, count=energyX())` reads the current card's captured X value; an upgraded Cascade adds one to the base. Automatically played cards do not spend energy and independently capture current energy for their own X effects. Selected-enemy targets use the existing `card-targets` stream (the core's CombatTargets domain); no target choice RNG is consumed for self or area targets. Unplayable cards move to discard or exhaust without executing effects; forced exhaustion applies to that fallback too. Successfully played Power cards still leave combat even when forced exhaustion is requested.
+
+One combat card lifecycle owns both manual and automatic play: result-pile snapshot, replay-count resolution, before-play rules, effects, after-play triggers, and placement. Nested card frames retain each card's target and X value across choices. Lifecycle continuation nodes run on the existing effect stack; there is no separate automatic-play scheduler. Batch cards are reserved before those frames start, matching the source's selection timing.
+
+`cardRule(type=attack, extraPlays=1, consumeOnPlayCount=true)` adds one execution to a matching card and consumes one Power stack when its total execution count is resolved. The amount of that Power controls how many future cards receive the rule, not the number of extra executions. `consumeOnPlay=true` remains a before-each-execution operation, as required by Free Attack. Card effects and after-play triggers run for each execution, while payment, X capture, and final placement happen once. One-Two Punch expires at owner turn-end.
+
+Cards may declare `onExhaust` and `upgradedOnExhaust`. The exhausted instance supplies the effect context and upgrade level; an upgraded exhaust callback alone makes the definition upgradable. The same dispatch covers played Exhaust cards, forced automatic exhaustion, direct and selected pile moves, bulk moves, and Ethereal cleanup. Drum of Battle draws two when played and grants 2 energy (3 upgraded) when exhausted. Self callbacks execute once per exhaustion before authored exhaust-trigger Powers in the current implementation; original global model Hook ordering remains pending. General card draw/turn events and generated callback replay counts are not implemented by this slice.
+
 ## Combat potion contract
 
 Potions use the same effect compiler and execution queue as cards and Powers:
@@ -108,7 +120,7 @@ package base-spire {
 
 The remaining Ironclad source semantics and shared DSL work are tracked in [ironclad-dsl-coverage.md](ironclad-dsl-coverage.md). Card-play rules and counted composition extend this language through the existing executor; they do not add a second scheduler.
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 59 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 57 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 63 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 61 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
 - [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers the Pyre maximum-energy and Cruelty vulnerable-damage modifiers, the Setup Strike/Mangle Power lifecycles, and Corruption/Free Attack/No Energy Gain card and resource rules.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - [`potions.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire) declares Fire, Block, Strength, Blessing of the Forge, Beetle Juice, and Flex Potion; [`potion-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potion-powers.spire) declares Flex Potion's temporary Strength lifecycle.
