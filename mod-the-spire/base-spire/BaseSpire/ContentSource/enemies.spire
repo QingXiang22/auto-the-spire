@@ -435,4 +435,21 @@ package base-spire {
     behavior = cycle(owlMagistrateScrutiny, owlMagistratePeckAssault,
       owlMagistrateJudicialFlight, owlMagistrateVerdict)
   }
+
+  enemy LouseProgenitor {
+    hp = variants(default=range(134, 136), tough=range(138, 141))
+    startingBlock = variants(default=14, tough=18)
+    moves = actions(
+      louseProgenitorWeb = sequence(
+        attack(variants(default=9, deadly=10), target=player),
+        applyPower(Frail, 2, target=player)
+      ),
+      louseProgenitorCurlAndGrow = sequence(
+        gainBlock(variants(default=14, tough=18)),
+        applyPower(Strength, 5, target=self)
+      ),
+      louseProgenitorPounce = attack(variants(default=14, deadly=16), target=player)
+    )
+    behavior = cycle(louseProgenitorWeb, louseProgenitorCurlAndGrow, louseProgenitorPounce)
+  }
 }
