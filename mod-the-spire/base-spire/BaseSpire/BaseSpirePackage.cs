@@ -110,6 +110,9 @@ public static class BaseSpireIds
     public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
     public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
     public static readonly ContentId NibbitsNormal = ContentId.Parse("base-spire:nibbits-normal");
+    public static readonly ContentId LivingShield = ContentId.Parse("base-spire:living-shield");
+    public static readonly ContentId TurretOperator = ContentId.Parse("base-spire:turret-operator");
+    public static readonly ContentId TurretOperatorWeak = ContentId.Parse("base-spire:turret-operator-weak");
     public static readonly ContentId LeafSlimeSmall = ContentId.Parse("base-spire:leaf-slime-small");
     public static readonly ContentId TwigSlimeSmall = ContentId.Parse("base-spire:twig-slime-small");
     public static readonly ContentId LeafSlimeMedium = ContentId.Parse("base-spire:leaf-slime-medium");
@@ -117,6 +120,7 @@ public static class BaseSpireIds
     public static readonly ContentId SlimesWeak = ContentId.Parse("base-spire:slimes-weak");
     public static readonly ContentId SlimesNormal = ContentId.Parse("base-spire:slimes-normal");
     public static readonly ContentId Ritual = ContentId.Parse("base-spire:ritual");
+    public static readonly ContentId Rampart = ContentId.Parse("base-spire:rampart");
     public static readonly ContentId Strength = ContentId.Parse("base-spire:strength");
     public static readonly ContentId FirePotion = ContentId.Parse("base-spire:fire-potion");
     public static readonly ContentId BlockPotion = ContentId.Parse("base-spire:block-potion");

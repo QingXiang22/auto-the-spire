@@ -889,6 +889,7 @@ internal enum EndTurnResolutionStage
     AdvanceEnemyAction,
     StartPlayerTurn,
     PlayerTurnStartPowers,
+    EnemyPlayerTurnStartPowers,
     PlayerOwnerTurnStartPowers
 }
 

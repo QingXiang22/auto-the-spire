@@ -504,6 +504,12 @@
       "id": "base-spire:ovicopter-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:ovicopter"]
+    },
+    {
+      "id": "base-spire:turret-operator-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "enemyIds": ["base-spire:living-shield", "base-spire:turret-operator"]
     }
   ]
 }

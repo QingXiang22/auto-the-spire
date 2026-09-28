@@ -16,6 +16,11 @@ package base-spire {
     preventsFatal = true
   }
 
+  power Rampart {
+    trigger = afterPlayerTurnStart
+    effect = gainBlock(1, perPowerStack=Rampart, properties=[unpowered], target=otherAllies, onlyEnemy=TurretOperator)
+  }
+
   power TerritorialPower {
     trigger = afterEnemyTurnEnd
     effect = applyScaledPower(Strength, 0, 1,
@@ -979,5 +984,34 @@ package base-spire {
       )),
       edge(bowlbugRockDizzy, bowlbugRockHeadbutt)
     ])
+  }
+
+  enemy LivingShield {
+    hp = variants(default=range(55, 55), tough=range(65, 65))
+    startingPowers = [power(Rampart, 25)]
+    moves = actions(
+      livingShieldSlam = attack(6, target=player),
+      livingShieldSmash = action(intent=Attack, effect=sequence(
+        attack(variants(default=16, deadly=18), target=player),
+        applyPower(Strength, 3, target=self)
+      ))
+    )
+    behavior = graph(start=livingShieldSlam, edges=[
+      edge(livingShieldSlam, chooseByCondition(
+        candidate(livingShieldSlam, when=metric(LivingAllies, AtLeast, 1)),
+        candidate(livingShieldSmash, when=metric(LivingAllies, Equal, 0))
+      )),
+      edge(livingShieldSmash, livingShieldSmash)
+    ])
+  }
+
+  enemy TurretOperator {
+    hp = variants(default=range(41, 41), tough=range(51, 51))
+    moves = actions(
+      turretOperatorUnload = repeat(5, attack(variants(default=3, deadly=4), target=player)),
+      turretOperatorUnloadSecond = repeat(5, attack(variants(default=3, deadly=4), target=player)),
+      turretOperatorReload = applyPower(Strength, 1, target=self)
+    )
+    behavior = cycle(turretOperatorUnload, turretOperatorUnloadSecond, turretOperatorReload)
   }
 }

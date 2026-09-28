@@ -595,6 +595,41 @@ public sealed class CombatSliceTests
             EnemyActionRepeatPolicy.PreventImmediateRepeat));
     }
 
+    public void BaseTurretOperatorEncounterUsesAllyTargetingAndLivingAllyConditions()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(1030, "ironclad", 1000, 1000, [],
+            BaseSpireIds.TurretOperatorWeak);
+        var livingShield = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.LivingShield);
+        var turret = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.TurretOperator);
+        Assert.Equal(25, livingShield.Creature.PowerAmount(BaseSpireIds.Rampart));
+        Assert.Equal(6, environment.Observe(session).Enemies.Single(enemy => enemy.Id == livingShield.Creature.Id).IntentDamage);
+        Assert.Equal(15, environment.Observe(session).Enemies.Single(enemy => enemy.Id == turret.Creature.Id).IntentDamage);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(25, turret.Creature.Block);
+        Assert.Equal(0, livingShield.Creature.Block);
+        Assert.Contains(session.State.Events, gameEvent => gameEvent.Type == "block"
+            && gameEvent.Source == livingShield.Creature.Id && gameEvent.Target == turret.Creature.Id
+            && gameEvent.Amount == 25 && gameEvent.Properties == DamageProperties.Unpowered);
+
+        environment.Step(session, new EndTurnAction());
+        var turretObservation = environment.Observe(session).Enemies.Single(enemy => enemy.Id == turret.Creature.Id);
+        Assert.Equal(IntentKind.Buff, turretObservation.Intent);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1, turret.Creature.Strength);
+        Assert.Equal(20, environment.Observe(session).Enemies.Single(enemy => enemy.Id == turret.Creature.Id).IntentDamage);
+
+        turret.Creature.Hp = 0;
+        environment.Step(session, new EndTurnAction());
+        var shieldObservation = environment.Observe(session).Enemies.Single(enemy => enemy.Id == livingShield.Creature.Id);
+        Assert.Equal(16, shieldObservation.IntentDamage);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(3, livingShield.Creature.Strength);
+        shieldObservation = environment.Observe(session).Enemies.Single(enemy => enemy.Id == livingShield.Creature.Id);
+        Assert.Equal(19, shieldObservation.IntentDamage);
+    }
+
     public void EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState()
     {
         var serializedCondition = System.Text.Json.JsonSerializer.Serialize<EnemyActionCondition>(
@@ -2011,9 +2046,9 @@ public sealed class CombatSliceTests
         var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/enemies.spire");
         var content = SpireCombatBehaviorDslCompiler.Compile(package);
 
-        Assert.Equal(26, content.Powers.Count);
-        Assert.Equal(57, content.Enemies.Count);
-        Assert.Equal(57, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(27, content.Powers.Count);
+        Assert.Equal(59, content.Enemies.Count);
+        Assert.Equal(59, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -5649,6 +5684,7 @@ internal static class Program
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.EnemyActionPowerReferencesAreValidatedWhenBuildingContent();
         tests.EnemyTransitionsUseWeightedRngAndPreventImmediateRepeats();
+        tests.BaseTurretOperatorEncounterUsesAllyTargetingAndLivingAllyConditions();
         tests.EnemyTransitionsEvaluateOrderedConditionsAgainstCombatState();
         tests.EncounterContentDslRejectsUnsupportedShapesAndDuplicateIds();
         tests.SpireCardDslCompilesTheCurrentIroncladCardSet();
