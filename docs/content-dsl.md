@@ -116,11 +116,30 @@ package base-spire {
 
 `attack` accepts an optional `properties` list of damage flags (`move`, `unpowered`, `unblockable`, `skipHurtAnimation`). Omission defaults to `[move]`; an empty list means no flags. Fire Potion explicitly uses `[unpowered]`, matching its source without adding the Move flag. Block Potion currently uses `gainBlock(12)`; source block properties and their full modifier pipeline remain outside this slice.
 
+## Captured counts and lexical scope
+
+`withCount("name", count=..., effect=...)` evaluates its count once before entering the body. `savedCount("name")` reads that immutable binding in any counted effect inside the body. Bindings follow effect composition and pending choices; nested bindings may shadow an outer name, and leaving the body restores the outer binding. They are execution context, not persistent mod variables. References outside their lexical scope fail registry validation. Independently triggered effects and automatically played cards start their own scope.
+
+```text
+play = withCount("handSize", count=pileCount(hand), effect=sequence(
+  forEachCard(from=hand, effect=moveSelectedCard(from=hand, to=exhaust)),
+  repeatForCount(0, 1, count=savedCount("handSize"), effect=attack(7))
+))
+```
+
+`forEachCard` snapshots its original card instances, then completes each item's effect and triggered continuations before advancing to the next item. In this example, exhaustion callbacks may draw cards, but those new cards are not exhausted and do not change the number of attacks. All original exhaustion callbacks finish before the attack sequence starts.
+
+`choose(prompt="...", options=[option("...", effect=...)])` exposes an ordinary choice through the same scheduler; an option may omit its effect. Both ordinary and card choices preserve the lexical count scope.
+
+`generateCards(count=number|scaled(...), pile=hand, upgraded=false)` samples with replacement from the holder's character pools, preserving pool order and deduplicating content IDs. Basic, Ancient, Event, and `canGenerateInCombat=false` cards are excluded, as in `CardFactory.FilterForCombat`. Each sample consumes one call on `combat-card-generation`. All samples are reserved before their generated instances are added sequentially; each `card_generated` event and its continuations finish before adding the next instance. Generated cards have fresh combat identities and do not alter the permanent deck. Zero requests consume no random calls. Positive requests require an explicit character identity and a nonempty eligible pool.
+
+Run combat supplies the character identity automatically. Standalone `Start`/`StartEncounter` may supply `characterId` independently of `playerId`; a player ID is never interpreted as a character name. This slice uses the currently registered subset of the owner's pool. Full original pool order, multiplayer eligibility metadata, hand capacity/overflow, and all original generation hooks remain fidelity work.
+
 ## Current source of truth
 
 The remaining Ironclad source semantics and shared DSL work are tracked in [ironclad-dsl-coverage.md](ironclad-dsl-coverage.md). Card-play rules and counted composition extend this language through the existing executor; they do not add a second scheduler.
 
-- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 63 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 61 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
+- [`ironclad-cards.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire) declares 65 cards currently associated with Ironclad combat, including the Event card Entrench and status card Slimed. The Ironclad pool contains 63 of the source's 87 cards, each marked with `pools = [IroncladCardPool]`.
 - [`ironclad-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire) declares the current Feel No Pain and Rage Power triggers the Pyre maximum-energy and Cruelty vulnerable-damage modifiers, the Setup Strike/Mangle Power lifecycles, and Corruption/Free Attack/No Energy Gain card and resource rules.
 - [`enemies.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire) declares Ritual and all nine enemy definitions currently registered by `base-spire`: Damp and Calcified Cultists, Fuzzy Wurm Crawler, Shrinker Beetle, Nibbit, and four Leaf/Twig Slimes.
 - [`potions.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire) declares Fire, Block, Strength, Blessing of the Forge, Beetle Juice, and Flex Potion; [`potion-powers.spire`](../mod-the-spire/base-spire/BaseSpire/ContentSource/potion-powers.spire) declares Flex Potion's temporary Strength lifecycle.

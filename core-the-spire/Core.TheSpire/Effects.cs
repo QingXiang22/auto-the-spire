@@ -16,10 +16,12 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveCardEffect), "moveCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnergyEffect), "modifyEnergy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GeneratePotionEffect), "generatePotion")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(GenerateCombatCardsEffect), "generateCombatCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseEffect), "choose")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForCountEffect), "repeatForCount")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(WithCountEffect), "withCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AutoPlayCardsEffect), "autoPlayCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForXCostEffect), "repeatForXCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
@@ -52,10 +54,12 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TaggedCardCountSource), "taggedCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerHpLossCountSource), "playerHpLossCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyXCountSource), "energyX")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SavedCountSource), "savedCount")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
 public sealed record EnergyXCountSource : CombatCountSource;
+public sealed record SavedCountSource(string Name) : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -90,6 +94,8 @@ public sealed record ExpirePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
 public sealed record ModifyEnergyEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record GeneratePotionEffect(int Count = 1) : EffectNode;
+public sealed record GenerateCombatCardsEffect(int Count, CardPile Pile = CardPile.Hand, bool Upgraded = false,
+    ScaledCombatAmount? CalculatedCount = null) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
     [System.Text.Json.Serialization.JsonConstructor]
@@ -106,6 +112,7 @@ public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, Effect
 public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
 public sealed record RepeatForCountEffect(int BaseCount, int PerCount, CombatCountSource Count,
     EffectNode Effect) : EffectNode;
+public sealed record WithCountEffect(string Name, CombatCountSource Count, EffectNode Effect) : EffectNode;
 public sealed record AutoPlayCardsEffect(CardPile From, int Count, CardPilePosition Position = CardPilePosition.Top,
     bool ForceExhaust = false, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
@@ -139,10 +146,10 @@ internal static class EffectExecutor
     private static readonly CardPile[] AllCardPiles = Enum.GetValues<CardPile>();
 
     public static void Execute(GameSession session, EntityState owner, EffectNode effect, EntityState? target = null,
-        CardInstance? selectedCard = null)
+        CardInstance? selectedCard = null, EffectCountScope? counts = null)
     {
         var state = session.State;
-        state.PendingEffects.Add((owner, effect, target, selectedCard));
+        state.PendingEffects.Add(new(owner, effect, target, selectedCard, counts));
         Drain(session);
     }
 
@@ -153,7 +160,7 @@ internal static class EffectExecutor
         var state = session.State;
         state.Emit(session, "card_exhausted", owner.Id, card.InstanceId, 1);
         var effects = BuildExhaustTriggerEffects(state, owner, card);
-        if (effects.Count > 0) state.PendingEffects.Add((owner, new SequenceEffect(effects), null, card));
+        if (effects.Count > 0) state.PendingEffects.Add(new(owner, new SequenceEffect(effects), null, card));
     }
 
     private static List<EffectNode> BuildExhaustTriggerEffects(GameState state, EntityState owner, CardInstance card)
@@ -170,7 +177,7 @@ internal static class EffectExecutor
         var state = session.State;
         var effects = BuildPowerTriggerEffects(state, owner, trigger, selectedCard);
         if (effects.Count > 0)
-            state.PendingEffects.Add((owner, new SequenceEffect(effects), target, selectedCard));
+            state.PendingEffects.Add(new(owner, new SequenceEffect(effects), target, selectedCard));
     }
 
     private static List<EffectNode> BuildPowerTriggerEffects(GameState state, EntityState owner, PowerTrigger trigger,
@@ -198,7 +205,7 @@ internal static class EffectExecutor
         while (state.PendingChoice is null && state.PendingCardSelection is null && state.PendingEffects.Count > 0)
         {
             var index = state.PendingEffects.Count - 1;
-            var (owner, effect, target, selectedCard) = state.PendingEffects[index];
+            var (owner, effect, target, selectedCard, counts) = state.PendingEffects[index];
             state.PendingEffects.RemoveAt(index);
             switch (effect)
             {
@@ -208,12 +215,21 @@ internal static class EffectExecutor
                 case BeginAutoCardEffect autoCard:
                     CombatCardPlay.QueueAutomatic(session, autoCard.Card, autoCard.ForceExhaust);
                     break;
+                case PlaceGeneratedCardEffect generatedCard:
+                    CombatCardGeneration.Place(session, generatedCard);
+                    break;
+                case GenerateCombatCardsEffect generation:
+                    var generatedCount = generation.CalculatedCount is { } calculatedGeneration
+                        ? ScaledAmount(state, owner, target, calculatedGeneration.BaseAmount,
+                            calculatedGeneration.PerCount, calculatedGeneration.Count, counts) : generation.Count;
+                    CombatCardGeneration.Queue(session, owner, generation, generatedCount);
+                    break;
                 case AutoPlayCardsEffect autoPlay:
-                    ReserveAutoPlayBatch(session, owner, target, autoPlay);
+                    ReserveAutoPlayBatch(session, owner, target, autoPlay, counts);
                     break;
                 case SequenceEffect sequence:
                     for (var i = sequence.Effects.Count - 1; i >= 0; i--)
-                        state.PendingEffects.Add((owner, sequence.Effects[i], target, selectedCard));
+                        state.PendingEffects.Add(new(owner, sequence.Effects[i], target, selectedCard, counts));
                     break;
                 case AttackEffect attack:
                     if (attack.Target == TargetSelector.AllOpponents)
@@ -231,7 +247,7 @@ internal static class EffectExecutor
                     var scaledVictim = ResolveSingleTarget(state, owner, target, scaledAttack.Target);
                     ApplyAttack(session, owner, scaledVictim,
                         ScaledAmount(state, owner, scaledVictim, scaledAttack.BaseAmount,
-                            scaledAttack.AmountPerCount, scaledAttack.Count));
+                            scaledAttack.AmountPerCount, scaledAttack.Count, counts));
                     break;
                 case RandomAttackEffect randomAttack:
                     if (randomAttack.Amount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
@@ -298,7 +314,7 @@ internal static class EffectExecutor
                     break;
                 case ApplyScaledPowerEffect scaledPower:
                     var powerAmount = ScaledAmount(state, owner, target, scaledPower.BaseAmount,
-                        scaledPower.AmountPerCount, scaledPower.Count);
+                        scaledPower.AmountPerCount, scaledPower.Count, counts);
                     state.ApplyPower(session, ResolveSingleTarget(state, owner, target, scaledPower.Target),
                         scaledPower.Power, powerAmount, owner);
                     break;
@@ -319,7 +335,7 @@ internal static class EffectExecutor
                         }
                     }
                     for (var i = moveTriggerEffects.Count - 1; i >= 0; i--)
-                        state.PendingEffects.Add((state.Player.Creature, moveTriggerEffects[i].Effect,
+                        state.PendingEffects.Add(new(state.Player.Creature, moveTriggerEffects[i].Effect,
                             null, moveTriggerEffects[i].Card));
                     break;
                 case AddCardsToPileEffect addCards:
@@ -339,7 +355,7 @@ internal static class EffectExecutor
                     var options = state.GetPile(chooseCard.From)
                         .Where(card => state.MatchesCardSelectionFilter(card, chooseCard.Filter)).ToArray();
                     if (options.Length > 0)
-                        state.PendingCardSelection = new PendingCardChoice(chooseCard, options, owner, target, selectedCard);
+                        state.PendingCardSelection = new PendingCardChoice(chooseCard, options, owner, target, selectedCard) { Counts = counts };
                     break;
                 case ChooseCardsFromPileEffect chooseCards:
                     if (chooseCards.MinChoices < 0 || chooseCards.MaxChoices < chooseCards.MinChoices)
@@ -352,7 +368,7 @@ internal static class EffectExecutor
                         if (chooseCards.MinChoices > maximum)
                             throw new InvalidOperationException("Not enough cards satisfy the required selection count.");
                         state.PendingCardSelection = new PendingCardSetChoice(chooseCards, multiOptions,
-                            owner, target, selectedCard, maximum);
+                            owner, target, selectedCard, maximum) { Counts = counts };
                     }
                     break;
                 case RandomlyMoveCardFromPileEffect randomCard:
@@ -372,7 +388,7 @@ internal static class EffectExecutor
                     var matchingCards = state.GetPile(eachCard.From)
                         .Where(card => state.MatchesCardSelectionFilter(card, eachCard.Filter)).ToArray();
                     for (var i = matchingCards.Length - 1; i >= 0; i--)
-                        state.PendingEffects.Add((owner, eachCard.Effect, target, matchingCards[i]));
+                        state.PendingEffects.Add(new(owner, eachCard.Effect, target, matchingCards[i], counts));
                     break;
                 case MoveSelectedCardToPileEffect moveSelectedCard:
                     if (selectedCard is null)
@@ -417,7 +433,7 @@ internal static class EffectExecutor
                 case ModifyEnergyEffect energy:
                     var requestedEnergy = energy.CalculatedAmount is { } calculatedEnergy
                         ? ScaledAmount(state, owner, target, calculatedEnergy.BaseAmount,
-                            calculatedEnergy.PerCount, calculatedEnergy.Count) : energy.Amount;
+                            calculatedEnergy.PerCount, calculatedEnergy.Count, counts) : energy.Amount;
                     var energyDelta = requestedEnergy > 0 && state.Player.Creature.Powers.Any(power =>
                         power.Value > 0 && state.Definition.Powers[power.Key].PreventEnergyGain) ? 0 : requestedEnergy;
                     var previousEnergy = state.Player.Energy;
@@ -433,6 +449,7 @@ internal static class EffectExecutor
                     state.PendingChoiceOwner = owner;
                     state.PendingChoiceTarget = target;
                     state.PendingChoiceSelectedCard = selectedCard;
+                    state.PendingChoiceCounts = counts;
                     break;
                 case IfEffect conditional:
                     var condition = conditional.Predicate switch
@@ -446,26 +463,31 @@ internal static class EffectExecutor
                         PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
                         _ => throw new InvalidOperationException($"Unsupported effect predicate '{conditional.Predicate.GetType().Name}'.")
                     };
-                    if (condition) state.PendingEffects.Add((owner, conditional.Then, target, selectedCard));
-                    else if (conditional.Else is not null) state.PendingEffects.Add((owner, conditional.Else, target, selectedCard));
+                    if (condition) state.PendingEffects.Add(new(owner, conditional.Then, target, selectedCard, counts));
+                    else if (conditional.Else is not null) state.PendingEffects.Add(new(owner, conditional.Else, target, selectedCard, counts));
                     break;
                 case RepeatEffect repeat:
                     if (repeat.Count < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
-                    for (var i = 0; i < repeat.Count; i++) state.PendingEffects.Add((owner, repeat.Effect, target, selectedCard));
+                    for (var i = 0; i < repeat.Count; i++) state.PendingEffects.Add(new(owner, repeat.Effect, target, selectedCard, counts));
+                    break;
+                case WithCountEffect binding:
+                    var capturedCount = ScaledAmount(state, owner, target, 0, 1, binding.Count, counts);
+                    state.PendingEffects.Add(new(owner, binding.Effect, target, selectedCard,
+                        new EffectCountScope(binding.Name, capturedCount, counts)));
                     break;
                 case RepeatForCountEffect repeat:
-                    var repeatCount = ScaledAmount(state, owner, target, repeat.BaseCount, repeat.PerCount, repeat.Count);
+                    var repeatCount = ScaledAmount(state, owner, target, repeat.BaseCount, repeat.PerCount, repeat.Count, counts);
                     if (repeatCount < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
-                    for (var i = 0; i < repeatCount; i++) state.PendingEffects.Add((owner, repeat.Effect, target, selectedCard));
+                    for (var i = 0; i < repeatCount; i++) state.PendingEffects.Add(new(owner, repeat.Effect, target, selectedCard, counts));
                     break;
                 case RepeatForXCostEffect repeatForX:
                     for (var i = 0; i < (state.CurrentCardPlay?.XEnergy ?? 0); i++)
-                        state.PendingEffects.Add((owner, repeatForX.Effect, target, selectedCard));
+                        state.PendingEffects.Add(new(owner, repeatForX.Effect, target, selectedCard, counts));
                     break;
                 case CustomEffect custom:
                     if (!state.Definition.CustomEffects.TryGetValue(custom.Handler, out var handler))
                         throw new InvalidOperationException($"Unknown custom effect handler '{custom.Handler}'.");
-                    handler.Execute(new EffectExecutionContext(session, owner, target, handler.Id), custom.Payload);
+                    handler.Execute(new EffectExecutionContext(session, owner, target, handler.Id, counts), custom.Payload);
                     break;
                 default:
                     throw new NotSupportedException($"Unsupported effect node: {effect.GetType().Name}");
@@ -483,7 +505,7 @@ internal static class EffectExecutor
     };
 
     private static int ScaledAmount(GameState state, EntityState owner, EntityState? selectedTarget, int baseAmount,
-        int amountPerCount, CombatCountSource source)
+        int amountPerCount, CombatCountSource source, EffectCountScope? counts = null)
     {
         var count = source switch
         {
@@ -492,6 +514,8 @@ internal static class EffectExecutor
                 : state.GetPile(pile.Pile).Count,
             PlayerHpLossCountSource => state.PlayerHpLossCount,
             EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
+            SavedCountSource saved => counts?.Resolve(saved.Name)
+                ?? throw new InvalidOperationException($"Count '{saved.Name}' is not bound in this effect scope."),
             TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),
             TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
                 .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
@@ -501,14 +525,14 @@ internal static class EffectExecutor
     }
 
     private static void ReserveAutoPlayBatch(GameSession session, EntityState owner, EntityState? target,
-        AutoPlayCardsEffect effect)
+        AutoPlayCardsEffect effect, EffectCountScope? counts)
     {
         var state = session.State;
         if (owner != state.Player.Creature || effect.From != CardPile.Draw || !Enum.IsDefined(effect.Position))
             throw new InvalidOperationException("Automatic play requires the player's draw pile and a supported position.");
         if (owner.Hp <= 0 || state.FirstLivingEnemy is null) return;
         var count = effect.CalculatedCount is { } calculated
-            ? ScaledAmount(state, owner, target, calculated.BaseAmount, calculated.PerCount, calculated.Count)
+            ? ScaledAmount(state, owner, target, calculated.BaseAmount, calculated.PerCount, calculated.Count, counts)
             : effect.Count;
         if (count < 0) throw new InvalidOperationException("Automatic play count cannot be negative.");
         var reserved = new List<CardInstance>();
@@ -525,7 +549,7 @@ internal static class EffectExecutor
             state.Emit(session, "card_moved", owner.Id, card.InstanceId, 1);
         }
         for (var i = reserved.Count - 1; i >= 0; i--)
-            state.PendingEffects.Add((owner, new BeginAutoCardEffect(reserved[i], effect.ForceExhaust), null, reserved[i]));
+            state.PendingEffects.Add(new(owner, new BeginAutoCardEffect(reserved[i], effect.ForceExhaust), null, reserved[i]));
     }
 
     private static void GeneratePotions(GameSession session, EntityState owner, int count)
