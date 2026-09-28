@@ -1,4 +1,17 @@
 package base-spire {
+  power CorruptionPower {
+    cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)
+  }
+
+  power FreeAttackPower {
+    cardRule = cardRule(type=attack, cost=0, consumeOnPlay=true)
+  }
+
+  power NoEnergyGainPower {
+    preventEnergyGain = true
+    removeAfterOwnerTurnEnd = true
+  }
+
   power FeelNoPain {
     trigger = afterCardExhausted
     effect = gainBlock(1, perPowerStack=FeelNoPain)

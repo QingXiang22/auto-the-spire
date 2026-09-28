@@ -41,7 +41,8 @@ public static class SpireCombatBehaviorDslCompiler
             var properties = Properties(declaration, "Power");
             Only(properties, "trigger", "effect", "skipFirstWhenAppliedToEnemy", "skipFirstWhenAppliedToPlayer",
                 "role", "whenCardType", "removeAfterPlayerTurnEnd", "maxEnergyPerStack",
-                "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd");
+                "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
+                "cardRule", "preventEnergyGain");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -81,7 +82,33 @@ public static class SpireCombatBehaviorDslCompiler
                     ? CompileStackAdjustment(stackChangeNode, "stackDelta", "negativeStackDelta") : null,
                 OnExpire: properties.TryGetValue("onExpire", out var expireNode)
                     ? CompileStackAdjustment(expireNode, "sourceStacks", "negativeSourceStacks") : null,
-                RemoveAfterOwnerTurnEnd: OptionalBoolean(properties, "removeAfterOwnerTurnEnd"));
+                RemoveAfterOwnerTurnEnd: OptionalBoolean(properties, "removeAfterOwnerTurnEnd"))
+            {
+                CardRule = properties.TryGetValue("cardRule", out var cardRuleNode) ? CompileCardRule(cardRuleNode) : null,
+                PreventEnergyGain = OptionalBoolean(properties, "preventEnergyGain")
+            };
+        }
+
+        private static CardPlayRule CompileCardRule(DslValueNode node)
+        {
+            var call = RequireCall(node);
+            if (call.Name != "cardRule" || call.Arguments.Any(argument => argument.Name is null))
+                throw Error(node.Location, "Card rules require cardRule(type=..., cost=..., resultPile=..., consumeOnPlay=...).");
+            var properties = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
+            foreach (var argument in call.Arguments)
+            {
+                if (argument.Name is not ("type" or "cost" or "resultPile" or "consumeOnPlay"))
+                    throw Error(argument.Location, $"Unknown cardRule argument '{argument.Name}'.");
+                if (!properties.TryAdd(argument.Name!, argument.Value))
+                    throw Error(argument.Location, $"Duplicate cardRule argument '{argument.Name}'.");
+            }
+            var rule = new CardPlayRule(EnumValue<CardType>(Required(properties, "type", node.Location)),
+                properties.TryGetValue("cost", out var cost) ? Integer(cost) : null,
+                properties.TryGetValue("resultPile", out var pile) ? EnumValue<CardPile>(pile) : null,
+                OptionalBoolean(properties, "consumeOnPlay"));
+            try { rule.Validate(); }
+            catch (ArgumentException exception) { throw Error(node.Location, exception.Message); }
+            return rule;
         }
 
         private PowerStackAdjustment CompileStackAdjustment(DslValueNode node, string positive, string negative)

@@ -19,6 +19,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseEffect), "choose")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForCountEffect), "repeatForCount")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForXCostEffect), "repeatForXCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
@@ -48,8 +49,11 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCardCountSource), "pile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TaggedCardCountSource), "taggedCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerHpLossCountSource), "playerHpLossCount")]
 public abstract record CombatCountSource;
-public sealed record PileCardCountSource(CardPile Pile) : CombatCountSource;
+public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
+public sealed record PlayerHpLossCountSource : CombatCountSource;
+public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
 public sealed record RandomAttackEffect(int Amount) : EffectNode;
@@ -81,7 +85,7 @@ public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
 public sealed record ExpirePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
-public sealed record ModifyEnergyEffect(int Amount) : EffectNode;
+public sealed record ModifyEnergyEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record GeneratePotionEffect(int Count = 1) : EffectNode;
 public sealed record ChooseEffect : EffectNode
 {
@@ -97,6 +101,8 @@ public sealed record ChooseEffect : EffectNode
 public sealed record ChoiceOption(string Label, EffectNode? Effect = null);
 public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, EffectNode? Else = null) : EffectNode;
 public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
+public sealed record RepeatForCountEffect(int BaseCount, int PerCount, CombatCountSource Count,
+    EffectNode Effect) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
@@ -387,8 +393,14 @@ internal static class EffectExecutor
                     state.ExpirePower(session, owner, expirePower.Power);
                     break;
                 case ModifyEnergyEffect energy:
-                    state.Player.Energy = Math.Max(0, state.Player.Energy + energy.Amount);
-                    state.Emit(session, "energy", state.Player.Id, state.Player.Id, energy.Amount);
+                    var requestedEnergy = energy.CalculatedAmount is { } calculatedEnergy
+                        ? ScaledAmount(state, owner, target, calculatedEnergy.BaseAmount,
+                            calculatedEnergy.PerCount, calculatedEnergy.Count) : energy.Amount;
+                    var energyDelta = requestedEnergy > 0 && state.Player.Creature.Powers.Any(power =>
+                        power.Value > 0 && state.Definition.Powers[power.Key].PreventEnergyGain) ? 0 : requestedEnergy;
+                    var previousEnergy = state.Player.Energy;
+                    state.Player.Energy = Math.Max(0, checked(previousEnergy + energyDelta));
+                    state.Emit(session, "energy", state.Player.Id, state.Player.Id, state.Player.Energy - previousEnergy);
                     break;
                 case GeneratePotionEffect generatePotion:
                     GeneratePotions(session, owner, generatePotion.Count);
@@ -419,6 +431,11 @@ internal static class EffectExecutor
                     if (repeat.Count < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
                     for (var i = 0; i < repeat.Count; i++) state.PendingEffects.Add((owner, repeat.Effect, target, selectedCard));
                     break;
+                case RepeatForCountEffect repeat:
+                    var repeatCount = ScaledAmount(state, owner, target, repeat.BaseCount, repeat.PerCount, repeat.Count);
+                    if (repeatCount < 0) throw new InvalidOperationException("Repeat count cannot be negative.");
+                    for (var i = 0; i < repeatCount; i++) state.PendingEffects.Add((owner, repeat.Effect, target, selectedCard));
+                    break;
                 case RepeatForXCostEffect repeatForX:
                     for (var i = 0; i < (state.PendingCardPlay?.XEnergy ?? 0); i++)
                         state.PendingEffects.Add((owner, repeatForX.Effect, target, selectedCard));
@@ -448,7 +465,10 @@ internal static class EffectExecutor
     {
         var count = source switch
         {
-            PileCardCountSource pile => state.GetPile(pile.Pile).Count,
+            PileCardCountSource pile => pile.Type is { } type
+                ? state.GetPile(pile.Pile).Count(card => state.Definition.Cards[card.CardId].Type == type)
+                : state.GetPile(pile.Pile).Count,
+            PlayerHpLossCountSource => state.PlayerHpLossCount,
             TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),
             TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
                 .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),

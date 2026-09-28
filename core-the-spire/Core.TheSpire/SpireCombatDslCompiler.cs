@@ -157,7 +157,14 @@ public static class SpireCombatDslCompiler
                     return new DrawCardsEffect(Integer(Argument(call, 0)));
                 case "modifyEnergy":
                     CheckShape(call, 1, 1);
-                    return new ModifyEnergyEffect(Integer(Argument(call, 0)));
+                    var energyAmount = Argument(call, 0);
+                    return energyAmount is DslNumberNode ? new ModifyEnergyEffect(Integer(energyAmount))
+                        : new ModifyEnergyEffect(0, CompileScaledAmount(energyAmount));
+                case "repeatForCount":
+                    CheckShape(call, 2, 2, "count", "effect");
+                    return new RepeatForCountEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
+                        CompileCombatCount(RequiredArgument(call, "count")),
+                        CompileEffect(RequiredArgument(call, "effect")));
                 case "addCards":
                     CheckShape(call, 1, 1, "pile", "count", "target", "inheritUpgradeFromPlayedCard");
                     return new AddCardsToPileEffect(Id(Name(Argument(call, 0))),
@@ -247,14 +254,27 @@ public static class SpireCombatDslCompiler
             }
         }
 
+        private ScaledCombatAmount CompileScaledAmount(DslValueNode node)
+        {
+            var call = RequireCall(node);
+            if (call.Name != "scaled") throw Error(node.Location, "Calculated amounts require scaled(base, perCount, count=...).");
+            CheckShape(call, 2, 2, "count");
+            return new ScaledCombatAmount(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
+                CompileCombatCount(RequiredArgument(call, "count")));
+        }
+
         private CombatCountSource CompileCombatCount(DslValueNode node)
         {
             var call = RequireCall(node);
             switch (call.Name)
             {
                 case "pileCount":
-                    CheckShape(call, 1, 1);
-                    return new PileCardCountSource(EnumValue<CardPile>(Argument(call, 0)));
+                    CheckShape(call, 1, 1, "type");
+                    return new PileCardCountSource(EnumValue<CardPile>(Argument(call, 0)),
+                        OptionalArgument(call, "type") is { } type ? EnumValue<CardType>(type) : null);
+                case "playerHpLossCount":
+                    CheckShape(call, 0, 0);
+                    return new PlayerHpLossCountSource();
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1);
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))));

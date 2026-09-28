@@ -1,4 +1,35 @@
 package base-spire {
+  card Corruption {
+    pools = [IroncladCardPool]
+    type = power rarity = ancient cost = 3 target = self
+    upgradedCost = 2
+    play = applyPower(CorruptionPower, 1, target=self)
+  }
+
+  card Unrelenting {
+    pools = [IroncladCardPool]
+    type = attack rarity = uncommon cost = 2 target = enemy
+    play = sequence(attack(14), applyPower(FreeAttackPower, 1, target=self))
+    upgradedPlay = sequence(attack(20), applyPower(FreeAttackPower, 1, target=self))
+  }
+
+  card ExpectAFight {
+    pools = [IroncladCardPool]
+    type = skill rarity = uncommon cost = 2 target = self
+    upgradedCost = 1
+    play = sequence(
+      modifyEnergy(scaled(0, 1, count=pileCount(hand, type=attack))),
+      applyPower(NoEnergyGainPower, 1, target=self)
+    )
+  }
+
+  card TearAsunder {
+    pools = [IroncladCardPool]
+    type = attack rarity = rare cost = 2 target = enemy
+    play = repeatForCount(1, 1, count=playerHpLossCount(), effect=attack(5))
+    upgradedPlay = repeatForCount(1, 1, count=playerHpLossCount(), effect=attack(7))
+  }
+
   card Anger {
     pools = [IroncladCardPool]
     type = attack

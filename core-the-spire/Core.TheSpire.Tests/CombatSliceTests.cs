@@ -50,7 +50,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(53, ironcladPool.Count);
+        Assert.Equal(57, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -427,7 +427,7 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(55, cards.Count);
+        Assert.Equal(59, cards.Count);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -469,7 +469,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(54, pool.Count);
+        Assert.Equal(58, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));
@@ -582,6 +582,172 @@ public sealed class CombatSliceTests
         environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Player.Id));
         environment.Step(noVulnerable, new PlayCardAction(0, noVulnerable.State.Enemy.Id));
         Assert.Equal(47, noVulnerable.State.Enemy.Hp);
+    }
+
+    public void CorruptionSharesCostRulesAndSnapshotsExhaustionAcrossCardChoices()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(91, "ironclad", 56, 65,
+            [BaseSpireIds.Corruption, BaseSpireIds.BurningPact, BaseSpireIds.DefendIronclad,
+                BaseSpireIds.Impervious, BaseSpireIds.StrikeIronclad, BaseSpireIds.Inflame],
+            BaseSpireIds.DampCultist.ToString());
+        var corruption = session.State.Player.HandInstances[0];
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.Equal(0, session.State.Player.Energy);
+        Assert.False(Enum.GetValues<CardPile>().Any(pile => session.State.GetPile(pile).Contains(corruption)));
+        var previews = environment.Observe(session).HandPlayPreviews;
+        Assert.Equal(0, previews[0].EnergyToSpend);
+        Assert.Equal((CardPile?)CardPile.Exhaust, previews[0].ResultPile);
+        Assert.Equal(0, previews[2].EnergyToSpend);
+        Assert.Equal(1, previews[3].EnergyToSpend);
+        Assert.False(environment.LegalActions(session).OfType<PlayCardAction>().Any(action => action.HandIndex == 3));
+        session.State.ApplyPower(session, session.State.Player.Creature, BaseSpireIds.FeelNoPain, 3,
+            session.State.Player.Creature);
+        var pact = session.State.Player.HandInstances[0];
+        var defend = session.State.Player.HandInstances[1];
+        var paused = environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.True(paused.NeedsChoice);
+        Assert.True(session.State.Player.PlayPileInstances.Contains(pact));
+        session.State.RemovePower(session.State.Player.Creature, BaseSpireIds.CorruptionPower);
+        environment.Step(session, new ChooseCardAction(defend.InstanceId));
+        Assert.Equal(0, session.State.Player.Energy);
+        Assert.True(session.State.Player.ExhaustPileInstances.Contains(pact));
+        Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "card_exhausted"
+            && gameEvent.Target == pact.InstanceId));
+        Assert.Equal(6, session.State.Player.Creature.Block);
+        Assert.Equal(0, session.State.Player.PlayPileInstances.Count);
+        Assert.Equal(2, session.State.Definition.Cards[BaseSpireIds.Corruption]
+            .ResolveCost(new CardInstance("corruption+", BaseSpireIds.Corruption, 1)));
+    }
+
+    public void FreeAttackConsumesOnlyMatchingPlaysAndPreservesXCostSpending()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(92, "ironclad", 56, 65,
+            [BaseSpireIds.Unrelenting, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash, BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(39, session.State.Enemy.Hp);
+        Assert.Equal(1, session.State.Player.Energy);
+        Assert.Equal(0, environment.Observe(session).HandPlayPreviews[1].EnergyToSpend);
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.Equal(1, session.State.Player.Creature.PowerAmount(BaseSpireIds.FreeAttackPower));
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(31, session.State.Enemy.Hp);
+        Assert.Equal(0, session.State.Player.Energy);
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(BaseSpireIds.FreeAttackPower));
+        Assert.Equal(1, environment.Observe(session).HandPlayPreviews.Single().EnergyToSpend);
+        Assert.False(environment.LegalActions(session).OfType<PlayCardAction>().Any());
+        var x = environment.Start(93, "ironclad", 56, 65,
+            [BaseSpireIds.Unrelenting, BaseSpireIds.Whirlwind], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        x.State.Player.MutableHand[0] = new CardInstance("unrelenting+", BaseSpireIds.Unrelenting, 1);
+        environment.Step(x, new PlayCardAction(0, x.State.Enemy.Id));
+        Assert.Equal(33, x.State.Enemy.Hp);
+        var preview = environment.Observe(x).HandPlayPreviews.Single();
+        Assert.Equal(1, preview.EnergyToSpend);
+        Assert.Equal(1, preview.XEnergy);
+        environment.Step(x, new PlayCardAction(0));
+        Assert.Equal(28, x.State.Enemy.Hp);
+        Assert.Equal(0, x.State.Player.Energy);
+        Assert.Equal(0, x.State.Player.Creature.PowerAmount(BaseSpireIds.FreeAttackPower));
+
+        var choice = environment.Start(97, "ironclad", 56, 65,
+            [BaseSpireIds.Unrelenting, BaseSpireIds.Headbutt], BaseSpireIds.DampCultist.ToString());
+        var unrelenting = choice.State.Player.HandInstances[0];
+        environment.Step(choice, new PlayCardAction(0, choice.State.Enemy.Id));
+        Assert.True(environment.Step(choice, new PlayCardAction(0, choice.State.Enemy.Id)).NeedsChoice);
+        Assert.Equal(0, choice.State.Player.Creature.PowerAmount(BaseSpireIds.FreeAttackPower));
+        environment.Step(choice, new ChooseCardAction(unrelenting.InstanceId));
+        Assert.Equal(1, choice.State.Events.Count(gameEvent => gameEvent.Type == "power" && gameEvent.Amount == -1));
+        Assert.Equal(1, choice.State.Player.Energy);
+
+        var skillEnvironment = new CombatEnvironment(Build(new BaseSpirePackage(), new XSkillRuleFixturePackage()));
+        var skill = skillEnvironment.Start(98, "ironclad", 56, 65,
+            [XSkillRuleFixturePackage.CardId], BaseSpireIds.DampCultist.ToString());
+        skill.State.ApplyPower(skill, skill.State.Player.Creature, BaseSpireIds.CorruptionPower, 1,
+            skill.State.Player.Creature);
+        Assert.Equal(3, skillEnvironment.Observe(skill).HandPlayPreviews.Single().EnergyToSpend);
+        skillEnvironment.Step(skill, new PlayCardAction(0, skill.State.Player.Id));
+        Assert.Equal(0, skill.State.Player.Energy);
+        Assert.Equal(3, skill.State.Player.Creature.Block);
+        Assert.Contains(skill.State.Player.ExhaustPileInstances, card => card.CardId == XSkillRuleFixturePackage.CardId);
+    }
+
+    private sealed class XSkillRuleFixturePackage : IRulePackage
+    {
+        public static readonly ContentId CardId = ContentId.Parse("card-rule-fixture:x-guard");
+        public PackageInfo Info { get; } = new("card-rule-fixture", "1.0.0");
+        public void Register(ContentRegistry registry)
+        {
+            var source = DslSourceParser.Parse("""
+                package card-rule-fixture {
+                  card XGuard { type = skill rarity = token cost = 0 costKind = x target = self
+                    play = repeatForX(gainBlock(1)) }
+                }
+                """);
+            foreach (var card in SpireCombatDslCompiler.CompileCards(source)) registry.Register(card);
+        }
+    }
+
+    public void ExpectAFightCountsHandAttacksAndLocksPositiveEnergyUntilTurnEnd()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        foreach (var upgraded in new[] { false, true })
+        {
+            var session = environment.Start(94, "ironclad", 56, 65,
+                [BaseSpireIds.ExpectAFight, BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash, BaseSpireIds.DefendIronclad],
+                BaseSpireIds.DampCultist.ToString());
+            if (upgraded) session.State.Player.MutableHand[0] = new CardInstance("expect+", BaseSpireIds.ExpectAFight, 1);
+            environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+            Assert.Equal(upgraded ? 4 : 3, session.State.Player.Energy);
+            Assert.Equal(1, session.State.Events.Count(gameEvent => gameEvent.Type == "energy"));
+            Assert.Equal(2, session.State.Events.Single(gameEvent => gameEvent.Type == "energy").Amount);
+            EffectExecutor.Execute(session, session.State.Player.Creature, new ModifyEnergyEffect(2));
+            Assert.Equal(upgraded ? 4 : 3, session.State.Player.Energy);
+            Assert.Equal(0, session.State.Events.Last(gameEvent => gameEvent.Type == "energy").Amount);
+            EffectExecutor.Execute(session, session.State.Player.Creature, new ModifyEnergyEffect(-1));
+            Assert.Equal(upgraded ? 3 : 2, session.State.Player.Energy);
+            environment.Step(session, new EndTurnAction());
+            Assert.Equal(0, session.State.Player.Creature.PowerAmount(BaseSpireIds.NoEnergyGainPower));
+            Assert.Equal(3, session.State.Player.Energy);
+            EffectExecutor.Execute(session, session.State.Player.Creature, new ModifyEnergyEffect(2));
+            Assert.Equal(5, session.State.Player.Energy);
+        }
+    }
+
+    public void TearAsunderCountsPositiveHpLossAcrossTurnsAndRepeatCountsAreCapturedOnce()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(95, "ironclad", 56, 65,
+            [BaseSpireIds.TearAsunder, BaseSpireIds.TearAsunder], BaseSpireIds.DampCultist.ToString(), enemyHp: 53);
+        session.State.Player.Creature.Block = 5;
+        EffectExecutor.Execute(session, session.State.Enemy, new AttackEffect(5));
+        EffectExecutor.Execute(session, session.State.Player.Creature, new LoseHpEffect(2));
+        EffectExecutor.Execute(session, session.State.Enemy, new AttackEffect(1));
+        Assert.Equal(2, session.State.PlayerHpLossCount);
+        var second = new CardInstance(session.State.Player.HandInstances[1].InstanceId, BaseSpireIds.TearAsunder, 1);
+        session.State.Player.MutableHand[1] = second;
+        environment.Step(session, new PlayCardAction(0, session.State.Enemy.Id));
+        Assert.Equal(38, session.State.Enemy.Hp);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(2, session.State.PlayerHpLossCount);
+        var index = session.State.Player.HandInstances.ToList().FindIndex(card => card.InstanceId == second.InstanceId);
+        environment.Step(session, new PlayCardAction(index, session.State.Enemy.Id));
+        Assert.Equal(17, session.State.Enemy.Hp);
+
+        var snapshot = environment.Start(96, "ironclad", 56, 65,
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.Bash], BaseSpireIds.DampCultist.ToString(),
+            drawPile: [BaseSpireIds.DefendIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.StrikeIronclad]);
+        EffectExecutor.Execute(snapshot, snapshot.State.Player.Creature,
+            new RepeatForCountEffect(0, 1, new PileCardCountSource(CardPile.Hand), new DrawCardsEffect(1)));
+        Assert.Equal(4, snapshot.State.Player.Hand.Count);
+        Assert.Equal(1, snapshot.State.Player.DrawPile.Count);
+        Assert.True(EffectDsl.Parse("""{"op":"repeatForCount","baseCount":1,"perCount":1,"count":{"kind":"playerHpLossCount"},"effect":{"op":"attack","amount":5}}""") is RepeatForCountEffect);
+        var invalid = DslSourceParser.Parse("""
+            package invalid { power Rule { cardRule = cardRule(type=skill, cost=-1) } }
+            """);
+        Assert.Throws<DslSourceException>(() => SpireCombatBehaviorDslCompiler.Compile(invalid));
     }
 
     public void SetupStrikeStacksTemporaryStrengthAndPreservesPermanentStrengthAtExpiry()
@@ -1672,7 +1838,8 @@ public sealed class CombatSliceTests
         var originalBasicId = basic.State.Player.HandInstances[0].InstanceId;
         env.Step(basic, new PlayCardAction(0, basic.State.Enemy.Id));
         Assert.Equal(47, basic.State.Enemy.Hp);
-        var basicCopy = basic.State.Player.DiscardPileInstances.Single();
+        Assert.Equal(2, basic.State.Player.DiscardPileInstances.Count);
+        var basicCopy = basic.State.Player.DiscardPileInstances.Single(card => card.InstanceId != originalBasicId);
         Assert.Equal(BaseSpireIds.Anger, basicCopy.CardId);
         Assert.Equal(0, basicCopy.UpgradeLevel);
         Assert.True(originalBasicId != basicCopy.InstanceId);
@@ -1683,7 +1850,7 @@ public sealed class CombatSliceTests
             BaseSpireIds.Anger, upgradeLevel: 1);
         env.Step(upgraded, new PlayCardAction(0, upgraded.State.Enemy.Id));
         Assert.Equal(45, upgraded.State.Enemy.Hp);
-        var upgradedCopy = upgraded.State.Player.DiscardPileInstances.Single();
+        var upgradedCopy = upgraded.State.Player.DiscardPileInstances.Single(card => card.InstanceId != "fixture-upgraded-anger");
         Assert.Equal(1, upgradedCopy.UpgradeLevel);
         Assert.True("fixture-upgraded-anger" != upgradedCopy.InstanceId);
     }
@@ -1709,7 +1876,9 @@ public sealed class CombatSliceTests
         var resolved = env.Step(state, new ChooseCardAction(defend.InstanceId));
         Assert.True(resolved.Observation.PendingCardSelection is null);
         Assert.Equal(defend.InstanceId, state.State.Player.DrawPileInstances[0].InstanceId);
-        Assert.Equal(strike.InstanceId, state.State.Player.DiscardPileInstances.Single().InstanceId);
+        Assert.Equal(2, state.State.Player.DiscardPileInstances.Count);
+        Assert.True(state.State.Player.DiscardPileInstances.Contains(strike));
+        Assert.Contains(state.State.Player.DiscardPileInstances, card => card.CardId == BaseSpireIds.Headbutt);
         Assert.True(resolved.Events.Any(gameEvent => gameEvent.Type == "card_choice"
             && gameEvent.Target == defend.InstanceId));
 
@@ -4679,6 +4848,10 @@ internal static class Program
         tests.PyreIncreasesTheNextTurnsMaximumEnergyThroughItsPower();
         tests.CrueltyAddsItsStacksToPoweredAttacksAgainstVulnerableTargets();
         tests.SetupStrikeStacksTemporaryStrengthAndPreservesPermanentStrengthAtExpiry();
+        tests.CorruptionSharesCostRulesAndSnapshotsExhaustionAcrossCardChoices();
+        tests.FreeAttackConsumesOnlyMatchingPlaysAndPreservesXCostSpending();
+        tests.ExpectAFightCountsHandAttacksAndLocksPositiveEnergyUntilTurnEnd();
+        tests.TearAsunderCountsPositiveHpLossAcrossTurnsAndRepeatCountsAreCapturedOnce();
         tests.MangleSuppressesEnemyStrengthThroughItsActionThenRestoresIt();
         tests.PowerLifecycleUsesSignedDeltasAndRejectsRecursiveLinks();
         tests.PowerExpiryWaitsForItsTurnEndChoiceAndUsesRemainingStacks();
