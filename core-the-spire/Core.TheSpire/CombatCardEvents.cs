@@ -56,14 +56,20 @@ internal static class CombatCardEvents
     internal static void QueueEntry(GameState state, CardInstance card)
     {
         var definition = state.Definition.Cards[card.CardId];
-        if (definition.OnEnterCombat is null && definition.UpgradedOnEnterCombat is null) return;
+        if (definition.OnEnterCombat is null && definition.UpgradedOnEnterCombat is null
+            && !state.Definition.HasCardEnteredCombatPowerTriggers) return;
         state.PendingEffects.Add(new(state.Player.Creature, new CardEnteredCombatEffect(card.InstanceId), null, card));
     }
 
     internal static void Enter(GameSession session, string instanceId)
     {
         var state = session.State;
-        if (state.FindCombatCard(instanceId) is { } card && state.Definition.Cards[card.CardId].ResolveEnterEffect(card) is { } effect)
+        if (state.FindCombatCard(instanceId) is not { } card) return;
+        EffectExecutor.QueuePowerLifecycleEffects(session, state.Player.Creature,
+            PowerTrigger.AfterCardEnteredCombat, card);
+        EffectExecutor.QueuePowerTriggerEffects(session, state.Player.Creature,
+            PowerTrigger.AfterCardEnteredCombat, selectedCard: card);
+        if (state.Definition.Cards[card.CardId].ResolveEnterEffect(card) is { } effect)
             state.PendingEffects.Add(new(state.Player.Creature, effect, null, card));
     }
 

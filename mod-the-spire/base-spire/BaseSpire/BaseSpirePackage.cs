@@ -288,6 +288,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         registry.Register(new PowerDefinition(BaseSpireIds.BarricadePower));
         registry.Register(new BarricadeHook());
         var enemyContent = BaseSpireContent.LoadEnemyBehavior(new ContentVariantProfile(deadlyEnemies, toughEnemies));
+        foreach (var affliction in enemyContent.Afflictions) registry.Register(affliction);
         foreach (var power in enemyContent.Powers) registry.Register(power);
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
         registry.Register(new PowerDefinition(BaseSpireIds.Vulnerable, PowerTrigger.AfterEnemyTurnEnd,

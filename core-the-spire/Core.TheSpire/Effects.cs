@@ -10,6 +10,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealEffect), "heal")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(KillEffect), "kill")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AfflictCardsEffect), "afflictCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ClearAfflictionEffect), "clearAffliction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockFromCurrentBlockEffect), "gainBlockFromCurrentBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
@@ -112,6 +114,8 @@ public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSele
     DamageProperties Properties = DamageProperties.None) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null) : EffectNode;
+public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
     DamageProperties? Properties = null, TargetSelector Target = TargetSelector.Self,
     ContentId? OnlyEnemy = null) : EffectNode;
@@ -240,6 +244,7 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Atta
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SelectedCardIsClonePredicate), "selectedCardIsClone")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCountAtLeastPredicate), "pileCountAtLeast")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlayCountEqualsPredicate), "cardPlayCountEquals")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlayCountAtLeastPredicate), "cardPlayCountAtLeast")]
 public abstract record EffectPredicate;
 public sealed record TargetAlivePredicate : EffectPredicate;
 public sealed record HasPowerPredicate(ContentId Power, TargetSelector Target = TargetSelector.Self) : EffectPredicate;
@@ -249,6 +254,7 @@ public sealed record PlayerLostHpThisTurnPredicate : EffectPredicate;
 public sealed record SelectedCardIsClonePredicate : EffectPredicate;
 public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : EffectPredicate;
 public sealed record CardPlayCountEqualsPredicate(CardType? Type, CardPlayHistoryPhase Phase, int Count) : EffectPredicate;
+public sealed record CardPlayCountAtLeastPredicate(CardType? Type, CardPlayHistoryPhase Phase, int Count) : EffectPredicate;
 
 internal static class EffectExecutor
 {
@@ -289,6 +295,21 @@ internal static class EffectExecutor
         var effects = BuildPowerTriggerEffects(state, owner, trigger, selectedCard);
         if (effects.Count > 0)
             state.PendingEffects.Add(new(owner, new SequenceEffect(effects), target, selectedCard));
+    }
+
+    internal static void QueuePowerLifecycleEffects(GameSession session, EntityState owner,
+        PowerTrigger trigger, CardInstance? eventCard = null)
+    {
+        var state = session.State;
+        var effects = owner.Powers.Where(power => power.Value > 0)
+            .SelectMany(power => state.Definition.Powers[power.Key].Lifecycle
+                .Where(subscription => subscription.Trigger == trigger
+                    && (subscription.WhenCardType is null || eventCard is not null
+                        && state.Definition.Cards[eventCard.CardId].Type == subscription.WhenCardType))
+                .Select(subscription => subscription.Effect))
+            .ToArray();
+        for (var i = effects.Length - 1; i >= 0; i--)
+            state.PendingEffects.Add(new(owner, effects[i], null, eventCard));
     }
 
     internal static void QueueCombatPowerTriggerEffects(GameSession session, PowerTrigger trigger,
@@ -532,6 +553,12 @@ internal static class EffectExecutor
                 case HealEffect heal:
                     if (heal.Amount < 0) throw new InvalidOperationException("Healing cannot be negative.");
                     state.Heal(session, owner, ResolveSingleTarget(state, owner, target, heal.Target), heal.Amount);
+                    break;
+                case AfflictCardsEffect afflict:
+                    ChangeCardAffliction(session, owner, afflict.Affliction, afflict.Type, apply: true);
+                    break;
+                case ClearAfflictionEffect clear:
+                    ChangeCardAffliction(session, owner, clear.Affliction, clear.Type, apply: false);
                     break;
                 case GainBlockEffect block:
                     var blockAmount = block.PerPowerStack is { } perPowerStack
@@ -811,7 +838,8 @@ internal static class EffectExecutor
                     {
                         var fresh = state.Player.CreateGeneratedCard(cloneSource.CardId);
                         clones[i] = new(fresh.InstanceId, cloneSource.CardId, cloneSource.UpgradeLevel,
-                            cloneSource.CostModifiers, isClone: true, cloneSource.VariableOffsets);
+                            cloneSource.CostModifiers, isClone: true, cloneSource.VariableOffsets,
+                            cloneSource.Afflictions, cloneSource.AfflictionKeywords);
                     }
                     CombatCardGeneration.QueuePlacements(state, clones, clone.Pile);
                     break;
@@ -888,6 +916,7 @@ internal static class EffectExecutor
                             ?? throw new InvalidOperationException("Clone predicates require a selected card context."),
                         PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
                         CardPlayCountEqualsPredicate plays => state.CardPlayHistory.Count(plays.Type, plays.Phase) == plays.Count,
+                        CardPlayCountAtLeastPredicate plays => state.CardPlayHistory.Count(plays.Type, plays.Phase) >= plays.Count,
                         _ => throw new InvalidOperationException($"Unsupported effect predicate '{conditional.Predicate.GetType().Name}'.")
                     };
                     if (condition) state.PendingEffects.Add(new(owner, conditional.Then, target, selectedCard, counts));
@@ -1264,6 +1293,31 @@ internal static class EffectExecutor
             foreach (var ally in state.Enemies.Select(enemy => enemy.Creature)
                 .Where(ally => ally.Id != victim.Id && ally.Hp > 0))
                 state.Emit(session, "ally_death", victim.Id, ally.Id, 1, properties, cardSource);
+    }
+
+    private static void ChangeCardAffliction(GameSession session, EntityState owner, ContentId afflictionId,
+        CardType? type, bool apply)
+    {
+        var state = session.State;
+        if (owner != state.Player.Creature)
+            throw new InvalidOperationException("Card afflictions currently apply to the active player's combat cards.");
+        var affliction = state.Definition.Afflictions[afflictionId];
+        foreach (var pile in GameState.CombatPiles)
+        foreach (var card in state.GetPile(pile).ToArray())
+        {
+            if (type is { } cardType && state.Definition.Cards[card.CardId].Type != cardType) continue;
+            var hasAffliction = card.Afflictions.Contains(afflictionId);
+            if (hasAffliction == apply) continue;
+            var afflictions = apply
+                ? card.Afflictions.Append(afflictionId).ToArray()
+                : card.Afflictions.Where(candidate => candidate != afflictionId).ToArray();
+            var keywords = afflictions.Aggregate(CardKeywords.None,
+                (current, candidate) => current | state.Definition.Afflictions[candidate].AddedKeywords);
+            var replacement = card.WithAfflictions(afflictions, keywords);
+            state.ReplaceCombatCard(card, replacement);
+            state.Emit(session, apply ? "card_afflicted" : "card_affliction_cleared",
+                owner.Id, card.InstanceId, 1);
+        }
     }
 
     private static void LoseMaxHp(GameSession session, EntityState source, EntityState target, int amount)

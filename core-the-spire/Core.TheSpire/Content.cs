@@ -75,7 +75,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
         if (!Enum.IsDefined(Trigger) || !Enum.IsDefined(Role))
             throw new ArgumentException("Power trigger and role must be recognized values.");
         if (TriggerCardType is { } cardType && (!Enum.IsDefined(cardType)
-            || Trigger is not (PowerTrigger.AfterCardPlayed or PowerTrigger.AfterCardExhausted)))
+            || Trigger is not (PowerTrigger.AfterCardPlayed or PowerTrigger.AfterCardExhausted
+                or PowerTrigger.AfterCardEnteredCombat)))
             throw new ArgumentException("A card-type filter requires a card event trigger.");
         if (OutgoingDamageMultiplier is < 0m)
             throw new ArgumentOutOfRangeException(nameof(OutgoingDamageMultiplier));
@@ -114,6 +115,9 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
                 || subscription.Trigger is PowerTrigger.None or PowerTrigger.AfterCardPlayed
                     or PowerTrigger.AfterCardExhausted)
                 throw new ArgumentException("Power lifecycle subscriptions require a combat phase trigger.");
+            if (subscription.WhenCardType is { } lifecycleCardType
+                && (!Enum.IsDefined(lifecycleCardType) || subscription.Trigger != PowerTrigger.AfterCardEnteredCombat))
+                throw new ArgumentException("A lifecycle card type filter requires AfterCardEnteredCombat.");
             if (subscription.Effect is null)
                 throw new ArgumentException("Power lifecycle subscriptions require an effect.");
         }
@@ -283,9 +287,9 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public CardKeywords ResolveKeywords(CardInstance instance)
     {
         if (instance.CardId != Id) throw new ArgumentException("Card instance belongs to a different definition.", nameof(instance));
-        return instance.UpgradeLevel > 0
+        return (instance.UpgradeLevel > 0
             ? (Keywords | UpgradedKeywords) & ~RemovedUpgradedKeywords
-            : Keywords;
+            : Keywords) | instance.AfflictionKeywords;
     }
 
 }
@@ -294,7 +298,8 @@ public sealed record CardInstance
 {
     public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0,
         IReadOnlyList<CardCostModifier>? costModifiers = null, bool isClone = false,
-        IReadOnlyList<CardVariableOffset>? variableOffsets = null)
+        IReadOnlyList<CardVariableOffset>? variableOffsets = null,
+        IReadOnlyList<ContentId>? afflictions = null, CardKeywords afflictionKeywords = CardKeywords.None)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         cardId.Validate();
@@ -314,6 +319,12 @@ public sealed record CardInstance
                 throw new ArgumentException("A card instance cannot contain duplicate variable offsets.", nameof(variableOffsets));
         }
         VariableOffsets = offsets.Length == 0 ? Array.Empty<CardVariableOffset>() : Array.AsReadOnly(offsets);
+        var afflictionIds = afflictions?.ToArray() ?? [];
+        foreach (var affliction in afflictionIds) affliction.Validate();
+        if (afflictionIds.Distinct().Count() != afflictionIds.Length)
+            throw new ArgumentException("A card instance cannot contain duplicate afflictions.", nameof(afflictions));
+        Afflictions = afflictionIds.Length == 0 ? Array.Empty<ContentId>() : Array.AsReadOnly(afflictionIds);
+        AfflictionKeywords = afflictionKeywords;
     }
 
     public string InstanceId { get; }
@@ -322,12 +333,17 @@ public sealed record CardInstance
     public IReadOnlyList<CardCostModifier> CostModifiers { get; }
     public bool IsClone { get; }
     public IReadOnlyList<CardVariableOffset> VariableOffsets { get; }
+    public IReadOnlyList<ContentId> Afflictions { get; }
+    public CardKeywords AfflictionKeywords { get; }
 
-    internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone, VariableOffsets);
+    internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone,
+        VariableOffsets, Afflictions, AfflictionKeywords);
     internal CardInstance WithCostModifiers(IReadOnlyList<CardCostModifier> modifiers) =>
-        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets);
+        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets, Afflictions, AfflictionKeywords);
     internal CardInstance WithVariableOffsets(IReadOnlyList<CardVariableOffset> offsets) =>
-        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets);
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets, Afflictions, AfflictionKeywords);
+    internal CardInstance WithAfflictions(IReadOnlyList<ContentId> afflictions, CardKeywords keywords) =>
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, afflictions, keywords);
 }
 
 public sealed class CardPoolDefinition
@@ -1042,10 +1058,21 @@ public sealed record EnemyVariableDefinition(ContentId Id, int DefaultInt = 0);
 public enum CardType { Attack, Skill, Power, Status }
 [Flags]
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
+public sealed record CardAfflictionDefinition(ContentId Id, CardKeywords AddedKeywords)
+{
+    public void Validate()
+    {
+        Id.Validate();
+        if ((AddedKeywords & ~(CardKeywords.Exhaust | CardKeywords.Ethereal | CardKeywords.Unplayable
+            | CardKeywords.Retain | CardKeywords.Innate)) != 0)
+            throw new ArgumentOutOfRangeException(nameof(AddedKeywords));
+    }
+}
 public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon, DeathBlow }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
-    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath }
-public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
+    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath,
+    AfterCardEnteredCombat }
+public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect, CardType? WhenCardType = null);
 public sealed record DamageModifierSubscription(decimal Multiplier,
     DamageProperties RequiredProperties = DamageProperties.None,
     DamageProperties ExcludedProperties = DamageProperties.None,
@@ -1063,6 +1090,7 @@ public interface IRulePackage
 public sealed class ContentRegistry
 {
     private readonly Dictionary<ContentId, CardDefinition> _cards = [];
+    private readonly Dictionary<ContentId, CardAfflictionDefinition> _afflictions = [];
     private readonly Dictionary<ContentId, PotionDefinition> _potions = [];
     private readonly Dictionary<ContentId, CardPoolDefinition> _cardPools = [];
     private readonly Dictionary<ContentId, RelicDefinition> _relics = [];
@@ -1086,6 +1114,7 @@ public sealed class ContentRegistry
         if (_packages.Any(p => p.Id == package.Info.Id))
             throw new InvalidOperationException($"Package '{package.Info.Id}' is already loaded.");
         var cardsBefore = new Dictionary<ContentId, CardDefinition>(_cards);
+        var afflictionsBefore = new Dictionary<ContentId, CardAfflictionDefinition>(_afflictions);
         var potionsBefore = new Dictionary<ContentId, PotionDefinition>(_potions);
         var cardPoolsBefore = new Dictionary<ContentId, CardPoolDefinition>(_cardPools);
         var relicsBefore = new Dictionary<ContentId, RelicDefinition>(_relics);
@@ -1109,6 +1138,7 @@ public sealed class ContentRegistry
         catch
         {
             Restore(_cards, cardsBefore);
+            Restore(_afflictions, afflictionsBefore);
             Restore(_potions, potionsBefore);
             Restore(_cardPools, cardPoolsBefore);
             Restore(_relics, relicsBefore);
@@ -1129,6 +1159,12 @@ public sealed class ContentRegistry
     }
 
     public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
+    public void Register(CardAfflictionDefinition definition)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        definition.Validate();
+        AddUnique(_afflictions, definition.Id, definition, "card affliction");
+    }
     public void Register(PotionDefinition definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
@@ -1243,6 +1279,7 @@ public sealed class ContentRegistry
                         ValidateEnemyActionCondition(condition, $"Enemy action '{action.Id}' transition");
             ValidateEffectReferences(action.Effect, $"Enemy action '{action.Id}'");
         }
+        foreach (var affliction in _afflictions.Values) affliction.Validate();
         foreach (var enemy in _enemies.Values)
         if (enemy.StartingTransition is { } transition)
             foreach (var choice in transition.Choices)
@@ -1429,6 +1466,7 @@ public sealed class ContentRegistry
         return new GameDefinition(
             _packages.ToArray(),
             new ReadOnlyDictionary<ContentId, CardDefinition>(new Dictionary<ContentId, CardDefinition>(_cards)),
+            new ReadOnlyDictionary<ContentId, CardAfflictionDefinition>(new Dictionary<ContentId, CardAfflictionDefinition>(_afflictions)),
             new ReadOnlyDictionary<ContentId, PotionDefinition>(new Dictionary<ContentId, PotionDefinition>(_potions)),
             new ReadOnlyDictionary<ContentId, CardPoolDefinition>(resolvedCardPools),
             new ReadOnlyDictionary<ContentId, RelicDefinition>(new Dictionary<ContentId, RelicDefinition>(_relics)),
@@ -1691,6 +1729,13 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an invalid heal target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(heal.Amount);
                 break;
+            case AfflictCardsEffect afflict when !_afflictions.ContainsKey(afflict.Affliction):
+                throw new InvalidOperationException($"{owner} applies unknown card affliction '{afflict.Affliction}'.");
+            case ClearAfflictionEffect clear when !_afflictions.ContainsKey(clear.Affliction):
+                throw new InvalidOperationException($"{owner} clears unknown card affliction '{clear.Affliction}'.");
+            case AfflictCardsEffect { Type: { } afflictType } when !Enum.IsDefined(afflictType):
+            case ClearAfflictionEffect { Type: { } clearType } when !Enum.IsDefined(clearType):
+                throw new InvalidOperationException($"{owner} uses an invalid card type for an affliction effect.");
             case RandomAttackEffect randomAttack:
                 ArgumentOutOfRangeException.ThrowIfNegative(randomAttack.Amount);
                 if (!ValidDamageProperties(randomAttack.Properties))
@@ -1995,6 +2040,11 @@ public sealed class ContentRegistry
                     || plays.Type is { } playType && !Enum.IsDefined(playType))
                     throw new InvalidOperationException($"{owner} has an invalid card-play history condition.");
                 break;
+            case CardPlayCountAtLeastPredicate plays:
+                if (!Enum.IsDefined(plays.Phase) || plays.Count < 0
+                    || plays.Type is { } minimumPlayType && !Enum.IsDefined(minimumPlayType))
+                    throw new InvalidOperationException($"{owner} has an invalid card-play history condition.");
+                break;
             default:
                 throw new InvalidOperationException($"{owner} has an unsupported effect predicate '{predicate.GetType().Name}'.");
         }
@@ -2097,6 +2147,7 @@ public sealed class ContentRegistry
 public sealed class GameDefinition
 {
     internal GameDefinition(PackageInfo[] packages, IReadOnlyDictionary<ContentId, CardDefinition> cards,
+        IReadOnlyDictionary<ContentId, CardAfflictionDefinition> afflictions,
         IReadOnlyDictionary<ContentId, PotionDefinition> potions,
         IReadOnlyDictionary<ContentId, CardPoolDefinition> cardPools,
         IReadOnlyDictionary<ContentId, RelicDefinition> relics,
@@ -2111,8 +2162,11 @@ public sealed class GameDefinition
     {
         Packages = Array.AsReadOnly(packages);
         Cards = cards;
+        Afflictions = afflictions;
         HasBeforeCardPlayListeners = cards.Values.Any(card => card.BeforeCardPlayed is not null || card.UpgradedBeforeCardPlayed is not null);
         HasAfterCardPlayListeners = cards.Values.Any(card => card.AfterCardPlayed is not null || card.UpgradedAfterCardPlayed is not null);
+        HasCardEnteredCombatPowerTriggers = powers.Values.Any(power =>
+            power.Trigger == PowerTrigger.AfterCardEnteredCombat);
         Potions = potions;
         CardPools = cardPools;
         Relics = relics;
@@ -2132,8 +2186,10 @@ public sealed class GameDefinition
 
     public IReadOnlyList<PackageInfo> Packages { get; }
     public IReadOnlyDictionary<ContentId, CardDefinition> Cards { get; }
+    public IReadOnlyDictionary<ContentId, CardAfflictionDefinition> Afflictions { get; }
     internal bool HasBeforeCardPlayListeners { get; }
     internal bool HasAfterCardPlayListeners { get; }
+    internal bool HasCardEnteredCombatPowerTriggers { get; }
     public IReadOnlyDictionary<ContentId, PotionDefinition> Potions { get; }
     public IReadOnlyDictionary<ContentId, CardPoolDefinition> CardPools { get; }
     public IReadOnlyDictionary<ContentId, RelicDefinition> Relics { get; }
