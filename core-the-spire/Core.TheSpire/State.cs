@@ -372,6 +372,21 @@ internal sealed class GameState
                     new RuleHookContext(session, hook.Id), dealer.Id, target.Id, properties, vulnerableMultiplier);
             damage = (int)decimal.Floor(damage * vulnerableMultiplier);
         }
+        decimal incomingMultiplier = 1m;
+        foreach (var (powerId, amount) in target.Powers)
+        {
+            if (amount <= 0) continue;
+            foreach (var modifier in Definition.Powers[powerId].IncomingDamageModifiers)
+            {
+                if ((properties & modifier.RequiredProperties) != modifier.RequiredProperties
+                    || (properties & modifier.ExcludedProperties) != 0
+                    || (modifier.RequiredSourcePower is { } requiredPower
+                        && dealer.PowerAmount(requiredPower) <= 0))
+                    continue;
+                incomingMultiplier *= modifier.Multiplier;
+            }
+        }
+        damage = (int)decimal.Floor(damage * incomingMultiplier);
         return Math.Max(0, damage);
     }
 

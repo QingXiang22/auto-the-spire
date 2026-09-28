@@ -68,6 +68,13 @@ package base-spire {
     upgradedPlay = sequence(attack(9), drawUntil(type=attack))
   }
 
+  card Colossus {
+    pools = [IroncladCardPool]
+    type = skill rarity = uncommon cost = 1 target = self
+    play = sequence(gainBlock(5), applyPower(ColossusPower, 1))
+    upgradedPlay = sequence(gainBlock(8), applyPower(ColossusPower, 1))
+  }
+
   card InfernalBlade {
     pools = [IroncladCardPool]
     type = skill rarity = uncommon cost = 1 target = self keywords = [exhaust]

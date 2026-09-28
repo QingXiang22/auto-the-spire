@@ -90,6 +90,13 @@ package base-spire {
     ]
   }
 
+  power ColossusPower {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+    incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered],
+      sourcePower=Vulnerable)]
+  }
+
   power PyrePower {
     maxEnergyPerStack = 1
   }
