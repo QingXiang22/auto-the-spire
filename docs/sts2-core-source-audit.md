@@ -54,7 +54,7 @@
 
 [`Seapunk.cs`](../sts2/src/Core/Models/Monsters/Seapunk.cs) 循环 Sea Kick 11/13、四次 2 点旋踢、以及获得 7/8 格挡和 1/2 力量的 Bubble Burp；Normal 遭遇与 Calcified Cultist 同场，Weak 遭遇为单体，均已配置。
 
-[`Inklet.cs`](../sts2/src/Core/Models/Monsters/Inklet.cs) 的三段 3/4 Jab 后，在 10/11 Piercing Gaze 与三段 2/3 Whirlwind 中随机选择且不连续重复；这两招之后都回到 Jab。`InkletsNormal` 的中位怪物以 Whirlwind 开场。新增 `graph(start=..., edges=[...])` 显式表达固定边与随机边汇合；`SlipperyPower` 则在持有者实际失去生命时消耗一层。
+[`Inklet.cs`](../sts2/src/Core/Models/Monsters/Inklet.cs) 的三段 3/4 Jab 后，在 10/11 Piercing Gaze 与三段 2/3 Whirlwind 中随机选择且不连续重复；这两招之后都回到 Jab。`InkletsNormal` 的中位怪物以 Whirlwind 开场。新增 `graph(start=..., edges=[...])` 显式表达固定边与随机边汇合；`SlipperyPower` 在持有者每次受到至少 1 点未格挡伤害后消耗一层。
 
 [`FrogKnight.cs`](../sts2/src/Core/Models/Monsters/FrogKnight.cs) 的普通遭遇有 191 HP、15 层 Plating；Tough 难度分别为 199 和 19。它从 Tongue Lash 开始，依序接 Strike Down Evil、For the Queen；之后若低于半血且尚未使用 Beetle Charge，则执行一次 35/40 点充能攻击，再回到 Tongue Lash。否则继续 Tongue Lash 循环。`chooseByCondition` 将有序条件转移与 `maxUsesPerCombat` 组合表达；不同难度的半血阈值按源码的整数除法精确表示。
 
