@@ -13,6 +13,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyScaledPowerEffect), "applyScaledPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DrawCardsEffect), "drawCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(DrawUntilCardTypeEffect), "drawUntilCardType")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(DrawUntilContinuationEffect), "drawUntilContinuation")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(MoveCardEffect), "moveCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnergyEffect), "modifyEnergy")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GeneratePotionEffect), "generatePotion")]
@@ -91,6 +93,8 @@ public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelecto
 public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
     CombatCountSource Count, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record DrawCardsEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
+public sealed record DrawUntilCardTypeEffect(CardType ContinueWhileType) : EffectNode;
+internal sealed record DrawUntilContinuationEffect(CardType ContinueWhileType, CardType LastDrawnType) : EffectNode;
 public sealed record MoveCardEffect(CardPile From, CardPile To, int Count = 1) : EffectNode;
 public sealed record AddCardsToPileEffect(ContentId Card, CardPile Pile, int Count = 1,
     TargetSelector Target = TargetSelector.FirstEnemy, bool InheritUpgradeFromPlayedCard = false) : EffectNode;
@@ -394,6 +398,15 @@ internal static class EffectExecutor
                         : draw.Amount;
                     state.Draw(session, drawAmount);
                     break;
+                case DrawUntilCardTypeEffect drawUntil:
+                    QueueNextDrawUntil(session, owner, drawUntil.ContinueWhileType, target, selectedCard, counts);
+                    break;
+                case DrawUntilContinuationEffect continueDraw:
+                    if (continueDraw.LastDrawnType == continueDraw.ContinueWhileType
+                        && state.Player.HandInstances.Count < CombatLimits.MaxHandSize)
+                        QueueNextDrawUntil(session, owner, continueDraw.ContinueWhileType,
+                            target, selectedCard, counts);
+                    break;
                 case MoveCardEffect move:
                     var movedCards = state.MoveCards(move.From, move.To, move.Count);
                     var moveTriggerEffects = new List<(CardInstance Card, EffectNode Effect)>();
@@ -626,6 +639,18 @@ internal static class EffectExecutor
     {
         var count = ResolveCombatCount(state, owner, selectedTarget, source, counts, selectedCard);
         return checked(baseAmount + amountPerCount * count);
+    }
+
+    private static void QueueNextDrawUntil(GameSession session, EntityState owner, CardType continueWhileType,
+        EntityState? target, CardInstance? selectedCard, EffectCountScope? counts)
+    {
+        var state = session.State;
+        var continuationIndex = state.PendingEffects.Count;
+        var drawnCard = state.DrawOne(session);
+        if (drawnCard is null) return;
+        var drawnType = state.Definition.Cards[drawnCard.CardId].Type;
+        state.PendingEffects.Insert(continuationIndex, new(owner,
+            new DrawUntilContinuationEffect(continueWhileType, drawnType), target, selectedCard, counts));
     }
 
     private static int ResolveCombatCount(GameState state, EntityState owner, EntityState? selectedTarget,

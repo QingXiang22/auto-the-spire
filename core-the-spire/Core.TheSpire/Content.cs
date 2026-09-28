@@ -1437,6 +1437,10 @@ public sealed class ContentRegistry
                     ValidateCombatCountSource(calculatedDraw.Count, owner, counts);
                 }
                 break;
+            case DrawUntilCardTypeEffect drawUntil:
+                if (!Enum.IsDefined(drawUntil.ContinueWhileType))
+                    throw new InvalidOperationException($"{owner} draws until an invalid card type.");
+                break;
             case GainBlockEffect gainBlock:
                 ArgumentOutOfRangeException.ThrowIfNegative(gainBlock.Amount);
                 if (gainBlock.PerPowerStack is { } blockPower && !_powers.ContainsKey(blockPower))

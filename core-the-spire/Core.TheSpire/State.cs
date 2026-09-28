@@ -526,6 +526,18 @@ internal sealed class GameState
         }
     }
 
+    internal CardInstance? DrawOne(GameSession session)
+    {
+        if (HasPowerRole(Player.Creature, PowerRole.NoDraw)) return null;
+        EnsureDrawPile(session);
+        if (Player.MutableDrawPile.Count == 0) return null;
+        var card = Player.MutableDrawPile[0];
+        Player.MutableDrawPile.RemoveAt(0);
+        Player.MutableHand.Add(card);
+        Emit(session, "draw", Player.Id, Player.Id, 1);
+        return card;
+    }
+
     internal void TransformCard(GameSession session, string instanceId, TransformSelectedCardEffect effect)
     {
         if (!Enum.IsDefined(effect.From) || effect.From == CardPile.Play)
@@ -710,4 +722,9 @@ internal enum EndTurnResolutionStage
     StartPlayerTurn,
     PlayerTurnStartPowers,
     PlayerOwnerTurnStartPowers
+}
+
+internal static class CombatLimits
+{
+    public const int MaxHandSize = 10;
 }
