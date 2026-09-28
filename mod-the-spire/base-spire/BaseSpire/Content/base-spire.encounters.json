@@ -119,6 +119,18 @@
       "tags": ["base-spire:mushroom"]
     },
     {
+      "id": "base-spire:flyconid-normal",
+      "roomType": "monster",
+      "enemySlots": [
+        {
+          "enemyChoices": ["base-spire:leaf-slime-medium", "base-spire:twig-slime-medium"],
+          "chooseRandomly": true
+        },
+        { "enemyChoices": ["base-spire:flyconid"] }
+      ],
+      "tags": ["base-spire:mushroom", "base-spire:slime"]
+    },
+    {
       "id": "base-spire:chompers-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:chomper", "base-spire:chomper"],
