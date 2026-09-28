@@ -413,7 +413,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             var chosenCard = cardChoice.Options.Single(card => card.InstanceId == chooseCard.CardInstanceId);
             if (cardChoice.Effect.To is { } destination
                 && !state.MoveCard(cardChoice.Effect.From, destination,
-                    chooseCard.CardInstanceId, cardChoice.Effect.DestinationPosition))
+                    chooseCard.CardInstanceId, cardChoice.Effect.DestinationPosition, session.Random.Get("shuffle")))
                 throw new InvalidOperationException("The selected card is no longer in its source pile.");
             state.Emit(session, "card_choice", state.Player.Id, chooseCard.CardInstanceId, 1);
             if (cardChoice.Effect.OnSelected is { } onSelected)

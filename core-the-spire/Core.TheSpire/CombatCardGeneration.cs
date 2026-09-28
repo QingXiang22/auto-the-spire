@@ -1,6 +1,7 @@
 namespace CoreTheSpire;
 
-internal sealed record PlaceGeneratedCardEffect(CardInstance Card, CardPile Pile) : EffectNode;
+internal sealed record PlaceGeneratedCardEffect(CardInstance Card, CardPile Pile,
+    CardPilePosition Position = CardPilePosition.Bottom) : EffectNode;
 
 internal static class CombatCardGeneration
 {
@@ -45,17 +46,34 @@ internal static class CombatCardGeneration
         QueuePlacements(state, generated, effect.Pile);
     }
 
-    internal static void QueuePlacements(GameState state, IReadOnlyList<CardInstance> cards, CardPile pile)
+    internal static void QueuePlacements(GameState state, IReadOnlyList<CardInstance> cards, CardPile pile,
+        CardPilePosition position = CardPilePosition.Bottom)
     {
         for (var i = cards.Count - 1; i >= 0; i--)
-            state.PendingEffects.Add(new(state.Player.Creature, new PlaceGeneratedCardEffect(cards[i], pile), null, cards[i]));
+            state.PendingEffects.Add(new(state.Player.Creature,
+                new PlaceGeneratedCardEffect(cards[i], pile, position), null, cards[i]));
     }
 
     internal static void Place(GameSession session, PlaceGeneratedCardEffect effect)
     {
         var state = session.State;
         if (state.Player.Creature.Hp <= 0 || state.FirstLivingEnemy is null) return;
-        state.GetPile(effect.Pile).Add(effect.Card);
+        var pile = state.GetPile(effect.Pile);
+        switch (effect.Position)
+        {
+            case CardPilePosition.Top:
+                pile.Insert(0, effect.Card);
+                break;
+            case CardPilePosition.Bottom:
+                pile.Add(effect.Card);
+                break;
+            case CardPilePosition.Random:
+                var index = session.Random.Get("shuffle").NextInt(pile.Count + 1);
+                pile.Insert(index, effect.Card);
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported generated card position '{effect.Position}'.");
+        }
         state.PendingEffects.Add(new(state.Player.Creature,
             new EmitGameEventEffect("card_generated", state.Player.Id, effect.Card.InstanceId, 1), null, effect.Card));
         CombatCardEvents.QueueEntry(state, effect.Card);
