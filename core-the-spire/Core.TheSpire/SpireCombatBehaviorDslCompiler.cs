@@ -55,7 +55,7 @@ public static class SpireCombatBehaviorDslCompiler
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
                 "removeAfterOpponentTurnEnd", "removeWhenApplierDies", "cardRule", "preventEnergyGain", "events", "on",
                 "incomingDamageModifiers", "blockGainModifiers", "blockGainMultiplier", "variables", "preventsFatal",
-                "damageCapPerStack", "isDebuff");
+                "damageCapPerStack", "preventsBlockClear", "isDebuff");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -103,6 +103,7 @@ public static class SpireCombatBehaviorDslCompiler
                 CardRule = properties.TryGetValue("cardRule", out var cardRuleNode) ? CompileCardRule(cardRuleNode) : null,
                 PreventEnergyGain = OptionalBoolean(properties, "preventEnergyGain"),
                 PreventsFatal = OptionalBoolean(properties, "preventsFatal"),
+                PreventsBlockClear = OptionalBoolean(properties, "preventsBlockClear"),
                 IsDebuff = OptionalBoolean(properties, "isDebuff"),
                 Events = properties.TryGetValue("events", out var eventsNode)
                     ? CompilePowerEvents(eventsNode) : Array.Empty<PowerEventSubscription>(),

@@ -618,7 +618,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         break;
                     }
                     var actingEnemy = state.Enemies[state.CurrentEnemyIndex];
-                    actingEnemy.Creature.Block = 0;
+                    if (!actingEnemy.Creature.Powers.Any(power => power.Value > 0
+                        && state.Definition.Powers[power.Key].PreventsBlockClear))
+                        actingEnemy.Creature.Block = 0;
                     var action = actingEnemy.Definition.Actions[actingEnemy.ActionIndex];
                     state.Emit(session, "enemy_action", actingEnemy.Creature.Id, state.Player.Id, (int)action.Intent);
                     state.EndTurnStage = EndTurnResolutionStage.ApplyEnemyActionPower;
