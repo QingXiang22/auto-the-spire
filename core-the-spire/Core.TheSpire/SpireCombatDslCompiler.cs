@@ -63,7 +63,7 @@ public static class SpireCombatDslCompiler
             var properties = ReadProperties(declaration);
             RequireOnlyProperties(declaration, properties,
                 "type", "rarity", "cost", "costKind", "upgradedCost", "target", "keywords", "play", "upgradedPlay",
-                "canGenerateInCombat", "tags", "pools");
+                "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
             var cost = Integer(Required(properties, "cost", declaration.Location));
@@ -93,7 +93,13 @@ public static class SpireCombatDslCompiler
             return new CardDefinition(Id(declaration.Name), cost, type, play, keywords, target, rarity,
                 upgradedPlay, upgradedCost, costKind,
                 properties.TryGetValue("canGenerateInCombat", out var canGenerateNode)
-                    ? Boolean(canGenerateNode) : true) { Tags = tags, PoolIds = pools };
+                    ? Boolean(canGenerateNode) : true)
+            {
+                Tags = tags, PoolIds = pools,
+                OnExhaust = properties.TryGetValue("onExhaust", out var exhaustNode) ? CompileEffect(exhaustNode) : null,
+                UpgradedOnExhaust = properties.TryGetValue("upgradedOnExhaust", out var upgradedExhaustNode)
+                    ? CompileEffect(upgradedExhaustNode) : null
+            };
         }
 
         private EffectNode CompileEffect(DslValueNode node)
@@ -165,6 +171,15 @@ public static class SpireCombatDslCompiler
                     return new RepeatForCountEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
                         CompileCombatCount(RequiredArgument(call, "count")),
                         CompileEffect(RequiredArgument(call, "effect")));
+                case "autoPlay":
+                    CheckShape(call, 0, 0, "from", "count", "position", "forceExhaust");
+                    var autoCount = RequiredArgument(call, "count");
+                    var autoSource = EnumValue<CardPile>(RequiredArgument(call, "from"));
+                    if (autoSource != CardPile.Draw) throw Error(call.Location, "Automatic play currently requires the draw pile.");
+                    return new AutoPlayCardsEffect(autoSource,
+                        autoCount is DslNumberNode ? Integer(autoCount) : 0,
+                        OptionalEnum(call, "position", CardPilePosition.Top), OptionalBoolean(call, "forceExhaust", false),
+                        autoCount is DslNumberNode ? null : CompileScaledAmount(autoCount));
                 case "addCards":
                     CheckShape(call, 1, 1, "pile", "count", "target", "inheritUpgradeFromPlayedCard");
                     return new AddCardsToPileEffect(Id(Name(Argument(call, 0))),
@@ -275,6 +290,9 @@ public static class SpireCombatDslCompiler
                 case "playerHpLossCount":
                     CheckShape(call, 0, 0);
                     return new PlayerHpLossCountSource();
+                case "energyX":
+                    CheckShape(call, 0, 0);
+                    return new EnergyXCountSource();
                 case "targetPowerAmount":
                     CheckShape(call, 1, 1);
                     return new TargetPowerCountSource(Id(Name(Argument(call, 0))));

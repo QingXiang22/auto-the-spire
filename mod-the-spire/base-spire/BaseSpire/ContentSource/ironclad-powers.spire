@@ -1,4 +1,9 @@
 package base-spire {
+  power OneTwoPunchPower {
+    cardRule = cardRule(type=attack, extraPlays=1, consumeOnPlayCount=true)
+    removeAfterOwnerTurnEnd = true
+  }
+
   power CorruptionPower {
     cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)
   }

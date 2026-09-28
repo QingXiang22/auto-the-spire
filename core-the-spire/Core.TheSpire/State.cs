@@ -186,7 +186,10 @@ internal sealed class GameState
     internal EntityState? PendingChoiceOwner { get; set; }
     internal EntityState? PendingChoiceTarget { get; set; }
     internal CardInstance? PendingChoiceSelectedCard { get; set; }
-    internal PendingCardPlay? PendingCardPlay { get; set; }
+    internal List<CardPlayFrame> CardPlayFrames { get; } = [];
+    internal CardPlayFrame? CurrentCardPlay => CardPlayFrames.Count == 0 ? null : CardPlayFrames[^1];
+    internal CardInstance CardInPlay(CardPlayFrame frame) =>
+        Player.PlayPileInstances.FirstOrDefault(card => card.InstanceId == frame.Card.InstanceId) ?? frame.Card;
     internal List<(EntityState Owner, EffectNode Effect, EntityState? Target, CardInstance? SelectedCard)> PendingEffects { get; } = [];
     internal EndTurnResolutionStage EndTurnStage { get; set; }
     internal int FlushHookIndex { get; set; }
@@ -336,18 +339,21 @@ internal sealed class GameState
         if (HasPowerRole(Player.Creature, PowerRole.NoDraw)) return;
         for (var i = 0; i < count; i++)
         {
-            if (Player.MutableDrawPile.Count == 0 && Player.MutableDiscardPile.Count > 0)
-            {
-                session.Random.Get("shuffle").Shuffle(Player.MutableDiscardPile);
-                Player.MutableDrawPile.AddRange(Player.MutableDiscardPile);
-                Player.MutableDiscardPile.Clear();
-            }
+            EnsureDrawPile(session);
             if (Player.MutableDrawPile.Count == 0) return;
             var card = Player.MutableDrawPile[0];
             Player.MutableDrawPile.RemoveAt(0);
             Player.MutableHand.Add(card);
             Emit(session, "draw", Player.Id, Player.Id, 1);
         }
+    }
+
+    internal void EnsureDrawPile(GameSession session)
+    {
+        if (Player.MutableDrawPile.Count != 0 || Player.MutableDiscardPile.Count == 0) return;
+        session.Random.Get("shuffle").Shuffle(Player.MutableDiscardPile);
+        Player.MutableDrawPile.AddRange(Player.MutableDiscardPile);
+        Player.MutableDiscardPile.Clear();
     }
 
     internal List<CardInstance> MoveCards(CardPile from, CardPile to, int count)
@@ -380,7 +386,7 @@ internal sealed class GameState
 
     internal bool IsUpgradeable(CardInstance card) => card.UpgradeLevel == 0
         && Definition.Cards.TryGetValue(card.CardId, out var definition)
-        && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null);
+        && (definition.UpgradedEffect is not null || definition.UpgradedCost is not null || definition.UpgradedOnExhaust is not null);
 
     internal bool MatchesCardSelectionFilter(CardInstance card, CardSelectionFilter filter) => filter switch
     {
@@ -473,8 +479,8 @@ internal sealed class GameState
 public sealed record GameEvent(int Sequence, string Type, string Source, string Target, int Amount);
 public sealed record PendingChoiceView(string Prompt, IReadOnlyList<string> Options);
 internal abstract class PendingCardSelectionState;
-internal sealed record PendingCardPlay(CardInstance Card, int XEnergy, EntityState? Target = null,
-    bool AfterPlayedDispatched = false, CardPile? ResultPile = CardPile.Discard);
+internal sealed record CardPlayFrame(CardInstance Card, int XEnergy, EntityState? Target,
+    CardPile? ResultPile, bool IsAutoPlay);
 internal sealed class PendingCardChoice(ChooseCardFromPileEffect effect, IReadOnlyList<CardInstance> options,
     EntityState owner, EntityState? target, CardInstance? selectedCard) : PendingCardSelectionState
 {

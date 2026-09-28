@@ -20,6 +20,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(IfEffect), "if")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatEffect), "repeat")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForCountEffect), "repeatForCount")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AutoPlayCardsEffect), "autoPlayCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RepeatForXCostEffect), "repeatForXCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardsToPileEffect), "addCardsToPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ChooseCardFromPileEffect), "chooseCardFromPile")]
@@ -50,9 +51,11 @@ public sealed record ScaledAttackEffect(int BaseAmount, int AmountPerCount, Comb
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TargetPowerCountSource), "targetPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TaggedCardCountSource), "taggedCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerHpLossCountSource), "playerHpLossCount")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EnergyXCountSource), "energyX")]
 public abstract record CombatCountSource;
 public sealed record PileCardCountSource(CardPile Pile, CardType? Type = null) : CombatCountSource;
 public sealed record PlayerHpLossCountSource : CombatCountSource;
+public sealed record EnergyXCountSource : CombatCountSource;
 public sealed record ScaledCombatAmount(int BaseAmount, int PerCount, CombatCountSource Count);
 public sealed record TargetPowerCountSource(ContentId Power) : CombatCountSource;
 public sealed record TaggedCardCountSource(ContentId Tag) : CombatCountSource;
@@ -103,6 +106,8 @@ public sealed record IfEffect(EffectPredicate Predicate, EffectNode Then, Effect
 public sealed record RepeatEffect(int Count, EffectNode Effect) : EffectNode;
 public sealed record RepeatForCountEffect(int BaseCount, int PerCount, CombatCountSource Count,
     EffectNode Effect) : EffectNode;
+public sealed record AutoPlayCardsEffect(CardPile From, int Count, CardPilePosition Position = CardPilePosition.Top,
+    bool ForceExhaust = false, ScaledCombatAmount? CalculatedCount = null) : EffectNode;
 public sealed record RepeatForXCostEffect(EffectNode Effect) : EffectNode;
 public sealed record CustomEffect(ContentId Handler, System.Text.Json.JsonElement Payload) : EffectNode;
 
@@ -147,7 +152,16 @@ internal static class EffectExecutor
     {
         var state = session.State;
         state.Emit(session, "card_exhausted", owner.Id, card.InstanceId, 1);
-        QueuePowerTriggerEffects(session, owner, PowerTrigger.AfterCardExhausted, selectedCard: card);
+        var effects = BuildExhaustTriggerEffects(state, owner, card);
+        if (effects.Count > 0) state.PendingEffects.Add((owner, new SequenceEffect(effects), null, card));
+    }
+
+    private static List<EffectNode> BuildExhaustTriggerEffects(GameState state, EntityState owner, CardInstance card)
+    {
+        var effects = new List<EffectNode>();
+        if (state.Definition.Cards[card.CardId].ResolveExhaustEffect(card) is { } ownEffect) effects.Add(ownEffect);
+        effects.AddRange(BuildPowerTriggerEffects(state, owner, PowerTrigger.AfterCardExhausted, card));
+        return effects;
     }
 
     internal static void QueuePowerTriggerEffects(GameSession session, EntityState owner, PowerTrigger trigger,
@@ -188,6 +202,15 @@ internal static class EffectExecutor
             state.PendingEffects.RemoveAt(index);
             switch (effect)
             {
+                case CardPlayPhaseEffect phase:
+                    CombatCardPlay.Continue(session, phase);
+                    break;
+                case BeginAutoCardEffect autoCard:
+                    CombatCardPlay.QueueAutomatic(session, autoCard.Card, autoCard.ForceExhaust);
+                    break;
+                case AutoPlayCardsEffect autoPlay:
+                    ReserveAutoPlayBatch(session, owner, target, autoPlay);
+                    break;
                 case SequenceEffect sequence:
                     for (var i = sequence.Effects.Count - 1; i >= 0; i--)
                         state.PendingEffects.Add((owner, sequence.Effects[i], target, selectedCard));
@@ -291,8 +314,7 @@ internal static class EffectExecutor
                         if (move.To == CardPile.Exhaust && move.From != CardPile.Exhaust)
                         {
                             state.Emit(session, "card_exhausted", state.Player.Id, movedCard.InstanceId, 1);
-                            foreach (var triggered in BuildPowerTriggerEffects(state, state.Player.Creature,
-                                PowerTrigger.AfterCardExhausted, movedCard))
+                            foreach (var triggered in BuildExhaustTriggerEffects(state, state.Player.Creature, movedCard))
                                 moveTriggerEffects.Add((movedCard, triggered));
                         }
                     }
@@ -306,9 +328,9 @@ internal static class EffectExecutor
                     if (!ReferenceEquals(cardOwner, state.Player.Creature))
                         throw new InvalidOperationException("Combat card piles are only modeled for the player.");
                     var destination = state.GetPile(addCards.Pile);
-                    var upgradeLevel = addCards.InheritUpgradeFromPlayedCard
-                        ? state.PendingCardPlay?.Card.UpgradeLevel ?? 0
-                        : 0;
+                    var playedFrame = state.CurrentCardPlay;
+                    var upgradeLevel = addCards.InheritUpgradeFromPlayedCard && playedFrame is not null
+                        ? state.CardInPlay(playedFrame).UpgradeLevel : 0;
                     for (var i = 0; i < addCards.Count; i++)
                         destination.Add(state.Player.CreateGeneratedCard(addCards.Card, upgradeLevel));
                     state.Emit(session, "cards_added", owner.Id, cardOwner.Id, addCards.Count);
@@ -437,7 +459,7 @@ internal static class EffectExecutor
                     for (var i = 0; i < repeatCount; i++) state.PendingEffects.Add((owner, repeat.Effect, target, selectedCard));
                     break;
                 case RepeatForXCostEffect repeatForX:
-                    for (var i = 0; i < (state.PendingCardPlay?.XEnergy ?? 0); i++)
+                    for (var i = 0; i < (state.CurrentCardPlay?.XEnergy ?? 0); i++)
                         state.PendingEffects.Add((owner, repeatForX.Effect, target, selectedCard));
                     break;
                 case CustomEffect custom:
@@ -469,12 +491,41 @@ internal static class EffectExecutor
                 ? state.GetPile(pile.Pile).Count(card => state.Definition.Cards[card.CardId].Type == type)
                 : state.GetPile(pile.Pile).Count,
             PlayerHpLossCountSource => state.PlayerHpLossCount,
+            EnergyXCountSource => state.CurrentCardPlay?.XEnergy ?? 0,
             TargetPowerCountSource power => (selectedTarget ?? OpponentOf(state, owner)).PowerAmount(power.Power),
             TaggedCardCountSource tag => AllCardPiles.Sum(pile => state.GetPile(pile)
                 .Count(card => state.Definition.Cards[card.CardId].Tags.Contains(tag.Tag))),
             _ => throw new InvalidOperationException("Unsupported combat count source.")
         };
         return checked(baseAmount + amountPerCount * count);
+    }
+
+    private static void ReserveAutoPlayBatch(GameSession session, EntityState owner, EntityState? target,
+        AutoPlayCardsEffect effect)
+    {
+        var state = session.State;
+        if (owner != state.Player.Creature || effect.From != CardPile.Draw || !Enum.IsDefined(effect.Position))
+            throw new InvalidOperationException("Automatic play requires the player's draw pile and a supported position.");
+        if (owner.Hp <= 0 || state.FirstLivingEnemy is null) return;
+        var count = effect.CalculatedCount is { } calculated
+            ? ScaledAmount(state, owner, target, calculated.BaseAmount, calculated.PerCount, calculated.Count)
+            : effect.Count;
+        if (count < 0) throw new InvalidOperationException("Automatic play count cannot be negative.");
+        var reserved = new List<CardInstance>();
+        for (var i = 0; i < count; i++)
+        {
+            state.EnsureDrawPile(session);
+            var draw = state.Player.MutableDrawPile;
+            if (draw.Count == 0) break;
+            var index = effect.Position == CardPilePosition.Top ? 0 : draw.Count - 1;
+            var card = draw[index];
+            draw.RemoveAt(index);
+            state.Player.MutablePlayPile.Add(card);
+            reserved.Add(card);
+            state.Emit(session, "card_moved", owner.Id, card.InstanceId, 1);
+        }
+        for (var i = reserved.Count - 1; i >= 0; i--)
+            state.PendingEffects.Add((owner, new BeginAutoCardEffect(reserved[i], effect.ForceExhaust), null, reserved[i]));
     }
 
     private static void GeneratePotions(GameSession session, EntityState owner, int count)

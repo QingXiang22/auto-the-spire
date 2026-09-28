@@ -93,11 +93,12 @@ public static class SpireCombatBehaviorDslCompiler
         {
             var call = RequireCall(node);
             if (call.Name != "cardRule" || call.Arguments.Any(argument => argument.Name is null))
-                throw Error(node.Location, "Card rules require cardRule(type=..., cost=..., resultPile=..., consumeOnPlay=...).");
+                throw Error(node.Location, "Card rules require cardRule with named arguments.");
             var properties = new Dictionary<string, DslValueNode>(StringComparer.Ordinal);
             foreach (var argument in call.Arguments)
             {
-                if (argument.Name is not ("type" or "cost" or "resultPile" or "consumeOnPlay"))
+                if (argument.Name is not ("type" or "cost" or "resultPile" or "consumeOnPlay"
+                    or "extraPlays" or "consumeOnPlayCount"))
                     throw Error(argument.Location, $"Unknown cardRule argument '{argument.Name}'.");
                 if (!properties.TryAdd(argument.Name!, argument.Value))
                     throw Error(argument.Location, $"Duplicate cardRule argument '{argument.Name}'.");
@@ -105,7 +106,9 @@ public static class SpireCombatBehaviorDslCompiler
             var rule = new CardPlayRule(EnumValue<CardType>(Required(properties, "type", node.Location)),
                 properties.TryGetValue("cost", out var cost) ? Integer(cost) : null,
                 properties.TryGetValue("resultPile", out var pile) ? EnumValue<CardPile>(pile) : null,
-                OptionalBoolean(properties, "consumeOnPlay"));
+                OptionalBoolean(properties, "consumeOnPlay"),
+                properties.TryGetValue("extraPlays", out var plays) ? Integer(plays) : 0,
+                OptionalBoolean(properties, "consumeOnPlayCount"));
             try { rule.Validate(); }
             catch (ArgumentException exception) { throw Error(node.Location, exception.Message); }
             return rule;

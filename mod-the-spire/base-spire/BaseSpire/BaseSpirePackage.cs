@@ -5,6 +5,11 @@ namespace BaseSpire;
 public static class BaseSpireIds
 {
     public static readonly ContentId Ironclad = ContentId.Parse("base-spire:ironclad");
+    public static readonly ContentId DrumOfBattle = ContentId.Parse("base-spire:drum-of-battle");
+    public static readonly ContentId Cascade = ContentId.Parse("base-spire:cascade");
+    public static readonly ContentId Havoc = ContentId.Parse("base-spire:havoc");
+    public static readonly ContentId OneTwoPunch = ContentId.Parse("base-spire:one-two-punch");
+    public static readonly ContentId OneTwoPunchPower = ContentId.Parse("base-spire:one-two-punch-power");
     public static readonly ContentId Corruption = ContentId.Parse("base-spire:corruption");
     public static readonly ContentId CorruptionPower = ContentId.Parse("base-spire:corruption-power");
     public static readonly ContentId Unrelenting = ContentId.Parse("base-spire:unrelenting");
