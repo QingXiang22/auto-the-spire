@@ -66,7 +66,7 @@ public static class SpireCombatDslCompiler
                 "canGenerateInCombat", "tags", "pools", "onExhaust", "upgradedOnExhaust",
                 "onEnterCombat", "upgradedOnEnterCombat", "beforeCardPlayed", "upgradedBeforeCardPlayed",
                 "afterCardPlayed", "upgradedAfterCardPlayed", "afterAutoPostPlay",
-                "upgradedAfterAutoPostPlay", "variables", "damageVariable", "damageValue",
+                "upgradedAfterAutoPostPlay", "turnEndInHand", "variables", "damageVariable", "damageValue",
                 "upgradedDamageValue");
             var type = EnumValue<CardType>(Required(properties, "type", declaration.Location));
             var rarity = EnumValue<CardRarity>(Required(properties, "rarity", declaration.Location));
@@ -120,6 +120,8 @@ public static class SpireCombatDslCompiler
                 OnExhaust = properties.TryGetValue("onExhaust", out var exhaustNode) ? CompileEffect(exhaustNode) : null,
                 UpgradedOnExhaust = properties.TryGetValue("upgradedOnExhaust", out var upgradedExhaustNode)
                     ? CompileEffect(upgradedExhaustNode) : null,
+                TurnEndInHand = properties.TryGetValue("turnEndInHand", out var turnEndInHandNode)
+                    ? CompileEffect(turnEndInHandNode) : null,
                 OnEnterCombat = properties.TryGetValue("onEnterCombat", out var entryNode) ? CompileEffect(entryNode) : null,
                 UpgradedOnEnterCombat = properties.TryGetValue("upgradedOnEnterCombat", out var upgradedEntryNode)
                     ? CompileEffect(upgradedEntryNode) : null,
@@ -257,10 +259,12 @@ public static class SpireCombatDslCompiler
                         OptionalTarget(call, "target", TargetSelector.Self),
                         OptionalBoolean(call, "inheritUpgradeFromPlayedCard", false));
                 case "summonEnemy":
-                    CheckShape(call, 1, 1, "count");
+                    CheckShape(call, 1, 1, "count", "startingAction");
                     var summonCount = OptionalInteger(call, "count", 1);
                     if (summonCount <= 0) throw Error(call.Location, "Summoned enemy count must be positive.");
-                    return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount);
+                    var startingActionNode = OptionalArgument(call, "startingAction");
+                    return new SummonEnemyEffect(ReferenceId(Argument(call, 0)), summonCount,
+                        startingActionNode is null ? null : ReferenceId(startingActionNode));
                 case "generateCards":
                     CheckShape(call, 0, 0, "count", "pile", "upgraded", "type", "distinct", "cost");
                     var generationCount = RequiredArgument(call, "count");

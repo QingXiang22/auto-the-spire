@@ -152,6 +152,7 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
     public int ActionIndex { get; set; }
+    public ContentId? StartingActionOverride { get; set; }
     public ContentId? LastActionId { get; private set; }
     public int ConsecutiveActionCount { get; private set; }
     private readonly Dictionary<ContentId, int> _actionUseCounts = [];
@@ -210,6 +211,8 @@ internal sealed class GameState
     private long _nextCardPlayExecutionId;
     private int _nextSummonedEnemyId;
     private int _playerTurnEventStartSequence;
+    internal HashSet<string> ProcessedTurnEndHandCardIds { get; } = [];
+    internal List<string> TurnEndHandCardIds { get; } = [];
 
     internal GameState(GameDefinition definition, PlayerCombatState player, IEnumerable<EnemyCombatState> enemies)
     {
@@ -829,6 +832,8 @@ internal enum EndTurnResolutionStage
     PlayerHandCleanup,
     AfterAutoPostPlayPowers,
     AfterAutoPostPlayCards,
+    CapturePlayerTurnEndHandCards,
+    PlayerHandTurnEndEffects,
     BeforeFlushHooks,
     BeforeFlushLateHooks,
     FlushHand,

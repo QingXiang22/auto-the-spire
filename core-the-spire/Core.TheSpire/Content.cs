@@ -206,6 +206,7 @@ public sealed record CardDefinition(ContentId Id, int Cost, CardType Type, Effec
     public ScaledCombatAmount? UpgradedCalculatedDamageValue { get; init; }
     public EffectNode? OnExhaust { get; init; }
     public EffectNode? UpgradedOnExhaust { get; init; }
+    public EffectNode? TurnEndInHand { get; init; }
     public EffectNode? AfterAutoPostPlay { get; init; }
     public EffectNode? UpgradedAfterAutoPostPlay { get; init; }
     public CardKeywords UpgradedKeywords { get; init; }
@@ -959,7 +960,7 @@ public enum CardType { Attack, Skill, Power, Status }
 public enum CardKeywords { None = 0, Exhaust = 1, Ethereal = 2, Unplayable = 4, Retain = 8, Innate = 16 }
 public enum IntentKind { None, Attack, Buff, Debuff }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
-    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered }
+    AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect);
 public sealed record DamageModifierSubscription(decimal Multiplier,
     DamageProperties RequiredProperties = DamageProperties.None,
@@ -1192,6 +1193,8 @@ public sealed class ContentRegistry
             if (card.OnExhaust is { } exhaustEffect) ValidateEffectReferences(exhaustEffect, $"Card '{card.Id}' exhaust effect");
             if (card.UpgradedOnExhaust is { } upgradedExhaust)
                 ValidateEffectReferences(upgradedExhaust, $"Upgraded card '{card.Id}' exhaust effect");
+            if (card.TurnEndInHand is { } turnEndInHand)
+                ValidateEffectReferences(turnEndInHand, $"Card '{card.Id}' turn-end-in-hand effect");
             if (card.OnEnterCombat is { } entryEffect) ValidateEffectReferences(entryEffect, $"Card '{card.Id}' entry effect");
             if (card.UpgradedOnEnterCombat is { } upgradedEntry)
                 ValidateEffectReferences(upgradedEntry, $"Upgraded card '{card.Id}' entry effect");
@@ -1598,6 +1601,9 @@ public sealed class ContentRegistry
                 if (!_enemies.ContainsKey(summon.Enemy))
                     throw new InvalidOperationException($"{owner} summons unknown enemy '{summon.Enemy}'.");
                 ArgumentOutOfRangeException.ThrowIfNegativeOrZero(summon.Count);
+                if (summon.StartingAction is { } startingAction
+                    && !_enemies[summon.Enemy].Actions.Any(action => action.Id == startingAction))
+                    throw new InvalidOperationException($"{owner} summons '{summon.Enemy}' with unknown starting action '{startingAction}'.");
                 break;
             case ChooseCardFromPileEffect chooseCard:
                 if (!Enum.IsDefined(chooseCard.From)
@@ -1674,6 +1680,8 @@ public sealed class ContentRegistry
                 break;
             case ModifyPowerVariableEffect variable:
                 ValidatePowerVariableReference(variable.Power, variable.Variable, owner);
+                if (!Enum.IsDefined(variable.Operation))
+                    throw new InvalidOperationException($"{owner} uses an invalid Power variable operation.");
                 if (variable.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget or TargetSelector.FirstEnemy))
                     throw new InvalidOperationException($"{owner} modifies a Power variable on an invalid target.");
                 break;

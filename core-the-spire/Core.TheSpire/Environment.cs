@@ -456,6 +456,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
         else if (action is EndTurnAction)
         {
             state.IsPlayerTurn = false;
+            state.ProcessedTurnEndHandCardIds.Clear();
+            state.TurnEndHandCardIds.Clear();
             state.EndTurnStage = EndTurnResolutionStage.AfterAutoPostPlayPowers;
             BeginPowerQueue(state, state.Player.Creature, PowerTrigger.AfterAutoPostPlayPhaseEntered);
             ContinueEndTurn(session);
@@ -495,16 +497,43 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         EffectExecutor.Resume(session);
                         break;
                     }
-                    state.EndTurnStage = EndTurnResolutionStage.BeforeFlushHooks;
-                    state.FlushHookIndex = 0;
+                    state.EndTurnStage = EndTurnResolutionStage.PlayerHandTurnEndEffects;
+                    break;
+                case EndTurnResolutionStage.PlayerHandTurnEndEffects:
+                    var turnEndInstanceId = state.TurnEndHandCardIds.FirstOrDefault(instanceId =>
+                        !state.ProcessedTurnEndHandCardIds.Contains(instanceId));
+                    var turnEndCard = turnEndInstanceId is null ? null
+                        : state.Player.MutableHand.FirstOrDefault(card => card.InstanceId == turnEndInstanceId);
+                    if (turnEndCard is null)
+                    {
+                        if (turnEndInstanceId is not null)
+                            state.ProcessedTurnEndHandCardIds.Add(turnEndInstanceId);
+                        else
+                        {
+                            state.EndTurnStage = EndTurnResolutionStage.BeforeFlushHooks;
+                            state.FlushHookIndex = 0;
+                        }
+                        break;
+                    }
+                    state.ProcessedTurnEndHandCardIds.Add(turnEndCard.InstanceId);
+                    state.PendingEffects.Add(new(state.Player.Creature,
+                        state.Definition.Cards[turnEndCard.CardId].TurnEndInHand!,
+                        state.Player.Creature, turnEndCard));
+                    EffectExecutor.Resume(session);
                     break;
                 case EndTurnResolutionStage.AfterAutoPostPlayPowers:
                     state.EndTurnStage = EndTurnResolutionStage.AfterAutoPostPlayCards;
                     break;
                 case EndTurnResolutionStage.AfterAutoPostPlayCards:
-                    state.EndTurnStage = EndTurnResolutionStage.PlayerHandCleanup;
+                    state.EndTurnStage = EndTurnResolutionStage.CapturePlayerTurnEndHandCards;
                     CombatCardEvents.QueueAfterAutoPostPlay(state);
                     EffectExecutor.Resume(session);
+                    break;
+                case EndTurnResolutionStage.CapturePlayerTurnEndHandCards:
+                    state.TurnEndHandCardIds.AddRange(state.Player.MutableHand
+                        .Where(card => state.Definition.Cards[card.CardId].TurnEndInHand is not null)
+                        .Select(card => card.InstanceId));
+                    state.EndTurnStage = EndTurnResolutionStage.PlayerHandCleanup;
                     break;
                 case EndTurnResolutionStage.BeforeFlushHooks:
                 case EndTurnResolutionStage.BeforeFlushLateHooks:
