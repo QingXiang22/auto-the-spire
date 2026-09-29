@@ -2477,8 +2477,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(32, content.Powers.Count);
-        Assert.Equal(73, content.Enemies.Count);
-        Assert.Equal(73, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(74, content.Enemies.Count);
+        Assert.Equal(74, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2678,6 +2678,34 @@ public sealed class CombatSliceTests
             BaseSpireIds.SoulNexus.ToString());
         Assert.Equal(234, deadlyTough.Observe(variantSession).EnemyHp);
         Assert.Equal(31, deadlyTough.Observe(variantSession).IntentDamage);
+    }
+
+    public void TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(1144, "ironclad", 2000, 2000, [],
+            BaseSpireIds.TorchHeadAmalgam.ToString());
+        Assert.Equal(199, environment.Observe(session).EnemyHp);
+        Assert.Equal(1, session.State.Enemy.PowerAmount(BaseSpireIds.Minion));
+
+        var expectedDamage = new[] { 18, 18, 24, 14, 14, 24 };
+        var expectedPlayerHp = 2000;
+        foreach (var damage in expectedDamage)
+        {
+            Assert.Equal(damage, environment.Observe(session).IntentDamage);
+            environment.Step(session, new EndTurnAction());
+            expectedPlayerHp -= damage;
+            Assert.Equal(expectedPlayerHp, session.State.Player.Creature.Hp);
+        }
+
+        Assert.Equal(14, environment.Observe(session).IntentDamage);
+        var toughDeadly = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true,
+            toughEnemies: true)));
+        var variantSession = toughDeadly.Start(1145, "ironclad", 2000, 2000, [],
+            BaseSpireIds.TorchHeadAmalgam.ToString());
+        Assert.Equal(211, toughDeadly.Observe(variantSession).EnemyHp);
+        Assert.Equal(19, toughDeadly.Observe(variantSession).IntentDamage);
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -6413,6 +6441,7 @@ internal static class Program
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
+        tests.TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
