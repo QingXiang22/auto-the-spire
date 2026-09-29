@@ -1,0 +1,13 @@
+package base-spire {
+  enemy SneakyGremlin {
+    hp = variants(default=range(11, 15), tough=range(10, 14))
+    moves = actions(
+      sneakyGremlinWake = action(intent=Stun, effect=sequence()),
+      sneakyGremlinTackle = attack(variants(default=9, deadly=10), target=player)
+    )
+    behavior = graph(start=sneakyGremlinWake, edges=[
+      edge(sneakyGremlinWake, sneakyGremlinTackle),
+      edge(sneakyGremlinTackle, sneakyGremlinTackle)
+    ])
+  }
+}
