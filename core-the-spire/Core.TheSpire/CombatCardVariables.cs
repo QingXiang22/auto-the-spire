@@ -46,14 +46,28 @@ internal static class CombatCardVariables
             decimal.ToInt32(decimal.Truncate(next - previous)), exactAmount: next - previous);
     }
 
-    internal static void Downgrade(GameSession session, CardInstance card)
+    internal static void Downgrade(GameSession session, CardInstance card, ContentId? temporarySource = null)
     {
         if (card.UpgradeLevel == 0) return;
+        if (temporarySource is { } source
+            && card.TemporaryUpgradeChanges.Any(change => change.SourcePower == source)) return;
         var definition = session.State.Definition.Cards[card.CardId];
         var offsets = card.VariableOffsets.Where(value =>
             definition.Variables.Single(variable => variable.Id == value.Variable).PreserveOnDowngrade).ToArray();
-        session.State.ReplaceCombatCard(card, card.WithUpgradeLevel(0).WithVariableOffsets(offsets));
+        var replacement = card.WithUpgradeLevel(0).WithVariableOffsets(offsets);
+        if (temporarySource is { } temporaryPower)
+            replacement = replacement.WithTemporaryUpgradeChange(new(temporaryPower, card.UpgradeLevel));
+        session.State.ReplaceCombatCard(card, replacement);
         session.State.Emit(session, "card_downgraded", session.State.Player.Id, card.InstanceId, card.UpgradeLevel);
+    }
+
+    internal static void RestoreTemporaryDowngrade(GameSession session, CardInstance card, ContentId sourcePower)
+    {
+        var change = card.TemporaryUpgradeChanges.SingleOrDefault(candidate => candidate.SourcePower == sourcePower);
+        if (change is null) return;
+        session.State.ReplaceCombatCard(card, card.WithoutTemporaryUpgradeChange(sourcePower));
+        for (var i = 0; i < change.RestoreLevels; i++)
+            session.State.UpgradeCard(session, card.InstanceId);
     }
 
 }

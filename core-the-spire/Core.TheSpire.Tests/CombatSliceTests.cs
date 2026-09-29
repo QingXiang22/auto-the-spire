@@ -2486,9 +2486,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(37, content.Powers.Count);
-        Assert.Equal(79, content.Enemies.Count);
-        Assert.Equal(79, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(38, content.Powers.Count);
+        Assert.Equal(80, content.Enemies.Count);
+        Assert.Equal(80, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2517,6 +2517,7 @@ public sealed class CombatSliceTests
         var toughForgotten = deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.TheForgotten);
         Assert.Equal(111, toughForgotten.MaxHp);
         Assert.True(toughForgotten.Actions[1].Effect is ScaledAttackEffect { BaseAmount: 15 });
+        Assert.Equal(89, deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.MagiKnight).MaxHp);
 
         var leafSmall = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.LeafSlimeSmall);
         Assert.Equal(EnemyActionRepeatPolicy.PreventImmediateRepeat,
@@ -2826,6 +2827,50 @@ public sealed class CombatSliceTests
         EffectExecutor.Execute(session, session.State.Player.Creature,
             new AttackEffect(2000, TargetSelector.SelectedTarget), forgotten.Creature);
         Assert.Equal(0, session.State.Player.Creature.PowerAmount(dexterity));
+    }
+
+    public void DampenTemporarilyDowngradesCardsUntilItsLastApplierDies()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(1190, "ironclad", 2000, 2000,
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad, BaseSpireIds.Bash],
+            BaseSpireIds.KnightsElite);
+        var magi = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.MagiKnight);
+        var flail = session.State.Enemies.Single(enemy => enemy.Definition.Id == ContentId.Parse("base-spire:flail-knight"));
+        var player = session.State.Player;
+        player.MutableHand[0] = new CardInstance("dampen-hand-upgraded", BaseSpireIds.StrikeIronclad, 1);
+        player.MutableDrawPile.Add(new CardInstance("dampen-draw-upgraded", BaseSpireIds.Bash, 1));
+        player.MutableDiscardPile.Add(new CardInstance("dampen-discard-upgraded", BaseSpireIds.DefendIronclad, 1));
+        player.MutableExhaustPile.Add(new CardInstance("dampen-exhaust-upgraded", BaseSpireIds.StrikeIronclad, 1));
+
+        environment.Step(session, new EndTurnAction());
+        environment.Step(session, new EndTurnAction());
+
+        Assert.Equal(1, player.Creature.PowerAmount(BaseSpireIds.DampenPower));
+        var downgraded = GameState.CombatPiles.SelectMany(pile => session.State.GetPile(pile)).ToArray();
+        Assert.Equal(0, downgraded.Single(card => card.InstanceId == "dampen-hand-upgraded").UpgradeLevel);
+        Assert.Equal(0, downgraded.Single(card => card.InstanceId == "dampen-draw-upgraded").UpgradeLevel);
+        Assert.Equal(0, downgraded.Single(card => card.InstanceId == "dampen-discard-upgraded").UpgradeLevel);
+        Assert.Equal(0, downgraded.Single(card => card.InstanceId == "dampen-exhaust-upgraded").UpgradeLevel);
+        Assert.Equal(0, downgraded.Single(card => card.InstanceId == "fixture-card-1").UpgradeLevel);
+
+        EffectExecutor.Execute(session, flail.Creature,
+            new RegisterPowerApplierEffect(BaseSpireIds.DampenPower, TargetSelector.FirstEnemy), player.Creature);
+        EffectExecutor.Execute(session, player.Creature,
+            new AttackEffect(2000, TargetSelector.SelectedTarget), magi.Creature);
+        Assert.Equal(1, player.Creature.PowerAmount(BaseSpireIds.DampenPower));
+        var stillDowngraded = GameState.CombatPiles.SelectMany(pile => session.State.GetPile(pile)).ToArray();
+        Assert.Equal(0, stillDowngraded.Single(card => card.InstanceId == "dampen-hand-upgraded").UpgradeLevel);
+
+        EffectExecutor.Execute(session, player.Creature,
+            new AttackEffect(2000, TargetSelector.SelectedTarget), flail.Creature);
+        Assert.Equal(0, player.Creature.PowerAmount(BaseSpireIds.DampenPower));
+        var restored = GameState.CombatPiles.SelectMany(pile => session.State.GetPile(pile)).ToArray();
+        Assert.Equal(1, restored.Single(card => card.InstanceId == "dampen-hand-upgraded").UpgradeLevel);
+        Assert.Equal(1, restored.Single(card => card.InstanceId == "dampen-draw-upgraded").UpgradeLevel);
+        Assert.Equal(1, restored.Single(card => card.InstanceId == "dampen-discard-upgraded").UpgradeLevel);
+        Assert.Equal(1, restored.Single(card => card.InstanceId == "dampen-exhaust-upgraded").UpgradeLevel);
+        Assert.Equal(0, restored.Single(card => card.InstanceId == "fixture-card-1").UpgradeLevel);
     }
 
     public void TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent()
@@ -6629,6 +6674,7 @@ internal static class Program
         tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();
         tests.SkittishPowerTriggersOnceOnCardDamageEachPlayerTurn();
         tests.TheLostAndForgottenReturnTheirStolenStatsWhenTheyDie();
+        tests.DampenTemporarilyDowngradesCardsUntilItsLastApplierDies();
         tests.TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent();
         tests.SkulkingColonyCapsIncomingHpLossAcrossHitsAndResetsAtPlayerTurnStart();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();

@@ -2,6 +2,15 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:knights-elite",
+      "roomType": "elite",
+      "enemyIds": [
+        "base-spire:flail-knight",
+        "base-spire:spectral-knight",
+        "base-spire:magi-knight"
+      ]
+    },
+    {
       "id": "base-spire:the-lost-and-forgotten-normal",
       "roomType": "monster",
       "enemyIds": [

@@ -126,6 +126,9 @@ public static class BaseSpireIds
     public static readonly ContentId TheLostAndForgottenNormal = ContentId.Parse("base-spire:the-lost-and-forgotten-normal");
     public static readonly ContentId PossessStrengthPower = ContentId.Parse("base-spire:possess-strength-power");
     public static readonly ContentId PossessDexterityPower = ContentId.Parse("base-spire:possess-dexterity-power");
+    public static readonly ContentId MagiKnight = ContentId.Parse("base-spire:magi-knight");
+    public static readonly ContentId DampenPower = ContentId.Parse("base-spire:dampen");
+    public static readonly ContentId KnightsElite = ContentId.Parse("base-spire:knights-elite");
     public static readonly ContentId TorchHeadAmalgam = ContentId.Parse("base-spire:torch-head-amalgam");
     public static readonly ContentId Minion = ContentId.Parse("base-spire:minion");
     public static readonly ContentId SkulkingColony = ContentId.Parse("base-spire:skulking-colony");

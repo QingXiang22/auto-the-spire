@@ -4,13 +4,15 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；79 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、定向卡牌 Affliction 生命周期及 Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；80 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、定向卡牌 Affliction 生命周期、临时卡牌降级及多施加者 Power 清理、Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 [`SpectralKnight.cs`](../sts2/src/Core/Models/Monsters/SpectralKnight.cs) 与 [`HexPower.cs`](../sts2/src/Core/Models/Powers/HexPower.cs) 已按源码类名迁入 `enemies-glory.spire`。Hex 给玩家所有当前战斗卡牌施加 Hexed，Hexed 仅在原卡牌尚未受其他 Affliction 影响时添加 Ethereal；新进入战斗的卡牌也会继承 Hexed。施加者死亡后 Hex 移除，并由 `power_removed` 事件清理 Hexed，同时仅移除由该 Affliction 添加的关键词。运行测试覆盖当前卡牌、新入战卡牌、击杀清理和原有 Ethereal 保留边界。Power 移除事件携带受影响 Power ID，并在 Power 已从实体状态删除后仍可派发给该 Power 声明的事件处理器。
 
 [`SneakyGremlin.cs`](../sts2/src/Core/Models/Monsters/SneakyGremlin.cs) 以源码类名进入 `enemies-gremlins.spire`。其首个 `Stun` 意图行动为空效果，只推进到之后循环的 Tackle；Tackle 普通伤害 9、DeadlyEnemies 10，HP 为普通 11–15、ToughEnemies 10–14。`isAwake` 只用于动画分支，不改变战斗规则，因此没有在模型状态里复制这个表现变量。
 
 [`MysteriousKnight.cs`](../sts2/src/Core/Models/Monsters/MysteriousKnight.cs) 使用与 `FlailKnight` 相同的 HP、开场 Ram、War Chant/Flail/Ram 加权行动图，仅额外在入场时获得 6 Strength 与 6 Plating。`enemies-knights.spire` 用同一组通用攻击、Power 和 action graph 原语描述该行为；测试检查普通与 Tough/Deadly profile、起始 Power 和多段 Flail 行为。
+
+[`MagiKnight.cs`](../sts2/src/Core/Models/Monsters/MagiKnight.cs)、[`DampenPower.cs`](../sts2/src/Core/Models/Powers/DampenPower.cs) 与 [`KnightsElite.cs`](../sts2/src/Core/Models/Encounters/KnightsElite.cs) 已部分迁入 `enemies-knights.spire` 和 encounter JSON。Magi Knight HP 为 82（Tough 89），固定循环为 Power Shield、Dampen、Spear、Prep、Bomb、Spear；Dampen 首次施加时暂时降级当前所有升级卡牌，后续施法者加入同一个非叠加 Power，最后一个施法者死亡后移除 Power 并恢复已记录的升级级别。通用 CardInstance 变更来源记录、临时降级/恢复效果和 Power 施加者登记原语表达了该规则，测试覆盖手牌、抽牌堆、弃牌堆、消耗堆、多施法者及最后移除恢复。KnightsElite 的敌人顺序已登记，但遭遇中的 Surrounded 方向/伤害机制尚未实现，且当前 Glory Act 遭遇池未接入此战；不能视为完整遭遇迁移。
 
 [`SoulNexus.cs`](../sts2/src/Core/Models/Monsters/SoulNexus.cs) 生命值普通 254 / Tough 234，首招 Soul Burn (29/31 Deadly)，之后在 Soul Burn、四击 Maelstrom (6/7 Deadly) 与 Drain Life (18/19 Deadly，另施加 Vulnerable 2 和 Weak 2) 间随机选择且不连续重复。`enemies-souls.spire` 用共享 `chooseWithoutRepeat` 与效果序列描述；测试覆盖招式选择、可见伤害修正、施加的 Powers、同 seed 复现及 Tough/Deadly 数据。
 
