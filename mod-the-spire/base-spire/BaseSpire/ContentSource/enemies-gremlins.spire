@@ -10,4 +10,16 @@ package base-spire {
       edge(sneakyGremlinTackle, sneakyGremlinTackle)
     ])
   }
+
+  enemy FatGremlin {
+    hp = variants(default=range(13, 17), tough=range(14, 18))
+    moves = actions(
+      fatGremlinWake = action(intent=Stun, effect=sequence()),
+      fatGremlinEscape = action(intent=Escape, effect=escape(target=self))
+    )
+    behavior = graph(start=fatGremlinWake, edges=[
+      edge(fatGremlinWake, fatGremlinEscape),
+      edge(fatGremlinEscape, fatGremlinEscape)
+    ])
+  }
 }

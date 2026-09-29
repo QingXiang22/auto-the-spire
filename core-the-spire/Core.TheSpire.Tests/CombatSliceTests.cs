@@ -2487,8 +2487,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(38, content.Powers.Count);
-        Assert.Equal(80, content.Enemies.Count);
-        Assert.Equal(80, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(81, content.Enemies.Count);
+        Assert.Equal(81, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2607,6 +2607,24 @@ public sealed class CombatSliceTests
         Assert.Equal(10, toughDeadly.Observe(variantSession).IntentDamage);
         toughDeadly.Step(variantSession, new EndTurnAction());
         Assert.Equal(46, variantSession.State.Player.Creature.Hp);
+    }
+
+    public void FatGremlinEscapesWithoutBeingTreatedAsDead()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(1140, "ironclad", 56, 65, [], BaseSpireIds.FatGremlin.ToString());
+
+        Assert.Equal(IntentKind.Stun, environment.Observe(session).Intent);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(IntentKind.Escape, environment.Observe(session).Intent);
+        Assert.False(session.State.IsTerminal);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.True(session.State.IsTerminal);
+        Assert.True(session.State.Enemy.Hp is >= 13 and <= 17);
+        Assert.True(environment.Observe(session).Enemies.Single().IsEscaped);
+        Assert.True(session.State.Events.Any(gameEvent => gameEvent.Type == "enemy_escaped"));
+        Assert.False(session.State.Events.Any(gameEvent => gameEvent.Type is "enemy_death" or "ally_death"));
     }
 
     public void MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers()
@@ -6669,6 +6687,7 @@ internal static class Program
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies();
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
+        tests.FatGremlinEscapesWithoutBeingTreatedAsDead();
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();

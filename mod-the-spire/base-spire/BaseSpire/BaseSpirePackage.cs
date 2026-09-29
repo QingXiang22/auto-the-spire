@@ -113,6 +113,7 @@ public static class BaseSpireIds
     public static readonly ContentId AxebotsNormal = ContentId.Parse("base-spire:axebots-normal");
     public static readonly ContentId SpectralKnight = ContentId.Parse("base-spire:spectral-knight");
     public static readonly ContentId SneakyGremlin = ContentId.Parse("base-spire:sneaky-gremlin");
+    public static readonly ContentId FatGremlin = ContentId.Parse("base-spire:fat-gremlin");
     public static readonly ContentId MysteriousKnight = ContentId.Parse("base-spire:mysterious-knight");
     public static readonly ContentId SoulNexus = ContentId.Parse("base-spire:soul-nexus");
     public static readonly ContentId SoulFysh = ContentId.Parse("base-spire:soul-fysh");
