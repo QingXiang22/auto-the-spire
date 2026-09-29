@@ -4511,6 +4511,32 @@ public sealed class CombatSliceTests
             && upgradeCards.Any(card => card.InstanceId == gameEvent.Target)));
     }
 
+    public void DarkEmbraceDefersEtherealExhaustDrawUntilAfterHandFlush()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(72, "ironclad", 56, 65,
+            [ContentId.Parse("base-spire:dark-embrace"), BaseSpireIds.StrikeIronclad, BaseSpireIds.Dazed],
+            BaseSpireIds.DampCultist.ToString(), drawPile: [BaseSpireIds.DefendIronclad]);
+        var exhaustedCardId = session.State.Player.HandInstances.Single(card => card.CardId == BaseSpireIds.Dazed).InstanceId;
+        var flushedCardId = session.State.Player.HandInstances.Single(card => card.CardId == BaseSpireIds.StrikeIronclad).InstanceId;
+        var deferredDrawCardId = session.State.Player.DrawPileInstances.Single().InstanceId;
+
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        environment.Step(session, new EndTurnAction());
+
+        var events = session.State.Events.ToArray();
+        var etherealExhaustIndex = Array.FindIndex(events, gameEvent => gameEvent.Type == "card_exhausted"
+            && gameEvent.Target == exhaustedCardId && gameEvent.CausedByEtherealExhaustion);
+        var handFlushIndex = Array.FindIndex(events, gameEvent => gameEvent.Type == "card_moved"
+            && gameEvent.Target == flushedCardId);
+        var deferredDrawIndex = Array.FindIndex(events, gameEvent => gameEvent.Type == "draw"
+            && gameEvent.CardSourceInstanceId == deferredDrawCardId);
+
+        Assert.True(etherealExhaustIndex >= 0);
+        Assert.True(handFlushIndex > etherealExhaustIndex);
+        Assert.True(deferredDrawIndex > handFlushIndex);
+    }
+
     public void BarricadePreventsPlayerBlockFromClearingAtTurnStart()
     {
         var env = new CombatEnvironment(Build(new BaseSpirePackage()));
@@ -7146,6 +7172,7 @@ internal static class Program
         tests.HandCleanupHooksCanSuppressEtherealAndFlush();
         tests.BeforeFlushHookCanPauseToRetainASelectedCardAndAfterFlushSeesTheResult();
         tests.WellLaidPlansAllowsSelectingUpToItsPowerAmountOrConfirmingNone();
+        tests.DarkEmbraceDefersEtherealExhaustDrawUntilAfterHandFlush();
         tests.BarricadePreventsPlayerBlockFromClearingAtTurnStart();
         tests.EntrenchAddsBlockEqualToCurrentBlockAndIsAnEventCard();
         tests.ImperviousGrantsBlockAndExhaustsItself();
