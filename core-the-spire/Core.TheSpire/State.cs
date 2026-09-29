@@ -325,6 +325,7 @@ internal sealed class GameState
         EnemyTurnParticipants.AddRange(Enemies);
     }
     public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.IsActive)?.Creature;
+    public int? GoldRewardPercent { get; set; }
     internal bool IsCombatantActive(EntityState creature) => creature == Player.Creature
         ? creature.Hp > 0
         : Enemies.Any(enemy => enemy.Creature == creature && enemy.IsActive);

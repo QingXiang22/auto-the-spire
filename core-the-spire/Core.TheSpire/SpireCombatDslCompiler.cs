@@ -190,11 +190,23 @@ public static class SpireCombatDslCompiler
                     return new ApplyPowerEffect(ReferenceId(Argument(call, 0)), Integer(Argument(call, 1)),
                         OptionalTarget(call, "target", TargetSelector.SelectedTarget));
                 case "applyScaledPower":
-                    CheckShape(call, 3, 3, "count", "target");
+                    CheckShape(call, 3, 3, "count", "target", "onlyEnemy");
                     return new ApplyScaledPowerEffect(Id(Name(Argument(call, 0))),
                         Integer(Argument(call, 1)), Integer(Argument(call, 2)),
                         CompileCombatCount(RequiredArgument(call, "count")),
-                        OptionalTarget(call, "target", TargetSelector.Self));
+                        OptionalTarget(call, "target", TargetSelector.Self),
+                        OptionalArgument(call, "onlyEnemy") is { } onlyEnemyPower ? Id(Name(onlyEnemyPower)) : null);
+                case "stealGold":
+                    CheckShape(call, 3, 3, "target");
+                    return new StealGoldEffect(Integer(Argument(call, 0)), Id(Name(Argument(call, 1))),
+                        Id(Name(Argument(call, 2))), OptionalTarget(call, "target", TargetSelector.FirstEnemy));
+                case "addGoldReward":
+                    CheckShape(call, 2, 2, "count");
+                    return new AddGoldRewardEffect(Integer(Argument(call, 0)), Integer(Argument(call, 1)),
+                        CompileCombatCount(RequiredArgument(call, "count")));
+                case "setGoldRewardPercent":
+                    CheckShape(call, 1, 1);
+                    return new SetGoldRewardPercentEffect(Integer(Argument(call, 0)));
                 case "gainBlock":
                     CheckShape(call, 1, 1, "perPowerStack", "properties", "target", "onlyEnemy");
                     var perPower = OptionalArgument(call, "perPowerStack");

@@ -498,6 +498,7 @@ internal sealed class RunState
     public int Hp { get; set; }
     public int MaxHp { get; set; }
     public int Gold { get; set; }
+    public int NextCombatGoldRewardIndex { get; set; }
     public List<CardInstance> Deck { get; }
     public List<ContentId> Relics { get; }
     public List<ContentId?> Potions { get; }
@@ -511,6 +512,23 @@ internal sealed class RunState
     public GameSession? ActiveCombat { get; set; }
     public RunRoomType? CurrentRoom => RoomStack.Count == 0 ? null : RoomStack[^1].RoomType;
     public ContentId? CurrentEncounterId => RoomStack.Count == 0 ? null : RoomStack[^1].EncounterId;
+
+    internal int LoseGold(int amount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+        var lost = Math.Min(Gold, amount);
+        Gold -= lost;
+        return lost;
+    }
+
+    internal void AddCombatGoldReward(int amount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(amount);
+        if (amount == 0) return;
+        if (RoomStack.Count == 0) throw new InvalidOperationException("A combat reward requires an active room.");
+        var rewardId = $"combat-extra-gold-{NextCombatGoldRewardIndex++}";
+        RoomStack[^1].Rewards.Add(new RunRewardState(rewardId, RunRewardKind.Gold, amount));
+    }
     internal int GetModInt(string modId, string key, int defaultValue = 0) => _modInts.Get(modId, key, defaultValue);
     internal int ReadModInt(string modId, string key) => _modInts.GetDeclared(modId, key);
     internal void SetModInt(string modId, string key, int value) => _modInts.Set(modId, key, value);
@@ -1261,8 +1279,16 @@ public sealed class RunEnvironment
 
         var shouldGivePotion = GetPotionOptions(state).Any()
             && RollForPotionReward(state, frame.RoomType, observation);
-        var amount = state.RewardRandom.NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
-        frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
+        var baseAmount = state.RewardRandom.NextInt(encounter.MinGoldReward, encounter.MaxGoldReward + 1);
+        var combat = state.ActiveCombat?.State;
+        var goldProportion = combat?.GoldRewardPercent is { } configuredPercent
+            ? configuredPercent / 100m
+            : combat is null || combat.Enemies.Count == 0 ? 1m
+                : (combat.Enemies.Count - combat.Enemies.Count(enemy => enemy.IsEscaped))
+                    / (decimal)combat.Enemies.Count;
+        var amount = (int)Math.Round(baseAmount * goldProportion);
+        if (goldProportion > 0m)
+            frame.Rewards.Add(new RunRewardState($"{encounterId}:gold", RunRewardKind.Gold, amount));
         if (shouldGivePotion && RollPotion(state) is { } potionId)
             frame.Rewards.Add(new RunRewardState($"{encounterId}:potion", RunRewardKind.Potion,
                 0, PotionId: potionId));

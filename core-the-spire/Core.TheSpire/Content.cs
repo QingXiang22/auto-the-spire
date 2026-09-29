@@ -1735,9 +1735,28 @@ public sealed class ContentRegistry
                 ArgumentOutOfRangeException.ThrowIfNegative(scaledPower.BaseAmount);
                 ArgumentOutOfRangeException.ThrowIfNegative(scaledPower.AmountPerCount);
                 if (scaledPower.Target is not (TargetSelector.Self or TargetSelector.SelectedTarget
-                    or TargetSelector.FirstEnemy))
+                    or TargetSelector.FirstEnemy or TargetSelector.OtherAllies))
                     throw new InvalidOperationException($"{owner} has an invalid scaled power target.");
+                if (scaledPower.OnlyEnemy is { } filteredEnemy && (!_enemies.ContainsKey(filteredEnemy)
+                    || scaledPower.Target != TargetSelector.OtherAllies))
+                    throw new InvalidOperationException($"{owner} filters a scaled Power by enemy with an invalid target or unknown enemy.");
                 ValidateCombatCountSource(scaledPower.Count, owner, counts);
+                break;
+            case StealGoldEffect stealGold:
+                ArgumentOutOfRangeException.ThrowIfNegative(stealGold.Amount);
+                if (!_powers.TryGetValue(stealGold.Power, out var recordingPower)
+                    || !recordingPower.Variables.Any(variable => variable.Id == stealGold.Variable)
+                    || !IsSingleEffectTarget(stealGold.Target))
+                    throw new InvalidOperationException($"{owner} steals gold into an unknown Power variable or target.");
+                break;
+            case AddGoldRewardEffect addGoldReward:
+                ArgumentOutOfRangeException.ThrowIfNegative(addGoldReward.BaseAmount);
+                ArgumentOutOfRangeException.ThrowIfNegative(addGoldReward.AmountPerCount);
+                ValidateCombatCountSource(addGoldReward.Count, owner, counts);
+                break;
+            case SetGoldRewardPercentEffect setGoldReward:
+                if (setGoldReward.Percent is < 0 or > 100)
+                    throw new InvalidOperationException($"{owner} sets an invalid gold reward percentage.");
                 break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
