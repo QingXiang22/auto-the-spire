@@ -65,6 +65,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public IReadOnlyList<BlockGainModifierSubscription> BlockGainModifiers { get; init; } = Array.Empty<BlockGainModifierSubscription>();
     public decimal? BlockGainMultiplier { get; init; }
     public int? DamageCapPerStack { get; init; }
+    public int? IncomingDamageCap { get; init; }
     public int? IncomingDamageCapPerTurnPerStack { get; init; }
     public IReadOnlyList<PowerVariableDefinition> Variables { get; init; } = Array.Empty<PowerVariableDefinition>();
 
@@ -85,6 +86,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             throw new ArgumentOutOfRangeException(nameof(BlockGainMultiplier));
         if (DamageCapPerStack is <= 0)
             throw new ArgumentOutOfRangeException(nameof(DamageCapPerStack));
+        if (IncomingDamageCap is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(IncomingDamageCap));
         if (IncomingDamageCapPerTurnPerStack is <= 0)
             throw new ArgumentOutOfRangeException(nameof(IncomingDamageCapPerTurnPerStack));
         foreach (var adjustment in new[] { OnStackChange, OnExpire })
@@ -159,7 +162,8 @@ public sealed record PotionDefinition(ContentId Id, PotionRarity Rarity, EffectN
     public void Validate()
     {
         Id.Validate();
-        if (!Enum.IsDefined(Rarity) || !Enum.IsDefined(Target) || Target == TargetSelector.OtherAllies)
+        if (!Enum.IsDefined(Rarity) || !Enum.IsDefined(Target)
+            || Target is TargetSelector.None or TargetSelector.OtherAllies)
             throw new ArgumentException("Potion rarity and target must be recognized values.");
         if (CharacterPoolIds is { Count: 0 })
             throw new ArgumentException("A character potion pool must name at least one character.");

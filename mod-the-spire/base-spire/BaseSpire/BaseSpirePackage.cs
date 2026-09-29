@@ -115,6 +115,9 @@ public static class BaseSpireIds
     public static readonly ContentId SneakyGremlin = ContentId.Parse("base-spire:sneaky-gremlin");
     public static readonly ContentId MysteriousKnight = ContentId.Parse("base-spire:mysterious-knight");
     public static readonly ContentId SoulNexus = ContentId.Parse("base-spire:soul-nexus");
+    public static readonly ContentId SoulFysh = ContentId.Parse("base-spire:soul-fysh");
+    public static readonly ContentId Beckon = ContentId.Parse("base-spire:beckon");
+    public static readonly ContentId Intangible = ContentId.Parse("base-spire:intangible");
     public static readonly ContentId TorchHeadAmalgam = ContentId.Parse("base-spire:torch-head-amalgam");
     public static readonly ContentId Minion = ContentId.Parse("base-spire:minion");
     public static readonly ContentId SkulkingColony = ContentId.Parse("base-spire:skulking-colony");
@@ -178,14 +181,27 @@ public static class BaseSpireContent
         IroncladStartingGold, IroncladStarterDeck(), [BaseSpireIds.BurningBlood],
         cardPools: [BaseSpireIds.IroncladCardPool]);
 
-    public static IReadOnlyList<CardDefinition> LoadIroncladCards()
+    public static IReadOnlyList<CardDefinition> LoadCards()
     {
-        const string resourceName = "BaseSpire.ContentSource.ironclad-cards.spire";
-        using var stream = typeof(BaseSpireContent).Assembly.GetManifestResourceStream(resourceName)
-            ?? throw new InvalidOperationException($"Missing base-spire content resource '{resourceName}'.");
-        using var reader = new System.IO.StreamReader(stream);
-        var package = DslSourceParser.Parse(reader.ReadToEnd(), "base-spire/ironclad-cards.spire");
-        return SpireCombatDslCompiler.CompileCards(package);
+        const string resourcePrefix = "BaseSpire.ContentSource.";
+        const string resourceSuffix = "-cards.spire";
+        var assembly = typeof(BaseSpireContent).Assembly;
+        var cards = assembly.GetManifestResourceNames()
+            .Where(name => name.StartsWith(resourcePrefix, StringComparison.Ordinal)
+                && name.EndsWith(resourceSuffix, StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .SelectMany(name =>
+            {
+                using var stream = assembly.GetManifestResourceStream(name)
+                    ?? throw new InvalidOperationException($"Missing base-spire content resource '{name}'.");
+                using var reader = new System.IO.StreamReader(stream);
+                var sourcePath = $"base-spire/{name[resourcePrefix.Length..]}";
+                return SpireCombatDslCompiler.CompileCards(DslSourceParser.Parse(reader.ReadToEnd(), sourcePath));
+            })
+            .ToArray();
+        if (cards.Length == 0)
+            throw new InvalidOperationException("No base-spire card content sources were embedded.");
+        return cards;
     }
 
     public static SpireCombatBehaviorContent LoadEnemyBehavior(ContentVariantProfile profile = default)
@@ -317,8 +333,7 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         foreach (var affliction in enemyContent.Afflictions) registry.Register(affliction);
         foreach (var power in enemyContent.Powers) registry.Register(power);
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
-        var ironcladCards = BaseSpireContent.LoadIroncladCards();
-        foreach (var card in ironcladCards) registry.Register(card);
+        foreach (var card in BaseSpireContent.LoadCards()) registry.Register(card);
         IroncladCardPool.Register(registry);
         registry.Register(new CardDefinition(BaseSpireIds.WellLaidPlans, 1, CardType.Power,
             new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1), Target: TargetSelector.Self,

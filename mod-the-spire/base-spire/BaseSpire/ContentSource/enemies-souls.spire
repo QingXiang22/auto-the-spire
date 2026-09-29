@@ -1,4 +1,10 @@
 package base-spire {
+  power Intangible {
+    trigger = afterOwnerTurnEnd
+    decrementOnTrigger = true
+    incomingDamageCap = 1
+  }
+
   enemy SoulNexus {
     hp = variants(default=range(254, 254), tough=range(234, 234))
     moves = actions(
@@ -18,5 +24,32 @@ package base-spire {
       edge(soulNexusDrainLife, chooseWithoutRepeat(
         soulNexusSoulBurn, soulNexusMaelstrom, soulNexusDrainLife))
     ])
+  }
+
+  enemy SoulFysh {
+    hp = variants(default=range(211, 211), tough=range(221, 221))
+    moves = actions(
+      soulFyshBeckon = sequence(
+        addCards(Beckon, pile=draw, target=player, position=random),
+        addCards(Beckon, pile=discard, target=player)
+      ),
+      soulFyshDeGas = attack(variants(default=16, deadly=17), target=player),
+      soulFyshGaze = sequence(
+        attack(variants(default=7, deadly=8), target=player),
+        addCards(Beckon, pile=discard, target=player)
+      ),
+      soulFyshFade = applyPower(Intangible, 2, target=self),
+      soulFyshScream = sequence(
+        attack(variants(default=13, deadly=15), target=player),
+        applyPower(Vulnerable, 3, target=player)
+      )
+    )
+    behavior = cycle(
+      soulFyshBeckon,
+      soulFyshDeGas,
+      soulFyshGaze,
+      soulFyshFade,
+      soulFyshScream
+    )
   }
 }

@@ -1,0 +1,10 @@
+package base-spire {
+  card Beckon {
+    type = status
+    rarity = status
+    cost = 1
+    target = none
+    play = sequence()
+    turnEndInHand = loseHp(6, target=self, properties=[move, unpowered, unblockable])
+  }
+}

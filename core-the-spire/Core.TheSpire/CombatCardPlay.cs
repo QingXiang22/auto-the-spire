@@ -30,6 +30,7 @@ internal static class CombatCardPlay
         }
         var target = definition.Target switch
         {
+            TargetSelector.None => null,
             TargetSelector.Self => state.Player.Creature,
             TargetSelector.SelectedTarget => RandomOpponent(session),
             TargetSelector.FirstEnemy => state.FirstLivingEnemy,
