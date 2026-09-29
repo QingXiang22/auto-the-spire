@@ -814,6 +814,35 @@ public sealed class CombatSliceTests
         Assert.True(toughDeadly.Observe(sessionVariant).Enemies[1].Hp is >= 23 and <= 39);
     }
 
+    public void BowlbugsNormalKeepsRockAndSelectsTwoDistinctWorkers()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var observedWorkers = new HashSet<ContentId>();
+        var workerIds = new HashSet<ContentId>
+        {
+            ContentId.Parse("base-spire:bowlbug-egg"),
+            ContentId.Parse("base-spire:bowlbug-silk"),
+            ContentId.Parse("base-spire:bowlbug-nectar")
+        };
+        for (uint seed = 0; seed < 64; seed++)
+        {
+            var session = environment.StartEncounter(seed, "ironclad", 56, 65, [],
+                ContentId.Parse("base-spire:bowlbugs-normal"));
+            var enemies = session.State.Enemies.Select(enemy => enemy.Definition.Id).ToArray();
+            Assert.Equal(3, enemies.Length);
+            Assert.Equal(ContentId.Parse("base-spire:bowlbug-rock"), enemies[0]);
+            Assert.True(enemies.Skip(1).All(workerIds.Contains));
+            Assert.True(enemies.Skip(1).Distinct().Count() == 2);
+            foreach (var worker in enemies.Skip(1)) observedWorkers.Add(worker);
+
+            var replay = environment.StartEncounter(seed, "ironclad", 56, 65, [],
+                ContentId.Parse("base-spire:bowlbugs-normal"));
+            Assert.True(replay.State.Enemies.Select(enemy => enemy.Definition.Id).SequenceEqual(enemies));
+        }
+        Assert.True(observedWorkers.SetEquals(workerIds));
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -6882,6 +6911,7 @@ internal static class Program
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.ChompersNormalMatchesSourceFormationAndArtifactActions();
         tests.BowlbugsWeakKeepsRockAndRandomlySelectsOneWorker();
+        tests.BowlbugsNormalKeepsRockAndSelectsTwoDistinctWorkers();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();
