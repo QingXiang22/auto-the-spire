@@ -2477,8 +2477,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(32, content.Powers.Count);
-        Assert.Equal(72, content.Enemies.Count);
-        Assert.Equal(72, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(73, content.Enemies.Count);
+        Assert.Equal(73, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2631,6 +2631,53 @@ public sealed class CombatSliceTests
         Assert.Equal(23, toughDeadly.Observe(variantSession).IntentDamage);
         toughDeadly.Step(variantSession, new EndTurnAction());
         Assert.Equal(33, variantSession.State.Player.Creature.Hp);
+    }
+
+    public void SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(1142, "ironclad", 2000, 2000, [], BaseSpireIds.SoulNexus.ToString());
+        Assert.Equal(254, environment.Observe(session).EnemyHp);
+        Assert.Equal(IntentKind.Attack, environment.Observe(session).Intent);
+        Assert.Equal(29, environment.Observe(session).IntentDamage);
+
+        var visitedActions = new HashSet<ContentId>();
+        var selectedActions = new List<ContentId>();
+        for (var turn = 0; turn < 18; turn++)
+        {
+            var enemy = session.State.Enemies.Single();
+            var currentAction = enemy.Definition.Actions[enemy.ActionIndex].Id;
+            visitedActions.Add(currentAction);
+            selectedActions.Add(currentAction);
+            environment.Step(session, new EndTurnAction());
+            var nextAction = enemy.Definition.Actions[enemy.ActionIndex].Id;
+            Assert.True(nextAction != currentAction);
+        }
+        Assert.True(visitedActions.SetEquals(session.State.Enemies.Single().Definition.Actions.Select(action => action.Id)));
+        Assert.Contains(session.State.Events, gameEvent => gameEvent.Type == "power"
+            && gameEvent.Target == session.State.Player.Id
+            && gameEvent.AffectedPower == BaseSpireIds.Vulnerable && gameEvent.Amount == 2);
+        Assert.Contains(session.State.Events, gameEvent => gameEvent.Type == "power"
+            && gameEvent.Target == session.State.Player.Id
+            && gameEvent.AffectedPower == BaseSpireIds.Weak && gameEvent.Amount == 2);
+
+        var replay = environment.Start(1142, "ironclad", 2000, 2000, [], BaseSpireIds.SoulNexus.ToString());
+        var replayActions = new List<ContentId>();
+        for (var turn = 0; turn < 18; turn++)
+        {
+            var enemy = replay.State.Enemies.Single();
+            replayActions.Add(enemy.Definition.Actions[enemy.ActionIndex].Id);
+            environment.Step(replay, new EndTurnAction());
+        }
+        Assert.True(selectedActions.SequenceEqual(replayActions));
+
+        var deadlyTough = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true,
+            toughEnemies: true)));
+        var variantSession = deadlyTough.Start(1143, "ironclad", 2000, 2000, [],
+            BaseSpireIds.SoulNexus.ToString());
+        Assert.Equal(234, deadlyTough.Observe(variantSession).EnemyHp);
+        Assert.Equal(31, deadlyTough.Observe(variantSession).IntentDamage);
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -6365,6 +6412,7 @@ internal static class Program
         tests.SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies();
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
+        tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();

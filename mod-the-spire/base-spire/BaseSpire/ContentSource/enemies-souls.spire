@@ -1,0 +1,22 @@
+package base-spire {
+  enemy SoulNexus {
+    hp = variants(default=range(254, 254), tough=range(234, 234))
+    moves = actions(
+      soulNexusSoulBurn = attack(variants(default=29, deadly=31), target=player),
+      soulNexusMaelstrom = repeat(4, attack(variants(default=6, deadly=7), target=player)),
+      soulNexusDrainLife = action(intent=Attack, effect=sequence(
+        attack(variants(default=18, deadly=19), target=player),
+        applyPower(Vulnerable, 2, target=player),
+        applyPower(Weak, 2, target=player)
+      ))
+    )
+    behavior = graph(start=soulNexusSoulBurn, edges=[
+      edge(soulNexusSoulBurn, chooseWithoutRepeat(
+        soulNexusSoulBurn, soulNexusMaelstrom, soulNexusDrainLife)),
+      edge(soulNexusMaelstrom, chooseWithoutRepeat(
+        soulNexusSoulBurn, soulNexusMaelstrom, soulNexusDrainLife)),
+      edge(soulNexusDrainLife, chooseWithoutRepeat(
+        soulNexusSoulBurn, soulNexusMaelstrom, soulNexusDrainLife))
+    ])
+  }
+}
