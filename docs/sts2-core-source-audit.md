@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；77 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、定向卡牌 Affliction 生命周期及 Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；79 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、定向卡牌 Affliction 生命周期及 Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 [`SpectralKnight.cs`](../sts2/src/Core/Models/Monsters/SpectralKnight.cs) 与 [`HexPower.cs`](../sts2/src/Core/Models/Powers/HexPower.cs) 已按源码类名迁入 `enemies-glory.spire`。Hex 给玩家所有当前战斗卡牌施加 Hexed，Hexed 仅在原卡牌尚未受其他 Affliction 影响时添加 Ethereal；新进入战斗的卡牌也会继承 Hexed。施加者死亡后 Hex 移除，并由 `power_removed` 事件清理 Hexed，同时仅移除由该 Affliction 添加的关键词。运行测试覆盖当前卡牌、新入战卡牌、击杀清理和原有 Ethereal 保留边界。Power 移除事件携带受影响 Power ID，并在 Power 已从实体状态删除后仍可派发给该 Power 声明的事件处理器。
 
@@ -21,6 +21,8 @@
 [`SkulkingColony.cs`](../sts2/src/Core/Models/Monsters/SkulkingColony.cs) 与 [`HardenedShellPower.cs`](../sts2/src/Core/Models/Powers/HardenedShellPower.cs) 已迁入 `enemies-colonies.spire`。Colony 普通/Tough HP 为 70/75，入场获得 15 层 Hardened Shell；每层令其每个玩家回合最多承受 1 点累计 HP 损失，统计攻击穿透格挡后的伤害与直接失血，并在玩家阵营回合开始重置。新 Power 元数据 `incomingDamageCapPerTurnPerStack` 以实体局内累计值表达此规则，不绑定 Colony；测试覆盖多击累积、直接失血共用上限、跨玩家回合重置和 Deadly/Tough 招式数值。
 
 [`PhantasmalGardener.cs`](../sts2/src/Core/Models/Monsters/PhantasmalGardener.cs)、[`SkittishPower.cs`](../sts2/src/Core/Models/Powers/SkittishPower.cs) 与 [`PhantasmalGardenersElite.cs`](../sts2/src/Core/Models/Encounters/PhantasmalGardenersElite.cs) 已迁入 `enemies-gardens.spire` 和 encounter JSON。Gardener HP 为 26–31（Tough 27–32），Skittish 为 6 层（Tough 7）；Bite 5、Lash 7、Flail 三击各 1、Enlarge 获得 2 力量（Deadly 3），之后固定循环。精英遭遇四个槽位分别以 Flail、Bite、Lash、Enlarge 开场。Skittish 在本侧以外的一次回合结束后复位；它要求攻击由卡牌发起、带 Move 属性且至少造成 1 点未格挡 HP 损失，每个玩家回合最多触发一次，并获得等于层数的不可强化格挡。DSL 以通用事件过滤器 `requiresCardSource` 与 `maxTriggersPerPlayerTurn` 表达该规则，触发预算存在实体运行态并于 `player_turn_start` 清空。当前单人模型未覆盖源码中的多人 Skittish 格挡层数缩放。
+
+[`TheLost.cs`](../sts2/src/Core/Models/Monsters/TheLost.cs)、[`TheForgotten.cs`](../sts2/src/Core/Models/Monsters/TheForgotten.cs)、[`PossessStrengthPower.cs`](../sts2/src/Core/Models/Powers/PossessStrengthPower.cs)、[`PossessSpeedPower.cs`](../sts2/src/Core/Models/Powers/PossessSpeedPower.cs) 与 [`TheLostAndForgottenNormal.cs`](../sts2/src/Core/Models/Encounters/TheLostAndForgottenNormal.cs) 已迁入 `enemies-forgotten.spire` 与 encounter JSON。The Lost 普通/Tough HP 为 93/99，The Forgotten 为 106/111。两者首招分别使玩家失去 2 Strength / Dexterity 并获得对应属性，The Forgotten 同时取得 8 格挡；之后 The Lost 双击 4（Deadly 5），The Forgotten 以 13（Deadly 15）加自身当前 Dexterity 攻击。通用 Power 变量保存各自累计窃取量，`afterOwnerDeath` 将对应属性返还给玩家。测试推进两个完整敌方行动轮，验证窃取、属性参与伤害计算，以及分别击杀时的返还。
 
 
 [`GasBomb.cs`](../sts2/src/Core/Models/Monsters/GasBomb.cs) 是 Living Fog 遭遇召出的单次攻击敌人：普通/Tough 生命值 7/8，Deadly 攻击 9（普通 8），以 Minion Power 入场并在攻击后自毁。`kill(target=self)` 是通用实体效果，与 Attack 共用死亡 Power/盟友死亡结算；`DeathBlow` 意图保留攻击伤害投影。定向测试检查自毁、致命攻击意图及 Minion 对 Feed 奖励的抑制。该定义现由 Living Fog 的 Bloat 行动召唤，并在 `living-fog-normal` encounter 中覆盖其编队槽位行为。
