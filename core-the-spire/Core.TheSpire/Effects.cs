@@ -243,7 +243,8 @@ public sealed record PowerEventSubscription(string EventType, GameEventActor Own
     bool OwnerTurnOnly = false, bool DeferUntilCardPlayed = false,
     bool DeferUntilOwnerTurnEnd = false, PowerEventAccumulationMode Accumulation = PowerEventAccumulationMode.PowerStacks,
     bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null, ContentId? CardTag = null,
-    PowerEventPhase Phase = PowerEventPhase.Normal);
+    PowerEventPhase Phase = PowerEventPhase.Normal, bool RequiresCardSource = false,
+    int? MaxTriggersPerPlayerTurn = null);
 internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect, string? EventCardInstanceId = null,
     bool AllowRemovedPower = false) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
