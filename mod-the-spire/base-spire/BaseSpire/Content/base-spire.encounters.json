@@ -2,6 +2,22 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:phantasmal-gardeners-elite",
+      "roomType": "elite",
+      "enemyIds": [
+        "base-spire:phantasmal-gardener",
+        "base-spire:phantasmal-gardener",
+        "base-spire:phantasmal-gardener",
+        "base-spire:phantasmal-gardener"
+      ],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:phantasmal-gardener-flail",
+        "1": "base-spire:phantasmal-gardener-bite",
+        "2": "base-spire:phantasmal-gardener-lash",
+        "3": "base-spire:phantasmal-gardener-enlarge"
+      }
+    },
+    {
       "id": "base-spire:corpse-slugs-weak",
       "roomType": "monster",
       "isWeak": true,

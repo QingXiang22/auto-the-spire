@@ -2486,9 +2486,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(34, content.Powers.Count);
-        Assert.Equal(76, content.Enemies.Count);
-        Assert.Equal(76, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(35, content.Powers.Count);
+        Assert.Equal(77, content.Enemies.Count);
+        Assert.Equal(77, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2752,6 +2752,44 @@ public sealed class CombatSliceTests
                 environment.Step(session, new PlayCardAction(index));
             }
         }
+    }
+
+    public void SkittishPowerTriggersOnceOnCardDamageEachPlayerTurn()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(1150, "ironclad", 2000, 2000, [],
+            BaseSpireIds.PhantasmalGardenersElite);
+        var gardeners = session.State.Enemies;
+        Assert.Equal(4, gardeners.Count);
+        Assert.Equal(3, environment.Observe(session).Enemies[0].IntentDamage);
+        Assert.Equal(5, environment.Observe(session).Enemies[1].IntentDamage);
+        Assert.Equal(7, environment.Observe(session).Enemies[2].IntentDamage);
+        Assert.Equal(IntentKind.Buff, environment.Observe(session).Enemies[3].Intent);
+        Assert.True(gardeners.All(enemy => enemy.Creature.PowerAmount(BaseSpireIds.SkittishPower) == 6));
+
+        var card = new CardInstance("skittish-test-strike", BaseSpireIds.StrikeIronclad);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2, TargetSelector.SelectedTarget), gardeners[0].Creature, card);
+        Assert.Equal(6, gardeners[0].Creature.Block);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2, TargetSelector.SelectedTarget), gardeners[0].Creature,
+            new CardInstance("skittish-test-strike-2", BaseSpireIds.StrikeIronclad));
+        Assert.Equal(4, gardeners[0].Creature.Block);
+        gardeners[1].Creature.Block = 2;
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2, TargetSelector.SelectedTarget), gardeners[1].Creature,
+            new CardInstance("skittish-test-strike-blocked", BaseSpireIds.StrikeIronclad));
+        Assert.Equal(0, gardeners[1].Creature.Block);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2, TargetSelector.SelectedTarget), gardeners[1].Creature);
+        Assert.Equal(0, gardeners[1].Creature.Block);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(0, gardeners[0].Creature.Block);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2, TargetSelector.SelectedTarget), gardeners[0].Creature,
+            new CardInstance("skittish-test-strike-3", BaseSpireIds.StrikeIronclad));
+        Assert.Equal(6, gardeners[0].Creature.Block);
     }
 
     public void TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent()
@@ -6553,6 +6591,7 @@ internal static class Program
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();
+        tests.SkittishPowerTriggersOnceOnCardDamageEachPlayerTurn();
         tests.TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent();
         tests.SkulkingColonyCapsIncomingHpLossAcrossHitsAndResetsAtPlayerTurnStart();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();

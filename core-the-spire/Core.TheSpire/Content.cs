@@ -108,6 +108,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             if (subscription.Owner is not (GameEventActor.Source or GameEventActor.Target)
                 || (subscription.DeferUntilCardPlayed && subscription.DeferUntilOwnerTurnEnd)
                 || !Enum.IsDefined(subscription.Accumulation)
+                || subscription.MaxTriggersPerPlayerTurn is <= 0
                 || (subscription.RequiredProperties & subscription.ExcludedProperties) != 0
                 || !ValidDamageProperties(subscription.RequiredProperties)
                 || !ValidDamageProperties(subscription.ExcludedProperties))

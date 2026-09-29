@@ -1,0 +1,24 @@
+package base-spire {
+  power SkittishPower {
+    events = [event(type=damage, owner=target, require=[move], positiveAmount=true,
+      ownerTurnOnly=false, requiresCardSource=true, maxTriggersPerPlayerTurn=1,
+      effect=gainBlock(1, perPowerStack=SkittishPower, target=self, properties=[unpowered]))]
+  }
+
+  enemy PhantasmalGardener {
+    hp = variants(default=range(26, 31), tough=range(27, 32))
+    startingPowers = [power(SkittishPower, variants(default=6, tough=7))]
+    moves = actions(
+      phantasmalGardenerBite = attack(5, target=player),
+      phantasmalGardenerLash = attack(7, target=player),
+      phantasmalGardenerFlail = repeat(3, attack(1, target=player)),
+      phantasmalGardenerEnlarge = applyPower(Strength, variants(default=2, deadly=3), target=self)
+    )
+    behavior = cycle(
+      phantasmalGardenerBite,
+      phantasmalGardenerLash,
+      phantasmalGardenerFlail,
+      phantasmalGardenerEnlarge
+    )
+  }
+}

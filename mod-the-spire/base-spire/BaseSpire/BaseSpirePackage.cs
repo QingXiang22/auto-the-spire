@@ -118,6 +118,9 @@ public static class BaseSpireIds
     public static readonly ContentId SoulFysh = ContentId.Parse("base-spire:soul-fysh");
     public static readonly ContentId Beckon = ContentId.Parse("base-spire:beckon");
     public static readonly ContentId Intangible = ContentId.Parse("base-spire:intangible");
+    public static readonly ContentId PhantasmalGardener = ContentId.Parse("base-spire:phantasmal-gardener");
+    public static readonly ContentId SkittishPower = ContentId.Parse("base-spire:skittish-power");
+    public static readonly ContentId PhantasmalGardenersElite = ContentId.Parse("base-spire:phantasmal-gardeners-elite");
     public static readonly ContentId TorchHeadAmalgam = ContentId.Parse("base-spire:torch-head-amalgam");
     public static readonly ContentId Minion = ContentId.Parse("base-spire:minion");
     public static readonly ContentId SkulkingColony = ContentId.Parse("base-spire:skulking-colony");

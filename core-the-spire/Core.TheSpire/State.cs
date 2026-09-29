@@ -7,6 +7,7 @@ internal sealed class EntityState
     private readonly Dictionary<ContentId, int> _powers = [];
     private readonly Dictionary<(ContentId Power, ContentId Variable), int> _powerVariables = [];
     private readonly Dictionary<ContentId, int> _incomingDamageThisPlayerTurn = [];
+    private readonly Dictionary<(ContentId Power, int Subscription), int> _powerEventTriggersThisPlayerTurn = [];
     private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
     private readonly Dictionary<(ContentId Power, string? ScopeId), int> _powerEventAmounts = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
@@ -39,6 +40,21 @@ internal sealed class EntityState
     internal void AddIncomingDamageThisPlayerTurn(ContentId power, int amount) =>
         _incomingDamageThisPlayerTurn[power] = checked(IncomingDamageThisPlayerTurn(power) + amount);
     internal void ResetIncomingDamageThisPlayerTurn() => _incomingDamageThisPlayerTurn.Clear();
+    internal void ResetPowerEventTriggersThisPlayerTurn() => _powerEventTriggersThisPlayerTurn.Clear();
+    internal bool TryRecordPowerEventTrigger(ContentId power, int subscription, int? limit)
+    {
+        if (limit is not { } maximum) return true;
+        var key = (power, subscription);
+        var count = _powerEventTriggersThisPlayerTurn.GetValueOrDefault(key);
+        if (count >= maximum) return false;
+        _powerEventTriggersThisPlayerTurn[key] = count + 1;
+        return true;
+    }
+    internal void ClearPowerEventTriggers(ContentId power)
+    {
+        foreach (var key in _powerEventTriggersThisPlayerTurn.Keys.Where(key => key.Power == power).ToArray())
+            _powerEventTriggersThisPlayerTurn.Remove(key);
+    }
     internal IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PowerVariableSnapshot() =>
         _powerVariables.GroupBy(pair => pair.Key.Power).ToDictionary(
             group => group.Key,
@@ -368,7 +384,10 @@ internal sealed class GameState
     {
         if (type == "player_turn_start")
             foreach (var creature in Enemies.Select(enemy => enemy.Creature).Append(Player.Creature))
+            {
                 creature.ResetIncomingDamageThisPlayerTurn();
+                creature.ResetPowerEventTriggersThisPlayerTurn();
+            }
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
             cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId,
             exactAmount, affectedVariable);
@@ -403,8 +422,10 @@ internal sealed class GameState
         foreach (var (powerId, powerAmount) in GetEventPowerEntries(actor, type, target, affectedPower, amount))
         {
             if (powerAmount <= 0) continue;
-            foreach (var subscription in Definition.Powers[powerId].Events)
+            var subscriptions = Definition.Powers[powerId].Events;
+            for (var subscriptionIndex = 0; subscriptionIndex < subscriptions.Count; subscriptionIndex++)
             {
+                var subscription = subscriptions[subscriptionIndex];
                 if (!StringComparer.Ordinal.Equals(subscription.EventType, type)
                     || (subscription.RequiresPositiveAmount && gameEvent.Amount <= 0)
                     || (gameEvent.Properties & subscription.RequiredProperties) != subscription.RequiredProperties
@@ -416,11 +437,14 @@ internal sealed class GameState
                     || (subscription.CardTag is { } cardTag
                         && (gameEvent.CardSourceInstanceId is not { } eventCardId
                             || FindCombatCard(eventCardId) is not { } eventCard
-                            || !Definition.Cards[eventCard.CardId].Tags.Contains(cardTag))))
+                            || !Definition.Cards[eventCard.CardId].Tags.Contains(cardTag)))
+                    || (subscription.RequiresCardSource && gameEvent.CardSourceInstanceId is null))
                     continue;
                 var ownerId = subscription.Owner == GameEventActor.Source ? source : target;
                 if (ownerId != actor.Id) continue;
                 if (subscription.OwnerTurnOnly && !IsOwnerTurn(actor)) continue;
+                if (!actor.TryRecordPowerEventTrigger(powerId, subscriptionIndex,
+                    subscription.MaxTriggersPerPlayerTurn)) continue;
                 if (subscription.DeferUntilCardPlayed && gameEvent.CardSourceInstanceId is { } cardInstanceId
                     && CardPlayFrames.Any(frame => frame.Card.InstanceId == cardInstanceId))
                 {
@@ -482,6 +506,7 @@ internal sealed class GameState
             owner.MutablePowerAppliers.Remove(power);
             owner.SkipNextPowerTriggers.Remove(power);
             owner.ClearPowerEventAmounts(power);
+            owner.ClearPowerEventTriggers(power);
             owner.ClearPowerVariables(power);
         }
         else
@@ -850,6 +875,7 @@ internal sealed class GameState
             owner.MutablePowerAppliers.Remove(powerId);
             owner.SkipNextPowerTriggers.Remove(powerId);
             owner.ClearPowerEventAmounts(powerId);
+            owner.ClearPowerEventTriggers(powerId);
             owner.ClearPowerVariables(powerId);
             Emit(session, "power_removed", owner.Id, owner.Id, amount, affectedPower: powerId);
         }
@@ -869,6 +895,7 @@ internal sealed class GameState
         owner.MutablePowerAppliers.Remove(powerId);
         owner.SkipNextPowerTriggers.Remove(powerId);
         owner.ClearPowerEventAmounts(powerId);
+        owner.ClearPowerEventTriggers(powerId);
         owner.ClearPowerVariables(powerId);
         if (Definition.Powers[powerId].Role == PowerRole.Strength) owner.Strength -= amount;
         if (Definition.Powers[powerId].Role == PowerRole.Dexterity) owner.Dexterity -= amount;
