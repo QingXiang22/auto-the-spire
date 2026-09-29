@@ -769,12 +769,13 @@ public static class SpireCombatDslCompiler
 
         private static TargetSelector ParseTarget(DslValueNode node) => Name(node) switch
         {
+            "none" => TargetSelector.None,
             "self" => TargetSelector.Self,
             "enemy" or "anyAlly" => TargetSelector.SelectedTarget,
             "firstEnemy" => TargetSelector.FirstEnemy,
             "allEnemies" => TargetSelector.AllOpponents,
             "randomEnemy" => TargetSelector.RandomEnemy,
-            _ => throw Error(node.Location, "Content target must be self, enemy, firstEnemy, allEnemies, or randomEnemy.")
+            _ => throw Error(node.Location, "Content target must be none, self, enemy, firstEnemy, allEnemies, or randomEnemy.")
         };
 
         private static TargetSelector ParseEffectTarget(DslValueNode node) => Name(node) switch

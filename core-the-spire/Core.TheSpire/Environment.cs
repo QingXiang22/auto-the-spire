@@ -358,7 +358,9 @@ public sealed class CombatEnvironment(GameDefinition definition)
             if (card.MultiplayerOnly) continue;
             if ((card.ResolveKeywords(instance) & CardKeywords.Unplayable) != 0) continue;
             if (CombatCardRules.Preview(state, instance).EnergyToSpend > state.Player.Energy) continue;
-            if (card.Target == TargetSelector.Self)
+            if (card.Target == TargetSelector.None)
+                actions.Add(new PlayCardAction(i));
+            else if (card.Target == TargetSelector.Self)
                 actions.Add(new PlayCardAction(i, state.Player.Id));
             else if (card.Target == TargetSelector.SelectedTarget)
                 actions.AddRange(enemies.Select(enemy => new PlayCardAction(i, enemy.Creature.Id)));

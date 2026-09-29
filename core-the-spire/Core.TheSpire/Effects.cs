@@ -230,7 +230,7 @@ public sealed record StunEnemyEffect(TargetSelector Target = TargetSelector.Self
 public sealed record SetEnemyHealthEffect(int Minimum, int Maximum) : EffectNode;
 internal sealed record InitializeSummonedEnemiesEffect(IReadOnlyList<string> InstanceIds) : EffectNode;
 
-public enum TargetSelector { Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy, OtherAllies }
+public enum TargetSelector { None, Self, FirstEnemy, SelectedTarget, AllOpponents, RandomEnemy, OtherAllies }
 [Flags]
 public enum DamageProperties { None = 0, Move = 1, Unpowered = 2, Unblockable = 4, SkipHurtAnimation = 8 }
 public enum GameEventActor { Source, Target, Player }
@@ -597,7 +597,8 @@ internal static class EffectExecutor
                     if (loseHp.Amount < 0) throw new InvalidOperationException("HP loss cannot be negative.");
                     var hpLossTarget = ResolveSingleTarget(state, owner, target, loseHp.Target);
                     var wasAliveBeforeHpLoss = hpLossTarget.Hp > 0;
-                    var hpLost = Math.Min(hpLossTarget.Hp, loseHp.Amount);
+                    var hpLost = state.LimitDamageAmount(hpLossTarget, loseHp.Amount);
+                    hpLost = Math.Min(hpLossTarget.Hp, hpLost);
                     hpLost = state.LimitIncomingDamageThisPlayerTurn(hpLossTarget, hpLost);
                     hpLossTarget.Hp -= hpLost;
                     state.RecordIncomingDamageThisPlayerTurn(hpLossTarget, hpLost);

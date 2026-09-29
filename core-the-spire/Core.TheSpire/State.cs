@@ -560,9 +560,20 @@ internal sealed class GameState
             }
         }
         damage = (int)decimal.Floor(damage * incomingMultiplier);
+        return LimitDamageAmount(target, damage);
+    }
+
+    internal int LimitDamageAmount(EntityState target, int damage)
+    {
         foreach (var (powerId, amount) in target.Powers)
-            if (amount > 0 && Definition.Powers[powerId].DamageCapPerStack is { } capPerStack)
+        {
+            if (amount <= 0) continue;
+            var power = Definition.Powers[powerId];
+            if (power.DamageCapPerStack is { } capPerStack)
                 damage = Math.Min(damage, checked(capPerStack * amount));
+            if (power.IncomingDamageCap is { } incomingCap)
+                damage = Math.Min(damage, incomingCap);
+        }
         return Math.Max(0, damage);
     }
 

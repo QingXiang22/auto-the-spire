@@ -85,7 +85,8 @@ public static class SpireCombatBehaviorDslCompiler
                 "vulnerableMultiplierPercentPerStack", "onStackChange", "onExpire", "removeAfterOwnerTurnEnd",
                 "removeAfterOpponentTurnEnd", "removeWhenApplierDies", "cardRule", "preventEnergyGain", "events", "on",
                 "incomingDamageModifiers", "blockGainModifiers", "blockGainMultiplier", "variables", "preventsFatal",
-                "damageCapPerStack", "incomingDamageCapPerTurnPerStack", "preventsBlockClear", "isDebuff",
+                "damageCapPerStack", "incomingDamageCap", "incomingDamageCapPerTurnPerStack",
+                "preventsBlockClear", "isDebuff",
                 "outgoingDamageMultiplier");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
@@ -151,9 +152,11 @@ public static class SpireCombatBehaviorDslCompiler
                     ? DecimalValue(blockGainMultiplierNode) : null,
                 DamageCapPerStack = properties.TryGetValue("damageCapPerStack", out var damageCapNode)
                     ? Integer(damageCapNode) : null,
-                IncomingDamageCapPerTurnPerStack = properties.TryGetValue(
-                    "incomingDamageCapPerTurnPerStack", out var incomingDamageCapNode)
+                IncomingDamageCap = properties.TryGetValue("incomingDamageCap", out var incomingDamageCapNode)
                     ? Integer(incomingDamageCapNode) : null,
+                IncomingDamageCapPerTurnPerStack = properties.TryGetValue(
+                    "incomingDamageCapPerTurnPerStack", out var incomingDamageCapPerTurnNode)
+                    ? Integer(incomingDamageCapPerTurnNode) : null,
                 Variables = properties.TryGetValue("variables", out var variablesNode)
                     ? CompilePowerVariables(variablesNode) : Array.Empty<PowerVariableDefinition>()
             };

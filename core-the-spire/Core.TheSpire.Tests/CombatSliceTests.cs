@@ -1092,6 +1092,16 @@ public sealed class CombatSliceTests
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
         Assert.Equal(93, cards.Count);
+        var registeredCards = BaseSpireContent.LoadCards();
+        Assert.Equal(94, registeredCards.Count);
+        Assert.Equal(registeredCards.Count, registeredCards.Select(card => card.Id).Distinct().Count());
+        var beckon = registeredCards.Single(card => card.Id == BaseSpireIds.Beckon);
+        Assert.Equal(CardRarity.Status, beckon.Rarity);
+        Assert.Equal(TargetSelector.None, beckon.Target);
+        var beckonTurnEnd = (LoseHpEffect)beckon.TurnEndInHand!;
+        Assert.Equal(6, beckonTurnEnd.Amount);
+        Assert.Equal(DamageProperties.Move | DamageProperties.Unpowered | DamageProperties.Unblockable,
+            beckonTurnEnd.Properties);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
@@ -2476,9 +2486,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(33, content.Powers.Count);
-        Assert.Equal(75, content.Enemies.Count);
-        Assert.Equal(75, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(34, content.Powers.Count);
+        Assert.Equal(76, content.Enemies.Count);
+        Assert.Equal(76, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2678,6 +2688,70 @@ public sealed class CombatSliceTests
             BaseSpireIds.SoulNexus.ToString());
         Assert.Equal(234, deadlyTough.Observe(variantSession).EnemyHp);
         Assert.Equal(31, deadlyTough.Observe(variantSession).IntentDamage);
+    }
+
+    public void SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.Start(1148, "ironclad", 2000, 2000, [], BaseSpireIds.SoulFysh.ToString());
+        var fysh = session.State.Enemy;
+        Assert.Equal(211, fysh.MaxHp);
+
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new ApplyPowerEffect(BaseSpireIds.Intangible, 2, TargetSelector.SelectedTarget), fysh);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(9, TargetSelector.SelectedTarget), fysh);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new LoseHpEffect(6, TargetSelector.SelectedTarget), fysh);
+        Assert.Equal(209, fysh.Hp);
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1, fysh.PowerAmount(BaseSpireIds.Intangible));
+        Assert.Equal(2, session.State.Player.HandInstances.Count(card => card.CardId == BaseSpireIds.Beckon));
+        Assert.Equal(2, session.State.Player.DrawPileInstances.Concat(session.State.Player.DiscardPileInstances)
+            .Concat(session.State.Player.ExhaustPileInstances).Concat(session.State.Player.HandInstances)
+            .Count(card => card.CardId == BaseSpireIds.Beckon));
+        Assert.Equal(16, environment.Observe(session).IntentDamage);
+        var beckonIndex = session.State.Player.HandInstances
+            .Select((card, index) => (card, index))
+            .First(item => item.card.CardId == BaseSpireIds.Beckon).index;
+        var beckonAction = new PlayCardAction(beckonIndex);
+        Assert.Contains(environment.LegalActions(session), action => action == beckonAction);
+        PlayAllBeckons();
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1984, session.State.Player.Creature.Hp);
+        Assert.Equal(7, environment.Observe(session).IntentDamage);
+        PlayAllBeckons();
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1977, session.State.Player.Creature.Hp);
+        Assert.Equal(IntentKind.Buff, environment.Observe(session).Intent);
+        PlayAllBeckons();
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1, fysh.PowerAmount(BaseSpireIds.Intangible));
+        Assert.Equal(13, environment.Observe(session).IntentDamage);
+        PlayAllBeckons();
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1964, session.State.Player.Creature.Hp);
+        Assert.Equal(0, fysh.PowerAmount(BaseSpireIds.Intangible));
+        Assert.Equal(0, session.State.Enemies.Single().ActionIndex);
+
+        var deadlyTough = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true,
+            toughEnemies: true)));
+        var variantSession = deadlyTough.Start(1149, "ironclad", 2000, 2000, [], BaseSpireIds.SoulFysh.ToString());
+        Assert.Equal(221, deadlyTough.Observe(variantSession).EnemyHp);
+        deadlyTough.Step(variantSession, new EndTurnAction());
+        Assert.Equal(17, deadlyTough.Observe(variantSession).IntentDamage);
+
+        void PlayAllBeckons()
+        {
+            while (session.State.Player.HandInstances.Any(card => card.CardId == BaseSpireIds.Beckon))
+            {
+                var index = session.State.Player.HandInstances
+                    .Select((card, cardIndex) => (card, cardIndex))
+                    .First(item => item.card.CardId == BaseSpireIds.Beckon).cardIndex;
+                environment.Step(session, new PlayCardAction(index));
+            }
+        }
     }
 
     public void TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent()
@@ -6478,6 +6552,7 @@ internal static class Program
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
+        tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();
         tests.TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent();
         tests.SkulkingColonyCapsIncomingHpLossAcrossHitsAndResetsAtPlayerTurnStart();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
