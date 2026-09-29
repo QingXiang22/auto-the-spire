@@ -42,6 +42,20 @@ package base-spire {
       effect=removePower(OffBalance))]
   }
 
+  power CurlUpTriggered {}
+
+  power CurlUpPower {
+    trigger = afterCardPlayed
+    effect = if(hasPower(CurlUpTriggered, target=self), sequence(
+      gainBlock(1, perPowerStack=CurlUpPower, properties=[unpowered]),
+      removePower(CurlUpPower),
+      removePower(CurlUpTriggered)
+    ))
+    events = [event(type=damage, owner=target, positiveAmount=false, ownerTurnOnly=false,
+      requiresCardSource=true, maxTriggersPerPlayerTurn=1,
+      effect=applyPower(CurlUpTriggered, 1, target=self))]
+  }
+
   power IllusionPower {}
 
   power SoarPower {
@@ -612,7 +626,7 @@ package base-spire {
 
   enemy LouseProgenitor {
     hp = variants(default=range(134, 136), tough=range(138, 141))
-    startingBlock = variants(default=14, tough=18)
+    startingPowers = [power(CurlUpPower, variants(default=14, tough=18))]
     moves = actions(
       louseProgenitorWeb = sequence(
         attack(variants(default=9, deadly=10), target=player),

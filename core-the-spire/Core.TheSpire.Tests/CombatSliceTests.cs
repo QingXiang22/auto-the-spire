@@ -843,6 +843,42 @@ public sealed class CombatSliceTests
         Assert.True(observedWorkers.SetEquals(workerIds));
     }
 
+    public void LouseProgenitorCurlUpWaitsForItsFirstDamagingCard()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var encounter = ContentId.Parse("base-spire:louse-progenitor-normal");
+        var session = environment.StartEncounter(1161, "ironclad", 56, 65, [], encounter);
+        var louse = session.State.Enemy;
+        Assert.True(louse.Hp is >= 134 and <= 136);
+        Assert.Equal(0, louse.Block);
+        Assert.Equal(14, louse.PowerAmount(BaseSpireIds.CurlUpPower));
+        environment.Step(session, new EndTurnAction());
+
+        session.State.Player.MutableHand.Clear();
+        session.State.Player.MutableDrawPile.Clear();
+        session.State.Player.MutableDiscardPile.Clear();
+        session.State.Player.MutableHand.AddRange([
+            new CardInstance("louse-defend", BaseSpireIds.DefendIronclad),
+            new CardInstance("louse-strike", BaseSpireIds.StrikeIronclad)
+        ]);
+        environment.Step(session, new PlayCardAction(0, session.State.Player.Id));
+        Assert.Equal(14, louse.PowerAmount(BaseSpireIds.CurlUpPower));
+        Assert.Equal(0, louse.Block);
+
+        louse.Block = 6;
+        var hpBeforeFullyBlockedStrike = louse.Hp;
+        environment.Step(session, new PlayCardAction(0, louse.Id));
+        Assert.Equal(0, louse.PowerAmount(BaseSpireIds.CurlUpPower));
+        Assert.Equal(0, louse.PowerAmount(ContentId.Parse("base-spire:curl-up-triggered")));
+        Assert.Equal(14, louse.Block);
+        Assert.Equal(hpBeforeFullyBlockedStrike, louse.Hp);
+
+        var tough = new CombatEnvironment(Build(new BaseSpirePackage(toughEnemies: true)));
+        var toughSession = tough.StartEncounter(1162, "ironclad", 56, 65, [], encounter);
+        Assert.Equal(18, toughSession.State.Enemy.PowerAmount(BaseSpireIds.CurlUpPower));
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -2582,7 +2618,7 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(44, content.Powers.Count);
+        Assert.Equal(46, content.Powers.Count);
         Assert.Equal(83, content.Enemies.Count);
         Assert.Equal(83, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
@@ -2592,6 +2628,13 @@ public sealed class CombatSliceTests
         Assert.Equal(PowerTrigger.AfterEnemyTurnEnd, ritual.Trigger);
         Assert.Equal(BaseSpireIds.Strength, ritual.TriggerEffect);
         Assert.True(ritual.SkipFirstTriggerWhenAppliedToEnemy);
+
+        var curlUp = content.Powers.Single(power => power.Id == BaseSpireIds.CurlUpPower);
+        Assert.Equal(PowerTrigger.AfterCardPlayed, curlUp.Trigger);
+        Assert.True(curlUp.Events.Single().RequiresCardSource);
+        Assert.Equal(1, curlUp.Events.Single().MaxTriggersPerPlayerTurn);
+        Assert.Equal(14, content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.LouseProgenitor)
+            .StartingPowers!.Single(power => power.Power == BaseSpireIds.CurlUpPower).Amount);
 
         var cultist = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.DampCultist);
         Assert.Equal(52, cultist.MinHp);
@@ -6912,6 +6955,7 @@ internal static class Program
         tests.ChompersNormalMatchesSourceFormationAndArtifactActions();
         tests.BowlbugsWeakKeepsRockAndRandomlySelectsOneWorker();
         tests.BowlbugsNormalKeepsRockAndSelectsTwoDistinctWorkers();
+        tests.LouseProgenitorCurlUpWaitsForItsFirstDamagingCard();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();

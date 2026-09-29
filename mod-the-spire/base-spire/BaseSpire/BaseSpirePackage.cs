@@ -117,6 +117,8 @@ public static class BaseSpireIds
     public static readonly ContentId GremlinMerc = ContentId.Parse("base-spire:gremlin-merc");
     public static readonly ContentId GremlinMercNormal = ContentId.Parse("base-spire:gremlin-merc-normal");
     public static readonly ContentId BowlbugsWeak = ContentId.Parse("base-spire:bowlbugs-weak");
+    public static readonly ContentId LouseProgenitor = ContentId.Parse("base-spire:louse-progenitor");
+    public static readonly ContentId CurlUpPower = ContentId.Parse("base-spire:curl-up-power");
     public static readonly ContentId SurprisePower = ContentId.Parse("base-spire:surprise-power");
     public static readonly ContentId ThieveryPower = ContentId.Parse("base-spire:thievery-power");
     public static readonly ContentId HeistPower = ContentId.Parse("base-spire:heist-power");

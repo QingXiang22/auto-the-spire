@@ -97,7 +97,7 @@
 
 [`OwlMagistrate.cs`](../sts2/src/Core/Models/Monsters/OwlMagistrate.cs) 普通 HP 231、Tough 247，循环 Scrutiny（16/17）、六段 Peck Assault（每段 4）、Judicial Flight 和 Verdict（33/36 并施加 4 层 Vulnerable）。飞行期间通过通用 `SoarPower` 将 powered 攻击伤害减半；Verdict 结算后移除 Soar。单体普通遭遇已登记。
 
-[`LouseProgenitor.cs`](../sts2/src/Core/Models/Monsters/LouseProgenitor.cs) HP 为 134–136（Tough 138–141），以 Curl Up 提供的 14（Tough 18）点格挡开场，循环 Web（9/10 并施加 2 层 Frail）、Curl and Grow（获得 14/18 格挡与 5 点力量）、Pounce（14/16）。DSL 新增通用敌人 `startingBlock` 字段，与 `startingPowers` 一样在初始行动确定前应用；Curl Up 的可视化状态未纳入模拟状态。
+[`LouseProgenitor.cs`](../sts2/src/Core/Models/Monsters/LouseProgenitor.cs) HP 为 134–136（Tough 138–141），开场携带一次性 Curl Up Power（14/Tough 18），第一次被玩家攻击牌命中并完成结算后获得对应格挡；无伤害牌不会消耗该 Power。行动循环为 Web（9/10 并施加 2 层 Frail）、Curl and Grow（获得 14/18 格挡与 5 点力量）、Pounce（14/16）。通用 `damage` 事件过滤和 `afterCardPlayed` Power trigger 表达了受击记录与结算后格挡；完全格挡的攻击牌也会触发，Curl/Uncurl 动画状态不进入模拟。
 
 [`CubexConstruct.cs`](../sts2/src/Core/Models/Monsters/CubexConstruct.cs) HP 为 65（Tough 70），入场带 13 格挡和 1 层 Artifact；循环 Charge Up（2 力量）、两次 Repeater Blast（7/8 伤害并各加 2 力量）、双段 Expel Blast（每段 5/6）。该行为只组合起始状态、序列/重复效果和显式图边，没有 Cubex 专属运行时规则。
 
