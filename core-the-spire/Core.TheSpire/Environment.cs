@@ -8,6 +8,7 @@ public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Bl
     IntentKind Intent, int IntentDamage, IReadOnlyDictionary<ContentId, int> Powers)
 {
     public bool IsEscaped { get; init; }
+    public bool IsPendingRevival { get; init; }
     public int SlotIndex { get; init; }
     public IReadOnlyDictionary<ContentId, int> ActionUseCounts { get; init; }
         = new Dictionary<ContentId, int>();
@@ -304,7 +305,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
     {
         var state = session.State;
         var action = enemy.Definition.Actions[Math.Min(enemy.ActionIndex, enemy.Definition.Actions.Count - 1)];
-        var intent = enemy.SkipNextAction ? IntentKind.Stun : action.Intent;
+        var intent = enemy.PendingRevivalIntent ?? (enemy.SkipNextAction ? IntentKind.Stun : action.Intent);
         var damage = intent is IntentKind.Attack or IntentKind.DeathBlow
             ? CalculateIntentDamage(session, enemy, action) : 0;
         return new EnemyCombatObservation(enemy.Creature.Id, enemy.Creature.Hp, enemy.Creature.MaxHp,
@@ -312,6 +313,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             new Dictionary<ContentId, int>(enemy.Creature.Powers))
         {
             IsEscaped = enemy.IsEscaped,
+            IsPendingRevival = enemy.PendingRevivalIntent is not null,
             ActionUseCounts = new Dictionary<ContentId, int>(enemy.ActionUseCounts),
             PowerVariables = enemy.Creature.PowerVariableSnapshot(),
             PowerCards = enemy.Creature.PowerCardSnapshot(),
@@ -652,7 +654,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         break;
                     }
                     while (state.CurrentEnemyIndex < state.EnemyTurnParticipants.Count
-                        && !state.EnemyTurnParticipants[state.CurrentEnemyIndex].IsActive)
+                        && !state.EnemyTurnParticipants[state.CurrentEnemyIndex].IsActive
+                        && state.EnemyTurnParticipants[state.CurrentEnemyIndex].PendingRevivalIntent is null)
                         state.CurrentEnemyIndex++;
                     if (state.CurrentEnemyIndex >= state.EnemyTurnParticipants.Count)
                     {
@@ -661,6 +664,19 @@ public sealed class CombatEnvironment(GameDefinition definition)
                         break;
                     }
                     var actingEnemy = state.EnemyTurnParticipants[state.CurrentEnemyIndex];
+                    if (actingEnemy.PendingRevivalIntent is { } revivalIntent)
+                    {
+                        actingEnemy.PendingRevivalIntent = null;
+                        var missingHp = actingEnemy.Creature.MaxHp - actingEnemy.Creature.Hp;
+                        actingEnemy.Creature.Hp = actingEnemy.Creature.MaxHp;
+                        actingEnemy.RevivedDuringEnemyTurn = true;
+                        state.Emit(session, "enemy_action", actingEnemy.Creature.Id, state.Player.Id,
+                            (int)revivalIntent);
+                        state.Emit(session, "enemy_revived", actingEnemy.Creature.Id,
+                            actingEnemy.Creature.Id, missingHp, exactAmount: actingEnemy.Creature.MaxHp);
+                        state.CurrentEnemyIndex++;
+                        break;
+                    }
                     if (ShouldClearBlock(session, actingEnemy.Creature))
                         actingEnemy.Creature.Block = 0;
                     if (actingEnemy.SkipNextAction)
@@ -721,6 +737,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     {
                         var enemy = state.EnemyTurnParticipants[enemyIndex];
                         if (!enemy.IsActive) continue;
+                        if (enemy.RevivedDuringEnemyTurn)
+                        {
+                            enemy.RevivedDuringEnemyTurn = false;
+                            continue;
+                        }
                         var currentAction = enemy.Definition.Actions[enemy.ActionIndex];
                         enemy.ActionIndex = enemy.Definition.ResolveNextActionIndex(currentAction.Id,
                             enemy.LastActionId, enemy.ConsecutiveActionCount,

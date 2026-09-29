@@ -119,6 +119,9 @@ public static class BaseSpireIds
     public static readonly ContentId BowlbugsWeak = ContentId.Parse("base-spire:bowlbugs-weak");
     public static readonly ContentId LouseProgenitor = ContentId.Parse("base-spire:louse-progenitor");
     public static readonly ContentId CurlUpPower = ContentId.Parse("base-spire:curl-up-power");
+    public static readonly ContentId TheObscura = ContentId.Parse("base-spire:the-obscura");
+    public static readonly ContentId Parafright = ContentId.Parse("base-spire:parafright");
+    public static readonly ContentId IllusionPower = ContentId.Parse("base-spire:illusion-power");
     public static readonly ContentId SurprisePower = ContentId.Parse("base-spire:surprise-power");
     public static readonly ContentId ThieveryPower = ContentId.Parse("base-spire:thievery-power");
     public static readonly ContentId HeistPower = ContentId.Parse("base-spire:heist-power");

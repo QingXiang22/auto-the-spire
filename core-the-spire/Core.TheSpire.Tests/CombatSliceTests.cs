@@ -879,6 +879,79 @@ public sealed class CombatSliceTests
         Assert.Equal(18, toughSession.State.Enemy.PowerAmount(BaseSpireIds.CurlUpPower));
     }
 
+    public void TheObscuraSummonsParafrightWhichRevivesAtItsNextAction()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.StartEncounter(1163, "ironclad", 2000, 2000, [],
+            ContentId.Parse("base-spire:the-obscura-normal"));
+        var obscura = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.TheObscura);
+        Assert.Equal(1, obscura.SlotIndex);
+        Assert.Equal(IntentKind.Summon, environment.Observe(session).Enemies.Single().Intent);
+
+        environment.Step(session, new EndTurnAction());
+        var parafright = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.Parafright);
+        Assert.Equal(0, parafright.SlotIndex);
+        Assert.Equal(21, parafright.Creature.Hp);
+        Assert.Equal(1, parafright.Creature.PowerAmount(BaseSpireIds.IllusionPower));
+        Assert.Equal(1, parafright.Creature.PowerAmount(ContentId.Parse("base-spire:minion")));
+
+        var priorObscuraAction = obscura.Definition.Actions[obscura.ActionIndex].Id;
+        for (var turn = 0; turn < 12; turn++)
+        {
+            environment.Step(session, new EndTurnAction());
+            var selectedAction = obscura.Definition.Actions[obscura.ActionIndex].Id;
+            Assert.True(selectedAction != priorObscuraAction);
+            priorObscuraAction = selectedAction;
+        }
+
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(21, TargetSelector.SelectedTarget), parafright.Creature);
+        EffectExecutor.Resume(session);
+        Assert.Equal(0, parafright.Creature.Hp);
+        Assert.Equal(IntentKind.Heal, environment.Observe(session).Enemies
+            .Single(enemy => enemy.Id == parafright.Creature.Id).Intent);
+        Assert.True(environment.Observe(session).Enemies.Single(enemy => enemy.Id == parafright.Creature.Id)
+            .IsPendingRevival);
+        Assert.False(session.State.IsCombatantActive(parafright.Creature));
+        Assert.False(session.State.AvailableEnemySlots.Contains(parafright.SlotIndex));
+        Assert.False(session.State.IsTerminal);
+        session.State.Player.MutableHand.Add(new CardInstance("revival-target-test",
+            BaseSpireIds.StrikeIronclad));
+        Assert.False(environment.LegalActions(session).OfType<PlayCardAction>()
+            .Any(action => action.TargetId == parafright.Creature.Id));
+
+        var revivalTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(21, parafright.Creature.Hp);
+        Assert.False(environment.Observe(session).Enemies.Single(enemy => enemy.Id == parafright.Creature.Id)
+            .IsPendingRevival);
+        Assert.Contains(revivalTurn.Events, gameEvent => gameEvent.Type == "enemy_revived"
+            && gameEvent.Source == parafright.Creature.Id && gameEvent.Amount == 21);
+        Assert.Contains(revivalTurn.Events, gameEvent => gameEvent.Type == "enemy_action"
+            && gameEvent.Source == parafright.Creature.Id && gameEvent.Amount == (int)IntentKind.Heal);
+        Assert.False(revivalTurn.Events.Any(gameEvent => gameEvent.Type == "damage"
+            && gameEvent.Source == parafright.Creature.Id));
+
+        var obscuraNextMove = obscura.Definition.Actions[obscura.ActionIndex].Id;
+        // The source Obscura does not revive; give this multi-action enemy the generic Power
+        // temporarily to verify that a queued revival preserves its already selected move.
+        session.State.ApplyPower(session, obscura.Creature, BaseSpireIds.IllusionPower, 1, obscura.Creature);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(200, TargetSelector.SelectedTarget), obscura.Creature);
+        EffectExecutor.Resume(session);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(21, TargetSelector.SelectedTarget), parafright.Creature);
+        EffectExecutor.Resume(session);
+        Assert.False(session.State.IsTerminal);
+        Assert.True(parafright.PendingRevivalIntent == IntentKind.Heal);
+        var secondRevivalTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(21, parafright.Creature.Hp);
+        Assert.Equal(obscuraNextMove, obscura.Definition.Actions[obscura.ActionIndex].Id);
+        Assert.Contains(secondRevivalTurn.Events, gameEvent => gameEvent.Type == "enemy_revived"
+            && gameEvent.Source == obscura.Creature.Id);
+        Assert.False(session.State.IsTerminal);
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -2619,8 +2692,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(46, content.Powers.Count);
-        Assert.Equal(83, content.Enemies.Count);
-        Assert.Equal(83, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(85, content.Enemies.Count);
+        Assert.Equal(85, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2635,6 +2708,10 @@ public sealed class CombatSliceTests
         Assert.Equal(1, curlUp.Events.Single().MaxTriggersPerPlayerTurn);
         Assert.Equal(14, content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.LouseProgenitor)
             .StartingPowers!.Single(power => power.Power == BaseSpireIds.CurlUpPower).Amount);
+
+        var illusion = content.Powers.Single(power => power.Id == BaseSpireIds.IllusionPower);
+        Assert.Equal(PowerTrigger.AfterOwnerDeath, illusion.Trigger);
+        Assert.True(illusion.TriggerRuleEffect is QueueEnemyRevivalEffect);
 
         var cultist = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.DampCultist);
         Assert.Equal(52, cultist.MinHp);
@@ -6956,6 +7033,7 @@ internal static class Program
         tests.BowlbugsWeakKeepsRockAndRandomlySelectsOneWorker();
         tests.BowlbugsNormalKeepsRockAndSelectsTwoDistinctWorkers();
         tests.LouseProgenitorCurlUpWaitsForItsFirstDamagingCard();
+        tests.TheObscuraSummonsParafrightWhichRevivesAtItsNextAction();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();

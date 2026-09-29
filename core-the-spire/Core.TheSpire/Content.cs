@@ -1117,7 +1117,7 @@ public sealed record CardAfflictionDefinition(ContentId Id, CardKeywords AddedKe
             throw new ArgumentOutOfRangeException(nameof(AddedKeywords));
     }
 }
-public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon, DeathBlow, Escape }
+public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon, DeathBlow, Escape, Heal }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath,
     AfterCardEnteredCombat }
@@ -1897,6 +1897,9 @@ public sealed class ContentRegistry
                 throw new InvalidOperationException($"{owner} kills an entity with an invalid target.");
             case EscapeEffect escape when !IsSingleEffectTarget(escape.Target):
                 throw new InvalidOperationException($"{owner} escapes an entity with an invalid target.");
+            case QueueEnemyRevivalEffect revival when !Enum.IsDefined(revival.Intent)
+                || revival.Intent is IntentKind.None or IntentKind.Attack or IntentKind.DeathBlow:
+                throw new InvalidOperationException($"{owner} queues revival with an invalid intent.");
             case AttackUsingBlockEffect attackUsingBlock when !IsSingleOrOpponentGroupTarget(attackUsingBlock.Target):
                 throw new InvalidOperationException($"{owner} has an invalid block-based attack target.");
             case AddCardsToPileEffect addCards:

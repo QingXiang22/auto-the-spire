@@ -11,6 +11,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealEffect), "heal")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(KillEffect), "kill")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EscapeEffect), "escape")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(QueueEnemyRevivalEffect), "queueEnemyRevival")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(StealGoldEffect), "stealGold")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddGoldRewardEffect), "addGoldReward")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SetGoldRewardPercentEffect), "setGoldRewardPercent")]
@@ -128,6 +129,7 @@ public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSele
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record EscapeEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record QueueEnemyRevivalEffect(IntentKind Intent = IntentKind.Heal) : EffectNode;
 public sealed record StealGoldEffect(int Amount, ContentId Power, ContentId Variable,
     TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
 public sealed record AddGoldRewardEffect(int BaseAmount, int AmountPerCount,
@@ -469,6 +471,16 @@ internal static class EffectExecutor
                         escapedEnemy.IsEscaped = true;
                         state.Emit(session, "enemy_escaped", owner.Id, escapedCreature.Id, 1);
                     }
+                    break;
+                case QueueEnemyRevivalEffect revival:
+                    var revivalOwner = state.Enemies.FirstOrDefault(enemy => enemy.Creature == owner)
+                        ?? throw new InvalidOperationException("Only an enemy can queue its own revival.");
+                    if (owner.Hp > 0 || revivalOwner.IsEscaped)
+                        throw new InvalidOperationException("An enemy can queue revival only while dead and not escaped.");
+                    if (revivalOwner.PendingRevivalIntent is not null)
+                        throw new InvalidOperationException("An enemy can have only one pending revival.");
+                    revivalOwner.PendingRevivalIntent = revival.Intent;
+                    state.Emit(session, "enemy_revival_queued", owner.Id, owner.Id, (int)revival.Intent);
                     break;
                 case SetEnemyHealthEffect setHealth:
                     if (owner.IsEnemy is false)
