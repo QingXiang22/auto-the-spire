@@ -65,6 +65,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public IReadOnlyList<BlockGainModifierSubscription> BlockGainModifiers { get; init; } = Array.Empty<BlockGainModifierSubscription>();
     public decimal? BlockGainMultiplier { get; init; }
     public int? DamageCapPerStack { get; init; }
+    public int? IncomingDamageCapPerTurnPerStack { get; init; }
     public IReadOnlyList<PowerVariableDefinition> Variables { get; init; } = Array.Empty<PowerVariableDefinition>();
 
     public void Validate()
@@ -84,6 +85,8 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
             throw new ArgumentOutOfRangeException(nameof(BlockGainMultiplier));
         if (DamageCapPerStack is <= 0)
             throw new ArgumentOutOfRangeException(nameof(DamageCapPerStack));
+        if (IncomingDamageCapPerTurnPerStack is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(IncomingDamageCapPerTurnPerStack));
         foreach (var adjustment in new[] { OnStackChange, OnExpire })
             if (adjustment is not null)
             {

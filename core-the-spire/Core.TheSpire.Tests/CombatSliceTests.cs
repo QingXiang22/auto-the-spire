@@ -2476,9 +2476,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(32, content.Powers.Count);
-        Assert.Equal(74, content.Enemies.Count);
-        Assert.Equal(74, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(33, content.Powers.Count);
+        Assert.Equal(75, content.Enemies.Count);
+        Assert.Equal(75, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2706,6 +2706,43 @@ public sealed class CombatSliceTests
             BaseSpireIds.TorchHeadAmalgam.ToString());
         Assert.Equal(211, toughDeadly.Observe(variantSession).EnemyHp);
         Assert.Equal(19, toughDeadly.Observe(variantSession).IntentDamage);
+    }
+
+    public void SkulkingColonyCapsIncomingHpLossAcrossHitsAndResetsAtPlayerTurnStart()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(1146, "ironclad", 2000, 2000, [],
+            BaseSpireIds.SkulkingColony.ToString());
+        var colony = session.State.Enemies.Single().Creature;
+        Assert.Equal(70, colony.MaxHp);
+        Assert.Equal(15, colony.PowerAmount(BaseSpireIds.HardenedShellPower));
+
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(10, TargetSelector.SelectedTarget), colony);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(10, TargetSelector.SelectedTarget), colony);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new LoseHpEffect(5, TargetSelector.FirstEnemy), colony);
+        Assert.Equal(55, colony.Hp);
+        Assert.Equal(15, session.State.Events.Where(gameEvent => gameEvent.Type is "damage" or "hp_loss"
+            && gameEvent.Target == colony.Id).Sum(gameEvent => gameEvent.Amount));
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1988, session.State.Player.Creature.Hp);
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(10, TargetSelector.SelectedTarget), colony);
+        Assert.Equal(45, colony.Hp);
+        Assert.Equal(IntentKind.Attack, environment.Observe(session).Intent);
+        Assert.Equal(14, environment.Observe(session).IntentDamage);
+
+        var tough = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true, toughEnemies: true)));
+        var toughSession = tough.Start(1147, "ironclad", 2000, 2000, [],
+            BaseSpireIds.SkulkingColony.ToString());
+        Assert.Equal(75, tough.Observe(toughSession).EnemyHp);
+        Assert.Equal(13, tough.Observe(toughSession).IntentDamage);
+        tough.Step(toughSession, new EndTurnAction());
+        Assert.Equal(16, tough.Observe(toughSession).IntentDamage);
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -6442,6 +6479,7 @@ internal static class Program
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent();
+        tests.SkulkingColonyCapsIncomingHpLossAcrossHitsAndResetsAtPlayerTurnStart();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
