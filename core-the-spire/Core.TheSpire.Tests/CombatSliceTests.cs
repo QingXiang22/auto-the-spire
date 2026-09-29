@@ -784,6 +784,36 @@ public sealed class CombatSliceTests
         Assert.True(deadly.Observe(deadlySession).Enemies.Select(enemy => enemy.IntentDamage).SequenceEqual([18, 0]));
     }
 
+    public void BowlbugsWeakKeepsRockAndRandomlySelectsOneWorker()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var eggSeen = false;
+        var nectarSeen = false;
+        for (uint seed = 0; seed < 64; seed++)
+        {
+            var session = environment.StartEncounter(seed, "ironclad", 56, 65, [], BaseSpireIds.BowlbugsWeak);
+            var enemies = session.State.Enemies.Select(enemy => enemy.Definition.Id).ToArray();
+            Assert.Equal(2, enemies.Length);
+            Assert.Equal(ContentId.Parse("base-spire:bowlbug-rock"), enemies[0]);
+            Assert.True(enemies[1] is var worker && (worker == ContentId.Parse("base-spire:bowlbug-egg")
+                || worker == ContentId.Parse("base-spire:bowlbug-nectar")));
+            eggSeen |= enemies[1] == ContentId.Parse("base-spire:bowlbug-egg");
+            nectarSeen |= enemies[1] == ContentId.Parse("base-spire:bowlbug-nectar");
+            Assert.True(session.State.Enemies[0].Creature.PowerAmount(ContentId.Parse("base-spire:imbalanced-power")) == 1);
+
+            var replay = environment.StartEncounter(seed, "ironclad", 56, 65, [], BaseSpireIds.BowlbugsWeak);
+            Assert.True(replay.State.Enemies.Select(enemy => enemy.Definition.Id).SequenceEqual(enemies));
+        }
+        Assert.True(eggSeen && nectarSeen);
+
+        var toughDeadly = new CombatEnvironment(Build(new BaseSpirePackage(toughEnemies: true, deadlyEnemies: true)));
+        var sessionVariant = toughDeadly.StartEncounter(1160, "ironclad", 56, 65, [], BaseSpireIds.BowlbugsWeak);
+        Assert.True(toughDeadly.Observe(sessionVariant).Enemies[0].Hp is >= 46 and <= 49);
+        Assert.True(toughDeadly.Observe(sessionVariant).Enemies[0].IntentDamage == 16);
+        Assert.True(toughDeadly.Observe(sessionVariant).Enemies[1].Hp is >= 23 and <= 39);
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -6851,6 +6881,7 @@ internal static class Program
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
         tests.ChompersNormalMatchesSourceFormationAndArtifactActions();
+        tests.BowlbugsWeakKeepsRockAndRandomlySelectsOneWorker();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();
