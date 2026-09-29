@@ -10,6 +10,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(LoseHpEffect), "loseHp")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealEffect), "heal")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(KillEffect), "kill")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(EscapeEffect), "escape")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AfflictCardsEffect), "afflictCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ClearAfflictionEffect), "clearAffliction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TemporarilyDowngradeCardsEffect), "temporarilyDowngradeCards")]
@@ -119,6 +120,7 @@ public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSele
     DamageProperties Properties = DamageProperties.None) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record EscapeEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null,
     TargetSelector Target = TargetSelector.Self, bool OnlyIfUnafflicted = false) : EffectNode;
 public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null,
@@ -436,6 +438,16 @@ internal static class EffectExecutor
                         CompleteDeath(session, killedCreature, owner, selectedCard, DamageProperties.None);
                     }
                     break;
+                case EscapeEffect escape:
+                    var escapedCreature = ResolveSingleTarget(state, owner, target, escape.Target);
+                    var escapedEnemy = state.Enemies.FirstOrDefault(enemy => enemy.Creature == escapedCreature)
+                        ?? throw new InvalidOperationException("Escape requires an enemy target.");
+                    if (escapedEnemy.IsActive)
+                    {
+                        escapedEnemy.IsEscaped = true;
+                        state.Emit(session, "enemy_escaped", owner.Id, escapedCreature.Id, 1);
+                    }
+                    break;
                 case SetEnemyHealthEffect setHealth:
                     if (owner.IsEnemy is false)
                         throw new InvalidOperationException("Setting enemy health requires an enemy action owner.");
@@ -536,7 +548,7 @@ internal static class EffectExecutor
                             attack.Properties, selectedCard, attack.OnFatal);
                         else
                             foreach (var enemy in state.Enemies)
-                                if (enemy.Creature.Hp > 0)
+                                if (enemy.IsActive)
                                     ApplyAttack(session, owner, enemy.Creature, attack.Amount,
                                         attack.Properties, selectedCard, attack.OnFatal);
                     }
@@ -552,7 +564,7 @@ internal static class EffectExecutor
                     {
                         var victims = dynamicAttack.Target == TargetSelector.AllOpponents
                             ? owner.IsEnemy ? new[] { state.Player.Creature }
-                                : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray()
+                                : state.Enemies.Where(enemy => enemy.IsActive).Select(enemy => enemy.Creature).ToArray()
                             : new[] { ResolveSingleTarget(state, owner, target, dynamicAttack.Target) };
                         foreach (var victim in victims)
                             ApplyAttack(session, owner, victim, dynamicAmount, dynamicAttack.Properties, damageCard);
@@ -562,7 +574,7 @@ internal static class EffectExecutor
                     var scaledVictims = scaledAttack.Target == TargetSelector.AllOpponents
                         ? owner.IsEnemy
                             ? new[] { state.Player.Creature }
-                            : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray()
+                            : state.Enemies.Where(enemy => enemy.IsActive).Select(enemy => enemy.Creature).ToArray()
                         : new[] { ResolveSingleTarget(state, owner, target, scaledAttack.Target) };
                     foreach (var scaledVictim in scaledVictims)
                         ApplyAttack(session, owner, scaledVictim,
@@ -578,7 +590,7 @@ internal static class EffectExecutor
                     if (randomAmount < 0) throw new InvalidOperationException("Attack damage cannot be negative.");
                     var opponents = owner.IsEnemy
                         ? state.Player.Creature.Hp > 0 ? new[] { state.Player.Creature } : []
-                        : state.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray();
+                        : state.Enemies.Where(enemy => enemy.IsActive).Select(enemy => enemy.Creature).ToArray();
                     if (opponents.Length > 0)
                     {
                         var victim = opponents[session.Random.Get("card-targets").NextInt(opponents.Length)];
@@ -594,7 +606,7 @@ internal static class EffectExecutor
                             DamageProperties.Move, selectedCard);
                         else
                             foreach (var enemy in state.Enemies)
-                                if (enemy.Creature.Hp > 0)
+                                if (enemy.IsActive)
                                     ApplyAttack(session, owner, enemy.Creature, blockBasedDamage,
                                         DamageProperties.Move, selectedCard);
                     }
@@ -660,7 +672,7 @@ internal static class EffectExecutor
                     {
                         if (block.OnlyEnemy is { } onlyEnemy && !state.Enemies.Any(enemy =>
                             enemy.Creature == recipient && enemy.Definition.Id == onlyEnemy)) continue;
-                        if (recipient.Hp <= 0) continue;
+                        if (!state.IsCombatantActive(recipient)) continue;
                         var recipientBlock = state.ModifyBlockGain(recipient, blockAmount, blockProperties);
                         recipient.Block += recipientBlock;
                         state.Emit(session, "block", owner.Id, recipient.Id, recipientBlock,
@@ -675,7 +687,7 @@ internal static class EffectExecutor
                         ? DamageProperties.Move : DamageProperties.None;
                     foreach (var recipient in ResolveMultipleTargets(state, owner, target, blockFromBlock.Target))
                     {
-                        if (recipient.Hp <= 0) continue;
+                        if (!state.IsCombatantActive(recipient)) continue;
                         var recipientBlock = state.ModifyBlockGain(recipient, gainedBlock, currentBlockProperties);
                         recipient.Block += recipientBlock;
                         state.Emit(session, "block", owner.Id, recipient.Id, recipientBlock,
@@ -996,7 +1008,7 @@ internal static class EffectExecutor
                 case IfEffect conditional:
                     var condition = conditional.Predicate switch
                     {
-                        TargetAlivePredicate => (target ?? OpponentOf(state, owner)).Hp > 0,
+                        TargetAlivePredicate => state.IsCombatantActive(target ?? OpponentOf(state, owner)),
                         HasPowerPredicate hasPower => ResolveSingleTarget(state, owner, target, hasPower.Target)
                             .PowerAmount(hasPower.Power) > 0,
                         PowerAmountAtLeastPredicate powerCondition => ResolveSingleTarget(state, owner, target,
@@ -1060,9 +1072,9 @@ internal static class EffectExecutor
         TargetSelector.SelectedTarget => [selected ?? OpponentOf(state, owner)],
         TargetSelector.AllOpponents => owner.IsEnemy
             ? [state.Player.Creature]
-            : state.Enemies.Where(enemy => enemy.Creature.Hp > 0).Select(enemy => enemy.Creature),
+            : state.Enemies.Where(enemy => enemy.IsActive).Select(enemy => enemy.Creature),
         TargetSelector.OtherAllies => owner.IsEnemy
-            ? state.Enemies.Where(enemy => enemy.Creature.Hp > 0 && enemy.Creature != owner)
+            ? state.Enemies.Where(enemy => enemy.IsActive && enemy.Creature != owner)
                 .Select(enemy => enemy.Creature)
             : Array.Empty<EntityState>(),
         _ => throw new ArgumentOutOfRangeException(nameof(selector), "This effect has an invalid target selector.")
@@ -1277,7 +1289,7 @@ internal static class EffectExecutor
         var allowedCount = summon.Count;
         if (summon.MaximumLivingEnemyCount is { } maximumLiving)
             allowedCount = Math.Min(allowedCount,
-                Math.Max(0, maximumLiving - state.Enemies.Count(enemy => enemy.Creature.Hp > 0)));
+                Math.Max(0, maximumLiving - state.Enemies.Count(enemy => enemy.IsActive)));
         if (summon.MaximumEnemyCount is { } maximumTotal)
             allowedCount = Math.Min(allowedCount, Math.Max(0, maximumTotal - state.Enemies.Count));
         var availableSlots = state.AvailableEnemySlots.ToList();
@@ -1391,7 +1403,7 @@ internal static class EffectExecutor
         QueuePowerTriggerEffects(session, victim, PowerTrigger.AfterOwnerDeath, source, cardSource);
         if (victim.IsEnemy)
             foreach (var ally in state.Enemies.Select(enemy => enemy.Creature)
-                .Where(ally => ally.Id != victim.Id && ally.Hp > 0))
+                .Where(ally => ally.Id != victim.Id && state.IsCombatantActive(ally)))
                 state.Emit(session, "ally_death", victim.Id, ally.Id, 1, properties, cardSource);
     }
 

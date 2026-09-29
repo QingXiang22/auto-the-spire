@@ -178,6 +178,8 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     private long _actionSelectionCount;
     public EntityState Creature { get; } = creature;
     public EnemyDefinition Definition { get; } = definition;
+    public bool IsEscaped { get; set; }
+    public bool IsActive => Creature.Hp > 0 && !IsEscaped;
     public int SlotIndex { get; set; }
     public int ActionIndex { get; set; }
     public bool SkipNextAction { get; set; }
@@ -232,8 +234,8 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
             EnemyActionMetric.PlayerMaxHp => player.MaxHp,
             EnemyActionMetric.PlayerHpPercent => player.MaxHp == 0 ? 0 : (int)((long)player.Hp * 100 / player.MaxHp),
             EnemyActionMetric.PlayerBlock => player.Block,
-            EnemyActionMetric.LivingEnemies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0),
-            EnemyActionMetric.LivingAllies => state.Enemies.Count(candidate => candidate.Creature.Hp > 0) -
+            EnemyActionMetric.LivingEnemies => state.Enemies.Count(candidate => candidate.IsActive),
+            EnemyActionMetric.LivingAllies => state.Enemies.Count(candidate => candidate.IsActive) -
                 (creature.Hp > 0 ? 1 : 0),
             EnemyActionMetric.EnemyCount => state.Enemies.Count,
             _ => throw new ArgumentOutOfRangeException(nameof(metric))
@@ -255,7 +257,7 @@ internal readonly record struct EnemyActionEvaluationContext(GameState state, En
     public bool HasAllyAction(ContentId enemyId, ContentId actionId)
     {
         foreach (var candidate in state.Enemies)
-            if (!ReferenceEquals(candidate, enemy) && candidate.Creature.Hp > 0
+            if (!ReferenceEquals(candidate, enemy) && candidate.IsActive
                 && candidate.Definition.Id == enemyId
                 && candidate.Definition.Actions[candidate.ActionIndex].Id == actionId)
                 return true;
@@ -295,11 +297,11 @@ internal sealed class GameState
     public List<EnemyCombatState> Enemies { get; }
     internal int? TotalEnemySlots { get; }
     internal IReadOnlyList<int> AvailableEnemySlots => TotalEnemySlots is { } total
-        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot || enemy.Creature.Hp <= 0)).ToArray()
+        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot || !enemy.IsActive)).ToArray()
         : Array.Empty<int>();
     internal void AddEnemy(EnemyCombatState enemy)
     {
-        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex && candidate.Creature.Hp > 0))
+        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex && candidate.IsActive))
             throw new InvalidOperationException($"Enemy slot {enemy.SlotIndex} is already occupied.");
         var index = Enemies.FindIndex(candidate => candidate.SlotIndex > enemy.SlotIndex);
         Enemies.Insert(index < 0 ? Enemies.Count : index, enemy);
@@ -322,7 +324,11 @@ internal sealed class GameState
         EnemyTurnParticipants.Clear();
         EnemyTurnParticipants.AddRange(Enemies);
     }
-    public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.Creature.Hp > 0)?.Creature;
+    public EntityState? FirstLivingEnemy => Enemies.FirstOrDefault(enemy => enemy.IsActive)?.Creature;
+    internal bool IsCombatantActive(EntityState creature) => creature == Player.Creature
+        ? creature.Hp > 0
+        : Enemies.Any(enemy => enemy.Creature == creature && enemy.IsActive);
+    internal bool IsEnemyActive(string creatureId) => Enemies.Any(enemy => enemy.Creature.Id == creatureId && enemy.IsActive);
     public bool IsPlayerTurn { get; internal set; } = true;
     internal long NextCardPlayExecutionId() => checked(++_nextCardPlayExecutionId);
     internal string NextSummonedEnemyInstanceId(ContentId enemyId)
@@ -332,7 +338,7 @@ internal sealed class GameState
         while (Enemies.Any(enemy => StringComparer.Ordinal.Equals(enemy.Creature.Id, instanceId)));
         return instanceId;
     }
-    public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => enemy.Creature.Hp <= 0))
+    public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => !enemy.IsActive))
         && PendingChoice is null && PendingCardSelection is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }
     internal PendingCardSelectionState? PendingCardSelection { get; set; }

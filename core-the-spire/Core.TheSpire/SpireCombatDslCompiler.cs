@@ -322,6 +322,9 @@ public static class SpireCombatDslCompiler
                 case "kill":
                     CheckShape(call, 0, 0, "target");
                     return new KillEffect(OptionalTarget(call, "target", TargetSelector.Self));
+                case "escape":
+                    CheckShape(call, 0, 0, "target");
+                    return new EscapeEffect(OptionalTarget(call, "target", TargetSelector.Self));
                 case "temporarilyDowngradeCards":
                     CheckShape(call, 1, 1, "target");
                     return new TemporarilyDowngradeCardsEffect(ReferenceId(Argument(call, 0)),

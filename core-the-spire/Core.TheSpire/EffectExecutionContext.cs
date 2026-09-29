@@ -35,7 +35,7 @@ public sealed class RuleHookContext
     public bool IsAliveCreature(string creatureId) =>
         _session.State.Player.Id == creatureId
             ? _session.State.Player.Creature.Hp > 0
-            : _session.State.Enemies.Any(enemy => enemy.Creature.Id == creatureId && enemy.Creature.Hp > 0);
+            : _session.State.IsEnemyActive(creatureId);
 }
 
 public interface ICustomEffectHandler

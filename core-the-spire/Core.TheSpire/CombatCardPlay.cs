@@ -44,7 +44,7 @@ internal static class CombatCardPlay
 
     private static EntityState RandomOpponent(GameSession session)
     {
-        var opponents = session.State.Enemies.Select(enemy => enemy.Creature).Where(enemy => enemy.Hp > 0).ToArray();
+        var opponents = session.State.Enemies.Where(enemy => enemy.IsActive).Select(enemy => enemy.Creature).ToArray();
         return opponents[session.Random.Get("card-targets").NextInt(opponents.Length)];
     }
 
