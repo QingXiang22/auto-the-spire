@@ -1140,6 +1140,7 @@ public interface IRulePackage
 public sealed class ContentRegistry
 {
     private readonly Dictionary<ContentId, CardDefinition> _cards = [];
+    private readonly List<ContentId> _cardRegistrationOrder = [];
     private readonly Dictionary<ContentId, CardAfflictionDefinition> _afflictions = [];
     private readonly Dictionary<ContentId, PotionDefinition> _potions = [];
     private readonly Dictionary<ContentId, CardPoolDefinition> _cardPools = [];
@@ -1164,6 +1165,7 @@ public sealed class ContentRegistry
         if (_packages.Any(p => p.Id == package.Info.Id))
             throw new InvalidOperationException($"Package '{package.Info.Id}' is already loaded.");
         var cardsBefore = new Dictionary<ContentId, CardDefinition>(_cards);
+        var cardRegistrationCountBefore = _cardRegistrationOrder.Count;
         var afflictionsBefore = new Dictionary<ContentId, CardAfflictionDefinition>(_afflictions);
         var potionsBefore = new Dictionary<ContentId, PotionDefinition>(_potions);
         var cardPoolsBefore = new Dictionary<ContentId, CardPoolDefinition>(_cardPools);
@@ -1188,6 +1190,8 @@ public sealed class ContentRegistry
         catch
         {
             Restore(_cards, cardsBefore);
+            _cardRegistrationOrder.RemoveRange(cardRegistrationCountBefore,
+                _cardRegistrationOrder.Count - cardRegistrationCountBefore);
             Restore(_afflictions, afflictionsBefore);
             Restore(_potions, potionsBefore);
             Restore(_cardPools, cardPoolsBefore);
@@ -1208,7 +1212,11 @@ public sealed class ContentRegistry
         finally { _registeringPackageId = null; }
     }
 
-    public void Register(CardDefinition definition) => AddUnique(_cards, definition.Id, definition, "card");
+    public void Register(CardDefinition definition)
+    {
+        AddUnique(_cards, definition.Id, definition, "card");
+        _cardRegistrationOrder.Add(definition.Id);
+    }
     public void Register(CardAfflictionDefinition definition)
     {
         ArgumentNullException.ThrowIfNull(definition);
@@ -1407,9 +1415,9 @@ public sealed class ContentRegistry
                 else if (_cards[cardId].MultiplayerOnly)
                     throw new InvalidOperationException($"Card pool '{pool.Id}' includes multiplayer-only card '{cardId}'.");
         var resolvedCardPools = _cardPools.ToDictionary(pair => pair.Key, pair =>
-            new CardPoolDefinition(pair.Key, pair.Value.Cards.Concat(_cards.Values
-                .Where(card => card.PoolIds.Contains(pair.Key) && !pair.Value.Cards.Contains(card.Id))
-                .Select(card => card.Id))));
+            new CardPoolDefinition(pair.Key, pair.Value.Cards.Concat(_cardRegistrationOrder
+                .Where(cardId => !pair.Value.Cards.Contains(cardId)
+                    && _cards[cardId].PoolIds.Contains(pair.Key)))));
         foreach (var character in _characters.Values)
         {
             foreach (var cardId in character.StartingDeck)

@@ -1412,8 +1412,15 @@ public sealed class CombatSliceTests
             beckonTurnEnd.Properties);
         Assert.Equal(cards.Count, cards.Select(card => card.Id).Distinct().Count());
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
-            .Select(card => card.Id), pool);
+        var declaredPool = SpireCombatDslCompiler.CompileCardPools(package).Single();
+        Assert.True(declaredPool.Cards.SequenceEqual(pool));
+        Assert.Equal(85, pool.Count);
+        Assert.Equal(new[] {
+            ContentId.Parse("base-spire:aggression"), ContentId.Parse("base-spire:anger"),
+            ContentId.Parse("base-spire:armaments"), ContentId.Parse("base-spire:ashen-strike"),
+            ContentId.Parse("base-spire:barricade")
+        }, pool.Take(5));
+        Assert.Equal(ContentId.Parse("base-spire:whirlwind"), pool[^1]);
         Assert.Equal(87, pool.Count + cards.Count(card => card.MultiplayerOnly));
         Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
         var demonicShield = cards.Single(card => card.Id == BaseSpireIds.DemonicShield);
@@ -1466,6 +1473,9 @@ public sealed class CombatSliceTests
             "package broken { card Bad { type = attack rarity = common cost = 1 target = enemy play = madeUp() } }",
             "broken.spire");
         Assert.Throws<DslSourceException>(() => SpireCombatDslCompiler.CompileCards(invalid));
+        var duplicatePoolCards = DslSourceParser.Parse(
+            "package broken { cardPool Pool { cards = [Strike, Strike] } }", "broken-pool.spire");
+        Assert.Throws<DslSourceException>(() => SpireCombatDslCompiler.CompileCardPools(duplicatePoolCards));
 
         var parseError = Assert.Throws<DslSourceException>(() => DslSourceParser.Parse(
             "package broken {\n  enemy Missing {\n    hp =\n  }\n}", "broken.spire"));

@@ -236,6 +236,30 @@ public static class BaseSpireContent
         return cards;
     }
 
+    public static IReadOnlyList<CardPoolDefinition> LoadCardPools()
+    {
+        const string resourcePrefix = "BaseSpire.ContentSource.";
+        const string resourceSuffix = "-cards.spire";
+        var assembly = typeof(BaseSpireContent).Assembly;
+        var pools = assembly.GetManifestResourceNames()
+            .Where(name => name.StartsWith(resourcePrefix, StringComparison.Ordinal)
+                && name.EndsWith(resourceSuffix, StringComparison.Ordinal))
+            .Order(StringComparer.Ordinal)
+            .SelectMany(name =>
+            {
+                using var stream = assembly.GetManifestResourceStream(name)
+                    ?? throw new InvalidOperationException($"Missing base-spire content resource '{name}'.");
+                using var reader = new System.IO.StreamReader(stream);
+                var sourcePath = $"base-spire/{name[resourcePrefix.Length..]}";
+                return SpireCombatDslCompiler.CompileCardPools(
+                    DslSourceParser.Parse(reader.ReadToEnd(), sourcePath));
+            })
+            .ToArray();
+        if (pools.Length == 0)
+            throw new InvalidOperationException("No base-spire card pool declarations were found.");
+        return pools;
+    }
+
     public static SpireCombatBehaviorContent LoadEnemyBehavior(ContentVariantProfile profile = default)
     {
         const string resourcePrefix = "BaseSpire.ContentSource.enemies";
