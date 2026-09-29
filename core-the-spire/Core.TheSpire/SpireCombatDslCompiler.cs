@@ -436,8 +436,11 @@ public static class SpireCombatDslCompiler
                         EnumValue<CardPile>(RequiredArgument(call, "from")),
                         StringValue(RequiredArgument(call, "prompt")),
                         Integer(RequiredArgument(call, "minChoices")),
-                        Integer(RequiredArgument(call, "maxChoices")),
-                        OptionalEnum(call, "filter", CardSelectionFilter.Any), OptionalEffect(call, "onSelected"));
+                        OptionalArgument(call, "maxChoices") is DslNumberNode maxChoicesNode
+                            ? Integer(maxChoicesNode) : 0,
+                        OptionalEnum(call, "filter", CardSelectionFilter.Any), OptionalEffect(call, "onSelected"),
+                        OptionalArgument(call, "maxChoices") is { } calculatedMaxChoices
+                            and not DslNumberNode ? CompileScaledAmount(calculatedMaxChoices) : null);
                 case "randomMoveCard":
                     CheckShape(call, 0, 0, "from", "to", "filter", "after");
                     return new RandomlyMoveCardFromPileEffect(

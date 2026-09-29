@@ -1121,7 +1121,7 @@ public sealed record CardAfflictionDefinition(ContentId Id, CardKeywords AddedKe
 public enum IntentKind { None, Attack, Buff, Debuff, Stun, Summon, DeathBlow, Escape, Heal }
 public enum PowerTrigger { None, AfterPlayerTurnEnd, AfterEnemyTurnEnd, AfterPlayerTurnStart, AfterCardExhausted,
     AfterCardPlayed, AfterOwnerTurnEnd, AfterOwnerTurnStart, AfterAutoPostPlayPhaseEntered, AfterOwnerDeath,
-    AfterCardEnteredCombat }
+    AfterCardEnteredCombat, BeforeFlushLate }
 public sealed record PowerLifecycleSubscription(PowerTrigger Trigger, EffectNode Effect, CardType? WhenCardType = null);
 public sealed record DamageModifierSubscription(decimal Multiplier,
     DamageProperties RequiredProperties = DamageProperties.None,
@@ -1986,8 +1986,10 @@ public sealed class ContentRegistry
                     throw new InvalidOperationException($"{owner} has an invalid multi-card selection pile or filter.");
                 ArgumentException.ThrowIfNullOrWhiteSpace(chooseCards.Prompt);
                 ArgumentOutOfRangeException.ThrowIfNegative(chooseCards.MinChoices);
-                if (chooseCards.MaxChoices < chooseCards.MinChoices)
+                if (chooseCards.CalculatedMaxChoices is null && chooseCards.MaxChoices < chooseCards.MinChoices)
                     throw new InvalidOperationException($"{owner} has invalid multi-card selection bounds.");
+                if (chooseCards.CalculatedMaxChoices is { } calculatedMaximum)
+                    ValidateCombatCountSource(calculatedMaximum.Count, owner, counts);
                 if (chooseCards.OnSelected is { } eachSelected) ValidateEffectReferences(eachSelected, owner, counts);
                 break;
             case RandomlyMoveCardFromPileEffect randomCard:

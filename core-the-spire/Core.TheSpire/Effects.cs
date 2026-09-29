@@ -172,7 +172,8 @@ public sealed record ChooseCardFromPileEffect(CardPile From, CardPile? To, strin
     CardPilePosition DestinationPosition = CardPilePosition.Top,
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
 public sealed record ChooseCardsFromPileEffect(CardPile From, string Prompt, int MinChoices, int MaxChoices,
-    CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null) : EffectNode;
+    CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? OnSelected = null,
+    ScaledCombatAmount? CalculatedMaxChoices = null) : EffectNode;
 public sealed record RandomlyMoveCardFromPileEffect(CardPile From, CardPile To,
     CardSelectionFilter Filter = CardSelectionFilter.Any, EffectNode? AfterMove = null) : EffectNode;
 public sealed record RandomlyMoveCardsEffect(CardPile From, CardPile To, int Count = 1,
@@ -841,13 +842,20 @@ internal static class EffectExecutor
                         state.PendingCardSelection = new PendingCardChoice(chooseCard, options, owner, target, selectedCard) { Counts = counts };
                     break;
                 case ChooseCardsFromPileEffect chooseCards:
-                    if (chooseCards.MinChoices < 0 || chooseCards.MaxChoices < chooseCards.MinChoices)
+                    if (chooseCards.MinChoices < 0
+                        || chooseCards.CalculatedMaxChoices is null && chooseCards.MaxChoices < chooseCards.MinChoices)
                         throw new InvalidOperationException("Card selection bounds are invalid.");
+                    var maxChoices = chooseCards.CalculatedMaxChoices is { } calculatedMaximum
+                        ? ScaledAmount(state, owner, target, calculatedMaximum.BaseAmount,
+                            calculatedMaximum.PerCount, calculatedMaximum.Count, counts, selectedCard)
+                        : chooseCards.MaxChoices;
+                    if (maxChoices < chooseCards.MinChoices)
+                        throw new InvalidOperationException("Calculated card selection maximum is below the required minimum.");
                     var multiOptions = state.GetPile(chooseCards.From)
                         .Where(card => state.MatchesCardSelectionFilter(card, chooseCards.Filter)).ToArray();
-                    if (multiOptions.Length > 0 && chooseCards.MaxChoices > 0)
+                    if (multiOptions.Length > 0 && maxChoices > 0)
                     {
-                        var maximum = Math.Min(chooseCards.MaxChoices, multiOptions.Length);
+                        var maximum = Math.Min(maxChoices, multiOptions.Length);
                         if (chooseCards.MinChoices > maximum)
                             throw new InvalidOperationException("Not enough cards satisfy the required selection count.");
                         state.PendingCardSelection = new PendingCardSetChoice(chooseCards, multiOptions,

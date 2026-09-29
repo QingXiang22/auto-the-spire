@@ -267,9 +267,10 @@ public static class SpireCombatBehaviorDslCompiler
                 }
                 var trigger = EnumValue<PowerTrigger>(Required(arguments, "event", call.Location));
                 if (trigger is not (PowerTrigger.AfterOwnerTurnStart or PowerTrigger.AfterOwnerTurnEnd
-                    or PowerTrigger.AfterAutoPostPlayPhaseEntered or PowerTrigger.AfterCardEnteredCombat))
+                    or PowerTrigger.AfterAutoPostPlayPhaseEntered or PowerTrigger.AfterCardEnteredCombat
+                    or PowerTrigger.BeforeFlushLate))
                     throw Error(Required(arguments, "event", call.Location).Location,
-                        "Power lifecycle hooks support owner turn boundaries, afterAutoPostPlayPhaseEntered, and afterCardEnteredCombat.");
+                        "Power lifecycle hooks support owner turn boundaries, beforeFlushLate, afterAutoPostPlayPhaseEntered, and afterCardEnteredCombat.");
                 var cardTypeNode = arguments.GetValueOrDefault("whenCardType");
                 if (cardTypeNode is not null && trigger != PowerTrigger.AfterCardEnteredCombat)
                     throw Error(cardTypeNode.Location, "whenCardType requires the afterCardEnteredCombat trigger.");
