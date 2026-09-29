@@ -1066,6 +1066,7 @@ internal enum EndTurnResolutionStage
     PlayerHandTurnEndEffects,
     BeforeFlushHooks,
     BeforeFlushLateHooks,
+    BeforeFlushLatePowers,
     FlushHand,
     AfterFlushHooks,
     PlayerTurnEndPowers,

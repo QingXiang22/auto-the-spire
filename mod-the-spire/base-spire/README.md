@@ -1,6 +1,6 @@
 # base-spire
 
-`base-spire` 是原版内容规则包，依赖 `core-the-spire`。当前 Ironclad 池迁入了 71/87 张卡，另注册 Entrench、Slimed 和 Giant Rock。效果覆盖攻击/格挡、抽牌与牌堆移动、选牌与升级、消耗触发、克隆与实例变量、回合攻击历史触发、升级关键字、Power 事件订阅、卡牌实例延迟累积与反应效果、随机目标、AoE、动态计数、回合条件、能量上限、易伤倍率和临时力量生命周期；完整卡池仍待迁入。
+`base-spire` 是原版内容规则包，依赖 `core-the-spire`。Ironclad 卡牌行为和 Power 已广泛使用 DSL 描述；当前 DSL fixture 有 86 张单人池卡和 2 张多人专用卡，和源码池快照的 87 张总数存在一张差异，详见仓库的 `docs/ironclad-dsl-coverage.md`。效果覆盖攻击/格挡、抽牌与牌堆移动、选牌与升级、消耗触发、克隆与实例变量、回合攻击历史触发、升级关键字、Power 事件订阅、卡牌实例延迟累积与反应效果、随机目标、AoE、动态计数、回合条件、能量上限、易伤倍率和临时力量生命周期；卡牌名单差异仍待核对。
 
 已迁入部分 Ironclad 遗物：Burning Blood、Anchor、Vajra、Charon's Ashes、Self-Forming Clay、Red Skull、Demon Tongue、Paper Phrog 和 Ruined Helmet。Fire、Block、Strength、Blessing of the Forge、Beetle Juice 和 Flex Potion 由 `potions.spire` 定义；Flex Potion 与 Setup Strike/Mangle 共用 Power 生命周期。战斗奖励可掉落并领取药水，固定槽位支持消费后保留空位，Potion Belt 扩容 2 格。完整药水池和非战斗/自动药水仍待迁移。
 

@@ -593,6 +593,11 @@ public sealed class CombatEnvironment(GameDefinition definition)
                 case EndTurnResolutionStage.AfterFlushHooks:
                     if (!RunFlushHooks(session)) return;
                     break;
+                case EndTurnResolutionStage.BeforeFlushLatePowers:
+                    state.EndTurnStage = EndTurnResolutionStage.FlushHand;
+                    if (state.PreFlushShouldFlush)
+                        BeginPowerQueue(state, state.Player.Creature, PowerTrigger.BeforeFlushLate);
+                    break;
                 case EndTurnResolutionStage.FlushHand:
                     FlushPlayerHand(session);
                     break;
@@ -885,7 +890,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
         state.EndTurnStage = stage switch
         {
             EndTurnResolutionStage.BeforeFlushHooks => EndTurnResolutionStage.BeforeFlushLateHooks,
-            EndTurnResolutionStage.BeforeFlushLateHooks => EndTurnResolutionStage.FlushHand,
+            EndTurnResolutionStage.BeforeFlushLateHooks => EndTurnResolutionStage.BeforeFlushLatePowers,
             EndTurnResolutionStage.AfterFlushHooks => EndTurnResolutionStage.PlayerTurnEndPowers,
             _ => throw new InvalidOperationException($"'{stage}' is not a flush hook stage.")
         };

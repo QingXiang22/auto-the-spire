@@ -462,7 +462,7 @@ public sealed class CombatSliceTests
             .Contains(BaseSpireIds.Ironclad));
         var ironcladPool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(ironcladPool.Count, ironcladPool.Distinct().Count());
-        Assert.Equal(85, ironcladPool.Count);
+        Assert.Equal(86, ironcladPool.Count);
         Assert.True(ironcladPool.All(id => definition.Cards.ContainsKey(id)));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Break));
         Assert.True(ironcladPool.Contains(BaseSpireIds.Breakthrough));
@@ -1384,9 +1384,20 @@ public sealed class CombatSliceTests
 
         Assert.Equal("base-spire", package.Name);
         var cards = SpireCombatDslCompiler.CompileCards(package);
-        Assert.Equal(93, cards.Count);
+        Assert.Equal(94, cards.Count);
+        var plansCard = cards.Single(card => card.Id == BaseSpireIds.WellLaidPlans);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1, TargetSelector.Self), plansCard.Effect);
+        Assert.Equal(new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 2, TargetSelector.Self), plansCard.UpgradedEffect);
+        var plansPower = BaseSpireContent.LoadIroncladPowers().Single(power => power.Id == BaseSpireIds.WellLaidPlansPower);
+        var subscription = plansPower.Lifecycle.Single();
+        var retainNode = subscription.Effect;
+        Assert.True(retainNode is ChooseCardsFromPileEffect);
+        var retain = (ChooseCardsFromPileEffect)retainNode;
+        Assert.Equal(PowerTrigger.BeforeFlushLate, subscription.Trigger);
+        Assert.Equal(new ScaledCombatAmount(0, 1,
+            new TargetPowerCountSource(BaseSpireIds.WellLaidPlansPower, TargetSelector.Self)), retain.CalculatedMaxChoices);
         var registeredCards = BaseSpireContent.LoadCards();
-        Assert.Equal(94, registeredCards.Count);
+        Assert.Equal(95, registeredCards.Count);
         Assert.Equal(registeredCards.Count, registeredCards.Select(card => card.Id).Distinct().Count());
         var beckon = registeredCards.Single(card => card.Id == BaseSpireIds.Beckon);
         Assert.Equal(CardRarity.Status, beckon.Rarity);
@@ -1399,7 +1410,7 @@ public sealed class CombatSliceTests
         var pool = Build(new BaseSpirePackage()).CardPools[BaseSpireIds.IroncladCardPool].Cards;
         Assert.Equal(cards.Where(card => card.PoolIds.Contains(BaseSpireIds.IroncladCardPool))
             .Select(card => card.Id), pool);
-        Assert.Equal(87, pool.Count + cards.Count(card => card.MultiplayerOnly));
+        Assert.Equal(88, pool.Count + cards.Count(card => card.MultiplayerOnly));
         Assert.True(cards.Any(card => card.Id == BaseSpireIds.Slimed));
         var demonicShield = cards.Single(card => card.Id == BaseSpireIds.DemonicShield);
         Assert.True(demonicShield.MultiplayerOnly);
@@ -1461,7 +1472,7 @@ public sealed class CombatSliceTests
     {
         var definition = Build(new BaseSpirePackage(), new CardPoolExtensionPackage());
         var pool = definition.CardPools[BaseSpireIds.IroncladCardPool].Cards;
-        Assert.Equal(86, pool.Count);
+        Assert.Equal(87, pool.Count);
         Assert.Equal(CardPoolExtensionPackage.CardId, pool[^1]);
         Assert.False(pool.Contains(BaseSpireIds.Entrench));
         Assert.False(pool.Contains(BaseSpireIds.Slimed));

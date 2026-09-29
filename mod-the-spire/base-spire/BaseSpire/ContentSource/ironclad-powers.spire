@@ -165,6 +165,13 @@ package base-spire {
       effect=autoPlaySelectedCard(from=hand))]
   }
 
+  power WellLaidPlansPower {
+    on = [trigger(event=beforeFlushLate,
+      effect=chooseCards(from=hand, prompt="Choose cards to retain", minChoices=0,
+        maxChoices=scaled(0, 1, count=targetPowerAmount(WellLaidPlansPower, target=self)),
+        filter=notRetained, onSelected=retainSelectedCard()))]
+  }
+
   power UnmovablePower {
     blockGainModifiers = [modifier(multiplier=2, require=[move], priorEntriesPerStack=1,
       playerOnly=true)]

@@ -359,18 +359,12 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         foreach (var power in BaseSpireContent.LoadIroncladPowers()) registry.Register(power);
         foreach (var power in BaseSpireContent.LoadPotionPowers()) registry.Register(power);
         foreach (var power in BaseSpireContent.LoadSharedPowers()) registry.Register(power);
-        registry.Register(new PowerDefinition(BaseSpireIds.WellLaidPlansPower));
-        registry.Register(new WellLaidPlansHook());
         var enemyContent = BaseSpireContent.LoadEnemyBehavior(new ContentVariantProfile(deadlyEnemies, toughEnemies));
         foreach (var affliction in enemyContent.Afflictions) registry.Register(affliction);
         foreach (var power in enemyContent.Powers) registry.Register(power);
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
         foreach (var card in BaseSpireContent.LoadCards()) registry.Register(card);
         IroncladCardPool.Register(registry);
-        registry.Register(new CardDefinition(BaseSpireIds.WellLaidPlans, 1, CardType.Power,
-            new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 1), Target: TargetSelector.Self,
-            Rarity: CardRarity.Uncommon,
-            UpgradedEffect: new ApplyPowerEffect(BaseSpireIds.WellLaidPlansPower, 2)));
         registry.Register(new CardDefinition(BaseSpireIds.Dazed, 0, CardType.Status,
             new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
             Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));
