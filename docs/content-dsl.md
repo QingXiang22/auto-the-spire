@@ -151,7 +151,7 @@ play = withCount("handSize", count=pileCount(hand), effect=sequence(
 
 `forEachCard` snapshots its original card instances, then completes each item's effect and triggered continuations before advancing to the next item. In this example, exhaustion callbacks may draw cards, but those new cards are not exhausted and do not change the number of attacks. All original exhaustion callbacks finish before the attack sequence starts.
 
-`choose(prompt="...", options=[option("...", effect=...)])` exposes an ordinary choice through the same scheduler; an option may omit its effect. Both ordinary and card choices preserve the lexical count scope.
+`choose(prompt="...", options=[option("...", effect=...)])` exposes an ordinary choice through the same scheduler; the effect may also be the second positional argument (`option("...", effectTree)`) or be omitted. Both ordinary and card choices preserve the lexical count scope.
 
 `generateCards(count=number|scaled(...), pile=hand, upgraded=false)` samples with replacement from the holder's character pools, preserving pool order and deduplicating content IDs. Basic, Ancient, Event, and `canGenerateInCombat=false` cards are excluded, as in `CardFactory.FilterForCombat`. Each sample consumes one call on `combat-card-generation`. All samples are reserved before their generated instances are added sequentially; each `card_generated` event and its continuations finish before adding the next instance. Generated cards have fresh combat identities and do not alter the permanent deck. Zero requests with replacement consume no random calls. Distinct requests shuffle even for zero requested cards. Requests that sample require an explicit character identity; with-replacement requests require a nonempty eligible pool.
 
