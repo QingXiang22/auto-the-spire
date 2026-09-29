@@ -617,7 +617,8 @@ public sealed class CombatEnvironment(GameDefinition definition)
                     {
                         var removed = state.RemovePower(state.Player.Creature, powerId);
                         if (removed != 0)
-                            state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed);
+                            state.Emit(session, "power_removed", state.Player.Id, state.Player.Id, removed,
+                                affectedPower: powerId);
                     }
                     state.EndTurnStage = EndTurnResolutionStage.EnemyOwnerTurnStartPowers;
                     state.CaptureEnemyTurnParticipants();

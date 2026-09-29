@@ -1731,8 +1731,12 @@ public sealed class ContentRegistry
                 break;
             case AfflictCardsEffect afflict when !_afflictions.ContainsKey(afflict.Affliction):
                 throw new InvalidOperationException($"{owner} applies unknown card affliction '{afflict.Affliction}'.");
+            case AfflictCardsEffect afflict when !IsSingleEffectTarget(afflict.Target):
+                throw new InvalidOperationException($"{owner} applies an affliction to an invalid target.");
             case ClearAfflictionEffect clear when !_afflictions.ContainsKey(clear.Affliction):
                 throw new InvalidOperationException($"{owner} clears unknown card affliction '{clear.Affliction}'.");
+            case ClearAfflictionEffect clear when !IsSingleEffectTarget(clear.Target):
+                throw new InvalidOperationException($"{owner} clears an affliction from an invalid target.");
             case AfflictCardsEffect { Type: { } afflictType } when !Enum.IsDefined(afflictType):
             case ClearAfflictionEffect { Type: { } clearType } when !Enum.IsDefined(clearType):
                 throw new InvalidOperationException($"{owner} uses an invalid card type for an affliction effect.");

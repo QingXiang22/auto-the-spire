@@ -116,8 +116,10 @@ public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSele
     DamageProperties Properties = DamageProperties.None) : EffectNode;
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
-public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null) : EffectNode;
-public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null) : EffectNode;
+public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null,
+    TargetSelector Target = TargetSelector.Self, bool OnlyIfUnafflicted = false) : EffectNode;
+public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null,
+    TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
     DamageProperties? Properties = null, TargetSelector Target = TargetSelector.Self,
     ContentId? OnlyEnemy = null) : EffectNode;
@@ -242,7 +244,8 @@ public sealed record PowerEventSubscription(string EventType, GameEventActor Own
     bool DeferUntilOwnerTurnEnd = false, PowerEventAccumulationMode Accumulation = PowerEventAccumulationMode.PowerStacks,
     bool? CausedByEtherealExhaustion = null, ContentId? AffectedPower = null, ContentId? CardTag = null,
     PowerEventPhase Phase = PowerEventPhase.Normal);
-internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect, string? EventCardInstanceId = null) : EffectNode;
+internal sealed record PowerEventEffect(ContentId Power, EffectNode Effect, string? EventCardInstanceId = null,
+    bool AllowRemovedPower = false) : EffectNode;
 public enum CardPile { Draw, Hand, Discard, Exhaust, Play }
 public enum CardPilePosition { Top, Bottom, Random }
 public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Attack }
@@ -473,7 +476,7 @@ internal static class EffectExecutor
                     CombatCardPlay.QueueAutomatic(session, autoCard.Card, autoCard.ForceExhaust);
                     break;
                 case PowerEventEffect powerEvent:
-                    if (owner.PowerAmount(powerEvent.Power) > 0)
+                    if (powerEvent.AllowRemovedPower || owner.PowerAmount(powerEvent.Power) > 0)
                     {
                         var eventCard = powerEvent.EventCardInstanceId is { } eventCardId
                             ? state.FindCombatCard(eventCardId) : selectedCard;
@@ -606,10 +609,12 @@ internal static class EffectExecutor
                     state.Heal(session, owner, ResolveSingleTarget(state, owner, target, heal.Target), heal.Amount);
                     break;
                 case AfflictCardsEffect afflict:
-                    ChangeCardAffliction(session, owner, afflict.Affliction, afflict.Type, apply: true);
+                    ChangeCardAffliction(session, ResolveSingleTarget(state, owner, target, afflict.Target),
+                        afflict.Affliction, afflict.Type, apply: true, afflict.OnlyIfUnafflicted);
                     break;
                 case ClearAfflictionEffect clear:
-                    ChangeCardAffliction(session, owner, clear.Affliction, clear.Type, apply: false);
+                    ChangeCardAffliction(session, ResolveSingleTarget(state, owner, target, clear.Target),
+                        clear.Affliction, clear.Type, apply: false);
                     break;
                 case GainBlockEffect block:
                     var blockAmount = block.PerPowerStack is { } perPowerStack
@@ -1355,7 +1360,7 @@ internal static class EffectExecutor
     }
 
     private static void ChangeCardAffliction(GameSession session, EntityState owner, ContentId afflictionId,
-        CardType? type, bool apply)
+        CardType? type, bool apply, bool onlyIfUnafflicted = false)
     {
         var state = session.State;
         if (owner != state.Player.Creature)
@@ -1365,6 +1370,7 @@ internal static class EffectExecutor
         foreach (var card in state.GetPile(pile).ToArray())
         {
             if (type is { } cardType && state.Definition.Cards[card.CardId].Type != cardType) continue;
+            if (apply && onlyIfUnafflicted && card.Afflictions.Count > 0) continue;
             var hasAffliction = card.Afflictions.Contains(afflictionId);
             if (hasAffliction == apply) continue;
             var afflictions = apply
