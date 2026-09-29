@@ -2477,8 +2477,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(32, content.Powers.Count);
-        Assert.Equal(71, content.Enemies.Count);
-        Assert.Equal(71, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(72, content.Enemies.Count);
+        Assert.Equal(72, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2592,6 +2592,45 @@ public sealed class CombatSliceTests
         Assert.Equal(10, toughDeadly.Observe(variantSession).IntentDamage);
         toughDeadly.Step(variantSession, new EndTurnAction());
         Assert.Equal(46, variantSession.State.Player.Creature.Hp);
+    }
+
+    public void MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers()
+    {
+        var normal = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = normal.Start(1140, "ironclad", 56, 65, [], BaseSpireIds.MysteriousKnight.ToString());
+        Assert.Equal(101, normal.Observe(session).EnemyHp);
+        Assert.Equal(6, session.State.Enemy.PowerAmount(BaseSpireIds.Strength));
+        Assert.Equal(6, session.State.Enemy.PowerAmount(ContentId.Parse("base-spire:plating-power")));
+        Assert.Equal(IntentKind.Attack, normal.Observe(session).Intent);
+        Assert.Equal(21, normal.Observe(session).IntentDamage);
+
+        normal.Step(session, new EndTurnAction());
+        Assert.Equal(35, session.State.Player.Creature.Hp);
+        Assert.True(normal.Observe(session).Intent is IntentKind.Attack or IntentKind.Buff);
+
+        GameSession? flailSession = null;
+        for (uint seed = 0; seed < 128; seed++)
+        {
+            var candidate = normal.Start(seed, "ironclad", 56, 65, [],
+                BaseSpireIds.MysteriousKnight.ToString());
+            normal.Step(candidate, new EndTurnAction());
+            if (normal.Observe(candidate).IntentDamage != 30) continue;
+            flailSession = candidate;
+            break;
+        }
+        Assert.True(flailSession is not null);
+        normal.Step(flailSession!, new EndTurnAction());
+        Assert.Equal(5, flailSession!.State.Player.Creature.Hp);
+
+        var toughDeadly = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true,
+            toughEnemies: true)));
+        var variantSession = toughDeadly.Start(1141, "ironclad", 56, 65, [],
+            BaseSpireIds.MysteriousKnight.ToString());
+        Assert.Equal(108, toughDeadly.Observe(variantSession).EnemyHp);
+        Assert.Equal(6, variantSession.State.Enemy.PowerAmount(ContentId.Parse("base-spire:plating-power")));
+        Assert.Equal(23, toughDeadly.Observe(variantSession).IntentDamage);
+        toughDeadly.Step(variantSession, new EndTurnAction());
+        Assert.Equal(33, variantSession.State.Player.Creature.Hp);
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -6325,6 +6364,7 @@ internal static class Program
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies();
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
+        tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
