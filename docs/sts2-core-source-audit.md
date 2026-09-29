@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；85 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、逃跑与延迟复活的独立生命周期、定向卡牌 Affliction 生命周期、临时卡牌降级及多施加者 Power 清理、Minion 阻止触发 Fatal 卡牌奖励、卡牌实例附魔和地图访问战利品标志已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；86 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀、逃跑与延迟复活的独立生命周期、定向卡牌 Affliction 生命周期、临时卡牌降级及多施加者 Power 清理、Minion 阻止触发 Fatal 卡牌奖励、卡牌实例附魔和地图访问战利品标志已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 [`SpectralKnight.cs`](../sts2/src/Core/Models/Monsters/SpectralKnight.cs) 与 [`HexPower.cs`](../sts2/src/Core/Models/Powers/HexPower.cs) 已按源码类名迁入 `enemies-glory.spire`。Hex 给玩家所有当前战斗卡牌施加 Hexed，Hexed 仅在原卡牌尚未受其他 Affliction 影响时添加 Ethereal；新进入战斗的卡牌也会继承 Hexed。施加者死亡后 Hex 移除，并由 `power_removed` 事件清理 Hexed，同时仅移除由该 Affliction 添加的关键词。运行测试覆盖当前卡牌、新入战卡牌、击杀清理和原有 Ethereal 保留边界。Power 移除事件携带受影响 Power ID，并在 Power 已从实体状态删除后仍可派发给该 Power 声明的事件处理器。
 
@@ -100,6 +100,8 @@
 [`LouseProgenitor.cs`](../sts2/src/Core/Models/Monsters/LouseProgenitor.cs) HP 为 134–136（Tough 138–141），开场携带一次性 Curl Up Power（14/Tough 18），第一次被玩家攻击牌命中并完成结算后获得对应格挡；无伤害牌不会消耗该 Power。行动循环为 Web（9/10 并施加 2 层 Frail）、Curl and Grow（获得 14/18 格挡与 5 点力量）、Pounce（14/16）。通用 `damage` 事件过滤和 `afterCardPlayed` Power trigger 表达了受击记录与结算后格挡；完全格挡的攻击牌也会触发，Curl/Uncurl 动画状态不进入模拟。
 
 [`TheObscura.cs`](../sts2/src/Core/Models/Monsters/TheObscura.cs)、[`Parafright.cs`](../sts2/src/Core/Models/Monsters/Parafright.cs) 与 [`IllusionPower.cs`](../sts2/src/Core/Models/Powers/IllusionPower.cs) 已迁入 `.spire`。The Obscura 123 HP（Tough 129），开场在固定 obscura 槽召唤 Parafright 到 illusion 槽；之后 Piercing Gaze 10/11、Sail 给全体队友 3 力量、Hardening Strike 6/7 并获得 6/7 格挡，三招随机且不连续重复。Parafright 21 HP、Slam 16/17，持有 Illusion 与 Minion；死亡后通过通用 `queueRevival(intent=Heal)` 暂时保持死亡/不可选中状态，在下一敌方行动阶段满血复活并消耗该行动。待复活敌人保留阵位并阻止战斗提前结束，复活后的常规意图不会额外前进。其 Power 使用 `removePowers(debuffsOnly=true, includeTemporary=false)` 清除永久 Debuff，保留 Buff 与临时 Debuff；测试覆盖这些清理边界，以及召唤、Minion、不可选中、延迟复活、intent、阵位/战斗终结边界和复活后再死亡。
+
+[`FakeMerchantMonster.cs`](../sts2/src/Core/Models/Monsters/FakeMerchantMonster.cs) 的 165 HP（Tough 175）行动由 `.spire` action graph 表达：开场 Swipe 13/15，之后等权选择 Swipe、Spew Coins（2×8）、Throw Relic（9/10 并施加 1 Frail）或权重为 3 的 Enrage（获得 2 Strength），并禁止连续重复；Throw Relic 后的候选集不含 Enrage。随机对白和视觉状态不进入玩法模型。该定义目前支持直接战斗启动，尚未添加事件遭遇或地图入口。
 
 [`CubexConstruct.cs`](../sts2/src/Core/Models/Monsters/CubexConstruct.cs) HP 为 65（Tough 70），入场带 13 格挡和 1 层 Artifact；循环 Charge Up（2 力量）、两次 Repeater Blast（7/8 伤害并各加 2 力量）、双段 Expel Blast（每段 5/6）。该行为只组合起始状态、序列/重复效果和显式图边，没有 Cubex 专属运行时规则。
 

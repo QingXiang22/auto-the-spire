@@ -960,6 +960,54 @@ public sealed class CombatSliceTests
         Assert.False(session.State.IsTerminal);
     }
 
+    public void FakeMerchantUsesWeightedNoRepeatActionsAndRestrictsItsPostThrowChoices()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(1164, "ironclad", 2000, 2000, [],
+            BaseSpireIds.FakeMerchant.ToString());
+        var enemy = session.State.Enemies.Single();
+        Assert.Equal(165, enemy.Creature.Hp);
+        Assert.Equal(13, environment.Observe(session).IntentDamage);
+
+        var swipe = ContentId.Parse("base-spire:fake-merchant-swipe");
+        var spew = ContentId.Parse("base-spire:fake-merchant-spew-coins");
+        var throwRelic = ContentId.Parse("base-spire:fake-merchant-throw-relic");
+        var enrage = ContentId.Parse("base-spire:fake-merchant-enrage");
+        var seen = new HashSet<ContentId> { swipe };
+        var previous = swipe;
+        for (var turn = 0; turn < 30; turn++)
+        {
+            var damageEventCount = session.State.Events.Count(gameEvent => gameEvent.Type == "damage");
+            environment.Step(session, new EndTurnAction());
+            var damageEvents = session.State.Events.Where(gameEvent => gameEvent.Type == "damage")
+                .Skip(damageEventCount).ToArray();
+            if (previous == spew)
+            {
+                Assert.Equal(8, damageEvents.Length);
+                Assert.True(damageEvents.All(gameEvent => gameEvent.Amount >= 2));
+            }
+            if (previous == throwRelic)
+                Assert.Equal(1, session.State.Player.Creature.PowerAmount(ContentId.Parse("base-spire:frail")));
+            var next = enemy.Definition.Actions[enemy.ActionIndex].Id;
+            Assert.True(next != previous);
+            if (previous == throwRelic)
+                Assert.True(next != enrage);
+            seen.Add(next);
+            previous = next;
+        }
+        Assert.True(seen.Contains(spew));
+        Assert.True(seen.Contains(throwRelic));
+        Assert.True(seen.Contains(enrage));
+
+        var toughDeadly = new CombatEnvironment(Build(new BaseSpirePackage(
+            toughEnemies: true, deadlyEnemies: true)));
+        var upgradedProfile = toughDeadly.Start(1165, "ironclad", 2000, 2000, [],
+            BaseSpireIds.FakeMerchant.ToString());
+        Assert.Equal(175, upgradedProfile.State.Enemy.Hp);
+        Assert.Equal(15, toughDeadly.Observe(upgradedProfile).IntentDamage);
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -2700,8 +2748,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(46, content.Powers.Count);
-        Assert.Equal(85, content.Enemies.Count);
-        Assert.Equal(85, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(86, content.Enemies.Count);
+        Assert.Equal(86, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -7067,6 +7115,7 @@ internal static class Program
         tests.BowlbugsNormalKeepsRockAndSelectsTwoDistinctWorkers();
         tests.LouseProgenitorCurlUpWaitsForItsFirstDamagingCard();
         tests.TheObscuraSummonsParafrightWhichRevivesAtItsNextAction();
+        tests.FakeMerchantUsesWeightedNoRepeatActionsAndRestrictsItsPostThrowChoices();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();

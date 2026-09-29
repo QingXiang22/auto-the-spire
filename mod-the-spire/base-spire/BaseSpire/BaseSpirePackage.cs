@@ -122,6 +122,7 @@ public static class BaseSpireIds
     public static readonly ContentId TheObscura = ContentId.Parse("base-spire:the-obscura");
     public static readonly ContentId Parafright = ContentId.Parse("base-spire:parafright");
     public static readonly ContentId IllusionPower = ContentId.Parse("base-spire:illusion-power");
+    public static readonly ContentId FakeMerchant = ContentId.Parse("base-spire:fake-merchant");
     public static readonly ContentId SurprisePower = ContentId.Parse("base-spire:surprise-power");
     public static readonly ContentId ThieveryPower = ContentId.Parse("base-spire:thievery-power");
     public static readonly ContentId HeistPower = ContentId.Parse("base-spire:heist-power");

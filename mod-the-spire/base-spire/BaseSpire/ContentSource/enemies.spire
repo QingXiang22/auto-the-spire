@@ -1143,6 +1143,33 @@ package base-spire {
     )
   }
 
+  enemy FakeMerchant {
+    hp = variants(default=range(165, 165), tough=range(175, 175))
+    moves = actions(
+      fakeMerchantSwipe = attack(variants(default=13, deadly=15), target=player),
+      fakeMerchantSpewCoins = repeat(8, attack(2, target=player)),
+      fakeMerchantThrowRelic = sequence(
+        attack(variants(default=9, deadly=10), target=player),
+        applyPower(Frail, 1, target=player)
+      ),
+      fakeMerchantEnrage = applyPower(Strength, 2, target=self)
+    )
+    behavior = graph(start=fakeMerchantSwipe, edges=[
+      edge(fakeMerchantSwipe, chooseWithLimits(repeat=preventImmediate,
+        candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
+        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, weight=3))),
+      edge(fakeMerchantSpewCoins, chooseWithLimits(repeat=preventImmediate,
+        candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
+        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, weight=3))),
+      edge(fakeMerchantEnrage, chooseWithLimits(repeat=preventImmediate,
+        candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
+        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, weight=3))),
+      edge(fakeMerchantThrowRelic, chooseWithLimits(repeat=preventImmediate,
+        candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
+        candidate(fakeMerchantThrowRelic)))
+    ])
+  }
+
 
 
 
