@@ -525,6 +525,15 @@ internal sealed class GameState
         Emit(session, "power", applier.Id, owner.Id, amount, affectedPower: power);
     }
 
+    internal void RegisterPowerApplier(EntityState owner, ContentId power, EntityState applier)
+    {
+        if (owner.PowerAmount(power) <= 0)
+            throw new InvalidOperationException($"Cannot register an applier for inactive Power '{power}'.");
+        if (!owner.MutablePowerAppliers.TryGetValue(power, out var appliers))
+            owner.MutablePowerAppliers.Add(power, appliers = []);
+        appliers.Add(applier.Id);
+    }
+
     internal void GainMaxHp(GameSession session, int amount)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(amount);

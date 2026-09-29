@@ -12,6 +12,9 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(KillEffect), "kill")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AfflictCardsEffect), "afflictCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ClearAfflictionEffect), "clearAffliction")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(TemporarilyDowngradeCardsEffect), "temporarilyDowngradeCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RestoreTemporarilyDowngradedCardsEffect), "restoreTemporarilyDowngradedCards")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RegisterPowerApplierEffect), "registerPowerApplier")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockEffect), "gainBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(GainBlockFromCurrentBlockEffect), "gainBlockFromCurrentBlock")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ApplyPowerEffect), "applyPower")]
@@ -119,6 +122,12 @@ public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : E
 public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null,
     TargetSelector Target = TargetSelector.Self, bool OnlyIfUnafflicted = false) : EffectNode;
 public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null,
+    TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record TemporarilyDowngradeCardsEffect(ContentId SourcePower,
+    TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record RestoreTemporarilyDowngradedCardsEffect(ContentId SourcePower,
+    TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record RegisterPowerApplierEffect(ContentId Power,
     TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record GainBlockEffect(int Amount, ContentId? PerPowerStack = null,
     DamageProperties? Properties = null, TargetSelector Target = TargetSelector.Self,
@@ -619,6 +628,27 @@ internal static class EffectExecutor
                 case ClearAfflictionEffect clear:
                     ChangeCardAffliction(session, ResolveSingleTarget(state, owner, target, clear.Target),
                         clear.Affliction, clear.Type, apply: false);
+                    break;
+                case TemporarilyDowngradeCardsEffect downgrade:
+                    var downgradeOwner = ResolveSingleTarget(state, owner, target, downgrade.Target);
+                    if (downgradeOwner != state.Player.Creature)
+                        throw new InvalidOperationException("Temporary card downgrades currently target the active player's cards.");
+                    foreach (var pile in GameState.CombatPiles)
+                    foreach (var card in state.GetPile(pile).Where(card => card.UpgradeLevel > 0).ToArray())
+                        CombatCardVariables.Downgrade(session, card, downgrade.SourcePower);
+                    break;
+                case RestoreTemporarilyDowngradedCardsEffect restoreDowngrade:
+                    var restoreOwner = ResolveSingleTarget(state, owner, target, restoreDowngrade.Target);
+                    if (restoreOwner != state.Player.Creature)
+                        throw new InvalidOperationException("Temporary card upgrades currently target the active player's cards.");
+                    foreach (var pile in GameState.CombatPiles)
+                    foreach (var card in state.GetPile(pile).Where(card => card.TemporaryUpgradeChanges
+                        .Any(change => change.SourcePower == restoreDowngrade.SourcePower)).ToArray())
+                        CombatCardVariables.RestoreTemporaryDowngrade(session, card, restoreDowngrade.SourcePower);
+                    break;
+                case RegisterPowerApplierEffect registerApplier:
+                    state.RegisterPowerApplier(ResolveSingleTarget(state, owner, target, registerApplier.Target),
+                        registerApplier.Power, owner);
                     break;
                 case GainBlockEffect block:
                     var blockAmount = block.PerPowerStack is { } perPowerStack

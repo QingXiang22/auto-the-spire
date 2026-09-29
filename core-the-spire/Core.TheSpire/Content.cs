@@ -307,7 +307,8 @@ public sealed record CardInstance
     public CardInstance(string instanceId, ContentId cardId, int upgradeLevel = 0,
         IReadOnlyList<CardCostModifier>? costModifiers = null, bool isClone = false,
         IReadOnlyList<CardVariableOffset>? variableOffsets = null,
-        IReadOnlyList<ContentId>? afflictions = null, CardKeywords afflictionKeywords = CardKeywords.None)
+        IReadOnlyList<ContentId>? afflictions = null, CardKeywords afflictionKeywords = CardKeywords.None,
+        IReadOnlyList<TemporaryCardUpgradeChange>? temporaryUpgradeChanges = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         cardId.Validate();
@@ -333,6 +334,16 @@ public sealed record CardInstance
             throw new ArgumentException("A card instance cannot contain duplicate afflictions.", nameof(afflictions));
         Afflictions = afflictionIds.Length == 0 ? Array.Empty<ContentId>() : Array.AsReadOnly(afflictionIds);
         AfflictionKeywords = afflictionKeywords;
+        var upgradeChanges = temporaryUpgradeChanges?.ToArray() ?? [];
+        foreach (var change in upgradeChanges)
+        {
+            change.SourcePower.Validate();
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(change.RestoreLevels);
+        }
+        if (upgradeChanges.Select(change => change.SourcePower).Distinct().Count() != upgradeChanges.Length)
+            throw new ArgumentException("A card cannot contain duplicate temporary upgrade sources.", nameof(temporaryUpgradeChanges));
+        TemporaryUpgradeChanges = upgradeChanges.Length == 0
+            ? Array.Empty<TemporaryCardUpgradeChange>() : Array.AsReadOnly(upgradeChanges);
     }
 
     public string InstanceId { get; }
@@ -343,16 +354,25 @@ public sealed record CardInstance
     public IReadOnlyList<CardVariableOffset> VariableOffsets { get; }
     public IReadOnlyList<ContentId> Afflictions { get; }
     public CardKeywords AfflictionKeywords { get; }
+    public IReadOnlyList<TemporaryCardUpgradeChange> TemporaryUpgradeChanges { get; }
 
     internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone,
-        VariableOffsets, Afflictions, AfflictionKeywords);
+        VariableOffsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges);
     internal CardInstance WithCostModifiers(IReadOnlyList<CardCostModifier> modifiers) =>
-        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets, Afflictions, AfflictionKeywords);
+        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges);
     internal CardInstance WithVariableOffsets(IReadOnlyList<CardVariableOffset> offsets) =>
-        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets, Afflictions, AfflictionKeywords);
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges);
     internal CardInstance WithAfflictions(IReadOnlyList<ContentId> afflictions, CardKeywords keywords) =>
-        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, afflictions, keywords);
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, afflictions, keywords, TemporaryUpgradeChanges);
+    internal CardInstance WithTemporaryUpgradeChange(TemporaryCardUpgradeChange change) =>
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, Afflictions,
+            AfflictionKeywords, TemporaryUpgradeChanges.Append(change).ToArray());
+    internal CardInstance WithoutTemporaryUpgradeChange(ContentId sourcePower) =>
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, Afflictions,
+            AfflictionKeywords, TemporaryUpgradeChanges.Where(change => change.SourcePower != sourcePower).ToArray());
 }
+
+public sealed record TemporaryCardUpgradeChange(ContentId SourcePower, int RestoreLevels);
 
 public sealed class CardPoolDefinition
 {
@@ -1736,6 +1756,21 @@ public sealed class ContentRegistry
                 if (!IsSingleEffectTarget(heal.Target))
                     throw new InvalidOperationException($"{owner} has an invalid heal target.");
                 ArgumentOutOfRangeException.ThrowIfNegative(heal.Amount);
+                break;
+            case TemporarilyDowngradeCardsEffect downgrade:
+                if (!_powers.TryGetValue(downgrade.SourcePower, out var downgradePower)
+                    || !downgradePower.RemoveWhenApplierDies || !IsSingleEffectTarget(downgrade.Target))
+                    throw new InvalidOperationException($"{owner} has an invalid temporary card downgrade source or target.");
+                break;
+            case RestoreTemporarilyDowngradedCardsEffect restore:
+                if (!_powers.TryGetValue(restore.SourcePower, out var restorePower)
+                    || !restorePower.RemoveWhenApplierDies || !IsSingleEffectTarget(restore.Target))
+                    throw new InvalidOperationException($"{owner} has an invalid temporary card restore source or target.");
+                break;
+            case RegisterPowerApplierEffect register:
+                if (!_powers.TryGetValue(register.Power, out var power)
+                    || !power.RemoveWhenApplierDies || !IsSingleEffectTarget(register.Target))
+                    throw new InvalidOperationException($"{owner} registers an applier for a Power that does not track living sources or has an invalid target.");
                 break;
             case AfflictCardsEffect afflict when !_afflictions.ContainsKey(afflict.Affliction):
                 throw new InvalidOperationException($"{owner} applies unknown card affliction '{afflict.Affliction}'.");

@@ -322,6 +322,18 @@ public static class SpireCombatDslCompiler
                 case "kill":
                     CheckShape(call, 0, 0, "target");
                     return new KillEffect(OptionalTarget(call, "target", TargetSelector.Self));
+                case "temporarilyDowngradeCards":
+                    CheckShape(call, 1, 1, "target");
+                    return new TemporarilyDowngradeCardsEffect(ReferenceId(Argument(call, 0)),
+                        OptionalTarget(call, "target", TargetSelector.Self));
+                case "restoreTemporarilyDowngradedCards":
+                    CheckShape(call, 1, 1, "target");
+                    return new RestoreTemporarilyDowngradedCardsEffect(ReferenceId(Argument(call, 0)),
+                        OptionalTarget(call, "target", TargetSelector.Self));
+                case "registerPowerApplier":
+                    CheckShape(call, 1, 1, "target");
+                    return new RegisterPowerApplierEffect(ReferenceId(Argument(call, 0)),
+                        OptionalTarget(call, "target", TargetSelector.Self));
                 case "afflictCards":
                     CheckShape(call, 1, 1, "type", "target", "onlyIfUnafflicted");
                     return new AfflictCardsEffect(ReferenceId(Argument(call, 0)),
