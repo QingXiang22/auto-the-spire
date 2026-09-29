@@ -11,6 +11,9 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(HealEffect), "heal")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(KillEffect), "kill")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(EscapeEffect), "escape")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(StealGoldEffect), "stealGold")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AddGoldRewardEffect), "addGoldReward")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(SetGoldRewardPercentEffect), "setGoldRewardPercent")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AfflictCardsEffect), "afflictCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ClearAfflictionEffect), "clearAffliction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TemporarilyDowngradeCardsEffect), "temporarilyDowngradeCards")]
@@ -121,6 +124,11 @@ public sealed record LoseHpEffect(int Amount, TargetSelector Target = TargetSele
 public sealed record HealEffect(int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record KillEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record EscapeEffect(TargetSelector Target = TargetSelector.Self) : EffectNode;
+public sealed record StealGoldEffect(int Amount, ContentId Power, ContentId Variable,
+    TargetSelector Target = TargetSelector.FirstEnemy) : EffectNode;
+public sealed record AddGoldRewardEffect(int BaseAmount, int AmountPerCount,
+    CombatCountSource Count) : EffectNode;
+public sealed record SetGoldRewardPercentEffect(int Percent) : EffectNode;
 public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null,
     TargetSelector Target = TargetSelector.Self, bool OnlyIfUnafflicted = false) : EffectNode;
 public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null,
@@ -138,7 +146,7 @@ public sealed record GainBlockFromCurrentBlockEffect(int Multiplier = 1,
     TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyPowerEffect(ContentId Power, int Amount, TargetSelector Target = TargetSelector.Self) : EffectNode;
 public sealed record ApplyScaledPowerEffect(ContentId Power, int BaseAmount, int AmountPerCount,
-    CombatCountSource Count, TargetSelector Target = TargetSelector.Self) : EffectNode;
+    CombatCountSource Count, TargetSelector Target = TargetSelector.Self, ContentId? OnlyEnemy = null) : EffectNode;
 public sealed record DrawCardsEffect(int Amount, ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
 public sealed record DrawUntilCardTypeEffect(CardType ContinueWhileType) : EffectNode;
 internal sealed record DrawUntilContinuationEffect(CardType ContinueWhileType, CardType LastDrawnType) : EffectNode;
@@ -702,9 +710,33 @@ internal static class EffectExecutor
                 case ApplyScaledPowerEffect scaledPower:
                     var powerAmount = ScaledAmount(state, owner, target, scaledPower.BaseAmount,
                         scaledPower.AmountPerCount, scaledPower.Count, counts, selectedCard);
-                    if (powerAmount != 0)
-                        state.ApplyPower(session, ResolveSingleTarget(state, owner, target, scaledPower.Target),
-                            scaledPower.Power, powerAmount, owner);
+                    foreach (var recipient in ResolveMultipleTargets(state, owner, target, scaledPower.Target))
+                    {
+                        if (scaledPower.OnlyEnemy is { } onlyEnemy && !state.Enemies.Any(enemy =>
+                            enemy.IsActive && enemy.Creature == recipient && enemy.Definition.Id == onlyEnemy)) continue;
+                        if (powerAmount != 0)
+                            state.ApplyPower(session, recipient, scaledPower.Power, powerAmount, owner);
+                    }
+                    break;
+                case StealGoldEffect stealGold:
+                    var goldTarget = ResolveSingleTarget(state, owner, target, stealGold.Target);
+                    if (goldTarget != state.Player.Creature)
+                        throw new InvalidOperationException("Gold theft currently targets the active player.");
+                    var stolen = session.RunOwner?.State.LoseGold(stealGold.Amount) ?? 0;
+                    if (stolen > 0)
+                    {
+                        owner.ModifyPowerVariable(stealGold.Power, stealGold.Variable, stolen);
+                        state.Emit(session, "gold_stolen", owner.Id, goldTarget.Id, stolen);
+                    }
+                    break;
+                case AddGoldRewardEffect addGoldReward:
+                    var rewardAmount = ScaledAmount(state, owner, target, addGoldReward.BaseAmount,
+                        addGoldReward.AmountPerCount, addGoldReward.Count, counts, selectedCard);
+                    if (rewardAmount > 0) session.RunOwner?.State.AddCombatGoldReward(rewardAmount);
+                    break;
+                case SetGoldRewardPercentEffect setGoldReward:
+                    state.GoldRewardPercent = setGoldReward.Percent;
+                    state.Emit(session, "gold_reward_percent", owner.Id, owner.Id, setGoldReward.Percent);
                     break;
                 case DrawCardsEffect draw:
                     var drawAmount = draw.CalculatedAmount is { } calculatedDraw

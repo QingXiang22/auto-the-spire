@@ -1,4 +1,24 @@
 package base-spire {
+  power ThieveryPower {
+    variables = [variable(GoldStolen, 0)]
+  }
+
+  power HeistPower {
+    trigger = afterOwnerDeath
+    effect = addGoldReward(0, 1, count=targetPowerAmount(HeistPower, target=self))
+  }
+
+  power SurprisePower {
+    trigger = afterOwnerDeath
+    effect = sequence(
+      summonEnemy(SneakyGremlin),
+      summonEnemy(FatGremlin),
+      applyScaledPower(HeistPower, 0, 1,
+        count=powerVariable(ThieveryPower, GoldStolen, target=self),
+        target=otherAllies, onlyEnemy=FatGremlin)
+    )
+  }
+
   enemy SneakyGremlin {
     hp = variants(default=range(11, 15), tough=range(10, 14))
     moves = actions(
@@ -15,11 +35,37 @@ package base-spire {
     hp = variants(default=range(13, 17), tough=range(14, 18))
     moves = actions(
       fatGremlinWake = action(intent=Stun, effect=sequence()),
-      fatGremlinEscape = action(intent=Escape, effect=escape(target=self))
+      fatGremlinEscape = action(intent=Escape, effect=sequence(
+        if(hasPower(HeistPower, target=self), setGoldRewardPercent(0),
+          else=setGoldRewardPercent(50)),
+        escape(target=self)
+      ))
     )
     behavior = graph(start=fatGremlinWake, edges=[
       edge(fatGremlinWake, fatGremlinEscape),
       edge(fatGremlinEscape, fatGremlinEscape)
     ])
+  }
+
+  enemy GremlinMerc {
+    hp = variants(default=range(47, 49), tough=range(51, 53))
+    startingPowers = [power(SurprisePower, 1), power(ThieveryPower, 20)]
+    moves = actions(
+      gremlinMercGimme = sequence(
+        repeat(2, attack(variants(default=7, tough=8), target=player)),
+        stealGold(20, ThieveryPower, GoldStolen, target=player)
+      ),
+      gremlinMercDoubleSmash = sequence(
+        repeat(2, attack(variants(default=6, tough=7), target=player)),
+        stealGold(20, ThieveryPower, GoldStolen, target=player),
+        applyPower(Weak, 2, target=player)
+      ),
+      gremlinMercHehe = sequence(
+        attack(variants(default=8, tough=9), target=player),
+        stealGold(20, ThieveryPower, GoldStolen, target=player),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = cycle(gremlinMercGimme, gremlinMercDoubleSmash, gremlinMercHehe)
   }
 }

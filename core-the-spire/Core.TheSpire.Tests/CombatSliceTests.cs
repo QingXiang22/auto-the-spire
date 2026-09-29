@@ -2486,9 +2486,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(38, content.Powers.Count);
-        Assert.Equal(81, content.Enemies.Count);
-        Assert.Equal(81, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(41, content.Powers.Count);
+        Assert.Equal(82, content.Enemies.Count);
+        Assert.Equal(82, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2625,6 +2625,90 @@ public sealed class CombatSliceTests
         Assert.True(environment.Observe(session).Enemies.Single().IsEscaped);
         Assert.True(session.State.Events.Any(gameEvent => gameEvent.Type == "enemy_escaped"));
         Assert.False(session.State.Events.Any(gameEvent => gameEvent.Type is "enemy_death" or "ally_death"));
+    }
+
+    public void GremlinMercTransfersStolenGoldAndAppliesSourceEscapeRewardRules()
+    {
+        static (RunEnvironment RunEnvironment, RunSession Run, CombatEnvironment CombatEnvironment,
+            GameSession Combat) Start()
+        {
+            var definition = Build(new BaseSpirePackage());
+            var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+            var run = runEnvironment.Start(20260927);
+            run.State.RoomStack.Clear();
+            run.State.RoomStack.Add(new RunRoomFrame(RunRoomType.Monster, null, false,
+                null, null, null, [], []));
+            run.State.Phase = RunPhase.ResolveRoom;
+            var combatEnvironment = new CombatEnvironment(definition);
+            var combat = combatEnvironment.StartEncounterForRun(run, BaseSpireIds.GremlinMercNormal);
+            return (runEnvironment, run, combatEnvironment, combat);
+        }
+
+        static void Kill(GameSession combat, EntityState enemy)
+        {
+            EffectExecutor.Execute(combat, combat.State.Player.Creature,
+                new AttackEffect(2000, TargetSelector.SelectedTarget), enemy);
+            EffectExecutor.Resume(combat);
+        }
+
+        var (runEnvironment, run, combatEnvironment, combat) = Start();
+        var startingHp = combat.State.Player.Creature.Hp;
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(79, run.State.Gold);
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "gold_stolen"
+            && gameEvent.Amount == 20);
+        Assert.Equal(startingHp - 14, combat.State.Player.Creature.Hp);
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(59, run.State.Gold);
+        Assert.Equal(startingHp - 26, combat.State.Player.Creature.Hp);
+        Assert.Equal(2, combat.State.Player.Creature.PowerAmount(BaseSpireIds.Weak));
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(39, run.State.Gold);
+        Assert.Equal(startingHp - 34, combat.State.Player.Creature.Hp);
+
+        var merc = combat.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.GremlinMerc);
+        Kill(combat, merc.Creature);
+        var fat = combat.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.FatGremlin);
+        var sneaky = combat.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.SneakyGremlin);
+        Assert.Equal(60, fat.Creature.PowerAmount(BaseSpireIds.HeistPower));
+
+        Kill(combat, fat.Creature);
+        Assert.Equal(39, run.State.Gold);
+        Assert.Equal(60, run.State.RoomStack[^1].Rewards.Single(reward => reward.Id.StartsWith(
+            "combat-extra-gold-", StringComparison.Ordinal)).Amount);
+        Kill(combat, sneaky.Creature);
+        Assert.True(combat.State.IsTerminal);
+        runEnvironment.CompleteCombat(run, combat);
+        Assert.Contains(run.State.RoomStack[^1].Rewards, reward => reward.Kind == RunRewardKind.Gold
+            && reward.Amount == 60);
+
+        var (escapeRunEnvironment, escapeRun, escapeCombatEnvironment, escapeCombat) = Start();
+        var escapeMerc = escapeCombat.State.Enemy;
+        Kill(escapeCombat, escapeMerc);
+        escapeCombatEnvironment.Step(escapeCombat, new EndTurnAction());
+        escapeCombatEnvironment.Step(escapeCombat, new EndTurnAction());
+        var escapedFat = escapeCombat.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.FatGremlin);
+        Assert.True(escapedFat.IsEscaped);
+        var escapeSneaky = escapeCombat.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.SneakyGremlin);
+        Kill(escapeCombat, escapeSneaky.Creature);
+        var halfReward = escapeRunEnvironment.CompleteCombat(escapeRun, escapeCombat);
+        Assert.Contains(halfReward.RoomStack[^1].Rewards,
+            reward => reward.Kind == RunRewardKind.Gold && reward.Amount is >= 5 and <= 10);
+
+        var (stolenEscapeRunEnvironment, stolenEscapeRun, stolenEscapeCombatEnvironment,
+            stolenEscapeCombat) = Start();
+        stolenEscapeCombatEnvironment.Step(stolenEscapeCombat, new EndTurnAction());
+        Kill(stolenEscapeCombat, stolenEscapeCombat.State.Enemy);
+        stolenEscapeCombatEnvironment.Step(stolenEscapeCombat, new EndTurnAction());
+        stolenEscapeCombatEnvironment.Step(stolenEscapeCombat, new EndTurnAction());
+        var stolenEscapedFat = stolenEscapeCombat.State.Enemies.Single(
+            enemy => enemy.Definition.Id == BaseSpireIds.FatGremlin);
+        Assert.True(stolenEscapedFat.IsEscaped);
+        var stolenEscapeSneaky = stolenEscapeCombat.State.Enemies.Single(
+            enemy => enemy.Definition.Id == BaseSpireIds.SneakyGremlin);
+        Kill(stolenEscapeCombat, stolenEscapeSneaky.Creature);
+        var noGoldReward = stolenEscapeRunEnvironment.CompleteCombat(stolenEscapeRun, stolenEscapeCombat);
+        Assert.False(noGoldReward.RoomStack[^1].Rewards.Any(reward => reward.Kind == RunRewardKind.Gold));
     }
 
     public void MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers()
@@ -6688,6 +6772,7 @@ internal static class Program
         tests.SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies();
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
         tests.FatGremlinEscapesWithoutBeingTreatedAsDead();
+        tests.GremlinMercTransfersStolenGoldAndAppliesSourceEscapeRewardRules();
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();
