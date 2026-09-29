@@ -1,4 +1,23 @@
 package base-spire {
+  power EscapeArtistPower {
+    trigger = afterOwnerTurnEnd
+    effect = if(powerAmountAtLeast(EscapeArtistPower, 2), decrementPower(EscapeArtistPower))
+  }
+
+  power FlutterPower {
+    incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered])]
+    events = [event(type=damage, owner=target, require=[move], exclude=[unpowered],
+      ownerTurnOnly=false, effect=sequence(
+        decrementPower(FlutterPower),
+        if(powerAmountAtLeast(FlutterPower, 1), sequence(), else=stun(target=self))
+      ))]
+  }
+
+  power SwipePower {
+    trigger = afterOwnerDeath
+    effect = returnHeldRunCardReward(SwipePower, sourceEncounter=ThievingHopperWeak)
+  }
+
   power ThieveryPower {
     variables = [variable(GoldStolen, 0)]
   }
@@ -67,5 +86,32 @@ package base-spire {
       )
     )
     behavior = cycle(gremlinMercGimme, gremlinMercDoubleSmash, gremlinMercHehe)
+  }
+
+  enemy ThievingHopper {
+    hp = variants(default=range(79, 79), tough=range(84, 84))
+    startingPowers = [power(EscapeArtistPower, 5)]
+    moves = actions(
+      thievingHopperThievery = sequence(
+        stealRunCard(SwipePower, from=[draw, discard], priorities=[
+          priority(rarities=[uncommon], excludeEnchantments=[Imbued]),
+          priority(rarities=[common, rare, event], excludeEnchantments=[Imbued]),
+          priority(rarities=[basic, quest], excludeEnchantments=[Imbued]),
+          priority(rarities=[ancient], requireEnchantments=[Imbued], matchAny=true)
+        ]),
+        attack(variants(default=17, deadly=19), target=player)
+      ),
+      thievingHopperFlutter = applyPower(FlutterPower, 5, target=self),
+      thievingHopperHatTrick = attack(variants(default=21, deadly=23), target=player),
+      thievingHopperNab = attack(variants(default=14, deadly=16), target=player),
+      thievingHopperEscape = escape(target=self)
+    )
+    behavior = graph(start=thievingHopperThievery, edges=[
+      edge(thievingHopperThievery, thievingHopperFlutter),
+      edge(thievingHopperFlutter, thievingHopperHatTrick),
+      edge(thievingHopperHatTrick, thievingHopperNab),
+      edge(thievingHopperNab, thievingHopperEscape),
+      edge(thievingHopperEscape, thievingHopperEscape)
+    ])
   }
 }

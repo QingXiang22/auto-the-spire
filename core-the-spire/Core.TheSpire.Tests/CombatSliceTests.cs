@@ -2523,9 +2523,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(41, content.Powers.Count);
-        Assert.Equal(82, content.Enemies.Count);
-        Assert.Equal(82, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(44, content.Powers.Count);
+        Assert.Equal(83, content.Enemies.Count);
+        Assert.Equal(83, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2746,6 +2746,100 @@ public sealed class CombatSliceTests
         Kill(stolenEscapeCombat, stolenEscapeSneaky.Creature);
         var noGoldReward = stolenEscapeRunEnvironment.CompleteCombat(stolenEscapeRun, stolenEscapeCombat);
         Assert.False(noGoldReward.RoomStack[^1].Rewards.Any(reward => reward.Kind == RunRewardKind.Gold));
+    }
+
+    public void ThievingHopperStealsPriorityRunCardAndReturnsExactCardReward()
+    {
+        static (RunEnvironment RunEnvironment, RunSession Run, CombatEnvironment CombatEnvironment,
+            GameSession Combat, CardInstance[] Cards) Start(bool hideCardsInHand = false)
+        {
+            var definition = Build(new BaseSpirePackage());
+            var runEnvironment = new RunEnvironment(definition, BaseSpireIds.StandardRun, BaseSpireIds.Ironclad);
+            var run = runEnvironment.Start(20260930);
+            var cards = new[]
+            {
+                new CardInstance("hopper-basic", BaseSpireIds.StrikeIronclad),
+                new CardInstance("hopper-common", BaseSpireIds.PommelStrike),
+                new CardInstance("hopper-uncommon", BaseSpireIds.Uppercut, upgradeLevel: 1,
+                    enchantments: [ContentId.Parse("base-spire:imbued")])
+            };
+            run.State.Deck.Clear();
+            run.State.Deck.AddRange(cards);
+            run.State.RoomStack.Clear();
+            run.State.VisitHistory.Clear();
+            run.State.VisitHistory.Add(new RunMapVisitView(run.State.ActIndex, "hopper-test-point",
+                MapPointType.Monster, [RunRoomType.Monster]));
+            run.State.RoomStack.Add(new RunRoomFrame(RunRoomType.Monster, "hopper-test-point", false,
+                null, null, null, [], []));
+            run.State.Phase = RunPhase.ResolveRoom;
+            var combatEnvironment = new CombatEnvironment(definition);
+            var combat = combatEnvironment.StartEncounterForRun(run, BaseSpireIds.ThievingHopperWeak);
+            combat.State.Player.MutableHand.Clear();
+            combat.State.Player.MutableDrawPile.Clear();
+            combat.State.Player.MutableDiscardPile.Clear();
+            if (hideCardsInHand) combat.State.Player.MutableHand.AddRange(cards);
+            else combat.State.Player.MutableDrawPile.AddRange(cards);
+            return (runEnvironment, run, combatEnvironment, combat, cards);
+        }
+
+        var (runEnvironment, run, combatEnvironment, combat, cards) = Start();
+        var cardRandom = combat.Random.Get("combat-card-generation");
+        var callsBeforeTheft = cardRandom.Counter;
+        combatEnvironment.Step(combat, new EndTurnAction());
+        Assert.Equal(callsBeforeTheft + 1, cardRandom.Counter);
+        Assert.False(run.State.Deck.Any(card => card.InstanceId == "hopper-common"));
+        Assert.True(combat.State.Player.DrawPileInstances.Concat(combat.State.Player.DiscardPileInstances)
+            .All(card => card.InstanceId != "hopper-common"));
+        var hopper = combat.State.Enemies.Single();
+        Assert.Equal(BaseSpireIds.ThievingHopper, hopper.Definition.Id);
+        Assert.Equal(1, hopper.Creature.PowerAmount(BaseSpireIds.SwipePower));
+        Assert.Equal(cards[1], hopper.Creature.PowerCards(BaseSpireIds.SwipePower).Single());
+        Assert.Contains(combat.State.Events, gameEvent => gameEvent.Type == "run_card_stolen"
+            && gameEvent.Target == "hopper-common");
+        Assert.True(run.State.VisitHistory.Single().LootStolen);
+        Assert.False(run.State.VisitHistory.Single().LootReturned);
+
+        EffectExecutor.Execute(combat, combat.State.Player.Creature,
+            new AttackEffect(2000, TargetSelector.SelectedTarget), hopper.Creature);
+        EffectExecutor.Resume(combat);
+        Assert.True(combat.State.IsTerminal);
+        Assert.False(run.State.Deck.Any(card => card.InstanceId == "hopper-common"));
+        Assert.True(run.State.VisitHistory.Single().LootReturned);
+        var completed = runEnvironment.CompleteCombat(run, combat);
+        var specialCard = completed.RoomStack[^1].Rewards.Single(reward =>
+            reward.SourceEncounterId == BaseSpireIds.ThievingHopperWeak);
+        Assert.True(specialCard.CardOptions.SequenceEqual([cards[1]]));
+        Assert.True(runEnvironment.Step(run, new ClaimCardRewardAction(specialCard.Id, cards[1].InstanceId))
+            .DeckInstances.Any(card => card == cards[1]));
+        Assert.Equal(1, run.State.Deck.Count(card => card.InstanceId == "hopper-common"));
+
+        var (_, emptyRun, emptyCombatEnvironment, emptyCombat, _) = Start(hideCardsInHand: true);
+        var emptyCardRandom = emptyCombat.Random.Get("combat-card-generation");
+        var emptyCallsBefore = emptyCardRandom.Counter;
+        EffectExecutor.Execute(emptyCombat, emptyCombat.State.Enemies.Single().Creature,
+            new StealRunCardEffect(BaseSpireIds.SwipePower, [CardPile.Draw, CardPile.Discard],
+            [new RunCardSelectionPriority([CardRarity.Uncommon], [], [ContentId.Parse("base-spire:imbued")])]));
+        Assert.Equal(emptyCallsBefore, emptyCardRandom.Counter);
+        Assert.Equal(0, emptyCombat.State.Enemies.Single().Creature.PowerAmount(BaseSpireIds.SwipePower));
+        Assert.True(emptyRun.State.Deck.All(card => card.InstanceId.StartsWith("hopper-", StringComparison.Ordinal)));
+        var emptyHopper = emptyCombat.State.Enemies.Single();
+        var firstMove = emptyCombatEnvironment.Step(emptyCombat, new EndTurnAction());
+        Assert.Equal(63, firstMove.Observation.PlayerHp);
+        Assert.Equal(4, emptyHopper.Creature.PowerAmount(BaseSpireIds.EscapeArtistPower));
+        Assert.Equal(IntentKind.Buff, emptyCombatEnvironment.Observe(emptyCombat).Intent);
+        emptyCombatEnvironment.Step(emptyCombat, new EndTurnAction());
+        Assert.Equal(5, emptyHopper.Creature.PowerAmount(BaseSpireIds.FlutterPower));
+        Assert.Equal(21, emptyCombatEnvironment.Observe(emptyCombat).IntentDamage);
+        for (var hit = 0; hit < 5; hit++)
+        {
+            var previousHp = emptyHopper.Creature.Hp;
+            EffectExecutor.Execute(emptyCombat, emptyCombat.State.Player.Creature,
+                new AttackEffect(10, TargetSelector.SelectedTarget), emptyHopper.Creature);
+            Assert.Equal(previousHp - 5, emptyHopper.Creature.Hp);
+            Assert.Equal(4 - hit, emptyHopper.Creature.PowerAmount(BaseSpireIds.FlutterPower));
+        }
+        Assert.True(emptyHopper.SkipNextAction);
+        Assert.Equal(IntentKind.Stun, emptyCombatEnvironment.Observe(emptyCombat).Enemies.Single().Intent);
     }
 
     public void MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers()
@@ -6811,6 +6905,7 @@ internal static class Program
         tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
         tests.FatGremlinEscapesWithoutBeingTreatedAsDead();
         tests.GremlinMercTransfersStolenGoldAndAppliesSourceEscapeRewardRules();
+        tests.ThievingHopperStealsPriorityRunCardAndReturnsExactCardReward();
         tests.MysteriousKnightMatchesFlailKnightMovesAndAddsItsSourceStartingPowers();
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();

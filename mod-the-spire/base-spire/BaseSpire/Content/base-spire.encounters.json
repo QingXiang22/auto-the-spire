@@ -7,6 +7,13 @@
       "enemyIds": ["base-spire:gremlin-merc"]
     },
     {
+      "id": "base-spire:thieving-hopper-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "enemyIds": ["base-spire:thieving-hopper"],
+      "tags": ["base-spire:thieves"]
+    },
+    {
       "id": "base-spire:knights-elite",
       "roomType": "elite",
       "enemyIds": [

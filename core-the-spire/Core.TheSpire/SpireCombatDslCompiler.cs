@@ -207,6 +207,24 @@ public static class SpireCombatDslCompiler
                 case "setGoldRewardPercent":
                     CheckShape(call, 1, 1);
                     return new SetGoldRewardPercentEffect(Integer(Argument(call, 0)));
+                case "stealRunCard":
+                    CheckShape(call, 1, 1, "from", "priorities");
+                    var sourcePilesNode = RequiredArgument(call, "from");
+                    if (sourcePilesNode is not DslListNode sourcePiles || sourcePiles.Items.Count == 0)
+                        throw Error(sourcePilesNode.Location, "stealRunCard requires at least one source pile.");
+                    var sourcePileIds = sourcePiles.Items.Select(item => EnumValue<CardPile>(item)).ToArray();
+                    if (sourcePileIds.Any(pile => pile is not (CardPile.Draw or CardPile.Discard))
+                        || sourcePileIds.Distinct().Count() != sourcePileIds.Length)
+                        throw Error(sourcePiles.Location, "Run-card theft can search unique draw/discard piles only.");
+                    var priorityNode = RequiredArgument(call, "priorities");
+                    if (priorityNode is not DslListNode priorities || priorities.Items.Count == 0)
+                        throw Error(priorityNode.Location, "stealRunCard requires an ordered priority list.");
+                    return new StealRunCardEffect(ReferenceId(Argument(call, 0)), sourcePileIds,
+                        priorities.Items.Select(CompileRunCardPriority).ToArray());
+                case "returnHeldRunCardReward":
+                    CheckShape(call, 1, 1, "sourceEncounter");
+                    return new ReturnHeldRunCardRewardEffect(ReferenceId(Argument(call, 0)),
+                        ReferenceId(RequiredArgument(call, "sourceEncounter")));
                 case "gainBlock":
                     CheckShape(call, 1, 1, "perPowerStack", "properties", "target", "onlyEnemy");
                     var perPower = OptionalArgument(call, "perPowerStack");
@@ -601,6 +619,43 @@ public static class SpireCombatDslCompiler
             if (variables.Select(variable => variable.Id).Distinct().Count() != variables.Length)
                 throw Error(node.Location, "A card cannot declare duplicate variables.");
             return Array.AsReadOnly(variables);
+        }
+
+        private RunCardSelectionPriority CompileRunCardPriority(DslValueNode node)
+        {
+            var call = RequireCall(node);
+            if (call.Name != "priority") throw Error(call.Location, "Expected priority(...) in run-card priorities.");
+            CheckShape(call, 0, 0, "rarities", "requireEnchantments", "excludeEnchantments", "matchAny");
+            var rarities = OptionalArgument(call, "rarities") is { } rarityNode
+                ? CompileEnumList<CardRarity>(rarityNode, "Card rarity filters") : Array.Empty<CardRarity>();
+            var required = OptionalArgument(call, "requireEnchantments") is { } requiredNode
+                ? CompileReferenceList(requiredNode, "Required enchantments") : Array.Empty<ContentId>();
+            var excluded = OptionalArgument(call, "excludeEnchantments") is { } excludedNode
+                ? CompileReferenceList(excludedNode, "Excluded enchantments") : Array.Empty<ContentId>();
+            if (rarities.Length == 0 && required.Length == 0)
+                throw Error(call.Location, "A card priority needs a rarity or required-enchantment filter.");
+            return new RunCardSelectionPriority(rarities, required, excluded,
+                OptionalBoolean(call, "matchAny", false));
+        }
+
+        private T[] CompileEnumList<T>(DslValueNode node, string description) where T : struct, Enum
+        {
+            if (node is not DslListNode list || list.Items.Count == 0)
+                throw Error(node.Location, $"{description} require a non-empty list.");
+            var values = list.Items.Select(item => EnumValue<T>(item)).ToArray();
+            if (values.Distinct().Count() != values.Length)
+                throw Error(node.Location, $"{description} cannot contain duplicates.");
+            return values;
+        }
+
+        private ContentId[] CompileReferenceList(DslValueNode node, string description)
+        {
+            if (node is not DslListNode list)
+                throw Error(node.Location, $"{description} require a list.");
+            var values = list.Items.Select(ReferenceId).ToArray();
+            if (values.Distinct().Count() != values.Length)
+                throw Error(node.Location, $"{description} cannot contain duplicates.");
+            return values;
         }
 
         private CardPlayListener? CompilePlayListener(IReadOnlyDictionary<string, DslValueNode> properties, string name)

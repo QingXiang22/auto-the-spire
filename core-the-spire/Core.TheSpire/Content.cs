@@ -1779,6 +1779,28 @@ public sealed class ContentRegistry
                 if (setGoldReward.Percent is < 0 or > 100)
                     throw new InvalidOperationException($"{owner} sets an invalid gold reward percentage.");
                 break;
+            case StealRunCardEffect stealCard:
+                if (!_powers.ContainsKey(stealCard.Power) || stealCard.From.Count == 0
+                    || stealCard.From.Any(pile => pile is not (CardPile.Draw or CardPile.Discard))
+                    || stealCard.From.Distinct().Count() != stealCard.From.Count || stealCard.Priorities.Count == 0)
+                    throw new InvalidOperationException($"{owner} has an invalid run-card theft definition.");
+                foreach (var priority in stealCard.Priorities)
+                {
+                    if (priority.Rarities.Count == 0 && priority.RequiredEnchantments.Count == 0
+                        || priority.Rarities.Any(rarity => !Enum.IsDefined(rarity) || rarity == CardRarity.None)
+                        || priority.Rarities.Distinct().Count() != priority.Rarities.Count
+                        || priority.RequiredEnchantments.Distinct().Count() != priority.RequiredEnchantments.Count
+                        || priority.ExcludedEnchantments.Distinct().Count() != priority.ExcludedEnchantments.Count)
+                        throw new InvalidOperationException($"{owner} has an invalid run-card priority.");
+                    foreach (var enchantment in priority.RequiredEnchantments.Concat(priority.ExcludedEnchantments))
+                        enchantment.Validate();
+                }
+                break;
+            case ReturnHeldRunCardRewardEffect returnCard:
+                returnCard.SourceEncounter.Validate();
+                if (!_powers.ContainsKey(returnCard.Power) || !_encounters.ContainsKey(returnCard.SourceEncounter))
+                    throw new InvalidOperationException($"{owner} returns a held card through an unknown Power or encounter.");
+                break;
             case ApplyPowerEffect applyPower when !_powers.ContainsKey(applyPower.Power):
                 throw new InvalidOperationException($"{owner} applies unknown power '{applyPower.Power}'.");
             case ApplyPowerEffect applyPower when applyPower.Target == TargetSelector.RandomEnemy:
