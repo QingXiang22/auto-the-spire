@@ -58,7 +58,10 @@ package base-spire {
 
   power IllusionPower {
     trigger = afterOwnerDeath
-    effect = queueRevival(intent=Heal)
+    effect = sequence(
+      queueRevival(intent=Heal),
+      removePowers(debuffsOnly=true, includeTemporary=false)
+    )
   }
 
   power SoarPower {

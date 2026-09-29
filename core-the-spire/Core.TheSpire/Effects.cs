@@ -66,6 +66,7 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeCardsInPileEffect), "upgradeCardsInPile")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(DecrementPowerEffect), "decrementPower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowerEffect), "removePower")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RemovePowersEffect), "removePowers")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SetEnemyActionEffect), "setEnemyAction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ExpirePowerEffect), "expirePower")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(RetainSelectedCardEffect), "retainSelectedCard")]
@@ -215,6 +216,7 @@ public sealed record TransformSelectedCardEffect(ContentId Card, CardPile From, 
 public sealed record UpgradeCardsInPileEffect(CardPile Pile) : EffectNode;
 public sealed record DecrementPowerEffect(ContentId Power) : EffectNode;
 public sealed record RemovePowerEffect(ContentId Power) : EffectNode;
+public sealed record RemovePowersEffect(bool DebuffsOnly = true, bool IncludeTemporary = false) : EffectNode;
 public sealed record SetEnemyActionEffect(ContentId Action) : EffectNode;
 public sealed record ExpirePowerEffect(ContentId Power) : EffectNode;
 public sealed record RetainSelectedCardEffect : EffectNode;
@@ -1055,6 +1057,19 @@ internal static class EffectExecutor
                     if (removedAmount != 0)
                         state.Emit(session, "power_removed", owner.Id, owner.Id, removedAmount,
                             affectedPower: removePower.Power);
+                    break;
+                case RemovePowersEffect removePowers:
+                    foreach (var powerId in owner.MutablePowers.Keys.ToArray())
+                    {
+                        var powerDefinition = state.Definition.Powers[powerId];
+                        if (removePowers.DebuffsOnly && !powerDefinition.IsDebuff
+                            || !removePowers.IncludeTemporary && powerDefinition.IsTemporary)
+                            continue;
+                        var amount = state.RemovePower(owner, powerId);
+                        if (amount != 0)
+                            state.Emit(session, "power_removed", owner.Id, owner.Id, amount,
+                                affectedPower: powerId);
+                    }
                     break;
                 case SetEnemyActionEffect setEnemyAction:
                     var actingEnemy = state.Enemies.FirstOrDefault(enemy => enemy.Creature.Id == owner.Id)
