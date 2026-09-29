@@ -5526,9 +5526,12 @@ public sealed class CombatSliceTests
             new MapPointDefinition("monster", 1, 3, MapPointType.Monster, ["boss"]),
             new MapPointDefinition("boss", 2, 3, MapPointType.Boss, [])
         ]);
-        var act = new ActDefinition(ContentId.Parse("test-fixture:ancient-act"), _ => map);
+        var ancientEventId = ContentId.Parse("test-fixture:ancient-event");
+        var ancientEvent = new RunEventDefinition(ancientEventId, RunEventKind.Ancient);
+        var act = new ActDefinition(ContentId.Parse("test-fixture:ancient-act"), _ => map,
+            ancientIds: [ancientEventId]);
         var environment = new RunEnvironment(new RunDefinition(ContentId.Parse("test-fixture:ancient-run"), [act]),
-            BaseSpireContent.Ironclad());
+            BaseSpireContent.Ironclad(), runEvents: [ancientEvent]);
         var session = environment.Start(8);
 
         var opening = environment.Observe(session);
@@ -5540,9 +5543,11 @@ public sealed class CombatSliceTests
         Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
         Assert.Equal(1, environment.LegalActions(session).Count);
 
-        var secondAct = new ActDefinition(ContentId.Parse("test-fixture:ancient-act-two"), _ => map);
+        var secondAct = new ActDefinition(ContentId.Parse("test-fixture:ancient-act-two"), _ => map,
+            ancientIds: [ancientEventId]);
         var twoActRun = new RunDefinition(ContentId.Parse("test-fixture:two-ancient-run"), [act, secondAct]);
-        var twoActEnvironment = new RunEnvironment(twoActRun, BaseSpireContent.Ironclad());
+        var twoActEnvironment = new RunEnvironment(twoActRun, BaseSpireContent.Ironclad(),
+            runEvents: [ancientEvent]);
         var twoActSession = twoActEnvironment.Start(10);
         var firstEntry = twoActEnvironment.Observe(twoActSession);
         twoActEnvironment.CompleteRoom(twoActSession, RunResult(RunOutcome.RoomCleared, firstEntry));
@@ -5572,9 +5577,9 @@ public sealed class CombatSliceTests
         var start = environment.Observe(session);
         Assert.Equal(start.Map.Select(point => (point.Id, point.Type)), replay.Map.Select(point => (point.Id, point.Type)));
         Assert.Equal(MapPointType.Ancient, start.Map.Single(point => point.Id == start.CurrentPointId).Type);
-        Assert.Equal(RunPhase.ResolveRoom, start.Phase);
-        Assert.Equal(RunRoomType.Event, start.CurrentRoom!.Value);
-        var route = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, start));
+        Assert.Equal(RunPhase.ChooseMapPoint, start.Phase);
+        Assert.Equal((RunRoomType?)null, start.CurrentRoom);
+        var route = start;
         Assert.True(environment.LegalActions(session).Count > 0);
         Assert.Equal(RunPhase.ChooseMapPoint, route.Phase);
     }
@@ -5583,7 +5588,7 @@ public sealed class CombatSliceTests
     {
         var map = new ActMapDefinition("ancient", "boss",
         [
-            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["unknown-1"]),
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Start, ["unknown-1"]),
             new MapPointDefinition("unknown-1", 1, 3, MapPointType.Unknown, ["unknown-2"]),
             new MapPointDefinition("unknown-2", 2, 3, MapPointType.Unknown, ["boss"]),
             new MapPointDefinition("boss", 3, 3, MapPointType.Boss, [])
@@ -5600,8 +5605,6 @@ public sealed class CombatSliceTests
         var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
         var seed = FindSeedForUnknownRolls(first => first > 0.15f, second => second <= 0.2f);
         var session = environment.Start(seed);
-        var opening = environment.Observe(session);
-        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, opening));
 
         var firstUnknown = environment.Step(session, new ChooseMapPointAction("unknown-1"));
         Assert.Equal(RunRoomType.Event, firstUnknown.CurrentRoom!.Value);
@@ -5614,14 +5617,14 @@ public sealed class CombatSliceTests
     {
         var firstMap = new ActMapDefinition("ancient", "boss",
         [
-            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["unknown-1"]),
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Start, ["unknown-1"]),
             new MapPointDefinition("unknown-1", 1, 3, MapPointType.Unknown, ["unknown-2"]),
             new MapPointDefinition("unknown-2", 2, 3, MapPointType.Unknown, ["boss"]),
             new MapPointDefinition("boss", 3, 3, MapPointType.Boss, [])
         ]);
         var secondMap = new ActMapDefinition("ancient-2", "boss-2",
         [
-            new MapPointDefinition("ancient-2", 0, 3, MapPointType.Ancient, ["unknown-3"]),
+            new MapPointDefinition("ancient-2", 0, 3, MapPointType.Start, ["unknown-3"]),
             new MapPointDefinition("unknown-3", 1, 3, MapPointType.Unknown, ["boss-2"]),
             new MapPointDefinition("boss-2", 2, 3, MapPointType.Boss, [])
         ]);
@@ -5640,7 +5643,6 @@ public sealed class CombatSliceTests
         var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
         var seed = FindSeedForUnknownRolls(first => first > 0.15f, second => second <= 0.2f, third => third > 0.15f);
         var session = environment.Start(seed);
-        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
         var firstUnknown = environment.Step(session, new ChooseMapPointAction("unknown-1"));
         Assert.Equal(RunRoomType.Event, firstUnknown.CurrentRoom!.Value);
         environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, firstUnknown));
@@ -5651,7 +5653,6 @@ public sealed class CombatSliceTests
         environment.Step(session, new ChooseMapPointAction("boss"));
         var nextActEntry = environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, environment.Observe(session)));
         Assert.Equal(1, nextActEntry.ActIndex);
-        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, nextActEntry));
         var thirdUnknown = environment.Step(session, new ChooseMapPointAction("unknown-3"));
         Assert.Equal(RunRoomType.Event, thirdUnknown.CurrentRoom!.Value);
     }
@@ -5660,7 +5661,7 @@ public sealed class CombatSliceTests
     {
         var map = new ActMapDefinition("ancient", "boss",
         [
-            new MapPointDefinition("ancient", 0, 3, MapPointType.Ancient, ["shop"]),
+            new MapPointDefinition("ancient", 0, 3, MapPointType.Start, ["shop"]),
             new MapPointDefinition("shop", 1, 3, MapPointType.Shop, ["unknown"]),
             new MapPointDefinition("unknown", 2, 3, MapPointType.Unknown, ["boss"]),
             new MapPointDefinition("boss", 3, 3, MapPointType.Boss, [])
@@ -5677,19 +5678,17 @@ public sealed class CombatSliceTests
         var environment = new RunEnvironment(run, BaseSpireContent.Ironclad());
         var seed = FindSeedForUnknownRolls(first => first > 0.12f && first <= 0.15f, _ => true);
         var session = environment.Start(seed);
-        var opening = environment.Observe(session);
-        environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, opening));
         var shop = environment.Step(session, new ChooseMapPointAction("shop"));
         Assert.Equal(RunRoomType.Shop, shop.CurrentRoom!.Value);
         environment.CompleteRoom(session, RunResult(RunOutcome.RoomCleared, shop));
         var unknown = environment.Step(session, new ChooseMapPointAction("unknown"));
         Assert.Equal(RunRoomType.Event, unknown.CurrentRoom!.Value);
-        Assert.Equal(new[] { "ancient", "shop", "unknown" }.AsEnumerable(),
+        Assert.Equal(new[] { "shop", "unknown" }.AsEnumerable(),
             unknown.VisitedMapPoints.Select(visit => visit.PointId));
 
         var shopChildrenMap = new ActMapDefinition("entry", "end",
         [
-            new MapPointDefinition("entry", 0, 3, MapPointType.Ancient, ["unknown"]),
+            new MapPointDefinition("entry", 0, 3, MapPointType.Start, ["unknown"]),
             new MapPointDefinition("unknown", 1, 3, MapPointType.Unknown, ["shop-left", "shop-right"]),
             new MapPointDefinition("shop-left", 2, 2, MapPointType.Shop, ["end"]),
             new MapPointDefinition("shop-right", 2, 4, MapPointType.Shop, ["end"]),
@@ -5699,8 +5698,6 @@ public sealed class CombatSliceTests
             [new ActDefinition(ContentId.Parse("test-fixture:shop-children-blacklist-act"), _ => shopChildrenMap)], odds);
         var childrenEnvironment = new RunEnvironment(childrenRun, BaseSpireContent.Ironclad());
         var childrenSession = childrenEnvironment.Start(seed);
-        childrenEnvironment.CompleteRoom(childrenSession,
-            RunResult(RunOutcome.RoomCleared, childrenEnvironment.Observe(childrenSession)));
         var childrenUnknown = childrenEnvironment.Step(childrenSession, new ChooseMapPointAction("unknown"));
         Assert.Equal(RunRoomType.Event, childrenUnknown.CurrentRoom!.Value);
     }
