@@ -2,6 +2,14 @@
   "schemaVersion": 1,
   "encounters": [
     {
+      "id": "base-spire:the-lost-and-forgotten-normal",
+      "roomType": "monster",
+      "enemyIds": [
+        "base-spire:the-lost",
+        "base-spire:the-forgotten"
+      ]
+    },
+    {
       "id": "base-spire:phantasmal-gardeners-elite",
       "roomType": "elite",
       "enemyIds": [

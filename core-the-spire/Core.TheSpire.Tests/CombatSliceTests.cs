@@ -2486,9 +2486,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(35, content.Powers.Count);
-        Assert.Equal(77, content.Enemies.Count);
-        Assert.Equal(77, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(37, content.Powers.Count);
+        Assert.Equal(79, content.Enemies.Count);
+        Assert.Equal(79, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2513,6 +2513,10 @@ public sealed class CombatSliceTests
         Assert.Equal(53, toughCultist.MaxHp);
         Assert.Equal(new ApplyPowerEffect(BaseSpireIds.Ritual, 6), toughCultist.Actions[0].Effect);
         Assert.Equal(new AttackEffect(3, TargetSelector.FirstEnemy), toughCultist.Actions[1].Effect);
+        Assert.Equal(99, deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.TheLost).MaxHp);
+        var toughForgotten = deadlyTough.Enemies.Single(enemy => enemy.Id == BaseSpireIds.TheForgotten);
+        Assert.Equal(111, toughForgotten.MaxHp);
+        Assert.True(toughForgotten.Actions[1].Effect is ScaledAttackEffect { BaseAmount: 15 });
 
         var leafSmall = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.LeafSlimeSmall);
         Assert.Equal(EnemyActionRepeatPolicy.PreventImmediateRepeat,
@@ -2790,6 +2794,38 @@ public sealed class CombatSliceTests
             new AttackEffect(2, TargetSelector.SelectedTarget), gardeners[0].Creature,
             new CardInstance("skittish-test-strike-3", BaseSpireIds.StrikeIronclad));
         Assert.Equal(6, gardeners[0].Creature.Block);
+    }
+
+    public void TheLostAndForgottenReturnTheirStolenStatsWhenTheyDie()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = environment.StartEncounter(1180, "ironclad", 2000, 2000, [],
+            BaseSpireIds.TheLostAndForgottenNormal);
+        var lost = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.TheLost);
+        var forgotten = session.State.Enemies.Single(enemy => enemy.Definition.Id == BaseSpireIds.TheForgotten);
+        var dexterity = ContentId.Parse("base-spire:dexterity");
+        Assert.Equal(93, lost.Creature.MaxHp);
+        Assert.Equal(106, forgotten.Creature.MaxHp);
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(dexterity));
+
+        environment.Step(session, new EndTurnAction());
+
+        Assert.Equal(-2, session.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+        Assert.Equal(-2, session.State.Player.Creature.PowerAmount(dexterity));
+        Assert.Equal(2, lost.Creature.PowerAmount(BaseSpireIds.Strength));
+        Assert.Equal(2, forgotten.Creature.PowerAmount(dexterity));
+        Assert.Equal(8, forgotten.Creature.Block);
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(1973, session.State.Player.Creature.Hp);
+
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2000, TargetSelector.SelectedTarget), lost.Creature);
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(BaseSpireIds.Strength));
+        Assert.Equal(-2, session.State.Player.Creature.PowerAmount(dexterity));
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(2000, TargetSelector.SelectedTarget), forgotten.Creature);
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(dexterity));
     }
 
     public void TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent()
@@ -6592,6 +6628,7 @@ internal static class Program
         tests.SoulNexusUsesNoRepeatRandomMovesAndSourceDamageVariants();
         tests.SoulFyshAddsBeckonAndIntangibleCapsEachHpLoss();
         tests.SkittishPowerTriggersOnceOnCardDamageEachPlayerTurn();
+        tests.TheLostAndForgottenReturnTheirStolenStatsWhenTheyDie();
         tests.TorchHeadAmalgamFollowsItsSixStepCycleAndPerHitIntent();
         tests.SkulkingColonyCapsIncomingHpLossAcrossHitsAndResetsAtPlayerTurnStart();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
