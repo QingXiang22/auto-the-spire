@@ -747,6 +747,43 @@ public sealed class CombatSliceTests
         Assert.True(deadlyAttackIntents.SequenceEqual([11, 3]));
     }
 
+    public void ChompersNormalMatchesSourceFormationAndArtifactActions()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var encounter = ContentId.Parse("base-spire:chompers-normal");
+        var chomper = ContentId.Parse("base-spire:chomper");
+        var session = environment.StartEncounter(20260928, "ironclad", 56, 65, [], encounter);
+        var initial = environment.Observe(session);
+
+        Assert.Equal(2, initial.Enemies.Count);
+        Assert.True(session.State.Enemies.All(enemy => enemy.Definition.Id == chomper));
+        Assert.True(initial.Enemies.All(enemy => enemy.Hp is >= 60 and <= 64));
+        Assert.True(initial.Enemies.Select(enemy => enemy.Intent).SequenceEqual([IntentKind.Attack, IntentKind.Debuff]));
+        Assert.True(initial.Enemies.Select(enemy => enemy.IntentDamage).SequenceEqual([16, 0]));
+        Assert.True(session.State.Enemies.All(enemy => enemy.Creature.PowerAmount(
+            ContentId.Parse("base-spire:artifact")) == 2));
+
+        var firstTurn = environment.Step(session, new EndTurnAction());
+        Assert.Equal(40, firstTurn.Observation.PlayerHp);
+        Assert.Equal(3, session.State.Player.HandInstances.Concat(session.State.Player.DrawPileInstances)
+            .Concat(session.State.Player.DiscardPileInstances).Concat(session.State.Player.ExhaustPileInstances)
+            .Count(card => card.CardId == BaseSpireIds.Dazed));
+
+        environment.Step(session, new EndTurnAction());
+        Assert.Equal(24, environment.Observe(session).PlayerHp);
+        Assert.Equal(6, session.State.Player.HandInstances.Concat(session.State.Player.DrawPileInstances)
+            .Concat(session.State.Player.DiscardPileInstances).Concat(session.State.Player.ExhaustPileInstances)
+            .Count(card => card.CardId == BaseSpireIds.Dazed));
+        Assert.True(session.State.Enemies.All(enemy => enemy.Creature.PowerAmount(
+            ContentId.Parse("base-spire:artifact")) == 2));
+
+        var deadly = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true, toughEnemies: true)));
+        var deadlySession = deadly.StartEncounter(20260929, "ironclad", 56, 65, [], encounter);
+        Assert.True(deadly.Observe(deadlySession).Enemies.All(enemy => enemy.Hp is >= 63 and <= 67));
+        Assert.True(deadly.Observe(deadlySession).Enemies.Select(enemy => enemy.IntentDamage).SequenceEqual([18, 0]));
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -6719,6 +6756,7 @@ internal static class Program
         tests.HellraiserDslAutoPlaysStrikeAsItIsDrawn();
         tests.BaseDampCultistNormalValuesMatchSourceRules();
         tests.BaseCultistsEncounterRunsBothSourceEnemySequences();
+        tests.ChompersNormalMatchesSourceFormationAndArtifactActions();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();
