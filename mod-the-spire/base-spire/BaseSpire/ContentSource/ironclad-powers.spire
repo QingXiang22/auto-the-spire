@@ -121,12 +121,15 @@ package base-spire {
   }
 
   power SetupStrikePower {
+    isTemporary = true
     onStackChange = grantPower(Strength, stackDelta)
     onExpire = grantPower(Strength, negativeSourceStacks)
     removeAfterOwnerTurnEnd = true
   }
 
   power ManglePower {
+    isDebuff = true
+    isTemporary = true
     onStackChange = grantPower(Strength, negativeStackDelta)
     onExpire = grantPower(Strength, sourceStacks)
     removeAfterOwnerTurnEnd = true

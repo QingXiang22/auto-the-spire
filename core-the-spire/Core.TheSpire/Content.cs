@@ -59,6 +59,7 @@ public sealed record PowerDefinition(ContentId Id, PowerTrigger Trigger = PowerT
     public bool PreventsFatal { get; init; }
     public bool PreventsBlockClear { get; init; }
     public bool IsDebuff { get; init; }
+    public bool IsTemporary { get; init; }
     public IReadOnlyList<PowerEventSubscription> Events { get; init; } = Array.Empty<PowerEventSubscription>();
     public IReadOnlyList<PowerLifecycleSubscription> Lifecycle { get; init; } = Array.Empty<PowerLifecycleSubscription>();
     public IReadOnlyList<DamageModifierSubscription> IncomingDamageModifiers { get; init; } = Array.Empty<DamageModifierSubscription>();

@@ -37,6 +37,8 @@ Power declarations now accept a compiled effect, a card-event trigger with optio
 
 Enemy death is a combat lifecycle state, not just HP reaching zero. A Power's `afterOwnerDeath` trigger may declare `queueRevival(intent=heal)`. The dead enemy remains untargetable and does not count as living, but its slot stays reserved and the encounter cannot end while revival is pending. At that enemy's next action phase the core restores it to full HP, emits `enemy_revived`, and spends that action on revival; its previously selected regular move remains next. This keeps death/turn scheduling in the core while content only declares the transition. `TheObscura`'s Parafright is the source-backed exercise for this contract.
 
+Powers declare `isDebuff` and `isTemporary` metadata independently of their effects. `removePowers(debuffsOnly=true, includeTemporary=false)` removes the matching powers from its owner and emits ordinary `power_removed` events. Illusion uses this after queuing revival, so permanent Debuffs disappear on death while buffs and temporary Debuffs remain. This is a reusable cleanup rule rather than an Illusion-specific runtime branch.
+
 ## Source form
 
 Related definitions live together in a package source file. Card upgrades may replace the effect tree or override selected values/costs. This makes structural upgrades explicit while keeping ordinary number upgrades concise.

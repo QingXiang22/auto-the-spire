@@ -542,6 +542,10 @@ public static class SpireCombatDslCompiler
                 case "removePower":
                     CheckShape(call, 1, 1);
                     return new RemovePowerEffect(ReferenceId(Argument(call, 0)));
+                case "removePowers":
+                    CheckShape(call, 0, 0, "debuffsOnly", "includeTemporary");
+                    return new RemovePowersEffect(OptionalBoolean(call, "debuffsOnly", true),
+                        OptionalBoolean(call, "includeTemporary", false));
                 case "setEnemyAction":
                     CheckShape(call, 1, 1);
                     return new SetEnemyActionEffect(ReferenceId(Argument(call, 0)));

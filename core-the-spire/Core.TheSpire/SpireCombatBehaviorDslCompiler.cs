@@ -87,7 +87,7 @@ public static class SpireCombatBehaviorDslCompiler
                 "incomingDamageModifiers", "blockGainModifiers", "blockGainMultiplier", "variables", "preventsFatal",
                 "damageCapPerStack", "incomingDamageCap", "incomingDamageCapPerTurnPerStack",
                 "preventsBlockClear", "isDebuff",
-                "outgoingDamageMultiplier");
+                "isTemporary", "outgoingDamageMultiplier");
             var trigger = properties.TryGetValue("trigger", out var triggerNode)
                 ? EnumValue<PowerTrigger>(triggerNode)
                 : PowerTrigger.None;
@@ -138,6 +138,7 @@ public static class SpireCombatBehaviorDslCompiler
                 PreventsFatal = OptionalBoolean(properties, "preventsFatal"),
                 PreventsBlockClear = OptionalBoolean(properties, "preventsBlockClear"),
                 IsDebuff = OptionalBoolean(properties, "isDebuff"),
+                IsTemporary = OptionalBoolean(properties, "isTemporary"),
                 OutgoingDamageMultiplier = properties.TryGetValue("outgoingDamageMultiplier", out var outgoingDamageNode)
                     ? DecimalValue(outgoingDamageNode) : null,
                 Events = properties.TryGetValue("events", out var eventsNode)

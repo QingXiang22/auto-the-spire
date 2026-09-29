@@ -881,7 +881,7 @@ public sealed class CombatSliceTests
 
     public void TheObscuraSummonsParafrightWhichRevivesAtItsNextAction()
     {
-        var definition = Build(new BaseSpirePackage());
+        var definition = Build(new BaseSpirePackage(), new IllusionDeathCleanupFixturePackage());
         var environment = new CombatEnvironment(definition);
         var session = environment.StartEncounter(1163, "ironclad", 2000, 2000, [],
             ContentId.Parse("base-spire:the-obscura-normal"));
@@ -905,10 +905,18 @@ public sealed class CombatSliceTests
             priorObscuraAction = selectedAction;
         }
 
+        var parafrightStrength = parafright.Creature.PowerAmount(BaseSpireIds.Strength);
+        session.State.ApplyPower(session, parafright.Creature, BaseSpireIds.Weak, 2, parafright.Creature);
+        session.State.ApplyPower(session, parafright.Creature,
+            IllusionDeathCleanupFixturePackage.TemporaryDebuff, 1, parafright.Creature);
+        session.State.ApplyPower(session, parafright.Creature, BaseSpireIds.Strength, 2, parafright.Creature);
         EffectExecutor.Execute(session, session.State.Player.Creature,
             new AttackEffect(21, TargetSelector.SelectedTarget), parafright.Creature);
         EffectExecutor.Resume(session);
         Assert.Equal(0, parafright.Creature.Hp);
+        Assert.Equal(0, parafright.Creature.PowerAmount(BaseSpireIds.Weak));
+        Assert.Equal(1, parafright.Creature.PowerAmount(IllusionDeathCleanupFixturePackage.TemporaryDebuff));
+        Assert.Equal(parafrightStrength + 2, parafright.Creature.PowerAmount(BaseSpireIds.Strength));
         Assert.Equal(IntentKind.Heal, environment.Observe(session).Enemies
             .Single(enemy => enemy.Id == parafright.Creature.Id).Intent);
         Assert.True(environment.Observe(session).Enemies.Single(enemy => enemy.Id == parafright.Creature.Id)
@@ -2711,7 +2719,10 @@ public sealed class CombatSliceTests
 
         var illusion = content.Powers.Single(power => power.Id == BaseSpireIds.IllusionPower);
         Assert.Equal(PowerTrigger.AfterOwnerDeath, illusion.Trigger);
-        Assert.True(illusion.TriggerRuleEffect is QueueEnemyRevivalEffect);
+        Assert.True(illusion.TriggerRuleEffect is SequenceEffect
+        {
+            Effects: [QueueEnemyRevivalEffect, RemovePowersEffect { DebuffsOnly: true, IncludeTemporary: false }]
+        });
 
         var cultist = content.Enemies.Single(enemy => enemy.Id == BaseSpireIds.DampCultist);
         Assert.Equal(52, cultist.MinHp);
@@ -6457,6 +6468,23 @@ public sealed class CombatSliceTests
 
         public void Register(ContentRegistry registry) => registry.Register(new PotionDefinition(
             GeneratorPotionId, PotionRarity.Common, new GeneratePotionEffect(2)));
+    }
+
+    private sealed class IllusionDeathCleanupFixturePackage : IRulePackage
+    {
+        public static readonly ContentId TemporaryDebuff = ContentId.Parse("illusion-test:temporary-debuff");
+        public PackageInfo Info { get; } = new("illusion-test", "1.0.0");
+
+        public void Register(ContentRegistry registry)
+        {
+            var source = DslSourceParser.Parse("""
+                package illusion-test {
+                  power TemporaryDebuff { isDebuff = true isTemporary = true }
+                }
+                """, "illusion-test/powers.spire");
+            foreach (var power in SpireCombatBehaviorDslCompiler.Compile(source).Powers)
+                registry.Register(power);
+        }
     }
 
     private static void EnterInitialMapRoom(RunEnvironment runEnvironment, RunSession run)
