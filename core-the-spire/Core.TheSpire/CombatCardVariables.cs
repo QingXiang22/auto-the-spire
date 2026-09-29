@@ -46,6 +46,20 @@ internal static class CombatCardVariables
             decimal.ToInt32(decimal.Truncate(next - previous)), exactAmount: next - previous);
     }
 
+    internal static void AddEnchantment(GameSession session, CardInstance card, ContentId enchantment)
+    {
+        if (card.Enchantments.Contains(enchantment)) return;
+        session.State.ReplaceCombatCard(card, card.WithEnchantment(enchantment));
+        session.State.Emit(session, "card_enchantment_added", enchantment.Value, card.InstanceId, 0);
+    }
+
+    internal static void RemoveEnchantment(GameSession session, CardInstance card, ContentId enchantment)
+    {
+        if (!card.Enchantments.Contains(enchantment)) return;
+        session.State.ReplaceCombatCard(card, card.WithoutEnchantment(enchantment));
+        session.State.Emit(session, "card_enchantment_removed", enchantment.Value, card.InstanceId, 0);
+    }
+
     internal static void Downgrade(GameSession session, CardInstance card, ContentId? temporarySource = null)
     {
         if (card.UpgradeLevel == 0) return;

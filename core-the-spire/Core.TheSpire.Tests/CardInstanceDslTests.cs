@@ -1,3 +1,4 @@
+using System.Text.Json;
 using BaseSpire;
 using CoreTheSpire;
 
@@ -51,6 +52,62 @@ public sealed class CardInstanceDslTests
             Assert.Equal(3, environment.Observe(session).HandPlayPreviews.Single().EnergyToSpend);
             Assert.False(environment.LegalActions(session).Any(action => action is PlayCardAction));
         }
+    }
+
+    public void CardEnchantmentsSurviveUpgradeMovesAndCombatClones()
+    {
+        var enchantment = ContentId.Parse("card-instance-fixture:imbued");
+        Assert.Throws<ArgumentException>(() => new CardInstance("duplicate-enchantment",
+            BaseSpireIds.StrikeIronclad, enchantments: [enchantment, enchantment]));
+
+        var registry = Registry();
+        RegisterPool(registry, BaseSpireIds.StrikeIronclad, BaseSpireIds.Anger);
+        var environment = new CombatEnvironment(registry.Build());
+        var compiled = SpireCombatDslCompiler.CompileCards(DslSourceParser.Parse("""
+            package card-instance-fixture {
+              card EnchantmentProbe {
+                cost = 0
+                type = skill
+                rarity = common
+                target = none
+                play = sequence(
+                  addCardEnchantment(Imbued, card=played),
+                  if(cardHasEnchantment(Imbued, card=played),
+                    removeCardEnchantment(Imbued, card=played))
+                )
+              }
+            }
+            """, "card-enchantment-fixture.spire"));
+        Assert.Equal(1, compiled.Count);
+        Assert.True(compiled[0].Effect is SequenceEffect { Effects.Count: 2 });
+        var serializedEffect = JsonSerializer.Serialize<EffectNode>(compiled[0].Effect);
+        var restoredEffect = JsonSerializer.Deserialize<EffectNode>(serializedEffect);
+        Assert.True(restoredEffect is SequenceEffect { Effects: [AddCardEnchantmentEffect, IfEffect] });
+
+        var upgraded = environment.Start(124, "player", 56, 65, [BaseSpireIds.StrikeIronclad],
+            BaseSpireIds.DampCultist.ToString(), characterId: Character);
+        upgraded.State.Player.MutableHand[0] = new CardInstance("enchanted-strike", BaseSpireIds.StrikeIronclad,
+            enchantments: [enchantment]);
+        Assert.True(upgraded.State.UpgradeCard(upgraded, "enchanted-strike"));
+        upgraded.State.MoveCard(CardPile.Hand, CardPile.Discard, "enchanted-strike", CardPilePosition.Bottom);
+        Assert.True(upgraded.State.Player.DiscardPileInstances.Single().Enchantments.SequenceEqual([enchantment]));
+        EffectExecutor.Execute(upgraded, upgraded.State.Player.Creature,
+            new SequenceEffect([
+                new IfEffect(new CardHasEnchantmentPredicate(enchantment),
+                    new RemoveCardEnchantmentEffect(enchantment)),
+                new AddCardEnchantmentEffect(enchantment)
+            ]), selectedCard: upgraded.State.Player.DiscardPileInstances.Single());
+        Assert.True(upgraded.State.Player.DiscardPileInstances.Single().Enchantments.SequenceEqual([enchantment]));
+        Assert.True(upgraded.State.Events.Any(gameEvent => gameEvent.Type == "card_enchantment_added"));
+        Assert.True(upgraded.State.Events.Any(gameEvent => gameEvent.Type == "card_enchantment_removed"));
+
+        var cloned = environment.Start(125, "player", 56, 65, [BaseSpireIds.Anger],
+            BaseSpireIds.DampCultist.ToString(), characterId: Character);
+        cloned.State.Player.MutableHand[0] = new CardInstance("enchanted-anger", BaseSpireIds.Anger,
+            enchantments: [enchantment]);
+        environment.Step(cloned, new PlayCardAction(0, cloned.State.Enemy.Id));
+        var generatedClone = cloned.State.Player.DiscardPileInstances.Single(card => card.IsClone);
+        Assert.True(generatedClone.Enchantments.SequenceEqual([enchantment]));
     }
 
     private sealed class GenerationPauseHook : IRuleHook

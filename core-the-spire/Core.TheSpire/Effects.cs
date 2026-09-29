@@ -49,6 +49,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(UpgradeSelectedCardEffect), "upgradeSelectedCard")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifySelectedCardCostEffect), "modifySelectedCardCost")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyCardVariableEffect), "modifyCardVariable")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(AddCardEnchantmentEffect), "addCardEnchantment")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(RemoveCardEnchantmentEffect), "removeCardEnchantment")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AccumulateCardDamageEffect), "accumulateCardDamage")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyPowerVariableEffect), "modifyPowerVariable")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ModifyEnemyVariableEffect), "modifyEnemyVariable")]
@@ -183,6 +185,8 @@ public sealed record ModifySelectedCardCostEffect(CardCostModifier Modifier,
 public sealed record ModifyCardVariableEffect(ContentId Variable, decimal Amount,
     CardContext Card = CardContext.Played, CardVariableOperation Operation = CardVariableOperation.Add,
     ScaledCombatAmount? CalculatedAmount = null) : EffectNode;
+public sealed record AddCardEnchantmentEffect(ContentId Enchantment, CardContext Card = CardContext.Selected) : EffectNode;
+public sealed record RemoveCardEnchantmentEffect(ContentId Enchantment, CardContext Card = CardContext.Selected) : EffectNode;
 public sealed record AccumulateCardDamageEffect(ContentId Variable,
     CardContext TargetCard = CardContext.Played, CardContext SourceCard = CardContext.Selected) : EffectNode;
 public enum PowerVariableOperation { Add, Set }
@@ -277,6 +281,7 @@ public enum CardSelectionFilter { Any, Upgradeable, NonAttack, NotRetained, Atta
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardExhaustedThisTurnPredicate), "cardExhaustedThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PlayerLostHpThisTurnPredicate), "playerLostHpThisTurn")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SelectedCardIsClonePredicate), "selectedCardIsClone")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(CardHasEnchantmentPredicate), "cardHasEnchantment")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(PileCountAtLeastPredicate), "pileCountAtLeast")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlayCountEqualsPredicate), "cardPlayCountEquals")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(CardPlayCountAtLeastPredicate), "cardPlayCountAtLeast")]
@@ -289,6 +294,7 @@ public sealed record EnergyAtLeastPredicate(int Amount) : EffectPredicate;
 public sealed record CardExhaustedThisTurnPredicate : EffectPredicate;
 public sealed record PlayerLostHpThisTurnPredicate : EffectPredicate;
 public sealed record SelectedCardIsClonePredicate : EffectPredicate;
+public sealed record CardHasEnchantmentPredicate(ContentId Enchantment, CardContext Card = CardContext.Selected) : EffectPredicate;
 public sealed record PileCountAtLeastPredicate(CardPile Pile, int Count) : EffectPredicate;
 public sealed record CardPlayCountEqualsPredicate(CardType? Type, CardPlayHistoryPhase Phase, int Count) : EffectPredicate;
 public sealed record CardPlayCountAtLeastPredicate(CardType? Type, CardPlayHistoryPhase Phase, int Count) : EffectPredicate;
@@ -909,6 +915,14 @@ internal static class EffectExecutor
                     CombatCardVariables.Modify(session, CombatCardVariables.ResolveCard(state, variable.Card, selectedCard),
                         variable.Variable, variable.Operation, variableAmount);
                     break;
+                case AddCardEnchantmentEffect enchantment:
+                    CombatCardVariables.AddEnchantment(session,
+                        CombatCardVariables.ResolveCard(state, enchantment.Card, selectedCard), enchantment.Enchantment);
+                    break;
+                case RemoveCardEnchantmentEffect enchantment:
+                    CombatCardVariables.RemoveEnchantment(session,
+                        CombatCardVariables.ResolveCard(state, enchantment.Card, selectedCard), enchantment.Enchantment);
+                    break;
                 case AccumulateCardDamageEffect accumulateDamage:
                     var damageSource = CombatCardVariables.ResolveCard(state, accumulateDamage.SourceCard, selectedCard);
                     var damageTarget = CombatCardVariables.ResolveCard(state, accumulateDamage.TargetCard, selectedCard);
@@ -973,7 +987,8 @@ internal static class EffectExecutor
                         var fresh = state.Player.CreateGeneratedCard(cloneSource.CardId);
                         clones[i] = new(fresh.InstanceId, cloneSource.CardId, cloneSource.UpgradeLevel,
                             cloneSource.CostModifiers, isClone: true, cloneSource.VariableOffsets,
-                            cloneSource.Afflictions, cloneSource.AfflictionKeywords);
+                            cloneSource.Afflictions, cloneSource.AfflictionKeywords,
+                            enchantments: cloneSource.Enchantments);
                     }
                     CombatCardGeneration.QueuePlacements(state, clones, clone.Pile);
                     break;
@@ -1050,6 +1065,8 @@ internal static class EffectExecutor
                         PlayerLostHpThisTurnPredicate => state.LastPlayerHpLossTurn == state.Turn,
                         SelectedCardIsClonePredicate => selectedCard?.IsClone
                             ?? throw new InvalidOperationException("Clone predicates require a selected card context."),
+                        CardHasEnchantmentPredicate hasEnchantment => CombatCardVariables.ResolveCard(
+                            state, hasEnchantment.Card, selectedCard).Enchantments.Contains(hasEnchantment.Enchantment),
                         PileCountAtLeastPredicate pile => state.GetPile(pile.Pile).Count >= pile.Count,
                         CardPlayCountEqualsPredicate plays => state.CardPlayHistory.Count(plays.Type, plays.Phase) == plays.Count,
                         CardPlayCountAtLeastPredicate plays => state.CardPlayHistory.Count(plays.Type, plays.Phase) >= plays.Count,
