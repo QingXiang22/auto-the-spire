@@ -4829,6 +4829,7 @@ public sealed class CombatSliceTests
             definition.Cards.Values, definition.CardPools.Values, definition.Encounters.Values);
         var combatEnvironment = new CombatEnvironment(definition);
         var run = runEnvironment.Start(810);
+        EnterInitialMapRoom(runEnvironment, run);
         runEnvironment.PushSubRoom(run, RunRoomType.Monster);
         run.State.RoomStack[^1] = run.State.RoomStack[^1] with
         {
@@ -4863,6 +4864,7 @@ public sealed class CombatSliceTests
             definition.Cards.Values, definition.CardPools.Values, definition.Encounters.Values);
         var replayCombatEnvironment = new CombatEnvironment(definition);
         var replayRun = replayRunEnvironment.Start(810);
+        EnterInitialMapRoom(replayRunEnvironment, replayRun);
         replayRunEnvironment.PushSubRoom(replayRun, RunRoomType.Monster);
         replayRun.State.RoomStack[^1] = replayRun.State.RoomStack[^1] with
         {
@@ -6045,7 +6047,7 @@ public sealed class CombatSliceTests
         run.State.Relics.Add(BaseSpireIds.SelfFormingClay);
         run.State.Deck.Clear();
         run.State.Deck.Add(new CardInstance("run-offering", BaseSpireIds.Offering));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
@@ -6059,7 +6061,7 @@ public sealed class CombatSliceTests
         combatEnvironment.Step(combat, new EndTurnAction());
         Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
         combatEnvironment.Step(combat, new EndTurnAction());
-        Assert.Equal(9, combat.State.Player.Creature.Block);
+        Assert.Equal(3, combat.State.Player.Creature.Block);
         Assert.Equal(0, combat.State.Player.Creature.PowerAmount(BaseSpireIds.SelfFormingClayPower));
         combat.State.Player.Creature.Hp = 1;
         combat.State.Player.Creature.Block = 0;
@@ -6080,7 +6082,7 @@ public sealed class CombatSliceTests
         run.State.Deck.Clear();
         run.State.Deck.Add(new CardInstance("red-skull-heal", RedSkullHealFixturePackage.HealCard));
         run.State.Deck.Add(new CardInstance("red-skull-hp-loss", RedSkullHealFixturePackage.HpLossCard));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
@@ -6105,7 +6107,7 @@ public sealed class CombatSliceTests
         run.State.Deck.Clear();
         run.State.Deck.Add(new CardInstance("demon-tongue-first-hit", DemonTongueFixturePackage.SelfDamageCard));
         run.State.Deck.Add(new CardInstance("demon-tongue-second-hit", DemonTongueFixturePackage.SelfDamageCard));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
@@ -6134,7 +6136,7 @@ public sealed class CombatSliceTests
         run.State.Deck.Clear();
         run.State.Deck.Add(new CardInstance("paper-phrog-bash", BaseSpireIds.Bash));
         run.State.Deck.Add(new CardInstance("paper-phrog-strike", BaseSpireIds.StrikeIronclad));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
@@ -6162,7 +6164,7 @@ public sealed class CombatSliceTests
         run.State.Deck.Clear();
         run.State.Deck.Add(new CardInstance("ruined-helmet-first-strength", RuinedHelmetStrengthFixturePackage.StrengthCard));
         run.State.Deck.Add(new CardInstance("ruined-helmet-second-strength", RuinedHelmetStrengthFixturePackage.StrengthCard));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
@@ -6189,7 +6191,7 @@ public sealed class CombatSliceTests
         Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.StrengthPotion));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.FirePotion));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
 
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
@@ -6226,7 +6228,7 @@ public sealed class CombatSliceTests
         Assert.True(run.State.TryAddPotion(BaseSpireIds.FlexPotion));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.FlexPotion));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.StrengthPotion));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
         var environment = new CombatEnvironment(definition);
         var combat = environment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
         combat.State.Player.MutableHand.Clear();
@@ -6263,7 +6265,7 @@ public sealed class CombatSliceTests
         Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.BlessingOfTheForge));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.BeetleJuice));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
         var environment = new CombatEnvironment(definition);
         var combat = environment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
         environment.Step(combat, new UsePotionAction(0, combat.State.Player.Id));
@@ -6397,7 +6399,7 @@ public sealed class CombatSliceTests
         var run = runEnvironment.Start(826);
         Assert.True(run.State.TryAddPotion(PotionGenerationFixturePackage.GeneratorPotionId));
         Assert.True(run.State.TryAddPotion(BaseSpireIds.BlockPotion));
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
         var combatEnvironment = new CombatEnvironment(definition);
         var combat = combatEnvironment.StartForRun(run, BaseSpireIds.DampCultist.ToString());
         var rewardsCounter = run.State.Random.Get("rewards").Counter;
@@ -6416,7 +6418,7 @@ public sealed class CombatSliceTests
     private static RunObservation CompletePotionRewardCombat(RunEnvironment runEnvironment,
         CombatEnvironment combatEnvironment, RunSession run)
     {
-        runEnvironment.PushSubRoom(run, RunRoomType.Monster);
+        EnterInitialMapRoom(runEnvironment, run);
         var frame = run.State.RoomStack[^1];
         run.State.RoomStack[^1] = frame with { EncounterId = PotionRewardFixturePackage.EncounterId };
         var combat = combatEnvironment.StartForRun(run, PotionRewardFixturePackage.EnemyId.ToString());
@@ -6458,6 +6460,12 @@ public sealed class CombatSliceTests
 
         public void Register(ContentRegistry registry) => registry.Register(new PotionDefinition(
             GeneratorPotionId, PotionRarity.Common, new GeneratePotionEffect(2)));
+    }
+
+    private static void EnterInitialMapRoom(RunEnvironment runEnvironment, RunSession run)
+    {
+        var firstRoom = runEnvironment.LegalActions(run).OfType<ChooseMapPointAction>().First();
+        runEnvironment.Step(run, firstRoom);
     }
 
     private sealed class HandOverflowFixturePackage : IRulePackage
