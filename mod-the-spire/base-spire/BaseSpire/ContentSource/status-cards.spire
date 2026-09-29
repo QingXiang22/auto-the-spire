@@ -1,4 +1,13 @@
 package base-spire {
+  card Dazed {
+    type = status
+    rarity = status
+    cost = 0
+    target = self
+    keywords = [ethereal, unplayable]
+    play = sequence()
+  }
+
   card Beckon {
     type = status
     rarity = status

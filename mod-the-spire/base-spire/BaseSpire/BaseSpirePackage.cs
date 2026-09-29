@@ -365,9 +365,6 @@ public sealed class BaseSpirePackage(bool deadlyEnemies = false, bool toughEnemi
         foreach (var enemy in enemyContent.Enemies) registry.Register(enemy);
         foreach (var card in BaseSpireContent.LoadCards()) registry.Register(card);
         IroncladCardPool.Register(registry);
-        registry.Register(new CardDefinition(BaseSpireIds.Dazed, 0, CardType.Status,
-            new SequenceEffect(Array.Empty<EffectNode>()), Target: TargetSelector.Self,
-            Rarity: CardRarity.Status, Keywords: CardKeywords.Ethereal | CardKeywords.Unplayable));
 
         foreach (var encounter in BaseSpireContent.LoadEncounters("base-spire.encounters.json"))
             registry.Register(encounter);
