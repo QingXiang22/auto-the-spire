@@ -16,7 +16,7 @@ Sources: `ThievingHopper.cs`, `ThievingHopperWeak.cs`, `SwipePower.cs`, `Flutter
 
 ## Existing core boundary
 
-The run already stores persistent cards as `CardInstance` values with stable instance IDs. Combat receives those instances in its piles, while the run deck remains a separate list until room completion writes the combat result back. `CardDefinition` has rarity, but `CardInstance` has no enchantment/Imbued data. `PowerInstanceState` stores numeric variables but cannot own a card reference. Run rewards support Gold, Card choices, Relic, and Potion, but not a specific-card reward. Map visit history does not expose stolen/returned-loot flags.
+The run already stores persistent cards as `CardInstance` values with stable instance IDs. Combat receives those instances in its piles, while the run deck remains a separate list until room completion writes the combat result back. `CardDefinition` has rarity, and `CardInstance` now carries arbitrary namespaced enchantment IDs with generic add/remove effects and an effect predicate. It still lacks prioritized selection across rarity and enchantment filters. `PowerInstanceState` stores numeric variables but cannot own a card reference. Run rewards support Gold, Card choices, Relic, and Potion, but not a specific-card reward. Map visit history does not expose stolen/returned-loot flags.
 
 These are missing shared concepts. They should not be implemented as `if (enemy == ThievingHopper)` branches in combat or run completion.
 

@@ -308,7 +308,8 @@ public sealed record CardInstance
         IReadOnlyList<CardCostModifier>? costModifiers = null, bool isClone = false,
         IReadOnlyList<CardVariableOffset>? variableOffsets = null,
         IReadOnlyList<ContentId>? afflictions = null, CardKeywords afflictionKeywords = CardKeywords.None,
-        IReadOnlyList<TemporaryCardUpgradeChange>? temporaryUpgradeChanges = null)
+        IReadOnlyList<TemporaryCardUpgradeChange>? temporaryUpgradeChanges = null,
+        IReadOnlyList<ContentId>? enchantments = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(instanceId);
         cardId.Validate();
@@ -344,6 +345,11 @@ public sealed record CardInstance
             throw new ArgumentException("A card cannot contain duplicate temporary upgrade sources.", nameof(temporaryUpgradeChanges));
         TemporaryUpgradeChanges = upgradeChanges.Length == 0
             ? Array.Empty<TemporaryCardUpgradeChange>() : Array.AsReadOnly(upgradeChanges);
+        var enchantmentIds = enchantments?.ToArray() ?? [];
+        foreach (var enchantment in enchantmentIds) enchantment.Validate();
+        if (enchantmentIds.Distinct().Count() != enchantmentIds.Length)
+            throw new ArgumentException("A card instance cannot contain duplicate enchantments.", nameof(enchantments));
+        Enchantments = enchantmentIds.Length == 0 ? Array.Empty<ContentId>() : Array.AsReadOnly(enchantmentIds);
     }
 
     public string InstanceId { get; }
@@ -355,21 +361,36 @@ public sealed record CardInstance
     public IReadOnlyList<ContentId> Afflictions { get; }
     public CardKeywords AfflictionKeywords { get; }
     public IReadOnlyList<TemporaryCardUpgradeChange> TemporaryUpgradeChanges { get; }
+    public IReadOnlyList<ContentId> Enchantments { get; }
 
     internal CardInstance WithUpgradeLevel(int level) => new(InstanceId, CardId, level, CostModifiers, IsClone,
-        VariableOffsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges);
+        VariableOffsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges, Enchantments);
     internal CardInstance WithCostModifiers(IReadOnlyList<CardCostModifier> modifiers) =>
-        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges);
+        new(InstanceId, CardId, UpgradeLevel, modifiers, IsClone, VariableOffsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges, Enchantments);
     internal CardInstance WithVariableOffsets(IReadOnlyList<CardVariableOffset> offsets) =>
-        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges);
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, offsets, Afflictions, AfflictionKeywords, TemporaryUpgradeChanges, Enchantments);
     internal CardInstance WithAfflictions(IReadOnlyList<ContentId> afflictions, CardKeywords keywords) =>
-        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, afflictions, keywords, TemporaryUpgradeChanges);
+        new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, afflictions, keywords, TemporaryUpgradeChanges, Enchantments);
     internal CardInstance WithTemporaryUpgradeChange(TemporaryCardUpgradeChange change) =>
         new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, Afflictions,
-            AfflictionKeywords, TemporaryUpgradeChanges.Append(change).ToArray());
+            AfflictionKeywords, TemporaryUpgradeChanges.Append(change).ToArray(), Enchantments);
     internal CardInstance WithoutTemporaryUpgradeChange(ContentId sourcePower) =>
         new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, Afflictions,
-            AfflictionKeywords, TemporaryUpgradeChanges.Where(change => change.SourcePower != sourcePower).ToArray());
+            AfflictionKeywords, TemporaryUpgradeChanges.Where(change => change.SourcePower != sourcePower).ToArray(), Enchantments);
+    internal CardInstance WithEnchantment(ContentId enchantment)
+    {
+        enchantment.Validate();
+        return Enchantments.Contains(enchantment) ? this
+            : new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, Afflictions,
+                AfflictionKeywords, TemporaryUpgradeChanges, Enchantments.Append(enchantment).ToArray());
+    }
+    internal CardInstance WithoutEnchantment(ContentId enchantment)
+    {
+        enchantment.Validate();
+        return !Enchantments.Contains(enchantment) ? this
+            : new(InstanceId, CardId, UpgradeLevel, CostModifiers, IsClone, VariableOffsets, Afflictions,
+                AfflictionKeywords, TemporaryUpgradeChanges, Enchantments.Where(id => id != enchantment).ToArray());
+    }
 }
 
 public sealed record TemporaryCardUpgradeChange(ContentId SourcePower, int RestoreLevels);
@@ -1993,6 +2014,16 @@ public sealed class ContentRegistry
                 if (variable.CalculatedAmount is { } variableAmount)
                     ValidateCombatCountSource(variableAmount.Count, owner, counts);
                 break;
+            case AddCardEnchantmentEffect enchantment:
+                enchantment.Enchantment.Validate();
+                if (!Enum.IsDefined(enchantment.Card))
+                    throw new InvalidOperationException($"{owner} adds an enchantment through an invalid card context.");
+                break;
+            case RemoveCardEnchantmentEffect enchantment:
+                enchantment.Enchantment.Validate();
+                if (!Enum.IsDefined(enchantment.Card))
+                    throw new InvalidOperationException($"{owner} removes an enchantment through an invalid card context.");
+                break;
             case AccumulateCardDamageEffect accumulateDamage:
                 ValidateCardVariableReference(accumulateDamage.Variable, accumulateDamage.TargetCard, owner);
                 if (!Enum.IsDefined(accumulateDamage.SourceCard))
@@ -2131,6 +2162,11 @@ public sealed class ContentRegistry
         switch (predicate)
         {
             case TargetAlivePredicate or CardExhaustedThisTurnPredicate or PlayerLostHpThisTurnPredicate or SelectedCardIsClonePredicate:
+                break;
+            case CardHasEnchantmentPredicate hasEnchantment:
+                hasEnchantment.Enchantment.Validate();
+                if (!Enum.IsDefined(hasEnchantment.Card))
+                    throw new InvalidOperationException($"{owner} checks an enchantment through an invalid card context.");
                 break;
             case HasPowerPredicate hasPower when !_powers.ContainsKey(hasPower.Power):
                 throw new InvalidOperationException($"{owner} checks unknown power '{hasPower.Power}'.");

@@ -454,6 +454,14 @@ public static class SpireCombatDslCompiler
                         OptionalEnum(call, "card", CardContext.Played),
                         OptionalEnum(call, "operation", CardVariableOperation.Add),
                         variableAmount is DslNumberNode ? null : CompileScaledAmount(variableAmount));
+                case "addCardEnchantment":
+                    CheckShape(call, 1, 1, "card");
+                    return new AddCardEnchantmentEffect(ReferenceId(Argument(call, 0)),
+                        OptionalEnum(call, "card", CardContext.Selected));
+                case "removeCardEnchantment":
+                    CheckShape(call, 1, 1, "card");
+                    return new RemoveCardEnchantmentEffect(ReferenceId(Argument(call, 0)),
+                        OptionalEnum(call, "card", CardContext.Selected));
                 case "accumulateCardDamage":
                     CheckShape(call, 1, 1, "target", "source");
                     return new AccumulateCardDamageEffect(ReferenceId(Argument(call, 0)),
@@ -553,6 +561,10 @@ public static class SpireCombatDslCompiler
                 case "selectedCardIsClone":
                     CheckShape(call, 0, 0);
                     return new SelectedCardIsClonePredicate();
+                case "cardHasEnchantment":
+                    CheckShape(call, 1, 1, "card");
+                    return new CardHasEnchantmentPredicate(ReferenceId(Argument(call, 0)),
+                        OptionalEnum(call, "card", CardContext.Selected));
                 case "pileCountAtLeast":
                     CheckShape(call, 2, 2);
                     return new PileCountAtLeastPredicate(EnumValue<CardPile>(Argument(call, 0)),

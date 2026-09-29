@@ -6860,6 +6860,7 @@ internal static class Program
         tests.ShopHistoryBlacklistsShopFromTheNextUnknownRoom();
         var instanceTests = new CardInstanceDslTests();
         instanceTests.InfernalBladeInstallsFreeCostBeforeInsertionAndClearsItAfterPlaying();
+        instanceTests.CardEnchantmentsSurviveUpgradeMovesAndCombatClones();
         instanceTests.DistinctGenerationShufflesTheWholeFilteredPoolBeforeTaking();
         instanceTests.LocalCostsComposeAndSurviveMovesAndCostReducingUpgrade();
         instanceTests.FreeCostPersistsThroughReplayAndExhaustChoiceThenExpires();

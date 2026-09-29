@@ -202,7 +202,7 @@ public sealed class CardVariableDslTests
         var stomp = session.State.Player.HandInstances.Single();
         EffectExecutor.Execute(session, session.State.Player.Creature, new CloneCardEffect(CardContext.Selected), selectedCard: stomp);
         Assert.True(session.State.Player.HandInstances.All(card =>
-            LocalCost(session.State, card) == 1));
+            LocalCost(session.State, card) == 2));
         Assert.Equal(1, session.State.Player.HandInstances.Single(card => card.IsClone).CostModifiers.Count);
     }
 

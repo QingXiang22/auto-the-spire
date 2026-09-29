@@ -930,7 +930,7 @@ public sealed class RunEnvironment
             var index = state.Deck.FindIndex(card => card.InstanceId == upgrade.CardInstanceId);
             if (index < 0) throw new InvalidOperationException("The selected card is no longer in the deck.");
             var card = state.Deck[index];
-            state.Deck[index] = new CardInstance(card.InstanceId, card.CardId, card.UpgradeLevel + 1);
+            state.Deck[index] = card.WithUpgradeLevel(card.UpgradeLevel + 1);
             foreach (var hook in _runHooks) hook.AfterRestSiteSmith(new RunHookContext(state, hook.Id));
         }
 
@@ -1096,8 +1096,8 @@ public sealed class RunEnvironment
                 case UpgradeSelectedRunCardEffect when selectedCard is { } selectedToUpgrade:
                     var selectedIndex = state.Deck.FindIndex(card => card.InstanceId == selectedToUpgrade.InstanceId);
                     if (selectedIndex < 0) throw new InvalidOperationException("The selected run card is no longer in the deck.");
-                    state.Deck[selectedIndex] = new CardInstance(selectedToUpgrade.InstanceId,
-                        selectedToUpgrade.CardId, selectedToUpgrade.UpgradeLevel + 1);
+                    state.Deck[selectedIndex] = selectedToUpgrade.WithUpgradeLevel(
+                        selectedToUpgrade.UpgradeLevel + 1);
                     break;
                 case WinRunEffect when frame.IsFinalEvent:
                     state.Status = RunStatus.Won;
