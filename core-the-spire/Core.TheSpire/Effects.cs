@@ -14,6 +14,8 @@ namespace CoreTheSpire;
 [System.Text.Json.Serialization.JsonDerivedType(typeof(StealGoldEffect), "stealGold")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AddGoldRewardEffect), "addGoldReward")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(SetGoldRewardPercentEffect), "setGoldRewardPercent")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(StealRunCardEffect), "stealRunCard")]
+[System.Text.Json.Serialization.JsonDerivedType(typeof(ReturnHeldRunCardRewardEffect), "returnHeldRunCardReward")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(AfflictCardsEffect), "afflictCards")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(ClearAfflictionEffect), "clearAffliction")]
 [System.Text.Json.Serialization.JsonDerivedType(typeof(TemporarilyDowngradeCardsEffect), "temporarilyDowngradeCards")]
@@ -131,6 +133,12 @@ public sealed record StealGoldEffect(int Amount, ContentId Power, ContentId Vari
 public sealed record AddGoldRewardEffect(int BaseAmount, int AmountPerCount,
     CombatCountSource Count) : EffectNode;
 public sealed record SetGoldRewardPercentEffect(int Percent) : EffectNode;
+public sealed record RunCardSelectionPriority(IReadOnlyList<CardRarity> Rarities,
+    IReadOnlyList<ContentId> RequiredEnchantments, IReadOnlyList<ContentId> ExcludedEnchantments,
+    bool MatchAny = false);
+public sealed record StealRunCardEffect(ContentId Power, IReadOnlyList<CardPile> From,
+    IReadOnlyList<RunCardSelectionPriority> Priorities) : EffectNode;
+public sealed record ReturnHeldRunCardRewardEffect(ContentId Power, ContentId SourceEncounter) : EffectNode;
 public sealed record AfflictCardsEffect(ContentId Affliction, CardType? Type = null,
     TargetSelector Target = TargetSelector.Self, bool OnlyIfUnafflicted = false) : EffectNode;
 public sealed record ClearAfflictionEffect(ContentId Affliction, CardType? Type = null,
@@ -743,6 +751,21 @@ internal static class EffectExecutor
                 case SetGoldRewardPercentEffect setGoldReward:
                     state.GoldRewardPercent = setGoldReward.Percent;
                     state.Emit(session, "gold_reward_percent", owner.Id, owner.Id, setGoldReward.Percent);
+                    break;
+                case StealRunCardEffect stealCard:
+                    StealRunCard(session, owner, stealCard);
+                    break;
+                case ReturnHeldRunCardRewardEffect returnCard:
+                    var heldCard = owner.TakePowerCard(returnCard.Power);
+                    if (heldCard is not null)
+                    {
+                        var runOwner = session.RunOwner
+                            ?? throw new InvalidOperationException("Returning a run card requires an active run.");
+                        runOwner.State.AddSpecificCardReward(heldCard, returnCard.SourceEncounter);
+                        runOwner.State.MarkCurrentVisitLootReturned();
+                        state.Emit(session, "run_card_rewarded", owner.Id, heldCard.InstanceId, 1,
+                            cardSource: heldCard);
+                    }
                     break;
                 case DrawCardsEffect draw:
                     var drawAmount = draw.CalculatedAmount is { } calculatedDraw
@@ -1411,6 +1434,45 @@ internal static class EffectExecutor
             available.Remove(potion);
             if (!run.TryAddPotion(potion.Id)) break;
             state.Emit(session, "potion_generated", state.Player.Id, potion.Id.Value, 1);
+        }
+    }
+
+    private static void StealRunCard(GameSession session, EntityState owner, StealRunCardEffect effect)
+    {
+        var state = session.State;
+        var run = session.RunOwner?.State
+            ?? throw new InvalidOperationException("Stealing a run card requires an active run.");
+        var runCards = run.Deck.ToDictionary(card => card.InstanceId, StringComparer.Ordinal);
+        var pileCards = effect.From.SelectMany(pile => state.GetPile(pile))
+            .Where(card => runCards.ContainsKey(card.InstanceId))
+            .DistinctBy(card => card.InstanceId).ToArray();
+        foreach (var priority in effect.Priorities)
+        {
+            var candidates = pileCards.Where(card =>
+            {
+                var definition = state.Definition.Cards[card.CardId];
+                var rarityMatches = priority.Rarities.Contains(definition.Rarity);
+                var enchantmentMatches = priority.RequiredEnchantments.Count > 0
+                    && priority.RequiredEnchantments.Any(card.Enchantments.Contains);
+                var matches = priority.MatchAny
+                    ? rarityMatches || enchantmentMatches
+                    : rarityMatches && priority.RequiredEnchantments.All(card.Enchantments.Contains);
+                return matches && !priority.ExcludedEnchantments.Any(card.Enchantments.Contains);
+            }).ToArray();
+            if (candidates.Length == 0) continue;
+
+            var random = session.Random.Get("combat-card-generation");
+            var selected = candidates[random.NextInt(candidates.Length)];
+            if (!run.RemoveDeckCard(selected.InstanceId, out var deckCard))
+                throw new InvalidOperationException($"Run card '{selected.InstanceId}' left the deck during theft resolution.");
+            foreach (var pile in effect.From)
+                state.GetPile(pile).RemoveAll(card => card.InstanceId == selected.InstanceId);
+            if (owner.PowerAmount(effect.Power) == 0)
+                state.ApplyPower(session, owner, effect.Power, 1, owner);
+            owner.StorePowerCard(effect.Power, deckCard);
+            run.MarkCurrentVisitLootStolen();
+            state.Emit(session, "run_card_stolen", owner.Id, deckCard.InstanceId, 1, cardSource: deckCard);
+            return;
         }
     }
 

@@ -119,6 +119,11 @@ public static class BaseSpireIds
     public static readonly ContentId SurprisePower = ContentId.Parse("base-spire:surprise-power");
     public static readonly ContentId ThieveryPower = ContentId.Parse("base-spire:thievery-power");
     public static readonly ContentId HeistPower = ContentId.Parse("base-spire:heist-power");
+    public static readonly ContentId ThievingHopper = ContentId.Parse("base-spire:thieving-hopper");
+    public static readonly ContentId ThievingHopperWeak = ContentId.Parse("base-spire:thieving-hopper-weak");
+    public static readonly ContentId EscapeArtistPower = ContentId.Parse("base-spire:escape-artist-power");
+    public static readonly ContentId FlutterPower = ContentId.Parse("base-spire:flutter-power");
+    public static readonly ContentId SwipePower = ContentId.Parse("base-spire:swipe-power");
     public static readonly ContentId MysteriousKnight = ContentId.Parse("base-spire:mysterious-knight");
     public static readonly ContentId SoulNexus = ContentId.Parse("base-spire:soul-nexus");
     public static readonly ContentId SoulFysh = ContentId.Parse("base-spire:soul-fysh");

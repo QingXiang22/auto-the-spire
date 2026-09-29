@@ -10,6 +10,7 @@ internal sealed class EntityState
     private readonly Dictionary<(ContentId Power, int Subscription), int> _powerEventTriggersThisPlayerTurn = [];
     private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
     private readonly Dictionary<(ContentId Power, string? ScopeId), int> _powerEventAmounts = [];
+    private readonly Dictionary<ContentId, List<CardInstance>> _powerCards = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
 
     public EntityState(string id, bool isEnemy, int hp, int maxHp)
@@ -83,6 +84,25 @@ internal sealed class EntityState
         foreach (var key in _powerVariables.Keys.Where(key => key.Power == power).ToArray())
             _powerVariables.Remove(key);
     }
+    internal void StorePowerCard(ContentId power, CardInstance card)
+    {
+        if (PowerAmount(power) <= 0)
+            throw new InvalidOperationException($"Cannot store a card on inactive Power '{power}'.");
+        if (!_powerCards.TryGetValue(power, out var cards)) _powerCards.Add(power, cards = []);
+        cards.Add(card);
+    }
+    internal IReadOnlyList<CardInstance> PowerCards(ContentId power) =>
+        _powerCards.TryGetValue(power, out var cards) ? cards.AsReadOnly() : Array.Empty<CardInstance>();
+    internal CardInstance? TakePowerCard(ContentId power)
+    {
+        if (!_powerCards.TryGetValue(power, out var cards) || cards.Count == 0) return null;
+        var card = cards[0];
+        cards.RemoveAt(0);
+        return card;
+    }
+    internal IReadOnlyDictionary<ContentId, IReadOnlyList<CardInstance>> PowerCardSnapshot() =>
+        _powerCards.ToDictionary(pair => pair.Key,
+            pair => (IReadOnlyList<CardInstance>)Array.AsReadOnly(pair.Value.ToArray()));
     internal void AccumulatePowerEventAmount(ContentId power, string? scopeId, int amount)
     {
         var key = (power, scopeId);

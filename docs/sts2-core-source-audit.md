@@ -4,7 +4,7 @@
 
 状态含义：**首轮已读**表示围绕当前切片读过关键实现和调用关系，不表示逐行审计了该域全部文件；**待扩展**表示已定位入口，后续扩展前需要继续追踪调用方、顺序和边界情况。
 
-战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；82 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀与逃跑的独立生命周期、定向卡牌 Affliction 生命周期、临时卡牌降级及多施加者 Power 清理、Minion 阻止触发 Fatal 卡牌奖励已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
+战斗内容 DSL 的作者模型与当前实现边界见 [`content-dsl.md`](content-dsl.md) 和 [`combat-dsl-design.md`](combat-dsl-design.md)。当前卡牌声明覆盖 Ironclad 可用单人卡池；83 种已注册怪物均由 `.spire` 内容编译。敌人实例变量、共享战斗变量、条件加权行为、盟友行动查询、总敌人数量约束、阶段生命值重设、召唤 Power 覆盖、本回合行动队列边界、带敌人定义筛选的盟友目标、多段攻击意图逐击计算、直接击杀与逃跑的独立生命周期、定向卡牌 Affliction 生命周期、临时卡牌降级及多施加者 Power 清理、Minion 阻止触发 Fatal 卡牌奖励、卡牌实例附魔和地图访问战利品标志已纳入行为 DSL 和运行态，遇敌阵容仍由 JSON 配置。源码审计标出的其余原版怪物与未建模 AI 仍需继续导入和验证，不应以当前 roster 作为全量完成依据。
 
 [`SpectralKnight.cs`](../sts2/src/Core/Models/Monsters/SpectralKnight.cs) 与 [`HexPower.cs`](../sts2/src/Core/Models/Powers/HexPower.cs) 已按源码类名迁入 `enemies-glory.spire`。Hex 给玩家所有当前战斗卡牌施加 Hexed，Hexed 仅在原卡牌尚未受其他 Affliction 影响时添加 Ethereal；新进入战斗的卡牌也会继承 Hexed。施加者死亡后 Hex 移除，并由 `power_removed` 事件清理 Hexed，同时仅移除由该 Affliction 添加的关键词。运行测试覆盖当前卡牌、新入战卡牌、击杀清理和原有 Ethereal 保留边界。Power 移除事件携带受影响 Power ID，并在 Power 已从实体状态删除后仍可派发给该 Power 声明的事件处理器。
 
@@ -17,6 +17,8 @@
 [`FatGremlin.cs`](../sts2/src/Core/Models/Monsters/FatGremlin.cs) 是 Gremlin Merc 遭遇中被召出的逃跑单位。它有 13–17 HP（Tough 14–18），先显示 Stun 意图并执行无规则效果的唤醒动作，随后执行 Escape。`escape(target=self)` 将它从存活目标、敌方行动队列和遭遇终止判定中移出，同时保留正生命值，不触发死亡及盟友死亡效果；观察视图显式暴露 `IsEscaped`。其召唤来源和逃跑时的金币比例由下述 Gremlin Merc/Surprise 迁移覆盖。
 
 [`GremlinMerc.cs`](../sts2/src/Core/Models/Monsters/GremlinMerc.cs)、[`SurprisePower.cs`](../sts2/src/Core/Models/Powers/SurprisePower.cs)、[`ThieveryPower.cs`](../sts2/src/Core/Models/Powers/ThieveryPower.cs)、[`HeistPower.cs`](../sts2/src/Core/Models/Powers/HeistPower.cs) 与 [`GremlinMercNormal.cs`](../sts2/src/Core/Models/Encounters/GremlinMercNormal.cs) 已迁入 `enemies-gremlins.spire` 和 encounter JSON。Gremlin Merc 普通 HP 47–49（Tough 51–53），依序使用 Gimme 两击 7（Tough 8）、Double Smash 两击 6（Tough 7）并施加 Weak 2、Hehe 攻击 8（Tough 9）并获得 2 Strength；每次攻击后最多偷取 20 金币。通用 `stealGold` 只扣除玩家实际持有量，并将实际金额累加到 Power 变量。Merc 死亡后，Surprise 依序召唤 Sneaky/Fat Gremlin，再只把 Heist Power 施加给 Fat，并转移已偷金额；Fat 死亡时把金额作为可领取的额外金币奖励返还，Fat 逃跑时则按是否持有 Heist 将本场基础金币比例设为 50% 或 0%。测试覆盖三招循环、实际金币扣除、击杀返还、未偷金逃跑半额和偷金后逃跑无金币奖励。遭遇已可直接启动，但 GremlinMercNormal 尚未加入任何 Act encounter pool。
+
+[`ThievingHopper.cs`](../sts2/src/Core/Models/Monsters/ThievingHopper.cs), `SwipePower.cs`, `FlutterPower.cs`, `EscapeArtistPower.cs` 与 `ThievingHopperWeak.cs` 已迁入 `enemies-gremlins.spire`。Thievery 按源码的稀有度和 Imbued 顺序优先级，从有 run-deck 对应项的抽牌堆/弃牌堆偷取，并把精确卡牌实例交由 Swipe Power 保管；Hopper 死亡后通过一个单卡奖励返还。通用 CardInstance 附魔 ID 与筛选、Power 持有卡牌、稳定移出战斗牌堆及 run deck 的 DSL 原语支持了该流程。Flutter 使用共享攻击伤害修正和目标受击事件；每次未被格挡的伤害消耗一层，耗尽时跳过 Hopper 下一行动。测试覆盖优先级、空候选不消耗随机数、原卡返还以及 Flutter 多段行为。地图访问视图也记录战利品偷取/返还标记；没有对应地图访问的直接战斗测试不会合成访问记录。遭遇可直接启动，尚未加入 Hive encounter pool。
 
 [`SoulNexus.cs`](../sts2/src/Core/Models/Monsters/SoulNexus.cs) 生命值普通 254 / Tough 234，首招 Soul Burn (29/31 Deadly)，之后在 Soul Burn、四击 Maelstrom (6/7 Deadly) 与 Drain Life (18/19 Deadly，另施加 Vulnerable 2 和 Weak 2) 间随机选择且不连续重复。`enemies-souls.spire` 用共享 `chooseWithoutRepeat` 与效果序列描述；测试覆盖招式选择、可见伤害修正、施加的 Powers、同 seed 复现及 Tough/Deadly 数据。
 

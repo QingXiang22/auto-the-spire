@@ -16,9 +16,9 @@ Sources: `ThievingHopper.cs`, `ThievingHopperWeak.cs`, `SwipePower.cs`, `Flutter
 
 ## Existing core boundary
 
-The run already stores persistent cards as `CardInstance` values with stable instance IDs. Combat receives those instances in its piles, while the run deck remains a separate list until room completion writes the combat result back. `CardDefinition` has rarity, and `CardInstance` now carries arbitrary namespaced enchantment IDs with generic add/remove effects and an effect predicate. It still lacks prioritized selection across rarity and enchantment filters. `PowerInstanceState` stores numeric variables but cannot own a card reference. Run rewards support Gold, Card choices, Relic, and Potion, but not a specific-card reward. Map visit history does not expose stolen/returned-loot flags.
+The run stores persistent cards as `CardInstance` values with stable instance IDs. Combat receives those instances in its piles, while the run deck remains a separate list until room completion writes the combat result back. `CardDefinition` has rarity, and `CardInstance` carries arbitrary namespaced enchantment IDs. Generic add/remove effects and an effect predicate expose that metadata. The `stealRunCard` effect searches configured combat piles using ordered rarity/enchantment priority groups, selects from the first non-empty group on `combat-card-generation`, and removes the exact instance from both combat and the run deck. The owning Power stores the card instance, and `returnHeldRunCardReward` creates a one-option reward containing that exact card and source encounter ID. Map visit history exposes `LootStolen` and `LootReturned` flags on the source point. Effects update those flags only when custody changes; map points without a run visit remain unaffected.
 
-These are missing shared concepts. They should not be implemented as `if (enemy == ThievingHopper)` branches in combat or run completion.
+These shared concepts are implemented without `if (enemy == ThievingHopper)` branches in combat or run completion. The current slice exercises them through one source-backed encounter.
 
 ## Proposed reusable semantics
 
@@ -28,25 +28,24 @@ These are missing shared concepts. They should not be implemented as `if (enemy 
 4. **Run history signals**: optional typed room-history events such as `loot_stolen` and `loot_returned`. They are observable run data; they must not control whether the card itself is removed or restored.
 5. **Power data**: a Power can own a typed card reference as extension state, in addition to numeric counters. The owner-death trigger can pass the held card into a generic specific-card reward effect.
 
-Candidate author-facing shape (syntax is provisional):
+Current author-facing syntax:
 
 ```text
 stealRunCard(
+  SwipePower,
   from=[draw, discard],
   priorities=[
-    cards(rarity=[uncommon], exclude=[imbued]),
-    cards(rarity=[common, rare, event], exclude=[imbued]),
-    cards(rarity=[basic, quest], exclude=[imbued]),
-    cards(rarity=[ancient], include=[imbued])
-  ],
-  storeOn=SwipePower,
-  random=CombatCardGeneration
+    priority(rarities=[uncommon], excludeEnchantments=[Imbued]),
+    priority(rarities=[common, rare, event], excludeEnchantments=[Imbued]),
+    priority(rarities=[basic, quest], excludeEnchantments=[Imbued]),
+    priority(rarities=[ancient], requireEnchantments=[Imbued], matchAny=true)
+  ]
 )
 
-returnHeldRunCardAsReward(SwipePower, sourceEncounter=ThievingHopperWeak)
+returnHeldRunCardReward(SwipePower, sourceEncounter=ThievingHopperWeak)
 ```
 
-The implementation should lower these declarations to validated typed effects at package load. Combat steps should only execute precompiled filters and mutate existing run/combat state.
+The compiler lowers these declarations to validated typed effects at package load. Combat steps execute precompiled filters and mutate existing run/combat state. The Thieving Hopper definition exercises this syntax. The run observation exposes the source visit loot flags.
 
 ## Acceptance tests for this slice
 
@@ -55,6 +54,6 @@ The implementation should lower these declarations to validated typed effects at
 - Cards without a run-deck instance and cards outside the configured piles are not candidates.
 - Killing the Hopper queues one specific-card reward. Claiming it restores exactly the original card instance to the run deck once; leaving the reward unclaimed does not duplicate it.
 - Generated cards that lack a persistent run-card instance are never accidentally deleted from the run deck.
-- Map history reports the source loot flags without affecting combat outcomes or RNG.
+- Map history marks theft after a successful selection and return after a reward is queued, without affecting combat outcomes or RNG.
 
-Flutter damage reduction and stun timing should be verified as a separate combat-runtime test after the card-custody slice; they must reuse the existing damage, Power, and action-queue contracts.
+Flutter's damage reduction and stun timing are verified alongside the custody behavior using the existing damage, Power, and action-queue contracts.

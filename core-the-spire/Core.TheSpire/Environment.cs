@@ -15,6 +15,8 @@ public sealed record EnemyCombatObservation(string Id, int Hp, int MaxHp, int Bl
         = new Dictionary<ContentId, IReadOnlyDictionary<ContentId, int>>();
     public IReadOnlyDictionary<ContentId, int> Variables { get; init; }
         = new Dictionary<ContentId, int>();
+    public IReadOnlyDictionary<ContentId, IReadOnlyList<CardInstance>> PowerCards { get; init; }
+        = new Dictionary<ContentId, IReadOnlyList<CardInstance>>();
 }
 
 public sealed class CombatEnvironment(GameDefinition definition)
@@ -312,6 +314,7 @@ public sealed class CombatEnvironment(GameDefinition definition)
             IsEscaped = enemy.IsEscaped,
             ActionUseCounts = new Dictionary<ContentId, int>(enemy.ActionUseCounts),
             PowerVariables = enemy.Creature.PowerVariableSnapshot(),
+            PowerCards = enemy.Creature.PowerCardSnapshot(),
             Variables = new Dictionary<ContentId, int>(enemy.Variables),
             SlotIndex = enemy.SlotIndex
         };

@@ -272,11 +272,18 @@ public sealed record MapPointView(string Id, int Floor, int Column, MapPointType
     IReadOnlyList<string> Children);
 
 public sealed record RunMapVisitView(int ActIndex, string PointId, MapPointType MapPointType,
-    IReadOnlyList<RunRoomType> RoomTypes);
+    IReadOnlyList<RunRoomType> RoomTypes)
+{
+    public bool LootStolen { get; init; }
+    public bool LootReturned { get; init; }
+}
 
 public enum RunRewardKind { Gold, Card, Relic, Potion }
 public sealed record RunRewardView(string Id, RunRewardKind Kind, int Amount,
-    IReadOnlyList<CardInstance> CardOptions, ContentId? RelicId = null, ContentId? PotionId = null);
+    IReadOnlyList<CardInstance> CardOptions, ContentId? RelicId = null, ContentId? PotionId = null)
+{
+    public ContentId? SourceEncounterId { get; init; }
+}
 public sealed record ClaimCardRewardAction(string RewardId, string CardInstanceId) : PlayerAction;
 public sealed record RunEventOptionView(ContentId Id, string Label, bool IsEnabled = true);
 public sealed record PendingRunCardSelectionView(string Prompt, IReadOnlyList<CardInstance> Candidates, bool CanSkip);
@@ -498,7 +505,7 @@ internal sealed class RunState
     public int Hp { get; set; }
     public int MaxHp { get; set; }
     public int Gold { get; set; }
-    public int NextCombatGoldRewardIndex { get; set; }
+    public int NextCombatRewardIndex { get; set; }
     public List<CardInstance> Deck { get; }
     public List<ContentId> Relics { get; }
     public List<ContentId?> Potions { get; }
@@ -526,8 +533,40 @@ internal sealed class RunState
         ArgumentOutOfRangeException.ThrowIfNegative(amount);
         if (amount == 0) return;
         if (RoomStack.Count == 0) throw new InvalidOperationException("A combat reward requires an active room.");
-        var rewardId = $"combat-extra-gold-{NextCombatGoldRewardIndex++}";
+        var rewardId = $"combat-extra-gold-{NextCombatRewardIndex++}";
         RoomStack[^1].Rewards.Add(new RunRewardState(rewardId, RunRewardKind.Gold, amount));
+    }
+    internal bool RemoveDeckCard(string instanceId, out CardInstance card)
+    {
+        var index = Deck.FindIndex(candidate => candidate.InstanceId == instanceId);
+        if (index < 0)
+        {
+            card = null!;
+            return false;
+        }
+        card = Deck[index];
+        Deck.RemoveAt(index);
+        return true;
+    }
+    internal void AddSpecificCardReward(CardInstance card, ContentId sourceEncounter)
+    {
+        if (RoomStack.Count == 0) throw new InvalidOperationException("A card reward requires an active room.");
+        var rewardId = $"combat-specific-card-{NextCombatRewardIndex++}";
+        RoomStack[^1].Rewards.Add(new RunRewardState(rewardId, RunRewardKind.Card, 0,
+            [card], SourceEncounterId: sourceEncounter));
+    }
+
+    internal void MarkCurrentVisitLootStolen() => MarkCurrentVisit(visit => visit with { LootStolen = true });
+
+    internal void MarkCurrentVisitLootReturned() => MarkCurrentVisit(visit => visit with { LootReturned = true });
+
+    private void MarkCurrentVisit(Func<RunMapVisitView, RunMapVisitView> update)
+    {
+        var mapPointId = RoomStack.LastOrDefault(frame => frame.MapPointId is not null)?.MapPointId;
+        if (mapPointId is null) return;
+        var visitIndex = VisitHistory.FindLastIndex(visit => visit.ActIndex == ActIndex
+            && visit.PointId == mapPointId);
+        if (visitIndex >= 0) VisitHistory[visitIndex] = update(VisitHistory[visitIndex]);
     }
     internal int GetModInt(string modId, string key, int defaultValue = 0) => _modInts.Get(modId, key, defaultValue);
     internal int ReadModInt(string modId, string key) => _modInts.GetDeclared(modId, key);
@@ -690,7 +729,8 @@ internal sealed record PendingRunCardSelectionState(ChooseRunCardEffect Selectio
     bool IsFinalEvent, ContentId? NextPageId);
 
 internal sealed record RunRewardState(string Id, RunRewardKind Kind, int Amount,
-    IReadOnlyList<CardInstance>? CardOptions = null, ContentId? RelicId = null, ContentId? PotionId = null);
+    IReadOnlyList<CardInstance>? CardOptions = null, ContentId? RelicId = null, ContentId? PotionId = null,
+    ContentId? SourceEncounterId = null);
 
 /// <summary>Single-player run lifecycle and map-choice layer. Room rules are resolved by room-specific environments.</summary>
 public sealed class RunEnvironment
@@ -782,7 +822,8 @@ public sealed class RunEnvironment
             : null,
         Array.AsReadOnly(frame.EnemySelections.Select(enemy => enemy.EnemyId).ToArray()),
         Array.AsReadOnly(frame.Rewards.Select(reward => new RunRewardView(reward.Id, reward.Kind,
-            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId, reward.PotionId)).ToArray()),
+            reward.Amount, reward.CardOptions ?? Array.Empty<CardInstance>(), reward.RelicId, reward.PotionId)
+            { SourceEncounterId = reward.SourceEncounterId }).ToArray()),
         Array.AsReadOnly(frame.EventOptions.Select(option => new RunEventOptionView(option.Id, option.Label,
             IsEventOptionLegal(option, state))).ToArray()));
 
