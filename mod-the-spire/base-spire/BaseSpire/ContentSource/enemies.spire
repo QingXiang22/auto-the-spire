@@ -56,7 +56,10 @@ package base-spire {
       effect=applyPower(CurlUpTriggered, 1, target=self))]
   }
 
-  power IllusionPower {}
+  power IllusionPower {
+    trigger = afterOwnerDeath
+    effect = queueRevival(intent=Heal)
+  }
 
   power SoarPower {
     incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered])]
@@ -639,6 +642,39 @@ package base-spire {
       louseProgenitorPounce = attack(variants(default=14, deadly=16), target=player)
     )
     behavior = cycle(louseProgenitorWeb, louseProgenitorCurlAndGrow, louseProgenitorPounce)
+  }
+
+  enemy TheObscura {
+    hp = variants(default=range(123, 123), tough=range(129, 129))
+    moves = actions(
+      obscuraIllusion = action(intent=Summon,
+        effect=summonEnemy(Parafright, slot=FirstAvailable)),
+      obscuraPiercingGaze = attack(variants(default=10, deadly=11), target=player),
+      obscuraSail = sequence(
+        applyPower(Strength, 3, target=self),
+        applyPower(Strength, 3, target=otherAllies)
+      ),
+      obscuraHardeningStrike = sequence(
+        attack(variants(default=6, deadly=7), target=player),
+        gainBlock(variants(default=6, deadly=7))
+      )
+    )
+    behavior = graph(start=obscuraIllusion, edges=[
+      edge(obscuraIllusion, chooseWithoutRepeat(
+        obscuraPiercingGaze, obscuraSail, obscuraHardeningStrike)),
+      edge(obscuraPiercingGaze, chooseWithoutRepeat(obscuraSail, obscuraHardeningStrike)),
+      edge(obscuraSail, chooseWithoutRepeat(obscuraPiercingGaze, obscuraHardeningStrike)),
+      edge(obscuraHardeningStrike, chooseWithoutRepeat(obscuraPiercingGaze, obscuraSail))
+    ])
+  }
+
+  enemy Parafright {
+    hp = variants(default=range(21, 21), tough=range(21, 21))
+    startingPowers = [power(IllusionPower, 1), power(Minion, 1)]
+    moves = actions(
+      parafrightSlam = attack(variants(default=16, deadly=17), target=player)
+    )
+    behavior = loop(parafrightSlam)
   }
 
   enemy CubexConstruct {

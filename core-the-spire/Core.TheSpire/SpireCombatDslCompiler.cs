@@ -355,6 +355,13 @@ public static class SpireCombatDslCompiler
                 case "escape":
                     CheckShape(call, 0, 0, "target");
                     return new EscapeEffect(OptionalTarget(call, "target", TargetSelector.Self));
+                case "queueRevival":
+                    CheckShape(call, 0, 0, "intent");
+                    var revivalIntent = OptionalArgument(call, "intent") is { } intentNode
+                        ? EnumValue<IntentKind>(intentNode) : IntentKind.Heal;
+                    if (revivalIntent is IntentKind.None or IntentKind.Attack or IntentKind.DeathBlow)
+                        throw Error(call.Location, "A queued enemy revival must use a non-damaging intent.");
+                    return new QueueEnemyRevivalEffect(revivalIntent);
                 case "temporarilyDowngradeCards":
                     CheckShape(call, 1, 1, "target");
                     return new TemporarilyDowngradeCardsEffect(ReferenceId(Argument(call, 0)),

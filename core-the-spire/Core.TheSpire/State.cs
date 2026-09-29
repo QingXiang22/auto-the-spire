@@ -200,6 +200,9 @@ internal sealed class EnemyCombatState(EntityState creature, EnemyDefinition def
     public EnemyDefinition Definition { get; } = definition;
     public bool IsEscaped { get; set; }
     public bool IsActive => Creature.Hp > 0 && !IsEscaped;
+    public bool ReservesSlot => IsActive || PendingRevivalIntent is not null;
+    public IntentKind? PendingRevivalIntent { get; set; }
+    public bool RevivedDuringEnemyTurn { get; set; }
     public int SlotIndex { get; set; }
     public int ActionIndex { get; set; }
     public bool SkipNextAction { get; set; }
@@ -317,11 +320,11 @@ internal sealed class GameState
     public List<EnemyCombatState> Enemies { get; }
     internal int? TotalEnemySlots { get; }
     internal IReadOnlyList<int> AvailableEnemySlots => TotalEnemySlots is { } total
-        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot || !enemy.IsActive)).ToArray()
+        ? Enumerable.Range(0, total).Where(slot => Enemies.All(enemy => enemy.SlotIndex != slot || !enemy.ReservesSlot)).ToArray()
         : Array.Empty<int>();
     internal void AddEnemy(EnemyCombatState enemy)
     {
-        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex && candidate.IsActive))
+        if (Enemies.Any(candidate => candidate.SlotIndex == enemy.SlotIndex && candidate.ReservesSlot))
             throw new InvalidOperationException($"Enemy slot {enemy.SlotIndex} is already occupied.");
         var index = Enemies.FindIndex(candidate => candidate.SlotIndex > enemy.SlotIndex);
         Enemies.Insert(index < 0 ? Enemies.Count : index, enemy);
@@ -359,7 +362,8 @@ internal sealed class GameState
         while (Enemies.Any(enemy => StringComparer.Ordinal.Equals(enemy.Creature.Id, instanceId)));
         return instanceId;
     }
-    public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => !enemy.IsActive))
+    public bool IsTerminal => (Player.Creature.Hp <= 0 || Enemies.All(enemy => !enemy.IsActive
+            && enemy.PendingRevivalIntent is null))
         && PendingChoice is null && PendingCardSelection is null && PendingEffects.Count == 0;
     public ChooseEffect? PendingChoice { get; internal set; }
     internal PendingCardSelectionState? PendingCardSelection { get; set; }

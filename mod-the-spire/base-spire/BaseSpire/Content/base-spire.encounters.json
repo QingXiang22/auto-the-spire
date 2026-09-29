@@ -423,6 +423,17 @@
       "enemyIds": ["base-spire:louse-progenitor"]
     },
     {
+      "id": "base-spire:the-obscura-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:the-obscura"],
+          "slotCount": 2,
+          "slotIndices": [1]
+        }
+      ]
+    },
+    {
       "id": "base-spire:cubex-construct-normal",
       "roomType": "monster",
       "enemyIds": ["base-spire:cubex-construct"]
