@@ -323,13 +323,16 @@ public static class SpireCombatDslCompiler
                     CheckShape(call, 0, 0, "target");
                     return new KillEffect(OptionalTarget(call, "target", TargetSelector.Self));
                 case "afflictCards":
-                    CheckShape(call, 1, 1, "type");
+                    CheckShape(call, 1, 1, "type", "target", "onlyIfUnafflicted");
                     return new AfflictCardsEffect(ReferenceId(Argument(call, 0)),
-                        OptionalArgument(call, "type") is { } afflictType ? EnumValue<CardType>(afflictType) : null);
+                        OptionalArgument(call, "type") is { } afflictType ? EnumValue<CardType>(afflictType) : null,
+                        OptionalEnum(call, "target", TargetSelector.Self),
+                        OptionalBoolean(call, "onlyIfUnafflicted", false));
                 case "clearAffliction":
-                    CheckShape(call, 1, 1, "type");
+                    CheckShape(call, 1, 1, "type", "target");
                     return new ClearAfflictionEffect(ReferenceId(Argument(call, 0)),
-                        OptionalArgument(call, "type") is { } clearType ? EnumValue<CardType>(clearType) : null);
+                        OptionalArgument(call, "type") is { } clearType ? EnumValue<CardType>(clearType) : null,
+                        OptionalEnum(call, "target", TargetSelector.Self));
                 case "setEnemyHealth":
                     CheckShape(call, 1, 1);
                     var healthRange = RequireCall(Argument(call, 0));

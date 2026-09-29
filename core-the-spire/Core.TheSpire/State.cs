@@ -391,7 +391,7 @@ internal sealed class GameState
             }
         }
         foreach (var actor in Enemies.Select(enemy => enemy.Creature).Append(Player.Creature))
-        foreach (var (powerId, powerAmount) in actor.Powers.ToArray())
+        foreach (var (powerId, powerAmount) in GetEventPowerEntries(actor, type, target, affectedPower, amount))
         {
             if (powerAmount <= 0) continue;
             foreach (var subscription in Definition.Powers[powerId].Events)
@@ -427,7 +427,8 @@ internal sealed class GameState
                 }
                 var otherId = subscription.Owner == GameEventActor.Source ? target : source;
                 (effects ??= []).Add((actor,
-                    new PowerEventEffect(powerId, subscription.Effect, gameEvent.CardSourceInstanceId),
+                    new PowerEventEffect(powerId, subscription.Effect, gameEvent.CardSourceInstanceId,
+                        AllowRemovedPower: type == "power_removed"),
                     FindCreature(otherId), subscription.Phase));
             }
         }
@@ -565,7 +566,8 @@ internal sealed class GameState
             if (!Definition.Powers[powerId].RemoveWhenApplierDies || !sourceIds.Remove(applierId)) continue;
             if (sourceIds.Count > 0) continue;
             var amount = RemovePower(owner, powerId);
-            if (amount != 0) Emit(session, "power_removed", applierId, owner.Id, amount);
+            if (amount != 0) Emit(session, "power_removed", applierId, owner.Id, amount,
+                affectedPower: powerId);
         }
     }
 
@@ -724,6 +726,16 @@ internal sealed class GameState
         }
     }
 
+    private static IEnumerable<KeyValuePair<ContentId, int>> GetEventPowerEntries(EntityState actor,
+        string eventType, string targetId, ContentId? affectedPower, int eventAmount)
+    {
+        foreach (var power in actor.Powers)
+            yield return power;
+        if (eventType == "power_removed" && actor.Id == targetId && affectedPower is { } removedPower
+            && !actor.Powers.ContainsKey(removedPower) && eventAmount > 0)
+            yield return new KeyValuePair<ContentId, int>(removedPower, eventAmount);
+    }
+
     internal int ModifyBlockGain(EntityState owner, int amount, DamageProperties properties)
     {
         if ((properties & DamageProperties.Move) != 0 && (properties & DamageProperties.Unpowered) == 0)
@@ -827,7 +839,7 @@ internal sealed class GameState
     {
         var amount = RemovePower(owner, powerId);
         if (amount == 0) return;
-        Emit(session, "power_removed", owner.Id, owner.Id, amount);
+        Emit(session, "power_removed", owner.Id, owner.Id, amount, affectedPower: powerId);
         if (Definition.Powers[powerId].OnExpire is { } adjustment)
             ApplyPower(session, owner, adjustment.Power, checked(amount * adjustment.AmountPerStack), owner);
     }

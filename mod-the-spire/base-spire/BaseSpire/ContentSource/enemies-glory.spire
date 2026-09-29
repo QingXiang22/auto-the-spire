@@ -1,4 +1,40 @@
 package base-spire {
+  affliction Hexed {
+    addKeywords = [Ethereal]
+  }
+
+  power Hex {
+    isDebuff = true
+    trigger = afterCardEnteredCombat
+    effect = afflictCards(Hexed, target=self, onlyIfUnafflicted=true)
+    removeWhenApplierDies = true
+    events = [event(type=power_removed, owner=target, power=Hex,
+      effect=clearAffliction(Hexed, target=self))]
+  }
+
+  enemy SpectralKnight {
+    hp = variants(default=range(93, 93), tough=range(97, 97))
+    moves = actions(
+      spectralKnightHex = sequence(
+        applyPower(Hex, 2, target=firstEnemy),
+        afflictCards(Hexed, target=firstEnemy, onlyIfUnafflicted=true)
+      ),
+      spectralKnightSoulSlash = attack(variants(default=15, deadly=17), target=player),
+      spectralKnightSoulFlame = repeat(3, attack(variants(default=3, deadly=4), target=player))
+    )
+    behavior = graph(start=spectralKnightHex, edges=[
+      edge(spectralKnightHex, spectralKnightSoulSlash),
+      edge(spectralKnightSoulSlash, chooseWithLimits(
+        candidate(spectralKnightSoulSlash, weight=2),
+        candidate(spectralKnightSoulFlame, cooldown=1)
+      )),
+      edge(spectralKnightSoulFlame, chooseWithLimits(
+        candidate(spectralKnightSoulSlash, weight=2),
+        candidate(spectralKnightSoulFlame, cooldown=1)
+      ))
+    ])
+  }
+
   power HighVoltage {
     trigger = afterEnemyTurnEnd
     effect = applyScaledPower(Strength, 0, 1,

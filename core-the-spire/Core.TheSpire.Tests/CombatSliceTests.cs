@@ -2476,9 +2476,9 @@ public sealed class CombatSliceTests
     {
         var content = BaseSpireContent.LoadEnemyBehavior();
 
-        Assert.Equal(31, content.Powers.Count);
-        Assert.Equal(69, content.Enemies.Count);
-        Assert.Equal(69, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(32, content.Powers.Count);
+        Assert.Equal(70, content.Enemies.Count);
+        Assert.Equal(70, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2522,6 +2522,47 @@ public sealed class CombatSliceTests
             "package broken { enemy Bad { hp = range(1, 2) moves = actions(badHit = attack(1, target=player)) behavior = loop(missing) } }",
             "broken.spire");
         Assert.Throws<DslSourceException>(() => SpireCombatBehaviorDslCompiler.Compile(invalid));
+    }
+
+    public void SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies()
+    {
+        var definition = Build(new BaseSpirePackage());
+        var environment = new CombatEnvironment(definition);
+        var session = environment.Start(1137, "ironclad", 56, 65,
+            [BaseSpireIds.StrikeIronclad, BaseSpireIds.DefendIronclad], BaseSpireIds.SpectralKnight.ToString());
+        var hexed = ContentId.Parse("base-spire:hexed");
+
+        environment.Step(session, new EndTurnAction());
+
+        var combatCards = Enum.GetValues<CardPile>().SelectMany(session.State.GetPile).ToArray();
+        Assert.True(combatCards.Length > 0);
+        foreach (var card in combatCards)
+        {
+            Assert.Contains(card.Afflictions, affliction => affliction == hexed);
+            Assert.True((definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Ethereal) != 0);
+        }
+
+        var enteredCard = session.State.Player.CreateGeneratedCard(BaseSpireIds.DefendIronclad);
+        session.State.Player.MutableDiscardPile.Add(enteredCard);
+        CombatCardEvents.QueueEntry(session.State, enteredCard);
+        EffectExecutor.Resume(session);
+        var enteredInCombat = session.State.FindCombatCard(enteredCard.InstanceId)!;
+        Assert.Contains(enteredInCombat.Afflictions, affliction => affliction == hexed);
+        Assert.True((definition.Cards[enteredInCombat.CardId].ResolveKeywords(enteredInCombat)
+            & CardKeywords.Ethereal) != 0);
+
+        var spectralKnight = session.State.Enemies.Single().Creature;
+        EffectExecutor.Execute(session, session.State.Player.Creature,
+            new AttackEffect(1000, TargetSelector.SelectedTarget), spectralKnight);
+        EffectExecutor.Resume(session);
+
+        Assert.Equal(0, session.State.Player.Creature.PowerAmount(ContentId.Parse("base-spire:hex")));
+        var remainingCards = Enum.GetValues<CardPile>().SelectMany(session.State.GetPile);
+        foreach (var card in remainingCards)
+        {
+            Assert.False(card.Afflictions.Contains(hexed));
+            Assert.False((definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Ethereal) != 0);
+        }
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -6253,6 +6294,7 @@ internal static class Program
         tests.RageTriggersOnlyAfterAttackCardsAndExpiresAtPlayerTurnEnd();
         tests.AfterCardPlayedPowerResumesOnceAfterCardChoice();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
+        tests.SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
