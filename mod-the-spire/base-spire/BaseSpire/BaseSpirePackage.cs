@@ -114,6 +114,7 @@ public static class BaseSpireIds
     public static readonly ContentId SpectralKnight = ContentId.Parse("base-spire:spectral-knight");
     public static readonly ContentId SneakyGremlin = ContentId.Parse("base-spire:sneaky-gremlin");
     public static readonly ContentId MysteriousKnight = ContentId.Parse("base-spire:mysterious-knight");
+    public static readonly ContentId SoulNexus = ContentId.Parse("base-spire:soul-nexus");
     public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
     public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
     public static readonly ContentId NibbitsNormal = ContentId.Parse("base-spire:nibbits-normal");
