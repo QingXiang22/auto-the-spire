@@ -12,15 +12,37 @@ public static class SpireCombatDslCompiler
 
         public IReadOnlyList<CardDefinition> CompileCards()
         {
-            var cards = package.Members.OfType<DslDeclarationNode>().ToArray();
-            if (cards.Length != package.Members.Count)
+            var declarations = package.Members.OfType<DslDeclarationNode>().ToArray();
+            if (declarations.Length != package.Members.Count)
                 throw Error(package.Location, "A card package can contain card declarations only.");
-            foreach (var card in cards)
-                if (card.Kind != "card") throw Error(card.Location, $"Expected a card declaration, found '{card.Kind}'.");
+            foreach (var declaration in declarations)
+                if (declaration.Kind is not ("card" or "cardPool"))
+                    throw Error(declaration.Location, $"Expected a card or cardPool declaration, found '{declaration.Kind}'.");
+            var cards = declarations.Where(declaration => declaration.Kind == "card").ToArray();
             var compiled = cards.Select(CompileCard).ToArray();
             if (compiled.Select(card => card.Id).Distinct().Count() != compiled.Length)
                 throw Error(package.Location, "Card IDs must be unique within a package.");
             return Array.AsReadOnly(compiled);
+        }
+
+        public IReadOnlyList<CardPoolDefinition> CompileCardPools()
+        {
+            var declarations = package.Members.OfType<DslDeclarationNode>().ToArray();
+            if (declarations.Length != package.Members.Count)
+                throw Error(package.Location, "A card pool package can contain declarations only.");
+            foreach (var declaration in declarations)
+                if (declaration.Kind is not ("card" or "cardPool"))
+                    throw Error(declaration.Location, $"Expected a card or cardPool declaration, found '{declaration.Kind}'.");
+            var pools = declarations.Where(declaration => declaration.Kind == "cardPool").Select(declaration =>
+            {
+                var properties = ReadProperties(declaration);
+                RequireOnlyProperties(declaration, properties, "cards");
+                return new CardPoolDefinition(Id(declaration.Name),
+                    ParseIds(Required(properties, "cards", declaration.Location), "cards"));
+            }).ToArray();
+            if (pools.Select(pool => pool.Id).Distinct().Count() != pools.Length)
+                throw Error(package.Location, "Card pool IDs must be unique within a package.");
+            return Array.AsReadOnly(pools);
         }
 
         public IReadOnlyList<PotionDefinition> CompilePotions()
@@ -1042,6 +1064,12 @@ public static class SpireCombatDslCompiler
     {
         ArgumentNullException.ThrowIfNull(package);
         return new Compiler(package).CompileCards();
+    }
+
+    public static IReadOnlyList<CardPoolDefinition> CompileCardPools(DslPackageNode package)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+        return new Compiler(package).CompileCardPools();
     }
 
     public static IReadOnlyList<PotionDefinition> CompilePotions(DslPackageNode package)

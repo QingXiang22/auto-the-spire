@@ -998,4 +998,27 @@ package base-spire {
     afterAutoPostPlay = autoPlaySelectedCard(from=exhaust)
     upgradedAfterAutoPostPlay = autoPlaySelectedCard(from=exhaust)
   }
+
+  cardPool IroncladCardPool {
+    cards = [
+      Aggression, Anger, Armaments, AshenStrike, Barricade,
+      Bash, BattleTrance, BloodWall, Bloodletting, Bludgeon,
+      BodySlam, Brand, Break, Breakthrough, Bully,
+      BurningPact, Cascade, Cinder, Colossus, Conflagration,
+      Corruption, CrimsonMantle, Cruelty, DarkEmbrace, DefendIronclad,
+      DemonForm, Dismantle, Dominate, DrumOfBattle,
+      EvilEye, ExpectAFight, Feed, FeelNoPain, FiendFire,
+      FightMe, FlameBarrier, ForgottenRitual, Havoc, Headbutt,
+      Hellraiser, Hemokinesis, HowlFromBeyond, Impervious, InfernalBlade,
+      Inferno, Inflame, IronWave, Juggernaut, Juggling,
+      Mangle, MoltenFist, NotYet, Offering, OneTwoPunch,
+      PactsEnd, PerfectedStrike, Pillage, PommelStrike, PrimalForce,
+      Pyre, Rage, Rampage, Rupture, SecondWind,
+      SetupStrike, ShrugItOff, Spite, Stampede, Stoke,
+      Stomp, StoneArmor, StrikeIronclad, SwordBoomerang,
+      Taunt, TearAsunder, Thrash, Thunderclap, Tremble,
+      TrueGrit, TwinStrike, Unmovable, Unrelenting, Uppercut,
+      Vicious, Whirlwind
+    ]
+  }
 }
