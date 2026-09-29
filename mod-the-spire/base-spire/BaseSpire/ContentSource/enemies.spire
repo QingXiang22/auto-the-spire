@@ -1170,6 +1170,47 @@ package base-spire {
     ])
   }
 
+  enemy TheAdversaryMkOne {
+    hp = variants(default=range(100, 100), tough=range(100, 100))
+    moves = actions(
+      adversaryOneSmash = attack(12, target=player),
+      adversaryOneBeam = attack(15, target=player),
+      adversaryOneBarrage = sequence(
+        repeat(2, attack(8, target=player)),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = cycle(adversaryOneSmash, adversaryOneBeam, adversaryOneBarrage)
+  }
+
+  enemy TheAdversaryMkTwo {
+    hp = variants(default=range(200, 200), tough=range(200, 200))
+    startingPowers = [power(Artifact, 1)]
+    moves = actions(
+      adversaryTwoBash = attack(13, target=player),
+      adversaryTwoFlameBeam = attack(16, target=player),
+      adversaryTwoBarrage = sequence(
+        repeat(2, attack(9, target=player)),
+        applyPower(Strength, 3, target=self)
+      )
+    )
+    behavior = cycle(adversaryTwoBash, adversaryTwoFlameBeam, adversaryTwoBarrage)
+  }
+
+  enemy TheAdversaryMkThree {
+    hp = variants(default=range(300, 300), tough=range(300, 300))
+    startingPowers = [power(Artifact, 2)]
+    moves = actions(
+      adversaryThreeCrash = attack(15, target=player),
+      adversaryThreeFlameBeam = attack(18, target=player),
+      adversaryThreeBarrage = sequence(
+        repeat(2, attack(10, target=player)),
+        applyPower(Strength, 4, target=self)
+      )
+    )
+    behavior = cycle(adversaryThreeCrash, adversaryThreeFlameBeam, adversaryThreeBarrage)
+  }
+
 
 
 

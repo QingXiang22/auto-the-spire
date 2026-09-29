@@ -123,6 +123,9 @@ public static class BaseSpireIds
     public static readonly ContentId Parafright = ContentId.Parse("base-spire:parafright");
     public static readonly ContentId IllusionPower = ContentId.Parse("base-spire:illusion-power");
     public static readonly ContentId FakeMerchant = ContentId.Parse("base-spire:fake-merchant");
+    public static readonly ContentId TheAdversaryMkOne = ContentId.Parse("base-spire:the-adversary-mk-one");
+    public static readonly ContentId TheAdversaryMkTwo = ContentId.Parse("base-spire:the-adversary-mk-two");
+    public static readonly ContentId TheAdversaryMkThree = ContentId.Parse("base-spire:the-adversary-mk-three");
     public static readonly ContentId SurprisePower = ContentId.Parse("base-spire:surprise-power");
     public static readonly ContentId ThieveryPower = ContentId.Parse("base-spire:thievery-power");
     public static readonly ContentId HeistPower = ContentId.Parse("base-spire:heist-power");
