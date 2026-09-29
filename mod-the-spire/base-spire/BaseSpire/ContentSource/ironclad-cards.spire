@@ -979,7 +979,6 @@ package base-spire {
   }
 
   card WellLaidPlans {
-    pools = [IroncladCardPool]
     type = power
     rarity = uncommon
     cost = 1
