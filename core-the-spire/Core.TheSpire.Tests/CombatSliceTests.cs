@@ -2477,8 +2477,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(32, content.Powers.Count);
-        Assert.Equal(70, content.Enemies.Count);
-        Assert.Equal(70, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(71, content.Enemies.Count);
+        Assert.Equal(71, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -2563,6 +2563,35 @@ public sealed class CombatSliceTests
             Assert.False(card.Afflictions.Contains(hexed));
             Assert.False((definition.Cards[card.CardId].ResolveKeywords(card) & CardKeywords.Ethereal) != 0);
         }
+    }
+
+    public void SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles()
+    {
+        var normal = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var session = normal.Start(1138, "ironclad", 56, 65, [], BaseSpireIds.SneakyGremlin.ToString());
+        var openingIntent = normal.Observe(session);
+        Assert.Equal(IntentKind.Stun, openingIntent.Intent);
+        Assert.Equal(0, openingIntent.IntentDamage);
+
+        normal.Step(session, new EndTurnAction());
+        Assert.Equal(56, session.State.Player.Creature.Hp);
+        Assert.Equal(IntentKind.Attack, normal.Observe(session).Intent);
+        Assert.Equal(9, normal.Observe(session).IntentDamage);
+
+        normal.Step(session, new EndTurnAction());
+        Assert.Equal(47, session.State.Player.Creature.Hp);
+        Assert.Equal(IntentKind.Attack, normal.Observe(session).Intent);
+        Assert.Equal(9, normal.Observe(session).IntentDamage);
+
+        var toughDeadly = new CombatEnvironment(Build(new BaseSpirePackage(deadlyEnemies: true,
+            toughEnemies: true)));
+        var variantSession = toughDeadly.Start(1139, "ironclad", 56, 65, [],
+            BaseSpireIds.SneakyGremlin.ToString());
+        Assert.True(toughDeadly.Observe(variantSession).EnemyHp is >= 10 and <= 14);
+        toughDeadly.Step(variantSession, new EndTurnAction());
+        Assert.Equal(10, toughDeadly.Observe(variantSession).IntentDamage);
+        toughDeadly.Step(variantSession, new EndTurnAction());
+        Assert.Equal(46, variantSession.State.Player.Creature.Hp);
     }
 
     public void BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards()
@@ -6295,6 +6324,7 @@ internal static class Program
         tests.AfterCardPlayedPowerResumesOnceAfterCardChoice();
         tests.SpireEnemyDslCompilesTheCompleteCurrentMonsterRoster();
         tests.SpectralKnightHexAfflictsEnteringCardsAndClearsWhenKnightDies();
+        tests.SneakyGremlinWakesThenCyclesItsAttackAcrossDifficultyProfiles();
         tests.BaseWeakSlimeEncounterUsesRandomSlotsAndAppliesSlimedCards();
         tests.BaseFlyconidHonorsMoveCooldownsAcrossRecentActionHistory();
         tests.BaseSoloNibbitFollowsItsAttackBlockAndStrengthCycle();
