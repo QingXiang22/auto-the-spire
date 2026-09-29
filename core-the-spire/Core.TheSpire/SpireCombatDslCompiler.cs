@@ -414,8 +414,12 @@ public static class SpireCombatDslCompiler
                     {
                         var option = RequireCall(node);
                         if (option.Name != "option") throw Error(option.Location, "Expected option(label, effect=...).");
-                        CheckShape(option, 1, 1, "effect");
-                        return new ChoiceOption(StringValue(Argument(option, 0)), OptionalEffect(option, "effect"));
+                        CheckShape(option, 1, 2, "effect");
+                        var positional = Positional(option).ToArray();
+                        if (positional.Length == 2 && OptionalArgument(option, "effect") is not null)
+                            throw Error(option.Location, "An option effect must be positional or named, not both.");
+                        return new ChoiceOption(StringValue(positional[0].Value), positional.Length == 2
+                            ? CompileEffect(positional[1].Value) : OptionalEffect(option, "effect"));
                     }).ToArray();
                     if (compiledOptions.Length == 0) throw Error(call.Location, "A choice requires at least one option.");
                     return new ChooseEffect(StringValue(RequiredArgument(call, "prompt")), compiledOptions);
