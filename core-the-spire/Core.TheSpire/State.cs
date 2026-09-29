@@ -6,6 +6,7 @@ internal sealed class EntityState
 {
     private readonly Dictionary<ContentId, int> _powers = [];
     private readonly Dictionary<(ContentId Power, ContentId Variable), int> _powerVariables = [];
+    private readonly Dictionary<ContentId, int> _incomingDamageThisPlayerTurn = [];
     private readonly Dictionary<ContentId, HashSet<string>> _powerAppliers = [];
     private readonly Dictionary<(ContentId Power, string? ScopeId), int> _powerEventAmounts = [];
     private readonly IReadOnlyDictionary<ContentId, int> _powerView;
@@ -33,6 +34,11 @@ internal sealed class EntityState
     public int PowerAmount(ContentId id) => _powers.GetValueOrDefault(id);
     internal int PowerVariable(ContentId power, ContentId variable) =>
         _powerVariables.GetValueOrDefault((power, variable));
+    internal int IncomingDamageThisPlayerTurn(ContentId power) =>
+        _incomingDamageThisPlayerTurn.GetValueOrDefault(power);
+    internal void AddIncomingDamageThisPlayerTurn(ContentId power, int amount) =>
+        _incomingDamageThisPlayerTurn[power] = checked(IncomingDamageThisPlayerTurn(power) + amount);
+    internal void ResetIncomingDamageThisPlayerTurn() => _incomingDamageThisPlayerTurn.Clear();
     internal IReadOnlyDictionary<ContentId, IReadOnlyDictionary<ContentId, int>> PowerVariableSnapshot() =>
         _powerVariables.GroupBy(pair => pair.Key.Power).ToDictionary(
             group => group.Key,
@@ -360,6 +366,9 @@ internal sealed class GameState
         bool causedByEtherealExhaustion = false, ContentId? affectedPower = null,
         decimal? exactAmount = null, ContentId? affectedVariable = null)
     {
+        if (type == "player_turn_start")
+            foreach (var creature in Enemies.Select(enemy => enemy.Creature).Append(Player.Creature))
+                creature.ResetIncomingDamageThisPlayerTurn();
         var gameEvent = new GameEvent(_events.Count, type, source, target, amount, properties,
             cardSource?.InstanceId, causedByEtherealExhaustion, affectedPower, CurrentCardPlay?.ExecutionId,
             exactAmount, affectedVariable);
@@ -555,6 +564,26 @@ internal sealed class GameState
             if (amount > 0 && Definition.Powers[powerId].DamageCapPerStack is { } capPerStack)
                 damage = Math.Min(damage, checked(capPerStack * amount));
         return Math.Max(0, damage);
+    }
+
+    internal int LimitIncomingDamageThisPlayerTurn(EntityState target, int damage)
+    {
+        foreach (var (powerId, amount) in target.Powers)
+        {
+            if (amount <= 0 || Definition.Powers[powerId].IncomingDamageCapPerTurnPerStack is not { } capPerStack)
+                continue;
+            var cap = checked(capPerStack * amount);
+            damage = Math.Min(damage, Math.Max(0, cap - target.IncomingDamageThisPlayerTurn(powerId)));
+        }
+        return damage;
+    }
+
+    internal void RecordIncomingDamageThisPlayerTurn(EntityState target, int damage)
+    {
+        if (damage <= 0) return;
+        foreach (var (powerId, amount) in target.Powers)
+            if (amount > 0 && Definition.Powers[powerId].IncomingDamageCapPerTurnPerStack is not null)
+                target.AddIncomingDamageThisPlayerTurn(powerId, damage);
     }
 
     internal void RemovePowersAppliedBy(GameSession session, string applierId)

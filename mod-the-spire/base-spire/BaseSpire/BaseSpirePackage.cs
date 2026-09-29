@@ -117,6 +117,8 @@ public static class BaseSpireIds
     public static readonly ContentId SoulNexus = ContentId.Parse("base-spire:soul-nexus");
     public static readonly ContentId TorchHeadAmalgam = ContentId.Parse("base-spire:torch-head-amalgam");
     public static readonly ContentId Minion = ContentId.Parse("base-spire:minion");
+    public static readonly ContentId SkulkingColony = ContentId.Parse("base-spire:skulking-colony");
+    public static readonly ContentId HardenedShellPower = ContentId.Parse("base-spire:hardened-shell-power");
     public static readonly ContentId Nibbit = ContentId.Parse("base-spire:nibbit");
     public static readonly ContentId NibbitsWeak = ContentId.Parse("base-spire:nibbits-weak");
     public static readonly ContentId NibbitsNormal = ContentId.Parse("base-spire:nibbits-normal");

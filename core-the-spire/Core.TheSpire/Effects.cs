@@ -598,7 +598,9 @@ internal static class EffectExecutor
                     var hpLossTarget = ResolveSingleTarget(state, owner, target, loseHp.Target);
                     var wasAliveBeforeHpLoss = hpLossTarget.Hp > 0;
                     var hpLost = Math.Min(hpLossTarget.Hp, loseHp.Amount);
+                    hpLost = state.LimitIncomingDamageThisPlayerTurn(hpLossTarget, hpLost);
                     hpLossTarget.Hp -= hpLost;
+                    state.RecordIncomingDamageThisPlayerTurn(hpLossTarget, hpLost);
                     state.Emit(session, "hp_loss", owner.Id, hpLossTarget.Id, hpLost,
                         loseHp.Properties, selectedCard);
                     if (wasAliveBeforeHpLoss && hpLossTarget.Hp == 0)
@@ -1335,9 +1337,11 @@ internal static class EffectExecutor
         if (blockBeforeDamage > 0 && victim.Block == 0)
             state.Emit(session, "block_broken", owner.Id, victim.Id, blockBeforeDamage, properties, cardSource);
         var damage = Math.Min(victim.Hp, rawDamage - absorbed);
+        damage = state.LimitIncomingDamageThisPlayerTurn(victim, damage);
         var fatal = damage > 0 && damage == victim.Hp
             && !victim.Powers.Any(power => power.Value > 0 && state.Definition.Powers[power.Key].PreventsFatal);
         victim.Hp -= damage;
+        state.RecordIncomingDamageThisPlayerTurn(victim, damage);
         if (fatal && onFatal is not null)
             state.PendingEffects.Add(new(owner, onFatal, victim, cardSource));
         state.Emit(session, "damage", owner.Id, victim.Id, damage, properties, cardSource);
