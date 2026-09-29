@@ -1008,6 +1008,38 @@ public sealed class CombatSliceTests
         Assert.Equal(15, toughDeadly.Observe(upgradedProfile).IntentDamage);
     }
 
+    public void AdversaryMachinesShareTheirThreeMoveCycleWithVariantStats()
+    {
+        var environment = new CombatEnvironment(Build(new BaseSpirePackage()));
+        var cases = new[]
+        {
+            (BaseSpireIds.TheAdversaryMkOne, 100, 0, 12, 8, 2),
+            (BaseSpireIds.TheAdversaryMkTwo, 200, 1, 13, 9, 3),
+            (BaseSpireIds.TheAdversaryMkThree, 300, 2, 15, 10, 4)
+        };
+
+        foreach (var (enemyId, hp, artifact, firstDamage, barrageDamage, strengthGain) in cases)
+        {
+            var session = environment.Start(1166, "ironclad", 2000, 2000, [], enemyId.ToString());
+            var enemy = session.State.Enemies.Single();
+            Assert.Equal(hp, enemy.Creature.Hp);
+            Assert.Equal(artifact, enemy.Creature.PowerAmount(ContentId.Parse("base-spire:artifact")));
+            Assert.Equal(firstDamage, environment.Observe(session).IntentDamage);
+
+            environment.Step(session, new EndTurnAction());
+            environment.Step(session, new EndTurnAction());
+            var damageBeforeBarrage = session.State.Events.Count(gameEvent => gameEvent.Type == "damage");
+            environment.Step(session, new EndTurnAction());
+            var barrageHits = session.State.Events.Where(gameEvent => gameEvent.Type == "damage")
+                .Skip(damageBeforeBarrage).ToArray();
+
+            Assert.Equal(2, barrageHits.Length);
+            Assert.True(barrageHits.All(gameEvent => gameEvent.Amount == barrageDamage));
+            Assert.Equal(strengthGain, enemy.Creature.Strength);
+            Assert.Equal(firstDamage + strengthGain, environment.Observe(session).IntentDamage);
+        }
+    }
+
     public void BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle()
     {
         var actionId = ContentId.Parse("action-graph-test:start");
@@ -2748,8 +2780,8 @@ public sealed class CombatSliceTests
         var content = BaseSpireContent.LoadEnemyBehavior();
 
         Assert.Equal(46, content.Powers.Count);
-        Assert.Equal(86, content.Enemies.Count);
-        Assert.Equal(86, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
+        Assert.Equal(89, content.Enemies.Count);
+        Assert.Equal(89, content.Enemies.Select(enemy => enemy.Id).Distinct().Count());
         var actionIds = content.Enemies.SelectMany(enemy => enemy.Actions).Select(action => action.Id).ToArray();
         Assert.Equal(actionIds.Length, actionIds.Distinct().Count());
 
@@ -7116,6 +7148,7 @@ internal static class Program
         tests.LouseProgenitorCurlUpWaitsForItsFirstDamagingCard();
         tests.TheObscuraSummonsParafrightWhichRevivesAtItsNextAction();
         tests.FakeMerchantUsesWeightedNoRepeatActionsAndRestrictsItsPostThrowChoices();
+        tests.AdversaryMachinesShareTheirThreeMoveCycleWithVariantStats();
         tests.BaseFuzzyWurmEncounterUsesItsLinkedSourceActionCycle();
         tests.BaseShrinkerBeetleUsesAPlayerDamageModifierRemovedWithItsApplier();
         tests.ConstructMenagerieEncounterMatchesSourceFormation();
