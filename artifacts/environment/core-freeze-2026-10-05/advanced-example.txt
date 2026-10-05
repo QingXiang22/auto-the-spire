@@ -1,0 +1,21 @@
+start: Running
+  tutorial:Counter: Score=0, Attempts=0, Applied=0
+  tutorial:Option: Delta=1
+  tutorial:Option: Delta=2
+submit: AwaitingDecision
+  tutorial:Counter: Score=0, Attempts=1, Applied=0
+  tutorial:Option: Delta=1
+  tutorial:Option: Delta=2
+answer: Running
+  tutorial:Counter: Score=2, Attempts=1, Applied=1
+  tutorial:Option: Delta=1
+  tutorial:Option: Delta=2
+submit: AwaitingDecision
+  tutorial:Counter: Score=2, Attempts=2, Applied=1
+  tutorial:Option: Delta=1
+  tutorial:Option: Delta=2
+answer: Terminal
+  tutorial:Counter: Score=3, Attempts=2, Applied=2
+  tutorial:Option: Delta=1
+  tutorial:Option: Delta=2
+result: tutorial:ReachedTarget

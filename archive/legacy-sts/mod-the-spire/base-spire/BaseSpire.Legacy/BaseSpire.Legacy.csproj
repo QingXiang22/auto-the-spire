@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../core-the-spire/Core.TheSpire.Legacy/Core.TheSpire.Legacy.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Content/*.encounters.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Content/*.acts.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="ContentSource/*.spire" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

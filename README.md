@@ -1,5 +1,7 @@
 # auto-the-spire
 
+2026-10-05：通用内核冻结为 engine/ir@0.3。此提交独立收录核心及必要配套，下游 base/net/AI 工作区改动仍待各自提交。当前入口与验证见 [core 冻结交接](docs/contracts/core-git-checkpoint.md)；下文旧 API 描述保留历史背景，以冻结契约为准。
+
 为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》训练环境。整体依赖方向是：通用规则内核 `core-the-spire` → 原版内容包 `mod-the-spire/base-spire` 与其他 mod → 未来由 `net-the-spire` 暴露统一的 Gym 风格接口。
 
 ## 当前构成

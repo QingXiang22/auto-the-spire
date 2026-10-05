@@ -1,0 +1,10 @@
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+  Core.TheSpire -> F:\Scylier-Project\active\auto-the-spire\.audit\core-git-freeze-2026-10-05\tree\core-the-spire\Core.TheSpire\bin\Debug\net9.0\Core.TheSpire.dll
+  Core.TheSpire.Engine.Tests -> F:\Scylier-Project\active\auto-the-spire\.audit\core-git-freeze-2026-10-05\tree\core-the-spire\Core.TheSpire.Engine.Tests\bin\Debug\net9.0\Core.TheSpire.Engine.Tests.dll
+
+已成功生成。
+    0 个警告
+    0 个错误
+
+已用时间 00:00:02.28

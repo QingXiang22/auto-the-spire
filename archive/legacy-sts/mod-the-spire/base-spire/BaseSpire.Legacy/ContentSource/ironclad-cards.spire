@@ -1,0 +1,4320 @@
+using namespace base-spire;
+
+card DemonicShield {
+    multiplayerOnly = true
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.allies where = alive } }
+        keywords = { exhaust }
+        play = {
+            loseHp = {
+                        amount = 1
+                        target = context.owner
+                        properties = { move unpowered unblockable }
+                    }
+            gainBlockFromCurrentBlock = {
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.allies where = alive } }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 1
+                        target = context.owner
+                        properties = { move unpowered unblockable }
+                    }
+            gainBlockFromCurrentBlock = {
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Tank {
+    multiplayerOnly = true
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = TankPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = TankPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Toxic {
+    upgradeable = false
+    normal = {
+        type = status
+        rarity = status
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust unplayable }
+        play = {
+
+        }
+        hooks = {
+            turnEndInHand = {
+                attack = {
+            damage = 5
+            target = context.owner
+            properties = { move unpowered }
+        }
+            }
+        }
+    }
+    upgraded = {
+        type = status
+        rarity = status
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust unplayable }
+        play = {
+
+        }
+        hooks = {
+            turnEndInHand = {
+                attack = {
+            damage = 5
+            target = context.owner
+            properties = { move unpowered }
+        }
+            }
+        }
+    }
+}
+
+card Infection {
+    upgradeable = false
+    normal = {
+        type = status
+        rarity = status
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { unplayable }
+        play = {
+
+        }
+        hooks = {
+            turnEndInHand = {
+                loseHp = {
+            amount = 3
+            target = context.owner
+        }
+            }
+        }
+    }
+    upgraded = {
+        type = status
+        rarity = status
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { unplayable }
+        play = {
+
+        }
+        hooks = {
+            turnEndInHand = {
+                loseHp = {
+            amount = 3
+            target = context.owner
+        }
+            }
+        }
+    }
+}
+
+card Stomp {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 3
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 12
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+            onEnterCombat = {
+                if = {
+            condition = { selectedCardIsClone = {
+
+        } }
+            then = {
+
+            }
+            else = {
+                modifySelectedCardCost = {
+            modifier = { costModifier = {
+            amount = { scaled = {
+            base = 0
+            perCount = -1
+            count = { cardPlaysThisTurn = {
+            type = attack
+            phase = finished
+        } }
+        } }
+            operation = add
+            expires = { turnEnd }
+        } }
+        }
+            }
+        }
+            }
+            beforeCardPlayed = {
+                whenCardType = attack
+                effect = {
+                modifySelectedCardCost = {
+            modifier = { costModifier = {
+            amount = -1
+            operation = add
+            expires = { turnEnd }
+        } }
+        }
+            }
+            }
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 3
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 15
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+            onEnterCombat = {
+                if = {
+            condition = { selectedCardIsClone = {
+
+        } }
+            then = {
+
+            }
+            else = {
+                modifySelectedCardCost = {
+            modifier = { costModifier = {
+            amount = { scaled = {
+            base = 0
+            perCount = -1
+            count = { cardPlaysThisTurn = {
+            type = attack
+            phase = finished
+        } }
+        } }
+            operation = add
+            expires = { turnEnd }
+        } }
+        }
+            }
+        }
+            }
+            beforeCardPlayed = {
+                whenCardType = attack
+                effect = {
+                modifySelectedCardCost = {
+            modifier = { costModifier = {
+            amount = -1
+            operation = add
+            expires = { turnEnd }
+        } }
+        }
+            }
+            }
+        }
+    }
+}
+
+card Juggling {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = JugglingPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { innate }
+        play = {
+            applyPower = {
+                        power = JugglingPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card FlameBarrier {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 12
+                    }
+            applyPower = {
+                        power = FlameBarrierPower
+                        stacks = 4
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 16
+                    }
+            applyPower = {
+                        power = FlameBarrierPower
+                        stacks = 6
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Juggernaut {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = JuggernautPower
+                        stacks = 6
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = JuggernautPower
+                        stacks = 8
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Rupture {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = RupturePower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = RupturePower
+                        stacks = 2
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card DarkEmbrace {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = DarkEmbracePower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = DarkEmbracePower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Vicious {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = ViciousPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = ViciousPower
+                        stacks = 2
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card StoneArmor {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = PlatingPower
+                        stacks = 4
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = PlatingPower
+                        stacks = 6
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Pillage {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 6
+                    }
+            drawUntil = {
+                        type = attack
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 9
+                    }
+            drawUntil = {
+                        type = attack
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Colossus {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 5
+                    }
+            applyPower = {
+                        power = ColossusPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 8
+                    }
+            applyPower = {
+                        power = ColossusPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Aggression {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = AggressionPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { innate }
+        play = {
+            applyPower = {
+                        power = AggressionPower
+                        stacks = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card InfernalBlade {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            generateCards = {
+                        count = 1
+                        type = attack
+                        distinct = true
+                        cost = { costModifier = {
+                        amount = 0
+                        expires = { turnEnd played }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            generateCards = {
+                        count = 1
+                        type = attack
+                        distinct = true
+                        cost = { costModifier = {
+                        amount = 0
+                        expires = { turnEnd played }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card PrimalForce {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            forEachCard = {
+                        from = hand
+                        filter = attack
+                        effect = { transformSelectedCard = {
+                        card = GiantRock
+                        from = hand
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            forEachCard = {
+                        from = hand
+                        filter = attack
+                        effect = { transformSelectedCard = {
+                        card = GiantRock
+                        from = hand
+                        upgraded = true
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card GiantRock {
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = token
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 16
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = token
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 20
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Stoke {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            withCount = {
+                        name = "handSize"
+                        count = { pileCount = {
+                        pile = hand
+                    } }
+                        effect = { forEachCard = {
+                        from = hand
+                        effect = { moveSelectedCard = {
+                        from = hand
+                        to = exhaust
+                    } }
+                    } generateCards = {
+                        count = { scaled = {
+                        base = 0
+                        perCount = 1
+                        count = { savedCount = {
+                        name = "handSize"
+                    } }
+                    } }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            withCount = {
+                        name = "handSize"
+                        count = { pileCount = {
+                        pile = hand
+                    } }
+                        effect = { forEachCard = {
+                        from = hand
+                        effect = { moveSelectedCard = {
+                        from = hand
+                        to = exhaust
+                    } }
+                    } generateCards = {
+                        count = { scaled = {
+                        base = 0
+                        perCount = 1
+                        count = { savedCount = {
+                        name = "handSize"
+                    } }
+                    } }
+                        upgraded = true
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card FiendFire {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    damageValue = 7
+    upgradedDamageValue = 10
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            withCount = {
+                        name = "handSize"
+                        count = { pileCount = {
+                        pile = hand
+                    } }
+                        effect = { forEachCard = {
+                        from = hand
+                        effect = { moveSelectedCard = {
+                        from = hand
+                        to = exhaust
+                    } }
+                    } repeatForCount = {
+                        base = 0
+                        perCount = 1
+                        count = { savedCount = {
+                        name = "handSize"
+                    } }
+                        effect = { attack = {
+                        damage = 7
+                    } }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            withCount = {
+                        name = "handSize"
+                        count = { pileCount = {
+                        pile = hand
+                    } }
+                        effect = { forEachCard = {
+                        from = hand
+                        effect = { moveSelectedCard = {
+                        from = hand
+                        to = exhaust
+                    } }
+                    } repeatForCount = {
+                        base = 0
+                        perCount = 1
+                        count = { savedCount = {
+                        name = "handSize"
+                    } }
+                        effect = { attack = {
+                        damage = 10
+                    } }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card DrumOfBattle {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            draw = {
+                        amount = 2
+                    }
+        }
+        hooks = {
+            onExhaust = {
+                modifyEnergy = {
+            amount = 2
+        }
+            }
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            draw = {
+                        amount = 2
+                    }
+        }
+        hooks = {
+            onExhaust = {
+                modifyEnergy = {
+            amount = 3
+        }
+            }
+        }
+    }
+}
+
+card Cascade {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = X
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            autoPlay = {
+                        from = draw
+                        count = { scaled = {
+                        base = 0
+                        perCount = 1
+                        count = { energyX = {
+
+                    } }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = X
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            autoPlay = {
+                        from = draw
+                        count = { scaled = {
+                        base = 1
+                        perCount = 1
+                        count = { energyX = {
+
+                    } }
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Havoc {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            autoPlay = {
+                        from = draw
+                        count = 1
+                        forceExhaust = true
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            autoPlay = {
+                        from = draw
+                        count = 1
+                        forceExhaust = true
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card OneTwoPunch {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = OneTwoPunchPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = OneTwoPunchPower
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Corruption {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = ancient
+        cost = 3
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = CorruptionPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = ancient
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = CorruptionPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Unrelenting {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 14
+                    }
+            applyPower = {
+                        power = FreeAttackPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 20
+                    }
+            applyPower = {
+                        power = FreeAttackPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card ExpectAFight {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            modifyEnergy = {
+                        amount = { scaled = {
+                        base = 0
+                        perCount = 1
+                        count = { pileCount = {
+                        pile = hand
+                        type = attack
+                    } }
+                    } }
+                    }
+            applyPower = {
+                        power = NoEnergyGainPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            modifyEnergy = {
+                        amount = { scaled = {
+                        base = 0
+                        perCount = 1
+                        count = { pileCount = {
+                        pile = hand
+                        type = attack
+                    } }
+                    } }
+                    }
+            applyPower = {
+                        power = NoEnergyGainPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card TearAsunder {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeatForCount = {
+                        base = 1
+                        perCount = 1
+                        count = { playerHpLossCount = {
+
+                    } }
+                        effect = { attack = {
+                        damage = 5
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeatForCount = {
+                        base = 1
+                        perCount = 1
+                        count = { playerHpLossCount = {
+
+                    } }
+                        effect = { attack = {
+                        damage = 7
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Anger {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 6
+                    }
+            cloneCard = {
+                        pile = discard
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 8
+                    }
+            cloneCard = {
+                        pile = discard
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Armaments {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 5
+                    }
+            chooseCard = {
+                        from = hand
+                        to = none
+                        prompt = "Choose a card to upgrade"
+                        filter = upgradeable
+                        onSelected = { upgradeSelectedCard = {
+
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 5
+                    }
+            upgradeCards = {
+                        pile = hand
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card StrikeIronclad {
+    pools = { IroncladCardPool }
+    tags = { Strike }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = basic
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 6
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = basic
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 9
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card DefendIronclad {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = basic
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 5
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = basic
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 8
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Bash {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = basic
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 8
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 2
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = basic
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 10
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 3
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Break {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = ancient
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 20
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 5
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = ancient
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 30
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 7
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Breakthrough {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 1
+                    }
+            attack = {
+                        damage = 9
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 1
+                    }
+            attack = {
+                        damage = 13
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card BattleTrance {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            draw = {
+                        amount = 3
+                    }
+            applyPower = {
+                        power = NoDraw
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            draw = {
+                        amount = 4
+                    }
+            applyPower = {
+                        power = NoDraw
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Bloodletting {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 3
+                    }
+            modifyEnergy = {
+                        amount = 2
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 3
+                    }
+            modifyEnergy = {
+                        amount = 3
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Bludgeon {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 3
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 32
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 3
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 42
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Barricade {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 3
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = BarricadePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = BarricadePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Entrench {
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = event
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlockFromCurrentBlock = {
+
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = event
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlockFromCurrentBlock = {
+
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card BodySlam {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    damageValue = { scaled = {
+            base = 0
+            perCount = 1
+            count = { block = {
+            target = context.owner
+        } }
+        } }
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attackUsingBlock = {
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attackUsingBlock = {
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card BurningPact {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            chooseCard = {
+                        from = hand
+                        to = exhaust
+                        prompt = "Choose a card to exhaust"
+                    }
+            draw = {
+                        amount = 2
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            chooseCard = {
+                        from = hand
+                        to = exhaust
+                        prompt = "Choose a card to exhaust"
+                    }
+            draw = {
+                        amount = 3
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Slimed {
+    upgradeable = false
+    normal = {
+        type = status
+        rarity = status
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            draw = {
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = status
+        rarity = status
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            draw = {
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Wound {
+    upgradeable = false
+    normal = {
+        type = status
+        rarity = status
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { unplayable }
+        play = {
+
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = status
+        rarity = status
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { unplayable }
+        play = {
+
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card DemonForm {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 3
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = DemonFormPower
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 3
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = DemonFormPower
+                        stacks = 3
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card FeelNoPain {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = FeelNoPain
+                        stacks = 3
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = FeelNoPain
+                        stacks = 4
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Headbutt {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 9
+                    }
+            chooseCard = {
+                        from = discard
+                        to = draw
+                        prompt = "Choose a card from discard"
+                        destinationPosition = top
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 12
+                    }
+            chooseCard = {
+                        from = discard
+                        to = draw
+                        prompt = "Choose a card from discard"
+                        destinationPosition = top
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Hemokinesis {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 2
+                    }
+            attack = {
+                        damage = 15
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 2
+                    }
+            attack = {
+                        damage = 20
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card IronWave {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 5
+                    }
+            attack = {
+                        damage = 5
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 7
+                    }
+            attack = {
+                        damage = 7
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Offering {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            loseHp = {
+                        amount = 6
+                    }
+            modifyEnergy = {
+                        amount = 2
+                    }
+            draw = {
+                        amount = 3
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            loseHp = {
+                        amount = 6
+                    }
+            modifyEnergy = {
+                        amount = 2
+                    }
+            draw = {
+                        amount = 5
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Inflame {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = Strength
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = Strength
+                        stacks = 3
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Impervious {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            gainBlock = {
+                        amount = 30
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            gainBlock = {
+                        amount = 40
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card PommelStrike {
+    pools = { IroncladCardPool }
+    tags = { Strike }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 9
+                    }
+            draw = {
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 10
+                    }
+            draw = {
+                        amount = 2
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card ShrugItOff {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 8
+                    }
+            draw = {
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 11
+                    }
+            draw = {
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card SecondWind {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            forEachCard = {
+                        from = hand
+                        filter = nonAttack
+                        effect = { moveSelectedCard = {
+                        from = hand
+                        to = exhaust
+                    } gainBlock = {
+                        amount = 5
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            forEachCard = {
+                        from = hand
+                        filter = nonAttack
+                        effect = { moveSelectedCard = {
+                        from = hand
+                        to = exhaust
+                    } gainBlock = {
+                        amount = 7
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card SwordBoomerang {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectRandom = {} }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 3
+                        effect = { randomAttack = {
+                        damage = 3
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectRandom = {} }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 4
+                        effect = { randomAttack = {
+                        damage = 3
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card TwinStrike {
+    pools = { IroncladCardPool }
+    tags = { Strike }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 5
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 7
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Uppercut {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 13
+                    }
+            applyPower = {
+                        power = Weak
+                        stacks = 1
+                        target = context.target
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 1
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 13
+                    }
+            applyPower = {
+                        power = Weak
+                        stacks = 2
+                        target = context.target
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 2
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Thunderclap {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 4
+                        target = allEnemies
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 1
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 7
+                        target = allEnemies
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 1
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card TrueGrit {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 7
+                    }
+            randomMoveCard = {
+                        from = hand
+                        to = exhaust
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 9
+                    }
+            chooseCard = {
+                        from = hand
+                        to = exhaust
+                        prompt = "Choose a card to exhaust"
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Tremble {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 3
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 4
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Whirlwind {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = X
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            repeatForX = {
+                        effect = { attack = {
+                        damage = 5
+                        target = allEnemies
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = X
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            repeatForX = {
+                        effect = { attack = {
+                        damage = 8
+                        target = allEnemies
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card BloodWall {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = common
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 2
+                    }
+            gainBlock = {
+                        amount = 16
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = common
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 2
+                    }
+            gainBlock = {
+                        amount = 20
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Brand {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 1
+                    }
+            chooseCard = {
+                        from = hand
+                        to = exhaust
+                        prompt = "Choose a card to exhaust"
+                    }
+            applyPower = {
+                        power = Strength
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            loseHp = {
+                        amount = 1
+                    }
+            chooseCard = {
+                        from = hand
+                        to = exhaust
+                        prompt = "Choose a card to exhaust"
+                    }
+            applyPower = {
+                        power = Strength
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Cinder {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 18
+                    }
+            randomMoveCard = {
+                        from = hand
+                        to = exhaust
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 24
+                    }
+            randomMoveCard = {
+                        from = hand
+                        to = exhaust
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card EvilEye {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { cardExhaustedThisTurn = {
+
+                    } }
+                        then = {
+                            repeat = {
+                        count = 2
+                        effect = { gainBlock = {
+                        amount = 8
+                    } }
+                    }
+                        }
+                        else = {
+                            gainBlock = {
+                        amount = 8
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { cardExhaustedThisTurn = {
+
+                    } }
+                        then = {
+                            repeat = {
+                        count = 2
+                        effect = { gainBlock = {
+                        amount = 11
+                    } }
+                    }
+                        }
+                        else = {
+                            gainBlock = {
+                        amount = 11
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card ForgottenRitual {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            if = {
+                        condition = { cardExhaustedThisTurn = {
+
+                    } }
+                        then = {
+                            modifyEnergy = {
+                        amount = 3
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            if = {
+                        condition = { cardExhaustedThisTurn = {
+
+                    } }
+                        then = {
+                            modifyEnergy = {
+                        amount = 4
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card PactsEnd {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 0
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { pileCountAtLeast = {
+                        pile = exhaust
+                        count = 3
+                    } }
+                        then = {
+                            attack = {
+                        damage = 17
+                        target = allEnemies
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 0
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { pileCountAtLeast = {
+                        pile = exhaust
+                        count = 3
+                    } }
+                        then = {
+                            attack = {
+                        damage = 23
+                        target = allEnemies
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Taunt {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 7
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 1
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            gainBlock = {
+                        amount = 8
+                    }
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 2
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card AshenStrike {
+    pools = { IroncladCardPool }
+    tags = { Strike }
+    upgradeable = true
+    damageValue = { scaled = {
+            base = 6
+            perCount = 3
+            count = { pileCount = {
+            pile = exhaust
+        } }
+        } }
+    upgradedDamageValue = { scaled = {
+            base = 6
+            perCount = 4
+            count = { pileCount = {
+            pile = exhaust
+        } }
+        } }
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 6
+                        perCount = 3
+                        count = { pileCount = {
+                        pile = exhaust
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 6
+                        perCount = 4
+                        count = { pileCount = {
+                        pile = exhaust
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Bully {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    damageValue = 4
+    upgradedDamageValue = 4
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 4
+                        perCount = 2
+                        count = { targetPowerAmount = {
+                        power = Vulnerable
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 4
+                        perCount = 3
+                        count = { targetPowerAmount = {
+                        power = Vulnerable
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Dismantle {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { hasPower = {
+                        power = Vulnerable
+                        target = context.target
+                    } }
+                        then = {
+                            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 8
+                    } }
+                    }
+                        }
+                        else = {
+                            attack = {
+                        damage = 8
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { hasPower = {
+                        power = Vulnerable
+                        target = context.target
+                    } }
+                        then = {
+                            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 10
+                    } }
+                    }
+                        }
+                        else = {
+                            attack = {
+                        damage = 10
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card NotYet {
+    pools = { IroncladCardPool }
+    canGenerateInCombat = false
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            heal = {
+                        amount = 10
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = {
+            heal = {
+                        amount = 13
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card PerfectedStrike {
+    pools = { IroncladCardPool }
+    tags = { Strike }
+    upgradeable = true
+    damageValue = { scaled = {
+            base = 6
+            perCount = 2
+            count = { cardsWithTag = {
+            tag = Strike
+        } }
+        } }
+    upgradedDamageValue = { scaled = {
+            base = 6
+            perCount = 3
+            count = { cardsWithTag = {
+            tag = Strike
+        } }
+        } }
+    normal = {
+        type = attack
+        rarity = common
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 6
+                        perCount = 2
+                        count = { cardsWithTag = {
+                        tag = Strike
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 6
+                        perCount = 3
+                        count = { cardsWithTag = {
+                        tag = Strike
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card FightMe {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 5
+                    } }
+                    }
+            applyPower = {
+                        power = Strength
+                        stacks = 3
+                        target = context.owner
+                    }
+            applyPower = {
+                        power = Strength
+                        stacks = 1
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 6
+                    } }
+                    }
+            applyPower = {
+                        power = Strength
+                        stacks = 4
+                        target = context.owner
+                    }
+            applyPower = {
+                        power = Strength
+                        stacks = 1
+                        target = context.target
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Conflagration {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 1
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 4
+                        effect = { attack = {
+                        damage = 2
+                        target = allEnemies
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 1
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 5
+                        effect = { attack = {
+                        damage = 2
+                        target = allEnemies
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Dominate {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 1
+                        target = context.target
+                    }
+            applyScaledPower = {
+                        power = Strength
+                        base = 0
+                        perCount = 1
+                        count = { targetPowerAmount = {
+                        power = Vulnerable
+                    } }
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            applyPower = {
+                        power = Vulnerable
+                        stacks = 2
+                        target = context.target
+                    }
+            applyScaledPower = {
+                        power = Strength
+                        base = 0
+                        perCount = 1
+                        count = { targetPowerAmount = {
+                        power = Vulnerable
+                    } }
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card MoltenFist {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            attack = {
+                        damage = 10
+                    }
+            if = {
+                        condition = { targetAlive = {
+
+                    } }
+                        then = {
+                            if = {
+                        condition = { hasPower = {
+                        power = Vulnerable
+                        target = context.target
+                    } }
+                        then = {
+                            applyScaledPower = {
+                        power = Vulnerable
+                        base = 0
+                        perCount = 1
+                        count = { targetPowerAmount = {
+                        power = Vulnerable
+                    } }
+                        target = context.target
+                    }
+                        }
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = { exhaust }
+        play = {
+            attack = {
+                        damage = 14
+                    }
+            if = {
+                        condition = { targetAlive = {
+
+                    } }
+                        then = {
+                            if = {
+                        condition = { hasPower = {
+                        power = Vulnerable
+                        target = context.target
+                    } }
+                        then = {
+                            applyScaledPower = {
+                        power = Vulnerable
+                        base = 0
+                        perCount = 1
+                        count = { targetPowerAmount = {
+                        power = Vulnerable
+                    } }
+                        target = context.target
+                    }
+                        }
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Rage {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = RagePower
+                        stacks = 3
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = RagePower
+                        stacks = 5
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Spite {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { playerLostHpThisTurn = {
+
+                    } }
+                        then = {
+                            repeat = {
+                        count = 2
+                        effect = { attack = {
+                        damage = 5
+                    } }
+                    }
+                        }
+                        else = {
+                            attack = {
+                        damage = 5
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            if = {
+                        condition = { playerLostHpThisTurn = {
+
+                    } }
+                        then = {
+                            repeat = {
+                        count = 3
+                        effect = { attack = {
+                        damage = 5
+                    } }
+                    }
+                        }
+                        else = {
+                            attack = {
+                        damage = 5
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Pyre {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = PyrePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = PyrePower
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Cruelty {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = CrueltyPower
+                        stacks = 25
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = CrueltyPower
+                        stacks = 50
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card SetupStrike {
+    pools = { IroncladCardPool }
+    tags = { Strike }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 7
+                    }
+            applyPower = {
+                        power = SetupStrikePower
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 9
+                    }
+            applyPower = {
+                        power = SetupStrikePower
+                        stacks = 3
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Mangle {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 3
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 15
+                    }
+            if = {
+                        condition = { targetAlive = {
+
+                    } }
+                        then = {
+                            applyPower = {
+                        power = ManglePower
+                        stacks = 10
+                        target = context.target
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 3
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 20
+                    }
+            if = {
+                        condition = { targetAlive = {
+
+                    } }
+                        then = {
+                            applyPower = {
+                        power = ManglePower
+                        stacks = 15
+                        target = context.target
+                    }
+                        }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Rampage {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    variables = {
+        variable = {
+            name = ExtraDamage
+            default = 0
+            preserveOnDowngrade = true
+        }
+    }
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 9
+                        perCount = 1
+                        count = { cardVariable = {
+                        variable = ExtraDamage
+                    } }
+                    }
+            modifyCardVariable = {
+                        variable = ExtraDamage
+                        amount = 5
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            scaledAttack = {
+                        base = 9
+                        perCount = 1
+                        count = { cardVariable = {
+                        variable = ExtraDamage
+                    } }
+                    }
+            modifyCardVariable = {
+                        variable = ExtraDamage
+                        amount = 9
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card CrimsonMantle {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = CrimsonMantlePower
+                        stacks = 8
+                        target = context.owner
+                    }
+            modifyPowerVariable = {
+                        power = CrimsonMantlePower
+                        variable = SelfDamage
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = CrimsonMantlePower
+                        stacks = 10
+                        target = context.owner
+                    }
+            modifyPowerVariable = {
+                        power = CrimsonMantlePower
+                        variable = SelfDamage
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Inferno {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = InfernoPower
+                        stacks = 6
+                        target = context.owner
+                    }
+            modifyPowerVariable = {
+                        power = InfernoPower
+                        variable = SelfDamage
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = InfernoPower
+                        stacks = 9
+                        target = context.owner
+                    }
+            modifyPowerVariable = {
+                        power = InfernoPower
+                        variable = SelfDamage
+                        amount = 1
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Feed {
+    pools = { IroncladCardPool }
+    canGenerateInCombat = false
+    upgradeable = true
+    damageValue = 10
+    upgradedDamageValue = 12
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 10
+                        onFatal = { gainMaxHp = {
+                        amount = 3
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 12
+                        onFatal = { gainMaxHp = {
+                        amount = 4
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Hellraiser {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = HellraiserPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = HellraiserPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Unmovable {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = rare
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = UnmovablePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = rare
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = UnmovablePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Thrash {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    variables = {
+        variable = {
+            name = Damage
+            default = 4
+            upgraded = 6
+            preserveOnDowngrade = true
+        }
+    }
+    damageVariable = Damage
+    normal = {
+        type = attack
+        rarity = rare
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 2
+                        effect = { attackVariable = {
+                        variable = Damage
+                    } }
+                    }
+            randomMoveCard = {
+                        from = hand
+                        to = exhaust
+                        filter = attack
+                        after = { accumulateCardDamage = {
+                        variable = Damage
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = rare
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = {
+            repeat = {
+                        count = 2
+                        effect = { attackVariable = {
+                        variable = Damage
+                    } }
+                    }
+            randomMoveCard = {
+                        from = hand
+                        to = exhaust
+                        filter = attack
+                        after = { accumulateCardDamage = {
+                        variable = Damage
+                    } }
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card Stampede {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = StampedePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = StampedePower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card WellLaidPlans {
+    upgradeable = true
+    normal = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = WellLaidPlansPower
+                        stacks = 1
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+    upgraded = {
+        type = power
+        rarity = uncommon
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = {
+            applyPower = {
+                        power = WellLaidPlansPower
+                        stacks = 2
+                        target = context.owner
+                    }
+        }
+        hooks = {
+
+        }
+    }
+}
+
+card HowlFromBeyond {
+    pools = { IroncladCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 3
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 18
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+            afterAutoPostPlay = {
+                autoPlaySelectedCard = {
+            from = exhaust
+        }
+            }
+        }
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 3
+        target = { selectAll = {} }
+        keywords = {  }
+        play = {
+            attack = {
+                        damage = 24
+                        target = allEnemies
+                    }
+        }
+        hooks = {
+            afterAutoPostPlay = {
+                autoPlaySelectedCard = {
+            from = exhaust
+        }
+            }
+        }
+    }
+}
+
+cardPool IroncladCardPool {
+    cards = { Aggression Anger Armaments AshenStrike Barricade Bash BattleTrance BloodWall Bloodletting Bludgeon BodySlam Brand Break Breakthrough Bully BurningPact Cascade Cinder Colossus Conflagration Corruption CrimsonMantle Cruelty DarkEmbrace DefendIronclad DemonForm Dismantle Dominate DrumOfBattle EvilEye ExpectAFight Feed FeelNoPain FiendFire FightMe FlameBarrier ForgottenRitual Havoc Headbutt Hellraiser Hemokinesis HowlFromBeyond Impervious InfernalBlade Inferno Inflame IronWave Juggernaut Juggling Mangle MoltenFist NotYet Offering OneTwoPunch PactsEnd PerfectedStrike Pillage PommelStrike PrimalForce Pyre Rage Rampage Rupture SecondWind SetupStrike ShrugItOff Spite Stampede Stoke Stomp StoneArmor StrikeIronclad SwordBoomerang Taunt TearAsunder Thrash Thunderclap Tremble TrueGrit TwinStrike Unmovable Unrelenting Uppercut Vicious Whirlwind }
+}

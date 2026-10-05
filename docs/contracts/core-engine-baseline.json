@@ -1,0 +1,252 @@
+{
+  "baseline_id": "core-engine-2026-10-05",
+  "status": "FROZEN",
+  "date": "2026-10-05",
+  "engine_version": "engine/ir@0.3",
+  "supported_dsl_versions": [
+    "core/0.1",
+    "core/0.2"
+  ],
+  "compiler_identities": [
+    "core-dsl/0.1",
+    "core-dsl/0.2",
+    "csharp-sdk/0.2"
+  ],
+  "scope": "generic engine primitives and current authoring/SDK contracts; game rules remain package-owned",
+  "fingerprint_role": "source delivery evidence; UTF-8 text normalized to LF; not semantic runtime identity",
+  "source_digest": "3588f1c8a5274c5cae1e420a12d0f69e176eb7c0dbecd4599cce6db5a580f9be",
+  "files": [
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/AuthoringChecks.cs",
+      "sha256": "7ffce7057d5991f22e6905bf38b0ebfbf9077d7e16d9c8478a56800f490eef64"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/Check.cs",
+      "sha256": "271f96d61eaca63dffde396757096b7ad5931d608d1d375b2d2b6bbed8e8ae7a"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/ContractChecks.cs",
+      "sha256": "f01d1825c868637ba636462f39f9aa078e431398ae383d87ba7190fdad546617"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/Core.TheSpire.Engine.Tests.csproj",
+      "sha256": "a5cba7a93b13d8a64d60445810bb4a801cc343a99979574c4e53e1097fa8e5da"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/CounterexampleChecks.cs",
+      "sha256": "30cc9b7928e9f094d8eb218f5a23691d11e2bf0345b8ad03e4d7ca6673580f56"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/DebugChecks.cs",
+      "sha256": "472baca13994cef6bd9b2c54e0f567db45dae2e90967352ce3a10c8a54e85412"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/EngineChecks.cs",
+      "sha256": "f2cf1fdc85fc392e10adf0a58060e1f80886b2104dfcfd996969e763d4061428"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs",
+      "sha256": "4b73ef6a2af46be6eaba727a3acdf1e4374a11b0cccf784290f965e43034ea5a"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/Program.cs",
+      "sha256": "eba65c6047613caec2c051d029ff79ac5b31a0fc166c2d69285e89698a6c003c"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/RequiredRefChecks.cs",
+      "sha256": "4f6bffb595a9b6be781c6b4fd44906132794a3c6fc85e186ae6bff8f6d720aae"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/RevealChecks.cs",
+      "sha256": "e04b49d6fb8ba702a3ad438402e7d8a7ad73a63f19d3f4407890b6b6c203e311"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/RuleLibraryChecks.cs",
+      "sha256": "2bfe173f0f7e16380e947f87a67589866b8a9730b90545af7f4770ad9ec196b4"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/VanillaRandomChecks.cs",
+      "sha256": "090171eb90c2afe2a331406c9aae1779ae589c36e86fe8fd8fcef0f677dd9d88"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire.Engine.Tests/VanillaRandomVectors.cs",
+      "sha256": "3edf345ac04aaf584d1924f71522f5224a7da25d1d7369f58f42163844d0e198"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Core.TheSpire.csproj",
+      "sha256": "cc94eda1642444c2ff44716fd10e85a49bab4d7e0f51b67549887b703e6aa565"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/AuthoringCollections.cs",
+      "sha256": "b57f62861cd8cb98d2c29adb1818ab5aff5add50f307f8ff2077171a8de5cb2a"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/CoreSpire.g4",
+      "sha256": "31438d0b0ec84f9e0d860755d0c7aebaea2691cb54e4955afdaea4bdeca6940f"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.Expressions.cs",
+      "sha256": "5d923f052a9675d60584c3e20b4311d724d540755ecb7b8393366a9037f948a7"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.Instructions.cs",
+      "sha256": "ce0c74f07a74c2d2080f4c5f688b3a409411d86c0ad433bd12d5dc6c2ead1eaf"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.Libraries.cs",
+      "sha256": "1b0612eee3848f9f9c517772c048d2e046f3ed3c5354941a178cea74441aa9a4"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.Syntax.cs",
+      "sha256": "4766715fccbab745c9a53df34ea90f469877fd7b27082ddb8497885762292ff8"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.Templates.cs",
+      "sha256": "b5857cde185b1f74dbd75499a1967f04b320587d9dc2a88a338b0eb58df20191"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs",
+      "sha256": "e44080c1a5170dca5da82407d8a5645b682e7c5d90f8e6f4d6d2fde358a56125"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslParser.cs",
+      "sha256": "97becd3895135aba74ee0c06ccbfe0bc221656a39db02fe58e3254bceec96dc1"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/Generated/CoreSpireLexer.cs",
+      "sha256": "3238165d969bc04cb28f7789e07da643a25043e921ea32747fd3d571463bae90"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/Generated/CoreSpireParser.cs",
+      "sha256": "3e3dc2363bea87813e9f13fd662e047ec346a6045fe46b4f5c56e33533acf8ce"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Compilation/IEngineDslExtension.cs",
+      "sha256": "813f09dd04f879ea069177d0aaa26c2b66b14f7a4cc5628308e5925c073eb3c6"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/DslSource.cs",
+      "sha256": "cae46f5fe133d4abee3ee31776227a3ed60e3782ee0105c2c69a4e9d2d0a3081"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Ir.cs",
+      "sha256": "91faeaff310ca4238731cfa0fd9b826865d37b994be4b3583f9c03b436717513"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/IrTypeChecker.cs",
+      "sha256": "bda3133059d39c46217b5a79ab5a9e3b6e071013fbab943194e625e81079bfed"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs",
+      "sha256": "81ee8bdf1ab6f68c5078d096af789601873f113faf244769200277a5e2129cb6"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Projection.cs",
+      "sha256": "9ed8d474dd503ddec343abcb39ee4b10eb8521b9278fa09441634d067c97118f"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/RandomProfile.cs",
+      "sha256": "ea26581c94855945df96f4a050517add8acb8398da7dab0187d9f95dd6ea7308"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/RandomService.cs",
+      "sha256": "9072c4bb980ddd363b41e3b4eec93d3069238e3b431542e1591664e5c3fd4e67"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/RuleSet.cs",
+      "sha256": "a6eb506eeaed9c8dd56ef1a48bf50611a9d475ac8d8999055d4296fe80ae4258"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/RuleSetData.cs",
+      "sha256": "99edb8ff80a16a4c7f4e6cae31a7b3c27a8aeecb766150e70e6569249e254810"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Scheduler.cs",
+      "sha256": "7daba206bc1bd86e254f4963c89ef29bb9947c4c04a579c8ea4be2e726ad6ba7"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Schema.cs",
+      "sha256": "246d542abfde6a9a08e6ba168a30a271b8c79e7bfd180cb5307fc642612d16a6"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Debug.cs",
+      "sha256": "ce40756dcb52cfd270d62a23b12044b47bcfc08cba165d8ad91073aba096d6dc"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Events.cs",
+      "sha256": "598b0baf50d1e94b7b48536bb7e36ab6739af79fb97cd8f73ff4c499d22df193"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Execution.cs",
+      "sha256": "49fa21350f34e3d17ec64eda1d6a46bd0608e4be7eb7bea076a95b56ec371356"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Expressions.cs",
+      "sha256": "d8a11ed7705f51a91bf00731c562dadcaa302add7281d825340f12311169bf13"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Frames.cs",
+      "sha256": "5ebdb759be5f129e274f6dc2a4097e0aee1062c3711c2d35e584501f4e3e1787"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Instructions.cs",
+      "sha256": "d13c96d65f94dc071bf05c60f8792b0ab2a860a1b502de1189ad66fd5b7ffdaa"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Queries.cs",
+      "sha256": "d56e9432bcc8ca4fc7eeaa9ab08b07b252cd6c2f25df4072a8c489179737a4f4"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Session.Resolution.cs",
+      "sha256": "784cc1d30e3f5cd70f34b4cdf7c6a93a72931701dcd7518ea7947c7f58723aec"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/StateStore.cs",
+      "sha256": "a8347024e43a55b064288cde38aadd16fa3a762569498a85f8621a5884b6382d"
+    },
+    {
+      "path": "core-the-spire/Core.TheSpire/Engine/Value.cs",
+      "sha256": "f18ce6a21d52a7152b84b92be7881e6bca7bd66f4d454a157d63f8c15964d576"
+    },
+    {
+      "path": "docs/contracts/core-engine-baseline.md",
+      "sha256": "8c0291e1ed99cf8b00b50ec5b01797c4a18a09b93e1f41eef7153e3d078e775e"
+    },
+    {
+      "path": "docs/examples/core-choice-counter/CoreChoiceCounter.csproj",
+      "sha256": "2e3f0977775a90acc2f8378cd33538ef92f2b1fbd3dccca85ce83dadd53df315"
+    },
+    {
+      "path": "docs/examples/core-choice-counter/Program.cs",
+      "sha256": "0456b66c5eabded0d4f2adf3eb0c711ef956a3b73c9db92c62172ecf4652a78e"
+    },
+    {
+      "path": "docs/examples/core-choice-counter/counter.spire",
+      "sha256": "e24b77f1aa27bfc29584a683a55a4202b0f3883cba4681ae8e4287959378a0ca"
+    },
+    {
+      "path": "docs/examples/core-choice-counter/game.spire",
+      "sha256": "6ba940b307deba44be014ff65836690b60308dac812ac74cbd20f4c5bddcd9e3"
+    },
+    {
+      "path": "docs/examples/core-choice-counter/rules/score-race.spire",
+      "sha256": "67dcc746297297d601f629feb50f5f58df401e6361a891ec245e320f24cfa814"
+    }
+  ],
+  "validation": {
+    "solution_errors": 0,
+    "solution_warnings": 0,
+    "engine": 95,
+    "base": 264,
+    "net": 393,
+    "dependency_checks": 10,
+    "differential": {
+      "passed": 7,
+      "unsupported_rng_profile": 4,
+      "unsupported_decision_model": 1,
+      "new_divergences": 0
+    }
+  },
+  "text_normalization": "UTF-8 bytes with CRLF and CR replaced by LF; BOM preserved",
+  "source_digest_format": "SHA-256 of sorted UTF-8 path + NUL + lowercase file SHA-256 + LF records"
+}

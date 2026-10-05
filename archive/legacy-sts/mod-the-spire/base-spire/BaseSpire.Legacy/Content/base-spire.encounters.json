@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "encounters": [
+    {
+      "id": "base-spire:gremlin-merc-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:gremlin-merc"]
+    },
+    {
+      "id": "base-spire:thieving-hopper-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "enemyIds": ["base-spire:thieving-hopper"],
+      "tags": ["base-spire:thieves"]
+    },
+    {
+      "id": "base-spire:knights-elite",
+      "roomType": "elite",
+      "enemyIds": [
+        "base-spire:flail-knight",
+        "base-spire:spectral-knight",
+        "base-spire:magi-knight"
+      ]
+    },
+    {
+      "id": "base-spire:the-lost-and-forgotten-normal",
+      "roomType": "monster",
+      "enemyIds": [
+        "base-spire:the-lost",
+        "base-spire:the-forgotten"
+      ]
+    },
+    {
+      "id": "base-spire:phantasmal-gardeners-elite",
+      "roomType": "elite",
+      "enemyIds": [
+        "base-spire:phantasmal-gardener",
+        "base-spire:phantasmal-gardener",
+        "base-spire:phantasmal-gardener",
+        "base-spire:phantasmal-gardener"
+      ],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:phantasmal-gardener-flail",
+        "1": "base-spire:phantasmal-gardener-bite",
+        "2": "base-spire:phantasmal-gardener-lash",
+        "3": "base-spire:phantasmal-gardener-enlarge"
+      }
+    },
+    {
+      "id": "base-spire:corpse-slugs-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "formations": [
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-whip-slap", "1": "base-spire:corpse-slug-glomp" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-glomp", "1": "base-spire:corpse-slug-goop" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-goop", "1": "base-spire:corpse-slug-whip-slap" } }
+      ],
+      "tags": ["base-spire:slugs"]
+    },
+    {
+      "id": "base-spire:corpse-slugs-normal",
+      "roomType": "monster",
+      "formations": [
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-whip-slap", "1": "base-spire:corpse-slug-glomp", "2": "base-spire:corpse-slug-goop" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-glomp", "1": "base-spire:corpse-slug-goop", "2": "base-spire:corpse-slug-whip-slap" } },
+        { "enemyIds": ["base-spire:corpse-slug", "base-spire:corpse-slug", "base-spire:corpse-slug"], "startingActionsByEnemyIndex": { "0": "base-spire:corpse-slug-goop", "1": "base-spire:corpse-slug-whip-slap", "2": "base-spire:corpse-slug-glomp" } }
+      ],
+      "tags": ["base-spire:slugs"]
+    },
+    {
+      "id": "base-spire:sludge-spinner-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:sludge-spinner"],
+      "isWeak": true
+    },
+    {
+      "id": "base-spire:bygone-effigy-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:bygone-effigy"]
+    },
+    {
+      "id": "base-spire:phrog-parasite-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:phrog-parasite"]
+    },
+    {
+      "id": "base-spire:mytes-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:myte", "base-spire:myte"],
+      "tags": ["base-spire:workers"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:myte-toxic",
+        "1": "base-spire:myte-suck"
+      }
+    },
+    {
+      "id": "base-spire:spiny-toad-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:spiny-toad"]
+    },
+    {
+      "id": "base-spire:slumbering-beetle-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:slumbering-beetle"]
+    },
+    {
+      "id": "base-spire:hunter-killer-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:hunter-killer"]
+    },
+    {
+      "id": "base-spire:tunneler-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:tunneler"],
+      "isWeak": true,
+      "tags": ["base-spire:burrower"]
+    },
+    {
+      "id": "base-spire:slimed-berserker-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:slimed-berserker"]
+    },
+    {
+      "id": "base-spire:exoskeletons-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],
+      "isWeak": true,
+      "tags": ["base-spire:exoskeletons"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:exoskeleton-skitter",
+        "1": "base-spire:exoskeleton-mandibles",
+        "2": "base-spire:exoskeleton-enrage"
+      }
+    },
+    {
+      "id": "base-spire:exoskeletons-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton", "base-spire:exoskeleton"],
+      "tags": ["base-spire:exoskeletons"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:exoskeleton-skitter",
+        "1": "base-spire:exoskeleton-mandibles",
+        "2": "base-spire:exoskeleton-enrage"
+      },
+      "startingActionChoicesByEnemyIndex": {
+        "3": ["base-spire:exoskeleton-skitter", "base-spire:exoskeleton-mandibles"]
+      }
+    },
+    {
+      "id": "base-spire:fuzzy-wurm-crawler-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:fuzzy-wurm-crawler"],
+      "isWeak": true,
+      "tags": ["base-spire:crawler"]
+    },
+    {
+      "id": "base-spire:shrinker-beetle-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:shrinker-beetle"],
+      "isWeak": true,
+      "tags": ["base-spire:shrinker"]
+    },
+    {
+      "id": "base-spire:overgrowth-crawlers",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:shrinker-beetle", "base-spire:fuzzy-wurm-crawler"],
+      "tags": ["base-spire:shrinker", "base-spire:crawler"]
+    },
+    {
+      "id": "base-spire:cultists-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:calcified-cultist", "base-spire:damp-cultist"]
+    },
+    {
+      "id": "base-spire:nibbits-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:nibbit"],
+      "isWeak": true,
+      "tags": ["base-spire:nibbit"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:nibbit-butt"
+      }
+    },
+    {
+      "id": "base-spire:nibbits-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:nibbit", "base-spire:nibbit"],
+      "tags": ["base-spire:nibbit"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:nibbit-slice",
+        "1": "base-spire:nibbit-hiss"
+      }
+    },
+    {
+      "id": "base-spire:slimes-weak",
+      "roomType": "monster",
+      "enemySlots": [
+        {
+          "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-small-slimes"
+        },
+        {
+          "enemyChoices": ["base-spire:leaf-slime-m", "base-spire:twig-slime-m"],
+          "chooseRandomly": true
+        },
+        {
+          "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-small-slimes"
+        }
+      ],
+      "isWeak": true,
+      "tags": ["base-spire:slime"]
+    },
+    {
+      "id": "base-spire:slimes-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": [
+            "base-spire:twig-slime-m",
+            "base-spire:leaf-slime-m",
+            "base-spire:leaf-slime-s",
+            "base-spire:twig-slime-s"
+          ]
+        },
+        {
+          "enemyIds": [
+            "base-spire:twig-slime-m",
+            "base-spire:leaf-slime-m",
+            "base-spire:twig-slime-s",
+            "base-spire:leaf-slime-s"
+          ]
+        }
+      ],
+      "tags": ["base-spire:slime"]
+    },
+    {
+      "id": "base-spire:devoted-sculptor-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:devoted-sculptor"],
+      "isWeak": true
+    },
+    {
+      "id": "base-spire:sewer-clam-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:sewer-clam"]
+    },
+    {
+      "id": "base-spire:snapping-jaxfruit-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:snapping-jaxfruit", "base-spire:flyconid"],
+      "tags": ["base-spire:mushroom"]
+    },
+    {
+      "id": "base-spire:flyconid-normal",
+      "roomType": "monster",
+      "enemySlots": [
+        {
+          "enemyChoices": ["base-spire:leaf-slime-m", "base-spire:twig-slime-m"],
+          "chooseRandomly": true
+        },
+        { "enemyChoices": ["base-spire:flyconid"] }
+      ],
+      "tags": ["base-spire:mushroom", "base-spire:slime"]
+    },
+    {
+      "id": "base-spire:chompers-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:chomper", "base-spire:chomper"],
+      "startingActionsByEnemyIndex": {
+        "1": "base-spire:chomper-screech"
+      },
+      "tags": ["base-spire:chomper"]
+    },
+    {
+      "id": "base-spire:byrdonis-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:byrdonis"]
+    },
+    {
+      "id": "base-spire:punch-construct-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:punch-construct"]
+    },
+    {
+      "id": "base-spire:mawler-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:mawler"]
+    },
+    {
+      "id": "base-spire:seapunk-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:seapunk"],
+      "isWeak": true,
+      "tags": ["base-spire:seapunk"]
+    },
+    {
+      "id": "base-spire:seapunk-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:calcified-cultist", "base-spire:seapunk"],
+      "tags": ["base-spire:seapunk"]
+    },
+    {
+      "id": "base-spire:inklets-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:inklet", "base-spire:inklet", "base-spire:inklet"],
+      "startingActionsByEnemyIndex": {
+        "1": "base-spire:inklet-whirlwind"
+      }
+    },
+    {
+      "id": "base-spire:toadpoles-weak",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:toadpole", "base-spire:toadpole"],
+      "isWeak": true,
+      "tags": ["base-spire:toadpoles"],
+      "startingActionsByEnemyIndex": {
+        "0": "base-spire:toadpole-spiken",
+        "1": "base-spire:toadpole-whirl"
+      }
+    },
+    {
+      "id": "base-spire:scrolls-of-biting-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "tags": ["base-spire:scrolls"],
+      "formations": [
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chomp",
+            "1": "base-spire:scroll-of-biting-chew",
+            "2": "base-spire:scroll-of-biting-more-teeth"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chew",
+            "1": "base-spire:scroll-of-biting-more-teeth",
+            "2": "base-spire:scroll-of-biting-chomp"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-more-teeth",
+            "1": "base-spire:scroll-of-biting-chomp",
+            "2": "base-spire:scroll-of-biting-chew"
+          }
+        }
+      ]
+    },
+    {
+      "id": "base-spire:scrolls-of-biting-normal",
+      "roomType": "monster",
+      "tags": ["base-spire:scrolls"],
+      "formations": [
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chomp",
+            "1": "base-spire:scroll-of-biting-chew",
+            "2": "base-spire:scroll-of-biting-more-teeth",
+            "3": "base-spire:scroll-of-biting-more-teeth"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-chew",
+            "1": "base-spire:scroll-of-biting-more-teeth",
+            "2": "base-spire:scroll-of-biting-chomp",
+            "3": "base-spire:scroll-of-biting-more-teeth"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting", "base-spire:scroll-of-biting"],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:scroll-of-biting-more-teeth",
+            "1": "base-spire:scroll-of-biting-chomp",
+            "2": "base-spire:scroll-of-biting-chew",
+            "3": "base-spire:scroll-of-biting-more-teeth"
+          }
+        }
+      ]
+    },
+    {
+      "id": "base-spire:globe-head-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:globe-head"]
+    },
+    {
+      "id": "base-spire:fossil-stalker-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:fossil-stalker"]
+    },
+    {
+      "id": "base-spire:frog-knight-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:frog-knight"]
+    },
+    {
+      "id": "base-spire:haunted-ship-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:haunted-ship"]
+    },
+    {
+      "id": "base-spire:fogmog-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:fogmog"]
+    },
+    {
+      "id": "base-spire:owl-magistrate-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:owl-magistrate"]
+    },
+    {
+      "id": "base-spire:louse-progenitor-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:louse-progenitor"]
+    },
+    {
+      "id": "base-spire:the-obscura-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:the-obscura"],
+          "slotCount": 2,
+          "slotIndices": [1]
+        }
+      ]
+    },
+    {
+      "id": "base-spire:cubex-construct-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:cubex-construct"]
+    },
+    {
+      "id": "base-spire:construct-menagerie-normal",
+      "roomType": "monster",
+      "enemyIds": [
+        "base-spire:punch-construct",
+        "base-spire:cubex-construct",
+        "base-spire:cubex-construct"
+      ]
+    },
+    {
+      "id": "base-spire:vine-shambler-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:vine-shambler"]
+    },
+    {
+      "id": "base-spire:slithering-strangler-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "weight": 1,
+          "enemySlots": [
+            { "enemyChoices": ["base-spire:snapping-jaxfruit"] },
+            { "enemyChoices": ["base-spire:slithering-strangler"] }
+          ]
+        },
+        {
+          "weight": 1,
+          "enemySlots": [
+            {
+              "enemyChoices": ["base-spire:leaf-slime-m", "base-spire:twig-slime-m"],
+              "chooseRandomly": true
+            },
+            { "enemyChoices": ["base-spire:slithering-strangler"] }
+          ]
+        },
+        {
+          "weight": 1,
+          "enemySlots": [
+            {
+              "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
+              "chooseRandomly": true
+            },
+            {
+              "enemyChoices": ["base-spire:leaf-slime-s", "base-spire:twig-slime-s"],
+              "chooseRandomly": true
+            },
+            { "enemyChoices": ["base-spire:slithering-strangler"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "base-spire:ruby-raiders-normal",
+      "roomType": "monster",
+      "enemySlots": [
+        {
+          "enemyChoices": [
+            "base-spire:axe-ruby-raider",
+            "base-spire:assassin-ruby-raider",
+            "base-spire:brute-ruby-raider",
+            "base-spire:crossbow-ruby-raider",
+            "base-spire:tracker-ruby-raider"
+          ],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-ruby-raiders"
+        },
+        {
+          "enemyChoices": [
+            "base-spire:axe-ruby-raider",
+            "base-spire:assassin-ruby-raider",
+            "base-spire:brute-ruby-raider",
+            "base-spire:crossbow-ruby-raider",
+            "base-spire:tracker-ruby-raider"
+          ],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-ruby-raiders"
+        },
+        {
+          "enemyChoices": [
+            "base-spire:axe-ruby-raider",
+            "base-spire:assassin-ruby-raider",
+            "base-spire:brute-ruby-raider",
+            "base-spire:crossbow-ruby-raider",
+            "base-spire:tracker-ruby-raider"
+          ],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-ruby-raiders"
+        }
+      ],
+      "tags": ["base-spire:ruby-raider"]
+    },
+    {
+      "id": "base-spire:vantom-boss",
+      "roomType": "boss",
+      "enemyIds": ["base-spire:vantom"]
+    },
+    {
+      "id": "base-spire:bowlbugs-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "tags": ["base-spire:workers"],
+      "enemySlots": [
+        { "enemyChoices": ["base-spire:bowlbug-rock"] },
+        {
+          "enemyChoices": ["base-spire:bowlbug-egg", "base-spire:bowlbug-nectar"],
+          "chooseRandomly": true
+        }
+      ]
+    },
+    {
+      "id": "base-spire:bowlbugs-normal",
+      "roomType": "monster",
+      "tags": ["base-spire:workers"],
+      "enemySlots": [
+        { "enemyChoices": ["base-spire:bowlbug-rock"] },
+        {
+          "enemyChoices": ["base-spire:bowlbug-egg", "base-spire:bowlbug-silk", "base-spire:bowlbug-nectar"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-bowlbug-workers"
+        },
+        {
+          "enemyChoices": ["base-spire:bowlbug-egg", "base-spire:bowlbug-silk", "base-spire:bowlbug-nectar"],
+          "chooseRandomly": true,
+          "uniqueChoiceGroup": "base-spire:distinct-bowlbug-workers"
+        }
+      ]
+    },
+    {
+      "id": "base-spire:living-fog-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:living-fog"],
+          "slotCount": 6,
+          "slotIndices": [5]
+        }
+      ]
+    },
+    {
+      "id": "base-spire:entomancer-elite",
+      "roomType": "elite",
+      "enemyIds": ["base-spire:entomancer"]
+    },
+    {
+      "id": "base-spire:ovicopter-normal",
+      "roomType": "monster",
+      "enemyIds": ["base-spire:ovicopter"]
+    },
+    {
+      "id": "base-spire:turret-operator-weak",
+      "roomType": "monster",
+      "isWeak": true,
+      "enemyIds": ["base-spire:living-shield", "base-spire:turret-operator"]
+    },
+    {
+      "id": "base-spire:fabricator-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:fabricator"],
+          "slotCount": 5,
+          "slotIndices": [2]
+        }
+      ]
+    },
+    {
+      "id": "base-spire:axebots-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:axebot", "base-spire:axebot"],
+          "slotCount": 2,
+          "slotIndices": [0, 1]
+        }
+      ]
+    },
+    {
+      "id": "base-spire:two-tailed-rats-normal",
+      "roomType": "monster",
+      "formations": [
+        {
+          "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "slotCount": 5,
+          "slotIndices": [2, 3, 4],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:two-tailed-rat-scratch-move",
+            "1": "base-spire:two-tailed-rat-disease-bite-move",
+            "2": "base-spire:two-tailed-rat-screech-move"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "slotCount": 5,
+          "slotIndices": [2, 3, 4],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:two-tailed-rat-disease-bite-move",
+            "1": "base-spire:two-tailed-rat-screech-move",
+            "2": "base-spire:two-tailed-rat-scratch-move"
+          }
+        },
+        {
+          "enemyIds": ["base-spire:two-tailed-rat", "base-spire:two-tailed-rat", "base-spire:two-tailed-rat"],
+          "slotCount": 5,
+          "slotIndices": [2, 3, 4],
+          "startingActionsByEnemyIndex": {
+            "0": "base-spire:two-tailed-rat-screech-move",
+            "1": "base-spire:two-tailed-rat-scratch-move",
+            "2": "base-spire:two-tailed-rat-disease-bite-move"
+          }
+        }
+      ]
+    }
+  ]
+}

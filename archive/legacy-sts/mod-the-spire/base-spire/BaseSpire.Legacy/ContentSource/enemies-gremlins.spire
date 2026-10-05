@@ -1,0 +1,117 @@
+package base-spire {
+  power EscapeArtistPower {
+    trigger = afterOwnerTurnEnd
+    effect = if(powerAmountAtLeast(EscapeArtistPower, 2), decrementPower(EscapeArtistPower))
+  }
+
+  power FlutterPower {
+    incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered])]
+    events = [event(type=damage, owner=target, require=[move], exclude=[unpowered],
+      ownerTurnOnly=false, effect=sequence(
+        decrementPower(FlutterPower),
+        if(powerAmountAtLeast(FlutterPower, 1), sequence(), else=stun(target=self))
+      ))]
+  }
+
+  power SwipePower {
+    trigger = afterOwnerDeath
+    effect = returnHeldRunCardReward(SwipePower, sourceEncounter=ThievingHopperWeak)
+  }
+
+  power ThieveryPower {
+    variables = [variable(GoldStolen, 0)]
+  }
+
+  power HeistPower {
+    trigger = afterOwnerDeath
+    effect = addGoldReward(0, 1, count=targetPowerAmount(HeistPower, target=self))
+  }
+
+  power SurprisePower {
+    trigger = afterOwnerDeath
+    effect = sequence(
+      summonEnemy(SneakyGremlin),
+      summonEnemy(FatGremlin),
+      applyScaledPower(HeistPower, 0, 1,
+        count=powerVariable(ThieveryPower, GoldStolen, target=self),
+        target=otherAllies, onlyEnemy=FatGremlin)
+    )
+  }
+
+  enemy SneakyGremlin {
+    hp = variants(default=range(11, 15), tough=range(10, 14))
+    moves = actions(
+      sneakyGremlinWake = action(intent=Stun, effect=sequence()),
+      sneakyGremlinTackle = attack(variants(default=9, deadly=10), target=player)
+    )
+    behavior = graph(start=sneakyGremlinWake, edges=[
+      edge(sneakyGremlinWake, sneakyGremlinTackle),
+      edge(sneakyGremlinTackle, sneakyGremlinTackle)
+    ])
+  }
+
+  enemy FatGremlin {
+    hp = variants(default=range(13, 17), tough=range(14, 18))
+    moves = actions(
+      fatGremlinWake = action(intent=Stun, effect=sequence()),
+      fatGremlinEscape = action(intent=Escape, effect=sequence(
+        if(hasPower(HeistPower, target=self), setGoldRewardPercent(0),
+          else=setGoldRewardPercent(50)),
+        escape(target=self)
+      ))
+    )
+    behavior = graph(start=fatGremlinWake, edges=[
+      edge(fatGremlinWake, fatGremlinEscape),
+      edge(fatGremlinEscape, fatGremlinEscape)
+    ])
+  }
+
+  enemy GremlinMerc {
+    hp = variants(default=range(47, 49), tough=range(51, 53))
+    startingPowers = [power(SurprisePower, 1), power(ThieveryPower, 20)]
+    moves = actions(
+      gremlinMercGimme = sequence(
+        repeat(2, attack(variants(default=7, tough=8), target=player)),
+        stealGold(20, ThieveryPower, GoldStolen, target=player)
+      ),
+      gremlinMercDoubleSmash = sequence(
+        repeat(2, attack(variants(default=6, tough=7), target=player)),
+        stealGold(20, ThieveryPower, GoldStolen, target=player),
+        applyPower(Weak, 2, target=player)
+      ),
+      gremlinMercHehe = sequence(
+        attack(variants(default=8, tough=9), target=player),
+        stealGold(20, ThieveryPower, GoldStolen, target=player),
+        applyPower(Strength, 2, target=self)
+      )
+    )
+    behavior = cycle(gremlinMercGimme, gremlinMercDoubleSmash, gremlinMercHehe)
+  }
+
+  enemy ThievingHopper {
+    hp = variants(default=range(79, 79), tough=range(84, 84))
+    startingPowers = [power(EscapeArtistPower, 5)]
+    moves = actions(
+      thievingHopperThievery = sequence(
+        stealRunCard(SwipePower, from=[draw, discard], priorities=[
+          priority(rarities=[uncommon], excludeEnchantments=[Imbued]),
+          priority(rarities=[common, rare, event], excludeEnchantments=[Imbued]),
+          priority(rarities=[basic, quest], excludeEnchantments=[Imbued]),
+          priority(rarities=[ancient], requireEnchantments=[Imbued], matchAny=true)
+        ]),
+        attack(variants(default=17, deadly=19), target=player)
+      ),
+      thievingHopperFlutter = applyPower(FlutterPower, 5, target=self),
+      thievingHopperHatTrick = attack(variants(default=21, deadly=23), target=player),
+      thievingHopperNab = attack(variants(default=14, deadly=16), target=player),
+      thievingHopperEscape = escape(target=self)
+    )
+    behavior = graph(start=thievingHopperThievery, edges=[
+      edge(thievingHopperThievery, thievingHopperFlutter),
+      edge(thievingHopperFlutter, thievingHopperHatTrick),
+      edge(thievingHopperHatTrick, thievingHopperNab),
+      edge(thievingHopperNab, thievingHopperEscape),
+      edge(thievingHopperEscape, thievingHopperEscape)
+    ])
+  }
+}

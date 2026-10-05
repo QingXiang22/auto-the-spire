@@ -1,0 +1,20 @@
+package base-spire {
+  enemy TorchHeadAmalgam {
+    hp = variants(default=range(199, 199), tough=range(211, 211))
+    startingPowers = [power(Minion, 1)]
+    moves = actions(
+      torchHeadAmalgamTackleOne = attack(variants(default=18, deadly=19), target=player),
+      torchHeadAmalgamTackleTwo = attack(variants(default=18, deadly=19), target=player),
+      torchHeadAmalgamSoulBeam = repeat(3, attack(8, target=player)),
+      torchHeadAmalgamWeakTackleOne = attack(variants(default=14, deadly=15), target=player),
+      torchHeadAmalgamWeakTackleTwo = attack(variants(default=14, deadly=15), target=player)
+    )
+    behavior = graph(start=torchHeadAmalgamTackleOne, edges=[
+      edge(torchHeadAmalgamTackleOne, torchHeadAmalgamTackleTwo),
+      edge(torchHeadAmalgamTackleTwo, torchHeadAmalgamSoulBeam),
+      edge(torchHeadAmalgamSoulBeam, torchHeadAmalgamWeakTackleOne),
+      edge(torchHeadAmalgamWeakTackleOne, torchHeadAmalgamWeakTackleTwo),
+      edge(torchHeadAmalgamWeakTackleTwo, torchHeadAmalgamSoulBeam)
+    ])
+  }
+}

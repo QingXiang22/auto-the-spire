@@ -1,0 +1,43 @@
+package base-spire {
+  power Strength {
+    role = Strength
+  }
+
+  power DemonFormPower {
+    trigger = afterPlayerTurnStart
+    effect = grantPower(Strength, sourceStacks)
+  }
+
+  power NoDraw {
+    trigger = afterPlayerTurnEnd
+    decrementOnTrigger = true
+    role = NoDraw
+  }
+
+  power Vulnerable {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+    skipFirstWhenAppliedToPlayer = true
+    role = Vulnerable
+    isDebuff = true
+  }
+
+  power Weak {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+    skipFirstWhenAppliedToPlayer = true
+    outgoingDamageMultiplier = 0.75
+    isDebuff = true
+  }
+
+  power SelfFormingClayPower {
+    trigger = afterPlayerTurnStart
+    effect = sequence(gainBlock(3, target=self), removePower(SelfFormingClayPower))
+  }
+
+  power Shrink {
+    outgoingDamageMultiplier = 0.7
+    removeWhenApplierDies = true
+    isDebuff = true
+  }
+}

@@ -1,0 +1,148 @@
+# 这个文件定义一个完整的小游戏：每次选择加 1 或加 2，累计到 3 分就结束。
+# 默认演示先选 +2，再选 +1，因此最终得到 3 分。
+# 阅读顺序：声明状态 → Setup 创建初始状态 → Advance 执行一次操作 → PlayerView 发布观察。
+# 游戏规则都在这个文件里；Program.cs 负责加载文件、提交动作和回答选择。
+#
+# 写法速查：
+#   名字 = 值          设置一个配置属性；分号通常可以省略。
+#   { ... }           一组属性或按顺序执行的规则。
+#   [Setup]           列表，这里只有一个初始化程序。
+#   add(a, b)         在游戏运行时计算 a + b。
+#   #                 从这里到行尾都是注释，不参与执行。
+# 名字区分大小写：Counter 是实体类型，counter 是程序里保存实例引用的局部变量。
+
+# 内容名称的前缀。例如 Counter 的完整名称会是 tutorial:Counter。
+using namespace tutorial;
+# 配置语言的版本，供编译器判断该怎样理解文件。
+dsl_version = "core/0.1"
+# 这个游戏规则包自己的版本，与上面的语言版本分别维护。
+version = "1.0.0"
+# 开局时执行 Setup。它在下面定义；声明写在后面也能被引用。
+start = [Setup]
+
+# 声明一种叫 Game 的生命周期作用域，用于容纳本局的实体。
+# 这里声明的是类型，实际作用域由 Setup 中的 createScope 创建。
+scope Game {}
+
+# 声明计分器的类型。这里只说明它有哪些字段，不会立即创建计分器实例。
+entity Counter {
+    fields = {
+        # 当前总分。Int 是整数；min/max 限定合法范围；default 是新实例的初始值。
+        Score = { type = Int(min = 0, max = 100) default = 0 }
+        # 已发起多少次操作：提交动作后就增加，包括仍在等待玩家选择的那一次。
+        Attempts = { type = Int(min = 0, max = 100) default = 0 }
+        # 已完成多少次加分：通过 Increased 事件的监听器增加。
+        # 两个计数用于看清暂停/续接：等待选择时 Attempts 已增加，Applied 尚未增加。
+        Applied = { type = Int(min = 0, max = 100) default = 0 }
+    }
+}
+
+# 每个 Option 实例表示一个可选项，Delta 表示选它后加多少分。
+# 默认加 1；Setup 会为第二个实例显式设置加 2。
+entity Option {
+    fields = { Delta = { type = Int(min = 1, max = 10) default = 1 } }
+}
+
+# 可选项集合：只能放 Option 实例，最多两个，默认保留插入顺序。
+# 决策会从这个集合读取候选，而不是直接从数字列表中选择。
+collection Options { element = Option capacity = 2 }
+
+# 开局初始化程序。body 中的指令从上到下执行。
+procedure Setup {
+    # locals 是程序执行期间的临时变量，不会自动成为玩家可观察的游戏状态。
+    # Binding 用来保存创建指令返回的引用：game 保存作用域，其他变量保存实体实例。
+    locals = { game = Binding counter = Binding one = Binding two = Binding }
+    body = {
+        # 创建本局作用域，将它的引用保存到 game（into 表示“把结果写入哪个变量”）。
+        createScope = { type = Game into = game }
+        # 在该作用域创建一个计分器，三个字段按默认值初始化为 0。
+        create = { type = Counter scope = game into = counter }
+        # 创建两个 Option，并加入 Options 集合。这里的 fields 给实例设置具体初值。
+        # 插入顺序决定候选下标：0 是加 1，1 是加 2。
+        create = { type = Option scope = game into = one collection = Options fields = { Delta = 1 } }
+        create = { type = Option scope = game into = two collection = Options fields = { Delta = 2 } }
+    }
+}
+
+# 声明“发生了一次加分”事件。payload 是随事件传递的信息。
+# 这里携带计分器引用，Ref(Counter) 表示它必须指向 Counter 类型的实例。
+event Increased { payload = { Counter = Ref(Counter) } }
+
+# 事件发生后的反应程序。parameters 是调用时传入的值；这里接收计分器引用。
+procedure CountApplied {
+    parameters = { counter = Ref(Counter) }
+    body = {
+        # set 修改实体字段：target 是哪个实例，field 是哪个字段，value 是新值。
+        # field(counter, Counter.Applied) 读取旧计数，add(..., 1) 加一后写回。
+        set = { target = counter field = Counter.Applied value = add(field(counter, Counter.Applied), 1) }
+    }
+}
+
+# 建立订阅：每次发出 Increased 事件，就执行 CountApplied。
+# 声明事件本身不会执行反应，必须通过订阅将两者连接起来。
+subscription AppliedCounter { event = Increased reaction = CountApplied }
+
+# 声明一种终局结果，其附带字段是最终分数。这里只声明结果形状，并未结束游戏。
+terminal ReachedTarget { fields = { Score = Int } }
+
+# 玩家可以提交的动作。一旦提交，执行下面的 body。
+action Advance {
+    # 允许角色为 player 的参与者提交。宿主创建 Session 时提供这个角色。
+    role = player
+    # counter 保存本次操作的计分器引用；selection 保存玩家选中的 Option 引用。
+    locals = { counter = Binding selection = Binding }
+    # 动作合法性条件：当前总分小于 3 时才允许提交。
+    # type(Counter) 查询计分器实例，first 取第一个（本例只有一个）；field 读取其分数。
+    # less(a, b) 判断 a < b。此条件不会自动执行动作，也不会自己宣告终局。
+    requires = less(field(first(type(Counter)), Counter.Score), 3)
+    body = {
+        # let 给局部变量赋值，保存查询到的计分器引用供后续指令使用。
+        let = { into = counter value = first(type(Counter)) }
+        # 先记录“发起了一次操作”。接下来暂停等待选择时，这次修改已经生效。
+        set = { target = counter field = Counter.Attempts value = add(field(counter, Counter.Attempts), 1) }
+        # 请求玩家选择；执行到这里时暂停，后面的指令等 Answer 后再继续。
+        decide = {
+            # 本例只有一个玩家，其参与者 ID 为 1。多玩家规则需确定实际回答者。
+            participant = participant(1)
+            # 回答是一个实体引用，即选中一个 Option 实例。
+            kind = EntityRef
+            # 提示文本交给宿主显示，不是可执行规则。
+            prompt = "Choose an increment"
+            # 回答后，把选中实例的引用写到 selection。
+            into = selection
+            # 从当前 Options 集合取候选。本例依次是加 1 和加 2 的两个实例。
+            candidates = collection(Options)
+            # 恰好选一个候选。
+            min = 1
+            max = 1
+        }
+        # 玩家回答后从这里续接；不会重新执行前面的 Attempts 加一。
+        set = {
+            target = counter field = Counter.Score
+            # 新总分 = 旧总分 + 选中实例的 Delta。
+            value = add(field(counter, Counter.Score), field(selection, Option.Delta))
+        }
+        # 发出加分事件，并携带当前计分器。监听器会先把 Applied 加一，随后继续本动作。
+        emit = { event = Increased payload = { Counter = counter } }
+        # 检查是否到达目标分数。greaterOrEqual(a, b) 判断 a >= b。
+        if = {
+            condition = greaterOrEqual(field(counter, Counter.Score), 3)
+            # 满足条件时设置终局及最终分数，Session 进入 Terminal 并停止执行。
+            # 未满足时本动作结束，Session 回到 Running，可再次提交 Advance。
+            then = { terminal = { result = ReachedTarget fields = { Score = field(counter, Counter.Score) } } }
+        }
+    }
+}
+
+# 玩家观察视图：role 指定谁使用，types 指定哪些实体类型可以发布。
+# {} 使用默认可见性；本例所有实体字段默认 Public，因此能看到分数、计数和选项加分值。
+# 局部变量不在投影里；更复杂游戏的隐藏信息需要显式设计可见性。
+projection PlayerView {
+    role = player
+    types = { Counter = {} Option = {} }
+}
+
+# 自己试着修改：
+# 1. 将 Setup 中第二个选项的 Delta 从 2 改为 4，第一次选它就以 4 分结束。
+# 2. 修改目标分数时，需要同时修改 Advance 的 requires 和 if condition 中的 3。
+# 3. 上面的 Int 范围和 collection 容量也是规则约束，修改玩法时要保持它们一致。
