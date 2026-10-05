@@ -1,0 +1,23 @@
+{
+  "baseline_id": "core-engine-2026-10-05",
+  "status": "FROZEN",
+  "engine_version": "engine/ir@0.3",
+  "verified_source_files": 48,
+  "solution_errors": 0,
+  "solution_warnings": 0,
+  "engine_checks": 95,
+  "base_checks": 264,
+  "net_checks": 393,
+  "dependency_checks": 10,
+  "differential_counts": {
+    "passed": 7,
+    "unsupported_decision_model": 1,
+    "unsupported_rng_profile": 4
+  },
+  "self_tests": 6,
+  "new_divergences": 0,
+  "docs_files": 199,
+  "docs_problems": 0,
+  "git_diff_check_exit_code": 0,
+  "full_singleplayer_and_ai": "not executed; remain outside core freeze acceptance"
+}

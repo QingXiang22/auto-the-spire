@@ -1,0 +1,29 @@
+package base-spire {
+  power HardenedShellPower {
+    incomingDamageCapPerTurnPerStack = 1
+  }
+
+  enemy SkulkingColony {
+    hp = variants(default=range(70, 70), tough=range(75, 75))
+    startingPowers = [power(HardenedShellPower, 15)]
+    moves = actions(
+      skulkingColonySmash = attack(variants(default=12, deadly=13), target=player),
+      skulkingColonyZoom = sequence(
+        attack(variants(default=14, deadly=16), target=player),
+        gainBlock(variants(default=10, tough=13))
+      ),
+      skulkingColonyInertia = sequence(
+        attack(variants(default=9, deadly=11), target=player),
+        applyPower(Strength, variants(default=2, deadly=3), target=self)
+      ),
+      skulkingColonyPiercingStabs = repeat(2,
+        attack(variants(default=7, deadly=8), target=player))
+    )
+    behavior = cycle(
+      skulkingColonySmash,
+      skulkingColonyZoom,
+      skulkingColonyInertia,
+      skulkingColonyPiercingStabs
+    )
+  }
+}

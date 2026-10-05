@@ -1,0 +1,58 @@
+# 规则库作者维护这个文件。具体游戏作者只需编辑上一级的 game.spire。
+# 同一份模板可以被不同配置文件、或同一文件里的多个 use 实例复用。
+using namespace counters;
+dsl_version = "core/0.2"
+version = "1.0.0"
+
+# procedure 复用执行过程；pure 表示只计算、不改变状态。
+# 它是规则库的公共函数；模板内的调用按库的命名空间解析。
+procedure BelowTarget {
+    parameters = { score = Int target = Int }
+    pure = true
+    result = Bool
+    body = { return = { value = less(score, target) } }
+}
+
+# template 复用一组声明：状态、初始化、动作、终局和观察。
+# arg(name) 在编译时替换成该次 use 提供的值；不会新增运行时变量或解释器。
+template ScoreRace {
+    parameters = {
+        target = { type = Int(min = 1, max = 10000) default = 3 }
+        increments = { type = List(Int(min = 1, max = 100), length = 16) default = [1, 2] }
+    }
+    body = {
+        # 模板的 Counter 在 use Game 后成为 tutorial:Game.Counter。
+        # 类型查询、字段引用等仍可用 Counter 写，编译器按实例作用域绑定。
+        entity Counter {
+            fields = { Score = { type = Int(min = 0, max = 1000000) default = 0 } }
+        }
+        procedure Setup {
+            locals = { counter = Binding }
+            body = { create = { type = Counter scope = frameScope() into = counter } }
+        }
+        start = [Setup]
+
+        terminal ReachedTarget { fields = { Score = Int } }
+        action Add {
+            role = player
+            parameters = { delta = Int(min = 1, max = 100) }
+            # 直接把每种加分值枚举成一个合法操作，不再先提交动作再请求一次选择。
+            choices = { delta = arg(increments) }
+            requires = pureCall(BelowTarget, field(first(type(Counter)), Counter.Score), arg(target))
+            body = {
+                set = {
+                    target = first(type(Counter)) field = Counter.Score
+                    value = add(field(first(type(Counter)), Counter.Score), delta)
+                }
+                if = {
+                    condition = greaterOrEqual(field(first(type(Counter)), Counter.Score), arg(target))
+                    then = { terminal = { result = ReachedTarget fields = { Score = field(first(type(Counter)), Counter.Score) } } }
+                }
+            }
+        }
+        projection PlayerView {
+            role = player
+            types = { Counter = {} }
+        }
+    }
+}

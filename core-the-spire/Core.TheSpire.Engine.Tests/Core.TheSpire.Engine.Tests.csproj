@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <AssemblyName>Core.TheSpire.Engine.Tests</AssemblyName>
+    <RootNamespace>CoreTheSpire.Engine.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Deliberately references only Core.TheSpire: the generic runtime must not need a game package. -->
+    <ProjectReference Include="..\Core.TheSpire\Core.TheSpire.csproj" />
+    <None Include="../../docs/examples/core-choice-counter/counter.spire" Link="Fixtures/counter.spire" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/examples/core-choice-counter/game.spire" Link="Fixtures/Simple/game.spire" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../docs/examples/core-choice-counter/rules/score-race.spire" Link="Fixtures/Simple/rules/score-race.spire" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

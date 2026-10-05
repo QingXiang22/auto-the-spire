@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../core-the-spire/Core.TheSpire.Legacy/Core.TheSpire.Legacy.csproj" />
+    <ProjectReference Include="../../base-spire/BaseSpire.Legacy/BaseSpire.Legacy.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="state.spire" LogicalName="TrainingMod.state.spire" />
+  </ItemGroup>
+</Project>

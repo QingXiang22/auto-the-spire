@@ -1,0 +1,61 @@
+{
+  "scope": "exported Git index, no untracked workspace implementation",
+  "fingerprints_verified": 54,
+  "source_digest": "3588f1c8a5274c5cae1e420a12d0f69e176eb7c0dbecd4599cce6db5a580f9be",
+  "checks": [
+    {
+      "name": "build",
+      "command": [
+        "dotnet",
+        "build",
+        "AutoTheSpire.sln"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "engine",
+      "command": [
+        "dotnet",
+        "run",
+        "--project",
+        "core-the-spire/Core.TheSpire.Engine.Tests",
+        "--no-build"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "default-example",
+      "command": [
+        "dotnet",
+        "run",
+        "--project",
+        "docs/examples/core-choice-counter/CoreChoiceCounter.csproj"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "advanced-example",
+      "command": [
+        "dotnet",
+        "run",
+        "--project",
+        "docs/examples/core-choice-counter/CoreChoiceCounter.csproj",
+        "--no-build",
+        "--",
+        "docs/examples/core-choice-counter/counter.spire",
+        "1,0"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "legacy",
+      "command": [
+        "dotnet",
+        "run",
+        "--project",
+        "archive/legacy-sts/core-the-spire/Core.TheSpire.Tests"
+      ],
+      "exit_code": 0
+    }
+  ]
+}

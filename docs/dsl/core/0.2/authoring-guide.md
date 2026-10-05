@@ -1,0 +1,106 @@
+# core/0.2：DSL 规则库与作者配置
+
+日期：2026-10-04。本文描述已经实现的作者层；基础声明、表达式、查询和命令沿用 [core/0.1 参考](../0.1/language-reference.md)。初次使用从 [作者入门](../README.md) 和带注释的 [配置入口](../../../examples/core-choice-counter/game.spire)、[规则库](../../../examples/core-choice-counter/rules/score-race.spire) 开始。
+
+## 1. 三种复用单位
+
+| 写法 | 复用内容 | 发生阶段 |
+| --- | --- | --- |
+| `procedure` | 带参数的计算或执行过程 | 游戏运行时，同一执行栈调用 |
+| `template` | 类型、过程、动作、事件、观察等一组声明 | 编译时展开并绑定 |
+| `use` | 某模板的一次具名实例及配置值 | 编译时选库、校验参数、生成规则 |
+
+不为模板新增运行时对象或第二解释器。现有低层声明可以与模板实例放在同一配置包中。只有新的文件导入/模板/实例写法要求 `dsl_version = "core/0.2"`；旧 `core/0.1` 文件继续支持并保留原编译身份。
+
+## 2. 文件导入与包依赖
+
+```text
+using namespace tutorial;
+dsl_version = "core/0.2"
+imports = ["rules/score-race.spire"]
+use Game { template = counters:ScoreRace }
+```
+
+`imports` 是字符串路径列表，路径相对于**声明该导入的文件**解析；库可以继续导入其他库。`LoadFiles("game.spire")` 递归加载依赖，按规范化路径去重，循环导入、缺失文件、多个文件声明同一包 ID 都报错。导入的库自动进入当前包依赖并参与链接。命名空间是包 ID，文件路径不充当内容 ID。
+
+`LoadFiles` 默认加载核心语言文件，当前没有扩展注册参数。需要自定义声明扩展的宿主使用 `Compile(..., dependencies: ..., extensions: ...)`：自己取得依赖包，DSL 用 `dependencies = [counters]` 显式声明依赖，编译后统一交给 `RuleSetBuilder`。`Compile` 不读取磁盘，含 `imports` 时明确拒绝；不暗中按 sourceName 加载文件。
+
+依赖包导出的模板可以复用；模板内部使用的库依赖按传递闭包解析。最终链接仍须提供全部依赖包。导入表示可用的定义与依赖，不保证初始化按导入书写顺序执行。
+
+## 3. 声明模板和参数
+
+```text
+using namespace counters;
+dsl_version = "core/0.2"
+template ScoreRace {
+    parameters = {
+        target = { type = Int(min = 1, max = 10000) default = 3 }
+        increments = { type = List(Int(min = 1, max = 100), length = 16) default = [1, 2] }
+    }
+    body = {
+        # 在这里写 entity / procedure / action / projection 等声明。
+        # 完整可运行定义见 rules/score-race.spire。
+    }
+}
+```
+
+`parameters` 可省略；每个参数必须有 `type`，`default` 可省略。没有默认值的参数必须由 `use.args` 提供。模板参数当前支持 **Int、Bool、String、Fixed、List(Int)** 字面量；复用已有形状及范围/长度检查，不允许实体引用、运行时表达式、可执行代码或任意对象作为配置参数。
+
+`body` 必须是声明块，支持核心声明和嵌套 `use`；可以有 `start` 初始化入口列表。不能在 body 内改命名空间、语言版本、依赖、导入或定义模板；当前不支持 `IEngineDslExtension` 自定义声明。模板及模板内声明、实例名使用简单名称，不含 `:` 或 `.`。
+
+模板发布时验证参数形状、默认值、结构和 `arg` 占位符；未实例化的 body 不保证已经完成全部名称/类型/行为检查。只有实例化、链接、运行的证据才能分别证明那些阶段，不能用“库文件可解析”代替验证。
+
+## 4. 配置实例与占位符
+
+```text
+use Game {
+    template = counters:ScoreRace
+    args = { target = 5 increments = [2, 4] }
+}
+```
+
+未知模板、重复实例名、未知参数、缺少必填参数、类型/范围不符都会拒绝。未提供的参数采用默认值。配置值不会自动成为 Session 字段；希望运行时观察到的值需要库显式声明和发布。
+
+模板内的 `arg(target)` 或 `arg(name = target)` 在 AST 上替换为字面量，然后交给普通绑定器。例如 `choices = { delta = arg(increments) }` 产生有限合法动作参数域。字符串不插值，`"arg(target)"` 仍是普通字符串；调用只能引用已声明参数。显式动作 choices 空列表会报错，避免空配置意外退化成自由参数动作。
+
+## 5. 名称、隔离与组合
+
+`tutorial` 包中的 `use Game` 展开库的 `Counter` 为 `tutorial:Game.Counter`、`Add` 为 `tutorial:Game.Add`。模板内部的非限定类型、字段、过程和事件引用优先解析实例自己的声明，随后解析定义模板的库命名空间。程序参数、局部变量、字段名称保持原名。具体游戏的同名函数不能捕获库内部调用。
+
+显式 `counters:BelowTarget` 等限定 ID 仍指相应公共定义。模板外引用实例内容时使用 `Game.Counter`、`Game.Add`；嵌套实例可以形成 `Game.Left.Counter`。例如一个库组合两个计分组件：
+
+```text
+using namespace pairs;
+dsl_version = "core/0.2"
+imports = ["score-race.spire"]
+template Pair {
+    parameters = { goal = { type = Int(min = 1, max = 10000) default = 10 } }
+    body = {
+        use Left { template = counters:ScoreRace args = { target = arg(goal) } }
+        use Right { template = counters:ScoreRace args = { target = arg(goal) } }
+    }
+}
+```
+
+此段展示组合语法，调用者再导入 pairs 库并 `use Game { template = pairs:Pair }`。这些实例拥有隔离的声明，但仍处于同一个 Session 并共享整局终局；共享玩家、轮次、资源或组合胜负需明确设计。本版未增加“向模板注入另一个实例的实体类型/行为”的参数能力，真实消费者提出需求后再扩展。
+
+模板的 `start` 自动收集到调用包的启动入口。engine/ir@0.3 按包链接顺序、包内登记顺序执行；模板按 use 展开顺序登记。一个入口暂停时先完成其续接，再执行剩余入口；有依赖时应明确导入/登记顺序，也可在单个 Setup 中顺序调用。旧 0.2 的 LIFO 排列须迁移，见 [冻结基线](../../../contracts/core-engine-baseline.md)。
+
+## 6. 身份、诊断和资源边界
+
+| 项目 | 约束 |
+| --- | --- |
+| 版本 | 前端身份为 `core-dsl/0.2`；运行时为 `engine/ir@0.3`；语言写法保持 core/0.2 |
+| 库身份 | 模板声明、参数和默认值的规范化 AST 哈希进入编译身份，包括未实例化的模板；依赖包参与最终规则身份 |
+| 无语义变化 | 注释、源码路径和源码位置不改变身份；版本/配置/展开后的规则改变身份 |
+| 报错来源 | 参数错误定位配置文件；展开后的绑定错误保留库位置，并附实例名及 use 位置 |
+| 展开保护 | 禁止递归模板；最多深度 32、实例 256、展开成员 4096 |
+| 数据生命周期 | 导出模板元数据只读，仅编译使用，不进入 Session 可变状态或公开观察 |
+
+库升级、配置变化产生新的规则身份；不要冒名复用旧训练/快照资产。模板只压缩重复声明，不自行推断规则合理性、观察充分性或原版一致性。公开知识仍由规则库在当前状态中表达，投影不能因方便而发布权威隐藏状态。
+
+## 7. 交付证据与接续
+
+检查覆盖真实示例加载、只改配置的不同结果、多实例隔离、库函数名称隔离、嵌套传递依赖、模板身份、参数与来源错误、循环/缺失导入。完整证据在 [本批报告](../../../review/archived/dsl-rule-library-authoring-2026-10-04.md)。
+
+接续由 mod/base 按真实机制把可复用规则放入 DSL 库，内容文件填写参数/组合。完整 STS 内容、整局环境与源规则对拍继续按 [当前任务清单](../../../review/tofix/README.md) 推进；本例不关闭这些范围。

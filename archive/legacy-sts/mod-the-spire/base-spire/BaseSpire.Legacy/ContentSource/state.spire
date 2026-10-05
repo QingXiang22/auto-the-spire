@@ -1,0 +1,22 @@
+package base-spire {
+  state RedSkullStrengthActive {
+    scope = combat
+    type = int
+    default = 0
+  }
+  state DemonTongueLastTriggeredTurn {
+    scope = combat
+    type = int
+    default = -1
+  }
+  state RuinedHelmetUsedThisCombat {
+    scope = combat
+    type = int
+    default = 0
+  }
+  state TwoTailedRatBackupCalls {
+    scope = combat
+    type = int
+    default = 0
+  }
+}

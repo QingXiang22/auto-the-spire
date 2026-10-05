@@ -1,0 +1,8 @@
+package base-spire {
+  power FlexPotionPower {
+    isTemporary = true
+    onStackChange = grantPower(Strength, stackDelta)
+    onExpire = grantPower(Strength, negativeSourceStacks)
+    removeAfterOwnerTurnEnd = true
+  }
+}
