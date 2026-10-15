@@ -39,7 +39,7 @@ flowchart TD
 - `ContentRegistry` 支持显式覆盖、包注册失败回滚、复合规则引用校验；这些能力比简单 JSON 加载器更完整。
 - 地图生成放在 base-spire 的 C# 中，遭遇目录使用 JSON，各种复杂算法不必强行迁进 DSL。
 
-依据：[Content.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs)、[State.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs)、[CombatCardPlay.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/CombatCardPlay.cs)、[Effects.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs)、[StandardActMapGenerator.cs](../../../../archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/StandardActMapGenerator.cs)。
+依据：[Content.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs)、[State.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs)、[CombatCardPlay.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/CombatCardPlay.cs)、[Effects.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs)、[StandardActMapGenerator.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/StandardActMapGenerator.cs)。
 
 ## 2. 优先调整的架构问题
 
@@ -61,7 +61,7 @@ flowchart TD
 
 **建议：** 查询和修正函数使用只读上下文；状态变更、RNG 消费和累计值消费使用显式命令。声明并验证 Observe/LegalActions 的只读、无随机消费契约。只读接口能防止通过该接口改状态，不能替代对 native handler 外部副作用的协作约定。
 
-依据：[Environment.cs:264](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs#L264)、[State.cs:593](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L593)、[EffectExecutionContext.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/EffectExecutionContext.cs)、[Effects.cs:1300](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs#L1300)。
+依据：[Environment.cs:264](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs#L264)、[State.cs:593](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L593)、[EffectExecutionContext.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/EffectExecutionContext.cs)、[Effects.cs:1300](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs#L1300)。
 
 ### A3：通用机制与原版默认策略没有充分分开
 
@@ -71,7 +71,7 @@ base-spire 已承载卡牌、怪物、遗物 Hook 与地图算法；但原版数
 
 **建议：** 把奖励参数、初始资源、容量限制等稳定参数集中为规则定义；对确实存在算法差异的奖励、可用性、地图生成等提供少量明确策略接口。base-spire 提供原版默认实现，core 执行通用流程与约束。不要为每个常量增加一个接口。
 
-依据：[CardRewards.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/CardRewards.cs)、[Runs.cs:925](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L925)、[CombatLimits](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L1089)、[项目 spec](../../../design/spec.md)。
+依据：[CardRewards.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/CardRewards.cs)、[Runs.cs:925](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L925)、[CombatLimits](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L1089)、[项目 spec](../../../design/spec.md)。
 
 ### A4：Power 与事件模型正在积累特例
 
@@ -81,7 +81,7 @@ base-spire 已承载卡牌、怪物、遗物 Hook 与地图算法；但原版数
 
 **建议：** 明确“只读规则修正”“生命周期回调”“提交效果的反应事件”三类职责；共享类型化事件、过滤与确定顺序规范。保留热路径中力量/敏捷等明确能力，其他订阅尽量组合。先统一契约，再逐步建立每会话的活动监听索引，保留监听快照和执行时重新检查的语义。不要直接换成异步消息总线。
 
-依据：[PowerDefinition](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L48)、[State.Emit](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L411)、[CombatCardEvents.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/CombatCardEvents.cs)。
+依据：[PowerDefinition](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L48)、[State.Emit](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L411)、[CombatCardEvents.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/CombatCardEvents.cs)。
 
 ### A5：训练和复现需要的状态能力尚未成为架构契约
 
@@ -91,7 +91,7 @@ base-spire 已承载卡牌、怪物、遗物 Hook 与地图算法；但原版数
 
 **建议：** 规则集身份包含包顺序、内容/规则配置、DSL/IR 版本与 native 扩展版本；建立 RNG 状态、实例、执行帧和 pending choice 的可恢复格式。纯 rollout 训练可稍后优化 fork；计划做搜索或反事实评估时应更早实现。暂不引入持久化全量对象图或复杂写时复制。
 
-依据：[RandomStreams.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/RandomStreams.cs)、[GameSession](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L1046)、[GameDefinition.Version](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L2385)、[BaseSpirePackage.Info](../../../../archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs#L358)。
+依据：[RandomStreams.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/RandomStreams.cs)、[GameSession](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L1046)、[GameDefinition.Version](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L2385)、[BaseSpirePackage.Info](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs#L358)。
 
 ## 3. DSL 设计评价
 
@@ -120,7 +120,7 @@ IR 至少区分纯数值表达式、纯谓词、目标查询/选择契约和会�
 
 不要把 DSL 扩展为随意脚本语言：复杂地图算法保留 C#；普通攻击数值、目标过滤、条件与选择应可组合；难以表达的机制走版本化、可恢复的扩展步骤。原语种类多少不是唯一标准，应看一个新内容需要改哪些核心契约。
 
-依据：[dsl-usage.md](../../../dsl/0.0.1/dsl-usage.md)、[primitives.md](../../../dsl/0.0.1/primitives.md)、[SpireCombatDslCompiler.cs:290](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L290)、[Content.cs:275](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L275)。
+依据：[dsl-usage.md](../../../dsl/0.0.1/dsl-usage.md)、[primitives.md](../../../dsl/0.0.1/primitives.md)、[SpireCombatDslCompiler.cs:290](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L290)、[Content.cs:275](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L275)。
 
 ## 4. 效率评价与实测边界
 
@@ -136,7 +136,7 @@ IR 至少区分纯数值表达式、纯谓词、目标查询/选择契约和会�
 | LegalActions：同一静止状态 | 1.96–2.07 μs | 1,872 B |
 | Step(EndTurn)：十张牌组、不打牌、连续 1000 回合 | 28.36–32.76 μs | 约 36,851 B |
 
-玩家生命被放大以避免提前结束；结束回合第一轮后通常是五张手牌。原始数据与可重跑工具见 [results](../../../../archive/legacy-sts/tools/core-architecture-audit/results-2026-10-01.jsonl) 与 [工具说明](../../../../archive/legacy-sts/tools/core-architecture-audit/README.md)。
+玩家生命被放大以避免提前结束；结束回合第一轮后通常是五张手牌。原始数据与可重跑工具见 [results](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/tools/core-architecture-audit/results-2026-10-01.jsonl) 与 [工具说明](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/tools/core-architecture-audit/README.md)。
 
 这只能说明简单场景下耗时较低、公共 API 分配可观。它不是纯结算器测量、没有复杂 Power/多敌/选牌/网络/序列化/AI 推理，不能外推真实训练吞吐。分配量不是保留内存大小；本次未做 CPU/GC profile，也未测状态复制或批量环境。
 

@@ -912,7 +912,7 @@ W-01另一个必需事实：[作者内容](../../../../mod-the-spire/base-spire/
 
 ### W-06四态核算的边界
 
-[覆盖脚本](../../../../tools/coverage-check/check_slice_coverage.py)约139～160行以作者/夹具列表数量直接填loaded_in_author_package与behaviour_verified，并把host_available固定为0，证据文字没有逐卡关联实际运行产物。接受分母/声明口径和四态结构，不把它当作独立验证22项加载/行为的执行器。已有内容行为检查保留；下一步挂接逐内容执行证据，并区分旧M1可用路径与作者扩展无法开局的路径。
+[覆盖脚本](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/tools/coverage-check/check_slice_coverage.py)约139～160行以作者/夹具列表数量直接填loaded_in_author_package与behaviour_verified，并把host_available固定为0，证据文字没有逐卡关联实际运行产物。接受分母/声明口径和四态结构，不把它当作独立验证22项加载/行为的执行器。已有内容行为检查保留；下一步挂接逐内容执行证据，并区分旧M1可用路径与作者扩展无法开局的路径。
 
 ### 重新派发及工程决定
 

@@ -164,7 +164,7 @@ M1 交接分别说明：通用引擎通过哪些夹具；STS哪些基础/升级�
 
 依赖通用IR/帧和数值契约，独立于 M1 战斗切片能否使用 Lua。交付 IComputeBackend/ComputeAsset、类型化输入/输出校验、Lua纯计算适配、预算、调用隔离及诊断；结果绑定帧槽后由IR使用。
 
-现有 `tools/LuaBackendProbe/` 是候选验证工具，所引用的 MoonSharp 不因项目文件存在就成为已批准/已满足约束的后端。先复核数值、指令/内存配额、可捕获错误能否逃逸预算、跨调用上值隔离、输入输出传递与部署；满足契约再接入。不能满足就报告具体缺口，保留通用接口，不硬接生产规则。
+历史 `tools/LuaBackendProbe/` 已于2026-10-15退出跟踪，仅保留本地与Git历史；它曾是候选验证工具，所引用的 MoonSharp 不因项目文件存在就成为已批准/已满足约束的后端。先复核数值、指令/内存配额、可捕获错误能否逃逸预算、跨调用上值隔离、输入输出传递与部署；满足契约再接入。不能满足就报告具体缺口，保留通用接口，不硬接生产规则。
 
 检查：相同输入两次/跨会话相同结果；无可变全局/upvalue残留；无玩法写/RNG/调度接口；输出错型/超限/异常不提交计算结果；玩家选择恢复不重算已保存结果。使用设计中的有界计算夹具和宿主独立结果对照，不为每次伤害加法跨Lua调用。版本/脚本/后端配置进入身份；不承诺Lua提速。
 
@@ -211,9 +211,6 @@ python ai-the-spire/tests/d02_collector.py
 python ai-the-spire/tests/d03_audit.py
 python ai-the-spire/tests/p02_measure.py
 python ai-the-spire/tests/d04_longrun.py
-python tools/dependency-check/check_dependencies.py   # K-09a：项目依赖图 + 新路径不引用 Legacy
-python tools/dependency-check/legacy_inventory.py    # K-09a：旧后端领域面清点（分类完整性强制）
-python tools/coverage-check/check_slice_coverage.py       # B-06a：覆盖核算（分母/已迁/剩余，三源不变量）
 python net-the-spire/client/test_client.py
 ```
 

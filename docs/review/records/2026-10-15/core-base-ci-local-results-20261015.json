@@ -1,0 +1,241 @@
+{
+  "reference": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "2089659bd07920088b93226136c72b6b6ee590ad",
+    "tree": "8eb770da4e87677c54799801488b71a8ccba687b",
+    "status": "upstream-only; pinned after latest-main review on 2026-10-15",
+    "other_local_reference": {
+      "path": "reference/sts2-ai-mcp",
+      "repository": "https://github.com/BMingSY/sts2-ai-mcp.git",
+      "commit": "5d1d36b24337d7dd27fe125682e4c51fb9f76aa0",
+      "required_for_build": false
+    }
+  },
+  "groups": {
+    "core": {
+      "suite": "core",
+      "configuration": "Release",
+      "commit": null,
+      "reference_lock": null,
+      "steps": [
+        {
+          "command": [
+            "dotnet",
+            "build",
+            "core-the-spire/Core.TheSpire.Engine.Tests",
+            "-c",
+            "Release"
+          ],
+          "exit_code": 0,
+          "log": "01.log"
+        },
+        {
+          "command": [
+            "dotnet",
+            "run",
+            "--no-build",
+            "--project",
+            "core-the-spire/Core.TheSpire.Engine.Tests",
+            "-c",
+            "Release"
+          ],
+          "exit_code": 0,
+          "log": "02.log"
+        }
+      ],
+      "exit_code": 0
+    },
+    "base": {
+      "suite": "base",
+      "configuration": "Release",
+      "commit": null,
+      "reference_lock": null,
+      "steps": [
+        {
+          "command": [
+            "dotnet",
+            "build",
+            "mod-the-spire/base-spire/BaseSpire.Slice.Tests",
+            "-c",
+            "Release"
+          ],
+          "exit_code": 0,
+          "log": "01.log"
+        },
+        {
+          "command": [
+            "dotnet",
+            "run",
+            "--no-build",
+            "--project",
+            "mod-the-spire/base-spire/BaseSpire.Slice.Tests",
+            "-c",
+            "Release",
+            "--",
+            "--suite",
+            "runtime",
+            "--report",
+            "F:\\Scylier-Project\\active\\auto-the-spire\\.artifacts\\ci-core-base-20261015\\workspace\\.artifacts\\ci\\base\\behavior"
+          ],
+          "exit_code": 0,
+          "log": "02.log"
+        },
+        {
+          "command": [
+            "dotnet",
+            "build",
+            "tools/base-spire-dev/BaseSpire.Dev.csproj",
+            "-c",
+            "Release"
+          ],
+          "exit_code": 0,
+          "log": "03.log"
+        },
+        {
+          "command": [
+            "F:\\tools\\python\\Python312\\python.exe",
+            "-X",
+            "utf8",
+            "tools/base-spire-dev/verify_examples.py"
+          ],
+          "exit_code": 0,
+          "log": "04.log"
+        }
+      ],
+      "exit_code": 0
+    },
+    "differential": {
+      "suite": "differential",
+      "configuration": "Release",
+      "commit": null,
+      "reference_lock": {
+        "repository": "https://github.com/iRyougi/sts2-sim.git",
+        "commit": "2089659bd07920088b93226136c72b6b6ee590ad",
+        "tree": "8eb770da4e87677c54799801488b71a8ccba687b",
+        "status": "upstream-only; pinned after latest-main review on 2026-10-15",
+        "other_local_reference": {
+          "path": "reference/sts2-ai-mcp",
+          "repository": "https://github.com/BMingSY/sts2-ai-mcp.git",
+          "commit": "5d1d36b24337d7dd27fe125682e4c51fb9f76aa0",
+          "required_for_build": false
+        }
+      },
+      "steps": [
+        {
+          "command": [
+            "F:\\tools\\python\\Python312\\python.exe",
+            "-X",
+            "utf8",
+            "tools/differential/prepare_reference.py"
+          ],
+          "exit_code": 0,
+          "log": "01.log"
+        },
+        {
+          "command": [
+            "dotnet",
+            "build",
+            "tools/differential/Differential.csproj",
+            "-c",
+            "Release"
+          ],
+          "exit_code": 0,
+          "log": "02.log"
+        },
+        {
+          "command": [
+            "dotnet",
+            "run",
+            "--no-build",
+            "--project",
+            "tools/differential/Differential.csproj",
+            "-c",
+            "Release",
+            "--",
+            "test",
+            "--suite",
+            "regression",
+            "--output",
+            "F:\\Scylier-Project\\active\\auto-the-spire\\.artifacts\\ci-core-base-20261015\\workspace\\.artifacts\\ci\\differential\\regression"
+          ],
+          "exit_code": 0,
+          "log": "03.log"
+        }
+      ],
+      "exit_code": 0
+    }
+  },
+  "base_behavior": {
+    "report_version": "env-06-behavior-report@1",
+    "project": "BaseSpire.Slice.Tests",
+    "checks_passed": 841,
+    "suite": "runtime",
+    "source_checks_executed": false,
+    "behavior_verified_ids": [
+      "armaments",
+      "ashen-strike",
+      "barricade",
+      "bash",
+      "battle-trance",
+      "bludgeon",
+      "body-slam",
+      "brand",
+      "breakthrough",
+      "bully",
+      "burning-pact",
+      "cinder",
+      "colossus",
+      "corruption",
+      "cruelty",
+      "dazed",
+      "defend-ironclad",
+      "demon-form",
+      "dominate",
+      "entrench",
+      "evil-eye",
+      "expect-a-fight",
+      "feed",
+      "feel-no-pain",
+      "flame-barrier",
+      "giant-rock",
+      "headbutt",
+      "impervious",
+      "infection",
+      "inflame",
+      "iron-wave",
+      "juggernaut",
+      "mangle",
+      "molten-fist",
+      "not-yet",
+      "pommel-strike",
+      "pyre",
+      "rage",
+      "rampage",
+      "setup-strike",
+      "slimed",
+      "spite",
+      "stone-armor",
+      "strike-ironclad",
+      "sword-boomerang",
+      "tank",
+      "true-grit",
+      "twin-strike",
+      "unmovable",
+      "unrelenting",
+      "uppercut",
+      "vicious",
+      "wound"
+    ],
+    "behavior_verified_count": 53,
+    "not_lowered": [],
+    "scope": "只覆盖**受控切片**里已迁移并使用正式源的内容；不代表完整原版内容的覆盖。",
+    "command": "dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --report <目录>"
+  },
+  "guards": [
+    "exact pinned commit/tree downloaded from GitHub and verified in preceding fetch probe",
+    "dirty reference rejected without overwrite",
+    "child exit 7 preserved; later checks not executed; failure result/log saved"
+  ],
+  "scope": "core/base/strict regression; contracts-python is proposal only; original sts2 source stays local",
+  "github": "Pending first pushed workflow run; branch link in report"
+}

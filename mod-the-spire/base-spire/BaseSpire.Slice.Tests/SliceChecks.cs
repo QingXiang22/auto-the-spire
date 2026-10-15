@@ -48,7 +48,7 @@ internal static class SliceChecks
         SliceFrontendRetainChecks.Run();
         SliceFrontendPowerProgramChecks.Run();
         SliceFrontendDamageModifierChecks.Run();
-        // Legacy interoperability checks are retained in archive/legacy-sts as a separate executable.
+        // Legacy interoperability checks were retired; the old implementation is available only in Git history.
         SliceFrontendAmountSourceChecks.Run();
         SliceFrontendInstanceVariableChecks.Run();
         SliceFrontendGenerationChecks.Run();

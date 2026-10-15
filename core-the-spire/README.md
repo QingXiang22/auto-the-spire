@@ -35,7 +35,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 ## 范围与维护
 
-活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版卡牌作者阅读 base 的[内容 DSL 文档](../docs/dsl/0.0.1/dsl-usage.md)。旧 STS 后端位于 [archive/legacy-sts](../archive/legacy-sts/README.md)，活动工程不引用归档。
+活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版卡牌作者阅读 base 的[内容 DSL 文档](../docs/dsl/0.0.1/dsl-usage.md)。旧 STS 后端已从当前树删除，仅保留Git历史，见 [archive/legacy-sts](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，活动工程不引用归档。
 
 当前运行语义冻结为 engine/ir@0.3，支持 core/0.1 与 core/0.2。接口迁移与维护约束见[冻结契约](../docs/contracts/core-engine-baseline.md)，独立检出范围见[Git 冻结交接](../docs/contracts/core-git-checkpoint.md)，关闭依据见[冻结报告](../docs/review/archived/core-contract-freeze-2026-10-05.md)及[首版交付](../docs/review/archived/core-engine-followup-2026-10-04.md)。其他设计问题按需查[模块 spec](../docs/design/core-the-spire/spec.md)和[架构决定](../docs/design/core-the-spire/core-architecture-decisions.md)。完整原版环境的验收状态统一维护在[当前清单](../docs/review/tofix/README.md)。
 

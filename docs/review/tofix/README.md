@@ -29,6 +29,7 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 
 | ID / 优先级 | 阶段、父项 / 唯一主责 | 小目标与详情 |
 | --- | --- | --- |
+| CI-01 / P1 | 用户2026-10-15指定；工程交付 / Codex | [core/base与严格对拍CI，参考上游升级](#ci-01) |
 | CORE-AUTHOR-04 / P1 | 用户2026-10-11授权；CORE-DSL-BASE、ENV-T06/07 / Codex | [作者模型与规则库重构；引擎0.4发布](#core-author-04) |
 | ENV-T01 / P1 | M01；ENV-01、BASE-02 / A | [源float加权随机集成；纠正Describe/限制文案](#env-t01) |
 | ENV-T02 / P1 | M01；ENV-03、W-05 / A | [战斗余效/胜利结算尾与永久状态写回](#env-t02) |
@@ -51,6 +52,16 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 | CORE-DSL-WARN / P2 | 用户2026-10-07明确排期；core维护 / 待派单 | [新语法编译warning](#core-dsl-warn) |
 
 表格用于定位任务；状态、认领、依赖、下一成果及完成条件只在下方对应条目维护。完整ENV/W范围保留，排期按本轮关键依赖调整；后续任务尚未就绪时，不把其验收目标当作当前派单。
+
+#### CI-01
+
+**状态与认领**：待验证（本地与GitHub托管三个CI组均通过，待用户分支审阅）；用户2026-10-15明确派单，Codex `/root` / `codex/core-base-ci`。目录边界为`.github/workflows`、`tools/ci`、`tools/differential`及参考版本登记、base检查分组与相关文档，不修改core/base游戏规则，不编辑独立参考玩法。`contracts-python`本次只说明，不接入。
+
+**当前小包与下一成果**：三个CI组及用户2026-10-15追加的目录整理已实施；根archive删除，artifacts与临时/退休工具退出跟踪，reference与tools边界收紧、历史引用迁移，活动规则与有效回归判别保留。[整理证据](../records/2026-10-15/repository-hygiene-2026-10-15.md)含无源码/参考/归档的干净副本构建、协议210及AI离线604检查。托管结果按[本分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Fcore-base-ci)的具体提交核对；下一步用户分支审阅，未并入主线。
+
+**完成条件**：固定最新已核对参考身份；独立干净检出构建和命令验证；Actions实际运行结果、日志/结算及未验证明确；本地完整检查分组不丢失。网络或上游兼容失败保留最小复现及受影响case，不将旧参考回退包装为新版成功。
+
+**本次交付证据**：[实现与验证](../records/2026-10-15/core-base-ci-2026-10-15.md)记录core99、runtime841＋本地source1、作者15及纯上游严格16双侧＋1自检；实现提交fc3c736已推送，[首次Actions](https://github.com/QingXiang22/auto-the-spire/actions/runs/38686046899)三个job均success。下一步用户审阅分支，未并入主线，不关闭环境/版本父项。
 
 #### CORE-AUTHOR-04
 

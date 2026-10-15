@@ -19,7 +19,7 @@
 
 **本地化已解出**：`reference/orimod/pck/OriMod/localization/{zhs,eng}/`，共 12 张表（cards / powers / relics / card_keywords / characters / events / placements / enchantments / ancients / ori_messages / ori_tutorials / settings_ui）。中英对照整理在 [localization-zh-en.md](../../../tools/orimod-decompile/verify/localization-zh-en.md)。**中文文案是理解机制的重要补充**——自然语言描述和代码实际行为有出入时（高度规则尤其明显），以代码为准。
 
-清点脚本：[tools/orimod-decompile/inventory.ps1](../../../tools/orimod-decompile/inventory.ps1)。
+清点脚本：[tools/orimod-decompile/inventory.ps1](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/tools/orimod-decompile/inventory.ps1)。
 
 ---
 
@@ -384,7 +384,7 @@ flowchart TD
 
 **但有两处不是 DSL 能覆盖的**：
 
-1. **技能是新的外部动作类型。** 现在的 `PlayerAction` 只有 6 种（`PlayCardAction` / `UsePotionAction` / `EndTurnAction` / `ChooseOptionAction` / `ChooseCardAction` / `ConfirmCardSelectionAction`，[State.cs:1036-1042](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L1036-L1042)），合法动作在 [Environment.cs:341-405](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs#L341-L405) 逐类枚举，`Step` 还会拿它做合法性校验。加技能 = 新增一个 `PlayerAction` 子类 + 在枚举与分发里加分支 + 决定它是否与打牌共享回合内时序。**这改变了 AI 的动作空间**（编码器、策略头、动作掩码都要跟着动），是接口变更而不是内容变更。
+1. **技能是新的外部动作类型。** 现在的 `PlayerAction` 只有 6 种（`PlayCardAction` / `UsePotionAction` / `EndTurnAction` / `ChooseOptionAction` / `ChooseCardAction` / `ConfirmCardSelectionAction`，[State.cs:1036-1042](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L1036-L1042)），合法动作在 [Environment.cs:341-405](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs#L341-L405) 逐类枚举，`Step` 还会拿它做合法性校验。加技能 = 新增一个 `PlayerAction` 子类 + 在枚举与分发里加分支 + 决定它是否与打牌共享回合内时序。**这改变了 AI 的动作空间**（编码器、策略头、动作掩码都要跟着动），是接口变更而不是内容变更。
 2. **每回合使用次数与刷新条件需要状态位和刷新时点**：`state` 目前只有 combat/run 两个作用域和 `int`，够用；但"落地时刷新跳跃"这类条件需要一个能在高度变化时触发的钩子——那属于高度模块。
 
 **结论**：技能本身容易；它的成本是环境动作契约的一次扩展，以及少量新钩子。这两件事都不需要动 DSL 语法。
@@ -397,7 +397,7 @@ flowchart TD
 
 | # | 高度机制的实际行为 | 现有 DSL 的缺口 |
 | --- | --- | --- |
-| 1 | **逐实体维度**：敌人各有高度 | `state` 是 `(modId, key) → int`，**没有实体维度**（[State.cs:689-692](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L689-L692)） |
+| 1 | **逐实体维度**：敌人各有高度 | `state` 是 `(modId, key) → int`，**没有实体维度**（[State.cs:689-692](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L689-L692)） |
 | 2 | **数值由高度差计算**：伤害 = f(攻方高度 − 守方高度) | `scaled` 只有 `base + perCount × count`；12 个计数源里没有"某实体的自定义数值"，且缺 `min`/`clamp`（[primitives.md §4](../../dsl/0.0.1/primitives.md)） |
 | 3 | **移动会被拦截**：下降经过平台时停住（`AloftChangePlan.StopAt`） | 没有"移动计划 + 沿途拦截"的概念；现有钩子是固定的 10 个 `IRuleHook` 方法 |
 | 4 | **目标按高度筛选/排序**：路径穿过的敌人、按高度排序逐个结算 | `TargetSelector` 是 7 个封闭枚举（`None/Self/FirstEnemy/SelectedTarget/AllOpponents/RandomEnemy/OtherAllies`），无法表达"满足高度条件的敌人按高度排序" |
@@ -461,20 +461,20 @@ flowchart TD
 | 文件 | 用途 |
 | --- | --- |
 | [DslSource.cs](../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs) | 词法与语法树：声明 Kind 只是标识符，**种类由编译器限定**（2026-10-03 路径级移动，原在 `Legacy/`；命名空间不变） |
-| [SpireCombatDslCompiler.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs) | `card` / `cardPool` / `potion`；`PositionalFields` 决定新语法能写哪些原语（第 418-438 行） |
-| [SpireCombatBehaviorDslCompiler.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatBehaviorDslCompiler.cs) | `power` / `enemy` / `affliction`；触发器与事件参数（第 41-48、284-344 行） |
-| [StateVariableDefinition.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/StateVariableDefinition.cs) | `state` 声明：`scope` = combat/run，`type` = int |
-| [Content.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs) | 运行时的强类型定义：`CardDefinition`（钩子在第 225-239 行）、`RelicDefinition`（第 186 行，**无行为字段**）、`PowerTrigger`（第 1131-1133 行）、`IRuleHook`（第 2420-2438 行） |
-| [Effects.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs) | `TargetSelector`（第 269 行）、`DamageProperties`（第 271 行）、全部效果节点 |
-| [State.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs) | `PlayerAction` 族（第 1036-1042 行）、mod 状态读写（第 689-692 行） |
-| [Environment.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs) | 合法动作枚举（第 341-405 行）、`Step` 校验（第 482 行） |
-| [Runs.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs) | `CharacterDefinition`（第 192 行）、`IRunHook`（第 339-355 行） |
+| [SpireCombatDslCompiler.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs) | `card` / `cardPool` / `potion`；`PositionalFields` 决定新语法能写哪些原语（第 418-438 行） |
+| [SpireCombatBehaviorDslCompiler.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatBehaviorDslCompiler.cs) | `power` / `enemy` / `affliction`；触发器与事件参数（第 41-48、284-344 行） |
+| [StateVariableDefinition.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/StateVariableDefinition.cs) | `state` 声明：`scope` = combat/run，`type` = int |
+| [Content.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs) | 运行时的强类型定义：`CardDefinition`（钩子在第 225-239 行）、`RelicDefinition`（第 186 行，**无行为字段**）、`PowerTrigger`（第 1131-1133 行）、`IRuleHook`（第 2420-2438 行） |
+| [Effects.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs) | `TargetSelector`（第 269 行）、`DamageProperties`（第 271 行）、全部效果节点 |
+| [State.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs) | `PlayerAction` 族（第 1036-1042 行）、mod 状态读写（第 689-692 行） |
+| [Environment.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs) | 合法动作枚举（第 341-405 行）、`Step` 校验（第 482 行） |
+| [Runs.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs) | `CharacterDefinition`（第 192 行）、`IRunHook`（第 339-355 行） |
 
 ### 实例（比文档更能说明"现在能写成什么样"）
 
 - [ironclad-cards.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire)（99 KB，96 张卡）
 - [ironclad-powers.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire)、[enemies.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire)（47 KB）
 - [state.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/state.spire)（4 条 `state` 声明示例）
-- [BaseSpirePackage.cs](../../../archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs)：角色注册（第 212 行）、遗物行为（`IRuleHook` 实现，第 411-537 行）
+- [BaseSpirePackage.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs)：角色注册（第 212 行）、遗物行为（`IRuleHook` 实现，第 411-537 行）
 
 > **检阅时优先看三处**：`primitives.md §2/§3/§4` 的三张表（能写什么）、`Content.cs` 的 `CardDefinition` 钩子清单（6 个）与 `PowerTrigger`（11 个）、`Effects.cs` 的 `TargetSelector`（7 个）。这三处直接决定 §8.2 表格里的四个缺口是否成立。

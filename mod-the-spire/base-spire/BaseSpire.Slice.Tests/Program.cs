@@ -16,6 +16,19 @@ internal static class Program
 {
     public static int Main(string[] args)
     {
+        var suite = ReadOption(args, "--suite") ?? "all";
+        if (suite is not ("all" or "runtime" or "source")
+            || (args.Contains("--suite", StringComparer.Ordinal) && ReadOption(args, "--suite") is null))
+        {
+            Console.Error.WriteLine("--suite requires all, runtime, or source.");
+            return 2;
+        }
+        if (suite == "source")
+        {
+            PotionFlowChecks.RunSourceChecks();
+            Console.WriteLine($"All {Check.Passed} source checks passed (requires local sts2).");
+            return 0;
+        }
         if (args.Contains("--describe-build", StringComparer.Ordinal))
         {
             foreach (var scope in new[] { BaseSpire.SinglePlayer.BaseSpireScope.Dev, BaseSpire.SinglePlayer.BaseSpireScope.DevMap })
@@ -67,7 +80,7 @@ internal static class Program
         }
         if (args.Contains("--potion-flow-only", StringComparer.Ordinal))
         {
-            PotionFlowChecks.Run(includeLegacy: true);
+            PotionFlowChecks.Run(includeLegacy: true, includeSource: suite == "all");
             Console.WriteLine($"All {Check.Passed} potion flow checks passed.");
             return 0;
         }
@@ -218,7 +231,7 @@ internal static class Program
             return 0;
         }
         var reportDirectory = ReadOption(args, "--report");
-        PotionFlowChecks.Run();
+        PotionFlowChecks.Run(includeSource: suite == "all");
         PotionReuseChecks.Run();
         CombatStarsChecks.Run();
         CombatForgeChecks.Run();
@@ -239,7 +252,7 @@ internal static class Program
         EventDomainChecks.Run();
         RunDomainChecks.Run();
         var passed = SliceChecks.RunAll(includeMap);
-        Console.WriteLine(includeMap ? $"All {passed} slice checks passed."
+        Console.WriteLine(includeMap ? $"All {passed} slice checks passed (suite={suite})."
             : $"All {passed} slice checks excluding map checks passed (--combat-only).");
 
         if (reportDirectory is null)
@@ -253,6 +266,8 @@ internal static class Program
             ["report_version"] = "env-06-behavior-report@1",
             ["project"] = "BaseSpire.Slice.Tests",
             ["checks_passed"] = passed,
+            ["suite"] = suite,
+            ["source_checks_executed"] = suite == "all",
             ["behavior_verified_ids"] = new JsonArray(
                 ids.Order(StringComparer.Ordinal).Select(id => (JsonNode)JsonValue.Create(id)).ToArray()),
             ["behavior_verified_count"] = ids.Count,

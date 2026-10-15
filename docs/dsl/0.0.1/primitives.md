@@ -1,9 +1,10 @@
 # `.spire` 效果原语目录（DSL 0.0.1）
 
+2026-10-15说明：本文基于已退休的Legacy编译器，源码链接指向删除前历史，不代表当前base实现能力；当前作者契约见[base/0.0.2参考](../0.0.2/authoring-reference.md)。
 本文件列出**战斗效果编译器**当前接受的全部原语，并标明哪些能在新版卡牌语法里书写。
 
 - **适用范围：** 卡牌 `play`/`hooks`、药水 `use`、敌人 `moves` 的效果表达式共用同一套原语与同一个编译器。整局事件效果是另一套入口（`RunEffect`），不在本目录内。
-- **来源：** [`SpireCombatDslCompiler.cs`](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs) 中 `CompileEffect` / `CompilePredicate` / `CompileCombatCount` 的 `case` 与紧随其后的 `CheckShape(...)`，以及决定新语法参数顺序的 `PositionalFields` 表。本目录由脚本从该文件推导，再人工抽查实测（见文末「维护方式」）。
+- **来源：** [`SpireCombatDslCompiler.cs`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs) 中 `CompileEffect` / `CompilePredicate` / `CompileCombatCount` 的 `case` 与紧随其后的 `CheckShape(...)`，以及决定新语法参数顺序的 `PositionalFields` 表。本目录由脚本从该文件推导，再人工抽查实测（见文末「维护方式」）。
 - **状态：** 与代码同步的**实现状态**，不是设计目标。原语的含义与运行时语义见 [content-dsl.md](content-dsl.md)。
 
 ## 1. 位置参数规则（决定「能不能写」）

@@ -1,14 +1,6 @@
 {
   "repository": "https://github.com/iRyougi/sts2-sim.git",
-  "commit": "2cdaea3b6dbc20cfa340662fa73640f20bb6fb00",
-  "patch": "sts2-sim-local.patch",
-  "patch_sha256": "e6af646dbef7188c3977b9659c28e9db37f77951a1d80c24166cccf4fa295a6e",
-  "patched_tree": "4899ae9049e7f5a4ab6b85e55c4b487b233ad1b1",
-  "status": "preserved-local-reference; not upstream or complete vanilla acceptance",
-  "other_local_reference": {
-    "path": "reference/sts2-ai-mcp",
-    "repository": "https://github.com/BMingSY/sts2-ai-mcp.git",
-    "commit": "5d1d36b24337d7dd27fe125682e4c51fb9f76aa0",
-    "required_for_build": false
-  }
+  "commit": "2089659bd07920088b93226136c72b6b6ee590ad",
+  "tree": "8eb770da4e87677c54799801488b71a8ccba687b",
+  "status": "upstream-only; pinned after latest-main review on 2026-10-15"
 }

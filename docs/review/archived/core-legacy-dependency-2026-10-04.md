@@ -8,7 +8,7 @@ Core.TheSpire SDK 默认编译 Legacy；base 同时编译旧注册器和新 Engi
 
 ## 本次处理
 
-源码与直接消费者移到[archive/legacy-sts](../../../archive/legacy-sts/README.md)。旧 core/base 为独立 Legacy 程序集；活动 solution 移除旧测试和 hook 项目，活动 base 只编译新路径。归档内容源为快照，正式 ContentSource 留原处。旧检查保留归档前未提交修改。
+源码与直接消费者移到[archive/legacy-sts](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。旧 core/base 为独立 Legacy 程序集；活动 solution 移除旧测试和 hook 项目，活动 base 只编译新路径。归档内容源为快照，正式 ContentSource 留原处。旧检查保留归档前未提交修改。
 
 Slice 的 4 项兼容检查移为归档可执行工程，活动 Slice 268→264；检查没有删除。通用 DslSource AST/解析器留活动 core，归档可以反向复用。differential inventory 不引用/运行旧注册器，历史注册段标记 archived_not_run、计数为 null；正式匹配直接使用前端按类别产生的 ID，不再需要旧注册器提供连接键。空历史匹配不是实测零。
 

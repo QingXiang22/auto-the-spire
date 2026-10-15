@@ -4,7 +4,7 @@
 | --- | --- |
 | 权威 | [开工清单 §15](../../design/implementation-kickoff.md)：**"B-07 开始前先冻结整局 manifest：从当前 base-spire 已有单人 Ironclad 内容/流程声明及贯通所需机制清点地图、遭遇、奖励、商店、营火、事件/古代人、遗物、药水和终局；逐项记来源与支持边界。当前未实现项也列入缺口，不能只统计已成功注册的项。以此作为 J-03 的有限分母"** |
 | 本文件角色 | **B-07 的前置产物**（不是 B-07 的实现）；它同时是 J-03 的有限分母与差异清单的起点 |
-| 数据来源 | [`tools/content-manifest/manifest-2026-10-02.json`](../../../tools/content-manifest/manifest-2026-10-02.json)（B-05a 机械清单）+ [`legacy-inventory-2026-10-02.json`](../../../tools/dependency-check/legacy-inventory-2026-10-02.json)（K-09a 旧后端清点）+ 内容源逐文件核对 |
+| 数据来源 | [`tools/content-manifest/manifest-2026-10-02.json`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/tools/content-manifest/manifest-2026-10-02.json)（B-05a 机械清单）+ [`legacy-inventory-2026-10-02.json`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/tools/dependency-check/legacy-inventory-2026-10-02.json)（K-09a 旧后端清点）+ 内容源逐文件核对 |
 
 2026-10-03状态提示：本文保留2026-10-02冻结分母与当时支持度；后续两房间Run/长期牌组/升级奖励已经交付，不能照下表的“未实现”全部重做。最新能力、永久状态缺口及完整整局边界见[完成度复核](../../review/records/2026-10-03/project-completion-review-2026-10-03.md)，当前任务归W-05/W-06。下表保持历史，未注册的事件等必需流程仍保留在分母。
 

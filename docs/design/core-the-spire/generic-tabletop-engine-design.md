@@ -1,6 +1,6 @@
 # 通用桌游规则引擎设计稿
 
-2026-10-04 最新决定：旧后端已移到[代码归档](../../../archive/legacy-sts/README.md)，正式工程不再依赖它。随机取样保留候选 Query 的顺序，游戏特定策略由 mod 拥有；保留开发者 Session API，尽早按职责拆分，为对拍提供按需调试模式。core/0.1 基础文本编译与 core/0.2 DSL 规则库/作者配置已实现，完整语言覆盖与 Lua 仍需独立验收；最新约束见[core 架构决定](core-architecture-decisions.md)。
+2026-10-04 最新决定：旧后端已移到[代码归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，正式工程不再依赖它。随机取样保留候选 Query 的顺序，游戏特定策略由 mod 拥有；保留开发者 Session API，尽早按职责拆分，为对拍提供按需调试模式。core/0.1 基础文本编译与 core/0.2 DSL 规则库/作者配置已实现，完整语言覆盖与 Lua 仍需独立验收；最新约束见[core 架构决定](core-architecture-decisions.md)。
 
 > 2026-10-04当前实施范围：遵守[ENV任务](../environment-completion-and-differential-v1.md)和[实现约束](../environment-implementation-constraints.md)。本文G阶段、Lua及恢复方案保留原设计时点，不能作为执行者重新派单依据；现有Engine/H能力直接复用，只为冻结原版完整环境补必要通用能力。生产落点和状态权威按实现约束，不迁回Legacy或另写STS内核。
 

@@ -18,7 +18,7 @@ dotnet run --project tools/content-manifest -- tools/content-manifest/manifest-2
 
 - 生成方式：走**真实注册路径**——`new BaseSpirePackage()` → `ContentRegistry.Build()` → 遍历
   `GameDefinition` 的各类别字典；源文件侧则逐个嵌入资源解析并编译，取声明的 ID。
-- 冻结产物：[manifest-2026-10-02.json](../../../../tools/content-manifest/manifest-2026-10-02.json)（约 127 KB）
+- 冻结产物：[manifest-2026-10-02.json](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/tools/content-manifest/manifest-2026-10-02.json)（约 127 KB）
   含 `sources`（逐文件路径/sha256/字节数/声明 ID）、`categories`（逐声明属性）、`totals`、`differences`、`scope`。
 
 **三条分母分别列出（互不替代）**：

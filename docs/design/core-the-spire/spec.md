@@ -119,7 +119,7 @@ G=(P,S,I,M,L,T,O,F)
 
 | 保留项 | 现状 |
 | --- | --- |
-| 玩家集合 | 运行态持有玩家集合，而不是把玩家身份铺成全局字段；当前实现只要求单人战斗（[Runs.cs](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs)） |
+| 玩家集合 | 运行态持有玩家集合，而不是把玩家身份铺成全局字段；当前实现只要求单人战斗（[Runs.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs)） |
 | `AnyPlayer` 类来源目标 | 保留在原版目标语义中，单人会话语境下投影为当前玩家（药水 `AnyPlayer` → `self`，见 [content-dsl.md](../../dsl/0.0.1/content-dsl.md)） |
 | `multiplayerOnly` 内容 | 仍然注册，但不进入单人卡池、也不是单人合法动作（Demonic Shield、Tank，见 [ironclad-cards.spire:4](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire#L4)） |
 | 多人专属机制的数据位 | 保留定义与可观察字段，但不实现其交互行为（例：Tank 的 Guarded 与队伍伤害分摊，见 [ironclad-dsl-coverage.md](../mod-the-spire/ironclad-dsl-coverage.md)） |

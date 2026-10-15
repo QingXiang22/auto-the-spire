@@ -1,7 +1,0 @@
-start: Running
-  tutorial:Game.Counter: Score=0
-submit: Running
-  tutorial:Game.Counter: Score=2
-submit: Terminal
-  tutorial:Game.Counter: Score=3
-result: tutorial:Game.ReachedTarget
