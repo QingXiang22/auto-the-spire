@@ -34,7 +34,7 @@ base将现有药水源元数据核对抽为source组；没有删除判别、改�
 | 参考GitHub下载/复用/脏树 | 固定commit/tree下载和复用验证通过；故意新增文件后拒绝覆盖，文件保留 |
 | CI子进程故障注入 | 子进程rc7原样返回，后续步骤不执行，失败日志与JSON仍保存 |
 
-GitHub首次运行结果在[本分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Fcore-base-ci)核对；本地结果不冒充托管runner结果。CI分支需要负责人/用户审阅后并入主线，本包不自行修改仓库默认分支或合并保护规则。
+GitHub首次实际运行[38686046899](https://github.com/QingXiang22/auto-the-spire/actions/runs/38686046899)对应实现提交 `fc3c7365dc6cdbb523154ca002d8b0964360dad4`，core、base、differential三个托管Windows job均success，日志artifact上传成功。CI分支待用户审阅并入主线；本包不自行修改仓库默认分支或合并保护规则。后续若仅更新本报告，其运行结果不替代上述实现提交的证据。
 
 ## 保留范围
 
