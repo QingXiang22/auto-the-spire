@@ -1,6 +1,6 @@
 # `.spire` 旧语法使用说明（当前实现）
 
-> 本文用于对照当前编译器与卡牌实现。新版作者约定见 [`dsl-usage.md`](./dsl-usage.md)；本文的 `package`、方括号集合、函数调用和分散升级字段仍是现有代码使用的旧语法。
+本文供你对照旧语法的编译器与内容实现。编写新卡牌时，使用 [`dsl-usage.md`](./dsl-usage.md) 中的新版作者约定。下文的 `package`、方括号集合、函数调用和分散升级字段属于仍有代码使用的旧语法。
 
 本文面向编写或审阅 `base-spire`、其他 mod 内容的人。示例依据当前仓库中的解析器与编译器；DSL 仍在演进，具体能力以编译器实际接受的字段和表达式为准。
 
@@ -232,6 +232,57 @@ package training-mod {
 
 难度值使用 `variants(default=..., deadly=..., tough=..., deadlyTough=...)`；范围用 `range(min, max)`。具体随机抽取的时点与随机流属于运行时规则。
 
+### 6.1 生成的状态机与运行时语义（BASE-02 批 1，2026-10-05）
+
+`behavior` 不是"序列 + 循环起点"的简写，而是**状态图**：它按冻结源码的
+`MonsterMoveStateMachine`（`MonsterMoves/MonsterMoveStateMachine/`）降级，状态、行动日志、冷却窗口与
+已选意图都放在 Engine 状态里，由**同一份 IR** 执行。已在内容里使用并被检查的形态：
+
+| 作者写法 | 生成的状态 | 语义（来源） |
+| --- | --- | --- |
+| `loop(x)` | 行动 x，后继 = x | `SnappingJaxfruit.cs:30-33` |
+| `cycle(a,b,c)` | a→b、b→c、c→**a**（从列表开头循环，不是最后一个） | `FuzzyWurmCrawler.cs:35-38` |
+| `startWith(a, then=B)` | 初始状态 = a，a 的后继 = B 的入口 | `Mawler.cs:35,43` |
+| `startWithChoice(C, then=B)` | 初始状态 = **分支** C（开局就掷点），C 的候选与 B 池内行动的后继都指向 B 的入口 | `Flyconid.cs:34-49` |
+| `graph(start=X, edges=[edge(从, 到)])` | 每个"从"行动的后继显式给出（到可以是行动或分支） | `Inklet.cs:69-83` |
+| `chooseWithLimits(candidate(…))` | 加权随机分支（`RandomBranchState`） | `RandomBranchState.cs:115-167` |
+| `chooseWithoutRepeat(m1,m2,…)` | 每个候选 `CannotRepeat` + 权重 1 的随机分支 | `SoulNexus` / `SludgeSpinner` 等 5 只敌人 |
+| `chooseByCondition(candidate(m, when=…))` | **有序**条件分支（`ConditionalBranchState`），不消耗随机数 | `ConditionalBranchState.cs:44-54` |
+
+`candidate(move, weight=, cooldown=, maxConsecutive=, maxUsesPerCombat=, when=)` 的参数逐条对应源码：
+
+- `weight`（默认 1）= `AddBranch(..., float weight)`；全部候选 weight 为 0 时**仍然抽一次**并命中**第一个**候选
+  （`max = 0` ⇒ `NextFloat(0)` ⇒ `num <= 0`，`RandomBranchState.cs:117-126`）。
+- `maxConsecutive=n` = `CannotRepeat`（n = 1）/ `CanRepeatXTimes(n)`：该行动在日志**尾部连续**出现 n 次后权重 0。
+  注意：源码 `AddBranch(state, 2)` 的整数参数是**连续上限**，不是权重。
+- `maxUsesPerCombat=1` = `UseOnlyOnce`：该行动**出现过**（含开局进日志的初始行动）就权重 0。`> 1` 未支持
+  （原版没有"整场最多 n 次"）。
+- `cooldown=c`：该行动出现在日志**最后 c 个行动**里就权重 0（`RandomBranchState.cs:158-165`）。
+- `when=`：`metric(EnemyHp, LessThan, n)` / `metric(Turn, AtLeast, n)` 与 `all`/`any`/`not` 组合。
+
+随机与调用点（运行时契约）：
+
+- 流是 `monster_ai`（`RunRngType.MonsterAi`）；**每次落到随机分支恰好一次**抽取；行动→行动的固定转移与
+  有序条件分支**不抽**。
+- 选取发生在**出生时**与**每个玩家回合开始**（`CombatManager.AfterCreatureAdded` → `RollMove`；
+  玩家侧回合开始 → `PrepareForNextTurn`）；当前状态是"还没执行过的行动"时**不转换也不抽**（首动不掷，
+  `MonsterMoveStateMachine.cs:60-63`），因此两次调用幂等。
+- 公开事实只有"已选意图"（`NextMove`）；状态机的当前状态、日志与冷却窗口是隐藏字段，不进观看者投影。
+- 加权选取（ENV-T01）：抽取合并成**一次** `SampleInt(monster_ai, 0, 2^53)`（53 位），再由纯计算资产
+  `base-spire:SourceWeightedPick`（后端 `base-spire-source-float32@1`）按原版 `RandomBranchState.cs:115-128`
+  做 `Sum` 的 double 累加器 → `NextFloat(max)` 的 double 乘法后一次转 float32 → 按声明顺序逐项 float32
+  减法、`<= 0f` 命中；门槛被挡住的候选按原版置 0 权重。候选权重可以是小数，`enemies.spire` 里两份带分数
+  权重的声明按源写成 `weight=0.4`/`0.6`（Fogmog，`Fogmog.cs:46-47`）与 `weight=0.083333336`
+  （= `1f/12f`）/`0.75`（Two-Tailed Rat，`TwoTailedRat.cs:125-128`），整套算术与原版逐位一致。
+  **注意**：这两只敌人**当前都未进包**（行动里用到 `summonEnemy` 等未实现原语，逐条记在未支持清单与其
+  遭遇排除列表里）；分数权重的运行时判别证据来自受控敌人文本（`SliceEnemyStateMachineChecks`），
+  内容侧的权重字面量与未加载原因也由同一检查钉住。
+- 已支持：`addCards(<卡名>, count=, pile=hand|draw|discard, position=bottom|top|random, target=player)`
+  与 `startingPowers = [power(<能力>, <层数>)]`（检查见 `SliceEnemyAddCardsChecks`）。
+- 未支持：具名条件 `condition(Name)`、`metric(LivingAllies/…)`、`power(...)`、`allyAction(...)`、
+  `escape`/`summonEnemy`、敌人 `variables`/`conditions` 声明表与 `modifyEnemyVariable`/`modifyCombatState`，
+  以及依赖**遭遇位次**的开场条件——这些敌人整条记为未支持，不产生近似行为。
+
 ## 7. 状态变量、卡池和药水
 
 ### Run/Combat 变量
@@ -277,12 +328,14 @@ package training-mod {
     rarity = common
     usage = combatOnly
     target = enemy
-    use = attack(20, target=target, properties=[unpowered])
+    source = "本mod的规则依据"
+    unpowered = true
+    use = { attack = { damage = 20 target = context.target } }
   }
 }
 ```
 
-当前药水 DSL 只接受 `usage = combatOnly`。非战斗药水用法还未实现。
+正式 `SpirePotionSource` 使用具名块效果，并复用卡牌逐效果程序。元数据接受 `usage = combatOnly | anyTime | automatic`，使用效果当前只绑定战斗药水；非战斗/自动效果必须声明非空 `unsupportedUse = "原因"`，不能写空 `use`。ID 使用所属包命名空间；`source` 必填，完整池顺序与玩法支持分开处理。栏位/领取/丢弃及编译边界见[药水契约](../../design/mod-the-spire/potion-inventory/spec.md)和[开发指南](../../design/mod-the-spire/base-development-guide.md#补充药水时只读本机制)。冻结 `.author` 场景的旧步骤语法继续兼容。
 
 ## 8. 编译与错误定位
 

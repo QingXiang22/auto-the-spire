@@ -1,0 +1,435 @@
+// B-05b：切片内容的**作者表示**。它编译到通用 IR（`EnginePackageBuilder`），与程序化包使用同一运行时。
+//
+// 语法（每行一条；`//` 与 `#` 起为注释；块用 `{}`，缩进不敏感）：
+//
+//   package base-spire { version = combat-slice-v1 }
+//   deck { strike-ironclad x5   defend-ironclad x4   bash }
+//   potions { beetle-juice }
+//   run { hp = 80  max-hp = 80  gold = 99 }
+//   power strength { name = Strength  role = Strength  effect = "..." }
+//   enemy calcified-cultist { name = ...  hp = 38  tough-hp = 39  first-move-ritual = 2  strike-damage = 9
+//                             strike-damage-deadly = 11  first-move = Incantation  repeat-move = DarkStrike
+//                             source = sts2/...  line = 230 }
+//   potion beetle-juice { name = BeetleJuice  rarity = rare  usage = combat-only  target = enemy
+//                         use { amount = 0  power = shrink  stacks = 4  steps = [target, apply_power] } }
+
+//   card strike-ironclad {
+//     name = StrikeIronclad  kind = Attack  cost = 1  source = BaseSpire/...  line = 1388
+//     normal   { amount = 6  steps = [target, damage] }
+//     upgraded { amount = 9  steps = [target, damage] }
+//   }
+//
+// 数值与出处**逐条镜像** SliceManifest 的冻结记录（同一个来源行），因此作者前端与程序化包是同一份数据；
+// 区别只在"效果怎么表达"：这里用显式的 step 列表，程序化包用按 kind/字段分派的通用程序。
+//
+// 支持的 steps 就是切片运行时**真正能执行**的动作：target / damage / block / apply_power / top_from_discard。
+// 声明未支持的 step、缺少前置 step、或 kind 与 step 不匹配，都会在**编译期**带路径拒绝，不会被静默忽略。
+// 新机制必须先在通用 Engine/切片运行时补齐能力，再扩展这里的 step 词表。
+
+package base-spire {
+  version = combat-slice-v1
+}
+
+potions {
+  beetle-juice
+  blessing-of-the-forge
+}
+
+deck {
+  strike-ironclad x5
+  defend-ironclad x4
+  bash
+}
+
+// B-07a：整局级的初始状态（长期 HP/最大 HP/金币）。长期牌组就是上面的 `deck { … }`；
+// 战斗里生成/克隆出来的牌只属于这场战斗，不会写回这里。
+run {
+  hp = 80
+  max-hp = 80
+  gold = 99
+}
+power strength {
+  name = Strength
+  role = Strength
+  effect = "adds its stacks to each attack hit"
+  source = base-spire/ContentSource/shared-powers.spire
+  line = 2
+  // 行为程序：力量不随时间衰减；伤害修正：攻击者每层加 1（加性阶段）。
+  owner-turn-end = none
+  damage = add-per-stack:1
+}
+
+power shrink {
+  name = Shrink
+  role = Shrink
+  effect = "its owner''s powered damage x0.70 (stacks are a duration, not a multiplier)"
+  source = sts2/src/Core/Models/Powers/ShrinkPower.cs
+  line = 5
+  owner-turn-end = tick
+  damage = multiply-outgoing:0.7
+}
+
+power ritual {
+  name = Ritual
+  role = Ritual
+  effect = "at the owner's turn end, gains Strength equal to its stacks (skipping the turn it was applied)"
+  source = base-spire/ContentSource/enemies.spire
+  line = 226
+  owner-turn-end = convert-to-strength
+}
+
+power vulnerable {
+  name = Vulnerable
+  role = Vulnerable
+  effect = "incoming powered damage x1.5 (stacks are a duration, not a multiplier), decremented after the enemy turn end, skipped on the turn it is applied"
+  source = base-spire/ContentSource/shared-powers.spire
+  line = 17
+  owner-turn-end = tick
+  damage = multiply-incoming:1.5
+}
+
+power weak {
+  name = Weak
+  role = Weak
+  effect = "its owner's powered damage x0.75 (stacks are a duration, not a multiplier), decremented after the enemy turn end, skipped on the turn it is applied"
+  source = base-spire/ContentSource/shared-powers.spire
+  line = 25
+  owner-turn-end = tick
+  damage = multiply-outgoing:0.75
+}
+
+enemy calcified-cultist {
+  name = CalcifiedCultist
+  hp = 38
+  tough-hp = 39
+  first-move-ritual = 2
+  strike-damage = 9
+  strike-damage-deadly = 11
+  first-move = Incantation
+  repeat-move = DarkStrike
+  source = base-spire/ContentSource/enemies.spire
+  line = 230
+  // 行动程序：开场先念咒（给自己上 Ritual），此后一直暗击。
+  // `first-ritual` / `strike` 是**这张敌人的字段引用**，因此每个敌人的数值仍只写在数据里。
+  move incantation { ritual = first-ritual }
+  move dark-strike { damage = strike }
+  cycle = [incantation, dark-strike xforever]
+}
+
+enemy damp-cultist {
+  name = DampCultist
+  hp = 51
+  tough-hp = 52
+  first-move-ritual = 5
+  strike-damage = 1
+  strike-damage-deadly = 3
+  first-move = Incantation
+  repeat-move = DarkStrike
+  source = base-spire/ContentSource/enemies.spire
+  line = 221
+  move incantation { ritual = first-ritual }
+  move dark-strike { damage = strike }
+  cycle = [incantation, dark-strike xforever]
+}
+
+potion beetle-juice {
+  name = BeetleJuice
+  rarity = rare
+  usage = combat-only
+  target = enemy
+  source = base-spire/ContentSource/potions.spire
+  line = 25
+  use { amount = 0  power = shrink  stacks = 4  steps = [target, apply_power] }
+}
+
+potion blessing-of-the-forge {
+  name = BlessingOfTheForge
+  rarity = uncommon
+  usage = combat-only
+  target = self
+  source = base-spire/ContentSource/potions.spire
+  line = 19
+  use { amount = 0  steps = [upgrade_hand] }
+}
+
+card strike-ironclad {
+  name = StrikeIronclad
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1388
+  normal   { amount = 6  steps = [target, damage] }
+  upgraded { amount = 9  steps = [target, damage] }
+}
+
+card defend-ironclad {
+  name = DefendIronclad
+  kind = Skill
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1424
+  normal   { amount = 5  steps = [block] }
+  upgraded { amount = 8  steps = [block] }
+}
+
+card bash {
+  name = Bash
+  kind = Attack
+  cost = 2
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1459
+  normal   { amount = 8   power = vulnerable  stacks = 2  steps = [target, damage, apply_power] }
+  upgraded { amount = 10  power = vulnerable  stacks = 3  steps = [target, damage, apply_power] }
+}
+
+card headbutt {
+  name = Headbutt
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2015
+  normal   { amount = 9   steps = [target, damage, top_from_discard] }
+  upgraded { amount = 12  steps = [target, damage, top_from_discard] }
+}
+
+card dazed {
+  name = Dazed
+  kind = Status
+  cost = 0
+  source = base-spire/ContentSource/status-cards.spire
+  line = 3
+  normal   { amount = 0  unplayable = true  ethereal = true  steps = [] }
+  upgraded { amount = 0  unplayable = true  ethereal = true  steps = [] }
+}
+
+card beckon {
+  name = Beckon
+  kind = Status
+  cost = 1
+  source = base-spire/ContentSource/status-cards.spire
+  line = 25
+  normal   { amount = 6  steps = []  hook turn_end_in_hand { steps = [lose_hp] } }
+  upgraded { amount = 6  steps = []  hook turn_end_in_hand { steps = [lose_hp] } }
+}
+card iron-wave {
+  name = IronWave
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2103
+  normal   { amount = 5  steps = [target, block, damage] }
+  upgraded { amount = 7  steps = [target, block, damage] }
+}
+
+card twin-strike {
+  name = TwinStrike
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2438
+  normal   { amount = 5  steps = [target, damage x2] }
+  upgraded { amount = 7  steps = [target, damage x2] }
+}
+
+card breakthrough {
+  name = Breakthrough
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1549
+  normal   { amount = 9  steps = [lose_hp:1, damage_all] }
+  upgraded { amount = 13  steps = [lose_hp:1, damage_all] }
+}
+card pommel-strike {
+  name = PommelStrike
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2265
+  normal   { amount = 9  steps = [target, damage, draw:1] }
+  upgraded { amount = 10  steps = [target, damage, draw:2] }
+}
+
+card shrug-it-off {
+  name = ShrugItOff
+  kind = Skill
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2307
+  normal   { amount = 8  steps = [block, draw:1] }
+  upgraded { amount = 11  steps = [block, draw:1] }
+}
+card thunderclap {
+  name = Thunderclap
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2535
+  normal   { amount = 4  power = vulnerable  stacks = 1  steps = [damage_all, apply_power_all] }
+  upgraded { amount = 7  power = vulnerable  stacks = 1  steps = [damage_all, apply_power_all] }
+}
+// Rampage（来源 ironclad-cards.spire:3852）：伤害 = 基础 9 + ExtraDamage，每次打出后 ExtraDamage += 5（升级 +9）。
+// 这里把"基础 9"编码成变量的**初值**（9 + 线性累加 与 基础+计数 在可观察行为上等价），并把"每次加多少"
+// 写成 grow-amount；来源的 preserveOnDowngrade 在当前切片里没有降级路径，因此**未建模**（见批次报告）。
+card rampage {
+  name = Rampage
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 3852
+  normal   { amount-source = variable:extra-damage  variable { extra-damage = 9 }  grow = extra-damage  grow-amount = 5   steps = [target, damage] }
+  upgraded { amount-source = variable:extra-damage  variable { extra-damage = 9 }  grow = extra-damage  grow-amount = 9   steps = [target, damage] }
+}
+// Entrench（来源 ironclad-cards.spire:1752）：`gainBlockFromCurrentBlock` = 格挡再获得"当前格挡"那么多（翻倍）；
+// 升级形态**费用不同**（普通 2 → 升级 1），因此费用写在变体块里。
+card entrench {
+  name = Entrench
+  kind = Skill
+  cost = 2
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1752
+  normal   { cost = 2  amount-source = block-count  steps = [block] }
+  upgraded { cost = 1  amount-source = block-count  steps = [block] }
+}
+// Inflame（来源 ironclad-cards.spire:2191）：`type = power`、`applyPower Strength 2`（升级 3）、目标是自己。
+// 它只用到切片**已经实现**的能力语义（Strength 是 `add-per-stack:1` 且回合末不衰减），因此可以声明。
+card inflame {
+  name = Inflame
+  kind = Power
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 2191
+  normal   { amount = 0  power = strength  stacks = 2  steps = [apply_power_self] }
+  upgraded { amount = 0  power = strength  stacks = 3  steps = [apply_power_self] }
+}
+// FeelNoPain（能力来源 ironclad-powers.spire:28）：`trigger = afterCardExhausted`、
+// `effect = gainBlock(1, perPowerStack=FeelNoPain)` —— 声明式触发点，切片在"一张牌被消耗之后"真的会调用它。
+power feel-no-pain {
+  name = FeelNoPain
+  role = FeelNoPain
+  effect = "after a card is exhausted: gain 1 Block per stack"
+  source = base-spire/ContentSource/ironclad-powers.spire
+  line = 28
+  trigger = after_card_exhausted
+  trigger-effect = gain-block-per-stack:1
+}
+
+// FeelNoPain 卡（来源 ironclad-cards.spire:1976）：cost 1、给自己上 3 层（升级 4 层）。
+card feel-no-pain {
+  name = FeelNoPain
+  kind = Power
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1976
+  normal   { amount = 0  power = feel-no-pain  stacks = 3  steps = [apply_power_self] }
+  upgraded { amount = 0  power = feel-no-pain  stacks = 4  steps = [apply_power_self] }
+}
+// RagePower（能力来源 ironclad-powers.spire:33）：`trigger = afterCardPlayed`、`whenCardType = attack`、
+// `effect = gainBlock(1, perPowerStack=RagePower)`、`removeAfterPlayerTurnEnd = true`
+// —— 打出**攻击**时按层数给格挡，回合末把整个能力移除。
+power rage-power {
+  name = RagePower
+  role = RagePower
+  effect = "after you play an Attack: gain 1 Block per stack; removed at the end of the turn"
+  source = base-spire/ContentSource/ironclad-powers.spire
+  line = 33
+  trigger = after_card_played
+  when-card-type = Attack
+  trigger-effect = gain-block-per-stack:1
+  owner-turn-end = remove
+}
+
+// Rage 卡（来源 ironclad-cards.spire:3565）：cost 0、给自己上 3 层（升级 5 层）。
+card rage {
+  name = Rage
+  kind = Power
+  cost = 0
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 3565
+  normal   { amount = 0  power = rage-power  stacks = 3  steps = [apply_power_self] }
+  upgraded { amount = 0  power = rage-power  stacks = 5  steps = [apply_power_self] }
+}
+// FightMe（来源 ironclad-cards.spire:3321）：`repeat count = 2 { attack damage 5 }` +
+// 给自己 3 层 Strength（升级 4 层）+ 给**目标** 1 层 Strength。
+// **同一张牌、同一个能力、两个收受者、两种层数** —— 用"带字面量层数的施加步骤"表达
+// （`apply_power_self:<n>` / `apply_power:<n>`；能力 id 仍是卡牌级 `power`）。
+card fight-me {
+  name = FightMe
+  kind = Attack
+  cost = 2
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 3321
+  normal   { amount = 5  power = strength  steps = [target, damage x2, apply_power_self:3, apply_power:1] }
+  upgraded { amount = 6  power = strength  steps = [target, damage x2, apply_power_self:4, apply_power:1] }
+}
+// Dominate（来源 ironclad-cards.spire:3425）：给自己施加 Strength，**层数 = 目标身上 Vulnerable 的层数**
+// （来源 `applyScaledPower { base = 0  perCount = 1  count = { targetPowerAmount { power = Vulnerable } } }`）；
+// 先给目标上 1 层易伤（升级 2 层），所以读到的是**施加之后**的层数。`keywords = { exhaust }` → `exhaust_self`。
+card dominate {
+  name = Dominate
+  kind = Skill
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 3425
+  normal   { amount = 0  power = strength  steps = [target, apply_power:vulnerable:1, apply_power_self_from_target:vulnerable, exhaust_self] }
+  upgraded { amount = 0  power = strength  steps = [target, apply_power:vulnerable:2, apply_power_self_from_target:vulnerable, exhaust_self] }
+}
+// NoEnergyGainPower（能力来源 ironclad-powers.spire:19）：`preventEnergyGain = true` +
+// `removeAfterOwnerTurnEnd = true` —— 本回合不能再获得能量，回合末整体移除。
+power no-energy-gain {
+  name = NoEnergyGainPower
+  role = NoEnergyGainPower
+  effect = "you cannot gain Energy this turn; removed at the end of the turn"
+  source = base-spire/ContentSource/ironclad-powers.spire
+  line = 19
+  prevent-energy-gain = true
+  owner-turn-end = remove
+}
+
+// ExpectAFight（来源 ironclad-cards.spire:1192）：获得"手牌里攻击牌数量"点能量（升级后费用 2 → 1），
+// 然后给自己 NoEnergyGainPower。
+card expect-a-fight {
+  name = ExpectAFight
+  kind = Skill
+  cost = 2
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 1192
+  normal   { cost = 2  amount-source = hand-count:Attack  power = no-energy-gain  stacks = 1  steps = [gain_energy, apply_power_self] }
+  upgraded { cost = 1  amount-source = hand-count:Attack  power = no-energy-gain  stacks = 1  steps = [gain_energy, apply_power_self] }
+}
+// Spite（来源 ironclad-cards.spire:3604）：`if { condition = { playerLostHpThisTurn }
+// then = { repeat 2 × damage 5 } else = { damage 5 } }`，cost 0、单目标攻击。
+card spite {
+  name = Spite
+  kind = Attack
+  cost = 0
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 3604
+  normal {
+    amount = 5
+    if {
+      condition = player-lost-hp-this-turn
+      then = [target, damage x2]
+      else = [target, damage]
+    }
+  }
+  upgraded {
+    amount = 6
+    if {
+      condition = player-lost-hp-this-turn
+      then = [target, damage x2]
+      else = [target, damage]
+    }
+  }
+}
+// AshenStrike（来源 ironclad-cards.spire:3057）：`scaledAttack { base = 6  perCount = 3
+// count = { pileCount { pile = exhaust } } }`（升级 perCount = 4）—— 伤害 = 6 + 3 × 消耗区牌数。
+card ashen-strike {
+  name = AshenStrike
+  kind = Attack
+  cost = 1
+  source = base-spire/ContentSource/ironclad-cards.spire
+  line = 3057
+  normal   { amount-source = exhaust-count  amount-base = 6  amount-per-count = 3  steps = [target, damage] }
+  upgraded { amount-source = exhaust-count  amount-base = 6  amount-per-count = 4  steps = [target, damage] }
+}

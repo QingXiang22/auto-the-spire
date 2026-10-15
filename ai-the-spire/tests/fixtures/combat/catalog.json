@@ -1,0 +1,269 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:combat-catalog-v1",
+  "declarations": {
+    "entity_kinds": [
+      {"id": "fixture:card", "semantic_version": "1", "description": "卡牌实例（同名不同实例分开）"},
+      {"id": "fixture:discard_pile", "semantic_version": "1", "description": "弃牌堆实体"},
+      {"id": "fixture:draw_pile", "semantic_version": "1", "description": "抽牌堆实体"},
+      {"id": "fixture:enemy", "semantic_version": "1", "description": "敌人实体"},
+      {"id": "fixture:hand_pile", "semantic_version": "1", "description": "手牌实体"},
+      {"id": "fixture:player", "semantic_version": "1", "description": "玩家实体"},
+      {"id": "fixture:power", "semantic_version": "1", "description": "Power 实体（经持有关系连接所有者）"}
+    ],
+    "content_types": [
+      {"id": "fixture:card_face", "semantic_version": "1", "description": "卡面内容类型", "kind_ids": ["fixture:card"]},
+      {"id": "fixture:power_face", "semantic_version": "1", "description": "Power 内容类型", "kind_ids": ["fixture:power"]}
+    ],
+    "fields": [
+      {
+        "id": "fixture:backend_damage_decimal",
+        "semantic_version": "1",
+        "description": "精确受到伤害；后端不提供该精度时显式 unavailable",
+        "value_type": "number",
+        "number_format": "decimal",
+        "applies_to": {"entity_kinds": ["fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:block",
+        "semantic_version": "1",
+        "description": "当前公开格挡，可为已知零",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player", "fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:card_face",
+        "semantic_version": "1",
+        "description": "卡面类别",
+        "value_type": "category",
+        "category_ids": ["fixture:bash", "fixture:defend", "fixture:headbutt", "fixture:strike"],
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:cards_played_this_turn",
+        "semantic_version": "1",
+        "description": "本回合已知出牌计数（当前观察直接给出，不由编码器累计）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:cost",
+        "semantic_version": "1",
+        "description": "当前费用（升级可改变）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:energy",
+        "semantic_version": "1",
+        "description": "当前能量",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:hp",
+        "semantic_version": "1",
+        "description": "当前公开生命值",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player", "fixture:enemy"], "action_types": [], "terminal_reasons": ["fixture:victory"]},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:intent",
+        "semantic_version": "1",
+        "description": "敌人公开意图",
+        "value_type": "category",
+        "category_ids": ["fixture:attack", "fixture:defend"],
+        "applies_to": {"entity_kinds": ["fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:max_hp",
+        "semantic_version": "1",
+        "description": "生命上限；适用但暂不可知时为 unknown",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player", "fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:owner",
+        "semantic_version": "1",
+        "description": "卡牌归属玩家",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:player"],
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:pile_scope",
+        "semantic_version": "1",
+        "description": "牌堆作用域（互斥组作用域字段，required/known）",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:player"],
+        "applies_to": {"entity_kinds": ["fixture:discard_pile", "fixture:draw_pile", "fixture:hand_pile"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:play_card_ref",
+        "semantic_version": "1",
+        "description": "打出的卡牌实例",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:card"],
+        "applies_to": {"entity_kinds": [], "action_types": ["fixture:play_card"], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:play_target_ref",
+        "semantic_version": "1",
+        "description": "打牌目标（可选；缺省语义由目录声明）",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:enemy"],
+        "applies_to": {"entity_kinds": [], "action_types": ["fixture:play_card"], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:power_amount",
+        "semantic_version": "1",
+        "description": "Power 层数",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:power"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:relic_triggered",
+        "semantic_version": "1",
+        "description": "本回合公开触发标志",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:strength",
+        "semantic_version": "1",
+        "description": "力量层数",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player", "fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:upgraded",
+        "semantic_version": "1",
+        "description": "卡牌是否升级；省略表示没有该声明，不等于 false",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "net:pile_members_complete",
+        "semantic_version": "1",
+        "description": "派生：牌堆成员是否完整（张量化，wire 不填）",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["fixture:discard_pile", "fixture:draw_pile", "fixture:hand_pile"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "net:pile_total_count",
+        "semantic_version": "1",
+        "description": "派生：牌堆总数（张量化，wire 不填）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:discard_pile", "fixture:draw_pile", "fixture:hand_pile"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      }
+    ],
+    "relation_types": [
+      {
+        "id": "fixture:held_by",
+        "semantic_version": "1",
+        "description": "Power 由玩家或敌人持有（无位置）",
+        "source_kind_ids": ["fixture:power"],
+        "target_kind_ids": ["fixture:enemy", "fixture:player"],
+        "position_schema": null
+      },
+      {
+        "id": "net:pile_member",
+        "semantic_version": "1",
+        "description": "派生：牌堆成员（张量化，wire 不填）",
+        "source_kind_ids": ["fixture:discard_pile", "fixture:draw_pile", "fixture:hand_pile"],
+        "target_kind_ids": ["fixture:card"],
+        "position_schema": null
+      }
+    ],
+    "pile_types": [
+      {
+        "id": "fixture:discard_pile_type",
+        "semantic_version": "1",
+        "description": "弃牌堆",
+        "kind_id": "fixture:discard_pile",
+        "member_kind_ids": ["fixture:card"],
+        "position_schema": {"unit": "card", "origin": "top", "min": 0, "max": null},
+        "exclusive_group_id": "fixture:battle",
+        "membership_scope_field_id": "fixture:pile_scope"
+      },
+      {
+        "id": "fixture:draw_pile_type",
+        "semantic_version": "1",
+        "description": "抽牌堆（已知绝对位置）",
+        "kind_id": "fixture:draw_pile",
+        "member_kind_ids": ["fixture:card"],
+        "position_schema": {"unit": "card", "origin": "top", "min": 0, "max": null},
+        "exclusive_group_id": "fixture:battle",
+        "membership_scope_field_id": "fixture:pile_scope"
+      },
+      {
+        "id": "fixture:hand_pile_type",
+        "semantic_version": "1",
+        "description": "手牌（无公开顺序，无位置语义）",
+        "kind_id": "fixture:hand_pile",
+        "member_kind_ids": ["fixture:card"],
+        "position_schema": null,
+        "exclusive_group_id": "fixture:battle",
+        "membership_scope_field_id": "fixture:pile_scope"
+      }
+    ],
+    "sequence_types": [],
+    "group_types": [],
+    "action_types": [
+      {"id": "fixture:end_turn", "semantic_version": "1", "description": "结束回合", "required_fields": [], "optional_fields": []},
+      {"id": "fixture:play_card", "semantic_version": "1", "description": "打出一张牌", "required_fields": ["fixture:play_card_ref"], "optional_fields": ["fixture:play_target_ref"]}
+    ],
+    "terminal_reasons": [
+      {"id": "fixture:defeat", "semantic_version": "1", "description": "战斗失败", "outcome": "loss", "required_fields": [], "optional_fields": []},
+      {"id": "fixture:victory", "semantic_version": "1", "description": "战斗胜利", "outcome": "win", "required_fields": ["fixture:hp"], "optional_fields": []}
+    ]
+  }
+}

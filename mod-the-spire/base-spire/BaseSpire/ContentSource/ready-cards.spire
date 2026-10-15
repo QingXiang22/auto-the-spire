@@ -1,0 +1,164 @@
+using namespace base-spire;
+
+# Source: sts2/src/Core/Models/Cards/Survivor.cs:17-36
+card Survivor {
+ pools = { SilentCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = basic cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 8 } chooseCard = { from = hand to = discard count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = basic cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 11 } chooseCard = { from = hand to = discard count = 1 autoSelect = true } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/Suppress.cs:23-54
+card Suppress {
+ pools = { SilentCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = ancient cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { innate } play = { attack = { damage = 11 } applyPower = { power = Weak stacks = 3 } } hooks = {} }
+ upgraded = { type = attack rarity = ancient cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { innate } play = { attack = { damage = 17 } applyPower = { power = Weak stacks = 5 } } hooks = {} }
+}
+
+# Frozen source: sts2/src/Core/Models/Cards/LunarBlast.cs
+card LunarBlast {
+ pools = { RegentCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = uncommon cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { repeatForCount = { count = { cardPlaysThisTurn = { type = skill phase = finished } } effect = { attack = { damage = 4 } } } } hooks = {} }
+ upgraded = { type = attack rarity = uncommon cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { repeatForCount = { count = { cardPlaysThisTurn = { type = skill phase = finished } } effect = { attack = { damage = 5 } } } } hooks = {} }
+}
+
+# Frozen source: sts2/src/Core/Models/Cards/Restlessness.cs:26-48
+card Restlessness {
+ pools = { ColorlessCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 0 target = { selectSelf = {} } keywords = { retain } play = { if = { condition = { pileCountAtLeast = { pile = hand count = 1 } } then = {} else = { repeat = { count = 2 effect = { draw = { amount = 1 } } } modifyEnergy = { amount = 2 } } } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 0 target = { selectSelf = {} } keywords = { retain } play = { if = { condition = { pileCountAtLeast = { pile = hand count = 1 } } then = {} else = { repeat = { count = 3 effect = { draw = { amount = 1 } } } modifyEnergy = { amount = 3 } } } } hooks = {} }
+}
+
+# Frozen source: sts2/src/Core/Models/Cards/DaggerThrow.cs:19-43
+card DaggerThrow {
+ pools = { SilentCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 9 } draw = { amount = 1 } chooseCard = { from = hand to = discard count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 12 } draw = { amount = 1 } chooseCard = { from = hand to = discard count = 1 autoSelect = true } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Glimmer.cs:16-39
+card Glimmer {
+ pools = { RegentCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 3 } chooseCard = { from = hand to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 4 } chooseCard = { from = hand to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Graveblast.cs
+card Graveblast {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { attack = { damage = 4 } chooseCard = { from = discard to = hand count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 6 } chooseCard = { from = discard to = hand count = 1 autoSelect = true } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/CosmicIndifference.cs
+card CosmicIndifference {
+ pools = { RegentCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = common cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 6 } chooseCard = { from = discard to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = common cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 9 } chooseCard = { from = discard to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/PhotonCut.cs
+card PhotonCut {
+ pools = { RegentCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 10 } draw = { amount = 1 } chooseCard = { from = hand to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 13 } draw = { amount = 2 } chooseCard = { from = hand to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/ThinkingAhead.cs
+card ThinkingAhead {
+ pools = { ColorlessCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { draw = { amount = 2 } chooseCard = { from = hand to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 0 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 2 } chooseCard = { from = hand to = draw destinationPosition = top count = 1 autoSelect = true } } hooks = {} }
+}
+
+# Frozen source: sts2/src/Core/Models/Cards/Supercritical.cs:13-32
+card Supercritical {
+ pools = { DefectCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = rare cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { modifyEnergy = { amount = 4 } } hooks = {} }
+ upgraded = { type = skill rarity = rare cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { modifyEnergy = { amount = 6 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Reap.cs:14-33
+card Reap {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 3 target = { selectOne = { from = context.opponents where = alive } } keywords = { retain } play = { attack = { damage = 27 } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 3 target = { selectOne = { from = context.opponents where = alive } } keywords = { retain } play = { attack = { damage = 33 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/CelestialMight.cs:14-36
+card CelestialMight {
+ pools = { RegentCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 2 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { repeat = { count = 3 effect = { attack = { damage = 6 } } } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 2 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { repeat = { count = 4 effect = { attack = { damage = 6 } } } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/KnowThyPlace.cs:15-44
+card KnowThyPlace {
+ pools = { RegentCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = common cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { applyPower = { power = Weak stacks = 1 } applyPower = { power = Vulnerable stacks = 1 } } hooks = {} }
+ upgraded = { type = skill rarity = common cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { applyPower = { power = Weak stacks = 1 } applyPower = { power = Vulnerable stacks = 1 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/MinionSacrifice.cs:15-33
+card MinionSacrifice {
+ pools = { TokenCardPool }
+ tags = { Minion }
+ upgradeable = true
+ normal = { type = skill rarity = token cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { gainBlock = { amount = 8 } } hooks = {} }
+ upgraded = { type = skill rarity = token cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { gainBlock = { amount = 11 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Squash.cs:18-41
+card Squash {
+ pools = { EventCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = event cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 10 } applyPower = { power = Vulnerable stacks = 2 } } hooks = {} }
+ upgraded = { type = attack rarity = event cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 12 } applyPower = { power = Vulnerable stacks = 3 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Exterminate.cs:13-34
+card Exterminate {
+ pools = { EventCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = event cost = 1 target = { selectAll = {} } keywords = {} play = { repeat = { count = 4 effect = { attack = { damage = 3 target = allEnemies } } } } hooks = {} }
+ upgraded = { type = attack rarity = event cost = 1 target = { selectAll = {} } keywords = {} play = { repeat = { count = 4 effect = { attack = { damage = 4 target = allEnemies } } } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/MinionStrike.cs:14-44
+card MinionStrike {
+ pools = { TokenCardPool }
+ tags = { Strike Minion }
+ upgradeable = true
+ normal = { type = attack rarity = token cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { attack = { damage = 6 } draw = { amount = 1 } } hooks = {} }
+ upgraded = { type = attack rarity = token cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { attack = { damage = 9 } draw = { amount = 1 } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/MinionDiveBomb.cs:15-37
+card MinionDiveBomb {
+ pools = { TokenCardPool }
+ tags = { Minion }
+ upgradeable = true
+ normal = { type = attack rarity = token cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { attack = { damage = 13 } } hooks = {} }
+ upgraded = { type = attack rarity = token cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { attack = { damage = 16 } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/ByrdSwoop.cs:17-35
+card ByrdSwoop {
+ pools = { EventCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = event cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 14 } } hooks = {} }
+ upgraded = { type = attack rarity = event cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 18 } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/Peck.cs:14-36
+card Peck {
+ pools = { EventCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = event cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { repeat = { count = 3 effect = { attack = { damage = 2 } } } } hooks = {} }
+ upgraded = { type = attack rarity = event cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { repeat = { count = 4 effect = { attack = { damage = 2 } } } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/RipAndTear.cs:16-35; VisualCardPool is not membership
+card RipAndTear {
+ pools = { EventCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = event cost = 1 target = { selectNone = {} } keywords = {} play = { repeat = { count = 2 effect = { randomAttack = { damage = 7 } } } } hooks = {} }
+ upgraded = { type = attack rarity = event cost = 1 target = { selectNone = {} } keywords = {} play = { repeat = { count = 2 effect = { randomAttack = { damage = 9 } } } } hooks = {} }
+}

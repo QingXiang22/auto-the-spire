@@ -1,0 +1,256 @@
+{
+  "suite": "fixtures-v1",
+  "fixtures_version": "env-00-fixtures@2",
+  "note": "ENV-00 首批夹具。三条硬约定：(1) 边界序列为 start → step:<n>:<action>（每个脚本步骤一个边界）；步骤内出现的逻辑决策点记在该边界的 decisions 里，候选取回答之前的集合，Kind/Prompt 只入记录不参与比较。(2) 两侧只比较规范化事实（player/enemy/pile/power 同一套路径），各自私有的完整状态不入比较。(3) rng_profile 不是 controlled-no-random@1 / vanilla-compatible@1 的 case 一律记 unsupported_rng_profile，不计通过；声明为受控无随机的 case 还要通过 base 侧实测（脚本期间随机调用总数不变）才可计入通过。受控状态只用于机制对拍，不能当正常开局胜负证据。含 end_turn 的 case 会走到敌方回合，其选招/洗牌属于各后端私有随机调用序列，因此在 ENV-01 完成前一律记 unsupported_rng_profile。",
+  "cases": [
+    {
+      "id": "strike-normal",
+      "title": "StrikeIronclad 普通形态：6 点伤害",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "伤害数值与目标域来自原版卡牌声明；受控手牌只放这一张，避免抽取顺序干扰。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:strike-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" }
+      ]
+    },
+    {
+      "id": "strike-upgraded",
+      "title": "StrikeIronclad 升级形态：9 点伤害",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "升级数值由夹具显式给出（不猜清单）。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:strike-ironclad", "upgraded": true, "amount": 9 } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" }
+      ]
+    },
+    {
+      "id": "defend-normal",
+      "title": "DefendIronclad 普通形态：5 点格挡",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/DefendIronclad.cs",
+        "note": "自身目标域，不应产生目标决策点。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:defend-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:defend-ironclad" }
+      ]
+    },
+    {
+      "id": "defend-upgraded",
+      "title": "DefendIronclad 升级形态：8 点格挡",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/DefendIronclad.cs",
+        "note": "升级数值由夹具显式给出。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:defend-ironclad", "upgraded": true, "amount": 8 } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:defend-ironclad" }
+      ]
+    },
+    {
+      "id": "bash-then-strike-vulnerable",
+      "title": "Bash 普通形态：8 点伤害 + 2 层易伤，随后 Strike 被放大到 9",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/Bash.cs",
+        "note": "易伤倍率 1.5 来自原版 Power 声明；这里检查的是'施加'与'放大'两段链路。"
+      },
+      "setup": {
+        "hand": [
+          { "card": "base-spire:bash" },
+          { "card": "base-spire:strike-ironclad" }
+        ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:bash", "target": "enemy:0" },
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" }
+      ]
+    },
+    {
+      "id": "bash-upgraded",
+      "title": "Bash 升级形态：10 点伤害 + 3 层易伤",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/Bash.cs",
+        "note": "升级数值与层数由夹具显式给出。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:bash", "upgraded": true, "amount": 10, "power_stacks": 3 } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:bash", "target": "enemy:0" }
+      ]
+    },
+    {
+      "id": "headbutt-mid-choice",
+      "title": "Headbutt：先选目标、再选中弃牌堆里的牌置顶",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/Headbutt.cs",
+        "note": "原版顺序是'先目标、后选牌'（见 SliceChecks 的受控场景）。弃牌堆只放一张，避免选中哪一张有歧义；两个决策点的候选集合都参与比较。"
+      },
+      "setup": {
+        "include_headbutt": true,
+        "hand": [ { "card": "base-spire:headbutt" } ],
+        "discard": [ { "card": "base-spire:defend-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:headbutt",
+          "target": "enemy:0",
+          "choose": "card:discard:0"
+        }
+      ],
+      "reference_scope": "unsupported_decision_model",
+      "reference_scope_reason": "参考的**选牌**决策源挂在 run 层（RunState.CardSelectionSource，默认 RunEngineCardSelectionDecisionSource），它的设置入口 ConfigureCardSelectionSource 是 internal；combat 层的 CardSelectionSource 不参与这条路径。实测：参考侧只记录了 1 个决策点（目标）而不是 2 个（目标+选牌），且没有抛错——说明它用的是 run 层默认源，静默自选了牌。工具无法在不修改参考的前提下把受控选牌注进去，因此本 case 只跑 base 侧并按决策模型未对接处理，不计通过。"
+    },
+    {
+      "id": "candidate-scope-partly-playable",
+      "title": "合法性口径：1 点能量下只有 1 费牌在候选里（2 费牌不进候选）",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire",
+        "note": "专门钉住候选列表的投影口径：如果候选取成'候选参数的整个定义域'，1 点能量时手里那张 2 费的 Bash 也会被列进候选，而参考侧用 CardModel.CanPlay 过滤后只剩 Strike。现在候选改取'可提交绑定里出现过的取值'，两侧应当一致只报 Strike。脚本只打这张 Strike，不结束回合，因此不涉及对端私有随机。"
+      },
+      "setup": {
+        "hand": [
+          { "card": "base-spire:strike-ironclad" },
+          { "card": "base-spire:bash" }
+        ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 1
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" }
+      ]
+    },
+    {
+      "id": "enemy-death-aftermath",
+      "title": "伤害与死亡后续：一击打死前排后另一只敌人与牌区仍一致",
+      "rng_profile": "unsupported_rng_profile",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "受控把前排压到 5 血；含 end_turn（会走到敌方回合，其选招序列属于各后端私有随机调用），因此本 case 只报差异、不计通过。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:strike-ironclad" } ],
+        "enemy_hp": [ 5, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" },
+        { "action": "end_turn" }
+      ]
+    },
+    {
+      "id": "power-turn-end-decay",
+      "title": "Power 生命周期（受控声明，**不能**用来裁决衰减）：直接声明的易伤不走施加路径",
+      "rng_profile": "unsupported_rng_profile",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "mod-the-spire/base-spire/BaseSpire/ContentSource/shared-powers.spire",
+        "note": "**这条 case 的用途已被裁决记录限定**：它用 setup.powers 直接声明能力（切片侧 Ticks=false，即'不是会走时长的能力'），绕过了原版 PowerCmd.Apply 的施加路径，因此两侧在易伤层数上不一致是**夹具表达差异**，不是规则差异——真实施加路径的对拍见 `vulnerable-decay-via-bash`。保留它是为了留下「受控声明 vs 真实施加」这条判别证据。含 end_turn，敌方回合同样是各后端私有随机序列。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:strike-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3,
+        "powers": [ { "owner": "enemy:0", "power": "base-spire:vulnerable", "stacks": 2 } ]
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" },
+        { "action": "end_turn" }
+      ]
+    },
+    {
+      "id": "vulnerable-decay-via-bash",
+      "title": "Power 生命周期（真实施加路径）：Bash 施加的易伤在敌方回合末按原版规则结算",
+      "rng_profile": "unsupported_rng_profile",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Powers/VulnerablePower.cs:59-65",
+        "note": "Bash 真实施加与敌方回合末易伤 2→1 已双侧独立执行；end_turn 后牌区构成仍存在私有初始牌序首差，保持原事实比较范围，不计通过。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:bash" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:bash", "target": "enemy:0" },
+        { "action": "end_turn" }
+      ]
+    },
+    {
+      "id": "random-reshuffle-unsupported",
+      "title": "随机路径：连续结束回合触发洗牌（只能记 unsupported_rng_profile）",
+      "rng_profile": "unsupported_rng_profile",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "core-the-spire/Core.TheSpire/Engine/RandomService.cs",
+        "note": "洗牌消费命名随机流；原版兼容 Profile（ENV-01）尚未实现，因此这个 case 只证明'不支持会被显式记下来'，不计通过。"
+      },
+      "setup": {
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "end_turn" },
+        { "action": "end_turn" },
+        { "action": "end_turn" }
+      ]
+    }
+  ]
+}

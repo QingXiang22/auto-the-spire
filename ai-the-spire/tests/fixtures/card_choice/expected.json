@@ -1,0 +1,149 @@
+{
+  "_provenance": {
+    "期望来源": "手写读解 fixtures/card_choice 的 wire 文档（当前观察），不调用被测实现生成",
+    "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
+    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+  },
+  "_notes": [
+    "选牌样例：头槌式中途选择。弃牌堆是洗牌后的无序公开成员集合，没有位置记录。",
+    "同名同内容四实例（sel-01..sel-04 均为 fixture:strike），其中 sel-04 已升级且费用 0；每张实例是独立候选，不能被合并成一个候选或一张牌。",
+    "group fixture:choice_display 的成员顺序无语义；期望给出排序后的成员集合。",
+    "弃牌堆与手牌同属 fixture:battle 互斥组，作用域同为 player-01，成员不重复。"
+  ],
+  "catalog": {
+    "protocol_version": "0.1",
+    "ruleset_id": "fixture:rules-v1",
+    "catalog_id": "fixture:choice-catalog-v1",
+    "declaration_counts": {
+      "entity_kinds": 5,
+      "content_types": 1,
+      "fields": 11,
+      "relation_types": 1,
+      "pile_types": 2,
+      "sequence_types": 0,
+      "group_types": 1,
+      "action_types": 1,
+      "terminal_reasons": 1
+    },
+    "catalog_digest": "sha256:67d4626e33a575876c51ef6d4b616bdf377634103d36cc748e572527c5e3b5e5"
+  },
+  "snapshots": {
+    "snapshot": {
+      "session_id": "session-choice-1",
+      "observation_id": 4,
+      "backend_profile_id": "fixture:sim-v1",
+      "status": "decision",
+      "is_terminal": false,
+      "entity_ids": [
+        "discard-01",
+        "enemy-01",
+        "hand-01",
+        "player-01",
+        "sel-01",
+        "sel-02",
+        "sel-03",
+        "sel-04",
+        "sel-05",
+        "sel-06",
+        "sel-07"
+      ],
+      "entity_kind_counts": {
+        "fixture:card": 7,
+        "fixture:discard_pile": 1,
+        "fixture:enemy": 1,
+        "fixture:hand_pile": 1,
+        "fixture:player": 1
+      },
+      "content_state_counts": {
+        "known": 8,
+        "not_applicable": 3
+      },
+      "field_state_counts": {
+        "known": 27
+      },
+      "known_zero_number_fields": [
+        ["sel-04", "fixture:cost"]
+      ],
+      "known_false_boolean_fields": [],
+      "unknown_fields": [],
+      "unavailable_fields": [],
+      "absent_optional_fields": [
+        ["sel-01", "fixture:upgraded"],
+        ["sel-02", "fixture:upgraded"],
+        ["sel-03", "fixture:upgraded"],
+        ["sel-05", "fixture:upgraded"],
+        ["sel-06", "fixture:upgraded"],
+        ["sel-07", "fixture:upgraded"]
+      ],
+      "piles": {
+        "discard-01": {
+          "total_count": 5,
+          "members_complete": true,
+          "visible_members": ["sel-01", "sel-02", "sel-03", "sel-04", "sel-05"],
+          "known_positions": []
+        },
+        "hand-01": {
+          "total_count": 2,
+          "members_complete": true,
+          "visible_members": ["sel-06", "sel-07"],
+          "known_positions": []
+        }
+      },
+      "relations": [],
+      "relation_count": 0,
+      "sequences": {},
+      "group_members_sorted": {
+        "fixture:choice_display@player-01": ["sel-01", "sel-02", "sel-03", "sel-04", "sel-05"]
+      },
+      "candidate_ids": ["c-01", "c-02", "c-03", "c-04", "c-05"],
+      "candidates": [
+        {
+          "candidate_id": "c-01",
+          "action_type": "fixture:choose_card",
+          "known_fields": {
+            "fixture:choice_source_ref": "discard-01",
+            "fixture:chosen_card_ref": "sel-01"
+          }
+        },
+        {
+          "candidate_id": "c-02",
+          "action_type": "fixture:choose_card",
+          "known_fields": {
+            "fixture:choice_source_ref": "discard-01",
+            "fixture:chosen_card_ref": "sel-02"
+          }
+        },
+        {
+          "candidate_id": "c-03",
+          "action_type": "fixture:choose_card",
+          "known_fields": {
+            "fixture:choice_source_ref": "discard-01",
+            "fixture:chosen_card_ref": "sel-03"
+          }
+        },
+        {
+          "candidate_id": "c-04",
+          "action_type": "fixture:choose_card",
+          "known_fields": {
+            "fixture:choice_source_ref": "discard-01",
+            "fixture:chosen_card_ref": "sel-04"
+          }
+        },
+        {
+          "candidate_id": "c-05",
+          "action_type": "fixture:choose_card",
+          "known_fields": {
+            "fixture:choice_source_ref": "discard-01",
+            "fixture:chosen_card_ref": "sel-05"
+          }
+        }
+      ],
+      "content_id_groups": {
+        "fixture:defend": ["sel-05", "sel-07"],
+        "fixture:strike": ["sel-01", "sel-02", "sel-03", "sel-04"]
+      },
+      "terminal_facts": null,
+      "snapshot_digest": "sha256:ee63d8464338ca3542acd661c09517b40c63758a58f9af5640c8e6d4741ec3db"
+    }
+  }
+}

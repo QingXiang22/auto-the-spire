@@ -1,0 +1,628 @@
+{
+  "suite": "L3 快照（V-06 牌堆、终局 facts、引用、排序、动作语义键）",
+  "cases": [
+    {
+      "case_id": "neg-pile-position-out-of-range",
+      "description": "V-06.1：0 <= position < total_count（真实总数作边界）",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-27"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.known_positions.1.position": 5}}
+      }
+    },
+    {
+      "case_id": "neg-pile-complete-flag-without-full-members",
+      "description": "V-06.2：members_complete=true 时成员数取等",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-28"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.members_complete": true}}
+      }
+    },
+    {
+      "case_id": "neg-pile-members-over-total",
+      "description": "V-06.2：可见成员数不得超过 total_count",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-28"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$set": {"piles.0.total_count": 1, "piles.0.known_positions": []}
+        }
+      }
+    },
+    {
+      "case_id": "neg-pile-position-duplicate-card",
+      "description": "V-06.3：每张牌至多一个位置",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-29"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.known_positions.1.card_ref": "card-1"}}
+      }
+    },
+    {
+      "case_id": "neg-pile-position-duplicate-slot",
+      "description": "V-06.3：每个位置至多一张牌",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-29"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.known_positions.1.position": 1}}
+      }
+    },
+    {
+      "case_id": "neg-pile-position-not-in-visible-members",
+      "description": "V-06.3：known_positions.card_ref 必须是 visible_members 子集",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-29"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.visible_members": ["card-1"]}}
+      }
+    },
+    {
+      "case_id": "neg-pile-kind-not-declared",
+      "description": "§2 L77：pile_ref 的 kind_id 必须唯一匹配已声明 pile_type",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-26"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.pile_ref": "player-A"}}
+      }
+    },
+    {
+      "case_id": "neg-pile-ref-dangling",
+      "description": "pile_ref 悬空",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-26"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"piles.0.pile_ref": "pile-Z"}}
+      }
+    },
+    {
+      "case_id": "neg-pile-ref-duplicate",
+      "description": "pile_ref 在快照内唯一",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-26"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "piles": {
+              "pile_ref": "pile-A",
+              "total_count": 3,
+              "visible_members": ["card-1", "card-2"],
+              "members_complete": false,
+              "known_positions": []
+            }
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-reserved-derived-field-in-wire",
+      "description": "§2 L88：保留字段 net:pile_total_count/net:pile_members_complete 不得填回 wire",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-79"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "entities.2.fields": {"field_id": "net:pile_total_count", "state": "known", "value": "3"}
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-reserved-derived-relation-in-wire",
+      "description": "§2 L88：保留关系 net:pile_member 不得出现在 relations",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-79"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "relations": {"type_id": "net:pile_member", "source_ref": "pile-A", "target_ref": "card-1"}
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-relation-position-when-schema-null",
+      "description": "protocol L81：position_schema 为 null 时必须省略 position",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-25"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "relations": {"type_id": "demo:owned_by", "source_ref": "card-1", "target_ref": "player-A", "position": 1}
+          }
+        }
+      }
+    },
+    {
+      "case_id": "pos-relation-position-omitted-when-schema-null",
+      "description": "position_schema=null 的关系省略 position 合法（与上一条互为对照）",
+      "expect": "accept",
+      "layers": ["L1", "L2", "L3"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "relations": {"type_id": "demo:owned_by", "source_ref": "card-1", "target_ref": "player-A"}
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-relation-fully-duplicate",
+      "description": "完全重复的关系拒绝（type/source/target/position）",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-25"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "relations": {"type_id": "demo:holds", "source_ref": "player-A", "target_ref": "card-1", "position": 2}
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-relation-dangling-target",
+      "description": "关系引用必须快照内闭合",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-39"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"relations.0.target_ref": "card-Z"}}
+      }
+    },
+    {
+      "case_id": "neg-relation-kind-mismatch",
+      "description": "关系端点种类必须属于声明的 source/target_kind_ids",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"relations.0.target_ref": "pile-A"}}
+      }
+    },
+    {
+      "case_id": "neg-relation-position-above-max",
+      "description": "position 必须落在声明 min/max 内",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-25"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"relations.0.position": 10}}
+      }
+    },
+    {
+      "case_id": "neg-entities-unsorted",
+      "description": "contract-artifacts §3：实体按公开 instance_id 排序",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-74"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$move": {"entities": [3, 0]}}
+      }
+    },
+    {
+      "case_id": "neg-entity-fields-unsorted",
+      "description": "contract-artifacts §3：字段按 field_id 排序",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-74"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$move": {"entities.3.fields": [2, 0]}}
+      }
+    },
+    {
+      "case_id": "neg-legal-actions-unsorted",
+      "description": "contract-artifacts §3：legal_actions 按动作语义键的 UTF-8 字节序排列",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-80"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$move": {"legal_actions": [1, 0]}}
+      }
+    },
+    {
+      "case_id": "neg-candidate-id-duplicate",
+      "description": "§1 L25：candidate_id 快照内唯一",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-40"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"legal_actions.1.candidate_id": "a1"}}
+      }
+    },
+    {
+      "case_id": "neg-action-semantic-duplicate",
+      "description": "§2 L94：同一动作语义不得以不同 candidate_id 重复发布",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-37"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$set": {"legal_actions.1": {"candidate_id": "a3", "action_type": "demo:end_turn", "fields": []}}
+        }
+      }
+    },
+    {
+      "case_id": "neg-action-missing-required-field",
+      "description": "§2 L92：必需动作字段必须齐全且 known",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-36"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"legal_actions.1.fields": []}}
+      }
+    },
+    {
+      "case_id": "neg-action-field-not-declared",
+      "description": "动作字段必须属于该动作声明的字段清单",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-36"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$set": {
+            "legal_actions.1.fields": [{"field_id": "demo:hp", "state": "known", "value": "45"}]
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-action-field-not-known",
+      "description": "§2 L92：所有执行所需字段必须 known",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-36"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$set": {"legal_actions.1.fields.0.state": "unknown"},
+          "$del": ["legal_actions.1.fields.0.value"]
+        }
+      }
+    },
+    {
+      "case_id": "neg-action-dangling-entity-ref",
+      "description": "动作 entity_ref 必须指向当前快照实体",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-39"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"legal_actions.1.fields.0.value": "card-Z"}}
+      }
+    },
+    {
+      "case_id": "neg-required-entity-field-omitted",
+      "description": "§2 L64/L68：required 且适用的字段不能省略",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-20"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$del": ["entities.3.fields.0"]}
+      }
+    },
+    {
+      "case_id": "neg-entity-duplicate-field-id",
+      "description": "同一实体不得重复声明 field_id",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-88"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {"entities.3.fields": {"field_id": "demo:played", "state": "known", "value": "3"}}
+        }
+      }
+    },
+    {
+      "case_id": "neg-content-state-known-without-id",
+      "description": "§2 L62：仅 known 带 content_id，反之必须带",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$del": ["entities.0.content_id"]}
+      }
+    },
+    {
+      "case_id": "neg-content-id-with-non-known-state",
+      "description": "非 known 的 content_state 不得携带 content_id",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.0.content_state": "unknown"}}
+      }
+    },
+    {
+      "case_id": "neg-decision-with-terminal-result",
+      "description": "§2 L58：decision 的 terminal_result 必须是 null",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$set": {
+            "terminal_result": {
+              "outcome": "win",
+              "reason_id": "demo:victory",
+              "facts": [{"field_id": "demo:hp", "state": "known", "value": "45"}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-decision-without-candidates",
+      "description": "§2 L58：decision 的候选非空",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"legal_actions": []}}
+      }
+    },
+    {
+      "case_id": "neg-terminal-without-result",
+      "description": "§2 L58：terminal 必须有终止结果",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-terminal", "$set": {"terminal_result": null}}
+      }
+    },
+    {
+      "case_id": "neg-terminal-with-legal-actions",
+      "description": "§2 L58：terminal 候选为空",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-terminal",
+          "$set": {"legal_actions": [{"candidate_id": "a1", "action_type": "demo:end_turn", "fields": []}]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-terminal-reason-undeclared",
+      "description": "§2 L60：reason_id 必须在 terminal_reasons 中声明",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-18"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-terminal", "$set": {"terminal_result.reason_id": "demo:unknown"}}
+      }
+    },
+    {
+      "case_id": "neg-terminal-outcome-mismatch",
+      "description": "§2 L60：outcome 必须与声明一致",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-18"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-terminal", "$set": {"terminal_result.outcome": "loss"}}
+      }
+    },
+    {
+      "case_id": "neg-terminal-facts-undeclared-field",
+      "description": "§2 L64：facts 只使用已声明字段",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-18"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-terminal",
+          "$set": {"terminal_result.facts": [{"field_id": "demo:ghost", "state": "known", "value": "1"}]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-terminal-facts-required-not-known",
+      "description": "§2 L64：必需结果事实必须 known",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-18"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-terminal",
+          "$set": {"terminal_result.facts": [{"field_id": "demo:hp", "state": "unknown"}]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-terminal-facts-not-applicable",
+      "description": "§2 L60：结果事实必须适用于该 reason_id",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-18"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-terminal",
+          "$set": {"terminal_result.reason_id": "demo:defeat"}
+        }
+      }
+    },
+    {
+      "case_id": "neg-terminal-facts-unsorted",
+      "description": "§2 L62：facts 按 field_id 排序",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-90"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-terminal",
+          "$set": {
+            "terminal_result.facts": [
+              {"field_id": "demo:played", "state": "known", "value": "3"},
+              {"field_id": "demo:hp", "state": "known", "value": "45"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-terminal-facts-duplicate",
+      "description": "§2 L62：facts 无重复 field_id",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-90"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-terminal",
+          "$set": {
+            "terminal_result.facts": [
+              {"field_id": "demo:hp", "state": "known", "value": "45"},
+              {"field_id": "demo:hp", "state": "known", "value": "46"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-sequence-duplicate-owner",
+      "description": "§2 L90：同一 type_id/owner_ref 唯一",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-34"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$append": {
+            "sequences": {"type_id": "demo:turn_queue", "owner_ref": "player-A", "elements": ["card-1"]}
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-sequence-dangling-element",
+      "description": "序列元素引用必须闭合",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-39"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"sequences.0.elements.1": "card-Z"}}
+      }
+    },
+    {
+      "case_id": "neg-group-multiplicity-two",
+      "description": "§2 L90：具体实例的 multiplicity=1（本版不按内容 ID 合并同名卡牌）",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-35"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"groups.0.members.0.multiplicity": 2}}
+      }
+    },
+    {
+      "case_id": "neg-group-member-dangling",
+      "description": "组成员引用必须闭合",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-39"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"groups.0.members.0.entity_ref": "card-Z"}}
+      }
+    },
+    {
+      "case_id": "neg-exclusive-group-member-overlap",
+      "description": "§2 L86：相同互斥组且作用域相同的牌堆成员不得重复",
+      "expect": "reject",
+      "layers": ["L1", "L2", "L3"],
+      "rule_ids": ["I-31"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$insert": {
+            "entities": [
+              3,
+              {
+                "instance_id": "pile-B",
+                "kind_id": "demo:draw_pile",
+                "content_state": "not_applicable",
+                "fields": [{"field_id": "demo:pile_scope", "state": "known", "value": "player-A"}]
+              }
+            ]
+          },
+          "$append": {
+            "piles": {
+              "pile_ref": "pile-B",
+              "total_count": 1,
+              "visible_members": ["card-1"],
+              "members_complete": true,
+              "known_positions": [{"card_ref": "card-1", "position": 0}]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

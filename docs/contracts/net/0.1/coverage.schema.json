@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "net-the-spire 机制覆盖表 v0.1（C-01 固定格式）",
+  "description": "固定 contract-artifacts.md §5 第 69 行要求的版本化覆盖表格式，使 protocol.md §1 第 48 行的 visibility_check_ids 有可校验的闭合目标（闭合本轮不变量 U-12）。行为状态为 proposed/implemented/verified/unsupported；没有运行证据不能写 verified（I-85）。unit：每行 = 一个 mechanism_id。",
+  "$comment": "键名逐字取自 contract-artifacts.md §5：mechanism_id、source_version/source_locator、public_fact、declaration_ids、update_and_invalidation、verification_ids、evidence_ref、status、unsupported_constraint、decision_counterexample。source_version 与 source_locator 按两个键实现（原文用斜杠并列，C-01 负责固定）。",
+  "type": "object",
+  "required": ["protocol_version", "coverage_id", "mechanisms"],
+  "properties": {
+    "protocol_version": {
+      "const": "0.1"
+    },
+    "coverage_id": {
+      "$ref": "#/$defs/NonEmptyString"
+    },
+    "mechanisms": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/CoverageRow"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "NonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "NonEmptyStringList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/NonEmptyString"
+      },
+      "uniqueItems": true
+    },
+    "CoverageRow": {
+      "type": "object",
+      "required": [
+        "mechanism_id",
+        "source_version",
+        "source_locator",
+        "public_fact",
+        "declaration_ids",
+        "update_and_invalidation",
+        "verification_ids",
+        "evidence_ref",
+        "status",
+        "unsupported_constraint",
+        "decision_counterexample"
+      ],
+      "properties": {
+        "mechanism_id": {
+          "$ref": "#/$defs/NonEmptyString"
+        },
+        "source_version": {
+          "$ref": "#/$defs/NonEmptyString"
+        },
+        "source_locator": {
+          "$ref": "#/$defs/NonEmptyString"
+        },
+        "public_fact": {
+          "type": "string"
+        },
+        "declaration_ids": {
+          "$ref": "#/$defs/NonEmptyStringList"
+        },
+        "update_and_invalidation": {
+          "type": "string"
+        },
+        "verification_ids": {
+          "$ref": "#/$defs/NonEmptyStringList"
+        },
+        "evidence_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": ["proposed", "implemented", "verified", "unsupported"]
+        },
+        "unsupported_constraint": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decision_counterexample": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

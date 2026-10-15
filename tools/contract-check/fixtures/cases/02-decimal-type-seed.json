@@ -1,0 +1,418 @@
+{
+  "suite": "L3/L4 decimal、类型与身份、seed 上界",
+  "cases": [
+    {
+      "case_id": "pos-decimal-negative-fraction",
+      "description": "contract-artifacts §2 L19：绝对值小于 1 允许 -0.xxx（原 schema 模式曾错误拒绝）",
+      "expect": "accept",
+      "layers": ["L1", "L3"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "-0.5"}}
+      }
+    },
+    {
+      "case_id": "neg-decimal-trailing-zero",
+      "description": "非规范 decimal：末位零",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-21"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "0.50"}}
+      }
+    },
+    {
+      "case_id": "neg-decimal-negative-zero",
+      "description": "负零必须写 0",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-21"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "-0"}}
+      }
+    },
+    {
+      "case_id": "neg-decimal-exponent",
+      "description": "不接受指数形式",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-21"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "1e2"}}
+      }
+    },
+    {
+      "case_id": "neg-decimal-leading-plus",
+      "description": "不接受前导 +",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-21"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "+1"}}
+      }
+    },
+    {
+      "case_id": "neg-decimal-comma",
+      "description": "不接受逗号",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-21"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "1,5"}}
+      }
+    },
+    {
+      "case_id": "neg-decimal-leading-zero",
+      "description": "不接受多余前导零",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-21"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.1.value": "01"}}
+      }
+    },
+    {
+      "case_id": "neg-integer-format-with-fraction",
+      "description": "number_format=integer 不接受小数部分",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-72"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.0.value": "45.5"}}
+      }
+    },
+    {
+      "case_id": "neg-number-value-json-float",
+      "description": "精确数值必须是字符串，JSON 浮点字面量在 L0 拒绝",
+      "expect": "reject",
+      "layers": ["L0", "L1", "L3"],
+      "rule_ids": ["I-91"],
+      "raw_documents": {
+        "snapshot": "{\"protocol_version\":\"0.1\",\"ruleset_id\":\"demo:rules-v1\",\"catalog_id\":\"demo:catalog-v1\",\"backend_profile_id\":\"demo:public-v1\",\"session_id\":\"session-A\",\"observation_id\":3,\"status\":\"decision\",\"terminal_result\":null,\"entities\":[{\"instance_id\":\"player-A\",\"kind_id\":\"demo:player\",\"content_state\":\"not_applicable\",\"fields\":[{\"field_id\":\"demo:hp\",\"state\":\"known\",\"value\":45.5}]}],\"relations\":[],\"piles\":[],\"sequences\":[],\"groups\":[],\"legal_actions\":[{\"candidate_id\":\"a1\",\"action_type\":\"demo:end_turn\",\"fields\":[]}]}"
+      }
+    },
+    {
+      "case_id": "neg-number-value-boolean",
+      "description": "类型错配：number 字段给 JSON boolean",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.3.fields.0.value": true}}
+      }
+    },
+    {
+      "case_id": "neg-boolean-value-string",
+      "description": "类型错配：boolean 字段给字符串",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {
+          "$base": "snapshot-demo",
+          "$insert": {"entities.3.fields": [0, {"field_id": "demo:defeated", "state": "known", "value": "yes"}]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-category-undeclared-value",
+      "description": "category 值必须是目录声明的类别 ID",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.0.fields.0.value": "demo:bash"}}
+      }
+    },
+    {
+      "case_id": "neg-entity-ref-dangling",
+      "description": "entity_ref 必须指向当前快照的 instance_id（快照内引用闭合）",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-39"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.0.fields.1.value": "player-Z"}}
+      }
+    },
+    {
+      "case_id": "neg-entity-ref-wrong-kind",
+      "description": "entity_ref 目标种类必须属于声明 target_kind_ids",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"entities.0.fields.1.value": "pile-A"}}
+      }
+    },
+    {
+      "case_id": "neg-snapshot-catalog-id-mismatch",
+      "description": "身份错配：快照 catalog_id 与目录不一致（exact identity）",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-01"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"catalog_id": "demo:catalog-v2"}}
+      }
+    },
+    {
+      "case_id": "neg-snapshot-ruleset-mismatch",
+      "description": "身份错配：ruleset_id 与目录不一致",
+      "expect": "reject",
+      "layers": ["L1", "L3"],
+      "rule_ids": ["I-01"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": {"$base": "snapshot-demo", "$set": {"ruleset_id": "demo:rules-v2"}}
+      }
+    },
+    {
+      "case_id": "pos-seed-max",
+      "description": "protocol L185：seed 上界 18446744073709551615 合法",
+      "expect": "accept",
+      "layers": ["L1", "L4"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "capabilities": "doc:capabilities-demo",
+        "request": {
+          "request_id": "r-start-max",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "18446744073709551615"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "pos-seed-zero",
+      "description": "seed 允许 0",
+      "expect": "accept",
+      "layers": ["L1", "L4"],
+      "documents": {
+        "capabilities": "doc:capabilities-demo",
+        "request": {
+          "request_id": "r-start-zero",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "0"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-overflow",
+      "description": "跨结构校验：seed 超出无符号 64 位上界必须拒绝（schema 模式无法表达数值上界）",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-overflow",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "18446744073709551616"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-overflow-20-nines",
+      "description": "跨结构上界与 schema 模式无关：20 位 9 满足 ^(0|[1-9][0-9]{0,19})$ 但超出 2^64-1，必须由 L4 拒绝",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-overflow-20-nines",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "99999999999999999999"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "pos-seed-max-minus-one",
+      "description": "上界内边界：18446744073709551614 合法（确认拒绝条件是数值上界而非位数上限）",
+      "expect": "accept",
+      "layers": ["L1", "L4"],
+      "documents": {
+        "capabilities": "doc:capabilities-demo",
+        "request": {
+          "request_id": "r-start-max-minus-one",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "18446744073709551614"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "pos-seed-2-pow-63",
+      "description": "protocol L185：seed 为无符号 64 位，2^63 超出有符号 64 位上界但必须接受（防止实现误用有符号解析）",
+      "expect": "accept",
+      "layers": ["L1", "L4"],
+      "documents": {
+        "capabilities": "doc:capabilities-demo",
+        "request": {
+          "request_id": "r-start-2pow63",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "9223372036854775808"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-leading-zero",
+      "description": "seed 只允许 0 或无前导零正整数",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-lz",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "0123"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-json-number",
+      "description": "protocol L185：seed 不接受 JSON number",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-num",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": 5
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-plus-sign",
+      "description": "seed 不接受符号",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-plus",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "+5"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-exponent",
+      "description": "seed 不接受指数与空白",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-exp",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "1e2"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-negative",
+      "description": "seed 是无符号 64 位十进制字符串",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-neg",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "-1"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-whitespace",
+      "description": "seed 不接受空白",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-76"],
+      "documents": {
+        "request": {
+          "request_id": "r-start-ws",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": " 0"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-seed-when-unsupported",
+      "description": "protocol L50/L185：后端不支持指定 seed 必须在执行前拒绝",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-11"],
+      "documents": {
+        "capabilities": {"$base": "capabilities-demo", "$set": {"seed_control": false}},
+        "request": {
+          "request_id": "r-start-unsupported",
+          "operation": "start",
+          "payload": {
+            "expected_identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "scenario_profile": "demo:profile-v1",
+            "seed": "7"
+          }
+        }
+      }
+    }
+  ]
+}

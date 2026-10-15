@@ -1,0 +1,61 @@
+{
+  "backend_kind": "simulation",
+  "operations": ["describe", "get_catalog", "start", "observe", "step", "request_status", "close"],
+  "scenario_profiles": [
+    {
+      "id": "demo:profile-v1",
+      "semantic_version": "1",
+      "required_declarations": ["demo:player", "demo:hp", "demo:play_target"],
+      "supported_mechanism_ids": ["demo:check_hp_visible"],
+      "unsupported_constraints": ["不支持公开恢复与分叉"],
+      "coverage_ref": "demo:coverage-v1"
+    }
+  ],
+  "seed_control": true,
+  "field_availability": {
+    "demo:hp": "available",
+    "demo:known_hp": "available",
+    "demo:played": "available",
+    "demo:card_face_ref": "available",
+    "demo:owner": "available",
+    "demo:pile_scope": "available",
+    "demo:play_target": "available",
+    "demo:secret": "unavailable",
+    "net:pile_total_count": "available",
+    "net:pile_members_complete": "available"
+  },
+  "supported_structures": [
+    {"structure": "Entity", "declaration_ids": ["demo:player", "demo:card", "demo:draw_pile"], "unsupported_constraints": []},
+    {"structure": "Pile", "declaration_ids": ["demo:draw_pile_type"], "unsupported_constraints": []},
+    {"structure": "TerminalResult", "declaration_ids": ["demo:victory", "demo:defeat"], "unsupported_constraints": []}
+  ],
+  "limits": {
+    "entities": 64,
+    "entity_fields": 32,
+    "relations": 64,
+    "piles": 8,
+    "visible_members_per_pile": 32,
+    "known_positions_per_pile": 32,
+    "sequences": 8,
+    "elements_per_sequence": 32,
+    "groups": 8,
+    "members_per_group": 32,
+    "legal_actions": 64,
+    "action_fields": 8,
+    "frame_bytes": 1048576,
+    "decimal_chars": 64,
+    "ledger_entries": 256,
+    "sessions": 4
+  },
+  "execution_guarantees": {
+    "stable_snapshot": true,
+    "request_status": true,
+    "active_deduplication": true,
+    "decision_pause": false,
+    "internal_snapshot_restore": false,
+    "seed_action_replay": "public_trace",
+    "public_state_restore": false,
+    "public_fork": false,
+    "rng_profile_id": "demo:prng-1"
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "_provenance": {
+    "期望来源": "手写读解 fixtures/combat 的 wire 文档（当前观察），不调用被测实现生成",
+    "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
+    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+  },
+  "_notes": [
+    "战斗样例：玩家/敌人/Power/三个战斗牌区（抽牌堆/手牌/弃牌堆）与打牌、结束回合候选。",
+    "抽牌堆是 encoder-design §9 的已知位置样例：总数 5，C=card-03 在 0、D=card-04 在 3，位置 1/2/4 不被推断，位置记录不增加成员数。",
+    "四态同时出现：已知零（block/cost/strength）、unknown（enemy-01 max_hp）、unavailable（enemy-01 backend_damage_decimal）、省略（五张牌缺 upgraded 声明）。",
+    "Power 以实体存在并经 fixture:held_by 关系连接所有者；wire 不重复填写保留派生声明 net:pile_*。"
+  ],
+  "catalog": {
+    "protocol_version": "0.1",
+    "ruleset_id": "fixture:rules-v1",
+    "catalog_id": "fixture:combat-catalog-v1",
+    "declaration_counts": {
+      "entity_kinds": 7,
+      "content_types": 2,
+      "fields": 19,
+      "relation_types": 2,
+      "pile_types": 3,
+      "sequence_types": 0,
+      "group_types": 0,
+      "action_types": 2,
+      "terminal_reasons": 2
+    },
+    "catalog_digest": "sha256:ca41d7b33bea37e2a94d0d85eb5e9bc11e530c2fe68146111a6380018d30de11"
+  },
+  "snapshots": {
+    "snapshot": {
+      "session_id": "session-combat-1",
+      "observation_id": 12,
+      "backend_profile_id": "fixture:sim-v1",
+      "status": "decision",
+      "is_terminal": false,
+      "entity_ids": [
+        "card-01",
+        "card-02",
+        "card-03",
+        "card-04",
+        "card-05",
+        "card-06",
+        "card-07",
+        "card-08",
+        "enemy-01",
+        "enemy-02",
+        "pile-discard",
+        "pile-draw",
+        "pile-hand",
+        "player-01",
+        "power-01",
+        "power-02"
+      ],
+      "entity_kind_counts": {
+        "fixture:card": 8,
+        "fixture:discard_pile": 1,
+        "fixture:draw_pile": 1,
+        "fixture:enemy": 2,
+        "fixture:hand_pile": 1,
+        "fixture:player": 1,
+        "fixture:power": 2
+      },
+      "content_state_counts": {
+        "known": 12,
+        "not_applicable": 4
+      },
+      "field_state_counts": {
+        "known": 48,
+        "unknown": 1,
+        "unavailable": 1
+      },
+      "known_zero_number_fields": [
+        ["card-05", "fixture:cost"],
+        ["enemy-01", "fixture:block"],
+        ["enemy-02", "fixture:strength"],
+        ["player-01", "fixture:block"]
+      ],
+      "known_false_boolean_fields": [
+        ["card-01", "fixture:upgraded"],
+        ["card-03", "fixture:upgraded"]
+      ],
+      "unknown_fields": [
+        ["enemy-01", "fixture:max_hp"]
+      ],
+      "unavailable_fields": [
+        ["enemy-01", "fixture:backend_damage_decimal"]
+      ],
+      "absent_optional_fields": [
+        ["card-02", "fixture:upgraded"],
+        ["card-05", "fixture:upgraded"],
+        ["card-06", "fixture:upgraded"],
+        ["card-07", "fixture:upgraded"],
+        ["card-08", "fixture:upgraded"],
+        ["enemy-02", "fixture:backend_damage_decimal"]
+      ],
+      "piles": {
+        "pile-discard": {
+          "total_count": 1,
+          "members_complete": true,
+          "visible_members": ["card-08"],
+          "known_positions": []
+        },
+        "pile-draw": {
+          "total_count": 5,
+          "members_complete": true,
+          "visible_members": ["card-01", "card-02", "card-03", "card-04", "card-05"],
+          "known_positions": [["card-03", 0], ["card-04", 3]]
+        },
+        "pile-hand": {
+          "total_count": 2,
+          "members_complete": true,
+          "visible_members": ["card-06", "card-07"],
+          "known_positions": []
+        }
+      },
+      "relations": [
+        ["fixture:held_by", "power-01", "player-01"],
+        ["fixture:held_by", "power-02", "enemy-01"]
+      ],
+      "relation_count": 2,
+      "sequences": {},
+      "group_members_sorted": {},
+      "candidate_ids": ["cand-end", "cand-play-06", "cand-play-07"],
+      "candidates": [
+        {
+          "candidate_id": "cand-end",
+          "action_type": "fixture:end_turn",
+          "known_fields": {}
+        },
+        {
+          "candidate_id": "cand-play-06",
+          "action_type": "fixture:play_card",
+          "known_fields": {"fixture:play_card_ref": "card-06"}
+        },
+        {
+          "candidate_id": "cand-play-07",
+          "action_type": "fixture:play_card",
+          "known_fields": {
+            "fixture:play_card_ref": "card-07",
+            "fixture:play_target_ref": "enemy-01"
+          }
+        }
+      ],
+      "content_id_groups": {
+        "fixture:defend": ["card-05", "card-07"],
+        "fixture:strike": ["card-01", "card-02", "card-06", "card-08"]
+      },
+      "terminal_facts": null,
+      "snapshot_digest": "sha256:59957205d7caafb9ca022413ec3a0661d976371a18bc883960b5b352e994d3f3"
+    }
+  }
+}

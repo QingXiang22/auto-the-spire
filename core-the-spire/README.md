@@ -1,22 +1,45 @@
 # core-the-spire
 
-本次 Git 提交与共享工作区的范围、独立检出后的验证、下一阶段的原版/mod 对拍顺序见 [Git 冻结交接](../docs/contracts/core-git-checkpoint.md)。
+core-the-spire 是一个用 C#/.NET 9 实现的通用规则引擎。你在 `.spire` 文件中描述游戏状态、玩家操作和结束条件，再由宿主程序加载并运行。一份规则可以运行多局独立会话，宿主通过参与者视图读取状态，也可以接入界面或 AI。
 
-2026-10-05：当前通用 core 收口进入冻结基线，运行语义 engine/ir@0.3，保留 core/0.1 与 core/0.2。范围、启动/枚举迁移及维护规则见 [冻结契约](../docs/contracts/core-engine-baseline.md)；已验收关闭证据见 [报告](../docs/review/archived/core-contract-freeze-2026-10-05.md)。后续重心转向游戏 DSL 包、公开接口与环境工具。
+## 从你要做的事开始
 
-活动内核是 `Core.TheSpire/Engine`：通用声明、IR、链接检查、状态、唯一调度器、随机和参与者观察。旧 STS 后端已移至 [archive/legacy-sts](../archive/legacy-sts/README.md)，活动工程不引用归档。
+| 文档类型 | 你想做什么 | 从这里开始 |
+| --- | --- | --- |
+| 教程 | 第一次写一份能运行的规则 | [第一次写规则](../docs/dsl/core/first-rule.md) |
+| 教程 | 第一次写程序驱动规则 | [第一次写宿主](../docs/design/core-the-spire/first-host.md) |
+| 操作指南 | 使用已有规则库，修改计分参数 | [配置目标和增量](../docs/dsl/core/how-to-configure-game.md) |
+| 操作指南 | 在已有宿主中接入带参数的动作 | [提交动作参数](../docs/design/core-the-spire/how-to-submit-parameters.md) |
+| 参考 | 查询 DSL 声明、表达式与模板 | [core/0.1 语言参考](../docs/dsl/core/0.1/language-reference.md)、[core/0.2 规则库指南](../docs/dsl/core/0.2/authoring-guide.md) |
+| 参考 | 查询交互 API 的输入、结果与错误 | [宿主交互 API](../docs/design/core-the-spire/session-api-reference.md) |
+| 解释 | 理解规则、会话、动作和玩家观察的关系 | [规则与宿主](../docs/design/core-the-spire/rules-and-host.md) |
+| 解释 | 理解内核的设计取舍 | [架构决定](../docs/design/core-the-spire/core-architecture-decisions.md) |
 
-规则作者直接编辑 core/0.2 `.spire` 配置，导入 DSL 规则库并填写参数，先读[作者入门](../docs/dsl/core/README.md)及[语言参考](../docs/dsl/core/0.1/language-reference.md)。Host/扩展开发者读[开发者指南](../docs/design/core-the-spire/developer-guide.md)、[架构决定](../docs/design/core-the-spire/core-architecture-decisions.md)和[模块 spec](../docs/design/core-the-spire/spec.md)。文本和 C# SDK 共用 IR/链接器/Session。
+## 先跑一个小游戏
 
-运行配置式小例子：
+安装 .NET 9 SDK，在仓库根目录运行：
+
+```powershell
+dotnet run --project docs/examples/core-first-host/CoreFirstHost.csproj
+```
+
+你会看到分数从 0 → 1 → 2 → 3，最后输出 `tutorial:ReachedTarget`。这是[第一份规则](../docs/examples/core-choice-counter/first-counter.spire)与[教学宿主](../docs/examples/core-first-host/Program.cs)协作的结果：规则负责加分和结束条件，宿主负责加载、操作和显示。两条教程会分别带你写出这两部分。
+
+已有规则库的配置示例仍可以这样运行：
 
 ```powershell
 dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 ```
 
-作者入口为 [game.spire](../docs/examples/core-choice-counter/game.spire)，规则库也是 [DSL 文件](../docs/examples/core-choice-counter/rules/score-race.spire)，都有中文注释。宿主只加载与交互，模板仍编译到同一 IR。规则库约束见 [core/0.2 指南](../docs/dsl/core/0.2/authoring-guide.md)；原 counter.spire 保留为进阶例子。修改规则文件后可使用 --no-build 运行，无需重新编译宿主。
+入口是 [game.spire](../docs/examples/core-choice-counter/game.spire)，其导入的[规则库](../docs/examples/core-choice-counter/rules/score-race.spire)也使用 DSL 编写。第一次构建以后，改 `.spire` 文件可以用 `--no-build` 运行，规则仍会重新加载。
 
-内核已实现作者对象及子集合冻结、Session 按职责拆分、保留候选顺序的取样、可注入版本化随机 profile 及可关闭的有界调试模式。首版交付证据见[报告](../docs/review/archived/core-engine-followup-2026-10-04.md)。它不代表完整原版环境或编辑器插件已完成。
+## 范围与维护
+
+活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版卡牌作者阅读 base 的[内容 DSL 文档](../docs/dsl/0.0.1/dsl-usage.md)。旧 STS 后端位于 [archive/legacy-sts](../archive/legacy-sts/README.md)，活动工程不引用归档。
+
+当前运行语义冻结为 engine/ir@0.3，支持 core/0.1 与 core/0.2。接口迁移与维护约束见[冻结契约](../docs/contracts/core-engine-baseline.md)，独立检出范围见[Git 冻结交接](../docs/contracts/core-git-checkpoint.md)，关闭依据见[冻结报告](../docs/review/archived/core-contract-freeze-2026-10-05.md)及[首版交付](../docs/review/archived/core-engine-followup-2026-10-04.md)。其他设计问题按需查[模块 spec](../docs/design/core-the-spire/spec.md)和[架构决定](../docs/design/core-the-spire/core-architecture-decisions.md)。完整原版环境的验收状态统一维护在[当前清单](../docs/review/tofix/README.md)。
+
+内核维护者从仓库根目录执行：
 
 ```powershell
 dotnet build AutoTheSpire.sln

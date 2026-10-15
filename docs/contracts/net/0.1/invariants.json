@@ -1,0 +1,651 @@
+{
+  "protocol_version": "0.1",
+  "asset": "cross-structure invariant checklist with stable ids (C-01)",
+  "generated_by": "tools/contract-check/emit_invariants_json.py",
+  "rule_count": 50,
+  "notes": [
+    "rules[] 只列出**代码实际发码**的规则 ID（wire_layers.py 的 _f、wire_json.py 的 ParseError），因此本文件与代码是精确一一对应；可用 --check 核对是否同步。",
+    "invariants.md 是规范侧的完整不变量清单，其 ID 集合是代码发码集合的超集；documented_but_not_emitted 列出文档规定但当前代码不发码的 ID（可能由机器 schema/L1 承担，或尚未实现）——这是待裁定项，不是本生成器的错误。",
+    "每个 ID 的出处与所在层见 source（文件:行）与 layers；documented_at 指向 invariants.md 首次提及处。"
+  ],
+  "documented_but_not_emitted": [
+    "I-02",
+    "I-03",
+    "I-04",
+    "I-06",
+    "I-10",
+    "I-12",
+    "I-14",
+    "I-15",
+    "I-16",
+    "I-17",
+    "I-19",
+    "I-30",
+    "I-32",
+    "I-33",
+    "I-38",
+    "I-41",
+    "I-42",
+    "I-43",
+    "I-45",
+    "I-46",
+    "I-47",
+    "I-49",
+    "I-51",
+    "I-52",
+    "I-53",
+    "I-54",
+    "I-55",
+    "I-56",
+    "I-57",
+    "I-58",
+    "I-59",
+    "I-60",
+    "I-61",
+    "I-62",
+    "I-63",
+    "I-64",
+    "I-65",
+    "I-67",
+    "I-69",
+    "I-71",
+    "I-73"
+  ],
+  "rules": [
+    {
+      "id": "I-01",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:441"
+      ],
+      "documented_at": "invariants.md:60"
+    },
+    {
+      "id": "I-05",
+      "layers": [
+        "L2",
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:166",
+        "wire_layers.py:169",
+        "wire_layers.py:219",
+        "wire_layers.py:250",
+        "wire_layers.py:459",
+        "wire_layers.py:472",
+        "wire_layers.py:566",
+        "wire_layers.py:715",
+        "wire_layers.py:758",
+        "wire_layers.py:798",
+        "wire_layers.py:810"
+      ],
+      "documented_at": "invariants.md:64"
+    },
+    {
+      "id": "I-07",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:204"
+      ],
+      "documented_at": "invariants.md:66"
+    },
+    {
+      "id": "I-08",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:253"
+      ],
+      "documented_at": "invariants.md:67"
+    },
+    {
+      "id": "I-09",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:181"
+      ],
+      "documented_at": "invariants.md:68"
+    },
+    {
+      "id": "I-11",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:1027"
+      ],
+      "documented_at": "invariants.md:70"
+    },
+    {
+      "id": "I-13",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:1038"
+      ],
+      "documented_at": "invariants.md:72"
+    },
+    {
+      "id": "I-18",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:495",
+        "wire_layers.py:499",
+        "wire_layers.py:517",
+        "wire_layers.py:521",
+        "wire_layers.py:529",
+        "wire_layers.py:535"
+      ],
+      "documented_at": "invariants.md:46"
+    },
+    {
+      "id": "I-20",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:484"
+      ],
+      "documented_at": "invariants.md:82"
+    },
+    {
+      "id": "I-21",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:385"
+      ],
+      "documented_at": "invariants.md:83"
+    },
+    {
+      "id": "I-22",
+      "layers": [
+        "L2",
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:174",
+        "wire_layers.py:177",
+        "wire_layers.py:383",
+        "wire_layers.py:390",
+        "wire_layers.py:394",
+        "wire_layers.py:398",
+        "wire_layers.py:405",
+        "wire_layers.py:476",
+        "wire_layers.py:571",
+        "wire_layers.py:573",
+        "wire_layers.py:718",
+        "wire_layers.py:722",
+        "wire_layers.py:761",
+        "wire_layers.py:765",
+        "wire_layers.py:816"
+      ],
+      "documented_at": "invariants.md:54"
+    },
+    {
+      "id": "I-23",
+      "layers": [
+        "L0"
+      ],
+      "source": [
+        "wire_json.py:113",
+        "wire_json.py:115"
+      ],
+      "documented_at": "invariants.md:85"
+    },
+    {
+      "id": "I-24",
+      "layers": [
+        "L0"
+      ],
+      "source": [
+        "wire_json.py:31"
+      ],
+      "documented_at": "invariants.md:86"
+    },
+    {
+      "id": "I-25",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:552",
+        "wire_layers.py:578",
+        "wire_layers.py:584",
+        "wire_layers.py:586"
+      ],
+      "documented_at": "invariants.md:87"
+    },
+    {
+      "id": "I-26",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:591",
+        "wire_layers.py:601",
+        "wire_layers.py:606"
+      ],
+      "documented_at": "invariants.md:88"
+    },
+    {
+      "id": "I-27",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:645"
+      ],
+      "documented_at": "invariants.md:89"
+    },
+    {
+      "id": "I-28",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:611",
+        "wire_layers.py:619",
+        "wire_layers.py:622",
+        "wire_layers.py:625"
+      ],
+      "documented_at": "invariants.md:90"
+    },
+    {
+      "id": "I-29",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:637",
+        "wire_layers.py:640",
+        "wire_layers.py:643"
+      ],
+      "documented_at": "invariants.md:91"
+    },
+    {
+      "id": "I-31",
+      "layers": [
+        "L2",
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:223",
+        "wire_layers.py:227",
+        "wire_layers.py:656",
+        "wire_layers.py:668"
+      ],
+      "documented_at": "invariants.md:93"
+    },
+    {
+      "id": "I-34",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:699",
+        "wire_layers.py:725",
+        "wire_layers.py:727"
+      ],
+      "documented_at": "invariants.md:96"
+    },
+    {
+      "id": "I-35",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:733",
+        "wire_layers.py:744",
+        "wire_layers.py:753",
+        "wire_layers.py:768",
+        "wire_layers.py:770"
+      ],
+      "documented_at": "invariants.md:97"
+    },
+    {
+      "id": "I-36",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:793",
+        "wire_layers.py:804",
+        "wire_layers.py:813"
+      ],
+      "documented_at": "invariants.md:98"
+    },
+    {
+      "id": "I-37",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:779"
+      ],
+      "documented_at": "invariants.md:99"
+    },
+    {
+      "id": "I-39",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:400",
+        "wire_layers.py:562",
+        "wire_layers.py:616",
+        "wire_layers.py:707",
+        "wire_layers.py:711",
+        "wire_layers.py:741",
+        "wire_layers.py:750"
+      ],
+      "documented_at": "invariants.md:101"
+    },
+    {
+      "id": "I-40",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:451",
+        "wire_layers.py:776"
+      ],
+      "documented_at": "invariants.md:102"
+    },
+    {
+      "id": "I-44",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:832",
+        "wire_layers.py:835",
+        "wire_layers.py:841",
+        "wire_layers.py:843"
+      ],
+      "documented_at": "invariants.md:109"
+    },
+    {
+      "id": "I-48",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:1060",
+        "wire_layers.py:1062"
+      ],
+      "documented_at": "invariants.md:113"
+    },
+    {
+      "id": "I-50",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:921"
+      ],
+      "documented_at": "invariants.md:115"
+    },
+    {
+      "id": "I-66",
+      "layers": [
+        "L1"
+      ],
+      "source": [
+        "check_contracts.py:218",
+        "check_contracts.py:225"
+      ],
+      "documented_at": "invariants.md:137"
+    },
+    {
+      "id": "I-68",
+      "layers": [
+        "L0"
+      ],
+      "source": [
+        "wire_json.py:107"
+      ],
+      "documented_at": "invariants.md:139"
+    },
+    {
+      "id": "I-70",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:987",
+        "wire_layers.py:989"
+      ],
+      "documented_at": "invariants.md:45"
+    },
+    {
+      "id": "I-72",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:387"
+      ],
+      "documented_at": "invariants.md:156"
+    },
+    {
+      "id": "I-74",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:453",
+        "wire_layers.py:465",
+        "wire_layers.py:542",
+        "wire_layers.py:593",
+        "wire_layers.py:613",
+        "wire_layers.py:629",
+        "wire_layers.py:701",
+        "wire_layers.py:735",
+        "wire_layers.py:746",
+        "wire_layers.py:790"
+      ],
+      "documented_at": "invariants.md:51"
+    },
+    {
+      "id": "I-75",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:187",
+        "wire_layers.py:335",
+        "wire_layers.py:357"
+      ],
+      "documented_at": "invariants.md:51"
+    },
+    {
+      "id": "I-76",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:852",
+        "wire_layers.py:855",
+        "wire_layers.py:858"
+      ],
+      "documented_at": "invariants.md:48"
+    },
+    {
+      "id": "I-77",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:312"
+      ],
+      "documented_at": "invariants.md:50"
+    },
+    {
+      "id": "I-78",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:214"
+      ],
+      "documented_at": "invariants.md:160"
+    },
+    {
+      "id": "I-79",
+      "layers": [
+        "L2",
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:296",
+        "wire_layers.py:301",
+        "wire_layers.py:557",
+        "wire_layers.py:676",
+        "wire_layers.py:681",
+        "wire_layers.py:687"
+      ],
+      "documented_at": "invariants.md:161"
+    },
+    {
+      "id": "I-80",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:781"
+      ],
+      "documented_at": "invariants.md:51"
+    },
+    {
+      "id": "I-81",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:900",
+        "wire_layers.py:905"
+      ],
+      "documented_at": "invariants.md:49"
+    },
+    {
+      "id": "I-82",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:1012"
+      ],
+      "documented_at": "invariants.md:163"
+    },
+    {
+      "id": "I-83",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:951",
+        "wire_layers.py:953"
+      ],
+      "documented_at": "invariants.md:164"
+    },
+    {
+      "id": "I-84",
+      "layers": [
+        "L4"
+      ],
+      "source": [
+        "wire_layers.py:963",
+        "wire_layers.py:978"
+      ],
+      "documented_at": "invariants.md:143"
+    },
+    {
+      "id": "I-85",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:340",
+        "wire_layers.py:343"
+      ],
+      "documented_at": "invariants.md:166"
+    },
+    {
+      "id": "I-86",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:145"
+      ],
+      "documented_at": "invariants.md:167"
+    },
+    {
+      "id": "I-87",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:272",
+        "wire_layers.py:282"
+      ],
+      "documented_at": "invariants.md:168"
+    },
+    {
+      "id": "I-88",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:463",
+        "wire_layers.py:788"
+      ],
+      "documented_at": "invariants.md:169"
+    },
+    {
+      "id": "I-89",
+      "layers": [
+        "L2"
+      ],
+      "source": [
+        "wire_layers.py:241"
+      ],
+      "documented_at": "invariants.md:170"
+    },
+    {
+      "id": "I-90",
+      "layers": [
+        "L3"
+      ],
+      "source": [
+        "wire_layers.py:509",
+        "wire_layers.py:511"
+      ],
+      "documented_at": "invariants.md:46"
+    },
+    {
+      "id": "I-91",
+      "layers": [
+        "L0"
+      ],
+      "source": [
+        "wire_json.py:37",
+        "wire_json.py:41",
+        "wire_json.py:100"
+      ],
+      "documented_at": "invariants.md:172"
+    }
+  ]
+}

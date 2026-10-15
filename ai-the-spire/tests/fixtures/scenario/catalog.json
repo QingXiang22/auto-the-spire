@@ -1,0 +1,177 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:scenario-catalog-v1",
+  "declarations": {
+    "entity_kinds": [
+      {"id": "fixture:event_option", "semantic_version": "1", "description": "场景选项实体"},
+      {"id": "fixture:map_node", "semantic_version": "1", "description": "路线节点实体"},
+      {"id": "fixture:player", "semantic_version": "1", "description": "玩家实体"},
+      {"id": "fixture:potion", "semantic_version": "1", "description": "药水实体"},
+      {"id": "fixture:potion_slot", "semantic_version": "1", "description": "可见药水槽实体（空槽也是真实实体）"}
+    ],
+    "content_types": [
+      {"id": "fixture:potion_face", "semantic_version": "1", "description": "药水内容类型", "kind_ids": ["fixture:potion"]}
+    ],
+    "fields": [
+      {
+        "id": "fixture:chosen_node_ref",
+        "semantic_version": "1",
+        "description": "选中的路线节点",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:map_node"],
+        "applies_to": {"entity_kinds": [], "action_types": ["fixture:choose_node"], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:chosen_option_ref",
+        "semantic_version": "1",
+        "description": "选中的场景选项",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:event_option"],
+        "applies_to": {"entity_kinds": [], "action_types": ["fixture:choose_option"], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:hp",
+        "semantic_version": "1",
+        "description": "当前公开生命值（场景级资源）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": ["fixture:victory"]},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:max_hp",
+        "semantic_version": "1",
+        "description": "生命上限",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:node_col",
+        "semantic_version": "1",
+        "description": "节点列",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:map_node"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:node_kind",
+        "semantic_version": "1",
+        "description": "已揭示的节点类型；未揭示时省略该声明（省略不等于 unknown 内容）",
+        "value_type": "category",
+        "category_ids": ["fixture:elite", "fixture:enemy", "fixture:rest", "fixture:treasure"],
+        "applies_to": {"entity_kinds": ["fixture:map_node"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:node_row",
+        "semantic_version": "1",
+        "description": "节点行",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:map_node"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:occupied",
+        "semantic_version": "1",
+        "description": "槽位是否被占用（空槽为 known false，不虚构药水内容）",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["fixture:potion_slot"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:option_kind",
+        "semantic_version": "1",
+        "description": "选项类型",
+        "value_type": "category",
+        "category_ids": ["fixture:accept", "fixture:decline"],
+        "applies_to": {"entity_kinds": ["fixture:event_option"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:potion_kind",
+        "semantic_version": "1",
+        "description": "药水类型",
+        "value_type": "category",
+        "category_ids": ["fixture:block_potion", "fixture:fire_potion"],
+        "applies_to": {"entity_kinds": ["fixture:potion"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:slot_index",
+        "semantic_version": "1",
+        "description": "槽位序号",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:potion_slot"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      }
+    ],
+    "relation_types": [
+      {
+        "id": "fixture:node_edge",
+        "semantic_version": "1",
+        "description": "路线连接（无位置）",
+        "source_kind_ids": ["fixture:map_node"],
+        "target_kind_ids": ["fixture:map_node"],
+        "position_schema": null
+      },
+      {
+        "id": "fixture:stored_in",
+        "semantic_version": "1",
+        "description": "药水存放在槽位",
+        "source_kind_ids": ["fixture:potion"],
+        "target_kind_ids": ["fixture:potion_slot"],
+        "position_schema": null
+      }
+    ],
+    "pile_types": [],
+    "sequence_types": [
+      {
+        "id": "fixture:route_path",
+        "semantic_version": "1",
+        "description": "已揭示的路线顺序（真实公开顺序，不排序）",
+        "owner_kind_ids": ["fixture:player"],
+        "element_kind_ids": ["fixture:map_node"],
+        "min_count": 0,
+        "max_count": null
+      }
+    ],
+    "group_types": [
+      {
+        "id": "fixture:reward_options",
+        "semantic_version": "1",
+        "description": "选项展示分组（无序）",
+        "owner_kind_ids": ["fixture:player"],
+        "member_kind_ids": ["fixture:event_option"],
+        "min_count": 0,
+        "max_count": null
+      }
+    ],
+    "action_types": [
+      {"id": "fixture:choose_node", "semantic_version": "1", "description": "选择下一节点", "required_fields": ["fixture:chosen_node_ref"], "optional_fields": []},
+      {"id": "fixture:choose_option", "semantic_version": "1", "description": "选择场景选项", "required_fields": ["fixture:chosen_option_ref"], "optional_fields": []}
+    ],
+    "terminal_reasons": [
+      {"id": "fixture:defeat", "semantic_version": "1", "description": "场景失败", "outcome": "loss", "required_fields": [], "optional_fields": []},
+      {"id": "fixture:victory", "semantic_version": "1", "description": "场景目标达成", "outcome": "win", "required_fields": ["fixture:hp"], "optional_fields": []}
+    ]
+  }
+}

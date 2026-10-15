@@ -1,0 +1,79 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "demo:rules-v1",
+  "catalog_id": "demo:catalog-v1",
+  "backend_profile_id": "demo:public-v1",
+  "session_id": "session-A",
+  "observation_id": 3,
+  "status": "decision",
+  "terminal_result": null,
+  "entities": [
+    {
+      "instance_id": "card-1",
+      "kind_id": "demo:card",
+      "content_state": "known",
+      "content_id": "demo:strike",
+      "fields": [
+        {"field_id": "demo:card_face_ref", "state": "known", "value": "demo:strike"},
+        {"field_id": "demo:owner", "state": "known", "value": "player-A"}
+      ]
+    },
+    {
+      "instance_id": "card-2",
+      "kind_id": "demo:card",
+      "content_state": "known",
+      "content_id": "demo:defend",
+      "fields": [
+        {"field_id": "demo:card_face_ref", "state": "known", "value": "demo:defend"},
+        {"field_id": "demo:owner", "state": "known", "value": "player-A"}
+      ]
+    },
+    {
+      "instance_id": "pile-A",
+      "kind_id": "demo:draw_pile",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "demo:pile_scope", "state": "known", "value": "player-A"}
+      ]
+    },
+    {
+      "instance_id": "player-A",
+      "kind_id": "demo:player",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "demo:hp", "state": "known", "value": "45"},
+        {"field_id": "demo:known_hp", "state": "known", "value": "0.5"},
+        {"field_id": "demo:played", "state": "unknown"}
+      ]
+    }
+  ],
+  "relations": [
+    {"type_id": "demo:holds", "source_ref": "player-A", "target_ref": "card-1", "position": 2}
+  ],
+  "piles": [
+    {
+      "pile_ref": "pile-A",
+      "total_count": 3,
+      "visible_members": ["card-1", "card-2"],
+      "members_complete": false,
+      "known_positions": [
+        {"card_ref": "card-1", "position": 1},
+        {"card_ref": "card-2", "position": 2}
+      ]
+    }
+  ],
+  "sequences": [
+    {"type_id": "demo:turn_queue", "owner_ref": "player-A", "elements": ["card-1", "card-2"]}
+  ],
+  "groups": [
+    {"type_id": "demo:choices", "owner_ref": "player-A", "members": [{"entity_ref": "card-1", "multiplicity": 1}]}
+  ],
+  "legal_actions": [
+    {"candidate_id": "a1", "action_type": "demo:end_turn", "fields": []},
+    {
+      "candidate_id": "a2",
+      "action_type": "demo:play",
+      "fields": [{"field_id": "demo:play_target", "state": "known", "value": "card-1"}]
+    }
+  ]
+}

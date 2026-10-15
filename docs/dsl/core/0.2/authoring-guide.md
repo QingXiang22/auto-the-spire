@@ -1,6 +1,8 @@
 # core/0.2：DSL 规则库与作者配置
 
-日期：2026-10-04。本文描述已经实现的作者层；基础声明、表达式、查询和命令沿用 [core/0.1 参考](../0.1/language-reference.md)。初次使用从 [作者入门](../README.md) 和带注释的 [配置入口](../../../examples/core-choice-counter/game.spire)、[规则库](../../../examples/core-choice-counter/rules/score-race.spire) 开始。
+本文供你查询 core/0.2 的导入、模板、参数和实例配置。基础声明、表达式、查询和命令沿用 [core/0.1 参考](../0.1/language-reference.md)。
+
+初次使用时，从 [作者入门](../README.md) 开始，再对照带注释的 [配置入口](../../../examples/core-choice-counter/game.spire)和[规则库](../../../examples/core-choice-counter/rules/score-race.spire)。本文描述截至 2026-10-04 已实现的作者层。
 
 ## 1. 三种复用单位
 

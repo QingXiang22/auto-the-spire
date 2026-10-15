@@ -92,8 +92,7 @@ public static partial class EngineDslCompiler
                     "collectionIndex" => _scope.CollectionIndex(
                         _compiler.Symbol<CollectionSymbol>(args.Required("collection", 0)), E("item", 1)),
                     "concat" => _scope.Concat(args.Rest(0).Select(Expression).ToArray()),
-                    "pureCall" => _scope.CallPure(_compiler.Symbol<ProcedureSymbol>(args.Required("procedure", 0)),
-                        args.Rest(1).Select(Expression).ToArray()),
+                    "pureCall" => PureCall(call, args),
                     "aggregate" => Aggregate(args),
                     _ => throw Error(call.Location, $"Unknown expression '{call.Name}'."),
                 };
@@ -101,6 +100,16 @@ public static partial class EngineDslCompiler
                 if (call.Name != "participant") args.Finish();
                 return Source(result, node.Location);
             });
+
+            private Expr PureCall(DslCallNode call, Arguments args)
+            {
+                var procedure = _compiler.Symbol<ProcedureSymbol>(args.Required("procedure", 0));
+                var named = call.Arguments.Any(a => a.Name == "args") ||
+                    call.Arguments.Count == 2 && call.Arguments[1].Value is DslBlockNode;
+                return _scope.CallPure(procedure, named
+                    ? CallArguments(procedure, args.Required("args", 1))
+                    : args.Rest(1).Select(Expression).ToArray());
+            }
 
             private Expr Aggregate(Arguments args)
             {

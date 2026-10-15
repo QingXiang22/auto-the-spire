@@ -1,0 +1,196 @@
+{
+  "canonical_version": "net-wire-canon-v1",
+  "note": "每个 expect_sha256 由独立的 .NET SHA256 对 expect_text 的 UTF-8 字节计算：canonical-v1..v5 / identity-* 的字节经 base64 传入（fixtures/golden/_hash-vectors-b64.ps1，由 _gen_hash_vectors.py 从手写文本生成），避免非 ASCII 字面量被错误解码。2026-10-01 首版 PowerShell 脚本用非 ASCII 字面量直接计算，canonical-v3/v5 的摘要被错误解码污染，已由 base64 版本与 Get-FileHash 双重确认后修正。",
+  "canonical": [
+    {
+      "id": "canonical-v1",
+      "document": {"b": 1, "a": [true, null, "x"]},
+      "expect_text": "{\"a\":[true,null,\"x\"],\"b\":1}",
+      "expect_sha256": "sha256:54a65415ad370228851a1da4b31b6fd42dc58b19a50d35cae759325f7388ce64",
+      "digest_tool": ".NET SHA256 (PowerShell)"
+    },
+    {
+      "id": "canonical-v2",
+      "document": {"s": "a\"b\\c\nd\te\u0001f"},
+      "expect_text": "{\"s\":\"a\\\"b\\\\c\\nd\\te\\u0001f\"}",
+      "expect_sha256": "sha256:58a6f3f7e956012dfe12e838b3c0e7eed1f2a90082a78bc86271b358d4ae0a50",
+      "digest_tool": ".NET SHA256 (PowerShell)",
+      "covers": "引号/反斜线转义、\\b\\t\\n\\f\\r 常用转义、其余控制字符小写 \\u00xx"
+    },
+    {
+      "id": "canonical-v3",
+      "document": {"z": 2, "\u00e9": 1},
+      "expect_text": "{\"z\":2,\"\u00e9\":1}",
+      "expect_sha256": "sha256:ebf5b3ac2125f90b74510656202151eacb0fa0dcdf14105494181e8969b802d5",
+      "digest_tool": ".NET SHA256 (PowerShell)",
+      "covers": "对象键按 UTF-8 字节序排序（z 0x7A 在 é 0xC3A9 之前），非 ASCII 不做转义"
+    },
+    {
+      "id": "canonical-v4",
+      "document": {"n": -12, "big": 9007199254740991, "o": {}, "a": []},
+      "expect_text": "{\"a\":[],\"big\":9007199254740991,\"n\":-12,\"o\":{}}",
+      "expect_sha256": "sha256:fd534d7740e0cbdb8e01249f3352a08ccfbbd0d8757548ce8cb2ad659448a145",
+      "digest_tool": ".NET SHA256 (PowerShell)",
+      "covers": "结构整数最短十进制、空对象/空数组、紧凑无空白"
+    },
+    {
+      "id": "canonical-v5",
+      "document": {"slash": "a/b", "text": "\u4e2d\u6587"},
+      "expect_text": "{\"slash\":\"a/b\",\"text\":\"\u4e2d\u6587\"}",
+      "expect_sha256": "sha256:331df54e6733c4e38a304db14d6f488781ee327c2e4dc19af0ad482dc0c14ddf",
+      "digest_tool": ".NET SHA256 (PowerShell)",
+      "covers": "不转义 /，保留原 Unicode 且不做归一化"
+    }
+  ],
+  "canonical_reject": [
+    {
+      "id": "float-literal",
+      "document": {"n": 1.0},
+      "expect_error": "wire 不含浮点字面量"
+    },
+    {
+      "id": "lone-surrogate",
+      "document": {"s": "\ud800"},
+      "expect_error": "不合法 Unicode"
+    }
+  ],
+  "decimal": [
+    {"id": "plus-leading-zeros", "source": "+0012.5000", "expect": "12.5"},
+    {"id": "negative-zero", "source": "-0.000", "expect": "0"},
+    {"id": "zero", "source": "0.000", "expect": "0"},
+    {"id": "exponent-positive", "source": "1e2", "expect": "100"},
+    {"id": "exponent-negative", "source": "1E-3", "expect": "0.001"},
+    {"id": "integer-source", "source": 1000, "expect": "1000"},
+    {"id": "negative-fraction", "source": "-0.5", "expect": "-0.5"},
+    {"id": "leading-zeros", "source": "007", "expect": "7"},
+    {"id": "already-canonical", "source": "12.5", "expect": "12.5"},
+    {"id": "trailing-zeros", "source": "12.500", "expect": "12.5"}
+  ],
+  "decimal_accept": ["0", "12.5", "-0.5", "-1", "0.0001", "10", "9007199254740991", "-0.0001"],
+  "decimal_reject": [
+    "-0",
+    "1.0",
+    "01",
+    "+1",
+    "1e2",
+    " 1",
+    "1 ",
+    "0.50",
+    "--1",
+    ".5",
+    "1.",
+    "",
+    "1,5",
+    "NaN",
+    "Infinity",
+    "00.5",
+    "-"
+  ],
+  "action_key": [
+    {
+      "id": "candidate-id-and-field-order-irrelevant",
+      "actions": [
+        {"candidate_id": "a1", "action_type": "demo:play", "fields": [{"field_id": "demo:play_target", "state": "known", "value": "card-1"}, {"field_id": "demo:owner", "state": "known", "value": "player-A"}]},
+        {"candidate_id": "zz", "action_type": "demo:play", "fields": [{"field_id": "demo:owner", "state": "known", "value": "player-A"}, {"field_id": "demo:play_target", "state": "known", "value": "card-1"}]}
+      ],
+      "expect_equal": true
+    },
+    {
+      "id": "different-target-distinct",
+      "actions": [
+        {"candidate_id": "a1", "action_type": "demo:play", "fields": [{"field_id": "demo:play_target", "state": "known", "value": "card-1"}]},
+        {"candidate_id": "a1", "action_type": "demo:play", "fields": [{"field_id": "demo:play_target", "state": "known", "value": "card-2"}]}
+      ],
+      "expect_distinct": true
+    },
+    {
+      "id": "end-turn-key-text",
+      "actions": [{"candidate_id": "a1", "action_type": "demo:end_turn", "fields": []}],
+      "expect_key_text": "{\"action_type\":\"demo:end_turn\",\"fields\":[]}"
+    }
+  ],
+  "identity": [
+    {
+      "id": "catalog-id",
+      "kind": "catalog",
+      "input": {
+        "protocol_version": "0.1",
+        "ruleset_id": "demo:rules-v1",
+        "catalog_id": "demo:catalog-v1",
+        "declarations": {
+          "entity_kinds": [{"id": "demo:player", "semantic_version": "1", "description": "玩家"}],
+          "content_types": [],
+          "fields": [],
+          "relation_types": [],
+          "pile_types": [],
+          "sequence_types": [],
+          "group_types": [],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "expect": "sha256:219ca8fbee443515b8c58646b1c7f0d203cc6a1f4c12620b088ae78c5918fe26"
+    },
+    {
+      "id": "request-fingerprint-describe",
+      "kind": "request",
+      "operation": "describe",
+      "payload": {},
+      "expect": "sha256:8e505a716c0207ba505d8b85f114b64aaaf3693ba249dbc882a9cfb8da2f873a"
+    },
+    {
+      "id": "ruleset-id",
+      "kind": "ruleset",
+      "input": {
+        "engine_versions": ["core-1.0"],
+        "ir_version": "ir-1",
+        "package_order": ["base-spire"],
+        "package_digests": ["sha256:aa"],
+        "rule_config": {"difficulty": "normal"},
+        "numeric_config": {"rounding": "per-hook"},
+        "prng_profile": "prng-1"
+      },
+      "expect": "sha256:c1bd7b220cb07a8d5876bf5351b50f5340a242fa89c61cb6d032ceb3c98fb700"
+    },
+    {
+      "id": "backend-profile-id",
+      "kind": "backend_profile",
+      "input": {
+        "backend_kind": "simulation",
+        "projection_semantics_version": "1",
+        "public_identity_version": "1",
+        "action_mapping_version": "1",
+        "field_availability": {"demo:hp": "available"},
+        "supported_mechanism_ids": ["demo:check_hp_visible"]
+      },
+      "expect": "sha256:4acff86fadeec298606a7ea68caa55cf0841a8a02d2d04ab3c84447033614d4e"
+    },
+    {
+      "id": "snapshot-storage",
+      "kind": "snapshot",
+      "input": {"z": [1, {"b": null, "a": 2}], "a": "x"},
+      "expect": "sha256:5ccfbe50ddfe4e82acb860d9159ec26b04e50b6d1077c010d6e5d0cb329fe23f"
+    },
+    {
+      "id": "catalog-id-reproducible",
+      "kind": "catalog",
+      "input": {
+        "protocol_version": "0.1",
+        "ruleset_id": "demo:rules-v1",
+        "catalog_id": "demo:catalog-v2",
+        "declarations": {
+          "entity_kinds": [{"id": "demo:player", "semantic_version": "1", "description": "\u73a9\u5bb6"}],
+          "content_types": [],
+          "fields": [],
+          "relation_types": [],
+          "pile_types": [],
+          "sequence_types": [],
+          "group_types": [],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "expect_stable": true
+    }
+  ]
+}

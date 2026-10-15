@@ -1,0 +1,228 @@
+using namespace base-spire;
+
+# Source: sts2/src/Core/Models/Cards/Volley.cs:13-32
+card Volley {
+ pools = { ColorlessCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = uncommon cost = X target = { selectNone = {} } keywords = {} play = { repeatForX = { effect = { randomAttack = { damage = 10 } } } } hooks = {} }
+ upgraded = { type = attack rarity = uncommon cost = X target = { selectNone = {} } keywords = {} play = { repeatForX = { effect = { randomAttack = { damage = 14 } } } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Prowess.cs; ColorlessCardPool.cs
+card Prowess {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = { type = power rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = Strength stacks = 1 target = context.owner } applyPower = { power = Dexterity stacks = 1 target = context.owner } } hooks = {} }
+    upgraded = { type = power rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = Strength stacks = 2 target = context.owner } applyPower = { power = Dexterity stacks = 2 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/EternalArmor.cs; ColorlessCardPool.cs
+card EternalArmor {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = { type = power rarity = rare cost = 3 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = PlatingPower stacks = 9 target = context.owner } } hooks = {} }
+    upgraded = { type = power rarity = rare cost = 3 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = PlatingPower stacks = 12 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/DramaticEntrance.cs
+card DramaticEntrance {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectAll = { from = context.opponents where = alive } }
+        keywords = { exhaust innate }
+        play = { attack = { damage = 11 target = allEnemies } }
+        hooks = {}
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectAll = { from = context.opponents where = alive } }
+        keywords = { exhaust innate }
+        play = { attack = { damage = 15 target = allEnemies } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/Finesse.cs
+card Finesse {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = { gainBlock = { amount = 4 target = context.owner } draw = { amount = 1 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = { gainBlock = { amount = 7 target = context.owner } draw = { amount = 1 } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/FlashOfSteel.cs
+card FlashOfSteel {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = { attack = { damage = 5 } draw = { amount = 1 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = attack
+        rarity = uncommon
+        cost = 0
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {  }
+        play = { attack = { damage = 8 } draw = { amount = 1 } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/MasterOfStrategy.cs
+card MasterOfStrategy {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = { draw = { amount = 3 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = rare
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = { draw = { amount = 4 } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/Production.cs
+card Production {
+    pools = { ColorlessCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = { modifyEnergy = { amount = 2 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = { modifyEnergy = { amount = 3 } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/Fuel.cs
+card Fuel {
+    pools = { TokenCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = token
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = { modifyEnergy = { amount = 1 } draw = { amount = 1 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = token
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust }
+        play = { modifyEnergy = { amount = 1 } draw = { amount = 2 } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/Luminesce.cs
+card Luminesce {
+    pools = { TokenCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = token
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust retain }
+        play = { modifyEnergy = { amount = 2 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = token
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { exhaust retain }
+        play = { modifyEnergy = { amount = 3 } }
+        hooks = {}
+    }
+}
+
+
+# Source: sts2/src/Core/Models/Cards/Shockwave.cs
+card Shockwave {
+ pools = { ColorlessCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 2 target = { selectAll = {} } keywords = { exhaust } play = { applyPower = { power = Weak stacks = 3 target = allEnemies } applyPower = { power = Vulnerable stacks = 3 target = allEnemies } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 2 target = { selectAll = {} } keywords = { exhaust } play = { applyPower = { power = Weak stacks = 5 target = allEnemies } applyPower = { power = Vulnerable stacks = 5 target = allEnemies } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/UltimateStrike.cs
+card UltimateStrike {
+ tags = { Strike }
+ pools = { ColorlessCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = uncommon cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {  } play = { attack = { damage = 14 } } hooks = {} }
+ upgraded = { type = attack rarity = uncommon cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {  } play = { attack = { damage = 20 } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/UltimateDefend.cs
+card UltimateDefend {
+ tags = { Defend }
+ pools = { ColorlessCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {  } play = { gainBlock = { amount = 11 target = context.owner } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {  } play = { gainBlock = { amount = 15 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Soul.cs
+card Soul {
+ pools = { TokenCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = token cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { draw = { amount = 2 } } hooks = {} }
+ upgraded = { type = skill rarity = token cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { draw = { amount = 3 } } hooks = {} }
+}

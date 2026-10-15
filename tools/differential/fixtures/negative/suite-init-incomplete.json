@@ -1,0 +1,136 @@
+{
+  "suite": "regression",
+  "fixtures_version": "env-t04-regression@1",
+  "note": "ENV-T04 严格 regression suite（`test --suite regression`）。三条硬约定：(1) expected_case_ids 是必测分母，缺 case/未注册 case/注册字段不合法都是 suite 定义错误；(2) 只有双侧 passed 或单侧 self_checked（仅 kind=wiring）可计入通过，unsupported_* / blocked_compare / 首差 / 异常 / 超时 / 缺维度 / 错误终点一律非零；(3) 五个 unsupported 原 ID（headbutt-mid-choice、enemy-death-aftermath、power-turn-end-decay、vulnerable-decay-via-bash、random-reshuffle-unsupported）保留原 ID、原语义与原比较范围，不删分母、不换弱 case；功能接通后原地升级而不是另加替代 case。受控状态只用于机制对拍，不当正常开局胜负证据；正常 Run 禁止运行中改字段/强制清场/补抽/换 seed。",
+  "target_scope": "base-spire-singleplayer-dev-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "reference/sts2-sim（独立检出，参考适配器只在工具层条件引用）",
+    "note": "受控机制 case 用受控切片包 + 与唯一工厂相同的公开随机/数值/Compute 配置资产（VanillaRandomLayout 算法/映射/Profile + SeedAllStreams + SourceWeightedPick 后端），Start 一次；formal-dev-factory case 用 BaseSpireRuntimeFactory + RunConfiguration.Ironclad(0, dev) → CreateSession(game_seed) → Start 一次。"
+  },
+  "expected_case_ids": [
+    "vulnerable-decay-via-bash"
+  ],
+  "cases": [
+    {
+      "id": "vulnerable-decay-via-bash",
+      "title": "Power 生命周期（真实施加路径）：Bash 施加的易伤在敌方回合末按原版规则结算",
+      "rng_profile": "controlled-state-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Powers/VulnerablePower.cs:59-65",
+        "note": "Bash 真实施加路径已独立双侧执行：共同边界易伤层数 0→2→1；但无脚本期新随机消费不足以证明可比，end_turn 后初始私有洗牌序列导致牌区构成首差。保持原比较范围与 unsupported_rng_profile，不排除事实。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:bash"
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3,
+        "initial_piles": {
+          "version": "ordered-starting-piles@1",
+          "source": "Ironclad.StartingDeck+controlled-slice@1",
+          "rng_derivation": "source-compat-sts2-frozen@1",
+          "hand": [
+            {
+              "slot": "start:09",
+              "card": "base-spire:bash",
+              "upgraded": false
+            }
+          ],
+          "draw": [
+            {
+              "slot": "start:00",
+              "card": "base-spire:strike-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:01",
+              "card": "base-spire:strike-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:02",
+              "card": "base-spire:strike-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:03",
+              "card": "base-spire:strike-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:04",
+              "card": "base-spire:strike-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:05",
+              "card": "base-spire:defend-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:06",
+              "card": "base-spire:defend-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:07",
+              "card": "base-spire:defend-ironclad",
+              "upgraded": false
+            },
+            {
+              "slot": "start:08",
+              "card": "base-spire:defend-ironclad",
+              "upgraded": false
+            }
+          ],
+          "discard": []
+        }
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:bash",
+          "target": "enemy:0"
+        },
+        {
+          "action": "end_turn"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-vulnerable-decay-via-bash",
+      "initialization": "受控切片包 + Bash 真实施加易伤 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:bash",
+        "base-spire:vulnerable"
+      ],
+      "variants": [
+        "applied-power"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "power"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:bash→enemy:0",
+        "end_turn"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 独立执行 Bash 与 end_turn；易伤层数一致，但 boundary[2].pile.draw.sorted 存在私有初始牌序引起的首差，原严格 case 不计通过。"
+    }
+  ]
+}

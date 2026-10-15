@@ -25,12 +25,12 @@ package base-spire {
     behavior = graph(start=spectralKnightHex, edges=[
       edge(spectralKnightHex, spectralKnightSoulSlash),
       edge(spectralKnightSoulSlash, chooseWithLimits(
-        candidate(spectralKnightSoulSlash, weight=2),
-        candidate(spectralKnightSoulFlame, cooldown=1)
+        candidate(spectralKnightSoulSlash, maxConsecutive=2),
+        candidate(spectralKnightSoulFlame, maxConsecutive=1)
       )),
       edge(spectralKnightSoulFlame, chooseWithLimits(
-        candidate(spectralKnightSoulSlash, weight=2),
-        candidate(spectralKnightSoulFlame, cooldown=1)
+        candidate(spectralKnightSoulSlash, maxConsecutive=2),
+        candidate(spectralKnightSoulFlame, maxConsecutive=1)
       ))
     ])
   }

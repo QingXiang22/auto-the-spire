@@ -1,0 +1,160 @@
+{
+  "_provenance": {
+    "期望来源": "手写读解 fixtures/scenario 的 wire 文档（当前观察），不调用被测实现生成",
+    "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
+    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+  },
+  "_notes": [
+    "场景样例：路线节点（已揭示 / 内容未知）、事件选项、药水槽（占用与空槽）与终止快照。",
+    "node-b 的 content_state=unknown 且省略 node_kind：省略只表示没有声明，不等于已知零或 unknown 字段。",
+    "slot-02 是空槽真实行：content_state=not_applicable、occupied known false（不是省略），不虚构药水内容。",
+    "fixture:route_path 保留公开真实顺序，不参与排序：元素顺序 node-c, node-a, node-b 非字典序。",
+    "终止快照：legal_actions 为空、terminal_result 使用目录声明的 fixture:victory 与 hp 事实；编码终止局面但不做 softmax。"
+  ],
+  "catalog": {
+    "protocol_version": "0.1",
+    "ruleset_id": "fixture:rules-v1",
+    "catalog_id": "fixture:scenario-catalog-v1",
+    "declaration_counts": {
+      "entity_kinds": 5,
+      "content_types": 1,
+      "fields": 11,
+      "relation_types": 2,
+      "pile_types": 0,
+      "sequence_types": 1,
+      "group_types": 1,
+      "action_types": 2,
+      "terminal_reasons": 2
+    },
+    "catalog_digest": "sha256:e7225af6b6186c6379c83e99d1c3a673e2da90e2e05c79280d295794767f8b36"
+  },
+  "snapshots": {
+    "snapshot": {
+      "session_id": "session-scenario-1",
+      "observation_id": 7,
+      "backend_profile_id": "fixture:sim-v1",
+      "status": "decision",
+      "is_terminal": false,
+      "entity_ids": [
+        "node-a",
+        "node-b",
+        "node-c",
+        "option-01",
+        "option-02",
+        "player-01",
+        "potion-01",
+        "slot-01",
+        "slot-02"
+      ],
+      "entity_kind_counts": {
+        "fixture:event_option": 2,
+        "fixture:map_node": 3,
+        "fixture:player": 1,
+        "fixture:potion": 1,
+        "fixture:potion_slot": 2
+      },
+      "content_state_counts": {
+        "known": 5,
+        "not_applicable": 3,
+        "unknown": 1
+      },
+      "field_state_counts": {
+        "known": 17
+      },
+      "known_zero_number_fields": [
+        ["node-a", "fixture:node_col"],
+        ["node-a", "fixture:node_row"],
+        ["node-c", "fixture:node_row"],
+        ["slot-01", "fixture:slot_index"]
+      ],
+      "known_false_boolean_fields": [
+        ["slot-02", "fixture:occupied"]
+      ],
+      "unknown_fields": [],
+      "unavailable_fields": [],
+      "absent_optional_fields": [
+        ["node-b", "fixture:node_kind"]
+      ],
+      "piles": {},
+      "relations": [
+        ["fixture:node_edge", "node-a", "node-b"],
+        ["fixture:node_edge", "node-c", "node-a"],
+        ["fixture:stored_in", "potion-01", "slot-01"]
+      ],
+      "relation_count": 3,
+      "sequences": {
+        "fixture:route_path@player-01": ["node-c", "node-a", "node-b"]
+      },
+      "group_members_sorted": {
+        "fixture:reward_options@player-01": ["option-01", "option-02"]
+      },
+      "candidate_ids": ["n-a", "n-b", "n-c", "o-1", "o-2"],
+      "candidates": [
+        {
+          "candidate_id": "n-a",
+          "action_type": "fixture:choose_node",
+          "known_fields": {"fixture:chosen_node_ref": "node-a"}
+        },
+        {
+          "candidate_id": "n-b",
+          "action_type": "fixture:choose_node",
+          "known_fields": {"fixture:chosen_node_ref": "node-b"}
+        },
+        {
+          "candidate_id": "n-c",
+          "action_type": "fixture:choose_node",
+          "known_fields": {"fixture:chosen_node_ref": "node-c"}
+        },
+        {
+          "candidate_id": "o-1",
+          "action_type": "fixture:choose_option",
+          "known_fields": {"fixture:chosen_option_ref": "option-01"}
+        },
+        {
+          "candidate_id": "o-2",
+          "action_type": "fixture:choose_option",
+          "known_fields": {"fixture:chosen_option_ref": "option-02"}
+        }
+      ],
+      "content_id_groups": {},
+      "terminal_facts": null,
+      "snapshot_digest": "sha256:0c58b2a1aa4284caebb8cd89f8e47d639d2c1d7082d69e53a8ada97c3dd36d04"
+    },
+    "snapshot-terminal": {
+      "session_id": "session-scenario-1",
+      "observation_id": 9,
+      "backend_profile_id": "fixture:sim-v1",
+      "status": "terminal",
+      "is_terminal": true,
+      "entity_ids": ["player-01"],
+      "entity_kind_counts": {
+        "fixture:player": 1
+      },
+      "content_state_counts": {
+        "not_applicable": 1
+      },
+      "field_state_counts": {
+        "known": 2
+      },
+      "known_zero_number_fields": [],
+      "known_false_boolean_fields": [],
+      "unknown_fields": [],
+      "unavailable_fields": [],
+      "absent_optional_fields": [],
+      "piles": {},
+      "relations": [],
+      "relation_count": 0,
+      "sequences": {},
+      "group_members_sorted": {},
+      "candidate_ids": [],
+      "candidates": [],
+      "content_id_groups": {},
+      "terminal_facts": {
+        "outcome": "win",
+        "reason_id": "fixture:victory",
+        "facts": {"fixture:hp": "31"}
+      },
+      "snapshot_digest": "sha256:5fe49b38b93505e071b8be4298cf1db57403411326d012bb12afdc97d1591942"
+    }
+  }
+}

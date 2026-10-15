@@ -1,0 +1,91 @@
+using namespace base-spire;
+
+# Source: sts2/src/Core/Models/Cards/Eradicate.cs:14-36
+card Eradicate {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = rare cost = X target = { selectOne = { from = context.opponents where = alive } } keywords = { retain } play = { repeatForX = { effect = { attack = { damage = 11 } } } } hooks = {} }
+ upgraded = { type = attack rarity = rare cost = X target = { selectOne = { from = context.opponents where = alive } } keywords = { retain } play = { repeatForX = { effect = { attack = { damage = 14 } } } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/Fear.cs:18-44
+card Fear {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { ethereal } play = { attack = { damage = 7 } applyPower = { power = Vulnerable stacks = 1 } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { ethereal } play = { attack = { damage = 8 } applyPower = { power = Vulnerable stacks = 2 } } hooks = {} }
+}
+
+card SharedFate {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = rare cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { applyPower = { power = Strength stacks = -2 target = context.owner } applyPower = { power = Strength stacks = -2 } } hooks = {} }
+ upgraded = { type = skill rarity = rare cost = 0 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { applyPower = { power = Strength stacks = -2 target = context.owner } applyPower = { power = Strength stacks = -3 } } hooks = {} }
+}
+
+# Frozen source: sts2/src/Core/Models/Cards/StrikeNecrobinder.cs
+card StrikeNecrobinder {
+ pools = { NecrobinderCardPool }
+ tags = { Strike }
+ upgradeable = true
+ normal = { type = attack rarity = basic cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 6 } } hooks = {} }
+ upgraded = { type = attack rarity = basic cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 9 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/DefendNecrobinder.cs
+card DefendNecrobinder {
+ pools = { NecrobinderCardPool }
+ tags = { Defend }
+ upgradeable = true
+ normal = { type = skill rarity = basic cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 5 target = context.owner } } hooks = {} }
+ upgraded = { type = skill rarity = basic cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 8 target = context.owner } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Sow.cs
+card Sow {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 1 target = { selectAll = {} } keywords = { retain } play = { attack = { damage = 8 target = allEnemies } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 1 target = { selectAll = {} } keywords = { retain } play = { attack = { damage = 11 target = allEnemies } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Parse.cs
+card Parse {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = { ethereal } play = { draw = { amount = 3 } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = { ethereal } play = { draw = { amount = 4 } } hooks = {} }
+}
+# Frozen source: sts2/src/Core/Models/Cards/Wisp.cs
+card Wisp {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = common cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { modifyEnergy = { amount = 1 } } hooks = {} }
+ upgraded = { type = skill rarity = common cost = 0 target = { selectSelf = {} } keywords = { exhaust retain } play = { modifyEnergy = { amount = 1 } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/Defy.cs
+card Defy {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { ethereal } play = { gainBlock = { amount = 6 target = context.owner } applyPower = { power = Weak stacks = 1 } } hooks = {} }
+ upgraded = { type = skill rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { ethereal } play = { gainBlock = { amount = 9 target = context.owner } applyPower = { power = Weak stacks = 1 } } hooks = {} }
+}
+# Source: sts2/src/Core/Models/Cards/Putrefy.cs
+card Putrefy {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { applyPower = { power = Weak stacks = 2 } applyPower = { power = Vulnerable stacks = 2 } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { exhaust } play = { applyPower = { power = Weak stacks = 3 } applyPower = { power = Vulnerable stacks = 3 } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Bury.cs
+card Bury {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = uncommon cost = 4 target = { selectOne = { from = context.opponents where = alive } } keywords = {  } play = { attack = { damage = 52 } } hooks = {} }
+ upgraded = { type = attack rarity = uncommon cost = 4 target = { selectOne = { from = context.opponents where = alive } } keywords = {  } play = { attack = { damage = 63 } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Defile.cs
+card Defile {
+ pools = { NecrobinderCardPool }
+ upgradeable = true
+ normal = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { ethereal } play = { attack = { damage = 13 } } hooks = {} }
+ upgraded = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = { ethereal } play = { attack = { damage = 17 } } hooks = {} }
+}

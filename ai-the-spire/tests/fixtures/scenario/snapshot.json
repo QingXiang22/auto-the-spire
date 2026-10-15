@@ -1,0 +1,153 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:scenario-catalog-v1",
+  "backend_profile_id": "fixture:sim-v1",
+  "session_id": "session-scenario-1",
+  "observation_id": 7,
+  "status": "decision",
+  "terminal_result": null,
+  "entities": [
+    {
+      "instance_id": "node-a",
+      "kind_id": "fixture:map_node",
+      "content_state": "known",
+      "content_id": "fixture:enemy_node",
+      "fields": [
+        {"field_id": "fixture:node_col", "state": "known", "value": "0"},
+        {"field_id": "fixture:node_kind", "state": "known", "value": "fixture:enemy"},
+        {"field_id": "fixture:node_row", "state": "known", "value": "0"}
+      ]
+    },
+    {
+      "instance_id": "node-b",
+      "kind_id": "fixture:map_node",
+      "content_state": "unknown",
+      "fields": [
+        {"field_id": "fixture:node_col", "state": "known", "value": "1"},
+        {"field_id": "fixture:node_row", "state": "known", "value": "1"}
+      ]
+    },
+    {
+      "instance_id": "node-c",
+      "kind_id": "fixture:map_node",
+      "content_state": "known",
+      "content_id": "fixture:rest_node",
+      "fields": [
+        {"field_id": "fixture:node_col", "state": "known", "value": "2"},
+        {"field_id": "fixture:node_kind", "state": "known", "value": "fixture:rest"},
+        {"field_id": "fixture:node_row", "state": "known", "value": "0"}
+      ]
+    },
+    {
+      "instance_id": "option-01",
+      "kind_id": "fixture:event_option",
+      "content_state": "known",
+      "content_id": "fixture:take_gold",
+      "fields": [
+        {"field_id": "fixture:option_kind", "state": "known", "value": "fixture:accept"}
+      ]
+    },
+    {
+      "instance_id": "option-02",
+      "kind_id": "fixture:event_option",
+      "content_state": "known",
+      "content_id": "fixture:leave",
+      "fields": [
+        {"field_id": "fixture:option_kind", "state": "known", "value": "fixture:decline"}
+      ]
+    },
+    {
+      "instance_id": "player-01",
+      "kind_id": "fixture:player",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:hp", "state": "known", "value": "52"},
+        {"field_id": "fixture:max_hp", "state": "known", "value": "80"}
+      ]
+    },
+    {
+      "instance_id": "potion-01",
+      "kind_id": "fixture:potion",
+      "content_state": "known",
+      "content_id": "fixture:fire_potion",
+      "fields": [
+        {"field_id": "fixture:potion_kind", "state": "known", "value": "fixture:fire_potion"}
+      ]
+    },
+    {
+      "instance_id": "slot-01",
+      "kind_id": "fixture:potion_slot",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:occupied", "state": "known", "value": true},
+        {"field_id": "fixture:slot_index", "state": "known", "value": "0"}
+      ]
+    },
+    {
+      "instance_id": "slot-02",
+      "kind_id": "fixture:potion_slot",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:occupied", "state": "known", "value": false},
+        {"field_id": "fixture:slot_index", "state": "known", "value": "1"}
+      ]
+    }
+  ],
+  "relations": [
+    {"type_id": "fixture:node_edge", "source_ref": "node-a", "target_ref": "node-b"},
+    {"type_id": "fixture:node_edge", "source_ref": "node-c", "target_ref": "node-a"},
+    {"type_id": "fixture:stored_in", "source_ref": "potion-01", "target_ref": "slot-01"}
+  ],
+  "piles": [],
+  "sequences": [
+    {"type_id": "fixture:route_path", "owner_ref": "player-01", "elements": ["node-c", "node-a", "node-b"]}
+  ],
+  "groups": [
+    {
+      "type_id": "fixture:reward_options",
+      "owner_ref": "player-01",
+      "members": [
+        {"entity_ref": "option-01", "multiplicity": 1},
+        {"entity_ref": "option-02", "multiplicity": 1}
+      ]
+    }
+  ],
+  "legal_actions": [
+    {
+      "candidate_id": "n-a",
+      "action_type": "fixture:choose_node",
+      "fields": [
+        {"field_id": "fixture:chosen_node_ref", "state": "known", "value": "node-a"}
+      ]
+    },
+    {
+      "candidate_id": "n-b",
+      "action_type": "fixture:choose_node",
+      "fields": [
+        {"field_id": "fixture:chosen_node_ref", "state": "known", "value": "node-b"}
+      ]
+    },
+    {
+      "candidate_id": "n-c",
+      "action_type": "fixture:choose_node",
+      "fields": [
+        {"field_id": "fixture:chosen_node_ref", "state": "known", "value": "node-c"}
+      ]
+    },
+    {
+      "candidate_id": "o-1",
+      "action_type": "fixture:choose_option",
+      "fields": [
+        {"field_id": "fixture:chosen_option_ref", "state": "known", "value": "option-01"}
+      ]
+    },
+    {
+      "candidate_id": "o-2",
+      "action_type": "fixture:choose_option",
+      "fields": [
+        {"field_id": "fixture:chosen_option_ref", "state": "known", "value": "option-02"}
+      ]
+    }
+  ]
+}

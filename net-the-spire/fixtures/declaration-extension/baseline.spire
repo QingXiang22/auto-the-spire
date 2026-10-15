@@ -1,0 +1,73 @@
+# 规则声明扩展例 · baseline（core/0.2）
+#
+# 用途：与扩展例 extended.spire 配对，验证 net 生产源码不需要为新增的公开字段或
+# 合法 Action 增加任何逐项注册行。两个规则包由同一个通用规则提供方加载
+# （core 的 EngineDslCompiler.LoadFiles），共享同一份 public-metadata.json，
+# 因此两者之间的差别只有本文件里的规则声明。
+#
+# 本文件所含声明：scope Board / entity Marker / collection Slots /
+# procedure Setup / terminal ReachedLimit / action Add / projection PlayerView。
+#
+# extended.spire 相对本文件的 delta（仅声明与行为）：
+#   * entity Marker 新增公开字段 Bump
+#   * entity Marker 新增隐藏字段 Secret（visibility = Hidden）
+#   * 新增内部 procedure Retally（有修改状态的 body，但不是公开 Action）
+#   * 新增合法 action Mark（带参数 amount 与显式 choices）
+#
+# 本规则包不声明任何随机绘制：建局与执行都不消耗随机数。
+using namespace declaration;
+dsl_version = "core/0.2";
+version = "1.0.0";
+# 开局入口：本局的初始状态由 Setup 建立（scope 与 Marker 实例都在这里创建）。
+# 没有 start 就没有实例，任何取 first(type(Marker)) 的动作都会被引擎拒绝。
+start = [Setup];
+
+scope Board { }
+
+entity Marker {
+    fields = {
+        Value = { type = Int(min = 0, max = 1000000) default = 0 }
+    }
+}
+
+collection Slots {
+    element = Marker
+    capacity = 4
+}
+
+procedure Setup {
+    locals = { board = Binding marker = Binding }
+    body = {
+        createScope = { type = Board into = board }
+        create = { type = Marker scope = board into = marker }
+    }
+}
+
+terminal ReachedLimit { fields = { Value = Int } }
+
+action Add {
+    role = player
+    parameters = { delta = Int(min = 1, max = 100) }
+    choices = { delta = [1, 2] }
+    body = {
+        set = {
+            target = first(type(Marker))
+            field = Marker.Value
+            value = add(field(first(type(Marker)), Marker.Value), delta)
+        }
+        if = {
+            condition = greaterOrEqual(field(first(type(Marker)), Marker.Value), 1000000)
+            then = {
+                terminal = {
+                    result = ReachedLimit
+                    fields = { Value = field(first(type(Marker)), Marker.Value) }
+                }
+            }
+        }
+    }
+}
+
+projection PlayerView {
+    role = player
+    types = { Marker = {} }
+}

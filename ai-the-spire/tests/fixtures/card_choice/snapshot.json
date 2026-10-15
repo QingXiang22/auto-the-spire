@@ -1,0 +1,197 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:choice-catalog-v1",
+  "backend_profile_id": "fixture:sim-v1",
+  "session_id": "session-choice-1",
+  "observation_id": 4,
+  "status": "decision",
+  "terminal_result": null,
+  "entities": [
+    {
+      "instance_id": "discard-01",
+      "kind_id": "fixture:discard_pile",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:pile_scope", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "enemy-01",
+      "kind_id": "fixture:enemy",
+      "content_state": "known",
+      "content_id": "fixture:jaw_worm",
+      "fields": [
+        {"field_id": "fixture:hp", "state": "known", "value": "30"}
+      ]
+    },
+    {
+      "instance_id": "hand-01",
+      "kind_id": "fixture:hand_pile",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:pile_scope", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "player-01",
+      "kind_id": "fixture:player",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:energy", "state": "known", "value": "2"},
+        {"field_id": "fixture:hp", "state": "known", "value": "38"}
+      ]
+    },
+    {
+      "instance_id": "sel-01",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "sel-02",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "sel-03",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "sel-04",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "0"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"},
+        {"field_id": "fixture:upgraded", "state": "known", "value": true}
+      ]
+    },
+    {
+      "instance_id": "sel-05",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:defend",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:defend"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "sel-06",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:bash",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:bash"},
+        {"field_id": "fixture:cost", "state": "known", "value": "2"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "sel-07",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:defend",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:defend"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    }
+  ],
+  "relations": [],
+  "piles": [
+    {
+      "pile_ref": "discard-01",
+      "total_count": 5,
+      "visible_members": ["sel-01", "sel-02", "sel-03", "sel-04", "sel-05"],
+      "members_complete": true,
+      "known_positions": []
+    },
+    {
+      "pile_ref": "hand-01",
+      "total_count": 2,
+      "visible_members": ["sel-06", "sel-07"],
+      "members_complete": true,
+      "known_positions": []
+    }
+  ],
+  "sequences": [],
+  "groups": [
+    {
+      "type_id": "fixture:choice_display",
+      "owner_ref": "player-01",
+      "members": [
+        {"entity_ref": "sel-01", "multiplicity": 1},
+        {"entity_ref": "sel-02", "multiplicity": 1},
+        {"entity_ref": "sel-03", "multiplicity": 1},
+        {"entity_ref": "sel-04", "multiplicity": 1},
+        {"entity_ref": "sel-05", "multiplicity": 1}
+      ]
+    }
+  ],
+  "legal_actions": [
+    {
+      "candidate_id": "c-01",
+      "action_type": "fixture:choose_card",
+      "fields": [
+        {"field_id": "fixture:choice_source_ref", "state": "known", "value": "discard-01"},
+        {"field_id": "fixture:chosen_card_ref", "state": "known", "value": "sel-01"}
+      ]
+    },
+    {
+      "candidate_id": "c-02",
+      "action_type": "fixture:choose_card",
+      "fields": [
+        {"field_id": "fixture:choice_source_ref", "state": "known", "value": "discard-01"},
+        {"field_id": "fixture:chosen_card_ref", "state": "known", "value": "sel-02"}
+      ]
+    },
+    {
+      "candidate_id": "c-03",
+      "action_type": "fixture:choose_card",
+      "fields": [
+        {"field_id": "fixture:choice_source_ref", "state": "known", "value": "discard-01"},
+        {"field_id": "fixture:chosen_card_ref", "state": "known", "value": "sel-03"}
+      ]
+    },
+    {
+      "candidate_id": "c-04",
+      "action_type": "fixture:choose_card",
+      "fields": [
+        {"field_id": "fixture:choice_source_ref", "state": "known", "value": "discard-01"},
+        {"field_id": "fixture:chosen_card_ref", "state": "known", "value": "sel-04"}
+      ]
+    },
+    {
+      "candidate_id": "c-05",
+      "action_type": "fixture:choose_card",
+      "fields": [
+        {"field_id": "fixture:choice_source_ref", "state": "known", "value": "discard-01"},
+        {"field_id": "fixture:chosen_card_ref", "state": "known", "value": "sel-05"}
+      ]
+    }
+  ]
+}

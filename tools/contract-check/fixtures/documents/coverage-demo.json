@@ -1,0 +1,32 @@
+{
+  "protocol_version": "0.1",
+  "coverage_id": "demo:coverage-v1",
+  "mechanisms": [
+    {
+      "mechanism_id": "demo:check_hp_visible",
+      "source_version": "1",
+      "source_locator": "demo:source#hp-visibility",
+      "public_fact": "demo:hp 是否公开",
+      "declaration_ids": ["demo:hp", "demo:secret"],
+      "update_and_invalidation": "回合开始与受伤时更新",
+      "verification_ids": ["demo:verify-hp-1"],
+      "evidence_ref": "demo:evidence/hp-visibility",
+      "status": "verified",
+      "unsupported_constraint": null,
+      "decision_counterexample": null
+    },
+    {
+      "mechanism_id": "demo:check_pile_scope",
+      "source_version": "1",
+      "source_locator": "demo:source#pile-scope",
+      "public_fact": "牌堆作用域",
+      "declaration_ids": ["demo:pile_scope"],
+      "update_and_invalidation": "战斗开始时确定",
+      "verification_ids": [],
+      "evidence_ref": null,
+      "status": "proposed",
+      "unsupported_constraint": "尚未提供运行证据",
+      "decision_counterexample": null
+    }
+  ]
+}

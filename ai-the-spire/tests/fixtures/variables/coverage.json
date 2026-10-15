@@ -1,0 +1,19 @@
+{
+  "protocol_version": "0.1",
+  "coverage_id": "fixture:variables-coverage-v1",
+  "mechanisms": [
+    {
+      "mechanism_id": "fixture:check-charge-visible",
+      "source_version": "fixture-source-1",
+      "source_locator": "fixture://variables#conditional-charge",
+      "public_fact": "充能状态被揭示后写入已知值；未揭示时字段为 unknown",
+      "declaration_ids": ["modD:secret_charge"],
+      "update_and_invalidation": "揭示后写 known；离开战斗或移除 Power 后不再适用",
+      "verification_ids": [],
+      "evidence_ref": null,
+      "status": "proposed",
+      "unsupported_constraint": null,
+      "decision_counterexample": null
+    }
+  ]
+}

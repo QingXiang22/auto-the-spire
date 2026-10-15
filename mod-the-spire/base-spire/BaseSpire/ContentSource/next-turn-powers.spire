@@ -1,0 +1,10 @@
+package base-spire {
+  # sts2/src/Core/Models/Powers/EnergyNextTurnPower.cs: AfterEnergyReset gains then removes.
+  power EnergyNextTurnPower {
+    rules = { afterEnergyReset = GrantDeferredEnergy(owner=context.owner, power=context.power, amount=context.power.stacks) }
+  }
+  # DrawCardsNextTurnPower.cs: ModifyHandDraw gates on AmountOnTurnStart; AfterSideTurnStart removes.
+  power DrawCardsNextTurnPower {
+    rules = { handDrawNextTurnOnce = true }
+  }
+}

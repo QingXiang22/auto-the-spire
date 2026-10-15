@@ -1,5 +1,15 @@
 # core-the-spire 引擎开发者指南
 
+本文面向 Host 开发者及内核维护者，供你按主题查询构建器、扩展和内核细节。
+
+根据接入任务选择入口：
+
+- 第一次写宿主：先做[宿主教程](first-host.md)。
+- 提交带参数的动作：查[参数提交操作指南](how-to-submit-parameters.md)。
+- 查询交互字段与约束：查[API参考](session-api-reference.md)。
+- 理解各部分的关系：读[规则与宿主](rules-and-host.md)。
+- 第一次编写规则：从[第一次写规则](../../dsl/core/first-rule.md)开始。
+
 更新：2026-10-04。本文说明活动 `Core.TheSpire/Engine/` 的实际接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.1` 基础文本编译与 `core/0.2` DSL 规则库配置层已交付。本文 C# 片段说明宿主与底层接口，不是规则作者必须采用的形式。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
 
 ## 0. 规则作者写文件，宿主调用 SDK
@@ -63,7 +73,9 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 实际是 Score=0 → 2 → 3、Running → Running → Terminal。+1/+2 是 Add 动作的两个有限参数绑定，默认下标 1,0，无需额外动作内决策。仅修改参数即可改变合法操作、合法性条件和终局；作者不必操作低层 IR。规则库本身仍是 DSL，其中 procedure 复用运行时函数，template 复用编译时声明。
 
-`LoadFiles` 递归处理相对 imports 并去重；`Compile` 不读取文件，只接受显式包依赖。需要注册游戏自定义声明扩展时宿主使用 Compile 的 extensions 参数再统一链接；当前 LoadFiles 没有扩展注册参数。模板展开后的参数错误定位配置源，规则绑定错误定位库源并附 use 位置，限制见 [规则库指南](../../dsl/core/0.2/authoring-guide.md)。
+`LoadFiles` 递归处理相对 imports 并去重。`Compile` 不读取文件，只接受显式包依赖。
+
+需要注册游戏自定义声明扩展时，宿主使用 Compile 的 extensions 参数，再统一链接；当前 LoadFiles 没有扩展注册参数。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体限制见 [规则库指南](../../dsl/core/0.2/authoring-guide.md)。
 
 ### 2.2 进阶例子：动作内选择、暂停及事件
 
@@ -204,7 +216,7 @@ var session = new Session(rules, 42, ["player"]);
 
 链接阶段解析名称、分配 ID、检查字段形状和程序约束，并计算 `RuleSet.Identity`。`Session.Identity` 还结合种子指纹、随机算法/profile 和角色配置。保存回放/对拍证据时应同时记录这些配置及动作序列；身份字符串不替代输入记录。
 
-`EnginePackageBuilder.Build()` 只能调用一次。**当前并未保证全部作者 Symbol/IR 在 Build 后深度不可变。** 完成组包后不要继续改动之前保留的作者对象，否则身份与执行内容可能不一致。规则产物冻结的目标不限制 SessionState 在游戏中的正常变化。
+`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[冻结基线](../../contracts/core-engine-baseline.md)只读发布。规则产物冻结不限制 SessionState 在游戏中的正常变化。
 
 ## 4. Host 怎样驱动 Session
 

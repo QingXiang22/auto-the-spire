@@ -1,0 +1,36 @@
+# 教程：从零写一个计分小游戏。每次加一，达到三分结束。
+using namespace tutorial;
+dsl_version = "core/0.1"
+version = "1.0.0"
+start = [Setup]
+
+# 类型声明不会创建实例。初始实例由 Setup 创建。
+entity Counter {
+    fields = { Score = { type = Int(min = 0, max = 100) default = 0 } }
+}
+
+procedure Setup {
+    locals = { counter = Binding }
+    body = { create = { type = Counter scope = frameScope() into = counter } }
+}
+
+terminal ReachedTarget { fields = { Score = Int } }
+
+action AddOne {
+    role = player
+    locals = { counter = Binding }
+    requires = less(field(first(type(Counter)), Counter.Score), 3)
+    body = {
+        let = { into = counter value = first(type(Counter)) }
+        set = { target = counter field = Counter.Score value = add(field(counter, Counter.Score), 1) }
+        if = {
+            condition = greaterOrEqual(field(counter, Counter.Score), 3)
+            then = { terminal = { result = ReachedTarget fields = { Score = field(counter, Counter.Score) } } }
+        }
+    }
+}
+
+projection PlayerView {
+    role = player
+    types = { Counter = {} }
+}

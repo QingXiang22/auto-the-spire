@@ -1,0 +1,103 @@
+// STS2 规则配置入口草案，2026-10-07。
+// 用来审语法与职责；当前编译器不支持本文件，不是可运行的原版规则包。
+// 可暂把它看作 mod 包根目录 main.spire 的候选内容；入口文件名尚待确认。
+// 包 ID、版本和 DSL 版本在 package 级声明，此处不重复。
+
+namespace sts2;
+
+// 以下 content / fields 是本次提出的拼写候选。
+// content 同时约定一种内容声明的形状，以及去哪里加载该种声明。
+// 字段是否必填、默认值，以及目录扫描细则仍待下一轮审阅。
+// 目录相对声明它的原始 mod 包解析；由启动器合并时仍保留包与文件来源。
+// 这里选择的目录只是 STS2 规则配置，core 不内置 cards、potions 等目录。
+// 实体只持有属性。内容定义不声明 play、use 等成员方法或内嵌行为体。
+// 行为在独立文件中定义为具名代码块，由执行规则用 call 指定块与上下文。
+
+content cards {
+    declaration = card
+    directory = "content/cards"
+
+    // 字段属于内容定义，不是运行时卡牌实例的全部状态。
+    // Enum(...) 在本草案中表示允许的枚举值，具体类型语法待审。
+    fields = {
+        type = Enum(attack, skill, power)
+        rarity = Enum(basic, common, uncommon, rare, special)
+
+        // CardCost / TargetRule 是待定义的 STS2 规则类型占位名。
+        // CardCost 需要涵盖整数和 X；这里不提前决定费用表达式的写法。
+        // TargetRule 描述目标选择规则；它和执行时取得的 target 对象分开。
+        cost = CardCost
+        target = TargetRule
+    }
+
+}
+
+content potions {
+    declaration = potion
+    directory = "content/potions"
+
+    fields = {
+        rarity = Enum(common, uncommon, rare)
+        usage = Enum(combatOnly, anyTime)
+        target = TargetRule
+    }
+
+}
+
+content creatures {
+    declaration = creature
+    directory = "content/creatures"
+
+    // creature 是 STS2 的领域声明；不是给 core 的通用 entity 改名。
+    // 示例只列一个基础字段；出生、敌人行动等规则随后单独展开。
+    fields = {
+        maxHp = Int(min = 1)
+    }
+
+}
+
+content resources {
+    declaration = resource
+    directory = "content/resources"
+
+    // 这里加载“资源种类”的定义，例如 Energy、Stars。
+    // initial 是定义中的初值；每个玩家实际持有多少资源属于运行时状态。
+    fields = {
+        initial = Int(min = 0)
+    }
+
+}
+
+// 新内容种类使用同样的 content 声明方式扩展。
+// fields 是结构约定；其背后的类型定义、状态映射与调用规则仍须提供。
+// 增加目录映射本身不会自动实现一种新玩法。
+// 遗物、Power、遭遇等也由规则配置声明；本文件先展开上述四种代表。
+// 出牌、药水使用、出生和资源重置都由外部规则块执行。
+// 执行入口提供具名对象；块像 event 一样声明所需 payload，call 按名字传入。
+// scope 可继承或显式选择 this；切换 this 不改变载荷中出牌者、卡牌、目标的含义。
+// 输入声明/调用示意见架构决定第 14 节；块内访问、载荷省略/转发拼写仍待定。
+// 具体内容与效果块怎样关联、执行入口怎样提供对象，留待下一层审阅。
+
+// 初始化：完成内容加载与引用绑定之后，在新会话启动时按顺序执行。
+// 下列块分别在独立 .spire 文件中定义，静态绑定，均无返回值。
+// 本草案只展示引用，尚未提供这些块的实现。
+// 本例 start 的 this 为会话上下文；启动器提供本次开局输入。
+// InitializeRun 建立 STS2 的局状态；不通过返回值传出对象。
+start {
+    call = {
+        block = sts2.setup:InitializeRun
+    }
+
+    // 本例是单人开局；player 由 STS2 从已建立的局状态取得。
+    call = {
+        scope = player
+        block = sts2.setup:InitializePlayer
+    }
+
+    call = {
+        block = sts2.setup:EnterFirstRoom
+    }
+}
+
+// start 没有使用 scope = { ... }：该保留写法暂时忽略内部内容、使用当前 this，
+// 编译 warning 的实现排在 P2，具体行为见架构决定第 12 节。

@@ -1,0 +1,20 @@
+{
+  "fixture_format": "net-the-spire/declaration-extension-metadata/1",
+  "static_build_id": "net-text-rules-declaration-extension-v1",
+  "scenario_profile": "net-text-rules-declaration-extension-v1",
+  "projection_id": "declaration:PlayerView",
+  "participant_role": "player",
+  "default_game_seed": "DECL-EXT-00",
+  "content": {},
+  "collections": {
+    "declaration:Slots": {
+      "use": "not_published",
+      "rule_id": "N-02-EXTENSION-FIXTURE-COLLECTION",
+      "reason": "扩展例只把 Slots 用作引擎侧集合，没有公开用途声明：公开协议不表达它的成员与多重性语义，按具名不发布处理，不静默丢弃公开事实"
+    }
+  },
+  "terminal_outcomes": {
+    "declaration:ReachedLimit": "win"
+  },
+  "known_positions": {}
+}

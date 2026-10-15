@@ -46,7 +46,7 @@ public sealed record AnchorResolution(string Name) : Resolution;
 /// </summary>
 public sealed class RuleSetBuilder
 {
-    public const string EngineVersion = "engine/ir@0.3";
+    public const string EngineVersion = "engine/ir@0.4";
 
     private readonly List<EnginePackage> _packages = [];
     private readonly Dictionary<int, string> _backendDescriptors = [];

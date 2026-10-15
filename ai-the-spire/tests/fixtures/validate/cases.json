@@ -1,0 +1,964 @@
+{
+  "_notes": [
+    "A-03 校验层正反例夹具（手写）。输入是既有手写夹具（combat / scenario）的声明式叠加；",
+    "expected 是本文件手写的 (错误码, 路径) 集合，不由 validate.py 产出。",
+    "errors 采用**集合等值**：实际收集到的 (code, path) 去重集合必须与 errors 完全一致——",
+    "既不允许少（漏报），也不允许多（虚报）。checked_contains / skipped_contains 断言本层",
+    "实际执行与明确跳过的检查名；checked_exact / skipped_exact 要求集合完全相等。",
+    "路径约定与共享 L3 一致：snapshot.entities[<instance_id>].fields[<field_id>].value、",
+    "snapshot.piles[<pile_ref>].known_positions[<card_ref>].position、snapshot.legal_actions[<candidate_id>] 等；",
+    "共享 L1（jsonschema_min）的路径按 JSON 路径下标给出（snapshot.entities[0].fields[1]）。",
+    "SNAPSHOT/TERMINAL：combat.* 与 scenario.* 见 tests/fixtures/ 下的同名手写文件。",
+    "capacity_overrides 是输入（在 CAPACITIES 默认值上叠加），不是期望。"
+  ],
+  "cases": [
+    {
+      "case_id": "structure/base-combat-valid",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "errors": [],
+      "checked_exact": [
+        "encoding/manifest-layout",
+        "encoding/catalog-binding",
+        "encoding/exact-identity",
+        "structure/top-level+status-pairing",
+        "content/content-state",
+        "fields/dictionary+applicability+required+value",
+        "references/entity-closure",
+        "candidates/handles+semantics+fields",
+        "piles/v06-1-position-bounds",
+        "piles/v06-2-member-closure+count",
+        "piles/v06-3-position-member-consistency",
+        "piles/v06-4-no-fabricated-cards",
+        "capacity/limits",
+        "shared/L1-structure",
+        "shared/L3-snapshot-vs-catalog"
+      ],
+      "skipped_exact": []
+    },
+    {
+      "case_id": "structure/missing-required-key",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$del": ["legal_actions"]},
+      "errors": [
+        ["unsupported_structure", "snapshot.legal_actions"],
+        ["unsupported_structure", "snapshot"]
+      ]
+    },
+    {
+      "case_id": "structure/unknown-top-level-key",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"surprise": 1}},
+      "errors": [
+        ["unsupported_structure", "snapshot.surprise"],
+        ["unsupported_structure", "snapshot"]
+      ]
+    },
+    {
+      "case_id": "structure/invalid-status",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"status": "paused"}},
+      "errors": [["unsupported_structure", "snapshot.status"]]
+    },
+    {
+      "case_id": "structure/decision-with-terminal-result",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {"terminal_result": {"outcome": "win", "reason_id": "fixture:victory", "facts": []}}
+      },
+      "errors": [["unsupported_structure", "snapshot.terminal_result"]]
+    },
+    {
+      "case_id": "structure/decision-with-empty-candidates",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions": []}},
+      "errors": [
+        ["empty_candidates_non_terminal", "snapshot.legal_actions"],
+        ["unsupported_structure", "snapshot.legal_actions"]
+      ]
+    },
+    {
+      "case_id": "structure/terminal-with-candidates",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "status": "terminal",
+          "terminal_result": {
+            "outcome": "win",
+            "reason_id": "fixture:victory",
+            "facts": [{"field_id": "fixture:hp", "state": "known", "value": "31"}]
+          }
+        }
+      },
+      "errors": [["unsupported_structure", "snapshot.legal_actions"]]
+    },
+    {
+      "case_id": "structure/terminal-without-result",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"status": "terminal", "legal_actions": []}},
+      "errors": [["unsupported_structure", "snapshot.terminal_result"]]
+    },
+
+    {
+      "case_id": "identity/snapshot-catalog-id-mismatch",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"catalog_id": "fixture:other-catalog"}},
+      "errors": [["version_mismatch", "snapshot.catalog_id"]]
+    },
+    {
+      "case_id": "identity/missing-identity-key-skips-check",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$del": ["catalog_id"]},
+      "errors": [
+        ["unsupported_structure", "snapshot.catalog_id"],
+        ["unsupported_structure", "snapshot"],
+        ["version_mismatch", "snapshot.catalog_id"]
+      ],
+      "skipped_contains": ["encoding/exact-identity(快照身份键缺失或非字符串)"]
+    },
+    {
+      "case_id": "identity/catalog-binding-mismatch",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "passed_catalog": {
+        "$base": "combat.catalog",
+        "$append": {
+          "declarations.entity_kinds": {
+            "id": "fixture:relic",
+            "semantic_version": "1",
+            "description": "新增实体种类（内容身份已变，配旧字典必须拒绝）"
+          }
+        }
+      },
+      "errors": [["version_mismatch", "catalog"]]
+    },
+    {
+      "case_id": "identity/no-catalog-skips-declaration-domain",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "pass_catalog": false,
+      "errors": [],
+      "skipped_exact": [
+        "encoding/catalog-binding",
+        "shared/L3-declaration-domain(成员kind·pile_type·关系种类与位置·序列组基数·终局facts·保留声明)"
+      ]
+    },
+    {
+      "case_id": "identity/no-catalog-terminal-skips-reason-domain",
+      "bundle": "scenario",
+      "snapshot": {"$base": "scenario.snapshot-terminal"},
+      "pass_catalog": false,
+      "errors": [],
+      "skipped_exact": [
+        "encoding/catalog-binding",
+        "terminal/reason-declaration(reason_id 注册与 outcome 需目录)",
+        "shared/L3-declaration-domain(成员kind·pile_type·关系种类与位置·序列组基数·终局facts·保留声明)"
+      ]
+    },
+
+    {
+      "case_id": "content/invalid-content-state",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.content_state": "maybe"}},
+      "errors": [
+        ["invalid_content_state", "snapshot.entities[card-01].content_state"],
+        ["invalid_content_state", "snapshot.entities[card-01].content_id"],
+        ["unsupported_structure", "snapshot.entities[0]"],
+        ["unsupported_structure", "snapshot.entities[0].content_state"]
+      ]
+    },
+    {
+      "case_id": "content/known-without-content-id",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$del": ["entities.0.content_id"]},
+      "errors": [
+        ["invalid_content_state", "snapshot.entities[card-01].content_id"],
+        ["unsupported_structure", "snapshot.entities[0]"]
+      ]
+    },
+    {
+      "case_id": "content/not-applicable-with-content-id",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.10.content_id": "fixture:ghost"}},
+      "errors": [
+        ["invalid_content_state", "snapshot.entities[pile-discard].content_id"],
+        ["unsupported_structure", "snapshot.entities[10]"]
+      ]
+    },
+    {
+      "case_id": "content/known-with-empty-content-id",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.content_id": ""}},
+      "errors": [
+        ["invalid_content_state", "snapshot.entities[card-01].content_id"],
+        ["unsupported_structure", "snapshot.entities[0].content_id"]
+      ]
+    },
+
+    {
+      "case_id": "fields/unregistered-field-id",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$insert": {"entities.0.fields": [2, {"field_id": "fixture:ghost", "state": "known", "value": "1"}]}
+      },
+      "errors": [["unregistered_field", "snapshot.entities[card-01].fields[fixture:ghost]"]]
+    },
+    {
+      "case_id": "fields/required-field-omitted",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$del": ["entities.0.fields.0"]},
+      "errors": [
+        ["missing_required_field", "snapshot.entities[card-01].fields[fixture:card_face]"],
+        ["missing_required_field", "snapshot.entities[card-01].fields"]
+      ]
+    },
+    {
+      "case_id": "fields/required-follows-catalog-declaration",
+      "bundle": "combat",
+      "catalog": {"$base": "combat.catalog", "$set": {"declarations.fields.2.required": false}},
+      "snapshot": {"$base": "combat.snapshot", "$del": ["entities.0.fields.0"]},
+      "errors": []
+    },
+    {
+      "case_id": "fields/duplicate-field-id",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$append": {"entities.0.fields": {"field_id": "fixture:cost", "state": "known", "value": "1"}}
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.entities[card-01].fields"],
+        ["unsupported_structure", "snapshot.entities[card-01].fields"]
+      ]
+    },
+    {
+      "case_id": "fields/invalid-state-enum",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.1.state": "maybe"}},
+      "errors": [
+        ["unsupported_structure", "snapshot.entities[card-01].fields[fixture:cost].state"],
+        ["unsupported_structure", "snapshot.entities[0].fields[1]"],
+        ["unsupported_structure", "snapshot.entities[0].fields[1].state"]
+      ]
+    },
+    {
+      "case_id": "fields/known-without-value",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$del": ["entities.0.fields.1.value"]},
+      "errors": [
+        ["state_value_mismatch", "snapshot.entities[card-01].fields[fixture:cost].value"],
+        ["unsupported_structure", "snapshot.entities[0].fields[1]"],
+        ["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:cost].value"]
+      ]
+    },
+    {
+      "case_id": "fields/unknown-with-value",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.8.fields.2.state": "unknown"}},
+      "errors": [
+        ["state_value_mismatch", "snapshot.entities[enemy-01].fields[fixture:hp].value"],
+        ["unsupported_structure", "snapshot.entities[8].fields[2]"]
+      ]
+    },
+    {
+      "case_id": "fields/number-given-as-boolean",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.1.value": true}},
+      "errors": [["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:cost].value"]]
+    },
+    {
+      "case_id": "fields/number-non-canonical-decimal",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.1.value": "01"}},
+      "errors": [["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:cost].value"]]
+    },
+    {
+      "case_id": "fields/number-integer-format-with-fraction",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.1.value": "1.5"}},
+      "errors": [["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:cost].value"]]
+    },
+    {
+      "case_id": "fields/boolean-given-as-string",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.3.value": "true"}},
+      "errors": [["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:upgraded].value"]]
+    },
+    {
+      "case_id": "fields/category-value-not-declared",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.0.value": "fixture:ghost_card"}},
+      "errors": [
+        ["unknown_type", "snapshot.entities[card-01].fields[fixture:card_face].value"],
+        ["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:card_face].value"]
+      ]
+    },
+    {
+      "case_id": "fields/category-given-as-number",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.0.value": 3}},
+      "errors": [
+        ["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:card_face].value"],
+        ["unsupported_structure", "snapshot.entities[0].fields[0].value"]
+      ]
+    },
+    {
+      "case_id": "fields/entity-ref-dangling",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.2.value": "player-99"}},
+      "errors": [["dangling_reference", "snapshot.entities[card-01].fields[fixture:owner].value"]]
+    },
+    {
+      "case_id": "fields/entity-ref-wrong-target-kind",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.2.value": "enemy-01"}},
+      "errors": [["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:owner].value"]]
+    },
+    {
+      "case_id": "fields/entity-ref-empty-string",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.2.value": ""}},
+      "errors": [
+        ["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:owner].value"],
+        ["unsupported_structure", "snapshot.entities[0].fields[2].value"],
+        ["dangling_reference", "snapshot.entities[card-01].fields[fixture:owner].value"]
+      ]
+    },
+    {
+      "case_id": "fields/number-non-finite-float64",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"entities.8.fields.2.value": "1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}},
+      "errors": [["non_finite_value", "snapshot.entities[enemy-01].fields[fixture:hp].value"]]
+    },
+    {
+      "case_id": "fields/number-precision-loss",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "entities.8.fields.0": {
+            "field_id": "fixture:backend_damage_decimal",
+            "state": "known",
+            "value": "0.100000000000000000000000000001"
+          }
+        }
+      },
+      "tolerances": {"absolute_tolerance": "1e-30", "relative_tolerance": "1e-30"},
+      "errors": [
+        ["numeric_precision_loss", "snapshot.entities[enemy-01].fields[fixture:backend_damage_decimal].value"]
+      ]
+    },
+    {
+      "case_id": "fields/number-within-explicit-tolerance",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "entities.8.fields.0": {
+            "field_id": "fixture:backend_damage_decimal",
+            "state": "known",
+            "value": "0.5"
+          }
+        }
+      },
+      "tolerances": {"absolute_tolerance": "1e-30", "relative_tolerance": "1e-30"},
+      "errors": []
+    },
+
+    {
+      "case_id": "applicability/field-on-wrong-entity-kind",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$insert": {"entities.0.fields": [3, {"field_id": "fixture:power_amount", "state": "known", "value": "1"}]}
+      },
+      "errors": [
+        ["field_not_applicable", "snapshot.entities[card-01].fields[fixture:power_amount]"],
+        ["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:power_amount]"]
+      ]
+    },
+    {
+      "case_id": "applicability/field-on-wrong-action-type",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "legal_actions.0.fields": [
+            {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-06"}
+          ]
+        }
+      },
+      "errors": [
+        ["field_not_applicable", "snapshot.legal_actions[cand-end].fields[fixture:play_card_ref]"],
+        ["missing_required_field", "snapshot.legal_actions[cand-end].fields[fixture:play_card_ref]"],
+        ["value_type_mismatch", "snapshot.legal_actions[cand-end].fields[fixture:play_card_ref]"]
+      ]
+    },
+    {
+      "case_id": "applicability/field-on-wrong-terminal-reason",
+      "bundle": "scenario",
+      "snapshot": {
+        "$base": "scenario.snapshot-terminal",
+        "$set": {
+          "terminal_result": {
+            "outcome": "loss",
+            "reason_id": "fixture:defeat",
+            "facts": [{"field_id": "fixture:hp", "state": "known", "value": "31"}]
+          }
+        }
+      },
+      "errors": [
+        ["field_not_applicable", "snapshot.terminal_result.facts[fixture:hp]"],
+        ["value_type_mismatch", "snapshot.terminal_result.facts[fixture:hp]"]
+      ]
+    },
+    {
+      "case_id": "applicability/empty-action-domain-is-not-encoding-layer-fact",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "legal_actions.0.fields": [
+            {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+          ]
+        }
+      },
+      "errors": [["missing_required_field", "snapshot.legal_actions[cand-end].fields[fixture:owner]"]]
+    },
+
+    {
+      "case_id": "references/relation-source-dangling",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"relations.0.source_ref": "power-99"}},
+      "errors": [
+        ["dangling_reference", "snapshot.relations[fixture:held_by].source_ref"],
+        ["unsupported_structure", "snapshot.relations"]
+      ]
+    },
+    {
+      "case_id": "references/relation-target-dangling",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"relations.0.target_ref": "player-99"}},
+      "errors": [["dangling_reference", "snapshot.relations[fixture:held_by].target_ref"]]
+    },
+    {
+      "case_id": "references/sequence-owner-dangling",
+      "bundle": "scenario",
+      "snapshot": {"$base": "scenario.snapshot", "$set": {"sequences.0.owner_ref": "player-99"}},
+      "errors": [["dangling_reference", "snapshot.sequences[fixture:route_path].owner_ref"]]
+    },
+    {
+      "case_id": "references/sequence-element-dangling",
+      "bundle": "scenario",
+      "snapshot": {
+        "$base": "scenario.snapshot",
+        "$set": {"sequences.0.elements": ["node-c", "node-a", "node-Z"]}
+      },
+      "errors": [["dangling_reference", "snapshot.sequences[fixture:route_path].elements"]]
+    },
+    {
+      "case_id": "references/group-owner-dangling",
+      "bundle": "scenario",
+      "snapshot": {"$base": "scenario.snapshot", "$set": {"groups.0.owner_ref": "player-99"}},
+      "errors": [["dangling_reference", "snapshot.groups[fixture:reward_options].owner_ref"]]
+    },
+    {
+      "case_id": "references/group-member-dangling",
+      "bundle": "scenario",
+      "snapshot": {
+        "$base": "scenario.snapshot",
+        "$set": {
+          "groups.0.members": [
+            {"entity_ref": "option-01", "multiplicity": 1},
+            {"entity_ref": "option-Z", "multiplicity": 1}
+          ]
+        }
+      },
+      "errors": [["dangling_reference", "snapshot.groups[fixture:reward_options].members"]]
+    },
+    {
+      "case_id": "references/candidate-field-entity-ref-dangling",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions.1.fields.0.value": "card-99"}},
+      "errors": [
+        ["dangling_reference", "snapshot.legal_actions[cand-play-06].fields[fixture:play_card_ref].value"],
+        ["unsupported_structure", "snapshot.legal_actions"]
+      ]
+    },
+
+    {
+      "case_id": "piles/v06-1-position-equals-total-count",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.known_positions.0.position": 5}},
+      "errors": [
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-03].position"],
+        ["unsupported_structure", "snapshot.piles[pile-draw].known_positions"],
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-03]"]
+      ]
+    },
+    {
+      "case_id": "piles/v06-1-position-negative",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.known_positions.0.position": -1}},
+      "errors": [
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-03].position"],
+        ["unsupported_structure", "snapshot.piles[1].known_positions[0].position"],
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-03]"]
+      ]
+    },
+    {
+      "case_id": "piles/v06-1-last-in-bounds-position-accepted",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.1.total_count": 4,
+          "piles.1.visible_members": ["card-01", "card-02", "card-03", "card-04"],
+          "piles.1.known_positions": [{"card_ref": "card-04", "position": 3}]
+        }
+      },
+      "errors": []
+    },
+    {
+      "case_id": "piles/v06-2-duplicate-member",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {"piles.1.visible_members": ["card-01", "card-01", "card-02", "card-03", "card-04"]}
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.piles[pile-draw].visible_members"],
+        ["count_mismatch", "snapshot.piles[pile-draw].visible_members"]
+      ]
+    },
+    {
+      "case_id": "piles/v06-2-member-dangling",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {"piles.1.visible_members": ["card-01", "card-02", "card-03", "card-04", "card-99"]}
+      },
+      "errors": [["dangling_reference", "snapshot.piles[pile-draw].visible_members"]]
+    },
+    {
+      "case_id": "piles/v06-2-member-kind-not-in-pile-type",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {"piles.2.visible_members": ["card-06", "enemy-01"], "piles.2.total_count": 2}
+      },
+      "errors": [["count_mismatch", "snapshot.piles[pile-hand].visible_members"]]
+    },
+    {
+      "case_id": "piles/v06-2-members-exceed-total",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.0.total_count": 0,
+          "piles.0.visible_members": ["card-08"],
+          "piles.0.members_complete": false,
+          "piles.0.known_positions": []
+        }
+      },
+      "errors": [["count_mismatch", "snapshot.piles[pile-discard].visible_members"]]
+    },
+    {
+      "case_id": "piles/v06-2-members-complete-not-equal-total",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {"piles.1.visible_members": ["card-01", "card-02", "card-03", "card-04"]}
+      },
+      "errors": [["count_mismatch", "snapshot.piles[pile-draw].members_complete"]]
+    },
+    {
+      "case_id": "piles/v06-2-incomplete-members-accepted",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.members_complete": false}},
+      "errors": []
+    },
+    {
+      "case_id": "piles/v06-2-member-in-two-piles-of-same-scope",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {"piles.0.visible_members": ["card-01", "card-08"], "piles.0.total_count": 2}
+      },
+      "errors": [["duplicate_identity", "snapshot.piles[pile-draw].visible_members"]]
+    },
+    {
+      "case_id": "piles/v06-3-position-card-not-a-member",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.known_positions.0.card_ref": "card-06"}},
+      "errors": [["invalid_position", "snapshot.piles[pile-draw].known_positions[card-06]"]]
+    },
+    {
+      "case_id": "piles/v06-3-card-with-two-positions",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.1.known_positions": [
+            {"card_ref": "card-03", "position": 0},
+            {"card_ref": "card-03", "position": 1}
+          ]
+        }
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.piles[pile-draw].known_positions[card-03]"],
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-03]"]
+      ]
+    },
+    {
+      "case_id": "piles/v06-3-two-cards-on-one-position",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.1.known_positions": [
+            {"card_ref": "card-03", "position": 0},
+            {"card_ref": "card-04", "position": 0}
+          ]
+        }
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.piles[pile-draw].known_positions[card-04]"],
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-04]"]
+      ]
+    },
+    {
+      "case_id": "piles/v06-4-positions-do-not-add-cards",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.0.known_positions": [
+            {"card_ref": "card-08", "position": 0},
+            {"card_ref": "card-08", "position": 0}
+          ]
+        }
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.piles[pile-discard].known_positions[card-08]"],
+        ["count_mismatch", "snapshot.piles[pile-discard].known_positions"],
+        ["invalid_position", "snapshot.piles[pile-discard].known_positions[card-08]"]
+      ]
+    },
+    {
+      "case_id": "piles/v06-partial-members-use-real-total-and-allow-holes",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.1.total_count": 9,
+          "piles.1.visible_members": ["card-01"],
+          "piles.1.members_complete": false,
+          "piles.1.known_positions": [{"card_ref": "card-01", "position": 8}]
+        }
+      },
+      "raise_first": true,
+      "errors": []
+    },
+    {
+      "case_id": "piles/pile-ref-duplicate",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "piles.2.pile_ref": "pile-draw",
+          "piles.2.total_count": 2,
+          "piles.2.visible_members": ["card-06", "card-07"]
+        }
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.piles[pile-draw].pile_ref"],
+        ["unknown_type", "snapshot.piles"]
+      ]
+    },
+    {
+      "case_id": "piles/pile-ref-dangling",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.0.pile_ref": "pile-Z"}},
+      "errors": [["dangling_reference", "snapshot.piles[pile-Z].pile_ref"]]
+    },
+    {
+      "case_id": "piles/pile-ref-entity-kind-mismatch",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.2.pile_ref": "card-06"}},
+      "errors": [
+        ["unsupported_structure", "snapshot.piles"],
+        ["unknown_type", "snapshot.piles[card-06].pile_ref"]
+      ]
+    },
+    {
+      "case_id": "piles/total-count-wrong-type",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.total_count": "5"}},
+      "errors": [
+        ["unsupported_structure", "snapshot.piles[pile-draw].total_count"],
+        ["unsupported_structure", "snapshot.piles[1].total_count"]
+      ]
+    },
+    {
+      "case_id": "piles/known-position-wrong-type-still-returns-report",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.known_positions.0.position": "0"}},
+      "errors": [
+        ["unsupported_structure", "snapshot.piles[pile-draw].known_positions[card-03].position"],
+        ["unsupported_structure", "snapshot.shared-findings"]
+      ],
+      "checked_contains": ["shared/L1+L3-aborted-by-shared-exception"]
+    },
+    {
+      "case_id": "piles/known-position-record-wrong-type-still-returns-report",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.known_positions.0": 3}},
+      "errors": [
+        ["unsupported_structure", "snapshot.piles[pile-draw].known_positions"],
+        ["unsupported_structure", "snapshot.shared-findings"]
+      ],
+      "checked_contains": ["shared/L1+L3-aborted-by-shared-exception"]
+    },
+    {
+      "case_id": "piles/members-complete-wrong-type",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.members_complete": 1}},
+      "errors": [["unsupported_structure", "snapshot.piles[1].members_complete"]]
+    },
+    {
+      "case_id": "piles/visible-members-wrong-type-canary",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"piles.1.visible_members": "card-01"}},
+      "errors": [
+        ["unsupported_structure", "snapshot.piles[pile-draw].visible_members"],
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-03]"],
+        ["invalid_position", "snapshot.piles[pile-draw].known_positions[card-04]"],
+        ["count_mismatch", "snapshot.piles[pile-draw].members_complete"],
+        ["count_mismatch", "snapshot.piles[pile-draw].known_positions"],
+        ["unsupported_structure", "snapshot.piles[1].visible_members"],
+        ["dangling_reference", "snapshot.piles[pile-draw].visible_members"],
+        ["count_mismatch", "snapshot.piles[pile-draw].visible_members"]
+      ]
+    },
+
+    {
+      "case_id": "candidates/duplicate-candidate-id",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions.1.candidate_id": "cand-end"}},
+      "errors": [["duplicate_identity", "snapshot.legal_actions"]]
+    },
+    {
+      "case_id": "candidates/duplicate-action-semantics",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "legal_actions.2.fields": [
+            {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-06"}
+          ]
+        }
+      },
+      "errors": [["duplicate_identity", "snapshot.legal_actions"]]
+    },
+    {
+      "case_id": "candidates/unregistered-action-type",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions.1.action_type": "fixture:ghost"}},
+      "errors": [["unknown_type", "snapshot.legal_actions[cand-play-06].action_type"]]
+    },
+    {
+      "case_id": "candidates/action-type-wrong-type",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions.1.action_type": 7}},
+      "errors": [
+        ["unknown_type", "snapshot.legal_actions[cand-play-06].action_type"],
+        ["unsupported_structure", "snapshot.legal_actions[1].action_type"],
+        ["unsupported_structure", "snapshot.legal_actions"]
+      ]
+    },
+    {
+      "case_id": "candidates/unregistered-field",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$insert": {
+          "legal_actions.1.fields": [
+            0,
+            {"field_id": "fixture:ghost", "state": "known", "value": "1"}
+          ]
+        }
+      },
+      "errors": [["unregistered_field", "snapshot.legal_actions[cand-play-06].fields[fixture:ghost]"]]
+    },
+    {
+      "case_id": "candidates/field-not-known",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions.1.fields.0.state": "unknown"}},
+      "errors": [
+        ["state_value_mismatch", "snapshot.legal_actions[cand-play-06].fields[fixture:play_card_ref]"],
+        ["state_value_mismatch", "snapshot.legal_actions[cand-play-06].fields[fixture:play_card_ref].value"],
+        ["unsupported_structure", "snapshot.legal_actions[1].fields[0]"],
+        ["unsupported_structure", "snapshot.legal_actions"],
+        ["missing_required_field", "snapshot.legal_actions[cand-play-06].fields[fixture:play_card_ref]"]
+      ]
+    },
+    {
+      "case_id": "candidates/required-field-omitted",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$set": {"legal_actions.1.fields": []}},
+      "errors": [
+        ["missing_required_field", "snapshot.legal_actions[cand-play-06].fields[fixture:play_card_ref]"],
+        ["missing_required_field", "snapshot.legal_actions[cand-play-06].fields"]
+      ]
+    },
+    {
+      "case_id": "candidates/duplicate-field-id",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$set": {
+          "legal_actions.1.fields": [
+            {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-06"},
+            {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-07"}
+          ]
+        }
+      },
+      "errors": [
+        ["duplicate_identity", "snapshot.legal_actions[cand-play-06].fields"],
+        ["unsupported_structure", "snapshot.legal_actions[cand-play-06].fields"]
+      ]
+    },
+    {
+      "case_id": "candidates/field-not-an-object-still-returns-report",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot", "$append": {"legal_actions.0.fields": 7}},
+      "errors": [
+        ["unsupported_structure", "snapshot.legal_actions[cand-end].fields[0]"],
+        ["unsupported_structure", "snapshot.shared-findings"]
+      ],
+      "checked_contains": ["shared/L1+L3-aborted-by-shared-exception"]
+    },
+
+    {
+      "case_id": "capacity/entity-rows-over-limit",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {"max_entities": 5},
+      "errors": [["capacity_exceeded", "snapshot.entities"]]
+    },
+    {
+      "case_id": "capacity/entity-field-rows-over-limit",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {"max_fields": 10},
+      "errors": [["capacity_exceeded", "snapshot.entities"]]
+    },
+    {
+      "case_id": "capacity/candidate-rows-over-limit",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {"max_candidates": 2},
+      "errors": [["capacity_exceeded", "snapshot.legal_actions"]]
+    },
+    {
+      "case_id": "capacity/candidate-field-rows-over-limit",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {"max_candidate_fields": 1},
+      "errors": [["capacity_exceeded", "snapshot.legal_actions"]]
+    },
+    {
+      "case_id": "capacity/relation-rows-over-limit",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {"max_relations": 1},
+      "errors": [["capacity_exceeded", "snapshot.relations"]]
+    },
+    {
+      "case_id": "capacity/pile-position-rows-over-limit",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {"max_pile_positions": 1},
+      "errors": [["capacity_exceeded", "snapshot.piles"]]
+    },
+    {
+      "case_id": "capacity/unconfigured-limits-do-not-truncate",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "capacity_overrides": {
+        "max_entities": null,
+        "max_fields": null,
+        "max_relations": null,
+        "max_pile_positions": null,
+        "max_sequences": null,
+        "max_groups": null,
+        "max_candidates": null,
+        "max_candidate_fields": null
+      },
+      "errors": [],
+      "checked_contains": ["capacity/none-configured"]
+    },
+
+    {
+      "case_id": "terminal/valid-facts",
+      "bundle": "scenario",
+      "snapshot": {"$base": "scenario.snapshot-terminal"},
+      "errors": [],
+      "checked_contains": ["terminal/facts-fields+value"]
+    },
+    {
+      "case_id": "terminal/required-fact-omitted",
+      "bundle": "scenario",
+      "snapshot": {"$base": "scenario.snapshot-terminal", "$set": {"terminal_result.facts": []}},
+      "errors": [["value_type_mismatch", "snapshot.terminal_result.facts"]]
+    },
+    {
+      "case_id": "terminal/unregistered-fact-field",
+      "bundle": "scenario",
+      "snapshot": {
+        "$base": "scenario.snapshot-terminal",
+        "$set": {
+          "terminal_result.facts": [
+            {"field_id": "fixture:hp", "state": "known", "value": "31"},
+            {"field_id": "fixture:ghost", "state": "known", "value": "1"}
+          ]
+        }
+      },
+      "errors": [
+        ["unregistered_field", "snapshot.terminal_result.facts[fixture:ghost]"],
+        ["unsupported_structure", "snapshot.terminal_result.facts"],
+        ["value_type_mismatch", "snapshot.terminal_result.facts[fixture:ghost]"]
+      ]
+    },
+
+    {
+      "case_id": "api/public-snapshot-view-input",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "input": "view",
+      "errors": []
+    },
+    {
+      "case_id": "api/non-document-input",
+      "bundle": "combat",
+      "snapshot": {"$base": "combat.snapshot"},
+      "input": "non-mapping",
+      "pass_catalog": false,
+      "errors": [["unsupported_structure", "snapshot"]]
+    },
+    {
+      "case_id": "api/require-valid-snapshot-raises-first-error",
+      "bundle": "combat",
+      "snapshot": {
+        "$base": "combat.snapshot",
+        "$insert": {"entities.0.fields": [2, {"field_id": "fixture:ghost", "state": "known", "value": "1"}]}
+      },
+      "raise_first": true,
+      "errors": [["unregistered_field", "snapshot.entities[card-01].fields[fixture:ghost]"]]
+    }
+  ]
+}

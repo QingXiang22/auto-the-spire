@@ -1,6 +1,8 @@
 # core/0.1 语言参考
 
-2026-10-04 补充：本页保留 core/0.1 基础语义；新的默认作者入口是 [core/0.2 规则库与配置](../0.2/authoring-guide.md)，新增 imports/template/use，底层原语继续以本页为准。
+本页供规则作者查询 core/0.1 的基础语义。使用 imports/template/use 时，查 [core/0.2 规则库与配置](../0.2/authoring-guide.md)；底层原语继续以本页为准。
+
+2026-10-04 补充：默认作者入口采用 core/0.2。
 
 状态：2026-10-04 已实现的首版通用配置语言。权威语法是 [CoreSpire.g4](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/CoreSpire.g4)，语义入口是 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。执行语义复用 Engine；目标设计稿中的语法不自动属于本版。先读 [作者入门](../README.md) 与完整 [counter.spire](../../../examples/core-choice-counter/counter.spire)。
 

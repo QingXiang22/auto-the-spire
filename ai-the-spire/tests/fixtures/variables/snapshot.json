@@ -1,0 +1,61 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:variables-catalog-v1",
+  "backend_profile_id": "fixture:sim-v1",
+  "session_id": "session-variables-1",
+  "observation_id": 21,
+  "status": "decision",
+  "terminal_result": null,
+  "entities": [
+    {
+      "instance_id": "card-01",
+      "kind_id": "fixture:card",
+      "content_state": "unknown",
+      "fields": []
+    },
+    {
+      "instance_id": "card-02",
+      "kind_id": "fixture:card",
+      "content_state": "unavailable",
+      "fields": []
+    },
+    {
+      "instance_id": "enemy-01",
+      "kind_id": "fixture:enemy",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:hp", "state": "known", "value": "30"},
+        {"field_id": "modB:charge", "state": "known", "value": "1.5"}
+      ]
+    },
+    {
+      "instance_id": "player-01",
+      "kind_id": "fixture:player",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:hp", "state": "known", "value": "50"},
+        {"field_id": "modA:charge", "state": "known", "value": "0"},
+        {"field_id": "modD:secret_charge", "state": "unknown"},
+        {"field_id": "ux:timer_unavailable", "state": "unavailable"}
+      ]
+    },
+    {
+      "instance_id": "power-01",
+      "kind_id": "fixture:power",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "modC:charge", "state": "known", "value": "modC:ready"}
+      ]
+    }
+  ],
+  "relations": [
+    {"type_id": "fixture:held_by", "source_ref": "power-01", "target_ref": "player-01"}
+  ],
+  "piles": [],
+  "sequences": [],
+  "groups": [],
+  "legal_actions": [
+    {"candidate_id": "c-1", "action_type": "fixture:end_turn", "fields": []}
+  ]
+}

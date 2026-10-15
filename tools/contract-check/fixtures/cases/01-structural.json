@@ -1,0 +1,345 @@
+{
+  "suite": "L0/L1 结构与状态组合",
+  "cases": [
+    {
+      "case_id": "pos-demo-catalog",
+      "description": "协议资产 demo 目录：结构 + 目录内部语义",
+      "expect": "accept",
+      "layers": ["L1", "L2"],
+      "documents": {"catalog": "doc:catalog-demo"}
+    },
+    {
+      "case_id": "pos-demo-snapshot",
+      "description": "demo 决策快照对 demo 目录全量通过（L1+L2+L3）",
+      "expect": "accept",
+      "layers": ["L1", "L2", "L3"],
+      "documents": {"catalog": "doc:catalog-demo", "snapshot": "doc:snapshot-demo"}
+    },
+    {
+      "case_id": "pos-demo-terminal-snapshot",
+      "description": "终局快照 + 具名 facts 闭合",
+      "expect": "accept",
+      "layers": ["L1", "L2", "L3"],
+      "documents": {"catalog": "doc:catalog-demo", "snapshot": "doc:snapshot-terminal"}
+    },
+    {
+      "case_id": "neg-unknown-top-level-key-snapshot",
+      "description": "§6 L217 顶层未知属性拒绝",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"snapshot": {"$base": "snapshot-demo", "$set": {"extra": 1}}}
+    },
+    {
+      "case_id": "neg-unknown-nested-key-entity",
+      "description": "未知键必须在每一层拒绝，不能只在顶层",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"snapshot": {"$base": "snapshot-demo", "$set": {"entities.0.extra": 1}}}
+    },
+    {
+      "case_id": "neg-unknown-capabilities-key",
+      "description": "contract-artifacts §4 L47：capabilities 八键全部必填并拒绝其他键（U-01）",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"restore": true}}}
+    },
+    {
+      "case_id": "neg-capability-key-hoisted",
+      "description": "protocol L54：重放/暂停键仅在 execution_guarantees 内，不得在 capabilities 顶层重复",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"decision_pause": false}}}
+    },
+    {
+      "case_id": "neg-capability-key-missing",
+      "description": "§4 L47：execution_guarantees 九键必填，不能用省略表示未实现",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$del": ["execution_guarantees.decision_pause"]}}
+    },
+    {
+      "case_id": "neg-public-state-restore-true",
+      "description": "contract-artifacts §4 L49：首版 public_state_restore 必须为 false（U-02）",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-70"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"execution_guarantees.public_state_restore": true}}}
+    },
+    {
+      "case_id": "neg-public-fork-true",
+      "description": "公开 fork 首版必须 false；不得用省略或未知枚举代替",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-66", "I-70"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"execution_guarantees.public_fork": true}}}
+    },
+    {
+      "case_id": "neg-seed-action-replay-unknown",
+      "description": "seed_action_replay 仅 none/public_trace",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"execution_guarantees.seed_action_replay": "full"}}}
+    },
+    {
+      "case_id": "neg-decision-pause-type",
+      "description": "decision_pause 必须是布尔能力",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"execution_guarantees.decision_pause": "yes"}}}
+    },
+    {
+      "case_id": "neg-field-availability-unknown-state",
+      "description": "§1 L50/L56：field_availability 仅 available/unavailable，暂未获知不等于 unavailable",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"field_availability.demo:hp": "unknown"}}}
+    },
+    {
+      "case_id": "neg-limits-missing-key",
+      "description": "contract-artifacts §4 L51：limits 十六项上限键必填",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$del": ["limits.sessions"]}}
+    },
+    {
+      "case_id": "neg-limits-negative",
+      "description": "limits 各项为非负安全整数",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"limits.sessions": -1}}}
+    },
+    {
+      "case_id": "neg-supported-structure-unknown",
+      "description": "supported_structures.structure 枚举固定（Entity/Relation/Pile/Sequence/Group/LegalAction/TerminalResult）",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$set": {"supported_structures.0.structure": "Card"}}}
+    },
+    {
+      "case_id": "neg-scenario-profile-missing-coverage-ref",
+      "description": "§4 L47：scenario_profiles 六键必填",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"capabilities": {"$base": "capabilities-demo", "$del": ["scenario_profiles.0.coverage_ref"]}}
+    },
+    {
+      "case_id": "pos-describe-result",
+      "description": "protocol L54：describe 成功 result 恰为 {identity, capabilities}",
+      "expect": "accept",
+      "layers": ["L1", "L4"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "describe_result": {
+          "identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+          "capabilities": "doc:capabilities-demo"
+        }
+      }
+    },
+    {
+      "case_id": "neg-describe-result-extra-key",
+      "description": "成功 result 不接受额外键（禁止任意 result 兜底）",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "describe_result": {
+          "identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+          "capabilities": "doc:capabilities-demo",
+          "extra": 1
+        }
+      }
+    },
+    {
+      "case_id": "neg-identity-version",
+      "description": "§1 L19：冻结期 protocol_version 完全相等（0.1）",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "identity": {"protocol_version": "0.2", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"}
+      }
+    },
+    {
+      "case_id": "pos-observe-active",
+      "description": "observe 成功结果 active 必须带对应稳定快照",
+      "expect": "accept",
+      "layers": ["L1", "L3", "L4"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "snapshot": "doc:snapshot-demo",
+        "observe_result": {"session_status": "active", "snapshot": "doc:snapshot-demo"}
+      }
+    },
+    {
+      "case_id": "neg-observe-active-without-snapshot",
+      "description": "protocol L183：active/terminal 必须有稳定快照",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"observe_result": {"session_status": "active"}}
+    },
+    {
+      "case_id": "neg-observe-settling-with-snapshot",
+      "description": "protocol L178/L195：settling 没有可执行快照，不得返回半成品快照",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"observe_result": {"session_status": "settling", "snapshot": "doc:snapshot-demo"}}
+    },
+    {
+      "case_id": "pos-attach-settling",
+      "description": "attach 成功包装允许明确 settling 且省略 snapshot",
+      "expect": "accept",
+      "layers": ["L1", "L4"],
+      "documents": {"attach_result": {"session_id": "session-A", "session_status": "settling"}}
+    },
+    {
+      "case_id": "neg-attach-settling-with-snapshot",
+      "description": "protocol L183：settling 时省略 snapshot",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"attach_result": {"session_id": "session-A", "session_status": "settling", "snapshot": "doc:snapshot-demo"}}
+    },
+    {
+      "case_id": "neg-attach-closed-status",
+      "description": "attach 的 session_status 仅 active/terminal/settling，不得默默重开",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"attach_result": {"session_id": "session-A", "session_status": "closed"}}
+    },
+    {
+      "case_id": "pos-close-result",
+      "description": "protocol L183：close 成功包装 {session_id, session_status: closed}",
+      "expect": "accept",
+      "layers": ["L1"],
+      "documents": {"close_result": {"session_id": "session-A", "session_status": "closed"}}
+    },
+    {
+      "case_id": "neg-close-result-not-closed",
+      "description": "close 不等同于游戏终止，session_status 必须恰为 closed",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"close_result": {"session_id": "session-A", "session_status": "active"}}
+    },
+    {
+      "case_id": "pos-request-status-pending",
+      "description": "request_status 非 completed 时不带 response",
+      "expect": "accept",
+      "layers": ["L1"],
+      "documents": {"request_status_result": {"status": "pending"}}
+    },
+    {
+      "case_id": "neg-request-status-completed-without-response",
+      "description": "protocol L180：completed 必须返回原响应",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"request_status_result": {"status": "completed"}}
+    },
+    {
+      "case_id": "neg-request-status-notfound-with-response",
+      "description": "not_found 不得携带响应",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "request_status_result": {
+          "status": "not_found",
+          "response": {
+            "request_id": "r2",
+            "ok": true,
+            "result": {
+              "identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+              "capabilities": "doc:capabilities-demo"
+            }
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-response-ok-with-error",
+      "description": "protocol L164：ok=true 仅有 result",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "response": {
+          "request_id": "r1",
+          "ok": true,
+          "result": {
+            "identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "capabilities": "doc:capabilities-demo"
+          },
+          "error": {"code": "backend_fault", "message": "x", "execution_state": "unknown", "retry_mode": "stop"}
+        }
+      }
+    },
+    {
+      "case_id": "neg-response-not-ok-without-error",
+      "description": "ok=false 仅有 error",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"response": {"request_id": "r1", "ok": false}}
+    },
+    {
+      "case_id": "neg-response-not-ok-with-result",
+      "description": "ok=false 不得携带 result",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "response": {
+          "request_id": "r1",
+          "ok": false,
+          "error": {"code": "invalid_input", "message": "x", "execution_state": "not_started", "retry_mode": "correct_input"},
+          "result": {
+            "identity": {"protocol_version": "0.1", "ruleset_id": "demo:rules-v1", "catalog_id": "demo:catalog-v1", "backend_profile_id": "demo:public-v1"},
+            "capabilities": "doc:capabilities-demo"
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-arbitrary-result",
+      "description": "protocol L183：不得保留能接受任意 result 的兜底分支",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"response": {"request_id": "r1", "ok": true, "result": {"note": "anything"}}}
+    },
+    {
+      "case_id": "neg-error-unknown-code",
+      "description": "§6 表：error code 枚举固定",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "error": {"code": "surprise", "message": "x", "execution_state": "not_started", "retry_mode": "correct_input"}
+      }
+    },
+    {
+      "case_id": "neg-error-execution-state-omitted",
+      "description": "§6 L195：execution_state/retry_mode 必填，错误必须说明是否已执行",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"error": {"code": "backend_fault", "message": "x", "retry_mode": "stop"}}
+    }
+  ]
+}

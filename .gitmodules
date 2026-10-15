@@ -1,6 +1,3 @@
-[submodule "reference/CombatSolver"]
-	path = reference/CombatSolver
-	url = https://github.com/Torch1230/CombatSolver.git
 [submodule "tools/Sts2Repairer"]
 	path = tools/Sts2Repairer
 	url = https://github.com/Yanxiyimengya/Sts2Repairer.git

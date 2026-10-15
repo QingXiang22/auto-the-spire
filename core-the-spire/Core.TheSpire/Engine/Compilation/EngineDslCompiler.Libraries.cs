@@ -3,13 +3,14 @@ namespace CoreTheSpire.Engine;
 public static partial class EngineDslCompiler
 {
     /// <summary>Imports are authoring-time dependencies, relative to the importing file, never runtime includes.</summary>
-    private sealed class SourceLibraryLoader
+    private sealed class SourceLibraryLoader(IReadOnlyList<IEngineDslExtension>? extensions = null,
+        IReadOnlyList<EnginePackage>? dependencies = null)
     {
         private readonly Dictionary<string, EnginePackage> _files = new(OperatingSystem.IsWindows()
             ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
         private readonly HashSet<string> _loading = new(OperatingSystem.IsWindows()
             ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
-        private readonly List<EnginePackage> _packages = [];
+        private readonly List<EnginePackage> _packages = [.. dependencies ?? []];
 
         public RuleSet Load(string[] paths)
         {
@@ -44,7 +45,7 @@ public static partial class EngineDslCompiler
                         if (!imported.Contains(dependency)) imported.Add(dependency);
                     }
                 }
-                var package = new CoreDslBinding(source, _packages, [], imported).Compile();
+                var package = new CoreDslBinding(source, _packages, extensions ?? [], imported).Compile();
                 if (_packages.Any(existing => existing.PackageId == package.PackageId))
                     throw new DslSourceException(source.Location, $"Package '{package.PackageId}' is already loaded from another file.");
                 _packages.Add(package);

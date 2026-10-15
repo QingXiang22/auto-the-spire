@@ -1,0 +1,177 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:choice-catalog-v1",
+  "declarations": {
+    "entity_kinds": [
+      {"id": "fixture:card", "semantic_version": "1", "description": "卡牌实例"},
+      {"id": "fixture:discard_pile", "semantic_version": "1", "description": "弃牌堆实体（选牌来源）"},
+      {"id": "fixture:enemy", "semantic_version": "1", "description": "敌人实体"},
+      {"id": "fixture:hand_pile", "semantic_version": "1", "description": "手牌实体"},
+      {"id": "fixture:player", "semantic_version": "1", "description": "玩家实体"}
+    ],
+    "content_types": [
+      {"id": "fixture:card_face", "semantic_version": "1", "description": "卡面内容类型", "kind_ids": ["fixture:card"]}
+    ],
+    "fields": [
+      {
+        "id": "fixture:card_face",
+        "semantic_version": "1",
+        "description": "卡面类别",
+        "value_type": "category",
+        "category_ids": ["fixture:bash", "fixture:defend", "fixture:strike"],
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:choice_source_ref",
+        "semantic_version": "1",
+        "description": "选牌来源牌堆",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:discard_pile"],
+        "applies_to": {"entity_kinds": [], "action_types": ["fixture:choose_card"], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:chosen_card_ref",
+        "semantic_version": "1",
+        "description": "被选中的卡牌实例",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:card"],
+        "applies_to": {"entity_kinds": [], "action_types": ["fixture:choose_card"], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:cost",
+        "semantic_version": "1",
+        "description": "当前费用（升级可改变）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:energy",
+        "semantic_version": "1",
+        "description": "当前能量",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:hp",
+        "semantic_version": "1",
+        "description": "当前公开生命值",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player", "fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:owner",
+        "semantic_version": "1",
+        "description": "卡牌归属玩家",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:player"],
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:pile_scope",
+        "semantic_version": "1",
+        "description": "牌堆作用域（互斥组作用域字段）",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["fixture:player"],
+        "applies_to": {"entity_kinds": ["fixture:discard_pile", "fixture:hand_pile"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:upgraded",
+        "semantic_version": "1",
+        "description": "卡牌是否升级；省略不等于 false",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["fixture:card"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "net:pile_members_complete",
+        "semantic_version": "1",
+        "description": "派生：牌堆成员是否完整（张量化，wire 不填）",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["fixture:discard_pile", "fixture:hand_pile"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "net:pile_total_count",
+        "semantic_version": "1",
+        "description": "派生：牌堆总数（张量化，wire 不填）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:discard_pile", "fixture:hand_pile"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      }
+    ],
+    "relation_types": [
+      {
+        "id": "net:pile_member",
+        "semantic_version": "1",
+        "description": "派生：牌堆成员（张量化，wire 不填）",
+        "source_kind_ids": ["fixture:discard_pile", "fixture:hand_pile"],
+        "target_kind_ids": ["fixture:card"],
+        "position_schema": null
+      }
+    ],
+    "pile_types": [
+      {
+        "id": "fixture:discard_pile_type",
+        "semantic_version": "1",
+        "description": "弃牌堆（洗牌后顺序未知）",
+        "kind_id": "fixture:discard_pile",
+        "member_kind_ids": ["fixture:card"],
+        "position_schema": null,
+        "exclusive_group_id": "fixture:battle",
+        "membership_scope_field_id": "fixture:pile_scope"
+      },
+      {
+        "id": "fixture:hand_pile_type",
+        "semantic_version": "1",
+        "description": "手牌",
+        "kind_id": "fixture:hand_pile",
+        "member_kind_ids": ["fixture:card"],
+        "position_schema": null,
+        "exclusive_group_id": "fixture:battle",
+        "membership_scope_field_id": "fixture:pile_scope"
+      }
+    ],
+    "sequence_types": [],
+    "group_types": [
+      {
+        "id": "fixture:choice_display",
+        "semantic_version": "1",
+        "description": "待选牌展示分组（无序）",
+        "owner_kind_ids": ["fixture:player"],
+        "member_kind_ids": ["fixture:card"],
+        "min_count": 0,
+        "max_count": 12
+      }
+    ],
+    "action_types": [
+      {"id": "fixture:choose_card", "semantic_version": "1", "description": "从公开牌区选择一张牌", "required_fields": ["fixture:choice_source_ref", "fixture:chosen_card_ref"], "optional_fields": []}
+    ],
+    "terminal_reasons": [
+      {"id": "fixture:defeat", "semantic_version": "1", "description": "战斗失败", "outcome": "loss", "required_fields": [], "optional_fields": []}
+    ]
+  }
+}

@@ -22,14 +22,11 @@ package base-spire {
   }
 
   power TerritorialPower {
-    trigger = afterEnemyTurnEnd
-    effect = applyScaledPower(Strength, 0, 1,
-      count=targetPowerAmount(TerritorialPower, target=self), target=self)
+    on = [trigger(event=afterOwnerTurnEnd, effect=grantPower(Strength, sourceStacks))]
   }
 
   power SlipperyPower {
-    events = [event(type=damage, owner=target, positiveAmount=true, ownerTurnOnly=false,
-      effect=decrementPower(SlipperyPower))]
+    rules = { hpLossCap = 1 }
   }
 
   power ImbalancedPower {
@@ -219,7 +216,7 @@ package base-spire {
   }
 
   enemy DampCultist {
-    hp = variants(default=range(52, 54), tough=range(51, 53))
+    hp = variants(default=range(51, 53), tough=range(52, 54))
     moves = actions(
       dampCultistIncantation = applyPower(Ritual, variants(default=5, deadly=6), target=self),
       dampCultistDarkStrike = attack(variants(default=1, deadly=3), target=player)
@@ -368,9 +365,9 @@ package base-spire {
       flailKnightRam = attack(variants(default=15, deadly=17), target=player)
     )
     behavior = startWith(flailKnightRam, then=chooseWithLimits(
-      candidate(flailKnightWarChant, weight=1, maxConsecutive=1),
-      candidate(flailKnightFlail, weight=2),
-      candidate(flailKnightRam, weight=2)
+      candidate(flailKnightWarChant, maxConsecutive=1),
+      candidate(flailKnightFlail, maxConsecutive=2),
+      candidate(flailKnightRam, maxConsecutive=2)
     ))
   }
 
@@ -407,13 +404,13 @@ package base-spire {
     )
     behavior = startWithChoice(
       chooseWithLimits(
-        candidate(flyconidFrailSpores, weight=2, cooldown=2),
-        candidate(flyconidSmash, weight=1, cooldown=1)
+        candidate(flyconidFrailSpores, weight=1, maxConsecutive=1, cooldown=2),
+        candidate(flyconidSmash, weight=1, maxConsecutive=1)
       ),
       then=chooseWithLimits(
-        candidate(flyconidVulnerableSpores, weight=3, cooldown=3),
-        candidate(flyconidFrailSpores, weight=2, cooldown=2),
-        candidate(flyconidSmash, weight=3, cooldown=1)
+        candidate(flyconidVulnerableSpores, weight=1, maxConsecutive=1, cooldown=3),
+        candidate(flyconidFrailSpores, weight=1, maxConsecutive=1, cooldown=2),
+        candidate(flyconidSmash, weight=1, maxConsecutive=1)
       )
     )
   }
@@ -429,7 +426,7 @@ package base-spire {
   }
 
   enemy Byrdonis {
-    hp = variants(default=range(90, 90), tough=range(81, 84))
+    hp = variants(default=range(81, 84), tough=range(90, 90))
     startingPowers = [power(TerritorialPower, 1)]
     moves = actions(
       byrdonisSwoop = attack(variants(default=17, deadly=19), target=player),
@@ -606,8 +603,8 @@ package base-spire {
     behavior = graph(start=fogmogIllusion, edges=[
       edge(fogmogIllusion, fogmogSwipe),
       edge(fogmogSwipe, chooseWithLimits(
-        candidate(fogmogSwipeRandom, weight=2, maxConsecutive=1),
-        candidate(fogmogHeadbutt, weight=3, maxConsecutive=1)
+        candidate(fogmogSwipeRandom, weight=0.4, maxConsecutive=1),
+        candidate(fogmogHeadbutt, weight=0.6, maxConsecutive=1)
       )),
       edge(fogmogSwipeRandom, fogmogHeadbutt),
       edge(fogmogHeadbutt, fogmogSwipe)
@@ -893,16 +890,16 @@ package base-spire {
     )
     behavior = graph(start=hunterKillerGoop, edges=[
       edge(hunterKillerGoop, chooseWithLimits(
-        candidate(hunterKillerBite, weight=1, maxConsecutive=1),
-        candidate(hunterKillerPuncture, weight=2)
+        candidate(hunterKillerBite, maxConsecutive=1),
+        candidate(hunterKillerPuncture, maxConsecutive=2)
       )),
       edge(hunterKillerBite, chooseWithLimits(
-        candidate(hunterKillerBite, weight=1, maxConsecutive=1),
-        candidate(hunterKillerPuncture, weight=2)
+        candidate(hunterKillerBite, maxConsecutive=1),
+        candidate(hunterKillerPuncture, maxConsecutive=2)
       )),
       edge(hunterKillerPuncture, chooseWithLimits(
-        candidate(hunterKillerBite, weight=1, maxConsecutive=1),
-        candidate(hunterKillerPuncture, weight=2)
+        candidate(hunterKillerBite, maxConsecutive=1),
+        candidate(hunterKillerPuncture, maxConsecutive=2)
       ))
     ])
   }
@@ -1133,13 +1130,13 @@ package base-spire {
       )
     )
     behavior = chooseWithLimits(repeat=preventImmediate,
-      candidate(twoTailedRatScratchMove, weight=1, when=condition(SummonAvailable)),
+      candidate(twoTailedRatScratchMove, weight=0.083333336, when=condition(SummonAvailable)),
       candidate(twoTailedRatScratchMove, weight=1, when=not(condition(SummonAvailable))),
-      candidate(twoTailedRatDiseaseBiteMove, weight=1, when=condition(SummonAvailable)),
+      candidate(twoTailedRatDiseaseBiteMove, weight=0.083333336, when=condition(SummonAvailable)),
       candidate(twoTailedRatDiseaseBiteMove, weight=1, when=not(condition(SummonAvailable))),
-      candidate(twoTailedRatScreechMove, weight=1, cooldown=3, when=condition(SummonAvailable)),
-      candidate(twoTailedRatScreechMove, weight=1, cooldown=3, when=not(condition(SummonAvailable))),
-      candidate(twoTailedRatCallForBackup, weight=9, maxUsesPerCombat=1, when=condition(SummonAvailable))
+      candidate(twoTailedRatScreechMove, weight=0.083333336, maxConsecutive=1, cooldown=3, when=condition(SummonAvailable)),
+      candidate(twoTailedRatScreechMove, weight=1, maxConsecutive=1, cooldown=3, when=not(condition(SummonAvailable))),
+      candidate(twoTailedRatCallForBackup, weight=0.75, maxUsesPerCombat=1, when=condition(SummonAvailable))
     )
   }
 
@@ -1157,13 +1154,13 @@ package base-spire {
     behavior = graph(start=fakeMerchantSwipe, edges=[
       edge(fakeMerchantSwipe, chooseWithLimits(repeat=preventImmediate,
         candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
-        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, weight=3))),
+        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, cooldown=3, maxConsecutive=1))),
       edge(fakeMerchantSpewCoins, chooseWithLimits(repeat=preventImmediate,
         candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
-        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, weight=3))),
+        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, cooldown=3, maxConsecutive=1))),
       edge(fakeMerchantEnrage, chooseWithLimits(repeat=preventImmediate,
         candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
-        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, weight=3))),
+        candidate(fakeMerchantThrowRelic), candidate(fakeMerchantEnrage, cooldown=3, maxConsecutive=1))),
       edge(fakeMerchantThrowRelic, chooseWithLimits(repeat=preventImmediate,
         candidate(fakeMerchantSwipe), candidate(fakeMerchantSpewCoins),
         candidate(fakeMerchantThrowRelic)))

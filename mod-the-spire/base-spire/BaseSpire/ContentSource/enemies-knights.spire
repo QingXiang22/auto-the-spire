@@ -15,9 +15,9 @@ package base-spire {
       mysteriousKnightRam = attack(variants(default=15, deadly=17), target=player)
     )
     behavior = startWith(mysteriousKnightRam, then=chooseWithLimits(
-      candidate(mysteriousKnightWarChant, weight=1, maxConsecutive=1),
-      candidate(mysteriousKnightFlail, weight=2),
-      candidate(mysteriousKnightRam, weight=2)
+      candidate(mysteriousKnightWarChant, maxConsecutive=1),
+      candidate(mysteriousKnightFlail, maxConsecutive=2),
+      candidate(mysteriousKnightRam, maxConsecutive=2)
     ))
   }
 

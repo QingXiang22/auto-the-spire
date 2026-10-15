@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <Content Include="counter.spire" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="first-counter.spire" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="game.spire" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="rules/*.spire" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
