@@ -1,0 +1,49 @@
+name: Core, base and differential
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-base-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  PYTHONUTF8: '1'
+
+jobs:
+  checks:
+    name: ${{ matrix.suite }}
+    runs-on: windows-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [core, base, differential]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Run ${{ matrix.suite }} checks
+        run: python -X utf8 tools/ci/check.py ${{ matrix.suite }}
+      - name: Upload logs and results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: checks-${{ matrix.suite }}-${{ github.sha }}
+          path: .artifacts/ci/${{ matrix.suite }}/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14

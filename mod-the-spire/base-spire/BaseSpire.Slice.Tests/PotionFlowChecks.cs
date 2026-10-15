@@ -10,13 +10,14 @@ internal static class PotionFlowChecks
     private const string PotionType = "base-spire:Potion";
     private static readonly SinglePlayerContent Content = SinglePlayerContentSource.Shared;
 
-    public static void Run(bool includeLegacy = false)
+    public static void RunSourceChecks()
     {
         Check.Run("药水：完整48项生成元数据逐项核对独立源码及池顺序", () =>
         {
             var root = new DirectoryInfo(Environment.CurrentDirectory);
-            while (root is not null && !Directory.Exists(Path.Combine(root.FullName, "sts2"))) root = root.Parent;
-            Check.True(root is not null, "源码检查从仓库执行");
+            while (root is not null && !File.Exists(Path.Combine(root.FullName, "AutoTheSpire.sln"))) root = root.Parent;
+            Check.True(root is not null && Directory.Exists(Path.Combine(root.FullName, "sts2")),
+                "源码检查要求当前仓库提供本地 sts2，不能借用祖先目录的源码");
             var sourceRoot = Path.Combine(root!.FullName, "sts2/src/Core");
             var shared = File.ReadAllText(Path.Combine(sourceRoot, "Models/PotionPools/SharedPotionPool.cs"));
             var epoch = File.ReadAllText(Path.Combine(sourceRoot, "Timeline/Epochs/Ironclad4Epoch.cs"));
@@ -38,6 +39,11 @@ internal static class PotionFlowChecks
             Check.Equal(35, pool.Count(p => p.UnsupportedUseReason.Length > 0), "未实现显式记账");
         });
 
+    }
+
+    public static void Run(bool includeLegacy = false, bool includeSource = true)
+    {
+        if (includeSource) RunSourceChecks();
         var rules = InventoryRules();
         Check.Run("药水：稀有度阈值使用源float32含边界比较", () =>
         {
