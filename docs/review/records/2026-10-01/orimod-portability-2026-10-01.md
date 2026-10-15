@@ -115,40 +115,40 @@
 
 | 种类 | 入口 | 状态 |
 | --- | --- | --- |
-| `card` / `cardPool` | [SpireCombatDslCompiler.cs:19](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L19) | DSL |
-| `potion` | [SpireCombatDslCompiler.cs:54](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L54) | DSL |
-| `power` / `enemy` / `affliction` | [SpireCombatBehaviorDslCompiler.cs:41-48](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatBehaviorDslCompiler.cs#L41-L48) | DSL（旧语法） |
-| `state` | [StateVariableDefinition.cs:31](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/StateVariableDefinition.cs#L31) | DSL，**仅 `int`** |
-| 角色 | [Runs.cs:192](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L192) `CharacterDefinition` | **仅 C#** |
-| 遗物 | [Content.cs:186](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L186) `RelicDefinition` | **仅 C#，且只有数据没有行为** |
+| `card` / `cardPool` | [SpireCombatDslCompiler.cs:19](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L19) | DSL |
+| `potion` | [SpireCombatDslCompiler.cs:54](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L54) | DSL |
+| `power` / `enemy` / `affliction` | [SpireCombatBehaviorDslCompiler.cs:41-48](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatBehaviorDslCompiler.cs#L41-L48) | DSL（旧语法） |
+| `state` | [StateVariableDefinition.cs:31](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/StateVariableDefinition.cs#L31) | DSL，**仅 `int`** |
+| 角色 | [Runs.cs:192](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L192) `CharacterDefinition` | **仅 C#** |
+| 遗物 | [Content.cs:186](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L186) `RelicDefinition` | **仅 C#，且只有数据没有行为** |
 | 遭遇 / Act 池 | `ContentDsl.cs` | JSON |
 
-**遗物是纯数据**：`RelicDefinition` 只有 `Id` / `Rarity` / `InSharedPool` / `IsFallback` / `IsStackable` / `CharacterPoolIds`，**没有任何行为字段**。行为全部靠 C# `IRunHook` / `IRuleHook` 实现，例如 [BaseSpirePackage.cs:411-537](../../../../archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs#L411-L537) 里的 `BurningBloodRunHook`、`CharonsAshesHook`、`RedSkullHook`。
+**遗物是纯数据**：`RelicDefinition` 只有 `Id` / `Rarity` / `InSharedPool` / `IsFallback` / `IsStackable` / `CharacterPoolIds`，**没有任何行为字段**。行为全部靠 C# `IRunHook` / `IRuleHook` 实现，例如 [BaseSpirePackage.cs:411-537](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs#L411-L537) 里的 `BurningBloodRunHook`、`CharonsAshesHook`、`RedSkullHook`。
 
 ### 3.2 触发与扩展面
 
 | 面 | 数量 | 位置 |
 | --- | --- | --- |
-| 卡牌钩子 | **6**：`onExhaust` / `turnEndInHand` / `onEnterCombat` / `beforeCardPlayed` / `afterCardPlayed` / `afterAutoPostPlay` | [Content.cs:225-239](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L225-L239) |
-| Power 生命周期触发器 | **11** | [Content.cs:1131-1133](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L1131-L1133) |
+| 卡牌钩子 | **6**：`onExhaust` / `turnEndInHand` / `onEnterCombat` / `beforeCardPlayed` / `afterCardPlayed` / `afterAutoPostPlay` | [Content.cs:225-239](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L225-L239) |
+| Power 生命周期触发器 | **11** | [Content.cs:1131-1133](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L1131-L1133) |
 | 战斗规则事件名 | 约 **46** 个（`damage`、`card_exhausted`、`power`、`hp_loss` …） | `State.cs` / `Effects.cs` 中的 `Emit(session, "…")` |
-| `IRuleHook` | 固定 **10** 个方法 | [Content.cs:2420-2438](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L2420-L2438) |
-| `IRunHook` | 固定 **11** 个方法 | [Runs.cs:339-355](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L339-L355) |
-| `ICustomEffectHandler` 可用命令 | **4** 个：`Execute(effect)` / `DealDamage` / `GainBlock` / `ApplyPower`，加 mod 级 `int` 读写 | [EffectExecutionContext.cs:41-93](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/EffectExecutionContext.cs#L41-L93) |
+| `IRuleHook` | 固定 **10** 个方法 | [Content.cs:2420-2438](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L2420-L2438) |
+| `IRunHook` | 固定 **11** 个方法 | [Runs.cs:339-355](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L339-L355) |
+| `ICustomEffectHandler` 可用命令 | **4** 个：`Execute(effect)` / `DealDamage` / `GainBlock` / `ApplyPower`，加 mod 级 `int` 读写 | [EffectExecutionContext.cs:41-93](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/EffectExecutionContext.cs#L41-L93) |
 
 ### 3.3 效果原语与目标
 
 - 效果原语约 60 个，其中 **25 个在新版卡牌语法里写不出来**（缺 `PositionalFields` 映射），见 [primitives.md](../../../dsl/0.0.1/primitives.md)。作者侧的关键缺项：`addCardEnchantment`、`removeCardEnchantment`、`expirePower`、`loseMaxHp`、`cardHasEnchantment`、`setEnemyAction`。
-- 目标选择器 **7 个**：`None / Self / FirstEnemy / SelectedTarget / AllOpponents / RandomEnemy / OtherAllies`（[Effects.cs:269](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs#L269)）。
+- 目标选择器 **7 个**：`None / Self / FirstEnemy / SelectedTarget / AllOpponents / RandomEnemy / OtherAllies`（[Effects.cs:269](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs#L269)）。
 - 计数源 **12 个**、谓词 **12 个**。
-- 关键词是固定 flags 枚举（`Exhaust / Ethereal / Unplayable / Retain / Innate`，[Content.cs:1119](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L1119)）；卡牌类型 4 个、稀有度 11 个也是封闭枚举。
+- 关键词是固定 flags 枚举（`Exhaust / Ethereal / Unplayable / Retain / Innate`，[Content.cs:1119](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L1119)）；卡牌类型 4 个、稀有度 11 个也是封闭枚举。
 
 ### 3.4 状态模型
 
 自定义状态只有 `(modId, key) -> int` 一张表，作用域是**整局**或**单场战斗**，**没有实体维度**：
 
-- 战斗态：[State.cs:296](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L296)、[State.cs:689-692](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L689-L692)
-- 整局态：[Runs.cs:402](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L402)、[Runs.cs:571-573](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L571-L573)
+- 战斗态：[State.cs:296](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L296)、[State.cs:689-692](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs#L689-L692)
+- 整局态：[Runs.cs:402](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L402)、[Runs.cs:571-573](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs#L571-L573)
 - DSL 声明：`state Name { scope = combat|run type = int default = 0 }`
 
 ---

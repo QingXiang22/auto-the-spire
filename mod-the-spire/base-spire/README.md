@@ -14,7 +14,7 @@
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-2026-10-04，旧注册器、地图生成器及旧 hooks 已移入[Legacy 归档](../../archive/legacy-sts/README.md)。旧检查在 archive 单独运行。原有能力说明保留在文末的历史段落中。
+2026-10-04，旧注册器、地图生成器及旧 hooks 已移入[Legacy 归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。2026-10-15用户要求删除根archive；旧实现与检查仅存Git历史，不再随当前检出提供。原有能力说明保留在文末的历史段落中。
 
 ## 正式单人入口（BASE-01，2026-10-05）
 

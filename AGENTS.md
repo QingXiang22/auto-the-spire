@@ -32,12 +32,12 @@
 
 - 项目为 AI 构建可复现、可观测、可控且可扩展的《杀戮尖塔 2》训练环境。整体分为四个部分：
 - `core-the-spire` 是独立的 C#/.NET 9 规则内核。通用状态、动作、结算、随机数、内容注册和 hook 放在这里。
-  - **当前只使用通用 Engine 后端。** 2026-10-04 用户决定将旧 STS 专用后端及消费者移到 `archive/legacy-sts/`；活动工程不再引用或编译归档，旧测试可单独运行。详见 [core-the-spire/AGENTS.md](./core-the-spire/AGENTS.md) 与[归档说明](./archive/legacy-sts/README.md)。归档不等于新环境已实现全部旧内容。
+  - **当前只使用通用 Engine 后端。** 2026-10-04 用户决定将旧 STS 专用后端及消费者移到 `archive/legacy-sts/`；活动工程不再引用或编译归档，2026-10-15用户要求删除根archive，旧实现仅从Git历史查阅，不作为当前检出命令。详见 [core-the-spire/AGENTS.md](./core-the-spire/AGENTS.md) 与[归档说明](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。归档不等于新环境已实现全部旧内容。
 - `mod-the-spire/base-spire` 是使用同一套内容接口实现原版规则的内容包；其他 mod 也通过该接口组合。`net-the-spire` 隔离外部动作与观察，`ai-the-spire` 消费该接口。
 - `net-the-spire` 对`core-the-spire`按照和原版游戏相同的方式提供对外的接口以供外部进行游戏运行时相关信息的提供与相关的交互。
 - `ai-the-spire` 是基于`net-the-spire`提供的接口进行的机器学习项目。
 - `sts2/` 是恢复得到的杀戮尖塔2源码浏览工程，base-spire 的原版规则以对应版本的真实游戏与源码为依据；core 不包含原版玩法。
-- `tools/` 是一些临时用到的工具，临时性的工具放在该目录下。
+- `tools/` 仅纳管[维护中的工程工具](tools/README.md)；临时修复/提取/实验脚本和生成报告只留本地，默认忽略。
 - `docs/` 统一存放项目所有涉及到的文档内容。
 
 ## 规范与实现状态
@@ -105,7 +105,7 @@
 ## 验证与汇报
 
 - 按上节选择开发检查和完整包集成门槛。从仓库根目录完整构建：`dotnet build AutoTheSpire.sln`。
-- 完整规则检查入口：`dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests` 与 `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests`；按上节影响范围和集成时点运行，不要求每次内容编辑都执行两套。仅构建成功不代表 `.spire` 文件可以解析、编译和注册。旧规则检查另在 `archive/legacy-sts/core-the-spire/Core.TheSpire.Tests`，不作为活动门槛。
+- 完整规则检查入口：`dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests` 与 `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests`；按上节影响范围和集成时点运行，不要求每次内容编辑都执行两套。仅构建成功不代表 `.spire` 文件可以解析、编译和注册。旧规则检查已随根archive删除，仅存Git历史，不作为当前检出命令或活动门槛。
 - 对 DSL 迁移至少核对内容包实际加载、声明与卡池数量、代表性基础/升级效果，以及 X 费、目标和钩子等受影响语义。能区分预期行为的检查优先于重复实现逻辑的检查。
 - 纯文档改动运行 `python tools/doc-check/check_docs.py` 与 `git diff --check`，核对链接/标题锚点；无需因此重跑规则套件。汇报中分别写明构建、规则检查、运行时内容加载和未执行项目；失败时给出首个错误及阻断范围，不把“测试数为零”写成通过。
 - 当前实现尚非完整原版。任何覆盖率、原版一致性或性能声明都应附可核对的内容范围与验证证据。

@@ -4,7 +4,7 @@
 
 ## 1. 当前状态
 
-Legacy 及直接消费者已经移入[代码归档](../../../archive/legacy-sts/README.md)，不进入活动 solution，活动工程不依赖它。活动 core 当前是 Engine；通用语法 AST/手写解析器仍保留给新路径使用。归档旧规则不代表新原版环境完成。
+Legacy及直接消费者于2026-10-15从当前树删除，原实现仅保留在Git历史，见[代码归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，不进入活动 solution，活动工程不依赖它。活动 core 当前是 Engine；通用语法 AST/手写解析器仍保留给新路径使用。归档旧规则不代表新原版环境完成。
 
 本轮已实现 C# / core/0.1 文本双入口、共享 IR/链接器、作者对象冻结、唯一调度器的职责拆分、可注入随机 profile 与有界调试模式。配置例子实际从 `.spire` 文件运行；Host 不再手写规则。入口见[core 作者入门](../../dsl/core/README.md)，验证与迁移说明见[交付报告](../../review/archived/core-engine-followup-2026-10-04.md)。STS 内容 DSL 仍是 base 前端，完整原版环境不因此完成。
 

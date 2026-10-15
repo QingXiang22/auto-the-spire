@@ -10,6 +10,7 @@ docs/architecture/c4/workspace.json
 /sts2/
 /fmod-gdextension/
 /tools/fmod-gdextension/
+/archive/
 
 # Local evidence and isolated builds; referenced history is bundled separately.
 /.audit/
@@ -29,11 +30,19 @@ docs/architecture/c4/workspace.json
 /reference/*
 !/reference/README.md
 !/reference/baselines/
+/reference/baselines/*
+!/reference/baselines/sts2-sim.json
 
-# One-off repair scripts and generated extraction reports retained locally.
-/tools/tmp-scan-slash.py
-/tools/repair-combat-slice-strings.py
-/tools/repair-combat-slice-text.py
-/tools/append-a-line-handoff-note.py
-/tools/orimod-decompile/verify/
-/tools/sts2-core-extract/CHANGES.tsv
+# Only maintained engineering tools enter Git; experiments remain local.
+/tools/*
+!/tools/AGENTS.md
+!/tools/README.md
+!/tools/base-spire-dev/
+!/tools/ci/
+!/tools/collect/
+!/tools/contract-check/
+!/tools/differential/
+!/tools/doc-check/
+!/tools/dsl-generate/
+!/tools/rng-oracle/
+!/tools/source-manifest/

@@ -2,11 +2,5 @@
   "repository": "https://github.com/iRyougi/sts2-sim.git",
   "commit": "2089659bd07920088b93226136c72b6b6ee590ad",
   "tree": "8eb770da4e87677c54799801488b71a8ccba687b",
-  "status": "upstream-only; pinned after latest-main review on 2026-10-15",
-  "other_local_reference": {
-    "path": "reference/sts2-ai-mcp",
-    "repository": "https://github.com/BMingSY/sts2-ai-mcp.git",
-    "commit": "5d1d36b24337d7dd27fe125682e4c51fb9f76aa0",
-    "required_for_build": false
-  }
+  "status": "upstream-only; pinned after latest-main review on 2026-10-15"
 }
