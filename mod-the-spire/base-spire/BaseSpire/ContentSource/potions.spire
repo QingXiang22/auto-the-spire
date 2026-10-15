@@ -1,43 +1,341 @@
 package base-spire {
-  potion FirePotion {
+  potion BloodPotion {
     rarity = common
-    usage = combatOnly
-    target = enemy
-    use = attack(20, target=target, properties=[unpowered])
+    usage = anyTime
+    target = self
+    source = "sts2/src/Core/Models/Potions/BloodPotion.cs"
+    unsupportedUse = "BloodPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
   }
-
-  potion BlockPotion {
-    rarity = common
+  potion SoldiersStew {
+    rarity = rare
     usage = combatOnly
     target = self
-    use = gainBlock(12)
+    source = "sts2/src/Core/Models/Potions/SoldiersStew.cs"
+    unsupportedUse = "SoldiersStew.OnUse/automatic hook is not implemented; metadata and acquisition only"
   }
-
-  potion StrengthPotion {
-    rarity = common
-    usage = combatOnly
-    target = self
-    use = applyPower(Strength, 2, target=self)
-  }
-
-  potion BlessingOfTheForge {
+  potion Ashwater {
     rarity = uncommon
     usage = combatOnly
     target = self
-    use = upgradeCards(pile=hand)
+    source = "sts2/src/Core/Models/Potions/Ashwater.cs"
+    unsupportedUse = "Ashwater.OnUse/automatic hook is not implemented; metadata and acquisition only"
   }
-
+  potion AttackPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/AttackPotion.cs"
+    unsupportedUse = "AttackPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
   potion BeetleJuice {
     rarity = rare
     usage = combatOnly
     target = enemy
-    use = applyPower(Shrink, 4, target=target)
+    source = "sts2/src/Core/Models/Potions/BeetleJuice.cs"
+    use = { applyPower = { power = Shrink stacks = 4 target = context.target } }
   }
-
+  potion BlessingOfTheForge {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/BlessingOfTheForge.cs"
+    use = { upgradeCards = { pile = hand } }
+  }
+  potion BlockPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/BlockPotion.cs"
+    unpowered = true
+    use = { gainBlock = { amount = 12 } }
+  }
+  potion BottledPotential {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/BottledPotential.cs"
+    unsupportedUse = "BottledPotential.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion Clarity {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/Clarity.cs"
+    unsupportedUse = "Clarity.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion ColorlessPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/ColorlessPotion.cs"
+    unsupportedUse = "ColorlessPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion CureAll {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/CureAll.cs"
+    unsupportedUse = "CureAll.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion DexterityPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/DexterityPotion.cs"
+    use = { applyPower = { power = DexterityPower stacks = 2 target = context.owner } }
+  }
+  potion DistilledChaos {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/DistilledChaos.cs"
+    unsupportedUse = "DistilledChaos.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion DropletOfPrecognition {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/DropletOfPrecognition.cs"
+    unsupportedUse = "DropletOfPrecognition.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion Duplicator {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/Duplicator.cs"
+    unsupportedUse = "Duplicator.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion EnergyPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/EnergyPotion.cs"
+    use = { modifyEnergy = { amount = 2 } }
+  }
+  potion EntropicBrew {
+    rarity = rare
+    usage = anyTime
+    target = self
+    source = "sts2/src/Core/Models/Potions/EntropicBrew.cs"
+    unsupportedUse = "EntropicBrew.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion ExplosiveAmpoule {
+    rarity = common
+    usage = combatOnly
+    target = allEnemies
+    source = "sts2/src/Core/Models/Potions/ExplosiveAmpoule.cs"
+    unpowered = true
+    use = { attack = { damage = 10 target = allEnemies } }
+  }
+  potion FairyInABottle {
+    rarity = rare
+    usage = automatic
+    target = self
+    source = "sts2/src/Core/Models/Potions/FairyInABottle.cs"
+    unsupportedUse = "FairyInABottle.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion FirePotion {
+    rarity = common
+    usage = combatOnly
+    target = enemy
+    source = "sts2/src/Core/Models/Potions/FirePotion.cs"
+    unpowered = true
+    use = { attack = { damage = 20 target = context.target } }
+  }
   potion FlexPotion {
     rarity = common
     usage = combatOnly
     target = self
-    use = applyPower(FlexPotionPower, 5, target=self)
+    source = "sts2/src/Core/Models/Potions/FlexPotion.cs"
+    use = { applyPower = { power = FlexPotionPower stacks = 5 target = context.owner } }
+  }
+  potion Fortifier {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/Fortifier.cs"
+    unsupportedUse = "Fortifier.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion FruitJuice {
+    rarity = rare
+    usage = anyTime
+    target = self
+    source = "sts2/src/Core/Models/Potions/FruitJuice.cs"
+    unsupportedUse = "FruitJuice.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion FyshOil {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/FyshOil.cs"
+    unsupportedUse = "FyshOil.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion GamblersBrew {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/GamblersBrew.cs"
+    unsupportedUse = "GamblersBrew.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion GigantificationPotion {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/GigantificationPotion.cs"
+    unsupportedUse = "GigantificationPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion HeartOfIron {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/HeartOfIron.cs"
+    use = { applyPower = { power = PlatingPower stacks = 7 target = context.owner } }
+  }
+  potion LiquidBronze {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/LiquidBronze.cs"
+    unsupportedUse = "LiquidBronze requires player ThornsPower, absent from loaded Power links; enemy Thorns is unsupported and its positiveAmount gate excludes source-required zero-damage retaliation; public Power fix required"
+  }
+  potion LiquidMemories {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/LiquidMemories.cs"
+    unsupportedUse = "LiquidMemories.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion LuckyTonic {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/LuckyTonic.cs"
+    unsupportedUse = "LuckyTonic.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion MazalethsGift {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/MazalethsGift.cs"
+    unsupportedUse = "MazalethsGift.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion OrobicAcid {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/OrobicAcid.cs"
+    unsupportedUse = "OrobicAcid.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion PotionOfBinding {
+    rarity = uncommon
+    usage = combatOnly
+    target = allEnemies
+    source = "sts2/src/Core/Models/Potions/PotionOfBinding.cs"
+    unsupportedUse = "PotionOfBinding.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion PowderedDemise {
+    rarity = uncommon
+    usage = combatOnly
+    target = enemy
+    source = "sts2/src/Core/Models/Potions/PowderedDemise.cs"
+    unsupportedUse = "PowderedDemise.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion PowerPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/PowerPotion.cs"
+    unsupportedUse = "PowerPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion RadiantTincture {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/RadiantTincture.cs"
+    unsupportedUse = "RadiantTincture.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion RegenPotion {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/RegenPotion.cs"
+    unsupportedUse = "RegenPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion ShacklingPotion {
+    rarity = rare
+    usage = combatOnly
+    target = allEnemies
+    source = "sts2/src/Core/Models/Potions/ShacklingPotion.cs"
+    unsupportedUse = "ShacklingPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion ShipInABottle {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/ShipInABottle.cs"
+    unsupportedUse = "ShipInABottle.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion SkillPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/SkillPotion.cs"
+    unsupportedUse = "SkillPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion SneckoOil {
+    rarity = rare
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/SneckoOil.cs"
+    unsupportedUse = "SneckoOil.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion SpeedPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/SpeedPotion.cs"
+    unsupportedUse = "SpeedPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion StableSerum {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/StableSerum.cs"
+    unsupportedUse = "StableSerum.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion StrengthPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/StrengthPotion.cs"
+    use = { applyPower = { power = Strength stacks = 2 target = context.owner } }
+  }
+  potion SwiftPotion {
+    rarity = common
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/SwiftPotion.cs"
+    use = { draw = { amount = 3 } }
+  }
+  potion TouchOfInsanity {
+    rarity = uncommon
+    usage = combatOnly
+    target = self
+    source = "sts2/src/Core/Models/Potions/TouchOfInsanity.cs"
+    unsupportedUse = "TouchOfInsanity.OnUse/automatic hook is not implemented; metadata and acquisition only"
+  }
+  potion VulnerablePotion {
+    rarity = common
+    usage = combatOnly
+    target = enemy
+    source = "sts2/src/Core/Models/Potions/VulnerablePotion.cs"
+    use = { applyPower = { power = Vulnerable stacks = 3 target = context.target } }
+  }
+  potion WeakPotion {
+    rarity = common
+    usage = combatOnly
+    target = enemy
+    source = "sts2/src/Core/Models/Potions/WeakPotion.cs"
+    use = { applyPower = { power = Weak stacks = 3 target = context.target } }
   }
 }

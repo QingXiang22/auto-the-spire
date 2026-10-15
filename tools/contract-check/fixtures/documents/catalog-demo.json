@@ -1,0 +1,205 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "demo:rules-v1",
+  "catalog_id": "demo:catalog-v1",
+  "declarations": {
+    "entity_kinds": [
+      {"id": "demo:card", "semantic_version": "1", "description": "卡牌实例"},
+      {"id": "demo:draw_pile", "semantic_version": "1", "description": "抽牌堆实体"},
+      {"id": "demo:player", "semantic_version": "1", "description": "玩家实体"}
+    ],
+    "content_types": [
+      {"id": "demo:card_face", "semantic_version": "1", "description": "卡面内容类型", "kind_ids": ["demo:card"]}
+    ],
+    "fields": [
+      {
+        "id": "demo:card_face_ref",
+        "semantic_version": "1",
+        "description": "卡面类别",
+        "value_type": "category",
+        "category_ids": ["demo:defend", "demo:strike"],
+        "applies_to": {"entity_kinds": ["demo:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:defeated",
+        "semantic_version": "1",
+        "description": "玩家是否已倒下",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["demo:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:hp",
+        "semantic_version": "1",
+        "description": "当前公开生命值",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["demo:player"], "action_types": [], "terminal_reasons": ["demo:victory"]},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:known_hp",
+        "semantic_version": "1",
+        "description": "允许小数的公开生命值",
+        "value_type": "number",
+        "number_format": "decimal",
+        "applies_to": {"entity_kinds": ["demo:player"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:optional_owner",
+        "semantic_version": "1",
+        "description": "可选的卡牌归属",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["demo:player"],
+        "applies_to": {"entity_kinds": ["demo:card"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:owner",
+        "semantic_version": "1",
+        "description": "卡牌归属玩家",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["demo:player"],
+        "applies_to": {"entity_kinds": ["demo:card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:pile_scope",
+        "semantic_version": "1",
+        "description": "牌堆所处作用域",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["demo:player"],
+        "applies_to": {"entity_kinds": ["demo:draw_pile"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:play_target",
+        "semantic_version": "1",
+        "description": "出牌目标",
+        "value_type": "entity_ref",
+        "target_kind_ids": ["demo:card"],
+        "applies_to": {"entity_kinds": [], "action_types": ["demo:play"], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:played",
+        "semantic_version": "1",
+        "description": "本场已打出牌数",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["demo:player"], "action_types": [], "terminal_reasons": ["demo:defeat", "demo:victory"]},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "demo:secret",
+        "semantic_version": "1",
+        "description": "条件可见的生命值",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["demo:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "conditional",
+        "condition_description": "仅在提供方机制检查通过时可见",
+        "visibility_check_ids": ["demo:check_hp_visible"]
+      },
+      {
+        "id": "net:pile_members_complete",
+        "semantic_version": "1",
+        "description": "派生：牌堆成员是否完整",
+        "value_type": "boolean",
+        "applies_to": {"entity_kinds": ["demo:draw_pile"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "net:pile_total_count",
+        "semantic_version": "1",
+        "description": "派生：牌堆总数",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["demo:draw_pile"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      }
+    ],
+    "relation_types": [
+      {
+        "id": "demo:holds",
+        "semantic_version": "1",
+        "description": "玩家持有卡牌",
+        "source_kind_ids": ["demo:player"],
+        "target_kind_ids": ["demo:card"],
+        "position_schema": {"unit": "slot", "origin": "hand", "min": 0, "max": 9}
+      },
+      {
+        "id": "demo:owned_by",
+        "semantic_version": "1",
+        "description": "卡牌归属关系（无位置）",
+        "source_kind_ids": ["demo:card"],
+        "target_kind_ids": ["demo:player"],
+        "position_schema": null
+      },
+      {
+        "id": "net:pile_member",
+        "semantic_version": "1",
+        "description": "派生：牌堆成员（张量化，wire 不填）",
+        "source_kind_ids": ["demo:draw_pile"],
+        "target_kind_ids": ["demo:card"],
+        "position_schema": null
+      }
+    ],
+    "pile_types": [
+      {
+        "id": "demo:draw_pile_type",
+        "semantic_version": "1",
+        "description": "抽牌堆",
+        "kind_id": "demo:draw_pile",
+        "member_kind_ids": ["demo:card"],
+        "position_schema": {"unit": "card", "origin": "top", "min": 0, "max": null},
+        "exclusive_group_id": "demo:battle",
+        "membership_scope_field_id": "demo:pile_scope"
+      }
+    ],
+    "sequence_types": [
+      {
+        "id": "demo:turn_queue",
+        "semantic_version": "1",
+        "description": "公开有序回合队列",
+        "owner_kind_ids": ["demo:player"],
+        "element_kind_ids": ["demo:card"],
+        "min_count": 0,
+        "max_count": null
+      }
+    ],
+    "group_types": [
+      {
+        "id": "demo:choices",
+        "semantic_version": "1",
+        "description": "候选展示分组",
+        "owner_kind_ids": ["demo:player"],
+        "member_kind_ids": ["demo:card"],
+        "min_count": 0,
+        "max_count": null
+      }
+    ],
+    "action_types": [
+      {"id": "demo:end_turn", "semantic_version": "1", "description": "结束回合", "required_fields": [], "optional_fields": []},
+      {"id": "demo:play", "semantic_version": "1", "description": "打出一张牌", "required_fields": ["demo:play_target"], "optional_fields": []}
+    ],
+    "terminal_reasons": [
+      {"id": "demo:defeat", "semantic_version": "1", "description": "战斗失败", "outcome": "loss", "required_fields": [], "optional_fields": ["demo:played"]},
+      {"id": "demo:victory", "semantic_version": "1", "description": "战斗胜利", "outcome": "win", "required_fields": ["demo:hp"], "optional_fields": ["demo:played"]}
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+using namespace example-mod;
+
+card Spark {
+    normal = {
+        type = attack rarity = common cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {} play = { attack = { damage = 4 } } hooks = {}
+    }
+    upgraded = {
+        type = attack rarity = common cost = 2
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {} play = { attack = { damage = 7 } } hooks = {}
+    }
+}
+
+card GenerateSpark {
+    normal = {
+        type = skill rarity = common cost = 0
+        target = { selectSelf = {} } keywords = {}
+        play = { generateCards = { count = 1 pool = { card = Spark } cost = 0 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill rarity = common cost = 0
+        target = { selectSelf = {} } keywords = {}
+        play = { generateCards = { count = 2 pool = { card = Spark } upgraded = true cost = 0 } }
+        hooks = {}
+    }
+}

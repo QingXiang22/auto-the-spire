@@ -1,0 +1,38 @@
+{
+  "_notes": [
+    "A-04 内容类型补全（手写输入，不是被测实现产出）。",
+    "用法：对每个 bundle 的 fixtures/<bundle>/catalog.json 做 declarations.content_types 的 $append（共享 check_contracts.resolve_document 的叠加语义）。",
+    "为什么需要：现有 fixtures 的 entities[].content_id 用的是**内容定义 ID**（如 fixture:strike、fixture:jaw_worm），",
+    "而 catalog 的 content_types 只声明了内容**家族**（fixture:card_face / fixture:power_face）。",
+    "tensorize 按 encoder-design §2 L50『未注册类型…返回显式错误』与 §5『只有 known 具有有效内容索引』",
+    "把未声明的内容类型报为 unknown_type @ snapshot.entities[<id>].content_id（见 tensor_suite 的负例）。",
+    "本文件把 fixtures 实际用到的内容定义按 kind_id 补齐声明，用于正向编码检查；它**不改动** A-01 的夹具与冻结摘要。",
+    "每个条目的 id/kind 均从 fixtures/<bundle>/snapshot.json 的 (kind_id, content_id) 对逐条抄出。"
+  ],
+  "bundles": {
+    "combat": [
+      {"id": "fixture:strike", "kind_id": "fixture:card"},
+      {"id": "fixture:headbutt", "kind_id": "fixture:card"},
+      {"id": "fixture:bash", "kind_id": "fixture:card"},
+      {"id": "fixture:defend", "kind_id": "fixture:card"},
+      {"id": "fixture:jaw_worm", "kind_id": "fixture:enemy"},
+      {"id": "fixture:cultist", "kind_id": "fixture:enemy"},
+      {"id": "fixture:strength_power", "kind_id": "fixture:power"},
+      {"id": "fixture:vulnerable_power", "kind_id": "fixture:power"}
+    ],
+    "scenario": [
+      {"id": "fixture:enemy_node", "kind_id": "fixture:map_node"},
+      {"id": "fixture:rest_node", "kind_id": "fixture:map_node"},
+      {"id": "fixture:take_gold", "kind_id": "fixture:event_option"},
+      {"id": "fixture:leave", "kind_id": "fixture:event_option"},
+      {"id": "fixture:fire_potion", "kind_id": "fixture:potion"}
+    ],
+    "card_choice": [
+      {"id": "fixture:strike", "kind_id": "fixture:card"},
+      {"id": "fixture:defend", "kind_id": "fixture:card"},
+      {"id": "fixture:bash", "kind_id": "fixture:card"},
+      {"id": "fixture:jaw_worm", "kind_id": "fixture:enemy"}
+    ],
+    "variables": []
+  }
+}

@@ -1,19 +1,69 @@
-package base-spire {
-  card Dazed {
-    type = status
-    rarity = status
-    cost = 0
-    target = self
-    keywords = [ethereal, unplayable]
-    play = sequence()
-  }
+using namespace base-spire;
 
-  card Beckon {
-    type = status
-    rarity = status
-    cost = 1
-    target = none
-    play = sequence()
-    turnEndInHand = loseHp(6, target=self, properties=[move, unpowered, unblockable])
-  }
+# Source: sts2/src/Core/Models/Cards/Debris.cs; StatusCardPool.cs
+card Debris {
+    pools = { StatusCardPool }
+    upgradeable = false
+    normal = { type = status rarity = status cost = 1 target = { selectNone = {} } keywords = { exhaust } play = {} hooks = {} }
+    upgraded = { type = status rarity = status cost = 1 target = { selectNone = {} } keywords = { exhaust } play = {} hooks = {} }
+}
+
+card Dazed {
+    upgradeable = false
+    normal = {
+        type = status
+        rarity = status
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { ethereal unplayable }
+        play = {}
+        hooks = {}
+    }
+    upgraded = {
+        type = status
+        rarity = status
+        cost = 0
+        target = { selectSelf = {} }
+        keywords = { ethereal unplayable }
+        play = {}
+        hooks = {}
+    }
+}
+
+card Beckon {
+    upgradeable = false
+    normal = {
+        type = status
+        rarity = status
+        cost = 1
+        target = { selectNone = {} }
+        keywords = {}
+        play = {}
+        hooks = {
+            turnEndInHand = {
+                loseHp = {
+                    amount = 6
+                    target = context.owner
+                    properties = { move unpowered unblockable }
+                }
+            }
+        }
+    }
+    upgraded = {
+        type = status
+        rarity = status
+        cost = 1
+        target = { selectNone = {} }
+        keywords = {}
+        play = {}
+        hooks = {
+            turnEndInHand = {
+                loseHp = {
+                    amount = 6
+                    target = context.owner
+                    properties = { move unpowered unblockable }
+                }
+            }
+        }
+    }
 }

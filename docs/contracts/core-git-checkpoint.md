@@ -29,3 +29,5 @@ dotnet run --project archive/legacy-sts/core-the-spire/Core.TheSpire.Tests
 5. **环境可信后推进 AI。** 完整环境、公开接口和日常对拍先稳定，再做训练收益、性能与泛化评估。通用核心缺口须附最小复现，由负责人决定修复或新增能力，不自行重开架构。
 
 本次冻结只关闭 core 的交付，不宣布原版、整局、mod 或 AI 完工。当前工作区的完整任务定义继续由负责人维护。
+
+后续可以直接按 [agent 分工与交付约定](../design/post-core-agent-assignments.md)分配 A/base、B/对拍、C/net；[可复制提示词](../design/agent-goals.md)与[唯一认领清单](../review/tofix/README.md#01-core冻结后的分派与下一步)配套。D/真实客户端和E/指定mod为原版候选稳定后的任务。

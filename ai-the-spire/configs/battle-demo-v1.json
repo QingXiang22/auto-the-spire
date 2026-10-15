@@ -1,0 +1,56 @@
+{
+  "profile_id": "battle-demo-v1",
+  "semantic_version": "1",
+  "description": "D1 可运行战斗学习版本的冻结工程演示 Profile：受控模拟工程交付，不代表正式游戏收益偏好或学习效果晋升标准。种子公式：第 k 轮第 j 局环境种子 = train_environment_base + episodes_per_round * k + j（k 从 0 起）。",
+  "host": {
+    "extra_args": []
+  },
+  "seeds": {
+    "demo_environment": 20261001,
+    "demo_executor": 20261002,
+    "model_init": 20261003,
+    "train_environment_base": 10000,
+    "validation_environment_base": 20000,
+    "validation_environment_count": 8,
+    "final_environment_base": 30000,
+    "final_environment_count": 8,
+    "executor_offset": 1000000,
+    "bootstrap": 20261003
+  },
+  "budget": {
+    "train_rounds": 8,
+    "episodes_per_round": 4,
+    "max_train_actions": 4096,
+    "max_decisions_per_episode": 128,
+    "episode_time_limit_s": 60.0,
+    "request_timeout_s": 10.0,
+    "demo_command_time_limit_s": 60.0,
+    "train_command_time_limit_s": 900.0,
+    "evaluate_command_time_limit_s": 180.0,
+    "storage_limit_bytes": 536870912
+  },
+  "ppo": {
+    "learning_rate": 0.002,
+    "clip_ratio": 0.2,
+    "epochs": 2,
+    "value_coef": 0.5,
+    "entropy_coef": 0.0,
+    "max_grad_norm": 1.0,
+    "adam_beta1": 0.9,
+    "adam_beta2": 0.999,
+    "adam_epsilon": 1e-08,
+    "seed": 20261003
+  },
+  "reward": {
+    "discount": 0.99,
+    "hp_lost_weight": -0.01,
+    "victory_weight": 1.0,
+    "defeat_weight": -1.0
+  },
+  "evaluation": {
+    "bootstrap_resamples": 1000,
+    "bootstrap_seed": 20261003
+  },
+  "model": {},
+  "encoding": {}
+}

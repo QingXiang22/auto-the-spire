@@ -1,0 +1,101 @@
+# 规则声明扩展例 · extended（core/0.2）
+#
+# 用途：baseline.spire 的扩展版本。相对 baseline 只增加下面四处声明，其余逐字相同：
+#   * entity Marker 新增公开字段 Bump（Int 0..1000000，default 0）
+#   * entity Marker 新增隐藏字段 Secret（visibility = Hidden，default 7）
+#   * 新增内部 procedure Retally（body 会修改 Marker.Bump，但没有任何 action/订阅引用它；
+#     它只是包内部的块，不得成为外部可提交操作）
+#   * 新增合法 action Mark（参数 amount，choices = [1, 3]；body 修改 Bump 与隐藏的 Secret）
+#
+# 两个规则包由同一个通用规则提供方加载、共享同一份 public-metadata.json；
+# net 生产源码里没有为 Bump / Secret / Retally / Mark 增加任何逐项注册行。
+#
+# 本规则包不声明任何随机绘制：建局与执行都不消耗随机数。
+using namespace declaration;
+dsl_version = "core/0.2";
+version = "1.0.0";
+# 开局入口：与 baseline 逐字相同（本局的初始状态由 Setup 建立）。
+start = [Setup];
+
+scope Board { }
+
+entity Marker {
+    fields = {
+        Value = { type = Int(min = 0, max = 1000000) default = 0 }
+        Bump = { type = Int(min = 0, max = 1000000) default = 0 }
+        Secret = { type = Int(min = 0, max = 1000000) default = 7 visibility = Hidden }
+    }
+}
+
+collection Slots {
+    element = Marker
+    capacity = 4
+}
+
+procedure Setup {
+    locals = { board = Binding marker = Binding }
+    body = {
+        createScope = { type = Board into = board }
+        create = { type = Marker scope = board into = marker }
+    }
+}
+
+# 仅此扩展例新增的内部块：不是 action，不应出现在公开目录或合法动作里。
+procedure Retally {
+    locals = { marker = Binding }
+    body = {
+        set = {
+            target = first(type(Marker))
+            field = Marker.Bump
+            value = add(field(first(type(Marker)), Marker.Bump), 1)
+        }
+    }
+}
+
+terminal ReachedLimit { fields = { Value = Int } }
+
+action Add {
+    role = player
+    parameters = { delta = Int(min = 1, max = 100) }
+    choices = { delta = [1, 2] }
+    body = {
+        set = {
+            target = first(type(Marker))
+            field = Marker.Value
+            value = add(field(first(type(Marker)), Marker.Value), delta)
+        }
+        if = {
+            condition = greaterOrEqual(field(first(type(Marker)), Marker.Value), 1000000)
+            then = {
+                terminal = {
+                    result = ReachedLimit
+                    fields = { Value = field(first(type(Marker)), Marker.Value) }
+                }
+            }
+        }
+    }
+}
+
+# 仅此扩展例新增的合法动作：公开字段 Bump 与隐藏字段 Secret 都在这里被修改。
+action Mark {
+    role = player
+    parameters = { amount = Int(min = 1, max = 3) }
+    choices = { amount = [1, 3] }
+    body = {
+        set = {
+            target = first(type(Marker))
+            field = Marker.Bump
+            value = add(field(first(type(Marker)), Marker.Bump), amount)
+        }
+        set = {
+            target = first(type(Marker))
+            field = Marker.Secret
+            value = add(field(first(type(Marker)), Marker.Secret), 1)
+        }
+    }
+}
+
+projection PlayerView {
+    role = player
+    types = { Marker = {} }
+}

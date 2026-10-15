@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>13.0</LangVersion>
+    <Version>0.4.0</Version>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
@@ -12,5 +13,7 @@
     <EmbeddedResource Include="Content\*.encounters.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Content\*.acts.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
     <EmbeddedResource Include="ContentSource\*.spire" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
+    <!-- B-05b 的作者前端文本：切片内容的作者表示，编译到通用 IR（与程序化包同一运行时）。 -->
+    <EmbeddedResource Include="Slice\Content\*.author" LogicalName="BaseSpire.SliceAuthor.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

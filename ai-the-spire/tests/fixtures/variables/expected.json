@@ -1,0 +1,109 @@
+{
+  "_provenance": {
+    "期望来源": "手写读解 fixtures/variables 的 wire 文档（当前观察），不调用被测实现生成",
+    "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
+    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+  },
+  "_notes": [
+    "扩展变量样例：三个 mod 各自声明同名 charge，命名空间、所有者实体与值类型全部不同，必须可区分。",
+    "modA:charge 为 number/integer、在 player-01，值为已知零；modB:charge 为 number/decimal、在 enemy-01；modC:charge 为 category、在 power-01。",
+    "modD:secret_charge 为 conditional：尚未公开时写 unknown（不省略），其 visibility_check_ids 由本 bundle 的 coverage.json 闭合。",
+    "ux:timer_unavailable 适用但后端不能提供，写 unavailable，与 unknown 和已知零区分。",
+    "card-01/card-02 的 content_state 分别为 unknown 与 unavailable，没有 content_id。",
+    "单候选决策点（fixture:end_turn）；终止/softmax 不在本批。"
+  ],
+  "catalog": {
+    "protocol_version": "0.1",
+    "ruleset_id": "fixture:rules-v1",
+    "catalog_id": "fixture:variables-catalog-v1",
+    "declaration_counts": {
+      "entity_kinds": 4,
+      "content_types": 0,
+      "fields": 6,
+      "relation_types": 1,
+      "pile_types": 0,
+      "sequence_types": 0,
+      "group_types": 0,
+      "action_types": 1,
+      "terminal_reasons": 1
+    },
+    "catalog_digest": "sha256:708b0d38b3a094a8be9095a1a0bd67178919eecc5b8b849f01016f63e4c7f102",
+    "conditional_fields": {
+      "modD:secret_charge": ["fixture:check-charge-visible"]
+    },
+    "shared_local_names": {
+      "charge": ["modA:charge", "modB:charge", "modC:charge"]
+    },
+    "coverage_mechanism_ids": ["fixture:check-charge-visible"]
+  },
+  "snapshots": {
+    "snapshot": {
+      "session_id": "session-variables-1",
+      "observation_id": 21,
+      "backend_profile_id": "fixture:sim-v1",
+      "status": "decision",
+      "is_terminal": false,
+      "entity_ids": ["card-01", "card-02", "enemy-01", "player-01", "power-01"],
+      "entity_kind_counts": {
+        "fixture:card": 2,
+        "fixture:enemy": 1,
+        "fixture:player": 1,
+        "fixture:power": 1
+      },
+      "content_state_counts": {
+        "not_applicable": 3,
+        "unavailable": 1,
+        "unknown": 1
+      },
+      "field_state_counts": {
+        "known": 5,
+        "unavailable": 1,
+        "unknown": 1
+      },
+      "known_zero_number_fields": [
+        ["player-01", "modA:charge"]
+      ],
+      "known_false_boolean_fields": [],
+      "unknown_fields": [
+        ["player-01", "modD:secret_charge"]
+      ],
+      "unavailable_fields": [
+        ["player-01", "ux:timer_unavailable"]
+      ],
+      "absent_optional_fields": [],
+      "piles": {},
+      "relations": [
+        ["fixture:held_by", "power-01", "player-01"]
+      ],
+      "relation_count": 1,
+      "sequences": {},
+      "group_members_sorted": {},
+      "candidate_ids": ["c-1"],
+      "candidates": [
+        {
+          "candidate_id": "c-1",
+          "action_type": "fixture:end_turn",
+          "known_fields": {}
+        }
+      ],
+      "content_id_groups": {},
+      "terminal_facts": null,
+      "field_type_by_instance": {
+        "enemy-01": {
+          "fixture:hp": ["number", "integer"],
+          "modB:charge": ["number", "decimal"]
+        },
+        "player-01": {
+          "fixture:hp": ["number", "integer"],
+          "modA:charge": ["number", "integer"],
+          "modD:secret_charge": ["number", "integer"],
+          "ux:timer_unavailable": ["number", "integer"]
+        },
+        "power-01": {
+          "modC:charge": ["category", null]
+        }
+      },
+      "snapshot_digest": "sha256:e621922bb995d1c161e58580a33fcd4f2fc372e4a7f3b8dd698da3dc27b2cc91"
+    }
+  }
+}

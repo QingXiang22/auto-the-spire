@@ -1,0 +1,27 @@
+using namespace example-mod;
+dsl_version = "base/0.0.2"
+
+card TwoHits {
+    common = {
+        type = attack
+        rarity = common
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {}
+        play = {
+            attack = { damage = 3 }
+            attack = { damage = 7 }
+            gainBlock = { amount = 2 }
+        }
+        hooks = {}
+    }
+    normal = {}
+    upgraded = {
+        cost = 1
+        play = {
+            attack = { damage = 4 }
+            attack = { damage = 9 }
+            gainBlock = { amount = 3 }
+        }
+    }
+}

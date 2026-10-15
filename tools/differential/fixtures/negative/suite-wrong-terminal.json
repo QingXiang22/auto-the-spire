@@ -1,0 +1,47 @@
+{
+  "suite": "negative-wrong-terminal",
+  "fixtures_version": "env-t04-negative@1",
+  "note": "失败契约反例（工具验收，不是产品内容覆盖）：case 预登记 expected_terminal=victory，但脚本不会击杀任何敌人、会话仍停在可继续边界。严格入口必须判 wrong_terminal（返回 1），不能因为两侧一致就记为通过。",
+  "target_scope": "base-spire-singleplayer-dev-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "reference/sts2-sim（本反例两侧本来一致，失败只来自错误终点）",
+    "note": "反例 suite：只用于证明严格入口的失败契约。"
+  },
+  "expected_case_ids": [ "neg-wrong-terminal" ],
+  "cases": [
+    {
+      "id": "neg-wrong-terminal",
+      "title": "反例：登记为胜利终局，实际停在运行中",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "Strike 打 38 血敌人只掉 6 点，不产生任何终局。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:strike-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" }
+      ],
+      "group": "failure-contract",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-NEG-wrong-terminal",
+      "initialization": "受控切片包 + 工厂同款随机/数值/Compute 配置 → Start 一次",
+      "contents": [ "base-spire:strike-ironclad" ],
+      "variants": [ "normal", "wrong-terminal-declaration" ],
+      "required_dimensions": [ "actions", "decisions", "facts" ],
+      "semantic_actions": [ "play_card:base-spire:strike-ironclad→enemy:0" ],
+      "expected_terminal": "victory",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs）"
+    }
+  ]
+}

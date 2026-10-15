@@ -71,7 +71,7 @@ public static partial class EngineDslCompiler
                     case "call":
                     {
                         var procedure = _compiler.Symbol<ProcedureSymbol>(p.Required("procedure"));
-                        var args = p.Get("args") is { } values ? List(values).Select(Expression).ToArray() : [];
+                        var args = CallArguments(procedure, p.Get("args"));
                         instruction = p.Get("into") is { } into ? _scope.Call(procedure, Slot(into), args) : _scope.Call(procedure, args);
                         break;
                     }
@@ -112,6 +112,19 @@ public static partial class EngineDslCompiler
                     default: throw Error(command.Location, $"Unknown command '{command.Name}'.");
                 }
                 return Source(instruction, command.Location);
+            }
+
+            private Expr[] CallArguments(ProcedureSymbol procedure, DslValueNode? values)
+            {
+                if (values is not DslBlockNode) return values is null ? [] : List(values).Select(Expression).ToArray();
+                if (!_compiler._modern) throw Error(values.Location, "Named procedure arguments require core/0.3.");
+                var named = Properties.Items(values).ToDictionary(p => p.Name, StringComparer.Ordinal);
+                foreach (var name in named.Keys)
+                    if (!procedure.Parameters.Any(p => p.Name == name))
+                        throw Error(named[name].Location, $"Procedure '{procedure.Name}' has no input '{name}'.");
+                return procedure.Parameters.Select(parameter => named.TryGetValue(parameter.Name, out var value)
+                    ? Expression(value.Value)
+                    : throw Error(values.Location, $"Missing input '{parameter.Name}' for '{procedure.Name}'.")).ToArray();
             }
 
             private (FieldSymbol, Expr)[] Initializers(DslValueNode? fields, Func<string, FieldSymbol> resolve) =>

@@ -1,0 +1,21 @@
+using namespace base-spire;
+
+# Sources: sts2/src/Core/Models/Cards/Acrobatics.cs, Prepared.cs, Hologram.cs.
+card Acrobatics {
+ pools = { SilentCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 3 } chooseCard = { from = hand to = discard autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 4 } chooseCard = { from = hand to = discard autoSelect = true } } hooks = {} }
+}
+card Prepared {
+ pools = { SilentCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = common cost = 0 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 1 } chooseCard = { from = hand to = discard autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = common cost = 0 target = { selectSelf = {} } keywords = {} play = { draw = { amount = 2 } chooseCard = { from = hand to = discard count = 2 autoSelect = true } } hooks = {} }
+}
+card Hologram {
+ pools = { DefectCardPool }
+ upgradeable = true
+ normal = { type = skill rarity = common cost = 1 target = { selectSelf = {} } keywords = { exhaust } play = { gainBlock = { amount = 3 } chooseCard = { from = discard to = hand autoSelect = true } } hooks = {} }
+ upgraded = { type = skill rarity = common cost = 1 target = { selectSelf = {} } keywords = {} play = { gainBlock = { amount = 5 } chooseCard = { from = discard to = hand autoSelect = true } } hooks = {} }
+}

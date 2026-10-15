@@ -1,0 +1,455 @@
+{
+    "rules":  [
+                  {
+                      "id":  "I-02",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:219-221（Identity.protocol_version const \"0.1\"）",
+                                       "wire.schema.json:820-821、1234-1235（PublicCatalog/PublicSnapshot 同键）",
+                                       "tools/contract-check/jsonschema_min.py:102-103（const 求值）",
+                                       "tools/contract-check/schema_policy.py:113-118 SCHEMA-2",
+                                       "case: neg-identity-version（期望 I-66）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/CatalogDto.cs:19、478 与 SnapshotDto.cs:296 同样以 const 拒绝对应值",
+                                       "跨泳道（AI 侧）：ai-the-spire/ai_the_spire/encoding/manifest.py:10、ai-the-spire/tests/encoding_suite.py:329-335（exact identity 四键完全相等）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "exact 相等由 const 强制；无前缀/区间匹配之外的宽松分支。"
+                  },
+                  {
+                      "id":  "I-03",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "ai-the-spire/ai_the_spire/encoding/manifest.py:644-657（matches_catalog/assert_catalog：目录内容摘要不一致即 version_mismatch，不重排索引）",
+                                       "ai-the-spire/tests/encoding_suite.py:359-389，case: ai-the-spire `combat/new-content-new-version`（新增声明后 dictionary_version 与 identity.catalog_id 必须都变）",
+                                       "case: ai-the-spire `combat/new-content-vs-old-dictionary`（新目录配旧字典必须 version_mismatch）",
+                                       "tools/contract-check/wire_canonical.py:324-343（共享 catalog_digest 参考实现）"
+                                   ],
+                      "layer":  "L2",
+                      "note":  "wire 侧 C-01 参考检查器不发码（tools/contract-check/wire_layers.py: 全文无 catalog_id↔内容 绑定）；C# 侧 `CatalogDto.Digest()`（net-the-spire/Net.TheSpire.Contracts/Dto/CatalogDto.cs:493）定义后无调用方。强制手段在 AI 侧 A-02 编码层，跨泳道覆盖。"
+                  },
+                  {
+                      "id":  "I-04",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:810-833（PublicCatalog 4 键 required + additionalProperties:false）",
+                                       "wire.schema.json:738-808（Declarations 九表 required + additionalProperties:false）",
+                                       "tools/contract-check/schema_policy.py:219 SCHEMA-17",
+                                       "tools/contract-check/schema_policy.py:113-118 SCHEMA-2",
+                                       "case: pos-demo-catalog（accept）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "空表必须是 []：由 required 保证表存在、由无 minItems 保证可为空。"
+                  },
+                  {
+                      "id":  "I-06",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；无任何 ID 词法/命名空间检查（Python 侧只有 NonEmptyString，wire.schema.json:21-24 明确写“命名空间语法未逐字给出”；C# WireReader.RequireNonEmptyString 与 AI types.py 的 doc[\"id\"] 同样只要求非空）",
+                                       "仅子条款被覆盖：I-86（tools/contract-check/wire_layers.py:145，case: neg-duplicate-declaration-id）、I-88（tools/contract-check/wire_layers.py:462-463，case: neg-entity-duplicate-field-id）"
+                                   ],
+                      "layer":  "L2",
+                      "note":  "缺口主体：声明 ID 必须带命名空间无强制；前置阻塞为 U-09（invariants.md:186）未冻结语法。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-10",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-20 tools/contract-check/wire_layers.py:478-485",
+                                       "case: neg-required-entity-field-omitted",
+                                       "tools/contract-check/jsonschema_min.py:139-142（required → I-66）",
+                                       "wire.schema.json:966-991（Field 的 known/else 条件分支）",
+                                       "跨泳道（AI 侧自有的适用域/required 检查）：ai-the-spire/ai_the_spire/encoding/validate.py:17、81-90 映射 I-20"
+                                   ],
+                      "layer":  "L3",
+                      "note":  "残留：省略不得编码为 known 零 / 显式 not_applicable 无检查；“三种责任”散文不可检。"
+                  },
+                  {
+                      "id":  "I-12",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:114-121 ContentState、123-129 FieldState、158-163 AvailabilityState（三组枚举互斥）",
+                                       "tools/contract-check/schema_policy.py:113-118 SCHEMA-2",
+                                       "case: neg-field-availability-unknown-state（期望 I-66）",
+                                       "I-83 tools/contract-check/wire_layers.py:947-953 + case: neg-capability-field-availability-unknown-field",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/SnapshotDto.cs:13、72 与 CapabilitiesDto.cs:229-232 同样按枚举拒绝"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "wire 无法表达“两者混用”；但“何时该报 unavailable”属提供方责任，无机器检查。"
+                  },
+                  {
+                      "id":  "I-14",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "tools/contract-check/schema_policy.py:113-118 SCHEMA-2（所有声明对象拒绝未知键 → 无处安放效果码/隐藏资料）",
+                                       "tools/contract-check/wire_canonical.py:300-343（catalog_identity_input：剔除 description、ID 集合排序、表按 id 排序）",
+                                       "case: identity:catalog-id（固定摘要值）、canonical:canonical-v1..v5（规范字节）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/CatalogDto.cs:465-490（PublicCatalog 只接受 4 键）、src/WireIdentity.cs:62-82 复用同一白名单"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "catalog 摘要未像 ruleset/backend 那样显式拒绝 timestamp/pid 键（tools/contract-check/wire_canonical.py:346-365 只作用于后两者）；当前依赖 schema 拒绝未知键间接兜住。"
+                  },
+                  {
+                      "id":  "I-15",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；无“仅 description 不同”的成对用例，也无任何断言 description 不参与语义/字典的检查（ai-the-spire/ai_the_spire/encoding/manifest.py:8、12-13 只是文档性声明；ai-the-spire/tests/encoding_suite.py: 无对应用例；C# 侧 description 仅作为 DTO 字段透传）",
+                                       "部分机制存在但只覆盖“不进身份”：tools/contract-check/wire_canonical.py:305-306（catalog_identity_input 剔除 description），case: identity:catalog-id（固定 sha256 摘要）"
+                                   ],
+                      "layer":  "L2",
+                      "note":  "缺口主体：“description 不得作为效果文字特征 / 首次实现不得为它增加自然语言编码”无任何强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-16",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "tools/contract-check/schema_policy.py:200 SCHEMA-14（PublicSnapshot.required 恰为 14 键）",
+                                       "wire.schema.json:1217-1231",
+                                       "tools/contract-check/jsonschema_min.py:139-142",
+                                       "跨泳道（独立实现）：ai-the-spire/ai_the_spire/encoding/validate.py:51-67、237-306（related=I-16），net-the-spire/Net.TheSpire.Contracts/Dto/SnapshotDto.cs:280-320"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "SCHEMA-14 是“恰为”断言，比逐文档 L1 校验更强。"
+                  },
+                  {
+                      "id":  "I-17",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1304-1349（decision→terminal_result=null 且 legal_actions minItems 1；terminal→TerminalResult 且 maxItems 0）",
+                                       "cases: neg-decision-with-terminal-result / neg-decision-without-candidates / neg-terminal-without-result / neg-terminal-with-legal-actions（均期望 I-66）",
+                                       "跨泳道（AI 侧自有检查）：ai-the-spire/ai_the_spire/encoding/validate.py:264、284-306（related=I-17）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "“技术中断不伪装输赢”属行为语义，无检查。"
+                  },
+                  {
+                      "id":  "I-19",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1023-1048（Entity：content_state=known → 必须 content_id，else 禁止 content_id）",
+                                       "wire.schema.json:114-121",
+                                       "cases: neg-content-state-known-without-id / neg-content-id-with-non-known-state（期望 I-66）",
+                                       "跨泳道（AI 侧自有检查）：ai-the-spire/ai_the_spire/encoding/validate.py:544-560（related=I-19），net-the-spire/Net.TheSpire.Contracts/Dto/SnapshotDto.cs:72-77"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "“无内容类型的场景/空槽仍是真实实体”由 ContentState 含 not_applicable 表达。"
+                  },
+                  {
+                      "id":  "I-30",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-29 tools/contract-check/wire_layers.py:636-643",
+                                       "case: neg-pile-position-not-in-visible-members",
+                                       "I-28 tools/contract-check/wire_layers.py:621-626",
+                                       "case: neg-pile-members-over-total",
+                                       "跨泳道（AI 侧自有检查，直接以 related=I-30 发码）：ai-the-spire/ai_the_spire/encoding/validate.py:894-902"
+                                   ],
+                      "layer":  "L3",
+                      "note":  "位置记录不增卡数、虚构卡牌无法进入 known_positions（非 visible_members 子集即拒）；“完整成员≠完整顺序”的顺序性无额外检查（也不存在隐藏顺序通道）。"
+                  },
+                  {
+                      "id":  "I-32",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；唯一相关强制是 I-79 tools/contract-check/wire_layers.py:555-558（禁止保留关系 net:pile_member 回填），case: neg-reserved-derived-relation-in-wire。AI 侧只在 SHARED_RULE_CODES（ai-the-spire/ai_the_spire/encoding/validate.py:100）为 I-32 预留映射，没有自己的检测；C# 侧无任何牌堆成员来源检查"
+                                   ],
+                      "layer":  "L3",
+                      "note":  "缺口主体：用其他 relation/group/sequence 类型重复表达牌堆成员无任何检查；目录也没有“成员型关系”标记可用。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-33",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-79 tools/contract-check/wire_layers.py:291-302（目录必须声明三个保留声明）+ tools/contract-check/wire_layers.py:672-693（wire 不得回填）",
+                                       "cases: neg-missing-reserved-relation / neg-missing-reserved-field / neg-reserved-derived-field-in-wire / neg-reserved-derived-relation-in-wire",
+                                       "AI 侧同 ID 亦只作映射预留（ai-the-spire/ai_the_spire/encoding/validate.py:101）"
+                                   ],
+                      "layer":  "L2",
+                      "note":  "同一 ID 横跨 L2/L3；此处按目录侧记 L2。"
+                  },
+                  {
+                      "id":  "I-38",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-74（tools/contract-check/wire_layers.py:452/464/541/592/612/628/700/734/745/789），cases: neg-entities-unsorted / neg-entity-fields-unsorted",
+                                       "I-80（tools/contract-check/wire_layers.py:780-781），case: neg-legal-actions-unsorted",
+                                       "tools/contract-check/wire_canonical.py:202-209（action_semantic_key 不含 candidate_id），case: action-key:candidate-id-and-field-order-irrelevant",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/WireSort.cs + Net.TheSpire.Tests/fixtures/cross-end-canonical.json（跨端排序向量）"
+                                   ],
+                      "layer":  "L3",
+                      "note":  "残句“排序不能代替公开 ID 来源审计、不得把数组序号当游戏位置”属审计/编码侧要求，无机器检查。"
+                  },
+                  {
+                      "id":  "I-41",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；无任何“同时只有一个未完成控制请求/唯一控制者”的建模（session_busy 在 Python C# 两泳道都只作枚举成员：wire.schema.json:181-198、net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs:174）。harness 已支持 case 级 requests/responses/ledger 列表（tools/contract-check/check_contracts.py:242-257），但无任何 case 使用"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：串行请求与唯一控制者无强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-42",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-82 tools/contract-check/wire_layers.py:1003-1019（同 request_id 复用于不同 operation/payload_fingerprint → 拒绝）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs:146（PayloadFingerprint 复用同一请求指纹算法）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "证据偏弱：I-82 目前没有任何 fixtures 用例（账本路径 case.get(\"ledger\") 全库未使用），属“代码发码但未被触发”。"
+                  },
+                  {
+                      "id":  "I-43",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1707-1740（Response allOf：ok=true→必须有 result 且禁止 error；else 反之）",
+                                       "cases: neg-response-ok-with-error / neg-response-not-ok-without-error / neg-response-not-ok-with-result（期望 I-66）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs（Response DTO 按同一分支解析）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "tools/contract-check/wire_layers.py:887-935 的 check_response docstring 提到 I-43，但该函数不发 I-43。"
+                  },
+                  {
+                      "id":  "I-45",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；tools/contract-check/wire_layers.py:862-884（_result_matches(\"get_catalog\") 只比较结果键集合，不比对 catalog_id）、check_request/check_control 全段均无比对；C# EnvelopeDto 只解析 get_catalog payload，无 catalog_id 一致性检查；AI 侧不处理控制接口"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：返回目录与请求 catalog_id 不一致、或对不存在的 catalog 返回近似目录，都无法被拒。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-46",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-11 tools/contract-check/wire_layers.py:1025-1033",
+                                       "case: neg-seed-when-unsupported",
+                                       "I-13 tools/contract-check/wire_layers.py:1034-1044（无 fixtures 用例）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/CapabilitiesDto.cs（scenario_profiles/seed_control DTO）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "残留缺口：start.payload.expected_identity 与目录身份不匹配无任何检查（expected_identity 只出现在 tools/contract-check/wire_layers.py:60/71 的白名单里）；“不恢复旧局”不可检。详见报告“B 类残留缺口”。"
+                  },
+                  {
+                      "id":  "I-47",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1953-2003（AttachResult：session_status enum {active,terminal,settling}、active/terminal 必须有 snapshot、else 禁止）",
+                                       "tools/contract-check/schema_policy.py:181-189 SCHEMA-12",
+                                       "cases: pos-attach-settling / neg-attach-settling-with-snapshot / neg-attach-closed-status"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "“不得默默重开”行为不可检；settling 的显式性由 schema 分支强制。"
+                  },
+                  {
+                      "id":  "I-49",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-81 tools/contract-check/wire_layers.py:878-879（step 成功结果必须恰为快照 14 键）",
+                                       "wire.schema.json:1425-1439（StepPayload required 三键）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "证据偏弱：I-81 无用例。残留：stale_observation 版本核对、outcome_unknown 不虚构下一观察无强制。"
+                  },
+                  {
+                      "id":  "I-51",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:2005-2019（CloseResult.session_status const \"closed\"、additionalProperties:false）",
+                                       "tools/contract-check/schema_policy.py:181-189 SCHEMA-12",
+                                       "cases: pos-close-result / neg-close-result-not-closed",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs:271 同样按枚举/常量拒绝"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "“等当前 step 完成后关闭、释放资源、不等同游戏终止”不可检。"
+                  },
+                  {
+                      "id":  "I-52",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；无去重范围/缓存检查（schema 仅固定 Limits.ledger_entries 存在，wire.schema.json:1867-1872 与 tools/contract-check/schema_policy.py:127 SCHEMA-4；C# 侧 ledger_entries 只作 capabilities 字段透传）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：进程级 start 去重、会话级 step/close 去重、成功与拒绝响应都缓存，均无强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-53",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-82 tools/contract-check/wire_layers.py:1003-1019（先核对 request_id 与 payload 指纹，再进行版本/候选判断的账本前提）",
+                                       "I-50 tools/contract-check/wire_layers.py:915-927（completed 必须返回原响应）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "证据偏弱：I-82/I-50 均无用例。残留：另一 request_id 用旧版本必须报 stale_observation、start 原样重发不得启动两局，无强制。"
+                  },
+                  {
+                      "id":  "I-54",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1918-1923（public_state_restore/public_fork const false）",
+                                       "tools/contract-check/schema_policy.py:130-140 SCHEMA-6",
+                                       "cases: neg-public-state-restore-true / neg-public-fork-true（期望 I-66+I-70）",
+                                       "I-70 tools/contract-check/wire_layers.py:986-989（L4 复核同一结论）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "reset-in-place/rollback/load 无对应 wire 键，schema 的 additionalProperties:false 一并拒绝。"
+                  },
+                  {
+                      "id":  "I-55",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:146-156（SessionStatus 七值）",
+                                       "wire.schema.json:1304-1349（active→decision 快照配对）",
+                                       "wire.schema.json:1570-1598、1975-2003（active/terminal 必须带稳定快照）",
+                                       "I-48 tools/contract-check/wire_layers.py:1050-1062（session_status 与 snapshot.status 一致性）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs:271、SnapshotDto.cs:299 同样按枚举/常量拒绝"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "残留：状态迁移合法性（合法路径、deadline→uncertain/faulted）无检查；I-48 目前无用例。"
+                  },
+                  {
+                      "id":  "I-56",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；tools/contract-check/wire_layers.py:930-934（check_response 中 execution_state=completed 分支仅注释 + pass）、check_control 全段无 session_busy/pending/settling 迁移检查；C# 与 AI 两泳道都没有会话锁/账本实现（session_busy 仅作枚举成员）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：锁内顺序、pending→settling、并发返回 session_busy、同 request_id 不提交第二次，全无强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-57",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；tools/contract-check/wire_layers.py:930-934（唯一涉及 execution_state 的代码，且为空分支）、check_response/check_control；C# 侧 not_started 只作枚举值（net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs）；无任何失败归因/后续决策禁令检查"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：失败归因（not_started vs unknown）、转 uncertain/faulted、禁止继续决策，无任何强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-58",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1570-1598（ObserveResult：session_status 非 active/terminal 时禁止 snapshot）",
+                                       "case: neg-observe-settling-with-snapshot（期望 I-66）",
+                                       "I-48 tools/contract-check/wire_layers.py:1059-1062（无用例）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "残留：stable_snapshot 声明真实性、真实游戏自行推进时必须换 observation_id，无强制。"
+                  },
+                  {
+                      "id":  "I-59",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）（含关键词 timeout/retry/not_found 搜索）；无超时与重发的关联检查；wire_json.py 只有 check_frame_bytes→I-68 帧上限；not_found 在两泳道都只是枚举值"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：超时后必须查原 request_id、not_found 不是未执行证明、未确认则停止控制，均无强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-60",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；无 ledger 保留/容量检查（ledger_entries 仅作 capabilities 的 required 键，wire.schema.json:1867-1872、tools/contract-check/schema_policy.py:127 SCHEMA-4；tools/contract-check/wire_layers.py:1001-1019 只有 request_id 复用检查）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：去重记录保留期、容量上限与超限拒绝新控制请求无强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-61",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；无进程丢失/基础设施截断记录检查；无“session_not_found 后不得自动继续旧动作”的断言（session_not_found 只是枚举值）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：模拟进程丢失可丢弃并记录为基础设施截断；真实进程丢失须重新识别且未确定不恢复控制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-62",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）（关键词 deadline = 0 命中）；无 ID 复用/关闭后句柄检查；schema 只固定 CloseResult const closed（wire.schema.json:2005-2019）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：取消不撤销已开始的 step、关闭后旧句柄不执行且 ID 不复用、无法结算到 configured deadline 转 uncertain/faulted。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-63",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1520-1553（Error：required {code,message,execution_state,retry_mode}、additionalProperties:false、code/execution_state/retry_mode 枚举）",
+                                       "tools/contract-check/schema_policy.py:113-118 SCHEMA-2",
+                                       "cases: neg-error-unknown-code / neg-error-execution-state-omitted（期望 I-66）",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs:174-181"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "“不附隐藏状态”由 additionalProperties:false 强制；path/message 内部结构仍开放（U-11）。"
+                  },
+                  {
+                      "id":  "I-64",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；tools/contract-check/wire_layers.py:930-934 为空分支，无 code→retry_mode/execution_state 组合检查；C# 与 AI 两泳道只解析 retry_mode 枚举值（net-the-spire/Net.TheSpire.Contracts/Dto/EnvelopeDto.cs:181），无行为映射"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：错误码对应的行为/重试指引（正确输入、查询原请求、停止）无任何强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-65",
+                      "disposition":  "missing",
+                      "evidence":  [
+                                       "搜索范围：tools/contract-check（wire_layers.py 全部 check_*、wire_json.py、schema_policy.py、check_contracts.py、fixtures/**）+ net-the-spire/Net.TheSpire.Contracts（Dto/*、WireParser.cs、WireIdentity.cs）+ ai-the-spire（encoding/validate.py、encoding/manifest.py、contracts/layers.py、tests/**）；wire_json.py 只有 check_frame_bytes→I-68 帧上限与 L0 解析；两泳道均无 NDJSON/stdio/传输断开处理（frame_bytes 只作 limits 字段）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "缺口：传输断开不得表示为 error 响应、消费端保留 request_id、重连不得绕过 NoSL，均无强制。建议见报告 §C。"
+                  },
+                  {
+                      "id":  "I-67",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "I-01 tools/contract-check/wire_layers.py:438-447",
+                                       "cases: neg-snapshot-catalog-id-mismatch / neg-snapshot-ruleset-mismatch",
+                                       "wire.schema.json:219-221（protocol_version const，即 I-02）",
+                                       "跨泳道（AI 侧）：ai-the-spire/ai_the_spire/encoding/manifest.py:10、ai-the-spire/tests/encoding_suite.py:329-335"
+                                   ],
+                      "layer":  "L3",
+                      "note":  "与 I-03 同源（protocol.md L219）：exact identity 部分已强制；“变更身份”部分见 I-03（AI 侧覆盖）。"
+                  },
+                  {
+                      "id":  "I-69",
+                      "disposition":  "covered",
+                      "evidence":  [
+                                       "tools/contract-check/schema_policy.py:146-151 SCHEMA-8（六键）",
+                                       "I-84 tools/contract-check/wire_layers.py:974-984 + case: neg-scenario-profile-declaration-unknown",
+                                       "I-13 tools/contract-check/wire_layers.py:1034-1044（无 fixtures 用例）",
+                                       "I-75 tools/contract-check/wire_layers.py:347-364 + case: neg-visibility-check-not-in-coverage",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/CapabilitiesDto.cs（ScenarioProfile DTO 键集合）"
+                                   ],
+                      "layer":  "L4",
+                      "note":  "残留：coverage_ref 指向不存在的覆盖表无检查（invariants.md:203 自认的残余风险）；id 集合=合法 start 取值 的“集合外拒绝”只有 I-13 代码、无用例。"
+                  },
+                  {
+                      "id":  "I-71",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1786-1820（structure 七值枚举、三键 required、additionalProperties:false）",
+                                       "tools/contract-check/schema_policy.py:146-151 SCHEMA-8",
+                                       "case: neg-supported-structure-unknown（期望 I-66）",
+                                       "I-84 tools/contract-check/wire_layers.py:954-969 + case: neg-supported-structure-declaration-unknown",
+                                       "跨泳道：net-the-spire/Net.TheSpire.Contracts/Dto/CapabilitiesDto.cs:49（structure 枚举）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "declaration_ids 闭合由 I-84 承担；“空数组冒充已审计”不可检（属提供方责任）。"
+                  },
+                  {
+                      "id":  "I-73",
+                      "disposition":  "schema",
+                      "evidence":  [
+                                       "wire.schema.json:1953-2003（AttachResult allOf：active/terminal 必须有 snapshot，settling 必须省略）",
+                                       "tools/contract-check/schema_policy.py:181-189 SCHEMA-12",
+                                       "cases: pos-attach-settling / neg-attach-settling-with-snapshot / neg-attach-closed-status",
+                                       "I-81 tools/contract-check/wire_layers.py:872-875（attach 分支的 operation→result 配对）+ I-48 tools/contract-check/wire_layers.py:1050-1062（快照状态一致性）"
+                                   ],
+                      "layer":  "L1",
+                      "note":  "“结果不含 operation”由 additionalProperties:false 覆盖；active→decision/terminal→terminal 由 I-48（无用例）复核。"
+                  }
+              ]
+}

@@ -30,6 +30,7 @@ internal static class EngineChecks
         AuthoringChecks.Run();
         RuleLibraryChecks.Run();
         ContractChecks.Run();
+        AuthorRuntimeV04Checks.Run();
         DebugChecks.Run();
         return Check.Passed;
     }

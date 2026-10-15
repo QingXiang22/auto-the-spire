@@ -1,0 +1,77 @@
+{
+  "suite": "negative-unregistered-case",
+  "fixtures_version": "env-t04-negative@1",
+  "note": "失败契约反例（工具验收，不是产品内容覆盖）：suite 里有一个没有进 expected_case_ids 的 case。严格入口必须在定义层返回 2，不能靠『文件里多出一个 case』扩大分母或悄悄算进结果。",
+  "target_scope": "base-spire-singleplayer-dev-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "reference/sts2-sim（本反例在定义层失败，不会跑到参考侧）",
+    "note": "反例 suite：只用于证明严格入口的失败契约。"
+  },
+  "expected_case_ids": [ "neg-strike" ],
+  "cases": [
+    {
+      "id": "neg-strike",
+      "title": "反例对照 case（本身可执行且两侧一致）",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "与 regression 的 strike-normal 同形，作为反例的对照 case。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:strike-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:strike-ironclad", "target": "enemy:0" }
+      ],
+      "group": "failure-contract",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-NEG-unregistered-case",
+      "initialization": "受控切片包 + 工厂同款随机/数值/Compute 配置 → Start 一次",
+      "contents": [ "base-spire:strike-ironclad" ],
+      "variants": [ "normal" ],
+      "required_dimensions": [ "actions", "facts" ],
+      "semantic_actions": [ "play_card:base-spire:strike-ironclad→enemy:0" ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs）"
+    },
+    {
+      "id": "neg-extra-unregistered",
+      "title": "反例：出现在 suite 里但没有登记进 expected_case_ids 的 case",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/DefendIronclad.cs",
+        "note": "该 case 本身可执行，问题只在没有登记进分母。"
+      },
+      "setup": {
+        "hand": [ { "card": "base-spire:defend-ironclad" } ],
+        "enemy_hp": [ 38, 51 ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        { "action": "play_card", "card": "base-spire:defend-ironclad" }
+      ],
+      "group": "failure-contract",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-NEG-unregistered-extra",
+      "initialization": "受控切片包 + 工厂同款随机/数值/Compute 配置 → Start 一次",
+      "contents": [ "base-spire:defend-ironclad" ],
+      "variants": [ "normal" ],
+      "required_dimensions": [ "actions", "facts" ],
+      "semantic_actions": [ "play_card:base-spire:defend-ironclad" ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs）"
+    }
+  ]
+}

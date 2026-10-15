@@ -1,0 +1,340 @@
+{
+  "suite": "L2 目录与覆盖表（引用闭合、能力层级、保留声明、覆盖表）",
+  "cases": [
+    {
+      "case_id": "pos-coverage-table",
+      "description": "U-12 收口：覆盖表格式固定且 visibility_check_ids 闭合",
+      "expect": "accept",
+      "layers": ["L1", "L2"],
+      "documents": {"catalog": "doc:catalog-demo", "coverage": "doc:coverage-demo"}
+    },
+    {
+      "case_id": "neg-content-type-kind-dangling",
+      "description": "声明引用必须闭合（content_types.kind_ids）",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-05"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.content_types.0.kind_ids": ["demo:unknown"]}}
+      }
+    },
+    {
+      "case_id": "neg-field-applies-action-dangling",
+      "description": "字段 applies_to 必须引用已声明的动作类型",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-05"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.fields.7.applies_to.action_types": ["demo:nope"]}}
+      }
+    },
+    {
+      "case_id": "neg-field-target-kind-dangling",
+      "description": "entity_ref 字段 target_kind_ids 必须闭合",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-05"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.fields.5.target_kind_ids": ["demo:ghost"]}}
+      }
+    },
+    {
+      "case_id": "neg-action-fields-dangling",
+      "description": "动作字段清单必须引用已声明字段",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-05"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.action_types.1.required_fields": ["demo:ghost"]}}
+      }
+    },
+    {
+      "case_id": "neg-relation-source-kind-dangling",
+      "description": "关系声明来源种类必须闭合",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-05"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.relation_types.0.source_kind_ids": ["demo:ghost"]}}
+      }
+    },
+    {
+      "case_id": "neg-pile-kind-dangling",
+      "description": "pile_type.kind_id 必须引用已声明实体种类",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-05"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.pile_types.0.kind_id": "demo:ghost"}}
+      }
+    },
+    {
+      "case_id": "neg-pile-kind-shared",
+      "description": "protocol L42：kind_id 不能被两个 pile_type 共用",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-07"],
+      "documents": {
+        "catalog": {
+          "$base": "catalog-demo",
+          "$append": {
+            "declarations.pile_types": {
+              "id": "demo:second_pile_type",
+              "semantic_version": "1",
+              "description": "第二个牌堆类型",
+              "kind_id": "demo:draw_pile",
+              "member_kind_ids": ["demo:card"],
+              "position_schema": null,
+              "exclusive_group_id": null,
+              "membership_scope_field_id": null
+            }
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-position-schema-max-lt-min",
+      "description": "protocol L81：max 不得小于 min（schema 无法表达，属跨结构）",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-77"],
+      "documents": {
+        "catalog": {
+          "$base": "catalog-demo",
+          "$set": {
+            "declarations.relation_types.0.position_schema.min": 5,
+            "declarations.relation_types.0.position_schema.max": 3
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-exclusive-group-without-scope",
+      "description": "protocol §2 L86：有互斥组的 pile_type 必须指定 membership_scope_field_id",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-78"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.pile_types.0.membership_scope_field_id": null}}
+      }
+    },
+    {
+      "case_id": "neg-scope-field-not-entity-ref",
+      "description": "membership_scope_field_id 必须是 entity_ref 字段",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-31"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.pile_types.0.membership_scope_field_id": "demo:hp"}}
+      }
+    },
+    {
+      "case_id": "neg-scope-field-not-required",
+      "description": "protocol §2 L86：作用域字段必须是 required 字段",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-31"],
+      "documents": {
+        "catalog": {
+          "$base": "catalog-demo",
+          "$set": {"declarations.pile_types.0.membership_scope_field_id": "demo:optional_owner"}
+        }
+      }
+    },
+    {
+      "case_id": "neg-action-required-fields-mismatch",
+      "description": "protocol L48：动作字段清单必须与 fields.applies_to/required 一致",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-87"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.action_types.1.required_fields": []}}
+      }
+    },
+    {
+      "case_id": "neg-action-field-required-and-optional",
+      "description": "同一字段不得同时在 required_fields 与 optional_fields",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-08"],
+      "documents": {
+        "catalog": {
+          "$base": "catalog-demo",
+          "$set": {"declarations.action_types.1.optional_fields": ["demo:play_target"]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-terminal-required-fields-mismatch",
+      "description": "终局原因字段清单必须与字段声明一致",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-87"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.terminal_reasons.1.required_fields": []}}
+      }
+    },
+    {
+      "case_id": "neg-duplicate-declaration-id",
+      "description": "声明表内 id 必须唯一",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-86"],
+      "documents": {
+        "catalog": {
+          "$base": "catalog-demo",
+          "$append": {
+            "declarations.fields": {
+              "id": "demo:hp",
+              "semantic_version": "2",
+              "description": "重复声明的生命值",
+              "value_type": "number",
+              "number_format": "integer",
+              "applies_to": {"entity_kinds": ["demo:player"], "action_types": [], "terminal_reasons": []},
+              "required": false,
+              "visibility": "public"
+            }
+          }
+        }
+      }
+    },
+    {
+      "case_id": "neg-sequence-min-greater-than-max",
+      "description": "基数下限不得大于上限",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-89"],
+      "documents": {
+        "catalog": {
+          "$base": "catalog-demo",
+          "$set": {"declarations.sequence_types.0.min_count": 5, "declarations.sequence_types.0.max_count": 2}
+        }
+      }
+    },
+    {
+      "case_id": "neg-missing-reserved-relation",
+      "description": "protocol §2 L88：使用 piles 的目录必须包含保留关系 net:pile_member",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-79"],
+      "documents": {"catalog": {"$base": "catalog-demo", "$del": ["declarations.relation_types.2"]}}
+    },
+    {
+      "case_id": "neg-missing-reserved-field",
+      "description": "protocol §2 L88：保留字段 net:pile_total_count/net:pile_members_complete 必须声明",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-79"],
+      "documents": {"catalog": {"$base": "catalog-demo", "$del": ["declarations.fields.11"]}}
+    },
+    {
+      "case_id": "neg-visibility-check-not-in-coverage",
+      "description": "U-12：conditional 字段的 visibility_check_ids 必须在覆盖表内闭合",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-75"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "coverage": {"$base": "coverage-demo", "$set": {"mechanisms.0.mechanism_id": "demo:other"}}
+      }
+    },
+    {
+      "case_id": "neg-coverage-verified-without-evidence",
+      "description": "contract-artifacts §5 L69：没有运行证据不能写 verified",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-85"],
+      "documents": {
+        "coverage": {
+          "$base": "coverage-demo",
+          "$set": {"mechanisms.0.verification_ids": [], "mechanisms.0.evidence_ref": null}
+        }
+      }
+    },
+    {
+      "case_id": "neg-coverage-unknown-status",
+      "description": "覆盖表 status 枚举固定 proposed/implemented/verified/unsupported",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"coverage": {"$base": "coverage-demo", "$set": {"mechanisms.0.status": "done"}}}
+    },
+    {
+      "case_id": "neg-coverage-missing-row-key",
+      "description": "覆盖表每行必须给出全部固定键（含 decision_counterexample）",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {"coverage": {"$base": "coverage-demo", "$del": ["mechanisms.0.decision_counterexample"]}}
+    },
+    {
+      "case_id": "neg-capability-field-availability-unknown-field",
+      "description": "contract-artifacts §4 L47：field_availability 的 field_id 引用在语义层校验",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-83"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "capabilities": {"$base": "capabilities-demo", "$set": {"field_availability": {"demo:ghost": "available"}}}
+      }
+    },
+    {
+      "case_id": "neg-supported-structure-declaration-unknown",
+      "description": "supported_structures.declaration_ids 必须引用目录已声明 ID",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-84"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "capabilities": {
+          "$base": "capabilities-demo",
+          "$set": {"supported_structures.0.declaration_ids": ["demo:ghost"]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-scenario-profile-declaration-unknown",
+      "description": "scenario_profiles.required_declarations 必须引用目录已声明 ID",
+      "expect": "reject",
+      "layers": ["L1", "L4"],
+      "rule_ids": ["I-84"],
+      "documents": {
+        "catalog": "doc:catalog-demo",
+        "capabilities": {
+          "$base": "capabilities-demo",
+          "$set": {"scenario_profiles.0.required_declarations": ["demo:ghost"]}
+        }
+      }
+    },
+    {
+      "case_id": "neg-capabilities-operations-duplicate",
+      "description": "contract-artifacts §4 L47：operations 为无重复操作名数组",
+      "expect": "reject",
+      "layers": ["L1"],
+      "rule_ids": ["I-66"],
+      "documents": {
+        "capabilities": {"$base": "capabilities-demo", "$set": {"operations": ["describe", "describe"]}}
+      }
+    },
+    {
+      "case_id": "neg-field-category-ids-empty",
+      "description": "category 字段必须列出类别 ID（空列表无法判定取值）",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.fields.0.category_ids": []}}
+      }
+    },
+    {
+      "case_id": "neg-field-target-kind-ids-empty",
+      "description": "entity_ref 字段必须指定目标种类",
+      "expect": "reject",
+      "layers": ["L1", "L2"],
+      "rule_ids": ["I-22"],
+      "documents": {
+        "catalog": {"$base": "catalog-demo", "$set": {"declarations.fields.5.target_kind_ids": []}}
+      }
+    }
+  ]
+}

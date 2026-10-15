@@ -1,0 +1,14 @@
+{
+  "root": null,
+  "base_seed": 20261001,
+  "episodes": 4,
+  "steps_per_episode": 20,
+  "seconds": 300.0,
+  "bytes": 16777216,
+  "inflight_bytes": 4194304,
+  "workers": 1,
+  "scenario_variant": "baseline",
+  "test_headbutt": false,
+  "splits": {},
+  "fault_injection": null
+}

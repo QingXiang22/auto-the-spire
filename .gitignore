@@ -10,3 +10,30 @@ docs/architecture/c4/workspace.json
 /sts2/
 /fmod-gdextension/
 /tools/fmod-gdextension/
+
+# Local evidence and isolated builds; referenced history is bundled separately.
+/.audit/
+/.artifacts/
+/artifacts/
+/boss-*.txt
+/boss-*.log
+
+# Python/editor/generated caches.
+**/__pycache__/
+*.py[cod]
+/.venv/
+/venv/
+**/.antlr/
+
+# External reference working copies are restored from reference/README.md.
+/reference/*
+!/reference/README.md
+!/reference/baselines/
+
+# One-off repair scripts and generated extraction reports retained locally.
+/tools/tmp-scan-slash.py
+/tools/repair-combat-slice-strings.py
+/tools/repair-combat-slice-text.py
+/tools/append-a-line-handoff-note.py
+/tools/orimod-decompile/verify/
+/tools/sts2-core-extract/CHANGES.tsv

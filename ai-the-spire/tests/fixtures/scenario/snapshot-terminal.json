@@ -1,0 +1,32 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:scenario-catalog-v1",
+  "backend_profile_id": "fixture:sim-v1",
+  "session_id": "session-scenario-1",
+  "observation_id": 9,
+  "status": "terminal",
+  "terminal_result": {
+    "outcome": "win",
+    "reason_id": "fixture:victory",
+    "facts": [
+      {"field_id": "fixture:hp", "state": "known", "value": "31"}
+    ]
+  },
+  "entities": [
+    {
+      "instance_id": "player-01",
+      "kind_id": "fixture:player",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:hp", "state": "known", "value": "31"},
+        {"field_id": "fixture:max_hp", "state": "known", "value": "80"}
+      ]
+    }
+  ],
+  "relations": [],
+  "piles": [],
+  "sequences": [],
+  "groups": [],
+  "legal_actions": []
+}

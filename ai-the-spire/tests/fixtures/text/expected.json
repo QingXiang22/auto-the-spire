@@ -1,0 +1,12 @@
+{
+  "_notes": "L0 严格文本解析向量（A-02 新增）。每个文件是**原始字节**，期望规则 ID 独立写出，来自共享解析层 tools/contract-check/wire_json.py：I-24（重复 JSON 键）、I-87（浮点字面量/NaN 常量，含 wire 解析层共用的非法 Unicode 值码）、L0-BOM、L0-UTF8、L0-JSON、L0-UNICODE。'accept' 不接受手写清单：接受向量是 fixtures/ 下全部手写目录/快照/覆盖表文件，由 fixture_suite.BUNDLES 派生（输入来自套件，期望是同文件 stdlib json 解析结果逐键相等）。",
+  "reject": [
+    {"case_id": "l0-dup-key", "file": "dup-key.json", "rule_id": "I-24", "what": "重复对象键必须被解析层拒绝"},
+    {"case_id": "l0-float-literal", "file": "float-literal.json", "rule_id": "I-91", "what": "wire 不含浮点字面量（I-23/I-87）"},
+    {"case_id": "l0-nan-constant", "file": "nan.json", "rule_id": "I-91", "what": "NaN/Infinity 不是 wire 值"},
+    {"case_id": "l0-bom", "file": "bom.json", "rule_id": "L0-BOM", "what": "UTF-8 文本不得带 BOM"},
+    {"case_id": "l0-bad-utf8", "file": "bad-utf8.json", "rule_id": "L0-UTF8", "what": "非 UTF-8 字节必须被拒绝"},
+    {"case_id": "l0-bad-json", "file": "bad-json.json", "rule_id": "L0-JSON", "what": "不完整 JSON 必须被拒绝"},
+    {"case_id": "l0-lone-surrogate", "file": "lone-surrogate.json", "rule_id": "L0-UNICODE", "what": "孤立代理项转义 U+D800 必须被拒绝"}
+  ]
+}

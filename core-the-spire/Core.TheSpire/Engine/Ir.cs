@@ -17,6 +17,18 @@ public abstract class IrNode
     public PrimitiveSignature Signature => PrimitiveSignatures.Get(Primitive);
 }
 
+/// <summary>Compile-time source attribution. It never contributes to semantic identity.</summary>
+public static class IrSource
+{
+    public static T At<T>(this T node, DslSourceLocation source) where T : IrNode
+    {
+        // Attribute only unassigned descendants: a called/expanded body may have a more precise source.
+        node.SourceLocation ??= source;
+        foreach (var child in node.Children) child.At(source);
+        return node;
+    }
+}
+
 public abstract class Expr : IrNode
 {
 }

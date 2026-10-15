@@ -1,0 +1,97 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:variables-catalog-v1",
+  "declarations": {
+    "entity_kinds": [
+      {"id": "fixture:card", "semantic_version": "1", "description": "卡牌实例（内容可未知或不可提供）"},
+      {"id": "fixture:enemy", "semantic_version": "1", "description": "敌人实体"},
+      {"id": "fixture:player", "semantic_version": "1", "description": "玩家实体"},
+      {"id": "fixture:power", "semantic_version": "1", "description": "Power 实体"}
+    ],
+    "content_types": [],
+    "fields": [
+      {
+        "id": "fixture:hp",
+        "semantic_version": "1",
+        "description": "当前公开生命值",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player", "fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "modA:charge",
+        "semantic_version": "1",
+        "description": "modA 的充能计数（整数，玩家）",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "modB:charge",
+        "semantic_version": "1",
+        "description": "modB 的同名充能计数（decimal，敌人）",
+        "value_type": "number",
+        "number_format": "decimal",
+        "applies_to": {"entity_kinds": ["fixture:enemy"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "modC:charge",
+        "semantic_version": "1",
+        "description": "modC 的同名充能状态（类别，Power）",
+        "value_type": "category",
+        "category_ids": ["modC:idle", "modC:ready"],
+        "applies_to": {"entity_kinds": ["fixture:power"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      },
+      {
+        "id": "modD:secret_charge",
+        "semantic_version": "1",
+        "description": "条件公开的充能计数；尚未公开时为 unknown",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "conditional",
+        "condition_description": "仅在提供方机制检查通过（充能状态被揭示）后可见",
+        "visibility_check_ids": ["fixture:check-charge-visible"]
+      },
+      {
+        "id": "ux:timer_unavailable",
+        "semantic_version": "1",
+        "description": "后端无法提供的诊断计时；适用但不可提供时显式 unavailable",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:player"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      }
+    ],
+    "relation_types": [
+      {
+        "id": "fixture:held_by",
+        "semantic_version": "1",
+        "description": "Power 由玩家或敌人持有",
+        "source_kind_ids": ["fixture:power"],
+        "target_kind_ids": ["fixture:enemy", "fixture:player"],
+        "position_schema": null
+      }
+    ],
+    "pile_types": [],
+    "sequence_types": [],
+    "group_types": [],
+    "action_types": [
+      {"id": "fixture:end_turn", "semantic_version": "1", "description": "结束回合（单候选决策点）", "required_fields": [], "optional_fields": []}
+    ],
+    "terminal_reasons": [
+      {"id": "fixture:defeat", "semantic_version": "1", "description": "失败", "outcome": "loss", "required_fields": [], "optional_fields": []}
+    ]
+  }
+}

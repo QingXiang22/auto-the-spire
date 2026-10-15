@@ -1,0 +1,22 @@
+using namespace base-spire;
+dsl_version = "base/0.0.2"
+
+# sts2/src/Core/Models/Cards/Predator.cs: damage then two extra cards next turn.
+card Predator {
+  pools = { SilentCardPool }
+  upgradeable = true
+  values = { damage = { normal = 15 upgraded = 20 } }
+  common = { type = attack rarity = common cost = 2 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = values.damage } applyPower = { power = DrawCardsNextTurnPower stacks = 2 target = context.owner } } hooks = {} }
+  normal = {}
+  upgraded = {}
+}
+
+# sts2/src/Core/Models/Cards/Outmaneuver.cs; EventCardPool.cs (Silent is visual only).
+card Outmaneuver {
+ pools = { EventCardPool }
+ upgradeable = true
+ values = { energy = { normal = 2 upgraded = 3 } }
+ common = { type = skill rarity = event cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = EnergyNextTurnPower stacks = values.energy target = context.owner } } hooks = {} }
+ normal = {}
+ upgraded = {}
+}

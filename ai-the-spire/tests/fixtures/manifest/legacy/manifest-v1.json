@@ -1,0 +1,110 @@
+{
+  "manifest_format_version": 1,
+  "tensor_layout_version": "ai-tensor-layout-v1",
+  "gym_id": "fixture:legacy-gym",
+  "dictionary_version": "ai-dict-v1:sha256:7f701953bccca152677db3f7221862acd5158e086d01148ec5635461023598f4",
+  "source_catalog_digest": "sha256:7f701953bccca152677db3f7221862acd5158e086d01148ec5635461023598f4",
+  "encoding_config_digest": "sha256:9d6f4e2d6ffd8b6827aa8ce9d9b8524c99900d57b901ef47333214f53e553fa5",
+  "manifest_digest": "sha256:865969dd06364b838841cf19bd5b2fb68bfd0da5352f3ea684107fe2245c6f9b",
+  "environment_identity": {
+    "protocol_version": "0.1",
+    "ruleset_id": "fixture:legacy-rules-v0",
+    "catalog_id": "fixture:legacy-catalog-v0",
+    "backend_profile_id": "fixture:legacy-backend-v0"
+  },
+  "scenario_profile": null,
+  "encoding_config": {
+    "config_version": "ai-encoding-config-v1",
+    "number_channel_dtype": "float64",
+    "absolute_tolerance": "0.0000000001",
+    "relative_tolerance": "0.00000001",
+    "transforms": {
+      "fixture:legacy_power": {"offset": "1", "scale": "0.5"}
+    },
+    "capacities": {
+      "max_entities": 4,
+      "max_fields": 8,
+      "max_relations": 4,
+      "max_pile_positions": null,
+      "max_sequences": null,
+      "max_groups": null,
+      "max_candidates": 2,
+      "max_candidate_fields": 4
+    }
+  },
+  "dictionaries": {
+    "entity_kinds": {
+      "names": ["fixture:legacy_card", "fixture:legacy_power"],
+      "by_name": {"fixture:legacy_card": 1, "fixture:legacy_power": 2}
+    },
+    "content_types": {
+      "names": ["fixture:legacy_face"],
+      "by_name": {"fixture:legacy_face": 1}
+    },
+    "fields": {
+      "names": ["fixture:legacy_cost", "fixture:legacy_power", "fixture:legacy_state"],
+      "by_name": {"fixture:legacy_cost": 1, "fixture:legacy_power": 2, "fixture:legacy_state": 3}
+    },
+    "relation_types": {
+      "names": ["fixture:legacy_held_by"],
+      "by_name": {"fixture:legacy_held_by": 1}
+    },
+    "sequence_types": {"names": [], "by_name": {}},
+    "group_types": {"names": [], "by_name": {}},
+    "action_types": {
+      "names": ["fixture:legacy_play"],
+      "by_name": {"fixture:legacy_play": 1}
+    },
+    "categories": {
+      "names": ["fixture:legacy_idle", "fixture:legacy_ready"],
+      "by_name": {"fixture:legacy_idle": 1, "fixture:legacy_ready": 2}
+    }
+  },
+  "field_records": {
+    "fixture:legacy_cost": {
+      "index": 1,
+      "value_type": "number",
+      "number_format": "integer",
+      "required": true,
+      "visibility": "public",
+      "category_ids": [],
+      "target_kind_ids": [],
+      "visibility_check_ids": [],
+      "applies_to": {
+        "entity_kinds": ["fixture:legacy_card"],
+        "action_types": [],
+        "terminal_reasons": []
+      }
+    },
+    "fixture:legacy_power": {
+      "index": 2,
+      "value_type": "number",
+      "number_format": "decimal",
+      "required": true,
+      "visibility": "public",
+      "category_ids": [],
+      "target_kind_ids": [],
+      "visibility_check_ids": [],
+      "applies_to": {
+        "entity_kinds": ["fixture:legacy_power"],
+        "action_types": [],
+        "terminal_reasons": []
+      }
+    },
+    "fixture:legacy_state": {
+      "index": 3,
+      "value_type": "category",
+      "number_format": null,
+      "required": false,
+      "visibility": "public",
+      "category_ids": ["fixture:legacy_idle", "fixture:legacy_ready"],
+      "target_kind_ids": [],
+      "visibility_check_ids": [],
+      "applies_to": {
+        "entity_kinds": ["fixture:legacy_power"],
+        "action_types": [],
+        "terminal_reasons": []
+      }
+    }
+  }
+}

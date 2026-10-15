@@ -1,0 +1,4486 @@
+{
+  "manifest_version": "b05a-content-manifest@1",
+  "package": "base-spire",
+  "registered_from": "new BaseSpirePackage() -\u003E ContentRegistry.Build()",
+  "sources": [
+    {
+      "path": "base-spire/enemies-amalgams.spire",
+      "sha256": "sha256:1dd3d302c3fa4d5b5de93ae274b7cab8abad142b919912a0dac9fd5ccf1e9ddb",
+      "bytes": 1035,
+      "declared_count": 1,
+      "declared_ids": [
+        "base-spire:torch-head-amalgam"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-colonies.spire",
+      "sha256": "sha256:e96a7565a43a59155a7cd02d5302ce1744446e691c4b682fbbb32306bbf4b442",
+      "bytes": 950,
+      "declared_count": 2,
+      "declared_ids": [
+        "base-spire:hardened-shell-power",
+        "base-spire:skulking-colony"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-forgotten.spire",
+      "sha256": "sha256:bebef9c829ba7c6b1c18829c3b84a9bd88c24cba32df27f6b74684d1ddc31f06",
+      "bytes": 1695,
+      "declared_count": 4,
+      "declared_ids": [
+        "base-spire:possess-dexterity-power",
+        "base-spire:possess-strength-power",
+        "base-spire:the-forgotten",
+        "base-spire:the-lost"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-gardens.spire",
+      "sha256": "sha256:7ab25c1125de7bc353f2f82282bca459aa579060c1e5a2eabbe6e9a8ca4ead0f",
+      "bytes": 939,
+      "declared_count": 2,
+      "declared_ids": [
+        "base-spire:phantasmal-gardener",
+        "base-spire:skittish-power"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-glory.spire",
+      "sha256": "sha256:be4dd5ff4b97d11e609af73014bcba17ec05618a11e0167359cc3c6ce4c47f63",
+      "bytes": 5472,
+      "declared_count": 11,
+      "declared_ids": [
+        "base-spire:axebot",
+        "base-spire:fabricator",
+        "base-spire:guardbot",
+        "base-spire:hex",
+        "base-spire:hexed",
+        "base-spire:high-voltage",
+        "base-spire:noisebot",
+        "base-spire:spectral-knight",
+        "base-spire:stabbot",
+        "base-spire:stock",
+        "base-spire:zapbot"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-gremlins.spire",
+      "sha256": "sha256:79c783347d3102ca3af1b6ff4e6d9ea9918a1bb18c9cf520cfef17092445d944",
+      "bytes": 4405,
+      "declared_count": 10,
+      "declared_ids": [
+        "base-spire:escape-artist-power",
+        "base-spire:fat-gremlin",
+        "base-spire:flutter-power",
+        "base-spire:gremlin-merc",
+        "base-spire:heist-power",
+        "base-spire:sneaky-gremlin",
+        "base-spire:surprise-power",
+        "base-spire:swipe-power",
+        "base-spire:thievery-power",
+        "base-spire:thieving-hopper"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-knights.spire",
+      "sha256": "sha256:c48187278759a54434ac4aa78af49fb4f8fa948765a5c3c4e3ab9978a0853434",
+      "bytes": 2061,
+      "declared_count": 3,
+      "declared_ids": [
+        "base-spire:dampen",
+        "base-spire:magi-knight",
+        "base-spire:mysterious-knight"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-overgrowth.spire",
+      "sha256": "sha256:72f90fd093b3758881f9b027dd6cd5f542cb7494e57075da03da167e7744cf05",
+      "bytes": 1475,
+      "declared_count": 4,
+      "declared_ids": [
+        "base-spire:leaf-slime-m",
+        "base-spire:leaf-slime-s",
+        "base-spire:twig-slime-m",
+        "base-spire:twig-slime-s"
+      ]
+    },
+    {
+      "path": "base-spire/enemies-souls.spire",
+      "sha256": "sha256:637f5711919c823924936ad2bb7aa396dda9b0a45358f60b22afe17f68a5ff1e",
+      "bytes": 1945,
+      "declared_count": 3,
+      "declared_ids": [
+        "base-spire:intangible",
+        "base-spire:soul-fysh",
+        "base-spire:soul-nexus"
+      ]
+    },
+    {
+      "path": "base-spire/enemies.spire",
+      "sha256": "sha256:551afd38c3774803a997345becbca6d17fda5e7ad932a1d1465c1e200cdf58e3",
+      "bytes": 47320,
+      "declared_count": 97,
+      "declared_ids": [
+        "base-spire:artifact",
+        "base-spire:assassin-ruby-raider",
+        "base-spire:axe-ruby-raider",
+        "base-spire:bowlbug-egg",
+        "base-spire:bowlbug-nectar",
+        "base-spire:bowlbug-rock",
+        "base-spire:bowlbug-silk",
+        "base-spire:brute-ruby-raider",
+        "base-spire:burrowed",
+        "base-spire:bygone-effigy",
+        "base-spire:byrdonis",
+        "base-spire:calcified-cultist",
+        "base-spire:chomper",
+        "base-spire:constrict-power",
+        "base-spire:corpse-slug",
+        "base-spire:crossbow-ruby-raider",
+        "base-spire:cubex-construct",
+        "base-spire:curl-up-power",
+        "base-spire:curl-up-triggered",
+        "base-spire:damp-cultist",
+        "base-spire:devoted-sculptor",
+        "base-spire:dexterity",
+        "base-spire:entomancer",
+        "base-spire:exoskeleton",
+        "base-spire:eye-with-teeth",
+        "base-spire:fake-merchant",
+        "base-spire:flail-knight",
+        "base-spire:flyconid",
+        "base-spire:fogmog",
+        "base-spire:fossil-stalker",
+        "base-spire:frail",
+        "base-spire:frog-knight",
+        "base-spire:fuzzy-wurm-crawler",
+        "base-spire:galvanic-power",
+        "base-spire:gas-bomb",
+        "base-spire:globe-head",
+        "base-spire:hard-to-kill",
+        "base-spire:hatch",
+        "base-spire:haunted-ship",
+        "base-spire:hunter-killer",
+        "base-spire:illusion-power",
+        "base-spire:imbalanced-power",
+        "base-spire:infested",
+        "base-spire:inklet",
+        "base-spire:living-fog",
+        "base-spire:living-shield",
+        "base-spire:louse-progenitor",
+        "base-spire:mawler",
+        "base-spire:minion",
+        "base-spire:myte",
+        "base-spire:nibbit",
+        "base-spire:off-balance",
+        "base-spire:ovicopter",
+        "base-spire:owl-magistrate",
+        "base-spire:paper-cuts-power",
+        "base-spire:parafright",
+        "base-spire:personal-hive-power",
+        "base-spire:phrog-parasite",
+        "base-spire:plating",
+        "base-spire:punch-construct",
+        "base-spire:rampart",
+        "base-spire:ravenous-power",
+        "base-spire:ritual",
+        "base-spire:scroll-of-biting",
+        "base-spire:seapunk",
+        "base-spire:sewer-clam",
+        "base-spire:shrinker-beetle",
+        "base-spire:slimed-berserker",
+        "base-spire:slippery-power",
+        "base-spire:slithering-strangler",
+        "base-spire:slow",
+        "base-spire:sludge-spinner",
+        "base-spire:slumber",
+        "base-spire:slumbering-beetle",
+        "base-spire:smog",
+        "base-spire:smoggy-power",
+        "base-spire:snapping-jaxfruit",
+        "base-spire:soar-power",
+        "base-spire:spiny-toad",
+        "base-spire:suck-power",
+        "base-spire:tangled-power",
+        "base-spire:tender",
+        "base-spire:territorial-power",
+        "base-spire:the-adversary-mk-one",
+        "base-spire:the-adversary-mk-three",
+        "base-spire:the-adversary-mk-two",
+        "base-spire:the-obscura",
+        "base-spire:thorns",
+        "base-spire:toadpole",
+        "base-spire:tough-egg",
+        "base-spire:tracker-ruby-raider",
+        "base-spire:tunneler",
+        "base-spire:turret-operator",
+        "base-spire:two-tailed-rat",
+        "base-spire:vantom",
+        "base-spire:vine-shambler",
+        "base-spire:wriggler"
+      ]
+    },
+    {
+      "path": "base-spire/ironclad-cards.spire",
+      "sha256": "sha256:bd32a7ba709f78908d724231ea1ff65ec87b99f30753060c55cf43c782d2cc5e",
+      "bytes": 99041,
+      "declared_count": 95,
+      "declared_ids": [
+        "base-spire:aggression",
+        "base-spire:anger",
+        "base-spire:armaments",
+        "base-spire:ashen-strike",
+        "base-spire:barricade",
+        "base-spire:bash",
+        "base-spire:battle-trance",
+        "base-spire:blood-wall",
+        "base-spire:bloodletting",
+        "base-spire:bludgeon",
+        "base-spire:body-slam",
+        "base-spire:brand",
+        "base-spire:break",
+        "base-spire:breakthrough",
+        "base-spire:bully",
+        "base-spire:burning-pact",
+        "base-spire:cascade",
+        "base-spire:cinder",
+        "base-spire:colossus",
+        "base-spire:conflagration",
+        "base-spire:corruption",
+        "base-spire:crimson-mantle",
+        "base-spire:cruelty",
+        "base-spire:dark-embrace",
+        "base-spire:defend-ironclad",
+        "base-spire:demon-form",
+        "base-spire:demonic-shield",
+        "base-spire:dismantle",
+        "base-spire:dominate",
+        "base-spire:drum-of-battle",
+        "base-spire:entrench",
+        "base-spire:evil-eye",
+        "base-spire:expect-a-fight",
+        "base-spire:feed",
+        "base-spire:feel-no-pain",
+        "base-spire:fiend-fire",
+        "base-spire:fight-me",
+        "base-spire:flame-barrier",
+        "base-spire:forgotten-ritual",
+        "base-spire:giant-rock",
+        "base-spire:havoc",
+        "base-spire:headbutt",
+        "base-spire:hellraiser",
+        "base-spire:hemokinesis",
+        "base-spire:howl-from-beyond",
+        "base-spire:impervious",
+        "base-spire:infection",
+        "base-spire:infernal-blade",
+        "base-spire:inferno",
+        "base-spire:inflame",
+        "base-spire:iron-wave",
+        "base-spire:ironclad-card-pool",
+        "base-spire:juggernaut",
+        "base-spire:juggling",
+        "base-spire:mangle",
+        "base-spire:molten-fist",
+        "base-spire:not-yet",
+        "base-spire:offering",
+        "base-spire:one-two-punch",
+        "base-spire:pacts-end",
+        "base-spire:perfected-strike",
+        "base-spire:pillage",
+        "base-spire:pommel-strike",
+        "base-spire:primal-force",
+        "base-spire:pyre",
+        "base-spire:rage",
+        "base-spire:rampage",
+        "base-spire:rupture",
+        "base-spire:second-wind",
+        "base-spire:setup-strike",
+        "base-spire:shrug-it-off",
+        "base-spire:slimed",
+        "base-spire:spite",
+        "base-spire:stampede",
+        "base-spire:stoke",
+        "base-spire:stomp",
+        "base-spire:stone-armor",
+        "base-spire:strike-ironclad",
+        "base-spire:sword-boomerang",
+        "base-spire:tank",
+        "base-spire:taunt",
+        "base-spire:tear-asunder",
+        "base-spire:thrash",
+        "base-spire:thunderclap",
+        "base-spire:toxic",
+        "base-spire:tremble",
+        "base-spire:true-grit",
+        "base-spire:twin-strike",
+        "base-spire:unmovable",
+        "base-spire:unrelenting",
+        "base-spire:uppercut",
+        "base-spire:vicious",
+        "base-spire:well-laid-plans",
+        "base-spire:whirlwind",
+        "base-spire:wound"
+      ]
+    },
+    {
+      "path": "base-spire/ironclad-powers.spire",
+      "sha256": "sha256:93710b97eb0fb453a02d9b8cc795e49d6e6ff603a075ac688b46c7d24c8c70ca",
+      "bytes": 5934,
+      "declared_count": 27,
+      "declared_ids": [
+        "base-spire:aggression-power",
+        "base-spire:barricade-power",
+        "base-spire:colossus-power",
+        "base-spire:corruption-power",
+        "base-spire:crimson-mantle-power",
+        "base-spire:cruelty-power",
+        "base-spire:dark-embrace-power",
+        "base-spire:feel-no-pain",
+        "base-spire:flame-barrier-power",
+        "base-spire:free-attack-power",
+        "base-spire:hellraiser-power",
+        "base-spire:inferno-power",
+        "base-spire:juggernaut-power",
+        "base-spire:juggling-power",
+        "base-spire:mangle-power",
+        "base-spire:no-energy-gain-power",
+        "base-spire:one-two-punch-power",
+        "base-spire:plating-power",
+        "base-spire:pyre-power",
+        "base-spire:rage-power",
+        "base-spire:rupture-power",
+        "base-spire:setup-strike-power",
+        "base-spire:stampede-power",
+        "base-spire:tank-power",
+        "base-spire:unmovable-power",
+        "base-spire:vicious-power",
+        "base-spire:well-laid-plans-power"
+      ]
+    },
+    {
+      "path": "base-spire/potion-powers.spire",
+      "sha256": "sha256:3b09b5ae70ab41ca8b5eebed87c533b2838a69c7c4ca7d0214073c5bb652a635",
+      "bytes": 222,
+      "declared_count": 1,
+      "declared_ids": [
+        "base-spire:flex-potion-power"
+      ]
+    },
+    {
+      "path": "base-spire/potions.spire",
+      "sha256": "sha256:74b61d191aca4ba0dd428d9c38563b8bbe420dbb5e35d0ff7d223fe794019f55",
+      "bytes": 832,
+      "declared_count": 6,
+      "declared_ids": [
+        "base-spire:beetle-juice",
+        "base-spire:blessing-of-the-forge",
+        "base-spire:block-potion",
+        "base-spire:fire-potion",
+        "base-spire:flex-potion",
+        "base-spire:strength-potion"
+      ]
+    },
+    {
+      "path": "base-spire/shared-powers.spire",
+      "sha256": "sha256:76b260b0df5dd538da599541c18e644febca4434e3379056e8b4dbc4af97b7aa",
+      "bytes": 895,
+      "declared_count": 7,
+      "declared_ids": [
+        "base-spire:demon-form-power",
+        "base-spire:no-draw",
+        "base-spire:self-forming-clay-power",
+        "base-spire:shrink",
+        "base-spire:strength",
+        "base-spire:vulnerable",
+        "base-spire:weak"
+      ]
+    },
+    {
+      "path": "base-spire/state.spire",
+      "sha256": "sha256:df9cc4bc47e3a95ac94fdaf7276a1978efdc701ec7f9674c2211459f940dc42b",
+      "bytes": 383,
+      "declared_count": 4,
+      "declared_ids": [
+        "base-spire:demon-tongue-last-triggered-turn",
+        "base-spire:red-skull-strength-active",
+        "base-spire:ruined-helmet-used-this-combat",
+        "base-spire:two-tailed-rat-backup-calls"
+      ]
+    },
+    {
+      "path": "base-spire/status-cards.spire",
+      "sha256": "sha256:894b13fd11eeca728af073b96c4a11d6008679ffeb0a007552977bf5ffde914a",
+      "bytes": 1347,
+      "declared_count": 2,
+      "declared_ids": [
+        "base-spire:beckon",
+        "base-spire:dazed"
+      ]
+    }
+  ],
+  "code_sources": [
+    {
+      "path": "mod-the-spire/base-spire/BaseSpire/BaseSpirePackage.cs",
+      "sha256": "sha256:c2652d77e2605020eb7bce7cff020237c0c96504d73c9f5073b46e08896f0d17",
+      "bytes": 38148
+    },
+    {
+      "path": "mod-the-spire/base-spire/BaseSpire/IroncladCardPool.cs",
+      "sha256": "sha256:cbf8cee04d0fab83908bc89f69258cf9baf5fe85d93eed6fc5529b621bdbe549",
+      "bytes": 244
+    },
+    {
+      "path": "mod-the-spire/base-spire/BaseSpire/StandardActMapGenerator.cs",
+      "sha256": "sha256:92094407aeb2e4eb46262baeb2e7143a476c7c69f83026b365ca08cbd1f47bf9",
+      "bytes": 21968
+    }
+  ],
+  "categories": {
+    "cards": [
+      {
+        "id": "base-spire:aggression",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:anger",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:armaments",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:ashen-strike",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [
+          "base-spire:strike"
+        ],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:barricade",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:bash",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Basic",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:battle-trance",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:beckon",
+        "source": "base-spire/status-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Status",
+        "rarity": "Status",
+        "has_upgrade": false,
+        "upgraded_cost": null,
+        "upgraded_effect": false,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "None",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": [
+          "turn_end_in_hand"
+        ]
+      },
+      {
+        "id": "base-spire:blood-wall",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:bloodletting",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:bludgeon",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 3,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:body-slam",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:brand",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:break",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Ancient",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:breakthrough",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:bully",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:burning-pact",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:cascade",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "X",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": null,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:cinder",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:colossus",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:conflagration",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:corruption",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Ancient",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:crimson-mantle",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:cruelty",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:dark-embrace",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:dazed",
+        "source": "base-spire/status-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Status",
+        "rarity": "Status",
+        "has_upgrade": false,
+        "upgraded_cost": null,
+        "upgraded_effect": false,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Ethereal, Unplayable",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:defend-ironclad",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Basic",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:demon-form",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 3,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:demonic-shield",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": true,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:dismantle",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:dominate",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:drum-of-battle",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": [
+          "on_exhaust"
+        ]
+      },
+      {
+        "id": "base-spire:entrench",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Event",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:evil-eye",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:expect-a-fight",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:feed",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": false,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:feel-no-pain",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:fiend-fire",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:fight-me",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:flame-barrier",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:forgotten-ritual",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:giant-rock",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Token",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:havoc",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:headbutt",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:hellraiser",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:hemokinesis",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:howl-from-beyond",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 3,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": [
+          "after_auto_post_play"
+        ]
+      },
+      {
+        "id": "base-spire:impervious",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:infection",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Status",
+        "rarity": "Status",
+        "has_upgrade": false,
+        "upgraded_cost": null,
+        "upgraded_effect": false,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Unplayable",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": [
+          "turn_end_in_hand"
+        ]
+      },
+      {
+        "id": "base-spire:infernal-blade",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:inferno",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:inflame",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:iron-wave",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:juggernaut",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:juggling",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:mangle",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 3,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:molten-fist",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:not-yet",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": false,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:offering",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:one-two-punch",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:pacts-end",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:perfected-strike",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [
+          "base-spire:strike"
+        ],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:pillage",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:pommel-strike",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [
+          "base-spire:strike"
+        ],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:primal-force",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:pyre",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:rage",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:rampage",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 1,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:rupture",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:second-wind",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:setup-strike",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [
+          "base-spire:strike"
+        ],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:shrug-it-off",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:slimed",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Status",
+        "rarity": "Status",
+        "has_upgrade": false,
+        "upgraded_cost": null,
+        "upgraded_effect": false,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:spite",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:stampede",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:stoke",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:stomp",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 3,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 3,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": [
+          "before_card_played",
+          "on_enter_combat"
+        ]
+      },
+      {
+        "id": "base-spire:stone-armor",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:strike-ironclad",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Basic",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [
+          "base-spire:strike"
+        ],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:sword-boomerang",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "RandomEnemy",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:tank",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 0,
+        "upgraded_effect": true,
+        "multiplayer_only": true,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:taunt",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:tear-asunder",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:thrash",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 1,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:thunderclap",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:toxic",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Status",
+        "rarity": "Status",
+        "has_upgrade": false,
+        "upgraded_cost": null,
+        "upgraded_effect": false,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust, Unplayable",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": [
+          "turn_end_in_hand"
+        ]
+      },
+      {
+        "id": "base-spire:tremble",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Exhaust",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:true-grit",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Skill",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:twin-strike",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Common",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [
+          "base-spire:strike"
+        ],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:unmovable",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Rare",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:unrelenting",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:uppercut",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 2,
+        "cost_kind": "Fixed",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 2,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "SelectedTarget",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:vicious",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:well-laid-plans",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 1,
+        "cost_kind": "Fixed",
+        "type": "Power",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": 1,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:whirlwind",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "X",
+        "type": "Attack",
+        "rarity": "Uncommon",
+        "has_upgrade": true,
+        "upgraded_cost": null,
+        "upgraded_effect": true,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "None",
+        "target": "AllOpponents",
+        "tags": [],
+        "pools": [
+          "base-spire:ironclad-card-pool"
+        ],
+        "variables": 0,
+        "hooks": []
+      },
+      {
+        "id": "base-spire:wound",
+        "source": "base-spire/ironclad-cards.spire",
+        "cost": 0,
+        "cost_kind": "Fixed",
+        "type": "Status",
+        "rarity": "Status",
+        "has_upgrade": false,
+        "upgraded_cost": null,
+        "upgraded_effect": false,
+        "multiplayer_only": false,
+        "can_be_generated_in_combat": true,
+        "keywords": "Unplayable",
+        "target": "Self",
+        "tags": [],
+        "pools": [],
+        "variables": 0,
+        "hooks": []
+      }
+    ],
+    "powers": [
+      {
+        "id": "base-spire:aggression-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:artifact",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:barricade-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:burrowed",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:colossus-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 1,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:constrict-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:corruption-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:crimson-mantle-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:cruelty-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:curl-up-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:curl-up-triggered",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:dampen",
+        "source": "base-spire/enemies-knights.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:dark-embrace-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 2,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:demon-form-power",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:dexterity",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:escape-artist-power",
+        "source": "base-spire/enemies-gremlins.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:feel-no-pain",
+        "source": "base-spire/ironclad-cards.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:flame-barrier-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:flex-potion-power",
+        "source": "base-spire/potion-powers.spire",
+        "is_temporary": true,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:flutter-power",
+        "source": "base-spire/enemies-gremlins.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 1,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:frail",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:free-attack-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:galvanic-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:hard-to-kill",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:hardened-shell-power",
+        "source": "base-spire/enemies-colonies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:hatch",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:heist-power",
+        "source": "base-spire/enemies-gremlins.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:hellraiser-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:hex",
+        "source": "base-spire/enemies-glory.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:high-voltage",
+        "source": "base-spire/enemies-glory.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:illusion-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:imbalanced-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:inferno-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:infested",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:intangible",
+        "source": "base-spire/enemies-souls.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:juggernaut-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:juggling-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:mangle-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": true,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:minion",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:no-draw",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:no-energy-gain-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:off-balance",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:one-two-punch-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:paper-cuts-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:personal-hive-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:plating",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:plating-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 2,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:possess-dexterity-power",
+        "source": "base-spire/enemies-forgotten.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:possess-strength-power",
+        "source": "base-spire/enemies-forgotten.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:pyre-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:rage-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:rampart",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:ravenous-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:ritual",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:rupture-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 2,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:self-forming-clay-power",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:setup-strike-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": true,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:shrink",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:skittish-power",
+        "source": "base-spire/enemies-gardens.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:slippery-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:slow",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 1,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:slumber",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:smoggy-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 2,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:soar-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 1,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:stampede-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:stock",
+        "source": "base-spire/enemies-glory.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:strength",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:suck-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:surprise-power",
+        "source": "base-spire/enemies-gremlins.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:swipe-power",
+        "source": "base-spire/enemies-gremlins.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:tangled-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:tank-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 1,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:tender",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:territorial-power",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:thievery-power",
+        "source": "base-spire/enemies-gremlins.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 1
+      },
+      {
+        "id": "base-spire:thorns",
+        "source": "base-spire/enemies.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:unmovable-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 1,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:vicious-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 1,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:vulnerable",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:weak",
+        "source": "base-spire/shared-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 0,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      },
+      {
+        "id": "base-spire:well-laid-plans-power",
+        "source": "base-spire/ironclad-powers.spire",
+        "is_temporary": false,
+        "events": 0,
+        "lifecycle": 1,
+        "incoming_damage_modifiers": 0,
+        "block_gain_modifiers": 0,
+        "variables": 0
+      }
+    ],
+    "enemies": [
+      {
+        "id": "base-spire:assassin-ruby-raider",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 18,
+        "max_hp": 23,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:axe-ruby-raider",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 20,
+        "max_hp": 22,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:axebot",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 40,
+        "max_hp": 44,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:bowlbug-egg",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 21,
+        "max_hp": 22,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:bowlbug-nectar",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 35,
+        "max_hp": 38,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:bowlbug-rock",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 45,
+        "max_hp": 48,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:bowlbug-silk",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 40,
+        "max_hp": 43,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:brute-ruby-raider",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 30,
+        "max_hp": 33,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:bygone-effigy",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 127,
+        "max_hp": 127,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:byrdonis",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 90,
+        "max_hp": 90,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:calcified-cultist",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 38,
+        "max_hp": 41,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:chomper",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 60,
+        "max_hp": 64,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:corpse-slug",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 25,
+        "max_hp": 27,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:crossbow-ruby-raider",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 18,
+        "max_hp": 21,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:cubex-construct",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 65,
+        "max_hp": 65,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:damp-cultist",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 51,
+        "max_hp": 53,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:devoted-sculptor",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 162,
+        "max_hp": 162,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:entomancer",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 145,
+        "max_hp": 145,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:exoskeleton",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 24,
+        "max_hp": 28,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:eye-with-teeth",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 6,
+        "max_hp": 6,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:fabricator",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 150,
+        "max_hp": 150,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:fake-merchant",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 165,
+        "max_hp": 165,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:fat-gremlin",
+        "source": "base-spire/enemies-gremlins.spire",
+        "min_hp": 13,
+        "max_hp": 17,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:flail-knight",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 101,
+        "max_hp": 101,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:flyconid",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 51,
+        "max_hp": 53,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:fogmog",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 74,
+        "max_hp": 74,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:fossil-stalker",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 51,
+        "max_hp": 53,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:frog-knight",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 191,
+        "max_hp": 191,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:fuzzy-wurm-crawler",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 55,
+        "max_hp": 57,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:gas-bomb",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 7,
+        "max_hp": 7,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:globe-head",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 148,
+        "max_hp": 148,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:gremlin-merc",
+        "source": "base-spire/enemies-gremlins.spire",
+        "min_hp": 47,
+        "max_hp": 49,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:guardbot",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 16,
+        "max_hp": 20,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:haunted-ship",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 63,
+        "max_hp": 63,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:hunter-killer",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 121,
+        "max_hp": 121,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:inklet",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 12,
+        "max_hp": 18,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:leaf-slime-m",
+        "source": "base-spire/enemies-overgrowth.spire",
+        "min_hp": 32,
+        "max_hp": 35,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:leaf-slime-s",
+        "source": "base-spire/enemies-overgrowth.spire",
+        "min_hp": 11,
+        "max_hp": 15,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:living-fog",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 80,
+        "max_hp": 80,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:living-shield",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 55,
+        "max_hp": 55,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:louse-progenitor",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 134,
+        "max_hp": 136,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:magi-knight",
+        "source": "base-spire/enemies-knights.spire",
+        "min_hp": 82,
+        "max_hp": 82,
+        "actions": 5
+      },
+      {
+        "id": "base-spire:mawler",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 76,
+        "max_hp": 76,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:mysterious-knight",
+        "source": "base-spire/enemies-knights.spire",
+        "min_hp": 101,
+        "max_hp": 101,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:myte",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 61,
+        "max_hp": 67,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:nibbit",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 42,
+        "max_hp": 46,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:noisebot",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 18,
+        "max_hp": 23,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:ovicopter",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 124,
+        "max_hp": 130,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:owl-magistrate",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 231,
+        "max_hp": 231,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:parafright",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 21,
+        "max_hp": 21,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:phantasmal-gardener",
+        "source": "base-spire/enemies-gardens.spire",
+        "min_hp": 26,
+        "max_hp": 31,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:phrog-parasite",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 61,
+        "max_hp": 64,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:punch-construct",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 60,
+        "max_hp": 60,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:scroll-of-biting",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 30,
+        "max_hp": 37,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:seapunk",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 47,
+        "max_hp": 49,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:sewer-clam",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 58,
+        "max_hp": 58,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:shrinker-beetle",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 38,
+        "max_hp": 40,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:skulking-colony",
+        "source": "base-spire/enemies-colonies.spire",
+        "min_hp": 70,
+        "max_hp": 70,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:slimed-berserker",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 261,
+        "max_hp": 261,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:slithering-strangler",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 53,
+        "max_hp": 55,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:sludge-spinner",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 37,
+        "max_hp": 39,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:slumbering-beetle",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 86,
+        "max_hp": 86,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:snapping-jaxfruit",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 34,
+        "max_hp": 36,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:sneaky-gremlin",
+        "source": "base-spire/enemies-gremlins.spire",
+        "min_hp": 11,
+        "max_hp": 15,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:soul-fysh",
+        "source": "base-spire/enemies-souls.spire",
+        "min_hp": 211,
+        "max_hp": 211,
+        "actions": 5
+      },
+      {
+        "id": "base-spire:soul-nexus",
+        "source": "base-spire/enemies-souls.spire",
+        "min_hp": 254,
+        "max_hp": 254,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:spectral-knight",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 93,
+        "max_hp": 93,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:spiny-toad",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 116,
+        "max_hp": 119,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:stabbot",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 18,
+        "max_hp": 23,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:the-adversary-mk-one",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 100,
+        "max_hp": 100,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:the-adversary-mk-three",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 300,
+        "max_hp": 300,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:the-adversary-mk-two",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 200,
+        "max_hp": 200,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:the-forgotten",
+        "source": "base-spire/enemies-forgotten.spire",
+        "min_hp": 106,
+        "max_hp": 106,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:the-lost",
+        "source": "base-spire/enemies-forgotten.spire",
+        "min_hp": 93,
+        "max_hp": 93,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:the-obscura",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 123,
+        "max_hp": 123,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:thieving-hopper",
+        "source": "base-spire/enemies-gremlins.spire",
+        "min_hp": 79,
+        "max_hp": 79,
+        "actions": 5
+      },
+      {
+        "id": "base-spire:toadpole",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 21,
+        "max_hp": 25,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:torch-head-amalgam",
+        "source": "base-spire/enemies-amalgams.spire",
+        "min_hp": 199,
+        "max_hp": 199,
+        "actions": 5
+      },
+      {
+        "id": "base-spire:tough-egg",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 14,
+        "max_hp": 18,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:tracker-ruby-raider",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 21,
+        "max_hp": 25,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:tunneler",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 87,
+        "max_hp": 87,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:turret-operator",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 41,
+        "max_hp": 41,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:twig-slime-m",
+        "source": "base-spire/enemies-overgrowth.spire",
+        "min_hp": 26,
+        "max_hp": 28,
+        "actions": 2
+      },
+      {
+        "id": "base-spire:twig-slime-s",
+        "source": "base-spire/enemies-overgrowth.spire",
+        "min_hp": 7,
+        "max_hp": 11,
+        "actions": 1
+      },
+      {
+        "id": "base-spire:two-tailed-rat",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 17,
+        "max_hp": 21,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:vantom",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 173,
+        "max_hp": 173,
+        "actions": 4
+      },
+      {
+        "id": "base-spire:vine-shambler",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 61,
+        "max_hp": 61,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:wriggler",
+        "source": "base-spire/enemies.spire",
+        "min_hp": 17,
+        "max_hp": 21,
+        "actions": 3
+      },
+      {
+        "id": "base-spire:zapbot",
+        "source": "base-spire/enemies-glory.spire",
+        "min_hp": 18,
+        "max_hp": 23,
+        "actions": 1
+      }
+    ],
+    "afflictions": [
+      {
+        "id": "base-spire:hexed",
+        "source": "base-spire/enemies-glory.spire"
+      },
+      {
+        "id": "base-spire:smog",
+        "source": "base-spire/enemies.spire"
+      }
+    ],
+    "potions": [
+      {
+        "id": "base-spire:beetle-juice",
+        "source": "base-spire/potions.spire"
+      },
+      {
+        "id": "base-spire:blessing-of-the-forge",
+        "source": "base-spire/potions.spire"
+      },
+      {
+        "id": "base-spire:block-potion",
+        "source": "base-spire/potions.spire"
+      },
+      {
+        "id": "base-spire:fire-potion",
+        "source": "base-spire/potions.spire"
+      },
+      {
+        "id": "base-spire:flex-potion",
+        "source": "base-spire/potions.spire"
+      },
+      {
+        "id": "base-spire:strength-potion",
+        "source": "base-spire/potions.spire"
+      }
+    ],
+    "card_pools": [
+      {
+        "id": "base-spire:ironclad-card-pool",
+        "source": "base-spire/ironclad-cards.spire"
+      }
+    ],
+    "relics": [
+      {
+        "id": "base-spire:anchor",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:burning-blood",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:charons-ashes",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:circlet",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:demon-tongue",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:paper-phrog",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:potion-belt",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:red-skull",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:ruined-helmet",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:self-forming-clay",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:vajra",
+        "source": "\u003Ccsharp-declared\u003E"
+      }
+    ],
+    "encounters": [
+      {
+        "id": "base-spire:axebots-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:bowlbugs-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:bowlbugs-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:bygone-effigy-elite",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:byrdonis-elite",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:chompers-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:construct-menagerie-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:corpse-slugs-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:corpse-slugs-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:cubex-construct-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:cultists-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:devoted-sculptor-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:entomancer-elite",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:exoskeletons-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:exoskeletons-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:fabricator-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:flyconid-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:fogmog-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:fossil-stalker-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:frog-knight-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:fuzzy-wurm-crawler-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:globe-head-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:gremlin-merc-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:haunted-ship-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:hunter-killer-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:inklets-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:knights-elite",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:living-fog-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:louse-progenitor-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:mawler-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:mytes-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:nibbits-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:nibbits-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:overgrowth-crawlers",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:ovicopter-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:owl-magistrate-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:phantasmal-gardeners-elite",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:phrog-parasite-elite",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:punch-construct-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:ruby-raiders-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:scrolls-of-biting-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:scrolls-of-biting-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:seapunk-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:seapunk-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:sewer-clam-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:shrinker-beetle-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:slimed-berserker-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:slimes-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:slimes-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:slithering-strangler-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:sludge-spinner-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:slumbering-beetle-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:snapping-jaxfruit-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:spiny-toad-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:the-lost-and-forgotten-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:the-obscura-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:thieving-hopper-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:toadpoles-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:tunneler-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:turret-operator-weak",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:two-tailed-rats-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:vantom-boss",
+        "source": "\u003Ccsharp-declared\u003E"
+      },
+      {
+        "id": "base-spire:vine-shambler-normal",
+        "source": "\u003Ccsharp-declared\u003E"
+      }
+    ],
+    "run_events": [],
+    "characters": [
+      {
+        "id": "base-spire:ironclad",
+        "source": "\u003Ccsharp-declared\u003E"
+      }
+    ],
+    "runs": [
+      {
+        "id": "base-spire:standard-run",
+        "source": "\u003Ccsharp-declared\u003E"
+      }
+    ],
+    "state_variables": [
+      {
+        "id": "base-spire:demon-tongue-last-triggered-turn",
+        "scope": "Combat",
+        "type": "Int",
+        "source": "base-spire/state.spire"
+      },
+      {
+        "id": "base-spire:red-skull-strength-active",
+        "scope": "Combat",
+        "type": "Int",
+        "source": "base-spire/state.spire"
+      },
+      {
+        "id": "base-spire:ruined-helmet-used-this-combat",
+        "scope": "Combat",
+        "type": "Int",
+        "source": "base-spire/state.spire"
+      },
+      {
+        "id": "base-spire:two-tailed-rat-backup-calls",
+        "scope": "Combat",
+        "type": "Int",
+        "source": "base-spire/state.spire"
+      }
+    ]
+  },
+  "totals": {
+    "declared_in_sources": 278,
+    "registered_total": 354,
+    "cards_registered": 96,
+    "powers_registered": 81,
+    "enemies_registered": 89,
+    "card_pools_registered": 1,
+    "relics_registered": 11,
+    "potions_registered": 6,
+    "characters_registered": 1,
+    "runs_registered": 1,
+    "encounters_registered": 63,
+    "run_events_registered": 0,
+    "afflictions_registered": 2,
+    "state_variables_registered": 4,
+    "ironclad_card_pool_size": 85,
+    "multiplayer_only_cards": 2
+  },
+  "differences": {
+    "declared_but_not_registered": [],
+    "registered_without_spire_source": [
+      "base-spire:anchor",
+      "base-spire:axebots-normal",
+      "base-spire:bowlbugs-normal",
+      "base-spire:bowlbugs-weak",
+      "base-spire:burning-blood",
+      "base-spire:bygone-effigy-elite",
+      "base-spire:byrdonis-elite",
+      "base-spire:charons-ashes",
+      "base-spire:chompers-normal",
+      "base-spire:circlet",
+      "base-spire:construct-menagerie-normal",
+      "base-spire:corpse-slugs-normal",
+      "base-spire:corpse-slugs-weak",
+      "base-spire:cubex-construct-normal",
+      "base-spire:cultists-normal",
+      "base-spire:demon-tongue",
+      "base-spire:devoted-sculptor-weak",
+      "base-spire:entomancer-elite",
+      "base-spire:exoskeletons-normal",
+      "base-spire:exoskeletons-weak",
+      "base-spire:fabricator-normal",
+      "base-spire:flyconid-normal",
+      "base-spire:fogmog-normal",
+      "base-spire:fossil-stalker-normal",
+      "base-spire:frog-knight-normal",
+      "base-spire:fuzzy-wurm-crawler-weak",
+      "base-spire:globe-head-normal",
+      "base-spire:gremlin-merc-normal",
+      "base-spire:haunted-ship-normal",
+      "base-spire:hunter-killer-normal",
+      "base-spire:inklets-normal",
+      "base-spire:ironclad",
+      "base-spire:knights-elite",
+      "base-spire:living-fog-normal",
+      "base-spire:louse-progenitor-normal",
+      "base-spire:mawler-normal",
+      "base-spire:mytes-normal",
+      "base-spire:nibbits-normal",
+      "base-spire:nibbits-weak",
+      "base-spire:overgrowth-crawlers",
+      "base-spire:ovicopter-normal",
+      "base-spire:owl-magistrate-normal",
+      "base-spire:paper-phrog",
+      "base-spire:phantasmal-gardeners-elite",
+      "base-spire:phrog-parasite-elite",
+      "base-spire:potion-belt",
+      "base-spire:punch-construct-normal",
+      "base-spire:red-skull",
+      "base-spire:ruby-raiders-normal",
+      "base-spire:ruined-helmet",
+      "base-spire:scrolls-of-biting-normal",
+      "base-spire:scrolls-of-biting-weak",
+      "base-spire:seapunk-normal",
+      "base-spire:seapunk-weak",
+      "base-spire:self-forming-clay",
+      "base-spire:sewer-clam-normal",
+      "base-spire:shrinker-beetle-weak",
+      "base-spire:slimed-berserker-normal",
+      "base-spire:slimes-normal",
+      "base-spire:slimes-weak",
+      "base-spire:slithering-strangler-normal",
+      "base-spire:sludge-spinner-weak",
+      "base-spire:slumbering-beetle-normal",
+      "base-spire:snapping-jaxfruit-normal",
+      "base-spire:spiny-toad-normal",
+      "base-spire:standard-run",
+      "base-spire:the-lost-and-forgotten-normal",
+      "base-spire:the-obscura-normal",
+      "base-spire:thieving-hopper-weak",
+      "base-spire:toadpoles-weak",
+      "base-spire:tunneler-weak",
+      "base-spire:turret-operator-weak",
+      "base-spire:two-tailed-rats-normal",
+      "base-spire:vajra",
+      "base-spire:vantom-boss",
+      "base-spire:vine-shambler-normal"
+    ],
+    "note": "registered_without_spire_source \u591A\u4E3A C# \u58F0\u660E\u7684\u5185\u5BB9\uFF08\u9057\u7269/\u89D2\u8272/\u6D41\u7A0B\uFF09\u6216\u7531\u5305\u5728\u6784\u5EFA\u671F\u5C55\u5F00\u7684 ID\uFF1Bdeclared_but_not_registered \u662F**\u4E0D\u53EF\u8FBE\u58F0\u660E**\uFF0C\u5FC5\u987B\u663E\u5F0F\u5904\u7406\uFF0C\u4E0D\u5F97\u4E3A\u4E86\u8BA9\u5206\u6BCD\u53D8\u5C0F\u800C\u5220\u6389\u6E90\u6587\u4EF6\u3002"
+  },
+  "scope": {
+    "ironclad_single_player_cards": [
+      "base-spire:aggression",
+      "base-spire:anger",
+      "base-spire:armaments",
+      "base-spire:ashen-strike",
+      "base-spire:barricade",
+      "base-spire:bash",
+      "base-spire:battle-trance",
+      "base-spire:blood-wall",
+      "base-spire:bloodletting",
+      "base-spire:bludgeon",
+      "base-spire:body-slam",
+      "base-spire:brand",
+      "base-spire:break",
+      "base-spire:breakthrough",
+      "base-spire:bully",
+      "base-spire:burning-pact",
+      "base-spire:cascade",
+      "base-spire:cinder",
+      "base-spire:colossus",
+      "base-spire:conflagration",
+      "base-spire:corruption",
+      "base-spire:crimson-mantle",
+      "base-spire:cruelty",
+      "base-spire:dark-embrace",
+      "base-spire:defend-ironclad",
+      "base-spire:demon-form",
+      "base-spire:dismantle",
+      "base-spire:dominate",
+      "base-spire:drum-of-battle",
+      "base-spire:evil-eye",
+      "base-spire:expect-a-fight",
+      "base-spire:feed",
+      "base-spire:feel-no-pain",
+      "base-spire:fiend-fire",
+      "base-spire:fight-me",
+      "base-spire:flame-barrier",
+      "base-spire:forgotten-ritual",
+      "base-spire:havoc",
+      "base-spire:headbutt",
+      "base-spire:hellraiser",
+      "base-spire:hemokinesis",
+      "base-spire:howl-from-beyond",
+      "base-spire:impervious",
+      "base-spire:infernal-blade",
+      "base-spire:inferno",
+      "base-spire:inflame",
+      "base-spire:iron-wave",
+      "base-spire:juggernaut",
+      "base-spire:juggling",
+      "base-spire:mangle",
+      "base-spire:molten-fist",
+      "base-spire:not-yet",
+      "base-spire:offering",
+      "base-spire:one-two-punch",
+      "base-spire:pacts-end",
+      "base-spire:perfected-strike",
+      "base-spire:pillage",
+      "base-spire:pommel-strike",
+      "base-spire:primal-force",
+      "base-spire:pyre",
+      "base-spire:rage",
+      "base-spire:rampage",
+      "base-spire:rupture",
+      "base-spire:second-wind",
+      "base-spire:setup-strike",
+      "base-spire:shrug-it-off",
+      "base-spire:spite",
+      "base-spire:stampede",
+      "base-spire:stoke",
+      "base-spire:stomp",
+      "base-spire:stone-armor",
+      "base-spire:strike-ironclad",
+      "base-spire:sword-boomerang",
+      "base-spire:taunt",
+      "base-spire:tear-asunder",
+      "base-spire:thrash",
+      "base-spire:thunderclap",
+      "base-spire:tremble",
+      "base-spire:true-grit",
+      "base-spire:twin-strike",
+      "base-spire:unmovable",
+      "base-spire:unrelenting",
+      "base-spire:uppercut",
+      "base-spire:vicious",
+      "base-spire:whirlwind"
+    ],
+    "cards_without_pool": [
+      "base-spire:beckon",
+      "base-spire:dazed",
+      "base-spire:demonic-shield",
+      "base-spire:entrench",
+      "base-spire:giant-rock",
+      "base-spire:infection",
+      "base-spire:slimed",
+      "base-spire:tank",
+      "base-spire:toxic",
+      "base-spire:well-laid-plans",
+      "base-spire:wound"
+    ],
+    "multiplayer_only_cards": [
+      "base-spire:demonic-shield",
+      "base-spire:tank"
+    ]
+  }
+}

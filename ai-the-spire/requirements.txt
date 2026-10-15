@@ -1,0 +1,6 @@
+# D1 可运行战斗学习版本的最小依赖声明（不引入训练框架）。
+#
+# 记录的实际版本：numpy 1.26.3（Python 3.12.0，Windows）。
+# 训练侧的反向传播 / Adam / PPO 全部是 NumPy 手写实现（见 ai_the_spire/models/autodiff.py 与
+# ai_the_spire/models/learning.py），因此这里不需要 torch/tensorflow 之类的框架。
+numpy>=1.26,<2

@@ -1,0 +1,2372 @@
+{
+ "canonical_version": "net-wire-canon-v1",
+ "cases": [
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-demo-catalog",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-demo-snapshot",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-demo-terminal-snapshot",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-unknown-top-level-key-snapshot",
+   "l1_findings": [
+    "snapshot: 未知键 'extra'（additionalProperties=false）"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-unknown-nested-key-entity",
+   "l1_findings": [
+    "snapshot.entities[0]: 未知键 'extra'（additionalProperties=false）"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-unknown-capabilities-key",
+   "l1_findings": [
+    "capabilities: 未知键 'restore'（additionalProperties=false）"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-capability-key-hoisted",
+   "l1_findings": [
+    "capabilities: 未知键 'decision_pause'（additionalProperties=false）"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-capability-key-missing",
+   "l1_findings": [
+    "capabilities.execution_guarantees: 缺少必需键 'decision_pause'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-public-state-restore-true",
+   "l1_findings": [
+    "capabilities.execution_guarantees.public_state_restore: 期望常量 False"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-70"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-public-fork-true",
+   "l1_findings": [
+    "capabilities.execution_guarantees.public_fork: 期望常量 False"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-70"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-seed-action-replay-unknown",
+   "l1_findings": [
+    "capabilities.execution_guarantees.seed_action_replay: 'full' 不在枚举 ['none', 'public_trace']"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-decision-pause-type",
+   "l1_findings": [
+    "capabilities.execution_guarantees.decision_pause: 期望 boolean，得到 string"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-field-availability-unknown-state",
+   "l1_findings": [
+    "capabilities.field_availability.demo:hp: 'unknown' 不在枚举 ['available', 'unavailable']"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-limits-missing-key",
+   "l1_findings": [
+    "capabilities.limits: 缺少必需键 'sessions'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-limits-negative",
+   "l1_findings": [
+    "capabilities.limits.sessions: -1 小于 minimum 0"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-supported-structure-unknown",
+   "l1_findings": [
+    "capabilities.supported_structures[0].structure: 'Card' 不在枚举 ['Entity', 'Relation', 'Pile', 'Sequence', 'Group', 'LegalAction', 'TerminalResult']"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-scenario-profile-missing-coverage-ref",
+   "l1_findings": [
+    "capabilities.scenario_profiles[0]: 缺少必需键 'coverage_ref'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-describe-result",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "catalog",
+    "describe_result"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-describe-result-extra-key",
+   "l1_findings": [
+    "describe_result: 未知键 'extra'（additionalProperties=false）"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "describe_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-identity-version",
+   "l1_findings": [
+    "identity.protocol_version: 期望常量 '0.1'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "identity"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-observe-active",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3",
+    "L4"
+   ],
+   "roles": [
+    "catalog",
+    "observe_result",
+    "snapshot"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-observe-active-without-snapshot",
+   "l1_findings": [
+    "observe_result: 缺少必需键 'snapshot'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "observe_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-observe-settling-with-snapshot",
+   "l1_findings": [
+    "observe_result: 命中禁止分支 not"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "observe_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-attach-settling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "attach_result"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-attach-settling-with-snapshot",
+   "l1_findings": [
+    "attach_result: 命中禁止分支 not"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "attach_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-attach-closed-status",
+   "l1_findings": [
+    "attach_result.session_status: 'closed' 不在枚举 ['active', 'terminal', 'settling']"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "attach_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-close-result",
+   "l1_findings": [],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "close_result"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-close-result-not-closed",
+   "l1_findings": [
+    "close_result.session_status: 期望常量 'closed'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "close_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "01-structural.json",
+   "id": "pos-request-status-pending",
+   "l1_findings": [],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "request_status_result"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-request-status-completed-without-response",
+   "l1_findings": [
+    "request_status_result: 缺少必需键 'response'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "request_status_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-request-status-notfound-with-response",
+   "l1_findings": [
+    "request_status_result: 命中禁止分支 not"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "request_status_result"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-response-ok-with-error",
+   "l1_findings": [
+    "response: 命中禁止分支 not"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "response"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-response-not-ok-without-error",
+   "l1_findings": [
+    "response: 缺少必需键 'error'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "response"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-response-not-ok-with-result",
+   "l1_findings": [
+    "response: 命中禁止分支 not"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "response"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-arbitrary-result",
+   "l1_findings": [
+    "response.result: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "response"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-error-unknown-code",
+   "l1_findings": [
+    "error.code: 'surprise' 不在枚举 ['version_mismatch', 'unsupported_capability', 'invalid_input', 'unknown_type', 'dangling_reference', 'stale_observation', 'illegal_candidate', 'request_conflict', 'session_busy', 'capacity_exceeded', 'session_not_found', 'session_closed', 'backend_fault', 'outcome_unknown']"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "error"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "01-structural.json",
+   "id": "neg-error-execution-state-omitted",
+   "l1_findings": [
+    "error: 缺少必需键 'execution_state'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "error"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "02-decimal-type-seed.json",
+   "id": "pos-decimal-negative-fraction",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-decimal-trailing-zero",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-21"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-decimal-negative-zero",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-21"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-decimal-exponent",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-21"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-decimal-leading-plus",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-21"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-decimal-comma",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-21"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-decimal-leading-zero",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-21"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-integer-format-with-fraction",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-72"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-number-value-json-float",
+   "l1_findings": [],
+   "layers": [
+    "L0",
+    "L1",
+    "L3"
+   ],
+   "roles": [],
+   "rule_ids": [
+    "I-91"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-number-value-boolean",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-boolean-value-string",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-category-undeclared-value",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-entity-ref-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-39"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-entity-ref-wrong-kind",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-snapshot-catalog-id-mismatch",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-01"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-snapshot-ruleset-mismatch",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-01"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "02-decimal-type-seed.json",
+   "id": "pos-seed-max",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "catalog",
+    "request"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "accept",
+   "file": "02-decimal-type-seed.json",
+   "id": "pos-seed-zero",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "request"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-overflow",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-overflow-20-nines",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-76"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "02-decimal-type-seed.json",
+   "id": "pos-seed-max-minus-one",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "request"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "accept",
+   "file": "02-decimal-type-seed.json",
+   "id": "pos-seed-2-pow-63",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "request"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-leading-zero",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-json-number",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-plus-sign",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-exponent",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-negative",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-whitespace",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-when-unsupported",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "request"
+   ],
+   "rule_ids": [
+    "I-11"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "03-catalog-coverage.json",
+   "id": "pos-coverage-table",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog",
+    "coverage"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-content-type-kind-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-05"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-field-applies-action-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-05"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-field-target-kind-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-05"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-action-fields-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-05"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-relation-source-kind-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-05"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-pile-kind-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-05"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-pile-kind-shared",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-07"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-position-schema-max-lt-min",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-77"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-exclusive-group-without-scope",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-78"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-scope-field-not-entity-ref",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-31"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-scope-field-not-required",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-31"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-action-required-fields-mismatch",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-87"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-action-field-required-and-optional",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-08"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-terminal-required-fields-mismatch",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-87"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-duplicate-declaration-id",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-86"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-sequence-min-greater-than-max",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-89"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-missing-reserved-relation",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-79"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-missing-reserved-field",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-79"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-visibility-check-not-in-coverage",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog",
+    "coverage"
+   ],
+   "rule_ids": [
+    "I-75"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-coverage-verified-without-evidence",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "coverage"
+   ],
+   "rule_ids": [
+    "I-85"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-coverage-unknown-status",
+   "l1_findings": [
+    "coverage.mechanisms[0].status: 'done' 不在枚举 ['proposed', 'implemented', 'verified', 'unsupported']"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "coverage"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-coverage-missing-row-key",
+   "l1_findings": [
+    "coverage.mechanisms[0]: 缺少必需键 'decision_counterexample'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "coverage"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-capability-field-availability-unknown-field",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-83"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-supported-structure-declaration-unknown",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-84"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-scenario-profile-declaration-unknown",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "capabilities",
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-84"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-capabilities-operations-duplicate",
+   "l1_findings": [
+    "capabilities.operations: uniqueItems 违反（存在重复元素）"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "capabilities"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-field-category-ids-empty",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "03-catalog-coverage.json",
+   "id": "neg-field-target-kind-ids-empty",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2"
+   ],
+   "roles": [
+    "catalog"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-position-out-of-range",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-27"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-complete-flag-without-full-members",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-28"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-members-over-total",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-28"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-position-duplicate-card",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-29"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-position-duplicate-slot",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-29"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-position-not-in-visible-members",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-29"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-kind-not-declared",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-26"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-ref-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-26"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-pile-ref-duplicate",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-26"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-reserved-derived-field-in-wire",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-79"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-reserved-derived-relation-in-wire",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-79"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-relation-position-when-schema-null",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-25"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "04-snapshot.json",
+   "id": "pos-relation-position-omitted-when-schema-null",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": []
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-relation-fully-duplicate",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-25"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-relation-dangling-target",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-39"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-relation-kind-mismatch",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-22"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-relation-position-above-max",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-25"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-entities-unsorted",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-74"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-entity-fields-unsorted",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-74"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-legal-actions-unsorted",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-80"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-candidate-id-duplicate",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-40"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-action-semantic-duplicate",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-37"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-action-missing-required-field",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-36"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-action-field-not-declared",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-36"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-action-field-not-known",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-36"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-action-dangling-entity-ref",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-39"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-required-entity-field-omitted",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-20"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-entity-duplicate-field-id",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-88"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-content-state-known-without-id",
+   "l1_findings": [
+    "snapshot.entities[0]: 缺少必需键 'content_id'"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-content-id-with-non-known-state",
+   "l1_findings": [
+    "snapshot.entities[0]: 命中禁止分支 not"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-decision-with-terminal-result",
+   "l1_findings": [
+    "snapshot.terminal_result: 期望 null，得到 object"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-decision-without-candidates",
+   "l1_findings": [
+    "snapshot.legal_actions: 元素数 0 小于 minItems 1"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-without-result",
+   "l1_findings": [
+    "snapshot.terminal_result: 期望 object，得到 null"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-with-legal-actions",
+   "l1_findings": [
+    "snapshot.legal_actions: 元素数 1 大于 maxItems 0"
+   ],
+   "layers": [
+    "L1"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-66"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-reason-undeclared",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-18"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-outcome-mismatch",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-18"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-facts-undeclared-field",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-18"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-facts-required-not-known",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-18"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-facts-not-applicable",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-18"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-facts-unsorted",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-90"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-terminal-facts-duplicate",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-90"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-sequence-duplicate-owner",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-34"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-sequence-dangling-element",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-39"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-group-multiplicity-two",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-35"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-group-member-dangling",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-39"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "04-snapshot.json",
+   "id": "neg-exclusive-group-member-overlap",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L2",
+    "L3"
+   ],
+   "roles": [
+    "catalog",
+    "snapshot"
+   ],
+   "rule_ids": [
+    "I-31"
+   ]
+  }
+ ],
+ "golden_case_count": 51,
+ "source": "tools/contract-check/fixtures (read-only)"
+}

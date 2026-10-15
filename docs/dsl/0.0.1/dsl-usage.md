@@ -13,7 +13,7 @@
 
 ## 1. 内容入口和命名空间
 
-基础内容入口为 `card`、`enemy`、`player`。文件顶部使用命名空间声明：
+设计中的基础内容域为 `card`、`enemy`、`player`；当前解析器尚无 `player` 声明，已支持的声明形式见本节下文。编写内容文件时，先在顶部指定命名空间：
 
 ```text
 using namespace base-spire;
@@ -26,6 +26,8 @@ using namespace base-spire;
 设计中的内容域包括卡牌、敌人与玩家角色。当前解析器尚无 `player` 声明；现有声明形式为 `card`、`cardPool`、`potion`、`power`、`enemy`、`affliction` 和 `state`。玩家当前血量、战斗能量等数据属于运行实例。跨命名空间引用的具体拼写仍待定。
 
 ## 2. 统一使用花括号
+
+卡牌效果应由共享原语组合。普通选牌后的多个操作写在`chooseCard.onSelected`中，数量/资格/实例选择与升级、复制、移动分别表达；短写会展开为相同程序，不为一张卡新增C#执行分支。可运行过的组合片段和适用边界见[通用选牌操作指南](../../design/mod-the-spire/base-development-guide.md#用通用选牌编写卡牌)与[原语契约](../../design/mod-the-spire/card-primitives/spec.md)。
 
 集合、配置、表达式和执行内容统一使用 `{}`，新版 DSL 不使用方括号集合。效果原语使用具名块：
 
@@ -223,6 +225,8 @@ card Bash {
 
 多个效果各自的目标用效果内的 `target = context.target` / `context.owner` 指定，与卡牌的目标契约相互独立。
 
+通用语法接受与base正式前端支持分开判断。base正式源已支持 `selectNone = {}`：真实空 `play = {}` 可以正常付款和收尾；无目标卡的执行程序（含嵌套分支）不得消费所选目标。能力牌的默认结果为None，由共享出牌收尾移出战斗牌区，不等同于exhaust，也不触发onExhaust。具体作者检查入口见[base开发指南](../../design/mod-the-spire/base-development-guide.md#让新增内容独立于全包大小)。
+
 更复杂的目标表达式（多目标组合、按条件返回不同选择器）仍需进一步定义。目标查询应读取当前状态；提交动作后，本次选择绑定到执行上下文，供效果获取。
 
 `play = {}` 执行其中的效果。攻击原语明确指明目标，例如 `target = context.target`；行动者等信息可从上下文获取，避免只写一个伤害数字而无法判断效果作用于谁。
@@ -244,6 +248,10 @@ count = {
 ```
 
 外层块的唯一调用作为参数值编译。作者使用具名字段；编译器负责按运行时类型化节点所需的顺序传递参数。当前卡牌迁移所需的 `pileCount(pile)`、`savedCount(name)` 和 `cardVariable(variable)` 均按此形式支持。
+
+`withCount` 进入效果块时读取一次；`savedCount` 只能在对应块及子块中使用，内层同名绑定结束后恢复外层，块外或兄弟分支引用带源位置拒绝。逐执行计数可写 `count = { cardPlaysThisTurn = { type = attack phase = finished } }`；当前支持attack/skill/power/status类型和finished阶段，同一实例重复执行分别计数。
+
+base已实现的共享 `autoPlay`、`drawUntil`、显式池 `generateCards` 写法、实际例子及限制见[modding指南](../../design/mod-the-spire/modding-guide.md#组合共享牌区与出牌能力)。抽牌堆自动出牌目前为免费策略，生成必须给出显式完整池；它们暂不接受放在hook内，完整角色生成池仍未实现。作者格式和解析器接受不代表所有原版内容已经注册或行为验证。
 
 上下文需要能够区分：
 
@@ -271,22 +279,30 @@ hooks = {
 
 每个事件处理体属于执行块。相同事件配置重复声明时，最后一个处理体整体替换前面的处理体。需要执行多个效果时，在最终处理体中顺序写入。
 
-当前卡牌 `hooks` 已支持的子块：
+卡牌 `hooks` 作者格式定义的子块：
 
 | 子块 | 触发时机 |
 | --- | --- |
-| `onExhaust = { … }` | 该牌被消耗时 |
+| `onExhaust = { … }` | 该牌被任何效果消耗时，不要求自身有exhaust关键词 |
 | `turnEndInHand = { … }` | 玩家回合结束时该牌仍在手牌中 |
 | `onEnterCombat = { … }` | 该牌进入战斗时 |
 | `beforeCardPlayed = { whenCardType = attack effect = { … } }` | 作为监听者，在匹配类型的牌被打出前 |
 | `afterCardPlayed = { whenCardType = attack effect = { … } }` | 作为监听者，在匹配类型的牌打出后 |
 | `afterAutoPostPlay = { … }` | 自动打牌完成后的后置阶段 |
 
+上表定义作者格式和期望时点。生产前端/运行时支持范围需分别核对；`afterAutoPostPlay` 当前尚未实现，包含它的原版卡仍明确记为未支持。具名hook可执行的叶效果也受前端限制，不能仅凭声明语法认定能力已交付。
+
 `beforeCardPlayed` / `afterCardPlayed` 用 `whenCardType` 过滤卡牌类型（省略表示匹配全部），`effect` 是执行块；新语法不使用旧语法的 `cardEvent(...)` 包装。基础版与升级版的钩子分别写在各自的 `hooks` 块里，不通过 `upgradedOnExhaust` 这类字段区分。
 
 这里的 `context.owner` 是待确定的持有者字段示意。事件列表、事件过滤、取消或改写结算的机制，以及多个内容订阅同一事件时的调用顺序，仍需要单独设计。事件的配置覆盖规则不决定这些运行时触发时点。
 
 ## 7. 对照当前实现
+
+正式 base 卡牌的 `play` 和已支持的 `hooks` 会保留逐效果参数及源码顺序，条件可以位于效果之间，`repeat = { count = N effect = { … } }` 重复整个子块。动态来源在对应效果执行处读取；普通、升级与各钩子的程序独立。`damageValue` 等卡级显示摘要不会覆盖 `attack.damage` 的显式参数；依赖卡级表达式的 `attackUsingBlock` 仍保留该来源。实际支持的叶原语和条件仍受领域前端约束，并非所有设计原语均已实现。维护入口和兼容界限见[逐效果表示设计](../../design/mod-the-spire/effect-ir/plan.md#修改入口与兼容边界)，新增组合应优先只修改内容和行为案例。
+
+**战斗复制 `cloneCard = { pile = discard }`（ENV-T05，2026-10-09）**：当前只接受这一种形状——把**正在打出的这张牌**按其打出时的实例状态复制到**弃牌堆**（Anger 用它）。克隆是同一场战斗里的**新实例**：定义、升级形态、实例变量与临时费用修正都按创建时刻取值，此后与源实例互不污染；它**没有长期来源**，不会被写回长期牌组，进入下一场战斗也不会被带过去。按当前数字效果的收尾规则，复制发生在效果序列里，最后击杀之后的复制仍会执行，出牌尾（进结果区、胜负判定）不受影响。
+
+未支持的形状（`pile` 为其它牌区、缺少 `pile`、未知字段、写在 `hooks` 里、批量 `xN`）都会带着**源位置**报错，不会静默降级。这仍**不是**完整的原版 `CreateClone`：星费快照、附魔、折磨与克隆来源链等语义列为后续工作。正式程序直接使用`CloneCardEffect`；诊断.author里的`clone_card_to_discard`仅在输入端翻译为相同原语。
 
 下表区分已确定的新作者约定与目前源码，便于审阅卡牌：
 
@@ -297,7 +313,7 @@ hooks = {
 | `normal` / `upgraded` 两个完整版本块 | 卡牌已迁移；其他旧内容没有卡牌版本块 |
 | `cost = X` | 卡牌新语法支持 X 费；旧内容使用 `costKind = X` 配合 `cost = 0` |
 | `target = {}` 目标块 | 已支持 `selectSelf` / `selectNone` / `selectOne` / `selectFirst` / `selectAll` / `selectRandom`（见 §5）；块内必须恰好一个选择器。旧语法使用固定目标枚举 |
-| 具名块效果与明确目标 | 卡牌编译器将支持的具名效果编译为现有类型化效果节点；其余旧语法使用函数调用 |
+| 具名块效果与明确目标 | 卡牌编译器将支持的具名效果编译为类型化效果节点；正式药水也复用逐效果程序，见[药水入口](dsl-usage-current.md#战斗药水)；敌人/Power仍兼容函数调用 |
 | `hooks` 子块 | 卡牌钩子已迁移；其他旧内容仍使用旧字段或独立行为定义 |
 | `multiplayerOnly` | 卡牌编译器读取多人专属标记；当前单人卡池排除标记卡牌 |
 | 新卡牌配置后写覆盖前值 | 新卡牌配置读取采用后值覆盖；旧配置字段仍按兼容解析规则处理 |
@@ -312,8 +328,20 @@ hooks = {
 - [Ironclad Power 源码](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire)：当前 Power 触发和事件行为。
 - [敌人源码](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire)：当前行动效果与行为选择。
 - [语法解析器](../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs)：当前语法树和词法规则（2026-10-03 **路径级移动**：原在 `Legacy/`，命名空间不变；同一个解析器现在同时服务旧后端与新 Engine 路径）。
-- [卡牌/效果编译器](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs)：当前字段与原语签名。
-- [Power/敌人编译器](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatBehaviorDslCompiler.cs)：当前触发与行为模型。
-- [运行时内容定义](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs)：内核消费的强类型定义。
+- [正式卡牌前端](../../../mod-the-spire/base-spire/BaseSpire/Slice/SpireCardSource.cs)与[逐效果编译器](../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectCompiler.cs)：活动 Engine 路径的领域读取与 IR 生成。
+- [正式 Power 前端](../../../mod-the-spire/base-spire/BaseSpire/Slice/SpirePowerSource.cs)与[敌人前端](../../../mod-the-spire/base-spire/BaseSpire/Slice/SpireEnemySource.cs)：活动路径的触发与行为读取。
+- [领域程序定义](../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectProgram.cs)：编译期效果结构；运行状态仍由 Engine 存储。
 
 本文描述新卡牌语法及其当前实现边界。原语目录见 [效果原语目录](./primitives.md)；表达式类型、共享 Power、角色与敌人完整写法、跨包覆盖和加载排序还需后续补齐。卡牌源文件已迁移到该语法并被内容包加载，但规则行为尚未全部通过检查——当前失败项与阻断范围见 [AGENTS.md 合规审计](../../review/archived/agents-md-conformance-2026-09-30.md)。
+
+### 移动选牌
+
+`chooseCard = { from = hand to = discard count = 2 autoSelect = true }`在一次决策中选择两张手牌，回答后按效果顺序继续执行。`count`是0..9999字面量，省略为1；数量不足时按实际候选数限制。来源支持hand/discard，去向支持不同的hand/discard/exhaust/draw；省略filter表示全部，显式筛选支持attack/nonAttack/upgradeable。draw去向可加`destinationPosition = top`；取回至满手牌时留在弃牌堆。源位置错误、未知/重复字段与其他形态明确拒绝。
+
+新原版内容写`autoSelect = true`对齐原生CardSelectCmd：零候选不提问，恰好够或不足时自动全选；未写保留手动确认。所有状态与决策结果保存在Engine中。复杂操作省略to（或to=none），通过`onSelected`顺序组合`upgradeSelectedCard`、`cloneSelectedCard { pile = discard }`和`moveSelectedCard`等子程序；实例绑定、外层let快照与命名空间链接向子程序传递。短写与完整写法使用同一SelectCardsEffect，未绑定当前牌明确拒绝。实际组合见[选牌操作指南](../../design/mod-the-spire/base-development-guide.md#用通用选牌编写卡牌)。
+
+`hooks = { onDiscard = { modifyEnergy = { amount = 2 } } }` 由手动选择弃牌触发被弃牌实例；普通出牌结果和回合结束不触发。它不支持发起新选择；跨牌Power监听、弃牌历史/Sly仍是后续机制。
+
+### 已有实例升级与直接创建升级牌
+
+两个完整变体定义各自初值与效果。直接创建升级牌采用升级费用、变量和关键词，入场时执行升级hook。升级已有牌按 `upgraded - normal` 的差额增加变量与基础费用，保留已积累成长和临时费用修饰，迁移升级关键词；重复升级不再加差额。来源依据是本地sim的CardModel.Upgrade/OnUpgrade及Thrash、Rampage增量升级。这个模型不包含多级升级或降级命令。

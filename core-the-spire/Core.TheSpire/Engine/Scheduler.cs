@@ -212,7 +212,7 @@ public sealed partial class Session
     {
         // A stopped session offers nothing. This is a read-only query, so it answers with an empty list instead of
         // being refused like a command; Submit/Step/Answer still reject anything after a fault or terminal result.
-        if (Status is SessionStatus.Faulted or SessionStatus.Terminal) return [];
+        if (Status != SessionStatus.Running) return [];
         BeginCommand("legal-actions");
         try
         {

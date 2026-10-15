@@ -5,7 +5,7 @@ namespace CoreTheSpire.Engine;
 /// <summary>Compiles configuration files to the same package/IR used by the C# SDK.</summary>
 public static partial class EngineDslCompiler
 {
-    public const string LanguageVersion = "core/0.2";
+    public const string LanguageVersion = "core/0.3";
 
     public static EnginePackage Compile(string source, string sourceName = "<memory>",
         IEnumerable<EnginePackage>? dependencies = null, IEnumerable<IEngineDslExtension>? extensions = null) =>
@@ -16,6 +16,16 @@ public static partial class EngineDslCompiler
     {
         return new SourceLibraryLoader().Load(paths);
     }
+
+    public static RuleSet LoadFiles(IEnumerable<string> paths, IEnumerable<IEngineDslExtension> extensions,
+        IEnumerable<EnginePackage>? dependencies = null) =>
+        new SourceLibraryLoader(extensions.ToArray(), (dependencies ?? []).ToArray()).Load(paths.ToArray());
+
+    /// <summary>Binds text rules into a game-owned authoring package before its single Build/freeze.</summary>
+    public static void BindInto(string source, EnginePackageBuilder package, string sourceName = "<memory>",
+        IEnumerable<EnginePackage>? dependencies = null, IEnumerable<IEngineDslExtension>? extensions = null) =>
+        new CoreDslBinding(EngineDslParser.Parse(source, sourceName), dependencies ?? [], extensions ?? [],
+            targetPackage: package).Bind();
 
     private sealed partial class CoreDslBinding
     {
@@ -31,9 +41,10 @@ public static partial class EngineDslCompiler
         private readonly Dictionary<DslDeclarationNode, TemplateScope> _templateScopes = [];
         private readonly Dictionary<(Type Kind, string Name), DeclarationSymbol> _templateSymbols = [];
         private TemplateScope? _bindingScope;
+        private readonly bool _modern;
 
         public CoreDslBinding(DslPackageNode source, IEnumerable<EnginePackage> dependencies, IEnumerable<IEngineDslExtension> extensions,
-            IReadOnlyList<EnginePackage>? imports = null)
+            IReadOnlyList<EnginePackage>? imports = null, EnginePackageBuilder? targetPackage = null)
         {
             _source = source;
             foreach (var member in source.Members)
@@ -42,15 +53,19 @@ public static partial class EngineDslCompiler
             var properties = new Properties(source.Members.OfType<DslPropertyNode>(), source.Location,
                 "dsl_version", "version", "dependencies", "overrides", "extends", "start", "imports");
             var language = Text(properties.Required("dsl_version"));
-            if (language is not "core/0.1" and not LanguageVersion)
-                throw Error(source.Location, $"dsl_version must be 'core/0.1' or '{LanguageVersion}'.");
+            if (language is not "core/0.1" and not "core/0.2" and not LanguageVersion)
+                throw Error(source.Location, $"dsl_version must be 'core/0.1', 'core/0.2' or '{LanguageVersion}'.");
+            _modern = language == LanguageVersion;
             var authoring = source.Members.Any(member => member is DslDeclarationNode { Kind: "template" or "use" }) || properties.Get("imports") is not null;
-            if (authoring && language != LanguageVersion) throw Error(source.Location, "imports/template/use require core/0.2.");
+            if (authoring && language == "core/0.1") throw Error(source.Location, "imports/template/use require core/0.2 or later.");
             if (properties.Get("imports") is { } importNode && imports is null)
                 throw Error(importNode.Location, "Use LoadFiles to resolve imports; Compile accepts explicit package dependencies only.");
-            _package = new EnginePackageBuilder(source.Name,
+            if (targetPackage is not null && targetPackage.PackageId != source.Name)
+                throw Error(source.Location, "BindInto namespace must match the target package.");
+            _package = targetPackage ?? new EnginePackageBuilder(source.Name,
                 properties.Get("version") is { } version ? Text(version) : "0.1.0");
-            _package.CompilerIdentity = language == "core/0.1" ? "core-dsl/0.1" : "core-dsl/0.2";
+            if (targetPackage is null) _package.CompilerIdentity = language.Replace("core/", "core-dsl/");
+            else _package.CompilerIdentity += "|" + language.Replace("core/", "core-dsl/");
             foreach (var extension in extensions)
             {
                 if (string.IsNullOrWhiteSpace(extension.Identity)) throw Error(source.Location, "Extension identity is required.");
@@ -72,10 +87,16 @@ public static partial class EngineDslCompiler
                 foreach (var symbol in dependency.Declarations)
                     _symbols[(symbol.GetType(), symbol.QualifiedId)] = symbol;
             }
-            if (language == LanguageVersion) _source = ExpandTemplates(source, dependencyArray);
+            if (language != "core/0.1") _source = ExpandTemplates(source, dependencyArray);
         }
 
         public EnginePackage Compile()
+        {
+            Bind();
+            return Located(_source.Location, _package.Build);
+        }
+
+        public void Bind()
         {
             // Declare names first: fields and programs may reference later declarations.
             foreach (var node in _source.Members.OfType<DslDeclarationNode>())
@@ -95,7 +116,6 @@ public static partial class EngineDslCompiler
             var start = _source.Members.OfType<DslPropertyNode>().SingleOrDefault(p => p.Name == "start");
             if (start is not null)
                 foreach (var name in List(start.Value)) _package.OnSessionStart(Symbol<ProcedureSymbol>(name));
-            return Located(_source.Location, _package.Build);
         }
 
         private void Declare(DslDeclarationNode node)

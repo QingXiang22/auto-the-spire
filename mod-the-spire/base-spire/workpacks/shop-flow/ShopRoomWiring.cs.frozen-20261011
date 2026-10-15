@@ -1,0 +1,1177 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using BaseSpire.Slice.Effects;
+using CoreTheSpire.Engine;
+
+namespace BaseSpire.Slice;
+
+/// <summary>
+/// ENV-T09.2：商店（`sts2/src/Core/Rooms/MerchantRoom.cs` + `Core/Entities/Merchant/*`）的完整机制模块。
+///
+/// 这是一个**独立生产目录**（`mod-the-spire/base-spire/workpacks/shop-flow/`）里的待接入模块：
+/// 正式的组包/注册（`CombatSlicePackage` 的 `Shop` 分支、`MapPhase` 上界、投影）由 Codex 串行收口，
+/// 本文件不修改任何既有文件。模块只通过四个小 record 接缝消费宿主已有的 Run 字段、牌组、遗物袋与药水栏，
+/// 所有状态都落在 Engine 类型化字段里（没有第二个调度器、没有 C# 可变 RunState）。
+///
+/// 机制与源一一对应（逐条依据见 `.audit/dsh-shop-flow-2026-10-11/source-facts.md`）：
+/// <list type="bullet">
+/// <item>`MerchantInventory.CreateForNormalMerchant` 的商品顺序与抽数顺序：5 张彩卡
+///       （先 `Shops.NextInt(5)` 抽折扣格）、2 张无色、3 件遗物（**先**抽两次稀有度）、3 瓶药水（3×2 抽后 3 次价格抽）；</item>
+/// <item>彩卡：`Rewards` 稀有度 roll → `Shops` 选卡 → `Rewards` 升级 roll（源恒不升级）→ `Shops` 价格 →（在售格再抽一次价格并整除 2）；</item>
+/// <item>无色卡：固定 uncommon/rare，无稀有度 roll；</item>
+/// <item>遗物：袋尾取货 + 空袋按 `Shop→Common→Uncommon→Rare→None` 回退，全空回退 `base-spire:circlet`（价格 1）；</item>
+/// <item>药水：`Shops` 稀有度 roll（`&lt;=0.1` Rare、`&lt;=0.35` Uncommon）+ 同池不重复的 pick + `Shops` 价格；</item>
+/// <item>删牌：`BaseCost + PriceIncrease * CardShopRemovalsUsed`，一次一间只能删一张。</item>
+/// </list>
+///
+/// 金币与商品状态（`Price`/`Sold`/`Unsupported`）全部是 Engine 权威存储；购买走正式配方
+/// （彩卡 = `CardDefinitions.New` 的字段表建长期牌、遗物 = `Relic` 实体 + 正式 `AfterObtained` 效果、
+/// 药水 = `PotionInventoryRules` 的药水实体与药水栏）。
+///
+/// **没有正式效果声明的商品不伪装可买**：`Unsupported = true` + `UnsupportedReason` 写明原因，
+/// 购买会被明确拒绝（`Fail`），原因串对审查可见。
+/// </summary>
+public sealed class ShopRoomWiring
+{
+    // -- 公开面（动作/过程/实体名字：正式集成与验证程序都按这些常量对接） --------------------------------------
+
+    public const string OfferEntityName = "ShopOffer";
+    public const string OffersCollectionName = "ShopOffers";
+    public const string RemovalsUsedFieldName = "ShopCardRemovalsUsed";
+
+    public const string BuyCardActionName = "BuyShopCard";
+    public const string BuyRelicActionName = "BuyShopRelic";
+    public const string BuyPotionActionName = "BuyShopPotion";
+    public const string RemoveCardActionName = "RemoveShopCard";
+    public const string LeaveActionName = "LeaveShop";
+
+    public const string CreateCardProcedureName = "CreateShopCard";
+    public const string ResolveCardProcedureName = "ResolveShopCard";
+    public const string CreatePotionProcedureName = "CreateShopPotion";
+    public const string ResolvePotionProcedureName = "ResolveShopPotion";
+
+    public const string OfferParameterName = "Offer";
+    public const string DeckCardParameterName = "Card";
+
+    /// <summary>货架容量：14 个真实商品位 + 余量（源 `MerchantInventory` 生成 5+2+3+3+1）。</summary>
+    public const int OfferCapacity = 16;
+
+    public const int ColoredCardEntryCount = 5;
+    public const int ColorlessCardEntryCount = 2;
+    public const int RelicEntryCount = 3;
+    public const int PotionEntryCount = 3;
+    public const int RemovalEntryCount = 1;
+    public const int TotalEntryCount = ColoredCardEntryCount + ColorlessCardEntryCount + RelicEntryCount + PotionEntryCount + RemovalEntryCount;
+
+    /// <summary>源 `_coloredCardTypes = [Attack, Attack, Skill, Skill, Power]`。</summary>
+    public static readonly IReadOnlyList<string> ColoredCardTypes = ["Attack", "Attack", "Skill", "Skill", "Power"];
+
+    public const string CardOfferKind = "card";
+    public const string RelicOfferKind = "relic";
+    public const string PotionOfferKind = "potion";
+    public const string RemovalOfferKind = "removal";
+
+    /// <summary>`ShopOffer.PoolKind`：彩卡 1..3（Attack/Skill/Power 各一条池），无色 4。</summary>
+    public const int ColoredPoolKindBase = 1;
+    public const int ColorlessPoolKind = 4;
+
+    public const string CircletId = "base-spire:circlet";
+    public const string ColorlessCardPoolName = "ColorlessCardPool";
+    public const string IroncladCardPoolName = "IroncladCardPool";
+    public const string ShopPointTypeMember = "Shop";
+
+    /// <summary>正常路径（各稀有度桶非空）每间商店的抽数：`Shops` 28、`Rewards` 14。验证程序按它对账。</summary>
+    public const int ExpectedShopsDraws = 28;
+    public const int ExpectedRewardsDraws = 14;
+
+    public const string NotEnoughGoldMessage = "base-spire: 金币不足，商店购买被拒绝（状态不变）";
+    public const string AlreadySoldMessage = "base-spire: 该商品已售出（源 FailureOutOfStock），购买被拒绝";
+    public const string UnsupportedRelicMessage = "base-spire: 这件商店遗物没有可执行的正式效果，不可购买（原因见条目 UnsupportedReason 字段）";
+    public const string UnsupportedCardMessage = "base-spire: 这个商店卡位没有可用的池成员，不可购买（原因见条目 UnsupportedReason 字段）";
+    public const string UnsupportedPotionMessage = "base-spire: 这个商店药水位没有可用的池成员，不可购买（原因见条目 UnsupportedReason 字段）";
+    public const string FullBeltMessage = "base-spire: 药水栏已满（3/3），购买被拒绝（状态不变）";
+    public const string EmptyCardBucketMessage = "base-spire: 商店彩卡位没有解析出池成员（内容池不完整；源侧在同样的内容下会抛异常）";
+    public const string UnregisteredPotionMessage = "base-spire: 商店药水定义未登记在本 Slice 的药水池里";
+    public const string ColorlessBucketReason = "base-spire: 无色池在该稀有度下没有内容成员（源侧会得到空选择），该商品不可购买";
+    public const string PotionBucketReason = "base-spire: 药水池在该稀有度下没有内容成员，该商品不可购买";
+    public const string UnregisteredRelicReasonPrefix = "base-spire: 商店遗物 '";
+    public const string UnregisteredRelicReasonSuffix = "' 未在正式登记表（SpireRelics）里声明可实现效果，不可购买——交 owner 裁决";
+
+    /// <summary>商店货架字段符号（宿主投影/验证程序直接按它读条目）。</summary>
+    public sealed record ShopOfferFields(
+        EntityTypeSymbol Type,
+        FieldSymbol Slot,
+        FieldSymbol Kind,
+        FieldSymbol DefinitionId,
+        FieldSymbol Rarity,
+        FieldSymbol PoolKind,
+        FieldSymbol PoolIndex,
+        FieldSymbol OnSale,
+        FieldSymbol Price,
+        FieldSymbol Sold,
+        FieldSymbol Unsupported,
+        FieldSymbol UnsupportedReason);
+
+    // -- 接缝 -------------------------------------------------------------------------------------------------
+
+    /// <summary>宿主 Run 侧接缝；`CardRarityOffset` 传奖励侧持久赔率字段（`RewardWiring` 的 `cardOdds`）。</summary>
+    public sealed record ShopRunSeam(
+        EntityTypeSymbol RunType,
+        CollectionSymbol Runs,
+        FieldSymbol Gold,
+        FieldSymbol Hp,
+        FieldSymbol MaxHp,
+        FieldSymbol? CardRarityOffset = null,
+        ProjectionSymbol? View = null);
+
+    /// <summary>宿主地图侧接缝；`ShopPhase` 必须是**新**相位数（见交接：`MapPhase` 上界要从 6 抬到 7）。</summary>
+    public sealed record ShopMapSeam(
+        FieldSymbol MapPhase,
+        FieldSymbol CurrentNode,
+        FieldSymbol NodeType,
+        EnumTypeSymbol PointType,
+        long ShopPhase,
+        long TravelPhase);
+
+    /// <summary>宿主卡牌侧接缝；`CardFields` 直接用 `CardDefinitions.New` 即可。</summary>
+    public sealed record ShopCardSeam(
+        EntityTypeSymbol CardType,
+        CollectionSymbol LongTermDeck,
+        IReadOnlyList<CardDefinition> Cards,
+        Func<IrScope, CardDefinition, bool, (FieldSymbol Field, Expr Value)[]> CardFields);
+
+    /// <summary>宿主遗物侧接缝；袋成员 id 字段 = `RunInitializationWiring.SharedId`（"RelicId"）。</summary>
+    public sealed record ShopRelicSeam(
+        EntityTypeSymbol RelicType,
+        FieldSymbol Definition,
+        FieldSymbol Rarity,
+        CollectionSymbol Owned,
+        FieldSymbol BagEntryId,
+        IReadOnlyDictionary<string, CollectionSymbol> PlayerBags,
+        IReadOnlyDictionary<string, CollectionSymbol>? SharedBags,
+        IReadOnlyList<SliceRelic> Library);
+
+    // -- 内部类型 ---------------------------------------------------------------------------------------------
+
+    /// <summary>池成员。`Index` 是**并集下标**（彩卡 0..N-1、无色接在后面），`PoolKind` 是所属池。</summary>
+    private sealed record PoolCard(int Index, int PoolKind, CardDefinition Card, int Rarity, string Kind);
+
+    /// <summary>`Enter` 里一次性分配、逐个商品位复用的局部变量。</summary>
+    private sealed class Locals
+    {
+        public int Bits;
+        public int Ordinal;
+        public int RarityText;
+        public int Count;
+        public int Pick;
+        public int Index;
+        public int Price;
+        public int Upgraded;
+        public int IdText;
+        public int OnSaleSlot;
+        public int Reason;
+        public int Created;
+        public int[] Exclusions = [];
+        public int[] RelicRarities = [];
+        public int[] PotionOrdinals = [];
+        public int[] PotionRarityTexts = [];
+        public int[] PotionIndices = [];
+        public int[] PotionExclusions = [];
+    }
+
+    // -- 字段 -------------------------------------------------------------------------------------------------
+
+    private readonly ShopRunSeam run;
+    private readonly ShopMapSeam map;
+    private readonly ShopCardSeam cards;
+    private readonly ShopRelicSeam relics;
+    private readonly PotionInventoryRules potions;
+
+    private readonly string shopsStream = VanillaRandomLayout.EnginePlayerStreamName("Shops");
+    private readonly string rewardsStream = VanillaRandomLayout.EnginePlayerStreamName("Rewards");
+
+    private readonly IReadOnlyList<PoolCard> createTable;
+    private readonly IReadOnlyDictionary<string, string> coloredSpecs;
+    private readonly string colorlessSpec;
+    private readonly string potionSpec;
+    private readonly IReadOnlyList<SliceRelic> buyableRelics;
+
+    private readonly ShopCardRarityAsset cardRarity;
+    private readonly ShopPoolAsset cardCount;
+    private readonly ShopPoolAsset cardPick;
+    private readonly ShopCardPriceAsset cardPrice;
+    private readonly ShopCardUpgradeAsset cardUpgrade;
+    private readonly ShopRelicRarityAsset relicRarity;
+    private readonly ShopRelicPriceAsset relicPrice;
+    private readonly ShopPotionRarityAsset potionRarity;
+    private readonly ShopPotionPriceAsset potionPrice;
+
+    private readonly ProcedureSymbol resolveCard;
+    private readonly ProcedureSymbol createCard;
+    private readonly ProcedureSymbol resolvePotion;
+    private readonly ProcedureSymbol createPotion;
+
+    /// <summary>货架集合。</summary>
+    public CollectionSymbol Offers { get; }
+
+    /// <summary>货架字段。</summary>
+    public ShopOfferFields Offer { get; }
+
+    /// <summary>Run 上的删牌次数计数（源 `Player.ExtraFields.CardShopRemovalsUsed`）。</summary>
+    public FieldSymbol RemovalsUsed { get; }
+
+    /// <summary>商店相位值。</summary>
+    public long ShopPhase => map.ShopPhase;
+
+    public ShopRoomWiring(
+        EnginePackageBuilder package,
+        ShopRunSeam run,
+        ShopMapSeam map,
+        ShopCardSeam cards,
+        ShopRelicSeam relics,
+        PotionInventoryRules potions,
+        string backendId = BaseSpireComputeBackend.BackendId)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+        this.run = run ?? throw new ArgumentNullException(nameof(run));
+        this.map = map ?? throw new ArgumentNullException(nameof(map));
+        this.cards = cards ?? throw new ArgumentNullException(nameof(cards));
+        this.relics = relics ?? throw new ArgumentNullException(nameof(relics));
+        this.potions = potions ?? throw new ArgumentNullException(nameof(potions));
+
+        // 池与并集下标：彩卡照 `RewardWiring.BuildPool` 的口径对账（源单机清单 = `IroncladRewardPool.SourceOrder`）。
+        var colored = BuildColoredPool(cards.Cards);
+        var colorless = BuildColorlessPool(cards.Cards, colored.Count);
+        var union = new List<PoolCard>(colored);
+        union.AddRange(colorless);
+        if (union.Count > RewardCompute.MaxPoolIndex + 1)
+        {
+            throw Faults.Schema($"base-spire: 商店池并集 {union.Count} 项超过既有池下标口径（<= {RewardCompute.MaxPoolIndex + 1}）");
+        }
+
+        var specs = new Dictionary<string, string>(StringComparer.Ordinal);
+        var table = new List<PoolCard>();
+        foreach (var kind in new[] { "Attack", "Skill", "Power" })
+        {
+            var members = colored.Where(card => string.Equals(card.Kind, kind, StringComparison.Ordinal)).ToList();
+            if (members.Count == 0)
+            {
+                throw Faults.Schema($"base-spire: 商店彩卡池里没有 '{kind}' 成员（内容池不完整）");
+            }
+
+            specs[kind] = Encode(members);
+            table.AddRange(members);
+        }
+
+        table.AddRange(colorless);
+        coloredSpecs = specs;
+        createTable = table;
+        colorlessSpec = Encode(colorless);
+        potionSpec = RewardPoolSpec.Encode(potions.Pool.Select((definition, index) => new RewardPoolEntry(index, PotionRarityOrdinal(definition.Rarity), false)));
+        buyableRelics = [.. relics.Library.Where(Buyable)];
+
+        // 实体与集合。
+        var offerType = package.EntityType(OfferEntityName);
+        Offer = new ShopOfferFields(
+            offerType,
+            offerType.AddField("Slot", FieldTypeSchema.Int(0, OfferCapacity - 1)),
+            offerType.AddField("Kind", FieldTypeSchema.String(16)),
+            offerType.AddField("DefinitionId", FieldTypeSchema.String(64)),
+            offerType.AddField("Rarity", FieldTypeSchema.String(16)),
+            offerType.AddField("PoolKind", FieldTypeSchema.Int(-1, ColorlessPoolKind)),
+            offerType.AddField("PoolIndex", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex)),
+            offerType.AddField("OnSale", FieldTypeSchema.Bool()),
+            offerType.AddField("Price", FieldTypeSchema.Int(0, 999999999)),
+            offerType.AddField("Sold", FieldTypeSchema.Bool()),
+            offerType.AddField("Unsupported", FieldTypeSchema.Bool()),
+            offerType.AddField("UnsupportedReason", FieldTypeSchema.String(512)));
+        Offers = package.Collection(OffersCollectionName, offerType);
+        Offers.Capacity = OfferCapacity;
+        run.View?.Type(offerType);
+
+        // Run 侧长期状态。
+        RemovalsUsed = run.RunType.AddField(RemovalsUsedFieldName, FieldTypeSchema.Int(0, 999));
+
+        // 纯计算资产。
+        cardRarity = ShopCompute.DeclareCardRarity(package, backendId);
+        cardCount = ShopCompute.DeclareCardCount(package, backendId);
+        cardPick = ShopCompute.DeclareCardPick(package, backendId);
+        cardPrice = ShopCompute.DeclareCardPrice(package, backendId);
+        cardUpgrade = ShopCompute.DeclareCardUpgrade(package, backendId);
+        relicRarity = ShopCompute.DeclareRelicRarity(package, backendId);
+        relicPrice = ShopCompute.DeclareRelicPrice(package, backendId);
+        potionRarity = ShopCompute.DeclarePotionRarity(package, backendId);
+        potionPrice = ShopCompute.DeclarePotionPrice(package, backendId);
+
+        // 建牌/建药水/解析 id 的过程。
+        resolveCard = DeclareResolveCard(package);
+        createCard = DeclareCreateCard(package);
+        resolvePotion = DeclareResolvePotion(package);
+        createPotion = DeclareCreatePotion(package);
+    }
+
+    // -- 进入商店 ---------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// 生成整间商店（源 `MerchantInventory.CreateForNormalMerchant` 的完整顺序）。
+    /// 宿主把 `Run.CurrentNode` 指到商店节点之后调用；相位在这里置成 <see cref="ShopPhase"/>。
+    /// 重复进入会先清空上一轮货架（源每次都新建一份 inventory）。
+    /// </summary>
+    public Inst[] Enter(IrScope s, Expr runExpr)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        var code = new List<Inst>
+        {
+            s.ForEach(s.Collection(Offers), offer => new Inst[] { s.Destroy(offer) }),
+            s.SetField(runExpr, map.MapPhase, s.Const(map.ShopPhase)),
+        };
+
+        var l = new Locals
+        {
+            Bits = s.Local("shopBits", FieldTypeSchema.Int(0, RewardCompute.Span - 1)),
+            Ordinal = s.Local("shopOrdinal", FieldTypeSchema.Int(0, 10)),
+            RarityText = s.Local("shopRarityText", FieldTypeSchema.String(16)),
+            Count = s.Local("shopCount", FieldTypeSchema.Int(0, RewardCompute.MaxPoolIndex + 1)),
+            Pick = s.Local("shopPick", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex)),
+            Index = s.Local("shopIndex", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex)),
+            Price = s.Local("shopPrice", FieldTypeSchema.Int(0, 999999999)),
+            Upgraded = s.Local("shopUpgraded", FieldTypeSchema.Bool()),
+            IdText = s.Local("shopDefinitionId", FieldTypeSchema.String(64)),
+            OnSaleSlot = s.Local("shopOnSaleSlot", FieldTypeSchema.Int(0, ColoredCardEntryCount - 1)),
+            Reason = s.Local("shopUnsupportedReason", FieldTypeSchema.String(512)),
+            Created = s.Local("shopOfferCreated", FieldTypeSchema.Binding()),
+        };
+        l.Exclusions = Allocate(s, code, "shopExclusion", ShopCompute.ExclusionCount);
+        l.RelicRarities = Allocate(s, code, "shopRelicRarity", RelicEntryCount - 1, FieldTypeSchema.String(16));
+        l.PotionOrdinals = Allocate(s, code, "shopPotionOrdinal", PotionEntryCount, FieldTypeSchema.Int(0, 10));
+        l.PotionRarityTexts = Allocate(s, code, "shopPotionRarity", PotionEntryCount, FieldTypeSchema.String(16));
+        l.PotionIndices = Allocate(s, code, "shopPotionIndex", PotionEntryCount);
+        l.PotionExclusions = Allocate(s, code, "shopPotionExclusion", ShopCompute.ExclusionCount);
+
+        // 1) 折扣格：源 `Player.PlayerRng.Shops.NextInt(_coloredCardTypes.Length)`（5 格彩卡之一）。
+        code.Add(s.SampleInt(shopsStream, s.Const(0L), s.Const((long)ColoredCardTypes.Count), l.OnSaleSlot));
+
+        // 2) 5 张彩卡（每类一条池；下标是并集下标，跨类排除项天然惰性）。
+        var cursor = 0;
+        for (var slot = 0; slot < ColoredCardTypes.Count; slot++)
+        {
+            var kind = ColoredCardTypes[slot];
+            EmitColoredCard(s, code, l, slot, kind, ColoredPoolKindBase + IndexOfColoredKind(kind), ref cursor);
+        }
+
+        // 3) 2 张无色卡（固定 uncommon / rare，没有稀有度 roll）。
+        for (var i = 0; i < ColorlessCardEntryCount; i++)
+        {
+            EmitColorlessCard(s, code, l, ColoredCardTypes.Count + i, i == 0 ? RewardRarity.Uncommon : RewardRarity.Rare, ref cursor);
+        }
+
+        // 4) 遗物：源先求值两次 RollRarity（Rewards），第三格固定 Shop（不抽稀有度）。
+        for (var i = 0; i < l.RelicRarities.Length; i++)
+        {
+            code.Add(s.SampleInt(rewardsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+            code.Add(s.Compute(
+                relicRarity.Asset,
+                [(relicRarity.Bits, s.LocalRef(l.Bits))],
+                [(relicRarity.Rarity, l.RelicRarities[i])]));
+        }
+
+        var relicSlot = ColoredCardTypes.Count + ColorlessCardEntryCount;
+        for (var i = 0; i < RelicEntryCount; i++)
+        {
+            EmitRelic(s, code, l, relicSlot + i, i < l.RelicRarities.Length ? s.LocalRef(l.RelicRarities[i]) : s.Const("Shop"));
+        }
+
+        // 5) 药水：源先 `CreateRandomPotionsOutOfCombat(Player, 3, Shops)` 生成 3 瓶（稀有度 + pick），
+        //    再逐个建条目（每个条目构造时抽一次价格）。
+        for (var i = 0; i < PotionEntryCount; i++)
+        {
+            code.Add(s.SampleInt(shopsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+            code.Add(s.Compute(
+                potionRarity.Asset,
+                [(potionRarity.Bits, s.LocalRef(l.Bits))],
+                [(potionRarity.Ordinal, l.PotionOrdinals[i]), (potionRarity.Rarity, l.PotionRarityTexts[i])]));
+            EmitPotionPick(s, code, l, i);
+        }
+
+        var potionSlot = relicSlot + RelicEntryCount;
+        for (var i = 0; i < PotionEntryCount; i++)
+        {
+            code.Add(s.SampleInt(shopsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+            code.Add(s.Compute(
+                potionPrice.Asset,
+                [(potionPrice.Ordinal, s.LocalRef(l.PotionOrdinals[i])), (potionPrice.Bits, s.LocalRef(l.Bits))],
+                [(potionPrice.Price, l.Price)]));
+            code.Add(s.Call(resolvePotion, l.IdText, s.LocalRef(l.PotionIndices[i])));
+            code.Add(s.SetLocal(l.Reason, s.Const(string.Empty)));
+            code.Add(s.If(
+                s.Equal(s.LocalRef(l.PotionIndices[i]), s.Const((long)RewardCompute.NoPoolIndex)),
+                s.SetLocal(l.Reason, s.Const(PotionBucketReason))));
+            code.Add(CreateOffer(
+                s,
+                l,
+                potionSlot + i,
+                PotionOfferKind,
+                s.LocalRef(l.IdText),
+                s.LocalRef(l.PotionRarityTexts[i]),
+                s.Const(-1L),
+                s.LocalRef(l.PotionIndices[i]),
+                s.Const(false),
+                s.LocalRef(l.Price),
+                s.Equal(s.LocalRef(l.PotionIndices[i]), s.Const((long)RewardCompute.NoPoolIndex))));
+        }
+
+        // 6) 删牌：源 `MerchantCardRemovalEntry.CalcCost()` = `BaseCost + PriceIncrease * CardShopRemovalsUsed`（无抽数）。
+        code.Add(s.SetLocal(l.Reason, s.Const(string.Empty)));
+        code.Add(CreateOffer(
+            s,
+            l,
+            potionSlot + PotionEntryCount,
+            RemovalOfferKind,
+            s.Const(string.Empty),
+            s.Const(string.Empty),
+            s.Const(-1L),
+            s.Const(-1L),
+            s.Const(false),
+            s.Add(
+                s.Const(ShopCompute.RemovalBasePrice),
+                s.Multiply(s.Const(ShopCompute.RemovalPriceIncrease), s.Field(runExpr, RemovalsUsed))),
+            s.Const(false)));
+
+        return code.ToArray();
+    }
+
+    // -- 动作注册 ---------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// 注册 5 个动作：买卡 / 买遗物 / 买药水 / 删牌 / 离店。
+    /// 五个动作的守卫都要求"地图相位 = 商店相位 且 当前节点类型是商店"，因此战斗期（相位 1）无法购买。
+    /// </summary>
+    public void RegisterActions(EnginePackageBuilder package)
+    {
+        ArgumentNullException.ThrowIfNull(package);
+
+        // 买卡：源 `MerchantCardEntry.OnTryPurchase`（先把牌放进长期牌组，再扣一次金币）。
+        {
+            var action = package.Action(BuyCardActionName);
+            var body = package.ActionBody(action);
+            var parameter = body.Param(OfferParameterName, FieldTypeSchema.RefTo(Offer.Type));
+            var runExpr = body.First(body.Collection(run.Runs));
+            var offer = body.Param(parameter.DeclarationIndex);
+            var code = new List<Inst>
+            {
+                body.If(body.Field(offer, Offer.Sold), body.Fail(AlreadySoldMessage)),
+                body.If(body.Field(offer, Offer.Unsupported), body.Fail(UnsupportedCardMessage)),
+                body.If(body.Not(EnoughGold(body, runExpr, offer)), body.Fail(NotEnoughGoldMessage)),
+                body.Call(createCard, body.Field(offer, Offer.PoolKind), body.Field(offer, Offer.PoolIndex)),
+                body.SetField(runExpr, run.Gold, body.Subtract(body.Field(runExpr, run.Gold), body.Field(offer, Offer.Price))),
+                body.SetField(offer, Offer.Sold, body.Const(true)),
+            };
+            body.Role(SliceManifest.PlayerRole);
+            body.Requires(InShop(body, runExpr));
+            body.Candidates(OfferParameterName, OfferCandidates(body, CardOfferKind));
+            body.Body(code.ToArray());
+        }
+
+        // 买遗物：源 `MerchantRelicEntry.OnTryPurchase`（先扣金币，再 `RelicCmd.Obtain` + AfterObtained 效果）。
+        {
+            var action = package.Action(BuyRelicActionName);
+            var body = package.ActionBody(action);
+            var parameter = body.Param(OfferParameterName, FieldTypeSchema.RefTo(Offer.Type));
+            var runExpr = body.First(body.Collection(run.Runs));
+            var offer = body.Param(parameter.DeclarationIndex);
+            var relicCreated = body.Local("shopRelicCreated", FieldTypeSchema.Binding());
+            var code = new List<Inst>
+            {
+                body.If(body.Field(offer, Offer.Sold), body.Fail(AlreadySoldMessage)),
+                body.If(body.Field(offer, Offer.Unsupported), body.Fail(UnsupportedRelicMessage)),
+                body.If(body.Not(EnoughGold(body, runExpr, offer)), body.Fail(NotEnoughGoldMessage)),
+                body.SetField(runExpr, run.Gold, body.Subtract(body.Field(runExpr, run.Gold), body.Field(offer, Offer.Price))),
+                body.CreateEntity(
+                    relics.RelicType,
+                    body.EntityScope(runExpr),
+                    relicCreated,
+                    [(relics.Definition, body.Field(offer, Offer.DefinitionId)), (relics.Rarity, body.Field(offer, Offer.Rarity))],
+                    relics.Owned),
+            };
+
+            foreach (var relic in relics.Library.Where(WithAfterObtainedEffect))
+            {
+                var effects = new List<Inst>();
+                foreach (var effect in relic.Effects.Where(effect => string.Equals(effect.Trigger, RelicTriggers.AfterObtained, StringComparison.Ordinal)))
+                {
+                    switch (effect.Kind)
+                    {
+                        case RelicEffectKinds.GainMaxHp:
+                            effects.Add(body.SetField(runExpr, run.MaxHp, body.Add(body.Field(runExpr, run.MaxHp), body.Const((long)effect.Amount))));
+                            effects.Add(body.SetField(runExpr, run.Hp, body.Add(body.Field(runExpr, run.Hp), body.Const((long)effect.Amount))));
+                            break;
+                        case RelicEffectKinds.GainGold:
+                            effects.Add(body.SetField(runExpr, run.Gold, body.Add(body.Field(runExpr, run.Gold), body.Const((long)effect.Amount))));
+                            break;
+                        default:
+                            throw Faults.Schema($"base-spire: 商店遗物 '{relic.ContentId}' 的 AfterObtained 效果 '{effect.Kind}' 没有实现，不能给空效果");
+                    }
+                }
+
+                code.Add(body.If(body.Equal(body.Field(offer, Offer.DefinitionId), body.Const(relic.ContentId)), effects.ToArray()));
+            }
+
+            code.Add(body.SetField(offer, Offer.Sold, body.Const(true)));
+            body.Role(SliceManifest.PlayerRole);
+            body.Requires(InShop(body, runExpr));
+            body.Candidates(OfferParameterName, OfferCandidates(body, RelicOfferKind));
+            body.Body(code.ToArray());
+        }
+
+        // 买药水：源 `MerchantPotionEntry.OnTryPurchase`（`PotionCmd.TryToProcure` → 满栏失败 → 扣金币）。
+        {
+            var action = package.Action(BuyPotionActionName);
+            var body = package.ActionBody(action);
+            var parameter = body.Param(OfferParameterName, FieldTypeSchema.RefTo(Offer.Type));
+            var runExpr = body.First(body.Collection(run.Runs));
+            var offer = body.Param(parameter.DeclarationIndex);
+            var code = new List<Inst>
+            {
+                body.If(body.Field(offer, Offer.Sold), body.Fail(AlreadySoldMessage)),
+                body.If(body.Field(offer, Offer.Unsupported), body.Fail(UnsupportedPotionMessage)),
+                body.If(body.Not(EnoughGold(body, runExpr, offer)), body.Fail(NotEnoughGoldMessage)),
+                body.If(body.Not(potions.HasSpace(body)), body.Fail(FullBeltMessage)),
+                body.Call(createPotion, body.Field(offer, Offer.PoolIndex)),
+            };
+            code.AddRange(potions.Acquire(body));
+            code.Add(body.SetField(runExpr, run.Gold, body.Subtract(body.Field(runExpr, run.Gold), body.Field(offer, Offer.Price))));
+            code.Add(body.SetField(offer, Offer.Sold, body.Const(true)));
+            body.Role(SliceManifest.PlayerRole);
+            body.Requires(InShop(body, runExpr));
+            body.Candidates(OfferParameterName, OfferCandidates(body, PotionOfferKind));
+            body.Body(code.ToArray());
+        }
+
+        // 删牌：费用在进入商店时按"已删次数"算好（源 `MerchantCardRemovalEntry`），一次一间只能删一张。
+        {
+            var action = package.Action(RemoveCardActionName);
+            var body = package.ActionBody(action);
+            var parameter = body.Param(OfferParameterName, FieldTypeSchema.RefTo(Offer.Type));
+            var cardParameter = body.Param(DeckCardParameterName, FieldTypeSchema.RefTo(cards.CardType));
+            var runExpr = body.First(body.Collection(run.Runs));
+            var offer = body.Param(parameter.DeclarationIndex);
+            var card = body.Param(cardParameter.DeclarationIndex);
+            var code = new List<Inst>
+            {
+                body.If(body.Field(offer, Offer.Sold), body.Fail(AlreadySoldMessage)),
+                body.If(body.Not(EnoughGold(body, runExpr, offer)), body.Fail(NotEnoughGoldMessage)),
+                body.SetField(runExpr, run.Gold, body.Subtract(body.Field(runExpr, run.Gold), body.Field(offer, Offer.Price))),
+                body.Destroy(card),
+                body.SetField(runExpr, RemovalsUsed, body.Add(body.Field(runExpr, RemovalsUsed), body.Const(1L))),
+                body.SetField(offer, Offer.Sold, body.Const(true)),
+            };
+            body.Role(SliceManifest.PlayerRole);
+            body.Requires(InShop(body, runExpr));
+            body.Candidates(OfferParameterName, OfferCandidates(body, RemovalOfferKind));
+            body.Candidates(DeckCardParameterName, body.Collection(cards.LongTermDeck));
+            body.Body(code.ToArray());
+        }
+
+        // 离店：回到地图（源 `MerchantRoom.Exit`；地图历史写入不在本 Slice 模型里，见交接）。
+        {
+            var action = package.Action(LeaveActionName);
+            var body = package.ActionBody(action);
+            var runExpr = body.First(body.Collection(run.Runs));
+            body.Role(SliceManifest.PlayerRole);
+            body.Requires(InShop(body, runExpr));
+            body.Body(body.SetField(runExpr, map.MapPhase, body.Const(map.TravelPhase)));
+        }
+    }
+
+    // -- 生成细节 ---------------------------------------------------------------------------------------------
+
+    private void EmitColoredCard(IrScope s, List<Inst> code, Locals l, int slot, string kind, int poolKind, ref int cursor)
+    {
+        var spec = s.Const(coloredSpecs[kind]);
+        // 稀有度 roll 走 Rewards（源 `PlayerOddsSet` 用 `rng.Rewards` 构造 `CardRarityOdds`）。
+        code.Add(s.SampleInt(rewardsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+        code.Add(s.Compute(
+            cardRarity.Asset,
+            [
+                (cardRarity.Bits, s.LocalRef(l.Bits)),
+                (cardRarity.Spec, spec),
+                (cardRarity.OffsetBits, OffsetExpr(s)),
+                .. ExclusionInputs(cardRarity.Exclusions, s, l.Exclusions),
+            ],
+            [(cardRarity.Ordinal, l.Ordinal), (cardRarity.Rarity, l.RarityText)]));
+        EmitCardPick(s, code, l, spec, l.Ordinal, l.Exclusions);
+        // 源侧候选池不完整时会抛异常；这里显式失败，不产生"没有池成员的商品"。
+        code.Add(s.If(s.Equal(s.LocalRef(l.Index), s.Const((long)RewardCompute.NoPoolIndex)), s.Fail(EmptyCardBucketMessage)));
+
+        EmitUpgradeAndPrice(s, code, l, l.Ordinal, colorless: false, onSaleSlot: l.OnSaleSlot, slot: slot);
+        code.Add(s.Call(resolveCard, l.IdText, s.Const((long)poolKind), s.LocalRef(l.Index)));
+        code.Add(s.SetLocal(l.Reason, s.Const(string.Empty)));
+        code.Add(CreateOffer(
+            s,
+            l,
+            slot,
+            CardOfferKind,
+            s.LocalRef(l.IdText),
+            s.LocalRef(l.RarityText),
+            s.Const((long)poolKind),
+            s.LocalRef(l.Index),
+            s.Equal(s.LocalRef(l.OnSaleSlot), s.Const((long)slot)),
+            s.LocalRef(l.Price),
+            s.Const(false)));
+        RecordExclusion(s, code, l.Exclusions, l.Index, ref cursor);
+    }
+
+    private void EmitColorlessCard(IrScope s, List<Inst> code, Locals l, int slot, int targetRarity, ref int cursor)
+    {
+        // 无色路径没有稀有度 roll：源 `CreateForMerchant(player, pool, rarity)` 直接给定稀有度。
+        var spec = s.Const(colorlessSpec);
+        code.Add(s.SetLocal(l.Ordinal, s.Const((long)targetRarity)));
+        EmitCardPick(s, code, l, spec, l.Ordinal, l.Exclusions);
+        EmitUpgradeAndPrice(s, code, l, l.Ordinal, colorless: true, onSaleSlot: -1, slot: slot);
+        code.Add(s.Call(resolveCard, l.IdText, s.Const((long)ColorlessPoolKind), s.LocalRef(l.Index)));
+        code.Add(s.SetLocal(l.Reason, s.Const(string.Empty)));
+        code.Add(s.If(
+            s.Equal(s.LocalRef(l.Index), s.Const((long)RewardCompute.NoPoolIndex)),
+            s.SetLocal(l.Reason, s.Const(ColorlessBucketReason))));
+        code.Add(CreateOffer(
+            s,
+            l,
+            slot,
+            CardOfferKind,
+            s.LocalRef(l.IdText),
+            s.Const(RarityText(targetRarity)),
+            s.Const((long)ColorlessPoolKind),
+            s.LocalRef(l.Index),
+            s.Const(false),
+            s.LocalRef(l.Price),
+            s.Equal(s.LocalRef(l.Index), s.Const((long)RewardCompute.NoPoolIndex))));
+        RecordExclusion(s, code, l.Exclusions, l.Index, ref cursor);
+    }
+
+    /// <summary>池成员定位：源 `items = options.Where(rarity).ToList(); Shops.NextItem(items)`。</summary>
+    private void EmitCardPick(IrScope s, List<Inst> code, Locals l, Expr spec, int ordinal, int[] exclusions)
+    {
+        code.Add(s.Compute(
+            cardCount.Asset,
+            [(cardCount.Spec, spec), (cardCount.Ordinal, s.LocalRef(ordinal)), .. ExclusionInputs(cardCount.Exclusions, s, exclusions)],
+            [(cardCount.Result, l.Count)]));
+        code.Add(s.SetLocal(l.Index, s.Const((long)RewardCompute.NoPoolIndex)));
+        code.Add(s.If(
+            s.Greater(s.LocalRef(l.Count), s.Const(0L)),
+            [
+                s.SampleInt(shopsStream, s.Const(0L), s.LocalRef(l.Count), l.Pick),
+                s.Compute(
+                    cardPick.Asset,
+                    [
+                        (cardPick.Spec, spec),
+                        (cardPick.Ordinal, s.LocalRef(ordinal)),
+                        (cardPick.Asset.Inputs[2], s.LocalRef(l.Pick)),
+                        .. ExclusionInputs(cardPick.Exclusions, s, exclusions),
+                    ],
+                    [(cardPick.Result, l.Index)]),
+            ]));
+    }
+
+    /// <summary>升级 roll（源恒不升级，但**无条件**消费一笔 Rewards）+ 价格（在售格再抽一次并整除 2）。</summary>
+    private void EmitUpgradeAndPrice(IrScope s, List<Inst> code, Locals l, int ordinal, bool colorless, int onSaleSlot, int slot)
+    {
+        code.Add(s.SampleInt(rewardsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+        code.Add(s.Compute(
+            cardUpgrade.Asset,
+            [(cardUpgrade.Bits, s.LocalRef(l.Bits))],
+            [(cardUpgrade.Upgraded, l.Upgraded)]));
+        code.Add(s.SampleInt(shopsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+        code.Add(PriceCompute(s, l, ordinal, colorless, onSale: false));
+        if (onSaleSlot < 0)
+        {
+            return;
+        }
+
+        // 源 `MerchantCardEntry.SetOnSale()`：置 `IsOnSale` 后**重新**调 `CalcCost()`（再抽一笔价格）并整除 2。
+        code.Add(s.If(
+            s.Equal(s.LocalRef(onSaleSlot), s.Const((long)slot)),
+            [
+                s.SampleInt(shopsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits),
+                PriceCompute(s, l, ordinal, colorless, onSale: true),
+            ]));
+    }
+
+    private Inst PriceCompute(IrScope s, Locals l, int ordinal, bool colorless, bool onSale) =>
+        s.Compute(
+            cardPrice.Asset,
+            [
+                (cardPrice.Ordinal, s.LocalRef(ordinal)),
+                (cardPrice.Colorless, s.Const(colorless)),
+                (cardPrice.Bits, s.LocalRef(l.Bits)),
+                (cardPrice.OnSale, s.Const(onSale)),
+            ],
+            [(cardPrice.Price, l.Price)]);
+
+    /// <summary>
+    /// 遗物取货：源 `RelicFactory.PullNextRelicFromBack` + `RelicGrabBag.GetAvailableDeque` 的
+    /// `Shop→Common→Uncommon→Rare→None` 回退链（袋尾取货、空袋往下卷、全空回退 Circlet）。
+    /// </summary>
+    private void EmitRelic(IrScope s, List<Inst> code, Locals l, int slot, Expr rolledRarity)
+    {
+        var resolvedRarity = s.Local($"shopRelicResolved{slot}", FieldTypeSchema.String(16));
+        var startRank = s.Local($"shopRelicStartRank{slot}", FieldTypeSchema.Int(0, 3));
+        var found = s.Local($"shopRelicFound{slot}", FieldTypeSchema.Bool());
+        var buyable = s.Local($"shopRelicBuyable{slot}", FieldTypeSchema.Bool());
+
+        code.Add(s.SetLocal(startRank, s.Const(0L)));
+        code.Add(s.If(s.Equal(rolledRarity, s.Const("Common")), s.SetLocal(startRank, s.Const(1L))));
+        code.Add(s.If(s.Equal(rolledRarity, s.Const("Uncommon")), s.SetLocal(startRank, s.Const(2L))));
+        code.Add(s.If(s.Equal(rolledRarity, s.Const("Rare")), s.SetLocal(startRank, s.Const(3L))));
+        code.Add(s.SetLocal(resolvedRarity, s.Const("None")));
+        code.Add(s.SetLocal(l.IdText, s.Const(CircletId)));
+        code.Add(s.SetLocal(found, s.Const(false)));
+
+        var rank = 0;
+        foreach (var rarity in new[] { "Shop", "Common", "Uncommon", "Rare" })
+        {
+            if (relics.PlayerBags.TryGetValue(rarity, out var bag))
+            {
+                var head = s.First(s.Collection(bag));
+                code.Add(s.If(
+                    s.And(
+                        s.Not(s.LocalRef(found)),
+                        s.And(s.LessOrEqual(s.LocalRef(startRank), s.Const((long)rank)), s.Greater(s.Count(s.Collection(bag)), s.Const(0L)))),
+                    [
+                        s.SetLocal(resolvedRarity, s.Const(rarity)),
+                        s.SetLocal(l.IdText, s.Field(head, relics.BagEntryId)),
+                        s.SetLocal(found, s.Const(true)),
+                        s.Destroy(head),
+                    ]));
+            }
+
+            rank++;
+        }
+
+        if (relics.SharedBags is not null)
+        {
+            // 镜像 `RunState.SharedRelicGrabBag.Remove(relic)`：共享袋里同 id 的成员一并移除。
+            foreach (var bag in relics.SharedBags.Values)
+            {
+                code.Add(s.ForEach(
+                    s.Where(s.Collection(bag), entry => s.Equal(s.Field(entry, relics.BagEntryId), s.LocalRef(l.IdText))),
+                    entry => new Inst[] { s.Destroy(entry) }));
+            }
+        }
+
+        code.Add(s.SampleInt(shopsStream, s.Const(0L), s.Const(RewardCompute.Span), l.Bits));
+        code.Add(s.Compute(
+            relicPrice.Asset,
+            [(relicPrice.Rarity, s.LocalRef(resolvedRarity)), (relicPrice.Bits, s.LocalRef(l.Bits))],
+            [(relicPrice.Price, l.Price)]));
+
+        // 可买判据：正式登记表里、效果已实现的那几件（外加源回退遗物 Circlet；源里它也没有获得效果）。
+        code.Add(s.SetLocal(buyable, s.Equal(s.LocalRef(l.IdText), s.Const(CircletId))));
+        foreach (var relic in buyableRelics)
+        {
+            code.Add(s.If(s.Equal(s.LocalRef(l.IdText), s.Const(relic.ContentId)), s.SetLocal(buyable, s.Const(true))));
+        }
+
+        code.Add(s.SetLocal(l.Reason, s.Const(string.Empty)));
+        code.Add(s.If(
+            s.Not(s.LocalRef(buyable)),
+            s.SetLocal(
+                l.Reason,
+                s.Concat(s.Const(UnregisteredRelicReasonPrefix), s.LocalRef(l.IdText), s.Const(UnregisteredRelicReasonSuffix)))));
+        code.Add(CreateOffer(
+            s,
+            l,
+            slot,
+            RelicOfferKind,
+            s.LocalRef(l.IdText),
+            s.LocalRef(resolvedRarity),
+            s.Const(-1L),
+            s.Const(-1L),
+            s.Const(false),
+            s.LocalRef(l.Price),
+            s.Not(s.LocalRef(buyable))));
+    }
+
+    private void EmitPotionPick(IrScope s, List<Inst> code, Locals l, int index)
+    {
+        var spec = s.Const(potionSpec);
+        code.Add(s.SetLocal(l.PotionIndices[index], s.Const((long)RewardCompute.NoPoolIndex)));
+        code.Add(s.Compute(
+            cardCount.Asset,
+            [
+                (cardCount.Spec, spec),
+                (cardCount.Ordinal, s.LocalRef(l.PotionOrdinals[index])),
+                .. ExclusionInputs(cardCount.Exclusions, s, l.PotionExclusions),
+            ],
+            [(cardCount.Result, l.Count)]));
+        code.Add(s.If(
+            s.Greater(s.LocalRef(l.Count), s.Const(0L)),
+            [
+                s.SampleInt(shopsStream, s.Const(0L), s.LocalRef(l.Count), l.Pick),
+                s.Compute(
+                    cardPick.Asset,
+                    [
+                        (cardPick.Spec, spec),
+                        (cardPick.Ordinal, s.LocalRef(l.PotionOrdinals[index])),
+                        (cardPick.Asset.Inputs[2], s.LocalRef(l.Pick)),
+                        .. ExclusionInputs(cardPick.Exclusions, s, l.PotionExclusions),
+                    ],
+                    [(cardPick.Result, l.PotionIndices[index])]),
+            ]));
+        if (index < PotionEntryCount - 1)
+        {
+            // 源在同一个 `list` 上 `Remove(item)`，因此同一间商店的药水互不重复。
+            code.Add(s.SetLocal(l.PotionExclusions[index], s.LocalRef(l.PotionIndices[index])));
+        }
+    }
+
+    /// <summary>建货架条目（`Reason` 局部里已经放好不可买原因）。</summary>
+    private Inst CreateOffer(
+        IrScope s,
+        Locals l,
+        int slot,
+        string kind,
+        Expr definitionId,
+        Expr rarity,
+        Expr poolKind,
+        Expr poolIndex,
+        Expr onSale,
+        Expr price,
+        Expr unsupported)
+    {
+        return s.CreateEntity(
+            Offer.Type,
+            s.EntityScope(s.First(s.Collection(run.Runs))),
+            l.Created,
+            [
+                (Offer.Slot, s.Const((long)slot)),
+                (Offer.Kind, s.Const(kind)),
+                (Offer.DefinitionId, definitionId),
+                (Offer.Rarity, rarity),
+                (Offer.PoolKind, poolKind),
+                (Offer.PoolIndex, poolIndex),
+                (Offer.OnSale, onSale),
+                (Offer.Price, price),
+                (Offer.Sold, s.Const(false)),
+                (Offer.Unsupported, unsupported),
+                (Offer.UnsupportedReason, s.LocalRef(l.Reason)),
+            ],
+            Offers);
+    }
+
+    private static int[] Allocate(IrScope s, List<Inst> code, string prefix, int count, FieldTypeSchema? schema = null)
+    {
+        var slots = new int[count];
+        for (var i = 0; i < count; i++)
+        {
+            slots[i] = s.Local($"{prefix}{i}", schema ?? FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex));
+            if (schema is null)
+            {
+                code.Add(s.SetLocal(slots[i], s.Const(-1L)));
+            }
+        }
+
+        return slots;
+    }
+
+    private static IEnumerable<(FieldSymbol Field, Expr Value)> ExclusionInputs(IReadOnlyList<FieldSymbol> fields, IrScope s, int[] exclusions)
+    {
+        for (var i = 0; i < fields.Count; i++)
+        {
+            yield return (fields[i], s.LocalRef(exclusions[i]));
+        }
+    }
+
+    private static void RecordExclusion(IrScope s, List<Inst> code, int[] exclusions, int index, ref int cursor)
+    {
+        if (cursor >= exclusions.Length)
+        {
+            return;
+        }
+
+        code.Add(s.SetLocal(exclusions[cursor], s.LocalRef(index)));
+        cursor++;
+    }
+
+    private Expr OffsetExpr(IrScope s) =>
+        run.CardRarityOffset is null ? s.Const(0L) : s.Field(s.First(s.Collection(run.Runs)), run.CardRarityOffset);
+
+    private Expr InShop(IrScope s, Expr runExpr) =>
+        s.And(
+            s.Equal(s.Field(runExpr, map.MapPhase), s.Const(map.ShopPhase)),
+            s.Equal(s.Field(s.Field(runExpr, map.CurrentNode), map.NodeType), s.EnumConst(map.PointType, ShopPointTypeMember)));
+
+    private Expr EnoughGold(IrScope s, Expr runExpr, Expr offer) =>
+        s.GreaterOrEqual(s.Field(runExpr, run.Gold), s.Field(offer, Offer.Price));
+
+    private Query OfferCandidates(IrScope s, string kind) =>
+        s.Where(
+            s.Collection(Offers),
+            offer => s.And(s.Equal(s.Field(offer, Offer.Kind), s.Const(kind)), s.Not(s.Field(offer, Offer.Sold))));
+
+    // -- 过程声明 ---------------------------------------------------------------------------------------------
+
+    private ProcedureSymbol DeclareResolveCard(EnginePackageBuilder package)
+    {
+        var procedure = package.Procedure(ResolveCardProcedureName);
+        var poolKind = procedure.Param("PoolKind", FieldTypeSchema.Int(0, ColorlessPoolKind));
+        var poolIndex = procedure.Param("PoolIndex", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex));
+        var resolved = procedure.Local("resolvedShopCardId", FieldTypeSchema.String(64));
+        procedure.Result(FieldTypeSchema.String(64));
+        var code = new List<Inst> { procedure.SetLocal(resolved, procedure.Const(string.Empty)) };
+        foreach (var member in createTable)
+        {
+            code.Add(procedure.If(
+                procedure.And(
+                    procedure.Equal(procedure.Param(poolKind), procedure.Const((long)member.PoolKind)),
+                    procedure.Equal(procedure.Param(poolIndex), procedure.Const((long)member.Index))),
+                procedure.SetLocal(resolved, procedure.Const(member.Card.Id))));
+        }
+
+        code.Add(procedure.Return(procedure.LocalRef(resolved)));
+        return procedure.Body(code.ToArray());
+    }
+
+    private ProcedureSymbol DeclareCreateCard(EnginePackageBuilder package)
+    {
+        var procedure = package.Procedure(CreateCardProcedureName);
+        var poolKind = procedure.Param("PoolKind", FieldTypeSchema.Int(0, ColorlessPoolKind));
+        var poolIndex = procedure.Param("PoolIndex", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex));
+        var runExpr = procedure.First(procedure.Collection(run.Runs));
+        var created = procedure.Local("createdShopCard", FieldTypeSchema.Binding());
+        var matched = procedure.Local("matchedShopCard", FieldTypeSchema.Bool());
+        var code = new List<Inst> { procedure.SetLocal(matched, procedure.Const(false)) };
+        foreach (var member in createTable)
+        {
+            code.Add(procedure.If(
+                procedure.And(
+                    procedure.Equal(procedure.Param(poolKind), procedure.Const((long)member.PoolKind)),
+                    procedure.Equal(procedure.Param(poolIndex), procedure.Const((long)member.Index))),
+                procedure.CreateEntity(
+                    cards.CardType,
+                    procedure.EntityScope(runExpr),
+                    created,
+                    cards.CardFields(procedure, member.Card, false),
+                    cards.LongTermDeck),
+                procedure.SetLocal(matched, procedure.Const(true))));
+        }
+
+        code.Add(procedure.If(procedure.Not(procedure.LocalRef(matched)), procedure.Fail(EmptyCardBucketMessage)));
+        return procedure.Body(code.ToArray());
+    }
+
+    private ProcedureSymbol DeclareResolvePotion(EnginePackageBuilder package)
+    {
+        var procedure = package.Procedure(ResolvePotionProcedureName);
+        var poolIndex = procedure.Param("PoolIndex", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex));
+        var resolved = procedure.Local("resolvedShopPotionId", FieldTypeSchema.String(64));
+        procedure.Result(FieldTypeSchema.String(64));
+        var code = new List<Inst> { procedure.SetLocal(resolved, procedure.Const(string.Empty)) };
+        for (var index = 0; index < potions.Pool.Count; index++)
+        {
+            code.Add(procedure.If(
+                procedure.Equal(procedure.Param(poolIndex), procedure.Const((long)index)),
+                procedure.SetLocal(resolved, procedure.Const(potions.Pool[index].Id))));
+        }
+
+        code.Add(procedure.Return(procedure.LocalRef(resolved)));
+        return procedure.Body(code.ToArray());
+    }
+
+    private ProcedureSymbol DeclareCreatePotion(EnginePackageBuilder package)
+    {
+        var procedure = package.Procedure(CreatePotionProcedureName);
+        var poolIndex = procedure.Param("PoolIndex", FieldTypeSchema.Int(-1, RewardCompute.NoPoolIndex));
+        var runExpr = procedure.First(procedure.Collection(run.Runs));
+        var created = procedure.Local("createdShopPotion", FieldTypeSchema.Binding());
+        var matched = procedure.Local("matchedShopPotion", FieldTypeSchema.Bool());
+        var code = new List<Inst> { procedure.SetLocal(matched, procedure.Const(false)) };
+        for (var index = 0; index < potions.Pool.Count; index++)
+        {
+            code.Add(procedure.If(
+                procedure.Equal(procedure.Param(poolIndex), procedure.Const((long)index)),
+                procedure.CreateEntity(
+                    potions.Entity,
+                    procedure.EntityScope(runExpr),
+                    created,
+                    potions.Fields(procedure, potions.Pool[index].Id, procedure.Const(-1L)),
+                    potions.Rewards),
+                procedure.SetLocal(matched, procedure.Const(true))));
+        }
+
+        code.Add(procedure.If(procedure.Not(procedure.LocalRef(matched)), procedure.Fail(UnregisteredPotionMessage)));
+        return procedure.Body(code.ToArray());
+    }
+
+    // -- 池构建 -----------------------------------------------------------------------------------------------
+
+    /// <summary>
+    /// 彩卡池：与 `RewardWiring.BuildPool` 同一口径（`IroncladRewardPool.SourceOrder` 去掉 multiplayerOnly，
+    /// 并用内容里 `pools = { IroncladCardPool }` 的声明做双向对账）；下标 = 源单机清单里的位置。
+    /// </summary>
+    private static IReadOnlyList<PoolCard> BuildColoredPool(IReadOnlyList<CardDefinition> cards)
+    {
+        var byId = new Dictionary<string, CardDefinition>(StringComparer.Ordinal);
+        foreach (var card in cards)
+        {
+            var shortId = ShortId(card.Id);
+            if (!byId.TryAdd(shortId, card))
+            {
+                throw new InvalidOperationException($"base-spire: 商店牌池对账失败：内容里有重复的卡 id '{shortId}'");
+            }
+        }
+
+        var effective = new List<CardDefinition>();
+        foreach (var id in IroncladRewardPool.SourceOrder)
+        {
+            if (IroncladRewardPool.MultiplayerOnly.Contains(id, StringComparer.Ordinal))
+            {
+                continue;
+            }
+
+            if (!byId.TryGetValue(id, out var card))
+            {
+                throw new InvalidOperationException($"base-spire: 商店牌池对账失败：源单机清单有 {id} 没有进内容");
+            }
+
+            effective.Add(card);
+        }
+
+        foreach (var id in IroncladRewardPool.MultiplayerOnly)
+        {
+            if (byId.TryGetValue(id, out var card) && !card.MultiplayerOnly)
+            {
+                throw new InvalidOperationException($"base-spire: 商店牌池对账失败：源侧 multiplayerOnly 的 '{id}' 在内容里不是 multiplayerOnly");
+            }
+        }
+
+        var declared = cards
+            .Where(card => card.Pools.Contains(IroncladCardPoolName, StringComparer.Ordinal))
+            .Select(card => ShortId(card.Id))
+            .ToHashSet(StringComparer.Ordinal);
+        var effectiveIds = effective.Select(card => ShortId(card.Id)).ToHashSet(StringComparer.Ordinal);
+        var missing = effectiveIds.Where(id => !declared.Contains(id)).OrderBy(id => id, StringComparer.Ordinal).ToList();
+        if (missing.Count > 0)
+        {
+            throw new InvalidOperationException($"base-spire: 商店牌池对账失败：源单机清单有 {missing.Count} 项没有进内容池：{string.Join(", ", missing)}");
+        }
+
+        var extra = declared.Where(id => !effectiveIds.Contains(id)).OrderBy(id => id, StringComparer.Ordinal).ToList();
+        if (extra.Count > 0)
+        {
+            throw new InvalidOperationException($"base-spire: 商店牌池对账失败：内容声明进 IroncladCardPool 但有 {extra.Count} 项不在源单机清单里：{string.Join(", ", extra)}");
+        }
+
+        return effective
+            .Select((card, index) => new PoolCard(index, ColoredPoolKindBase + IndexOfColoredKind(card.Kind), card, RarityOrdinal(CardRarityText(card)), card.Kind))
+            .ToList();
+    }
+
+    /// <summary>
+    /// 无色池：源用 `ModelDb.CardPool&lt;ColorlessCardPool&gt;()`，**没有源顺序清单**，因此按内容声明序排列、
+    /// 下标接在彩卡之后（并集空间不重叠）。正式集成需要补一份 `ColorlessCardPool` 源顺序清单来对账。
+    /// </summary>
+    private static IReadOnlyList<PoolCard> BuildColorlessPool(IReadOnlyList<CardDefinition> cards, int indexOffset)
+    {
+        var list = new List<PoolCard>();
+        foreach (var card in cards)
+        {
+            if (card.MultiplayerOnly || !card.Pools.Contains(ColorlessCardPoolName, StringComparer.Ordinal))
+            {
+                continue;
+            }
+
+            var ordinal = RarityOrdinal(CardRarityText(card));
+            if (ordinal == RewardRarity.Basic)
+            {
+                continue;
+            }
+
+            list.Add(new PoolCard(indexOffset + list.Count, ColorlessPoolKind, card, ordinal, card.Kind));
+        }
+
+        return list;
+    }
+
+    private static string Encode(IReadOnlyList<PoolCard> members) =>
+        RewardPoolSpec.Encode(members.Select(card => new RewardPoolEntry(card.Index, card.Rarity, card.Card.Upgradeable)));
+
+    private static bool WithAfterObtainedEffect(SliceRelic relic) =>
+        relic.Effects.Any(effect => string.Equals(effect.Trigger, RelicTriggers.AfterObtained, StringComparison.Ordinal));
+
+    /// <summary>
+    /// 可买判据：正式登记表里、官方不支持原因串为空、且效果都在本模块/战斗侧的实现范围内。
+    /// 不满足的商品照源仍会出现在货架上，但被明确标成 `Unsupported`（不伪装可买）。
+    /// </summary>
+    private static bool Buyable(SliceRelic relic) =>
+        string.IsNullOrEmpty(SpireRelics.UnsupportedReason(relic))
+        && relic.Effects
+            .Where(effect => string.Equals(effect.Trigger, RelicTriggers.AfterObtained, StringComparison.Ordinal))
+            .All(effect => effect.Kind is RelicEffectKinds.GainMaxHp or RelicEffectKinds.GainGold)
+        && relic.Effects.All(effect =>
+            string.Equals(effect.Trigger, RelicTriggers.AfterObtained, StringComparison.Ordinal)
+            || string.Equals(effect.Trigger, RelicTriggers.AfterCombatVictory, StringComparison.Ordinal));
+
+    private static int IndexOfColoredKind(string kind) => kind switch
+    {
+        "Attack" => 0,
+        "Skill" => 1,
+        _ => 2,
+    };
+
+    private static string ShortId(string id)
+    {
+        var separator = id.LastIndexOf(':');
+        return separator < 0 ? id : id[(separator + 1)..];
+    }
+
+    private static string CardRarityText(CardDefinition card)
+    {
+        var normal = card.Normal.Rarity;
+        var upgraded = card.Upgraded.Rarity;
+        if (!string.Equals(normal, upgraded, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"base-spire: 商店牌池对账失败：卡 '{card.Id}' 的 normal/upgraded 稀有度不一致（'{normal}' vs '{upgraded}'）");
+        }
+
+        return normal;
+    }
+
+    private static int RarityOrdinal(string rarity) => rarity switch
+    {
+        "basic" => RewardRarity.Basic,
+        "common" => RewardRarity.Common,
+        "uncommon" => RewardRarity.Uncommon,
+        "rare" => RewardRarity.Rare,
+        "ancient" => RewardRarity.Ancient,
+        "event" => RewardRarity.Event,
+        "token" => RewardRarity.Token,
+        "status" => RewardRarity.Status,
+        "curse" => RewardRarity.Curse,
+        "quest" => RewardRarity.Quest,
+        _ => throw Faults.Schema($"base-spire: 商店池里出现了未登记的稀有度 '{rarity}'"),
+    };
+
+    private static int PotionRarityOrdinal(string rarity) => rarity switch
+    {
+        "rare" => RewardRarity.Rare,
+        "uncommon" => RewardRarity.Uncommon,
+        _ => RewardRarity.Common,
+    };
+
+    private static string RarityText(int rarity)
+    {
+        // 不用 switch 常量标签：RewardRarity 的成员不保证是 const。
+        if (rarity == RewardRarity.Rare)
+        {
+            return "rare";
+        }
+
+        if (rarity == RewardRarity.Uncommon)
+        {
+            return "uncommon";
+        }
+
+        return rarity == RewardRarity.Basic ? "basic" : "common";
+    }
+}

@@ -148,13 +148,14 @@ public static partial class EngineDslCompiler
             }
         }
 
-        private static void ValidateTemplateBody(EngineDslTemplate template)
+        private void ValidateTemplateBody(EngineDslTemplate template)
         {
             foreach (var member in template.Body.Members)
             {
                 if (member is DslDeclarationNode declaration)
                 {
-                    if (!IsCoreKind(declaration.Kind) || declaration.Kind == "template") throw Error(declaration.Location, "Template bodies contain core declarations and nested use only.");
+                    if ((!IsCoreKind(declaration.Kind) && !(_modern && _extensions.ContainsKey(declaration.Kind))) || declaration.Kind == "template")
+                        throw Error(declaration.Location, "Template body contains an unregistered declaration kind.");
                     if (declaration.Name.Contains(':') || declaration.Name.Contains('.')) throw Error(declaration.Location, "Template-owned declarations must use simple names.");
                 }
                 else if (member is not DslPropertyNode { Name: "start" }) throw Error(member.Location, "Only start and declarations are allowed in a template body.");

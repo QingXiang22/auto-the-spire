@@ -1,0 +1,77 @@
+﻿using namespace base-spire;
+
+# Source: sts2/src/Core/Models/Cards/StrikeRegent.cs
+card StrikeRegent {
+    pools = { RegentCardPool }
+    tags = { Strike }
+    upgradeable = true
+    normal = {
+        type = attack
+        rarity = basic
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {}
+        play = { attack = { damage = 6 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = attack
+        rarity = basic
+        cost = 1
+        target = { selectOne = { from = context.opponents where = alive } }
+        keywords = {}
+        play = { attack = { damage = 9 } }
+        hooks = {}
+    }
+}
+
+# Source: sts2/src/Core/Models/Cards/DefendRegent.cs
+card DefendRegent {
+    pools = { RegentCardPool }
+    tags = { Defend }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = basic
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {}
+        play = { gainBlock = { amount = 5 target = context.owner } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = basic
+        cost = 1
+        target = { selectSelf = {} }
+        keywords = {}
+        play = { gainBlock = { amount = 8 target = context.owner } }
+        hooks = {}
+    }
+}
+
+
+
+# Source: sts2/src/Core/Models/Cards/Prophesize.cs
+card Prophesize {
+    pools = { RegentCardPool }
+    upgradeable = true
+    normal = {
+        type = skill
+        rarity = uncommon
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = { draw = { amount = 6 } }
+        hooks = {}
+    }
+    upgraded = {
+        type = skill
+        rarity = uncommon
+        cost = 2
+        target = { selectSelf = {} }
+        keywords = {  }
+        play = { draw = { amount = 9 } }
+        hooks = {}
+    }
+}

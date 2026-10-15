@@ -1,0 +1,524 @@
+{
+  "suite": "negative-wiring-missing-dimension",
+  "fixtures_version": "env-t04-negative@1",
+  "note": "失败契约反例（工具验收，不是产品内容覆盖）：完整注册 suite（8 个正常双侧 case + 工厂接线 case，全部预登记，不用 --only）。工厂 case 声明 required_dimensions 含 terminal，但工厂会话停在 session_status=Running、没有终局，因此记录里**没有**抽取 terminal 维度，也没有给它伪造占位读数；expected_terminal 仍是正确的 running。修复前 self_checked 绕过维度门槛、整批 rc 0；修复后该 case 必须判 missing_dimension、rc 1，其余 8 个双侧 case 与比较器自检 6/6 保持原行为。",
+  "target_scope": "base-spire-singleplayer-dev-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "reference/sts2-sim（独立检出，参考适配器只在工具层条件引用）",
+    "note": "受控机制 case 用受控切片包 + 与唯一工厂相同的公开随机/数值/Compute 配置资产（VanillaRandomLayout 算法/映射/Profile + SeedAllStreams + SourceWeightedPick 后端），Start 一次；formal-dev-factory case 用 BaseSpireRuntimeFactory + RunConfiguration.Ironclad(0, dev) → CreateSession(game_seed) → Start 一次。"
+  },
+  "expected_case_ids": [
+    "strike-normal",
+    "strike-upgraded",
+    "defend-normal",
+    "defend-upgraded",
+    "bash-then-strike-vulnerable",
+    "bash-upgraded",
+    "candidate-scope-partly-playable",
+    "last-kill-before-terminal",
+    "factory-wiring-dev-scope"
+  ],
+  "cases": [
+    {
+      "id": "strike-normal",
+      "title": "StrikeIronclad 普通形态：6 点伤害",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "伤害数值与目标域来自原版卡牌声明；受控手牌只放这一张，避免抽取顺序干扰。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:strike-ironclad"
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:strike-ironclad",
+          "target": "enemy:0"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-strike-normal",
+      "initialization": "受控切片包（CombatSlicePackage，含受控手牌/敌人血量/能量）+ 工厂同款随机/数值/Compute 配置 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:strike-ironclad"
+      ],
+      "variants": [
+        "normal"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:strike-ironclad→enemy:0"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs：CombatState + CombatEngine + ScriptedSelection，独立执行同一语义动作）"
+    },
+    {
+      "id": "strike-upgraded",
+      "title": "StrikeIronclad 升级形态：9 点伤害",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/StrikeIronclad.cs",
+        "note": "升级数值由夹具显式给出（不猜清单）。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:strike-ironclad",
+            "upgraded": true,
+            "amount": 9
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:strike-ironclad",
+          "target": "enemy:0"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-strike-upgraded",
+      "initialization": "受控切片包 + 升级形态数值显式给出 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:strike-ironclad"
+      ],
+      "variants": [
+        "upgraded"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:strike-ironclad(upgraded)→enemy:0"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs，独立执行同一升级形态与语义动作）"
+    },
+    {
+      "id": "defend-normal",
+      "title": "DefendIronclad 普通形态：5 点格挡",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/DefendIronclad.cs",
+        "note": "自身目标域，不应产生目标决策点。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:defend-ironclad"
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:defend-ironclad"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-defend-normal",
+      "initialization": "受控切片包 + 自身目标牌 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:defend-ironclad"
+      ],
+      "variants": [
+        "normal"
+      ],
+      "required_dimensions": [
+        "actions",
+        "facts",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:defend-ironclad"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs，独立执行同一语义动作）"
+    },
+    {
+      "id": "defend-upgraded",
+      "title": "DefendIronclad 升级形态：8 点格挡",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/DefendIronclad.cs",
+        "note": "升级数值由夹具显式给出。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:defend-ironclad",
+            "upgraded": true,
+            "amount": 8
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:defend-ironclad"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-defend-upgraded",
+      "initialization": "受控切片包 + 升级形态数值显式给出 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:defend-ironclad"
+      ],
+      "variants": [
+        "upgraded"
+      ],
+      "required_dimensions": [
+        "actions",
+        "facts",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:defend-ironclad(upgraded)"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs，独立执行同一升级形态与语义动作）"
+    },
+    {
+      "id": "bash-then-strike-vulnerable",
+      "title": "Bash 普通形态：8 点伤害 + 2 层易伤，随后 Strike 被放大到 9",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/Bash.cs",
+        "note": "易伤倍率 1.5 来自原版 Power 声明；这里检查的是'施加'与'放大'两段链路。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:bash"
+          },
+          {
+            "card": "base-spire:strike-ironclad"
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:bash",
+          "target": "enemy:0"
+        },
+        {
+          "action": "play_card",
+          "card": "base-spire:strike-ironclad",
+          "target": "enemy:0"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-bash-then-strike-vulnerable",
+      "initialization": "受控切片包 + 两张手牌 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:bash",
+        "base-spire:strike-ironclad",
+        "base-spire:vulnerable"
+      ],
+      "variants": [
+        "normal"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "power",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:bash→enemy:0",
+        "play_card:base-spire:strike-ironclad→enemy:0"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs，独立执行施加+放大两段链路）"
+    },
+    {
+      "id": "bash-upgraded",
+      "title": "Bash 升级形态：10 点伤害 + 3 层易伤",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "sts2/src/Core/Models/Cards/Bash.cs",
+        "note": "升级数值与层数由夹具显式给出。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:bash",
+            "upgraded": true,
+            "amount": 10,
+            "power_stacks": 3
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:bash",
+          "target": "enemy:0"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-bash-upgraded",
+      "initialization": "受控切片包 + 升级形态数值/层数显式给出 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:bash",
+        "base-spire:vulnerable"
+      ],
+      "variants": [
+        "upgraded"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "power",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:bash(upgraded)→enemy:0"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs，独立执行同一升级形态与语义动作）"
+    },
+    {
+      "id": "candidate-scope-partly-playable",
+      "title": "合法性口径：1 点能量下只有 1 费牌在候选里（2 费牌不进候选）",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire",
+        "note": "专门钉住候选列表的投影口径：如果候选取成'候选参数的整个定义域'，1 点能量时手里那张 2 费的 Bash 也会被列进候选，而参考侧用 CardModel.CanPlay 过滤后只剩 Strike。现在候选改取'可提交绑定里出现过的取值'，两侧应当一致只报 Strike。脚本只打这张 Strike，不结束回合，因此不涉及对端私有随机。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:strike-ironclad"
+          },
+          {
+            "card": "base-spire:bash"
+          }
+        ],
+        "enemy_hp": [
+          38,
+          51
+        ],
+        "player_hp": 80,
+        "energy": 1
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:strike-ironclad",
+          "target": "enemy:0"
+        }
+      ],
+      "group": "existing-regression",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-candidate-scope-partly-playable",
+      "initialization": "受控切片包 + 1 点能量与 1/2 费各一张 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:strike-ironclad",
+        "base-spire:bash"
+      ],
+      "variants": [
+        "normal",
+        "energy-limited"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:strike-ironclad→enemy:0"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs；参考侧候选用 CardModel.CanPlay 过滤，独立于 base 的候选投影）"
+    },
+    {
+      "id": "last-kill-before-terminal",
+      "title": "最后击杀与终局边界：击杀最后一只敌人的动作体与终局判定不在中途截断",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "controlled_state",
+        "source": "mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs:972-1030（BattleEndTail）",
+        "note": "ENV-T02 的判别点：胜利判定必须挂在动作体末尾（BattleEndTail），不能在伤害结算中途 SetTerminal 截掉父效果余效与出牌收尾。受控把两只敌人压到 1/5 血，第一张 Strike 击杀前排、第二张 Bash 击杀**最后一只**敌人；最后一个边界同时检查终局、牌区与玩家剩余资源。敌人语义槽位按**存活集合**编号（`AssignSlots` 用 LivingEnemies，与参考侧 combat.Enemies 同口径），所以击杀前排后存活的那只重新编号为 enemy:0——第二张牌的目标就写 enemy:0，这本身也钉住了两侧的存活投影口径。本 case 只覆盖战斗层终局边界：Run 级长期写回与跨房（Feed MaxHp 等）仍依赖 T05 的真实房间流程，不在本 case 内声称。"
+      },
+      "setup": {
+        "hand": [
+          {
+            "card": "base-spire:strike-ironclad"
+          },
+          {
+            "card": "base-spire:bash"
+          }
+        ],
+        "enemy_hp": [
+          1,
+          5
+        ],
+        "player_hp": 80,
+        "energy": 3
+      },
+      "script": [
+        {
+          "action": "play_card",
+          "card": "base-spire:strike-ironclad",
+          "target": "enemy:0"
+        },
+        {
+          "action": "play_card",
+          "card": "base-spire:bash",
+          "target": "enemy:0"
+        }
+      ],
+      "group": "new-required",
+      "kind": "mechanism",
+      "base_source": "controlled-slice-v1",
+      "game_seed": "ENV-T04-CTRL-last-kill-before-terminal",
+      "initialization": "受控切片包 + 两只敌人 1/5 血 → Start 一次；无正常开局语义",
+      "contents": [
+        "base-spire:strike-ironclad",
+        "base-spire:bash",
+        "base-spire:vulnerable"
+      ],
+      "variants": [
+        "normal",
+        "last-kill",
+        "terminal-boundary"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order"
+      ],
+      "semantic_actions": [
+        "play_card:base-spire:strike-ironclad→enemy:0",
+        "play_card:base-spire:bash→enemy:0（击杀前排后存活槽位重新编号）"
+      ],
+      "expected_terminal": "victory",
+      "reference_source": "reference/sts2-sim 单场战斗适配器（ReferenceBackend.cs：同一击杀序列，参考侧在 PlayCardAsync 内完成整张牌的效果与收尾后才结束战斗）"
+    },
+    {
+      "id": "factory-wiring-dev-scope",
+      "title": "唯一工厂接线：dev 范围可用、未实现范围在建局前被拒绝、未启动会话零随机零玩家、配置在 Start 前就位",
+      "rng_profile": "controlled-no-random@1",
+      "provenance": {
+        "kind": "factory_wiring",
+        "source": "mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs",
+        "note": "工具/生产集成自检（kind=wiring，reference_scope=not_applicable）：实测 dev 范围构造成功、Ironclad/Full/ascension=1/Silent/未知范围/未知源基线六项在建局前被拒绝、工厂返回的会话零随机消费与零玩家实例、随机算法/映射/Compute 后端在 Start 之前就位、Start 恰好一次成功。它不是规则对拍，也不计内容覆盖。"
+      },
+      "setup": {},
+      "script": [],
+      "reference_scope": "not_applicable",
+      "reference_scope_reason": "kind=wiring 是工具/生产集成自检，没有参考侧对应物（参考是单场战斗模拟器，不实现本项目工厂的范围/身份拒绝语义）。",
+      "group": "wiring",
+      "kind": "wiring",
+      "base_source": "formal-dev-factory",
+      "game_seed": "ENV-T04-WIRING-DEV-SCOPE",
+      "initialization": "BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, dev)) → Describe() + CreateSession(game_seed) → Start 一次；另有六项必须先于建局被拒绝的负例",
+      "contents": [
+        "base-spire-singleplayer-dev-v1"
+      ],
+      "variants": [
+        "scope=dev",
+        "missing-declared-dimension=terminal"
+      ],
+      "required_dimensions": [
+        "actions",
+        "facts",
+        "terminal"
+      ],
+      "semantic_actions": [],
+      "expected_terminal": "running",
+      "reference_source": "不适用：kind=wiring 的验收标准是自身实测断言（工厂拒绝/未启动会话/配置就位），不是双侧比较"
+    }
+  ],
+  "derived_from": {
+    "path": "tools/differential/suites/regression.json",
+    "sha256": "2dccebe90a9e41f32642da4bc754997f56c637f4f5085a558e9843b3763701e3",
+    "excluding_ids": [
+      "enemy-death-aftermath",
+      "headbutt-mid-choice",
+      "power-turn-end-decay",
+      "random-reshuffle-unsupported",
+      "rng-initial-shuffle",
+      "vulnerable-decay-via-bash"
+    ],
+    "generator": ".audit/dsh-env-t04-gates-2026-10-08/build-negative-suites.py"
+  }
+}

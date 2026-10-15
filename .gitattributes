@@ -1,0 +1,5 @@
+* text=auto eol=lf
+*.zip -text
+
+# Patch context whitespace and byte identity are part of the saved reference input.
+reference/baselines/*.patch -text -whitespace

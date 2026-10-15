@@ -1,0 +1,324 @@
+{
+  "_notes": "A-02 手写期望（独立于被测实现）。索引期望是人按 encoder-design §2 的规则（完整名称 UTF-8 字节序、索引 0 保留给补齐）逐表读目录得出的 name→index 全量映射；field_record_expectations 逐键写出编码侧继承的目录事实；transform_cases 写出 (raw → float64) 的期望结果；legacy.* 是手写旧字典文件的冻结值（摘要由共享规范 codec 产出后写死，运行时不改写）。",
+  "environment": {
+    "gym_id": "fixture:gym-v1",
+    "backend_profile_id": "fixture:sim-v1"
+  },
+  "index_expectations": {
+    "combat": {
+      "entity_kinds": {
+        "fixture:card": 1,
+        "fixture:discard_pile": 2,
+        "fixture:draw_pile": 3,
+        "fixture:enemy": 4,
+        "fixture:hand_pile": 5,
+        "fixture:player": 6,
+        "fixture:power": 7
+      },
+      "content_types": {"fixture:card_face": 1, "fixture:power_face": 2},
+      "fields": {
+        "fixture:backend_damage_decimal": 1,
+        "fixture:block": 2,
+        "fixture:card_face": 3,
+        "fixture:cards_played_this_turn": 4,
+        "fixture:cost": 5,
+        "fixture:energy": 6,
+        "fixture:hp": 7,
+        "fixture:intent": 8,
+        "fixture:max_hp": 9,
+        "fixture:owner": 10,
+        "fixture:pile_scope": 11,
+        "fixture:play_card_ref": 12,
+        "fixture:play_target_ref": 13,
+        "fixture:power_amount": 14,
+        "fixture:relic_triggered": 15,
+        "fixture:strength": 16,
+        "fixture:upgraded": 17,
+        "net:pile_members_complete": 18,
+        "net:pile_total_count": 19
+      },
+      "relation_types": {"fixture:held_by": 1, "net:pile_member": 2},
+      "action_types": {"fixture:end_turn": 1, "fixture:play_card": 2},
+      "sequence_types": {},
+      "group_types": {},
+      "categories": {
+        "fixture:attack": 1,
+        "fixture:bash": 2,
+        "fixture:defend": 3,
+        "fixture:headbutt": 4,
+        "fixture:strike": 5
+      }
+    },
+    "variables": {
+      "entity_kinds": {
+        "fixture:card": 1,
+        "fixture:enemy": 2,
+        "fixture:player": 3,
+        "fixture:power": 4
+      },
+      "content_types": {},
+      "fields": {
+        "fixture:hp": 1,
+        "modA:charge": 2,
+        "modB:charge": 3,
+        "modC:charge": 4,
+        "modD:secret_charge": 5,
+        "ux:timer_unavailable": 6
+      },
+      "relation_types": {"fixture:held_by": 1},
+      "action_types": {"fixture:end_turn": 1},
+      "sequence_types": {},
+      "group_types": {},
+      "categories": {"modC:idle": 1, "modC:ready": 2}
+    },
+    "scenario": {
+      "entity_kinds": {
+        "fixture:event_option": 1,
+        "fixture:map_node": 2,
+        "fixture:player": 3,
+        "fixture:potion": 4,
+        "fixture:potion_slot": 5
+      },
+      "content_types": {"fixture:potion_face": 1},
+      "fields": {
+        "fixture:chosen_node_ref": 1,
+        "fixture:chosen_option_ref": 2,
+        "fixture:hp": 3,
+        "fixture:max_hp": 4,
+        "fixture:node_col": 5,
+        "fixture:node_kind": 6,
+        "fixture:node_row": 7,
+        "fixture:occupied": 8,
+        "fixture:option_kind": 9,
+        "fixture:potion_kind": 10,
+        "fixture:slot_index": 11
+      },
+      "relation_types": {"fixture:node_edge": 1, "fixture:stored_in": 2},
+      "sequence_types": {"fixture:route_path": 1},
+      "group_types": {"fixture:reward_options": 1},
+      "action_types": {"fixture:choose_node": 1, "fixture:choose_option": 2},
+      "categories": {
+        "fixture:accept": 1,
+        "fixture:block_potion": 2,
+        "fixture:decline": 3,
+        "fixture:elite": 4,
+        "fixture:enemy": 5,
+        "fixture:fire_potion": 6,
+        "fixture:rest": 7,
+        "fixture:treasure": 8
+      }
+    },
+    "card_choice": {
+      "entity_kinds": {
+        "fixture:card": 1,
+        "fixture:discard_pile": 2,
+        "fixture:enemy": 3,
+        "fixture:hand_pile": 4,
+        "fixture:player": 5
+      },
+      "content_types": {"fixture:card_face": 1},
+      "fields": {
+        "fixture:card_face": 1,
+        "fixture:choice_source_ref": 2,
+        "fixture:chosen_card_ref": 3,
+        "fixture:cost": 4,
+        "fixture:energy": 5,
+        "fixture:hp": 6,
+        "fixture:owner": 7,
+        "fixture:pile_scope": 8,
+        "fixture:upgraded": 9,
+        "net:pile_members_complete": 10,
+        "net:pile_total_count": 11
+      },
+      "relation_types": {"net:pile_member": 1},
+      "action_types": {"fixture:choose_card": 1},
+      "sequence_types": {},
+      "group_types": {"fixture:choice_display": 1},
+      "categories": {"fixture:bash": 1, "fixture:defend": 2, "fixture:strike": 3}
+    }
+  },
+  "field_record_expectations": {
+    "combat": {
+      "fixture:hp": {
+        "index": 7,
+        "value_type": "number",
+        "number_format": "integer",
+        "required": true,
+        "visibility": "public",
+        "category_ids": [],
+        "target_kind_ids": [],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:player", "fixture:enemy"],
+          "action_types": [],
+          "terminal_reasons": ["fixture:victory"]
+        }
+      },
+      "fixture:card_face": {
+        "index": 3,
+        "value_type": "category",
+        "number_format": null,
+        "required": true,
+        "visibility": "public",
+        "category_ids": ["fixture:bash", "fixture:defend", "fixture:headbutt", "fixture:strike"],
+        "target_kind_ids": [],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:card"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "fixture:owner": {
+        "index": 10,
+        "value_type": "entity_ref",
+        "number_format": null,
+        "required": true,
+        "visibility": "public",
+        "category_ids": [],
+        "target_kind_ids": ["fixture:player"],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:card"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "net:pile_total_count": {
+        "index": 19,
+        "value_type": "number",
+        "number_format": "integer",
+        "required": false,
+        "visibility": "public",
+        "category_ids": [],
+        "target_kind_ids": [],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:discard_pile", "fixture:draw_pile", "fixture:hand_pile"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      }
+    },
+    "variables": {
+      "modA:charge": {
+        "index": 2,
+        "value_type": "number",
+        "number_format": "integer",
+        "required": false,
+        "visibility": "public",
+        "category_ids": [],
+        "target_kind_ids": [],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:player"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "modB:charge": {
+        "index": 3,
+        "value_type": "number",
+        "number_format": "decimal",
+        "required": false,
+        "visibility": "public",
+        "category_ids": [],
+        "target_kind_ids": [],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:enemy"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "modC:charge": {
+        "index": 4,
+        "value_type": "category",
+        "number_format": null,
+        "required": false,
+        "visibility": "public",
+        "category_ids": ["modC:idle", "modC:ready"],
+        "target_kind_ids": [],
+        "visibility_check_ids": [],
+        "applies_to": {
+          "entity_kinds": ["fixture:power"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      },
+      "modD:secret_charge": {
+        "index": 5,
+        "value_type": "number",
+        "number_format": "integer",
+        "required": false,
+        "visibility": "conditional",
+        "category_ids": [],
+        "target_kind_ids": [],
+        "visibility_check_ids": ["fixture:check-charge-visible"],
+        "applies_to": {
+          "entity_kinds": ["fixture:player"],
+          "action_types": [],
+          "terminal_reasons": []
+        }
+      }
+    }
+  },
+  "transform_cases": [
+    {"case_id": "combat-energy-7", "bundle": "combat", "field_id": "fixture:energy", "raw": "7", "expected": 2.0},
+    {"case_id": "combat-energy-10", "bundle": "combat", "field_id": "fixture:energy", "raw": "10", "expected": 3.0},
+    {"case_id": "combat-cost-identity", "bundle": "combat", "field_id": "fixture:cost", "raw": "3", "expected": 3.0},
+    {"case_id": "combat-damage-decimal-identity", "bundle": "combat", "field_id": "fixture:backend_damage_decimal", "raw": "12.5", "expected": 12.5},
+    {"case_id": "combat-noncanonical-source", "bundle": "combat", "field_id": "fixture:cost", "raw": "+0003.000", "expected": 3.0},
+    {"case_id": "variables-modb-2.5", "bundle": "variables", "field_id": "modB:charge", "raw": "2.5", "expected": 5.0},
+    {"case_id": "variables-modb-negative", "bundle": "variables", "field_id": "modB:charge", "raw": "-2", "expected": -4.0},
+    {"case_id": "scenario-node-row-6", "bundle": "scenario", "field_id": "fixture:node_row", "raw": "6", "expected": 1.0},
+    {"case_id": "card-choice-cost-2", "bundle": "card_choice", "field_id": "fixture:cost", "raw": "2", "expected": 1.0}
+  ],
+  "legacy": {
+    "catalog": "legacy/catalog.json",
+    "manifest": "legacy/manifest-v1.json",
+    "dictionary_version": "ai-dict-v1:sha256:7f701953bccca152677db3f7221862acd5158e086d01148ec5635461023598f4",
+    "source_catalog_digest": "sha256:7f701953bccca152677db3f7221862acd5158e086d01148ec5635461023598f4",
+    "encoding_config_digest": "sha256:9d6f4e2d6ffd8b6827aa8ce9d9b8524c99900d57b901ef47333214f53e553fa5",
+    "manifest_digest": "sha256:865969dd06364b838841cf19bd5b2fb68bfd0da5352f3ea684107fe2245c6f9b",
+    "environment_identity": {
+      "protocol_version": "0.1",
+      "ruleset_id": "fixture:legacy-rules-v0",
+      "catalog_id": "fixture:legacy-catalog-v0",
+      "backend_profile_id": "fixture:legacy-backend-v0"
+    },
+    "indices": {
+      "entity_kinds": {"fixture:legacy_card": 1, "fixture:legacy_power": 2},
+      "content_types": {"fixture:legacy_face": 1},
+      "fields": {
+        "fixture:legacy_cost": 1,
+        "fixture:legacy_power": 2,
+        "fixture:legacy_state": 3
+      },
+      "relation_types": {"fixture:legacy_held_by": 1},
+      "sequence_types": {},
+      "group_types": {},
+      "action_types": {"fixture:legacy_play": 1},
+      "categories": {"fixture:legacy_idle": 1, "fixture:legacy_ready": 2}
+    },
+    "absolute_tolerance": "0.0000000001",
+    "relative_tolerance": "0.00000001",
+    "transforms": {"fixture:legacy_power": {"offset": "1", "scale": "0.5"}},
+    "capacities": {
+      "max_entities": 4,
+      "max_fields": 8,
+      "max_relations": 4,
+      "max_pile_positions": null,
+      "max_sequences": null,
+      "max_groups": null,
+      "max_candidates": 2,
+      "max_candidate_fields": 4
+    },
+    "encode_number": [
+      {"case_id": "legacy-power-7", "field_id": "fixture:legacy_power", "raw": "7", "expected": 12.0},
+      {"case_id": "legacy-power-1", "field_id": "fixture:legacy_power", "raw": "1", "expected": 0.0},
+      {"case_id": "legacy-cost-identity", "field_id": "fixture:legacy_cost", "raw": "3", "expected": 3.0}
+    ],
+    "category": {"field_id": "fixture:legacy_state", "category_id": "fixture:legacy_ready", "expected": 2}
+  }
+}

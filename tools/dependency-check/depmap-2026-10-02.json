@@ -1,0 +1,100 @@
+{
+  "check_version": "k09a-dependency-map@1",
+  "checks": {
+    "failed": 0,
+    "passed": 8
+  },
+  "cycles": [],
+  "legacy_reference_violations": {},
+  "legacy_type_count": 363,
+  "new_path_files_scanned": 39,
+  "projects": {
+    "AdaptedOnPlayChecks": [],
+    "BaseSpire": [
+      "Core.TheSpire"
+    ],
+    "BaseSpire.Slice.Tests": [
+      "BaseSpire",
+      "Core.TheSpire"
+    ],
+    "BeamOrderingKeyChecks": [],
+    "BfwsResearchChecks": [],
+    "CardHookReceiverChecks": [],
+    "CardTargetingChecks": [],
+    "CheckpointTool": [],
+    "ChoiceSourceAudit": [],
+    "ClientUpdateChecks": [],
+    "CodeMetrics": [],
+    "CombatSolver": [],
+    "CombatSolver.GcPolicyChecks": [],
+    "CombatSolver.MemoryCleaner": [],
+    "CombatSolver.WavePolicyChecks": [],
+    "CompactStatePrototype": [],
+    "ContentManifest": [
+      "BaseSpire",
+      "Core.TheSpire"
+    ],
+    "Core.TheSpire": [],
+    "Core.TheSpire.Engine.Tests": [
+      "Core.TheSpire"
+    ],
+    "Core.TheSpire.Tests": [
+      "BaseSpire",
+      "Core.TheSpire",
+      "TestHookMod"
+    ],
+    "CoreArchitectureAudit": [
+      "BaseSpire"
+    ],
+    "CoverageCatalog": [],
+    "DiagnosticLogTests": [],
+    "ExpansionBatchChecks": [],
+    "ForkableListLayoutChecks": [],
+    "GcTraceAnalysis": [],
+    "HookListenerSnapshotChecks": [],
+    "LoopDisplayChecks": [],
+    "LuaBackendProbe": [],
+    "ModelPredictionStateChecks": [],
+    "Net.TheSpire": [
+      "Core.TheSpire",
+      "Net.TheSpire.Contracts"
+    ],
+    "Net.TheSpire.Contracts": [],
+    "Net.TheSpire.Host": [
+      "BaseSpire",
+      "Net.TheSpire"
+    ],
+    "Net.TheSpire.Tests": [
+      "BaseSpire",
+      "Net.TheSpire",
+      "Net.TheSpire.Contracts"
+    ],
+    "OfflineSearchHarness": [],
+    "OriMod": [],
+    "PerformanceCandidateProbes": [],
+    "PerformanceRecordingTests": [],
+    "PortfolioSelectorChecks": [],
+    "PowerAmountComparisonChecks": [],
+    "PowerCardValuationChecks": [],
+    "PreCombatRequestChecks": [],
+    "PredictionStateStoreChecks": [],
+    "ReachableHandPotentialChecks": [],
+    "ReachableHandValueChecks": [],
+    "RunStatisticsTests": [],
+    "RuntimeGcProfileChecks": [],
+    "SnapshotListBufferChecks": [],
+    "StateFingerprintChecks": [],
+    "Sts2Sim.Core": [],
+    "Sts2Sim.Core.Tests": [
+      "Sts2Sim.Core"
+    ],
+    "SurgicalResearchChecks": [],
+    "TestHookMod": [
+      "BaseSpire",
+      "Core.TheSpire"
+    ],
+    "TranspositionFrontierChecks": [],
+    "TurnPhaseMirrorChecks": [],
+    "sts2": []
+  }
+}

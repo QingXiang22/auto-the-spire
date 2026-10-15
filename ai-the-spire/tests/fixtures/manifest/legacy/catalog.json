@@ -1,0 +1,63 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:legacy-rules-v0",
+  "catalog_id": "fixture:legacy-catalog-v0",
+  "declarations": {
+    "entity_kinds": [
+      {"id": "fixture:legacy_card", "semantic_version": "1", "description": "旧版卡牌实例"},
+      {"id": "fixture:legacy_power", "semantic_version": "1", "description": "旧版 Power 实例"}
+    ],
+    "content_types": [
+      {"id": "fixture:legacy_face", "semantic_version": "1", "description": "旧版卡面内容类型", "kind_ids": ["fixture:legacy_card"]}
+    ],
+    "fields": [
+      {
+        "id": "fixture:legacy_cost",
+        "semantic_version": "1",
+        "description": "旧版费用",
+        "value_type": "number",
+        "number_format": "integer",
+        "applies_to": {"entity_kinds": ["fixture:legacy_card"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:legacy_power",
+        "semantic_version": "1",
+        "description": "旧版 Power 层数（decimal）",
+        "value_type": "number",
+        "number_format": "decimal",
+        "applies_to": {"entity_kinds": ["fixture:legacy_power"], "action_types": [], "terminal_reasons": []},
+        "required": true,
+        "visibility": "public"
+      },
+      {
+        "id": "fixture:legacy_state",
+        "semantic_version": "1",
+        "description": "旧版状态类别",
+        "value_type": "category",
+        "category_ids": ["fixture:legacy_idle", "fixture:legacy_ready"],
+        "applies_to": {"entity_kinds": ["fixture:legacy_power"], "action_types": [], "terminal_reasons": []},
+        "required": false,
+        "visibility": "public"
+      }
+    ],
+    "relation_types": [
+      {
+        "id": "fixture:legacy_held_by",
+        "semantic_version": "1",
+        "description": "旧版持有关系",
+        "source_kind_ids": ["fixture:legacy_power"],
+        "target_kind_ids": ["fixture:legacy_card"],
+        "position_schema": null
+      }
+    ],
+    "pile_types": [],
+    "sequence_types": [],
+    "group_types": [],
+    "action_types": [
+      {"id": "fixture:legacy_play", "semantic_version": "1", "description": "旧版打牌", "required_fields": [], "optional_fields": []}
+    ],
+    "terminal_reasons": []
+  }
+}

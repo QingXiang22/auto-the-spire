@@ -1,0 +1,236 @@
+{
+  "protocol_version": "0.1",
+  "ruleset_id": "fixture:rules-v1",
+  "catalog_id": "fixture:combat-catalog-v1",
+  "backend_profile_id": "fixture:sim-v1",
+  "session_id": "session-combat-1",
+  "observation_id": 12,
+  "status": "decision",
+  "terminal_result": null,
+  "entities": [
+    {
+      "instance_id": "card-01",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"},
+        {"field_id": "fixture:upgraded", "state": "known", "value": false}
+      ]
+    },
+    {
+      "instance_id": "card-02",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "card-03",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:headbutt",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:headbutt"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"},
+        {"field_id": "fixture:upgraded", "state": "known", "value": false}
+      ]
+    },
+    {
+      "instance_id": "card-04",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:bash",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:bash"},
+        {"field_id": "fixture:cost", "state": "known", "value": "2"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"},
+        {"field_id": "fixture:upgraded", "state": "known", "value": true}
+      ]
+    },
+    {
+      "instance_id": "card-05",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:defend",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:defend"},
+        {"field_id": "fixture:cost", "state": "known", "value": "0"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "card-06",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "card-07",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:defend",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:defend"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "card-08",
+      "kind_id": "fixture:card",
+      "content_state": "known",
+      "content_id": "fixture:strike",
+      "fields": [
+        {"field_id": "fixture:card_face", "state": "known", "value": "fixture:strike"},
+        {"field_id": "fixture:cost", "state": "known", "value": "1"},
+        {"field_id": "fixture:owner", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "enemy-01",
+      "kind_id": "fixture:enemy",
+      "content_state": "known",
+      "content_id": "fixture:jaw_worm",
+      "fields": [
+        {"field_id": "fixture:backend_damage_decimal", "state": "unavailable"},
+        {"field_id": "fixture:block", "state": "known", "value": "0"},
+        {"field_id": "fixture:hp", "state": "known", "value": "44"},
+        {"field_id": "fixture:intent", "state": "known", "value": "fixture:attack"},
+        {"field_id": "fixture:max_hp", "state": "unknown"},
+        {"field_id": "fixture:strength", "state": "known", "value": "3"}
+      ]
+    },
+    {
+      "instance_id": "enemy-02",
+      "kind_id": "fixture:enemy",
+      "content_state": "known",
+      "content_id": "fixture:cultist",
+      "fields": [
+        {"field_id": "fixture:block", "state": "known", "value": "5"},
+        {"field_id": "fixture:hp", "state": "known", "value": "12"},
+        {"field_id": "fixture:intent", "state": "known", "value": "fixture:defend"},
+        {"field_id": "fixture:max_hp", "state": "known", "value": "12"},
+        {"field_id": "fixture:strength", "state": "known", "value": "0"}
+      ]
+    },
+    {
+      "instance_id": "pile-discard",
+      "kind_id": "fixture:discard_pile",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:pile_scope", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "pile-draw",
+      "kind_id": "fixture:draw_pile",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:pile_scope", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "pile-hand",
+      "kind_id": "fixture:hand_pile",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:pile_scope", "state": "known", "value": "player-01"}
+      ]
+    },
+    {
+      "instance_id": "player-01",
+      "kind_id": "fixture:player",
+      "content_state": "not_applicable",
+      "fields": [
+        {"field_id": "fixture:block", "state": "known", "value": "0"},
+        {"field_id": "fixture:cards_played_this_turn", "state": "known", "value": "2"},
+        {"field_id": "fixture:energy", "state": "known", "value": "3"},
+        {"field_id": "fixture:hp", "state": "known", "value": "45"},
+        {"field_id": "fixture:max_hp", "state": "known", "value": "80"},
+        {"field_id": "fixture:relic_triggered", "state": "known", "value": true},
+        {"field_id": "fixture:strength", "state": "known", "value": "2"}
+      ]
+    },
+    {
+      "instance_id": "power-01",
+      "kind_id": "fixture:power",
+      "content_state": "known",
+      "content_id": "fixture:strength_power",
+      "fields": [
+        {"field_id": "fixture:power_amount", "state": "known", "value": "2"}
+      ]
+    },
+    {
+      "instance_id": "power-02",
+      "kind_id": "fixture:power",
+      "content_state": "known",
+      "content_id": "fixture:vulnerable_power",
+      "fields": [
+        {"field_id": "fixture:power_amount", "state": "known", "value": "1"}
+      ]
+    }
+  ],
+  "relations": [
+    {"type_id": "fixture:held_by", "source_ref": "power-01", "target_ref": "player-01"},
+    {"type_id": "fixture:held_by", "source_ref": "power-02", "target_ref": "enemy-01"}
+  ],
+  "piles": [
+    {
+      "pile_ref": "pile-discard",
+      "total_count": 1,
+      "visible_members": ["card-08"],
+      "members_complete": true,
+      "known_positions": []
+    },
+    {
+      "pile_ref": "pile-draw",
+      "total_count": 5,
+      "visible_members": ["card-01", "card-02", "card-03", "card-04", "card-05"],
+      "members_complete": true,
+      "known_positions": [
+        {"card_ref": "card-03", "position": 0},
+        {"card_ref": "card-04", "position": 3}
+      ]
+    },
+    {
+      "pile_ref": "pile-hand",
+      "total_count": 2,
+      "visible_members": ["card-06", "card-07"],
+      "members_complete": true,
+      "known_positions": []
+    }
+  ],
+  "sequences": [],
+  "groups": [],
+  "legal_actions": [
+    {"candidate_id": "cand-end", "action_type": "fixture:end_turn", "fields": []},
+    {
+      "candidate_id": "cand-play-06",
+      "action_type": "fixture:play_card",
+      "fields": [
+        {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-06"}
+      ]
+    },
+    {
+      "candidate_id": "cand-play-07",
+      "action_type": "fixture:play_card",
+      "fields": [
+        {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-07"},
+        {"field_id": "fixture:play_target_ref", "state": "known", "value": "enemy-01"}
+      ]
+    }
+  ]
+}

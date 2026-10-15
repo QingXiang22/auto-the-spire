@@ -1,0 +1,321 @@
+{
+  "_provenance": {
+    "输入": "对 fixtures/<bundle>/*.json 手写文档的声明式改动（$set/$del/$append/$move）",
+    "期望": "手写独立的共享规则 ID 期望（docs/contracts/net/0.1/invariants.md）；不调用被测实现生成",
+    "改动方式": "复用共享参考实现 check_contracts.resolve_document 的叠加语义，避免第二套 diff 实现"
+  },
+  "_notes": [
+    "expect=reject（默认）：该输入必须被共享分层检查拒绝，且实际命中集合包含 expect_rule_ids 全部条目。",
+    "expect=accept：登记型 canary，记录共享资产当前**未**拒绝的结构。这些是发现的契约缺口，交由协议侧判断是否补规则，AI 侧不放宽也不私改协议。"
+  ],
+  "cases": [
+    {
+      "case_id": "neg-position-out-of-range",
+      "fixture": "combat",
+      "mutations_note": "抽牌堆总数 5，把 card-03 的位置改成 7",
+      "$set": {"piles.1.known_positions.0.position": 7},
+      "expect_rule_ids": ["I-27"]
+    },
+    {
+      "case_id": "neg-position-duplicate-card",
+      "fixture": "combat",
+      "mutations_note": "两条位置记录都指向 card-04",
+      "$set": {"piles.1.known_positions.0.card_ref": "card-04"},
+      "expect_rule_ids": ["I-29"]
+    },
+    {
+      "case_id": "neg-position-collision",
+      "fixture": "combat",
+      "mutations_note": "card-03 与 card-04 都占位置 0",
+      "$set": {"piles.1.known_positions.1.position": 0},
+      "expect_rule_ids": ["I-29"]
+    },
+    {
+      "case_id": "neg-position-non-member",
+      "fixture": "combat",
+      "mutations_note": "位置记录指向不在 visible_members 里的 card-06",
+      "$set": {"piles.1.known_positions.0.card_ref": "card-06"},
+      "expect_rule_ids": ["I-29"]
+    },
+    {
+      "case_id": "neg-pile-count-mismatch",
+      "fixture": "combat",
+      "mutations_note": "弃牌堆 total_count=3 但 members_complete=true 且只有 1 名成员",
+      "$set": {"piles.0.total_count": 3},
+      "expect_rule_ids": ["I-28"]
+    },
+    {
+      "case_id": "neg-members-exceed-total",
+      "fixture": "combat",
+      "mutations_note": "手牌 total_count=2 却列出 3 名成员",
+      "$set": {"piles.2.visible_members": ["card-01", "card-06", "card-07"]},
+      "expect_rule_ids": ["I-28"]
+    },
+    {
+      "case_id": "neg-exclusive-group-overlap",
+      "fixture": "combat",
+      "mutations_note": "手牌与抽牌堆同互斥组同作用域，card-01 同时出现在两堆",
+      "$set": {"piles.2.visible_members": ["card-01", "card-06", "card-07"], "piles.2.total_count": 3},
+      "expect_rule_ids": ["I-31"]
+    },
+    {
+      "case_id": "neg-dangling-action-ref",
+      "fixture": "combat",
+      "mutations_note": "打牌目标指向不存在的 enemy-99",
+      "$set": {"legal_actions.2.fields.1.value": "enemy-99"},
+      "expect_rule_ids": ["I-39"]
+    },
+    {
+      "case_id": "neg-dangling-relation-target",
+      "fixture": "combat",
+      "mutations_note": "关系目标指向不存在的 power-99",
+      "$set": {"relations.1.target_ref": "power-99"},
+      "expect_rule_ids": ["I-39"]
+    },
+    {
+      "case_id": "neg-required-field-omitted",
+      "fixture": "combat",
+      "mutations_note": "删除 player-01 的必需字段 fixture:energy",
+      "$del": ["entities.13.fields.2"],
+      "expect_rule_ids": ["I-20"]
+    },
+    {
+      "case_id": "neg-noncanonical-decimal",
+      "fixture": "combat",
+      "mutations_note": "card-01 费用写成非规范十进制 01",
+      "$set": {"entities.0.fields.1.value": "01"},
+      "expect_rule_ids": ["I-21"]
+    },
+    {
+      "case_id": "neg-integer-format-fraction",
+      "fixture": "combat",
+      "mutations_note": "number_format=integer 的 hp 写成 12.5",
+      "$set": {"entities.9.fields.1.value": "12.5"},
+      "expect_rule_ids": ["I-72"]
+    },
+    {
+      "case_id": "neg-unknown-extra-key",
+      "fixture": "combat",
+      "mutations_note": "快照顶层加入未声明键",
+      "$set": {"debug_note": "x"},
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-unregistered-field",
+      "fixture": "combat",
+      "mutations_note": "card-06 使用未声明的字段 ID",
+      "$set": {"entities.5.fields.1.field_id": "fixture:unknown_field"},
+      "expect_rule_ids": ["I-05"]
+    },
+    {
+      "case_id": "neg-decision-empty-candidates",
+      "fixture": "combat",
+      "mutations_note": "decision 状态却没有任何候选",
+      "$set": {"legal_actions": []},
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-duplicate-candidate-id",
+      "fixture": "combat",
+      "mutations_note": "两个候选复用同一 candidate_id",
+      "$set": {"legal_actions.1.candidate_id": "cand-end"},
+      "expect_rule_ids": ["I-40"]
+    },
+    {
+      "case_id": "neg-duplicate-action-semantics",
+      "fixture": "combat",
+      "mutations_note": "同一动作语义以不同 candidate_id 重复发布",
+      "$set": {
+        "legal_actions.2.fields": [
+          {"field_id": "fixture:play_card_ref", "state": "known", "value": "card-06"}
+        ]
+      },
+      "expect_rule_ids": ["I-37"]
+    },
+    {
+      "case_id": "neg-action-field-not-known",
+      "fixture": "combat",
+      "mutations_note": "候选的执行所需字段写成 unknown 且不带值",
+      "$set": {"legal_actions.1.fields.0.state": "unknown"},
+      "$del": ["legal_actions.1.fields.0.value"],
+      "expect_rule_ids": ["I-36"]
+    },
+    {
+      "case_id": "neg-action-missing-required-field",
+      "fixture": "combat",
+      "mutations_note": "打牌候选缺少必需字段 play_card_ref",
+      "$set": {"legal_actions.2.fields": []},
+      "expect_rule_ids": ["I-36"]
+    },
+    {
+      "case_id": "neg-action-field-not-declared-for-action",
+      "fixture": "combat",
+      "mutations_note": "候选带上不属于该动作的字段",
+      "$append": {
+        "legal_actions.1.fields": {"field_id": "fixture:strength", "state": "known", "value": "2"}
+      },
+      "expect_rule_ids": ["I-36"]
+    },
+    {
+      "case_id": "neg-identity-mismatch",
+      "fixture": "combat",
+      "mutations_note": "快照 catalog_id 与目录不一致",
+      "$set": {"catalog_id": "fixture:other-catalog-v1"},
+      "expect_rule_ids": ["I-01"]
+    },
+    {
+      "case_id": "neg-duplicate-instance-id",
+      "fixture": "combat",
+      "mutations_note": "power-02 复用 card-01 的 instance_id",
+      "$set": {"entities.15.instance_id": "card-01"},
+      "expect_rule_ids": ["I-40"]
+    },
+    {
+      "case_id": "neg-unknown-entity-kind",
+      "fixture": "combat",
+      "mutations_note": "实体使用未声明的 kind_id",
+      "$set": {"entities.0.kind_id": "fixture:unknown_kind"},
+      "expect_rule_ids": ["I-05"]
+    },
+    {
+      "case_id": "neg-known-without-value",
+      "fixture": "combat",
+      "mutations_note": "known 字段缺少 value",
+      "$del": ["entities.0.fields.0.value"],
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-unknown-with-value",
+      "fixture": "combat",
+      "mutations_note": "unknown 字段带 value",
+      "$set": {"entities.8.fields.4.value": "44"},
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-content-id-on-non-known",
+      "fixture": "combat",
+      "mutations_note": "content_state=unknown 却带 content_id",
+      "$set": {"entities.0.content_state": "unknown"},
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-observation-id-wrong-type",
+      "fixture": "combat",
+      "mutations_note": "observation_id 用字符串而非安全整数",
+      "$set": {"observation_id": "3"},
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-unsorted-entities",
+      "fixture": "combat",
+      "mutations_note": "把 card-01 移到实体数组末尾，破坏规范排序",
+      "$move": {"entities": [0, 15]},
+      "expect_rule_ids": ["I-74"]
+    },
+    {
+      "case_id": "neg-unsorted-visible-members",
+      "fixture": "card_choice",
+      "mutations_note": "弃牌堆成员数组乱序",
+      "$move": {"piles.0.visible_members": [0, 3]},
+      "expect_rule_ids": ["I-74"]
+    },
+    {
+      "case_id": "neg-group-duplicate-member",
+      "fixture": "card_choice",
+      "mutations_note": "展示分组重复列出 sel-01",
+      "$append": {"groups.0.members": {"entity_ref": "sel-01", "multiplicity": 1}},
+      "expect_rule_ids": ["I-35"]
+    },
+    {
+      "case_id": "neg-group-multiplicity-two",
+      "fixture": "card_choice",
+      "mutations_note": "具体实例的 multiplicity 写成 2（本版不按内容合并实例）",
+      "$set": {"groups.0.members.0.multiplicity": 2},
+      "expect_rule_ids": ["I-35"]
+    },
+    {
+      "case_id": "neg-sequence-not-unique",
+      "fixture": "scenario",
+      "mutations_note": "同一 type_id/owner_ref 出现两次",
+      "$append": {
+        "sequences": {
+          "type_id": "fixture:route_path",
+          "owner_ref": "player-01",
+          "elements": ["node-a"]
+        }
+      },
+      "expect_rule_ids": ["I-34"]
+    },
+    {
+      "case_id": "neg-node-kind-undeclared-category",
+      "fixture": "scenario",
+      "mutations_note": "node-b 的节点类型用了未声明的类别 ID",
+      "$set": {
+        "entities.1.fields": [
+          {"field_id": "fixture:node_col", "state": "known", "value": "1"},
+          {"field_id": "fixture:node_kind", "state": "known", "value": "fixture:boss"},
+          {"field_id": "fixture:node_row", "state": "known", "value": "1"}
+        ]
+      },
+      "expect_rule_ids": ["I-22"]
+    },
+    {
+      "case_id": "neg-terminal-candidates-not-empty",
+      "fixture": "scenario",
+      "snapshot": "snapshot-terminal",
+      "mutations_note": "terminal 快照仍带候选",
+      "$set": {
+        "legal_actions": [
+          {
+            "candidate_id": "x",
+            "action_type": "fixture:choose_node",
+            "fields": [{"field_id": "fixture:chosen_node_ref", "state": "known", "value": "node-a"}]
+          }
+        ]
+      },
+      "expect_rule_ids": ["I-66"]
+    },
+    {
+      "case_id": "neg-terminal-required-fact-omitted",
+      "fixture": "scenario",
+      "snapshot": "snapshot-terminal",
+      "mutations_note": "fixture:victory 声明的必需结果事实被省略",
+      "$set": {"terminal_result.facts": []},
+      "expect_rule_ids": ["I-18"]
+    },
+    {
+      "case_id": "neg-terminal-outcome-mismatch",
+      "fixture": "scenario",
+      "snapshot": "snapshot-terminal",
+      "mutations_note": "outcome 与 terminal_reasons 声明不一致",
+      "$set": {"terminal_result.outcome": "loss"},
+      "expect_rule_ids": ["I-18"]
+    },
+    {
+      "case_id": "neg-conditional-visibility-check-unclosed",
+      "fixture": "variables",
+      "mutations_note": "conditional 字段的 visibility_check_ids 在覆盖表中不存在",
+      "$set": {
+        "declarations.fields.4.visibility_check_ids": ["fixture:no-such-check"]
+      },
+      "role": "catalog",
+      "expect_rule_ids": ["I-75"]
+    },
+    {
+      "case_id": "gap-conditional-field-omitted",
+      "fixture": "variables",
+      "mutations_note": "conditional 且尚未公开的 modD:secret_charge 被省略（协议要求写 unknown，当前共享规则不拒绝）",
+      "$del": ["entities.3.fields.2"],
+      "expect": "accept",
+      "expect_rule_ids": []
+    },
+    {
+      "case_id": "gap-position-on-no-position-schema-pile",
+      "fixture": "card_choice",
+      "mutations_note": "position_schema=null 的弃牌堆声明了已知位置（关系侧有 I-25，pile 侧当前无对应检查）",
+      "$set": {"piles.0.known_positions": [{"card_ref": "sel-01", "position": 0}]},
+      "expect": "accept",
+      "expect_rule_ids": []
+    }
+  ]
+}
