@@ -1,19 +1,20 @@
-# 本地参考依赖
+# 对拍参考依赖
 
-生产 core/base/net 不引用参考实现。严格对拍工具的 `sts2-sim` 是条件编译依赖；缺失时构建仍可成功，严格 suite 必须报告参考不可用。
+生产core/base/net不引用独立参考。严格对拍工具按[锁定清单](baselines/sts2-sim.json)从GitHub拉取sts2-sim；克隆目录被忽略，不作为submodule或vendored源码提交。
 
-2026-10-15 清理保留了 `sts2-sim` 的实际本地工作树，而非把上游 HEAD 当成完整身份：固定上游 `2cdaea3b6dbc20cfa340662fa73640f20bb6fb00`，本地改动存于 [补丁](baselines/sts2-sim-local.patch)，摘要和完整 Git tree 见[锁定清单](baselines/sts2-sim.json)。补丁是对既有参考改动的保全，未据此宣称完整原版一致或重新验收参考库。
+本次2026-10-15拉取上游main最新提交 `2089659bd07920088b93226136c72b6b6ee590ad`，使用纯上游代码，不应用本地补丁。锁定SHA和Git tree用于重复运行；后续更新先拉取最新、实际编译/对拍，再修改锁定清单，避免一次代码提交在不同日期使用不同参考。
 
-干净检出后，在根目录运行：
+在仓库根目录运行：
 
 ```powershell
 python tools/differential/prepare_reference.py
-dotnet build AutoTheSpire.sln
-dotnet run --no-build --project tools/differential -- test --suite regression --output .audit/regression
+python tools/ci/check.py differential
 ```
 
-离线复现可向准备脚本传入 `--source <已有sts2-sim克隆路径>`；脚本从该克隆的 Git 对象恢复固定提交，再应用同一补丁。目标目录已存在时拒绝覆盖；当前共享工作区的参考不会被自动修改。
+准备脚本只在目标缺失时创建克隆并按固定SHA获取；已有克隆必须是对应提交/tree且无本地改动，否则拒绝覆盖。离线恢复可传入 `--source <已有纯上游克隆路径>`。实际构建和严格suite的非零结果原样保留。
 
-`sts2-ai-mcp` 仅作架构资料；上游及固定提交也登记在锁定清单，不是构建或检查依赖。`orimod` 为本地研究材料，不纳入本仓库。已不存在且未被活动工程引用的 `CombatSolver` 子模块登记在本次清理中移除，其旧指针仍在 Git 历史和仓库外备份中。
+旧的 `2cdaea3` 加本地修改副本已完整保留在 `F:/Scylier-Project/backups/sts2-sim-pre-upstream-20261015/`。当时的锁定清单、补丁及许可证保存在[历史提交](https://github.com/QingXiang22/auto-the-spire/tree/dcc7d609c1fa88f5abadebddd9ea6bf8e1efee5b/reference/baselines)，不用于当前CI。旧轨迹仍对应其原参考身份，不能冒用新版身份。
 
-`sts2/` 为本地恢复的原版源码，不随本仓库分发。按用户2026-10-15要求，不上传 GitHub、不放入 GitHub Actions；完整 Slice 中的源数据检查、全量文档源链接核对、源清单提取留在本地，并需要同版本源码。普通生产构建不依赖它。
+`sts2-ai-mcp`和orimod仍仅作本地研究资料。已退出的CombatSolver登记只保留在历史中。
+
+原版 `sts2/` 源码保持本地：不上传GitHub、不作为Actions输入。需要它的源码核对和完整文档检查在本地执行；base检查的 `--suite runtime` 与独立参考严格regression均不要求该源码。当前regression的有限通过不代表完整原版/四幕/五角色验收。

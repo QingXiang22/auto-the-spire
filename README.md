@@ -26,7 +26,7 @@ dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 
 干净检出的生产构建不需要 `sts2/`。完整 Slice 套件包含读取同版本原版源码的检查，须在提供本地 `sts2/` 后运行；源码不上传 GitHub，也不作为 GitHub Actions 输入。源码提取、源规则核对和全量文档源链接检查同样留在本地。
 
-严格对拍需要按[参考依赖说明](reference/README.md)恢复固定参考及本地补丁；历史文档的本地证据链接可按[证据归档说明](docs/review/evidence/README.md)恢复。仅构建成功不代表这两类检查已经执行。
+本地和GitHub的core/base/严格对拍共用[CI检查入口](tools/ci/README.md)。base可显式运行 `--suite runtime`（无原版源码），`--suite source`保留本地源码核对，默认仍为完整组。严格对拍按[参考依赖说明](reference/README.md)从GitHub获取固定上游提交，无须在本仓库保存参考源码或本地补丁；历史文档证据按[归档说明](docs/review/evidence/README.md)恢复。
 
 当前实现是战斗切片与通用整局流转骨架，不代表完整原版模拟。源码依据、已读规则域和待扩展清单见 [`docs/design/sts2-core-source-audit.md`](./docs/design/sts2-core-source-audit.md)；整体契约见 [`docs/design/spec.md`](./docs/design/spec.md)。
 
