@@ -57,7 +57,7 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 
 **状态与认领**：待验证（本地与GitHub托管三个CI组均通过，待用户分支审阅）；用户2026-10-15明确派单，Codex `/root` / `codex/core-base-ci`。目录边界为`.github/workflows`、`tools/ci`、`tools/differential`及参考版本登记、base检查分组与相关文档，不修改core/base游戏规则，不编辑独立参考玩法。`contracts-python`本次只说明，不接入。
 
-**当前小包与下一成果**：已核对并拉取纯上游2089659，旧脏工作树已完整保留；从GitHub按固定SHA拉取参考，交付core、base无源码运行时组及严格regression的Actions与本地同一入口。必要API迁移仅在对拍适配器；参考差异保留非零，不删case/seed或缩减维度。`sts2/`及其源检查只留本地，默认完整Slice保留。
+**当前小包与下一成果**：三个CI组及用户2026-10-15追加的目录整理已实施；根archive删除，artifacts与临时/退休工具退出跟踪，reference与tools边界收紧、历史引用迁移，活动规则与有效回归判别保留。[整理证据](../records/2026-10-15/repository-hygiene-2026-10-15.md)含无源码/参考/归档的干净副本构建、协议210及AI离线604检查。托管结果按[本分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Fcore-base-ci)的具体提交核对；下一步用户分支审阅，未并入主线。
 
 **完成条件**：固定最新已核对参考身份；独立干净检出构建和命令验证；Actions实际运行结果、日志/结算及未验证明确；本地完整检查分组不丢失。网络或上游兼容失败保留最小复现及受影响case，不将旧参考回退包装为新版成功。
 

@@ -346,7 +346,7 @@ internal static class InventoryCommand
 
     private static LegacyResult LegacyRegistered()
     {
-        // The compatibility implementation is archived and is not a dependency of this executable.
+        // The retired implementation is available only in Git history, not in the current tree.
         // Preserve the report section as explicitly unavailable, rather than claiming a measured zero.
         var json = new JsonObject
         {
@@ -354,7 +354,7 @@ internal static class InventoryCommand
             ["status"] = "archived_not_run",
             ["registered_total"] = null,
             ["archive"] = "archive/legacy-sts",
-            ["note"] = "旧注册器已归档，本命令不加载归档程序集；空匹配仅表示没有本轮 Legacy 证据，不表示旧内容数为零。",
+            ["note"] = "旧注册器已从当前树删除，archive字段仅为历史路径；本命令不加载旧程序集，空匹配仅表示没有本轮Legacy证据，不表示旧内容数为零。",
         };
         return new LegacyResult(json, 0, new HashSet<string>(StringComparer.Ordinal),
             new Dictionary<string, HashSet<string>>(StringComparer.Ordinal));

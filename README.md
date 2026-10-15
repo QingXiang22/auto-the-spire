@@ -6,12 +6,15 @@ auto-the-spire 为 AI 提供可复现、可观察、可控且可扩展的《杀�
 
 ## 当前构成
 
-- `core-the-spire/Core.TheSpire`：Godot无关的.NET 9/C#规则内核；活动工程只使用通用`Engine/`，旧STS后端/消费者已移到[Legacy归档](archive/legacy-sts/README.md)。
+- `core-the-spire/Core.TheSpire`：Godot无关的.NET 9/C#规则内核；活动工程只使用通用`Engine/`，旧STS后端/消费者已从当前树删除，历史见[Legacy归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。
 - `mod-the-spire/base-spire`：原版内容包、SinglePlayer开发工厂与战斗/Run实现；具体支持范围和未结项只维护当前清单。
 - `mod-the-spire/test-hook-mod`：历史示例说明；当前目录仅保留 README，不是活动可编译项目。
-- `core-the-spire/Core.TheSpire.Engine.Tests`：通用 Engine 可执行规则检查；旧后端与旧消费者见 [Legacy 归档](archive/legacy-sts/README.md)。
+- `core-the-spire/Core.TheSpire.Engine.Tests`：通用 Engine 可执行规则检查；旧后端与旧消费者仅保留在Git历史，见 [Legacy 归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。
 - `net-the-spire`：已有本机stdio Host、公开投影/内容目录/合法候选及控制客户端，支持受控默认/作者场景。
 - `ai-the-spire`：已有公开编码器、共享小模型、有限PPO、模型包及demo/train/evaluate/resume/diagnose；学习获胜效果尚未成立。
+- `tools/`：仅纳管[维护中的工程工具](tools/README.md)，临时脚本与生成产物留本地。
+- `reference/`：仅纳管拉取源、版本身份及说明，外部依赖由脚本获取。
+- `artifacts/`、`.artifacts/`、`.audit/`：忽略的本地日志、轨迹和构建/验证产物。
 - `sts2/`：源码恢复浏览工程，仅用于核对规则，不是内核编译依赖。
 
 ## 构建与验证

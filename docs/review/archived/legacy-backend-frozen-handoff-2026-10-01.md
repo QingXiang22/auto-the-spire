@@ -33,7 +33,7 @@
 
 **新增**
 
-- [`core-the-spire/Core.TheSpire/Legacy/README.md`](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/README.md)：该目录是什么、冻结理由、消费者清单、使用约定、待决事项。
+- [`core-the-spire/Core.TheSpire/Legacy/README.md`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/README.md)：该目录是什么、冻结理由、消费者清单、使用约定、待决事项。
 - 本交接报告。
 
 **修改**

@@ -64,7 +64,7 @@ TOTAL declared: 190   passed: 179   failed: 11
 ### V2 — 公共契约变更未说明（[AGENTS.md:24](../../../AGENTS.md)）
 
 - **变更：** 新版卡牌编译器把**单效果 `play` 也包成 `SequenceEffect`**，改变了 `CardDefinition.Effect` / `ResolveEffect` 的公开形状（旧语法下单效果产出裸节点）。
-- **位置：** [`SpireCombatDslCompiler.cs:312`](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L312)（`CompileVersionEffect` 无条件 `new SequenceEffect(effects)`）
+- **位置：** [`SpireCombatDslCompiler.cs:312`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/SpireCombatDslCompiler.cs#L312)（`CompileVersionEffect` 无条件 `new SequenceEffect(effects)`）
 - **证据：** `docs/*.md` 全文搜索 `SequenceEffect` / 效应树形状 = **0 命中**；没有新旧行为对照、没有受影响文件清单、没有迁移要求。
 - **影响：** 7 个断言失败（期望裸 `AttackEffect` / `GainBlockEffect` / `ApplyPowerEffect` / `IfEffect` / `HealEffect`）。
 
@@ -87,12 +87,12 @@ TOTAL declared: 190   passed: 179   failed: 11
 
 ### V6 — 失败时未给出阻断范围（[AGENTS.md:40](../../../AGENTS.md)）
 
-- [`CombatSliceTests.cs:7142`](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Tests/CombatSliceTests.cs#L7142) 的 `Program.Main` 顺序调用测试，无逐测试隔离；任一断言失败即以未捕获异常终止。
+- [`CombatSliceTests.cs:7142`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Tests/CombatSliceTests.cs#L7142) 的 `Program.Main` 顺序调用测试，无逐测试隔离；任一断言失败即以未捕获异常终止。
 - **影响：** 190 个测试中 11 个失败，原生命令只能报出第 1 个，无法给出阻断范围；这也是本节命令 6 必须存在的原因。
 
 ### V7 — 有测试从未被规则检查执行（[AGENTS.md:38](../../../AGENTS.md)）
 
-- `SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage`（[`CombatSliceTests.cs:400`](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Tests/CombatSliceTests.cs#L400)）已声明，但 `Program.Main` 未注册：**190 个声明方法 vs 189 次调用**。
+- `SlipperyPowerDecrementsOnlyAfterPositiveUnblockedDamage`（[`CombatSliceTests.cs:400`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Tests/CombatSliceTests.cs#L400)）已声明，但 `Program.Main` 未注册：**190 个声明方法 vs 189 次调用**。
 - 单独运行该测试是通过的，但它永远不在规则检查的覆盖范围内。
 
 ### 失败的 11 项与根因对应
@@ -111,7 +111,7 @@ TOTAL declared: 190   passed: 179   failed: 11
 | `NotYetHealsAndKeepsItsCombatGenerationRestriction` | V2 |
 | `SpiteRepeatsAfterPlayerHpLossAndResetsOnTheNextTurn` | V2 |
 
-补充证据（V2 的深层缺陷）：`SequenceEffect` 用 record 默认相等，而 `Effects` 是 `IReadOnlyList<EffectNode>`（[`Effects.cs:80`](../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs#L80)），构造时 `Array.AsReadOnly(effects.ToArray())` 每次新建集合。实测：
+补充证据（V2 的深层缺陷）：`SequenceEffect` 用 record 默认相等，而 `Effects` 是 `IReadOnlyList<EffectNode>`（[`Effects.cs:80`](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Effects.cs#L80)），构造时 `Array.AsReadOnly(effects.ToArray())` 每次新建集合。实测：
 
 ```text
 new SequenceEffect([Attack(5)]) == new SequenceEffect([Attack(5)])   ->  False

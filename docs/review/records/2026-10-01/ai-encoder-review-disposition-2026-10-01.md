@@ -24,7 +24,7 @@
 
 报告中 A1“第 9 节把验收当作已实现”的判断不成立。v0.2 已明确“不是本次已经执行的工作”，且验收场景只定义未来预期，没有声称真实来源存在或场景已经通过。真实来源待验证仍然重要，但不能因此把独立模块验证称为自圆其说。
 
-A2 的静态依据可复核：[Environment.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs)的 ObserveSession 对 DrawPile/DrawPileInstances 使用 ToArray，[State.cs](../../../../archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs)的 CombatObservation 保存这两个列表。若把这个低层结果直接当作 AI 观察，隐藏排列会进入输入；本次没有实际 AI 消费链路或泄漏实验，不宣称已发生训练泄漏。
+A2 的静态依据可复核：[Environment.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Environment.cs)的 ObserveSession 对 DrawPile/DrawPileInstances 使用 ToArray，[State.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/State.cs)的 CombatObservation 保存这两个列表。若把这个低层结果直接当作 AI 观察，隐藏排列会进入输入；本次没有实际 AI 消费链路或泄漏实验，不宣称已发生训练泄漏。
 
 “必须替换为已知前缀 + 无序剩余”也不采纳为唯一格式。用户当前要求卡牌编号与位置，外部投影满足这一契约即可。完整牌组列表可以是正常的可见信息；报告未证明 RunObservation.Deck 就是战斗抽牌序列，不能仅因其全量认定它泄露隐藏排列。
 

@@ -27,7 +27,7 @@
 | core/0.1 counter.spire | 暂停/回答及事件，Score=3、Attempts=2、Applied=2 Terminal，rc=0 |
 | tools/dependency-check/check_dependencies.py | **10/10**，15 工程、0 环/违规，rc=0 |
 
-详细产物目录：[core](../../../artifacts/environment/core-freeze-2026-10-05/engine-checks.txt)、[base](../../../artifacts/environment/core-freeze-2026-10-05/base-checks.txt)、[net](../../../artifacts/environment/core-freeze-2026-10-05/net-checks.txt)、[对拍](../../../artifacts/environment/core-freeze-2026-10-05/fixtures/comparison.json)、[依赖](../../../artifacts/environment/core-freeze-2026-10-05/dependencies.json)、[默认示例](../../../artifacts/environment/core-freeze-2026-10-05/default-example.txt)、[进阶示例](../../../artifacts/environment/core-freeze-2026-10-05/advanced-example.txt)。
+详细产物目录：[core](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/engine-checks.txt)、[base](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/base-checks.txt)、[net](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/net-checks.txt)、[对拍](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/fixtures/comparison.json)、[依赖](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/dependencies.json)、[默认示例](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/default-example.txt)、[进阶示例](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/advanced-example.txt)。
 
 `python tools/doc-check/check_docs.py` 扫描 199 份 Markdown，0 问题；`git diff --check` rc=0，仅既有跟踪文件的 CRLF 提示。本批未执行完整单人矩阵、真实客户端或 AI 学习，不算它们通过。归档旧后端不进入活动门槛。
 
@@ -43,6 +43,6 @@
 
 2026-10-05 用户授权提交核心并暂时冻结。仅暂存通用内核、核心检查、DSL 示例/规范、必要的 Legacy 归档及其退出活动入口；工作区完整 solution 与 base/net/AI 等未提交实现继续保留。提交中的根 solution 只包含核心及核心检查，详见 [Git 交接](../../contracts/core-git-checkpoint.md)。
 
-从 Git index 导出独立副本，未复制未跟踪的下游实现：54 项 LF 规范化源码指纹全部匹配；根 solution 构建 0 错误/0 警告；核心 95/95；默认和进阶示例实际加载与结果正确；归档旧规则 190/190。命令、返回码和输出见 [独立验证摘要](../../../artifacts/environment/core-freeze-2026-10-05/git-checkpoint/validation.json)及同目录日志。生成代码及生成脚本仅去除尾随空白，日志规范化换行；不改变运行语义或版本。暂存区 `git diff --cached --check` 通过。
+从 Git index 导出独立副本，未复制未跟踪的下游实现：54 项 LF 规范化源码指纹全部匹配；根 solution 构建 0 错误/0 警告；核心 95/95；默认和进阶示例实际加载与结果正确；归档旧规则 190/190。命令、返回码和输出见 [独立验证摘要](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/artifacts/environment/core-freeze-2026-10-05/git-checkpoint/validation.json)及同目录日志。生成代码及生成脚本仅去除尾随空白，日志规范化换行；不改变运行语义或版本。暂存区 `git diff --cached --check` 通过。
 
 原版环境下一步应在 base DSL/规则库中扩展，并将参考对拍纳入每批功能测试；参考端 unsupported 单列，最终以对应版本真实客户端/源码核对。其他 mod 在原版基线稳定后实施，并与真实游戏加载相同 mod 版本/配置/顺序的表现核对。冻结不关闭原版、整局、mod 或 AI 的工作。

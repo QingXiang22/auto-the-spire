@@ -42,7 +42,7 @@ python tools/dependency-check/check_dependencies.py --json tools/dependency-chec
 | `engine-and-slice/scan-non-empty` | 14 个新路径文件 |
 | **`engine-and-slice/no-legacy-types`** | **0 个违规**：`Engine/**` 与 `Slice/**` 都**没有**在类型位置引用任何 Legacy 类型 |
 
-`TOTAL: 8 passed, 0 failed, 8 executed`。依赖图落盘为 [depmap-2026-10-02.json](../../../../tools/dependency-check/depmap-2026-10-02.json)（2.6 KB）。
+`TOTAL: 8 passed, 0 failed, 8 executed`。依赖图落盘为 [depmap-2026-10-02.json](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/tools/dependency-check/depmap-2026-10-02.json)（2.6 KB）。
 
 ## 4. 过程中修掉的三个"检查自己的错误"（都是假阳性/漏报）
 

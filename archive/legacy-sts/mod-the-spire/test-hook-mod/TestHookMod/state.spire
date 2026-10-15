@@ -1,9 +1,0 @@
-package training-mod {
-  state AncientVisits { scope = run type = int default = 0 }
-  state PracticeCardUses { scope = run type = int default = 0 }
-  state PlayCount { scope = run type = int default = 0 }
-  state CombatsStarted { scope = run type = int default = 0 }
-  state PracticeCardUses { scope = combat type = int default = 0 }
-  state PlayCount { scope = combat type = int default = 0 }
-  state ObservedAncientVisits { scope = combat type = int default = 0 }
-}

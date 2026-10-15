@@ -59,7 +59,7 @@ flowchart TD
 | ANTLR、编辑器/LSP 插件 | ANTLR 4.13.1 已接入；具体编辑器插件尚未交付 |
 | 对拍专用调试模式、内核职责拆分 | 同一 Session 按职责拆分；可选有界轨迹已接入 tools |
 | 规则深冻结 | 作者对象及子集合在 Build 后拒绝写入，IR/Value 集合复制并只读发布，链接结果独立 |
-| Legacy | 位于[代码归档](../../../archive/legacy-sts/README.md)，不属于本指南的执行后端 |
+| Legacy | 已从当前树删除，仅见[历史代码归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，不属于本指南的执行后端 |
 
 ## 2. 从规则配置文件跑通执行与续接
 

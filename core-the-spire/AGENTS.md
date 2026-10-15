@@ -15,7 +15,7 @@
 
 ## 当前唯一后端
 
-2026-10-04 用户决定退出 Legacy 兼容依赖。旧内核、旧注册器、旧测试及工具已移到[代码归档](../archive/legacy-sts/README.md)，不进入活动 solution。活动 core/base/net/tools 不得引用或链接编译归档实现，不得运行时回退。归档工程可单独运行，反向复用活动 core 的通用语法解析器；不表示新原版环境已完成。
+2026-10-04 用户决定退出 Legacy 兼容依赖。2026-10-15用户要求删除根archive；旧内核、旧注册器、旧测试及工具仅保留在Git历史，见[代码归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，不进入活动 solution。活动 core/base/net/tools 不得引用或链接编译归档实现，不得运行时回退。历史实现不再随当前检出提供；删除旧代码不表示新原版环境已完成。
 
 经用户或负责人明确派单的通用维护落 `Core.TheSpire/Engine/`。游戏领域类型、玩法、原版随机布局与内容 DSL 语义由 mod/base 提供。当前普通作者入口为 core/0.2 `.spire` 规则库配置（imports/template/use），保留 core/0.1 基础声明；两者使用 EngineDslCompiler；C# EnginePackageBuilder 用于扩展与宿主集成，见[作者入门](../docs/dsl/core/README.md)。
 
