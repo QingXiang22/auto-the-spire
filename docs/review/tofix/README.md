@@ -55,9 +55,9 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 
 #### CI-01
 
-**状态与认领**：待验证（本地与GitHub托管三个CI组均通过，待用户分支审阅）；用户2026-10-15明确派单，Codex `/root` / `codex/core-base-ci`。目录边界为`.github/workflows`、`tools/ci`、`tools/differential`及参考版本登记、base检查分组与相关文档，不修改core/base游戏规则，不编辑独立参考玩法。`contracts-python`本次只说明，不接入。
+**状态与认领**：待验证（初版三个托管CI组通过，目录整理本地验证完成，待用户PR审阅）；用户2026-10-15明确派单，Codex `/root` / `codex/core-base-ci`，目录整理使用`codex/repository-hygiene-20261015`经PR交付。目录边界为`.github/workflows`、`tools/ci`、`tools/differential`及参考版本登记、base检查分组、用户指定目录整理与相关文档，不修改core/base游戏规则，不编辑独立参考玩法。`contracts-python`本次只说明，不接入。
 
-**当前小包与下一成果**：三个CI组及用户2026-10-15追加的目录整理已实施；根archive删除，artifacts与临时/退休工具退出跟踪，reference与tools边界收紧、历史引用迁移，活动规则与有效回归判别保留。[整理证据](../records/2026-10-15/repository-hygiene-2026-10-15.md)含无源码/参考/归档的干净副本构建、协议210及AI离线604检查。托管结果按[本分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Fcore-base-ci)的具体提交核对；下一步用户分支审阅，未并入主线。
+**当前小包与下一成果**：三个CI组及用户2026-10-15追加的目录整理已实施；根archive删除，artifacts与临时/退休工具退出跟踪，reference与tools边界收紧、历史引用迁移，活动规则与有效回归判别保留。[整理证据](../records/2026-10-15/repository-hygiene-2026-10-15.md)含无源码/参考/归档的干净副本构建、协议210及AI离线604检查。托管结果按[整理分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Frepository-hygiene-20261015)的具体提交核对；下一步用户PR审阅，未并入主线。
 
 **完成条件**：固定最新已核对参考身份；独立干净检出构建和命令验证；Actions实际运行结果、日志/结算及未验证明确；本地完整检查分组不丢失。网络或上游兼容失败保留最小复现及受影响case，不将旧参考回退包装为新版成功。
 

@@ -1,6 +1,6 @@
 # 仓库目录整理 — 2026-10-15
 
-用户明确要求删除根archive，审查artifacts/reference和临时tools是否应进入主线。Codex `/root`在`codex/core-base-ci`执行，承接[CI-01](../../tofix/README.md#ci-01)；不修改玩法、公开契约、严格suite或恢复训练。
+用户明确要求删除根archive，审查artifacts/reference和临时tools是否应进入主线。Codex `/root`从`codex/core-base-ci`接续，在`codex/repository-hygiene-20261015`交付，承接[CI-01](../../tofix/README.md#ci-01)；不修改玩法、公开契约、严格suite或恢复训练。直接推送原CI分支被GitHub规则GH013拒绝，理由是必须通过PR；保持保护规则，改用新分支PR接入原CI分支，再由既有PR #1进入默认分支。
 
 ## 文件处置
 
@@ -30,7 +30,7 @@
 | 本地doc-check及diff-check | 最终491份Markdown无问题，diff-check通过 |
 | 忽略边界探针 | 临时tools、输出、参考源码及旧patch均被忽略；CI入口和依赖信息可纳管 |
 
-本包在[本分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Fcore-base-ci)重新执行三个现有组；先前[首次运行](https://github.com/QingXiang22/auto-the-spire/actions/runs/38686046899)只证明整理前实现。托管结果须按具体提交核对，不能以本地构建冒充规则/对拍通过。
+本包在[整理分支Actions](https://github.com/QingXiang22/auto-the-spire/actions?query=branch%3Acodex%2Frepository-hygiene-20261015)重新执行三个现有组；先前[首次运行](https://github.com/QingXiang22/auto-the-spire/actions/runs/38686046899)只证明整理前实现。托管结果须按具体提交核对，不能以本地构建冒充规则/对拍通过。
 
 未新增运行时测试；未改规则、内容数值或DSL。原版源码核对、完整net客户端流程、全量四幕五角色/独立候选验收和训练不在本次验证范围。完整文档源链接检查仍需本地原版及历史证据，不因为清理而降低检查。
 
