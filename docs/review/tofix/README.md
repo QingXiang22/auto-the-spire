@@ -55,13 +55,13 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 
 #### CI-01
 
-**状态与认领**：待验证（本地三个CI组通过，待托管Actions运行及分支审阅）；用户2026-10-15明确派单，Codex `/root` / `codex/core-base-ci`。目录边界为`.github/workflows`、`tools/ci`、`tools/differential`及参考版本登记、base检查分组与相关文档，不修改core/base游戏规则，不编辑独立参考玩法。`contracts-python`本次只说明，不接入。
+**状态与认领**：待验证（本地与GitHub托管三个CI组均通过，待用户分支审阅）；用户2026-10-15明确派单，Codex `/root` / `codex/core-base-ci`。目录边界为`.github/workflows`、`tools/ci`、`tools/differential`及参考版本登记、base检查分组与相关文档，不修改core/base游戏规则，不编辑独立参考玩法。`contracts-python`本次只说明，不接入。
 
 **当前小包与下一成果**：已核对并拉取纯上游2089659，旧脏工作树已完整保留；从GitHub按固定SHA拉取参考，交付core、base无源码运行时组及严格regression的Actions与本地同一入口。必要API迁移仅在对拍适配器；参考差异保留非零，不删case/seed或缩减维度。`sts2/`及其源检查只留本地，默认完整Slice保留。
 
 **完成条件**：固定最新已核对参考身份；独立干净检出构建和命令验证；Actions实际运行结果、日志/结算及未验证明确；本地完整检查分组不丢失。网络或上游兼容失败保留最小复现及受影响case，不将旧参考回退包装为新版成功。
 
-**本次交付证据**：[实现与本地验证](../records/2026-10-15/core-base-ci-2026-10-15.md)记录core99、runtime841＋本地source1、作者15及纯上游严格16双侧＋1自检；下一步推送并核对Actions，未验证不冒充已验收。
+**本次交付证据**：[实现与验证](../records/2026-10-15/core-base-ci-2026-10-15.md)记录core99、runtime841＋本地source1、作者15及纯上游严格16双侧＋1自检；实现提交fc3c736已推送，[首次Actions](https://github.com/QingXiang22/auto-the-spire/actions/runs/38686046899)三个job均success。下一步用户审阅分支，未并入主线，不关闭环境/版本父项。
 
 #### CORE-AUTHOR-04
 
