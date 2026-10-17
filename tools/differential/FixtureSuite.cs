@@ -70,7 +70,9 @@ internal static class BaseScopes
     /// <summary>`BaseSpireScope.DevMap`：T05 地图生成/物化与 ChooseMapPoint 已接入的范围。</summary>
     public const string DevMap = "dev-map";
 
-    public static readonly IReadOnlyList<string> All = [Dev, DevMap];
+    public const string DevRun = "dev-run";
+
+    public static readonly IReadOnlyList<string> All = [Dev, DevMap, DevRun];
 }
 
 /// <summary>case 种类。受控机制与正常开局是不同 kind，不能混算（ENV 约束 §9）。</summary>
@@ -126,8 +128,9 @@ internal static class Dimensions
     public const string Rewards = "rewards";
     public const string Permanent = "permanent-inventory";
     public const string RewardClosure = "reward-closure";
+    public const string CombatOrigins = "combat-copy-origins";
     public static readonly IReadOnlyList<string> All =
-        [Actions, Decisions, Facts, PileOrder, Power, Streams, Trace, Terminal, Rewards, Permanent, RewardClosure];
+        [Actions, Decisions, Facts, PileOrder, Power, Streams, Trace, Terminal, Rewards, Permanent, RewardClosure, CombatOrigins];
 }
 
 /// <summary>预期终点：严格入口按它核对 base 侧实际状态（错误终点直接非零）。</summary>
@@ -169,7 +172,9 @@ internal sealed record FixtureCase(
     IReadOnlyList<string>? RequiredDimensions = null,
     IReadOnlyList<string>? SemanticActions = null,
     string? ExpectedTerminal = null,
-    string? ReferenceSource = null);
+    string? ReferenceSource = null,
+    int NormalCombatCount = 1,
+    bool RequirePotionAcquisition = false);
 
 /// <summary>suite 级别的构建身份：同一 suite 版本必须绑定同一构建/配置/参考身份。</summary>
 internal sealed record SuiteBuildIdentity(
@@ -286,7 +291,7 @@ internal static class FixtureSuites
                     case "play_card" when string.IsNullOrWhiteSpace(step.Card):
                         problems.Add($"{fixture.Id}: 第 {index} 步 play_card 缺少 card");
                         break;
-                    case "normal_reward_take" or "normal_reward_skip" when fixture.Kind == CaseKinds.NormalReward:
+                    case "normal_act1" or "normal_reward_take" or "normal_reward_skip" or "normal_reward_take_discard" or "normal_reward_use_first" or "normal_reward_use_cancel" or "normal_aroma_upgrade" or "normal_aroma_transform" or "normal_aroma_upgrade_next_combat" or "normal_aroma_transform_next_combat" or "normal_capacity_skip" or "normal_capacity_discard" when fixture.Kind == CaseKinds.NormalReward:
                     case "play_card" or "end_turn":
                         break;
                     default:

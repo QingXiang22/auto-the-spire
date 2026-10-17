@@ -227,7 +227,11 @@ internal static class OrchestrationChecks
         });
         Check.Run("Orchestration: unsupported command shapes and missing full generation pool fail with source location", () =>
         {
-            foreach (var body in new[] { "autoPlay = { from = hand count = 1 }", "drawUntil = { type = typo }", "generateCards = { count = 1 }", "generateCards = { count = 2 distinct = true pool = { card = OrchestrationProbe } }" })
+            foreach (var body in new[] { "autoPlay = { from = hand count = 1 }", "drawUntil = { type = typo }", "generateCards = { count = 1 }", "generateCards = { count = 2 distinct = true pool = { card = OrchestrationProbe } }",
+                "generateCards = { count = 3 choose = true pool = { card = OrchestrationProbe } }",
+                "generateCards = { count = 1 allowCancel = true pool = { card = OrchestrationProbe } }",
+                "generateCards = { count = 0 distinct = true choose = true pool = { card = OrchestrationProbe } }",
+                "generateCards = { count = 3 distinct = true choose = invalid pool = { card = OrchestrationProbe } }" })
             {
                 var parsed = Parse(body);
                 Check.Equal(0, parsed.Cards.Count, "no partial capability accepted");

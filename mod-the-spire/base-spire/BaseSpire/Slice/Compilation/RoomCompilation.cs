@@ -30,7 +30,7 @@ internal static class RoomCompilation
 
         if (options.ActMapEnabled && runStateBindings.HasRun)
         {
-            actMap = MapRoomWiring.Declare(contentBindings.Package, eventsBindings.Projection, runStateBindings.RunEntity!);
+            actMap = MapRoomWiring.Declare(contentBindings.Package, eventsBindings.Projection, runStateBindings.RunEntity!, options.ActPlan is not null);
         }
 
         RunInitializationWiring? runInitialization = runStateBindings.HasRun && (options.InitializeNewRun || actMap is not null)
@@ -73,14 +73,17 @@ internal static class RoomCompilation
             var eventContext = new EventCompileContext(rooms, eventState.CurrentEventId, MapRoomWiring.EventPhase)
             {
                 Resources = resources,
+                Deck = deckCommands,
+                SourceEvents = options.ActPlan?.Acts.SelectMany(a => a.Events).Distinct(StringComparer.Ordinal).ToArray(),
             };
-            var modules = EventModules.Create(eventState);
+            var modules = EventModules.Create(eventState, contentBindings.Package);
             var catalog = new EventRoomCatalog(modules);
             unknownRooms = new UnknownRoomsBindings(odds, eventState, eventContext,
                 new EventVisitLifecycle(eventState, eventContext, modules), catalog);
         }
 
-        return new RoomServicesBindings(actMap, runInitialization, rooms, resources, relicCommands, deckCommands, treasure, shop, unknownRooms);
+        var acts = options.ActPlan is null ? null : new RunActWiring(contentBindings.Package, runStateBindings.RunEntity!, actMap!, options.ActPlan);
+        return new RoomServicesBindings(actMap, runInitialization, rooms, resources, relicCommands, deckCommands, treasure, shop, unknownRooms, acts);
     }
 
     internal static void Rooms(
@@ -92,7 +95,8 @@ internal static class RoomCompilation
         RunCollectionsBindings runCollectionsBindings,
         RoomServicesBindings roomServicesBindings,
         RewardsBindings rewardsBindings,
-        RoomTransitionBindings roomTransitionBindings)
+        RoomTransitionBindings roomTransitionBindings, EncounterPoolBindings pools, RunEncountersBindings visits,
+        Func<IrScope, Inst[]> clearCombat)
     {
 
         // T05：地图 scope 的房间选择入口。`EnterNextRoom` 在上面被显式跳过（它是非地图 scope 的
@@ -110,8 +114,11 @@ internal static class RoomCompilation
                     unknown.Events, unknown.EventContext, unknown.Catalog));
             }
 
+            if (roomServicesBindings.Acts is { } actRun)
+                entries.Add(new MapRoomEntry("Ancient", (scope, run, _) => actRun.AncientBoundary(scope, run, roomServicesBindings.RunInitialization!)));
             roomServicesBindings.ActMap.RegisterChooseMapPoint(contentBindings.Package, runCollectionsBindings.RunStates!,
-                entries);
+                entries, roomServicesBindings.Acts is not { } acts ? null : (scope, run) => acts.Continue(scope, run,
+                    roomServicesBindings.RunInitialization!, pools, visits, roomServicesBindings.Unknown!, runStateBindings, clearCombat));
 
             RestSiteWiring.Register(contentBindings.Package, roomServicesBindings.Rooms!, roomServicesBindings.Resources!,
                 cardsBindings.CardDefinitions);

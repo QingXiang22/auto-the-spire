@@ -34,6 +34,8 @@ internal static class SnapshotChecks
         yield return ("N-02 候选严格按公开语义键的 UTF-8 字节序排列", CandidatesSortedBySemanticKey);
         yield return ("N-02 candidate_id 只作 step 引用、不进入任何特征", CandidateIdNotInFeatures);
         yield return ("N-02 暂停期投影为 active + status=decision，候选恰为 PendingDecision.Candidates", PausedMapsToActiveDecision);
+        yield return ("N-02 可选单选保留真实候选和取消绑定，必选不取消，多选仍拒绝", OptionalSingleDecision);
+        yield return ("N-02 可选引用为空时省略，有值时发布闭合句柄，清空后再次省略", OptionalEntityReference);
         yield return ("N-02 observation_id 在同一稳定版本上可重复（纯读，不改状态）", ObservationIdIsStableAcrossReads);
         yield return ("N-02 切片不声明 sequences/groups，输出空数组且成员引用闭合", NoSequencesOrGroupsAndClosedReferences);
         yield return ("N-02 隐藏牌堆只暴露真实总数、不暴露成员（V-02）", HiddenDrawPileLeaksNoMembers);
@@ -927,6 +929,33 @@ internal static class SnapshotChecks
         Check.Sequence(expected, referenced, "暂停期候选恰为 PendingDecision.Candidates（按公开实例 ID）");
     }
 
+    private static void OptionalSingleDecision()
+    {
+        var session = NewBattle();
+        var original = SlicePublicProfile.Create();
+        var answer = original.AnswerAction with { Parameters = original.AnswerAction.Parameters.ToDictionary(
+            x => x.Key, x => x.Value with { Required = false }) };
+        var profile = new PublicSnapshotProfile(original.RulesetId, original.CatalogId, original.BackendProfileId,
+            original.Kinds, original.Collections, original.Relations, original.Actions, answer, original.Terminals,
+            original.KnownPositions, NetProtocol.V02);
+        var projector = new PublicSnapshotProjector(session.RuleSet, profile, "optional-decision");
+        var view = session.Observe(SliceManifest.Player, PlayerViewId);
+        var candidates = session.State.CollectionMembers(session.RuleSet.Collections.Single(c => c.QualifiedId == HandCollectionId).Id).Take(3).ToArray();
+        var request = new DecisionRequest(700, session.StateVersion, SliceManifest.Player, DecisionResponseKind.EntityRefList,
+            "Choose or cancel", candidates, 0, 1);
+        ProjectedSnapshot Map(DecisionRequest pending) => projector.Project(new SnapshotInput(view, [], pending, SessionStatus.AwaitingDecision, null));
+        var optional = Map(request);
+        Check.Equal(4, optional.Bindings.Count, "three instances plus cancellation");
+        var cancel = optional.Bindings.Single(b => b.EmptyDecision);
+        Check.Equal(700L, cancel.DecisionRequestId!.Value, "cancellation retains real request");
+        Check.True(cancel.DecisionInstance is null, "no invented candidate instance");
+        Check.Equal(0, optional.Snapshot!.LegalActions.Single(a => a.CandidateId == cancel.CandidateId).Fields.Count, "empty fields encode cancellation");
+        var required = Map(request with { Minimum = 1 });
+        Check.Equal(3, required.Bindings.Count, "required single has no cancel");
+        Check.False(required.Bindings.Any(b => b.EmptyDecision), "no cancellation for required request");
+        Check.MappingFault(() => Map(request with { Maximum = 2 }), "multiple selection remains explicit", "TODO-N02-MULTI-SELECT");
+    }
+
     private static void ObservationIdIsStableAcrossReads()
     {
         var session = NewBattle();
@@ -1094,6 +1123,41 @@ internal static class SnapshotChecks
     }
 
     /// <summary>H-02：entity_ref 目标种类与动作/终局字段必需性来自显式声明，不是映射层的猜测。</summary>
+    private static void OptionalEntityReference()
+    {
+        var p = new EnginePackageBuilder("base-spire", "optional-reference-witness");
+        var area = p.ScopeType("Area"); var owner = p.EntityType("Owner"); var target = p.EntityType("Target");
+        var selected = owner.AddField("Target", FieldTypeSchema.RefTo(target), optional: true);
+        var view = p.Projection("PlayerView"); view.ParticipantRole = SliceManifest.PlayerRole; view.Type(owner); view.Type(target);
+        var setup = p.Procedure("Setup"); var space = setup.Local("scope", FieldTypeSchema.Binding());
+        var created = setup.Local("created", FieldTypeSchema.Binding());
+        setup.Body(setup.CreateScope(area, space), setup.CreateEntity(owner, setup.LocalRef(space), created, []),
+            setup.CreateEntity(target, setup.LocalRef(space), created, [])); p.OnSessionStart(setup.Symbol);
+        foreach (var name in new[] { "Select", "Clear" })
+        {
+            var body = p.ActionBody(p.Action(name)); body.Role(SliceManifest.PlayerRole);
+            body.Body(body.SetField(body.First(body.Type(owner, area)), selected,
+                name == "Select" ? body.First(body.Type(target, area)) : body.Const(Value.None)));
+        }
+        var builder = new RuleSetBuilder(); builder.Add(p.Build()); var rules = builder.Build();
+        var profile = DerivedPublicProfile.Build(rules, PlayerViewId, SliceManifest.PlayerRole, PublicBuildMetadata.Create("optional-reference-witness"));
+        var session = new Session(rules, 42UL, [SliceManifest.PlayerRole]); session.Start();
+        var projector = new PublicSnapshotProjector(rules, profile, "optional-reference");
+        const string id = "net:field:base-spire:Owner.Target";
+        EntityDto Owner(PublicSnapshotDto snapshot) => snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Owner");
+        Check.False(Owner(Project(session, projector).Snapshot!).Fields.Any(f => f.FieldId == id), "None is omitted, never encoded as an unknown reference or not_applicable");
+        var choose = session.LegalActions(SliceManifest.Player).Single(a => a.Definition.QualifiedId == "base-spire:Select");
+        session.Submit(choose.Definition, SliceManifest.Player, []);
+        var snapshot = Project(session, projector).Snapshot!;
+        var field = Owner(snapshot).Fields.Single(f => f.FieldId == id);
+        Check.Equal("known", field.State, "present optional reference is known");
+        Check.Equal(WireCanonical.Text(WireValue.Str(snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Target").InstanceId)),
+            WireCanonical.Text(field.Value!), "reference points to a published target");
+        var clear = session.LegalActions(SliceManifest.Player).Single(a => a.Definition.QualifiedId == "base-spire:Clear");
+        session.Submit(clear.Definition, SliceManifest.Player, []);
+        Check.False(Owner(Project(session, projector).Snapshot!).Fields.Any(f => f.FieldId == id), "cleared optional reference is omitted again");
+    }
+
     private static void TargetKindsAndRequirednessAreDeclared()
     {
         var catalog = CatalogProjector.Project(SlicePublicProfile.Create());

@@ -35,8 +35,8 @@ internal static class PotionFlowChecks
                 Check.Equal(ValueOf("PotionUsage") switch { "CombatOnly" => "combatOnly", "AnyTime" => "anyTime", _ => "automatic" }, p.Usage, p.Name + " usage");
                 Check.Equal(ValueOf("TargetType") switch { "AnyEnemy" => "enemy", "AllEnemies" => "allEnemies", _ => "self" }, p.Target, p.Name + " target");
             }
-            Check.Equal(13, Content.Model.Potions.Count, "十三项真实程序，不能把元数据算成效果实现");
-            Check.Equal(35, pool.Count(p => p.UnsupportedUseReason.Length > 0), "未实现显式记账");
+            Check.Equal(14, Content.Model.Potions.Count, "十四项真实程序，不能把元数据算成效果实现");
+            Check.Equal(34, pool.Count(p => p.UnsupportedUseReason.Length > 0), "未实现显式记账");
         });
 
     }
@@ -237,12 +237,56 @@ internal static class PotionFlowChecks
 
     private static void CombatChecks()
     {
-        var model = SliceAuthorFrontend.Load() with { Potions = Content.Model.Potions,
+        var model = SliceAuthorFrontend.Load() with { Cards = Content.Model.Cards, Potions = Content.Model.Potions,
             PotionPool = Content.Model.PotionPool, Powers = [.. Content.Model.Powers,
                 .. SpirePowerSource.Parse("package base-spire { power PotionCheckDexterity { role = Dexterity } }", "potion-check").Powers],
             Belt = [new("base-spire:block-potion", 1), new("base-spire:strength-potion", 1), new("base-spire:fire-potion", 1)] };
         var builder = new RuleSetBuilder(); builder.Add(CombatSlicePackage.Build(authorModel: model).Build());
         var rules = builder.Build();
+        foreach (var mode in new[] { "cancel", "choose", "full" })
+            Check.Run($"AttackPotion候选：{mode}完整池一次洗牌、暂停续接和清理", () =>
+            {
+                var s = New(rules); ClearBelt(s); var potion = ArrangePotion(s, "attack-potion");
+                if (mode == "full")
+                    while (Members(s, "Hand").Count < SliceManifest.MaxHandSize)
+                    {
+                        var card = Members(s, "DrawPile").First();
+                        s.State.RunAtomic(() => { s.State.RemoveFromCollection(FormalSliceFixture.Collection(s, "base-spire:DrawPile"), card);
+                            s.State.AddToCollection(FormalSliceFixture.Collection(s, "base-spire:Hand"), card); });
+                    }
+                var cardsBefore = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Card").Id).Count;
+                var before = s.Random.DrawCount(SliceManifest.CardGenerationStream);
+                Submit(s, "UsePotion", potion);
+                Check.Equal(SessionStatus.AwaitingDecision, s.Status, "生成后暂停");
+                var d = s.PendingDecision!;
+                Check.Equal(0L, d.Minimum, "允许取消"); Check.Equal(1L, d.Maximum, "最多选一张");
+                Check.Equal(3, d.Candidates.Count, "三张实际候选");
+                Check.Equal(3, d.Candidates.Select(c => FormalSliceFixture.Definition(s,c)).Distinct().Count(), "定义不重复");
+                Check.Equal(before + 32, s.Random.DrawCount(SliceManifest.CardGenerationStream), "独立参考确认33项攻击池洗牌32抽");
+                var chosen = d.Candidates.First(c => FormalSliceFixture.Number(s,c,"base-spire:Card","Cost") > 0);
+                var others = d.Candidates.Where(c => c != chosen).ToArray();
+                s.Answer(new DecisionAnswer(d.RequestId, mode == "cancel" ? [] : [chosen]));
+                Check.Equal(SessionStatus.Running, s.Status, "续接完成");
+                Check.Equal(before + 32, s.Random.DrawCount(SliceManifest.CardGenerationStream), "续接不补抽");
+                Check.Equal(0, Members(s, "GeneratedCardOffers").Count, "候选集合清空");
+                Check.Equal(0, Members(s, "GenerationPool").Count, "隐藏索引清空");
+                Check.Equal(0, Members(s, "PotionBelt").Count, "取消也消耗使用的瓶");
+                Check.Equal(cardsBefore + (mode == "cancel" ? 0 : 1), s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Card").Id).Count, "只保留选中真实实例");
+                Check.True(others.All(c => !s.State.Exists(c)), "未选实例销毁");
+                if (mode == "cancel") { Check.False(s.State.Exists(chosen), "取消销毁全部候选"); return; }
+                Check.True(Members(s, mode == "full" ? "DiscardPile" : "Hand").Contains(chosen), "满手落弃牌，否则入手");
+                var cost = FormalSliceFixture.Number(s,chosen,"base-spire:Card","Cost");
+                Check.Equal(-cost, FormalSliceFixture.Number(s,chosen,"base-spire:Card","CostModifier"), "本回合免费");
+                if (mode == "choose")
+                {
+                    foreach (var enemy in Members(s,"Monsters")) FormalSliceFixture.SetNumber(s,enemy,FormalSliceFixture.MonsterTypeId,"Hp",900);
+                    Submit(s, "PlayCard", chosen);
+                    while (s.Status == SessionStatus.AwaitingDecision) s.Answer(new DecisionAnswer(s.PendingDecision!.RequestId,[s.PendingDecision.Candidates.First()]));
+                    Check.Equal(-cost, FormalSliceFixture.Number(s,chosen,"base-spire:Card","CostModifier"), "首次打出不提前清费用");
+                }
+                Submit(s, "EndTurn");
+                Check.Equal(0L, FormalSliceFixture.Number(s,chosen,"base-spire:Card","CostModifier"), "回合结束清费用");
+            });
         Check.Run("药水：作者全体敌人程序不提问、不空用，复用同一效果编译器", () =>
         {
             var source = SpirePotionSource.Parse("""

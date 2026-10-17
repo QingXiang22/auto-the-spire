@@ -478,7 +478,7 @@ package base-spire {
   }
 
   enemy Inklet {
-    hp = variants(default=range(12, 18), tough=range(11, 17))
+    hp = variants(default=range(11, 17), tough=range(12, 18))
     startingPowers = [power(SlipperyPower, 1)]
     moves = actions(
       inkletJab = attack(variants(default=3, deadly=4), target=player),

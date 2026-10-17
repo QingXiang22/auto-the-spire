@@ -32,4 +32,4 @@ dotnet run --project archive/legacy-sts/core-the-spire/Core.TheSpire.Tests
 
 本次冻结只关闭 core 的交付，不宣布原版、整局、mod 或 AI 完工。当前工作区的完整任务定义继续由负责人维护。
 
-后续可以直接按 [agent 分工与交付约定](../design/post-core-agent-assignments.md)分配 A/base、B/对拍、C/net；[可复制提示词](../design/agent-goals.md)与[唯一认领清单](../review/tofix/README.md#01-core冻结后的分派与下一步)配套。D/真实客户端和E/指定mod为原版候选稳定后的任务。
+后续可以直接按 [agent 分工与交付约定](../design/post-core-agent-assignments.md)分配 A/base、B/对拍、C/net；[可复制提示词](../design/agent-goals.md)与[唯一认领清单](../review/tofix/README.md#当前任务)配套。D/真实客户端和E/指定mod为原版候选稳定后的任务。

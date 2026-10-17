@@ -17,7 +17,7 @@ updated_at: 2026-10-09T13:10:00+08:00
 前置 B `.audit/dsh-env-t04-map-resume-2026-10-09/task-record.json`（`delivery_status=ready_for_review`、实测 `running=false`；其 `handoff_path` 已由负责人移入 `docs/review/records/2026-10-09/`）。
 
 **状态**：本交接在工作开始时即建立（派单要求固定 YAML 头），当前为 `in_progress`；收尾时改为
-`ready_for_review` 或 `blocked` 并补齐命令、返回码、证据与首差。**未完成前不得据此关闭任何父项。**
+`ready_for_review` 或 `blocked` 并补齐命令、返回码、证据与首个差异。**未完成前不得据此关闭任何父项。**
 
 ## 接手后先做什么
 
@@ -29,4 +29,4 @@ updated_at: 2026-10-09T13:10:00+08:00
    A 可实施；C（公开奖励轨迹）在本包实际交付后接。
 2. 读本节下方「已交付/改动」与「源依据」两节，再按需查 `.audit/dsh-env-t05-rewards-resume-2026-10-09/`。
 
-（以下各节在本包完成时补全：已交付能力、命令与返回码、真实轨迹证据、首差与未验证范围、下一已就绪任务。）
+（以下各节在本包完成时补全：已交付能力、命令与返回码、真实轨迹证据、首个差异与未验证范围、下一已就绪任务。）

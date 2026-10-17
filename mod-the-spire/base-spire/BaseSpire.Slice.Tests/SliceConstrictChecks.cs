@@ -123,7 +123,7 @@ internal static class SliceConstrictChecks
             randomProfile: VanillaRandomLayout.Profile,
             computeBackend: SourceWeightedPickBackend.Instance);
         session.Start();
-        return new BaseSpireRunSession(RunConfiguration.Ironclad(), null!, "fixture", "fixture",
+        return new BaseSpireRunSession(RunConfiguration.FrozenIronclad(), null!, "fixture", "fixture",
             (uint)FixtureSeed, session, session.Participant(0), SliceManifest.PlayerRole, "fixture", []);
     }
 

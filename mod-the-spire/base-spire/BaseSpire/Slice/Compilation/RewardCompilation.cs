@@ -53,7 +53,10 @@ internal static class RewardCompilation
                 },
                 isBoss: scope => scope.Equal(scope.Field(
                     scope.Field(scope.First(scope.Collection(runCollectionsBindings.RunStates!)), roomServicesBindings.ActMap.RunCurrentNode), roomServicesBindings.ActMap.NodeType),
-                    scope.EnumConst(roomServicesBindings.ActMap.PointType, "Boss")), potions: potionsBindings.Potions);
+                    scope.EnumConst(roomServicesBindings.ActMap.PointType, "Boss")), potions: potionsBindings.Potions,
+                isElite: scope => roomServicesBindings.ActMap.AtRoomType(scope,
+                    scope.First(scope.Collection(runCollectionsBindings.RunStates!)), "Elite"), relics: roomServicesBindings.RelicCommands,
+                actIndex: roomServicesBindings.ActMap.RunActIndex);
         }
 
         return new RewardsBindings(rewards);

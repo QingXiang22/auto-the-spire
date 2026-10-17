@@ -74,7 +74,7 @@ required 且适用的字段省略是错误；conditional 且尚未公开用 unkn
 
 每个所选场景/后端交付一张版本化覆盖表（JSON 或等价结构化表，格式在 C-01 固定），每行包含 mechanism_id、source_version/source_locator、public_fact、declaration_ids、update_and_invalidation、verification_ids、evidence_ref、status、unsupported_constraint、decision_counterexample。状态为 proposed/implemented/verified/unsupported；没有运行证据不能写 verified。
 
-N-02 前先建立所选切片的机制清单和可信来源；N-02 补齐实际字段/更新和验证证据，N-05 检查覆盖闭合。E1 进入要求有可验证来源和规则切片证据，不要求尚未实现的 net 投影已验证。E2 前完成公开事实充分性审计，E3/E4 对新增机制/后端重做。选择首个切片至少包括公开资源、重复实例、一个中途选择、位置更新及一个隐藏信息机制；不虚构缺失规则来凑场景。
+N-02 前先建立所选切片的机制清单和可信来源；N-02 补齐实际字段/更新和验证证据，N-05 检查覆盖完整。E1 进入要求有可验证来源和规则切片证据，不要求尚未实现的 net 投影已验证。E2 前完成公开事实充分性审计，E3/E4 对新增机制/后端重做。选择首个切片至少包括公开资源、重复实例、一个中途选择、位置更新及一个隐藏信息机制；不虚构缺失规则来凑场景。
 
 V-15 检查来源/覆盖表引用和状态，并构造“决策相关公开事实不同”的成对状态，要求 wire 保留差异、编码不错误合并；V-02 检查隐藏状态变化不泄漏。V-15 的有限反例不能证明所有游戏 Markov；允许未确认项，但不能把涉及目标任务的未支持公开约束忽略后启动训练。
 

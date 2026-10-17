@@ -80,6 +80,8 @@ public static class SpirePowerSource
             ["Frail"] = "base-spire:frail",
             // 敌人侧 debuff：Constrict（拥有者回合末对自己造成 unpowered 伤害 = 层数；施加者死亡时移除）。
             ["ConstrictPower"] = "base-spire:constrict-power",
+            ["Poison"] = "base-spire:poison",
+            ["Accelerant"] = "base-spire:accelerant",
         };
 
     /// <summary>一个能力声明在本批次支持的字段。</summary>
@@ -121,6 +123,7 @@ public static class SpirePowerSource
         string Source)
     {
         public IReadOnlyList<PowerRule> Rules { get; init; } = [];
+        public bool NegativeStacksAreInfinite { get; init; }
     }
 
     /// <summary>一份能力源的降级结果（四态）。</summary>
@@ -211,6 +214,14 @@ public static class SpirePowerSource
                     : $"{package.Name}:{SpireCardSource.ToId(node.Name)}";
             id = id.Contains(':') ? id : $"{package.Name}:{id}";
             declaration = declaration with { Id = id };
+            declaration = declaration with { Rules = declaration.Rules.Select(rule =>
+            {
+                if (rule.Reference.Length == 0) return rule;
+                if (ids is not null && ids.TryGetValue(rule.Reference, out var linked)) return rule with { Reference = linked };
+                if (package.Name == "base-spire" && KnownIds.TryGetValue(rule.Reference, out linked)) return rule with { Reference = linked };
+                problems.Add($"{rule.Source}: unknown power reference {rule.Reference}");
+                return rule;
+            }).ToArray() };
             if (!HasReusableBehavior(declaration))
                 problems.Add("运行时未实现声明的角色/触发器/效果组合：不注册部分生效的能力");
 
@@ -232,7 +243,7 @@ public static class SpirePowerSource
     private static bool HasReusableBehavior(Declaration power)
     {
         if (power.Rules.Count > 0 && power.Role.Length == 0 && power.Trigger.Length == 0) return true;
-        if (power.Role.Length > 0 && power.Role is not ("Strength" or "Vulnerable" or "Shrink" or "Dexterity" or "NoDraw" or "Focus" or "Doom" or "Poison" or "Accelerant")) return false;
+        if (power.Role.Length > 0 && power.Role is not ("Strength" or "Vulnerable" or "Shrink" or "Dexterity" or "NoDraw" or "Focus" or "Doom" or "Poison" or "Accelerant" or "Artifact")) return false;
         bool Prefix(string prefix) => power.TriggerEffect.StartsWith(prefix, StringComparison.Ordinal);
         if (power.Trigger is AuthorPowerTrigger.AfterCardExhausted or AuthorPowerTrigger.AfterCardPlayed)
             return Prefix(PowerTriggerEffect.GainBlockPerStackPrefix)
@@ -250,7 +261,7 @@ public static class SpirePowerSource
         return power.PreventEnergyGain || power.PreventsBlockClear || power.MaxEnergyPerStack != 0
             || power.CardRuleType is "Attack" or "Skill" or "Power" or "Status"
             || power.DamageModifier.Length > 0 || power.BlockGainMultiplier.Length > 0
-            || power.BlockGainAdditivePerStack != 0 || power.Role is "NoDraw" or "Focus" or "Doom" or "Poison" or "Accelerant"
+            || power.BlockGainAdditivePerStack != 0 || power.Role is "NoDraw" or "Focus" or "Doom" or "Poison" or "Accelerant" or "Artifact"
             || power.TemporaryStrengthPerStack != 0 || power.VulnerableMultiplierPercentPerStack != 0
             || power.OwnerTurnEnd is PowerTurnEnd.Tick or PowerTurnEnd.Remove or PowerTurnEnd.RemoveAtOpponentTurnEnd or PowerTurnEnd.ConvertToStrength
             || power.OwnerTurnEnd.StartsWith(PowerTriggerEffect.GainPowerPerStackPrefix, StringComparison.Ordinal)
@@ -271,6 +282,7 @@ public static class SpirePowerSource
         var whenCardType = string.Empty;
         var triggerEffect = string.Empty;
         var preventEnergyGain = false;
+        var negativeStacksAreInfinite = false;
         var modifierSourcePower = string.Empty;
         var blockGainMultiplier = string.Empty;
         var blockGainPriorEntries = 0;
@@ -364,6 +376,10 @@ public static class SpirePowerSource
                 case "cardRule":
                     ReadCardRule(property.Value, node.Name, ref cardRuleType, ref cardRuleCost,
                         ref cardRuleResultPile, ref cardRuleConsumeOnPlay, ref problems);
+                    break;
+                case "negativeStacksAreInfinite":
+                    if (property.Value is DslBooleanNode declaredInfinite) negativeStacksAreInfinite = declaredInfinite.Value;
+                    else problems.Add($"{node.Name}.negativeStacksAreInfinite requires a boolean");
                     break;
                 case "decrementOnTrigger":
                     if (property.Value is DslBooleanNode { Value: true })
@@ -527,7 +543,8 @@ public static class SpirePowerSource
             whenCardType, triggerEffect, preventEnergyGain, preventsBlockClear, modifierSourcePower,
             maxEnergyPerStack, vulnerablePercentPerStack, temporaryStrength, cardRuleType,
             cardRuleCost, cardRuleResultPile, cardRuleConsumeOnPlay, blockGainMultiplier,
-            blockGainPriorEntries, blockGainAdditive, effectText, sourcePath) { Rules = rules };
+            blockGainPriorEntries, blockGainAdditive, effectText, sourcePath)
+            { Rules = rules, NegativeStacksAreInfinite = negativeStacksAreInfinite };
     }
 
     /// <summary>
@@ -1631,6 +1648,7 @@ public static class SpirePowerSource
             BlockGainPriorEntriesPerStack: declaration.BlockGainPriorEntriesPerStack,
             BlockGainAdditivePerStack: declaration.BlockGainAdditivePerStack,
             SourcePath: declaration.Source,
-            SourceLine: declaration.Line) { Rules = declaration.Rules };
+            SourceLine: declaration.Line)
+            { Rules = declaration.Rules, NegativeStacksAreInfinite = declaration.NegativeStacksAreInfinite };
     }
 }

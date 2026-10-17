@@ -4,6 +4,8 @@
 
 ## 共用上下文
 
+多幕开发配置的幕计划、预生成/活动队列、全局楼层及切幕入口见[默认幕计划与跨幕生命周期](act-transitions.md)。`dev-map`保留单幕语义，`dev-run`显式启用默认三幕计划；完整Ironclad身份另行验收。
+
 [RoomCompileContext](../../../mod-the-spire/base-spire/BaseSpire/Slice/RoomCompileContext.cs)的完整构造签名：
 
 ```csharp
@@ -16,7 +18,7 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 
 | 成员 | 用途/前置条件 |
 | --- | --- |
-| `CurrentRun(IrScope scope) → Expr` | 生成读取Run集合首实例的表达式；正式组包保证Run单例 |
+| `CurrentRun(IrScope scope) → Expr` | 生成读取Run集合首实例的表达式；正式规则包构建保证Run单例 |
 | `At(IrScope scope, Expr run, int phase, string pointType) → Expr` | 同时比较访问阶段与房型；房型取实际房型（问号房判定结果）或节点枚举成员，见 `MapRoomWiring.AtRoomType`。`pointType`使用源枚举名，如`Treasure` |
 | `CloseVisit(IrScope scope, Expr run) → Inst` | 生成将访问阶段写为`TravelReadyPhase`的指令；调用者先完成本房间提交和选择 |
 | `Hp / MaxHp / Gold` | 长期Run字段；通过`scope.Field`读取，通过`scope.SetField`生成写入 |
@@ -39,15 +41,17 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 | `UnknownRoomWiring(package, run, map)` | 问号概率模块：声明四个非事件赔率字段（float32 位型，默认值即源初值）与判定资产 `base-spire:UnknownMapPointOddsRoll` |
 | `UnknownRoomWiring.BlacklistShop(scope, run)` | 源 `RunManager.BuildRoomTypeBlacklist`（上一间房是 Shop 或当前节点子节点全是 Shop）；必须在 `Visit` 之前求值 |
 | `UnknownRoomWiring.RollRoomType(scope, run, blacklistShop)` | 抽一笔 `base-spire:run:unknown_map_point`、纯计算判定并写回赔率；返回命中房型的 local slot |
-| `UnknownRoomEntry.Create(map, standard, odds, events, context, catalog)` | 问号入口：黑名单 → 判定 → 写 `Run.ActualRoomType` → 按实际房型复用 Standard 入口或走事件路径；未接线房型显式失败 |
+| `UnknownRoomEntry.Create(map, standard, odds, events, context, catalog)` | 问号入口：黑名单 → 判定 → 写 `Run.ActualRoomType` → 按实际房型复用 Standard 入口或走事件路径；未接入房型显式失败 |
 | `IEventRoomModule.Id / RegisterActions / Enter` | 一个具体事件的身份、选项注册和进入指令；各事件可放独立文件 |
 | `ChoiceEventModule.Id / Enter / Choices` | 普通事件作者入口；只描述初始化及选项，共享RegisterActions生成Role、身份/phase/存活守卫和选择尾 |
 | `EventChoice(actionName, effects, available = null, completion = Finish)` | 不可变选项定义；效果按序编译，可选资格谓词只影响本选项 |
 | `EventEffectContext.GainGold / DamageOutsideCombat / HealLivingPlayer` | 调用Run领域命令生成Engine IR；输入快照、资源边界与尾部死亡由共享层负责 |
 | `EventCompletion.Finish / Continue` | 存活时结束或保留访问；致死时两种模式都先清理访问再发布Defeat |
 | `EventCompileContext.Resources` | 正式装配提供Domain/Run/RunResources，含Run字段、已有Defeat符号和可选GoldGainHooks；普通事件缺此能力时建包期失败 |
+| `EventCompileContext.Deck` | 正式装配提供同一个RunDeck；需要永久牌组选择的事件通过它生成IR，缺能力时建包期失败 |
 | `EventSourceIdentity.ModuleId(源类名)` | 源事件身份（`RunEventQueue.SourceId`）↔ 注册模块 ID 的唯一转换点；不在源池里的名字建包期失败 |
 | `IEventEligibility.IsAllowed(scope, context, run)` | 可选：源 `EventModel.IsAllowed` 的覆盖声明，供队列资格跳过使用 |
+| `SourceEventEligibility.Evaluate(scope, context, run, sourceName, result)` | 独立于效果模块的源资格表，输出布尔local；当前限第一幕，缺资格实现明确失败，范围见[事件契约](event-domain/spec.md#源事件资格env-t09-pr05) |
 | `EventRoomCatalog(modules)` | 按提供顺序组合模块；空ID或重复ID拒绝。`Ids`只代表可执行模块，不能冒充完整源事件池 |
 | `catalog.RegisterActions(package, context)` | 依次登记各事件的公开动作，不复制中央动作表 |
 | `catalog.Enter(scope, context, run, selectedId)` | 根据已由源选择器选定的ID进入模块，写当前事件和phase；未登记ID显式失败 |
@@ -55,6 +59,7 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 | `EventVisitLifecycle.Pull(scope, run)` | 源 `ActModel.PullNextEvent`：`eventsVisited % Count` 取 `NextEvent`，按资格与已访问跳过、命中后加入已访问集合；返回选中源身份的 local slot |
 | `EventVisitLifecycle.MarkVisited(scope, run)` | 源 `RoomSet.MarkVisited(RoomType.Event)`：事件房进入时 `EventsVisited` +1 |
 | `EventRandomAsset.NextInt(scope, 源类名, min, max)` | 源事件级 `Rng.NextInt`：一笔 `SampleInt(base-spire:event:<SLUG>)` + 纯计算换算 |
+| `EventFloatGoldAsset.Declare(package).Roll(scope, 源类名, baseGold, min, max, run, field)` | 源`NextFloat(min,max)`经float32、decimal加baseGold再截断为整数金币；一笔事件流抽取，缓存到来源拥有的Run字段 |
 | `EventCompileContext(room, currentEventId, phase)` | 事件运行状态字段和阶段由正式事件服务（`EventVisitLifecycle.Declare` + `MapRoomWiring.EventPhase`）声明并初始化；此对象只传符号 |
 | `context.Active(scope, run, id)` | 同时检查当前事件ID和访问阶段，用于本事件各选项的守卫 |
 | `context.Close(scope, run)` | 清当前事件ID并恢复旅行；模块先完成必要选择与永久写回 |
@@ -96,7 +101,7 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 | 决策过程 | 在动作执行中暂停，取得选择后恢复；多步骤选牌等复用已有过程 |
 | `IrScope.Fail(string)` | 抛出规则故障，Session成为`Faulted`且不能继续提交；不表达可恢复的普通操作失败 |
 
-实现依据：[候选登记](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs)、[合法动作与提交](../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs)。房间作者使用base接缝时同样遵循这些行为；公开候选应来自实际合法绑定，不能只在客户端过滤。
+实现依据：[候选登记](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs)、[合法动作与提交](../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs)。房间作者使用base接口时同样遵循这些行为；公开候选应来自实际合法绑定，不能只在客户端过滤。
 
 ## 资源接缝
 
@@ -108,10 +113,17 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 | --- | --- | --- |
 | 脱战获得金币、伤害、回复 | [RunResources](../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunResources.cs)的`GainGold` / `DamageOutsideCombat` / `HealLivingPlayer` | 生成IR；金币hook链须与当前内容匹配，伤害限定当前Unblockable\|Unpowered范围，回复不复活。选项数值和访问收尾由调用方或事件编译器决定；见[契约](event-domain/spec.md) |
 | 支出金币、增加生命上限 | `RunResources.LoseGold(scope, run, amount)` / `GainMaxHp(scope, run, amount)` | 非负输入快照；支出最低0，购买先用Requires校验够钱；增加上限后回复实际增量。历史分类及完整修正参与者未支持 |
+| 非卡牌来源失去生命上限 | `RunResources.LoseMaxHp(scope, run, amount)` | 快照非负输入；先按新上限损失超出部分的当前生命，再将MaxHp最低设为1。复用脱战伤害；历史、修正及死亡阻止参与者尚未齐全 |
 | 获得遗物 | [RunRelics.Obtain(scope, run, definition)](../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunRelics.cs) | 受支持不可叠加身份创建→玩家/共享袋移除→AfterObtained复用同一RunResources。Supported是可获得效果名单，抽取和来源收尾另归房间；未知效果明确失败 |
+| 战斗奖励遗物抽取 | `RunRelics.DrawReward(scope, run, identityField, rarityField) → Inst[]` | 玩家袋已初始化；在卡牌奖励之后用Player.Rewards抽一次稀有度，按玩家袋前端取身份并同时移出共享袋。字段由RewardWiring拥有，领取复用Obtain；空袋回退尚未获独立双侧验收 |
 | 永久牌组创建、获得、移除 | [RunDeck.Create / Acquire / Remove](../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunDeck.cs) | Create使用New配方；Acquire保留实例、调用方先移出候选；Remove校验永久成员并先BeforeRemoved。当前无获得替换参与者，源全部hook/历史仍未支持；见[整局契约](run-domain/spec.md) |
+| 永久牌组选择升级／变换 | `RunDeck.SelectForUpgrade(scope)` / `SelectForTransform(scope, run, stream)` | 空域不提问，唯一候选自动选，多候选Engine暂停；升级保留实例，变换支持完整Ironclad普通池并追加新实例。源事件传自己的流；其他池、附着和全部参与者仍未支持 |
+| 同时选择多张永久牌 | `RunDeck.SelectMany(scope, count, eligible, prompt, onSelected)` | 一次EntityRefList决策恰选count张，按答案顺序执行；候选≤count时自动处理全部，Engine快照防止新变换实例重新入选。公开多选依T03，不降低真实数量约束 |
+| 按有序永久候选随机选一张 | `RunDeck.SelectRandom(scope, candidates, stream, onSelected)` | 非空域恰好一抽，回调收到所选真实实例；单候选仍抽取，空域失败。CanRemove / HasRarity供内容组合资格，移除仍单独复用Remove |
+| 非战斗均匀卡牌奖励 | `RunCardRewards(package, deck).Choose(scope, run, pool, count, take)` | 完整且有序的候选池由来源提供；Rewards无放回抽定义，沿源NoUpgradeRoll，不改稀有度偏移。Engine恰选take张并保留实例，清理余项；当前公开协议尚不能提交多选，不能宣称此形状公开可用 |
 | 普通事件选项 | [ChoiceEventModule](../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/EventChoices.cs)和`EventChoice` | 共享Role、访问/存活守卫及死亡/结束尾；内容只给初始化、可用条件和效果，事件战斗返回尚非此能力 |
 | 新卡字段、复制、升级 | [CardDefinitions](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDefinitions.cs)的`New` / `Copy` / `Upgrade` | 统一变量、源排序键和升级增量；New/Copy不创建实体或完成长期获得流程，Copy的clone策略与战斗副本策略不同 |
+| 卡牌附魔首批 | [CardEnchantments](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardEnchantments.cs)的`CanEnchantPermanent(scope, card)` / `ApplySown(scope, card)` | 调用方提供永久牌选择域；只支持Sown，资格拒绝Status／Curse／Quest、不可打出的永久牌及已附魔实例。附魔身份／层数／Disabled属于卡实例，Copy保留独立状态、Upgrade保留附魔、New不继承旧附魔；后继出牌复用AfterBody，完整范围见[原语契约](card-primitives/spec.md#卡牌附魔首批sown) |
 | 战斗牌堆移动、消耗、克隆、变形 | [CardPileProcedures](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardPileProcedures.cs)的`MoveChosen` / `Move` / `Clone` / `Transform` | 仅战斗牌堆。手动选择用MoveChosen保留入手限制、置顶记录与手动弃牌回调；Move不等同手动弃牌，不用于永久牌组移除 |
 | 药水容量与奖励入栏 | [PotionInventoryRules](../../../mod-the-spire/base-spire/BaseSpire/Slice/PotionInventoryRules.cs)的`HasSpace` / `Acquire` / `Fields` | Acquire从该模块Rewards取首项，不自行校验所有调用前置条件；调用方先保证有奖励且有空槽。Fields只给实例字段，不完成入栏 |
 | 房间适用条件与回到地图 | `RoomCompileContext.At` / `CloseVisit` | At使用本次实际房型；CloseVisit只恢复旅行阶段，房间自己的已领取标记、候选清理、战斗提交或终局判断不能省略 |
@@ -141,6 +153,6 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 
 ## 接线迁移
 
-营火旧`Register(package, map, runs, hp, maxHp, deck, ...)`改为传入`RoomCompileContext`；宝箱旧构造的Run/map/gold参数也从上下文读取。正式组包器已迁移。额外的卡牌/遗物/药水依赖仍显式传入，不通过全局服务查询。
+营火旧`Register(package, map, runs, hp, maxHp, deck, ...)`改为传入`RoomCompileContext`；宝箱旧构造的Run/map/gold参数也从上下文读取。正式规则包构建器已迁移。额外的卡牌/遗物/药水依赖仍显式传入，不通过全局服务查询。
 
 本次上下文提取保留原指令语义和随机调用。构建身份由实际规则产物派生；其他初始化补丁导致的身份变化按其工作包单独结算。后续机制新增公开状态仍须维护[公开语义](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BasePublicSemantics.cs)。

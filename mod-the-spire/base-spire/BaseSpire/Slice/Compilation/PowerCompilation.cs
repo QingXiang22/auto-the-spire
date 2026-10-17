@@ -273,6 +273,8 @@ internal static class PowerCompilation
                 body.Add(scope.Decide(scope.Const(Value.OfParticipant(SliceManifest.Player)),
                     DecisionResponseKind.EntityRef, "Choose a target", targetSlot,
                     scope.Collection(pilesBindings.Monsters), scope.Const(1L), scope.Const(1L)));
+            // Target selection completes before use; the bottle is consumed before effect decisions.
+            body.Add(scope.Destroy(potionRef));
             body.AddRange(CompileEffects(scope, potionRef, owner, scope.LocalRef(targetSlot), targetSlot,
                 -1, -1, -1, program, declaration.Unpowered));
             return index == declarations.Count - 1

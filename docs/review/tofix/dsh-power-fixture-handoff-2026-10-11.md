@@ -9,7 +9,7 @@ updated_at: 2026-10-11
 
 # ENV-T04 受控 Power 初值机制包交接（B）
 
-本包修复工具的受控初值适配。原 17 项完整执行一次：14 passed / 1 self_checked / 1 diverged / 1 unsupported_rng_profile，严格 rc=1；原 14 项自检保留，新增 8 项实际执行判别全部通过，总计 22/22。Power 原首差消失，但 ENV-T04 整体不能据此关闭。主清单由负责人更新，本会话交付后停止。
+本包修复工具的受控初值适配。原 17 项完整执行一次：14 passed / 1 self_checked / 1 diverged / 1 unsupported_rng_profile，严格 rc=1；原 14 项自检保留，新增 8 项实际执行判别全部通过，总计 22/22。Power 原首个差异消失，但 ENV-T04 整体不能据此关闭。主清单由负责人更新，本会话交付后停止。
 
 派发见[固定记录](../../../.audit/dsh-power-fixture-2026-10-11/task-record.json)。该记录及同目录的[任务原文](../../../.audit/dsh-power-fixture-2026-10-11/task.txt)、[输入摘要](../../../.audit/dsh-power-fixture-2026-10-11/inputs-before.json)保留原样。执行记录见[完整回归](../../../.audit/dsh-power-fixture-2026-10-11/regression/regression.json)、[随机/配置/轨迹/文件摘要证据](../../../.audit/dsh-power-fixture-2026-10-11/delivery-evidence.json)、[正常 Run 阶段诊断](../../../.audit/dsh-power-fixture-2026-10-11/init-upfront/init-upfront-diagnosis.json)。run_id 为 `regression@env-t04-regression@1+20261010T185302Z`；suite SHA256 为 `5cca423f8e0d298f8229d5b5ad14cbe0fb104515645c796db4a858d31af223a2`。机器时间与任务日期不同，保留真实产物时间，不改写 run_id。
 
@@ -56,14 +56,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .audit/dsh-power-fixture-202
 
 |真实执行|base 与参考轨迹|结论|
 |---|---|---|
-|原 power-turn-end-decay，enemy:0 Vulnerable|boundary0=2、boundary1=2、boundary2=1|原双方首差修复；真实减层|
+|原 power-turn-end-decay，enemy:0 Vulnerable|boundary0=2、boundary1=2、boundary2=1|原双方首个差异修复；真实减层|
 |原 vulnerable-decay-via-bash|0→2→1|真实 Bash 施加及衰减保持|
 |玩家/敌方 Strength 六组对照中的两组|2→2|非衰减者不变|
 |玩家/敌方 Vulnerable/Weak 四组|2→1|双方初态与持续轨迹一致，全量 Comparator passed|
 |实际错设 Ticks=false|boundary2 stacks 2≠正确1|必要负例 detected=true|
 |实际错设 SkipNextTick=true|boundary2 stacks 2≠正确1|必要负例 detected=true|
 
-负例首差均 `boundary[2].power.enemy.base-spire:calcified-cultist.0.stacks`，不是仅篡改最终 JSON。原 14 项包含 Power 字段、牌区/候选/随机 gate 等判别，全部继续执行；8 项新增不计作原 suite case，不缩减17分母。
+负例首个差异均 `boundary[2].power.enemy.base-spire:calcified-cultist.0.stacks`，不是仅篡改最终 JSON。原 14 项包含 Power 字段、牌区/候选/随机 gate 等判别，全部继续执行；8 项新增不计作原 suite case，不缩减17分母。
 
 原 Power seed 为 `ENV-T04-CTRL-power-turn-end-decay`；Bash 为 `ENV-T04-CTRL-vulnerable-decay-via-bash`。两侧 source/profile/configuration 和原 game_seed 已记录：base 为受控切片+正式相同随机配置，reference 为独立 sts2-sim 顺序路径、显式 `source-compat-sts2-frozen@1`（12条 run 具名流；非重键模式）。相关源/参考/作者/适配文件 SHA256、base session_identity、reference_identity 原样摘入证据。
 
@@ -81,9 +81,9 @@ base 单位为 raw-generator-words，reference 为 native-counter-increments，�
 
 只读 `init-upfront` 对原 seed 得出 run_seed_u32=3850333834、up_front_stream_seed_u32=2615586789。参考 run_constructed/profile_applied 均0；player_created 累计230；room_entered 累计295。独立 CloneExact 阶段重放：共享遗物袋112 + 角色遗物袋118 + 共享古代人洗牌0 + act0事件洗牌30 + 普通槽16 + 精英槽17 + boss1 + ancient1 =295。原 base UpFront=17、reference=295，差278；参考首遭遇 `FUZZY_WURM_CRAWLER_WEAK`。这与其他旧 seed 的计数不能混用。
 
-最早可定位阶段是遗物袋前置初始化：[源 InitializeNewRun](../../../sts2/src/Core/Runs/RunManager.cs#L445)先共享袋再玩家袋；[源玩家袋](../../../sts2/src/Core/Entities/Players/Player.cs#L363)负责缺失时填充；[参考 CreatePlayerRelicGrabBag](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L242)实现相同顺序。Dev base 的[Setup 队列入口](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3969)只在存在 treasure wiring 时接前置，其 Dev 场景未接该 wiring，随后直接建遭遇队列；[工厂范围描述](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L193)明确前置阶段/全量池/精英等缺口。Ironclad 其他新范围已有共享袋接线，不能把 Dev 缺口泛化为所有 base 范围。
+最早可定位阶段是遗物袋前置初始化：[源 InitializeNewRun](../../../sts2/src/Core/Runs/RunManager.cs#L445)先共享袋再玩家袋；[源玩家袋](../../../sts2/src/Core/Entities/Players/Player.cs#L363)负责缺失时填充；[参考 CreatePlayerRelicGrabBag](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L242)实现相同顺序。Dev base 的[Setup 队列入口](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3969)只在存在 treasure wiring 时接前置，其 Dev 场景未接该 wiring，随后直接建遭遇队列；[工厂范围描述](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L193)明确前置阶段/全量池/精英等缺口。Ironclad 其他新范围已有共享袋接入，不能把 Dev 缺口泛化为所有 base 范围。
 
-交 Codex 的最小生产建议：在本 case 实际 Dev 正式工厂路径接上共享/玩家遗物袋的源顺序与真实源池消费，先用 player_created 阶段112/118独立核对；后续事件/整幕生成及池子子集仍单列差异，继续找首差，不能补278次空抽或据该归因宣告随机规则验收。未在本包启动第二生产包。
+交 Codex 的最小生产建议：在本 case 实际 Dev 正式工厂路径接上共享/玩家遗物袋的源顺序与真实源池消费，先用 player_created 阶段112/118独立核对；后续事件/整幕生成及池子子集仍单列差异，继续找首个差异，不能补278次空抽或据该归因宣告随机规则验收。未在本包启动第二生产包。
 
 `random-reshuffle-unsupported` 实际双方消费随机，首条差异证据为 `boundary[3].pile.draw.initial-slots`：base `start:05,start:00,start:08,start:03,start:07` vs reference `start:03,start:06,start:04,start:09,start:01`。共6条差异只作路径证据，不作规则裁决，不升级无随机 profile。
 

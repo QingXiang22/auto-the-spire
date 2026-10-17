@@ -13,7 +13,7 @@
 - delivery_status: `ready_for_review`（**不是验收**）
 - updated_at: 2026-10-12T10:05:00+08:00
 
-归属与接手入口：归属[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（主清单由负责人单写，本会话只写本交接与自有
+归属与接手入口：归属[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（主清单由负责人独自修改，本会话只写本交接与自有
 证据）。本包可写目录只有 `tools/differential/`（本 case 的 Profile 声明、必要结算文案、README）与
 [.audit/dsh-strict-reshuffle-close-20261012](../../../.audit/dsh-strict-reshuffle-close-20261012/)；输出在
 `.artifacts/parallel/dsh-strict-reshuffle-close-20261012`。没有改 core / base / net / `reference` / AI，
@@ -64,7 +64,7 @@
 | **Restore** | `reference/.../Runs/RunRngSet.cs:265-268` 的 `MockRng` 是**换对象**（`_rngs[type] = new Rng(seed)`，计数器归零）；`ReferenceRandomProbe.Restore` 换完必须**重挂基线**（`Restore` 内调 `Baseline()`），前后读数写进 `reference_streams.restore_before/restore_after` | `restore_before.combat-draw = 9` → `restore_after = 0`；初始化期那条同 seed 的临时流留在 `observed:3`（指纹同 `0x268d…`、`Comparable=false`），按**对象身份**分列，没有被当成同一条流 |
 | **实际边界（洗牌输入/输出）** | 源 `CardPileCmd.Shuffle` = `discard + drawPile` → `List.Sort`（`CardModel.CompareTo`：`ModelId.Entry` 序、同级按升级等级）→ 一次 Fisher–Yates | 独立复算得到洗后 10 张 = `04,05,06,08,01,00,09,03,07,02`，与两侧边界 3 的 `pile.hand.initial-slots = start:04,05,06,08,01` / `pile.draw.initial-slots = start:00,09,03,07,02` **逐值一致**；抽牌堆内容序也与 `pile.draw.order` 一致 |
 
-结论：**没有发现源语义首差**——不需要保留红态，也没有为了变绿改任何其他 case。
+结论：**没有发现源语义首个差异**——不需要保留红态，也没有为了变绿改任何其他 case。
 
 ## 构建与身份
 
@@ -128,10 +128,10 @@ base 记录的**唯一**差异（`notes` 数组，对比 #1 与 #3）：
 没有改比较器、没有加历史矩阵。两次都是**完整 17**（`complete=true`，不是 `--only`），因此非零不是子集运行的
 副产物——若被改的那处没有被真的比较，这两次都会是 rc0。
 
-| 反例 | 只改参考记录的这一处 | 原 rc | 判定 / 首差 / 维度 |
+| 反例 | 只改参考记录的这一处 | 原 rc | 判定 / 首个差异 / 维度 |
 | --- | --- | --- | --- |
-| **N1 牌序变化** | `random-reshuffle-unsupported` 的 `boundary[3].pile.draw.order` 换一个**纯置换**：前两项对调（多重集、条数、`sorted` 集合都不变），即"牌序变了、构成没变" | **1** | `verdict=diverged`，唯一首差 `boundary[3].pile.draw.order`（kind `collection`），最后一致边界 `2:step:1:end_turn`；`passed 15 / self_checked 1 / 不计通过 1`、自检 0 失败 |
-| **N2 参考 Shuffle 边界流缺失** | 同一 case 的 `boundaries[*].streams` 清空（参考侧不再有真实具名流读数） | **1** | `verdict=diverged`，首差 `boundary[3].streams[base-spire:combat-draw].present`（`存在 ≠ 缺失`），并**如实**列出 `missing_dimensions=["streams(reference)"]`；其余计数同 N1 |
+| **N1 牌序变化** | `random-reshuffle-unsupported` 的 `boundary[3].pile.draw.order` 换一个**纯置换**：前两项对调（多重集、条数、`sorted` 集合都不变），即"牌序变了、构成没变" | **1** | `verdict=diverged`，唯一首个差异 `boundary[3].pile.draw.order`（kind `collection`），最后一致边界 `2:step:1:end_turn`；`passed 15 / self_checked 1 / 不计通过 1`、自检 0 失败 |
+| **N2 参考 Shuffle 边界流缺失** | 同一 case 的 `boundaries[*].streams` 清空（参考侧不再有真实具名流读数） | **1** | `verdict=diverged`，首个差异 `boundary[3].streams[base-spire:combat-draw].present`（`存在 ≠ 缺失`），并**如实**列出 `missing_dimensions=["streams(reference)"]`；其余计数同 N1 |
 
 沿用既有自检：完整 17 的 `self_test` 22 项 0 失败里仍包含本 case 的 `identical/`（现在 `verdict=passed`）、
 `mutant/collection`（`pile.hand.order` 截断）与 `mutant/stream`（`combat-draw` `draws 10≠9`），即
@@ -139,7 +139,7 @@ base 记录的**唯一**差异（`notes` 数组，对比 #1 与 #3）：
 
 ## 差异、阻塞与未验证
 
-- **首差：无。** 完整 17 的 `random-reshuffle-unsupported` 两侧 4 个边界逐条一致（含 `pile.*.initial-slots`
+- **首个差异：无。** 完整 17 的 `random-reshuffle-unsupported` 两侧 4 个边界逐条一致（含 `pile.*.initial-slots`
   与具名流 `draws`/指纹），`divergences=[]`。最后一致边界 = 该 case 的最后一个边界。
 - **未验证（本包不声称）**：正常 Run、奖励、四幕推进的**双侧比较没有执行**；本 case 仍是**受控单场机制**对拍，
   不构成正常开局胜负或整局证据。真实重洗之外的 6 条合成流键
@@ -159,7 +159,7 @@ base 记录的**唯一**差异（`notes` 数组，对比 #1 与 #3）：
 
 ## 维护位置与自查
 
-- 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（本轮由负责人单写）；
+- 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（本轮由负责人独自修改）；
   工具用法与口径写 [tools/differential/README.md](../../../tools/differential/README.md)（新增「重洗严格升级（2026-10-12）」）；
   长日志与原始证据在 [.audit/dsh-strict-reshuffle-close-20261012](../../../.audit/dsh-strict-reshuffle-close-20261012/)，
   运行产物在 `.artifacts/parallel/dsh-strict-reshuffle-close-20261012`。

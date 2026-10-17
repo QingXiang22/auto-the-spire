@@ -36,6 +36,8 @@ internal sealed class ReferenceRandomProbe : IDisposable
     private readonly Dictionary<Rng, Observed> observed = new();
     private readonly Dictionary<Rng, long> namedBaseline = new();
     private readonly Dictionary<Rng, long> dynamicBaseline = new();
+    private readonly Dictionary<Rng, string> encounterStreams = new();
+    private HashSet<Rng>? capturingEncounter;
 
     /// <summary>具名流的**原始**诊断名 → 显式映射后的 base 引擎流名。</summary>
     private readonly Dictionary<string, string> mappedNames = new(StringComparer.Ordinal);
@@ -75,6 +77,22 @@ internal sealed class ReferenceRandomProbe : IDisposable
 
     /// <summary>建局完成、脚本开始之前的状态读数（初始化证据，不写入任何脚本边界）。</summary>
     public void MarkInitialization() => initialization = Cumulative("initial");
+
+    /// <summary>Identify encounter RNG objects by their native call site, never by seed or output matching.</summary>
+    public void ObserveEncounter(Action enter, Func<string> streamName)
+    {
+        if (capturingEncounter is not null) throw new InvalidOperationException("Nested encounter observation");
+        var captured = new HashSet<Rng>();
+        capturingEncounter = captured;
+        try { enter(); }
+        finally { capturingEncounter = null; }
+        if (captured.Count > 1) throw new CheckFailed("Multiple RNG objects generated one encounter; mapping is ambiguous");
+        foreach (var rng in captured) encounterStreams.Add(rng, streamName());
+    }
+
+    /// <summary>Map the actual event-owned RNG object by native event identity, before any effect draw.</summary>
+    public void ObserveEvent(Sts2Sim.Core.Models.EventModel model) =>
+        encounterStreams.Add(model.Rng, BaseSpire.Slice.Rooms.EventRandomAsset.StreamName(model.GetType().Name));
 
     /// <summary>
     /// 受控注入后的工具侧游标对齐：把**这一条** run 级具名流按源版本 Profile 重新装回种子，
@@ -209,13 +227,16 @@ internal sealed class ReferenceRandomProbe : IDisposable
         return Sorted(snapshots);
     }
 
-    private static ReferenceStreamSnapshot Dynamic(Rng rng, Observed entry, string status)
+    private ReferenceStreamSnapshot Dynamic(Rng rng, Observed entry, string status)
     {
         var state = rng.ToSerializable();
+        bool comparable = encounterStreams.TryGetValue(rng, out var stream);
         return new ReferenceStreamSnapshot(
-            Records.ObservedStreamPrefix + entry.Ordinal, entry.Name, entry.Origin, status, rng.Counter,
+            Records.ObservedStreamPrefix + entry.Ordinal, comparable ? stream! : entry.Name,
+            comparable ? (stream!.StartsWith("base-spire:event:", StringComparison.Ordinal)
+                ? "native EventModel.Rng object" : "native EncounterDefinition.CreateMonsters RNG object") : entry.Origin, status, rng.Counter,
             RngSourceCompat.FingerprintText(state.state0, state.state1, state.state2, state.state3),
-            false);
+            comparable);
     }
 
     private static IReadOnlyList<ReferenceStreamSnapshot> Sorted(List<ReferenceStreamSnapshot> snapshots) =>
@@ -279,6 +300,10 @@ internal sealed class ReferenceRandomProbe : IDisposable
 
     private void Observe(Rng rng, string op, double min, double max, int arity)
     {
+        if (capturingEncounter is not null && new System.Diagnostics.StackTrace().GetFrames().Any(frame =>
+            frame.GetMethod()?.DeclaringType == typeof(Sts2Sim.Core.Content.EncounterDefinition)
+            && frame.GetMethod()?.Name is "CreateMonsters" or "CreateMonstersCore"))
+            capturingEncounter.Add(rng);
         if (!observed.TryGetValue(rng, out var entry))
         {
             var raw = rng.DiagnosticStreamName;

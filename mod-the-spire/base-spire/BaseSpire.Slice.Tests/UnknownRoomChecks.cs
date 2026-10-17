@@ -54,6 +54,7 @@ internal static class UnknownRoomChecks
         UnregisteredEventIdentityFails();
         VisitedEventIsSkipped();
         EligibilityAndCounting();
+        SourceEligibilityWithoutModules();
     }
 
     /// <summary>源身份 ↔ 注册 ID 的转换点是唯一且带校验的：源池成员可用，越界名字建包期失败。</summary>
@@ -246,6 +247,7 @@ internal static class UnknownRoomChecks
             ArrangeAt(session, run, parent, "Monster");
             // 队列第 2 条（下标 1）= 源池顺序里下一个身份 `UnrestSite`，本构建没有它的模块。
             FormalSliceFixture.SetNumber(session, run, RunTypeId, "EventsVisited", 1);
+            FormalSliceFixture.SetNumber(session, run, RunTypeId, "Hp", 56);
 
             var fault = Check.Fault(EngineFaultCode.SessionStateInvalid,
                 () => Submit(session, Legal(session, ChooseAction)!, target),
@@ -266,6 +268,7 @@ internal static class UnknownRoomChecks
             var target = FindUnknownWithParent(session, out var parent);
             ArrangeAt(session, run, parent, "Monster");
             AddVisited(session, run, "SunkenStatue");
+            FormalSliceFixture.SetNumber(session, run, RunTypeId, "Hp", 56);
 
             // 下标 0 已访问 ⇒ 跳过；下标 1 = `UnrestSite`（未实现）⇒ 具名失败。
             Check.Fault(EngineFaultCode.SessionStateInvalid,
@@ -321,7 +324,36 @@ internal static class UnknownRoomChecks
         public Expr IsAllowed(IrScope scope, EventCompileContext context, Expr run) => scope.Const(eligible);
     }
 
-    private static Session BuildLifecycleProbe()
+    private static void SourceEligibilityWithoutModules()
+    {
+        Check.Run("ENV-T09 源资格独立于效果：跳过第一幕禁用事件和70%生命以上的UnrestSite [受控队列]", () =>
+        {
+            var session = BuildLifecycleProbe(["PotionCourier", "StoneOfAllTime", "UnrestSite", "SunkenStatue"], []);
+            var run = RunInstance(session);
+            FormalSliceFixture.SetNumber(session, run, RunTypeId, "Hp", 57);
+            Submit(session, Legal(session, "PullEvent")!);
+            Check.Equal("SunkenStatue", Text(session, run, RunTypeId, "PulledId"), "不因缺少效果模块而默认允许");
+            Check.Equal(3L, FormalSliceFixture.Number(session, run, RunTypeId, "EventsVisited"), "只前进三个不合格身份");
+            Check.Sequence(["SunkenStatue"], VisitedIds(session), "被跳过的身份不计已访问");
+
+            var boundary = BuildLifecycleProbe(["UnrestSite", "SunkenStatue"], []);
+            var boundaryRun = RunInstance(boundary);
+            FormalSliceFixture.SetNumber(boundary, boundaryRun, RunTypeId, "Hp", 56);
+            Submit(boundary, Legal(boundary, "PullEvent")!);
+            Check.Equal("UnrestSite", Text(boundary, boundaryRun, RunTypeId, "PulledId"), "56/80恰好70%允许");
+        });
+        Check.Run("ENV-T09 未支持的源资格明确失败，不作为恒true或静默缩池 [受控队列]", () =>
+        {
+            var session = BuildLifecycleProbe(["LuminousChoir", "SunkenStatue"], []);
+            var fault = Check.Fault(EngineFaultCode.SessionStateInvalid,
+                () => Submit(session, Legal(session, "PullEvent")!), "资格未支持必须报错");
+            Check.True(fault.Message.Contains("source event eligibility is not implemented for LuminousChoir", StringComparison.Ordinal),
+                "失败定位到资格及源身份");
+            Check.Equal(0, VisitedIds(session).Count, "资格未确定不记录事件访问");
+        });
+    }
+
+    private static Session BuildLifecycleProbe(string[]? sourceNames = null, IEventRoomModule[]? moduleOverrides = null)
     {
         var package = new EnginePackageBuilder("base-spire", "0.4.0");
         var runType = package.EntityType("Run");
@@ -341,7 +373,7 @@ internal static class UnknownRoomChecks
         var initialization = new RunInitializationWiring(package, runType);
         var state = EventVisitLifecycle.Declare(package, runType, initialization);
         var context = new EventCompileContext(rooms, state.CurrentEventId, MapRoomWiring.EventPhase);
-        IEventRoomModule[] modules =
+        IEventRoomModule[] modules = moduleOverrides ??
         [
             new ProbeEvent("UnrestSite", eligible: false),
             new ProbeEvent("SunkenStatue", eligible: true),
@@ -370,7 +402,7 @@ internal static class UnknownRoomChecks
                  (pulled, setup.Const(string.Empty))], runs),
         };
         // 源池身份顺序（与 RunSourcePoolManifest 一致）：本包只放三个，探针用。
-        foreach (var sourceName in new[] { "UnrestSite", "SunkenStatue", "WarHistorianRepy" })
+        foreach (var sourceName in sourceNames ?? ["UnrestSite", "SunkenStatue", "WarHistorianRepy"])
         {
             steps.Add(setup.CreateEntity(initialization.RoomIdentity, setup.EntityScope(setup.LocalRef(runSlot)), created,
                 [(initialization.RoomId, setup.Const(sourceName))], initialization.Events));
@@ -390,7 +422,7 @@ internal static class UnknownRoomChecks
 
     private static Session NewRun()
     {
-        var run = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.DevMap))
+        var run = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.DevMap))
             .CreateSession(GoldenSeed);
         run.Start();
         return run.Session;

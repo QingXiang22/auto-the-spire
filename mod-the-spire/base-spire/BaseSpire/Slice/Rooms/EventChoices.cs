@@ -14,7 +14,8 @@ public sealed record EventEffectContext(IrScope Scope, Expr Run, RunResources Re
     public Expr Read(FieldSymbol field) => Scope.Field(Run, field);
     public Inst[] GainGold(long amount) => GainGold(Scope.Const(amount));
     public Inst[] GainGold(Expr amount) => Resources.GainGold(Scope, Run, amount);
-    public Inst[] DamageOutsideCombat(long amount) => Resources.DamageOutsideCombat(Scope, Run, Scope.Const(amount));
+    public Inst[] DamageOutsideCombat(long amount) => DamageOutsideCombat(Scope.Const(amount));
+    public Inst[] DamageOutsideCombat(Expr amount) => Resources.DamageOutsideCombat(Scope, Run, amount);
     public Inst[] HealLivingPlayer(long amount) => Resources.HealLivingPlayer(Scope, Run, Scope.Const(amount));
     public Inst Unsupported(string reason) => Scope.Fail(reason);
 }

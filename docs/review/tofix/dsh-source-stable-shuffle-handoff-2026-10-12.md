@@ -3,7 +3,7 @@
 本包修掉源 `StableShuffle` 缺失的**预排序**：base 里正常抽牌与效果抽牌共用的唯一重洗入口
 （[CardDrawProcedures.Reshuffle](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDrawProcedures.cs)）
 现在按源 `CardPileCmd.Shuffle` 的顺序执行「清已知位置 → 弃牌堆逐张并入抽牌堆 → **按源 `CardModel.CompareTo`
-排序** → 一次 Fisher–Yates」。ENV-T04 受控重洗 case 的残余首差（两侧洗牌**输入顺序**不同）因此消除；随机流
+排序** → 一次 Fisher–Yates」。ENV-T04 受控重洗 case 的残余首个差异（两侧洗牌**输入顺序**不同）因此消除；随机流
 条数与抽牌 hook 次数不变。没有扩大引擎架构，也没有补卡牌。
 
 - task_id: ENV-T06（父项）／本包 `ENV-T06-source-stable-shuffle-20261012`
@@ -14,19 +14,19 @@
 - delivery_status: `ready_for_review`
 - updated_at: 2026-10-12T08:21:48+08:00
 
-归属与接手入口：归属[主清单 ENV-T06](README.md#env-t06)（主清单由负责人单写，本会话只写本交接与自有证据）。
+归属与接手入口：归属[主清单 ENV-T06](README.md#env-t06)（主清单由负责人独自修改，本会话只写本交接与自有证据）。
 交付范围＝base 共享重洗的源预排序、其窄排序元数据/纯计算资产/必要检查与两处指南；**未改** core、net、tools、
-`reference/`、商店接缝与既有 `CardDefinitions.Schema` 形状。本报告记录 2026-10-12 的交付；当前排期、认领与
+`reference/`、商店接口与既有 `CardDefinitions.Schema` 形状。本报告记录 2026-10-12 的交付；当前排期、认领与
 状态以主清单为准，`ready_for_review` 不是验收，也不关闭父项或环境。
 
 ## 接手后先做什么
 
 1. 先核对[主清单 ENV-T06](README.md#env-t06)与 `git status --short`。本包**已交付**：源排序键
-   （隐藏 `SourceOrderKey`）、共享重洗的源预排序、纯计算资产与后端分派、5 项判别检查、两处指南与一次完整
+   （隐藏 `SourceOrderKey`）、共享重洗的源预排序、纯计算资产与后端分派、5 项针对性检查、两处指南与一次完整
    Slice 通过。已交的商店/语义重放/客户端**不要重做**。
 2. 之后（B 补参考 streams、Codex 串行收口严格门槛）：用下面的新 `BaseSpire.dll` 重跑严格 17。前置条件＝把差分器
    base 侧/参考侧的**身份基线**按本包的新值迁移（见「身份迁移」），预期结果＝`random-reshuffle-unsupported` 的
-   `boundary[3].pile.draw.initial-slots` 首差消失；该 case 的 `rng_profile` 声明未改，仍判
+   `boundary[3].pile.draw.initial-slots` 首个差异消失；该 case 的 `rng_profile` 声明未改，仍判
    `unsupported_rng_profile`（是否升级为可计通过由负责人决定，升级须同时补参考侧 `streams` 投影）。
 3. 定向复算命令（本包已验证）：`dotnet <测试 dll> --reshuffle-only`。生产侧单点复算可用
    `python .audit/dsh-source-stable-shuffle-20261012/verify-shuffle-vectors.py`。
@@ -79,7 +79,7 @@
   ① `SliceChecks.AttackUntilOutOfAttacks` 改为只从 `LegalAction.Bindings`（guard 已通过）里挑攻击牌——它原先按
   `Candidates`（全部手牌）贪心，源排序把 `BASH` 稳定排到最前时会出现「最前面的攻击牌付不起、但同手牌里有付得起
   的牌」而递交被守卫拒绝；② `SliceEnemyStateMachineChecks` 的「有序条件分支」会话改装**正确**后端并只断言
-  `monster_ai` 抽取为 0——该夹具回合开始会真的重洗，重洗现在会执行**另一个**包内 compute 资产，「装错后端即
+  `monster_ai` 抽取为 0——该测试场景回合开始会真的重洗，重洗现在会执行**另一个**包内 compute 资产，「装错后端即
   Unsupported」仍由同一 Check.Run 里的加权分桶会话覆盖；③ `SliceMapRoomChecks` 的 dev/dev-map 身份常量按
   `--describe-build` 实测迁移（下节）。除这三处外没有改既有断言。
 
@@ -93,8 +93,8 @@
 | dev-map | `c46704e1392e253e` → `6c1e1be04af1492b` | `fd9e605af013e515` → `9d9f43c0d1b58809` |
 
 实测证据 [describe-build.txt](../../../.audit/dsh-source-stable-shuffle-20261012/describe-build.txt)，迁移注释写在
-`SliceMapRoomChecks` 常量上方（含旧值留档）。这属「合法重构造成旧快照失效」的基线迁移；差分器/公开夹具侧
-（`tools/differential`、net/Host 夹具）的同一批身份由 B/负责人统一迁移。
+`SliceMapRoomChecks` 常量上方（含旧值留档）。这属「合法重构造成旧快照失效」的基线迁移；差分器/公开接口回放数据侧
+（`tools/differential`、net/Host 测试场景）的同一批身份由 B/负责人统一迁移。
 
 ## 源定位
 
@@ -139,7 +139,7 @@
 
 ## 判别点（实际结果）
 
-- **原 10 张首差消失**（端到端实测，同 seed/同流位置）：重洗后第 1 张 = 弃牌堆第 4 个实例，剩余抽牌堆 =
+- **原 10 张首个差异消失**（端到端实测，同 seed/同流位置）：重洗后第 1 张 = 弃牌堆第 4 个实例，剩余抽牌堆 =
   第 `5,6,8,1,0,9,3,7,2` 个实例 —— 与 T04 独立模型的 `04,05,06,08,01 / 00,09,03,07,02` 同序；`Shuffle` 流恰好
   消费 **9** 次（`n-1`，与迁移前同一条流、同条数）。
 - **>16 张重复实例按源算法**：17 张同键实例端到端得到源内省排序置换 `[0,14,13,12,11,10,9,15,8,6,5,4,3,2,1,7,16]`
@@ -161,8 +161,8 @@
 - **牌触发的非空抽牌堆重洗**（如 Reboot 一类「把弃牌堆洗回抽牌堆」）base 目前没有入口；`Reshuffle` 的触发条件与
   源 `ShuffleIfNecessary` 一致，因此该形状仍未接通（上一包已登记的同一缺口）。
 - **未跑**：`dotnet build AutoTheSpire.sln`、Engine、net、tools、训练/归档套件、正常整局公开复放与 Host 轨迹。
-  本包没有改 core/net/tools/协议，也没有改商店接缝。
-- **夹具级注意**：`SliceFixtures.PutInHand(upgraded: true)` 这类**测试注入**升级不经过 `CardDefinitions.Upgrade`，
+  本包没有改 core/net/tools/协议，也没有改商店接口。
+- **测试辅助方法的注意事项**：`SliceFixtures.PutInHand(upgraded: true)` 这类**测试注入**升级不经过 `CardDefinitions.Upgrade`，
   不会同步排序键；生产升级路径已同步（检查③覆盖）。若后续检查要用注入升级再触发重洗，需要显式同步该键。
 
 ## 依赖与可继续事项
@@ -170,13 +170,13 @@
 - 依赖：ENV-T04 的受控重洗 case 与独立模型（已交）；[.audit/dsh-reshuffle-followup-20261011](../../../.audit/dsh-reshuffle-followup-20261011/)
   的游标对齐成果（本包复用其 seed/期望值，未重做工具侧）。上游：本包不启动下一包。
 - 可继续（B/Codex）：①把差分器 base/参考身份基线迁到本包新值并补参考侧逐边界 `streams`；②用新 DLL 跑严格 17，
-  确认 `boundary[3]` 首差消失后由负责人裁定是否升级该 case 的比较口径；③如需，把「>16 且键混合」的输入加进
+  确认 `boundary[3]` 首个差异消失后由负责人裁定是否升级该 case 的比较口径；③如需，把「>16 且键混合」的输入加进
   受控 case 作为独立对拍。
 - 可复用：本包构建根、`--reshuffle-only` 开发入口、独立模型脚本、C# 探针、5 项检查与身份实测清单。
 
 ## 维护位置与自查
 
-- 任务状态/认领/下一成果只回写[主清单 ENV-T06](../../review/tofix/README.md#env-t06)（本轮由负责人单写）；机制用法写
+- 任务状态/认领/下一成果只回写[主清单 ENV-T06](../../review/tofix/README.md#env-t06)（本轮由负责人独自修改）；机制用法写
   [base 控制流模块](../../design/mod-the-spire/control-flow-modules.md#重洗的源预排序stableshuffle)与
   [base 开发指南](../../design/mod-the-spire/base-development-guide.md#新增共享状态字段)；证据与长日志在
   [.audit/dsh-source-stable-shuffle-20261012](../../../.audit/dsh-source-stable-shuffle-20261012/)，构建在

@@ -10,7 +10,7 @@
 
 本包补齐**参考侧受控机制逐稳定边界的真实随机流快照**，让真实重洗第一次可以按**完整维度**独立比较。
 `random-reshuffle-unsupported` 的参考记录不再是 `missing_dimensions=[streams(reference)]`：边界 3 两侧现在有
-同键、同单位的 `base-spire:combat-draw`（`draws=9`、指纹 `0x268d319817e8d9b3`），而**首差仍是**
+同键、同单位的 `base-spire:combat-draw`（`draws=9`、指纹 `0x268d319817e8d9b3`），而**首个差异仍是**
 `boundary[3].pile.draw.initial-slots`（base 缺源 `StableShuffle` 预排序，A 主责未交）。
 本包**不改**该 case 的 `unsupported_rng_profile` 声明、不改 17 分母/seed/预期终点/维度含义、不关闭父项 ENV-T04，
 也没有动 base/core/net/reference 生产。ready_for_review **不是验收**。
@@ -25,7 +25,7 @@
    [参考记录 `random-reshuffle-unsupported`](../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/records/reference/random-reshuffle-unsupported.json)
    的 `boundaries[*].streams` 与 `reference_streams`。想复放：用下面的构建/运行命令（固定闭包，只读）。
 3. 等 A 的 base 排序包落地后，由 Codex 在新的**共同闭包**上重放本包命令：预期 `random-reshuffle-unsupported`
-   的 `pile.draw.initial-slots` / `pile.draw.order` 首差消失；届时再裁定是否把该 case 升级到现有源兼容 Profile
+   的 `pile.draw.initial-slots` / `pile.draw.order` 首个差异消失；届时再裁定是否把该 case 升级到现有源兼容 Profile
    （`vanilla-compatible@1`）。**本包不擅自改 Profile 或 unsupported 状态。**
 4. 若还要继续本线：优先核对 `RngSourceCompat.UnverifiedKeyNames` 里那 6 条合成键（base 侧消费点/引擎常量），
    它是"下一次消费这两条流时才会显形"的同类隐患；不需要重录冒烟。
@@ -90,7 +90,7 @@ dotnet build .audit/dsh-reference-stream-boundaries-20261012/verify/Differential
 
 | # | 命令（`$dll` = 上面的 Differential.dll） | 原 rc | 执行数 | 结果 |
 | --- | --- | --- | --- | --- |
-| 1 | `dotnet $dll test --suite regression --only random-reshuffle-unsupported --output .audit/dsh-reference-stream-boundaries-20261012/targeted-reshuffle` | **1** | 选中 1 / 执行 1 | `unsupported_rng_profile`，`complete=false`，`missing_dimensions=[]`，首差 `boundary[3].pile.draw.initial-slots` |
+| 1 | `dotnet $dll test --suite regression --only random-reshuffle-unsupported --output .audit/dsh-reference-stream-boundaries-20261012/targeted-reshuffle` | **1** | 选中 1 / 执行 1 | `unsupported_rng_profile`，`complete=false`，`missing_dimensions=[]`，首个差异 `boundary[3].pile.draw.initial-slots` |
 | 2 | `dotnet $dll test --suite regression --output .audit/dsh-reference-stream-boundaries-20261012/full-regression` | **1** | expected 17 / executed 17 | `passed 15` / `self_checked 1`（factory-wiring）/ `unsupported_rng_profile 1`；自检 22 项 0 失败；reference 执行 16 |
 | 3 | `dotnet $dll test --suite regression --only random-reshuffle-unsupported --records .audit/dsh-reference-stream-boundaries-20261012/negative-missing-streams/records --output .audit/dsh-reference-stream-boundaries-20261012/negative-missing-streams` | **1** | 选中 1 / 执行 1 | 负例：`missing_dimensions=[streams(reference)]`（清空逐边界流读数后仍真报缺维度） |
 
@@ -113,14 +113,14 @@ dotnet build .audit/dsh-reference-stream-boundaries-20261012/verify/Differential
 - **初始化与 Restore 分列**（参考记录 `reference_streams`）：`restore_before` 里 `Shuffle=9`、`niche=2`；
   `restore_after` 里 `Shuffle=0`（工具侧归零，未变）；`initialization` 是建局完成时的真实读数。
   **没有**把任何一个累计末态填到所有边界。
-- **首差未变**：`boundary[3].pile.draw.initial-slots`（base `start:05,00,08,03,07` ≠ reference `start:00,09,03,07,02`），
+- **首个差异未变**：`boundary[3].pile.draw.initial-slots`（base `start:05,00,08,03,07` ≠ reference `start:00,09,03,07,02`），
   来自 A 主责的 base 缺 `StableShuffle` 预排序；6 条差异全部是牌区顺序类，`streams` 不再产生差异。
 - base 记录逐字节与负责人基线一致（16 个 base 记录 SHA256 全部 IDENTICAL）；参考记录差异集中在
   `boundaries[*].streams`、`reference_streams`、`script_random` 具名化与 `profile_code_sha256`。
 
 ## 未验证 / 依赖 / 可继续事项
 
-- **未验证**：A 的 base 排序包未交，所以**真实重洗的双侧一致仍未证明**；本包只把参考侧维度补全并证明首差仍在牌区顺序。
+- **未验证**：A 的 base 排序包未交，所以**真实重洗的双侧一致仍未证明**；本包只把参考侧维度补全并证明首个差异仍在牌区顺序。
   本包不声称"重洗已接通"、不把该 case 升级 Profile、不关闭父项。
 - **未验证**：`RngSourceCompat.UnverifiedKeyNames` 的 6 条合成键（`UnknownMapPoint`/`CombatPotionGeneration`/
   `CombatEnergyCosts`/`MonsterAi`/`CombatOrbs`/`TreasureRoomRelics`）尚未与 base 实际消费点/引擎常量核对；

@@ -8,19 +8,21 @@
 
 活动版本为 Core.TheSpire/BaseSpire `0.4.0`、`engine/ir@0.4`、`core/0.3` 和卡牌作者语言 `base/0.0.2`。新作者语法见[base/0.0.2 参考](../../docs/dsl/0.0.2/authoring-reference.md)，同包文本机制绑定见[core/0.3 参考](../../docs/dsl/core/0.3/authoring-reference.md)。旧冻结文档保留历史合同，不代表当前构建仍使用旧身份。
 
-在仓库根目录运行活动检查：
+安装根 [global.json](../../global.json) 指定的 .NET SDK `9.0.306` 后，在仓库根目录运行无原版源码依赖的运行时检查：
 
 ```powershell
-dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
+dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --suite runtime
 ```
+
+本地提供同版本 `sts2/` 后，可用 `--suite source` 单独核对源码，或省略 `--suite` 运行完整组。运行时组不等于执行过源码核对。需要与 GitHub Actions 相同的检查和日志时，见 [CI 检查入口](../../tools/ci/README.md)。
 
 2026-10-04，旧注册器、地图生成器及旧 hooks 已移入[Legacy 归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。2026-10-15用户要求删除根archive；旧实现与检查仅存Git历史，不再随当前检出提供。原有能力说明保留在文末的历史段落中。
 
-## 正式单人入口（BASE-01，2026-10-05）
+## 正式单人入口（BASE-01）
 
 正式构建的**唯一组包/会话工厂**位于 `BaseSpire/SinglePlayer/`。B 的对拍后端与 C 的公开 Host 使用该工厂创建一局。
 
-以下签名定义工厂契约。修改接口时，同步本节和本线的阶段交接：
+以下列出主要成员，供接入时查询；这不是可直接编译的完整类定义。配置与范围以 [RunConfiguration.cs](BaseSpire/SinglePlayer/RunConfiguration.cs) 为准，工厂与会话分别见 [BaseSpireRuntimeFactory.cs](BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs) 和 [BaseSpireBuildDescription.cs](BaseSpire/SinglePlayer/BaseSpireBuildDescription.cs)。修改接口时同步本节。
 
 ```csharp
 namespace BaseSpire.SinglePlayer;
@@ -32,7 +34,7 @@ public sealed record RunConfiguration            // 不可变整局配置；Game
     public UnlockPolicy Unlocks { get; init; } = UnlockPolicy.All;
     public RunMode Mode { get; init; } = RunMode.SinglePlayer;
     public string SourceBaselineId { get; init; } = BaseSpireSourceBaselines.Frozen;  // 只接受已登记基线
-    public string ScopeId { get; init; } = BaseSpireScope.Dev;                        // 只接受 dev
+    public string ScopeId { get; init; } = BaseSpireScope.Dev;                        // 接受 dev / dev-map
     public static RunConfiguration Ironclad(int ascension = 0, string scopeId = BaseSpireScope.Dev);
     public BaseSpireCharacter Resolve();     // 角色/进阶/范围/模式/解锁/基线全部在建局前校验
 }
@@ -48,11 +50,12 @@ public static class BaseSpireSourceBaselines
 
 public static class BaseSpireScope
 {
-    public const string Dev;        // base-spire-singleplayer-dev-v1（**当前唯一可实现**的范围）
+    public const string Dev;        // base-spire-singleplayer-dev-v1（默认，按遭遇序号推进）
+    public const string DevMap;     // base-spire-singleplayer-dev-map-v1（地图/房间开发范围）
     public const string Ironclad;   // base-spire-ironclad-singleplayer-v1（已登记，尚未实现）
     public const string Full;       // base-spire-singleplayer-v1（已登记，尚未实现）
-    public static IReadOnlyList<string> Known { get; }        // 三个 id（区分"未知"与"已知未实现"）
-    public static IReadOnlyList<string> Implemented { get; }   // 当前 = [Dev]
+    public static readonly IReadOnlyList<string> Known;        // [Dev, DevMap, Ironclad, Full]
+    public static readonly IReadOnlyList<string> Implemented;  // [Dev, DevMap]
     public static bool IsImplemented(string scopeId);
     public static string NotImplementedReason(string scopeId);
 }
@@ -63,6 +66,8 @@ public sealed class BaseSpireRuntimeFactory
     public RunConfiguration Configuration { get; }
     public BaseSpireCharacter Character { get; }
     public RuleSet Rules { get; }                             // 只读规则集（会话状态不在这里）
+    public bool ActMapEnabled { get; }                        // 仅 DevMap 为 true
+    public BasePublicSemantics PublicSemantics { get; }       // 与实际规则集闭合的只读语义
     public BaseSpireBuildDescription Describe();               // 只读规则/构建描述（不含每局 seed）
     public BaseSpireRunSession CreateSession(string gameSeed); // 已配置、**尚未 Start** 的独立会话
     public const string ProjectionId = "base-spire:PlayerView";
@@ -85,30 +90,37 @@ public sealed record BaseSpireRunSession
 }
 ```
 
-Host、工具和对拍后端使用同一创建流程：
+Host、工具和对拍后端使用同一创建流程。以下片段用于已引用 BaseSpire 的宿主；从公开接口启动并交互的完整步骤见[公开运行指南](../../docs/design/net-the-spire/how-to-run-public-game.md)。
 
 ```csharp
-var factory = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad());   // ScopeId 只接受 dev（见下）
+using BaseSpire.SinglePlayer;
+
+var config = RunConfiguration.Ironclad(scopeId: BaseSpireScope.DevMap);
+var factory = new BaseSpireRuntimeFactory(config);
 var build   = factory.Describe();                                          // 目录/身份/范围与 unsupported
 var run     = factory.CreateSession("ENV-IRONCLAD-00");                    // 已配置、未 Start、RNG 未消费
 run.Start();                                                               // 每个新 Session 恰好一次
 // 之后：run.Session.LegalActions(run.Participant) / Submit / Answer / Observe(run.Participant, run.ProjectionId)
 ```
 
-**dev 范围的接入限制**
+**开发范围的接入限制**
 
 B/C 接入时，使用下表中的实际支持范围；不能发布完整范围身份。
 
 | 维度 | 现在 | 拒绝方式 |
 | --- | --- | --- |
-| 范围 `ScopeId` | 只可实现 `base-spire-singleplayer-dev-v1` | `Ironclad` / `full` → `NotSupportedException`（构造工厂时，**不生成 Session、不发布描述**）；未知 id → `ArgumentException` |
+| 范围 `ScopeId` | `Dev` / `DevMap`，默认 `Dev` | `Ironclad` / `Full` → `NotSupportedException`（构造工厂时不生成 Session、不发布描述）；未知 id → `ArgumentException` |
 | 角色 `Character` | 只有 `Ironclad` | 其余四角色 → `NotSupportedException`（原因含"卡池/机制未迁移"） |
-| 进阶 `Ascension` | 只有 `0` | `>0` → `NotSupportedException`（`tough`/`deadly` 变体未接入） |
+| 进阶 `Ascension` | 只有 `0` | 任何非 `0` 值 → `NotSupportedException`（`tough`/`deadly` 变体未接入） |
 | 解锁 / 模式 | `All` / `SinglePlayer` | 其它值 → `NotSupportedException` |
 | 源基线 `SourceBaselineId` | 只有 `BaseSpireSourceBaselines.Frozen`（`sts2-frozen-2026-10-05`） | 未知基线 → `ArgumentException`（不按名字继续跑） |
-| 内容范围 | 整幕队列 **15 槽**（弱 3 + 普通 12）由已支持的 6 条 act-1 遭遇填充（弱 3 + 普通 3，含 `mawler-normal`）；无地图/房间类型/真实奖励/幕转换 | `Describe().ExcludedEncounters` / `UnsupportedContent` / `Limitations` 逐条列原因 |
+| `Dev` 流程 | 按遭遇序号推进普通战斗；不物化地图、不注册地图选择动作 | 已知限制从实际构建描述读取 |
+| `DevMap` 流程 | 第一幕地图、普通/精英/Boss 入口、普通战斗奖励、营火、宝箱、商店和已实现事件模块 | 选中未实现房型/事件时具名失败；幕转换、四幕真实胜负尚未闭合 |
+| 内容范围 | 正式池保留源身份，存在身份不表示相应行为可执行 | `Describe().ExcludedEncounters` / `UnsupportedContent` / `Limitations` 分列排除项与限制；验收状态查主清单 |
 
 范围由**实际能力闭合**开启（`BaseSpireScope.Implemented`），改字符串不算实现。
+
+构建描述由工厂生成，部分限制文字沿用早期实现说明；核对具体能力时，应结合对应模块、行为检查和[主清单](../../docs/review/tofix/README.md)。例如药水池已传入正式公开语义，不应从早期“未装载药水”的说明推断当前领取能力。
 
 契约与身份字段：
 
@@ -119,6 +131,7 @@ B/C 接入时，使用下表中的实际支持范围；不能发布完整范围�
 - **原版随机**：算法 `mega-random/xoshiro256ss-splitmix64@1`、映射 `vanilla-uniform@1`；
   字符串 seed 按 `uint(hash32(seed))` 得 run seed，12 条 run 流与 3 条 player 流按
   `seed + hash32(snake_case(名))` 显式种好；`SeededStreams` 给出 (原版流, 引擎流名, 种子) 全表。
+  此外还种下遭遇派生流；`DevMap` 增加地图与事件流，完整列表以本次 `SeededStreams` 和 `EncounterStreams` 为准。
   流名映射为显式表（`VanillaRandomLayout.EngineStreamName`）：`Shuffle` → `base-spire:combat-draw`、
   `CombatTargets` → `base-spire:combat-random-target`、`CombatCardSelection` → `base-spire:combat-random-card`、
   其余 → `base-spire:run:<snake>`；player 流 → `base-spire:player:<snake>`。
@@ -175,7 +188,7 @@ string identity = factory.Describe().PublicBuildId;        // 已折入 semantic
 
 | 成员 | 内容 | 由谁定义 |
 | --- | --- | --- |
-| `Content` | `类型限定名 → { FieldName, ContentIds }`：`base-spire:Card/Power/Monster/Relic` 的内容 ID 目录，ids 来自**实际加载内容**（未支持/未降级内容不进目录） | base（Engine 的 `FieldDefinition` 只说"这是 string 字段"，枚举不出取值） |
+| `Content` | `类型限定名 → { FieldName, ContentIds }`：Card/Power/Monster/Relic/Potion 等已登记类型的内容 ID 目录，ids 来自实际加载的定义；元数据存在不表示所有使用效果均已实现 | base（Engine 的 `FieldDefinition` 只说"这是 string 字段"，枚举不出取值） |
 | `Collections` | `集合限定名 → Pile/Sequence/Group/NotPublished`：牌堆引用哪个 `pile_ref` 实体种类、是否有公开位置坐标、有序流程/归组的 owner **实体种类**、或具名不发布的规则号与理由 | base（集合用途与位置/归属不能从集合名推导） |
 | `KnownPositions` | `KnownCard` 事实的卡牌/牌堆/位置字段名 + `标记值 → 引擎集合` 词表（当前只有 `draw` → `base-spire:DrawPile`） | base（只知道字段名不够；标记词表是包自己的词表） |
 | `TerminalOutcomes` | `base-spire:Victory → Win`、`base-spire:Defeat → Loss`；`WireName()` 给出 `win`/`loss`/`other` | base（终局名字不同不等于 win/loss） |
@@ -196,8 +209,7 @@ string identity = factory.Describe().PublicBuildId;        // 已折入 semantic
   内容或语义变化即换身份。`CanonicalText()` 是逐行可核对的规范化文本（证据用）。
 - **依赖方向**：base **不引用** `net-the-spire` 的程序集或 DTO。公开出口一侧（C 线）负责把
   `Content`/`Collections`/`KnownPositions`/`TerminalOutcomes` 翻译成协议侧的形状；base 只声明游戏语义。
-- **未接通**：本包只提供元数据，不表示 Host/公开出口已经接线；当前正式内容不产生 `KnownCard` 事实
-  （`top_from_discard` 类效果未进入 dev 内容），角色是 schema 层声明，运行时事实由包程序维护。
+- **公开接线**：Host 的 [FormalDevMetadata.FromBase](../../net-the-spire/Net.TheSpire.Host/FormalDevMetadata.cs)读取该元数据并生成公开构建描述；[FormalDevScenario](../../net-the-spire/Net.TheSpire.Host/FormalDevScenario.cs)使用同一工厂。完整使用步骤见[公开运行指南](../../docs/design/net-the-spire/how-to-run-public-game.md)，公开出口验收仍查主清单。
 
 检查：`BaseSpire.Slice.Tests/PublicSemanticsChecks.cs` 覆盖闭合、目录=实际加载内容、集合可见性解释
 （牌堆/有序流程/受阻不发布）、公开顺序不落 NotPublished 与丢序 Group 的判别、owner 进入规范化文本、
@@ -248,3 +260,11 @@ string identity = factory.Describe().PublicBuildId;        // 已折入 semantic
 卡牌、药水、Power 和怪物行为在注册时从 `.spire` DSL 编译成强类型节点；环境 step 只执行节点，不在结算热路径解析源码。DSL 操作包括顺序、条件、重复、攻击、生命损失、格挡、施加状态、抽牌/移动牌、生成牌、实例级选牌、资源修改、随机生成战斗药水和选择。复杂内容可通过 `ICustomEffectHandler` 扩展，但只能调用 core 提供的效果命令，不能直接改写运行态。
 
 从仓库根目录运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的战斗切片检查。源规则审计依据及待读领域见 `docs/design/sts2-core-source-audit.md`。
+
+## 随机布局版本
+
+正式内容元数据由 `ContentMetadataVersion` 独立选择。默认 `sts2-card-metadata-2089659@1` 将 Bloodletting、Taunt、Dominate、Cruelty 的普通/升级稀有度与只读参考版本对齐，奖励、商店和生成牌共用编译后的定义；该版本进入 PublicBuildId。`FrozenIronclad()` 同时保留旧随机布局和旧内容元数据，不能将随机版本当作完整内容版本。
+
+正式 `RunConfiguration.Ironclad()` 默认采用 `RunRandomLayout.V109`（`sts2-v0.109-xxhash64@1`）。原始 seed 不做裁剪或大小写替换；根与具名流使用 UTF-8 XxHash64，派生加法按 ulong 回绕，`old` 前缀仅改变根派生。工厂在 Start 前为 run/player、地图、事件和遭遇流播种；敌人状态机随机分支使用 run 级 MonsterAi，共享该流游标。每局仍由调用者启动一次。布局身份进入 StreamLayoutDigest 和 PublicBuildId，描述中可读取 RandomLayoutId。
+
+重放历史 hash32 记录时显式使用 `RunConfiguration.FrozenIronclad()`。会话 RunSeed、SeededStreams 和 EncounterStreams 的种子字段现为 ulong，消费者不得截断为 uint。内容来源仍是原登记源基线；此配置不代表所有游戏内容已迁移到 v0.109。

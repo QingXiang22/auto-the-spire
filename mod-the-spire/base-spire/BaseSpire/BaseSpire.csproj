@@ -7,6 +7,7 @@
     <Version>0.4.0</Version>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="9.0.0" />
     <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
   </ItemGroup>
   <ItemGroup>

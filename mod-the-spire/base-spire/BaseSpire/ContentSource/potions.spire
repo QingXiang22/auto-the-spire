@@ -25,7 +25,7 @@ package base-spire {
     usage = combatOnly
     target = self
     source = "sts2/src/Core/Models/Potions/AttackPotion.cs"
-    unsupportedUse = "AttackPotion.OnUse/automatic hook is not implemented; metadata and acquisition only"
+    use = { generateCards = { pool = { character = IroncladCardPool } type = attack count = 3 distinct = true choose = true allowCancel = true cost = 0 } }
   }
   potion BeetleJuice {
     rarity = rare

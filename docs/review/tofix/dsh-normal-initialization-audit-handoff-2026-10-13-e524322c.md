@@ -11,7 +11,7 @@
 ## 负责人接手先做什么
 
 1. 先裁决下文公开 bootstrap 提案；只有另行授权参考主责后才能实施。仅公开现有接收 RunRngSet 的 private 构造仍不够，因为地图及玩家/内容具名派生继续使用参考原生 hash64。
-2. 对动态怪物 seed 表达式单独核验冻结源/客户端。冻结源与参考的表达式形状不同，不能把它包装成已确认的 hash32 兼容修复。此项在正常首战中可达，但不是本次 boundary0 地图首差的原因。
+2. 对动态怪物 seed 表达式单独核验冻结源/客户端。冻结源与参考的表达式形状不同，不能把它包装成已确认的 hash32 兼容修复。此项在正常首战中可达，但不是本次 boundary0 地图首个差异的原因。
 3. 若批准新参考接口和固定 DLL，另派工具包实现共同动作绑定及 HP 同义投影，先检查首次共同地图边界，再逐步推进真实首战/奖励。禁止在旧分叉后的奖励差异上裁决奖励算法。
 
 本包到此停止，不认领下一包，不提交、发布、清理、派任务或修改参考。父 T04、M01 及完整环境不随本审计关闭。
@@ -105,7 +105,7 @@ public static RunState CreateSequentialForNewRun(
 - 不开放地图factory的任意结果注入。若需要factory，输入应仅为参考自行构造的新Rng及参考act，且输出来源限制要成为接口契约；本提案优先只注入seed派生。
 - 显式身份建议 `sequential-source-bootstrap-sts2-frozen@1`，不是扩张既有`source-compat-sts2-frozen@1`的12流范围，也不扩大`vanilla-compatible@1`证明范围。原字符串、派生算法/32位溢出版本、源摘要、bootstrap顺序、acts/character/slot、所有域播种、参考DLL及适配源码hash进入参考身份和manifest。
 - Clone/存档必须保留policy身份；旧/新policy与keyed互换明确拒绝。重放不得凭同string接受不同派生/顺序身份。
-- 批准实现后的最小判别：独立向量覆盖高位/回绕及old完整字符串；检查第一地图样本前policy已绑定、玩家三流种子与首次指纹；任何已消费输入/重复bootstrap拒绝且无副作用。随后两例共同动作前缀实际执行；不能通过改旧17/维度或只比计数证明兼容。
+- 批准实现后的最小检查：独立向量覆盖高位/回绕及old完整字符串；检查第一地图样本前policy已绑定、玩家三流种子与首次指纹；任何已消费输入/重复bootstrap拒绝且无副作用。随后两例共同动作前缀实际执行；不能通过改旧17/维度或只比计数证明兼容。
 
 ## HP、实例与共同动作的工具语义
 
@@ -137,7 +137,7 @@ dotnet $DLL test --suite normal-reward-prefix --output .artifacts/parallel/dsh-n
 | 固定闭包核对 | 0；全部匹配 | 上述closure-verification |
 | 隔离工具构建 | 0；0警告/0错误 | [build.log](../../../.audit/dsh-normal-initialization-audit-20261013/build.log) |
 | 完整旧17 | 0；17 executed，16双侧passed+1self_checked，自检无失败 | [机器报告](../../../.artifacts/parallel/dsh-normal-initialization-audit-20261013/final/regression/regression.json)、[可读结果](../../../.artifacts/parallel/dsh-normal-initialization-audit-20261013/final/regression/regression.md) |
-| 完整新2 | 1；2 executed、2 reference_ran、2diverged，缺维度列表为空，自检无失败 | [机器报告](../../../.artifacts/parallel/dsh-normal-initialization-audit-20261013/final/normal-reward-prefix/regression.json)、[首差表](../../../.artifacts/parallel/dsh-normal-initialization-audit-20261013/final/normal-reward-prefix/regression.md) |
+| 完整新2 | 1；2 executed、2 reference_ran、2diverged，缺维度列表为空，自检无失败 | [机器报告](../../../.artifacts/parallel/dsh-normal-initialization-audit-20261013/final/normal-reward-prefix/regression.json)、[首个差异表](../../../.artifacts/parallel/dsh-normal-initialization-audit-20261013/final/normal-reward-prefix/regression.md) |
 
 运行ID分别为`regression@env-t04-regression@1+20261013T110105Z`、`normal-reward-prefix@normal-reward-prefix@1+20261013T110120Z`。新例PublicBuildId=`e8a6ccf78f186dda`。命令只串行跑一次最终状态，没有为绿结果重复全套。
 
@@ -154,7 +154,7 @@ dotnet $DLL test --suite normal-reward-prefix --output .artifacts/parallel/dsh-n
 
 受阻依赖归属ENV-T04参考bootstrap公开接口裁决；只阻塞正常源兼容初始化及其后的同轨迹奖励比较。可继续范围为固定闭包旧17和已有独立地图机制证据、各线已授权生产任务，以及负责人源/客户端动态seed裁决；不因此阻塞所有生产，也不自派接续。
 
-未验证：新bootstrap未实现/构建；正常初始化一致性、共同动作前缀、HP修正投影、药水领取一致性、后继旅行实际提交、下一战斗复制来源/长期一致性、商店/变形/全幕动态域、真实客户端。缺参考/维度/零执行严格负例本包未另重复全套执行；沿用现有门槛，新2首差仍真实非零。
+未验证：新bootstrap未实现/构建；正常初始化一致性、共同动作前缀、HP修正投影、药水领取一致性、后继旅行实际提交、下一战斗复制来源/长期一致性、商店/变形/全幕动态域、真实客户端。缺参考/维度/零执行严格负例本包未另重复全套执行；沿用现有门槛，新2首个差异仍真实非零。
 
 ## 文档检查与维护位置
 

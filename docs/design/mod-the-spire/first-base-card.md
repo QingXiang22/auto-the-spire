@@ -79,4 +79,4 @@ dotnet $cardTool play "$cardLesson/training-cards.spire" practice:training-strik
 
 普通卡现在把生命从38打到29，格挡仍为2；升级卡仍打到27、格挡3。`upgraded.play`替换整个效果列表，所以普通效果的修改没有自动叠加进升级效果。
 
-你已经完成一张新卡的定义、注册、普通/升级出牌和外部文件修改。教程只改一个DSL文件；没有进入组包器、Host或原版源码。未知机制和完整Run资格分别在[作者参考](../../dsl/0.0.2/authoring-reference.md)及[base开发指南](base-development-guide.md)中处理。
+你已经完成一张新卡的定义、注册、普通/升级出牌和外部文件修改。教程只改一个DSL文件；没有进入规则包构建器、Host或原版源码。未知机制和完整Run资格分别在[作者参考](../../dsl/0.0.2/authoring-reference.md)及[base开发指南](base-development-guide.md)中处理。

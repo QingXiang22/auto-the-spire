@@ -1,4 +1,12 @@
 package base-spire {
+  power Poison {
+    role = Poison
+  }
+
+  power Accelerant {
+    role = Accelerant
+  }
+
   power Strength {
     role = Strength
   }
@@ -36,6 +44,7 @@ package base-spire {
   }
 
   power Shrink {
+    negativeStacksAreInfinite = true
     outgoingDamageMultiplier = 0.7
     removeWhenApplierDies = true
     isDebuff = true

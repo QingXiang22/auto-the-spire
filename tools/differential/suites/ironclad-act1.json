@@ -1,0 +1,130 @@
+{
+  "suite": "ironclad-act1",
+  "fixtures_version": "ironclad-act1@1",
+  "note": "Continuous real Run outcomes, not combat-count prefixes. Original six-combat route continues through the next encounter to genuine defeat; first-act completion remains a separate required delivery, never inferred from this death case.",
+  "target_scope": "base-spire-singleplayer-dev-map-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-map-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "Native sequential reference; actual loaded DLL SHA256 in each reference record",
+    "note": "Content baseline frozen; random layout sts2-v0.109-xxhash64@1; no reference modifications"
+  },
+  "expected_case_ids": [
+    "ironclad-act1-original-seed",
+    "ironclad-act1-continuation"
+  ],
+  "cases": [
+    {
+      "id": "ironclad-act1-original-seed",
+      "title": "Original seed continuous Run to actual defeat",
+      "rng_profile": "vanilla-compatible@1",
+      "provenance": {
+        "kind": "normal_run",
+        "source": "sts2/src/Core/Rooms/CombatRoom.cs; sts2/src/Core/Rewards/RewardsSet.cs; sts2/src/Core/Models/Powers/ShrinkPower.cs; sts2/src/Core/Models/Events/AromaOfChaos.cs",
+        "note": "Original seed, empty setup. Same public combat policy as capacity prefix, actual potion use after its sixth combat. No room-count stopping condition."
+      },
+      "setup": {},
+      "script": [
+        {
+          "action": "normal_act1"
+        }
+      ],
+      "reference_scope": "compared",
+      "group": "normal-run",
+      "kind": "normal-reward",
+      "base_source": "formal-dev-factory",
+      "base_scope": "dev-map",
+      "game_seed": "ENV-T04-RNG-SHUFFLE-001",
+      "initialization": "Independent normal factory/RunState; Start once; no state writes",
+      "contents": [
+        "continuous-run",
+        "natural-defeat",
+        "cross-room-state",
+        "real-potion-use"
+      ],
+      "variants": [
+        "original-seed-defeat"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order",
+        "power",
+        "streams",
+        "rewards",
+        "permanent-inventory",
+        "reward-closure",
+        "combat-copy-origins",
+        "terminal"
+      ],
+      "semantic_actions": [
+        "visible-flame-barrier-headbutt-power-bash-strike-defend@1",
+        "lowest-public-monster-hp",
+        "visible-map-room-priority",
+        "continue-until-real-outcome"
+      ],
+      "expected_terminal": "defeat",
+      "reference_source": "Independent native CombatRoom and RewardsSet for actual Monster/Elite room types; potion slot instances and complete reward closure.",
+      "normal_combat_count": 1,
+      "require_potion_acquisition": false
+    },
+    {
+      "id": "ironclad-act1-continuation",
+      "title": "Original seed defensive continuous Run to first-act completion",
+      "rng_profile": "vanilla-compatible@1",
+      "provenance": {
+        "kind": "normal_run",
+        "source": "sts2/src/Core/Rooms/CombatRoom.cs; sts2/src/Core/Rewards/RewardsSet.cs; sts2/src/Core/Models/Powers/ShrinkPower.cs; sts2/src/Core/Models/Events/AromaOfChaos.cs",
+        "note": "Same original seed and empty setup. Defensive public policy prioritizes Defend below 20 HP; requires actual act completion rather than early death or a battle-count prefix."
+      },
+      "setup": {},
+      "script": [
+        {
+          "action": "normal_act1",
+          "choose": "defensive"
+        }
+      ],
+      "reference_scope": "compared",
+      "group": "normal-run",
+      "kind": "normal-reward",
+      "base_source": "formal-dev-factory",
+      "base_scope": "dev-map",
+      "game_seed": "ENV-T04-RNG-SHUFFLE-001",
+      "initialization": "Independent normal factory/RunState; Start once; no state writes",
+      "contents": [
+        "continuous-run",
+        "natural-defeat",
+        "cross-room-state",
+        "real-potion-use"
+      ],
+      "variants": [
+        "defensive-act-completion"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order",
+        "power",
+        "streams",
+        "rewards",
+        "permanent-inventory",
+        "reward-closure",
+        "combat-copy-origins"
+      ],
+      "semantic_actions": [
+        "visible-flame-barrier-headbutt-power-bash-strike-defend@1",
+        "lowest-public-monster-hp",
+        "visible-map-room-priority",
+        "continue-until-real-outcome"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "Independent native CombatRoom and RewardsSet for actual Monster/Elite room types; potion slot instances and complete reward closure.",
+      "normal_combat_count": 1,
+      "require_potion_acquisition": false
+    }
+  ]
+}

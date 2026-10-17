@@ -41,7 +41,7 @@ internal static class SliceEncounterQueueChecks
             // 生产在 `Build` 里用 `RunSourcePoolManifest.Complete` 把可执行子集覆盖成**源身份全池**，
             // 未支持的遭遇保留真实 ID（只阻塞执行）。复算必须用同一个池，否则比的是两个不同的规则。
             var pool = RunSourcePoolManifest.Complete(SinglePlayerContentSource.Shared.EncounterPool);
-            var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession(MilestoneSeed);
+            var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession(MilestoneSeed);
             session.Start();
             var state = session.Session;
             var observed = Queue(state);
@@ -93,7 +93,7 @@ internal static class SliceEncounterQueueChecks
         Check.Run("[ENV-T08 队列] 精英队列 = 独立库存（15 槽、仅源精英池成员、与普通队列零交集、逐槽同复算）[真实]", () =>
         {
             var pool = RunSourcePoolManifest.Complete(SinglePlayerContentSource.Shared.EncounterPool);
-            var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession(MilestoneSeed);
+            var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession(MilestoneSeed);
             session.Start();
             var state = session.Session;
             var normal = Queue(state);
@@ -141,7 +141,7 @@ internal static class SliceEncounterQueueChecks
         Check.Run("[ENV-T08 初始化] up_front 逐段对账（遗物袋/事件/普通/精英/BOSS/古代人）+ 同 seed 重放一致 + 计数独立 [真实]", () =>
         {
             var pool = RunSourcePoolManifest.Complete(SinglePlayerContentSource.Shared.EncounterPool);
-            var first = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession(MilestoneSeed);
+            var first = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession(MilestoneSeed);
             Check.Equal(0L, first.Session.Random.TotalDraws, "CreateSession（配置阶段）一个随机数都不能消费");
             first.Start();
             var state = first.Session;
@@ -171,7 +171,7 @@ internal static class SliceEncounterQueueChecks
                 "up_front 之外还有别的流在抽，但总抽数不得小于 up_front 的抽数");
 
             // 同 config/seed 重放一致：队列内容与随机账目逐项相同。
-            var second = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession(MilestoneSeed);
+            var second = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession(MilestoneSeed);
             second.Start();
             var again = second.Session;
             Check.Sequence(normal.Select(entry => entry.EncounterId),
@@ -198,7 +198,7 @@ internal static class SliceEncounterQueueChecks
 
         Check.Run("[ENV-T08 初始化] Start 只初始化一次：第二次 Start 具名失败且不重建库存 [真实]", () =>
         {
-            var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession(MilestoneSeed);
+            var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession(MilestoneSeed);
             session.Start();
             var state = session.Session;
             var before = Inventory(state);
@@ -226,7 +226,7 @@ internal static class SliceEncounterQueueChecks
                 "base-spire:vine-shambler-normal",
                 "base-spire:slimes-normal", "base-spire:inklets-normal", "base-spire:flyconid-normal",
             };
-            var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession("ACT1-BASIC-10");
+            var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession("ACT1-BASIC-10");
             session.Start();
             var observed = Queue(session.Session);
             Check.Sequence(expected, observed.Select(entry => entry.EncounterId),

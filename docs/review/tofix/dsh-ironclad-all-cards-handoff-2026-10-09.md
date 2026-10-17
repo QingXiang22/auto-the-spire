@@ -1,6 +1,6 @@
 # ENV-T05 Ironclad 卡牌完整批次 — 综合交接
 
-> 负责人2026-10-10复核：原会话已被用户中断并停止；本报告保留执行者当时的 in_progress 和记账。负责人直接执行六条局部检查通过，但发现 withCount 词法范围、掉血计数跨战斗重置、PrimalForce替代实例三处反例，尚未验收两族。新增标准入口 `--card-completion-only`；实际证据与后继边界见[复核记录](../records/2026-10-10/dsh-context-and-sim-control-review-2026-10-10.md)，当前状态只看[主清单](README.md#env-t05)。
+> 负责人2026-10-10复核：原会话已被用户中断并停止；本报告保留执行者当时的 in_progress 和记录。负责人直接执行六条局部检查通过，但发现 withCount 词法范围、掉血计数跨战斗重置、PrimalForce替代实例三处反例，尚未验收两族。新增标准入口 `--card-completion-only`；实际证据与后继边界见[复核记录](../records/2026-10-10/dsh-context-and-sim-control-review-2026-10-10.md)，当前状态只看[主清单](README.md#env-t05)。
 
 
 ```yaml
@@ -37,7 +37,7 @@ updated_at: 2026-10-10T00:06:51+08:00
 - **节点/共享过程**：`DynamicRepeatCardEffect`（新增）、`CardAmountSource.PaidX / CardsWithTag / PlayerHpLossCount`、
   `CardEffectExpressions.Amount` 新增 `PlayerHpLossCount` / `CardsWithTag`（`TaggedCount` 求和 hand/draw/discard/exhaust/inPlay）、
   `SpireCardSource.CountSourceOf` 新增 `cardsWithTag` / `playerHpLossCount` / `energyX`。
-- **首个判别案例**：`mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceFrontendIroncladCompletionChecks.cs` 的
+- **首个测试用例**：`mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceFrontendIroncladCompletionChecks.cs` 的
   「Whirlwind `repeatForX` —— X 只作用于**次数**，每击是字面 5（升级 8）」，用 `(spent, x) ∈ {(0,3),(1,2)}` 构造两个不同的 X 值：
   若 X 泄漏进数值叶，X=3 会得到每击 3 点/总共 9 而非 15。**这条同时是 X 不泄漏的回归守卫。**
 
@@ -54,7 +54,7 @@ updated_at: 2026-10-10T00:06:51+08:00
   运行时侧 `CombatSlicePackage.CompileEffects` 的 `savedCounts` 字典 + `PileCollection` / `MoveCardSteps` / `TransformCardSteps`。
   `MoveCardSteps` 走 Exhaust 时复用 `exhaust_from_hand` 口径（置 `ExhaustedCardThisTurn` + `Call(triggerAfterExhaust)`），
   `TransformCardSteps` 复用 `becomes:` 口径（同时改写 Instance 的定义/种类/费用/数值/能力/变量与 `Upgraded`）。
-- **首个判别案例**：「FiendFire 的快照**先于**消耗 —— 命中数取打出时的手牌张数」。
+- **首个测试用例**：「FiendFire 的快照**先于**消耗 —— 命中数取打出时的手牌张数」。
   受控手牌 4 张 ⇒ 打出的牌先离开手牌 ⇒ 命中 3 次；若快照读晚（或被消耗改变），命中数会变成 0/4。
   另三条覆盖 `filter = nonAttack` 的筛选（攻击牌留手）、`transformSelectedCard` 的**就地改写同一实例**（变形后还能当攻击牌打出去并结算 GiantRock 的 16/20 点）。
 
@@ -65,7 +65,7 @@ updated_at: 2026-10-10T00:06:51+08:00
 | 命令 | 退出码 | 结果 |
 | --- | --- | --- |
 | `dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests/BaseSpire.Slice.Tests.csproj` | 0 | 已成功生成，0 错误 / 3 警告（既有 `Slice/SourceMap/ActMap.cs(42,37)`、`(60,33)` CS8600、`Slice/SpirePowerSource.cs(1241,39)` CS8604） |
-| `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests --no-build -- --combat-only` | 1 | **345 条 ok / 0 条 fail**；唯一失败是身份 gate（见「首差」）。输出留档 `.audit/dsh-ironclad-all-cards-2026-10-09/run-interim.txt` |
+| `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests --no-build -- --combat-only` | 1 | **345 条 ok / 0 条 fail**；唯一失败是身份 gate（见「首个差异」）。输出留档 `.audit/dsh-ironclad-all-cards-2026-10-09/run-interim.txt` |
 | `W06_DUMP_UNSUPPORTED=1` + 同命令 | 1 | 同上，并打印 20 条 `DIAG`（每张未支持卡的**逐字**原因）与四态摘要 |
 
 四态实测（同一构建）：
@@ -88,7 +88,7 @@ BASE-01 构建：ruleset=baec5147cdaf7503 卡=75 能力=29 敌人=35 起始牌�
 
 ## 首差与未验证范围
 
-- **唯一首差（身份 gate，禁止自行修改）**：
+- **唯一首个差异（身份 gate，禁止自行修改）**：
   ```text
   BaseSpire.Slice.Tests.CheckFailedException: T05 身份：dev 默认规则与公开构建摘要匹配已复核 Anger 基线 [真实]:
   verified dev ruleset identity: expected 'b4d85a04422074c7', got 'baec5147cdaf7503'
@@ -107,7 +107,7 @@ BASE-01 构建：ruleset=baec5147cdaf7503 卡=75 能力=29 敌人=35 起始牌�
 
 1. **生成/抽牌族**：在 `mod-the-spire/base-spire/BaseSpire/Slice/Effects/SourceEffectPrograms.cs` 的 `ReadEffectProgram` 里加 `generateCards` 与 `drawUntil` 结构分支（与家族 2 同形：新领域节点 + `CardEffectPile` 复用 + 链接/校验递归），在 `CardEffectCompiler.cs` / `CombatSlicePackage.cs` 接上「生成到指定牌区」的共享过程。落地后 `Stoke`（池缺口 18 → 17）、`InfernalBlade`、`Pillage` 应转为已降级。
 2. **能力族**：`ironclad-powers.spire` 的 10 个未降级能力是 8 张卡「能力引用无法链接」的**真正根因**（`SpirePowerSource.RuntimeImplemented` 白名单缺这些 id）。逐条原因已在 `W06_DUMP_UNSUPPORTED` 输出里（`OneTwoPunchPower` 缺 `extraPlays`/`consumeOnPlayCount`、`JugglingPower` 的 `if(cardPlaysThisTurn(...), cloneCard(...))`、`RupturePower`/`DarkEmbracePower` 的 `applyScaledPower`/`draw` + 多 `events` 未支持等）。**落地能力后必须同步改 `SliceFormalSourceChecks.cs` 里断言 Juggling「无法链接」的检查，以及因支持 X 费而失效的断言。**
-3. 每族落地后照家族 1/2 的样子补 `SliceFrontendIroncladCompletionChecks.cs` 的判别，并在本文件追加一小段（真实源形状 / 节点与共享过程 / 首个判别案例）。
+3. 每族落地后照家族 1/2 的样子补 `SliceFrontendIroncladCompletionChecks.cs` 的检查，并在本文件追加一小段（真实源形状 / 节点与共享过程 / 首个测试用例）。
 4. 收尾：按派单串行跑门槛命令并把命令、退出码、真实执行数写进本文件；重跑矩阵 `--label 最终`。
 
 ## 未关闭范围（明确不包含在本批）

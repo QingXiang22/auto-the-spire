@@ -38,6 +38,7 @@ public sealed record CardEffectBindings(
         throw new InvalidOperationException("autoPlay: no shared play pipeline was wired");
 
     public Expr? PlayedCard { get; init; }
+    public Func<Inst[]> AfterDiscardBatch { get; init; } = () => [];
     public Func<CardEffectOperation, Expr, Inst[]> Stars { get; init; } = (_, _) => throw new InvalidOperationException("stars binding missing");
     public Func<ForgeCardEffect, Expr, Inst[]> Forge { get; init; } = (_, _) => throw new InvalidOperationException("forge binding missing");
     public Func<OrbCardEffect, Expr, Inst[]> Orbs { get; init; } = (_, _) => throw new InvalidOperationException("orbs binding missing");
@@ -123,7 +124,8 @@ public static class CardEffectCompiler
                 // 所以 body 里把当前牌移出牌区不会打乱遍历；body 的"当前牌"就是这一轮的绑定值。
                 case ForEachCardEffect each:
                     instructions.Add(scope.ForEach(Filtered(scope, each, bindings),
-                        item => CompileInScope(scope, each.Body, bindings, environment.BindCard(item))));
+                        item => CompileInScope(scope, each.Body, bindings, environment.BindCard(item) with { DeferDiscardFlush = true })));
+                    if (!environment.DeferDiscardFlush) instructions.AddRange(bindings.AfterDiscardBatch());
                     break;
                 case MoveSelectedCardEffect move:
                     var moving = Current(environment.SelectedCard, move.Source);
@@ -131,14 +133,16 @@ public static class CardEffectCompiler
                     break;
                 case SelectCardsEffect choice:
                     instructions.AddRange(bindings.SelectCards(choice,
-                        card => CompileInScope(scope, choice.OnSelected, bindings, environment.BindCard(card))));
+                        card => CompileInScope(scope, choice.OnSelected, bindings, environment.BindCard(card) with { DeferDiscardFlush = true })));
+                    if (!environment.DeferDiscardFlush) instructions.AddRange(bindings.AfterDiscardBatch());
                     break;
                 case RandomCardEffect random:
                     var candidates = Filtered(scope, random.From, random.Filter, bindings);
                     var selected = scope.Local("randomSelectedCard", FieldTypeSchema.Binding());
                     instructions.Add(scope.If(scope.Greater(scope.Count(candidates), scope.Const(0L)),
                         [scope.SamplePick(SliceManifest.RandomCardStream, scope.Sort(candidates, card => card), selected),
-                         .. CompileInScope(scope, random.OnSelected, bindings, environment.BindCard(scope.LocalRef(selected)))]));
+                         .. CompileInScope(scope, random.OnSelected, bindings, environment.BindCard(scope.LocalRef(selected)) with { DeferDiscardFlush = true })]));
+                    if (!environment.DeferDiscardFlush) instructions.AddRange(bindings.AfterDiscardBatch());
                     break;
                 case TransformSelectedCardEffect transform:
                     instructions.AddRange(bindings.TransformCard(transform.From, transform.CardId, transform.Upgraded,

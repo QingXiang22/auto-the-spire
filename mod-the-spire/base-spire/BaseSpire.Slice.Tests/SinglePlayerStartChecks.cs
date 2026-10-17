@@ -23,7 +23,7 @@ internal static class SinglePlayerStartChecks
     private const string MilestoneSeed = "ENV-IRONCLAD-00";
 
     private static BaseSpireRuntimeFactory Factory() =>
-        new(RunConfiguration.Ironclad());
+        new(RunConfiguration.FrozenIronclad());
 
     public static void Run()
     {
@@ -202,14 +202,14 @@ internal static class SinglePlayerStartChecks
         Check.Run("BASE-01-R1 范围身份：只有 dev 可实现，Ironclad/full 在建局前拒绝且不生成 Session [真实]", () =>
         {
             // 三个 id 都传一遍：dev 可运行，另外两个必须**在构建任何 Session 之前**失败。
-            var dev = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).Describe();
+            var dev = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).Describe();
             Check.Equal(BaseSpireScope.Dev, dev.ScopeId, "默认范围是 dev");
-            Check.Sequence([BaseSpireScope.Dev, BaseSpireScope.DevMap], BaseSpireScope.Implemented,
-                "当前可实现范围只有 dev 与 T05 的 dev-map（改标签不算实现）");
+            Check.Sequence([BaseSpireScope.Dev, BaseSpireScope.DevMap, BaseSpireScope.DevRun], BaseSpireScope.Implemented,
+                "开发范围显式区分单幕与多幕，完整Ironclad/full身份仍未开放");
             foreach (var scope in new[] { BaseSpireScope.Ironclad, BaseSpireScope.Full })
             {
                 var failure = Record.Exception(() =>
-                    new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, scope)).Describe());
+                    new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, scope)).Describe());
                 Check.True(failure is NotSupportedException,
                     $"范围 {scope} 必须被拒绝（实际 {failure?.GetType().Name ?? "没有异常"}）");
                 Check.True(failure!.Message.Contains(scope, StringComparison.Ordinal),
@@ -220,7 +220,7 @@ internal static class SinglePlayerStartChecks
 
             // 未知范围 id 与"已知但未实现"是两类失败：前者是输入错误。
             var unknown = Record.Exception(() =>
-                new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, "base-spire-made-up-v1")).Describe());
+                new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, "base-spire-made-up-v1")).Describe());
             Check.True(unknown is ArgumentException,
                 $"未知范围 id 应是输入错误（实际 {unknown?.GetType().Name ?? "没有异常"}）");
         });
@@ -365,7 +365,7 @@ internal static class SinglePlayerStartChecks
 
         Check.Run("BASE-01 拒绝契约：不支持的进阶/角色在建局前失败，不退回 Ironclad 或进阶 0 [真实]", () =>
         {
-            var advanced = Record.Exception(() => new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(1)).Describe());
+            var advanced = Record.Exception(() => new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(1)).Describe());
             Check.True(advanced is NotSupportedException,
                 $"进阶 1 必须被拒绝（实际 {advanced?.GetType().Name ?? "没有异常"}）");
             var silent = Record.Exception(() =>
@@ -391,7 +391,7 @@ internal static class SinglePlayerStartChecks
             Check.Equal(VanillaRandomLayout.RunSeed(session.AcceptedSeed), session.RunSeed,
                 "run seed 由接受的字符串哈希（不加前缀、不换字符）");
             var upFront = session.SeededStreams.Single(entry => entry.Type == "UpFront");
-            Check.Equal(VanillaRandomLayout.StreamSeed(session.RunSeed, "UpFront"), upFront.Seed,
+            Check.Equal((ulong)VanillaRandomLayout.StreamSeed(checked((uint)session.RunSeed), "UpFront"), upFront.Seed,
                 "流种子 = run seed + hash32(snake_case(流名))");
         });
         Check.Run("BASE-01 正式开局可实际推进：只用公开动作走到真实胜负或房间范围尽头 [真实]", () =>

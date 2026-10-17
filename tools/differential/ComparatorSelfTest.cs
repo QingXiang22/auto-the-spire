@@ -14,7 +14,7 @@ internal static class ComparatorSelfTest
     internal sealed record Item(string Name, string ExpectedKind, bool Detected, string? Detail);
 
     /// <summary>对整批 base 记录构造受控错误并逐个断言被抓到；返回每一项的实测结果。</summary>
-    public static List<Item> Run(IReadOnlyList<CaseRecord> records, string reproduction)
+    public static List<Item> Run(IReadOnlyList<CaseRecord> records, string reproduction, IReadOnlyList<FixtureCase>? fixtures = null)
     {
         var items = new List<Item>();
         if (records.Count == 0)
@@ -121,6 +121,95 @@ internal static class ComparatorSelfTest
                     $"base={Stack(left, 0)}→{Stack(left, 2)}; reference={Stack(right, 0)}→{Stack(right, 2)}; verdict={comparison.Verdict}"));
             }
 #endif
+        }
+#if REFERENCE_SIM
+        foreach (var normal in records.Where(r => r.SemanticActions is { Count: > 0 }).Take(1))
+        {
+            var plan = normal.SemanticActions!.ToArray();
+            var fixture = fixtures?.Single(c => c.Id == normal.CaseId)
+                ?? throw new CheckFailed("Normal action self-check requires its registered fixture");
+            void Reject(string name, int index, NormalSemanticAction changed)
+            {
+                var altered = plan.ToArray(); altered[index] = changed;
+                var result = NormalRewardEntry.RunReference(fixture, normal with { SemanticActions = altered });
+                items.Add(new Item("common-action/" + name, "rejected-before-submit",
+                    result.Status == "faulted" && result.Boundaries.Count == index + 1, result.Detail));
+            }
+            Reject("candidate-set", 0, plan[0] with { BeforeActions = [] });
+            int play = Array.FindIndex(plan, p => p.Action == "base-spire:PlayCard");
+            Reject("instance-definition", play, plan[play] with
+            { BeforeVisible = plan[play].BeforeVisible.Select((f,i) => i == 0 ? f with { Value = "invalid:card" } : f).ToArray() });
+            int target = Array.FindIndex(plan, p => p.Decisions.Count > 0);
+            Reject("target", target, plan[target] with
+            { Decisions = plan[target].Decisions.Select(d => d with { Chosen = "enemy:missing" }).ToArray() });
+        }
+#endif
+        var eventRecords = records.Where(r => r.CaseId.StartsWith("normal-aroma-", StringComparison.Ordinal)
+            || r.CaseId.StartsWith("normal-post-event-", StringComparison.Ordinal)).ToArray();
+        if (eventRecords.Length > 0)
+        {
+            items.Add(Detect("mutant/permanent-instance-origin", "field", record =>
+                MutateFact(record, "deck.origins.order", truncate: true) is { } mutant ? (mutant, record) : null,
+                eventRecords, reproduction));
+            items.Add(Detect("mutant/event-rng", "stream", record =>
+            {
+                var index = record.Boundaries.ToList().FindLastIndex(b => b.Streams.Any(s => s.Stream == "base-spire:event:AROMA_OF_CHAOS"));
+                if (index < 0) return null;
+                return (record with { Boundaries = record.Boundaries.Select((b, i) => i != index ? b : b with
+                    { Streams = b.Streams.Select(s => s.Stream == "base-spire:event:AROMA_OF_CHAOS" ? s with { Draws = s.Draws + 1 } : s).ToArray() }).ToArray() }, record);
+            }, eventRecords, reproduction));
+        }
+        var carried = records.Where(r => r.CaseId.StartsWith("normal-post-event-", StringComparison.Ordinal)).ToArray();
+        if (carried.Length > 0)
+        {
+            var normal = carried[0];
+            var changed = MutateFact(normal, "player.hp") ?? throw new CheckFailed("Normal combat record lacks player.hp");
+            var failed = Comparator.Compare(changed with { Status = "faulted", Detail = "synthetic later execution failure" }, normal, reproduction);
+            items.Add(new Item("fault/earlier-prefix-divergence", "fault-with-first-difference",
+                failed.Verdict == "fault" && failed.Divergences.Any(d => d.Kind == "field" && d.Path.EndsWith("player.hp", StringComparison.Ordinal)),
+                failed.Verdict + ":" + failed.Divergences.FirstOrDefault()?.Path));
+            items.Add(Detect("mutant/combat-copy-origin", "collection", record =>
+            {
+                for (var index = record.Boundaries.Count - 1; index >= 0; index--)
+                {
+                    var boundary = record.Boundaries[index];
+                    var order = boundary.Facts.FirstOrDefault(f => f.Path == "pile.hand.order")?.Value.Split(',');
+                    var origins = boundary.Facts.FirstOrDefault(f => f.Path == "pile.hand.origins")?.Value.Split(',');
+                    if (order is null || origins is null || order.Length != origins.Length) continue;
+                    for (var first = 0; first < order.Length; first++)
+                        for (var second = first + 1; second < order.Length; second++)
+                            if (order[first] == order[second] && origins[first] != origins[second])
+                            {
+                                (origins[first], origins[second]) = (origins[second], origins[first]);
+                                var mutant = boundary with { Facts = boundary.Facts.Select(f => f.Path == "pile.hand.origins"
+                                    ? f with { Value = string.Join(",", origins) } : f).ToArray() };
+                                return (record with { Boundaries = record.Boundaries.Select((b, i) => i == index ? mutant : b).ToArray() }, record);
+                            }
+                }
+                return null;
+            },
+                carried, reproduction));
+        }
+        var capacity = records.Where(r => r.CaseId.StartsWith("normal-capacity-", StringComparison.Ordinal)).ToArray();
+        if (capacity.Length > 0)
+        {
+            items.Add(Detect("mutant/potion-instance-origin", "field", record =>
+                MutateFact(record, "potion.inventory.origins", truncate: true) is { } mutant ? (mutant, record) : null,
+                capacity, reproduction));
+            items.Add(Detect("mutant/elite-relic-omission", "field", record =>
+            {
+                var index = record.Boundaries.ToList().FindIndex(b => b.Facts.Any(f => f.Path == "reward.relic.present" && f.Value == "true"));
+                if (index < 0) return null;
+                return (record with { Boundaries = record.Boundaries.Select((b, i) => i == index
+                    ? b with { Facts = b.Facts.Where(f => f.Path != "reward.relic.definition").ToArray() } : b).ToArray() }, record);
+            }, capacity, reproduction));
+        }
+        foreach (var frontier in records.Where(r => r.BackendVersion == "normal-run@1" && r.Status == "faulted" && r.Boundaries.Count > 0))
+        {
+            var samePrefix = frontier with { Status = "ok", Detail = null };
+            var comparison = Comparator.Compare(frontier, samePrefix, reproduction);
+            items.Add(new Item("run/unfinished-frontier-remains-failed", "fault", comparison.Verdict == "fault"
+                && comparison.Divergences.Count == 0, comparison.Verdict + ": identical successful prefix cannot complete a Run"));
         }
         return items;
     }

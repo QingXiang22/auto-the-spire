@@ -14,6 +14,7 @@ public static partial class SpireCardSource
         var program = ReadEffectProgram(value, "potion.use", target, null, false, ref problems, out _);
         foreach (var effect in program.Effects)
             if (effect is not PrimitiveCardEffect { Amount.Source: CardAmountSource.Literal }
+                && effect is not GenerateCardsEffect { Choose: true }
                 && !(effect is ForEachCardEffect { From: CardEffectPile.Hand, Filter: CardEffectCardFilter.Any } each
                     && each.Body.Effects.All(child => child is UpgradeSelectedCardEffect)))
                 problems.Add($"{effect.Source}: potion effect requires an unbound card mechanism");

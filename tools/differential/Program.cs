@@ -21,6 +21,29 @@ internal static class Program
 
         switch (command)
         {
+            case "sown-combat":
+#if REFERENCE_SIM
+                return SownCombatChecks.Run(Option(options, "output") ?? "artifacts/environment/sown-combat");
+#else
+                Console.Error.WriteLine("Sown combat comparison requires the independent reference dependency.");
+                return 2;
+#endif
+            case "event-modules":
+#if REFERENCE_SIM
+                return EventModuleChecks.Run(Option(options, "output") ?? "artifacts/environment/event-modules", Option(options, "event"));
+#else
+                Console.Error.WriteLine("Event module comparison requires the independent reference dependency.");
+                return 2;
+#endif
+            case "event-content":
+#if REFERENCE_SIM
+                return EventContentChecks.Run(Option(options, "output") ?? "artifacts/environment/event-content");
+#else
+                Console.Error.WriteLine("Event content checks require the independent reference dependency.");
+                return 2;
+#endif
+            case "v109-rng":
+                return NormalRewardEntry.CheckV109Random(Option(options, "output") ?? "artifacts/environment/v109-rng");
             case "inventory":
                 return InventoryCommand.Run(Option(options, "output") ?? "artifacts/environment/inventory");
 
@@ -66,6 +89,14 @@ internal static class Program
                     Option(options, "output") ?? "artifacts/environment/init-diagnosis",
                     Option(options, "records"));
 
+            case "act-transition":
+#if REFERENCE_SIM
+                return ActTransitionChecks.Run(Option(options, "output") ?? "artifacts/environment/act-transition");
+#else
+                Console.Error.WriteLine("Act transitions require the independent reference dependency.");
+                return 2;
+#endif
+
             case "verify":
                 return VerifyCommand.Run(
                     Repo.Root(),
@@ -98,12 +129,16 @@ internal static class Program
     private static void Usage()
     {
         Console.Error.WriteLine("用法：");
+        Console.Error.WriteLine("  dotnet run --project tools/differential -- event-modules [--event <源类名>] [--output <目录>]  （不生成地图或战斗；受控真实事件访问及独立比较，已知参考差异仍非零）");
+        Console.Error.WriteLine("  dotnet run --project tools/differential -- event-content [--output <目录>]  （Tablet/Cheese独立访问比较及Wood资格集成检查）");
+        Console.Error.WriteLine("  dotnet run --project tools/differential -- v109-rng [--output <目录>]");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- inventory [--output <目录>]");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- compare --suite <夹具套件> [--records <参考记录目录>] [--output <目录>]");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- test --suite regression [--only <id,id>] [--records <外部参考记录目录>] [--output <目录>] [--case-timeout-ms <毫秒>]");
         Console.Error.WriteLine("      严格入口：只接受声明 expected_case_ids 的 suite；缺 case/零执行/缺参考/unsupported/异常/超时/首差/错误终点/缺维度都非零。");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- rng [--vectors <神谕向量 JSON>] [--layout <布局向量 JSON>] [--source-compat <源版本 Profile 向量 JSON>] [--output <目录>]");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- init-upfront --seed <原始字符串 game seed> [--records <记录目录>] [--output <目录>]");
+        Console.Error.WriteLine("  dotnet run --project tools/differential -- act-transition [--output <目录>]  （三幕预生成/地图独立比较与受控切幕，不是正常通关）");
         Console.Error.WriteLine("      初始化首差诊断（只读）：参考开局各阶段 UpFront 计数、阶段重放分解、池全量、两侧记录里的 up_front 次数与首个战斗事实。");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- verify [--inventory <inventory.json>] [--fixtures <comparison.json>] [--output <目录>]");
         Console.Error.WriteLine("  dotnet run --project tools/differential -- run --character <角色> --ascension <n> --seed <种子> [--output <目录>]   （未实现）");

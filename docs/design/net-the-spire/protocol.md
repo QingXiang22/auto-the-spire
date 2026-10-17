@@ -65,11 +65,13 @@
 
 `facts` 为 Field 数组，与实体字段使用相同的 `{field_id, state, value?}`，按 field_id 排序且无重复；适用域从 reason_id 对应的 terminal_reason 检查。
 
-reason_id 必须在 terminal_reasons 中声明，outcome 与该声明一致；facts 遵守其 required_fields/optional_fields 及字段 applies_to，必需结果事实为 known，引用闭合。新增原因/事实改变 catalog_id；不能临时输出未声明的字符串当作终局契约。
+reason_id 必须在 terminal_reasons 中声明，outcome 与该声明一致；facts 遵守其 required_fields/optional_fields 及字段 applies_to，必需结果事实为 known，所有引用均有效。新增原因/事实改变 catalog_id；不能临时输出未声明的字符串当作终局契约。
 
 Entity 为 `{instance_id, kind_id, content_state, fields, content_id?}`。content_state=known/unknown/unavailable/not_applicable，仅 known 带 content_id。无内容类型的场景/空槽仍是真实实体。
 
 Field 为 `{field_id, state, value?}`；state=known/unknown/unavailable。known 必须有值，其余不带值；required 且适用的字段不能省略；不适用或声明可选的字段可省略。省略只表示没有声明，无法区分“不适用”和“可选未提供”，不能编码成 known 零或显式 not_applicable；完整状态表见契约资产第 4 节。
+
+Engine声明optional且当前值为None的实体字段按此规则省略，并在映射诊断中记录N-02-OPTIONAL-ABSENT；恢复实际值后正常发布known。可选entity_ref有值时仍须引用闭合，不能为了表示空而创建占位实体或发布无效句柄。required字段不适用此省略规则。
 
 | value_type | known 的 wire 值 |
 | --- | --- |
@@ -89,7 +91,7 @@ Pile 为 `{pile_ref, total_count, visible_members, members_complete, known_posit
 位置为 `{card_ref, position}`。position 是真实牌堆从顶部 0 起的绝对下标，编码侧 absolute_position 与它同义，允许空洞，绝不是 visible_members 数组下标。跨结构不变量如下，分别纳入 V-06：
 
 1. total_count/position 是安全 JSON 整数；每个位置满足 `0 <= position < total_count`，即使成员不完整也用真实总数作边界。
-2. visible_members 唯一、引用闭合、成员 kind 属于 pile_type；其数量不超过 total_count，members_complete=true 时取等。
+2. visible_members 唯一、引用均有效、成员 kind 属于 pile_type；其数量不超过 total_count，members_complete=true 时取等。
 3. known_positions 的 card_ref 是 visible_members 的子集；每张牌至多一个位置，每个位置至多一张牌。
 4. 完整成员不意味着顺序完整；位置记录不增加卡牌数。未知身份仅体现在总数，不建立带内部序号的虚构卡牌。
 
@@ -105,7 +107,9 @@ LegalAction 为 `{candidate_id, action_type, fields}`。fields 沿用字段结�
 
 所有无序数组及 legal_actions 遵守[规范排序与动作语义键](contract-artifacts.md#3-公开数组与动作语义键)；Sequence.elements 仍保留公开真实顺序。candidate_id 不参与排序。排序不能代替公开 ID 来源审计，也不得把数组序号当作游戏位置。
 
-引用在同一快照内闭合。此前公开且当前有效的信息直接表现为字段、关系和位置；没有历史事件流、独立 known_top、模型字典身份、完整隐藏牌序或 RNG。UI 文案与内部诊断置于隔离调试通道，不默认成为训练输入。
+正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。多于一项的选择仍明确拒绝。旧0.1应答目录继续声明Instance为required。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端身份随该声明改变。
+
+引用的目标均在同一快照内。此前公开且当前有效的信息直接表现为字段、关系和位置；没有历史事件流、独立 known_top、模型字典身份、完整隐藏牌序或 RNG。UI 文案与内部诊断置于隔离调试通道，不默认成为训练输入。
 
 ## 3. 完整快照示例
 

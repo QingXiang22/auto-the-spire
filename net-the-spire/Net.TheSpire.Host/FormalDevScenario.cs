@@ -30,6 +30,7 @@ internal static class FormalDevScenario
     [
         ("dev", BaseSpireScope.Dev),
         ("dev-map", BaseSpireScope.DevMap),
+        ("dev-run", BaseSpireScope.DevRun),
     ];
 
     /// <summary>命令行没给 <c>--scope</c> 时的默认范围名：与既有正式入口逐字相同（dev）。</summary>

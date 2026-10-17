@@ -15,6 +15,9 @@ public sealed record MapRoomEntry(string PointType, Func<IrScope, Expr, Expr, In
         };
         if (phase is { } value)
             steps.Add(scope.SetField(run, map.RunMapPhase, scope.Const((long)value)));
+        if (map.RunTotalFloor is not null)
+            steps.Add(scope.SetField(run, map.RunTotalFloor, scope.Add(scope.Field(run, map.RunCompletedFloors!),
+                scope.Count(scope.Where(scope.Collection(map.Nodes), point => scope.Field(point, map.NodeVisited))))));
         return [.. steps];
     }
 

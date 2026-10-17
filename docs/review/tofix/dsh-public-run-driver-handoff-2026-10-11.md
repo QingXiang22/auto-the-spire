@@ -40,7 +40,7 @@ base/net 的 C#（只用 `python -m py_compile` 检查运行器语法）。
 
 dev-map 实测身份（每份 summary 的 `identity`）：`net:backend:simulation-0.2-350911d86bad900d` /
 `net:catalog:b400d7f332f590cc` / `net:ruleset:bf54a1e5d279a86b` / protocol `0.2`，profile
-`base-spire-singleplayer-dev-map-v1`；与 [act1_smoke 夹具](../../../tools/base-spire-dev/fixtures/act1-basic-10.json)
+`base-spire-singleplayer-dev-map-v1`；与 [act1_smoke 回放数据](../../../tools/base-spire-dev/fixtures/act1-basic-10.json)
 的 expected_identity 一致，但**运行器不固化该身份**——每局按 `describe` 实测并要求与自身观测一致。
 `dev-map` 的 `limit` 为 entities 256 / legal_actions 256 / sequences 10 / frame_bytes 262144。
 
@@ -60,7 +60,7 @@ python -X utf8 -u net-the-spire/client/run_game.py `
 | --- | --- | --- | ---: | --- |
 | `runs/seed-K` | `ENV-T03-SEED-K` | 315 步 `death` | 0 | **最深真实轨迹**：从正常 `start` 走通地图选点、战斗、奖励、宝箱（跳过遗物）、营火，推进到 **Boss 房** `base-spire:vantom-boss`（floor 17、room 12、gold 302），`terminal_result.outcome=loss`、`Defeat.Turn=6`；`run_complete=true` |
 | `runs/seed-K-repeat` | `ENV-T03-SEED-K` | 315 步 `death` | 0 | **可复现**：与 `runs/seed-K` 的 `steps.ndjson` 逐行相同（315 个 `action` / `candidate_id` / `observation_id` 全等，末观测 `12972`，两个文件字节数也一致） |
-| `runs/seed-E` | `ENV-T03-SEED-E` | 240 步 `unsupported_map_room` | 4 | floor 13、Hp 70/80，地图节点只提供 `Unknown`（事件房未接线）→ 推之前停下，地图节点保留、状态不变，`run_complete=false` |
+| `runs/seed-E` | `ENV-T03-SEED-E` | 240 步 `unsupported_map_room` | 4 | floor 13、Hp 70/80，地图节点只提供 `Unknown`（事件房未接入）→ 推之前停下，地图节点保留、状态不变，`run_complete=false` |
 | `runs/act1-full-A2` | `ACT1-BASIC-10` | 179 步 `death` | 0 | 同一公开 seed 的正常驱动整局死亡 |
 | `runs/seed-B` / `runs/seed-G` | `ENV-T03-SEED-B` / `-G` | 138 / 182 步 `death` | 0 | 另一固定 seed 的真实开局与步骤 |
 | `runs/smoke-6` | `ACT1-BASIC-10` | 6 步 `step_limit` | 3 | `--max-actions 6`：步数截止不是整局通过 |
@@ -88,18 +88,18 @@ CurrentRoom/EncounterId`、长期牌堆、遗物、药水带）与 `seed_request
 ## 未覆盖与后续
 
 - **`ActCompleted`（`MapPhase==6`）未在实跑中到达**：固定策略目前要么在幕 1 末段战斗死亡（jaxfruit/
-  inklets），要么先撞上只提供未接线房型的地图节点。因此"第一幕过关不得当整局胜利"目前**只有代码与
+  inklets），要么先撞上只提供未接入房型的地图节点。因此"第一幕过关不得当整局胜利"目前**只有代码与
   协议层依据**：`act_completed_dev_boundary` 分类、`summary.act_completed_observed`、以及默认不推
   `ContinueToNextAct`（`--step-frontier` 才实地推进，宿主会具名 `Fail("act transition is not implemented
   in dev-map scope")`）。**如实记为未覆盖**，没有注入 Engine 状态造正常轨迹。
-- 未接线范围：`Unknown`（事件）/ `Shop`（商店）/ `Elite`（精英）房型、幕转换、部分宝箱遗物与药水效果；
+- 未接入范围：`Unknown`（事件）/ `Shop`（商店）/ `Elite`（精英）房型、幕转换、部分宝箱遗物与药水效果；
   运行器在这些边界**选之前**停成 `unsupported_map_room` / `unsupported_action`（`--step-unsupported-room`
-  可实地取回宿主的具名失败）。
+  可实际进入房间，检查宿主返回的具体错误）。
 - 本包不是通关能力声明：没有多 seed 搜索、没有训练、没有 AI；`seed-K` 是"能推进到 Boss 房"的真实
   证据，不是"必然通关"。
 - 新初始化 DLL 上的整局复放由 Codex 在 A 最终构建后协调：届时只需换 `--host-dll` / `--scope` / `--seed`
   重跑，运行器会按新 `describe` 的身份与本包未固化的一致性断言自行校验；旧不可变 Host 的证据**不能**
-  升级为新输入验证。幕转换或房型接线后，`--step-frontier` / 新增房型可让同一运行器继续推进到
+  升级为新输入验证。幕转换或房型接入后，`--step-frontier` / 新增房型可让同一运行器继续推进到
   `ActCompleted` 甚至整局 `victory`。
 
 ## 文档与仓库检查

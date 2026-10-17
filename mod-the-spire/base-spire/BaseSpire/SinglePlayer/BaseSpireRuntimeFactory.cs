@@ -26,13 +26,31 @@ public sealed class BaseSpireRuntimeFactory
     private readonly RuleSet _rules;
     private readonly BasePublicSemantics _publicSemantics;
     private readonly BaseSpireBuildDescription _description;
+    private readonly RunActPlan? _actPlan;
+    private readonly SliceEncounterPool _runtimePool;
 
     public BaseSpireRuntimeFactory(RunConfiguration configuration)
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         // 建局前校验：不支持的角色/进阶在这里就失败（不产生"半配置"的规则集）。
         Character = configuration.Resolve();
-        _content = SinglePlayerContentSource.Shared;
+        _content = SinglePlayerContentVersions.Apply(SinglePlayerContentSource.Shared, configuration.ContentMetadataVersion);
+        _actPlan = configuration.ScopeId == BaseSpireScope.DevRun ? RunActPlan.Default : null;
+        _runtimePool = (_actPlan?.Combined ?? _content.EncounterPool) with { RandomLayoutId = configuration.RandomLayoutId };
+        if (_actPlan is not null)
+        {
+            var loaded = _content.EnemyIds.ToHashSet(StringComparer.Ordinal);
+            bool Executable(SliceEncounter encounter) => encounter.AllEnemyIds.Count > 0 && encounter.AllEnemyIds.All(loaded.Contains);
+            _content = _content with
+            {
+                WeakEncounters = _runtimePool.WeakEncounters.Where(Executable).ToArray(),
+                NormalEncounters = _runtimePool.RegularEncounters.Where(Executable).ToArray(),
+                BossEncounters = _runtimePool.Bosses.Where(Executable).ToArray(),
+                ExcludedEncounters = _runtimePool.AllEncounters.Where(e => !Executable(e))
+                    .Select(e => (e.EncounterId, "Source identity retained; enemy behavior or spawn formation is not implemented")).ToArray(),
+                SourceDigests = [.. _content.SourceDigests, (RunActPlan.Resource, _actPlan.Digest)],
+            };
+        }
 
         var builder = new RuleSetBuilder();
         builder.Add(CombatSlicePackage.Build(
@@ -40,7 +58,7 @@ public sealed class BaseSpireRuntimeFactory
             fromAuthorText: false,
             authorModel: _content.Model,
             packageVersion: configuration.ScopeId,
-            encounterPool: _content.EncounterPool,
+            encounterPool: _runtimePool,
             // 正式构建：战斗开始时洗战斗牌堆（原版用 run 的 `Shuffle` 流）。
             shuffleBattleDeck: true,
             // 正式构建：**不按房间计数发 Victory**——原版胜利只在最终 BOSS 之后的终局事件发生。
@@ -52,7 +70,7 @@ public sealed class BaseSpireRuntimeFactory
             spawnHpStream: VanillaRandomLayout.EngineStreamName("Niche"),
             // T05：**默认关**。只有 dev-map scope 打开地图物化/`ChooseMapPoint`；
             // 开与关决定包里有没有 `MapNodes`/`MapChildren` 与新动作，因此是范围身份的一部分。
-            actMapEnabled: ActMapEnabled, initializeNewRun: true).Build());
+            actMapEnabled: ActMapEnabled, initializeNewRun: true, actPlan: _actPlan).Build());
         _rules = builder.Build();
         // ENV-T03：公开出口所必需的**不可变游戏语义元数据**。它在构造期就与实际规则集、所选投影和
         // **实际加载内容**逐条闭合（缺集合用途/终局解释/内容字段都会在这里显式失败），因此 Host 与工具
@@ -80,7 +98,7 @@ public sealed class BaseSpireRuntimeFactory
     /// 以及修为哪个计算后端，因此它是**范围身份的一部分**，不是运行期开关。
     /// </summary>
     public bool ActMapEnabled =>
-        string.Equals(Configuration.ScopeId, BaseSpireScope.DevMap, StringComparison.Ordinal);
+        Configuration.ScopeId is BaseSpireScope.DevMap or BaseSpireScope.DevRun;
 
     /// <summary>只读规则集（可共享；会话状态不在这里）。</summary>
     public RuleSet Rules => _rules;
@@ -112,7 +130,8 @@ public sealed class BaseSpireRuntimeFactory
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(gameSeed);
         var accepted = gameSeed;
-        var runSeed = VanillaRandomLayout.RunSeed(accepted);
+        var layout = new RunRandomLayout(Configuration.RandomLayoutId);
+        var runSeed = layout.RootSeed(accepted);
         var session = new Session(
             _rules,
             // 会话种子就是本局的 run seed：显式种流的那些用不到它，但未显式种的流由它派生，
@@ -129,20 +148,21 @@ public sealed class BaseSpireRuntimeFactory
             computeBackend: ActMapEnabled ? new BaseSpireComputeBackend() : SourceWeightedPickBackend.Instance);
 
         // 关键顺序：**先种流，再由调用方 Start**。种流在第一次抽数之前才被接受（引擎会拒绝晚种）。
-        var seeded = new List<(string Type, string Stream, uint Seed)>(
-            VanillaRandomLayout.SeedAllStreams(session.Random, accepted));
+        var seeded = layout.Streams(accepted).ToList();
+        foreach (var item in seeded) session.Random.SeedStream(item.Stream, item.Seed);
         // BASE-02：**遭遇派生流**。带编队的遭遇在进入房间时按源公式
         // `(uint)(runSeed + TotalFloor + hash(entry))`（`EncounterModel.cs:268`）用**独立** Rng 抽取阵容，
         // 与 run 级流互不干扰；这里在幕开始前把每个 (遭遇, 楼层) 的流显式种好（生成点不能临场重种）。
-        // 楼层取**房间号**：地图未接入时的显式替代（见构建描述的限制）。
-        var encounterStreams = new List<(string Type, string Stream, uint Seed)>();
-        foreach (var encounter in _content.EncounterPool.FormationEncounters)
+        // 地图范围按实际访问数选择流，首幕含Boss最多16次；非地图范围才以战斗房间号替代。
+        var encounterStreams = new List<(string Type, string Stream, ulong Seed)>();
+        foreach (var encounter in _runtimePool.FormationEncounters)
         {
             var entry = VanillaRandomLayout.SourceEntry(encounter.EncounterId);
-            for (var floor = 1; floor <= _content.EncounterPool.RoomCount; floor++)
+            for (var floor = 1; floor <= (_actPlan?.Acts.Sum(a => a.NormalRooms + 2)
+                ?? (ActMapEnabled ? MapRoomWiring.MaxRow : _content.EncounterPool.RoomCount)); floor++)
             {
                 var stream = VanillaRandomLayout.EncounterStreamName(entry, floor);
-                var seed = VanillaRandomLayout.EncounterSeed(runSeed, floor, entry);
+                var seed = layout.ContentSeed(runSeed, floor, entry);
                 session.Random.SeedStream(stream, seed);
                 encounterStreams.Add(("Encounter", stream, seed));
             }
@@ -154,25 +174,32 @@ public sealed class BaseSpireRuntimeFactory
         if (ActMapEnabled)
         {
             var mapStream = MapRoomWiring.ActMapStreamName;
-            var mapSeed = VanillaRandomLayout.ActMapSeed(runSeed, 1);
+            var mapSeed = layout.NamedSeed(runSeed, VanillaRandomLayout.ActMapStreamType(1));
             session.Random.SeedStream(mapStream, mapSeed);
             seeded.Add(("ActMap", mapStream, mapSeed));
+            if (_actPlan is not null)
+                foreach (var act in _actPlan.Acts.Skip(1))
+                {
+                    var stream = VanillaRandomLayout.ActMapStreamName(act.Index + 1);
+                    var seed = layout.NamedSeed(runSeed, VanillaRandomLayout.ActMapStreamType(act.Index + 1));
+                    session.Random.SeedStream(stream, seed); seeded.Add(("ActMap", stream, seed));
+                }
 
             // ENV-T09-unknown-room-modules-20261012：**事件级流**（源 `EventModel.BeginEvent` 的
             // `new Rng(runSeed + slot + hash(Id.Entry))`）。它们是内容派生流，因此只在用到事件的
             // dev-map scope 种；按**源事件池全量**种（不按"有没有可执行模块"筛），这样将来加模块时
             // 流位置已经对齐，且未实现事件被选中时也不会因为缺流而变成另一种失败。
-            foreach (var sourceName in RunSourcePoolManifest.Events)
+            foreach (var sourceName in _actPlan is null ? RunSourcePoolManifest.Events : _actPlan.Acts.SelectMany(a => a.Events).Distinct(StringComparer.Ordinal))
             {
                 var entry = VanillaRandomLayout.SourceEventEntry(sourceName);
                 var stream = VanillaRandomLayout.EventStreamName(entry);
-                var eventSeed = VanillaRandomLayout.EventSeed(runSeed, entry);
+                var eventSeed = layout.ContentSeed(runSeed, 0, entry);
                 session.Random.SeedStream(stream, eventSeed);
                 seeded.Add(("Event", stream, eventSeed));
             }
         }
 
-        // 种完必须仍然一个随机数都没消费：否则"配置完成、尚未开始"的契约就是假的。
+        // Configuration must finish before any random consumption.
         if (session.Random.TotalDraws != 0)
         {
             throw new InvalidOperationException(
@@ -333,6 +360,13 @@ public sealed class BaseSpireRuntimeFactory
                 + "事件按源 `unknown_map_point` 流判定、按源事件队列消费，`Run.CurrentEventId` 是当前事件身份，"
                 + "`Run.EventsVisited` 是源访问计数，已访问身份存在 `RunVisitedEvents`（不发布）。"
                 + "换房建场与结算仍使用 `SettledRoom == CurrentRoom`；地图不另存战斗状态。");
+            if (_actPlan is not null)
+            {
+                Replace("遭遇队列：", "遭遇队列：dev-run显式使用默认Overgrowth→Hive→Glory。开局先洗共享古代人并分配各幕子集，再逐幕生成事件、普通/精英队列、Boss与古代人；身份全池不按可执行性过滤。切幕只启用预生成库存，不重洗遗物袋或重复抽取UpFront。重抽保护仍为256次；未支持出生行为/编队选中明确失败。");
+                Replace("地图：", "地图：dev-run各幕使用各自act_1_map/act_2_map/act_3_map流、15/14/13个普通房间长度及各幕源房型分布。切幕销毁旧地图并物化新节点，TotalFloor累计已访问节点；后续幕先选古代人起始点，其效果尚未实现时具名失败，不能直接跳到普通房间。");
+                Replace("房间流程：", "房间流程：dev-run在Boss全部奖励关闭后允许ContinueToNextAct，保留HP/金币/永久牌/遗物/药水真实实例与全局战斗结算键，清理旧战斗和访问/问号赔率状态。其他房间/事件效果仍为已实现子集。");
+                Replace("胜利条件：", "胜利条件：默认三幕的Boss奖励关闭只标记幕完成，首两次ContinueToNextAct真实切幕，第三次明确停在未实现的TheArchitect最终事件；不提前发布整局Victory，不等于完整Ironclad四幕验收。后续幕古代人、敌人/事件和完整hook仍有明确缺口。");
+            }
         }
 
         return new BaseSpireBuildDescription(
@@ -359,10 +393,8 @@ public sealed class BaseSpireRuntimeFactory
             _content.NormalEncounters.Count,
             pool.RoomCount,
             [.. pool.Encounters.Select(encounter => encounter.EncounterId).Order(StringComparer.Ordinal)],
-            [.. VanillaRandomLayout.RunStreams(string.Empty)
-                .Select(entry => VanillaRandomLayout.EngineStreamName(entry.Type))
-                .Concat(VanillaRandomLayout.PlayerStreams(string.Empty, 0)
-                    .Select(entry => VanillaRandomLayout.EnginePlayerStreamName(entry.Type)))
+            [.. new RunRandomLayout(Configuration.RandomLayoutId).Streams(string.Empty)
+                .Select(entry => entry.Stream)
                 .Distinct(StringComparer.Ordinal)
                 .Order(StringComparer.Ordinal)],
             _content.ExcludedEncounters,
@@ -376,21 +408,23 @@ public sealed class BaseSpireRuntimeFactory
             StreamLayoutDigest,
             semantics.Digest,
             PublicBuildId(Configuration.ScopeId, RulesetDigest(rules), StreamLayoutDigest, _content.ContentDigest,
-                semantics.Digest));
+                semantics.Digest)) { RandomLayoutId = Configuration.RandomLayoutId, ContentMetadataVersion = Configuration.ContentMetadataVersion };
     }
 
     /// <summary>
     /// 随机**布局**身份：流名映射（原版流类型 → 引擎流名）+ 算法/映射 id 的摘要。
     /// 布局变了（例如把 `Shuffle` 映射到别的流名）即使规则集没变也必须换身份，否则同 seed 行为不同却同名。
     /// </summary>
-    private static string StreamLayoutDigest => Digest(string.Join("\n",
+    private string StreamLayoutDigest => Digest(string.Join("\n",
         new[]
         {
             $"algorithm={VanillaRandomLayout.AlgorithmId}",
             $"draw={VanillaRandomLayout.DrawProfileId}",
         }
+        .Concat(Configuration.RandomLayoutId == RunRandomLayout.Frozen ? Array.Empty<string>()
+            : new[] { $"seed-layout={Configuration.RandomLayoutId}" })
         .Concat(VanillaRandomLayout.RunStreamTypes.Select(type =>
-            $"run:{type}->{VanillaRandomLayout.EngineStreamName(type)}"))
+            $"run:{type}->{new RunRandomLayout(Configuration.RandomLayoutId).EngineStreamName(type)}"))
         .Concat(VanillaRandomLayout.PlayerStreamTypes.Select(type =>
             $"player:{type}->{VanillaRandomLayout.EnginePlayerStreamName(type)}"))));
 
@@ -398,7 +432,7 @@ public sealed class BaseSpireRuntimeFactory
     /// 公开构建身份：所有会改变行为/公开事实的维度合成一个 id。范围、源基线、规则集摘要、内容摘要、
     /// 随机 Profile 与流布局、**公开语义元数据**任一变化都会换 id；每局 seed **不在这里**（它是会话证据）。
     /// </summary>
-    private static string PublicBuildId(string scopeId, string rulesetDigest, string streamLayoutDigest,
+    private string PublicBuildId(string scopeId, string rulesetDigest, string streamLayoutDigest,
         string contentDigest, string semanticsDigest) =>
         Digest(string.Join("\n",
             $"scope={scopeId}",
@@ -406,7 +440,9 @@ public sealed class BaseSpireRuntimeFactory
             $"ruleset={rulesetDigest}",
             $"content={contentDigest}",
             $"layout={streamLayoutDigest}",
-            $"semantics={semanticsDigest}"));
+            $"semantics={semanticsDigest}")
+            + (Configuration.ContentMetadataVersion == SinglePlayerContentVersions.Frozen ? string.Empty
+                : $"\ncontent-metadata={Configuration.ContentMetadataVersion}"));
 
     private static string Digest(string text) => BasePublicSemanticsBuilder.Digest(text);
 

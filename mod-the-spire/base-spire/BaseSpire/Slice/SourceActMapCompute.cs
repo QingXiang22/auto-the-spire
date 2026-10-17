@@ -96,15 +96,16 @@ public static class SourceActMapCompute
 
     public static SourceActMapReplay Replay(string blob, int rooms) => Replay(ParseWords(blob), rooms);
 
-    public static SourceActMapReplay Replay(IReadOnlyList<ulong> words, int rooms)
+    public static SourceActMapReplay Replay(IReadOnlyList<ulong> words, int rooms, int actIndex = 0)
     {
         var rng = new SourceMapRandom(words);
         int rest;
         int unknown;
         try
         {
-            rest = rng.NextGaussianInt(7, 1, 6, 7);
-            unknown = MapPointTypeCounts.StandardRandomUnknownCount(rng);
+            rest = actIndex switch { 0 => rng.NextGaussianInt(7, 1, 6, 7), 1 => rng.NextGaussianInt(6, 1, 6, 7),
+                2 => rng.NextInt(5, 7), _ => throw new ArgumentOutOfRangeException(nameof(actIndex)) };
+            unknown = MapPointTypeCounts.StandardRandomUnknownCount(rng) - (actIndex > 0 ? 1 : 0);
         }
         catch (SourceMapWordsExhaustedException)
         {
@@ -204,19 +205,21 @@ public sealed class BaseSpireComputeBackend : IComputeBackend
     private readonly object replayLock = new();
     private string? completedBlob;
     private int completedRooms;
+    private int completedAct;
     private SourceActMapReplay? completedReplay;
 
-    private SourceActMapReplay Replay(string blob, int rooms)
+    private SourceActMapReplay Replay(string blob, int rooms, int act = 0)
     {
         lock (replayLock)
         {
-            if (completedReplay is not null && completedRooms == rooms && completedBlob == blob)
+            if (completedReplay is not null && completedRooms == rooms && completedAct == act && completedBlob == blob)
                 return completedReplay;
-            var replay = SourceActMapCompute.Replay(blob, rooms);
+            var replay = SourceActMapCompute.Replay(SourceActMapCompute.ParseWords(blob), rooms, act);
             if (replay.Done)
             {
                 completedBlob = blob;
                 completedRooms = rooms;
+                completedAct = act;
                 completedReplay = replay;
             }
             return replay;
@@ -271,6 +274,11 @@ public sealed class BaseSpireComputeBackend : IComputeBackend
                     return;
                 }
 
+                if (EventFloatGoldAsset.TryExecute(asset.Entry, inputs, outputs))
+                {
+                    return;
+                }
+
                 SourceWeightedPickBackend.Instance.Execute(asset, inputs, outputs);
                 return;
         }
@@ -278,7 +286,7 @@ public sealed class BaseSpireComputeBackend : IComputeBackend
 
     private void ExecuteGenerate(IReadOnlyList<Value> inputs, Value[] outputs)
     {
-        var replay = Replay(inputs[0].AsString(), (int)inputs[1].AsInt());
+        var replay = Replay(inputs[0].AsString(), (int)inputs[1].AsInt(), inputs.Count > 2 ? (int)inputs[2].AsInt() : 0);
         outputs[0] = Value.Of(replay.Done);
         outputs[1] = Value.Of((long)replay.Rest);
         outputs[2] = Value.Of((long)replay.Unknown);
@@ -290,7 +298,8 @@ public sealed class BaseSpireComputeBackend : IComputeBackend
 
     private void ExecuteCell(IReadOnlyList<Value> inputs, Value[] outputs)
     {
-        var cells = Replay(inputs[0].AsString(), SourceActMapCompute.ActRooms).Cells;
+        var cells = Replay(inputs[0].AsString(), inputs.Count > 2 ? (int)inputs[2].AsInt() : SourceActMapCompute.ActRooms,
+            inputs.Count > 3 ? (int)inputs[3].AsInt() : 0).Cells;
         var index = (int)inputs[1].AsInt();
         if (index < 0 || index >= cells.Count)
         {
@@ -310,7 +319,8 @@ public sealed class BaseSpireComputeBackend : IComputeBackend
 
     private void ExecuteEdge(IReadOnlyList<Value> inputs, Value[] outputs)
     {
-        var edges = Replay(inputs[0].AsString(), SourceActMapCompute.ActRooms).Edges;
+        var edges = Replay(inputs[0].AsString(), inputs.Count > 2 ? (int)inputs[2].AsInt() : SourceActMapCompute.ActRooms,
+            inputs.Count > 3 ? (int)inputs[3].AsInt() : 0).Edges;
         var index = (int)inputs[1].AsInt();
         if (index < 0 || index >= edges.Count)
         {

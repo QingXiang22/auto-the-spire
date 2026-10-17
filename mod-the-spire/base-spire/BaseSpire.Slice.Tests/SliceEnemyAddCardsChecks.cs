@@ -182,7 +182,7 @@ internal static class SliceEnemyAddCardsChecks
             computeBackend: SourceWeightedPickBackend.Instance);
         session.Random.SeedStream(DrawStream, FixtureStreamSeed);
         session.Start();
-        var run = new BaseSpireRunSession(RunConfiguration.Ironclad(), null!, "fixture", "fixture",
+        var run = new BaseSpireRunSession(RunConfiguration.FrozenIronclad(), null!, "fixture", "fixture",
             (uint)FixtureSeed, session, session.Participant(0), SliceManifest.PlayerRole, "fixture", []);
         return (run, SliceFixtures.Cultist(session, "base-spire:calcified-cultist"),
             SliceFixtures.Cultist(session, "base-spire:damp-cultist"));

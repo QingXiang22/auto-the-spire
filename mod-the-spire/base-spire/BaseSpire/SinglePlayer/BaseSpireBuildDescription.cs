@@ -61,6 +61,8 @@ public sealed record BaseSpireBuildDescription(
     /// </summary>
     string PublicBuildId)
 {
+    public string RandomLayoutId { get; init; } = RunRandomLayout.Frozen;
+    public string ContentMetadataVersion { get; init; } = SinglePlayerContentVersions.Frozen;
     /// <summary>人读摘要（Host 的 stderr 与交接证据直接用这一段）。</summary>
     public string Summary =>
         $"{ScopeId} build={PublicBuildId} ruleset={RulesetId} source={SourceBaselineId} "
@@ -83,21 +85,21 @@ public sealed record BaseSpireRunSession(
     string RequestedSeed,
     /// <summary>实际接受的 seed（按源规则标准化；哈希用的是它）。</summary>
     string AcceptedSeed,
-    /// <summary>本局的数值 run seed（`uint(hash32(acceptedSeed))`）。</summary>
-    uint RunSeed,
+    /// <summary>本局数值 seed；由 Configuration.RandomLayoutId 选择 hash32 或 v0.109 XxHash64。</summary>
+    ulong RunSeed,
     Session Session,
     ParticipantId Participant,
     string ParticipantRole,
     string ProjectionId,
     /// <summary>实际种下的 (原版流类型, 引擎流名, 种子)：构建描述/工具/证据共用同一张表。</summary>
-    IReadOnlyList<(string Type, string Stream, uint Seed)> SeededStreams)
+    IReadOnlyList<(string Type, string Stream, ulong Seed)> SeededStreams)
 {
     /// <summary>
     /// **遭遇派生流**（类型标为 `Encounter`）：每个带编队的遭遇在每个楼层一条，种子按源
     /// `(uint)(runSeed + TotalFloor + hash(entry))` 显式种好。与 <see cref="SeededStreams"/>（原版 12+3 条流）
     /// 分开登记：前者是原版**流布局**，后者是"遭遇自己的 Rng"（`EncounterModel.cs:266-270`）。
     /// </summary>
-    public IReadOnlyList<(string Type, string Stream, uint Seed)> EncounterStreams { get; init; } = [];
+    public IReadOnlyList<(string Type, string Stream, ulong Seed)> EncounterStreams { get; init; } = [];
 
     /// <summary>本局的**会话身份**（含 seed 指纹）：属证据，不作公开静态 ruleset_id。</summary>
     public string SessionIdentity => Session.Identity;

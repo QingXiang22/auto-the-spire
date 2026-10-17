@@ -53,6 +53,11 @@ public sealed class MapRoomWiring
     public const int EventPhase = 8;
 
     public FieldSymbol RunActCompleted { get; private set; } = null!;
+    public FieldSymbol? RunActIndex { get; internal set; }
+    public FieldSymbol? RunTotalFloor { get; internal set; }
+    public FieldSymbol? RunCompletedFloors { get; internal set; }
+    public FieldSymbol? AncientPending { get; internal set; }
+    private FieldSymbol? generateAct, cellRooms, cellAct, edgeRooms, edgeAct;
     public const string RestActionName = "RestAtCampfire";
     public const string SmithActionName = "SmithAtCampfire";
 
@@ -255,7 +260,7 @@ public sealed class MapRoomWiring
     public static MapRoomWiring Declare(
         EnginePackageBuilder package,
         ProjectionSymbol projection,
-        EntityTypeSymbol runEntity)
+        EntityTypeSymbol runEntity, bool multiAct = false)
     {
         // 枚举成员顺序即 ordinal，必须与移植件 `MapPointType` 一致（Unassigned=0 … Ancient=8）。
         var pointType = package.Enum(PointTypeEnumName);
@@ -353,6 +358,15 @@ public sealed class MapRoomWiring
             roomType, runActualRoomType);
         wiring.RunActCompleted = runEntity.AddField("ActCompleted", FieldTypeSchema.Bool());
         wiring.Projection = projection;
+        if (multiAct)
+        {
+            wiring.generateAct = generate.Input("ActIndex", FieldTypeSchema.Int(0, 2));
+            wiring.cellRooms = cell.Input("Rooms", FieldTypeSchema.Int(0, 512));
+            wiring.cellAct = cell.Input("ActIndex", FieldTypeSchema.Int(0, 2));
+            wiring.edgeRooms = edge.Input("Rooms", FieldTypeSchema.Int(0, 512));
+            wiring.edgeAct = edge.Input("ActIndex", FieldTypeSchema.Int(0, 2));
+            foreach (var asset in new[] { generate, cell, edge }) asset.SourceHash += "+Hive+Glory@multi-act-v1";
+        }
         return wiring;
     }
 
@@ -367,8 +381,14 @@ public sealed class MapRoomWiring
     ///       并自检 `Count(MapNodes) == Cells`。</item>
     /// </list>
     /// </summary>
-    public IReadOnlyList<Inst> SetupSteps(IrScope scope, CollectionSymbol runStates)
+    public IReadOnlyList<Inst> SetupSteps(IrScope scope, CollectionSymbol runStates, int rooms = SourceActMapCompute.ActRooms, int actIndex = 0)
     {
+        (FieldSymbol, Expr)[] Profile((FieldSymbol, Expr)[] inputs, FieldSymbol? roomInput, FieldSymbol? actInput)
+        {
+            if (actInput is null) return inputs;
+            return [.. inputs, .. roomInput is null ? Array.Empty<(FieldSymbol, Expr)>() : [(roomInput, scope.Const((long)rooms))],
+                (actInput, scope.Const((long)actIndex))];
+        }
         var run = scope.First(scope.Collection(runStates));
         var blob = scope.Local("mapBlob", FieldTypeSchema.String(MaxBlobLength));
         var done = scope.Local("mapDone", FieldTypeSchema.Bool());
@@ -401,14 +421,14 @@ public sealed class MapRoomWiring
         {
             scope.If(scope.Not(scope.LocalRef(done)), new Inst[]
             {
-                scope.SampleInt(ActMapStreamName, scope.Const(0L), scope.Const(SourceActMapCompute.Span), payload),
+                scope.SampleInt(VanillaRandomLayout.ActMapStreamName(actIndex + 1), scope.Const(0L), scope.Const(SourceActMapCompute.Span), payload),
                 scope.SetLocal(blob, scope.Concat(
                     scope.LocalRef(blob), scope.Const(";"), scope.LocalRef(payload))),
-                scope.Compute(Generate, new (FieldSymbol, Expr)[]
+                scope.Compute(Generate, Profile(new (FieldSymbol, Expr)[]
                 {
                     (GenWords, scope.LocalRef(blob)),
-                    (GenRooms, scope.Const((long)SourceActMapCompute.ActRooms)),
-                }, new (FieldSymbol, int)[]
+                    (GenRooms, scope.Const((long)rooms)),
+                }, null, generateAct), new (FieldSymbol, int)[]
                 {
                     (GenDone, done),
                     (GenRest, restSlot),
@@ -435,11 +455,11 @@ public sealed class MapRoomWiring
         {
             scope.If(scope.Less(scope.LocalRef(cellIndex), scope.LocalRef(cellsSlot)), new Inst[]
             {
-                scope.Compute(Cell, new (FieldSymbol, Expr)[]
+                scope.Compute(Cell, Profile(new (FieldSymbol, Expr)[]
                 {
                     (CellWords, scope.LocalRef(blob)),
                     (CellIndexIn, scope.LocalRef(cellIndex)),
-                }, new (FieldSymbol, int)[]
+                }, cellRooms, cellAct), new (FieldSymbol, int)[]
                 {
                     (CellExists, cellExistsSlot),
                     (CellCol, cellColSlot),
@@ -471,11 +491,11 @@ public sealed class MapRoomWiring
         {
             scope.If(scope.Less(scope.LocalRef(edgeIndex), scope.LocalRef(edgesSlot)), new Inst[]
             {
-                scope.Compute(Edge, new (FieldSymbol, Expr)[]
+                scope.Compute(Edge, Profile(new (FieldSymbol, Expr)[]
                 {
                     (EdgeWords, scope.LocalRef(blob)),
                     (EdgeIndexIn, scope.LocalRef(edgeIndex)),
-                }, new (FieldSymbol, int)[]
+                }, edgeRooms, edgeAct), new (FieldSymbol, int)[]
                 {
                     (EdgeExists, edgeExistsSlot),
                     (EdgeParent, edgeParentSlot),
@@ -549,7 +569,7 @@ public sealed class MapRoomWiring
         RegisterChooseMapPoint(package, runStates, MapRoomEntry.Standard(this, startNextRoom, treasure, shop));
 
     public void RegisterChooseMapPoint(EnginePackageBuilder package, CollectionSymbol runStates,
-        IReadOnlyList<MapRoomEntry> entries)
+        IReadOnlyList<MapRoomEntry> entries, Func<IrScope, Expr, Inst[]>? continueAct = null)
     {
         var registeredTypes = new HashSet<string>(StringComparer.Ordinal);
         foreach (var entry in entries)
@@ -561,7 +581,11 @@ public sealed class MapRoomWiring
         var run = body.First(body.Collection(runStates));
         var nodeRef = body.Param(parameter.DeclarationIndex);
         body.Role(SliceManifest.PlayerRole);
-        body.Candidates(ChooseParameterName, body.Relation(Children, body.Field(run, RunCurrentNode)));
+        body.Candidates(ChooseParameterName, AncientPending is null ? body.Relation(Children, body.Field(run, RunCurrentNode))
+            : body.Where(body.Collection(Nodes), node => body.Or(
+                body.And(body.Field(run, AncientPending), body.Equal(node, body.Field(run, RunCurrentNode))),
+                body.And(body.Not(body.Field(run, AncientPending)), body.Exists(body.Where(
+                    body.Relation(Children, body.Field(run, RunCurrentNode)), child => body.Equal(child, node)))))));
         body.Requires(body.And(
             body.Or(
                 body.Equal(body.Field(run, RunMapPhase), body.Const(0L)),
@@ -606,7 +630,8 @@ public sealed class MapRoomWiring
         advance.Role(SliceManifest.PlayerRole);
         advance.Requires(advance.And(advance.Field(completedRun, RunActCompleted),
             advance.Equal(advance.Field(completedRun, RunMapPhase), advance.Const((long)ActCompletedPhase))));
-        advance.Body(advance.Fail("base-spire: Act 1 completed; act transition is not implemented in dev-map scope"));
+        advance.Body(continueAct is null ? [advance.Fail("base-spire: Act 1 completed; act transition is not implemented in dev-map scope")]
+            : continueAct(advance, completedRun));
     }
 
     private Expr NodeAt(IrScope scope, int indexSlot) =>

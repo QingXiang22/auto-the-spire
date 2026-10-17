@@ -35,7 +35,7 @@ internal static class SliceEncounterFormationChecks
             for (var index = 0; index < 24 && !matched; index++)
             {
                 var seed = $"ENV-IRONCLAD-{index:D2}";
-                var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession(seed);
+                var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession(seed);
                 session.Start();
                 var encounterId = CurrentEncounter(session);
                 if (!byId.TryGetValue(encounterId, out var encounter) || !encounter.HasFormationProgram)
@@ -134,7 +134,7 @@ internal static class SliceEncounterFormationChecks
             }
 
             // 建局时**必须已经**把派生流种好（每个已支持的编队遭遇 × 房间数），且不消费任何随机数。
-            var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession("ENV-IRONCLAD-00");
+            var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession("ENV-IRONCLAD-00");
             var pool = SinglePlayerContentSource.Shared.EncounterPool;
             Check.Equal(0L, session.Session.Random.TotalDraws, "种流不消费随机数（尚未 Start）");
             Check.Equal(pool.FormationEncounters.Count * pool.RoomCount, session.EncounterStreams.Count,
@@ -144,7 +144,7 @@ internal static class SliceEncounterFormationChecks
         Check.Run("[BASE-02 编队] 三个编队遭遇已进池：派生流按 (遭遇 × 楼层) 条数种好、且不消费随机数", () =>
         {
             var pool = SinglePlayerContentSource.Shared.EncounterPool;
-            var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad()).CreateSession("ENV-IRONCLAD-00");
+            var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad()).CreateSession("ENV-IRONCLAD-00");
             Check.Equal(0L, session.Session.Random.TotalDraws, "种流不消费随机数（尚未 Start）");
             var formationEncounters = pool.FormationEncounters.Select(entry => entry.EncounterId).ToList();
             Check.Sequence(
@@ -157,7 +157,7 @@ internal static class SliceEncounterFormationChecks
             {
                 var entry = VanillaRandomLayout.SourceEntry(id);
                 var stream = VanillaRandomLayout.EncounterStreamName(entry, 1);
-                Check.Equal(VanillaRandomLayout.EncounterSeed(session.RunSeed, 1, entry),
+                Check.Equal((ulong)VanillaRandomLayout.EncounterSeed(checked((uint)session.RunSeed), 1, entry),
                     session.EncounterStreams.Single(record => record.Stream == stream).Seed,
                     $"{id} 楼层 1 的种子 = runSeed + 楼层 + hash(entry)");
             }
@@ -199,7 +199,7 @@ internal static class SliceEncounterFormationChecks
             var rooms = new List<string>();
             for (var index = 0; index < 6 && compared < 1; index++)
             {
-                var session = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad())
+                var session = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad())
                     .CreateSession($"ENV-IRONCLAD-{index:D2}");
                 session.Start();
                 for (var room = 1; room <= pool.RoomCount; room++)
@@ -293,13 +293,13 @@ internal static class SliceEncounterFormationChecks
     /// <item>阵容顺序 = 名单/槽位顺序（抽取顺序不影响出生顺序）。</item>
     /// </list>
     /// </summary>
-    private static IReadOnlyList<string> Replay(SliceEncounter encounter, uint runSeed, int floor)
+    private static IReadOnlyList<string> Replay(SliceEncounter encounter, ulong runSeed, int floor)
     {
         var entry = VanillaRandomLayout.SourceEntry(encounter.EncounterId);
         var random = new RandomService(runSeed, VanillaRandomLayout.AlgorithmId,
             VanillaRandomLayout.DrawProfileId, VanillaRandomLayout.Profile);
         random.SeedStream(VanillaRandomLayout.EncounterStreamName(entry, floor),
-            VanillaRandomLayout.EncounterSeed(runSeed, floor, entry));
+            VanillaRandomLayout.EncounterSeed(checked((uint)runSeed), floor, entry));
 
         var formations = encounter.EffectiveFormations;
         var chosen = formations[0];

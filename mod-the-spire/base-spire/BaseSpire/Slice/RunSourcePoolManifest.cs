@@ -27,7 +27,14 @@ public static class RunSourcePoolManifest
         return supported with
         {
             WeakEncounters = Load(act.WeakNormalEncounters, SliceEncounterPool.WeakKind),
-            RegularEncounters = Load(act.RegularEncounters, SliceEncounterPool.NormalKind),
+            RegularEncounters = Load(act.RegularEncounters, SliceEncounterPool.NormalKind).Select(encounter =>
+                supported.RandomLayoutId == RunRandomLayout.V109 ? encounter.EncounterId switch
+                {
+                    "base-spire:nibbits-normal" => encounter with { Tags = [] },
+                    "base-spire:slithering-strangler-normal" => encounter with { Tags = ["base-spire:jaxfruit", "base-spire:slime"] },
+                    "base-spire:snapping-jaxfruit-normal" => encounter with { Tags = ["base-spire:mushroom", "base-spire:jaxfruit"] },
+                    _ => encounter,
+                } : encounter).ToArray(),
             BossEncounters = Load(["base-spire:ceremonial-beast-boss", "base-spire:the-kin-boss", "base-spire:vantom-boss"], "boss"),
             // 精英库存与它的队列长度同样来自幕声明；这条接入不是"额外内容"，是源本来就在
             // GenerateRooms 里预生成的独立列表（此前被错误地追加进普通队列）。
@@ -39,7 +46,7 @@ public static class RunSourcePoolManifest
     {
         var declarations = EncounterContent.LoadEncounters().ToDictionary(e => e.Id, StringComparer.Ordinal);
         return ids.Select(id => declarations.TryGetValue(id, out var d)
-            ? new SliceEncounter(id, kind, d.EnemyIds, d.Tags, d.Formations, d.Slots)
+            ? new SliceEncounter(id, kind, d.EnemyIds, d.Tags, d.Formations, d.Slots) { StartingActionsByEnemyIndex = d.StartingActionsByEnemyIndex }
             : new SliceEncounter(id, kind, [], [], [], [])).ToArray();
     }
     // Overgrowth.AllEvents followed by ModelDb.AllSharedEvents, source enumeration order.

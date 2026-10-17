@@ -89,3 +89,44 @@ public sealed record EventRandomAsset(ComputeAssetSymbol Asset, FieldSymbol Payl
         return true;
     }
 }
+
+/// <summary>Source float32 variation -> decimal addition -> integer gold, with all RNG consumption emitted as Engine IR.</summary>
+public sealed record EventFloatGoldAsset(ComputeAssetSymbol Asset, FieldSymbol Payload, FieldSymbol Base,
+    FieldSymbol Min, FieldSymbol Max, FieldSymbol Result)
+{
+    public const string Entry = "source-event-float-gold";
+    private int nextLocal;
+
+    public static EventFloatGoldAsset Declare(EnginePackageBuilder package)
+    {
+        var asset = package.ComputeAsset("SourceEventFloatGold");
+        asset.BackendId = BaseSpireComputeBackend.BackendId;
+        asset.SourcePath = EventRandomAsset.SourcePath;
+        asset.SourceHash = "Rng.NextFloat+JungleMazeAdventure.CalculateVars+PlayerCmd.GainGold:decimal-truncate@1";
+        asset.Entry = Entry;
+        return new(asset, asset.Input("Payload", FieldTypeSchema.Int(0, EventRandomAsset.Span - 1)),
+            asset.Input("Base", FieldTypeSchema.Int(0, 999999)),
+            asset.Input("Min", FieldTypeSchema.Int(-999999, 999999)),
+            asset.Input("Max", FieldTypeSchema.Int(-999999, 999999)),
+            asset.Output("Gold", FieldTypeSchema.Int(0, 999999)));
+    }
+
+    public Inst[] Roll(IrScope s, string sourceName, int baseGold, int min, int max, Expr run, FieldSymbol field)
+    {
+        var payload = s.Local($"eventFloatGoldPayload{nextLocal++}", FieldTypeSchema.Int(0, EventRandomAsset.Span - 1));
+        var result = s.Local($"eventFloatGold{nextLocal++}", FieldTypeSchema.Int(0, 999999));
+        return [s.SampleInt(EventRandomAsset.StreamName(sourceName), s.Const(0L), s.Const(EventRandomAsset.Span), payload),
+            s.Compute(Asset, [(Payload, s.LocalRef(payload)), (Base, s.Const((long)baseGold)),
+                (Min, s.Const((long)min)), (Max, s.Const((long)max))], [(Result, result)]),
+            s.SetField(run, field, s.LocalRef(result))];
+    }
+
+    public static bool TryExecute(string entry, IReadOnlyList<Value> inputs, Value[] outputs)
+    {
+        if (entry != Entry) return false;
+        var value = (float)(inputs[0].AsInt() * (1.0 / EventRandomAsset.Span)
+            * (inputs[3].AsInt() - inputs[2].AsInt()) + inputs[2].AsInt());
+        outputs[0] = Value.Of((long)(inputs[1].AsInt() + (decimal)value));
+        return true;
+    }
+}

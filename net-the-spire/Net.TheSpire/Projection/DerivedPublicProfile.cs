@@ -94,7 +94,7 @@ public static class DerivedPublicProfile
         var relations = BuildRelations(rules, projection, included);
         var actions = BuildActions(rules, included, protocolVersion);
         var terminals = BuildTerminals(rules, metadata);
-        var answer = BuildAnswerAction(included);
+        var answer = BuildAnswerAction(included, protocolVersion);
         var knownPositions = BuildKnownPositions(rules, metadata, collections);
 
         // 身份先按占位构造一次，用真实目录文档算目录摘要，再据此定稿（目录摘要本身不含 identity 字段）。
@@ -517,13 +517,13 @@ public static class DerivedPublicProfile
         return actions;
     }
 
-    private static PublicActionRule BuildAnswerAction(HashSet<string> included) =>
+    private static PublicActionRule BuildAnswerAction(HashSet<string> included, string protocolVersion) =>
         new(AnswerActionTypeId,
             new Dictionary<int, PublicActionField>
             {
                 // 决策域不是单一类型：候选可以是卡牌、敌人或其它实体，因此按**公开种类全集**声明上界
                 // （protocol.md §2 第 100 行允许，但不得为此截断真实候选）。
-                [0] = new PublicActionField(AnswerInstanceFieldId, PublicValueKind.EntityRef, Required: true,
+                [0] = new PublicActionField(AnswerInstanceFieldId, PublicValueKind.EntityRef, Required: protocolVersion == NetProtocol.V01,
                     TargetKindIds: included.Select(id => KindPrefix + id).OrderBy(id => id, StringComparer.Ordinal)
                         .ToList()),
             },

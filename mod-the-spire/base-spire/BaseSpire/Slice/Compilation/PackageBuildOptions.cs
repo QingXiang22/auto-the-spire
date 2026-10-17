@@ -20,4 +20,5 @@ internal sealed record PackageBuildOptions(
     IReadOnlyList<string>? StartingRelics,
     string? SpawnHpStream,
     bool ActMapEnabled,
-    bool InitializeNewRun);
+    bool InitializeNewRun,
+    BaseSpire.SinglePlayer.RunActPlan? ActPlan = null);

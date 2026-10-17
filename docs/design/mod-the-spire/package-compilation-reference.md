@@ -1,6 +1,6 @@
 # 公共组包编译模块
 
-文档类型：参考（Reference）。适用于修改base的共享规则接线；内容作者使用已有原语时仍从[base开发指南](base-development-guide.md)进入。本页列出实现入口和依赖传递方法，不维护任务状态。
+文档类型：参考（Reference）。适用于修改base的共享规则接入；内容作者使用已有原语时仍从[base开发指南](base-development-guide.md)进入。本页列出实现入口和依赖传递方法，不维护任务状态。
 
 ## 公开入口与编译期参数
 
@@ -26,7 +26,7 @@
 | 遭遇池与普通/精英队列 | [EncounterCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/EncounterCompilation.cs)：`EncounterPool`、`RunEncounters`、`EnqueueProcedure`、`EncounterQueues` | 池、队列和消费计数分别绑定；保留真实源池与袋子重抽语义 |
 | 换房和战斗重建 | [BattleRoomCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/BattleRoomCompilation.cs)：`RoomTransition` | 生成StartNextRoom：清旧战斗、消费遭遇、掷出生HP、复制长期牌组及开回合 |
 | 真正新Run开局 | [NewRunCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/NewRunCompilation.cs)：`Setup`、`NewRun` | 将初始化库存、队列和首房接入OnSessionStart |
-| 地图与房间叶接线 | [RoomCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/RoomCompilation.cs)：`RoomServices`、`Rooms` | 创建RoomCompileContext及房间服务，再登记进入和公开操作 |
+| 地图与房间叶接入 | [RoomCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/RoomCompilation.cs)：`RoomServices`、`Rooms` | 创建RoomCompileContext及房间服务，再登记进入和公开操作 |
 | 奖励声明与Boss奖励关闭 | [RewardCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/RewardCompilation.cs)：`Rewards` | 在SettleBattle生成之前提供RewardWiring；Boss关闭回调只标幕完成 |
 | 战斗胜负和长期提交 | [SettlementCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/SettlementCompilation.cs)：`Settlement`、`SettlementBinding`、`BattleEndTail` | 嵌套出牌返回后，外层动作才结算和提交 |
 | 药水、结束回合、兼容换房/升级公开动作 | [ActionCompilation](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/ActionCompilation.cs)：`PotionAction`、`EndTurnAction`、`RunActions` | 消费已声明的规则命令，保留Role、候选与守卫 |
@@ -39,7 +39,7 @@
 
 HP、Power 实例与层数、动作状态和随机游标全部属于 Engine 状态；本能力不新增可变 C# 状态、不抽随机。固定 Byrdonis SWOOP→PECK→SWOOP 转移不抽 MonsterAi；正式出生仍使用原有 HP 流在普通81..84范围抽取。tough90及deadly攻击声明不表示 Run 已支持 Ascension>0。源依据：[TerritorialPower](../../../sts2/src/Core/Models/Powers/TerritorialPower.cs) 的 participants.Contains(Owner) 及当前 Amount；[Byrdonis](../../../sts2/src/Core/Models/Monsters/Byrdonis.cs) 的出生与动作表。
 
-可区分的错误行为由 [Byrdonis机制检查](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceByrdonisChecks.cs) 验证：应用即加力量、首次回合末跳过、递减层数、固定使用出生层数、敌方末尾重复触发玩家，以及 PECK 力量只加到总伤害一次。受控夹具不是正常公开 Run 或独立参考对拍证据。
+可区分的错误行为由 [Byrdonis机制检查](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceByrdonisChecks.cs) 验证：应用即加力量、首次回合末跳过、递减层数、固定使用出生层数、敌方末尾重复触发玩家，以及 PECK 力量只加到总伤害一次。预设状态的测试场景不是正常公开 Run 或独立参考对拍证据。
 
 ## 声明与接线顺序
 

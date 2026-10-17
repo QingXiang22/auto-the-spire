@@ -83,7 +83,7 @@ dispatch_record: 本包task-record.json的仓库相对路径
 ---
 ```
 
-正文必须包含已交付能力、修改文件和语义、输入/构建/源/reference/config/seed/run_id（适用时）、逐项完成条件与证据、实际命令/返回码、首差、未执行和阻塞、接手第一步。长日志保存在本包 artifacts/.audit。`ready_for_review` 表示执行者请求核验，不代表负责人验收；真实依赖缺失用 `blocked` 并说明依赖 ID、最小复现、受阻 case 和可继续事项。不能只写“完成”。
+正文必须包含已交付能力、修改文件和语义、输入/构建/源/reference/config/seed/run_id（适用时）、逐项完成条件与证据、实际命令/返回码、首个差异、未执行和阻塞、接手第一步。长日志保存在本包 artifacts/.audit。`ready_for_review` 表示执行者请求核验，不代表负责人验收；真实依赖缺失用 `blocked` 并说明依赖 ID、最小复现、受阻 case 和可继续事项。不能只写“完成”。
 
 ### Codex 的每次复核
 

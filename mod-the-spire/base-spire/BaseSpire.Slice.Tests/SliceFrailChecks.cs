@@ -128,7 +128,7 @@ internal static class SliceFrailChecks
             randomProfile: VanillaRandomLayout.Profile,
             computeBackend: SourceWeightedPickBackend.Instance);
         session.Start();
-        var run = new BaseSpireRunSession(RunConfiguration.Ironclad(), null!, "fixture", "fixture",
+        var run = new BaseSpireRunSession(RunConfiguration.FrozenIronclad(), null!, "fixture", "fixture",
             (uint)FixtureSeed, session, session.Participant(0), SliceManifest.PlayerRole, "fixture", []);
         return run;
     }

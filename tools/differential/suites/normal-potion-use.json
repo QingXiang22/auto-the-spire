@@ -1,0 +1,144 @@
+{
+  "suite": "normal-potion-use",
+  "fixtures_version": "normal-potion-use@1",
+  "note": "Original seed, actual first reward potion used in second combat; native pool shuffle and common generated-card choices.",
+  "target_scope": "base-spire-singleplayer-dev-map-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-map-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "Native sequential reference; actual loaded DLL SHA256 in each reference record",
+    "note": "Content baseline frozen; random layout sts2-v0.109-xxhash64@1; no reference modifications"
+  },
+  "expected_case_ids": [
+    "normal-potion-use-first",
+    "normal-potion-use-cancel"
+  ],
+  "cases": [
+    {
+      "id": "normal-potion-use-first",
+      "title": "Actual AttackPotion, choose first generated card",
+      "rng_profile": "vanilla-compatible@1",
+      "provenance": {
+        "kind": "normal_run",
+        "source": "sts2/src/Core/Rooms/CombatRoom.cs; sts2/src/Core/Rewards/RewardsSet.cs",
+        "note": "Actual normal lifecycle, visible-bash-strike-defend@1 policy"
+      },
+      "setup": {},
+      "script": [
+        {
+          "action": "normal_reward_use_first"
+        }
+      ],
+      "reference_scope": "compared",
+      "group": "normal-reward",
+      "kind": "normal-reward",
+      "base_source": "formal-dev-factory",
+      "base_scope": "dev-map",
+      "game_seed": "ENV-T04-RNG-SHUFFLE-001",
+      "initialization": "Independent normal factory/RunState; Start once; no state writes",
+      "contents": [
+        "normal-victory",
+        "gold",
+        "card-reward",
+        "potion-reward",
+        "permanent-writeback",
+        "map-travel",
+        "second-normal-combat",
+        "cross-room-permanent-state",
+        "generated-offer",
+        "actual-potion-use"
+      ],
+      "variants": [
+        "use-first"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order",
+        "power",
+        "streams",
+        "rewards",
+        "permanent-inventory",
+        "reward-closure"
+      ],
+      "semantic_actions": [
+        "visible-bash-strike-defend@1",
+        "first-legal-monster-coordinate",
+        "take-card-0",
+        "take-potion-if-present",
+        "take-gold",
+        "use-first-potion",
+        "choose-first-generated-card"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "Independent native lifecycle and PotionCmd.CanUseManually; unsupported use candidates are retained",
+      "normal_combat_count": 2,
+      "require_potion_acquisition": false
+    },
+    {
+      "id": "normal-potion-use-cancel",
+      "title": "Actual AttackPotion, cancel generated card offer",
+      "rng_profile": "vanilla-compatible@1",
+      "provenance": {
+        "kind": "normal_run",
+        "source": "sts2/src/Core/Rooms/CombatRoom.cs; sts2/src/Core/Rewards/RewardsSet.cs",
+        "note": "Actual normal lifecycle, visible-bash-strike-defend@1 policy"
+      },
+      "setup": {},
+      "script": [
+        {
+          "action": "normal_reward_use_cancel"
+        }
+      ],
+      "reference_scope": "compared",
+      "group": "normal-reward",
+      "kind": "normal-reward",
+      "base_source": "formal-dev-factory",
+      "base_scope": "dev-map",
+      "game_seed": "ENV-T04-RNG-SHUFFLE-001",
+      "initialization": "Independent normal factory/RunState; Start once; no state writes",
+      "contents": [
+        "normal-victory",
+        "gold",
+        "card-reward",
+        "potion-reward",
+        "permanent-writeback",
+        "map-travel",
+        "second-normal-combat",
+        "cross-room-permanent-state",
+        "generated-offer",
+        "actual-potion-use"
+      ],
+      "variants": [
+        "use-cancel"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order",
+        "power",
+        "streams",
+        "rewards",
+        "permanent-inventory",
+        "reward-closure"
+      ],
+      "semantic_actions": [
+        "visible-bash-strike-defend@1",
+        "first-legal-monster-coordinate",
+        "take-card-0",
+        "take-potion-if-present",
+        "take-gold",
+        "use-first-potion",
+        "cancel-generated-card"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "Independent native lifecycle and PotionCmd.CanUseManually; unsupported use candidates are retained",
+      "normal_combat_count": 2,
+      "require_potion_acquisition": false
+    }
+  ]
+}

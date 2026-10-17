@@ -187,13 +187,13 @@ internal static class NewRunCompilation
             if (roomServicesBindings.RunInitialization is not null)
                 setupSteps.AddRange(roomServicesBindings.RunInitialization.Setup(setupBindings.Setup, setupBindings.Setup.First(setupBindings.Setup.Collection(runCollectionsBindings.RunStates!))));
 
-            if (options.InitializeNewRun && roomServicesBindings.RunInitialization is not null)
+            if (options.InitializeNewRun && roomServicesBindings.RunInitialization is not null && options.ActPlan is null)
                 setupSteps.AddRange(roomServicesBindings.RunInitialization.GenerateEventQueue(setupBindings.Setup, setupBindings.Setup.First(setupBindings.Setup.Collection(runCollectionsBindings.RunStates!))));
 
             // BASE-01/02�?*遭遇池与整幕队列**。池成员�?弱池在前、普通池在后"的源顺序各建一个实例，
             // 然后用原�?`UpFront` �?*一次生成整幕队�?*（GrabBag + 标签回避，见 `EnqueueProcedure`）：
             // 池的内容是规则（进规则身份），队列是局内状态（每局一份）—�?第几间遇到谁"永不烘进规则集�?
-            if (options.EncounterPool is not null)
+            if (options.EncounterPool is not null && options.ActPlan is null)
             {
                 foreach (var encounter in options.EncounterPool.Encounters.Concat(options.InitializeNewRun ? options.EncounterPool.Elites : []))
                 {
@@ -236,6 +236,11 @@ internal static class NewRunCompilation
                         setupBindings.Setup.First(setupBindings.Setup.Collection(runCollectionsBindings.RunStates!)), options.EncounterPool));
                 }
             }
+
+            if (roomServicesBindings.Acts is not null)
+                setupSteps.AddRange(roomServicesBindings.Acts.Initialize(setupBindings.Setup,
+                    setupBindings.Setup.First(setupBindings.Setup.Collection(runCollectionsBindings.RunStates!)),
+                    roomServicesBindings.RunInitialization!, encounterPoolBindings, runEncountersBindings, encounterQueuesBindings));
 
             // 第一间房走与后续房间**同一�?*流程（HP 来自 Run、战斗牌由长期牌组拷贝而来）�?
             // ENV-T05 修正：**地图 scope 开局不自动开打**。源在幕开始时站在第 0 行起点、只显示可选子节点，

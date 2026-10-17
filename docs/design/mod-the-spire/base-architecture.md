@@ -22,7 +22,7 @@ flowchart TD
     Session --> Net[net公开观察与候选]
 ```
 
-图中前端、房间模块和组包器主要在构建规则时工作。它们生成读写状态的指令，不保存一份额外的C#游戏状态。`RoomCompileContext`和`CardPlayContext`也是编译期绑定；名称里的context不表示运行中的Session。
+图中前端、房间模块和规则包构建器主要在构建规则时工作。它们生成读写状态的指令，不保存一份额外的C#游戏状态。`RoomCompileContext`和`CardPlayContext`也是编译期绑定；名称里的context不表示运行中的Session。
 
 ## 目录分工
 
@@ -76,11 +76,11 @@ workpacks/                尚未正式集成的隔离工作包
 
 原来的`Build`把状态声明和多个领域的局部函数放在同一作用域。局部函数直接捕获玩家字段、牌区和程序句柄，参数表没有显示这些依赖；读取一个函数时，还要追溯外层声明和调用时机。这就是“集中在一个方法里”形成的负担。
 
-`CombatSlicePackage.Build(...)`保留调用兼容性，转交[CombatPackageComposer](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CombatPackageComposer.cs)。根组装只安排声明、程序体接线和动作注册；伤害、Power、敌人行动、换房和新Run的IR生成分别由`Compilation/`中的领域模块拥有。按修改目标查[编译模块参考](package-compilation-reference.md)，无需逐段检索一个巨型方法。
+`CombatSlicePackage.Build(...)`保留调用兼容性，转交[CombatPackageComposer](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CombatPackageComposer.cs)。根组装只安排声明、程序体接入和动作注册；伤害、Power、敌人行动、换房和新Run的IR生成分别由`Compilation/`中的领域模块拥有。按修改目标查[编译模块参考](package-compilation-reference.md)，无需逐段检索一个巨型方法。
 
 [CompilationBindings](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CompilationBindings.cs)把玩家、敌人、卡牌、牌区、Run资源、遭遇池和房间服务等符号分别组成有类型的返回值。每个编译方法在参数表中列出所用分组和回调，没有一个包含全包变量的通用上下文。已有分组增加字段时，变化落在声明者、对应Bindings及实际消费者；初始化和重置由字段寿命决定。只有引入另一组依赖或改变模块顺序时才调整根组装。具体修改步骤见[新增共享状态字段](base-development-guide.md#新增共享状态字段)。
 
-程序声明和程序体接线分开，是因为伤害、反击、格挡和回合触发会引用共同的程序句柄。根组装先取得句柄，再编译引用它的程序体，保留原有声明、IR和随机调用顺序。根方法末尾的短适配函数只向领域模块转发参数；具体规则在相应模块中。
+程序声明和程序体接入分开，是因为伤害、反击、格挡和回合触发会引用共同的程序句柄。根组装先取得句柄，再编译引用它的程序体，保留原有声明、IR和随机调用顺序。根方法末尾的短适配函数只向领域模块转发参数；具体规则在相应模块中。
 
 这些分组保存编译期符号，`CompilationSlots`只为生成IR分配局部量名称。实际生命、金币、访问计数和随机状态仍在Engine里。卡牌和怪物按资源规则自动发现；地图房型通过`Rooms/MapRoomEntry`组合，事件通过`EventRoomCatalog`登记。普通事件继承`ChoiceEventModule`，提供自己的初始化、选项和领域效果；共享编译器生成动作守卫、关闭和死亡尾。源池选择和执行目录分开，未实现身份保持显式失败。
 

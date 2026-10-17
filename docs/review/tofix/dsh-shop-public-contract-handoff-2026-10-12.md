@@ -14,7 +14,7 @@ Source Eternals/未实现遗物效果仍属 base 范围，且发现一处**本�
 - dispatch_record: [.audit/dsh-shop-public-contract-20261012/task-record.json](../../../.audit/dsh-shop-public-contract-20261012/task-record.json)（`status: accepted`）
 - delivery_status: `ready_for_review`（公开契约证据与消费者缺口修复已交；完整整局与 Host 侧声明项未收口）
 - updated_at: `2026-10-12T07:58:36+08:00`
-- 主清单对应项：[T03](README.md#env-t03)（本包不修改主清单；状态与认领由 Codex 单写）
+- 主清单对应项：[T03](README.md#env-t03)（本包不修改主清单；状态与认领由 Codex 独自修改）
 
 ## 接手后先做什么
 
@@ -43,7 +43,7 @@ Source Eternals/未实现遗物效果仍属 base 范围，且发现一处**本�
 
 [verify_shop_contract.py](../../../.audit/dsh-shop-public-contract-20261012/verify_shop_contract.py)：把已录帧按
 L1（0.2 `wire.schema.json`）→ L2（`check_catalog`）→ L3（`check_snapshot`）→ L4（`check_control`）逐层过一遍，
-再叠加商店公开闭合专项。它**只读**复用 `tools/contract-check/wire_layers.py`，按 0.2 显式覆盖两处旧 0.1 规则
+再叠加商店公开接口的一致性检查。它**只读**复用 `tools/contract-check/wire_layers.py`，按 0.2 显式覆盖两处旧 0.1 规则
 （0.1 的 `I-81` start 结果形状、`I-76` 的规范 uint64 十进制 seed）——覆盖点在运行时打印，避免用旧限制判 0.2：
 
 | 0.1 规则 | 0.2 行为 | 依据 |
@@ -54,7 +54,7 @@ L1（0.2 `wire.schema.json`）→ L2（`check_catalog`）→ L3（`check_snapsho
 
 商店专项（全部纯帧派生，不依赖 `steps.ndjson`，也不重判规则）：
 
-- **候选闭合**：每一步提交的 `candidate_id` 必须在该步**前置快照**的 `legal_actions` 里，且
+- **候选完整性**：每一步提交的 `candidate_id` 必须在该步**前置快照**的 `legal_actions` 里，且
   `expected_observation_id` 等于该快照的 `observation_id`。
 - **拒绝步**：被拒绝的 `step` 必须 `ok=false`、**没有快照**、带具名 `code`/`execution_state`/`retry_mode`
   且 `execution_state ∈ {not_started, completed}`（不得是 `unknown`），并且**下一步的前置快照逐字段不变**（拒绝不推进）。
@@ -119,7 +119,7 @@ profile `base-spire-singleplayer-dev-map-v1`；scope `dev-map`；seed `ENV-T03-S
 
 | 检查 | 工作目录与实际命令 | 返回码/结果 | 证据与证明范围 |
 | --- | --- | --- | --- |
-| 帧级契约校验（3 局：两份负责人轨迹 + 本包反例局） | `python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.py --verbose --run-dir .audit/owner-project-review-20261012/shop-buy-remove --run-dir .audit/owner-project-review-20261012/shop-remove --run-dir .audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe` | rc **1**；131 request + 131 response 帧、121 快照全部 L1 通过；L2 逐局目录（三局合计 1416 条声明）闭合；`0.2 wire 门槛=0`、`商店公开闭合=0`、`Host 结构声明=126`；拒绝步 1 条已核 | [verify-shop-contract.log](../../../.audit/dsh-shop-public-contract-20261012/verify-shop-contract.log)、[verify-final.json](../../../.audit/dsh-shop-public-contract-20261012/verify-final.json) |
+| 帧级契约校验（3 局：两份负责人轨迹 + 本包反例局） | `python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.py --verbose --run-dir .audit/owner-project-review-20261012/shop-buy-remove --run-dir .audit/owner-project-review-20261012/shop-remove --run-dir .audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe` | rc **1**；131 request + 131 response 帧、121 快照全部 L1 通过；L2 逐局目录（三局合计 1416 条声明）的引用均有效；`0.2 wire 门槛=0`、`商店公开闭合=0`、`Host 结构声明=126`；拒绝步 1 条已核 | [verify-shop-contract.log](../../../.audit/dsh-shop-public-contract-20261012/verify-shop-contract.log)、[verify-final.json](../../../.audit/dsh-shop-public-contract-20261012/verify-final.json) |
 | 商店机制检查（离线，四组 672 项） | `python -X utf8 -u net-the-spire/client/test_shop_public.py` | rc **0**，`passed=672 failed=0` | [test-shop-public.log](../../../.audit/dsh-shop-public-contract-20261012/test-shop-public.log)。与 wave-2 的 672 项同数，未减少断言 |
 | 带商店记录整段复算（两局） | `python … test_shop_public.py --only replay --run-dir .audit/owner-project-review-20261012/shop-buy-remove`（45 步）／`…/shop-remove`（46 步） | 各 rc **0**，45/45 与 46/46 步**逐字一致**，0 个旧规则变体步骤 | [test-shop-public-replay.log](../../../.audit/dsh-shop-public-contract-20261012/test-shop-public-replay.log) |
 | 非商店记录回归（最小回代） | `python … --only replay --run-dir .audit/dsh-public-run-driver-2026-10-11/runs/seed-K` | rc **0**，315/315 逐字一致（与改动前相同） | 同上日志。**未**重跑 17 条历史轨迹或其它 seed 矩阵 |
@@ -140,7 +140,7 @@ net416/Engine/Slice 与历史轨迹）。
 而同一目录里 `scenario_profiles[*].required_declarations` 用的是完整声明 ID（`net:kind:base-spire:Player`），
 同一载荷里 `Pile`（5）/`Sequence`（11）也用的是完整 ID。0.1 的 `I-71`/`I-84` 要求
 `declaration_ids` 必须是**本 catalog 已声明 ID**，0.2 只改 §7 的四处差异、其余沿用 §1–6，因此这 42 项
-（每局）未闭合。最小复现：
+（每局）仍有声明不一致。最小复现：
 
 ```powershell
 python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.py --verbose
@@ -157,7 +157,7 @@ python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.
 net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../../../net-the-spire/Net.TheSpire.Tests/FormalPathChecks.cs#L552)）与
 `Pile` 逐项（[ControlChecks.cs:240](../../../net-the-spire/Net.TheSpire.Tests/ControlChecks.cs#L240)），
 所以 `Entity`/`Relation`/`LegalAction`/`TerminalResult` 的短名从未被检查。这是 2026-10-07「公开语义透传」
-迁移引入的，不是商店引入的，**不影响**本包商店结论（商店动作/字段/序列在这四处都各自闭合）。
+迁移引入的，不是商店引入的，**不影响**本包商店结论（商店动作/字段/序列在这四处都能逐项对应）。
 裁决要么让 Host 发完整声明 ID，要么由负责人修订 `I-71`/`I-84` 在 0.2 下的口径——本包两条路都不做。
 
 **次个差异（本包已修，留作回归对照）**：修复前 `replay` 组复算两份商店轨迹的**首要定位**是
@@ -182,7 +182,7 @@ net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../..
 
 ## 维护位置
 
-* 任务状态/认领/依赖/下一成果：[主清单 T03](README.md#env-t03)（Codex 单写；本包未改）。
+* 任务状态/认领/依赖/下一成果：[主清单 T03](README.md#env-t03)（Codex 独自修改；本包未改）。
 * 使用方法与 CLI：`net-the-spire/client/run_game.md`、`net-the-spire/client/README.md`、
   `docs/design/net-the-spire/how-to-run-public-game.md` §6。
 * 契约与不变量口径：`docs/design/net-the-spire/protocol.md` §7（0.2 差异）、

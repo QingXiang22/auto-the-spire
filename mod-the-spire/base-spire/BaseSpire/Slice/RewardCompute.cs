@@ -194,7 +194,7 @@ public static class RewardCompute
     public const string SourceHash =
         "Rewards/RewardsSet.cs+Rewards/GoldReward.cs+Rewards/CardReward.cs+Rewards/PotionReward.cs+"
         + "Rewards/Reward.cs+Factories/CardFactory.cs+Factories/PotionFactory.cs+Odds/CardRarityOdds.cs+"
-        + "Odds/PotionRewardOdds.cs+Runs/CardCreationOptions.cs+Models/CardPools/IroncladCardPool.cs@sts2-reward-chain-v1";
+        + "Odds/PotionRewardOdds.cs+Runs/CardCreationOptions.cs+Models/CardPools/IroncladCardPool.cs@sts2-reward-chain-elite-v2";
 
     /// <summary>与 `SourceWeightedPick.Span` 一致：`raw64 &gt;&gt; 11` 恰好是源的 `NextDouble()`。</summary>
     public const long Span = 1L << 53;
@@ -313,13 +313,14 @@ public static class RewardCompute
 
         var roll = RollOf(bits);
         var boss = inputs.Count > 5 && inputs[5].AsBool();
-        var rareOdds = boss ? 1f : RegularRareOdds + current;
+        var elite = inputs.Count > 6 && inputs[6].AsBool();
+        var rareOdds = boss ? 1f : (elite ? 0.1f : RegularRareOdds) + current;
         int rarity;
         if (roll < rareOdds)
         {
             rarity = RewardRarity.Rare;
         }
-        else if (roll < (boss ? 0f : RegularUncommonOdds) + rareOdds)
+        else if (roll < (boss ? 0f : elite ? 1f - 0.5f - 0.1f : RegularUncommonOdds) + rareOdds)
         {
             rarity = RewardRarity.Uncommon;
         }

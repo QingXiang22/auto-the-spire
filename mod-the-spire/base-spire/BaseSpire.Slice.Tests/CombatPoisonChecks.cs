@@ -83,7 +83,7 @@ internal static class CombatPoisonChecks
             Check.Equal(2L, FormalSliceFixture.PowerStacks(session, player, "mymod:poison"), "player decrement");
             Check.Equal(3L, Number(session, player, FormalSliceFixture.PlayerTypeId, "HpLossCount"), "one hp loss event per poison hit");
         });
-        Check.Run("Poison: lethal player damage terminates without decrement", () =>
+        Check.Run("Poison: lethal player damage removes dead-owner powers before terminal", () =>
         {
             var session = Start();
             var player = FormalSliceFixture.Player(session);
@@ -93,7 +93,8 @@ internal static class CombatPoisonChecks
             FormalSliceFixture.EndTurn(session); Healthy(session);
             Check.Equal(SessionStatus.Terminal, session.Status, "player poison death");
             Check.Equal("base-spire:Defeat", session.Terminal!.Definition.QualifiedId, "defeat not victory");
-            Check.Equal(5L, FormalSliceFixture.PowerStacks(session, player, "mymod:poison"), "dead owner does not decrement");
+            Check.Equal(0L, FormalSliceFixture.PowerStacks(session, player, "mymod:poison"), "confirmed death removes the power, not a surviving-owner decrement");
+            Check.Equal(0, FormalSliceFixture.PowerIds(session, player).Count, "dead-owner power inventory is empty");
         });
     }
 

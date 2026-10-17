@@ -56,7 +56,6 @@ internal static class ActionCompilation
                         PotionEffectChain(useBody, usedPotion, useOwner, useSelf, PotionTargets.Self),
                     }),
                 // 消耗：离开药水栏（药水是消耗品，且不消耗能量）�?
-                useBody.Destroy(usedPotion),
                 // ENV-T02（复核修正）：胜利判定在**动作体末尾**——药水照样能造成伤害并击杀最后一个敌人，
                 // 必须在"效果 + 消耗"跑完之后再判，否则这条路径又会截断收尾（与 `PlayCard`/`EndTurn` 同规格）。
                 BattleEndTail(useBody));

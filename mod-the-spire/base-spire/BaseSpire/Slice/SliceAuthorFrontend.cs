@@ -420,6 +420,8 @@ public sealed record AuthorCard(
     public bool CanGenerateInCombat { get; init; } = true;
     public bool NormalInnate { get; init; }
     public bool UpgradedInnate { get; init; }
+    public bool NormalSly { get; init; }
+    public bool UpgradedSly { get; init; }
     public string DamageVariable { get; init; } = "";
 
     /// <summary>Formal source programs. Null identifies the legacy diagnostic adapter, never an empty effect.</summary>
@@ -544,6 +546,7 @@ public sealed record AuthorPower(
     int BlockGainAdditivePerStack = 0)
 {
     public IReadOnlyList<PowerRule> Rules { get; init; } = [];
+    public bool NegativeStacksAreInfinite { get; init; }
 }
 
 /// <summary>

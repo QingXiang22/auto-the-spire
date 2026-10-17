@@ -15,6 +15,8 @@ public interface IEventRoomModule
 public sealed record EventCompileContext(RoomCompileContext Room, FieldSymbol CurrentEventId, int Phase)
 {
     public RunResources? Resources { get; init; }
+    public RunDeck? Deck { get; init; }
+    public IReadOnlyList<string>? SourceEvents { get; init; }
 
     public Expr Active(IrScope scope, Expr run, string eventId) => scope.And(
         scope.Equal(scope.Field(run, Room.Map.RunMapPhase), scope.Const((long)Phase)),
@@ -55,6 +57,10 @@ public sealed class EventRoomCatalog
     public Inst Enter(IrScope scope, EventCompileContext context, Expr run, Expr selectedId)
     {
         Inst branch = scope.Fail("base-spire: selected event has no registered executable module");
+        if (context.SourceEvents is { } sources)
+            foreach (var source in sources.Reverse())
+                branch = scope.IfElse(scope.Equal(selectedId, scope.Const(source)),
+                    [scope.Fail($"base-spire: selected event {source} has no registered executable module")], [branch]);
         // Nest in reverse so the declared order is also the dispatch order.
         foreach (var module in _modules.Reverse())
             branch = scope.IfElse(scope.Equal(selectedId, scope.Const(module.Id)),

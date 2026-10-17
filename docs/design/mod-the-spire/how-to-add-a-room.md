@@ -2,7 +2,7 @@
 
 文档类型：操作指南（How-to）。面向已有明确房间机制目标的开发者，将房间叶接入正式工厂。首次学习从[房间动作教程](first-base-room.md)开始；目录职责见[base组织结构](base-architecture.md)。当前任务、认领和验收只查[主清单本项](../../review/tofix/README.md#env-t09)。
 
-本页和[房间接口参考](room-compile-reference.md)是房间包的短入口。只读派单指定的原版源方法及目标模块；组包器由接线负责人处理，缺接口时提交具体缺口。
+本页和[房间接口参考](room-compile-reference.md)是房间包的短入口。只读派单指定的原版源方法及目标模块；规则包构建器由接入负责人处理，缺接口时提交具体缺口。
 
 ## 1. 运行一个完整的房间动作
 
@@ -49,13 +49,13 @@ public static void Register(EnginePackageBuilder package, RoomCompileContext roo
 4. 将永久资源变化写入 `RoomCompileContext` 绑定的Run/长期集合。战斗副本中的临时变化不直接冒充长期获得。
 5. 完成本访问的选择与资源提交，再调用 `CloseVisit`。多次购买的房间在离店时关闭，不在每次购买后关闭。
 
-本上下文仅统一Run、长期牌组与访问守卫/关闭；药水、遗物、卡牌配方和商店库存仍以显式依赖传入。其准确入口见[资源接缝](room-compile-reference.md#资源接缝)。商店是"多次购买、离店才关闭"的现成例子：[ShopRoomWiring](../../../mod-the-spire/base-spire/BaseSpire/Slice/ShopRoomWiring.cs) 在进入时一次性生成库存（`Enter`），把每个商品的 `Sold`/`Unsupported`/`UnsupportedReason` 都写在 Engine 字段里，只有 `LeaveShop` 调 `CloseVisit`。
+本上下文仅统一Run、长期牌组与访问守卫/关闭；药水、遗物、卡牌配方和商店库存仍以显式依赖传入。其准确入口见[资源接口](room-compile-reference.md#资源接缝)。商店是"多次购买、离店才关闭"的现成例子：[ShopRoomWiring](../../../mod-the-spire/base-spire/BaseSpire/Slice/ShopRoomWiring.cs) 在进入时一次性生成库存（`Enter`），把每个商品的 `Sold`/`Unsupported`/`UnsupportedReason` 都写在 Engine 字段里，只有 `LeaveShop` 调 `CloseVisit`。
 
 普通的不可购买状态要在`Requires`或候选查询中排除，使玩家仍可选择其他商品或离店。`Fail`表示规则故障并终止Session，不用于金币不足、商品售罄或栏位已满的常规反馈。一个动作只能登记一个`Candidates`查询；需要第二个选择时，复用正式决策过程，不能连续调用两次覆盖前一个参数域。
 
 ## 3. 由负责人接入正式入口
 
-接线分三处，各处只查相应符号附近：
+接入分三处，各处只查相应符号附近：
 
 | 操作 | 入口符号 | 负责人需要确认 |
 | --- | --- | --- |
@@ -69,7 +69,7 @@ public static void Register(EnginePackageBuilder package, RoomCompileContext roo
 
 ## 横向扩展问号事件
 
-问号房（`MapPointType.Unknown`）已经**真的接线**：判定实际房型、复用已有房间入口、消费源事件队列、
+问号房（`MapPointType.Unknown`）已经**真的接入**：判定实际房型、复用已有房间入口、消费源事件队列、
 进入独立事件模块、真实选择/写回/关闭后继续地图。三个共享模块各有归属：
 
 | 模块 | 归属 | 拥有什么 |
@@ -91,7 +91,7 @@ public static void Register(EnginePackageBuilder package, RoomCompileContext roo
    - 需要事件级随机数时用 `EventVisitState.Random.NextInt(scope, "源类名", min, max)`：它对应源
      `EventModel.BeginEvent` 给每个事件建的独立 Rng（引擎流 `base-spire:event:&lt;SLUG&gt;`，建局时按源池全量种好）。
    - 本页的金币一类"本页数值"写进 `EventVisitState.EventPageGold`，选项效果从它取值。
-   - 源里覆盖了 `EventModel.IsAllowed` 的事件，额外实现 `IEventEligibility`（队列跳过用的就是它）。
+   - 先核对独立的 `SourceEventEligibility` 源资格表，不以效果模块未实现为由默认允许；缺少的源条件先补表。模块确需覆盖时实现 `IEventEligibility`，保持同一源条件。当前表限第一幕，跨幕接入须使用真实幕索引。
    - 使用`effects.GainGold`、`DamageOutsideCombat`、`HealLivingPlayer`组合资源操作，不直接改金币/生命字段。普通选项默认Finish；多页选项用`EventCompletion.Continue`保留访问。
    - 未支持的源选项保留身份并**显式失败**，不静默省略。特殊自定义交互仍可实现`IEventRoomModule`，按对应机制连接。
 2. 在 [EventModules](../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/EventModules.cs) 的列表里加一项。
@@ -106,7 +106,7 @@ protected override IReadOnlyList<EventChoice> Choices(EventCompileContext contex
     [new("TakeMyGold", effects => effects.GainGold(7))];
 ```
 
-正式装配提供带`RunResources`能力的`EventCompileContext`。源时序和当前支持范围见[事件领域契约](event-domain/spec.md)。新增共享机制先补对应规格与判别案例；单纯组合已有能力引用该规格，不为每个事件新建流程和测试框架。
+正式装配提供带`RunResources`能力的`EventCompileContext`。源时序和当前支持范围见[事件领域契约](event-domain/spec.md)。新增共享机制先补对应规格与测试用例；单纯组合已有能力引用该规格，不为每个事件新建流程和测试框架。
 
 受控例子（两个独立模块的选项隔离/永久写回/关闭、重复 ID 拒绝、未注册事件显式失败）仍然可跑：
 
@@ -114,7 +114,7 @@ protected override IReadOnlyList<EventChoice> Choices(EventCompileContext contex
 dotnet run --project docs/examples/base-events --artifacts-path .artifacts/parallel/event-example
 ```
 
-真实问号流程的局部判别与固定 seed 证据：
+真实问号流程的局部检查与固定 seed 证据：
 
 ```powershell
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests --artifacts-path .artifacts/parallel/unknown-room-checks -- --unknown-room-only
@@ -122,10 +122,19 @@ dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests --artifacts-
 
 该组覆盖：固定 seed `ENV-T03-SEED-L` 的第一次判定（独立复算的 Event/`SunkenStatue`/金币量）、源
 float32 赔率累加与命中复位、Shop 黑名单、判成战斗/精英/宝箱/商店时复用真实入口与守卫、
-未实现身份具名失败、源身份转换、已访问身份跳过与访问计数（共 10 项）；受控包另测资格跳过与
+未实现身份报错并指出不支持的对象、源身份转换、已访问身份跳过与访问计数（共 10 项）；受控包另测资格跳过与
 "走满一轮允许重复"。准确签名见[横向注册接口](room-compile-reference.md#横向注册地图入口与事件)。
 
 ## 4. 验证本包
+
+事件内容先直接验证生产目录和领域操作，再统一做正常地图集成。已有源码与独立参考时，从仓库根目录运行：
+
+```powershell
+dotnet build tools/differential/Differential.csproj --artifacts-path .artifacts/event-dev
+dotnet .artifacts/event-dev/bin/Differential/debug/Differential.dll event-modules --event MorphicGrove --output .audit/event-dev/morphic
+```
+
+该命令实际进入正式MorphicGrove模块、执行两分支及多张牌选择，结果写入`result.json`；通过时返回0。工具不生成地图或战斗，受控Run初态、共享内容配方与真实目录Enter均有显式边界。其他已注册源类名可用`--event`做目录进入检查；为新行为复用定向比较入口，不必先让某个seed走到房间。全部模块检查省略`--event`；Jungle独行已有具名参考RNG偏离，完整检查据此非零，不能用它替换正常Run验收。方法与结果范围见[独立事件模块验证](../../../tools/differential/README.md#独立事件模块验证)。
 
 开发时选择受影响分组。现有例子：
 
@@ -137,7 +146,7 @@ dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests --artifacts-
 
 依次验证受控营火边界、受控宝箱边界和**正式商店**（`BaseSpireScope.DevMap` 工厂建会话，从地图 `ChooseMapPoint` 的 Shop 分支进店；覆盖 14 格库存顺序、`Shops` 27 抽/`Rewards` 14 抽、买不起/满栏/不可买被候选与守卫拒绝后仍能离店、买卡/买药水/买遗物长期写回、删牌走正式 `Decide` 只删选中的那个、观察不重建货架）。新房间优先验证真正区分行为的获得/扣款/容量/选择/离店路径，按根[测试取舍](../../../AGENTS.md#测试取舍全仓库强制)执行。
 
-正式集成按根约定串行完成构建和受影响门槛，再通过[公开运行路径](../net-the-spire/how-to-run-public-game.md)从正常开局到达本房间。受控例子、本地检查、正常公开可达和独立双侧分别记账。
+正式集成按根约定串行完成构建和受影响门槛，再通过[公开运行路径](../net-the-spire/how-to-run-public-game.md)从正常开局到达本房间。受控例子、本地检查、正常公开可达和独立双侧分别记录。
 
 ## 派单时携带的短包
 

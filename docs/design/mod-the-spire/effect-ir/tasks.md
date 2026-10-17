@@ -7,7 +7,7 @@
 - [x] T003 [US1] 在 `BaseSpire/Slice/SpireCardSource.cs` 保留逐效果参数与独立引用，不再用卡级槽解释组合。
 - [x] T004 [US2] 在领域前端保留顺序/嵌套条件和重复，建立明确的旧步骤适配边界。
 - [x] T005 [US1] 在 `BaseSpire/Slice/Effects/` 实现领域程序到现有 IR 的编译器，接入正式出牌路径。
-- [x] T006 [US3] 初次在 `BaseSpire/Slice/CombatSlicePackage.cs` 明确效果/动作生命周期接缝，保持钩子、末杀、永久提交时序；拆分后的维护入口见[编译模块参考](../package-compilation-reference.md)中的`CardCompilation`、`SettlementCompilation`和`ActionCompilation`。
+- [x] T006 [US3] 初次在 `BaseSpire/Slice/CombatSlicePackage.cs` 明确效果/动作生命周期接口，保持钩子、末杀、永久提交时序；拆分后的维护入口见[编译模块参考](../package-compilation-reference.md)中的`CardCompilation`、`SettlementCompilation`和`ActionCompilation`。
 - [x] T007 [US2] 在 `BaseSpire.Slice.Tests/EffectProgramChecks.cs` 验证升级、动态读值、条件/重复/目标暂停和边界行为。
 - [x] T008 更新作者/接手文档与本包证据；串行运行构建、Engine/Slice/net、内容加载及文档检查。
 

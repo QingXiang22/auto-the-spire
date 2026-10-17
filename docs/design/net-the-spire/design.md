@@ -46,7 +46,7 @@ flowchart LR
 
 必须先对每个训练配置建立“公开机制 → 当前字段/位置 → 提供方来源 → 验证场景”的映射。内核已有公开摘要就复用；确实缺少公开已知位置时，在环境提供方增加当前可知状态及其规则更新，不放到 AI、不新增供 AI 重放的历史协议。
 
-映射格式、状态、来源定位和公开事实充分性审计见[契约资产第5节](contract-artifacts.md#5-机制覆盖与观察充分性审计)。N-02 前建立机制清单/可信来源，N-02 交付更新与失效实现及机制证据，N-05 验收覆盖闭合，E2 前完成 V-15。它不是 AI 的知识模型，也不能用 fixtures 自证真实来源。
+映射格式、状态、来源定位和公开事实充分性审计见[契约资产第5节](contract-artifacts.md#5-机制覆盖与观察充分性审计)。N-02 前建立机制清单/可信来源，N-02 交付更新与失效实现及机制证据，N-05 验收覆盖完整，E2 前完成 V-15。它不是 AI 的知识模型，也不能用 fixtures 自证真实来源。
 
 例如置顶、抽牌、洗牌、随机插牌各自改变的是当前可知位置。实现应通过规则层的明确结果或可信适配信号更新这些事实，不能读取完整牌序后全标为known。发现所需事实缺失，先交规则提供方补声明和规则更新；只有现有通用组合无法表达时才附最小复现交负责人判断core缺口。net不另写一套卡牌规则模拟。真实适配器如何形成这些当前事实由其内部决定，但不能依赖AI传来过往事件。
 
@@ -109,7 +109,7 @@ flowchart LR
 
 模拟侧的来源是所选RuleSet/Projection与该构建的不可变补充元数据，动态来源是同一稳定边界的Observe/LegalActions/PendingDecision/Terminal。元数据只补通用声明缺少的语义，不照抄实体/字段/动作清单，也不承载另一份可变游戏状态。
 
-core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义，不能为了登记公开能力反向依赖net。Host组合规则提供方与net，必要的协议转换在这里接入；Net.TheSpire保持core/contracts依赖。现有SDK能提供的声明先直接读取，缺少游戏解释时由base工厂随构建返回只读信息，不以新增核心facade作为前置条件。具体元数据接口须在ENV-T03接线时落实，当前没有已发布的新API或DSL语法。
+core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义，不能为了登记公开能力反向依赖net。Host组合规则提供方与net，必要的协议转换在这里接入；Net.TheSpire保持core/contracts依赖。现有SDK能提供的声明先直接读取，缺少游戏解释时由base工厂随构建返回只读信息，不以新增核心facade作为前置条件。具体元数据接口须在ENV-T03接入时落实，当前没有已发布的新API或DSL语法。
 
 对真实游戏，适配器从本体形成相同公开事实与操作含义，控制器将绑定转换成真实操作。它与模拟侧共享契约及编码规则；两侧的种子、附着、恢复等能力可不同，describe必须如实声明。接口相同不表示两侧行为一致已通过对拍。
 
@@ -129,7 +129,7 @@ core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义
 
 实现时由base声明 `MapDraws` 为隐藏字段，net沿既有通用派生规则处理，不能按该字段名字硬过滤或另算地图。诊断材料仍保留在Engine权威状态，本地工具/SDK的显式诊断读取可用；此包不新增公共wire操作或为诊断暴露整个State。修改可见性必须更新实际构建/catalog身份与适用C#/Python/schema证据。旧0.1兼容按既有契约，正式0.2目录随规则变更；合法选择、公开句柄、重复提交和随机消费保持可核对。
 
-负责人协调C仅在 `BaseSpire/Slice/MapRoomWiring.cs` 的MapDraws字段声明增加 `visibility: FieldVisibility.Hidden` 及必要邻近注释；该文件其他逻辑与base公共组包器由A维护。此授权是单字段跨线接缝，不授权C改玩法、药水、随机算法或DSL。
+负责人协调C仅在 `BaseSpire/Slice/MapRoomWiring.cs` 的MapDraws字段声明增加 `visibility: FieldVisibility.Hidden` 及必要邻近注释；该文件其他逻辑与base公共规则包构建器由A维护。此授权是单字段跨线接口，不授权C改玩法、药水、随机算法或DSL。
 
 ### ENV-T03公开声明闭合与旧切片后端装配（2026-10-12）
 
@@ -138,13 +138,13 @@ core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义
 | 结构 | 登记的公开ID | 不漏、不冒充 |
 | --- | --- | --- |
 | `Entity` | `kind.KindId`（`net:kind:<引擎类型>`） | 映射表键（`base-spire:Player`）只是映射键，不是目录声明ID |
-| `Relation` | 已发布关系的`TypeId`（`net:relation:…`） | `Disposition.Published`为空的引擎关系不发；它没有`relation_type`，发了就无法闭合 |
+| `Relation` | 已发布关系的`TypeId`（`net:relation:…`） | `Disposition.Published`为空的引擎关系不发；它没有`relation_type`，发布后就会产生无法解析的引用 |
 | `LegalAction` | 各动作的`ActionTypeId`（`net:action:…`）加net自声明的`net:action:net.answer_decision` | 应答类型出现在wire的合法候选里（暂停期），目录也发布它，因此必须一并登记 |
 | `TerminalResult` | 各终局的`ReasonId`（`net:reason:…`） | 同上，不用空数组掩盖缺失 |
 
 `Pile`/`Sequence`/`Group`沿用各自`pile_type`/`sequence_type`/`group_type`的公开ID。列表按公开ID的UTF-8字节序去重排序，使同一目录无论注册顺序如何都产出同一份声明。
 
-旧切片/作者场景的宿主组装：`ControlHost`/`ControlSession`带一个**可选**`IComputeBackend`参数，由组合层注入规则包声明资产所需的后端（`Net.TheSpire.Host`的`legacy-slice`分支与检查夹具传`BaseSpireComputeBackend.Instance`）。通用控制层不认识任何游戏ID或玩法，只把实例转交引擎；不传时保持旧行为（执行该资产时报`Unsupported`，链接期只检查声明）。正式路径不走这个接缝：后端由`ISessionSource`/base工厂在建会话时装好，控制入口只唤醒它一次。
+旧切片/作者场景的宿主组装：`ControlHost`/`ControlSession`带一个**可选**`IComputeBackend`参数，由组合层注入规则包声明资产所需的后端（`Net.TheSpire.Host`的`legacy-slice`分支与测试场景传`BaseSpireComputeBackend.Instance`）。通用控制层不认识任何游戏ID或玩法，只把实例转交引擎；不传时保持旧行为（执行该资产时报`Unsupported`，链接期只检查声明）。正式路径不走这个接口：后端由`ISessionSource`/base工厂在建会话时装好，控制入口只唤醒它一次。
 
 实机证据与前后对比见[本包交接](../../review/tofix/dsh-host-declarations-close-handoff-2026-10-12.md)。
 
@@ -162,7 +162,7 @@ core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义
 | `STS2AIMCP/Game/GameStateService.cs` | 活动界面、牌/能力/敌人及选择对象定位 | 本体提供玩家当前可见事实；隐藏状态、未知牌序和RNG不直接序列化 |
 | `STS2AIMCP/Server/HttpServer.cs` | 本机传输与生命周期 | 传输只包装公共契约；模拟训练维持直接规则步进 |
 
-实施接缝：现有ControlSession直接持有core Session和PublicSnapshotProjector，尚未完成通用双后端抽取。真实适配开工时，将请求账本、观察版本和候选绑定与模拟执行分开；模拟侧继续消费core公开输出，本体侧消费游戏对象。保持冻结core和已发布wire契约，不为未来接口先建空项目。
+接入位置：现有ControlSession直接持有core Session和PublicSnapshotProjector，尚未完成通用双后端抽取。真实适配开工时，将请求账本、观察版本和候选绑定与模拟执行分开；模拟侧继续消费core公开输出，本体侧消费游戏对象。保持冻结core和已发布wire契约，不为未来接口先建空项目。
 
 稳定边界以动作队列、玩家输入和界面就绪共同判定。参考中的500ms快照静止条件只作本体过渡辅助，不能进入模拟训练的每步等待。选牌弹窗本身是合法回答边界；父动作暂停时先发布选择，回答后再跟踪余效，不能等待父动作完成才允许回答。超时不撤销已提交动作，客户端查询原request，不重复点击。
 

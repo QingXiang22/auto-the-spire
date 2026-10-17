@@ -9,7 +9,7 @@ updated_at: 2026-10-11T03:01:14+08:00
 
 # ENV-T05 已有效果复用药水包交接 — 2026-10-11
 
-本包让负责人复用 ExplosiveAmpoule 与 HeartOfIron 的正式使用程序，并获得 LiquidBronze 的可执行公共缺口反例。48项源池保持完整，支持数从11增至13，具名未支持从37减至35；LiquidBronze仍未支持。此处交付可审阅的两瓶及缺口，不代表 ENV-T05 父项或公开轨迹已验收。
+本包交付 ExplosiveAmpoule 与 HeartOfIron 的正式使用程序，以及可复现 LiquidBronze 所依赖公共能力缺失的用例。保留完整的48项源池，支持使用的药水从11增至13项，明确不支持使用的药水从37减至35项；LiquidBronze仍未支持。这两瓶药水和缺失能力的用例可供负责人审阅，不表示 ENV-T05 父项或公开运行记录已经验收。
 
 归属为[主清单 ENV-T05](README.md#env-t05)，派单与本包验收范围见[原任务](../../../.audit/dsh-potion-reuse-2026-10-11/task.txt)及[派单记录](../../../.audit/dsh-potion-reuse-2026-10-11/task-record.json)。正文记录本次交付，排期、认领和关闭结论由负责人维护主清单；本会话未修改主清单或受保护派单输入。
 
@@ -22,7 +22,7 @@ updated_at: 2026-10-11T03:01:14+08:00
 
 ## 已交付能力和实际修改
 
-| 内容 | 正式实现 | 实际判别 |
+| 内容 | 正式实现 | 实际检查 |
 | --- | --- | --- |
 | ExplosiveAmpoule | [正式源:122](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire#L122)：`unpowered = true`，对 `allEnemies` 伤害10，既有IR和动作尾 | 双敌各31→21；分别及组合安排 Strength8、Weak3、Vulnerable3，均仍10；无目标提问、不付能量、不新增随机抽取、旧瓶重复提交拒绝；双敌各10同时击杀后瓶消耗、SettledRoom结算和下一房保留另一瓶 |
 | HeartOfIron | [正式源:187](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire#L187)：普通链接施加 `PlatingPower` 7给owner；加载的通用ID为 `base-spire:plating-power` | 施加不立即给格挡，免费且仅消费一次；连续三回合7→6→5→4；第2、3回合相对无药对照少掉血6、5，实际验证后续格挡；另加Dexterity8/Frail4对照仍6、5，符合unpowered格挡 |
@@ -53,7 +53,7 @@ potion-reuse/minimal-liquid-bronze.spire(7,13): unregistered power 'Thorns'
 
 ## 构建、配置和证据
 
-所有命令从工作目录执行；SDK9.0.306、Debug；仅使用 `.artifacts/parallel/dsh-potion-reuse` 的构建和DLL。seed=20261011UL，BaseSpireComputeBackend.Instance。新增检查读取 SinglePlayerContentSource 的正式药水/Power内容，再用作者双敌战斗、受控初始库存和状态判别语义；未建立正常获得轨迹，没有公开整幕run_id或正常Profile验收记录。
+所有命令从工作目录执行；SDK9.0.306、Debug；仅使用 `.artifacts/parallel/dsh-potion-reuse` 的构建和DLL。seed=20261011UL，BaseSpireComputeBackend.Instance。新增检查读取 SinglePlayerContentSource 的正式药水/Power内容，再用作者双敌战斗、受控初始库存和状态检查语义；未建立正常获得轨迹，没有公开整幕run_id或正常Profile验收记录。
 
 实际嵌入源摘要：potions `121e32c818cd784b`、ironclad-powers `c60f206794170e26`、enemies `80ee84a0fabc92a1`；聚合内容摘要 `7aabc15c408b2f79`。完整SHA256与工具版本在[构建清单](../../../.audit/dsh-potion-reuse-2026-10-11/build-manifest.json)。
 
@@ -66,10 +66,10 @@ potion-reuse/minimal-liquid-bronze.spire(7,13): unregistered power 'Thorns'
 | `dotnet .artifacts/parallel/dsh-potion-reuse/bin/BaseSpire.Slice.Tests/debug/BaseSpire.Slice.Tests.dll --potion-flow-only` | 0；25项通过 | [药水流程](../../../.audit/dsh-potion-reuse-2026-10-11/final-potion-flow.log) |
 | `dotnet .artifacts/parallel/dsh-potion-reuse/bin/BaseSpire.Slice.Tests/debug/BaseSpire.Slice.Tests.dll --potion-reuse-only` | 0；11项通过，包含未支持/公共缺口检查 | [药水复用](../../../.audit/dsh-potion-reuse-2026-10-11/final-potion-reuse.log) |
 
-solution按要求构建了本包独立目录内Host及依赖；未使用或覆盖负责人不可变Host、其他线obj/bin。未改 Power源、IR、生命周期、前端、工厂、库存/奖励/地图规则、静态身份、Boss夹具等公共拥有文件。未提交、reset、清理、派子agent或训练。
+solution按要求构建了本包独立目录内Host及依赖；未使用或覆盖负责人不可变Host、其他线obj/bin。未改 Power源、IR、生命周期、前端、工厂、库存/奖励/地图规则、静态身份、Boss回放数据等公共拥有文件。未提交、reset、清理、派子agent或训练。
 
 完整Slice运行、net运行、公开第一幕Boss、本包新增瓶正常获得轨迹均未执行，交Codex集成；既有公开Boss通过只是输入基线，不是本次复验。LiquidBronze的玩家Thorns加载及后续反伤仍待公共修复和负责人验收。
 
-文档/格式检查：`python tools/doc-check/check_docs.py` rc=2，扫描379页；仅另一线的 Power 夹具交接中两个 Markdown `#L` 锚点失败，见[完整文档检查](../../../.audit/dsh-potion-reuse-2026-10-11/doc-check.log)。未越权修订该交接。`python -B .audit/dsh-potion-reuse-2026-10-11/handoff-check.py` rc=0，本包两页链接/锚点/围栏及四个源文件行尾检查无问题，见[定向检查](../../../.audit/dsh-potion-reuse-2026-10-11/handoff-check.log)；`git diff --check` rc=0，见[格式日志](../../../.audit/dsh-potion-reuse-2026-10-11/full-diff-check.log)。git diff不覆盖未跟踪新文件，定向检查补充本包范围。
+文档/格式检查：`python tools/doc-check/check_docs.py` rc=2，扫描379页；仅另一线的 Power 测试场景交接中两个 Markdown `#L` 锚点失败，见[完整文档检查](../../../.audit/dsh-potion-reuse-2026-10-11/doc-check.log)。未越权修订该交接。`python -B .audit/dsh-potion-reuse-2026-10-11/handoff-check.py` rc=0，本包两页链接/锚点/围栏及四个源文件行尾检查无问题，见[定向检查](../../../.audit/dsh-potion-reuse-2026-10-11/handoff-check.log)；`git diff --check` rc=0，见[格式日志](../../../.audit/dsh-potion-reuse-2026-10-11/full-diff-check.log)。git diff不覆盖未跟踪新文件，定向检查补充本包范围。
 
 本报告按 auto-the-spire-handoff 方法完成执行者接手自查：目标、当前入口、可复用成果、第一步、验收范围、公共缺口和证据均可由正文直接定位；没有独立读者验证。派单文件、原始输入摘要仍受保护，本包交付状态只维护本页头部，父任务状态及认领只由负责人维护[主清单](README.md#env-t05)。

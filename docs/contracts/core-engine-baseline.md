@@ -54,7 +54,7 @@ core/0.2 模板在编译时展开；名称前缀与库词法绑定隔离各实�
 
 RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法/映射。SampleInt 的范围为 [min,max)，SamplePick 保留查询顺序，不隐式按实例 ID 排序。游戏种子解析、布流与特殊算法归游戏包。
 
-Int 使用 Int64；默认 NumericProfile 为 checked 整数及 decimal 运算后 2 位 ToEven 量化，可由组包指定已支持 Profile。字段 Fixed 的 scale 元数据不独立替换 RuleSet 的算术 Profile；写入按类型/范围检查，不另按字段 scale 量化。溢出、除零明确失败；不隐式使用 binary64。
+Int 使用 Int64；默认 NumericProfile 为 checked 整数及 decimal 运算后 2 位 ToEven 量化，可由规则包构建指定已支持 Profile。字段 Fixed 的 scale 元数据不独立替换 RuleSet 的算术 Profile；写入按类型/范围检查，不另按字段 scale 量化。溢出、除零明确失败；不隐式使用 binary64。
 
 构建后的声明、IR 子集合、包与链接表按现有冻结规则只读发布。规则身份绑定运行版本、包顺序/内容、编译器/扩展/后端与数值语义；文件路径、源码位置和 debug 配置不改变语义身份。StateHash 仅覆盖状态，State.Clone/Random.Capture 不是完整暂停 Session 的恢复资产。
 

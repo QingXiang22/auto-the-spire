@@ -21,6 +21,7 @@ internal static class Program
             .Concat(AcceptanceChecks.Build()).Concat(MeasurementChecks.Build())
             .Concat(FormalPathChecks.Build()).Concat(DeclarationExtensionChecks.Build())
             .Concat(DeclarationClosure.Build()).ToList();
+        if (args.Contains("--snapshot-only", StringComparer.Ordinal)) checks = SnapshotChecks.Build().ToList();
         var passed = 0;
         var failed = 0;
         foreach (var (name, body) in checks)
