@@ -1299,5 +1299,36 @@
         "Amount": 3
       }
     ]
+  },
+  {
+    "Name": "CloakClasp",
+    "ContentId": "base-spire:cloak-clasp",
+    "Rarity": "Rare",
+    "SourcePath": "sts2/src/Core/Models/Relics/CloakClasp.cs",
+    "SourceLine": 16,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-end",
+        "Kind": "gain-block",
+        "Amount": 1,
+        "AmountSource": "hand",
+        "HandAtLeast": 1
+      }
+    ]
+  },
+  {
+    "Name": "ScreamingFlagon",
+    "ContentId": "base-spire:screaming-flagon",
+    "Rarity": "Shop",
+    "SourcePath": "sts2/src/Core/Models/Relics/ScreamingFlagon.cs",
+    "SourceLine": 15,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-end",
+        "Kind": "damage-all-enemies",
+        "Amount": 20,
+        "HandAtMost": 0
+      }
+    ]
   }
 ]

@@ -44,7 +44,7 @@ AfterObtained／AfterRemoved是构建期注入的`(scope, run, relic) → Inst[]
 
 战斗遗物按持有顺序编译到同一Engine生命周期，已熔毁／已移除监听不运行；定义ID在执行前捕获，替换不在同一批监听中重新执行新实例。源CombatManager.EndCombatInternal顺序是AfterCombatEnd→AfterCombatVictory→永久提交；单人死亡不伪造成功战斗结束。房间进入／BeforeCombatStart先于首回合；起始遗物必须在首战之前创建。Creature.AfterTurnStart明确首回合不清格挡，Anchor等因此保留开战格挡；后续回合按既有防清空参与者处理。PlatingPower的源首回合不递减使用通用`minimumStartTriggerTurn = 2`声明，仅约束玩家回合开始触发，不阻断首回合末格挡。
 
-效果可声明固定回合、实际Monster／Elite／Boss房型、目标及计数阈值。SwordOfStone只在精英胜利加计数，第五次通过共享Replace保位换成SwordOfJade，新实例下一次战斗进入时施加力量。Counter隐藏，ShowCounter／DisplayAmount公开所需计数，StackCount独立于游戏效果计数。完整多变量／历史／模型优先级和其他未接语义不得据此声明支持。
+效果可声明固定回合、实际Monster／Elite／Boss房型、目标及计数阈值，也可声明手牌数量条件（`HandAtLeast`／`HandAtMost`，来源`PileType.Hand`的`Count != 0`与`IsEmpty`）。SwordOfStone只在精英胜利加计数，第五次通过共享Replace保位换成SwordOfJade，新实例下一次战斗进入时施加力量。Counter隐藏，ShowCounter／DisplayAmount公开所需计数，StackCount独立于游戏效果计数。完整多变量／历史／模型优先级和其他未接语义不得据此声明支持。
 
 回合修正按当前有效持有实例查询，不缓存移除前的结果。抽牌／最大能量修正支持首回合或回合区间；保留能量仅在声明区间内跳过清零并增加本回合最大能量。留牌只阻止普通flush，虚无处置仍先执行。保留格挡上限在没有其他Power阻止清空时截断当前格挡。计数取模用于跨战斗的回合周期；战斗结束不隐式重置遗物Counter。胜利早期治疗先于普通胜利治疗，生命比例条件按当前最大生命向下取整后比较，不能被普通胜利回血提前改变资格。
 

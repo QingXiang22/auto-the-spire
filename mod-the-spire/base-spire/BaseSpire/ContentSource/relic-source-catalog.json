@@ -791,8 +791,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/CloakClasp.cs",
     "SourceSha256": "75ac4318ed01a96762daf6aff676fd8f8fa2f5ee806a5aca8e5ce2501fa41315",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local turn-end hook in sts2/src/Core/Models/Relics/CloakClasp.cs; unpowered block per hand card declared and exercised by RelicContentChecks.",
     "Hooks": [
       "BeforeSideTurnEnd"
     ]
@@ -3609,8 +3609,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/ScreamingFlagon.cs",
     "SourceSha256": "7395ea69243cb1a4f93009ef257dc87c98a6e8298f91d24ce0aed3d48c8f2e40",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local turn-end hook in sts2/src/Core/Models/Relics/ScreamingFlagon.cs; empty-hand unpowered area damage declared and exercised by RelicContentChecks.",
     "Hooks": [
       "BeforeSideTurnEnd"
     ]

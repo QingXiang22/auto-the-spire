@@ -24,6 +24,10 @@ public sealed record SliceRelicEffect(string Trigger, string Kind, int Amount)
     public string OrbKind { get; init; } = "";
     /// <summary>牌型过滤（空＝任意牌）；当前只用于 <see cref="RelicTriggers.AfterCardPlayed"/>。</summary>
     public string CardKind { get; init; } = "";
+    /// <summary>手牌数至少（-1＝不作为条件；来源 `PileType.Hand … Count != 0`）。</summary>
+    public int HandAtLeast { get; init; } = -1;
+    /// <summary>手牌数至多（-1＝不作为条件；来源 `…IsEmpty`）。</summary>
+    public int HandAtMost { get; init; } = -1;
 }
 
 /// <summary>
@@ -185,6 +189,7 @@ public static class SpireRelics
                     or RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterCardExhausted => effect.Kind is RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterPlayerTurnStart => effect.Kind is RelicEffectKinds.DamageAllEnemies,
+                RelicTriggers.BeforeSideTurnEnd => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.GainBlock,
                 RelicTriggers.AfterRoomEntered => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.SetCounter,
                 RelicTriggers.Modifier => effect.Kind is RelicEffectKinds.ModifyHandDraw or RelicEffectKinds.ModifyMaxEnergy
                     or RelicEffectKinds.RetainEnergy or RelicEffectKinds.RetainHand or RelicEffectKinds.PreventPotionProcurement or RelicEffectKinds.RetainedBlockLimit
@@ -200,6 +205,9 @@ public static class SpireRelics
                 || effect.MapPointType is not ("" or "Unknown") || effect.Divisor < 1 || effect.AmountSource is not ("constant" or "permanent-deck" or "hand")
                 || effect.CardKind is not ("" or "Attack" or "Skill" or "Power"))
                 return $"{relic.Name} 的效果参数不合法";
+            if (effect.HandAtLeast < -1 || effect.HandAtMost < -1
+                || effect.HandAtLeast >= 0 && effect.HandAtMost >= 0 && effect.HandAtLeast > effect.HandAtMost)
+                return $"{relic.Name} 的手牌数量条件不合法";
             if (effect.CardKind.Length > 0 && effect.Trigger != RelicTriggers.AfterCardPlayed)
                 return $"{relic.Name} 的触发点 '{effect.Trigger}' 不支持牌型过滤";
             if (effect.Kind == RelicEffectKinds.ChannelOrb && effect.OrbKind is not ("Lightning" or "Frost" or "Dark" or "Plasma" or "Glass")

@@ -127,6 +127,7 @@ internal static class RelicContentChecks
         });
         RunOrbs();
         RunCardPlay();
+        RunTurnEnd();
         RunPassives();
         RunConditions();
         RunRooms();
@@ -306,6 +307,47 @@ internal static class RelicContentChecks
             before = MonsterHpTotal(s);
             Submit(s, "EndTurn");
             Check.Equal(before - perHit, MonsterHpTotal(s), "source area damage stays unpowered");
+        });
+    }
+
+    public static void RunTurnEnd()
+    {
+        Case(["CloakClasp"], "Relic turn end: CloakClasp gains one unpowered block per hand card and none on an empty hand", () =>
+        {
+            // 普通格挡在回合结束时会被清掉，所以同场带上 SturdyClamp（保留格挡上限 10）把这一刻的格挡留下来观察。
+            var reference = New(); Submit(reference, "Obtain_SturdyClamp"); Submit(reference, "BeginMonster");
+            SetMonsterHp(reference, 500L); SetPlayer(reference, "Hp", 95L);
+            Submit(reference, "EndTurn");
+            Check.Equal(0L, PlayerNumber(reference, "Block"), "nothing grants block without the relic");
+
+            var s = New(); Submit(s, "Obtain_SturdyClamp"); Submit(s, "Obtain_CloakClasp"); Submit(s, "BeginMonster");
+            SetMonsterHp(s, 500L); SetPlayer(s, "Hp", 95L);
+            var hand = Members(s, "Hand").Count;
+            Check.True(hand > 0, "starting hand is not empty");
+            FormalSliceFixture.GivePower(s, FormalSliceFixture.Player(s), "base-spire:dexterity-power", 5L);
+            Submit(s, "EndTurn");
+            Check.Equal((long)hand, PlayerNumber(s, "Block"), "one block per card, unaffected by Dexterity");
+
+            var empty = New(); Submit(empty, "Obtain_SturdyClamp"); Submit(empty, "Obtain_CloakClasp");
+            Submit(empty, "BeginMonster"); SetMonsterHp(empty, 500L); SetPlayer(empty, "Hp", 95L);
+            EmptyHand(empty);
+            Check.Equal(0, Members(empty, "Hand").Count, "hand emptied before the turn ends");
+            Submit(empty, "EndTurn");
+            Check.Equal(0L, PlayerNumber(empty, "Block"), "an empty hand gains no block");
+        });
+        Case(["ScreamingFlagon"], "Relic turn end: ScreamingFlagon damages every enemy only when the hand is empty", () =>
+        {
+            var s = New(); Submit(s, "Obtain_ScreamingFlagon"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Hp", 95L);
+            var perHit = 20L * Members(s, "Monsters").Count;
+            var before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before, MonsterHpTotal(s), "a non-empty hand does not damage");
+            EmptyHand(s);
+            Check.Equal(0, Members(s, "Hand").Count, "hand emptied before the turn ends");
+            before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before - perHit, MonsterHpTotal(s), "an empty hand damages every enemy for twenty");
         });
     }
 
@@ -620,6 +662,29 @@ internal static class RelicContentChecks
         var card = FormalSliceFixture.MoveToHand(s, cardId);
         FormalSliceFixture.PlayAt(s, card, Members(s, "Monsters")[0]);
         Check.False(s.Status == SessionStatus.Faulted, "card play: " + s.Fault);
+    }
+    /// <summary>把手牌直接挪到弃牌堆（受控输入，不触发打牌效果），用于观察“空手”时的时点。</summary>
+    private static void EmptyHand(Session s)
+    {
+        var hand = s.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand").Id;
+        var discard = s.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:DiscardPile").Id;
+        s.State.RunAtomic(() =>
+        {
+            foreach (var card in s.State.CollectionMembers(hand).ToArray())
+            {
+                s.State.RemoveFromCollection(hand, card);
+                s.State.AddToCollection(discard, card);
+            }
+        });
+    }
+    private static void PlayWholeHand(Session s)
+    {
+        SetPlayer(s, "Energy", 30L);
+        foreach (var card in Members(s, "Hand").ToArray())
+        {
+            FormalSliceFixture.PlayAt(s, card, Members(s, "Monsters")[0]);
+            Check.False(s.Status == SessionStatus.Faulted, "hand play: " + s.Fault);
+        }
     }
     private static void PlaySkill(Session s, string cardId = "base-spire:defend-ironclad")
     {

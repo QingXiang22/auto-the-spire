@@ -76,6 +76,10 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
         Expr condition = s.Const(true);
         if (effect.CardKind.Length > 0)
             condition = s.And(condition, card is null ? s.Const(false) : cardKindIs(s, card, effect.CardKind));
+        if (effect.HandAtLeast >= 0)
+            condition = s.And(condition, s.GreaterOrEqual(s.Count(s.Collection(piles.Hand)), s.Const((long)effect.HandAtLeast)));
+        if (effect.HandAtMost >= 0)
+            condition = s.And(condition, s.LessOrEqual(s.Count(s.Collection(piles.Hand)), s.Const((long)effect.HandAtMost)));
         if (effect.CounterEquals >= 0)
             condition = s.And(condition, s.Equal(s.Field(instance, relics.Schema!.Counter), s.Const((long)effect.CounterEquals)));
         if (effect.HpAtMostPercent > 0)
