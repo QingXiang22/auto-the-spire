@@ -1,5 +1,8 @@
 # review历史记录与证据索引
 
+2026-10-18：[base 人类手册与 agent skill](2026-10-18/base-development-manual-skill-2026-10-18.md)记录全领域文档、两篇逐步复现教程、任务路由与有界定位的实际验证。未迁移玩法与原验收范围不变，当前状态见主清单。
+
+
 2026-10-18：[纯 DSL base 首批切换](2026-10-18/base-dsl-native-cutover-2026-10-18.md)保存最终目录、生产切换、源范围、实际验证及功能回退边界；[冻结检查清单](2026-10-18/base-dsl-check-disposition.json)逐组保留原检查与 suite 去向。当前状态仍只见主清单。
 
 

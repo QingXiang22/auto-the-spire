@@ -1,0 +1,32 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Teaching rule: a development relic, not an original-game implementation.
+template AfterDrawBlockRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    amount = { type = Int(min = 0, max = 999) }
+  }
+  body = {
+    procedure WhenDrawn {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      body = {
+        forEach = {
+          query = collection(Relics) item = relic
+          body = {
+            if = {
+              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+              then = { call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(amount) } } }
+            }
+          }
+        }
+      }
+    }
+    subscription OnDraw { event = AfterCardDrawn reaction = WhenDrawn }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

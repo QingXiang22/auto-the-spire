@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use PracticeBeads {
+  template = AfterDrawBlockRelic
+  args = { definition = "tutorial:practice-beads" amount = 2 }
+}

@@ -50,7 +50,9 @@
 
 ## 编写和扩展规则的操作指南
 
-基于 base 开始修改时，先读[纯 DSL 开发指南](design/mod-the-spire/base-development-guide.md)与[包格式参考](dsl/core/0.3/package-reference.md)。[第一张卡](design/mod-the-spire/first-base-card.md)和[第一个房间动作](design/mod-the-spire/first-base-room.md)保留旧验收意图，尚未迁移，不能照旧命令执行。理解职责分工见[base组织结构](design/mod-the-spire/base-architecture.md)。
+原版内容开发从[base-spire 人类手册](development/base-spire/README.md)开始：两篇实际可运行教程、各领域开发指南和共享操作参考。Codex／DSH 可用[base 开发 skill](../.agents/skills/base-spire-development/SKILL.md)按任务读取同一资料与有界来源查询，避免通读旧组包器。
+
+基于 base 开始修改时，先走[遗物配置](development/base-spire/tutorials/first-relic.md)和[共享规则](development/base-spire/tutorials/shared-rule.md)教程，再按领域查[手册](development/base-spire/README.md)与[包格式参考](dsl/core/0.3/package-reference.md)。[第一张卡](design/mod-the-spire/first-base-card.md)和[第一个房间动作](design/mod-the-spire/first-base-room.md)保留旧验收意图，尚未迁移，不能照旧命令执行。理解职责分工见[base组织结构](design/mod-the-spire/base-architecture.md)。
 
 | 需要完成什么 | 指南 |
 | --- | --- |
