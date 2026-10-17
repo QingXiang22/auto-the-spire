@@ -1,0 +1,6 @@
+interface:
+  display_name: "base-spire DSL 开发"
+  short_description: "按领域定位纯 DSL 内容、共享规则与源依据，复用开发教程并选择必要验证"
+  default_prompt: "使用 $base-spire-development 按当前任务定位领域文档、DSL 和源依据，完成有证据的规则开发。"
+policy:
+  allow_implicit_invocation: true

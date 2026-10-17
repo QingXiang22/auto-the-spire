@@ -59,7 +59,7 @@
 
 ## 当前交付
 
-2026-10-18用户确认架构纠偏：**CORE-AUTHOR-05：Engine DSL主体与Spire子集迁移**，Codex `/root`，首批 T00～T06 已完成本地集成，待同提交 CI 与 PR 审阅。用户要求 base 严格只用 DSL／必要 JSON，直接切换并接受未迁移玩法暂时报未支持；按 [spec](../../design/mod-the-spire/engine-dsl-migration/spec.md)、[plan](../../design/mod-the-spire/engine-dsl-migration/plan.md)、[tasks](../../design/mod-the-spire/engine-dsl-migration/tasks.md)实施。默认 Host 和工具已改为通用 DSL 包加载；当前仅支持遗物抽牌开发 scope，TheAbacus 有实际 DSL 行为见证，原 297 件源范围保留。solution 构建、Engine 105 项、包行为 11 项、Net 350 项及迁移边界通过，原 regression 仍明确退出 3、零执行，不能当作独立比较通过。实际身份、目录、检查与回退范围见[首批交付](../records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，设计前工作区事实见[纠偏记录](../records/2026-10-18/base-dsl-migration-checkpoint-2026-10-18.md)。下一成果先为同提交 CI 与审阅，随后按机制依赖恢复资源／伤害／回合和相关内容；完整游戏迁移、正常 Run 与原 ENV/W 验收均未完成。不恢复 C# 玩法，不派并行 agent。
+2026-10-18用户确认架构纠偏：**CORE-AUTHOR-05：Engine DSL主体与Spire子集迁移**，Codex `/root`，首批 T00～T06 已通过 [PR #9](https://github.com/QingXiang22/auto-the-spire/pull/9) 合入 main/807d17d，core／base／net／migration 四组 CI 已通过；本轮按用户要求编写人类手册与派生 skill，文档进度只维护[本次文档整理](#本次文档整理)。用户要求 base 严格只用 DSL／必要 JSON，直接切换并接受未迁移玩法暂时报未支持；按 [spec](../../design/mod-the-spire/engine-dsl-migration/spec.md)、[plan](../../design/mod-the-spire/engine-dsl-migration/plan.md)、[tasks](../../design/mod-the-spire/engine-dsl-migration/tasks.md)实施。默认 Host 和工具已改为通用 DSL 包加载；当前仅支持遗物抽牌开发 scope，TheAbacus 有实际 DSL 行为见证，原 297 件源范围保留。solution 构建、Engine 105 项、包行为 11 项、Net 350 项及迁移边界通过，原 regression 仍明确退出 3、零执行，不能当作独立比较通过。实际身份、目录、检查与回退范围见[首批交付](../records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，设计前工作区事实见[纠偏记录](../records/2026-10-18/base-dsl-migration-checkpoint-2026-10-18.md)。后续按机制依赖恢复资源／伤害／回合和相关内容；完整游戏迁移、正常 Run 与原 ENV/W 验收均未完成。不恢复 C# 玩法，不派并行 agent。
 
 2026-10-18原 **BASE-LAYOUT-01** 的目录与未提交修改审阅纳入CORE-AUTHOR-05，不再单独推进C#领域目录方案。原29份DSL正文与目录移动证据保留；TheAbacus的C#补全只作迁移行为依据。后续目录以CORE-AUTHOR-05的plan为准，纯DSL交付不能用文件移动或局部构建代替。
 
@@ -876,6 +876,8 @@ W-01～08 保留全项目范围。它们说明最终要交付什么；当前执�
 完整协作和验收责任见[管理约定](../../design/post-core-agent-assignments.md)。
 
 ## 本次文档整理
+
+2026-10-18，Codex `/root` 按用户指令完成 CORE-AUTHOR-05 的人类开发手册与 agent skill，本地已验证，待 PR 审阅。基线 main/807d17d；[人类手册](../../development/base-spire/README.md)覆盖全部游戏开发领域，含两篇从隔离初态逐步走通的教程；[项目 skill](../../../.agents/skills/base-spire-development/SKILL.md)复用同一文档并提供有界来源定位。实际得到 6→8、逐抽 2／4／6／6、无遗物 0 和组合 10／12／14；定位助手 9 项演练、skill 元信息／引用及 720 份文档检查通过。未修改生产玩法，未运行远程 DSH 或独立 agent 评审；尚缺领域只给恢复方法，不计可玩支持。范围与验收见[交付约定](../../design/mod-the-spire/base-development-docs.md)，结果与未验证项见[记录](../records/2026-10-18/base-development-manual-skill-2026-10-18.md)。后续恢复玩法时同步维护准确操作和对应领域指南，原完整范围不变。
 
 2026-10-17按当前workflow-b审阅修订计划：保留领域分类，新增唯一当前交付，首批收窄为Sown＋SapphireSeed；明确每批即时集成、Neow先于正常首幕验收、PR主要归属及历史认领。当前稿待用户review，未开工；五项审阅发现的处理与验证附在[规划记录](../records/2026-10-17/domain-task-plan-2026-10-17.md)。
 

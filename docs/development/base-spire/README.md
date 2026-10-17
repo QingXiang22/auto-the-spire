@@ -1,0 +1,40 @@
+# base-spire 开发手册
+
+文档类型：参考（Reference）；按读者任务导航。
+
+这份手册面向维护原版内容与共享玩法的开发者。先通过两篇教程学会使用 DSL 模板和编写共享规则，再按领域指南开发。你不需要先通读旧组包器、Host 或全部恢复源码。
+
+适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有遗物抽牌开发场景可执行；普通卡牌、Power、药水、敌人、正常开局和 Run 仍待迁移。各领域指南覆盖这些内容的开发方法，不能据此认定它们已可玩。实际能力读取 manifest，任务认领与剩余范围只看[主清单](../../review/tofix/README.md#当前交付)。
+
+## 从教程开始
+
+需要仓库 `global.json` 指定的 .NET SDK 9.0.306、Python 3.12 和 PowerShell。教程在仓库根目录操作，在 `.audit/` 创建隔离副本，正式包保持原规则。
+
+1. [配置第一个遗物](tutorials/first-relic.md)：加载真实包，把练习数值从 6 改为 8，通过公开 Host 观察实际结果。
+2. [编写共享触发规则](tutorials/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，以受限内容配置调用它，观察逐抽 2／4／6 和空堆不触发。
+
+通用 DSL 尚不熟悉时，先完成[第一份规则](../../dsl/core/first-rule.md)。旧 `base/0.0.2` 卡牌与 C# 房间教程保留迁移依据，不能作为本手册的可执行步骤。
+
+## 按开发任务查找
+
+| 你要开发什么 | 阅读入口 |
+| --- | --- |
+| 已有机制下新增内容、登记源身份与公开目录 | [扩展内容](how-to/extend-content.md) |
+| 卡牌、费用、目标、普通／升级、关键词、附着、伤害、回合 | [卡牌与战斗](how-to/cards-and-combat.md) |
+| Power 生命周期、遗物实例与触发、药水容量与使用 | [Power、遗物与药水](how-to/powers-relics-potions.md) |
+| 敌人、意图、行动、编队、遭遇和召唤依赖 | [敌人与遭遇](how-to/enemies-and-encounters.md) |
+| 角色、进阶、开局、地图、各类房间、事件、奖励、跨幕和终局 | [角色与完整 Run](how-to/run-and-rooms.md) |
+| 新增共享机制或恢复旧行为 | [迁移完整机制](how-to/migrate-mechanism.md) |
+| 包加载、公开结果、错误与验证选择 | [验证与排障](how-to/verify-and-debug.md) |
+
+## 查准确接口与理解架构
+
+| 需要 | 入口 |
+| --- | --- |
+| 查当前可用 DSL 状态、参数、事件顺序和局限 | [共享操作参考](reference/operations.md) |
+| 查所有领域的落点与前置依赖 | [领域目录参考](reference/domains.md) |
+| 查 includes、manifest、静态 JSON 和内容子集限制 | [包格式参考](../../dsl/core/0.3/package-reference.md) |
+| 理解源目录、可执行内容、完整 DSL 与受限配置的关系 | [开发模型](explanation/development-model.md) |
+| 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
+
+本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[文档与 skill 约定](../../design/mod-the-spire/base-development-docs.md)。

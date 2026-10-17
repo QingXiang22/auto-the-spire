@@ -13,3 +13,5 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 可在命令后传入其他 manifest 路径，再使用 `--scope <id>`。本版 `check` 用于当前 base 开发范围；仅通用加载验证使用 `validate`。退出码 0 为当前命令完成，2 为格式／加载失败，3 为未支持。旧 `play`、`probe` 和直接传卡牌 `.spire` 的入口明确返回 3。
 
 当前 `base-spire-dsl-relic-draw-dev-v1` 只实现遗物实例、抽牌／重洗和 TheAbacus 触发链。未迁移卡牌、Power 和 Run 不能通过旧命令执行；[旧作者工具源码](../base-migration-baseline/base-spire-dev/Program.cs)仅作迁移依据。目录及后续恢复见[规格与设计](../../docs/design/mod-the-spire/engine-dsl-migration.md)。
+
+分阶段学习与实际公开结果见[base 开发教程](../../docs/development/base-spire/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为见证。
