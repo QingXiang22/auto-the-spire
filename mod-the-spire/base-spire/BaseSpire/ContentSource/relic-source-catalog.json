@@ -2358,8 +2358,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/MercuryHourglass.cs",
     "SourceSha256": "916280bc3a6627c90ed9ff2868adafcdb1f59f7941427156fc61a957d2147a50",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local player-turn-start hook in sts2/src/Core/Models/Relics/MercuryHourglass.cs; unpowered damage to all hittable enemies declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterPlayerTurnStart"
     ]

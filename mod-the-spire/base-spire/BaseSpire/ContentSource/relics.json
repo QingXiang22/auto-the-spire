@@ -1256,5 +1256,19 @@
         "Amount": 3
       }
     ]
+  },
+  {
+    "Name": "MercuryHourglass",
+    "ContentId": "base-spire:mercury-hourglass",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/MercuryHourglass.cs",
+    "SourceLine": 12,
+    "Effects": [
+      {
+        "Trigger": "after-player-turn-start",
+        "Kind": "damage-all-enemies",
+        "Amount": 3
+      }
+    ]
   }
 ]

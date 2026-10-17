@@ -437,6 +437,19 @@ internal static class RelicContentChecks
                 Check.Equal(second, PlayerNumber(s, "Stars"), "after one player turn");
                 Submit(s, "BeginMonster"); Check.Equal(first, PlayerNumber(s, "Stars"), "battle reset");
             });
+        Case(["MercuryHourglass"], "Relic conditions: MercuryHourglass damages every enemy at each player turn start", () =>
+        {
+            var s = New(); Submit(s, "Obtain_MercuryHourglass"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Hp", 95L);
+            var perHit = 3L * Members(s, "Monsters").Count;
+            var before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before - perHit, MonsterHpTotal(s), "the next player turn start damages every enemy");
+            FormalSliceFixture.GivePower(s, FormalSliceFixture.Player(s), "base-spire:strength", 5L);
+            before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before - perHit, MonsterHpTotal(s), "source area damage stays unpowered");
+        });
     }
 
     public static void RunRooms()

@@ -37,6 +37,10 @@ dotnet run --no-build --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -
 - 公开语义 10/10、遗物生命周期与 Run 14/14。
 - 身份迁移：dev `28ac6d84bc73f96d`／`9b1e393422bebc75`、dev-map `83238c8da492af09`／`70132d1bb1df4034`（上一版 `daa13b3bc7f1567c`／`cee2fcf4a4a63f5a`、`bf88d25972f155d9`／`9a5285f99cadfca6` 记录在注释里）。
 
+## 同批补充：MercuryHourglass
+
+`MercuryHourglass`（Uncommon，`MercuryHourglass.cs:12-25`）是同一效果种类在另一个时点的消费者：`AfterPlayerTurnStart` 对全体可命中敌人造成 3 点 Unpowered 伤害。声明为 `after-player-turn-start → damage-all-enemies 3`，并只给该触发点开放这一种效果，避免顺带放宽其它组合。场景断言第二回合开始时的伤害等于“3 × 存活敌人数”，并同样用 Strength 对照确认无加成。加入后遗物内容组为 **75/75 通过**；覆盖报告 **76/76 可执行**、未实现 220，`unsupported` 339。
+
 ## 未验证与下一步
 
 只有受控内容场景证据：没有独立双侧、正常整局获得或公开 Host 轨迹，完整 Engine／Slice／net／严格回归仍交 GitHub Actions。`after-card-exhausted` 目前不区分消耗者身份，单人对局下等价于源的“拥有者为本玩家”判断；多人语义未建模。下一已就绪成果是继续从剩余 221 件源遗物里挑一组已能表达的能力（例如 `ModifyDamageAdditive` 的 StrikeDummy／MiniatureCannon／MysticLighter，或 `AfterPlayerTurnStart` 的 MercuryHourglass 需要先补群体伤害的回合触发组合）。
