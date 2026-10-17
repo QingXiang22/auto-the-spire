@@ -15,6 +15,14 @@
 3. 补齐后重新纳入 ToughBandages，用 SturdyClamp 保留格挡观察“每弃一张 +3、上限 10”，再用空手回合做负例；
 4. 同一路径也可顺带核对 `on_exhaust` 是否也需要逐张派发（当前消耗触发走的是批次过程）。
 
+### 已定位的准确位置
+
+- `TurnCompilation.EndTurnHandSteps`（`TurnCompilation.cs:454-488`）：Ethereal 分支已经逐张派发 `on_exhaust` 并调用 `TriggerAfterExhaust`，**只有非 Ethereal 的弃牌分支缺钩子**。
+- 缺钩子的是 `KeepOrDiscard`（`TurnCompilation.cs:490-531`）里的 `Discard()`：它只做 `RemoveFromCollection(Hand)` + `AddToCollection(DiscardPile)`，既没有 `PowerRules.QueueSly`，也没有 `DispatchCardHook(HookOnDiscard)`，更没有遗物监听。
+- 要补齐的链与 `CardCompilation.CardPiles` 的丢弃回调同形：`QueueSly → DispatchCardHook(on_discard) → 遗物 after-card-discarded`。`KeepOrDiscard` 目前拿不到这三样，需要把回调从 `EndTurnHandSteps`（它已有 `DispatchCardHook` 与 `powerRulesBindings`）与 composer（可传 `relicPrograms.Dispatch`）传进来。
+- 注意保留/虚无语义不变：`Keep()` 分支与 Ethereal 分支的顺序不要改；`retainHand` 的判定仍在 `Branch` 之前。
+
+
 ## 边界
 
 该批未产生任何提交或内容变更；`relics.json`、`relic-source-catalog.json`、`SliceRelics.cs`、`CardCompilation.cs`、`CombatPackageComposer.cs` 与检查文件均已回退到 `31d3aa9` 的状态。没有新增独立双侧或公开证据，也没有宣称 ToughBandages 已实现。
