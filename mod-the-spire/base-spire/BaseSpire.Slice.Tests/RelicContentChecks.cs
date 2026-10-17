@@ -268,6 +268,45 @@ internal static class RelicContentChecks
             Check.Equal(5L, PlayerNumber(s, "Energy"), "tenth Attack refunds its cost with one energy");
             Check.Equal(0L, RelicDisplay(s, "base-spire:nunchaku"), "counter wraps at ten");
         });
+        Case(["LetterOpener"], "Relic card play: LetterOpener damages every enemy on the third Skill of a turn", () =>
+        {
+            var s = New(); Submit(s, "Obtain_LetterOpener"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Hp", 95L); SetPlayer(s, "Energy", 20L);
+            var perHit = 5L * Members(s, "Monsters").Count;
+            var before = MonsterHpTotal(s);
+            PlaySkill(s); PlaySkill(s);
+            Check.Equal(before, MonsterHpTotal(s), "two Skills do not trigger");
+            PlaySkill(s);
+            Check.Equal(before - perHit, MonsterHpTotal(s), "third Skill damages every enemy");
+            FormalSliceFixture.GivePower(s, FormalSliceFixture.Player(s), "base-spire:strength", 5L);
+            before = MonsterHpTotal(s);
+            PlaySkill(s); PlaySkill(s); PlaySkill(s);
+            Check.Equal(before - perHit, MonsterHpTotal(s), "source area damage stays unpowered");
+            Submit(s, "EndTurn"); SetPlayer(s, "Energy", 20L);
+            before = MonsterHpTotal(s);
+            PlaySkill(s); PlaySkill(s);
+            Check.Equal(before, MonsterHpTotal(s), "the per-turn counter restarts");
+            PlaySkill(s);
+            Check.Equal(before - perHit, MonsterHpTotal(s), "third Skill of the new turn damages again");
+        });
+        Case(["CharonsAshes"], "Relic exhaust: CharonsAshes damages every enemy whenever a card is exhausted", () =>
+        {
+            var s = New(); Submit(s, "Obtain_CharonsAshes"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Hp", 95L);
+            var perHit = 3L * Members(s, "Monsters").Count;
+            var before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before, MonsterHpTotal(s), "a turn without exhaust does not damage");
+            Submit(s, "GiveDazed");
+            before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before - perHit, MonsterHpTotal(s), "the Ethereal card exhausts and damages every enemy");
+            FormalSliceFixture.GivePower(s, FormalSliceFixture.Player(s), "base-spire:strength", 5L);
+            Submit(s, "GiveDazed");
+            before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before - perHit, MonsterHpTotal(s), "source area damage stays unpowered");
+        });
     }
 
     public static void RunPassives()
@@ -547,6 +586,12 @@ internal static class RelicContentChecks
     {
         var card = FormalSliceFixture.MoveToHand(s, cardId);
         FormalSliceFixture.PlayAt(s, card, Members(s, "Monsters")[0]);
+        Check.False(s.Status == SessionStatus.Faulted, "card play: " + s.Fault);
+    }
+    private static void PlaySkill(Session s, string cardId = "base-spire:defend-ironclad")
+    {
+        var card = FormalSliceFixture.MoveToHand(s, cardId);
+        FormalSliceFixture.PlayAt(s, card, FormalSliceFixture.Player(s));
         Check.False(s.Status == SessionStatus.Faulted, "card play: " + s.Fault);
     }
     private static long RelicDisplay(Session s, string contentId) => Number(s,

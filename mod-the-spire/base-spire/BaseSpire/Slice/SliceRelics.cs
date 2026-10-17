@@ -56,6 +56,9 @@ public static class RelicTriggers
     public const string AfterObtained = "after-obtained";
     /// <summary>一张牌打出之后（来源 `RelicModel.AfterCardPlayed`）。</summary>
     public const string AfterCardPlayed = "after-card-played";
+
+    /// <summary>一张牌被消耗之后（来源 `RelicModel.AfterCardExhausted`）。</summary>
+    public const string AfterCardExhausted = "after-card-exhausted";
     public const string AfterCombatEnd = "after-combat-end";
     public const string AfterCombatRoomEntered = "after-combat-room-entered";
     public const string BeforeCombatStart = "before-combat-start";
@@ -72,7 +75,7 @@ public static class RelicTriggers
     public const string AfterCombatVictoryEarly = "after-combat-victory-early";
     public const string AfterRoomEntered = "after-room-entered";
     public static readonly IReadOnlyList<string> All = [AfterCombatVictory, AfterObtained, AfterCardPlayed,
-        AfterCombatEnd,
+        AfterCardExhausted, AfterCombatEnd,
         AfterCombatRoomEntered, BeforeCombatStart, AfterSideTurnStart, AfterPlayerTurnStartLate,
         BeforeSideTurnStart, AfterBlockCleared, BeforeHandDraw, AfterPlayerTurnStart, AfterEnergyReset, Modifier,
         BeforeSideTurnEnd, AfterSideTurnEnd, AfterCombatVictoryEarly, AfterRoomEntered];
@@ -103,6 +106,8 @@ public static class RelicEffectKinds
     public const string AddCounter = "add-counter";
     public const string GainStars = "gain-stars";
     public const string SetCounter = "set-counter";
+    /// <summary>对全部存活敌人造成**无加成**伤害（源 `ValueProp.Unpowered`）。</summary>
+    public const string DamageAllEnemies = "damage-all-enemies";
     public const string ModifyRestHeal = "modify-rest-heal";
     public const string ChannelOrb = "channel-orb";
     public const string AddOrbSlots = "add-orb-slots";
@@ -110,7 +115,7 @@ public static class RelicEffectKinds
     public static readonly IReadOnlyList<string> All = [Heal, GainMaxHp, GainGold, HealToFull, HealMaxHpPercent,
         GainPotionSlots, CountAndReplace, ApplyPower, GainBlock, GainEnergy, LoseEnergy, ModifyHandDraw, ModifyMaxEnergy,
         RetainEnergy, RetainHand, PreventPotionProcurement, RetainedBlockLimit, AddCounter, GainStars, SetCounter, ModifyRestHeal,
-        ChannelOrb, AddOrbSlots, ModifyLightningOrbValue];
+        ChannelOrb, AddOrbSlots, ModifyLightningOrbValue, DamageAllEnemies];
 }
 
 /// <summary>
@@ -176,7 +181,9 @@ public static class SpireRelics
                 RelicTriggers.AfterCombatEnd => effect.Kind is RelicEffectKinds.GainMaxHp or RelicEffectKinds.Heal,
                 RelicTriggers.AfterCombatVictory or RelicTriggers.AfterCombatVictoryEarly => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.CountAndReplace,
                 RelicTriggers.AfterCardPlayed => effect.Kind is RelicEffectKinds.GainEnergy or RelicEffectKinds.ApplyPower
-                    or RelicEffectKinds.GainBlock or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter,
+                    or RelicEffectKinds.GainBlock or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter
+                    or RelicEffectKinds.DamageAllEnemies,
+                RelicTriggers.AfterCardExhausted => effect.Kind is RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterRoomEntered => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.SetCounter,
                 RelicTriggers.Modifier => effect.Kind is RelicEffectKinds.ModifyHandDraw or RelicEffectKinds.ModifyMaxEnergy
                     or RelicEffectKinds.RetainEnergy or RelicEffectKinds.RetainHand or RelicEffectKinds.PreventPotionProcurement or RelicEffectKinds.RetainedBlockLimit

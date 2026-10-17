@@ -98,8 +98,10 @@ internal static class SliceMapRoomChecks
     // `--relic-content-only`, `--describe-build`). Previous dev 2ee95d1e50b93b0a / 6ccdb4ee30acd725.
     // 2026-10-17 relic card-play batch: four more executable relics (Nunchaku/Kunai/Shuriken/OrnamentalFan)
     // plus the `after-card-played` trigger and card-kind filter. Previous dev 2b67d3cf8a4731f4 / e3f4afd5fb459d40.
-    private const string DevGoldenRuleset = "daa13b3bc7f1567c";
-    private const string DevGoldenBuild = "cee2fcf4a4a63f5a";
+    // 2026-10-17 relic exhaust batch: LetterOpener/CharonsAshes, `after-card-exhausted` and unpowered area
+    // damage reuse the shared monster damage command. Previous dev daa13b3bc7f1567c / cee2fcf4a4a63f5a.
+    private const string DevGoldenRuleset = "28ac6d84bc73f96d";
+    private const string DevGoldenBuild = "9b1e393422bebc75";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -118,8 +120,9 @@ internal static class SliceMapRoomChecks
     // Same relic schema/lifecycle migration; previous dev-map 6ed7062e03b9867d / 74ef43415f47d401.
     // Same relic content batch as dev; previous dev-map 466c1e5dbb31bf7d / 8c82420f95a29547.
     // Same relic card-play batch; previous dev-map 84b4dbd80cb769ea / 42889d7374f76501.
-    private const string DevMapGoldenRuleset = "bf88d25972f155d9";
-    private const string DevMapGoldenBuild = "9a5285f99cadfca6";
+    // Same relic exhaust batch; previous dev-map bf88d25972f155d9 / 9a5285f99cadfca6.
+    private const string DevMapGoldenRuleset = "83238c8da492af09";
+    private const string DevMapGoldenBuild = "70132d1bb1df4034";
 
     public static void DefaultIdentity()
     {

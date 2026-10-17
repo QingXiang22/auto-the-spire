@@ -28,6 +28,7 @@ internal static class CombatPackageComposer
             pilesBindings);
         var powerQueryBindings = PowerCompilation.PowerQuery(contentBindings, powerBindings, pilesBindings);
         BaseSpire.Slice.Domain.Combat.CombatOrbs? orbs = null;
+        MonsterDamageBindings? monsterDamageBindings = null;
         BaseSpire.Slice.Domain.Combat.CombatDoom? doom = null;
         BaseSpire.Slice.Domain.Combat.CombatOsty? osty = null;
         BaseSpire.Slice.Domain.Combat.CombatOsty Osty()
@@ -81,13 +82,19 @@ internal static class CombatPackageComposer
             relicsBindings, runStateBindings, runCollectionsBindings, roomServicesBindings, eventsBindings,
             powerCommandsBindings, (s, amount) => [.. BlockGainSteps(s, amount, true)], EnergyGainBlocked,
             (s, operation, kind, amount) => orbs!.Emit(s, new OrbCardEffect(operation, kind, CardEffectAmount.Literal(0), true, new("relics.json", 1, 1)), amount),
-            (s, card, kind) => s.Equal(s.Field(card, cardsBindings.CardKindField), s.EnumConst(battleBindings.CardKind, kind)));
+            (s, card, kind) => s.Equal(s.Field(card, cardsBindings.CardKindField), s.EnumConst(battleBindings.CardKind, kind)),
+            // 无加成全体伤害（遗物源 ValueProp.Unpowered）：复用与球/卡牌同一个 DamageMonster 命令。
+            (s, amount) => [s.ForEach(s.Collection(pilesBindings.Monsters), enemy => [
+                s.If(s.Greater(s.Field(enemy, enemiesBindings.MonsterHp), s.Const(0L)),
+                    s.Call(monsterDamageBindings!.DamageMonster.Symbol,
+                        s.First(s.Type(playerBindings.Player, battleBindings.BattleScope)), enemy,
+                        s.Maximum(s.Const(0L), amount), s.Const(false)))])]);
         if (potionsBindings.Potions is { } potionInventory)
         {
             potionInventory.ShouldAcquire = (s, _) => s.Not(relicPrograms.Has(s, RelicEffectKinds.PreventPotionProcurement));
             potionInventory.DeclareAcquireProcedure(contentBindings.Package);
         }
-        var monsterDamageBindings = DamageCompilation.MonsterDamage(contentBindings, playerBindings, enemiesBindings);
+        monsterDamageBindings = DamageCompilation.MonsterDamage(contentBindings, playerBindings, enemiesBindings);
         DamageCompilation.MonsterDamageBody(
             enemiesBindings, pilesBindings, eventsBindings, powerRulesBindings, monsterDamageBindings,
             DamageChain);
@@ -126,7 +133,8 @@ internal static class CombatPackageComposer
         var turnStartTriggerBindings = DamageCompilation.TurnStartTrigger(contentBindings);
         DamageCompilation.TurnStartTriggerBody(turnStartTriggerBindings, GrantPowerChain);
         var exhaustTriggerBindings = DamageCompilation.ExhaustTrigger(contentBindings);
-        DamageCompilation.ExhaustTriggerBody(powerRulesBindings, exhaustTriggerBindings, TriggerChain);
+        DamageCompilation.ExhaustTriggerBody(powerRulesBindings, exhaustTriggerBindings, TriggerChain,
+            scope => relicPrograms.Dispatch(scope, RelicTriggers.AfterCardExhausted));
         orbs = new BaseSpire.Slice.Domain.Combat.CombatOrbs(contentBindings.Package, playerBindings.PlayerOrbSlots,
             scope => scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)),
             scope => scope.And(scope.Not(scope.Field(scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)), playerBindings.PlayerBattleSettled)),

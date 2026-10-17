@@ -11,7 +11,7 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
     RunStateBindings runState, RunCollectionsBindings runCollections, RoomServicesBindings services,
     EventsBindings events, PowerCommandsBindings powers, Func<IrScope, Expr, Inst[]> gainBlock,
     Func<IrScope, Expr> energyBlocked, Func<IrScope, string, string, Expr, Inst[]> orbEffect,
-    Func<IrScope, Expr, string, Expr> cardKindIs)
+    Func<IrScope, Expr, string, Expr> cardKindIs, Func<IrScope, Expr, Inst[]> damageAllEnemies)
 {
     private int nextLocal;
     private readonly Dictionary<string, ProcedureSymbol> modifiers = new(StringComparer.Ordinal);
@@ -139,6 +139,8 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
                 Inst Apply(Expr target) => s.Call(powers.ApplyPower.Symbol, target, s.Const(effect.PowerId), s.Const((long)effect.Amount),
                     s.Const(definition.OwnerTurnEnd == PowerTurnEnd.Tick), s.Const(false));
                 return effect.Target == "enemies" ? [s.ForEach(s.Collection(piles.Monsters), enemy => [Apply(enemy)])] : [Apply(owner)];
+            case RelicEffectKinds.DamageAllEnemies:
+                return damageAllEnemies(s, amount);
             case RelicEffectKinds.CountAndReplace:
                 var commands = services.RelicCommands ?? throw new InvalidOperationException("Relic replacement commands are not wired");
                 return [.. commands.AddCounter(s, instance, s.Const((long)effect.Amount)),

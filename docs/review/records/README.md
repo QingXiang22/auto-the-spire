@@ -2,6 +2,8 @@
 
 2026-10-17：[遗物源清单与实例公共接口](2026-10-17/relic-foundation-2026-10-17.md)记录297件源遗物／300条池成员对账、四件base正式声明，以及RunRelics获得／移除／替换／熔毁、实例计数与有效性查询；27项相关定向检查通过，完整回归、逐件资格与独立证据仍待验证。
 
+2026-10-17：[遗物消耗触发与无加成群体伤害](2026-10-17/relic-exhaust-area-2026-10-17.md)新增`after-card-exhausted`触发点与`damage-all-enemies`（Unpowered）效果种类，实现LetterOpener与CharonsAshes并用Strength对照验证无加成；覆盖推进到75/75可执行、未实现降到221。
+
 2026-10-17：[遗物卡牌打出触发与四件消费者](2026-10-17/relic-card-play-2026-10-17.md)新增`after-card-played`遗物触发点与牌型过滤，实现Nunchaku、Kunai、Shuriken、OrnamentalFan；覆盖报告推进到73/73可执行、未实现降到223，身份基线随之迁移；独立与公开证据仍缺。
 
 2026-10-17：[遗物球类消费者行为见证](2026-10-17/relic-orb-witness-2026-10-17.md)补五件球类遗物（DataDisk、CrackedCore、SymbioticVirus、RunicCapacitor、InfusedCore）的实际被动／激发伤害、首回合限制与逐战重建证据，消除CI覆盖门槛唯一失败项；覆盖报告为69/69可执行、297件源遗物中227件未裁定，完整回归留给GitHub Actions。

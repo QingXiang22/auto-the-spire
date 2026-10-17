@@ -318,9 +318,13 @@ internal static class DamageCompilation
     internal static void ExhaustTriggerBody(
         PowerRulesBindings powerRulesBindings,
         ExhaustTriggerBindings exhaustTriggerBindings,
-        TriggerChainCallback TriggerChain)
+        TriggerChainCallback TriggerChain,
+        Func<ProcedureBuilder, Inst[]>? relicAfterExhaust = null)
     {
-        exhaustTriggerBindings.TriggerAfterExhaust.Body([.. TriggerChain(exhaustTriggerBindings.TriggerAfterExhaust, AuthorPowerTrigger.AfterCardExhausted), powerRulesBindings.PowerRules.Call(exhaustTriggerBindings.TriggerAfterExhaust, "Exhaust")]);
+        exhaustTriggerBindings.TriggerAfterExhaust.Body([
+            .. TriggerChain(exhaustTriggerBindings.TriggerAfterExhaust, AuthorPowerTrigger.AfterCardExhausted),
+            powerRulesBindings.PowerRules.Call(exhaustTriggerBindings.TriggerAfterExhaust, "Exhaust"),
+            .. relicAfterExhaust?.Invoke(exhaustTriggerBindings.TriggerAfterExhaust) ?? []]);
 
     }
 

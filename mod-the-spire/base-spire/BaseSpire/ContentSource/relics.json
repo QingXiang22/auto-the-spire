@@ -1213,5 +1213,48 @@
       }
     ],
     "ShowCounter": true
+  },
+  {
+    "Name": "LetterOpener",
+    "ContentId": "base-spire:letter-opener",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/LetterOpener.cs",
+    "SourceLine": 17,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-start",
+        "Kind": "set-counter",
+        "Amount": 0
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "add-counter",
+        "Amount": 1,
+        "CardKind": "Skill",
+        "CounterModulo": 3
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "damage-all-enemies",
+        "Amount": 5,
+        "CardKind": "Skill",
+        "CounterEquals": 0
+      }
+    ],
+    "ShowCounter": true
+  },
+  {
+    "Name": "CharonsAshes",
+    "ContentId": "base-spire:charons-ashes",
+    "Rarity": "Rare",
+    "SourcePath": "sts2/src/Core/Models/Relics/CharonsAshes.cs",
+    "SourceLine": 11,
+    "Effects": [
+      {
+        "Trigger": "after-card-exhausted",
+        "Kind": "damage-all-enemies",
+        "Amount": 3
+      }
+    ]
   }
 ]
