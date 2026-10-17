@@ -17,8 +17,8 @@ internal static class PotionReuseChecks
         Check.Run("药水复用：正式资源加载、普通Power链接及原11瓶保留", () =>
         {
             Check.Equal(48, Content.Model.PotionPool.Count, "完整池不缩减");
-            Check.Equal(14, Content.Model.Potions.Count, "包含已验证生成选择机制的AttackPotion");
-            Check.Equal(34, Content.Model.PotionPool.Count(p => p.UnsupportedUseReason.Length > 0), "未支持仍具名");
+            Check.Equal(15, Content.Model.Potions.Count, "包含AttackPotion和公共荆棘接通的LiquidBronze");
+            Check.Equal(33, Content.Model.PotionPool.Count(p => p.UnsupportedUseReason.Length > 0), "未支持仍具名");
             foreach (var id in new[] { "beetle-juice", "blessing-of-the-forge", "block-potion", "dexterity-potion",
                 "energy-potion", "fire-potion", "flex-potion", "strength-potion", "swift-potion", "vulnerable-potion", "weak-potion" })
                 Check.True(Content.Model.Potions.Any(p => p.Id == "base-spire:" + id), "保留原效果 " + id);
@@ -31,7 +31,7 @@ internal static class PotionReuseChecks
             Check.False(plating.Id == "base-spire:plating", "不使用敌人专用同名ID");
             Console.WriteLine("POWER_LINK " + string.Join(",", Content.Model.Powers.Where(p => p.Name.Contains("Plating", StringComparison.Ordinal) || p.Name.Contains("Thorns", StringComparison.Ordinal)).Select(p => p.Name + "=" + p.Id)));
             Check.True(Content.Model.Potions.Single(p => p.Name == "HeartOfIron").Program is not null, "正式Heart程序已加载");
-            Check.False(Content.Model.Potions.Any(p => p.Name == "LiquidBronze"), "公共缺口不能伪报支持");
+            Check.True(Content.Model.Potions.Any(p => p.Name == "LiquidBronze"), "LiquidBronze复用已加载玩家ThornsPower");
             foreach (var source in Content.SourceDigests.Where(p => p.Resource == SpirePotionSource.Resource
                 || p.Resource.EndsWith("ironclad-powers.spire", StringComparison.Ordinal)
                 || p.Resource.EndsWith("enemies.spire", StringComparison.Ordinal)))
@@ -113,22 +113,33 @@ internal static class PotionReuseChecks
                 }
             });
 
-        Check.Run("药水复用：LiquidBronze保留未支持且不发布空使用", () =>
+        Check.Run("药水复用：LiquidBronze实际授予3荆棘、免费且只消耗一次", () =>
         {
             var s = New(); var bottle = Arrange(s, "liquid-bronze");
-            Check.True(Legal(s, "UsePotion") is null, "未支持元数据不能变成空效果");
-            Check.True(Content.Model.PotionPool.Single(p => p.Name == "LiquidBronze").UnsupportedUseReason.Contains("zero-damage", StringComparison.Ordinal), "具名公共语义缺口");
-            Submit(s, "DiscardPotion", bottle); Check.Equal(0, Members(s, "PotionBelt").Count, "保留丢弃能力");
+            var energy = PlayerNumber(s, "Energy"); var draws = s.Random.TotalDraws;
+            var use = Legal(s, "UsePotion")!; Submit(s, "UsePotion", bottle);
+            Check.Equal(SessionStatus.Running, s.Status, "单人目标直接解析拥有者");
+            Check.Equal(3L, FormalSliceFixture.PowerStacks(s, FormalSliceFixture.Player(s), "base-spire:thorns-power"), "正式程序挂载3层玩家荆棘");
+            Check.Equal(energy, PlayerNumber(s, "Energy"), "不花能量");
+            Check.Equal(draws, s.Random.TotalDraws, "不抽随机");
+            ConsumedOnce(s, bottle, use);
+            FormalSliceFixture.EndTurn(s);
+            var enemies = Members(s, "Monsters").ToArray();
+            var hp = enemies.Select(e => Number(s, e, FormalSliceFixture.MonsterTypeId, "Hp")).ToArray();
+            FormalSliceFixture.EndTurn(s);
+            Check.Equal(SessionStatus.Running, s.Status, "后续真实敌人回合执行反击");
+            for (var i=0;i<enemies.Length;i++)
+                Check.Equal(hp[i]-3L,Number(s,enemies[i],FormalSliceFixture.MonsterTypeId,"Hp"), "每次敌人攻击实际反击3点");
         });
         ThornsWitness();
     }
 
     private static void ThornsWitness()
     {
-        Check.Run("药水复用：LiquidBronze公共缺口最小反例（实际链接表，不计支持）", () =>
+        Check.Run("药水复用：LiquidBronze链接玩家荆棘而不回退未实现的敌人同名Power", () =>
         {
             var links = Content.Model.Powers.ToDictionary(p => p.Name, p => p.Id, StringComparer.Ordinal);
-            Check.False(links.ContainsKey("ThornsPower"), "源玩家ThornsPower没有正式链接");
+            Check.Equal("base-spire:thorns-power", links["ThornsPower"], "玩家公共荆棘已正式链接");
             Check.False(links.ContainsKey("Thorns"), "敌人Thorns也未实际加载，不能以声明冒充实现");
             var unsupported = Content.Unsupported.Single(p => p.Item == "power:Thorns");
             Console.WriteLine($"THORNS_UNSUPPORTED {unsupported.Item}: {unsupported.Reason}");
@@ -145,11 +156,10 @@ internal static class PotionReuseChecks
                       }
                     }
                     """, "potion-reuse/minimal-liquid-bronze.spire", links);
-                Check.Equal(0, witness.Potions.Count, "普通链接表拒绝没有加载的能力");
-                Check.True(witness.Pool.Single().UnsupportedUseReason.Length > 0, "仍保留具名未支持原因");
+                Check.Equal(power == "ThornsPower" ? 1 : 0, witness.Potions.Count, "只接受实际已加载的玩家能力");
+                Check.Equal(power != "ThornsPower", witness.Pool.Single().UnsupportedUseReason.Length > 0, "未知引用仍具名拒绝");
                 Console.WriteLine($"THORNS_LINK_WITNESS power={power}; loaded_programs={witness.Potions.Count}; reason={witness.Pool.Single().UnsupportedUseReason}");
             }
-            Console.WriteLine("THORNS_SOURCE_EXPECTATION stacks=3: powered damage=9 => retaliation=3; powered damage=0 => retaliation=3; unpowered/nonattack => retaliation=0. No loaded player Thorns; these are source expectations, NOT runtime passes.");
         });
     }
 

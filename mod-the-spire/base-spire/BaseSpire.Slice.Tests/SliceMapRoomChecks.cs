@@ -90,8 +90,8 @@ internal static class SliceMapRoomChecks
     // Focused evidence: SilentPoisonChecks; previous dev 475abd581a69694c / 161d18afa369a767.
     // 2026-10-17: complete solo Sly family, dynamic keyword lifetimes, isolated discard batches and before-hit Thorns.
     // Previous dev db7ab18e687e380d / feb3f5074952e499; focused witnesses: SilentSlyChecks.
-    private const string DevGoldenRuleset = "8b9877853c09390b";
-    private const string DevGoldenBuild = "155131ed9ad8a8f7";
+    private const string DevGoldenRuleset = "87b1e83c4318a488";
+    private const string DevGoldenBuild = "d3484e3e0486354a";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -107,8 +107,8 @@ internal static class SliceMapRoomChecks
     // Sown/SapphireSeed and actual card-copy semantics: .audit/sown-20261017/.
     // Previous dev-map 34b51c466486b0f9 / d96534dd8df06257.
     // Previous dev-map 2958d9e779c64116 / 46130439a68eedb3.
-    private const string DevMapGoldenRuleset = "639897b31bed14b7";
-    private const string DevMapGoldenBuild = "ee9f39726c390d25";
+    private const string DevMapGoldenRuleset = "6ed7062e03b9867d";
+    private const string DevMapGoldenBuild = "74ef43415f47d401";
 
     public static void DefaultIdentity()
     {

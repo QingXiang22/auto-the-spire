@@ -28,8 +28,10 @@ Card.AddedSly保存本场战斗的附加关键词，Card.SingleTurnSly保存本�
 
 未在本地执行完整solution／Slice／net／严格regression。完整core、base、net及独立参考regression仅在本地轻量检查完成并推送后交给GitHub Actions；实际运行与结论记录在PR，不提前把排队算通过。源码检查依赖本地sts2，不进入Actions。
 
-冻结hash32的dev规则／公开构建身份由db7ab18e687e380d／feb3f5074952e499迁为8b9877853c09390b／155131ed9ad8a8f7；dev-map由2958d9e779c64116／46130439a68eedb3迁为639897b31bed14b7／ee9f39726c390d25。身份变化对应新卡、动态字段、奇巧批次隔离和受击前触发，资源按Git的LF字节核对。
+冻结hash32的dev规则／公开构建身份由db7ab18e687e380d／feb3f5074952e499迁为87b1e83c4318a488／d3484e3e0486354a；dev-map由2958d9e779c64116／46130439a68eedb3迁为6ed7062e03b9867d／74ef43415f47d401。身份变化对应新卡、动态字段、奇巧批次隔离和受击前触发，资源按Git的LF字节核对。
 
 ## 验证边界
 
 本批证明正式加载及受控单人行为，不代表Silent正式开局／多幕胜负、多人Sneaky、全部动态关键词、Omnislice特殊反击条件或独立逐卡原版对拍已经完成。旧中毒牌族及本批源码核对不能替代这些证据。
+
+首次Actions运行39030202531的core、net和differential通过，base首错为旧测试断言玩家ThornsPower尚未实现。已将该缺口断言改为实际链接和行为验证，并让LiquidBronze复用已实现的3层玩家荆棘；实际可使用药水14→15，未支持34→33。本地药水复用11项、源码3项及公开语义10项通过，完整回归仍交给更新提交后的Actions。
