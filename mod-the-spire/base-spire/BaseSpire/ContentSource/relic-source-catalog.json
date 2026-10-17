@@ -2684,8 +2684,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/Orichalcum.cs",
     "SourceSha256": "75f295aa8fd693ec6dd81e2fab24f048d5b8bcb2d9de906ec93859f044cb7826",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local very-early/end-of-turn hooks in sts2/src/Core/Models/Relics/Orichalcum.cs; block-only-when-empty rule declared at the earlier relic turn-end site and exercised by RelicContentChecks (ordering note retained).",
     "Hooks": [
       "BeforeSideTurnEndVeryEarly",
       "BeforeSideTurnEnd",

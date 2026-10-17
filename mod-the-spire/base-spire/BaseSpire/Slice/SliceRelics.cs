@@ -28,6 +28,10 @@ public sealed record SliceRelicEffect(string Trigger, string Kind, int Amount)
     public int HandAtLeast { get; init; } = -1;
     /// <summary>手牌数至多（-1＝不作为条件；来源 `…IsEmpty`）。</summary>
     public int HandAtMost { get; init; } = -1;
+    /// <summary>当前格挡至少（-1＝不作为条件；来源 `creature.Block >= n`）。</summary>
+    public int BlockAtLeast { get; init; } = -1;
+    /// <summary>当前格挡至多（-1＝不作为条件；来源 `creature.Block == 0` 等）。</summary>
+    public int BlockAtMost { get; init; } = -1;
 }
 
 /// <summary>
@@ -217,6 +221,9 @@ public static class SpireRelics
             if (effect.HandAtLeast < -1 || effect.HandAtMost < -1
                 || effect.HandAtLeast >= 0 && effect.HandAtMost >= 0 && effect.HandAtLeast > effect.HandAtMost)
                 return $"{relic.Name} 的手牌数量条件不合法";
+            if (effect.BlockAtLeast < -1 || effect.BlockAtMost < -1
+                || effect.BlockAtLeast >= 0 && effect.BlockAtMost >= 0 && effect.BlockAtLeast > effect.BlockAtMost)
+                return $"{relic.Name} 的格挡数量条件不合法";
             if (effect.CardKind.Length > 0 && effect.Trigger != RelicTriggers.AfterCardPlayed)
                 return $"{relic.Name} 的触发点 '{effect.Trigger}' 不支持牌型过滤";
             if (effect.Kind == RelicEffectKinds.ChannelOrb && effect.OrbKind is not ("Lightning" or "Frost" or "Dark" or "Plasma" or "Glass")

@@ -550,6 +550,25 @@ internal static class RelicContentChecks
             Check.True(PlayerNumber(s, "Block") % 3L == 0L, "a later payout stays a multiple of the per-hit amount");
             Check.True(PlayerNumber(s, "Hp") <= before, "the combat keeps dealing damage after the payout");
         });
+        Case(["Orichalcum"], "Relic conditions: Orichalcum grants six block at turn end only when already unblocked", () =>
+        {
+            // SturdyClamp 把这一刻的格挡留到可读（上限 10）；Orichalcum 只在“回合末没有格挡”时补 6 点。
+            var unblocked = New(); Submit(unblocked, "Obtain_SturdyClamp"); Submit(unblocked, "Obtain_Orichalcum");
+            Submit(unblocked, "BeginMonster"); SetMonsterHp(unblocked, 500L); SetPlayer(unblocked, "Hp", 95L);
+            Submit(unblocked, "EndTurn");
+            Check.Equal(6L, PlayerNumber(unblocked, "Block"), "no block at turn end grants six");
+
+            var guarded = New(); Submit(guarded, "Obtain_SturdyClamp"); Submit(guarded, "Obtain_Orichalcum");
+            Submit(guarded, "BeginMonster"); SetMonsterHp(guarded, 500L); SetPlayer(guarded, "Hp", 95L);
+            SetPlayer(guarded, "Block", 5L);
+            Submit(guarded, "EndTurn");
+            Check.Equal(5L, PlayerNumber(guarded, "Block"), "existing block prevents the grant");
+
+            var reference = New(); Submit(reference, "Obtain_SturdyClamp"); Submit(reference, "BeginMonster");
+            SetMonsterHp(reference, 500L); SetPlayer(reference, "Hp", 95L);
+            Submit(reference, "EndTurn");
+            Check.Equal(0L, PlayerNumber(reference, "Block"), "nothing grants block without the relic");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");

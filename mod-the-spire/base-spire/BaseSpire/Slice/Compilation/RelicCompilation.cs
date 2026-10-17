@@ -81,6 +81,14 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
             condition = s.And(condition, s.GreaterOrEqual(s.Count(s.Collection(piles.Hand)), s.Const((long)effect.HandAtLeast)));
         if (effect.HandAtMost >= 0)
             condition = s.And(condition, s.LessOrEqual(s.Count(s.Collection(piles.Hand)), s.Const((long)effect.HandAtMost)));
+        if (effect.BlockAtLeast >= 0 || effect.BlockAtMost >= 0)
+        {
+            var block = outsideCombat ? s.Const(0L) : s.Field(Owner(s), player.PlayerBlock);
+            if (effect.BlockAtLeast >= 0)
+                condition = s.And(condition, s.GreaterOrEqual(block, s.Const((long)effect.BlockAtLeast)));
+            if (effect.BlockAtMost >= 0)
+                condition = s.And(condition, s.LessOrEqual(block, s.Const((long)effect.BlockAtMost)));
+        }
         if (effect.CounterEquals >= 0)
             condition = s.And(condition, s.Equal(s.Field(instance, relics.Schema!.Counter), s.Const((long)effect.CounterEquals)));
         if (effect.HpAtMostPercent > 0)

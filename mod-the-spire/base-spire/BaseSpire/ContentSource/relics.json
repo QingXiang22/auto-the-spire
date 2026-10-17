@@ -1392,5 +1392,20 @@
         "PowerId": "base-spire:self-forming-clay"
       }
     ]
+  },
+  {
+    "Name": "Orichalcum",
+    "ContentId": "base-spire:orichalcum",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/Orichalcum.cs",
+    "SourceLine": 15,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-end",
+        "Kind": "gain-block",
+        "Amount": 6,
+        "BlockAtMost": 0
+      }
+    ]
   }
 ]
