@@ -22,6 +22,21 @@
 - 要补齐的链与 `CardCompilation.CardPiles` 的丢弃回调同形：`QueueSly → DispatchCardHook(on_discard) → 遗物 after-card-discarded`。`KeepOrDiscard` 目前拿不到这三样，需要把回调从 `EndTurnHandSteps`（它已有 `DispatchCardHook` 与 `powerRulesBindings`）与 composer（可传 `relicPrograms.Dispatch`）传进来。
 - 注意保留/虚无语义不变：`Keep()` 分支与 Ethereal 分支的顺序不要改；`retainHand` 的判定仍在 `Branch` 之前。
 
+## 第二次尝试（2026-10-18）与失败记录
+
+按上面的位置实际接了三段钩子（`KeepOrDiscard` 增加 `afterDiscard` 回调、`Discard()` 里依次做 `QueueSly → on_discard → 遗物`，composer 传 `AfterDiscard`），并写好了 ToughBandages 的声明、目录资格与场景。三次失败与结论：
+
+1. 直接把 `relicPrograms.Dispatch(scope, AfterCardDiscarded)` 写进 `Discard()`：链接期 **栈溢出**，栈在 `CoreTheSpire.Engine.IrTypeChecker.CheckExprCore`，说明生成的 IR 里有自引用或过深的表达式，不是普通校验失败。
+2. 改成“独立过程符号 + 稍后补过程体”后先遇到 **NullReferenceException**：回合末手牌处置体在 `CardPlay` **之前**编译，过程符号若在 `CardPlay` 附近创建就还是 null。把符号创建提前到方法开头的可空局部声明处可以消除该空引用。
+3. 即使符号提前创建、过程体只设一次，仍然**栈溢出**（同样在 `IrTypeChecker`）。因此问题不在符号时序，而在 `Dispatch` 生成的指令被放进 `KeepOrDiscard` 的递归 `Branch` 时形成的 IR 形状；下一步应先对照能正常工作的 `RelicAfterDamageReceived`（同样是“先建符号、后设体、由受伤分支调用”），确认差异是否来自 `QueueSly`/`DispatchCardHook` 的上下文或 `Branch` 的重复展开。
+
+该次尝试的全部改动已回退，仓库回到 `85130e7` 状态：遗物内容组 82/82、覆盖 83/83 可执行、未实现 213（校验器 exit 0）。场景设计可以直接复用：同场带 SturdyClamp 观察“每弃一张 +3、保留上限 10”，再用 `EmptyHand` 的空手回合做负例。
+
+## 下一步建议
+
+先做一个**最小复现**：只加遗物监听（不加 `QueueSly`/`on_discard`）看是否仍溢出；再逐步加回，定位是哪一段让 IR 退化。定位后再一次性接入三段钩子并纳入 ToughBandages／Tingsha。
+
+
 
 ## 边界
 
