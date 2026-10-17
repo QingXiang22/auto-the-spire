@@ -1377,5 +1377,20 @@
         "Amount": 1
       }
     ]
+  },
+  {
+    "Name": "SelfFormingClay",
+    "ContentId": "base-spire:self-forming-clay",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/SelfFormingClay.cs",
+    "SourceLine": 15,
+    "Effects": [
+      {
+        "Trigger": "after-damage-received",
+        "Kind": "apply-power",
+        "Amount": 3,
+        "PowerId": "base-spire:self-forming-clay"
+      }
+    ]
   }
 ]

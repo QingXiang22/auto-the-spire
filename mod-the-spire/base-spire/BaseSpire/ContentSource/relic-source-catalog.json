@@ -3670,8 +3670,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/SelfFormingClay.cs",
     "SourceSha256": "c67dff243bb62af45f53fa2bb9a94d1bb30066a34ad0d730a44a04c44dd73ad7",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local damage-received hook in sts2/src/Core/Models/Relics/SelfFormingClay.cs; stacking next-turn block power declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterDamageReceived"
     ]

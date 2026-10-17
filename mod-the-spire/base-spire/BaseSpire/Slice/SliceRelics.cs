@@ -195,7 +195,7 @@ public static class SpireRelics
                     or RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterCardExhausted => effect.Kind is RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterDamageReceived => effect.Kind is RelicEffectKinds.DrawCards or RelicEffectKinds.AddCounter
-                    or RelicEffectKinds.SetCounter,
+                    or RelicEffectKinds.SetCounter or RelicEffectKinds.ApplyPower,
                 RelicTriggers.AfterPlayerTurnStart => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.DrawCards
                     or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter,
                 RelicTriggers.BeforeSideTurnEnd => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.GainBlock,
