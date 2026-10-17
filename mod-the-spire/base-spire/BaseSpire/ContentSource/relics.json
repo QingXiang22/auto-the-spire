@@ -1352,5 +1352,30 @@
       }
     ],
     "ShowCounter": true
+  },
+  {
+    "Name": "CentennialPuzzle",
+    "ContentId": "base-spire:centennial-puzzle",
+    "Rarity": "Common",
+    "SourcePath": "sts2/src/Core/Models/Relics/CentennialPuzzle.cs",
+    "SourceLine": 14,
+    "Effects": [
+      {
+        "Trigger": "before-combat-start",
+        "Kind": "set-counter",
+        "Amount": 0
+      },
+      {
+        "Trigger": "after-damage-received",
+        "Kind": "draw-cards",
+        "Amount": 3,
+        "CounterEquals": 0
+      },
+      {
+        "Trigger": "after-damage-received",
+        "Kind": "add-counter",
+        "Amount": 1
+      }
+    ]
   }
 ]

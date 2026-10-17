@@ -196,7 +196,8 @@ internal static class DamageCompilation
         AfterDamageBindings afterDamageBindings,
         PlayerDamageBindings playerDamageBindings,
         DamageChainCallback DamageChain,
-        SettleTailCallback SettleTail, BaseSpire.Slice.Domain.Combat.CombatOsty? osty)
+        SettleTailCallback SettleTail, BaseSpire.Slice.Domain.Combat.CombatOsty? osty,
+        Func<ProcedureBuilder, Inst[]>? relicAfterDamage = null)
     {
         var tail = new Inst[]
             {
@@ -221,7 +222,7 @@ internal static class DamageCompilation
                         playerDamageBindings.DamagePlayer.SetField(playerDamageBindings.StruckPlayer, playerBindings.PlayerHpLossCount,
                             playerDamageBindings.DamagePlayer.Add(playerDamageBindings.DamagePlayer.Field(playerDamageBindings.StruckPlayer, playerBindings.PlayerHpLossCount),
                                 playerDamageBindings.DamagePlayer.Const(1L))),
-                    }),
+                    }.Concat(relicAfterDamage?.Invoke(playerDamageBindings.DamagePlayer) ?? []).ToArray()),
                 playerDamageBindings.DamagePlayer.Emit(eventsBindings.PlayerDamaged, (eventsBindings.PlayerDamagedAttacker, playerDamageBindings.DamagePlayer.Param(playerDamageBindings.StruckAttacker)),
                     (eventsBindings.PlayerDamagedAmount, playerDamageBindings.DamagePlayer.LocalRef(playerDamageBindings.StruckDamage))),
                 // W-06：受�?**powered 且正�?*伤害之后的能力触发（来源事件�?`require=[move]`/

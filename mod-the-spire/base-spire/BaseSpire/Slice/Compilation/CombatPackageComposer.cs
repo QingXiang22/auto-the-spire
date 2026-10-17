@@ -129,9 +129,11 @@ internal static class CombatPackageComposer
         var afterDamageBindings = DamageCompilation.AfterDamage(contentBindings, enemiesBindings);
         DamageCompilation.AfterDamageBody(afterDamageBindings, RetaliateChain);
         var playerDamageBindings = DamageCompilation.PlayerDamage(contentBindings, battleBindings, playerBindings, enemiesBindings);
+        // 受击后的遗物监听先建过程符号，过程体在抽牌等绑定就绪后再补（见下方 relicAfterDamage.Body）。
+        var relicAfterDamage = contentBindings.Package.Procedure("RelicAfterDamageReceived");
         DamageCompilation.PlayerDamageBody(
             playerBindings, enemiesBindings, eventsBindings, powerRulesBindings, afterDamageBindings, playerDamageBindings,
-            DamageChain, SettleTail, osty);
+            DamageChain, SettleTail, osty, scope => [scope.Call(relicAfterDamage.Symbol)]);
         DamageCompilation.PlayerBlockBody(contentBindings, playerBindings, playerBlockBindings, RandomAttackChain);
         var turnStartTriggerBindings = DamageCompilation.TurnStartTrigger(contentBindings);
         DamageCompilation.TurnStartTriggerBody(turnStartTriggerBindings, GrantPowerChain);
@@ -168,6 +170,8 @@ internal static class CombatPackageComposer
         drawBindings = CardCompilation.Draw(
             contentBindings, battleBindings, playerBindings, cardsBindings, pilesBindings, powerQueryBindings,
             powerCommandsBindings, powerRulesBindings, knowledgeCommandsBindings, DrawPrevented);
+        // 抽牌绑定就绪后再补受击遗物监听的过程体（过程体里可能用到抽牌）。
+        relicAfterDamage.Body(relicPrograms.Dispatch(relicAfterDamage, RelicTriggers.AfterDamageReceived));
         var enemySelectionBindings = EnemyCompilation.EnemySelection(contentBindings, enemiesBindings);
         EnemyCompilation.EnemySelectionBody(contentBindings, enemiesBindings, enemySelectionBindings, SelectMachine);
         var playerTurnBindings = TurnCompilation.PlayerTurn(

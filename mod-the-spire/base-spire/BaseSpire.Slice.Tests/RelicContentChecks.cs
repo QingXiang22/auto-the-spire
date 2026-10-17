@@ -522,6 +522,19 @@ internal static class RelicContentChecks
             Submit(carried, "BeginMonster"); SetMonsterHp(carried, 500L);
             Check.Equal(6, Members(carried, "Hand").Count, "the carried counter completes the period in the next battle");
         });
+        Case(["CentennialPuzzle"], "Relic damage: CentennialPuzzle draws three cards on the first unblocked hit of a combat", () =>
+        {
+            var s = New(); Submit(s, "Obtain_CentennialPuzzle"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Hp", 95L);
+            var turns = 0;
+            while (Members(s, "Hand").Count == 5 && turns < 4) { Submit(s, "EndTurn"); turns++; }
+            Check.True(turns < 4, "the combat produces an unblocked hit within four turns");
+            Check.Equal(8, Members(s, "Hand").Count, "the first unblocked hit draws three extra cards");
+            var before = PlayerNumber(s, "Hp");
+            Submit(s, "EndTurn");
+            Check.Equal(5, Members(s, "Hand").Count, "later turns in the same combat do not draw again");
+            Check.True(PlayerNumber(s, "Hp") <= before, "the combat keeps dealing damage after the draw");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");

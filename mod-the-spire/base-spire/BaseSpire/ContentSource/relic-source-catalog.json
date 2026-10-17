@@ -671,8 +671,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/CentennialPuzzle.cs",
     "SourceSha256": "f7645036f0fb53e6d5b5bf1fe20f6f30efbf25ddc3508e25937e1fed81d399be",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local damage-received hook in sts2/src/Core/Models/Relics/CentennialPuzzle.cs; once-per-combat three-card draw declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterDamageReceived",
       "AfterCombatEnd"
