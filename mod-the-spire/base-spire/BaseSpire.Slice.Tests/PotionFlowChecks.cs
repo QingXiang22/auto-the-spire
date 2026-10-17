@@ -35,8 +35,8 @@ internal static class PotionFlowChecks
                 Check.Equal(ValueOf("PotionUsage") switch { "CombatOnly" => "combatOnly", "AnyTime" => "anyTime", _ => "automatic" }, p.Usage, p.Name + " usage");
                 Check.Equal(ValueOf("TargetType") switch { "AnyEnemy" => "enemy", "AllEnemies" => "allEnemies", _ => "self" }, p.Target, p.Name + " target");
             }
-            Check.Equal(14, Content.Model.Potions.Count, "十四项真实程序，不能把元数据算成效果实现");
-            Check.Equal(34, pool.Count(p => p.UnsupportedUseReason.Length > 0), "未实现显式记账");
+            Check.Equal(15, Content.Model.Potions.Count, "十五项真实程序，包含公共荆棘接通的LiquidBronze");
+            Check.Equal(33, pool.Count(p => p.UnsupportedUseReason.Length > 0), "未实现显式记账");
         });
 
     }

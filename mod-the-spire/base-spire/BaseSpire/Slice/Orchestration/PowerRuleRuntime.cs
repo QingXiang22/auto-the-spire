@@ -38,6 +38,7 @@ public sealed class PowerRuleRuntime
     private readonly CollectionSymbol slyDiscards;
     private readonly EntityTypeSymbol slyEntry;
     private readonly FieldSymbol slyCard;
+    private readonly FieldSymbol slyBatch, nextSlyBatch;
     public FieldSymbol ActiveCard { get; }
     public FieldSymbol EndingTurn { get; }
     public FieldSymbol EtherealExhaust { get; }
@@ -54,6 +55,8 @@ public sealed class PowerRuleRuntime
         this.monsters=monsters; this.longDeck=longDeck!;
         slyEntry=package.EntityType("SlyDiscardEntry");
         slyCard=slyEntry.AddField("Card",FieldTypeSchema.RefTo(card.Type),visibility:FieldVisibility.Hidden);
+        slyBatch=slyEntry.AddField("Batch",FieldTypeSchema.Int(0,999999),visibility:FieldVisibility.Hidden);
+        nextSlyBatch=player.AddField("NextSlyBatch",FieldTypeSchema.Int(0,999999),visibility:FieldVisibility.Hidden);
         slyDiscards=package.Collection("SlyDiscards",slyEntry);
         slyDiscards.IdentityVisible=false; slyDiscards.OrderVisible=false;
         procedures["AfterDiscardBatch"]=package.Procedure("PlaySlyDiscards");
@@ -67,6 +70,9 @@ public sealed class PowerRuleRuntime
         var attacked=package.Procedure("PowerRulesAfterUnblockedAttack");
         attacked.Param("Target",FieldTypeSchema.AnyRef());
         procedures["AfterUnblockedAttack"]=attacked;
+        var beforeAttack=package.Procedure("PowerRulesBeforeIncomingAttack");
+        beforeAttack.Param("Attacker",FieldTypeSchema.AnyRef());
+        procedures["BeforeIncomingAttack"]=beforeAttack;
         ActiveCard=player.AddField("ActiveCard", FieldTypeSchema.RefTo(card.Type), visibility:FieldVisibility.Hidden, optional:true);
         EndingTurn=player.AddField("EndingTurn",FieldTypeSchema.Bool(),visibility:FieldVisibility.Hidden);
         EtherealExhaust=player.AddField("EtherealExhaust",FieldTypeSchema.Bool(),visibility:FieldVisibility.Hidden);
@@ -85,12 +91,9 @@ public sealed class PowerRuleRuntime
         }
     }
     public Inst Call(IrScope s,string name,params Expr[] args)=>s.Call(procedures[name].Symbol,args);
-    public Inst[] QueueSly(IrScope s,Expr discarded) => [..cards.Where(c=>c.Normal.Sly || c.Upgraded.Sly).Select(c=>
-        s.If(s.And(s.Equal(s.Field(discarded,card.Definition),s.Const(c.Id)),
-            s.Or(s.And(s.Field(discarded,card.Upgraded),s.Const(c.Upgraded.Sly)),
-                s.And(s.Not(s.Field(discarded,card.Upgraded)),s.Const(c.Normal.Sly)))),
-            s.CreateEntity(slyEntry,s.EntityScope(discarded),s.Local("slyDiscard",FieldTypeSchema.RefTo(slyEntry)),
-                [(slyCard,discarded)],slyDiscards)))];
+    public Inst[] QueueSly(IrScope s,Expr discarded) => [s.If(recipes.IsSly(s,discarded),
+        s.CreateEntity(slyEntry,s.EntityScope(discarded),s.Local("slyDiscard",FieldTypeSchema.RefTo(slyEntry)),
+            [(slyCard,discarded),(slyBatch,s.Const(0L))],slyDiscards))];
     private Expr Owner(IrScope s)=>s.First(s.Type(player,battle));
     private Expr Attack(IrScope s,Expr c)=>s.Equal(s.Field(c,card.Kind),s.EnumConst(kinds,"Attack"));
     private Query Owned(IrScope s)=>s.Relation(powers,Owner(s));
@@ -135,12 +138,21 @@ public sealed class PowerRuleRuntime
     }
     public void Build(PowerRuleBindings b)
     {
-        Body("AfterDiscardBatch",s=>[s.ForEach(s.Collection(slyDiscards),entry=> {
+        Body("AfterDiscardBatch",s=> {
+            var batch=s.Local("discardBatch",FieldTypeSchema.Int(1,999999));
+            return new Inst[] { s.SetField(Owner(s),nextSlyBatch,s.Add(s.Field(Owner(s),nextSlyBatch),s.Const(1L))),
+                s.SetLocal(batch,s.Field(Owner(s),nextSlyBatch)),
+                s.ForEach(s.Where(s.Collection(slyDiscards),entry=>s.Equal(s.Field(entry,slyBatch),s.Const(0L))),
+                    entry=>[s.SetField(entry,slyBatch,s.LocalRef(batch))]),
+                s.ForEach(s.Where(s.Collection(slyDiscards),entry=>s.Equal(s.Field(entry,slyBatch),s.LocalRef(batch))),entry=> {
             var c=s.Local("slyCard",FieldTypeSchema.RefTo(card.Type));
             return new Inst[] { s.SetLocal(c,s.Field(entry,slyCard)),s.Destroy(entry),
                 s.If(s.And(b.Alive(s),s.GreaterOrEqual(s.CollectionIndex(piles.Discard,s.LocalRef(c)),s.Const(0L))),
                     s.Call(b.Play,s.LocalRef(c),s.Const((long)CardEffectPile.Discard),s.Const(true),s.Const(false),s.Const(1L))) };
-        })]);
+            }) };
+        });
+        Body("BeforeIncomingAttack",s=>Rules(PowerRuleKind.RetaliateBeforeAttack).Select(x=>
+            Each(s,x.Power,p=>[s.Call(b.Damage,Owner(s),s.Param(0),s.Field(p,stacks),s.Const(false))])).ToArray());
         var application=ApplyOwnedPower;
         var prevented=application.Local("applicationPrevented",FieldTypeSchema.Bool());
         Expr isPoison=definitions.Where(p=>p.Role=="Poison").Aggregate((Expr)application.Const(false),
@@ -221,7 +233,8 @@ public sealed class PowerRuleRuntime
                 [s.Call(b.Draw,s.Field(p,stacks))])])).ToArray());
         Body("AfterTurnEnd",s=>Rules(PowerRuleKind.DrawOnExhaust).Select(x=>Each(s,x.Power,p=>{
             var count=s.Local("deferredDraw",FieldTypeSchema.Int(0,9999));return new Inst[]{
-                s.SetLocal(count,s.Multiply(s.Field(p,deferred),s.Field(p,stacks))),s.SetField(p,deferred,s.Const(0L)),s.Call(b.Draw,s.LocalRef(count))};})).ToArray());
+                s.SetLocal(count,s.Multiply(s.Field(p,deferred),s.Field(p,stacks))),s.SetField(p,deferred,s.Const(0L)),s.Call(b.Draw,s.LocalRef(count))};}))
+            .Append(s.ForEach(s.Type(card.Type,battle),c=>[s.SetField(c,card.SingleTurnSly,s.Const(false))])).ToArray());
         Body("AfterTurnStart",s=>Rules(PowerRuleKind.SelfDamageAtTurnStart).Select(x=>Each(s,x.Power,p=>[
             s.If(s.Greater(s.Field(p,selfDamage),s.Const(0L)),s.Call(b.LoseHp,s.Field(p,selfDamage)),Call(s,"ReceivedDamage"))]))
             .Concat(Rules(PowerRuleKind.BlockAtTurnStart).Select(x=>Each(s,x.Power,p=>[s.Call(b.Block,s.Field(p,stacks))])))
@@ -247,7 +260,9 @@ public sealed class PowerRuleRuntime
             return [..steps];
         });
         Body("AfterPlay",s=>{var playing=s.Param(0);return [s.If(s.Greater(s.Field(playing,pending),s.Const(0L)),
-            s.Call(b.Apply,Owner(s),s.Const(SliceManifest.StrengthId),s.Field(playing,pending),s.Const(false),s.Const(false)),s.SetField(playing,pending,s.Const(0L)))];});
+            s.Call(b.Apply,Owner(s),s.Const(SliceManifest.StrengthId),s.Field(playing,pending),s.Const(false),s.Const(false)),s.SetField(playing,pending,s.Const(0L))),
+            ..Rules(PowerRuleKind.GrantSlyAfterSkill).Select(x=>Each(s,x.Power,p=>[
+                s.If(s.Equal(s.Field(playing,card.Kind),s.EnumConst(kinds,"Skill")),s.SetField(playing,card.AddedSly,s.Const(true)))]))];});
         Body("AfterDraw",s=>Rules(PowerRuleKind.AutoPlayDrawnStrikes).Select(x=>Each(s,x.Power,p=>[
             s.If(s.And(b.HasTag(s,s.Param(0),"base-spire:strike"),b.Alive(s)),
                 s.Call(b.Play,s.Param(0),s.Const((long)CardEffectPile.Hand),s.Const(true),s.Const(false),s.Const(1L)))]))

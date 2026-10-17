@@ -1,0 +1,61 @@
+using namespace base-spire;
+dsl_version = "base/0.0.2";
+
+# Sources: sts2/src/Core/Models/Cards/<Name>.cs. Haze is in silent-cards.spire.
+card Abrasive {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = power rarity = rare cost = 3 target = { selectSelf = {} } keywords = { sly } hooks = {} }
+    normal = { play = { applyPower = { power = Dexterity stacks = 1 target = context.owner } applyPower = { power = ThornsPower stacks = 4 target = context.owner } } }
+    upgraded = { play = { applyPower = { power = Dexterity stacks = 1 target = context.owner } applyPower = { power = ThornsPower stacks = 6 target = context.owner } } }
+}
+card FlickFlack {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = attack rarity = common cost = 1 target = { selectAll = {} } keywords = { sly } hooks = {} }
+    normal = { play = { attack = { damage = 6 target = allEnemies } } }
+    upgraded = { play = { attack = { damage = 8 target = allEnemies } } }
+}
+card Reflex {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = skill rarity = uncommon cost = 3 target = { selectSelf = {} } keywords = { sly } hooks = {} }
+    normal = { play = { draw = { amount = 2 } } }
+    upgraded = { play = { draw = { amount = 3 } } }
+}
+card Ricochet {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = attack rarity = common cost = 2 target = { selectNone = {} } keywords = { sly } hooks = {} }
+    normal = { play = { repeat = { count = 4 effect = { randomAttack = { damage = 3 } } } } }
+    upgraded = { play = { repeat = { count = 5 effect = { randomAttack = { damage = 3 } } } } }
+}
+card Tactician {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = skill rarity = uncommon cost = 3 target = { selectSelf = {} } keywords = { sly } hooks = {} }
+    normal = { play = { modifyEnergy = { amount = 1 } } }
+    upgraded = { play = { modifyEnergy = { amount = 2 } } }
+}
+card Untouchable {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = skill rarity = common cost = 2 target = { selectSelf = {} } keywords = { sly } hooks = {} }
+    normal = { play = { gainBlock = { amount = 6 } } }
+    upgraded = { play = { gainBlock = { amount = 9 } } }
+}
+card HandTrick {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} hooks = {} }
+    normal = { play = { gainBlock = { amount = 7 } chooseCard = { from = hand filter = nonSlySkill autoSelect = true onSelected = { grantSelectedSly = {} } } } }
+    upgraded = { play = { gainBlock = { amount = 10 } chooseCard = { from = hand filter = nonSlySkill autoSelect = true onSelected = { grantSelectedSly = {} } } } }
+}
+card MasterPlanner {
+    pools = { SilentCardPool }
+    upgradeable = true
+    common = { type = power rarity = rare target = { selectSelf = {} } keywords = {} hooks = {}
+        play = { applyPower = { power = MasterPlannerPower stacks = 1 target = context.owner } } }
+    normal = { cost = 2 }
+    upgraded = { cost = 1 }
+}

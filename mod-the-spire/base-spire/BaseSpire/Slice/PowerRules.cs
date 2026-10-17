@@ -8,7 +8,8 @@ public enum PowerRuleKind
     ExtraAttackPlays, DrawOnExhaust, CloneThirdAttack, ReclaimAttacksBeforeTurn,
     SelfDamageAtTurnStart, BlockAtTurnStart, StrengthOnOwnerHpLoss,
     DamageAllOnOwnerDamage, AutoPlayDrawnStrikes, AutoPlayHandAttacksAtTurnEnd, HpLossCap, EnergyAfterResetOnce,
-    HandDrawNextTurnOnce, ApplyPowerOnDraw, ApplyPowerAtTurnStart, ApplyPowerOnUnblockedAttack, DamageAllEveryThirdPower
+    HandDrawNextTurnOnce, ApplyPowerOnDraw, ApplyPowerAtTurnStart, ApplyPowerOnUnblockedAttack, DamageAllEveryThirdPower,
+    GrantSlyAfterSkill, RetaliateBeforeAttack
 }
 public sealed record PowerRule(PowerRuleKind? Kind, int Amount, DslSourceLocation Source)
 {
@@ -33,6 +34,8 @@ public static class PowerRuleSource
         ["applyPowerAtTurnStart"] = PowerRuleKind.ApplyPowerAtTurnStart,
         ["applyPowerOnUnblockedAttack"] = PowerRuleKind.ApplyPowerOnUnblockedAttack,
         ["damageAllEveryThirdPower"] = PowerRuleKind.DamageAllEveryThirdPower,
+        ["grantSlyAfterSkill"] = PowerRuleKind.GrantSlyAfterSkill,
+        ["retaliateBeforeAttack"] = PowerRuleKind.RetaliateBeforeAttack,
     };
     public static IReadOnlyList<PowerRule> Read(DslValueNode value, List<string> problems)
     {

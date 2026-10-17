@@ -109,7 +109,7 @@ internal static class CombatPackageComposer
         DamageCompilation.AfterDamageBody(afterDamageBindings, RetaliateChain);
         var playerDamageBindings = DamageCompilation.PlayerDamage(contentBindings, battleBindings, playerBindings, enemiesBindings);
         DamageCompilation.PlayerDamageBody(
-            playerBindings, eventsBindings, powerRulesBindings, afterDamageBindings, playerDamageBindings,
+            playerBindings, enemiesBindings, eventsBindings, powerRulesBindings, afterDamageBindings, playerDamageBindings,
             DamageChain, SettleTail, osty);
         var playerBlockBindings = DamageCompilation.PlayerBlock(contentBindings, battleBindings, playerBindings);
         DamageCompilation.PlayerBlockBody(contentBindings, playerBindings, playerBlockBindings, RandomAttackChain);

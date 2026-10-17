@@ -82,6 +82,7 @@ public static class SpirePowerSource
             ["ConstrictPower"] = "base-spire:constrict-power",
             ["Poison"] = "base-spire:poison",
             ["Accelerant"] = "base-spire:accelerant",
+            ["ThornsPower"] = "base-spire:thorns-power",
         };
 
     /// <summary>一个能力声明在本批次支持的字段。</summary>

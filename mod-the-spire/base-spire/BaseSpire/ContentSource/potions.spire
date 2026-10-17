@@ -196,7 +196,7 @@ package base-spire {
     usage = combatOnly
     target = self
     source = "sts2/src/Core/Models/Potions/LiquidBronze.cs"
-    unsupportedUse = "LiquidBronze requires player ThornsPower, absent from loaded Power links; enemy Thorns is unsupported and its positiveAmount gate excludes source-required zero-damage retaliation; public Power fix required"
+    use = { applyPower = { power = ThornsPower stacks = 3 target = context.owner } }
   }
   potion LiquidMemories {
     rarity = rare

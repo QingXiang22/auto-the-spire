@@ -190,6 +190,7 @@ internal static class DamageCompilation
 
     internal static void PlayerDamageBody(
         PlayerBindings playerBindings,
+        EnemiesBindings enemiesBindings,
         EventsBindings eventsBindings,
         PowerRulesBindings powerRulesBindings,
         AfterDamageBindings afterDamageBindings,
@@ -241,9 +242,12 @@ internal static class DamageCompilation
             scope.And(scope.Param(playerDamageBindings.StruckPowered), scope.And(scope.Greater(unblocked, scope.Const(0L)),
                 scope.Not(scope.IsNone(osty.Living(scope, playerDamageBindings.StruckPlayer))))),
             osty.Receive(scope, playerDamageBindings.StruckPlayer, unblocked), tail.Skip(3).ToArray()) };
-        scope.Body(DamageChain(scope, playerDamageBindings.StruckAmount, playerDamageBindings.StruckFixed,
+        scope.Body(scope.If(scope.Greater(scope.Field(scope.Param(playerDamageBindings.StruckAttacker),enemiesBindings.MonsterHp),scope.Const(0L)),
+            DamageChain(scope, playerDamageBindings.StruckAmount, playerDamageBindings.StruckFixed,
             playerDamageBindings.StruckStacks, playerDamageBindings.StruckDamage, scope.Param(playerDamageBindings.StruckAttacker),
-            playerDamageBindings.StruckPlayer, scope.Param(playerDamageBindings.StruckPowered)).Concat(tail.Take(3)).Concat(afterBlock).ToArray());
+            playerDamageBindings.StruckPlayer, scope.Param(playerDamageBindings.StruckPowered)).Concat(new[] {
+                scope.If(scope.Param(playerDamageBindings.StruckPowered),powerRulesBindings.PowerRules.Call(scope,"BeforeIncomingAttack",scope.Param(playerDamageBindings.StruckAttacker)))
+            }).Concat(tail.Take(3)).Concat(afterBlock).ToArray()));
 
     }
 

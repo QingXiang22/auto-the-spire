@@ -27,6 +27,7 @@ internal static class Program
         {
             PotionFlowChecks.RunSourceChecks();
             SilentPoisonChecks.RunSourceChecks();
+            SilentSlyChecks.RunSourceChecks();
             Console.WriteLine($"All {Check.Passed} source checks passed (requires local sts2).");
             return 0;
         }
@@ -85,6 +86,12 @@ internal static class Program
             CombatPoisonChecks.Run();
             SilentPoisonChecks.Run();
             Console.WriteLine($"All {Check.Passed} Poison checks passed (controlled source contract witnesses).");
+            return 0;
+        }
+        if (args.Contains("--sly-only", StringComparer.Ordinal))
+        {
+            SilentSlyChecks.Run();
+            Console.WriteLine($"All {Check.Passed} Sly checks passed (controlled formal content).");
             return 0;
         }
         if (args.Contains("--doom-only", StringComparer.Ordinal))
@@ -274,6 +281,7 @@ internal static class Program
         CombatDoomChecks.Run();
         CombatPoisonChecks.Run();
         SilentPoisonChecks.Run();
+        SilentSlyChecks.Run();
         CombatOstyChecks.Run();
         NextTurnEnergyChecks.Run();
         NextTurnDrawChecks.Run();

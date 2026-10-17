@@ -557,6 +557,10 @@ public static class SlicePublicProfile
                     "旧0.1受控切片不提供附魔消费者；正式0.2由规则声明派生发布"),
                 ["EnchantmentDisabled"] = Disposition<PublishedField>.Skip("N-02-LEGACY-ATTACHMENT-SCOPE",
                     "旧0.1受控切片不提供附魔消费者；正式0.2由规则声明派生发布"),
+                ["AddedSly"] = Disposition<PublishedField>.Skip("N-02-LEGACY-ATTACHMENT-SCOPE",
+                    "旧受控切片不提供动态奇巧消费者；正式环境从base声明派生发布"),
+                ["SingleTurnSly"] = Disposition<PublishedField>.Skip("N-02-LEGACY-ATTACHMENT-SCOPE",
+                    "旧受控切片不提供临时奇巧消费者；正式环境从base声明派生发布"),
                 // W-01：作者内容的卡牌实例变量（`Variable_<name>`，例：Rampage 的成长量 extra-damage）。
                 ["Variable_extra-damage"] = publishInstanceVariables
                     ? Number(CardType, "Variable_extra-damage")
