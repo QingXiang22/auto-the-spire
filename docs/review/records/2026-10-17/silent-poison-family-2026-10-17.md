@@ -28,10 +28,12 @@ Artifact阻止此Poison路径时消耗一层，不挂毒、不推进Outbreak。�
 
 68项中覆盖全部12张牌的普通、创建时升级、Armaments升级，以及实际支付、目标、结果牌区、毒层数、触发次数、自然递减、跨回合余数、满手／NoDraw、Dexterity／Frail、Artifact、末杀、随机消耗与弃牌hook先于奇巧的顺序。受控状态设置只用于这些行为用例，不作为正常整局证据。
 
-冻结hash32的dev规则／公开构建身份由475abd581a69694c／161d18afa369a767迁为db7ab18e687e380d／4e4d147add7d136f；dev-map由34b51c466486b0f9／d96534dd8df06257迁为2958d9e779c64116／91f5d485acc9be2a。迁移原因是新增内容、触发流程、公开ApplicationCount和隐藏奇巧队列，以及清场后的抽牌守卫，不把摘要相等当作行为证据。
+冻结hash32的dev规则／公开构建身份由475abd581a69694c／161d18afa369a767迁为db7ab18e687e380d／feb3f5074952e499；dev-map由34b51c466486b0f9／d96534dd8df06257迁为2958d9e779c64116／46130439a68eedb3。迁移原因是新增内容、触发流程、公开ApplicationCount和隐藏奇巧队列，以及清场后的抽牌守卫，不把摘要相等当作行为证据。
 
 ## GitHub验证与剩余边界
 
 完整core、base、net和独立参考regression在本地轻量检查完成后，使用现有GitHub Actions工作流执行。运行链接和最终结论在PR及主清单维护，不提前把排队状态计为通过。已有事件／附魔PR是本批父分支依赖，按依赖顺序审阅。
 
 本批证明该12张内容的正式加载与受控行为。未执行本族独立原版逐卡对拍、Silent正常开局／多幕胜负、完整角色剩余牌和120对候选矩阵；这些不因本批完成而关闭。
+
+首次Actions运行39023906760的core及differential通过，base因本地CRLF资源与Git LF资源摘要不同而失败，net因旧诊断Profile缺少SlyDiscards及ApplicationCount处置而失败。已按Git字节重建并更新身份快照，补齐兼容映射；本地仅重跑公开语义10项及net快照26项，均通过。完整回归继续交给更新提交后的Actions。

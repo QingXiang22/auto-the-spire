@@ -89,7 +89,7 @@ internal static class SliceMapRoomChecks
     // 2026-10-17: 12 Silent poison cards, owner-origin application hooks, Sly discard queue and public counter.
     // Focused evidence: SilentPoisonChecks; previous dev 475abd581a69694c / 161d18afa369a767.
     private const string DevGoldenRuleset = "db7ab18e687e380d";
-    private const string DevGoldenBuild = "4e4d147add7d136f";
+    private const string DevGoldenBuild = "feb3f5074952e499";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -105,7 +105,7 @@ internal static class SliceMapRoomChecks
     // Sown/SapphireSeed and actual card-copy semantics: .audit/sown-20261017/.
     // Previous dev-map 34b51c466486b0f9 / d96534dd8df06257.
     private const string DevMapGoldenRuleset = "2958d9e779c64116";
-    private const string DevMapGoldenBuild = "91f5d485acc9be2a";
+    private const string DevMapGoldenBuild = "46130439a68eedb3";
 
     public static void DefaultIdentity()
     {

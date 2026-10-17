@@ -511,6 +511,8 @@ public static class SlicePublicProfile
                 ["Stacks"] = Number(PowerType, "Stacks"),
                 ["Ticks"] = Boolean(PowerType, "Ticks"),
                 ["SkipNextTick"] = Boolean(PowerType, "SkipNextTick"),
+                ["ApplicationCount"] = Disposition<PublishedField>.Skip("BASE-LEGACY-RESOURCE-SCOPE",
+                    "旧受控切片没有施毒计数消费者；正式环境从base声明派生并公开该计数"),
             });
 
     /// <summary>
@@ -616,6 +618,8 @@ public static class SlicePublicProfile
                 "旧受控切片不注册充能球消费者；正式环境通过base声明派生Profile发布队列及成员"),
             ["base-spire:PowerCardSelection"] = CollectionDisposition.Skip("BASE-INTERNAL-POWER-SELECTION",
                 "能力处理中的内部卡牌快照；成员种类未加入投影，不向玩家公开，也不改变旧切片目录"),
+            ["base-spire:SlyDiscards"] = CollectionDisposition.Skip("BASE-INTERNAL-SLY-DISCARD",
+                "手动弃牌批次的内部奇巧条目；成员种类未加入投影，实际卡牌位置由正式牌区发布"),
             ["base-spire:Monsters"] = CollectionDisposition.Skip("TODO-N02-GROUP-OWNER",
                 "生物集合不是牌堆（protocol.md:83 的 pile 成员是卡牌实例）；发布为 group 需要一个 owner 实体，" +
                 "而战斗作用域不是实体，且引擎集合成员唯一、无法表达 group 的 multiplicity（protocol.md:96）→ 登记为能力边界"),
