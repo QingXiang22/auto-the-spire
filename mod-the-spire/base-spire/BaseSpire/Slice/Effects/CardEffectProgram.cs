@@ -127,7 +127,7 @@ public enum CardEffectCardFilter { Any, Attack, NonAttack, Upgradeable }
 
 public enum CardEffectOperation { Damage, GainBlock, GainEnergy, Draw, LoseHp, Heal, ApplyPower, GainMaxHp, GainStars, LoseStars, SetStars }
 public enum CardEffectTarget { Owner, Selected, AllEnemies, RandomEnemy, LowestHp }
-public enum CardAmountSource { Literal, Hand, Discard, Draw, Exhaust, Played, Block, Variable, TargetPower, PaidX, CardsWithTag, PlayerHpLossCount, SavedCount, PaidStarX }
+public enum CardAmountSource { Literal, Hand, Discard, Draw, Exhaust, Played, Block, Variable, TargetPower, PaidX, CardsWithTag, PlayerHpLossCount, SavedCount, PaidStarX, EnemyPowerSum }
 
 /// <summary>Constant + Multiplier * live source value, evaluated at this effect's execution position.</summary>
 public sealed record CardEffectAmount(CardAmountSource Source, long Constant, long Multiplier = 0, string Reference = "")

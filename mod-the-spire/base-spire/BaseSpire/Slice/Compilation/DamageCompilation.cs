@@ -74,6 +74,14 @@ internal static class DamageCompilation
                     // （Feed 的 `on_fatal_gain_max_hp`、遗物回血、实例变量写回）与出牌收尾还要继续跑；
                     // 胜利判定统一挂在**动作体末尾**的 `BattleEndTail`（`PlayCard`/`EndTurn`/`UsePotion`）。
                     monsterDamageBindings.DamageMonster.RemoveFromCollection(pilesBindings.Monsters, monsterDamageBindings.HitTargetRef)),
+                monsterDamageBindings.DamageMonster.If(monsterDamageBindings.DamageMonster.And(
+                    monsterDamageBindings.DamageMonster.Param(monsterDamageBindings.HitPowered),
+                    monsterDamageBindings.DamageMonster.And(monsterDamageBindings.DamageMonster.Greater(
+                        monsterDamageBindings.DamageMonster.LocalRef(monsterDamageBindings.HitDamage),
+                        monsterDamageBindings.DamageMonster.LocalRef(monsterDamageBindings.HitAbsorbed)),
+                        monsterDamageBindings.DamageMonster.Greater(monsterDamageBindings.DamageMonster.Field(
+                            monsterDamageBindings.HitTargetRef,enemiesBindings.MonsterHp),monsterDamageBindings.DamageMonster.Const(0L)))),
+                    powerRulesBindings.PowerRules.Call(monsterDamageBindings.DamageMonster,"AfterUnblockedAttack",monsterDamageBindings.HitTargetRef)),
             }).ToArray()));
 
     }

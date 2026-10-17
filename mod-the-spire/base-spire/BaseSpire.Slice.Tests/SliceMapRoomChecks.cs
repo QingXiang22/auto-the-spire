@@ -86,8 +86,10 @@ internal static class SliceMapRoomChecks
     // and SlipperyBridge permanent preview/removal. Source/native prefix: .audit/act1-run-20261016/.
     // Previous dev aad01bb0852d0d7d / 48e4a0d6e545db41; dev-map 59937585291f40b1 / b91254a8b3d86d80.
     // 2026-10-17: card attachment fields/copy policy and post-body Sown trigger; controlled/native/public witnesses.
-    private const string DevGoldenRuleset = "475abd581a69694c";
-    private const string DevGoldenBuild = "161d18afa369a767";
+    // 2026-10-17: 12 Silent poison cards, owner-origin application hooks, Sly discard queue and public counter.
+    // Focused evidence: SilentPoisonChecks; previous dev 475abd581a69694c / 161d18afa369a767.
+    private const string DevGoldenRuleset = "db7ab18e687e380d";
+    private const string DevGoldenBuild = "feb3f5074952e499";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -101,8 +103,9 @@ internal static class SliceMapRoomChecks
     // 2026-10-17: complete JungleMazeAdventure/MorphicGrove modules, simultaneous deck selection.
     // Isolated real-catalogue checks: .audit/event-layer-20261017/; native Jungle solo RNG gap remains explicit.
     // Sown/SapphireSeed and actual card-copy semantics: .audit/sown-20261017/.
-    private const string DevMapGoldenRuleset = "34b51c466486b0f9";
-    private const string DevMapGoldenBuild = "d96534dd8df06257";
+    // Previous dev-map 34b51c466486b0f9 / d96534dd8df06257.
+    private const string DevMapGoldenRuleset = "2958d9e779c64116";
+    private const string DevMapGoldenBuild = "46130439a68eedb3";
 
     public static void DefaultIdentity()
     {

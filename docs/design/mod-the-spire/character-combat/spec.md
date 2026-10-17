@@ -43,6 +43,18 @@ Plasma在玩家回合开始能量重置及AfterTurnStart之后触发；其他球
 
 测试用例须覆盖基础5伤害/降为4、Accelerant两层造成5+4+3、对手汇总与死亡过滤、次数不超过层数、耗尽删除、格挡与Strength不改结果、玩家伤害次数、敌人死亡不行动。
 
+## 静默猎手中毒牌族
+
+源池与卡牌直接引用的Power共同确定12张中毒相关牌：Accelerant、BouncingFlask、BubbleBubble、CorrosiveWave、DeadlyPoison、Envenom、Haze、Mirage、NoxiousFumes、Outbreak、PoisonedStab、Snakebite。正式内容位于`silent-cards.spire`与`silent-powers.spire`，保留普通／升级、稀有度及SilentCardPool归属。该内容族不开放Silent正式开局或替代多幕胜负验收。
+
+卡牌及玩家触发能力通过`ApplyOwnedPower`施加，存活目标与战斗有效时才操作。正Poison被Artifact阻止时消耗一层Artifact，不挂毒、不推进Outbreak。成功施加一次计一次，与层数无关；Outbreak每三次对全体存活敌人造成自身层数的unpowered伤害，公开`Power.ApplicationCount`保留0～2余数，跨回合不重置。中毒递减、受控初始状态和敌人行动不冒充玩家施毒。Artifact接入限定此Poison路径，不代表所有debuff阻止规则已迁移。
+
+CorrosiveWave每张实际抽到的牌向各存活敌人施毒，并在拥有者回合结束时移除。NoxiousFumes在下次玩家回合完成抽牌后施毒，此后每回合重复。Envenom逐次检查powered攻击的未格挡伤害，给仍存活目标施毒；全挡、unpowered伤害和死亡目标不触发。伤害先确认死亡再派发存活目标反应，避免连锁Outbreak重复提交死亡事件。BouncingFlask每次反弹独立消费一次CombatTargets，前次触发杀死的目标不参加后次抽取。Mirage实时汇总存活敌人的Poison，再走正常Dexterity／Frail格挡修正。
+
+Haze的永久Sly沿共享手动弃牌流程：先移动整个已选批次并执行弃牌hook，再按顺序免费自动打出奇巧牌。待处理条目为Engine的隐藏SlyDiscardEntry，不构成新的牌区；普通回合末清手不触发。临时授予奇巧、其他角色完整参与者与独立原版对拍仍按各自合同，不由本族受控检查推断。
+
+定向入口`--poison-only`覆盖实际加载、三种升级路径、生命周期及组合边界；`--suite source`从本地原版池及直接Power引用独立核对分母。广覆盖回归在整组本地轻量检查后由GitHub Actions执行。
+
 ## Osty 基础生命周期
 
 依据OstyCmd.Summon与CreatureCmd.GainMaxHp：summonOsty(amount)零值无操作，首次创建归属玩家的独立宠物；存活时同时增加MaxHP/HP，死亡保留身份，复活以本次amount重设MaxHP/HP。healOsty只治疗存活宠物并封顶；loseOstyHp为不经格挡的生命损失，死亡不移除实体；ostyAttack只允许存活宠物攻击当前所选敌人，基础伤害不使用玩家Strength。金额使用共享数值表达式，负值显式拒绝。

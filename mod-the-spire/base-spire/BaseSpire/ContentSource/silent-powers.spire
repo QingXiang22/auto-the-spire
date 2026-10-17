@@ -1,0 +1,19 @@
+package base-spire {
+  # Source: Models/Powers/CorrosiveWavePower.cs
+  power CorrosiveWavePower {
+    rules = { applyPowerOnDraw = Poison }
+    removeAfterOwnerTurnEnd = true
+  }
+  # Source: Models/Powers/EnvenomPower.cs
+  power EnvenomPower {
+    rules = { applyPowerOnUnblockedAttack = Poison }
+  }
+  # Source: Models/Powers/NoxiousFumesPower.cs
+  power NoxiousFumesPower {
+    rules = { applyPowerAtTurnStart = Poison }
+  }
+  # Source: Models/Powers/OutbreakPower.cs
+  power OutbreakPower {
+    rules = { damageAllEveryThirdPower = Poison }
+  }
+}

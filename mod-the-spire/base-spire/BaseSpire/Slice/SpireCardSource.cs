@@ -20,7 +20,7 @@ public static partial class SpireCardSource
     public const string ResourceSuffix = "-cards.spire";
 
     private static readonly IReadOnlyList<string> SupportedKeywords =
-        ["exhaust", "ethereal", "unplayable", "retain", "innate"];
+        ["exhaust", "ethereal", "unplayable", "retain", "innate", "sly"];
 
     /// <summary>一个效果原语（`play` 块里的一个成员）在本批次支持的字段。</summary>
     public sealed record Primitive(
@@ -1852,6 +1852,7 @@ public static partial class SpireCardSource
             "context.target" => "target",
             "context.owner" => "owner",
             "allEnemies" => "allEnemies",
+            "randomEnemy" => "randomEnemy",
             _ => $"unsupported:{name}",
         };
     }
@@ -2118,6 +2119,8 @@ public static partial class SpireCardSource
             DamageVariable = declaration.DamageVariable,
             NormalInnate = normal.Keywords.Contains("innate", StringComparer.Ordinal),
             UpgradedInnate = upgraded.Keywords.Contains("innate", StringComparer.Ordinal),
+            NormalSly = normal.Keywords.Contains("sly", StringComparer.Ordinal),
+            UpgradedSly = upgraded.Keywords.Contains("sly", StringComparer.Ordinal),
             MultiplayerOnly = declaration.MultiplayerOnly,
             Tags = [.. declaration.Tags.Select(raw => NamespaceTag(raw, packageId))],
         };

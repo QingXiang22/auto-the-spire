@@ -328,7 +328,7 @@ internal static class CombatPackageComposer
         CollectionSymbol PileCollection(CardEffectPile pile) => CardCompilation.PileCollection(pilesBindings, pile);
         CardPileProcedures CardPiles() => CardCompilation.CardPiles(
             battleBindings, playerBindings, cardsBindings, pilesBindings, exhaustTriggerBindings,
-            knowledgeCommandsBindings, DispatchCardHook);
+            knowledgeCommandsBindings, powerRulesBindings, DispatchCardHook);
         Inst[] DispatchCardHook(IrScope scope, Expr cardRef, string hook) => CardCompilation.DispatchCardHook(
             battleBindings, playerBindings, cardsBindings, powerRulesBindings, CompileEffects, scope, cardRef,
             hook);

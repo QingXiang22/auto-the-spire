@@ -15,6 +15,7 @@ public sealed record CardEffectStateBindings(
     /// 出牌历史独立于牌区：牌离场后历史仍保留，用历史数全场牌会重复。
     /// </summary>
     public CollectionSymbol InPlay { get; init; } = null!;
+    public CollectionSymbol Enemies { get; init; } = null!;
     /// <summary>
     /// ENV-T05：玩家本**次战斗**累计"实际失去生命"的事件次数（TearAsunder 的次数来源）。
     /// 战斗级——不随回合清零（与 `LostHpThisTurn` 区分）。
@@ -52,6 +53,9 @@ public sealed class CardEffectExpressions(IrScope scope, CardEffectStateBindings
             CardAmountSource.Block => scope.Field(owner, state.Block),
             CardAmountSource.Variable => scope.Field(card, state.Variables[amount.Reference]),
             CardAmountSource.TargetPower => scope.CallPure(state.PowerStacks, target, scope.Const(amount.Reference)),
+            CardAmountSource.EnemyPowerSum => scope.Aggregate(scope.Where(scope.Collection(state.Enemies),
+                enemy => scope.Greater(scope.Field(enemy,state.EnemyHp),scope.Const(0L))), AggregateOp.Sum,
+                enemy => scope.CallPure(state.PowerStacks,enemy,scope.Const(amount.Reference))),
             CardAmountSource.PaidX => paidX ?? throw Unsupported("X", "effect needs a captured payment context"),
             CardAmountSource.PaidStarX => PaidStarX ?? throw Unsupported("StarX", "effect needs a captured star payment context"),
             CardAmountSource.PlayerHpLossCount => scope.Field(owner, state.HpLossCount),

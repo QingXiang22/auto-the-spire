@@ -306,6 +306,8 @@ public static class BasePublicSemanticsBuilder
                 "BASE-INTERNAL-RELIC-BAG", "玩家随机遗物库存不发布未来奖励。"),
             ["PowerCardSelection"] = (BasePublicCollectionUse.NotPublished, null, null, null,
                 "BASE-INTERNAL-POWER-SELECTION", "内部Power候选快照，不发布中间牌区。"),
+            ["SlyDiscards"] = (BasePublicCollectionUse.NotPublished, null, null, null,
+                "BASE-INTERNAL-SLY-DISCARD", "手动弃牌批次的内部待打出条目；实际卡牌位置由正式牌区发布。"),
             ["CardPlayHistory"] = (BasePublicCollectionUse.NotPublished, null, null, null,
                 "BASE-INTERNAL-PLAY-HISTORY", "内部执行事件记录；事件种类不在公开投影，公开牌序列继续由 PlayedThisTurn 提供。"),
             ["Monsters"] = (BasePublicCollectionUse.Sequence, null, "Player", null, null, null),
