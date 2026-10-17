@@ -111,8 +111,9 @@ internal static class SliceMapRoomChecks
     // 2026-10-17 SelfFormingClay consumes that trigger with its next-turn block power. Previous dev 8b0dd0f571004fd0 / 1b5d78529aeeb4de.
     // 2026-10-17 per-stack block effect in a power sequence now loads (PowerCount 55→56). Previous dev c3e80e123a592ecd / e720657f9744aff7.
     // 2026-10-18 Orichalcum adds block-size conditions (BlockAtLeast/BlockAtMost). Previous dev 58b3cef636e06488 / 250a1283c1556641.
-    private const string DevGoldenRuleset = "97704742b08ae2ef";
-    private const string DevGoldenBuild = "082df4fc513d85cf";
+    // 2026-10-18 ToughBandages adds the relic-only discard hook at the turn-end flush. Previous dev 97704742b08ae2ef / 082df4fc513d85cf.
+    private const string DevGoldenRuleset = "d38b36c7be4c7782";
+    private const string DevGoldenBuild = "02ba7ba8bc64ff3a";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -140,8 +141,9 @@ internal static class SliceMapRoomChecks
     // Same SelfFormingClay addition; previous dev-map 85beb60106ad58a9 / 8262c6c4a0d76aee.
     // Same per-stack block fix; previous dev-map a2e76db7002d51c1 / c1bfa1c760a80690.
     // Same Orichalcum addition; previous dev-map 2e69c1a8e092394a / 257f9b76174e59c7.
-    private const string DevMapGoldenRuleset = "ac0764f3c9e63ad3";
-    private const string DevMapGoldenBuild = "023957de61c94c87";
+    // Same ToughBandages addition; previous dev-map ac0764f3c9e63ad3 / 023957de61c94c87.
+    private const string DevMapGoldenRuleset = "cd59bdfde4209734";
+    private const string DevMapGoldenBuild = "ae0107d8ff66a60c";
 
     public static void DefaultIdentity()
     {

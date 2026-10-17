@@ -1407,5 +1407,19 @@
         "BlockAtMost": 0
       }
     ]
+  },
+  {
+    "Name": "ToughBandages",
+    "ContentId": "base-spire:tough-bandages",
+    "Rarity": "Rare",
+    "SourcePath": "sts2/src/Core/Models/Relics/ToughBandages.cs",
+    "SourceLine": 12,
+    "Effects": [
+      {
+        "Trigger": "after-card-discarded",
+        "Kind": "gain-block",
+        "Amount": 3
+      }
+    ]
   }
 ]

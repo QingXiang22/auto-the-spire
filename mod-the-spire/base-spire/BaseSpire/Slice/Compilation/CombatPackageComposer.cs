@@ -323,7 +323,8 @@ internal static class CombatPackageComposer
             cardInHand);
         Inst KeepOrDiscard(Expr cardInHand) => TurnCompilation.KeepOrDiscard(
             cardsBindings, pilesBindings, playerTurnEndBindings, cardInHand,
-            relicPrograms.Has(playerTurnEndBindings.EndPlayerTurn, RelicEffectKinds.RetainHand));
+            relicPrograms.Has(playerTurnEndBindings.EndPlayerTurn, RelicEffectKinds.RetainHand),
+            (scope, card) => relicPrograms.Dispatch(scope, RelicTriggers.AfterCardDiscarded));
         Inst TurnEndHookChain(Expr cardInHand) => TurnCompilation.TurnEndHookChain(
             playerTurnEndBindings, DispatchCardHook, cardInHand);
         Inst[] SpawnStartingPowers(IrScope scope, SliceEnemy definition, int monsterSlot) => CombatantCompilation.SpawnStartingPowers(

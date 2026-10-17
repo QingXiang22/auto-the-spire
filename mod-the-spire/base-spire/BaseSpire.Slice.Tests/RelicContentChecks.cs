@@ -569,6 +569,28 @@ internal static class RelicContentChecks
             Submit(reference, "EndTurn");
             Check.Equal(0L, PlayerNumber(reference, "Block"), "nothing grants block without the relic");
         });
+        Case(["ToughBandages"], "Relic discard: ToughBandages gains three unpowered block per discarded card", () =>
+        {
+            // 回合末的手牌处置逐张派发弃牌监听；普通格挡随后被清掉，所以同场带 SturdyClamp（保留上限 10）观察这一刻。
+            var reference = New(); Submit(reference, "Obtain_SturdyClamp"); Submit(reference, "BeginMonster");
+            SetMonsterHp(reference, 500L); SetPlayer(reference, "Hp", 95L);
+            Submit(reference, "EndTurn");
+            Check.Equal(0L, PlayerNumber(reference, "Block"), "nothing grants block without the relic");
+
+            var s = New(); Submit(s, "Obtain_SturdyClamp"); Submit(s, "Obtain_ToughBandages"); Submit(s, "BeginMonster");
+            SetMonsterHp(s, 500L); SetPlayer(s, "Hp", 95L);
+            var hand = Members(s, "Hand").Count;
+            Check.True(hand >= 4, "the flush discards the whole hand");
+            FormalSliceFixture.GivePower(s, FormalSliceFixture.Player(s), "base-spire:dexterity-power", 5L);
+            Submit(s, "EndTurn");
+            Check.Equal((long)Math.Min(10, 3 * hand), PlayerNumber(s, "Block"), "three per discarded card, capped by the retained-block limit");
+
+            var empty = New(); Submit(empty, "Obtain_SturdyClamp"); Submit(empty, "Obtain_ToughBandages");
+            Submit(empty, "BeginMonster"); SetMonsterHp(empty, 500L); SetPlayer(empty, "Hp", 95L);
+            EmptyHand(empty);
+            Submit(empty, "EndTurn");
+            Check.Equal(0L, PlayerNumber(empty, "Block"), "an already empty hand discards nothing and gains no block");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");

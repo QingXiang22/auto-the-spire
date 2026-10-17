@@ -4222,8 +4222,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/ToughBandages.cs",
     "SourceSha256": "7713a46cf28a67a8cc3aa622030bfc7ea69ae8d2e9cc3c416305fade348e2aad",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local discard hook in sts2/src/Core/Models/Relics/ToughBandages.cs; unpowered block per discarded card declared and exercised by RelicContentChecks at the turn-end discard path.",
     "Hooks": [
       "AfterCardDiscarded"
     ]

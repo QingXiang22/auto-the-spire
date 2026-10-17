@@ -1,6 +1,16 @@
 # 遗物批次尝试记录：回合末弃牌不经过逐张弃牌钩子
 
-任务：**ENV-T09-PR02-CONTENT**。本轮尝试用新加的 `after-card-discarded` 触发点纳入 ToughBandages（Rare，Silent，`ToughBandages.cs:12-24`：每弃一张牌获得 3 点 Unpowered 格挡），实现与场景都写完并编译通过，但受控场景实测“回合末手牌处置后格挡为 0”，说明**回合末的手牌处置不会经过逐张弃牌钩子**。该批改动已全部回退（构建与覆盖恢复：遗物内容组 82/82、覆盖 83/83、未实现 213），本记录只保留发现与下一步。
+任务：**ENV-T09-PR02-CONTENT**。本记录含两段：先记录“回合末手牌处置不经过逐张弃牌钩子”的发现与两次失败尝试；再记录 2026-10-18 用**最小复现**定位后，以“只接遗物监听”的方式落地 ToughBandages（Rare，Silent，`ToughBandages.cs:12-24`：每弃一张牌获得 3 点 Unpowered 格挡）的结果与仍然开放的范围。
+
+## 已解决：只接遗物监听即可覆盖回合末弃牌（2026-10-18）
+
+最小复现做法：在 `TurnCompilation.KeepOrDiscard` 增加 `afterDiscard` 回调、`Discard()` 里只追加**遗物派发**（`relicPrograms.Dispatch(scope, AfterCardDiscarded)`），composer 从 `KeepOrDiscard` 闭包传入；不加 `QueueSly`/`DispatchCardHook`。结果包正常链接，场景通过：“手牌 5 张在回合末被弃 → 3×5=15 点格挡被 SturdyClamp 截到 10；预先空手（受控移动，不经过弃牌回调）→ 0 点”。
+
+因此前面两次尝试的**栈溢出不是遗物派发本身**，而是同时塞进 `QueueSly` 与 `DispatchCardHook(on_discard)` 的组合（或那次的过程符号/体顺序）；现在遗物侧已经可用，`on_discard` 与 Sly 入队在回合末仍未接入，属于**仍然开放**的引擎缺口，留给后续批次单独用同样的小步方式验证。
+
+覆盖与身份：遗物内容组 84/84、覆盖 85/85 可执行、未实现 211；dev `d38b36c7be4c7782`／`02ba7ba8bc64ff3a`、dev-map `cd59bdfde4209734`／`ae0107d8ff66a60c`。
+
+## 历史：第一次发现（2026-10-17）
 
 ## 现象与定位
 

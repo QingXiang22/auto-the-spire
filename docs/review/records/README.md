@@ -4,7 +4,7 @@
 
 2026-10-17：[遗物源清单与实例公共接口](2026-10-17/relic-foundation-2026-10-17.md)记录297件源遗物／300条池成员对账、四件base正式声明，以及RunRelics获得／移除／替换／熔毁、实例计数与有效性查询；27项相关定向检查通过，完整回归、逐件资格与独立证据仍待验证。
 
-2026-10-17：[遗物批次尝试记录：回合末弃牌不经过逐张弃牌钩子](2026-10-17/relic-discard-flush-gap-2026-10-17.md)ToughBandages两次试做后回退：回合末手牌处置只走批次钩子与消耗触发过程，不逐张派发`on_discard`/`after-card-discarded`；第二次接入三段钩子在链接期`IrTypeChecker`栈溢出，空引用与栈溢出的定位过程、回退状态与最小复现建议均已记录。
+2026-10-17：[遗物批次尝试记录：回合末弃牌不经过逐张弃牌钩子](2026-10-17/relic-discard-flush-gap-2026-10-17.md)记录回合末手牌处置不逐张派发`on_discard`/`after-card-discarded`的发现、两次失败尝试，以及2026-10-18用最小复现定位后“只接遗物监听”落地ToughBandages（3×弃牌数、SturdyClamp截到10、空手为0）；`on_discard`/Sly在回合末仍未接入。
 
 2026-10-17：[SelfFormingClay复用受击触发](2026-10-17/relic-self-forming-clay-2026-10-17.md)把上一批的`after-damage-received`接到“下回合格挡”能力上，并在同轮修好`perPowerStack`解析让能力按层数结算（PowerCount 55→56）；覆盖83/83可执行、未实现213。
 

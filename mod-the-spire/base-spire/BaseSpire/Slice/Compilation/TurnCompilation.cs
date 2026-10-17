@@ -491,11 +491,13 @@ internal static class TurnCompilation
         CardsBindings cardsBindings,
         PilesBindings pilesBindings,
         PlayerTurnEndBindings playerTurnEndBindings,
-        Expr cardInHand, Expr? retainHand = null)
+        Expr cardInHand, Expr? retainHand = null,
+        Func<IrScope, Expr, Inst[]>? afterDiscard = null)
     {
         Inst Discard() => playerTurnEndBindings.EndPlayerTurn.If(playerTurnEndBindings.EndPlayerTurn.Const(true),
-            playerTurnEndBindings.EndPlayerTurn.RemoveFromCollection(pilesBindings.Hand, cardInHand),
-            playerTurnEndBindings.EndPlayerTurn.AddToCollection(pilesBindings.DiscardPile, cardInHand));
+            [playerTurnEndBindings.EndPlayerTurn.RemoveFromCollection(pilesBindings.Hand, cardInHand),
+             playerTurnEndBindings.EndPlayerTurn.AddToCollection(pilesBindings.DiscardPile, cardInHand),
+             .. afterDiscard?.Invoke(playerTurnEndBindings.EndPlayerTurn, cardInHand) ?? []]);
         Inst Keep() => playerTurnEndBindings.EndPlayerTurn.If(playerTurnEndBindings.EndPlayerTurn.Const(false));
 
         var cards = cardsBindings.CardDefinitions.Compiled.ToList();

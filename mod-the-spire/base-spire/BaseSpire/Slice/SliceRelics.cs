@@ -70,6 +70,9 @@ public static class RelicTriggers
 
     /// <summary>玩家真正吃到伤害之后（`result.UnblockedDamage > 0`，来源 `RelicModel.AfterDamageReceived`）。</summary>
     public const string AfterDamageReceived = "after-damage-received";
+
+    /// <summary>一张牌被弃掉之后（来源 `RelicModel.AfterCardDiscarded`）。</summary>
+    public const string AfterCardDiscarded = "after-card-discarded";
     public const string AfterCombatEnd = "after-combat-end";
     public const string AfterCombatRoomEntered = "after-combat-room-entered";
     public const string BeforeCombatStart = "before-combat-start";
@@ -86,7 +89,7 @@ public static class RelicTriggers
     public const string AfterCombatVictoryEarly = "after-combat-victory-early";
     public const string AfterRoomEntered = "after-room-entered";
     public static readonly IReadOnlyList<string> All = [AfterCombatVictory, AfterObtained, AfterCardPlayed,
-        AfterCardExhausted, AfterDamageReceived, AfterCombatEnd,
+        AfterCardExhausted, AfterDamageReceived, AfterCardDiscarded, AfterCombatEnd,
         AfterCombatRoomEntered, BeforeCombatStart, AfterSideTurnStart, AfterPlayerTurnStartLate,
         BeforeSideTurnStart, AfterBlockCleared, BeforeHandDraw, AfterPlayerTurnStart, AfterEnergyReset, Modifier,
         BeforeSideTurnEnd, AfterSideTurnEnd, AfterCombatVictoryEarly, AfterRoomEntered];
@@ -200,6 +203,7 @@ public static class SpireRelics
                 RelicTriggers.AfterCardExhausted => effect.Kind is RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterDamageReceived => effect.Kind is RelicEffectKinds.DrawCards or RelicEffectKinds.AddCounter
                     or RelicEffectKinds.SetCounter or RelicEffectKinds.ApplyPower,
+                RelicTriggers.AfterCardDiscarded => effect.Kind is RelicEffectKinds.GainBlock,
                 RelicTriggers.AfterPlayerTurnStart => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.DrawCards
                     or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter,
                 RelicTriggers.BeforeSideTurnEnd => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.GainBlock,
