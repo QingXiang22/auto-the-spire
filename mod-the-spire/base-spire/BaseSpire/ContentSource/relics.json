@@ -1440,5 +1440,35 @@
         "Amount": 1
       }
     ]
+  },
+  {
+    "Name": "StrikeDummy",
+    "ContentId": "base-spire:strike-dummy",
+    "Rarity": "Common",
+    "SourcePath": "sts2/src/Core/Models/Relics/StrikeDummy.cs",
+    "SourceLine": 11,
+    "Effects": [
+      {
+        "Trigger": "modifier",
+        "Kind": "modify-damage-additive",
+        "Amount": 3,
+        "CardTag": "base-spire:strike"
+      }
+    ]
+  },
+  {
+    "Name": "FakeStrikeDummy",
+    "ContentId": "base-spire:fake-strike-dummy",
+    "Rarity": "Event",
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeStrikeDummy.cs",
+    "SourceLine": 11,
+    "Effects": [
+      {
+        "Trigger": "modifier",
+        "Kind": "modify-damage-additive",
+        "Amount": 1,
+        "CardTag": "base-spire:strike"
+      }
+    ]
   }
 ]

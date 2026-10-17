@@ -41,6 +41,8 @@ public sealed record CardEffectBindings(
     public Func<Expr, Expr> IsNonSlySkill { get; init; } = _ => throw new InvalidOperationException("Sly skill filter binding missing");
     public Func<Expr, Inst[]> GrantSelectedSly { get; init; } = _ => throw new InvalidOperationException("Sly grant binding missing");
     public Func<Inst[]> AfterDiscardBatch { get; init; } = () => [];
+    /// <summary>按伤害来源牌加算伤害（遗物 ModifyDamageAdditive）。</summary>
+    public Func<Expr, Expr>? ModifyDamage { get; init; }
     public Func<CardEffectOperation, Expr, Inst[]> Stars { get; init; } = (_, _) => throw new InvalidOperationException("stars binding missing");
     public Func<ForgeCardEffect, Expr, Inst[]> Forge { get; init; } = (_, _) => throw new InvalidOperationException("forge binding missing");
     public Func<OrbCardEffect, Expr, Inst[]> Orbs { get; init; } = (_, _) => throw new InvalidOperationException("orbs binding missing");
@@ -215,7 +217,8 @@ public static class CardEffectCompiler
         {
             case CardEffectOperation.Damage:
                 return Targets(scope, effect.Target, b, target =>
-                    [scope.Call(b.Damage, b.Owner, target, amount, scope.Const(!b.Unpowered))]);
+                    [scope.Call(b.Damage, b.Owner, target,
+                        b.Unpowered || b.ModifyDamage is null ? amount : b.ModifyDamage(amount), scope.Const(!b.Unpowered))]);
             case CardEffectOperation.ApplyPower:
                 return Targets(scope, effect.Target, b, target =>
                     [scope.Call(b.ApplyPower, target, scope.Const(effect.PowerId), amount, scope.Const(true), scope.Const(false))]);

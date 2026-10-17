@@ -1310,8 +1310,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/FakeStrikeDummy.cs",
     "SourceSha256": "e496856ab5aa4b00beadf5ade4bbbaebcecdf1aed1d63fe557be243a55e3ed2d",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/FakeStrikeDummy.cs; +1 for Strike-tagged damage declared and exercised by RelicContentChecks.",
     "Hooks": [
       "ModifyDamageAdditive"
     ]
@@ -3974,8 +3974,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/StrikeDummy.cs",
     "SourceSha256": "b2644e4578edaa03100f4e88f9a7b1f6992c414fb4e1aa73dd5af1b9fc5d0238",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/StrikeDummy.cs; +3 for Strike-tagged damage declared and exercised by RelicContentChecks.",
     "Hooks": [
       "ModifyDamageAdditive"
     ]

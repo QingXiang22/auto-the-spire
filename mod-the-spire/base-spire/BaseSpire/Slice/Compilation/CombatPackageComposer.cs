@@ -91,7 +91,15 @@ internal static class CombatPackageComposer
                         s.First(s.Type(playerBindings.Player, battleBindings.BattleScope)), enemy,
                         s.Maximum(s.Const(0L), amount), s.Const(false)))])],
             // 抽牌：与回合开始/卡牌效果共用同一个抽牌过程（含重洗、阻止与 AfterDraw）。
-            (s, amount) => [s.Call(drawBindings!.Draw, s.Maximum(s.Const(0L), amount))]);
+            (s, amount) => [s.Call(drawBindings!.Draw, s.Maximum(s.Const(0L), amount))],
+            // 带牌来源过滤的伤害加性修正：标签用 TaggedDefinitions 的定义集，升级/附魔直接读实例字段。
+            (s, card, tag) => cardsBindings.TaggedDefinitions.TryGetValue(tag, out var members) && members.Count > 0
+                ? members.Select(id => s.Equal(s.Field(card, cardsBindings.CardDefinition), s.Const(id)))
+                    .Aggregate((left, right) => s.Or(left, right))
+                : s.Const(false),
+            (s, card) => s.Field(card, cardsBindings.CardUpgraded),
+            (s, card) => s.NotEqual(s.Field(card, cardsBindings.CardSchema.Enchantment), s.Const("")),
+            cardsBindings.Card);
         if (potionsBindings.Potions is { } potionInventory)
         {
             potionInventory.ShouldAcquire = (s, _) => s.Not(relicPrograms.Has(s, RelicEffectKinds.PreventPotionProcurement));
@@ -359,7 +367,8 @@ internal static class CombatPackageComposer
             powerCommandsBindings, powerRulesBindings, monsterDamageBindings, playerHpLossBindings,
             drawBindings, EffectState, BlockGainSteps, EnergyGainBlocked, CardPiles, PileCollection,
             ExhaustAttackAndGrow, DispatchCardHook, scope, cardRef, owner, selectedTarget, targetSlot,
-            discardSlot, discardSlotsSlot, createdSlot, program, unpowered, paidX, paidStarX, orbs, doom, Osty);
+            discardSlot, discardSlotsSlot, createdSlot, program, unpowered, paidX, paidStarX, orbs, doom, Osty,
+            (s, card, amount) => relicPrograms.ModifyDamageAdditive(s, card, amount));
         CollectionSymbol PileCollection(CardEffectPile pile) => CardCompilation.PileCollection(pilesBindings, pile);
         CardPileProcedures CardPiles() => CardCompilation.CardPiles(
             battleBindings, playerBindings, cardsBindings, pilesBindings, exhaustTriggerBindings,

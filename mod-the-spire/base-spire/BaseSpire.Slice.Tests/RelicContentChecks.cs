@@ -605,6 +605,34 @@ internal static class RelicContentChecks
             Check.Equal(10L, PlayerNumber(s, "Energy"), "the kill refunds the energy spent on the attack");
             Check.Equal(5, Members(s, "Hand").Count, "the kill draws one card back");
         });
+        Case(["StrikeDummy"], "Relic damage: StrikeDummy adds three damage to Strike-tagged cards only", () =>
+        {
+            var s = New(); Submit(s, "Obtain_StrikeDummy"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Energy", 10L);
+            var monster = Members(s, "Monsters")[0];
+            var before = Number(s, monster, "Monster", "Hp");
+            var strike = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            FormalSliceFixture.PlayAt(s, strike, monster);
+            Check.Equal(before - 9L, Number(s, monster, "Monster", "Hp"), "Strike deals six plus three");
+            before = Number(s, monster, "Monster", "Hp");
+            var bash = FormalSliceFixture.MoveToHand(s, "base-spire:bash");
+            FormalSliceFixture.PlayAt(s, bash, monster);
+            Check.Equal(before - 8L, Number(s, monster, "Monster", "Hp"), "a non-Strike attack keeps its own damage");
+        });
+        Case(["FakeStrikeDummy"], "Relic damage: FakeStrikeDummy adds one damage to Strike-tagged cards only", () =>
+        {
+            var s = New(); Submit(s, "Obtain_FakeStrikeDummy"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Energy", 10L);
+            var monster = Members(s, "Monsters")[0];
+            var before = Number(s, monster, "Monster", "Hp");
+            var strike = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            FormalSliceFixture.PlayAt(s, strike, monster);
+            Check.Equal(before - 7L, Number(s, monster, "Monster", "Hp"), "Strike deals six plus one");
+            before = Number(s, monster, "Monster", "Hp");
+            var bash = FormalSliceFixture.MoveToHand(s, "base-spire:bash");
+            FormalSliceFixture.PlayAt(s, bash, monster);
+            Check.Equal(before - 8L, Number(s, monster, "Monster", "Hp"), "a non-Strike attack keeps its own damage");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");

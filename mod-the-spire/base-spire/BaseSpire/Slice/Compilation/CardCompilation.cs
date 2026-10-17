@@ -308,7 +308,8 @@ internal static class CardCompilation
         bool unpowered = false,
         Expr? paidX = null, Expr? paidStarX = null, BaseSpire.Slice.Domain.Combat.CombatOrbs? orbs = null,
         BaseSpire.Slice.Domain.Combat.CombatDoom? doom = null,
-        Func<BaseSpire.Slice.Domain.Combat.CombatOsty>? osty = null)
+        Func<BaseSpire.Slice.Domain.Combat.CombatOsty>? osty = null,
+        Func<IrScope, Expr, Expr, Expr>? damageModifier = null)
     {
         var expressions = new CardEffectExpressions(scope, EffectState(scope), cardRef, owner, selectedTarget, paidX) { PaidStarX = paidStarX };
 
@@ -329,6 +330,7 @@ internal static class CardCompilation
             unpowered)
         {
             PlayedCard = cardRef,
+            ModifyDamage = damageModifier is null ? null : amount => damageModifier(scope, cardRef, amount),
             IsNonSlySkill = instance => scope.And(scope.Equal(scope.Field(instance,cardsBindings.CardKindField),scope.EnumConst(battleBindings.CardKind,"Skill")),
                 scope.Not(cardsBindings.CardDefinitions.IsSly(scope,instance))),
             GrantSelectedSly = instance => [scope.SetField(instance,cardsBindings.CardSchema.SingleTurnSly,scope.Const(true))],

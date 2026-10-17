@@ -32,6 +32,12 @@ public sealed record SliceRelicEffect(string Trigger, string Kind, int Amount)
     public int BlockAtLeast { get; init; } = -1;
     /// <summary>当前格挡至多（-1＝不作为条件；来源 `creature.Block == 0` 等）。</summary>
     public int BlockAtMost { get; init; } = -1;
+    /// <summary>伤害来源牌必须带该标签（空＝不按标签过滤；来源 `cardSource.Tags.Contains(CardTag.X)`）。</summary>
+    public string CardTag { get; init; } = "";
+    /// <summary>伤害来源牌必须是升级版本（来源 `cardSource.IsUpgraded`）。</summary>
+    public bool CardUpgradedOnly { get; init; }
+    /// <summary>伤害来源牌必须带附魔（来源 `cardSource.Enchantment != null`）。</summary>
+    public bool CardEnchantedOnly { get; init; }
 }
 
 /// <summary>
@@ -128,6 +134,8 @@ public static class RelicEffectKinds
 
     /// <summary>抽 N 张牌（复用共享抽牌过程，含重洗、抽牌阻止与 AfterDraw）。</summary>
     public const string DrawCards = "draw-cards";
+    /// <summary>按伤害来源牌加算伤害（源 `ModifyDamageAdditive`）。</summary>
+    public const string ModifyDamageAdditive = "modify-damage-additive";
     public const string ModifyRestHeal = "modify-rest-heal";
     public const string ChannelOrb = "channel-orb";
     public const string AddOrbSlots = "add-orb-slots";
@@ -135,7 +143,7 @@ public static class RelicEffectKinds
     public static readonly IReadOnlyList<string> All = [Heal, GainMaxHp, GainGold, HealToFull, HealMaxHpPercent,
         GainPotionSlots, CountAndReplace, ApplyPower, GainBlock, GainEnergy, LoseEnergy, ModifyHandDraw, ModifyMaxEnergy,
         RetainEnergy, RetainHand, PreventPotionProcurement, RetainedBlockLimit, AddCounter, GainStars, SetCounter, ModifyRestHeal,
-        ChannelOrb, AddOrbSlots, ModifyLightningOrbValue, DamageAllEnemies, DrawCards];
+        ChannelOrb, AddOrbSlots, ModifyLightningOrbValue, DamageAllEnemies, DrawCards, ModifyDamageAdditive];
 }
 
 /// <summary>
@@ -214,7 +222,7 @@ public static class SpireRelics
                 RelicTriggers.AfterRoomEntered => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.SetCounter,
                 RelicTriggers.Modifier => effect.Kind is RelicEffectKinds.ModifyHandDraw or RelicEffectKinds.ModifyMaxEnergy
                     or RelicEffectKinds.RetainEnergy or RelicEffectKinds.RetainHand or RelicEffectKinds.PreventPotionProcurement or RelicEffectKinds.RetainedBlockLimit
-                    or RelicEffectKinds.ModifyRestHeal or RelicEffectKinds.ModifyLightningOrbValue,
+                    or RelicEffectKinds.ModifyRestHeal or RelicEffectKinds.ModifyLightningOrbValue or RelicEffectKinds.ModifyDamageAdditive,
                 _ => effect.Kind is RelicEffectKinds.ApplyPower or RelicEffectKinds.GainBlock or RelicEffectKinds.GainEnergy or RelicEffectKinds.Heal or RelicEffectKinds.LoseEnergy
                     or RelicEffectKinds.AddCounter or RelicEffectKinds.GainStars or RelicEffectKinds.SetCounter or RelicEffectKinds.ChannelOrb or RelicEffectKinds.AddOrbSlots,
             };

@@ -12,10 +12,49 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
     EventsBindings events, PowerCommandsBindings powers, Func<IrScope, Expr, Inst[]> gainBlock,
     Func<IrScope, Expr> energyBlocked, Func<IrScope, string, string, Expr, Inst[]> orbEffect,
     Func<IrScope, Expr, string, Expr> cardKindIs, Func<IrScope, Expr, Inst[]> damageAllEnemies,
-    Func<IrScope, Expr, Inst[]> drawCards)
+    Func<IrScope, Expr, Inst[]> drawCards, Func<IrScope, Expr, string, Expr> cardHasTag,
+    Func<IrScope, Expr, Expr> cardUpgraded, Func<IrScope, Expr, Expr> cardEnchanted,
+    EntityTypeSymbol cardEntity)
 {
     private int nextLocal;
     private readonly Dictionary<string, ProcedureSymbol> modifiers = new(StringComparer.Ordinal);
+
+    /// <summary>带“伤害来源牌”过滤的加性伤害修正（StrikeDummy／MiniatureCannon／MysticLighter）。</summary>
+    internal Expr ModifyDamageAdditive(IrScope s, Expr card, Expr amount)
+    {
+        if (!relics.HasRelics || options.RelicLibrary is null) return amount;
+        var entries = options.RelicLibrary.SelectMany(r => r.Effects
+            .Where(e => e.Trigger == RelicTriggers.Modifier && e.Kind == RelicEffectKinds.ModifyDamageAdditive)
+            .Select(e => (Relic: r, Effect: e))).ToArray();
+        if (entries.Length == 0) return amount;
+        if (!modifiers.TryGetValue(RelicEffectKinds.ModifyDamageAdditive, out var symbol))
+        {
+            var body = content.Package.Procedure("RelicModifier_modify_damage_additive");
+            body.Pure().Result(FieldTypeSchema.Int(-999, 999999));
+            var input = body.Param("Amount", FieldTypeSchema.Int(-999, 999999));
+            var cardParam = body.Param("Card", FieldTypeSchema.RefTo(cardEntity));
+            var result = body.Local("result", FieldTypeSchema.Int(-999, 999999));
+            body.Body(body.SetLocal(result, body.Param(input)),
+                body.ForEach(body.Collection(relics.Schema!.Owned), instance =>
+                    entries.Select(entry => body.If(body.And(body.Not(body.Field(instance, relics.Schema.IsMelted)),
+                        body.And(body.Equal(body.Field(instance, relics.Schema.Definition), body.Const(entry.Relic.ContentId)),
+                            CardCondition(body, entry.Effect, body.Param(cardParam)))),
+                        body.SetLocal(result, body.Add(body.LocalRef(result), body.Const((long)entry.Effect.Amount)))))),
+                body.Return(body.LocalRef(result)));
+            modifiers[RelicEffectKinds.ModifyDamageAdditive] = symbol = body.Symbol;
+        }
+        return s.CallPure(symbol, amount, card);
+    }
+
+    private Expr CardCondition(IrScope s, SliceRelicEffect effect, Expr card)
+    {
+        Expr condition = s.Const(true);
+        if (effect.CardTag.Length > 0) condition = s.And(condition, cardHasTag(s, card, effect.CardTag));
+        if (effect.CardUpgradedOnly) condition = s.And(condition, cardUpgraded(s, card));
+        if (effect.CardEnchantedOnly) condition = s.And(condition, cardEnchanted(s, card));
+        if (effect.CardKind.Length > 0) condition = s.And(condition, cardKindIs(s, card, effect.CardKind));
+        return condition;
+    }
 
     internal Expr Modify(IrScope s, string kind, Expr amount)
     {

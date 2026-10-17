@@ -113,8 +113,9 @@ internal static class SliceMapRoomChecks
     // 2026-10-18 Orichalcum adds block-size conditions (BlockAtLeast/BlockAtMost). Previous dev 58b3cef636e06488 / 250a1283c1556641.
     // 2026-10-18 ToughBandages adds the relic-only discard hook at the turn-end flush. Previous dev 97704742b08ae2ef / 082df4fc513d85cf.
     // 2026-10-18 GremlinHorn adds the `after-monster-died` relic trigger. Previous dev d38b36c7be4c7782 / 02ba7ba8bc64ff3a.
-    private const string DevGoldenRuleset = "2bbf020a340fc02e";
-    private const string DevGoldenBuild = "ec5c1ba232981b77";
+    // 2026-10-18 StrikeDummy/FakeStrikeDummy add the card-source damage-additive modifier. Previous dev 2bbf020a340fc02e / ec5c1ba232981b77.
+    private const string DevGoldenRuleset = "5858a21346fb08c8";
+    private const string DevGoldenBuild = "29767f2dea35cdc9";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -144,8 +145,9 @@ internal static class SliceMapRoomChecks
     // Same Orichalcum addition; previous dev-map 2e69c1a8e092394a / 257f9b76174e59c7.
     // Same ToughBandages addition; previous dev-map ac0764f3c9e63ad3 / 023957de61c94c87.
     // Same GremlinHorn addition; previous dev-map cd59bdfde4209734 / ae0107d8ff66a60c.
-    private const string DevMapGoldenRuleset = "df81101e617014db";
-    private const string DevMapGoldenBuild = "14b7118cfa1af873";
+    // Same StrikeDummy/FakeStrikeDummy addition; previous dev-map df81101e617014db / 14b7118cfa1af873.
+    private const string DevMapGoldenRuleset = "95e6cfafcfd4d535";
+    private const string DevMapGoldenBuild = "e32e93050d8cdc68";
 
     public static void DefaultIdentity()
     {
