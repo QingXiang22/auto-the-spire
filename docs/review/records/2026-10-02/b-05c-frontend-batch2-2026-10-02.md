@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第二批）——hook 的作者语法与运行时 |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（hook 词表/模型/校验）、`Slice/CombatSlicePackage.cs`（共享步骤降级 + 三个触发点）、`BaseSpire.Slice.Tests/SliceFrontendHookChecks.cs`（新增 5 项检查） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（hook 词表/模型/校验）、`Composition/CombatSlicePackage.cs`（共享步骤降级 + 三个触发点）、`BaseSpire.Slice.Tests/Cards/SliceFrontendHookChecks.cs`（新增 5 项检查） |
 | 状态 | **部分完成（第二批）**：本批交付 `on_exhaust` 与 `turn_end_in_hand` 两个 hook；B-05c 其余子项仍未开始（见 §4） |
 | 前置 | B-05c 第一批（[batch1](b-05c-frontend-batch1-2026-10-02.md)）、B-05b |
 
@@ -79,10 +79,10 @@ B-05a 的分母（354 条声明 / 85 张卡池卡）不变：本批带进作者�
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`exhaust_self`、`AuthorHooks`、两词块头解析、hook 校验）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（共享 `StepInstructions`；结果区分派（消耗区 + on_exhaust）；
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`exhaust_self`、`AuthorHooks`、两词块头解析、hook 校验）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（共享 `StepInstructions`；结果区分派（消耗区 + on_exhaust）；
   端末 `TurnEndHookChain`；`exhaustPile` 使用）
-- `BaseSpire.Slice.Tests/SliceFrontendHookChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendHookChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/` 语义、Legacy、net、Python 侧。未提交、未清理共享工作区。

@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十一批）——**能力的回合末行为程序**作者化（此前按 id 硬编码） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"Power/敌人/药水及 run"） |
-| 负责范围 | `Slice/Content/slice-content.author`（四个能力的回合末行为）、`Slice/SliceAuthorFrontend.cs`（`owner-turn-end` 解析与校验）、`Slice/CombatSlicePackage.cs`（按声明分派 + **修掉一处潜伏缺陷**）、`BaseSpire.Slice.Tests/SliceFrontendPowerProgramChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/Examples/slice-content.author`（四个能力的回合末行为）、`Authoring/SliceAuthorFrontend.cs`（`owner-turn-end` 解析与校验）、`Composition/CombatSlicePackage.cs`（按声明分派 + **修掉一处潜伏缺陷**）、`BaseSpire.Slice.Tests/Powers/SliceFrontendPowerProgramChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（十一批）**：能力回合末行为已作者化；B-05c 其余子项仍未开始（见 §6） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批10](b-05c-frontend-batch10-2026-10-02.md) |
 
@@ -88,10 +88,10 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/Content/slice-content.author`（四个能力的 `owner-turn-end`；新增 `power ritual` 声明）
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorPower.OwnerTurnEnd`、`PowerTurnEnd` 词表、两条校验）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`DeclaredPowerTurnEnd` 按声明分派；**`HardcodedPowerTurnEnd` 改用 `IfElse` 修掉潜伏缺陷**）
-- `BaseSpire.Slice.Tests/SliceFrontendPowerProgramChecks.cs`（新增 4 项）、10 个场景文本补能力声明、`SliceChecks.cs`（注册）；`SliceFrontendChecks.cs`（power 计数 3→4）
+- `BaseSpire/Authoring/Examples/slice-content.author`（四个能力的 `owner-turn-end`；新增 `power ritual` 声明）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorPower.OwnerTurnEnd`、`PowerTurnEnd` 词表、两条校验）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`DeclaredPowerTurnEnd` 按声明分派；**`HardcodedPowerTurnEnd` 改用 `IfElse` 修掉潜伏缺陷**）
+- `BaseSpire.Slice.Tests/Powers/SliceFrontendPowerProgramChecks.cs`（新增 4 项）、10 个场景文本补能力声明、`SliceChecks.cs`（注册）；`SliceFrontendChecks.cs`（power 计数 3→4）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

@@ -16,7 +16,7 @@ updated_at: 2026-10-08T17:14:22+08:00
 本包**不**接通 Host、**不**关闭 T03、**不**实现 T05。
 
 归属：ENV-T03「公开Host接唯一工厂；从规则声明派生公开出口」的 base 侧依赖子包（A）。
-接手入口：主清单 ENV-T03 条目；本文件「C 接入步骤」；[base README 公开语义元数据节](../../../../mod-the-spire/base-spire/README.md#公开语义元数据env-t03-a-线子包2026-10-08)。
+接手入口：主清单 ENV-T03 条目；本文件「C 接入步骤」；[base README 公开语义元数据节](../../../../tools/base-migration-baseline/README.md#公开语义元数据env-t03-a-线子包2026-10-08)。
 交付范围：负责会话 `session-71eea2fb-9dea-477e-89b3-fca5adaa6a44`；只写 `mod-the-spire/base-spire/**`、
 本交接与 `.audit/dsh-env-t03-base-metadata-2026-10-08/**`。`core-the-spire`、`net-the-spire`、`tools`、
 `reference`、`ai-the-spire`、`solution` 只读；主清单未编辑。
@@ -27,7 +27,7 @@ updated_at: 2026-10-08T17:14:22+08:00
 1. 先确认本包**已交付部分**，不要重做：元数据类型与构造期闭合在
    `BaseSpire/SinglePlayer/BasePublicSemantics.cs`，工厂出口是 `PublicSemantics`，身份接线在
    `BaseSpireBuildDescription.SemanticsDigest` / `PublicBuildId`，检查在
-   `BaseSpire.Slice.Tests/PublicSemanticsChecks.cs`（8 条，已随 Slice 332/332 通过）。
+   `BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs`（8 条，已随 Slice 332/332 通过）。
 2. 下一步（负责人/下一轮）：先按「差异、阻塞与未验证」核对根构建失败是否只属于 B/C 在制改动；
    若已消解，重跑串行门槛确认 base 与解决方案共同可构建。C 侧按「C 接入步骤」翻译元数据，
    其 `ready_for_review` 之前本包保持待验证。
@@ -63,7 +63,7 @@ string[] lines        = s.CanonicalText().Split('\n');  // 逐行可核对的证
   `PublicBuildId` 多一个 `semantics=` 输入维度，`Digest` 复用同一实现。
 - `SinglePlayer/BaseSpireBuildDescription.cs`：新增位置参数 `string SemanticsDigest`（在 `StreamLayoutDigest`
   之后、`PublicBuildId` 之前），`Summary` 追加 `semantics=<digest>`。
-- 新增 `BaseSpire.Slice.Tests/PublicSemanticsChecks.cs`（8 条检查）并在 `SliceChecks.RunAll` 注册。
+- 新增 `BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs`（8 条检查）并在 `SliceChecks.RunAll` 注册。
 - `mod-the-spire/base-spire/README.md`：新增「公开语义元数据（ENV-T03 A 线子包）」参考节，并修正
   `PublicBuildId` 组成描述。
 

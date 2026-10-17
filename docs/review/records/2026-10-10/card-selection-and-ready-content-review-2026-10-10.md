@@ -2,7 +2,7 @@
 
 2026-10-10；Codex `/root`。任务归属为主清单ENV-T06/ENV-T12；本页保存本次构建与复核证据，当前状态与下一包只看[主清单](../../tofix/README.md#env-t06)。用户要求优先可用成果并减少非必要检查，本轮按此收紧验证。
 
-接手先运行 `dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests`，再用已构建DLL执行 `--card-selection-only`。新选牌卡写法看[独立源文件](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/selection-cards.spire)，不重做公共编排或恢复暂停会话。下一共享缺口是下一回合资源与弃牌消费者；内容线只接主清单当前DSH包。
+接手先运行 `dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests`，再用已构建DLL执行 `--card-selection-only`。新选牌卡写法看[独立源文件](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/selection-cards.spire)，不重做公共编排或恢复暂停会话。下一共享缺口是下一回合资源与弃牌消费者；内容线只接主清单当前DSH包。
 
 ## 实际成果
 
@@ -50,4 +50,4 @@ Acrobatics（3/4抽后弃1）、Prepared（1/2抽后弃1/2）、Hologram（3/5�
 
 后继内容包 `ENV-T12-ready-content-20261010` 已通过[dsh-remote-operator](C:/Users/26877/.codex/skills/dsh-remote-operator/SKILL.md)派发：`session-d9b9a494-16ca-497a-8507-70c6d66d5109`；[派单](../../../../.audit/dsh-ready-content-2026-10-10/task.txt)、[accepted记录](../../../../.audit/dsh-ready-content-2026-10-10/task-record.json)。先LegSweep，再连续补现有能力就绪卡；仅卡DSL、RemainingCardFamiliesChecks.cs和本包交接/认领，禁止公共C#/Program/身份/夹具。卡作者使用单牌筛选反馈，不逐卡跑全量/整局；缺共享能力记录具体源依赖并继续可做部分。新派发只记accepted，未查询结果、不宣称交付。
 
-可维护性改进落在[base指南](../../../design/mod-the-spire/base-development-guide.md#用通用选牌编写卡牌)、[验证节奏](../../../design/mod-the-spire/base-development-guide.md#批量开发时缩短反馈)与[选牌规格](../../../design/mod-the-spire/base-orchestration/spec.md#通用选牌与恢复执行)。后续优先实现能解锁整族内容的共享能力；保持一线一包，公共架构由Codex亲自维护。
+可维护性改进落在[base指南](../../../../tools/base-migration-baseline/docs/base-development-guide.md#用通用选牌编写卡牌)、[验证节奏](../../../../tools/base-migration-baseline/docs/base-development-guide.md#批量开发时缩短反馈)与[选牌规格](../../../design/mod-the-spire/base-orchestration/spec.md#通用选牌与恢复执行)。后续优先实现能解锁整族内容的共享能力；保持一线一包，公共架构由Codex亲自维护。

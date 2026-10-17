@@ -21,7 +21,7 @@ dispatch_record: .audit/dsh-env-t04-gates-2026-10-08/task-record.json
 
 归属：ENV-T04「严格regression接唯一工厂和独立参考」，B 线（`tools/differential/`）。
 接手入口：主清单 [ENV-T04](../../tofix/README.md#env-t04)；[B 完整交付合同 §4](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；
-[工具 README](../../../../tools/differential/README.md)（“严格入口”“失败契约反例”“门槛覆盖 `self_checked`”三节）。
+[工具 README](../../../../tools/base-migration-baseline/differential/README.md)（“严格入口”“失败契约反例”“门槛覆盖 `self_checked`”三节）。
 交付范围：本会话是 B 线本包唯一生产执行者；只写 `tools/differential/`（`TestCommand.cs`、两项负例 fixture、README）、
 本交接、主清单 T04 行、`.audit/dsh-env-t04-gates-2026-10-08/` 与 `artifacts/environment/tests/gates-2026-10-08/`。
 core/base/net/AI/参考玩法与根 solution 未改，未提交/推送/reset/清理，未派生 agent。
@@ -125,7 +125,7 @@ core/base/net/AI/参考玩法与根 solution 未改，未提交/推送/reset/清
 
 - 任务状态/认领/证据：主清单 [ENV-T04](../../tofix/README.md#env-t04)（本包只回写该条，不自判父项验收）。
 - 方法与契约：`docs/design/post-core-agent-assignments.md` §4、`docs/design/environment-implementation-constraints.md` §9/§12、
-  [工具 README](../../../../tools/differential/README.md)（本包已更新）。
+  [工具 README](../../../../tools/base-migration-baseline/differential/README.md)（本包已更新）。
 - 本次证据：`tools/differential/fixtures/negative/suite-wiring-{missing-dimension,wrong-terminal}.json`、
   `artifacts/environment/tests/gates-2026-10-08/`（六项产物）、`.audit/dsh-env-t04-gates-2026-10-08/`
   （派单记录、`prefix-runs.log`、`postfix-runs.log`、`build-tools-final.log`、`postfix-product-summary.txt`、

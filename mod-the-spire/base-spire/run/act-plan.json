@@ -1,0 +1,596 @@
+{
+  "format": "engine-dsl/source-data@1",
+  "kind": "act-plan-source-data",
+  "source_path": "tools/base-migration-baseline/BaseSpire/Run/Content/base-spire.run.acts.json",
+  "source_sha256": "65bdd62fd9d4a3a94b60eb18fcea5d498be396d4576b924301cf6efc60cb6a83",
+  "data": {
+    "schemaVersion": 1,
+    "source": "Default ActModel/RunManager all-unlock singleplayer plan; explicit v0.109 encounter metadata (reference HEAD 2089659bd07920088b93226136c72b6b6ee590ad), matching the existing v0.109 Overgrowth migration",
+    "sharedAncients": [
+      "Darv"
+    ],
+    "acts": [
+      {
+        "id": "base-spire:overgrowth-act",
+        "sourceName": "Overgrowth",
+        "index": 0,
+        "normalRooms": 15,
+        "weakRooms": 3,
+        "eliteRooms": 15,
+        "events": [
+          "AromaOfChaos",
+          "ByrdonisNest",
+          "DenseVegetation",
+          "JungleMazeAdventure",
+          "LuminousChoir",
+          "MorphicGrove",
+          "SapphireSeed",
+          "SunkenStatue",
+          "TabletOfTruth",
+          "UnrestSite",
+          "Wellspring",
+          "WhisperingHollow",
+          "WoodCarvings",
+          "BrainLeech",
+          "CrystalSphere",
+          "DollRoom",
+          "FakeMerchant",
+          "PotionCourier",
+          "RanwidTheElder",
+          "RelicTrader",
+          "RoomFullOfCheese",
+          "SelfHelpBook",
+          "SlipperyBridge",
+          "StoneOfAllTime",
+          "Symbiote",
+          "TeaMaster",
+          "TheFutureOfPotions",
+          "TheLegendsWereTrue",
+          "ThisOrThat",
+          "WarHistorianRepy",
+          "WelcomeToWongos"
+        ],
+        "ancients": [
+          "Neow"
+        ],
+        "weak": [
+          "base-spire:fuzzy-wurm-crawler-weak",
+          "base-spire:nibbits-weak",
+          "base-spire:shrinker-beetle-weak",
+          "base-spire:slimes-weak"
+        ],
+        "normal": [
+          "base-spire:cubex-construct-normal",
+          "base-spire:flyconid-normal",
+          "base-spire:fogmog-normal",
+          "base-spire:inklets-normal",
+          "base-spire:mawler-normal",
+          "base-spire:nibbits-normal",
+          "base-spire:overgrowth-crawlers",
+          "base-spire:ruby-raiders-normal",
+          "base-spire:slimes-normal",
+          "base-spire:slithering-strangler-normal",
+          "base-spire:snapping-jaxfruit-normal",
+          "base-spire:vine-shambler-normal"
+        ],
+        "elite": [
+          "base-spire:bygone-effigy-elite",
+          "base-spire:byrdonis-elite",
+          "base-spire:phrog-parasite-elite"
+        ],
+        "boss": [
+          "base-spire:ceremonial-beast-boss",
+          "base-spire:the-kin-boss",
+          "base-spire:vantom-boss"
+        ]
+      },
+      {
+        "id": "base-spire:hive-act",
+        "sourceName": "Hive",
+        "index": 1,
+        "normalRooms": 14,
+        "weakRooms": 2,
+        "eliteRooms": 15,
+        "events": [
+          "Amalgamator",
+          "Bugslayer",
+          "ColorfulPhilosophers",
+          "ColossalFlower",
+          "FieldOfManSizedHoles",
+          "InfestedAutomaton",
+          "LostWisp",
+          "SpiritGrafter",
+          "TheLanternKey",
+          "ZenWeaver",
+          "BrainLeech",
+          "CrystalSphere",
+          "DollRoom",
+          "FakeMerchant",
+          "PotionCourier",
+          "RanwidTheElder",
+          "RelicTrader",
+          "RoomFullOfCheese",
+          "SelfHelpBook",
+          "SlipperyBridge",
+          "StoneOfAllTime",
+          "Symbiote",
+          "TeaMaster",
+          "TheFutureOfPotions",
+          "TheLegendsWereTrue",
+          "ThisOrThat",
+          "WarHistorianRepy",
+          "WelcomeToWongos"
+        ],
+        "ancients": [
+          "Orobas",
+          "Pael",
+          "Tezcatara"
+        ],
+        "weak": [
+          "base-spire:bowlbugs-weak",
+          "base-spire:exoskeletons-weak",
+          "base-spire:thieving-hopper-weak",
+          "base-spire:tunneler-weak"
+        ],
+        "normal": [
+          "base-spire:bowlbugs-normal",
+          "base-spire:chompers-normal",
+          "base-spire:exoskeletons-normal",
+          "base-spire:hunter-killer-normal",
+          "base-spire:louse-progenitor-normal",
+          "base-spire:mytes-normal",
+          "base-spire:ovicopter-normal",
+          "base-spire:slumbering-beetle-normal",
+          "base-spire:spiny-toad-normal",
+          "base-spire:the-obscura-normal"
+        ],
+        "elite": [
+          "base-spire:decimillipede-elite",
+          "base-spire:entomancer-elite",
+          "base-spire:infested-prisms-elite"
+        ],
+        "boss": [
+          "base-spire:kaiser-crab-boss",
+          "base-spire:knowledge-demon-boss",
+          "base-spire:the-insatiable-boss"
+        ]
+      },
+      {
+        "id": "base-spire:glory-act",
+        "sourceName": "Glory",
+        "index": 2,
+        "normalRooms": 13,
+        "weakRooms": 2,
+        "eliteRooms": 15,
+        "events": [
+          "BattlewornDummy",
+          "GraveOfTheForgotten",
+          "HungryForMushrooms",
+          "Reflections",
+          "RoundTeaParty",
+          "Trial",
+          "TinkerTime",
+          "BrainLeech",
+          "CrystalSphere",
+          "DollRoom",
+          "FakeMerchant",
+          "PotionCourier",
+          "RanwidTheElder",
+          "RelicTrader",
+          "RoomFullOfCheese",
+          "SelfHelpBook",
+          "SlipperyBridge",
+          "StoneOfAllTime",
+          "Symbiote",
+          "TeaMaster",
+          "TheFutureOfPotions",
+          "TheLegendsWereTrue",
+          "ThisOrThat",
+          "WarHistorianRepy",
+          "WelcomeToWongos"
+        ],
+        "ancients": [
+          "Nonupeipe",
+          "Tanx",
+          "Vakuu"
+        ],
+        "weak": [
+          "base-spire:devoted-sculptor-weak",
+          "base-spire:scrolls-of-biting-weak",
+          "base-spire:turret-operator-weak"
+        ],
+        "normal": [
+          "base-spire:axebots-normal",
+          "base-spire:construct-menagerie-normal",
+          "base-spire:fabricator-normal",
+          "base-spire:frog-knight-normal",
+          "base-spire:globe-head-normal",
+          "base-spire:owl-magistrate-normal",
+          "base-spire:scrolls-of-biting-normal",
+          "base-spire:slimed-berserker-normal",
+          "base-spire:the-lost-and-forgotten-normal"
+        ],
+        "elite": [
+          "base-spire:knights-elite",
+          "base-spire:mecha-knight-elite",
+          "base-spire:soul-nexus-elite"
+        ],
+        "boss": [
+          "base-spire:aeonglass-boss",
+          "base-spire:queen-boss",
+          "base-spire:test-subject-boss"
+        ]
+      }
+    ],
+    "encounters": [
+      {
+        "id": "base-spire:bygone-effigy-elite",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:byrdonis-elite",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:ceremonial-beast-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:cubex-construct-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:flyconid-normal",
+        "tags": [
+          "base-spire:mushroom",
+          "base-spire:slimes"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:fogmog-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:fuzzy-wurm-crawler-weak",
+        "tags": [
+          "base-spire:crawler"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:inklets-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:mawler-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:nibbits-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:nibbits-weak",
+        "tags": [
+          "base-spire:nibbit"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:overgrowth-crawlers",
+        "tags": [
+          "base-spire:shrinker",
+          "base-spire:crawler"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:phrog-parasite-elite",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:ruby-raiders-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:shrinker-beetle-weak",
+        "tags": [
+          "base-spire:shrinker"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:slimes-normal",
+        "tags": [
+          "base-spire:slimes"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:slimes-weak",
+        "tags": [
+          "base-spire:slimes"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:slithering-strangler-normal",
+        "tags": [
+          "base-spire:jaxfruit",
+          "base-spire:slimes"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:snapping-jaxfruit-normal",
+        "tags": [
+          "base-spire:mushroom",
+          "base-spire:jaxfruit"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:the-kin-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:vantom-boss",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:vine-shambler-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:bowlbugs-normal",
+        "tags": [
+          "base-spire:workers"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:bowlbugs-weak",
+        "tags": [
+          "base-spire:workers"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:chompers-normal",
+        "tags": [
+          "base-spire:chomper"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:decimillipede-elite",
+        "enemyIds": [],
+        "roomType": "elite",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:entomancer-elite",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:exoskeletons-normal",
+        "tags": [
+          "base-spire:exoskeletons"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:exoskeletons-weak",
+        "tags": [
+          "base-spire:exoskeletons"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:hunter-killer-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:kaiser-crab-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:infested-prisms-elite",
+        "enemyIds": [],
+        "roomType": "elite",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:knowledge-demon-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:louse-progenitor-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:mytes-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:ovicopter-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:slumbering-beetle-normal",
+        "tags": [
+          "base-spire:workers"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:spiny-toad-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:the-insatiable-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:the-obscura-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:thieving-hopper-weak",
+        "tags": [
+          "base-spire:thieves"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:tunneler-weak",
+        "tags": [
+          "base-spire:burrower"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:axebots-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:construct-menagerie-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:devoted-sculptor-weak",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:aeonglass-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:fabricator-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:frog-knight-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:globe-head-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:knights-elite",
+        "tags": [
+          "base-spire:knights"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:mecha-knight-elite",
+        "enemyIds": [],
+        "roomType": "elite",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:owl-magistrate-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:queen-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:scrolls-of-biting-normal",
+        "tags": [
+          "base-spire:scrolls"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:scrolls-of-biting-weak",
+        "tags": [
+          "base-spire:scrolls"
+        ],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:slimed-berserker-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:soul-nexus-elite",
+        "enemyIds": [],
+        "roomType": "elite",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:test-subject-boss",
+        "enemyIds": [],
+        "roomType": "boss",
+        "tags": [],
+        "unsupportedFormation": "Source encounter identity/tags retained; spawn formation not imported"
+      },
+      {
+        "id": "base-spire:the-lost-and-forgotten-normal",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      },
+      {
+        "id": "base-spire:turret-operator-weak",
+        "tags": [],
+        "formationSource": "base-spire.encounters.json"
+      }
+    ]
+  }
+}

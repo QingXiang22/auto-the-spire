@@ -27,13 +27,13 @@
 
 ## 实际修改文件
 
-- [silent-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/silent-cards.spire)
-- [defect-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/defect-cards.spire)
-- [necrobinder-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/necrobinder-cards.spire)
-- [regent-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/regent-cards.spire)
-- [colorless-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/colorless-cards.spire)
-- [RemainingCardFamiliesChecks.cs](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/RemainingCardFamiliesChecks.cs)
-- [Program.cs](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/Program.cs)：新增 `--remaining-card-families-only` 和默认入口中的实际调用；新增检查先于旧 SliceChecks 执行，未改旧断言或身份 golden。
+- [silent-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/silent-cards.spire)
+- [defect-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/defect-cards.spire)
+- [necrobinder-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/necrobinder-cards.spire)
+- [regent-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/regent-cards.spire)
+- [colorless-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/colorless-cards.spire)
+- [RemainingCardFamiliesChecks.cs](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/RemainingCardFamiliesChecks.cs)
+- [Program.cs](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs)：新增 `--remaining-card-families-only` 和默认入口中的实际调用；新增检查先于旧 SliceChecks 执行，未改旧断言或身份 golden。
 - [主清单](../../tofix/README.md)：仅本会话 ENV-T12 执行者认领段；本固定交接报告。
 - [inventory.py](../../../../.audit/dsh-card-families-2026-10-10/inventory.py)、[matrix.py](../../../../.audit/dsh-card-families-2026-10-10/matrix.py)、[coverage-matrix.md](../../../../.audit/dsh-card-families-2026-10-10/coverage-matrix.md)
 
@@ -84,16 +84,16 @@ family01 的关键修复包括使用 `draw = { amount = ... }`、`modifyEnergy`�
 | [Finisher](../../../../sts2/src/Core/Models/Cards/Finisher.cs#L26) | 1费；每次6→8伤害，次数为本回合该玩家已完成Attack牌数 | `cardPlaysThisTurn { type=attack phase=finished }` 可映射；需确认不含当前牌且按拥有者计数 |
 | [Restlessness](../../../../sts2/src/Core/Models/Cards/Restlessness.cs#L26) | 0费、Retain；没有其他手牌才逐张抽2→3，然后加能量2→3 | 只有hand-count与pileCountAtLeast线索；空手条件及逐张抽牌时序尚未核对 |
 
-另有动态值候选暂不能按现有接口直接实现：[Flechettes](../../../../sts2/src/Core/Models/Cards/Flechettes.cs) 要数手牌Skill，而 [CountSourceOf](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SpireCardSource.cs#L477) 只接受 exhaust、hand 或 hand/attack；[MindBlast](../../../../sts2/src/Core/Models/Cards/MindBlast.cs) 要数draw，当前上述分支不接受draw；[DoubleEnergy](../../../../sts2/src/Core/Models/Cards/DoubleEnergy.cs) 要读取支付费用后的当前energy，`energyX` 只是已付X，不可替代。未为这些候选创建假声明。
+另有动态值候选暂不能按现有接口直接实现：[Flechettes](../../../../sts2/src/Core/Models/Cards/Flechettes.cs) 要数手牌Skill，而 [CountSourceOf](../../../../tools/base-migration-baseline/BaseSpire/Cards/SpireCardSource.cs#L477) 只接受 exhaust、hand 或 hand/attack；[MindBlast](../../../../sts2/src/Core/Models/Cards/MindBlast.cs) 要数draw，当前上述分支不接受draw；[DoubleEnergy](../../../../sts2/src/Core/Models/Cards/DoubleEnergy.cs) 要读取支付费用后的当前energy，`energyX` 只是已付X，不可替代。未为这些候选创建假声明。
 
-[SourceEffectPrograms](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/SourceEffectPrograms.cs#L114) 中 `repeatForCount` 会先快照次数；`withCount` 有词法快照。不得为了凑足族人数越过接口限制。[Fisticuffs](../../../../sts2/src/Core/Models/Cards/Fisticuffs.cs#L32) 的格挡依赖攻击结果 TotalDamage+OverkillDamage；[GoldAxe](../../../../sts2/src/Core/Models/Cards/GoldAxe.cs#L21) 依赖全战斗已完成出牌数；[GangUp](../../../../sts2/src/Core/Models/Cards/GangUp.cs#L18) 是多人专用且依赖其他玩家攻击命中历史；[Shiv](../../../../sts2/src/Core/Models/Cards/Shiv.cs#L23) 目标和重复次数受Power影响，不能直接当固定4伤害衍生牌。
+[SourceEffectPrograms](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/SourceEffectPrograms.cs#L114) 中 `repeatForCount` 会先快照次数；`withCount` 有词法快照。不得为了凑足族人数越过接口限制。[Fisticuffs](../../../../sts2/src/Core/Models/Cards/Fisticuffs.cs#L32) 的格挡依赖攻击结果 TotalDamage+OverkillDamage；[GoldAxe](../../../../sts2/src/Core/Models/Cards/GoldAxe.cs#L21) 依赖全战斗已完成出牌数；[GangUp](../../../../sts2/src/Core/Models/Cards/GangUp.cs#L18) 是多人专用且依赖其他玩家攻击命中历史；[Shiv](../../../../sts2/src/Core/Models/Cards/Shiv.cs#L23) 目标和重复次数受Power影响，不能直接当固定4伤害衍生牌。
 
 ## 接续操作与工具注意事项
 
 1. 从 `git status --short` 开始；当前全仓存在大量其他负责人的修改/未跟踪文件。不要 reset、clean、提交或覆盖他人文件；只改用户列出的内容源、新族检查、一次性入口、综合矩阵与本认领段。
 2. 读 [总入口](../../../README.md)、[主清单](../../tofix/README.md) ENV-T05/T06/T12、相关 AGENTS、[基础开发指南](../../../design/mod-the-spire/base-development-guide.md) 和 [DSL指南](../../../dsl/0.0.1/dsl-usage.md)；先核对已交付ID，登记新会话和一个完整族。不要从历史报告重新做已交付牌。
 3. 库存和矩阵可依次运行 `python .audit/dsh-card-families-2026-10-10/inventory.py`、`python .audit/dsh-card-families-2026-10-10/matrix.py`。矩阵脚本将显式families映射当作本会话已通过证据；新增族应先实际通过检查，再更新映射，不能仅靠生成矩阵将行为标pass。
-4. `family01.py`、`family04.py`、`family05.py` 等早期生成脚本包含修正前版本或已删除受阻草案，**不要直接重跑**。以当前正式DSL和 [检查预期](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/RemainingCardFamiliesChecks.cs) 为交付事实；audit脚本不是正式源。
+4. `family01.py`、`family04.py`、`family05.py` 等早期生成脚本包含修正前版本或已删除受阻草案，**不要直接重跑**。以当前正式DSL和 [检查预期](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/RemainingCardFamiliesChecks.cs) 为交付事实；audit脚本不是正式源。
 5. 串行使用上述专用检查入口；同工作区不得并发写obj/bin。同ID已存在正式包时用正式族检查，避免多文件探针冲突误判语义。初次工具项目 `dotnet build tools/base-spire-dev/BaseSpire.Dev.csproj --nologo` 退出0，但未完成最终全量门禁。
 6. 最近文档检查 `python tools/doc-check/check_docs.py`（`pwsh-287`）退出0，扫描341个Markdown文件、0问题。新增内容可能改变公开构建身份，不能更新固定Act1夹具或降低身份门槛；交负责人审阅重录。
 

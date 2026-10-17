@@ -42,7 +42,7 @@
 ### 本包确认的关键事实（供接手直接复用）
 
 - 仓库**不存在** `UpgradeReward`；派单所指占位实现叫 **`UpgradeLongTermCard`**，位于
-  `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs:4684-4737`，且**只在 `hasRun && actMap is null` 时注册**
+  `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs:4684-4737`，且**只在 `hasRun && actMap is null` 时注册**
   （`CombatSlicePackage.cs:4663-4738`）⇒ DevMap 下**完全没有奖励动作**，`MapPhase = 2` 直接开放 `ChooseMapPoint`。
 - 开局根因：`CombatSlicePackage.cs:3884 setupSteps.Add(setup.Call(startNextRoom!.Symbol))` **不区分 `actMap`**，
   开局即铺第一间房战斗，与 `MapPhase = 0` 并存 ⇒ 派单所述「DevMap 开局同时暴露 PlayCard/EndTurn/ChooseMapPoint」。
@@ -65,8 +65,8 @@
 - `sts2/src/Core/Models/EncounterModel.cs:64-100`、`sts2/src/Core/Rooms/CombatRoom.cs:51,235,267`、`sts2/src/Core/Rooms/TreasureRoom.cs:82`；
 - `sts2/src/Core/Commands/{PlayerCmd.cs:141,PotionCmd.cs:28}`、`sts2/src/Core/Entities/Players/Player.cs:34,42,166,581-613,624`；
 - `sts2/src/Core/Random/Rng.cs:89-109,145-164,255`；
-- base 侧：`mod-the-spire/base-spire/BaseSpire/Slice/MapRoomWiring.cs`、`:CombatSlicePackage.cs`（上表行号）、
-  `SinglePlayer/BaseSpireRuntimeFactory.cs`、`SinglePlayer/RunConfiguration.cs`、`Slice/SpireCardSource.cs`、`Slice/SourceWeightedPick.cs`；
+- base 侧：`mod-the-spire/base-spire/BaseSpire/Rooms/MapRoomWiring.cs`、`:CombatSlicePackage.cs`（上表行号）、
+  `SinglePlayer/BaseSpireRuntimeFactory.cs`、`SinglePlayer/RunConfiguration.cs`、`Cards/SpireCardSource.cs`、`Randomness/SourceWeightedPick.cs`；
 - 引擎侧：`core-the-spire/Core.TheSpire/Engine/{RandomProfile,RandomService,Session.Instructions,Schema,PackageBuilder}.cs`。
 
 ## 源码 / DLL 摘要、config、seed、run_id、命令返回码

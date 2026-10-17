@@ -1,5 +1,10 @@
 # review历史记录与证据索引
 
+2026-10-18：[纯 DSL base 首批切换](2026-10-18/base-dsl-native-cutover-2026-10-18.md)保存最终目录、生产切换、源范围、实际验证及功能回退边界；[冻结检查清单](2026-10-18/base-dsl-check-disposition.json)逐组保留原检查与 suite 去向。当前状态仍只见主清单。
+
+
+2026-10-18：[base DSL迁移的设计前改动与纠偏记录](2026-10-18/base-dsl-migration-checkpoint-2026-10-18.md)保留用户关于纯DSL和直接切换的决定、已发生的文件移动与加载器实验、实际检查结果和未完成依赖；不是完整迁移验收。接续先读关联规格／设计／任务，当前状态只看主清单。
+
 2026-10-18：[遗物下一批候选评估](2026-10-18/relic-next-batch-assessment-2026-10-18.md)登记UnceasingTop、TheAbacus、BurningSticks、Akabeko、ParryingShield各自缺口与建议顺序（先TheAbacus洗牌时点，再随机单体伤害解锁三件）；无代码改动。
 
 2026-10-18：[遗物伤害加性修正与StrikeDummy／FakeStrikeDummy](2026-10-18/relic-damage-additive-2026-10-18.md)新增modify-damage-additive与牌来源过滤（标签/升级/附魔），并记录标签名实为ase-spire:strike这一事实；覆盖推进到90/90可执行、未实现206（含MiniatureCannon与MysticLighter两个过滤分支）。

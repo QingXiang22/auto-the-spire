@@ -21,7 +21,7 @@ dispatch_record: .audit/dsh-env-t04-init-diagnosis-2026-10-08/task-record.json
 工作包：[B 完整交付合同](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；
 实现约束：[§10 参考差异与失败处理](../../../design/environment-implementation-constraints.md#10-参考差异与失败处理) 与
 [ENV-T04 初始洗牌的派生对齐边界](../../../design/environment-implementation-constraints.md#env-t04初始洗牌的派生对齐边界2026-10-08)；
-工具入口：[tools/differential/README.md](../../../../tools/differential/README.md)。
+工具入口：[tools/differential/README.md](../../../../tools/base-migration-baseline/differential/README.md)。
 
 ## 结论摘要（可直接引用的读数）
 
@@ -143,7 +143,7 @@ mtime 2026-10-05T16:53:49（源码未变，与 46 向量校准同一次参考构
 3. `sts2/src/Core/Models/ActModel.cs:334-347` 本幕事件池（本幕 + `ModelDb.AllSharedEvents`，按 epoch 过滤）`UnstableShuffle(rng)` —— 参考对应 `RunState.cs:295-298`，**30 次消费的来源**；
    `:348-359` 前 `NumberOfWeakEncounters` 槽弱袋 `AddWithoutRepeatingTags`；`:360-371` 补齐到 `GetNumberOfRooms` 的常规袋同法；
    `:372-383` **精英固定 15 槽**（同一个袋 + 标签回避）；`:384` `rng.NextItem(AllBossEncounters)`；`:385` `rng.NextItem(解锁古代 ∪ 本幕共享子集)`。
-4. base 侧接入点：`mod-the-spire/base-spire/BaseSpire/Slice/SliceEncounterPool.cs:95` 与 `Slice/CombatSlicePackage.cs:3815`
+4. base 侧接入点：`mod-the-spire/base-spire/BaseSpire/Enemies/SliceEncounterPool.cs:95` 与 `Composition/CombatSlicePackage.cs:3815`
    （当前只用 `up_front` 预生成整幕普通队列）、`SinglePlayer/SinglePlayerContent.cs:38-42`（池只绑 `UpFront`/`Shuffle` 两条引擎流）、
    `SinglePlayer/BaseSpireRuntimeFactory.cs:167-183`（自述这些前置阶段与精英/BOSS/古代人未接入）。
    **注意：base 现有普通队列算法本身逐字一致，A 线要补的是「前置阶段 + 精英/BOSS/古代人段」，不是重写队列；**

@@ -2,7 +2,7 @@
 
 日期：2026-10-10。关联[主清单ENV-T06](../../tofix/README.md#env-t06)的 `ENV-T06-next-turn-energy-20261010` 与[T12内容包](../../tofix/README.md#env-t12)的 `ENV-T12-ready-content-20261010`。本记录保存此构建与协调证据；当前认领、状态和接续仍只看主清单。
 
-接手第一步：读[并发开发步骤](../../../design/mod-the-spire/base-development-guide.md#与共享机制开发并发补卡)，按自己的输出目录构建并运行局部DLL。组合下一回合能量的卡先看同页[作者写法](../../../design/mod-the-spire/base-development-guide.md#编写下一回合能量收益)，复用已注册Power；Outmaneuver已由负责人交付，不重复编写。
+接手第一步：读[并发开发步骤](../../../../tools/base-migration-baseline/docs/base-development-guide.md#与共享机制开发并发补卡)，按自己的输出目录构建并运行局部DLL。组合下一回合能量的卡先看同页[作者写法](../../../../tools/base-migration-baseline/docs/base-development-guide.md#编写下一回合能量收益)，复用已注册Power；Outmaneuver已由负责人交付，不重复编写。
 
 ## 文件边界和实际协调
 

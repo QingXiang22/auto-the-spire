@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础战斗内容批**（第二小批）——**HP 损失（`lose_hp`）原语 + `Beckon` 状态牌** |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："…**死亡/胜负**…来源对照和生命周期场景成立"）；来源：`ContentSource/status-cards.spire:25-60` |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`lose_hp` 步骤 + hook 允许面）、`Slice/CombatSlicePackage.cs`（`LosePlayerHp` 过程 + 步骤降级）、`Slice/Content/slice-content.author`（Beckon）、`BaseSpire.Slice.Tests/SliceFrontendBeckonChecks.cs`（新增 4 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："…**死亡/胜负**…来源对照和生命周期场景成立"）；来源：`Cards/Content/status-cards.spire:25-60` |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`lose_hp` 步骤 + hook 允许面）、`Composition/CombatSlicePackage.cs`（`LosePlayerHp` 过程 + 步骤降级）、`Authoring/Examples/slice-content.author`（Beckon）、`BaseSpire.Slice.Tests/Cards/SliceFrontendBeckonChecks.cs`（新增 4 项） |
 | 状态 | **本小批完成**；B-06a 其余子项未完成（见 §6） |
 | 前置 | [第一小批](b-06a-status-cards-2026-10-02.md)（`unplayable`/`ethereal`/`Status`） |
 
@@ -75,9 +75,9 @@ card Beckon {
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorSteps.LoseHp`、hook 允许面）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`LosePlayerHp`、`lose_hp` 步骤降级）
-- `BaseSpire/Slice/Content/slice-content.author`（Beckon）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorSteps.LoseHp`、hook 允许面）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`LosePlayerHp`、`lose_hp` 步骤降级）
+- `BaseSpire/Authoring/Examples/slice-content.author`（Beckon）
 - 检查：`SliceFrontendBeckonChecks.cs`（新增 4 项）、`SliceFrontendStatusCardChecks.cs`（卡数）、
   `SliceFrontendChecks/DomainChecks/HookChecks/PlayHookChecks/BatchChecks/CompatibilityChecks.cs`（限定到冻结卡片集）、
   `SliceFrontendHookStepChecks.cs`（hook 允许面）

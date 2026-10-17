@@ -35,7 +35,7 @@
 | 触发面是固定方法列表 | ✅ 包可声明事件与订阅，带优先级、重检谓词、作用域绑定 | [Schema.cs:221-249](../../../../core-the-spire/Core.TheSpire/Engine/Schema.cs#L221-L249)、[Schema.cs:370-391](../../../../core-the-spire/Core.TheSpire/Engine/Schema.cs#L370-L391) |
 | —（本报告未列）目标查询无法排序/筛选 | ✅ `Query` 已支持 `Where` / `Sort` / `Take` / `Skip` / `First` / `Count` / `Exists` / `Aggregate`；算术含 `Minimum` / `Maximum` | [PackageBuilder.cs:422-436](../../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs#L422-L436)、[PackageBuilder.cs:357-359](../../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs#L357-L359) |
 
-而且这套引擎**不是纸面设计**：`Engine` 检查 32/32、`base-spire` 切片检查 21/21 通过，其中已经有一条检查直接验证"第二个包按 qualified id 扩展 `base-spire` 的 `Player` 类型并追加字段"[SliceChecks.cs:150-162](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceChecks.cs#L150-L162)，而 `Monster` / `Player` / `Power` 都已经标了 `ExtensibleFields`[CombatSlicePackage.cs:40-76](../../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L40-L76)。
+而且这套引擎**不是纸面设计**：`Engine` 检查 32/32、`base-spire` 切片检查 21/21 通过，其中已经有一条检查直接验证"第二个包按 qualified id 扩展 `base-spire` 的 `Player` 类型并追加字段"[SliceChecks.cs:150-162](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs#L150-L162)，而 `Monster` / `Player` / `Power` 都已经标了 `ExtensibleFields`[CombatSlicePackage.cs:40-76](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L40-L76)。
 
 **因此本文的结论需要改写为：**
 
@@ -123,7 +123,7 @@
 | 遗物 | [Content.cs:186](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Content.cs#L186) `RelicDefinition` | **仅 C#，且只有数据没有行为** |
 | 遭遇 / Act 池 | `ContentDsl.cs` | JSON |
 
-**遗物是纯数据**：`RelicDefinition` 只有 `Id` / `Rarity` / `InSharedPool` / `IsFallback` / `IsStackable` / `CharacterPoolIds`，**没有任何行为字段**。行为全部靠 C# `IRunHook` / `IRuleHook` 实现，例如 [BaseSpirePackage.cs:411-537](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs#L411-L537) 里的 `BurningBloodRunHook`、`CharonsAshesHook`、`RedSkullHook`。
+**遗物是纯数据**：`RelicDefinition` 只有 `Id` / `Rarity` / `InSharedPool` / `IsFallback` / `IsStackable` / `CharacterPoolIds`，**没有任何行为字段**。行为全部靠 C# `IRunHook` / `IRuleHook` 实现，例如 [BaseSpirePackage.cs:411-537](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/tools/base-migration-baseline/BaseSpire.Legacy/BaseSpirePackage.cs#L411-L537) 里的 `BurningBloodRunHook`、`CharonsAshesHook`、`RedSkullHook`。
 
 ### 3.2 触发与扩展面
 

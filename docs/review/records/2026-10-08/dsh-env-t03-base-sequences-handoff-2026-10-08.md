@@ -30,7 +30,7 @@ updated_at: 2026-10-08T18:08:41+08:00
 
 1. **不要重写**元数据类型与构造期闭合：`mod-the-spire/base-spire/BaseSpire/SinglePlayer/BasePublicSemantics.cs`
    已有内容目录/集合用途/已知位置/终局含义四类含义与 `BasePublicSemanticsBuilder.Build`；本包只在它上面
-   加 `Sequence` 并改集合用途，8 条原有检查在 `BaseSpire.Slice.Tests/PublicSemanticsChecks.cs`。
+   加 `Sequence` 并改集合用途，8 条原有检查在 `BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs`。
 2. 下一步（C 线）：按「C 接入步骤」把 `Use` 翻成 net 的 `PublicCollectionRule.Sequence(ownerKindEngineTypeId)`，
    并给 `PublicSnapshotProjector` 加通用 owner **种类**唯一解析（旧固定 `owner_ref` 路径保留、wire 不改）。
    现状：`net-the-spire/Net.TheSpire.Host/FormalDevMetadata.cs` 的 `switch` 对 `Sequence` 走 `_ =>` 抛
@@ -95,7 +95,7 @@ owner 规则（本包新增、由构造期强制）：owner 必须是**所选投
 3. **有序载荷不得泄漏隐藏事实**（构造期抛）：标成 `Sequence` 的集合必须 `IdentityVisible && OrderVisible`，
    否则不得用有序载荷承载（DrawPile 这类声明隐藏成员/顺序的集合只能走 `Pile`）。
 4. **owner 与摘要一致**（检查逐行核对）：owner 必须是投影里的真实种类，且 use+owner 出现在 `CanonicalText()` 里
-   （即进入 `Digest` 与 `PublicBuildId`）。`BaseSpire.Slice.Tests/PublicSemanticsChecks.cs` 新增第 9 条检查
+   （即进入 `Digest` 与 `PublicBuildId`）。`BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs` 新增第 9 条检查
    断言 1–4 的整组（含 `sequence=6` / `notPublished=2`），并把原第 6 条的 owner 分支从 `Group` 扩到
    `Group || Sequence`、逐条核对 6 条 sequence 的元素种类。
 
@@ -108,7 +108,7 @@ owner 规则（本包新增、由构造期强制）：owner 必须是**所选投
 
   | 命令 | 返回码 | 结果 | 日志 |
   | --- | --- | --- | --- |
-  | `dotnet build mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj -v q` | 0 | 0 错误 / 1 警告（`Slice/SpirePowerSource.cs(1241,39)` CS8604，预存在） | `01-base-build.txt` |
+  | `dotnet build mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj -v q` | 0 | 0 错误 / 1 警告（`Powers/SpirePowerSource.cs(1241,39)` CS8604，预存在） | `01-base-build.txt` |
   | `dotnet build AutoTheSpire.sln -v q` | 1 | 唯一错误在 C 线在制文件 `net-the-spire/Net.TheSpire/Projection/DerivedPublicProfile.cs(375,29)` CS1739（见下节） | `02-root-build.txt` |
   | `dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests` | 0 | `All 95 engine checks passed.` | `03-engine-tests.txt` |
   | `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests` | 0 | `All 333 slice checks passed.`（原 332 + 本包新增 1 条判别） | `04-slice-tests.txt` |
@@ -129,7 +129,7 @@ owner 规则（本包新增、由构造期强制）：owner 必须是**所选投
   的相对路径（深度多算了一层，如 `../../../../.audit/…`），非本包写范围，未改。
   `git diff --check` 返回码 0（只有 LF/CRLF 提示，无空白错误）。
 - **源码 / 产物摘要**（SHA-256 前 16 位）：`SinglePlayer/BasePublicSemantics.cs` =
-  `3a09d1297a45dfb4`（18:03:19）、`BaseSpire.Slice.Tests/PublicSemanticsChecks.cs` = `aa6207a02b8a906c`（18:04:17）、
+  `3a09d1297a45dfb4`（18:03:19）、`BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs` = `aa6207a02b8a906c`（18:04:17）、
   产物 `BaseSpire/bin/Debug/net9.0/BaseSpire.dll` = `ce81f096d5935ea7`（18:05:33）、
   测试 `BaseSpire.Slice.Tests/bin/Debug/net9.0/BaseSpire.Slice.Tests.dll` = `8f7a2e601aad7303`（18:05:44）
   —— 两个 DLL 的写入时间均晚于其源码，证据不来自陈旧产物。

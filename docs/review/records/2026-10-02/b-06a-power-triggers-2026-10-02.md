@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础战斗内容批**（第九小批）——**能力的声明式触发点** + `FeelNoPain` |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`ContentSource/ironclad-powers.spire:28`（能力）+ `ContentSource/ironclad-cards.spire:1976`（卡） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`trigger`/`when-card-type`/`trigger-effect` 三个声明键 + 校验）、`Slice/SliceManifest.cs`（`SlicePower` 三个属性）、`Slice/CombatSlicePackage.cs`（触发链 + 消耗点接线）、`Slice/Content/slice-content.author`（能力 + 卡）、`net` 目录、切片检查（新增 5 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`Powers/Content/ironclad-powers.spire:28`（能力）+ `Cards/Content/ironclad-cards.spire:1976`（卡） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`trigger`/`when-card-type`/`trigger-effect` 三个声明键 + 校验）、`Composition/SliceManifest.cs`（`SlicePower` 三个属性）、`Composition/CombatSlicePackage.cs`（触发链 + 消耗点接线）、`Authoring/Examples/slice-content.author`（能力 + 卡）、`net` 目录、切片检查（新增 5 项） |
 | 状态 | **本小批完成**；B-06a 其余子项仍未完成（见 §6） |
 | 前置 | 第八小批（`apply_power_self`） |
 
@@ -93,10 +93,10 @@ power FeelNoPain {
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorPowerTrigger`、`PowerTriggerEffect`、三个键与校验、遮蔽改名）
-- `BaseSpire/Slice/SliceManifest.cs`（`SlicePower.Trigger/WhenCardType/TriggerEffect`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`TriggerAfterCardExhausted` + 声明链 + 两条消耗路径接线）
-- `BaseSpire/Slice/Content/slice-content.author`（`power feel-no-pain` + `card feel-no-pain`）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorPowerTrigger`、`PowerTriggerEffect`、三个键与校验、遮蔽改名）
+- `BaseSpire/Composition/SliceManifest.cs`（`SlicePower.Trigger/WhenCardType/TriggerEffect`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`TriggerAfterCardExhausted` + 声明链 + 两条消耗路径接线）
+- `BaseSpire/Authoring/Examples/slice-content.author`（`power feel-no-pain` + `card feel-no-pain`）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（目录内容 ID）
 - `tools/dependency-check/check_dependencies.py`（遮蔽检查 + 新路径同名类型集合）
 - 切片检查：`SliceFrontendPowerTriggerChecks.cs`（新增 5 项）、`SliceFixtures.cs`、`SliceChecks.cs`、两处能力计数

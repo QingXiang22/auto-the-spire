@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-06a 基础战斗内容批**（第三小批）——基础牌第一组（来源逐条对照）+ **胜利终局**生命周期场景 |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："基础/升级牌…典型多敌…死亡/胜负；逐机制更新net profile/coverage"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（字面量参数步骤 `lose_hp:<n>`）、`Slice/CombatSlicePackage.cs`（该步骤的降级）、`Slice/Content/slice-content.author`（3 张卡）、`net` 公开目录（3 个新内容 ID）、切片检查（新增 4 项 + 4 处检查"限定到冻结卡片集"的重构） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（字面量参数步骤 `lose_hp:<n>`）、`Composition/CombatSlicePackage.cs`（该步骤的降级）、`Authoring/Examples/slice-content.author`（3 张卡）、`net` 公开目录（3 个新内容 ID）、切片检查（新增 4 项 + 4 处检查"限定到冻结卡片集"的重构） |
 | 状态 | **本小批完成**；B-06a 其余子项仍未完成（见 §5） |
 | 前置 | [第一小批](b-06a-status-cards-2026-10-02.md) / [第二小批](b-06a-losehp-beckon-2026-10-02.md) |
 
@@ -76,9 +76,9 @@
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`lose_hp:<n>` 字面量参数）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（该步骤的降级分支）
-- `BaseSpire/Slice/Content/slice-content.author`（IronWave / TwinStrike / Breakthrough）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`lose_hp:<n>` 字面量参数）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（该步骤的降级分支）
+- `BaseSpire/Authoring/Examples/slice-content.author`（IronWave / TwinStrike / Breakthrough）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（目录内容 ID）
 - 切片检查：`SliceFrontendBasicCardChecks.cs`（新增 4 项）、`SliceFixtures.cs`（`AuthoredBeyondSlice` + 显式升级数值）、
   `SliceFrontendChecks/DomainChecks/HookChecks/PlayHookChecks/BatchChecks/CompatibilityChecks.cs`（限定到切片卡片集）

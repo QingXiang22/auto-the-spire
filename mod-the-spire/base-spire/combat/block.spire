@@ -1,0 +1,10 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Unpowered block does not use card/power additive or multiplicative modifiers.
+procedure GainUnpoweredBlock {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  body = {
+    set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), amount)) }
+  }
+}

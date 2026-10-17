@@ -8,13 +8,13 @@
 
 配置只接受Ironclad、A0、全解锁、单人及`sts2-v0.109-xxhash64@1`和对应内容元数据。`dev`、`dev-map`继续保留单幕初始化和既有身份；它们不隐式切换为多幕计划。`Ironclad`和`Full`完整身份仍不开放。
 
-[RunActPlan](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/RunActPlan.cs)读取唯一[版本化幕数据](../../../mod-the-spire/base-spire/BaseSpire/Content/base-spire.run.acts.json)。数据包含每幕完整事件/遭遇/Boss/古代人身份与源顺序、标签、地图长度和已有编队声明；不能执行的编队/敌人保留原身份，实际进入时明确失败。该数据摘要加入构建身份。Overgrowth三个遭遇的v0.109标签迁移与既有版本配置一致；冻结源码和v0.109元数据的差异显式记录，不改参考玩法。
+[RunActPlan](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/RunActPlan.cs)读取唯一[版本化幕数据](../../../tools/base-migration-baseline/BaseSpire/Run/Content/base-spire.run.acts.json)。数据包含每幕完整事件/遭遇/Boss/古代人身份与源顺序、标签、地图长度和已有编队声明；不能执行的编队/敌人保留原身份，实际进入时明确失败。该数据摘要加入构建身份。Overgrowth三个遭遇的v0.109标签迁移与既有版本配置一致；冻结源码和v0.109元数据的差异显式记录，不改参考玩法。
 
 依据为`ActModel.GetDefaultList/GenerateRooms`、`RunManager.GenerateRooms/EnterNextAct/EnterAct/SetActInternal`、`Models/Acts/Overgrowth/Hive/Glory`，以及已锁定v0.109参考的原生默认幕计划。
 
 ## 开局预生成
 
-所有局内可变状态均在Engine实体、集合和字段中。[RunActWiring](../../../mod-the-spire/base-spire/BaseSpire/Slice/RunActWiring.cs)只持有编译符号和静态计划，不创建另一套C# RunState或随机调度器。
+所有局内可变状态均在Engine实体、集合和字段中。[RunActWiring](../../../tools/base-migration-baseline/BaseSpire/Run/RunActWiring.cs)只持有编译符号和静态计划，不创建另一套C# RunState或随机调度器。
 
 1. 复用Run初始化，生成并洗共享/玩家遗物袋；整局只做一次。
 2. 洗共享古代人，先为所有后续幕分配共享子集，再生成任何幕的房间。空子集的有界随机调用也按源保留。

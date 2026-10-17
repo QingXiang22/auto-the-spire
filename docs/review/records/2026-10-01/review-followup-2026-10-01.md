@@ -72,8 +72,8 @@ K-08 Lua、K-09/B-05 至 B-07 迁移、L 批学习仍沿用[开工清单](../../
 
 - `Legacy/Effects.cs`：SequenceEffect 按顺序结构相等/哈希。
 - `Legacy/SpireCombatDslCompiler.cs`：具名块单效果解包，零/多效果保持序列。
-- `ContentSource/ironclad-cards.spire`：仅 Cascade 两版本恢复 cost=X。
-- `ContentSource/enemies.spire`：DampCultist 普通51–53/Tough52–54。
+- `Cards/Content/ironclad-cards.spire`：仅 Cascade 两版本恢复 cost=X。
+- `Enemies/Content/enemies.spire`：DampCultist 普通51–53/Tough52–54。
 - `Core.TheSpire.Tests/CombatSliceTests.cs`：HP 来源断言及全量发现/隔离执行入口；没有放宽断言。
 - `docs/contracts/net/0.1/wire.schema.json`：严格能力结构、移除任意成功结果兜底，补包装/facts/位置/seed 等结构；**此部分中断前尚未运行 schema 正反例或语义校验，应交执行 agent 复核**。
 - 对应协议、能力设计、DSL 形状说明、HP 示例与来源审计已同步；这些是当前评审输入，不能把机器资产的未验证变化称为契约闭合。

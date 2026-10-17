@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十四批）——**状态来源的数值**（切片里"实例变量"的最小形态：数值在打出那一刻求值，不是声明常量） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"实例变量"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`amount-source` 解析与校验）、`Slice/CombatSlicePackage.cs`（打出时求值链）、`BaseSpire.Slice.Tests/SliceFrontendAmountSourceChecks.cs`（新增 3 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`amount-source` 解析与校验）、`Composition/CombatSlicePackage.cs`（打出时求值链）、`BaseSpire.Slice.Tests/Cards/SliceFrontendAmountSourceChecks.cs`（新增 3 项） |
 | 状态 | **部分完成（十四批）**：状态来源已交付；B-05a 记的"卡牌变量"里的**可变实例量**（被效果写回并记住的值）仍未做（见 §4） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批13](b-05c-frontend-batch13-2026-10-02.md) |
 
@@ -63,9 +63,9 @@ card test-tally {
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AmountSource` 词表、`amount-source` 解析与互斥校验）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`AmountSourceChain` / `AmountFrom`：打出时求值）
-- `BaseSpire.Slice.Tests/SliceFrontendAmountSourceChecks.cs`（新增 3 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AmountSource` 词表、`amount-source` 解析与互斥校验）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`AmountSourceChain` / `AmountFrom`：打出时求值）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendAmountSourceChecks.cs`（新增 3 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

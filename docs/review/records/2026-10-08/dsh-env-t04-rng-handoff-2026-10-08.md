@@ -16,7 +16,7 @@ dispatch_record: .audit/dsh-env-t04-rng-2026-10-08/task-record.json
 归属：主清单 [ENV-T04](../../tofix/README.md#env-t04)「严格regression接唯一工厂和独立参考」，B 线 `tools/differential/`。
 接手入口：[派单记录](../../../../.audit/dsh-env-t04-rng-2026-10-08/task-record.json)、
 [ENV 实现约束 §10 与「ENV-T04初始洗牌的派生对齐边界（2026-10-08）」](../../../design/environment-implementation-constraints.md#env-t04初始洗牌的派生对齐边界2026-10-08)、
-[工具 README](../../../../tools/differential/README.md)、[源输入摘要](../../../../.audit/dsh-supervisor/review-2026-10-08-1639/rng-source-inputs.json)。
+[工具 README](../../../../tools/base-migration-baseline/differential/README.md)、[源输入摘要](../../../../.audit/dsh-supervisor/review-2026-10-08-1639/rng-source-inputs.json)。
 交付范围：只写 `tools/differential/`、`tools/rng-oracle/`、本交接与 `.audit/dsh-env-t04-rng-2026-10-08/`、`artifacts/environment/tests/`。
 `reference/sts2-sim/`、`sts2/`、`core/`、`base/`、`net/`、`AI/`、solution 与主清单只读；core 冻结。
 

@@ -8,11 +8,11 @@
 
 | 模块 | 本次交付的职责 |
 | --- | --- |
-| [Domain/Run/RunResources](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunResources.cs) | 整局金币、当前支持范围的脱战不可格挡/无加成伤害、存活治疗与Defeat声明；输入快照和边界只实现一处 |
+| [Domain/Run/RunResources](../../../../tools/base-migration-baseline/BaseSpire/Run/RunResources.cs) | 整局金币、当前支持范围的脱战不可格挡/无加成伤害、存活治疗与Defeat声明；输入快照和边界只实现一处 |
 | `GoldGainHooks` | 编译期Modify、AfterModifying、AfterGained适配；正式当前参与者为空/恒等，测试用Engine指令验证源顺序和一次求值 |
-| [EventChoices](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/EventChoices.cs) | 不可变选项定义、可选资格、Continue/Finish；生成Role、身份/phase/存活守卫，全部效果后清理访问并处理死亡 |
+| [EventChoices](../../../../tools/base-migration-baseline/BaseSpire/Rooms/EventChoices.cs) | 不可变选项定义、可选资格、Continue/Finish；生成Role、身份/phase/存活守卫，全部效果后清理访问并处理死亡 |
 | `EventCompileContext.Resources` / `RoomCompilation` | 明确装配Run资源能力与既有Defeat符号；特殊旧模块接口保留，普通新模块缺能力时建包期失败 |
-| [SunkenStatueEvent](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/SunkenStatueEvent.cs) | 选项只调用GainGold/DamageOutsideCombat；不再手写Role、守卫、金币/生命写入或死亡尾；源进入变量仍由本事件拥有 |
+| [SunkenStatueEvent](../../../../tools/base-migration-baseline/BaseSpire/Rooms/Events/SunkenStatueEvent.cs) | 选项只调用GainGold/DamageOutsideCombat；不再手写Role、守卫、金币/生命写入或死亡尾；源进入变量仍由本事件拥有 |
 | [GoldEvent](../../../examples/base-events/GoldEvent.cs) / [HealEvent](../../../examples/base-events/HealEvent.cs) | 两个独立文件只写身份和选项效果，复用相同编译器；原可见结果保持 |
 
 DDD在此落为资源、事件访问、源选择和内容的明确边界；SDD落为输入/状态归属/时序/失败/公开结果和判别案例的同一契约。对象只持编译符号/定义，实际游戏状态与暂停/恢复继续由Engine管理。

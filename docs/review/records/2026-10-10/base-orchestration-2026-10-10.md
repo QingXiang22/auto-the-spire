@@ -6,7 +6,7 @@
 
 [spec / plan / tasks](../../../design/mod-the-spire/base-orchestration/spec.md)先定义成功条件和反例，再实施。参考 `reference/sts2-sim` 的 CardModel、CardCmd、AutoPlayCmd、CombatEngine 分工；变形、Pillage、Havoc及生成池由 `sts2/` 对应源码核对。未引用 sim 运行时，未改 core 或参考规则。
 
-生产落点是 `BaseSpire/Slice/Orchestration/` 的15个编译期模块、`Slice/Effects/` 的领域节点/词法环境/编译器及组包绑定。它们生成冻结 Engine IR，不在 C# 对象里存储会话游戏状态。
+生产落点是 `BaseSpire/Cards/Runtime/` 的15个编译期模块、`Cards/Effects/` 的领域节点/词法环境/编译器及组包绑定。它们生成冻结 Engine IR，不在 C# 对象里存储会话游戏状态。
 
 - `CardSchema` / `CardDefinitions` / `CardPileProcedures` 区分新定义实例、长期战斗副本、克隆和变形替代。变形创建独立实体并保留原位置；原实体可供历史引用，在换房边界清理。克隆保留实例变量及当前费用状态，临时牌不带长期来源。
 - `CardPlayPipeline` 是手动、自动及重复执行共用的 `base-spire:ExecuteCardPlay`。付款、X快照、正式目标各一次；每次执行经过 before/start/body/finish/after；结果区一次。仅最外层动作调用战斗结束与永久提交，末杀不会截断父余效和结果区。

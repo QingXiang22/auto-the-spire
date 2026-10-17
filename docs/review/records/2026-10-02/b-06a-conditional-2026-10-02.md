@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础内容批**（第十四小批）——**条件效果**（`if { condition then else }`）+ `Spite` |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`ContentSource/ironclad-cards.spire:3604` |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`AuthorCondition`/`AuthorConditional`、`if` 嵌套块、与 `steps` 二选一、步骤表解析复用）、`Slice/CombatSlicePackage.cs`（玩家 `LostHpThisTurn` 字段 + 置位/清零 + 条件降级）、`Slice/Content/slice-content.author`、`net` 公开映射（新字段处置）、切片检查（新增 5 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`Cards/Content/ironclad-cards.spire:3604` |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`AuthorCondition`/`AuthorConditional`、`if` 嵌套块、与 `steps` 二选一、步骤表解析复用）、`Composition/CombatSlicePackage.cs`（玩家 `LostHpThisTurn` 字段 + 置位/清零 + 条件降级）、`Authoring/Examples/slice-content.author`、`net` 公开映射（新字段处置）、切片检查（新增 5 项） |
 | 状态 | **本小批完成**；B-06a 其余子项仍未完成（见 §5） |
 | 前置 | 第十三小批（能量） |
 
@@ -90,9 +90,9 @@ normal {
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorCondition`/`AuthorConditional`、`if` 嵌套块、二选一校验、`ParseStepList` 复用）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`LostHpThisTurn` 字段、置位/清零、`ConditionExpr`、条件降级）
-- `BaseSpire/Slice/Content/slice-content.author`（Spite）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorCondition`/`AuthorConditional`、`if` 嵌套块、二选一校验、`ParseStepList` 复用）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`LostHpThisTurn` 字段、置位/清零、`ConditionExpr`、条件降级）
+- `BaseSpire/Authoring/Examples/slice-content.author`（Spite）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（新字段的显式处置）
 - 切片检查：`SliceFrontendPlayConditionalChecks.cs`（新增 5 项）、`SliceChecks.cs`、`SliceFixtures.cs`、B-01 的字段计数
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）

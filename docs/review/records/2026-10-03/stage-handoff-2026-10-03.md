@@ -117,9 +117,9 @@ python net-the-spire/client/test_author_content.py
 
 | 文件 | 改动 |
 | --- | --- |
-| `BaseSpire/Slice/CombatSlicePackage.cs` | 幂等键从 `Run.BattleSettled`（全局）移到**战斗作用域的玩家** `Player.BattleSettled`（新战斗＝新实例＝false ⇒ 按战斗实例幂等，符合 §19.2"不能用一个不重置的全局布尔代表所有房间"）；`SettleBattle` 改为"先写回 HP、再置这场战斗的守卫"；三处终局分支（胜利 / 普通伤害失败 / HP 损失失败）都在 `SetTerminal` **之前**调用结算 |
+| `BaseSpire/Composition/CombatSlicePackage.cs` | 幂等键从 `Run.BattleSettled`（全局）移到**战斗作用域的玩家** `Player.BattleSettled`（新战斗＝新实例＝false ⇒ 按战斗实例幂等，符合 §19.2"不能用一个不重置的全局布尔代表所有房间"）；`SettleBattle` 改为"先写回 HP、再置这场战斗的守卫"；三处终局分支（胜利 / 普通伤害失败 / HP 损失失败）都在 `SetTerminal` **之前**调用结算 |
 | `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs` | 为 `Player.BattleSettled` 写显式处置：**Skip**（`N-02-INTERNAL-BOOKKEEPING`，理由：结算幂等键是引擎内部簿记，终局事实已由终局结果公开表达） |
-| `BaseSpire.Slice.Tests/SliceFrontendRunStateChecks.cs` | 更新两处断言到玩家作用域；**补回**失败写回检查；**新增**"只死一个敌人时不结算"检查 |
+| `BaseSpire.Slice.Tests/Cards/SliceFrontendRunStateChecks.cs` | 更新两处断言到玩家作用域；**补回**失败写回检查；**新增**"只死一个敌人时不结算"检查 |
 
 ### 验证（本批次实跑）
 
@@ -147,8 +147,8 @@ J-01 150/150；AI 503/503；client 50/50；契约 210/210；覆盖 1/1；依赖 
 
 | 文件 | 改动 |
 | --- | --- |
-| `BaseSpire/Slice/CombatSlicePackage.cs` | `Run` 侧新增**长期牌组**集合 `LongTermDeck`（只在作者文本声明了 `run` 时创建）；setup 里为**每个声明条目**另建一份实例，**只进长期牌组、不进任何战斗牌区** ⇒ 战斗实例与长期实例是两批独立实例 |
-| `BaseSpire.Slice.Tests/SliceFrontendRunStateChecks.cs` | 新增检查：长期牌组张数＝声明卡组张数；战斗牌区（抽牌堆/手牌/弃牌堆）实例与长期实例**不重叠**；把一张**战斗**牌置为升级态后，**同定义的长期实例仍未升级** |
+| `BaseSpire/Composition/CombatSlicePackage.cs` | `Run` 侧新增**长期牌组**集合 `LongTermDeck`（只在作者文本声明了 `run` 时创建）；setup 里为**每个声明条目**另建一份实例，**只进长期牌组、不进任何战斗牌区** ⇒ 战斗实例与长期实例是两批独立实例 |
+| `BaseSpire.Slice.Tests/Cards/SliceFrontendRunStateChecks.cs` | 新增检查：长期牌组张数＝声明卡组张数；战斗牌区（抽牌堆/手牌/弃牌堆）实例与长期实例**不重叠**；把一张**战斗**牌置为升级态后，**同定义的长期实例仍未升级** |
 
 ### 验证
 
@@ -175,7 +175,7 @@ J-01 150/150；AI 503/503；client 50/50；覆盖 1/1；依赖 9/9。
 
 | 文件 | 改动 |
 | --- | --- |
-| `BaseSpire.Slice.Tests/SliceFrontendRunStateChecks.cs` | 场景加一张 `test-generate`（`steps = [generate:strike-ironclad]`）夹具牌；新增检查：打出后手牌里多一张打击、该**生成实例不在**长期牌组里、长期牌组张数与成员**不变** |
+| `BaseSpire.Slice.Tests/Cards/SliceFrontendRunStateChecks.cs` | 场景加一张 `test-generate`（`steps = [generate:strike-ironclad]`）夹具牌；新增检查：打出后手牌里多一张打击、该**生成实例不在**长期牌组里、长期牌组张数与成员**不变** |
 
 ### 验证
 
@@ -406,7 +406,7 @@ L2/L3/L4 三处排序 ⇒ 该成对比较必然失败；本批次落地后应当
 
 | 文件 | 改动 |
 | --- | --- |
-| `BaseSpire/Slice/CombatSlicePackage.cs` | 新增测试场景旋钮 `swapEncounterOrder`（默认 **false**；只把两个敌人的**创建顺序**对调，可见事实完全相同；明确标注为非原版、仅供成对验收） |
+| `BaseSpire/Composition/CombatSlicePackage.cs` | 新增测试场景旋钮 `swapEncounterOrder`（默认 **false**；只把两个敌人的**创建顺序**对调，可见事实完全相同；明确标注为非原版、仅供成对验收） |
 | `Net.TheSpire.Tests/SnapshotChecks.cs` | `NewBattle` 透传该旋钮；新增检查 **`W-02 只对调不可见创建顺序的成对场景：公开快照逐字节相同`**：① 两个场景的公开快照 `WireCanonical` **逐字节相同**；② 公开句柄**数量相同**；③ 句柄**集合相同**（编号不含创建顺序） |
 
 ### 证据（三类，分开记）
@@ -908,7 +908,7 @@ build **0 错误 0 警告**；net **386/386**；J-01 **162/162**；client **50/5
 
 ### W-01当前观察摘要
 
-W-01另一个必需事实：[作者内容](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Content/slice-content.author)的Spite约400～420行使用player-lost-hp-this-turn决定单次/两次伤害，包中的LostHpThisTurn在回合开始重置；当前SlicePublicProfile约130行却按“可由公开HP变化推导”Skip。该推导依赖过去而非当前快照，且直接影响收益。作者Profile应发布当前布尔摘要并补对应差异检查；不是要求AI记录历史。本轮只核对源码，尚未运行该成对场景。
+W-01另一个必需事实：[作者内容](../../../../tools/base-migration-baseline/BaseSpire/Authoring/Examples/slice-content.author)的Spite约400～420行使用player-lost-hp-this-turn决定单次/两次伤害，包中的LostHpThisTurn在回合开始重置；当前SlicePublicProfile约130行却按“可由公开HP变化推导”Skip。该推导依赖过去而非当前快照，且直接影响收益。作者Profile应发布当前布尔摘要并补对应差异检查；不是要求AI记录历史。本轮只核对源码，尚未运行该成对场景。
 
 ### W-06四态核算的边界
 
@@ -934,7 +934,7 @@ W-01另一个必需事实：[作者内容](../../../../mod-the-spire/base-spire/
 ## 批次 26（2026-10-03）：W-02 持久引用绑定落地——跨状态不换绑、销毁不复用、撤销再授权
 
 认领：**W-02**（公开ID与事实可信）。主责目录 `net-the-spire/Net.TheSpire/Projection/**` 与 `net-the-spire/Net.TheSpire.Tests/SnapshotChecks.cs`；
-另有一个**默认关闭**的受控场景旋钮落在共享文件 `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs`（与既有 `swapEncounterOrder` 同级、同风格）。
+另有一个**默认关闭**的受控场景旋钮落在共享文件 `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs`（与既有 `swapEncounterOrder` 同级、同风格）。
 本批次**只改**这三类文件，未触碰 Host/Control/client/AI，未提交、未清理共享工作区。
 
 ### 修复了什么（批次25负责人的静态反例）
@@ -1026,8 +1026,8 @@ W-01另一个必需事实：[作者内容](../../../../mod-the-spire/base-spire/
 | 文件 | 改动 |
 | --- | --- |
 | `core-the-spire/Core.TheSpire/Engine/Projection.cs` | **通用机制**：`ProjectedCollection` 增加 `Capacity`——集合的**声明**容量（`CollectionSymbol.Capacity`，越界时引擎已按 `CapacityExceeded` 拒绝）。它是规则而不是隐藏状态，且让"容量"只有一个来源：引擎声明 |
-| `base-spire/Slice/SliceManifest.cs` | 新增 `PotionSlotCount = 3`，来源逐条注明（`reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs:23` `InitialMaxPotionSlotCount = 3`；`PotionCmdTests.cs:51-56`）。增槽来源属原版遗物范围，未实现 |
-| `base-spire/Slice/CombatSlicePackage.cs` | ① `PotionBelt.Capacity = PotionSlotCount`；② 药水实体加入**观看者投影**（`projection.Type(potion!)`）——否则它既不是公开实体，`UsePotion` 候选也引用不到（I-22）；③ `Run` 实体加入观看者投影 ⇒ Hp/MaxHp/Gold 成为公开字段。三处都在 `hasPotions`/`hasRun` 分支内，默认路径形状不变 |
+| `base-spire/Composition/SliceManifest.cs` | 新增 `PotionSlotCount = 3`，来源逐条注明（`reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs:23` `InitialMaxPotionSlotCount = 3`；`PotionCmdTests.cs:51-56`）。增槽来源属原版遗物范围，未实现 |
+| `base-spire/Composition/CombatSlicePackage.cs` | ① `PotionBelt.Capacity = PotionSlotCount`；② 药水实体加入**观看者投影**（`projection.Type(potion!)`）——否则它既不是公开实体，`UsePotion` 候选也引用不到（I-22）；③ `Run` 实体加入观看者投影 ⇒ Hp/MaxHp/Gold 成为公开字段。三处都在 `hasPotions`/`hasRun` 分支内，默认路径形状不变 |
 | `net/.../PublicVocabulary.cs` | `PublishedGroup` 改为 `(GroupTypeId, OwnerKindId, MemberKindIds, MinCount, MaxCount?)`：owner 不再是**写死的公开引用**（句柄由 W-02 的会话内绑定决定），min/max 承载容量 |
 | `net/.../PublicSnapshotProjector.cs` | group 发布：owner 按**种类唯一解析**（与 `pile_ref` 同理，多个实例即按 `N-02-GROUP-OWNER` 拒绝，不猜一个）；成员引用闭合；并对声明的 `[min..max]` **自检**（`I-35`） |
 | `net/.../CatalogProjector.cs` | 发射 `group_types`（owner/member kind + min/max_count）。默认 Profile 不发布任何 group ⇒ 默认目录字节不变 |
@@ -1035,7 +1035,7 @@ W-01另一个必需事实：[作者内容](../../../../mod-the-spire/base-spire/
 | `net/.../SlicePublicProfile.cs` | 作者变体：`CreateAuthorContent(RuleSet rules)`（**容量必须从引擎声明读**，不在 Profile 里另抄数字）、`AuthorKinds()`（Potion kind：内容身份 + Rarity/Target category 词表 + Amount/PowerStacks；PowerId 具名跳过，理由与卡牌同源；**Run kind**：Hp/MaxHp/Gold）、`AuthorCollections()`（`PotionBelt` 与 `LongTermDeck` 由"具名跳过"改为**发布为 group**，`max_count` = 引擎容量/未声明上限；`RunStates` 保持具名跳过并写明理由）、`AuthorActions()`（`UsePotion`，slot0 = 药水引用、required、TargetKindIds 收窄到药水 kind）；同时补全**作者能力内容表**（作者的 `shrink`/`feel-no-pain`/`rage-power`/`no-energy-gain` 只有作者变体登记；否则一用 beetle-juice 就按 `N-02-UNDECLARED-CONTENT` 拒绝） |
 | `net/Net.TheSpire.Host/Program.cs` | 作者变体传入规则集 |
 | `net/Net.TheSpire.Tests/SnapshotChecks.cs` | 新增检查 `W-01 作者变体发布药水 kind/枚举、药水栏（group+容量）与 UsePotion` |
-| `base-spire/BaseSpire.Slice.Tests/SliceFrontendPotionChecks.cs` | 新增检查 `W-01 药水栏槽位：容量 = SliceManifest.PotionSlotCount，越界由引擎拒绝 [真实]` |
+| `base-spire/BaseSpire.Slice.Tests/Potions/SliceFrontendPotionChecks.cs` | 新增检查 `W-01 药水栏槽位：容量 = SliceManifest.PotionSlotCount，越界由引擎拒绝 [真实]` |
 | `net-the-spire/client/test_author_content.py` | 探针升级为**真检查**：断言药水 kind / 药水栏 group / UsePotion 候选，并**提交使用**一瓶药水（目标提问 → 应答 → 消耗 → 效果），失败返回 1 |
 
 ### 验证（本批次实跑）
@@ -1625,8 +1625,8 @@ author: …/episode.json ending=terminal reason=net:reason:base-spire:Victory st
 
 | 文件 | 内容 |
 | --- | --- |
-| `BaseSpire/Slice/SpireCardSource.cs`（新） | 正式 `*-cards.spire`（嵌入资源）→ `DslSourceParser` AST → 共享作者模型 `AuthorCard`（与 `.author` 同一模型）→ `CombatSlicePackage` 的 Engine IR → 会话执行。**四态分开报**：声明（AST 里的 `card` 数）/ 解析 / 降级 / 未支持（逐条原因） |
-| `BaseSpire.Slice.Tests/SliceFormalSourceChecks.cs`（新） | 9 项检查：资源枚举、四态分离、未支持名单（多原语/非空 hooks/X 费）、AST 声明集一致、基础/升级伤害与格挡、`exhaust`、`unplayable`、`draw`、目标语义 |
+| `BaseSpire/Cards/SpireCardSource.cs`（新） | 正式 `*-cards.spire`（嵌入资源）→ `DslSourceParser` AST → 共享作者模型 `AuthorCard`（与 `.author` 同一模型）→ `CombatSlicePackage` 的 Engine IR → 会话执行。**四态分开报**：声明（AST 里的 `card` 数）/ 解析 / 降级 / 未支持（逐条原因） |
+| `BaseSpire.Slice.Tests/Cards/SliceFormalSourceChecks.cs`（新） | 9 项检查：资源枚举、四态分离、未支持名单（多原语/非空 hooks/X 费）、AST 声明集一致、基础/升级伤害与格挡、`exhaust`、`unplayable`、`draw`、目标语义 |
 
 显式范围（本批次）：单效果原语（`attack { damage }` / `gainBlock { amount }` / `draw { amount }` / 空 `play`）
 + 关键词 `exhaust`/`ethereal`/`unplayable`/`retain` + 目标域 `selectSelf` /
@@ -1817,7 +1817,7 @@ base-spire/status-cards.spire:   声明  2 / 解析  2 / 降级  1 / 未支持  
 
 | 内容 | 说明 |
 | --- | --- |
-| `BaseSpire/Slice/SpirePowerSource.cs`（新） | 正式 `*-powers.spire` → `DslSourceParser` AST → `AuthorPower`；四态（声明/解析/降级/未支持原因） |
+| `BaseSpire/Powers/SpirePowerSource.cs`（新） | 正式 `*-powers.spire` → `DslSourceParser` AST → `AuthorPower`；四态（声明/解析/降级/未支持原因） |
 | 字段降级 | `role`、`outgoingDamageMultiplier`→`damage = multiply-outgoing:M`、`preventEnergyGain`、`removeAfter{Owner,Player}TurnEnd`→`owner-turn-end = remove`、`decrementOnTrigger`/`afterEnemyTurnEnd`/`afterPlayerTurnEnd`→`owner-turn-end = tick`、`trigger = afterCardExhausted/afterCardPlayed`→`trigger`、`whenCardType`→`when-card-type`、`effect = gainBlock(N, perPowerStack=自己)`→`trigger-effect = gain-block-per-stack:N` |
 | 卡牌模型 | 能力声明**整体改用正式能力源**；卡牌的"能力名 → id"链接表也随之来自正式源 |
 

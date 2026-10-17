@@ -20,9 +20,9 @@
 
 | 新增物 | 作用 |
 | --- | --- |
-| [ShopRoomWiring.cs.frozen-20261011](../../../../mod-the-spire/base-spire/workpacks/shop-flow/ShopRoomWiring.cs.frozen-20261011) | 生产模块：`ShopOffer` 货架实体 + 14 格生成 + 5 个动作 + 4 个过程（**已迁移进 `BaseSpire/Slice/ShopRoomWiring.cs`，此处为冻结留档**） |
-| [ShopCompute.cs.frozen-20261011](../../../../mod-the-spire/base-spire/workpacks/shop-flow/ShopCompute.cs.frozen-20261011) | 纯计算条目（9 个资源/Entry）：稀有度、池计数/选取、价格、升级 roll、遗物稀有度/价格、药水稀有度/价格（**已迁移进 `BaseSpire/Slice/ShopCompute.cs`**） |
-| [ShopFlowChecks/](../../../../mod-the-spire/base-spire/workpacks/shop-flow/ShopFlowChecks) | 独立验证工程：只编译上面两个文件，引用冻结二进制，跑真实 Engine 会话（现行检查见 `BaseSpire.Slice.Tests/ShopFlowChecks.cs`） |
+| [ShopRoomWiring.cs.frozen-20261011](../../../../tools/base-migration-baseline/workpacks/shop-flow/ShopRoomWiring.cs.frozen-20261011) | 生产模块：`ShopOffer` 货架实体 + 14 格生成 + 5 个动作 + 4 个过程（**已迁移进 `BaseSpire/Rooms/Shop/ShopRoomWiring.cs`，此处为冻结留档**） |
+| [ShopCompute.cs.frozen-20261011](../../../../tools/base-migration-baseline/workpacks/shop-flow/ShopCompute.cs.frozen-20261011) | 纯计算条目（9 个资源/Entry）：稀有度、池计数/选取、价格、升级 roll、遗物稀有度/价格、药水稀有度/价格（**已迁移进 `BaseSpire/Rooms/Shop/ShopCompute.cs`**） |
+| [ShopFlowChecks/](../../../../tools/base-migration-baseline/workpacks/shop-flow/ShopFlowChecks) | 独立验证工程：只编译上面两个文件，引用冻结二进制，跑真实 Engine 会话（现行检查见 `BaseSpire.Slice.Tests/Rooms/ShopFlowChecks.cs`） |
 | [source-facts.md](../../../../.audit/dsh-shop-flow-2026-10-11/source-facts.md) | 源行号与逐字常量（流、阈值、价格、库存顺序、购买写回、离店、选卡细节） |
 | [verification.md](../../../../.audit/dsh-shop-flow-2026-10-11/verification.md) | 命令/返回码/哈希/13 条检查判别点/抽数对账 |
 

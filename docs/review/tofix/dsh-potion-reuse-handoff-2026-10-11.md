@@ -24,11 +24,11 @@ updated_at: 2026-10-11T03:01:14+08:00
 
 | 内容 | 正式实现 | 实际检查 |
 | --- | --- | --- |
-| ExplosiveAmpoule | [正式源:122](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire#L122)：`unpowered = true`，对 `allEnemies` 伤害10，既有IR和动作尾 | 双敌各31→21；分别及组合安排 Strength8、Weak3、Vulnerable3，均仍10；无目标提问、不付能量、不新增随机抽取、旧瓶重复提交拒绝；双敌各10同时击杀后瓶消耗、SettledRoom结算和下一房保留另一瓶 |
-| HeartOfIron | [正式源:187](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire#L187)：普通链接施加 `PlatingPower` 7给owner；加载的通用ID为 `base-spire:plating-power` | 施加不立即给格挡，免费且仅消费一次；连续三回合7→6→5→4；第2、3回合相对无药对照少掉血6、5，实际验证后续格挡；另加Dexterity8/Frail4对照仍6、5，符合unpowered格挡 |
-| LiquidBronze | [正式源:194](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire#L194)：保留具名unsupportedUse，未启用程序 | 不出现UsePotion空动作，仍可丢弃；实际加载表中 `ThornsPower` 和敌人 `Thorns` 都缺失；最小链接反例加载0项程序，见下一节 |
+| ExplosiveAmpoule | [正式源:122](../../../tools/base-migration-baseline/BaseSpire/Potions/Content/potions.spire#L122)：`unpowered = true`，对 `allEnemies` 伤害10，既有IR和动作尾 | 双敌各31→21；分别及组合安排 Strength8、Weak3、Vulnerable3，均仍10；无目标提问、不付能量、不新增随机抽取、旧瓶重复提交拒绝；双敌各10同时击杀后瓶消耗、SettledRoom结算和下一房保留另一瓶 |
+| HeartOfIron | [正式源:187](../../../tools/base-migration-baseline/BaseSpire/Potions/Content/potions.spire#L187)：普通链接施加 `PlatingPower` 7给owner；加载的通用ID为 `base-spire:plating-power` | 施加不立即给格挡，免费且仅消费一次；连续三回合7→6→5→4；第2、3回合相对无药对照少掉血6、5，实际验证后续格挡；另加Dexterity8/Frail4对照仍6、5，符合unpowered格挡 |
+| LiquidBronze | [正式源:194](../../../tools/base-migration-baseline/BaseSpire/Potions/Content/potions.spire#L194)：保留具名unsupportedUse，未启用程序 | 不出现UsePotion空动作，仍可丢弃；实际加载表中 `ThornsPower` 和敌人 `Thorns` 都缺失；最小链接反例加载0项程序，见下一节 |
 
-新增[复用检查](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/PotionReuseChecks.cs)，[Program入口:26](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/Program.cs#L26)添加 `--potion-reuse-only`，[默认调用:133](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/Program.cs#L133)接入同一检查；[PotionFlow数量:37](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/PotionFlowChecks.cs#L37)仅调整13/35及对应文本。未新增公共C#机制、Power白名单或随机补抽；48项的元数据/顺序/稀有度和原11瓶程序保留，既有25项检查通过。
+新增[复用检查](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/PotionReuseChecks.cs)，[Program入口:26](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs#L26)添加 `--potion-reuse-only`，[默认调用:133](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs#L133)接入同一检查；[PotionFlow数量:37](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/PotionFlowChecks.cs#L37)仅调整13/35及对应文本。未新增公共C#机制、Power白名单或随机补抽；48项的元数据/顺序/稀有度和原11瓶程序保留，既有25项检查通过。
 
 来源、语义及编辑详情见[源/构建摘要](../../../.audit/dsh-potion-reuse-2026-10-11/source-build-summary.md)。药水规则依据[开发指南药水章节](../../design/mod-the-spire/base-development-guide.md)和[库存契约](../../design/mod-the-spire/potion-inventory/spec.md)。
 
@@ -36,13 +36,13 @@ updated_at: 2026-10-11T03:01:14+08:00
 
 [原版药水](../../../sts2/src/Core/Models/Potions/LiquidBronze.cs)施加ThornsPower 3；[原版能力:17](../../../sts2/src/Core/Models/Powers/ThornsPower.cs#L17)在 BeforeDamageReceived 检查powered攻击或Omnislice，不要求amount>0。普通powered攻击9或0均应反伤3，普通unpowered/非攻击对照不反伤；Omnislice例外需另外核对。
 
-正式组装仅链接[实际加载的能力](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/SinglePlayerContent.cs#L87)。[现有敌人Thorns声明:114](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire#L114)未降级成功，实际原因如下：
+正式组装仅链接[实际加载的能力](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/SinglePlayerContent.cs#L87)。[现有敌人Thorns声明:114](../../../tools/base-migration-baseline/BaseSpire/Enemies/Content/enemies.spire#L114)未降级成功，实际原因如下：
 
 ```text
 Thorns.events 的事件类型 'before_damage' 未支持（只支持 damage / block / power）；运行时未实现声明的角色/触发器/效果组合：不注册部分生效的能力
 ```
 
-[最小反例:126](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/PotionReuseChecks.cs#L126)用正式加载表，分别编译单瓶 `applyPower = { power = ThornsPower stacks = 3 target = context.owner }` 以及 `power = Thorns`。实际程序数均为0，保留未支持元数据；[最终输出:18](../../../.audit/dsh-potion-reuse-2026-10-11/final-potion-reuse.log#L18)为：
+[最小反例:126](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/PotionReuseChecks.cs#L126)用正式加载表，分别编译单瓶 `applyPower = { power = ThornsPower stacks = 3 target = context.owner }` 以及 `power = Thorns`。实际程序数均为0，保留未支持元数据；[最终输出:18](../../../.audit/dsh-potion-reuse-2026-10-11/final-potion-reuse.log#L18)为：
 
 ```text
 potion-reuse/minimal-liquid-bronze.spire(7,13): unregistered power 'ThornsPower'

@@ -54,10 +54,10 @@ TOTAL declared: 190   passed: 179   failed: 11
 ### V1 — `cost = X` 未落实（[AGENTS.md:17](../../../AGENTS.md)）
 
 - **现象：** HEAD 有 2 张 X 费牌（`Cascade`、`Whirlwind`，旧语法 `costKind = x`）。迁移后只有 Whirlwind 写成 `cost = X`，Cascade 仍是 `cost = 0`。
-- **位置：** [`ironclad-cards.spire:987`](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire#L987)（Cascade `cost = 0`）对照 [`ironclad-cards.spire:2671`](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire#L2671)（Whirlwind `cost = X`）
+- **位置：** [`ironclad-cards.spire:987`](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire#L987)（Cascade `cost = 0`）对照 [`ironclad-cards.spire:2671`](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire#L2671)（Whirlwind `cost = X`）
 - **复现：**
-  - `git show HEAD:mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire | Select-String 'costKind = x'` → 2 处
-  - `Select-String -Path mod-the-spire/base-spire/BaseSpire/ContentSource/*.spire -Pattern 'cost = X'` → 仅 Whirlwind 的 2 行
+  - `git show HEAD:mod-the-spire/base-spire/BaseSpire/Cards/Content/ironclad-cards.spire | Select-String 'costKind = x'` → 2 处
+  - `Select-String -Path mod-the-spire/base-spire/BaseSpire各领域的Content/*.spire -Pattern 'cost = X'` → 仅 Whirlwind 的 2 行
   - 编译结果：`base-spire:cascade cost=0 kind=Fixed HasEnergyXCost=False`，`base-spire:whirlwind kind=X HasEnergyXCost=True`
 - **影响：** Cascade 的效果 `count = scaled(0, 1, count = energyX())` 恒为 0，战斗里不自动打出任何牌。实测该场景 `energy=3 enemyHp=53 auto_play=0`（测试期望 `enemyHp=38 block=5 energy=0 auto_play=3`）。直接导致 2 个测试失败。
 
@@ -82,7 +82,7 @@ TOTAL declared: 190   passed: 179   failed: 11
 ### V5 — 文档歧义未修正（[AGENTS.md:15](../../../AGENTS.md)）
 
 - [`content-dsl.md:46`](../../dsl/0.0.1/content-dsl.md) 已加指向 `dsl-usage.md` 的提示，但 [`content-dsl.md:48`](../../dsl/0.0.1/content-dsl.md) 仍以旧方括号写法讲**卡牌**卡池归属：`pools = [IroncladCardPool]`、`cardPool IroncladCardPool { cards = [Aggression, Anger, Armaments] }`。新语法为 `pools = { … }` / `cards = { … }`。
-- 同类：[`content-dsl.md:184`](../../dsl/0.0.1/content-dsl.md) 的 `variables = [variable(ExtraDamage, 0, …)]` 讲的是卡牌变量，新语法见 [`ironclad-cards.spire:3855`](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire#L3855) 的 `variables = { variable = { … } }`。
+- 同类：[`content-dsl.md:184`](../../dsl/0.0.1/content-dsl.md) 的 `variables = [variable(ExtraDamage, 0, …)]` 讲的是卡牌变量，新语法见 [`ironclad-cards.spire:3855`](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire#L3855) 的 `variables = { variable = { … } }`。
 - **可复现：** 用新语法编译 `tags = [Strike]` 报 `tags must use a brace block`；`tags = { Strike }` 通过。
 
 ### V6 — 失败时未给出阻断范围（[AGENTS.md:40](../../../AGENTS.md)）

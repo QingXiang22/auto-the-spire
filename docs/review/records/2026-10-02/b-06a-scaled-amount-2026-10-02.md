@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础内容批**（第十五小批）——**缩放数值来源**（`base + perCount × 计数`）+ `AshenStrike` |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`ContentSource/ironclad-cards.spire:3057` |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`exhaust-count`、`amount-base`/`amount-per-count`）、`Slice/CombatSlicePackage.cs`（`ScaledAmount` 降级）、`Slice/Content/slice-content.author`、`net` 目录、切片检查（新增 5 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`Cards/Content/ironclad-cards.spire:3057` |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`exhaust-count`、`amount-base`/`amount-per-count`）、`Composition/CombatSlicePackage.cs`（`ScaledAmount` 降级）、`Authoring/Examples/slice-content.author`、`net` 目录、切片检查（新增 5 项） |
 | 状态 | **本小批完成**；B-06a 其余子项仍未完成（见 §5） |
 | 前置 | 第十四小批（条件效果） |
 
@@ -84,9 +84,9 @@ upgradedDamageValue = scaled { base = 6  perCount = 4  count = { pileCount { pil
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`ExhaustCount`、`amount-base`/`amount-per-count`、`ScaledPart`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`exhaust-count` 与 `ScaledAmount` 降级）
-- `BaseSpire/Slice/Content/slice-content.author`（AshenStrike）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`ExhaustCount`、`amount-base`/`amount-per-count`、`ScaledPart`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`exhaust-count` 与 `ScaledAmount` 降级）
+- `BaseSpire/Authoring/Examples/slice-content.author`（AshenStrike）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（目录内容 ID）
 - 切片检查：`SliceFrontendScaledAmountChecks.cs`（新增 5 项）、`SliceFixtures.cs`、`SliceChecks.cs`
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）

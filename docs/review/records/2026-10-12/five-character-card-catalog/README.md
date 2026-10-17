@@ -46,7 +46,7 @@
 
 注册结果来自当前构建的正式资源解析→降级→`CombatSlicePackage`→`RuleSetBuilder.Build`，[coverage.ndjson](../../../../../.audit/owner-five-character-card-catalog-20261012/coverage.ndjson)逐声明记录 Parsed/Lowered/Registered。共有 178 条声明、176 条注册、2 条受阻；五角色归属随后按原版池对齐。
 
-行为证据复用同构建的 [794 项 Slice 通过日志](../../../../../.audit/owner-shared-run-20261012/slice-final.log)及 [SliceFormalSourceChecks 行为名单](../../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceFormalSourceChecks.cs)。名单是有来源的人工维护清单，不能理解成自动逐卡完整验收。普通、创建时升级、Armaments 升级等完整匹配行保存于机器清单；表格只链接首个证据位置。日志中单纯提到卡名的断言不计为该牌行为证据。
+行为证据复用同构建的 [794 项 Slice 通过日志](../../../../../.audit/owner-shared-run-20261012/slice-final.log)及 [SliceFormalSourceChecks 行为名单](../../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFormalSourceChecks.cs)。名单是有来源的人工维护清单，不能理解成自动逐卡完整验收。普通、创建时升级、Armaments 升级等完整匹配行保存于机器清单；表格只链接首个证据位置。日志中单纯提到卡名的断言不计为该牌行为证据。
 
 已有[严格回归](../../../../../.audit/owner-shared-run-20261012/regression-final/regression.json)为 16 项双侧通过和 1 项接线自检，主要覆盖 Ironclad 的 Strike/Defend/Bash/Headbutt 等机制与公开流程；没有据此把全部 143 张注册角色卡标为“原版一致”。四个角色的牌在受控 Ironclad 会话中可检查，并不表示它们已经具有自己的完整开局、资源和整局行为。
 

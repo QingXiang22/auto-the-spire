@@ -12,7 +12,7 @@
 
 ## 改动边界
 
-只改`mod-the-spire/base-spire/BaseSpire.Slice.Tests/RelicContentChecks.cs`：新增`RunOrbs()`（第135行起，由`Run()`在`RunPassives()`前调用）与三个局部断言辅助`SetMonsterHp`／`MonsterHpTotal`／`MonsterMaxHpTotal`。生产内容、领域、编译和公开协议均未改；五件遗物的`relics.json`声明沿用上一批，因此[FOUNDATION记录](relic-foundation-2026-10-17.md)里的rules／build身份继续有效。
+只改`mod-the-spire/base-spire/BaseSpire.Slice.Tests/Relics/RelicContentChecks.cs`：新增`RunOrbs()`（第135行起，由`Run()`在`RunPassives()`前调用）与三个局部断言辅助`SetMonsterHp`／`MonsterHpTotal`／`MonsterMaxHpTotal`。生产内容、领域、编译和公开协议均未改；五件遗物的`relics.json`声明沿用上一批，因此[FOUNDATION记录](relic-foundation-2026-10-17.md)里的rules／build身份继续有效。
 
 ## 实际场景与断言
 

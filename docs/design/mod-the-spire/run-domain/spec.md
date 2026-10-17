@@ -38,7 +38,9 @@ AfterObtained／AfterRemoved是构建期注入的`(scope, run, relic) → Inst[]
 
 ## 遗物正式内容与覆盖门槛
 
-遗物效果的唯一正式来源为`ContentSource/relics.json`，读取器拒绝未知字段、重复ID、缺失来源、空效果且无明确源无玩法依据、未实现触发点／效果组合。`relic-source-catalog.json`保存完整297件源身份、300条池成员、源摘要与资格裁定；它不是可执行效果库，未实现成员不进入已支持目录，两者摘要都进入实际ContentDigest。原C#四件声明迁入JSON，不保留第二份效果表。
+过渡实现的 `after-shuffle` 在弃牌堆重洗、源排序与实际随机洗牌完成后派发，早于下一张牌的抽取或自动打出。普通抽牌与自动出牌复用同一个Reshuffle；抽牌堆非空或弃牌堆为空时不派发，初始洗牌不走此监听。当前TheAbacus每次获得6点无加成格挡，移除后停止监听。主动合并非空抽牌堆的完整Shuffle命令不在此接缝范围。这是后续DSL迁移的行为基线，不表示C#规则路径已符合目标架构。
+
+遗物效果的唯一正式来源为`Relics/Content/relics.json`，读取器拒绝未知字段、重复ID、缺失来源、空效果且无明确源无玩法依据、未实现触发点／效果组合。`relic-source-catalog.json`保存完整297件源身份、300条池成员、源摘要与资格裁定；它不是可执行效果库，未实现成员不进入已支持目录，两者摘要都进入实际ContentDigest。原C#四件声明迁入JSON，不保留第二份效果表。
 
 获得型效果复用RunResources的GainMaxHp／GainGold／HealLivingPlayer／HealToFull／HealMaxHpPercent；百分比治疗按原版最终整数生命截断。获得药水容量调用同一PotionInventoryRules.GainSlots：MaxPotionCount为玩家Engine持久字段、初值3，支持域0..999；SlotIndex为稳定槽号，领取扫描首个空槽，满栏不入组，容量获得不移动已有瓶。Belt的静态容量只是Engine上界，不能替代动态资格。
 

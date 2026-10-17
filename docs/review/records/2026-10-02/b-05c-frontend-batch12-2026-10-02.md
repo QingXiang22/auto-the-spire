@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十二批）——**能力的伤害修正**作者化（Vulnerable/Weak/Strength 由声明驱动，不再按 id 比较） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)；伤害次序的冻结证据见 [r-damage-source-evidence](../2026-10-01/r-damage-source-evidence-2026-10-01.md) |
-| 负责范围 | `Slice/Content/slice-content.author`（三个修正声明）、`Slice/SliceAuthorFrontend.cs`（`damage` 解析与校验）、`Slice/CombatSlicePackage.cs`（加性/乘性阶段按声明生成）、`BaseSpire.Slice.Tests/SliceFrontendDamageModifierChecks.cs`（新增 3 项） |
+| 负责范围 | `Authoring/Examples/slice-content.author`（三个修正声明）、`Authoring/SliceAuthorFrontend.cs`（`damage` 解析与校验）、`Composition/CombatSlicePackage.cs`（加性/乘性阶段按声明生成）、`BaseSpire.Slice.Tests/Powers/SliceFrontendDamageModifierChecks.cs`（新增 3 项） |
 | 状态 | **部分完成（十二批）**：伤害修正已作者化；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批11](b-05c-frontend-batch11-2026-10-02.md) |
 
@@ -67,10 +67,10 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/Content/slice-content.author`（三个 `damage = ...` 声明）
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorPower.DamageModifier/Value`、`PowerDamage` 词表、`ParsePowerDamage`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`AdditiveStage` / `MultiplicativeStage` 按声明生成；尾部保持原样）
-- `BaseSpire.Slice.Tests/SliceFrontendDamageModifierChecks.cs`（新增 3 项）、测试场景补力量声明、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/Examples/slice-content.author`（三个 `damage = ...` 声明）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorPower.DamageModifier/Value`、`PowerDamage` 词表、`ParsePowerDamage`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`AdditiveStage` / `MultiplicativeStage` 按声明生成；尾部保持原样）
+- `BaseSpire.Slice.Tests/Powers/SliceFrontendDamageModifierChecks.cs`（新增 3 项）、测试场景补力量声明、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

@@ -1,5 +1,8 @@
 # 在base能力上写出第一张卡
 
+> 2026-10-18：本页保留旧 C# base 的教程／接口依据，所列运行路径已退出生产，当前不能照此执行。纯 DSL 开发请从[开发指南](base-development-guide.md)与[包格式参考](../../dsl/core/0.3/package-reference.md)开始；原功能需按迁移任务恢复。
+
+
 文档类型：教程（Tutorial）。你将从一个空目录写一张卡，用base真实前端与Engine出牌，然后只改DSL观察伤害变化。本教程使用已实现的攻击和格挡，不需要修改C#。
 
 前置条件：安装.NET 9 SDK和PowerShell；在仓库根目录操作。教程文件写入你自己的`.audit/tutorial-base-card`，不改正式卡池。完整Run的安装与源资格见[内容操作指南](modding-guide.md)。

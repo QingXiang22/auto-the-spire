@@ -22,8 +22,8 @@ C#/.NET 9，base 领域前端经 EnginePackageBuilder 生成冻结 engine/ir@0.3
 | 不可变领域程序、逐效果数值/目标/条件 | `Effects/CardEffectProgram.cs` | 新增领域语义；不保存 Session 或玩法状态 |
 | 程序到冻结 Engine IR | `Effects/CardEffectCompiler.cs` | 新增效果的 IR 编译；不持有胜负、房间提交或动作注册接口 |
 | 动态数值/条件到状态表达式 | `Effects/CardEffectExpressions.cs` | 新增已绑定状态的查询/条件；不缓存实时值 |
-| 实际字段/过程/集合与编译器绑定 | `Compilation/CardCompilation.EffectState` / `CompileEffects` | 新增或尚未绑定的状态、共享过程；保持同一个 Engine 权威状态 |
-| 付款、目标选择、hook、结果区及胜负收尾 | `Orchestration/CardPlayPipeline`与`Compilation/CardCompilation.CardPlay`；结算尾由`SettlementCompilation.BattleEndTail`生成，其他公开动作在`ActionCompilation`绑定 | 变更动作生命周期；不能由叶效果决定 |
+| 实际字段/过程/集合与编译器绑定 | `Cards/Compilation/CardCompilation.EffectState` / `CompileEffects` | 新增或尚未绑定的状态、共享过程；保持同一个 Engine 权威状态 |
+| 付款、目标选择、hook、结果区及胜负收尾 | `Orchestration/CardPlayPipeline`与`Cards/Compilation/CardCompilation.CardPlay`；结算尾由`SettlementCompilation.BattleEndTail`生成，其他公开动作在`ActionCompilation`绑定 | 变更动作生命周期；不能由叶效果决定 |
 
 `NormalProgram` / `UpgradedProgram` 非 null 的正式卡以领域程序为执行依据；`AuthorHooks.Programs` 同样保存逐钩子程序。已有 `NormalAmount`、`PowerId`、`Steps` 和 `Conditional` 保留显示与诊断摘要，修改这些摘要不改写正式程序。程序为空表示源块确实为空；未支持或引用缺失仍进入 `Unsupported`，不能注册空牌代替。
 
@@ -31,7 +31,7 @@ C#/.NET 9，base 领域前端经 EnginePackageBuilder 生成冻结 engine/ir@0.3
 
 动态数值在每条效果处编译为当前状态表达式。X 的数值来源明确为 `PaidX`，读取外层付款捕获的局部值，能量改变后保持不变；正式效果不依赖显示 Amount 槽。所选目标和随机目标使用不同绑定，重复块内的随机效果每次执行各抽一次。进入战斗的 hook 根据复制后实例的升级标记选择变体。
 
-公共组装由`Compilation/CombatPackageComposer`安排，维护时按[编译模块参考](../package-compilation-reference.md)进入目标领域；新增共享字段按[开发步骤](../base-development-guide.md#新增共享状态字段)接通初值、生命周期与消费者。
+公共组装由`Composition/CombatPackageComposer`安排，维护时按[编译模块参考](../package-compilation-reference.md)进入目标领域；新增共享字段按[开发步骤](../../../../tools/base-migration-baseline/docs/base-development-guide.md#新增共享状态字段)接通初值、生命周期与消费者。
 
 ## 最小开发反馈
 
@@ -39,7 +39,7 @@ C#/.NET 9，base 领域前端经 EnginePackageBuilder 生成冻结 engine/ir@0.3
 
 仓库根目录运行 `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --effects-only`，只执行本包的语义反例、对照与边界检查。`--combat-only` 执行全部 Slice 检查中除地图检查外的项目，输出明确限定范围；默认仍执行完整门槛，不自动跳过失败。
 
-新增已有效果组合时，改 `ContentSource/*.spire` 和行为案例即可；新增原语时再依次修改领域前端、效果模型/编译器及必要的绑定。公开字段不变时，不要求 net 为效果组合新增注册特判。IR 改变会影响规则和公开构建摘要，消费者仍应从正式工厂取得身份。实际证据及尚未通过的门槛见主清单链接的交付记录。
+新增已有效果组合时，改 `各领域Content/*.spire` 和行为案例即可；新增原语时再依次修改领域前端、效果模型/编译器及必要的绑定。公开字段不变时，不要求 net 为效果组合新增注册特判。IR 改变会影响规则和公开构建摘要，消费者仍应从正式工厂取得身份。实际证据及尚未通过的门槛见主清单链接的交付记录。
 
 ## 风险与验证
 

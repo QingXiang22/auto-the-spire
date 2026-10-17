@@ -45,7 +45,7 @@ H32 表示冻结源对 UTF-16 字符的两路有符号 int 循环，最后转 ui
 
 ### 公开入口排除结果
 
-[现有 Apply](../../../tools/differential/RngSourceCompat.cs#L328-L353)逐流检查Counter并替换，只覆盖run流；它也不是完整bootstrap的原子校验，后面的流若已消费，前面流可能已替换。新接口应先验证所有输入，再创建/绑定任何对象。
+[现有 Apply](../../../tools/base-migration-baseline/differential/RngSourceCompat.cs#L328-L353)逐流检查Counter并替换，只覆盖run流；它也不是完整bootstrap的原子校验，后面的流若已消费，前面流可能已替换。新接口应先验证所有输入，再创建/绑定任何对象。
 
 [RunRngSet.FromSave](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs#L239-L259)仍由原字符串构造根；CloneExact保留根，CloneReseeded只重播指定流且继续原生name hash。PlayerRngSet的[LoadFromSerializable](../../../reference/sts2-sim/src/Sts2Sim.Core/Random/PlayerRngSet.cs#L203-L212)要求现根Seed一致，没有正常创建玩家前注入的入口。即使序列化能操作部分流，也不能修正已生成地图或冻结源完整初始化。没有使用移植/存档伪装正常新Run、私有反射或old改seed。
 
@@ -109,15 +109,15 @@ public static RunState CreateSequentialForNewRun(
 
 ## HP、实例与共同动作的工具语义
 
-[base Facts](../../../tools/differential/NormalRewardEntry.cs#L119-L143)把长期Run.Hp写成run.hp；[reference Facts](../../../tools/differential/NormalRewardReference.cs#L66-L85)同路径却是实时Creature.CurrentHp。base战斗实时HP已在player.hp事实中，不应删除HP维度或把长期字段改成实时提交。
+[base Facts](../../../tools/base-migration-baseline/differential/NormalRewardEntry.cs#L119-L143)把长期Run.Hp写成run.hp；[reference Facts](../../../tools/base-migration-baseline/differential/NormalRewardReference.cs#L66-L85)同路径却是实时Creature.CurrentHp。base战斗实时HP已在player.hp事实中，不应删除HP维度或把长期字段改成实时提交。
 
-本次[逐边界HP证据](../../../.audit/dsh-normal-initialization-audit-20261013/hp-boundaries.json)中，take的base boundary5（EndTurn后）run.hp=80、player.hp=76；源实现说明来自[永久结算:21–50](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/SettlementCompilation.cs#L21-L50)。这不是跨侧同轨迹差异归因，只是各侧投影定义和实际值核对。
+本次[逐边界HP证据](../../../.audit/dsh-normal-initialization-audit-20261013/hp-boundaries.json)中，take的base boundary5（EndTurn后）run.hp=80、player.hp=76；源实现说明来自[永久结算:21–50](../../../tools/base-migration-baseline/BaseSpire/Combat/Compilation/SettlementCompilation.cs#L21-L50)。这不是跨侧同轨迹差异归因，只是各侧投影定义和实际值核对。
 
 下一个授权工具包应保持：战斗中以player.hp/max_hp比较实时值；run.hp/max_hp表达永久提交值。参考无独立长期提交槽时，不能用实时值冒充它：须记录入战永久快照并仅在参考真实胜利/死亡结算生命周期完成边界刷新，明确标记观察投影。奖励/可旅行边界必须核对永久提交=完成所有胜利余效后的实时值，同时核对base真实Run字段及SettledRoom/BattleSettled；无需改参考游戏状态。战斗最大HP变化也按同样边界处理。该工具修正本包未实施，避免在初始化分叉前制造新的等价结论。
 
 永久牌组位置标识仅在本追加/跳过范围有效，不证明删除、变形、跨战斗复制来源的稳定实例身份。后继范围应使用双方可验证的来源映射，不沿用位置标签假定通用稳定。
 
-[Drive](../../../tools/differential/NormalRewardEntry.cs#L20-L65)在双方分别选合法首项，故相同策略≠同具体轨迹。后续应由共同语义控制器先比候选集合/边界，再选择一个动作及参数/目标，分别绑定双方当地实例执行；目标/选牌也必须绑定同一语义选择。任一侧候选不存在、不唯一、不可出牌、目标不合法、容量不足或结果故障必须非零，不可退回本侧第一项继续。各侧展开kind/label及选中语义应共同核对，不能用相同行数或相同动作名掩盖不同候选。现有不合法选择会报故障，但不是共同动作绑定已交付。
+[Drive](../../../tools/base-migration-baseline/differential/NormalRewardEntry.cs#L20-L65)在双方分别选合法首项，故相同策略≠同具体轨迹。后续应由共同语义控制器先比候选集合/边界，再选择一个动作及参数/目标，分别绑定双方当地实例执行；目标/选牌也必须绑定同一语义选择。任一侧候选不存在、不唯一、不可出牌、目标不合法、容量不足或结果故障必须非零，不可退回本侧第一项继续。各侧展开kind/label及选中语义应共同核对，不能用相同行数或相同动作名掩盖不同候选。现有不合法选择会报故障，但不是共同动作绑定已交付。
 
 ## 本次真实验证与证据
 

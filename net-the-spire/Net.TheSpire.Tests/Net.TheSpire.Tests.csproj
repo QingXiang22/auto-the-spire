@@ -11,9 +11,9 @@
   <ItemGroup>
     <ProjectReference Include="../Net.TheSpire.Contracts/Net.TheSpire.Contracts.csproj" />
     <ProjectReference Include="../Net.TheSpire/Net.TheSpire.csproj" />
-    <!-- 正式 Host 的组合层（base 工厂 + 派生 Profile + 控制宿主）：检查直接复用，不复制第二份接线。 -->
+    <!-- 正式 Host 的组合层（纯 DSL 加载 + 派生 Profile + 控制宿主）：检查直接复用，不复制第二份接线。 -->
     <ProjectReference Include="../Net.TheSpire.Host/Net.TheSpire.Host.csproj" />
-    <!-- 首个训练配置的受控切片（只读消费；net 侧不修改内容包）。 -->
-    <ProjectReference Include="../../mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj" />
+    <!-- 通用 Engine 会话与 DSL 类型（net 不实现内容规则）。 -->
+    <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
   </ItemGroup>
 </Project>

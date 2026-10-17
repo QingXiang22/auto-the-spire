@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第八批）——**多选**（`top_attacks_from_discard xN`） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"选择"）；引擎纪律见 [core-the-spire/AGENTS.md](../../../../core-the-spire/AGENTS.md) |
-| 负责范围 | `Engine/Ir.cs`、`Engine/IrTypeChecker.cs`、`Engine/Scheduler.cs`、`Engine/RuleSet.cs`（**新 IR 节点 `query.refList`**，4 处：声明/类型检查/求值/**转储**）、`Slice/SliceAuthorFrontend.cs`、`Slice/CombatSlicePackage.cs`、`BaseSpire.Slice.Tests/SliceFrontendMultiSelectChecks.cs`（新增 5 项） |
+| 负责范围 | `Engine/Ir.cs`、`Engine/IrTypeChecker.cs`、`Engine/Scheduler.cs`、`Engine/RuleSet.cs`（**新 IR 节点 `query.refList`**，4 处：声明/类型检查/求值/**转储**）、`Authoring/SliceAuthorFrontend.cs`、`Composition/CombatSlicePackage.cs`、`BaseSpire.Slice.Tests/Cards/SliceFrontendMultiSelectChecks.cs`（新增 5 项） |
 | 状态 | **部分完成（八批）**：多选已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批7](b-05c-frontend-batch7-2026-10-02.md) |
 
@@ -71,9 +71,9 @@ normal { amount = 1  steps = [top_attacks_from_discard x2] }
 ## 6. 修改文件
 
 - `core-the-spire/Core.TheSpire/Engine/Ir.cs`、`IrTypeChecker.cs`、`Scheduler.cs`、`RuleSet.cs`（新节点 + 三处教学 + 转储）
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`top_attacks_from_discard` 词表）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（多选降级、`discardSlots` 槽位、批次归属规则）
-- `BaseSpire.Slice.Tests/SliceFrontendMultiSelectChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`top_attacks_from_discard` 词表）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（多选降级、`discardSlots` 槽位、批次归属规则）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendMultiSelectChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未提交、未清理共享工作区。

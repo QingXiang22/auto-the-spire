@@ -1,0 +1,60 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development layout only. Vanilla pre-sort and stream derivation remain unsupported.
+procedure ReshuffleDiscard {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = and(not(exists(collection(DrawPile))), exists(collection(DiscardPile)))
+      then = {
+        forEach = {
+          query = collection(DiscardPile) item = card
+          body = {
+            removeFromCollection = { collection = DiscardPile item = card }
+            addToCollection = { collection = DrawPile item = card }
+          }
+        }
+        shuffle = { collection = DrawPile stream = "base-spire:development-shuffle" }
+        emit = { event = AfterShuffle payload = { owner = owner } }
+      }
+    }
+  }
+}
+procedure DrawOne {
+  parameters = { owner = Ref(Player) }
+  locals = { drawn = Binding }
+  body = {
+    if = {
+      condition = and(not(field(owner, Player.DrawBlocked)), less(count(collection(Hand)), 10))
+      then = {
+        call = { procedure = ReshuffleDiscard args = { owner = owner } }
+        let = { into = drawn value = first(collection(DrawPile)) }
+        if = {
+          condition = not(isNone(drawn))
+          then = {
+            removeFromCollection = { collection = DrawPile item = drawn }
+            addToCollection = { collection = Hand item = drawn }
+            emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } }
+          }
+        }
+      }
+    }
+  }
+}
+action Draw {
+  role = player
+  body = { call = { procedure = DrawOne args = { owner = first(type(Player)) } } }
+}
+action DiscardHand {
+  role = player
+  body = {
+    forEach = {
+      query = collection(Hand) item = card
+      body = {
+        removeFromCollection = { collection = Hand item = card }
+        addToCollection = { collection = DiscardPile item = card }
+      }
+    }
+  }
+}

@@ -51,8 +51,10 @@ public static partial class EngineDslCompiler
                 if (member is not DslPropertyNode and not DslDeclarationNode)
                     throw Error(member.Location, "Root members must be declarations or named properties.");
             var properties = new Properties(source.Members.OfType<DslPropertyNode>(), source.Location,
-                "dsl_version", "version", "dependencies", "overrides", "extends", "start", "imports");
+                "dsl_version", "version", "dependencies", "overrides", "extends", "start", "imports", "includes");
             var language = Text(properties.Required("dsl_version"));
+            if (properties.Get("includes") is { } includeNode)
+                throw Error(includeNode.Location, "Use LoadFiles to resolve same-package includes.");
             if (language is not "core/0.1" and not "core/0.2" and not LanguageVersion)
                 throw Error(source.Location, $"dsl_version must be 'core/0.1', 'core/0.2' or '{LanguageVersion}'.");
             _modern = language == LanguageVersion;

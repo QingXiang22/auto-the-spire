@@ -30,8 +30,8 @@
 
 关键位置：
 
-- `mod-the-spire/base-spire/BaseSpire/Slice/RewardWiring.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rewards/RewardWiring.cs`
+- `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs`
 
 ### Boss 房间
 
@@ -61,17 +61,17 @@
 
 共享池元数据：
 
-- `mod-the-spire/base-spire/BaseSpire/Slice/SharedRelicPoolManifest.cs`
+- `mod-the-spire/base-spire/BaseSpire/Relics/SharedRelicPoolManifest.cs`
 - 当前记录 118 个共享遗物身份和稀有度；Treasure 池筛选 Common/Uncommon/Rare。
 
 纯规则袋：
 
-- `mod-the-spire/base-spire/BaseSpire/Slice/TreasureRelicBag.cs`
+- `mod-the-spire/base-spire/BaseSpire/Relics/TreasureRelicBag.cs`
 - 当前实现按稀有度分袋、袋头取出并移除、稀有度回退、池外校验。
 
 测试：
 
-- `mod-the-spire/base-spire/BaseSpire.Slice.Tests/TreasureRelicBagChecks.cs`
+- `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Relics/TreasureRelicBagChecks.cs`
 - 入口：`--treasure-bag-only`
 
 ## 最终验证

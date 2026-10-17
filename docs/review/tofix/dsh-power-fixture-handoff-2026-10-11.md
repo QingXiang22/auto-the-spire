@@ -15,16 +15,16 @@ updated_at: 2026-10-11
 
 ## 改变文件与共同初值契约
 
-- [BaseBackend](../../../tools/differential/BaseBackend.cs#L608)：`GivePower` 由嵌入作者声明 `SliceAuthorFrontend.Load().Powers` 推出 `Ticks = declared.OwnerTurnEnd == PowerTurnEnd.Tick`；没有声明即显式失败。`SkipNextTick=false`。增加仅自检使用的错误初值执行入口，在 Start 后、首个快照前改字段并执行真实脚本。
-- [ComparatorSelfTest](../../../tools/differential/ComparatorSelfTest.cs#L88)：保留原 14 项，追加两种错误初值和玩家/敌方各三类已持有 Power 对照。
-- [FixtureSuite](../../../tools/differential/FixtureSuite.cs)：注释明确 `setup.powers` 是已持有初值。
-- [工具 README](../../../tools/differential/README.md)：补共同契约、时点、方向和实际自检。
-- [原 suite](../../../tools/differential/suites/regression.json)：仅原 power-turn-end-decay 的标题和 provenance.note 纠正旧“Ticks=false”描述；没有新增初值字段。17 个 ID、脚本、seed、牌组、目标、profile、比较维度与终点不变。证据提取对照[负责人原报告](../../../.audit/dsh-plan-2026-10-11/owner-regression/regression.json)逐 case 核验可见合同及完整分母一致。
+- [BaseBackend](../../../tools/base-migration-baseline/differential/BaseBackend.cs#L608)：`GivePower` 由嵌入作者声明 `SliceAuthorFrontend.Load().Powers` 推出 `Ticks = declared.OwnerTurnEnd == PowerTurnEnd.Tick`；没有声明即显式失败。`SkipNextTick=false`。增加仅自检使用的错误初值执行入口，在 Start 后、首个快照前改字段并执行真实脚本。
+- [ComparatorSelfTest](../../../tools/base-migration-baseline/differential/ComparatorSelfTest.cs#L88)：保留原 14 项，追加两种错误初值和玩家/敌方各三类已持有 Power 对照。
+- [FixtureSuite](../../../tools/base-migration-baseline/differential/FixtureSuite.cs)：注释明确 `setup.powers` 是已持有初值。
+- [工具 README](../../../tools/base-migration-baseline/differential/README.md)：补共同契约、时点、方向和实际自检。
+- [原 suite](../../../tools/base-migration-baseline/differential/suites/regression.json)：仅原 power-turn-end-decay 的标题和 provenance.note 纠正旧“Ticks=false”描述；没有新增初值字段。17 个 ID、脚本、seed、牌组、目标、profile、比较维度与终点不变。证据提取对照[负责人原报告](../../../.audit/dsh-plan-2026-10-11/owner-regression/regression.json)逐 case 核验可见合同及完整分母一致。
 - 本包审计目录新增回归双方原记录、诊断、证据与[提取脚本](../../../.audit/dsh-power-fixture-2026-10-11/collect-evidence.ps1)，以及本交接。
 
-[受控初始化契约](../../design/environment-implementation-constraints.md#env-t04受控power初值边界2026-10-11)规定脚本前已经持有。实际受控 base 走程序化切片；[冻结作者镜像](../../../mod-the-spire/base-spire/BaseSpire/Slice/Content/slice-content.author)的 Strength 为 `none`，Vulnerable/Weak 为 `tick`，不是给所有 Power 同一个布尔值。[base 调度](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L2320)只在 Ticks 成立时处理减层，并消费 SkipNextTick。工具据此构造实际初态，没有专设 Vulnerable 名字分支。
+[受控初始化契约](../../design/environment-implementation-constraints.md#env-t04受控power初值边界2026-10-11)规定脚本前已经持有。实际受控 base 走程序化切片；[冻结作者镜像](../../../tools/base-migration-baseline/BaseSpire/Authoring/Examples/slice-content.author)的 Strength 为 `none`，Vulnerable/Weak 为 `tick`，不是给所有 Power 同一个布尔值。[base 调度](../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L2320)只在 Ticks 成立时处理减层，并消费 SkipNextTick。工具据此构造实际初态，没有专设 Vulnerable 名字分支。
 
-参考独立从自己的模型克隆，[ReferenceBackend](../../../tools/differential/ReferenceBackend.cs#L241)调用 `ApplyInternal(owner, stacks)`；[参考 PowerModel](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/PowerModel.cs#L83)仅设置拥有者/层数及登记，没有新施加的跳过语义。[源 PowerCmd](../../../sts2/src/Core/Commands/PowerCmd.cs#L144)只对运行中新施加给玩家的 Debuff 设置 `SkipNextDurationTick=true`。所以初始持有状态的双方 skip 均 false；施加方向不能替代初始化时点。[源 Vulnerable](../../../sts2/src/Core/Models/Powers/VulnerablePower.cs#L59)及[参考 Vulnerable](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VulnerablePower.cs#L53)、[参考 Weak](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WeakPower.cs#L43)的持续衰减在 `AfterSideTurnEnd` 检查 `CombatSide.Enemy`，本脚本对玩家/敌方持有者均在敌方 side 结束后衰减；不概括为各自拥有者回合末。
+参考独立从自己的模型克隆，[ReferenceBackend](../../../tools/base-migration-baseline/differential/ReferenceBackend.cs#L241)调用 `ApplyInternal(owner, stacks)`；[参考 PowerModel](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/PowerModel.cs#L83)仅设置拥有者/层数及登记，没有新施加的跳过语义。[源 PowerCmd](../../../sts2/src/Core/Commands/PowerCmd.cs#L144)只对运行中新施加给玩家的 Debuff 设置 `SkipNextDurationTick=true`。所以初始持有状态的双方 skip 均 false；施加方向不能替代初始化时点。[源 Vulnerable](../../../sts2/src/Core/Models/Powers/VulnerablePower.cs#L59)及[参考 Vulnerable](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VulnerablePower.cs#L53)、[参考 Weak](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WeakPower.cs#L43)的持续衰减在 `AfterSideTurnEnd` 检查 `CombatSide.Enemy`，本脚本对玩家/敌方持有者均在敌方 side 结束后衰减；不概括为各自拥有者回合末。
 
 未修改参考源码/适配器、生产 base/core/net/AI、主清单和 A/C 文件；没有用 base 状态制造参考、放宽 profile、过滤 Power/牌区、补抽、重做地图 port 或随机观察器。
 
@@ -81,7 +81,7 @@ base 单位为 raw-generator-words，reference 为 native-counter-increments，�
 
 只读 `init-upfront` 对原 seed 得出 run_seed_u32=3850333834、up_front_stream_seed_u32=2615586789。参考 run_constructed/profile_applied 均0；player_created 累计230；room_entered 累计295。独立 CloneExact 阶段重放：共享遗物袋112 + 角色遗物袋118 + 共享古代人洗牌0 + act0事件洗牌30 + 普通槽16 + 精英槽17 + boss1 + ancient1 =295。原 base UpFront=17、reference=295，差278；参考首遭遇 `FUZZY_WURM_CRAWLER_WEAK`。这与其他旧 seed 的计数不能混用。
 
-最早可定位阶段是遗物袋前置初始化：[源 InitializeNewRun](../../../sts2/src/Core/Runs/RunManager.cs#L445)先共享袋再玩家袋；[源玩家袋](../../../sts2/src/Core/Entities/Players/Player.cs#L363)负责缺失时填充；[参考 CreatePlayerRelicGrabBag](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L242)实现相同顺序。Dev base 的[Setup 队列入口](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3969)只在存在 treasure wiring 时接前置，其 Dev 场景未接该 wiring，随后直接建遭遇队列；[工厂范围描述](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L193)明确前置阶段/全量池/精英等缺口。Ironclad 其他新范围已有共享袋接入，不能把 Dev 缺口泛化为所有 base 范围。
+最早可定位阶段是遗物袋前置初始化：[源 InitializeNewRun](../../../sts2/src/Core/Runs/RunManager.cs#L445)先共享袋再玩家袋；[源玩家袋](../../../sts2/src/Core/Entities/Players/Player.cs#L363)负责缺失时填充；[参考 CreatePlayerRelicGrabBag](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L242)实现相同顺序。Dev base 的[Setup 队列入口](../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L3969)只在存在 treasure wiring 时接前置，其 Dev 场景未接该 wiring，随后直接建遭遇队列；[工厂范围描述](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L193)明确前置阶段/全量池/精英等缺口。Ironclad 其他新范围已有共享袋接入，不能把 Dev 缺口泛化为所有 base 范围。
 
 交 Codex 的最小生产建议：在本 case 实际 Dev 正式工厂路径接上共享/玩家遗物袋的源顺序与真实源池消费，先用 player_created 阶段112/118独立核对；后续事件/整幕生成及池子子集仍单列差异，继续找首个差异，不能补278次空抽或据该归因宣告随机规则验收。未在本包启动第二生产包。
 

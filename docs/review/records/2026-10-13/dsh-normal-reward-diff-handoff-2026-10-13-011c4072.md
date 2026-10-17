@@ -24,12 +24,12 @@ dispatch_record: .audit/dsh-normal-reward-diff-20261013/task-record.json
 
 ## 已交付与接口变化
 
-- [NormalRewardEntry](../../../../tools/differential/NormalRewardEntry.cs)：正常 `BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0,dev-map)) → CreateSession(gameSeed) → Start` 一次；只提交合法动作，不设初始牌区、HP、金币、敌人或强制清场。
-- [NormalRewardReference](../../../../tools/differential/NormalRewardReference.cs)：独立正常 RunState/Overgrowth/Player/MapTravel/RoomFactory/PushRoom/Enter；真实战胜后 `ResolveOutcomeAsync(true)`，读取 GeneratedRewards，真实 `SelectOption/Take/Skip` 消费，最后正常 Exit/Pop。
-- [独立严格 suite](../../../../tools/differential/suites/normal-reward-prefix.json)：两个固定 case，Ironclad/A0/dev-map；take seed=`ENV-T03-SEED-L`，skip seed=`ENV-T04-RNG-SHUFFLE-001`，`vanilla-compatible@1`。两侧采用同一可见候选策略，但路径分叉后展开动作不同，**不能称作相同具体动作前缀的成功对拍**。完整动作在每侧 kind/label 中保留。
-- [FixtureSuite](../../../../tools/differential/FixtureSuite.cs) 增加 normal-reward kind 与策略动作；[TestCommand](../../../../tools/differential/TestCommand.cs) 增加 rewards/permanent-inventory/reward-closure 实测门槛。记录金币/Hp/MaxHp、永久牌组逐位置实例/定义/升级、药水库存/容量、奖励牌序/稀有度/升级/金币/药水存在与解决状态、地图节点/连线/坐标/阶段、真实合法候选及随机读数。
-- [Comparator](../../../../tools/differential/Comparator.cs) 先比较共同前缀，再报告边界数量，避免总数差遮住更早首差。原17定义未改；[ComparatorSelfTest](../../../../tools/differential/ComparatorSelfTest.cs) 仅修复既有可空警告。[ReferenceBackend](../../../../tools/differential/ReferenceBackend.cs) 最小开放工具内部投影辅助方法；两侧分派增添新 kind。
-- [工具用法](../../../../tools/differential/README.md#正常首战奖励前缀) 明确正常入口与旧受控 run 命令分列。永久牌组位置只适用于本包追加/跳过，不是移除/变形/跨战斗复制的通用稳定实例身份。
+- [NormalRewardEntry](../../../../tools/base-migration-baseline/differential/NormalRewardEntry.cs)：正常 `BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0,dev-map)) → CreateSession(gameSeed) → Start` 一次；只提交合法动作，不设初始牌区、HP、金币、敌人或强制清场。
+- [NormalRewardReference](../../../../tools/base-migration-baseline/differential/NormalRewardReference.cs)：独立正常 RunState/Overgrowth/Player/MapTravel/RoomFactory/PushRoom/Enter；真实战胜后 `ResolveOutcomeAsync(true)`，读取 GeneratedRewards，真实 `SelectOption/Take/Skip` 消费，最后正常 Exit/Pop。
+- [独立严格 suite](../../../../tools/base-migration-baseline/differential/suites/normal-reward-prefix.json)：两个固定 case，Ironclad/A0/dev-map；take seed=`ENV-T03-SEED-L`，skip seed=`ENV-T04-RNG-SHUFFLE-001`，`vanilla-compatible@1`。两侧采用同一可见候选策略，但路径分叉后展开动作不同，**不能称作相同具体动作前缀的成功对拍**。完整动作在每侧 kind/label 中保留。
+- [FixtureSuite](../../../../tools/base-migration-baseline/differential/FixtureSuite.cs) 增加 normal-reward kind 与策略动作；[TestCommand](../../../../tools/base-migration-baseline/differential/TestCommand.cs) 增加 rewards/permanent-inventory/reward-closure 实测门槛。记录金币/Hp/MaxHp、永久牌组逐位置实例/定义/升级、药水库存/容量、奖励牌序/稀有度/升级/金币/药水存在与解决状态、地图节点/连线/坐标/阶段、真实合法候选及随机读数。
+- [Comparator](../../../../tools/base-migration-baseline/differential/Comparator.cs) 先比较共同前缀，再报告边界数量，避免总数差遮住更早首差。原17定义未改；[ComparatorSelfTest](../../../../tools/base-migration-baseline/differential/ComparatorSelfTest.cs) 仅修复既有可空警告。[ReferenceBackend](../../../../tools/base-migration-baseline/differential/ReferenceBackend.cs) 最小开放工具内部投影辅助方法；两侧分派增添新 kind。
+- [工具用法](../../../../tools/base-migration-baseline/differential/README.md#正常首战奖励前缀) 明确正常入口与旧受控 run 命令分列。永久牌组位置只适用于本包追加/跳过，不是移除/变形/跨战斗复制的通用稳定实例身份。
 
 修改边界仅 tools/differential、本包 .audit/.artifacts 和本交接；未修改 base/core/net/reference 玩法、生产工程或旧证据，未 reset/clean/提交，未派其他会话。
 
@@ -82,7 +82,7 @@ take 永久追加牌分别为 Forgotten Ritual / Bloodletting；skip 两侧永�
 源依据与边界：
 
 - [原游戏 CombatRoom:261–272](../../../../sts2/src/Core/Rooms/CombatRoom.cs#L261-L272) 从房间结束生成并offer；[RewardsSet:206–254](../../../../sts2/src/Core/Rewards/RewardsSet.cs#L206-L254)定义金币/药水/牌及随机顺序；[RunManager:724–755](../../../../sts2/src/Core/Runs/RunManager.cs#L724-L755)是地图生成上下文。
-- [参考 RunState:175–190](../../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L175-L190)构造时已生成地图；[GenerateCurrentMap:373–385](../../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L373-L385)用 RunRngSet.Seed 派生地图 RNG。[RngSourceCompat.Apply:328–353](../../../../tools/differential/RngSourceCompat.cs#L328-L353)只替换尚未消费的run具名流，不改变根Seed/已生成地图，也不改变玩家Rewards RNG。公开GenerateMap仍使用原生根Seed，没有本包已确认的正常源兼容根Seed注入API。
+- [参考 RunState:175–190](../../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L175-L190)构造时已生成地图；[GenerateCurrentMap:373–385](../../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L373-L385)用 RunRngSet.Seed 派生地图 RNG。[RngSourceCompat.Apply:328–353](../../../../tools/base-migration-baseline/differential/RngSourceCompat.cs#L328-L353)只替换尚未消费的run具名流，不改变根Seed/已生成地图，也不改变玩家Rewards RNG。公开GenerateMap仍使用原生根Seed，没有本包已确认的正常源兼容根Seed注入API。
 - [参考真实胜利:376–399](../../../../reference/sts2-sim/src/Sts2Sim.Core/Rooms/CombatRoom.cs#L376-L399)完成战斗、胜利hooks并生成奖励；本包实际调用该生命周期，未直接伪造奖励。
 
 随机证据没有补抽或删除域：边界Streams为当时累计状态；ReferenceStreams另留初始化/实际触及增量。base单位generator words，reference单位native counter increments；未映射的原生地图、玩家和动态流保留observed证据，不宣称同单位。源版本兼容范围之外的正常根seed/玩家流仍待负责人窄裁决。固定DLL身份经摘要验证；源码语义定位不等于所有当前源码与DLL逐文件等价。
@@ -93,4 +93,4 @@ take 永久追加牌分别为 Forgotten Ritual / Bloodletting；skip 两侧永�
 
 ## 维护与接手自查
 
-用法维护在[工具说明](../../../../tools/differential/README.md#正常首战奖励前缀)，原始证据在本包.audit/.artifacts，当前任务状态仅由[主清单](../../tofix/README.md#env-t04)维护。正文自查可定位目标/当前入口、复用成果、第一步、原完成条件/验收者、首差/未验证及维护位置；这是作者自查，不是独立读者审阅。实际文档检查 `python tools/doc-check/check_docs.py` 扫描479篇 Markdown、0问题、rc0；`git diff --check` rc0，共享已有文件仅提示LF/CRLF转换警告。
+用法维护在[工具说明](../../../../tools/base-migration-baseline/differential/README.md#正常首战奖励前缀)，原始证据在本包.audit/.artifacts，当前任务状态仅由[主清单](../../tofix/README.md#env-t04)维护。正文自查可定位目标/当前入口、复用成果、第一步、原完成条件/验收者、首差/未验证及维护位置；这是作者自查，不是独立读者审阅。实际文档检查 `python tools/doc-check/check_docs.py` 扫描479篇 Markdown、0问题、rc0；`git diff --check` rc0，共享已有文件仅提示LF/CRLF转换警告。

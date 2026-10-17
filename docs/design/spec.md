@@ -1,5 +1,10 @@
 # auto-the-spire 项目规范（草案）
 
+> 2026-10-18生产切换：默认 Host 只加载纯 DSL base 的遗物抽牌开发包，正常 Run 尚未恢复。下文旧实现数量与 C# 接口属于历史行为依据，不代表当前可执行支持；当前边界见[迁移规格](mod-the-spire/engine-dsl-migration/spec.md)和[实际交付](../review/records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)。
+
+
+2026-10-18用户确认：Engine为主体，几乎所有游戏逻辑由完整DSL实现，Spire是该DSL面向内容作者的受限子集。base以DSL规则库与内容配置定义游戏；C#构建IR不等于完成DSL迁移。当前偏差、C#保留边界与迁移验收见[Engine DSL迁移设计](mod-the-spire/engine-dsl-migration.md)。本决定优先于此前将大量C#领域规则作为最终实现的组织说明；既有玩法验收范围继续保留。
+
 本规范定义项目目标、模块边界和规则契约。接手时，先从[当前清单](../review/tofix/README.md)确认任务，再查涉及的章节。第 2～9 节保留旧 STS 兼容实现的行为描述；核对活动 Engine 时，使用下文链接的 ENV 任务包和实现约束。
 
 > 源码依据：仓库中的 [`sts2/`](../../sts2/README-for-browsing.md) 是从本机游戏数据恢复的浏览工程，并非开发者发布的原始源码。以下“源码观察”只描述当前这份恢复工程；`core-the-spire` 是独立实现，不直接复制其 Godot 运行时结构。

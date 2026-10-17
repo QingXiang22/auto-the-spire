@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础战斗内容批**（第五小批）——**`apply_power_all`（对全体施加能力）** + `Thunderclap` |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："典型多敌…逐机制更新net profile/coverage"）；来源：`ContentSource/ironclad-cards.spire:2535` |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（新步骤 + 目标域互斥 + `power`/`stacks` 要求 + hook 允许面）、`Slice/CombatSlicePackage.cs`（降级）、`Slice/Content/slice-content.author`（Thunderclap）、`net` 目录、切片检查（新增 4 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："典型多敌…逐机制更新net profile/coverage"）；来源：`Cards/Content/ironclad-cards.spire:2535` |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（新步骤 + 目标域互斥 + `power`/`stacks` 要求 + hook 允许面）、`Composition/CombatSlicePackage.cs`（降级）、`Authoring/Examples/slice-content.author`（Thunderclap）、`net` 目录、切片检查（新增 4 项） |
 | 状态 | **本小批完成**；B-06a 其余子项仍未完成（见 §5） |
 | 前置 | 第一〜四小批（状态牌 / HP 损失 / 基础牌 / 抽牌） |
 
@@ -70,9 +70,9 @@ card Thunderclap {
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`ApplyPowerAll`、互斥校验、`power`/`stacks` 要求、hook 允许面、不可批次）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`apply_power_all` → `ForEach(monsters, applyPower)`）
-- `BaseSpire/Slice/Content/slice-content.author`（Thunderclap）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`ApplyPowerAll`、互斥校验、`power`/`stacks` 要求、hook 允许面、不可批次）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`apply_power_all` → `ForEach(monsters, applyPower)`）
+- `BaseSpire/Authoring/Examples/slice-content.author`（Thunderclap）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（目录内容 ID）
 - 切片检查：`SliceFrontendApplyPowerAllChecks.cs`（新增 4 项）、`SliceFrontendHookStepChecks.cs`（允许面）、
   `SliceFixtures.cs`（已迁内容清单）、`SliceChecks.cs`（注册）

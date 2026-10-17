@@ -29,8 +29,8 @@
 | --- | --- | --- |
 | `core-the-spire/Core.TheSpire/Engine/` | 通用类型/实例/集合/关系/作用域、IR/类型检查、唯一调度器、选择续接、通用随机/数值配置、纯投影及窄诊断 | Card/Power/Monster/Act/Boss枚举、STS卡名分支、回合/伤害/奖励/地图的内置规则 |
 | `mod-the-spire/base-spire/BaseSpire/SinglePlayer/`（新正式入口落点） | 原版配置/Schema/规则库、正式规则包构建、开局、地图/房间/战斗/长期状态、完整Run | 再写一个调度器；用普通C#可变对象作为独立权威游戏状态；调用Legacy或参考后端执行 |
-| `BaseSpire/ContentSource/` | 正式内容与定义/池的单一来源；现有`.spire`/有来源的JSON/注册数据按实际作者接口迁移 | 正式效果长期再抄一份到`.author`或测试字符串；忽略未知字段/不支持原语后继续加载 |
-| `BaseSpire/Slice/` | 可复用前端/IR构造和旧受控场景；按需抽取共享正确实现 | 用旧切片的固定敌人/诊断牌组或测试开关代替正式整局 |
+| `BaseSpire/{Cards,Powers,Relics,Potions,Enemies}/Content/` | 正式内容与定义/池的单一来源；现有`.spire`/有来源的JSON/注册数据按实际作者接口迁移 | 正式效果长期再抄一份到`.author`或测试字符串；忽略未知字段/不支持原语后继续加载 |
+| `BaseSpire/`各领域的前端／规则／编译模块 | 可复用前端/IR构造和旧受控场景；按需抽取共享正确实现 | 用旧切片的固定敌人/诊断牌组或测试开关代替正式整局 |
 | `net-the-spire/Net.TheSpire/` | 内核公开输出的通用协议编码、目录派生、候选句柄、控制和账本 | 第二套字段/动作/可见性规则；STS伤害/选牌/奖励规则、重演历史、绕过候选直接写状态；新增对base/参考的项目依赖 |
 | `net-the-spire/Net.TheSpire.Host/` | 组合base正式入口与net、配置/stdio传输 | 另一份开局或状态机；每次start丢失正式RNG配置；stdout混入日志 |
 | `tools/differential/` | 双侧适配、语义动作、诊断抽取、严格测试、首个差异/来源/证据 | 生产规则后端；把base结果复制成reference；通过修改游戏状态续跑整局 |
@@ -48,7 +48,7 @@
 
 ## 3. 同一个正式构建、同一条会话创建路径
 
-`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../mod-the-spire/base-spire/README.md)，当前缺口及验收见[唯一清单](../review/tofix/README.md#当前任务)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
+`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../tools/base-migration-baseline/README.md)，当前缺口及验收见[唯一清单](../review/tofix/README.md#当前任务)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
 
 工厂负责构建正式RuleSet，并为给定GameSeed创建**配置完成、尚未Start**的独立Session：选择数值/随机Profile，派生Run/Player/内容流，在任何会消耗随机的开局程序之前布流。Host和BaseBackend调用同一工厂；启动由各控制入口调用一次，禁止工厂和ControlSession各Start一次。范围ID属于不可变构建配置，使用下列显式身份：
 

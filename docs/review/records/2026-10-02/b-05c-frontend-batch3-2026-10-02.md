@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第三批）——`on_enter_combat` / `before_card_played` / `after_card_played` |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（hook 词表 5 个）、`Slice/CombatSlicePackage.cs`（三个新触发点）、`BaseSpire.Slice.Tests/SliceFrontendPlayHookChecks.cs`（新增 4 项检查） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（hook 词表 5 个）、`Composition/CombatSlicePackage.cs`（三个新触发点）、`BaseSpire.Slice.Tests/Cards/SliceFrontendPlayHookChecks.cs`（新增 4 项检查） |
 | 状态 | **部分完成（三批）**：本批把 hook 面补全到 5 个；B-05c 其余子项仍未开始（见 §4） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md)、[批2](b-05c-frontend-batch2-2026-10-02.md) |
 
@@ -67,9 +67,9 @@ B-05a 的分母（354 条声明 / 85 张卡池卡）不变：作者路径覆盖�
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（hook 词表 5 个；`AuthorHooks` 增 3 个字段）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`EnterCombatChain`、`PlayedHookChain`；出牌 body 与 setup 的接线）
-- `BaseSpire.Slice.Tests/SliceFrontendPlayHookChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（hook 词表 5 个；`AuthorHooks` 增 3 个字段）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`EnterCombatChain`、`PlayedHookChain`；出牌 body 与 setup 的接线）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendPlayHookChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/` 语义、Legacy、net、Python 侧。未提交、未清理共享工作区。

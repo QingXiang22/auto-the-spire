@@ -1,0 +1,39 @@
+{
+  "fixture_format": "net-the-spire/declaration-extension-metadata/1",
+  "static_build_id": "base-spire-dsl-0.5.0-dsl.1",
+  "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
+  "projection_id": "base-spire:PlayerView",
+  "participant_role": "player",
+  "default_game_seed": "BASE-DSL-00",
+  "content": {
+    "base-spire:Relic": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:the-abacus"
+      ]
+    }
+  },
+  "collections": {
+    "base-spire:Relics": {
+      "use": "group",
+      "owner_kind_type_id": "base-spire:Player"
+    },
+    "base-spire:Hand": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-PILES",
+      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+    },
+    "base-spire:DrawPile": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-PILES",
+      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+    },
+    "base-spire:DiscardPile": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-PILES",
+      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+    }
+  },
+  "terminal_outcomes": {},
+  "known_positions": {}
+}

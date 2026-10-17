@@ -1,0 +1,11 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity Player {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    Block = { type = Int(min = 0, max = 999) default = 0 }
+    DrawBlocked = { type = Bool default = false }
+  }
+}

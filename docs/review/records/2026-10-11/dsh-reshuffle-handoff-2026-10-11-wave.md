@@ -30,7 +30,7 @@
 - 为什么需要：base 受控切片按声明顺序发牌、`Shuffle` 流消费 0；参考侧的战斗开始是它自己的原生流程（`Player.PopulateCombatState → DrawPile.RandomizeOrderInternal → UnstableShuffle`），必然先用 `Shuffle` 流洗一次开局牌堆（10 张＝9 次）。适配器随后的 `ApplyOrdered` 只覆盖**牌序**，游标不会回来，于是脚本开始前参考侧比 base 多 9 次偏移。这是纯工具侧不对齐，不是任何一侧的规则结论。
 - 接口/语义变化：只影响参考侧受控单场路径的**随机起始状态**；`RngSourceCompat.cs` 内容变化使 `reference_identity.profile_code_sha256` 由 `sha256:952e57a0…` 变为 `sha256:1830ab9b…`（所有 reference 记录随之变化，属预期身份信号）。base 侧、core/base/net/reference 生产、生产 csproj、suite 定义（`tools/differential/suites/regression.json`，sha256 仍 `5cca423f…`）全部未改；原 17 ID/seed/维度/预期 terminal/Profile 声明逐项未动。
 - 影响面实测：对齐后除 `random-reshuffle-unsupported` 之外，其余 16 case 的 `verdict`/`base_status`/`reference_status`/维度/终点/`divergences` **逐项不变**；记录文件层面只有新增的 `notes[2]` 与 `profile_code_sha256` 两项差异（见 `bounded-change-check.txt`、`record-field-diff.txt`）。
-- 方法记录写入 [tools/differential/README.md](../../../../tools/differential/README.md#重洗比较2026-10-11)（新增「重洗比较（2026-10-11）」小节，并在工具契约段加指针）。
+- 方法记录写入 [tools/differential/README.md](../../../../tools/base-migration-baseline/differential/README.md#重洗比较2026-10-11)（新增「重洗比较（2026-10-11）」小节，并在工具契约段加指针）。
 
 ## 验证与证据
 
@@ -76,7 +76,7 @@ case `random-reshuffle-unsupported`：受控切片包、`game_seed=ENV-T04-CTRL-
 
 **调用栈（两侧，只读源码定位）**
 
-- base：`CardDrawProcedures.One → Reshuffle`（[CardDrawProcedures.cs:33-37](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDrawProcedures.cs#L33-L37)：弃牌逐张移入抽牌堆 → `scope.ShuffleCollection(piles.Draw, SliceManifest.DrawStream)`）→ core [`StateStore.ShuffleCollection`:455-470](../../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs#L455-L470) → `RandomService.Shuffle(stream, members)`。
+- base：`CardDrawProcedures.One → Reshuffle`（[CardDrawProcedures.cs:33-37](../../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDrawProcedures.cs#L33-L37)：弃牌逐张移入抽牌堆 → `scope.ShuffleCollection(piles.Draw, SliceManifest.DrawStream)`）→ core [`StateStore.ShuffleCollection`:455-470](../../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs#L455-L470) → `RandomService.Shuffle(stream, members)`。
 - reference：`CardPileCmd.Draw → ShuffleIfNecessary`（[CardPileCmd.cs:365-372](../../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/CardPileCmd.cs#L365-L372)）→ `Shuffle`（[375-407](../../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/CardPileCmd.cs#L375-L407)：`combined = discard + drawPile` → `combined.StableShuffle(shuffleRng)`）→ [`ListExtensions.StableShuffle`:16-27](../../../../reference/sts2-sim/src/Sts2Sim.Core/Helpers/ListExtensions.cs#L16-L27)（先 `Sort(Comparer<T>.Default)` 再不稳定洗牌）→ `Rng.Shuffle`。
 
 ### 首差与裁定
@@ -88,7 +88,7 @@ case `random-reshuffle-unsupported`：受控切片包、`game_seed=ENV-T04-CTRL-
 
 ### 精确 base 缺口（交负责人派包，本会话未改 base）
 
-- 缺口方法：`mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDrawProcedures.cs:33-37` 的 `Reshuffle`（core `StateStore.ShuffleCollection` 跟随其语义）没有源 `StableShuffle` 的预排序。
+- 缺口方法：`mod-the-spire/base-spire/BaseSpire/Cards/Runtime/CardDrawProcedures.cs:33-37` 的 `Reshuffle`（core `StateStore.ShuffleCollection` 跟随其语义）没有源 `StableShuffle` 的预排序。
 - 输入：抽牌堆为空、弃牌堆 `[start:00…start:09]`（5×Strike、4×Defend、1×Bash）；`Shuffle` 流种子 `3072570454`，游标 0。
 - 预期（源语义）：先按内容 Id（源 `ModelId` 定序）再按升级等级排序，再 descending Fisher–Yates，得 `04,05,06,08,01,00,09,03,07,02` → hand `04,05,06,08,01`、draw `00,09,03,07,02`（＝参考侧对齐后实测值）。
 - 实际（base）：不排序直接洗牌，得 `09,01,02,04,06,05,00,08,03,07` → hand `09,01,02,04,06`、draw `05,00,08,03,07`。
@@ -133,6 +133,6 @@ dotnet .artifacts/parallel/dsh-reshuffle-followup-20261011/bin/Debug/net9.0/Diff
 
 ## 维护位置与自查
 
-- 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../tofix/README.md#env-t04)（本轮由负责人 Codex 单写）；方法写 [tools/differential/README.md](../../../../tools/differential/README.md#重洗比较2026-10-11)；本次证据与长日志在 `.audit/dsh-reshuffle-followup-20261011/`，构建在 `.artifacts/parallel/dsh-reshuffle-followup-20261011/`。
+- 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../tofix/README.md#env-t04)（本轮由负责人 Codex 单写）；方法写 [tools/differential/README.md](../../../../tools/base-migration-baseline/differential/README.md#重洗比较2026-10-11)；本次证据与长日志在 `.audit/dsh-reshuffle-followup-20261011/`，构建在 `.artifacts/parallel/dsh-reshuffle-followup-20261011/`。
 - 预期读者能定位：目标与有效状态（主清单 T04）、可复用成果（「已交付」）、第一步（「接手后先做什么」2）、完成条件与验收者（主清单完成条件＋负责人 Codex）、阻塞/未验证（「未验证与缺口」）、维护位置（本节）。
 - 以上属作者自查，不是独立读者验证；`ready_for_review` 表示请负责人复核，不等于验收。本会话未提交、未推送、未打 tag、未改其他包构建根。

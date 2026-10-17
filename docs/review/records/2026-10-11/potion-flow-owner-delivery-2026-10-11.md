@@ -4,13 +4,13 @@
 
 ## 接手后的第一步
 
-1. 核对主清单与当前工作区，不重做本包的库存/奖励编排。规则代码在 `BaseSpire/Slice/PotionInventoryRules.cs`、`SpirePotionSource.cs`、`Effects/PotionEffectSource.cs`；作者入口见[base开发指南](../../../design/mod-the-spire/base-development-guide.md#补充药水时只读本机制)。
+1. 核对主清单与当前工作区，不重做本包的库存/奖励编排。规则代码在 `BaseSpire/Potions/PotionInventoryRules.cs`、`SpirePotionSource.cs`、`Effects/PotionEffectSource.cs`；作者入口见[base开发指南](../../../../tools/base-migration-baseline/docs/base-development-guide.md#补充药水时只读本机制)。
 2. 在已就绪且负责人派单的前提下，B复核受控初始化交接，再为本包补独立药水生成、容量、使用及随机时序对拍。独立参考所需初始化缺口只阻塞对应case，不能换池或补抽。源码对账、受控检查和正常公开轨迹已经可复用。
 3. A后继生产按主清单队列认领完整房型/奖励机制包。其余37项药水使用效果逐机制实现，禁止把可生成元数据当行为覆盖率；本次没有派发新的远程生产包。
 
 ## 已交付与职责
 
-- `ContentSource/potions.spire` 保存角色3项+共享45项的完整生成元数据与源顺序。`SinglePlayerContent` 加载实际资源并将摘要纳入内容身份，11项使用程序进作者模型，其余37项留真实元数据和具名未支持原因，仍参与生成。
+- `Potions/Content/potions.spire` 保存角色3项+共享45项的完整生成元数据与源顺序。`SinglePlayerContent` 加载实际资源并将摘要纳入内容身份，11项使用程序进作者模型，其余37项留真实元数据和具名未支持原因，仍参与生成。
 - `SpirePotionSource` 只做领域读取/链接；效果复用既有解析器、逐效果程序与编译器。11项为 Fire、Block、Strength、Dexterity、Flex、BlessingOfTheForge、BeetleJuice、Energy、Swift、Weak、Vulnerable。DexterityPower通过正式Power源注册，没有新增白名单。
 - `PotionInventoryRules` 拥有药水类型、栏位、奖励候选、生成/取得/丢弃；Run/库存全部在Engine，没有另一份C#状态。三槽容量、SlotIndex与空槽稳定；可见成员按槽号排列。领取保留同一候选实例。
 - 满栏时TakeRewardPotion不合法，奖励保留。源没有自动替换对话框：先DiscardPotion，再领取；也可SkipRewardPotion。取消就是不提交丢弃。领取/丢弃/跳过不抽随机。

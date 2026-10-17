@@ -16,7 +16,7 @@
 
 公开重放发现本包初版快照字段不允许负值，负力量造成ValueOutOfRange；已改为与Power.Stacks相同的-99..99，并增加准确反例。最终实际Boss轨迹通过，不以忽略异常替代修复。
 
-编写方法见[下一回合抽牌指南](../../../design/mod-the-spire/base-development-guide.md#编写下一回合抽牌收益)及[编排规格](../../../design/mod-the-spire/base-orchestration/spec.md#下一回合抽牌)。旧grantPower文本钩子的名字仍受静态规范表限制；本包开始期间施加的反例通过受控作者模型构造，不能将其写成该旧钩子的自定义名字链接已完成。新Power规则注册和卡牌引用本身可用。
+编写方法见[下一回合抽牌指南](../../../../tools/base-migration-baseline/docs/base-development-guide.md#编写下一回合抽牌收益)及[编排规格](../../../design/mod-the-spire/base-orchestration/spec.md#下一回合抽牌)。旧grantPower文本钩子的名字仍受静态规范表限制；本包开始期间施加的反例通过受控作者模型构造，不能将其写成该旧钩子的自定义名字链接已完成。新Power规则注册和卡牌引用本身可用。
 
 ## DSH交付核对与并发边界
 

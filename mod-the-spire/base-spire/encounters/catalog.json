@@ -1,0 +1,887 @@
+{
+  "format": "engine-dsl/source-catalog@1",
+  "kind": "encounter",
+  "source_baseline": "local-sts2-source-2026-10-18",
+  "entries": [
+    {
+      "id": "base-spire:aeonglass-boss",
+      "name": "AeonglassBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/AeonglassBoss.cs",
+      "source_sha256": "4a4bce9de986094ad8f24c56ddafe18741fd0ef92867b405993bd946f1a04fba",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:axebots-normal",
+      "name": "AxebotsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/AxebotsNormal.cs",
+      "source_sha256": "3a0e7dc63f498284ffc034a5ae6a8651bdaf4e330567ff7a4f0ee9a164e66637",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:battleworn-dummy-event-encounter",
+      "name": "BattlewornDummyEventEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/BattlewornDummyEventEncounter.cs",
+      "source_sha256": "b252a672c86e4458652af60d2b5abb99516ef0016f79b3bc58b93412e843b4cf",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:bowlbugs-normal",
+      "name": "BowlbugsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/BowlbugsNormal.cs",
+      "source_sha256": "9825e8ed31f14a2ca08e5b0e2cc790962362bf59f682b9bf62d9354ad831f0e4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:bowlbugs-weak",
+      "name": "BowlbugsWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/BowlbugsWeak.cs",
+      "source_sha256": "7507c76268d014e7cb13ec1e4342aaf1efb5831317324a612f7fd62c1777ebfc",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:bygone-effigy-elite",
+      "name": "BygoneEffigyElite",
+      "source_path": "sts2/src/Core/Models/Encounters/BygoneEffigyElite.cs",
+      "source_sha256": "f7437870dfd57c72bd6f51220775759cb5598a0f342ee28cb6c22adcf29a8331",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:byrdonis-elite",
+      "name": "ByrdonisElite",
+      "source_path": "sts2/src/Core/Models/Encounters/ByrdonisElite.cs",
+      "source_sha256": "839f6504977f75de8895517e432b2eb7ca16e6caf86479e93bd8036049a34330",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ceremonial-beast-boss",
+      "name": "CeremonialBeastBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/CeremonialBeastBoss.cs",
+      "source_sha256": "423692a5d8cfdc20af64817ee972c93ca9089da3d6403de7d8e3955a03c3af25",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:chompers-normal",
+      "name": "ChompersNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/ChompersNormal.cs",
+      "source_sha256": "4a818e6532f6de8ba09835d2b21d325ee045885be579c58ee869f38802302827",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:construct-menagerie-normal",
+      "name": "ConstructMenagerieNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/ConstructMenagerieNormal.cs",
+      "source_sha256": "287f31b8fdf6c8b429f9b35e668aa59dad2cef65cfa7142d7e576c416870fcb3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:corpse-slugs-normal",
+      "name": "CorpseSlugsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/CorpseSlugsNormal.cs",
+      "source_sha256": "2544670a94e60b0034c616cb99a368f0068347267372f2f57dfc9de09b682c3e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:corpse-slugs-weak",
+      "name": "CorpseSlugsWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/CorpseSlugsWeak.cs",
+      "source_sha256": "8b63878122e5b09a96510dabe2546ad9aa9e4a796d6df144d464a54994bba0f2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:cubex-construct-normal",
+      "name": "CubexConstructNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/CubexConstructNormal.cs",
+      "source_sha256": "dbea21586a703966af38d642a69beed341be7074d389bd1bbbf3dcf85e797fc9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:cultists-normal",
+      "name": "CultistsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/CultistsNormal.cs",
+      "source_sha256": "7b8ecee4b24b67203de229b5109c1a6c6e4b120f8141cbed296fd3a8399904df",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:decimillipede-elite",
+      "name": "DecimillipedeElite",
+      "source_path": "sts2/src/Core/Models/Encounters/DecimillipedeElite.cs",
+      "source_sha256": "0da9ea28ff0171a652192f3e4306767b3e07f4517bd903c97ede9f5b430a7572",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dense-vegetation-event-encounter",
+      "name": "DenseVegetationEventEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/DenseVegetationEventEncounter.cs",
+      "source_sha256": "275c12c3e1ca00a1cc4cf176518973ea5b967558f4a53d00acc7264116fa6bdf",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:deprecated-encounter",
+      "name": "DeprecatedEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/DeprecatedEncounter.cs",
+      "source_sha256": "71e3a234405147dd7273a43fb9a80aa4b4f52c6a772342739c21b4b6f7b9cd1a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:devoted-sculptor-weak",
+      "name": "DevotedSculptorWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/DevotedSculptorWeak.cs",
+      "source_sha256": "4a2542328d2f57d88aa167c0501f99b782c86f1e52f0e679e9640e3eaac7ed72",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:entomancer-elite",
+      "name": "EntomancerElite",
+      "source_path": "sts2/src/Core/Models/Encounters/EntomancerElite.cs",
+      "source_sha256": "50a2390b9328c24aaeec0732864dbf7de583e57007910ab41f42c514b687f736",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:exoskeletons-normal",
+      "name": "ExoskeletonsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/ExoskeletonsNormal.cs",
+      "source_sha256": "edc6c4b778ec0f53e4bfbcec77c65929feebd7cf911ad37f1b015032320b9e23",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:exoskeletons-weak",
+      "name": "ExoskeletonsWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/ExoskeletonsWeak.cs",
+      "source_sha256": "3c804d173bd5305f335dc8903987b792ff189ed91267d7938a6ee1ff169f7b7f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fabricator-normal",
+      "name": "FabricatorNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/FabricatorNormal.cs",
+      "source_sha256": "0390ef0151a229f5b827b4ad77bed3feb39bd9331e9f06a916c6cae86de0966d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fake-merchant-event-encounter",
+      "name": "FakeMerchantEventEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/FakeMerchantEventEncounter.cs",
+      "source_sha256": "c89809e8021159cda1abef403fbf4775e136e27341fd5afb71d77d983d344e45",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:flyconid-normal",
+      "name": "FlyconidNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/FlyconidNormal.cs",
+      "source_sha256": "9c0d5915405eb4f653b55178906290bcd6e797fe5d0cb2e5b7374e2017e4c5eb",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fogmog-normal",
+      "name": "FogmogNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/FogmogNormal.cs",
+      "source_sha256": "a998845b7f23e2492eb26e21b8bbfc202da5fc94d444cba0c5545605f462a3f3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fossil-stalker-normal",
+      "name": "FossilStalkerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/FossilStalkerNormal.cs",
+      "source_sha256": "8e2fb9b37d0f9fcfb0be7b74050cfed82a89e4de98ae1de710d768eb20fc72dd",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:frog-knight-normal",
+      "name": "FrogKnightNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/FrogKnightNormal.cs",
+      "source_sha256": "91ea3468c6309284cc386d98cf17895fc0cfff337eeebc09a859d989a5500f96",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fuzzy-wurm-crawler-weak",
+      "name": "FuzzyWurmCrawlerWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/FuzzyWurmCrawlerWeak.cs",
+      "source_sha256": "306bae08ec4ffc05936242ab7749bfe24e8facf79cbdbe4e3d4bc84d9a25bd0e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:globe-head-normal",
+      "name": "GlobeHeadNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/GlobeHeadNormal.cs",
+      "source_sha256": "3b2ff707027b05fffac4407ea88a6bacd420b559968e4cb76b93f311bb11498f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:gremlin-merc-normal",
+      "name": "GremlinMercNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/GremlinMercNormal.cs",
+      "source_sha256": "0d68c699af2cd9778313d5707cfa5afe5c4b9bb4203fd392c2a2e9e52b1319ee",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:haunted-ship-normal",
+      "name": "HauntedShipNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/HauntedShipNormal.cs",
+      "source_sha256": "67e13e2cced232196d069d1414c4adff53ecfc944d7e05e832e9ed0894cce00f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hunter-killer-normal",
+      "name": "HunterKillerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/HunterKillerNormal.cs",
+      "source_sha256": "23196401f9a10864dde0982dfd5f4e37ff15da086a2f04c98fd42274958f0c9c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:infested-prisms-elite",
+      "name": "InfestedPrismsElite",
+      "source_path": "sts2/src/Core/Models/Encounters/InfestedPrismsElite.cs",
+      "source_sha256": "113529e21714e7eed5756845f2f7ab0ff841b8e3c07a31bccb6b5b841cec7eae",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:inklets-normal",
+      "name": "InkletsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/InkletsNormal.cs",
+      "source_sha256": "701493790cfac154a8f7a49e82c455654b384757818e3b5b5dd50650607e5139",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:kaiser-crab-boss",
+      "name": "KaiserCrabBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/KaiserCrabBoss.cs",
+      "source_sha256": "07c9dfac1e3d99521efc9d55550e3aa089259f28a677ff71b5d456f632117e55",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:knights-elite",
+      "name": "KnightsElite",
+      "source_path": "sts2/src/Core/Models/Encounters/KnightsElite.cs",
+      "source_sha256": "1eed609a722c25e51764424e03707f9828d4ccd7bda8e7ffbd9256bd63ecb166",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:knowledge-demon-boss",
+      "name": "KnowledgeDemonBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/KnowledgeDemonBoss.cs",
+      "source_sha256": "7e6f57fd52e38caa7a85f2824a6982049e3cf449cfdfd4864fa101a9b4eb75ad",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:lagavulin-matriarch-boss",
+      "name": "LagavulinMatriarchBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/LagavulinMatriarchBoss.cs",
+      "source_sha256": "a9acc143be107e4608acb4072487b5647321e385860770ace3197d0b5775a420",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:living-fog-normal",
+      "name": "LivingFogNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/LivingFogNormal.cs",
+      "source_sha256": "7ab2f325cd780943141153c3f20c2b46d948c3757364e4d0dad792216d12c669",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:louse-progenitor-normal",
+      "name": "LouseProgenitorNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/LouseProgenitorNormal.cs",
+      "source_sha256": "2255bfdcc6b6e4171adec4223ccd7c89e88233e28b15380f9e9e9235c7a8e350",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mawler-normal",
+      "name": "MawlerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/MawlerNormal.cs",
+      "source_sha256": "86b8ddea688444d729b279f6e5df181d80d8afd62452960d83795941e5e72f42",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mecha-knight-elite",
+      "name": "MechaKnightElite",
+      "source_path": "sts2/src/Core/Models/Encounters/MechaKnightElite.cs",
+      "source_sha256": "7a2b8bceaeaa640c49ead31fafa282da09b7727ffd14aacbfe5e81adad44bae8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mysterious-knight-event-encounter",
+      "name": "MysteriousKnightEventEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/MysteriousKnightEventEncounter.cs",
+      "source_sha256": "f61dace2f57c326e564a5b3ab581addf5a87299c93f6b580af25549df9ceadf1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mytes-normal",
+      "name": "MytesNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/MytesNormal.cs",
+      "source_sha256": "19d319a0db7ed7646e3400985394e0a20095ba333e27dc57c44f6fb23d0ad097",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:nibbits-normal",
+      "name": "NibbitsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/NibbitsNormal.cs",
+      "source_sha256": "a5b84e1df56a5e85785ab654b899777db8baee453481de4faf140f7420f2edd9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:nibbits-weak",
+      "name": "NibbitsWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/NibbitsWeak.cs",
+      "source_sha256": "fa2354ed95db89c0d43cc2307cf2d6570a0a8c8028d9fd861ca432c52a0727b4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:overgrowth-crawlers",
+      "name": "OvergrowthCrawlers",
+      "source_path": "sts2/src/Core/Models/Encounters/OvergrowthCrawlers.cs",
+      "source_sha256": "19522315b75732f6b94cc09b63c2916edf626c226ee8efdb82be7af33ca8ff5f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ovicopter-normal",
+      "name": "OvicopterNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/OvicopterNormal.cs",
+      "source_sha256": "79e1cc10a71566b316b20a23e7b7d447bdbf98896c2aca697d0af01e83422525",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:owl-magistrate-normal",
+      "name": "OwlMagistrateNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/OwlMagistrateNormal.cs",
+      "source_sha256": "7d5b86b240f933ced98332eaa50e3e3eee5483ce12176e31a9e6c9ea8908b571",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:phantasmal-gardeners-elite",
+      "name": "PhantasmalGardenersElite",
+      "source_path": "sts2/src/Core/Models/Encounters/PhantasmalGardenersElite.cs",
+      "source_sha256": "bed10f5feebd36d498891cbff36cf61d47b2485a02b1e86d6543a44ef4fb3841",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:phrog-parasite-elite",
+      "name": "PhrogParasiteElite",
+      "source_path": "sts2/src/Core/Models/Encounters/PhrogParasiteElite.cs",
+      "source_sha256": "7c886e8ebf7db10427f78cbd958f85132d1311e8fc2b0e6f5c84aef5af4a67d6",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:punch-construct-normal",
+      "name": "PunchConstructNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/PunchConstructNormal.cs",
+      "source_sha256": "0d920c1c446333d1a39b16a9814baa5f95a09a70a13e01900b36047907f406fa",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:punch-off-event-encounter",
+      "name": "PunchOffEventEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/PunchOffEventEncounter.cs",
+      "source_sha256": "b299a564e5bceb0e6aecda0eb13b5bb1374ddc75705e37039123ac5b07bd8060",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:queen-boss",
+      "name": "QueenBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/QueenBoss.cs",
+      "source_sha256": "a951d1d566e97cd332ddb614b084bcfde242e8d5ca31839ec2a411943e76bc55",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ruby-raiders-normal",
+      "name": "RubyRaidersNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/RubyRaidersNormal.cs",
+      "source_sha256": "ce3789a28fb2c5f2e6645473ef806f6bcce236b47fb476f3c092db1b262a5f19",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:scrolls-of-biting-normal",
+      "name": "ScrollsOfBitingNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/ScrollsOfBitingNormal.cs",
+      "source_sha256": "abf3819e25f9a5f642b5641f4c233492b95392b084b0af5d1758e33f8f78366b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:scrolls-of-biting-weak",
+      "name": "ScrollsOfBitingWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/ScrollsOfBitingWeak.cs",
+      "source_sha256": "290585aedc2b83455d1c28608dfbbc9af689ae8e4449ad98802772237fba7e2c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:seapunk-normal",
+      "name": "SeapunkNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SeapunkNormal.cs",
+      "source_sha256": "c16009043b6802db13d35de88667dff611bb3f6cf3e6cd06b69801b0d514cd14",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:seapunk-weak",
+      "name": "SeapunkWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/SeapunkWeak.cs",
+      "source_sha256": "9ddbeb8262f02d729998124f684bfcb6f090848d8ab17ba41f64dae36a9773b9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sewer-clam-normal",
+      "name": "SewerClamNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SewerClamNormal.cs",
+      "source_sha256": "6f3cf30ed9c1e731740eb55fc0eec13931ef5c5e1a84886ff34bb877a8b5db62",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shrinker-beetle-weak",
+      "name": "ShrinkerBeetleWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/ShrinkerBeetleWeak.cs",
+      "source_sha256": "188392adb5585394338ce8ffd4be9bfb1f84fd15f66a7f3f07447e04b7731b98",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:skulking-colony-elite",
+      "name": "SkulkingColonyElite",
+      "source_path": "sts2/src/Core/Models/Encounters/SkulkingColonyElite.cs",
+      "source_sha256": "1aafa59bf3ac06b6781da281dddd65d6f063a5aa65c463321b89ebb3badd3b2d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slimed-berserker-normal",
+      "name": "SlimedBerserkerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SlimedBerserkerNormal.cs",
+      "source_sha256": "e1659ca8f79cc932f7b825951bed44043a0faa373ba5443ed700ae510df1a1aa",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slimes-normal",
+      "name": "SlimesNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SlimesNormal.cs",
+      "source_sha256": "0c53efaaf3053551c55be100f69cfe3dfe5f32f6fac03f57db77d85c54db1c74",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slimes-weak",
+      "name": "SlimesWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/SlimesWeak.cs",
+      "source_sha256": "e28277926221eb06799873115b096e9b48a8672446754da75c5ae902beede7ec",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slithering-strangler-normal",
+      "name": "SlitheringStranglerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SlitheringStranglerNormal.cs",
+      "source_sha256": "6303054f9e6b1809fe058179f5fe0a5a2b834255e300dd1e1b065c4ad37ccae3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sludge-spinner-weak",
+      "name": "SludgeSpinnerWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/SludgeSpinnerWeak.cs",
+      "source_sha256": "c11a81ed470fd487585947411ad589d2d40192befa4d7dd546cd0c35b8f29ff6",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slumbering-beetle-normal",
+      "name": "SlumberingBeetleNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SlumberingBeetleNormal.cs",
+      "source_sha256": "0ae40808e8c225cbcc724dc14b4439c44a9dbdbd0c849d64d58e10cf90cc0932",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:snapping-jaxfruit-normal",
+      "name": "SnappingJaxfruitNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SnappingJaxfruitNormal.cs",
+      "source_sha256": "0a98fdd512aff75b5b1ff5876d7f9770a19cd38ef24e660c42ec9a0efd4a2548",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:soul-fysh-boss",
+      "name": "SoulFyshBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/SoulFyshBoss.cs",
+      "source_sha256": "a5cc41556f7878a644b630643f71a0bd43cb396a75fbcb7fe48640bf7607cd89",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:soul-nexus-elite",
+      "name": "SoulNexusElite",
+      "source_path": "sts2/src/Core/Models/Encounters/SoulNexusElite.cs",
+      "source_sha256": "cd2209ee4d926e810ca322b91a0b9c7e2204ce8fead23e9d0f3c610904ff1c70",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:spiny-toad-normal",
+      "name": "SpinyToadNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/SpinyToadNormal.cs",
+      "source_sha256": "bdc0df997f8ac1628e4d722ad9f73ff72cf053f93b64d9d649fe5770d1327ed5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:terror-eel-elite",
+      "name": "TerrorEelElite",
+      "source_path": "sts2/src/Core/Models/Encounters/TerrorEelElite.cs",
+      "source_sha256": "5800407b7b8f6220ff37f73dda4d4add466bbc9db1c5c20f807d97ae057becf1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:test-subject-boss",
+      "name": "TestSubjectBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/TestSubjectBoss.cs",
+      "source_sha256": "4b0128135b7281f606ad8142c996e3061c387640f2285854db351945745aa39f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-architect-event-encounter",
+      "name": "TheArchitectEventEncounter",
+      "source_path": "sts2/src/Core/Models/Encounters/TheArchitectEventEncounter.cs",
+      "source_sha256": "8cf57b6ee54884b1e7e4143d2d0aa09d03865b2d5ad8acc37d0d304f19e94d14",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-insatiable-boss",
+      "name": "TheInsatiableBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/TheInsatiableBoss.cs",
+      "source_sha256": "ea72f7e7e41fceb2c2afb65bf91e47cd1ec876b69be880df5d0b7f311ac6f217",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-kin-boss",
+      "name": "TheKinBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/TheKinBoss.cs",
+      "source_sha256": "eae6f5da4e04c1512fdd01f24838f5e659812162088259f4764573d057df076f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-lost-and-forgotten-normal",
+      "name": "TheLostAndForgottenNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/TheLostAndForgottenNormal.cs",
+      "source_sha256": "e77c9493a7adbdea9b732c98fdf3daefe20c8d86df5da0356598834c20f94ef0",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-obscura-normal",
+      "name": "TheObscuraNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/TheObscuraNormal.cs",
+      "source_sha256": "e3ef94c067e79aaed8465490e070397481e75a40150ee0405eb4581d5de71d92",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:thieving-hopper-weak",
+      "name": "ThievingHopperWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/ThievingHopperWeak.cs",
+      "source_sha256": "dadf66ac4d10376057a33300f5cd2e5e71923279cf4a45dc1320a7aedb429624",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:toadpoles-weak",
+      "name": "ToadpolesWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/ToadpolesWeak.cs",
+      "source_sha256": "f88dc5d5d31aa51c13e6f754b9a2d2d0a831476366ef0e331e2bee8c862fa112",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tunneler-normal",
+      "name": "TunnelerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/TunnelerNormal.cs",
+      "source_sha256": "8be8c5e02ab738d2cfd931953916bc9146596b3c901fb9e6759c25f0c2a780ae",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tunneler-weak",
+      "name": "TunnelerWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/TunnelerWeak.cs",
+      "source_sha256": "013ac46c54b228d412a28c18294b5a65d3623a28fa28388e5a856d24ca1e0fae",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:turret-operator-weak",
+      "name": "TurretOperatorWeak",
+      "source_path": "sts2/src/Core/Models/Encounters/TurretOperatorWeak.cs",
+      "source_sha256": "83b3a97a251256242c6b49ca6a64972c21eacd49e7969f5036feb8b0ec241a62",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:two-tailed-rats-normal",
+      "name": "TwoTailedRatsNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/TwoTailedRatsNormal.cs",
+      "source_sha256": "bafd98026caa6f58b946ae0733af47c9757e893fc8d3f73429767b0f91451a05",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vantom-boss",
+      "name": "VantomBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/VantomBoss.cs",
+      "source_sha256": "e72862d131895f8f2c8cb79e98d10d95d04454e874f4eaba8e94a7f0c0b3834b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vine-shambler-normal",
+      "name": "VineShamblerNormal",
+      "source_path": "sts2/src/Core/Models/Encounters/VineShamblerNormal.cs",
+      "source_sha256": "3dcfa74acd36704d39019ad673c0bed43d3910b0154b486ab8af19455ff7d8ea",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:waterfall-giant-boss",
+      "name": "WaterfallGiantBoss",
+      "source_path": "sts2/src/Core/Models/Encounters/WaterfallGiantBoss.cs",
+      "source_sha256": "a45cdecd5a82caf08df5377c3c0375a9f56267515382f0155570cdda0e5e3297",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    }
+  ]
+}

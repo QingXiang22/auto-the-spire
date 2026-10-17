@@ -28,7 +28,7 @@ card Sweep {
 }
 ```
 
-正式迁移入口包括 [Whirlwind、Stoke 等](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire)与 [Predator、Outmaneuver](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/next-turn-cards.spire)。示例只说明语法，不单独证明整包原版等价。
+正式迁移入口包括 [Whirlwind、Stoke 等](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire)与 [Predator、Outmaneuver](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/next-turn-cards.spire)。示例只说明语法，不单独证明整包原版等价。
 
 ## 组合数值与读取时点
 
@@ -107,7 +107,7 @@ kind仅接受Lightning/Frost/Dark/Plasma/Glass，amount接受组合数值，缺�
 
 owner、选中敌人 target、卡牌实例变量及 lexical local 是不同上下文。无目标内容拒绝选中目标依赖；未知 local、变量、字段、目标和不可用上下文不能默默忽略。原语没有开放的任意 scope 字段，写未知 scope 会拒绝。
 
-正式能力可声明 `rules = { afterEnergyReset = GrantDeferredEnergy(owner=context.owner, power=context.power, amount=context.power.stacks) }`。参数必须具名、完整且无未知名；本 hook 提供 owner/power/stacks，不提供 card/target。宿主声明类型，文本过程在同一 EnginePackageBuilder 中经 core/0.3 BindInto 绑定，最终统一 Build 冻结。机制体见[生命周期文本库](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/lifecycle-rules.spire)。能量受阻时仍按原时点移除一次性能力。
+正式能力可声明 `rules = { afterEnergyReset = GrantDeferredEnergy(owner=context.owner, power=context.power, amount=context.power.stacks) }`。参数必须具名、完整且无未知名；本 hook 提供 owner/power/stacks，不提供 card/target。宿主声明类型，文本过程在同一 EnginePackageBuilder 中经 core/0.3 BindInto 绑定，最终统一 Build 冻结。机制体见[生命周期文本库](../../../tools/base-migration-baseline/BaseSpire/Authoring/Content/lifecycle-rules.spire)。能量受阻时仍按原时点移除一次性能力。
 
 ## 迁移检查
 

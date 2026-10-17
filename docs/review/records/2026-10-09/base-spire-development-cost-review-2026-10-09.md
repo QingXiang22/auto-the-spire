@@ -42,7 +42,7 @@ A/C 两个准备会话合计 28.9 会话分钟、7,878,013 报告 token，其中
 
 微测分开运行，受 JIT、GC 和机器负载影响，不能严格相加或宣称已经取得某个优化倍数；但是反复重算的数量与主要开销已经成立。
 
-[MapRoomWiring.SetupSteps](../../../../mod-the-spire/base-spire/BaseSpire/Slice/MapRoomWiring.cs)（约 337 行起）每抽一个 payload 就拼接字符串并调用 Generate，直到源算法能完成；这样维持逐字 RNG 消费，原因合理。但[计算后端](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceActMapCompute.cs)的 `ExecuteCell` / `ExecuteEdge`（238、258 行）又分别对完整词表调用 Replay。已求出的图为了取每个节点和边被重新生成一次。
+[MapRoomWiring.SetupSteps](../../../../tools/base-migration-baseline/BaseSpire/Rooms/MapRoomWiring.cs)（约 337 行起）每抽一个 payload 就拼接字符串并调用 Generate，直到源算法能完成；这样维持逐字 RNG 消费，原因合理。但[计算后端](../../../../tools/base-migration-baseline/BaseSpire/Maps/SourceActMapCompute.cs)的 `ExecuteCell` / `ExecuteEdge`（238、258 行）又分别对完整词表调用 Replay。已求出的图为了取每个节点和边被重新生成一次。
 
 前缀字符串拼接/解析本身累计扫描 D(D+1)/2 个词，另有各前缀的算法成本；最终物化又增加 (V+E) 次完整生成。这不是生成地图所必需的工作。
 
@@ -52,9 +52,9 @@ A/C 两个准备会话合计 28.9 会话分钟、7,878,013 报告 token，其中
 
 ## 3. 组包器与中间表示增加修改负担
 
-审阅时 base 生产 C# 共 35 文件、约 18,216 行。[CombatSlicePackage.cs](../../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs)为 4,753 行；[正式工厂](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)32–69 行仍用它装配正式规则。类型、牌/能力 lowering、战斗生命周期、房间、长期状态和地图接线在同一组包上下文内共享大量局部符号。
+审阅时 base 生产 C# 共 35 文件、约 18,216 行。[CombatSlicePackage.cs](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs)为 4,753 行；[正式工厂](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)32–69 行仍用它装配正式规则。类型、牌/能力 lowering、战斗生命周期、房间、长期状态和地图接线在同一组包上下文内共享大量局部符号。
 
-一个具体的跨层例子是 Feed：[SpireCardSource.cs](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SpireCardSource.cs)约 1247 行将 `onFatal.gainMaxHp` 转成 `AuthorStep("on_fatal_gain_max_hp:n")`；组包器约 2855 行再用 `StartsWith`、切片和 `long.Parse` 转成 IR。部分其他效果也用冒号串承载目标、能力 ID 和数值。这样新增机制要核对作者语法、字符串协议、lowering 与运行时结算，而中间层没有完整类型约束。
+一个具体的跨层例子是 Feed：[SpireCardSource.cs](../../../../tools/base-migration-baseline/BaseSpire/Cards/SpireCardSource.cs)约 1247 行将 `onFatal.gainMaxHp` 转成 `AuthorStep("on_fatal_gain_max_hp:n")`；组包器约 2855 行再用 `StartsWith`、切片和 `long.Parse` 转成 IR。部分其他效果也用冒号串承载目标、能力 ID 和数值。这样新增机制要核对作者语法、字符串协议、lowering 与运行时结算，而中间层没有完整类型约束。
 
 这说明存在维护风险，不能仅凭文件长就断言它解释了全部 token。较小的改良路径是随现有 ENV-T07 或下一个真实机制包，抽出明确输入/输出的领域 lowering 和战斗/房间生命周期组装；对受影响步骤使用具名、类型化数据，保持现有 DSL、内容 ID、IR 语义和源调用顺序。不要先全面重写语言或把同一巨型作用域机械分文件。
 
@@ -62,11 +62,11 @@ A/C 两个准备会话合计 28.9 会话分钟、7,878,013 报告 token，其中
 
 ## 4. 测试反馈慢，重复组包却不是主因
 
-[FormalSliceFixture.NewFormal](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/FormalSliceFixture.cs)每次重新加载正式切片并建 RuleSet；生产工厂则已经缓存不可变内容，同一工厂可以创建多局独立 Session，不能说生产每局都重新解析内容。
+[FormalSliceFixture.NewFormal](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Shared/FormalSliceFixture.cs)每次重新加载正式切片并建 RuleSet；生产工厂则已经缓存不可变内容，同一工厂可以创建多局独立 Session，不能说生产每局都重新解析内容。
 
 探针测得冷工厂约 294 毫秒、热工厂约 45 毫秒、Formal BuildRuleSet 约 51 毫秒。因此组包复用有价值，但在本轮测量中优先级低于地图重算。测试源码有 35 个 `FormalSliceFixture.NewFormal` 和 16 个 `new BaseSpireRuntimeFactory` 调用点；这不是运行时调用计数。
 
-[测试入口](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/Program.cs)固定 RunAll，缺少定向筛选和逐项耗时。最近修复日志出现三次较长 Slice 运行：265.57 秒失败、258.72 秒失败、259.38 秒通过；最终 net 118.68 秒，root build 2.8 秒、Engine 1.08 秒。这些实际记录说明主要时间在运行期验证和重跑，不在编译。前面的失败含身份 golden 等真实变化后的收口，不能全部称为无必要测试，但发现一个前置错误就无法运行末尾新检查，反馈效率可以改善。
+[测试入口](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs)固定 RunAll，缺少定向筛选和逐项耗时。最近修复日志出现三次较长 Slice 运行：265.57 秒失败、258.72 秒失败、259.38 秒通过；最终 net 118.68 秒，root build 2.8 秒、Engine 1.08 秒。这些实际记录说明主要时间在运行期验证和重跑，不在编译。前面的失败含身份 golden 等真实变化后的收口，不能全部称为无必要测试，但发现一个前置错误就无法运行末尾新检查，反馈效率可以改善。
 
 建议加入按机制/名称筛选和逐项耗时，让调试先跑可区分本机制语义的检查，最终仍串行执行既有全量门槛；合理复用不可变规则，同时让 Session、状态与 RNG 保持每局独立。身份 golden 与行为断言分开解释，语义变化后有依据地更新身份，不能为通过测试随手覆盖。
 

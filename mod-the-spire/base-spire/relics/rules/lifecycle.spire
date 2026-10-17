@@ -1,0 +1,34 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure ObtainRelic {
+  parameters = { owner = Ref(Player) definition = String(length = 64) }
+  locals = { instance = Binding }
+  body = {
+    create = {
+      type = Relic scope = entityScope(owner) into = instance collection = Relics
+      fields = { Owner = field(owner, Player.Owner) Holder = owner DefinitionId = definition }
+    }
+    emit = { event = RelicObtained payload = { owner = owner relic = instance } }
+  }
+}
+procedure RemoveRelic {
+  parameters = { instance = Ref(Relic) }
+  body = {
+    if = {
+      condition = greaterOrEqual(collectionIndex(Relics, instance), 0)
+      then = {
+        removeFromCollection = { collection = Relics item = instance }
+        emit = { event = RelicRemoved payload = { owner = field(instance, Relic.Holder) relic = instance } }
+        destroy = { target = instance }
+      }
+      else = { fail = { message = "Relic is not owned" } }
+    }
+  }
+}
+action RemoveOwnedRelic {
+  role = player
+  parameters = { instance = Ref(Relic) }
+  candidates = { parameter = instance query = collection(Relics) }
+  body = { call = { procedure = RemoveRelic args = { instance = instance } } }
+}

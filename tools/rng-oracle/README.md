@@ -8,7 +8,7 @@ ENV-01 的已知向量来源。它**只按只读原版源码重写**，不参考
 python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanilla-rng-vectors.json `
   --layout artifacts/environment/vanilla-rng-layout.json `
   --cs core-the-spire/Core.TheSpire.Engine.Tests/VanillaRandomVectors.cs `
-  --cs-layout mod-the-spire/base-spire/BaseSpire.Slice.Tests/VanillaSeedLayoutVectors.cs
+  --cs-layout mod-the-spire/base-spire/BaseSpire.Slice.Tests/Randomness/VanillaSeedLayoutVectors.cs
 ```
 
 `--cs` / `--cs-layout` 直接**生成** C# 向量表而不是手抄：转录错误在这里是不可接受的（一个数字抄错，

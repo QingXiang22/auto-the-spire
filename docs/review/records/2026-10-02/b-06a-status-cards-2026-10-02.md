@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础战斗内容批**（第一小批）——状态牌的两个关键词 `unplayable` / `ethereal` 与第一张状态牌 `Dazed` |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："基础/升级牌、常用Power、典型多敌、药水、能量/费用、牌区域、死亡/胜负；逐机制更新net profile/coverage"）；来源：`ContentSource/status-cards.spire:3-23` |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`unplayable`/`ethereal`/`kind = Status`/显式空步骤表）、`Slice/CombatSlicePackage.cs`（卡牌字段 + 出牌 guard + 端末消耗）、`Slice/Content/slice-content.author`（Dazed）、`net` 公开映射（两个布尔字段 + Status 类别）、`BaseSpire.Slice.Tests/SliceFrontendStatusCardChecks.cs`（新增 4 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："基础/升级牌、常用Power、典型多敌、药水、能量/费用、牌区域、死亡/胜负；逐机制更新net profile/coverage"）；来源：`Cards/Content/status-cards.spire:3-23` |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`unplayable`/`ethereal`/`kind = Status`/显式空步骤表）、`Composition/CombatSlicePackage.cs`（卡牌字段 + 出牌 guard + 端末消耗）、`Authoring/Examples/slice-content.author`（Dazed）、`net` 公开映射（两个布尔字段 + Status 类别）、`BaseSpire.Slice.Tests/Cards/SliceFrontendStatusCardChecks.cs`（新增 4 项） |
 | 状态 | **本小批完成**；B-06a 的其余内容（基础牌批、典型多敌、能量/费用、死亡/胜负、其余药水）未完成（见 §5） |
 | 前置 | B-05c（批 1〜23）、R-DAMAGE |
 
@@ -87,9 +87,9 @@ H-02 的 `category_ids` 期望值随之更新（这是**有意的契约变化**�
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`unplayable`/`ethereal` 键与模型、`kind = Status`、显式空步骤表）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`Unplayable`/`Ethereal` 字段、出牌 guard、端末消耗、`Status` 枚举成员）
-- `BaseSpire/Slice/Content/slice-content.author`（Dazed 声明）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`unplayable`/`ethereal` 键与模型、`kind = Status`、显式空步骤表）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`Unplayable`/`Ethereal` 字段、出牌 guard、端末消耗、`Status` 枚举成员）
+- `BaseSpire/Authoring/Examples/slice-content.author`（Dazed 声明）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（两个布尔字段的公开处置 + `net:cat:Status`）
 - `net-the-spire/Net.TheSpire.Tests/SnapshotChecks.cs`（H-02 类别期望更新）
 - 切片检查：`SliceFrontendStatusCardChecks.cs`（新增 4 项）、`SliceFrontendChecks.cs`（负例替换 + 正向空步骤 + 冻结卡数）、其余 3 处冻结卡数期望

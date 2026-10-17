@@ -8,7 +8,7 @@
 
 ## 实际修改
 
-生产修改仅在`mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs`及新增`Slice/Compilation/`。公共Build的命名参数和默认值保留，通过`PackageBuildOptions`转交组装。原3936行文件成为84行兼容入口，268行`CombatPackageComposer`安排构建顺序和参数转发；具体IR生成由Schema、伤害、Power、敌人、回合、卡牌能力绑定、遭遇队列、换房、开局、奖励、结算及公开动作模块拥有。
+生产修改仅在`mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs`及新增`Slice/Compilation/`。公共Build的命名参数和默认值保留，通过`PackageBuildOptions`转交组装。原3936行文件成为84行兼容入口，268行`CombatPackageComposer`安排构建顺序和参数转发；具体IR生成由Schema、伤害、Power、敌人、回合、卡牌能力绑定、遭遇队列、换房、开局、奖励、结算及公开动作模块拥有。
 
 `CompilationBindings`分别返回玩家、敌人、卡牌、牌区、Run资源、遗物、遭遇池和房间服务等符号。每个编译方法列明它消费的分组和回调，没有包含全包变量的通用容器。保留必需的互相调用能力，并将程序句柄声明和Body接线分成阶段；短回调适配函数留在根组装，实际规则不再隐式读取Build局部作用域。
 

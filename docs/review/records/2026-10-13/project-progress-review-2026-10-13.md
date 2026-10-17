@@ -33,7 +33,7 @@
 
 1. ENV-T03：正式`run_game.py`的IMPLEMENTED_MAP_TYPES仍不含Unknown/Elite，也没有通用事件选项策略。先消费已交事件/房间能力，不误报Host没有Unknown。
 2. ENV-T08/T09：上述固定正常路线已实证缺Byrdonis精英行为；其他未实现事件/遗物和Fogmog/Cubex等依赖仍在原范围。仅补正式流程需要的完整内容机制，不恢复批量补牌。
-3. ENV-T10：`Slice/MapRoomWiring.cs`的ContinueToNextAct仍显式Fail，未生成下一幕地图/队列。先前第一幕Boss证据不能抵四幕胜负。
+3. ENV-T10：`Rooms/MapRoomWiring.cs`的ContinueToNextAct仍显式Fail，未生成下一幕地图/队列。先前第一幕Boss证据不能抵四幕胜负。
 4. ENV-T01/02/04/05：严格17绿态不能代替源权重完整范围、正常奖励/药水/长期写回的独立双侧闭环；M01父项保持开放。
 5. ENV-T06/12：新角色原语为本地基础能力，完整Power/伤害/召唤hook、正式角色初始化、独立双侧和正常五角色流程继续待验证。AI继续暂缓。
 

@@ -6,13 +6,13 @@
 | --- | --- |
 | 任务 ID | **B-05b**（将 Strike/Defend/Bash/Headbutt、切片 Power/敌人的**作者表示**编译为通用 IR，与已有程序化包使用同一运行时） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `mod-the-spire/base-spire/BaseSpire/Slice/Content/slice-content.author`（作者文本）、`Slice/SliceAuthorFrontend.cs`（前端）、`CombatSlicePackage.cs`（step 降级路径）、`BaseSpire.Slice.Tests/SliceFrontendChecks.cs` + `SliceFixtures.cs`（检查） |
+| 负责范围 | `mod-the-spire/base-spire/BaseSpire/Authoring/Examples/slice-content.author`（作者文本）、`Authoring/SliceAuthorFrontend.cs`（前端）、`CombatSlicePackage.cs`（step 降级路径）、`BaseSpire.Slice.Tests/Authoring/SliceFrontendChecks.cs` + `SliceFixtures.cs`（检查） |
 | 状态 | 实现已验证（切片检查 **29/29**，其中 4 项为 B-05b） |
 | 前置 | B-05a（已完成，见 [b-05a](b-05a-content-manifest-2026-10-02.md)） |
 
 ## 1. 交付内容
 
-**作者文本** `Slice/Content/slice-content.author`（嵌入资源）：声明 package/version、卡组、3 个 Power、2 个敌人与
+**作者文本** `Authoring/Examples/slice-content.author`（嵌入资源）：声明 package/version、卡组、3 个 Power、2 个敌人与
 4 张卡的 normal/upgraded 变体，每张卡带**显式的效果步骤列表**，并逐条镜像 B-05a 冻结清单的数值与出处
 （同一 `source` 路径与 `line`）。
 
@@ -88,10 +88,10 @@
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/Content/slice-content.author`（新增；`BaseSpire.csproj` 增加嵌入规则）
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（新增：模型/解析/校验/降级）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`fromAuthorText` 参数 + step 降级的指令链；默认路径不变）
-- `BaseSpire.Slice.Tests/SliceFrontendChecks.cs`、`SliceFixtures.cs`（新增；`SliceChecks.RunAll` 注册）
+- `BaseSpire/Authoring/Examples/slice-content.author`（新增；`BaseSpire.csproj` 增加嵌入规则）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（新增：模型/解析/校验/降级）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`fromAuthorText` 参数 + step 降级的指令链；默认路径不变）
+- `BaseSpire.Slice.Tests/Authoring/SliceFrontendChecks.cs`、`SliceFixtures.cs`（新增；`SliceChecks.RunAll` 注册）
 - `net-the-spire/Net.TheSpire.Tests/SnapshotChecks.cs`（修掉 3 条 CS8604 可空警告）
 
 未修改：`Engine/` 语义、Legacy、net 契约与 Python 侧。未提交、未清理共享工作区。

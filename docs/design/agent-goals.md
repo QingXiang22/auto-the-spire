@@ -33,7 +33,7 @@
 让每次规则交付都有实际独立双侧执行和可复现的首个差异，而非只有绿色本地检查。
 
 - **边界**：只写 `tools/differential/`、必要 rng-oracle、suite/参考适配及证据；统筹串行集成构建，不改 A/C、core、参考玩法或 AI。
-- **先读**：[主清单 B 队列](../review/tofix/README.md#当前任务)、[B 完整合同](post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)、[工具 README](../../tools/differential/README.md)和涉及的实现约束。
+- **先读**：[主清单 B 队列](../review/tofix/README.md#当前任务)、[B 完整合同](post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)、[工具 README](../../tools/base-migration-baseline/differential/README.md)和涉及的实现约束。
 - **第一步**：定位既有 Comparator/FixtureSuite/两侧适配，核对本包与公开 Host 的构建/配置/seed，再接 A 已有工厂；参考独立执行，不能复制 base 结果。
 - **交付判断**：保留必测/unsupported 原 ID 与完整比较维度；缺 case、零执行、缺参考、异常、超时或首个差异都不记通过。源随机差异按原始 seed 和独立依据裁决，不补抽、换 seed 或改参考效果。
 - **维护**：本包状态更新主清单；case、源分母、首个差异和 manifest 在工具资产/证据中维护。阶段与候选按合同绑定同一 run_id，覆盖不扫描历史字符串计算，早死或旧 compare 返回 0 不抵完整验收。

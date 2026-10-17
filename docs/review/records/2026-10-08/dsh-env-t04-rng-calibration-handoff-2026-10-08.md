@@ -18,7 +18,7 @@ dispatch_record: .audit/dsh-env-t04-rng-calibration-2026-10-08/task-record.json
 不改 core/base/net/reference/solution 与主清单。主清单入口：[ENV-T04](../../tofix/README.md#env-t04)；
 工作包入口：[B 完整交付合同](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)、
 [ENV 实现约束的初始洗牌派生对齐边界](../../../design/environment-implementation-constraints.md#env-t04初始洗牌的派生对齐边界2026-10-08)、
-[工具 README](../../../../tools/differential/README.md)。
+[工具 README](../../../../tools/base-migration-baseline/differential/README.md)。
 
 ## 接手后的第一步
 

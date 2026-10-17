@@ -1,0 +1,43 @@
+{
+  "suite": "normal-tablet",
+  "fixtures_version": "normal-tablet@1",
+  "note": "Default three-map-act initialization, original fixed seed, five actual TabletOfTruth pages and subsequent combat through genuine death. Death is not first-act completion; the existing ironclad-act1 suite remains required and unchanged.",
+  "target_scope": "base-spire-singleplayer-dev-run-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-run-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "Native default-plan RunState; actual loaded DLL digest in the reference record"
+  },
+  "expected_case_ids": ["normal-default-plan-tablet-death"],
+  "cases": [
+    {
+      "id": "normal-default-plan-tablet-death",
+      "title": "Normal default-plan TabletOfTruth and persistent upgrades through actual death",
+      "rng_profile": "vanilla-compatible@1",
+      "provenance": {
+        "kind": "normal_run",
+        "source": "sts2/src/Core/Models/Events/TabletOfTruth.cs; sts2/src/Core/Commands/CreatureCmd.cs",
+        "note": "Original seed, empty setup, real normal event queue; shared visible action policy and independent native replay."
+      },
+      "setup": {},
+      "script": [{ "action": "normal_act1", "choose": "tablet" }],
+      "reference_scope": "compared",
+      "group": "normal-run",
+      "kind": "normal-reward",
+      "base_source": "formal-dev-factory",
+      "base_scope": "dev-run",
+      "game_seed": "ENV-T04-RNG-SHUFFLE-001",
+      "initialization": "Independent default three-map-act factory/RunState, Start once, no state writes",
+      "contents": ["tablet-of-truth", "max-hp-loss", "permanent-upgrades", "continuous-run", "natural-defeat"],
+      "variants": ["five-pages-then-normal-combat"],
+      "required_dimensions": ["actions", "decisions", "facts", "pile-order", "power", "streams", "rewards", "permanent-inventory", "reward-closure", "combat-copy-origins", "terminal"],
+      "semantic_actions": ["visible-flame-barrier-headbutt-power-bash-strike-defend@1", "lowest-public-monster-hp", "visible-map-room-priority", "continue-until-real-outcome"],
+      "expected_terminal": "defeat",
+      "reference_source": "Independent native default-plan RunState, EventModel and normal CombatRoom/RewardsSet; no source modifications",
+      "normal_combat_count": 1,
+      "require_potion_acquisition": false
+    }
+  ]
+}

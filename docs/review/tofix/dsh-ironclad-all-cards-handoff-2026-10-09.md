@@ -30,14 +30,14 @@ updated_at: 2026-10-10T00:06:51+08:00
 
 ### 家族 1：类型化动态次数 + 计数来源（3 张）
 
-- **真实源形状**（`mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire`）：
+- **真实源形状**（`mod-the-spire/base-spire/BaseSpire/Cards/Content/ironclad-cards.spire`）：
   - `Whirlwind`（:2665）：`cost = X`、`target = { selectAll = {} }`、`play = { repeatForX = { effect = { attack = { damage = 5 target = allEnemies } } } }`（升级 8）。
   - `TearAsunder`（:1251）：`repeatForCount = { base = 1 perCount = 1 count = { playerHpLossCount = {} } effect = { attack = { damage = 5 } } }`（升级 7）。
   - `PerfectedStrike`（:3263）：`tags = { Strike }`、`scaledAttack = { base = 6 perCount = 2|3 count = { cardsWithTag = { tag = Strike } } }`。
 - **节点/共享过程**：`DynamicRepeatCardEffect`（新增）、`CardAmountSource.PaidX / CardsWithTag / PlayerHpLossCount`、
   `CardEffectExpressions.Amount` 新增 `PlayerHpLossCount` / `CardsWithTag`（`TaggedCount` 求和 hand/draw/discard/exhaust/inPlay）、
   `SpireCardSource.CountSourceOf` 新增 `cardsWithTag` / `playerHpLossCount` / `energyX`。
-- **首个测试用例**：`mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceFrontendIroncladCompletionChecks.cs` 的
+- **首个测试用例**：`mod-the-spire/base-spire/BaseSpire.Slice.Tests/Cards/SliceFrontendIroncladCompletionChecks.cs` 的
   「Whirlwind `repeatForX` —— X 只作用于**次数**，每击是字面 5（升级 8）」，用 `(spent, x) ∈ {(0,3),(1,2)}` 构造两个不同的 X 值：
   若 X 泄漏进数值叶，X=3 会得到每击 3 点/总共 9 而非 15。**这条同时是 X 不泄漏的回归守卫。**
 
@@ -64,7 +64,7 @@ updated_at: 2026-10-10T00:06:51+08:00
 
 | 命令 | 退出码 | 结果 |
 | --- | --- | --- |
-| `dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests/BaseSpire.Slice.Tests.csproj` | 0 | 已成功生成，0 错误 / 3 警告（既有 `Slice/SourceMap/ActMap.cs(42,37)`、`(60,33)` CS8600、`Slice/SpirePowerSource.cs(1241,39)` CS8604） |
+| `dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests/BaseSpire.Slice.Tests.csproj` | 0 | 已成功生成，0 错误 / 3 警告（既有 `Maps/Generation/ActMap.cs(42,37)`、`(60,33)` CS8600、`Powers/SpirePowerSource.cs(1241,39)` CS8604） |
 | `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests --no-build -- --combat-only` | 1 | **345 条 ok / 0 条 fail**；唯一失败是身份 gate（见「首个差异」）。输出留档 `.audit/dsh-ironclad-all-cards-2026-10-09/run-interim.txt` |
 | `W06_DUMP_UNSUPPORTED=1` + 同命令 | 1 | 同上，并打印 20 条 `DIAG`（每张未支持卡的**逐字**原因）与四态摘要 |
 
@@ -93,7 +93,7 @@ BASE-01 构建：ruleset=baec5147cdaf7503 卡=75 能力=29 敌人=35 起始牌�
   BaseSpire.Slice.Tests.CheckFailedException: T05 身份：dev 默认规则与公开构建摘要匹配已复核 Anger 基线 [真实]:
   verified dev ruleset identity: expected 'b4d85a04422074c7', got 'baec5147cdaf7503'
   ```
-  触发点 `mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceChecks.cs` 里的 `SliceMapRoomChecks.DefaultIdentity()`。
+  触发点 `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs` 里的 `SliceMapRoomChecks.DefaultIdentity()`。
   负责人基线：dev 规则 `b4d85a04422074c7`、公开构建 `5b86ab40c7f210a3`、公开语义 `983a2268d49ce4db`。
   **按派单要求：不改 `SliceMapRoomChecks.cs` 与身份 golden、不把实际输出写成预期，留负责人一次性迁移。**
   本批新增内容会使身份继续变化，最终值以收尾时那次实测为准。
@@ -105,7 +105,7 @@ BASE-01 构建：ruleset=baec5147cdaf7503 卡=75 能力=29 敌人=35 起始牌�
 
 ## 下一步（具体动作）
 
-1. **生成/抽牌族**：在 `mod-the-spire/base-spire/BaseSpire/Slice/Effects/SourceEffectPrograms.cs` 的 `ReadEffectProgram` 里加 `generateCards` 与 `drawUntil` 结构分支（与家族 2 同形：新领域节点 + `CardEffectPile` 复用 + 链接/校验递归），在 `CardEffectCompiler.cs` / `CombatSlicePackage.cs` 接上「生成到指定牌区」的共享过程。落地后 `Stoke`（池缺口 18 → 17）、`InfernalBlade`、`Pillage` 应转为已降级。
+1. **生成/抽牌族**：在 `mod-the-spire/base-spire/BaseSpire/Cards/Effects/SourceEffectPrograms.cs` 的 `ReadEffectProgram` 里加 `generateCards` 与 `drawUntil` 结构分支（与家族 2 同形：新领域节点 + `CardEffectPile` 复用 + 链接/校验递归），在 `CardEffectCompiler.cs` / `CombatSlicePackage.cs` 接上「生成到指定牌区」的共享过程。落地后 `Stoke`（池缺口 18 → 17）、`InfernalBlade`、`Pillage` 应转为已降级。
 2. **能力族**：`ironclad-powers.spire` 的 10 个未降级能力是 8 张卡「能力引用无法链接」的**真正根因**（`SpirePowerSource.RuntimeImplemented` 白名单缺这些 id）。逐条原因已在 `W06_DUMP_UNSUPPORTED` 输出里（`OneTwoPunchPower` 缺 `extraPlays`/`consumeOnPlayCount`、`JugglingPower` 的 `if(cardPlaysThisTurn(...), cloneCard(...))`、`RupturePower`/`DarkEmbracePower` 的 `applyScaledPower`/`draw` + 多 `events` 未支持等）。**落地能力后必须同步改 `SliceFormalSourceChecks.cs` 里断言 Juggling「无法链接」的检查，以及因支持 X 费而失效的断言。**
 3. 每族落地后照家族 1/2 的样子补 `SliceFrontendIroncladCompletionChecks.cs` 的检查，并在本文件追加一小段（真实源形状 / 节点与共享过程 / 首个测试用例）。
 4. 收尾：按派单串行跑门槛命令并把命令、退出码、真实执行数写进本文件；重跑矩阵 `--label 最终`。

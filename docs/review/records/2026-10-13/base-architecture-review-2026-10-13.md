@@ -14,7 +14,7 @@
 
 ## 1. Power公共命令缺少真实来源上下文
 
-**影响：高；关联ENV-T06。** [PowerCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/PowerCompilation.cs)约第50～69行声明的`ApplyPower`只有Owner、PowerId、Stacks、Ticks、SkipNextTick；`ResolvePowerApplied`只有PowerId和Owner。[CardCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CardCompilation.cs)约第125～143行以“目标不是玩家”近似“玩家施加”，随后查玩家身上的触发Power并抽牌。
+**影响：高；关联ENV-T06。** [PowerCompilation](../../../../tools/base-migration-baseline/BaseSpire/Powers/Compilation/PowerCompilation.cs)约第50～69行声明的`ApplyPower`只有Owner、PowerId、Stacks、Ticks、SkipNextTick；`ResolvePowerApplied`只有PowerId和Owner。[CardCompilation](../../../../tools/base-migration-baseline/BaseSpire/Cards/Compilation/CardCompilation.cs)约第125～143行以“目标不是玩家”近似“玩家施加”，随后查玩家身上的触发Power并抽牌。
 
 本地原版[ViciousPower](../../../../sts2/src/Core/Models/Powers/ViciousPower.cs)的`AfterPowerAmountChanged`明确检查实际变化量大于零、`applier == Owner`以及目标Power种类。现有公共调用无法表达这些完整事实。该发现是静态契约差异；本轮未执行反例，也不据此声称所有当前Vicious路径都失败。
 
@@ -24,7 +24,7 @@
 
 ## 2. 正式配置还没有贯穿内容、幕池和地图
 
-**影响：高；关联ENV-T10，角色部分归ENV-T12。** [工厂](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)约第34～35行解析配置后仍取无配置键的`SinglePlayerContentSource.Shared`；[内容组装](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/SinglePlayerContent.cs)约第63～67行缓存唯一结果、第140行取第一幕声明、第207行固定Ironclad起始牌组。[RunSourcePoolManifest](../../../../mod-the-spire/base-spire/BaseSpire/Slice/RunSourcePoolManifest.cs)固定Overgrowth、古代人、Boss与事件池；[MapRoomWiring](../../../../mod-the-spire/base-spire/BaseSpire/Slice/MapRoomWiring.cs)固定第一幕流，`ContinueToNextAct`仍明确Fail。
+**影响：高；关联ENV-T10，角色部分归ENV-T12。** [工厂](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)约第34～35行解析配置后仍取无配置键的`SinglePlayerContentSource.Shared`；[内容组装](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/SinglePlayerContent.cs)约第63～67行缓存唯一结果、第140行取第一幕声明、第207行固定Ironclad起始牌组。[RunSourcePoolManifest](../../../../tools/base-migration-baseline/BaseSpire/Run/RunSourcePoolManifest.cs)固定Overgrowth、古代人、Boss与事件池；[MapRoomWiring](../../../../tools/base-migration-baseline/BaseSpire/Rooms/MapRoomWiring.cs)固定第一幕流，`ContinueToNextAct`仍明确Fail。
 
 当前工厂显式拒绝其他角色和未支持范围，因此这不是已经发生的“选Silent却开Ironclad”故障。但只放开角色开关或只实现推进动作，会让配置标签与实际规则脱节。
 
@@ -34,7 +34,7 @@ T10的第一步应当让已实现第一幕走显式幕定义，再接第二幕�
 
 ## 3. Power仍有多套内部表达
 
-**影响：中高；关联ENV-T06／CORE-AUTHOR-04后续边界裁决。** [AuthorPower](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SliceAuthorFrontend.cs)约第471行同时包含Role、Effect、OwnerTurnEnd、DamageModifier、TriggerEffect等字符串和机制字段；另外还有[PowerRule](../../../../mod-the-spire/base-spire/BaseSpire/Slice/PowerRules.cs)枚举机制／文本procedure入口。[TurnCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/TurnCompilation.cs)约第332～405行用switch、前缀和`long.Parse`再次解释`OwnerTurnEnd`，包括当前Territorial的`gain-power-per-stack`编码。
+**影响：中高；关联ENV-T06／CORE-AUTHOR-04后续边界裁决。** [AuthorPower](../../../../tools/base-migration-baseline/BaseSpire/Authoring/SliceAuthorFrontend.cs)约第471行同时包含Role、Effect、OwnerTurnEnd、DamageModifier、TriggerEffect等字符串和机制字段；另外还有[PowerRule](../../../../tools/base-migration-baseline/BaseSpire/Powers/PowerRules.cs)枚举机制／文本procedure入口。[TurnCompilation](../../../../tools/base-migration-baseline/BaseSpire/Combat/Compilation/TurnCompilation.cs)约第332～405行用switch、前缀和`long.Parse`再次解释`OwnerTurnEnd`，包括当前Territorial的`gain-power-per-stack`编码。
 
 因此新增相似行为仍可能同时增加DSL解析、字符串协议、字段和编译分支。卡牌的类型化程序已经降低了这一成本，Power尚未达到同一程度。
 
@@ -44,9 +44,9 @@ T10的第一步应当让已实现第一幕走显式幕定义，再接第二幕�
 
 ## 4. 角色机制和生命周期需要更明确的组装边界
 
-**影响：中高；关联ENV-T06／T12。** [CombatPackageComposer](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CombatPackageComposer.cs)约第29～52行递归扫描卡牌程序检测Osty，约第86～129行直接构建Poison／Doom／Orbs及其规则回调；这些已经超过纯依赖接线。`UsesOsty`还重复列出条件、循环、选择等程序节点，未来增加组合节点时存在漏扫风险。
+**影响：中高；关联ENV-T06／T12。** [CombatPackageComposer](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatPackageComposer.cs)约第29～52行递归扫描卡牌程序检测Osty，约第86～129行直接构建Poison／Doom／Orbs及其规则回调；这些已经超过纯依赖接线。`UsesOsty`还重复列出条件、循环、选择等程序节点，未来增加组合节点时存在漏扫风险。
 
-[CombatLifecycle](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CombatLifecycle.cs)的`ResetAdditional`是可覆盖的单一委托，根组包把Orbs与Osty清理拼接进去；[BattleRoomCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/BattleRoomCompilation.cs)约第532～542行另行重置Stars／OrbSlots。当前EndBattle在进入下一战斗时执行，不能把名称理解成胜利动作已立即清理所有战斗状态。
+[CombatLifecycle](../../../../tools/base-migration-baseline/BaseSpire/Combat/CombatLifecycle.cs)的`ResetAdditional`是可覆盖的单一委托，根组包把Orbs与Osty清理拼接进去；[BattleRoomCompilation](../../../../tools/base-migration-baseline/BaseSpire/Rooms/Compilation/BattleRoomCompilation.cs)约第532～542行另行重置Stars／OrbSlots。当前EndBattle在进入下一战斗时执行，不能把名称理解成胜利动作已立即清理所有战斗状态。
 
 建议各机制拥有声明、所需编译绑定、明确的生命周期贡献与公开投影；内容能力需求由类型化程序统一遍历或链接阶段得出。根只组合这些明确的模块。生命周期用有确定次序的多项贡献取代可覆盖单回调，区分回合开始／结束、战斗结算、离开战斗、进入战斗、幕切换；先定义各时点的源顺序，不使用无序自动扫描注册。
 
@@ -54,7 +54,7 @@ T10的第一步应当让已实现第一幕走显式幕定义，再接第二幕�
 
 ## 5. 正式构建与受控夹具入口应逐步分开
 
-**影响：中；后续维护随相关机制包处理。** [PackageBuildOptions](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/PackageBuildOptions.cs)把IncludeTestHeadbutt、SwapEncounterOrder、SameDefinitionEnemyPair、FromAuthorText等夹具选项与正式Run选项放在同一记录。[ContentCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/ContentCompilation.cs)仍有无作者模型时的Manifest分支；根组包及NewRun编译同时承担受控场景与正式流程。
+**影响：中；后续维护随相关机制包处理。** [PackageBuildOptions](../../../../tools/base-migration-baseline/BaseSpire/Composition/PackageBuildOptions.cs)把IncludeTestHeadbutt、SwapEncounterOrder、SameDefinitionEnemyPair、FromAuthorText等夹具选项与正式Run选项放在同一记录。[ContentCompilation](../../../../tools/base-migration-baseline/BaseSpire/Composition/ContentCompilation.cs)仍有无作者模型时的Manifest分支；根组包及NewRun编译同时承担受控场景与正式流程。
 
 正式工厂目前明确传入真实模型及所需开关，不能据此说生产正在回退旧内容。问题是后续增加一个正式能力时还需理解许多无关组合，容易漏接某条路径。
 

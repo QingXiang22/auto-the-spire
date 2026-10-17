@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=["core", "base", "net", "differential"])
+    parser.add_argument("suite", choices=["core", "base", "net", "differential", "migration"])
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -32,18 +32,19 @@ def main() -> int:
         project = "core-the-spire/Core.TheSpire.Engine.Tests"
         commands = [build(project), run(project)]
     elif args.suite == "base":
-        project = "mod-the-spire/base-spire/BaseSpire.Slice.Tests"
-        commands = [build(project), run(project) + ["--", "--suite", "runtime", "--report", str(output / "behavior")],
-                    [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/relic-coverage.json")],
-                    build("tools/base-spire-dev/BaseSpire.Dev.csproj"),
-                    [sys.executable, "-X", "utf8", "tools/base-spire-dev/verify_examples.py"]]
+        project = "tools/base-spire-dev/BaseSpire.Dev.csproj"
+        commands = [build(project), run(project) + ["--", "validate"],
+                    run(project) + ["--", "check", "--report", str(output / "behavior")],
+                    [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/package-behavior.json")]]
     elif args.suite == "net":
         project = "net-the-spire/Net.TheSpire.Tests"
         commands = [build(project), run(project)]
+    elif args.suite == "migration":
+        commands = [build("tools/differential/Differential.csproj"),
+                    [sys.executable, "-X", "utf8", "tools/ci/check_dsl_migration.py", "--configuration", config, "--output", str(output)]]
     else:
         project = "tools/differential/Differential.csproj"
-        commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
-                    build(project), run(project) + ["--", "test", "--suite", "regression", "--output", str(output / "regression")]]
+        commands = [build(project), run(project) + ["--", "test", "--suite", "regression", "--output", str(output / "regression")]]
     env = dict(os.environ, PYTHONUTF8="1",
                BASE_SPIRE_DEV_DLL=str(ROOT / f"tools/base-spire-dev/bin/{config}/net9.0/BaseSpire.Dev.dll"))
     top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=ROOT, capture_output=True, text=True)

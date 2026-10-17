@@ -74,9 +74,9 @@ case 全部执行（分母 15→17 只增不减），新增 `map-generated-alpha
 - 设计：`.audit/dsh-env-t04-map-differential-2026-10-08/map-case-design.md`（比较对象、两侧源定位、事实路径、字数单位、参考身份）。
 - base 侧（只读）：`mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs:81-82`
   （`ActMapEnabled => ScopeId == BaseSpireScope.DevMap`）、`:150-166`（`SeedStream("base-spire:run:act_1_map", ActMapSeed(runSeed, 1))`，建局阶段消费随机即抛）；
-  `Slice/VanillaRandomLayout.cs:219-236`（`ActMapSeed = runSeed + DeterministicHashCode("act_1_map")`）；
-  `Slice/MapRoomWiring.cs`（`ActMapStreamName`/`MapNodes`/`MapChildren` 常量与 `:316-362` 增量抽样、
-  超 `WordBudget` 即具名 Fail）；`Slice/SourceActMapCompute.cs:50-68`（`Span=1<<53`、`ActRooms=15`、`WordBudget=512`）；
+  `Randomness/VanillaRandomLayout.cs:219-236`（`ActMapSeed = runSeed + DeterministicHashCode("act_1_map")`）；
+  `Rooms/MapRoomWiring.cs`（`ActMapStreamName`/`MapNodes`/`MapChildren` 常量与 `:316-362` 增量抽样、
+  超 `WordBudget` 即具名 Fail）；`Maps/SourceActMapCompute.cs:50-68`（`Span=1<<53`、`ActRooms=15`、`WordBudget=512`）；
   `SinglePlayer/RunConfiguration.cs:28,46,49,56`（`DevMap = "base-spire-singleplayer-dev-map-v1"`、`Implemented=[Dev,DevMap]`）。
 - 参考侧（只读）：`reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Overgrowth.cs:20,68-73`（`BaseNumberOfRooms => 15`、
   `restCount=NextGaussianInt(7,1,6,7)`、`unknownCount=StandardRandomUnknownCount`）、

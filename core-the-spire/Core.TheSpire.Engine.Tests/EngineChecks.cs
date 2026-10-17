@@ -29,6 +29,7 @@ internal static class EngineChecks
         CounterexampleChecks.Run();
         AuthoringChecks.Run();
         RuleLibraryChecks.Run();
+        SourceFragmentChecks.Run();
         ContractChecks.Run();
         AuthorRuntimeV04Checks.Run();
         DebugChecks.Run();

@@ -1,5 +1,7 @@
 # 项目文档总入口
 
+2026-10-18当前架构工作从[纯DSL base规格](design/mod-the-spire/engine-dsl-migration/spec.md)、[目录与迁移设计](design/mod-the-spire/engine-dsl-migration/plan.md)和[实施任务](design/mod-the-spire/engine-dsl-migration/tasks.md)进入。用户已确认直接切换并接受未迁移玩法暂时报未支持；默认 Host 与开发工具已切换到纯 DSL 遗物抽牌开发包；正常 Run 与其他未迁移玩法明确未支持。实际范围和检查见[首批交付记录](review/records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，状态仍见主清单。
+
 审阅剩余工作时，打开[领域总览](review/tofix/README.md#当前任务)了解各类范围；review最近一批请直接看[当前交付](review/tofix/README.md#当前交付)、[推进顺序](review/tofix/README.md#推进顺序)和[每批集成](review/tofix/README.md#每批集成与重排条件)。[归属与依赖](review/tofix/README.md#归属与依赖)指定主要归属，原ENV编号保留为合同与证据索引。当前状态与排期只在主清单维护。
 
 导航整理：2026-10-17。任务范围、core冻结和AI实验安排以主清单及相关契约为准。
@@ -14,8 +16,8 @@
 | --- | --- |
 | 运行一个不依赖原版内容的小游戏 | [core README](../core-the-spire/README.md#先跑一个小游戏)：分数到 3 后输出 `tutorial:ReachedTarget` |
 | 构建和验证 core/base | [CI 检查入口](../tools/ci/README.md)：按修改范围选组，退出码为 0，日志与 `result.json` 写入 `.artifacts/ci/<组名>/` |
-| 区分运行时检查与本地源码核对 | [base README](../mod-the-spire/base-spire/README.md)：`--suite runtime` 不读原版源码，`--suite source` 需要同版本 `sts2/`，默认完整组 |
-| 准备严格对拍的独立参考 | [参考依赖说明](../reference/README.md)：按锁定提交获取上游，再按 CI 入口执行；完整原版验收仍按主清单 |
+| 加载纯 DSL 包并检查当前行为 | [base 开发工具](../tools/base-spire-dev/README.md)：validate／describe／check；源目录不计可执行支持 |
+| 核对原完整对拍的恢复边界 | [对拍入口](../tools/differential/README.md)：原 suite 保留，当前逐项未支持并非零；[参考版本](../reference/README.md)保持 |
 | 修改开发文档 | 在根目录运行 `python tools/doc-check/check_docs.py` 和 `git diff --check`；两者均须返回 0 |
 
 ## 接手路径
@@ -48,7 +50,7 @@
 
 ## 编写和扩展规则的操作指南
 
-基于base开始修改时，先做[第一张卡](design/mod-the-spire/first-base-card.md)或[第一个房间动作](design/mod-the-spire/first-base-room.md)；两篇教程都从空目录开始，附逐步可见结果。理解目录和编译/运行分工见[base组织结构](design/mod-the-spire/base-architecture.md)。
+基于 base 开始修改时，先读[纯 DSL 开发指南](design/mod-the-spire/base-development-guide.md)与[包格式参考](dsl/core/0.3/package-reference.md)。[第一张卡](design/mod-the-spire/first-base-card.md)和[第一个房间动作](design/mod-the-spire/first-base-room.md)保留旧验收意图，尚未迁移，不能照旧命令执行。理解职责分工见[base组织结构](design/mod-the-spire/base-architecture.md)。
 
 | 需要完成什么 | 指南 |
 | --- | --- |
@@ -83,10 +85,10 @@
 | --- | --- |
 | 项目目标与模块边界 | [项目spec](design/spec.md)、[文档协作约定](AGENTS.md) |
 | core宿主API与冻结语义 | 先做[第一次写宿主](design/core-the-spire/first-host.md)；查[开发者指南](design/core-the-spire/developer-guide.md)、[冻结契约](contracts/core-engine-baseline.md)、[Git交接](contracts/core-git-checkpoint.md) |
-| base内容与Run | [mod spec](design/mod-the-spire/spec.md)、[base README](../mod-the-spire/base-spire/README.md)、[base实施编排](design/mod-the-spire/base-spire-implementation-plan.md)；历史Ironclad覆盖不是完整分母 |
+| base内容与Run | [mod spec](design/mod-the-spire/spec.md)、[base README](../tools/base-migration-baseline/README.md)、[base实施编排](design/mod-the-spire/base-spire-implementation-plan.md)；历史Ironclad覆盖不是完整分母 |
 | 内容DSL | 新卡牌从 [base/0.0.2 作者参考](dsl/0.0.2/authoring-reference.md)进入；已有领域效果查[0.0.1作者约定](dsl/0.0.1/dsl-usage.md)；旧兼容/实现细节查[content-dsl](dsl/0.0.1/content-dsl.md)、[战斗设计](dsl/0.0.1/combat-dsl-design.md) |
 | core文本规则库 | 先做[第一次写规则](dsl/core/first-rule.md)；[作者入口与配置入门](dsl/core/README.md)、[0.3同包绑定参考](dsl/core/0.3/authoring-reference.md)、[0.2规则库指南](dsl/core/0.2/authoring-guide.md)、[0.1语言参考](dsl/core/0.1/language-reference.md) |
-| B严格对拍 | [工具README](../tools/differential/README.md)、ENV范围/实现约束；参考默认只读，`sts2/`源码及同版本客户端优先裁决 |
+| B严格对拍 | [工具README](../tools/base-migration-baseline/differential/README.md)、ENV范围/实现约束；参考默认只读，`sts2/`源码及同版本客户端优先裁决 |
 | C公开出口 | [net spec](design/net-the-spire/spec.md)、[协议及0.2扩展](design/net-the-spire/protocol.md)、[公开契约资产](design/net-the-spire/contract-artifacts.md) |
 | AI兼容/后续学习 | [AI spec](design/ai-the-spire/spec.md)、[策略契约](design/ai-the-spire/policy-contract.md)、[训练设计](design/ai-the-spire/training-design.md)、[共同验收](design/ai-net-verification.md)；是否启动实验只查主清单 W-07，旧阶段证据按需查看 |
 

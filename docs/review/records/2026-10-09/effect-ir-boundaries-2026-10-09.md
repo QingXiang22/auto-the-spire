@@ -12,10 +12,10 @@
 
 ## 实现及接口变化
 
-- [领域程序](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectProgram.cs)保存不可变的逐效果类型、目标、数值来源、能力引用和源码位置；条件及重复包含有序子程序。重复的单位是整个块，零次为空。
-- [领域前端](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/SourceEffectPrograms.cs)复用已有 AST 及叶读取，保留独立参数，递归检查变量并链接能力。缺失引用进入带来源的 Unsupported，不注册空效果替代。
-- [效果编译器](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectCompiler.cs)仅生成冻结 Engine IR。它没有 Session、胜负判定或房间提交接口；动态来源在对应效果位置读取同一个权威状态。
-- [组包接缝](../../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs)提供字段、查询和共享领域过程。出牌外层选择一次目标；随机命中使用独立槽位，每次执行抽取。X 读外层捕获的付款局部值，后续能量变化不改付款值。
+- [领域程序](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/CardEffectProgram.cs)保存不可变的逐效果类型、目标、数值来源、能力引用和源码位置；条件及重复包含有序子程序。重复的单位是整个块，零次为空。
+- [领域前端](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/SourceEffectPrograms.cs)复用已有 AST 及叶读取，保留独立参数，递归检查变量并链接能力。缺失引用进入带来源的 Unsupported，不注册空效果替代。
+- [效果编译器](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/CardEffectCompiler.cs)仅生成冻结 Engine IR。它没有 Session、胜负判定或房间提交接口；动态来源在对应效果位置读取同一个权威状态。
+- [组包接缝](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs)提供字段、查询和共享领域过程。出牌外层选择一次目标；随机命中使用独立槽位，每次执行抽取。X 读外层捕获的付款局部值，后续能量变化不改付款值。
 - `AuthorCard.NormalProgram` / `UpgradedProgram` 和 `AuthorHooks.Programs` 是正式源的执行依据；显示数值及旧 Steps/Conditional 保留兼容摘要，不能覆盖显式参数。升级与各 hook 独立；进入下一战斗按复制实例的升级标记选择 hook。
 - `.author` 诊断路径仍用原步骤编译。正式程序的 `LegacyCardEffect` 明确桥接现有选择/移动/升级机制；没有批量迁移敌人、Power、药水或全部卡牌。hook 不允许暂停选择，攻击玩家的原语仍不冒充敌人伤害。
 

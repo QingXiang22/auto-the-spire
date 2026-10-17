@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第二十批）——**药水首批**（`potion` 声明 + 药水栏 + `UsePotion` 动作） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)、[药水与 run 的范围说明](../../../design/mod-the-spire/potion-run-scope-2026-10-02.md) |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`potion`/`potions` 解析与校验）、`Slice/CombatSlicePackage.cs`（药水类型/栏位/使用动作；步骤降级参数化）、`BaseSpire.Slice.Tests/SliceFrontendPotionChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`potion`/`potions` 解析与校验）、`Composition/CombatSlicePackage.cs`（药水类型/栏位/使用动作；步骤降级参数化）、`BaseSpire.Slice.Tests/Potions/SliceFrontendPotionChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（二十批）**：药水首批已交付（3 张声明可跑：格挡/力量/火焰）；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批19](../../../design/mod-the-spire/potion-run-scope-2026-10-02.md) |
 
@@ -75,9 +75,9 @@ potion block-potion {
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorPotion`/`AuthorBeltEntry`、`PotionRarities/Usages/Targets`、`ReadPotion`、`potions` 块、模型两种新字段）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（药水类型/栏位/`UsePotion`、`PotionEffectChain`、步骤降级字段参数化）
-- `BaseSpire.Slice.Tests/SliceFrontendPotionChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorPotion`/`AuthorBeltEntry`、`PotionRarities/Usages/Targets`、`ReadPotion`、`potions` 块、模型两种新字段）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（药水类型/栏位/`UsePotion`、`PotionEffectChain`、步骤降级字段参数化）
+- `BaseSpire.Slice.Tests/Potions/SliceFrontendPotionChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未提交、未清理共享工作区。

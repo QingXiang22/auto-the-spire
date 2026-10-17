@@ -34,13 +34,13 @@
 
 | 文件 | 变化 |
 | --- | --- |
-| [ReferenceRandomProbe.cs](../../../tools/differential/ReferenceRandomProbe.cs) | 重写为**逐边界**流观察器：安装时保存并最终恢复既有 `RngDiagnostics.DrawObserver`；`Attach` 登记参考自己的 run/player 具名流并把基线对齐到当前计数器；`AtBoundary` 返回与 base 同形状的 `StreamSnapshot`（增量视图）；`Cumulative` 供初始化/Restore 前后/`script_random` 用（全量视图）；`Restore` 内部在重新装种子后**重挂基线**（`MockRng` 换对象）并留下 `restore-before/after` 真实读数 |
-| [ReferenceBackend.cs](../../../tools/differential/ReferenceBackend.cs) | `RunControlled`/`Build`/`Add` 串起 probe；`BoundaryRecord.Streams` 不再传空表；新增 `CaseRecord.ReferenceStreams` 证据；`Restore("Shuffle", …)` 经 probe 包装（对齐行为本身未变） |
-| [Records.cs](../../../tools/differential/Records.cs) | 新增 `ReferenceStreamSnapshot` / `ReferenceStreamEvidence` / `ReferenceStreamBoundary` 与 `CaseRecord.ReferenceStreams`；新增 `Records.ObservedStreamPrefix` 与 `Records.IsNamedStream`（**具名流 vs 动态槽位**的唯一判据） |
-| [RngSourceCompat.cs](../../../tools/differential/RngSourceCompat.cs) | 修 `EngineStreamName`：`CombatTargets`/`CombatCardSelection`/`CombatCardGeneration` 改为直接引用 base `SliceManifest` 常量（原自写键与 base 实际键不同）；新增 `DiagnosticStreamName`/`PlayerStreamNames`；登记 `UnverifiedKeyNames`（其余 6 条合成的 run 键待核对） |
-| [Comparator.cs](../../../tools/differential/Comparator.cs) | `vanilla-compatible@1` 下只比**具名流**（动态槽位没有稳定跨后端键，条目集合不同不是规则差异） |
-| [TestCommand.cs](../../../tools/differential/TestCommand.cs) | `streams` 维度门槛收紧为"某个边界存在 `Draws > 0` 的具名流"；新增流证据自洽结算（声明消费却无具名流边界读数，或脚本期间**实际增长**的具名流在逐边界覆盖不到 → `missing_dimension`），不补 0、不放宽 |
-| [README.md](../../../tools/differential/README.md) | 新增[参考侧逐边界随机流（2026-10-12）](../../../tools/differential/README.md#参考侧逐边界随机流2026-10-12)，写明两类身份、单位、逐边界增量语义、Restore 换对象与门槛 |
+| [ReferenceRandomProbe.cs](../../../tools/base-migration-baseline/differential/ReferenceRandomProbe.cs) | 重写为**逐边界**流观察器：安装时保存并最终恢复既有 `RngDiagnostics.DrawObserver`；`Attach` 登记参考自己的 run/player 具名流并把基线对齐到当前计数器；`AtBoundary` 返回与 base 同形状的 `StreamSnapshot`（增量视图）；`Cumulative` 供初始化/Restore 前后/`script_random` 用（全量视图）；`Restore` 内部在重新装种子后**重挂基线**（`MockRng` 换对象）并留下 `restore-before/after` 真实读数 |
+| [ReferenceBackend.cs](../../../tools/base-migration-baseline/differential/ReferenceBackend.cs) | `RunControlled`/`Build`/`Add` 串起 probe；`BoundaryRecord.Streams` 不再传空表；新增 `CaseRecord.ReferenceStreams` 证据；`Restore("Shuffle", …)` 经 probe 包装（对齐行为本身未变） |
+| [Records.cs](../../../tools/base-migration-baseline/differential/Records.cs) | 新增 `ReferenceStreamSnapshot` / `ReferenceStreamEvidence` / `ReferenceStreamBoundary` 与 `CaseRecord.ReferenceStreams`；新增 `Records.ObservedStreamPrefix` 与 `Records.IsNamedStream`（**具名流 vs 动态槽位**的唯一判据） |
+| [RngSourceCompat.cs](../../../tools/base-migration-baseline/differential/RngSourceCompat.cs) | 修 `EngineStreamName`：`CombatTargets`/`CombatCardSelection`/`CombatCardGeneration` 改为直接引用 base `SliceManifest` 常量（原自写键与 base 实际键不同）；新增 `DiagnosticStreamName`/`PlayerStreamNames`；登记 `UnverifiedKeyNames`（其余 6 条合成的 run 键待核对） |
+| [Comparator.cs](../../../tools/base-migration-baseline/differential/Comparator.cs) | `vanilla-compatible@1` 下只比**具名流**（动态槽位没有稳定跨后端键，条目集合不同不是规则差异） |
+| [TestCommand.cs](../../../tools/base-migration-baseline/differential/TestCommand.cs) | `streams` 维度门槛收紧为"某个边界存在 `Draws > 0` 的具名流"；新增流证据自洽结算（声明消费却无具名流边界读数，或脚本期间**实际增长**的具名流在逐边界覆盖不到 → `missing_dimension`），不补 0、不放宽 |
+| [README.md](../../../tools/base-migration-baseline/differential/README.md) | 新增[参考侧逐边界随机流（2026-10-12）](../../../tools/base-migration-baseline/differential/README.md#参考侧逐边界随机流2026-10-12)，写明两类身份、单位、逐边界增量语义、Restore 换对象与门槛 |
 
 ### 接口/语义变化（供消费方核对）
 
@@ -57,9 +57,9 @@
   见 `reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs` 与 `RngDiagnostics.cs`（**只读**，未修改）。
 - **Restore 换对象**：`reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs` 的 `MockRng`
   （`_rngs[rngType] = new Rng(seed)`），因此对齐后必须重挂基线；本包在调试中实测到"不重挂则新对象在每个边界重复出现"。
-- **显式映射的 base 真键**：`mod-the-spire/base-spire/BaseSpire/Slice/SliceManifest.cs`
+- **显式映射的 base 真键**：`mod-the-spire/base-spire/BaseSpire/Composition/SliceManifest.cs`
   （`DrawStream` / `RandomTargetStream` / `RandomCardStream` / `CardGenerationStream`）与
-  `.../Slice/VanillaRandomLayout.cs:EngineStreamName`（编译期引用，未修改 base）。
+  `.../Randomness/VanillaRandomLayout.cs:EngineStreamName`（编译期引用，未修改 base）。
 - **参考身份**：`reference/sts2-sim` HEAD 与 `source-compat-sts2-frozen@1` 的派生替换范围仍按原登记；
   本包只改了 `RngSourceCompat.cs`，因此 `reference_identity.profile_code_sha256` 随之改变（这是预期差异，不是行为差异）。
 

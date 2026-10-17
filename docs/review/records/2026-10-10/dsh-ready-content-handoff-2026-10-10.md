@@ -6,7 +6,7 @@
 
 This handoff records the current ENV-T12 content slice after the ready-card scan. It is a dated implementation snapshot, not an independent Slay the Spire 2 parity claim. The complete source denominator remains **577 original single-player entries**; multiplayer entries and non-STS2 inventions were not added.
 
-Production changes were restricted to card DSL files under `mod-the-spire/base-spire/BaseSpire/ContentSource/` and `mod-the-spire/base-spire/BaseSpire.Slice.Tests/RemainingCardFamiliesChecks.cs`.
+Production changes were restricted to card DSL files under `mod-the-spire/base-spire/BaseSpire/ContentSource/` and `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Cards/RemainingCardFamiliesChecks.cs`.
 
 ## Source-backed cards added in this session
 

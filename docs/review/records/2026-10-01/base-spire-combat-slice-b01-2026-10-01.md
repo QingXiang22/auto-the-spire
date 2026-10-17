@@ -24,8 +24,8 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `BaseSpire/Slice/SliceManifest.cs` | 冻结来源清单：4 张卡、2 个 Power、1 个敌人，每项带 `文件:行`；战斗常量（80 HP、3 能量、10 手牌上限、5/4/1 起始牌组）；未取到原版规则的值显式标为 **TestScenario** |
-| `BaseSpire/Slice/CombatSlicePackage.cs` | 用通用 `EnginePackageBuilder` 声明的 `base-spire:combat-slice-v1`：Battle 作用域、Player/Monster/Card/Power 类型、CardKind 枚举、5 个区域（手牌/抽牌堆/弃牌堆/消耗堆/本回合历史）+ Monsters 集合 + Powers 关系、6 个事件、2 个终结结果、PlayerView 投影、5 个过程（SetupBattle / DrawCards / StartPlayerTurn / StartEnemyTurn / EndPlayerTurn）、2 个动作（PlayCard / EndTurn） |
+| `BaseSpire/Composition/SliceManifest.cs` | 冻结来源清单：4 张卡、2 个 Power、1 个敌人，每项带 `文件:行`；战斗常量（80 HP、3 能量、10 手牌上限、5/4/1 起始牌组）；未取到原版规则的值显式标为 **TestScenario** |
+| `BaseSpire/Composition/CombatSlicePackage.cs` | 用通用 `EnginePackageBuilder` 声明的 `base-spire:combat-slice-v1`：Battle 作用域、Player/Monster/Card/Power 类型、CardKind 枚举、5 个区域（手牌/抽牌堆/弃牌堆/消耗堆/本回合历史）+ Monsters 集合 + Powers 关系、6 个事件、2 个终结结果、PlayerView 投影、5 个过程（SetupBattle / DrawCards / StartPlayerTurn / StartEnemyTurn / EndPlayerTurn）、2 个动作（PlayCard / EndTurn） |
 | `BaseSpire.Slice.Tests/`（4 文件） | 9 项 B-01 可执行检查 |
 
 **修改**

@@ -18,7 +18,7 @@
 
 ## 修改边界
 
-`Slice/SliceRelics.cs`、`Slice/Compilation/RelicCompilation.cs`、`Slice/Compilation/DamageCompilation.cs`、`Slice/Compilation/CombatPackageComposer.cs`、`ContentSource/relics.json`、`ContentSource/relic-source-catalog.json`、`BaseSpire.Slice.Tests/RelicContentChecks.cs` 与身份基线文件。未改 core、net 协议或独立参考。
+`Relics/SliceRelics.cs`、`Relics/Compilation/RelicCompilation.cs`、`Combat/Compilation/DamageCompilation.cs`、`Composition/CombatPackageComposer.cs`、`Relics/Content/relics.json`、`Relics/Content/relic-source-catalog.json`、`BaseSpire.Slice.Tests/Relics/RelicContentChecks.cs` 与身份基线文件。未改 core、net 协议或独立参考。
 
 ## 命令与结果
 

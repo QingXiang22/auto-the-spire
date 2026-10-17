@@ -11,7 +11,7 @@ namespace NetTheSpire.Host;
 /// （实体种类、公开字段与其类型/参数、合法动作、终局字段）一律由 RuleSet 与所选投影派生，本文件
 /// 不列普通字段/动作/参数/枚举/引用。文件里出现本实现未支持的结构时显式抛错，不静默丢弃公开事实。
 /// </remarks>
-internal sealed record TextRuleProviderSpec(
+public sealed record TextRuleProviderSpec(
     string FixtureFormat,
     string ProjectionId,
     string ParticipantRole,
@@ -96,6 +96,7 @@ internal sealed record TextRuleProviderSpec(
         foreach (var member in RequireObject(node, $"{what} content").Members)
         {
             var entry = RequireObject(member.Value, $"{what} content.{member.Key}");
+            Known(entry, "field_name", "content_ids");
             var fieldName = RequireString(entry, "field_name", $"{what} content.{member.Key}");
             var ids = RequireStringList(entry, "content_ids", $"{what} content.{member.Key}");
             result[member.Key] = new PublicContentRule(fieldName, ids);
@@ -116,6 +117,13 @@ internal sealed record TextRuleProviderSpec(
         {
             var entry = RequireObject(member.Value, $"{what} collections.{member.Key}");
             var use = RequireString(entry, "use", $"{what} collections.{member.Key}");
+            Known(entry, use switch
+            {
+                "pile" => ["use", "pile_kind_type_id", "position"],
+                "group" or "sequence" => ["use", "owner_kind_type_id"],
+                "not_published" => ["use", "rule_id", "reason"],
+                _ => throw new NotSupportedException($"{what}: unknown collection use '{use}'"),
+            });
             result[member.Key] = use switch
             {
                 "pile" => PublicCollectionRule.Pile(
@@ -145,6 +153,7 @@ internal sealed record TextRuleProviderSpec(
         }
 
         var entry = RequireObject(node, $"{what} position");
+        Known(entry, "unit", "origin", "min", "max");
         return new PublicPositionSchema(
             RequireString(entry, "unit", $"{what} position"),
             RequireString(entry, "origin", $"{what} position"),
@@ -186,6 +195,7 @@ internal sealed record TextRuleProviderSpec(
         {
             var where = $"{what} known_positions.{member.Key}";
             var entry = RequireObject(member.Value, where);
+            Known(entry, "fact_kind_id", "card_field_name", "pile_field_name", "position_field_name", "pile_type_by_collection");
             var pileTypes = new Dictionary<string, string>(StringComparer.Ordinal);
             if (Optional(entry, "pile_type_by_collection") is { } pileNode)
             {
@@ -210,6 +220,12 @@ internal sealed record TextRuleProviderSpec(
 
     private static WireObject RequireObject(WireValue node, string what) =>
         node as WireObject ?? throw new NotSupportedException($"{what}: 期望 JSON 对象，实际是 {node.TypeName}");
+
+    private static void Known(WireObject value, params string[] keys)
+    {
+        var unknown = value.Members.FirstOrDefault(p => !keys.Contains(p.Key, StringComparer.Ordinal));
+        if (unknown.Key is not null) throw new NotSupportedException($"Unsupported metadata field '{unknown.Key}'.");
+    }
 
     private static WireValue? Optional(WireObject node, string key) => node.Get(key);
 

@@ -16,14 +16,14 @@
 1. 读本节与《已验证》《未执行 / 受阻》《首差》，确认三件事：`dev-map` 现在**从正式地图 `ChooseMapPoint`
    的 Shop 分支进店**；普通拒绝不 Fault 整局；删牌走正式 `Decide`。
 2. 复跑本包门槛（命令与 rc 见《实际命令与 rc》）：`--shop-flow-only` 11 项、完整 Slice 770 项。
-3. 只在本包边界内继续：`mod-the-spire/base-spire/BaseSpire/Slice/ShopRoomWiring.cs`、`ShopCompute.cs`、
+3. 只在本包边界内继续：`mod-the-spire/base-spire/BaseSpire/Rooms/Shop/ShopRoomWiring.cs`、`ShopCompute.cs`、
    `ColorlessShopPool.cs` 及《改动与接口》列出的接缝；**不要**重开 core 重构、不补卡牌、不动 B/C 文件。
 
 ## 已有复用（不重做）
 
 - 隔离交付：`mod-the-spire/base-spire/workpacks/shop-flow/` 的 `ShopRoomWiring.cs`/`ShopCompute.cs`/
   `ShopFlowChecks`。本包已把它们迁进正式生产树，旧文件改名为 `*.cs.frozen-20261011` 冻结留档
-  （见 [workpacks/shop-flow/README.md](../../../../mod-the-spire/base-spire/workpacks/shop-flow/README.md)）；
+  （见 [workpacks/shop-flow/README.md](../../../../tools/base-migration-baseline/workpacks/shop-flow/README.md)）；
   旧 13 项检查的主机是**旧的两瓶药水池**，不能作为现行池验收。
 - 源依据：[source-facts.md](../../../../.audit/dsh-shop-flow-2026-10-11/source-facts.md)（流归属、阈值、价格、
   库存顺序、购买写回、离店、选卡细节）。
@@ -38,23 +38,23 @@
 
 | 文件 | 内容 |
 | --- | --- |
-| `BaseSpire/Slice/ShopRoomWiring.cs` | 正式商店机制：`ShopOffer`（含 `SourceName`）/`ShopOffers`、`Enter` 生成 14 格、5 个动作、4 个过程、遗物袋取货与可买判据 |
-| `BaseSpire/Slice/ShopCompute.cs` | 9 个纯计算 Entry（`shop-card-rarity` 多出一个 `Available` 输出）+ 对应 IR 记符号 |
-| `BaseSpire/Slice/ColorlessShopPool.cs` | 无色**源顺序清单 + 源稀有度**（64 项：Uncommon 39 / Rare 25） |
+| `BaseSpire/Rooms/Shop/ShopRoomWiring.cs` | 正式商店机制：`ShopOffer`（含 `SourceName`）/`ShopOffers`、`Enter` 生成 14 格、5 个动作、4 个过程、遗物袋取货与可买判据 |
+| `BaseSpire/Rooms/Shop/ShopCompute.cs` | 9 个纯计算 Entry（`shop-card-rarity` 多出一个 `Available` 输出）+ 对应 IR 记符号 |
+| `BaseSpire/Cards/Pools/ColorlessShopPool.cs` | 无色**源顺序清单 + 源稀有度**（64 项：Uncommon 39 / Rare 25） |
 
 ### 修改的接缝（括号内是本包改动范围）
 
-- `Slice/Compilation/RoomCompilation.cs`：`RoomServices` 增 `CardsBindings`/`PotionsBindings`/`RelicsBindings`
+- `Rooms/Compilation/RoomCompilation.cs`：`RoomServices` 增 `CardsBindings`/`PotionsBindings`/`RelicsBindings`
   参数并构造 `ShopRoomWiring`；`Rooms` 里 `RegisterChooseMapPoint` 传 shop、`shop.RegisterActions`。
-- `Slice/Compilation/CompilationBindings.cs`：`RoomServicesBindings` 增 `ShopRoomWiring? Shop`。
-- `Slice/Compilation/CombatPackageComposer.cs`：只改 `RoomServices` 的调用参数。
-- `Slice/MapRoomWiring.cs`：新增 `ShopPhase = 7` 常量、`MapPhase` 字段域 0..7、`Projection` 只读属性、
+- `Composition/CompilationBindings.cs`：`RoomServicesBindings` 增 `ShopRoomWiring? Shop`。
+- `Composition/CombatPackageComposer.cs`：只改 `RoomServices` 的调用参数。
+- `Rooms/MapRoomWiring.cs`：新增 `ShopPhase = 7` 常量、`MapPhase` 字段域 0..7、`Projection` 只读属性、
   `Shop` 分支（进店 → `shop.Enter`）、Shop 从"未实现房型"列表移除、`RegisterChooseMapPoint` 增 shop 参数。
-- `Slice/SourceActMapCompute.cs`：`BaseSpireComputeBackend.Execute` 默认分支先分派 `ShopCompute.TryExecute`。
-- `Slice/Orchestration/CardDefinitions.cs`：只加只读 `Schema` 属性（商店复用同一卡实体/配方）。
-- `Slice/SliceManifest.cs`：只加 `RemoveCardChoicePrompt`。
+- `Maps/SourceActMapCompute.cs`：`BaseSpireComputeBackend.Execute` 默认分支先分派 `ShopCompute.TryExecute`。
+- `Cards/Runtime/CardDefinitions.cs`：只加只读 `Schema` 属性（商店复用同一卡实体/配方）。
+- `Composition/SliceManifest.cs`：只加 `RemoveCardChoicePrompt`。
 - `SinglePlayer/BasePublicSemantics.cs`：`ShopOffers` 具名发布为 `Sequence`（owner `Run`）。
-- `Slice/ShopRoomWiring.cs` 内把 `ShopOffer` 加进观看者投影（经 `map.Projection`）。
+- `Rooms/Shop/ShopRoomWiring.cs` 内把 `ShopOffer` 加进观看者投影（经 `map.Projection`）。
 
 ### 公共接口变更（需负责人注意）
 
@@ -109,9 +109,9 @@ doc-check 的 4 项**全部是既有问题**（`dsh-power-fixture-handoff-2026-1
   `Core/Models/Cards/<无色卡>.cs`（稀有度）。
 - 参考：无新增独立参考；判定依据是上列源文件 + `source-facts.md`（原隔离包已逐行核对，本包沿用并修正两处）。
 - 被测源 SHA256：
-  - `BaseSpire/Slice/ShopRoomWiring.cs` = `9EE5E0924FC50E31B46183E221773DAC376BB012C72E8111F4F946AEB4D83847`
-  - `BaseSpire/Slice/ShopCompute.cs` = `B45460B3CE9F40C57331E2D9681D4CA4DBED0ABB794C624EABB690ADAC8DF213`
-  - `BaseSpire/Slice/ColorlessShopPool.cs` = `6F203FAD89309214A8FBA2D03E43464E5F99567056554E0C187D44B2DD9E144E`
+  - `BaseSpire/Rooms/Shop/ShopRoomWiring.cs` = `9EE5E0924FC50E31B46183E221773DAC376BB012C72E8111F4F946AEB4D83847`
+  - `BaseSpire/Rooms/Shop/ShopCompute.cs` = `B45460B3CE9F40C57331E2D9681D4CA4DBED0ABB794C624EABB690ADAC8DF213`
+  - `BaseSpire/Cards/Pools/ColorlessShopPool.cs` = `6F203FAD89309214A8FBA2D03E43464E5F99567056554E0C187D44B2DD9E144E`
 - 最终构建产物 SHA256（`.artifacts/parallel/dsh-shop-integration-20261011-final/bin/.../debug/`）：
   - `BaseSpire.dll` = `E10198EEA6FBFA255D1257FA31DA3FFFABF25ED653325EF0946A3C943C2829C2`（1 538 560 字节）
   - `Core.TheSpire.dll` = `ECB685ABF1F3EBD70ECA559E8455E526205EF0CD6C9352DFEEFC87A1F682B137`（492 032 字节）

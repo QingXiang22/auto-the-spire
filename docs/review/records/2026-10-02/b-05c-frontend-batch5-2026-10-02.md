@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第五批）——目标域 `damage_random`，以及 §14 明文要求的"随机候选顺序和消费点有来源" |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Engine/Scheduler.cs` + `Engine/RandomService.cs`（**公共契约修正**）、`Slice/SliceAuthorFrontend.cs`、`Slice/CombatSlicePackage.cs`、`Slice/SliceManifest.cs`、`BaseSpire.Slice.Tests/SliceFrontendRandomChecks.cs`、`Core.TheSpire.Engine.Tests/EngineChecks.cs` |
+| 负责范围 | `Engine/Scheduler.cs` + `Engine/RandomService.cs`（**公共契约修正**）、`Authoring/SliceAuthorFrontend.cs`、`Composition/CombatSlicePackage.cs`、`Composition/SliceManifest.cs`、`BaseSpire.Slice.Tests/Cards/SliceFrontendRandomChecks.cs`、`Core.TheSpire.Engine.Tests/EngineChecks.cs` |
 | 状态 | **部分完成（五批）**：随机目标与候选顺序/消费点来源已交付；B-05c 其余子项仍未开始（见 §6） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批4](b-05c-frontend-batch4-2026-10-02.md) |
 
@@ -86,10 +86,10 @@ B-05a 的分母（354 条声明 / 85 张卡池卡）不变。
 - `core-the-spire/Core.TheSpire/Engine/Scheduler.cs`（`SamplePick` 候选排序 + 注释）
 - `core-the-spire/Core.TheSpire/Engine/RandomService.cs`（`DrawPick` 文档改为与实现一致）
 - `core-the-spire/Core.TheSpire.Engine.Tests/EngineChecks.cs`（新增 K-05 顺序检查）
-- `BaseSpire/Slice/SliceManifest.cs`（`RandomTargetStream` 常量与出处注释）
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`damage_random` 词表 + 目标确定方式唯一性）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`damage_random` 降级：`SamplePick` + 伤害）
-- `BaseSpire.Slice.Tests/SliceFrontendRandomChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Composition/SliceManifest.cs`（`RandomTargetStream` 常量与出处注释）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`damage_random` 词表 + 目标确定方式唯一性）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`damage_random` 降级：`SamplePick` + 伤害）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendRandomChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未提交、未清理共享工作区。

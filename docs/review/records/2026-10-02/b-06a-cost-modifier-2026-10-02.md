@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础内容批**（第十六小批）——**临时费用修正**（`modify_cost:<n>`）+ **本回合已打出计数**（`played-count:<Kind>`） |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："能量/费用"）；来源：`ContentSource/ironclad-cards.spire:167`（`Stomp` 的 `modifySelectedCardCost`） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`modify_cost:<n>`（可负）、`played-count:<Kind>`）、`Slice/CombatSlicePackage.cs`（费用修正字段与有效费用、四牌区回合末过期、已打出计数）、`net` 公开映射（新卡牌字段的显式处置）、切片检查（新增 5 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行："能量/费用"）；来源：`Cards/Content/ironclad-cards.spire:167`（`Stomp` 的 `modifySelectedCardCost`） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`modify_cost:<n>`（可负）、`played-count:<Kind>`）、`Composition/CombatSlicePackage.cs`（费用修正字段与有效费用、四牌区回合末过期、已打出计数）、`net` 公开映射（新卡牌字段的显式处置）、切片检查（新增 5 项） |
 | 状态 | **本小批完成（能力）**；`Stomp` **本身未声明**（见 §4，理由写在报告里） |
 | 前置 | 第十五小批（缩放数值） |
 
@@ -81,8 +81,8 @@ beforeCardPlayed = { whenCardType = attack  effect = { modifySelectedCardCost = 
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`ModifyCost`（可负字面量）、`PlayedCountPrefix`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`CostModifier` 字段、`CostForPayment`、`modify_cost` 步骤、`played-count` 降级、四牌区过期）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`ModifyCost`（可负字面量）、`PlayedCountPrefix`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`CostModifier` 字段、`CostForPayment`、`modify_cost` 步骤、`played-count` 降级、四牌区过期）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（`CostModifier` 的公开处置）
 - 切片检查：`SliceFrontendCostModifierChecks.cs`（新增 5 项）、`SliceChecks.cs`
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）

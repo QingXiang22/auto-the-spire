@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第四批）——`cost = X` 与**捕获时点** |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行明文要求"X 费捕获/目标域/保留时点有独立检查"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`cost = X` 解析与校验）、`Slice/CombatSlicePackage.cs`（合法性 + 捕获降级）、`BaseSpire.Slice.Tests/SliceFrontendXCostChecks.cs`（新增 4 项检查） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`cost = X` 解析与校验）、`Composition/CombatSlicePackage.cs`（合法性 + 捕获降级）、`BaseSpire.Slice.Tests/Cards/SliceFrontendXCostChecks.cs`（新增 4 项检查） |
 | 状态 | **部分完成（四批）**：X 费与捕获时点已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) / [批2](b-05c-frontend-batch2-2026-10-02.md) / [批3](b-05c-frontend-batch3-2026-10-02.md) |
 
@@ -64,9 +64,9 @@ B-05a 的分母（354 条声明 / 85 张卡池卡）不变；旧后端仍持有�
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorCard.IsXCost`；`cost = X` 解析；amount 冲突校验）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`EnergyIsEnough()` guard、`SpendEnergy()` 捕获链）
-- `BaseSpire.Slice.Tests/SliceFrontendXCostChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorCard.IsXCost`；`cost = X` 解析；amount 冲突校验）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`EnergyIsEnough()` guard、`SpendEnergy()` 捕获链）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendXCostChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/` 语义（只用既有原语：`Or`/`SetField`/`Subtract`）、Legacy、net、Python 侧。

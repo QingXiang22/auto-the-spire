@@ -1,10 +1,10 @@
 # Base 共享控制流程与职责边界
 
-文档类型：解释（Explanation）。本页解释 base 如何借鉴本地 sim 的命令、出牌和生命周期分工。生产由 `CombatSlicePackage` 进入 `Compilation/CombatPackageComposer` 接入，[Orchestration 模块](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardPlayPipeline.cs)生成冻结 Engine IR，Session 执行它。任务状态只在[主清单](../../review/tofix/README.md#env-t06)，实现范围由[规格](base-orchestration/spec.md)定义，验证证据见[实施复核](../../review/records/2026-10-10/base-orchestration-2026-10-10.md)。
+文档类型：解释（Explanation）。本页解释 base 如何借鉴本地 sim 的命令、出牌和生命周期分工。生产由 `CombatSlicePackage` 进入 `Composition/CombatPackageComposer` 接入，[Orchestration 模块](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardPlayPipeline.cs)生成冻结 Engine IR，Session 执行它。任务状态只在[主清单](../../review/tofix/README.md#env-t06)，实现范围由[规格](base-orchestration/spec.md)定义，验证证据见[实施复核](../../review/records/2026-10-10/base-orchestration-2026-10-10.md)。
 
 ## 借鉴的分工
 
-移动选牌由[CardSelectionProcedures](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardSelectionProcedures.cs)独立拥有候选、数量和暂停/恢复IR；实际移动、消耗事件仍复用牌区命令。它不拥有付款、出牌结果或终局。作者例子在独立的[选牌卡源](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/selection-cards.spire)，新卡组合无需增加AuthorStep字符串或net逐卡处理。
+移动选牌由[CardSelectionProcedures](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardSelectionProcedures.cs)独立拥有候选、数量和暂停/恢复IR；实际移动、消耗事件仍复用牌区命令。它不拥有付款、出牌结果或终局。作者例子在独立的[选牌卡源](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/selection-cards.spire)，新卡组合无需增加AuthorStep字符串或net逐卡处理。
 
 | sim 落点 | base 的实现职责 |
 | --- | --- |
@@ -21,7 +21,7 @@
 
 这些模块只持编译期符号、源定义及生成 IR 的函数，不持 Session 或隐藏的 C# 游戏状态。
 
-| 模块（`BaseSpire/Slice/Orchestration/`） | 唯一职责 | 不承担 |
+| 模块（`BaseSpire/Cards/Runtime/`） | 唯一职责 | 不承担 |
 | --- | --- | --- |
 | `CardSchema` / `CardDefinitions` | 实例字段、定义初始化、升级、长期副本与克隆策略 | 出牌调度、奖励选择 |
 | `CardPileProcedures` | 移动/消耗、克隆、创建变形替代实例及保留索引 | 费用、终局 |
@@ -40,14 +40,14 @@
 
 房间在 `Slice/` 的 `MapRoomWiring`、`RestSiteWiring`、`TreasureRoomWiring`、`RewardWiring` 中编排。地图选择进入真实房型；营火复用升级契约；宝箱在Engine集合中管理源共享随机袋、独立稀有度与金币抽取及持有实例；奖励模块决定普通/Boss奖励参数并关闭奖励。Boss奖励关闭只写幕完成，整局胜利仍由整局终局规则决定。无需为卡牌作者加载这些房间模块。
 
-营火和宝箱通过[RoomCompileContext](../../../mod-the-spire/base-spire/BaseSpire/Slice/RoomCompileContext.cs)消费同一Run/长期符号，并共用访问守卫和关闭指令。它不持游戏状态；地图进入、奖励及Boss幕完成回调仍各有主责。扩展路径见[房间操作指南](how-to-add-a-room.md)和[准确接口](room-compile-reference.md)。
+营火和宝箱通过[RoomCompileContext](../../../tools/base-migration-baseline/BaseSpire/Rooms/RoomCompileContext.cs)消费同一Run/长期符号，并共用访问守卫和关闭指令。它不持游戏状态；地图进入、奖励及Boss幕完成回调仍各有主责。扩展路径见[房间操作指南](how-to-add-a-room.md)和[准确接口](room-compile-reference.md)。
 
 ### 重洗的源预排序（`StableShuffle`）
 
-源 `CardPileCmd.Shuffle`（`sts2/src/Core/Commands/CardPileCmd.cs:864-876`）在洗牌前先 `combined.StableShuffle(...)`：[ListExtensions](../../../sts2/src/Core/Extensions/ListExtensions.cs) 把合并后的牌堆**先按 `CardModel.CompareTo` 排序**（`ModelId.Entry` 序数，再 `CurrentUpgradeLevel`），再做降序 Fisher–Yates。[CardDrawProcedures](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDrawProcedures.cs) 的 `Reshuffle` 是普通抽牌与效果抽牌共用的唯一重洗入口，按同一顺序执行：清已知位置 → 弃牌堆逐张并入抽牌堆 → 源预排序 → 一次 `ShuffleCollection`（流条数不变）。
+源 `CardPileCmd.Shuffle`（`sts2/src/Core/Commands/CardPileCmd.cs:864-876`）在洗牌前先 `combined.StableShuffle(...)`：[ListExtensions](../../../sts2/src/Core/Extensions/ListExtensions.cs) 把合并后的牌堆**先按 `CardModel.CompareTo` 排序**（`ModelId.Entry` 序数，再 `CurrentUpgradeLevel`），再做降序 Fisher–Yates。[CardDrawProcedures](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDrawProcedures.cs) 的 `Reshuffle` 是普通抽牌与效果抽牌共用的唯一重洗入口，按同一顺序执行：清已知位置 → 弃牌堆逐张并入抽牌堆 → 源预排序 → 一次 `ShuffleCollection`（流条数不变）。
 
 - 排序键是卡实例上的**隐藏编译辅助元数据** `SourceOrderKey`（`ENTRY@升级等级`）。Entry 由**声明名**按 `StringHelper.Slugify` 还原，不是内容 id 的逆向转写（两者不恒等）；`CardDefinitions` 的 `Fields`/`New`/`Copy`/`Upgrade` 是写出它的唯一入口，新增创建、复制或升级路径必须一并写出，否则重洗读空值直接失败。
-- 排序由纯计算资产 `SourceStableShuffleOrder`（[SourceStableShuffle](../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceStableShuffle.cs)）给出：对下标数组用源比较器调用 `List<T>.Sort(...)`，因此 ≥16 张同键实例的并列次序与源的内省排序逐位一致（稳定排序在实测的重复实例输入里约 3/4 与其不同）。IR 每一步只取"目标顺序第 k 张当前的下标"并把该牌移到末尾，不新增运行态、不消耗随机数。
+- 排序由纯计算资产 `SourceStableShuffleOrder`（[SourceStableShuffle](../../../tools/base-migration-baseline/BaseSpire/Randomness/SourceStableShuffle.cs)）给出：对下标数组用源比较器调用 `List<T>.Sort(...)`，因此 ≥16 张同键实例的并列次序与源的内省排序逐位一致（稳定排序在实测的重复实例输入里约 3/4 与其不同）。IR 每一步只取"目标顺序第 k 张当前的下标"并把该牌移到末尾，不新增运行态、不消耗随机数。
 - 后端按 `asset.Entry` 分派：受控切片与对拍使用 `SourceWeightedPickBackend`，`BaseSpireComputeBackend` 的 default 分支逐字转发到它，两条会话路径因此一致。
 - 局部检查：`BaseSpire.Slice.Tests --reshuffle-only`（键口径、源置换、创建/复制/升级路径、10 张 ENV-T04 case 与 17 张同键的端到端牌序）。卡类型新增隐藏字段、`DrawCards` 多了计算与移动指令，规则身份与公开构建身份随之变化，需要统一迁移基线。
 

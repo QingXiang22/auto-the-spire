@@ -21,7 +21,7 @@
 
 ## 修改边界
 
-`Slice/SliceRelics.cs`（触发点、`CardKind` 与参数校验）、`Slice/Compilation/RelicCompilation.cs`（`DispatchCard` 与牌型条件）、`Slice/Compilation/DamageCompilation.cs`（打出后过程追加遗物监听）、`Slice/Compilation/CombatPackageComposer.cs`（接线牌型比较）、`ContentSource/relics.json`、`ContentSource/relic-source-catalog.json`、`BaseSpire.Slice.Tests/RelicContentChecks.cs`（四个场景）与身份基线文件。未改 core、net 协议或独立参考。
+`Relics/SliceRelics.cs`（触发点、`CardKind` 与参数校验）、`Relics/Compilation/RelicCompilation.cs`（`DispatchCard` 与牌型条件）、`Combat/Compilation/DamageCompilation.cs`（打出后过程追加遗物监听）、`Composition/CombatPackageComposer.cs`（接线牌型比较）、`Relics/Content/relics.json`、`Relics/Content/relic-source-catalog.json`、`BaseSpire.Slice.Tests/Relics/RelicContentChecks.cs`（四个场景）与身份基线文件。未改 core、net 协议或独立参考。
 
 ## 命令与结果
 
