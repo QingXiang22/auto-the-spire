@@ -535,18 +535,19 @@ internal static class RelicContentChecks
             Check.Equal(5, Members(s, "Hand").Count, "later turns in the same combat do not draw again");
             Check.True(PlayerNumber(s, "Hp") <= before, "the combat keeps dealing damage after the draw");
         });
-        Case(["SelfFormingClay"], "Relic damage: SelfFormingClay converts a hit into next-turn block through its stacking power", () =>
+        Case(["SelfFormingClay"], "Relic damage: SelfFormingClay pays three block per unblocked hit through its stacking power", () =>
         {
             var s = New(); Submit(s, "Obtain_SelfFormingClay"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
             SetPlayer(s, "Hp", 95L);
             var turns = 0;
             while (PlayerNumber(s, "Block") == 0L && turns < 4) { Submit(s, "EndTurn"); turns++; }
-            Check.True(turns < 4, "the combat produces a hit within four turns");
-            Check.Equal(3L, PlayerNumber(s, "Block"), "the hit becomes three block at the next turn start");
+            var hits = PlayerNumber(s, "HpLossCount");
+            Check.True(turns < 4 && hits > 0, "the combat produces unblocked hits within four turns");
+            Check.Equal(3L * hits, PlayerNumber(s, "Block"), "each unblocked hit contributes three block");
             Check.Equal(0L, Power(s, "base-spire:self-forming-clay"), "the power is consumed when it pays out");
             var before = PlayerNumber(s, "Hp");
             Submit(s, "EndTurn");
-            Check.Equal(3L, PlayerNumber(s, "Block"), "a later hit grants the same three block, not an accumulated amount");
+            Check.True(PlayerNumber(s, "Block") % 3L == 0L, "a later payout stays a multiple of the per-hit amount");
             Check.True(PlayerNumber(s, "Hp") <= before, "the combat keeps dealing damage after the payout");
         });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>

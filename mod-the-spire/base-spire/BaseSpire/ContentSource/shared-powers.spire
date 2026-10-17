@@ -44,7 +44,7 @@ package base-spire {
 
   power SelfFormingClayPower {
     trigger = afterPlayerTurnStart
-    effect = sequence(gainBlock(3, target=self), removePower(SelfFormingClayPower))
+    effect = sequence(gainBlock(1, perPowerStack=SelfFormingClayPower), removePower(SelfFormingClayPower))
   }
 
   power Shrink {

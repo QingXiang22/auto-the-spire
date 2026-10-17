@@ -254,6 +254,7 @@ public static class SpirePowerSource
             return power.TriggerEffect.Split(PowerTriggerEffect.SequenceSeparator).All(effect =>
                 effect.StartsWith(PowerTriggerEffect.GainPowerPerStackPrefix, StringComparison.Ordinal)
                 || effect.StartsWith(PowerTriggerEffect.GainBlockPrefix, StringComparison.Ordinal)
+                || effect.StartsWith(PowerTriggerEffect.GainBlockPerStackPrefix, StringComparison.Ordinal)
                 || effect is PowerTriggerEffect.RemoveSelf or PowerTriggerEffect.DecrementSelf);
         if (power.Trigger == AuthorPowerTrigger.AfterBlockGained) return Prefix(PowerTriggerEffect.RandomAttackPerStackPrefix);
         if (power.Trigger == AuthorPowerTrigger.AfterDamageTaken) return Prefix(PowerTriggerEffect.RetaliatePerStackPrefix);
@@ -660,21 +661,25 @@ public static class SpirePowerSource
             {
                 case "gainBlock":
                 {
-                    // 只支持"固定数值、目标是自己"的形态（按层数的形态走单效果路径）。
+                    // 支持固定数值（target=self）与按自身层数（perPowerStack=自己）两种形态。
                     var amount = step.Arguments.FirstOrDefault(item => item.Name is null) is { } positional
                         ? IntOf(positional.Value)
                         : 0;
                     var targetsSelf = step.Arguments.Any(item => item.Name == "target"
                         && NameOf(item.Value) == "self");
-                    var perStack = step.Arguments.Any(item => item.Name == "perPowerStack");
-                    if (perStack || (amount <= 0 && !targetsSelf))
+                    var perStackSelf = step.Arguments.Any(item => item.Name == "perPowerStack"
+                        && NameOf(item.Value) == powerName);
+                    var perStackOther = step.Arguments.Any(item => item.Name == "perPowerStack" && !perStackSelf);
+                    if (perStackOther || (perStackSelf ? amount <= 0 : amount <= 0 && !targetsSelf))
                     {
                         problems.Add($"{powerName}.effect sequence 里的 gainBlock 形态未支持"
-                            + "（只支持固定数值 gainBlock(n, target=self)）");
+                            + "（只支持固定数值 gainBlock(n, target=self) 或按自身层数 gainBlock(n, perPowerStack=自己)）");
                         return true;
                     }
 
-                    parts.Add($"{PowerTriggerEffect.GainBlockPrefix}{amount}");
+                    parts.Add(perStackSelf
+                        ? $"{PowerTriggerEffect.GainBlockPerStackPrefix}{amount}"
+                        : $"{PowerTriggerEffect.GainBlockPrefix}{amount}");
                     break;
                 }
                 case "removePower":

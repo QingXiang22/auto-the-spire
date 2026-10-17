@@ -109,8 +109,9 @@ internal static class SliceMapRoomChecks
     // 2026-10-17 Pendulum adds the shared `draw-cards` relic effect. Previous dev 2d6cc019dfe1a98d / f66c39dcd9474851.
     // 2026-10-17 CentennialPuzzle adds the `after-damage-received` relic trigger. Previous dev 8f6d5a74a9f0e49d / ac56bbdcf1117d15.
     // 2026-10-17 SelfFormingClay consumes that trigger with its next-turn block power. Previous dev 8b0dd0f571004fd0 / 1b5d78529aeeb4de.
-    private const string DevGoldenRuleset = "c3e80e123a592ecd";
-    private const string DevGoldenBuild = "e720657f9744aff7";
+    // 2026-10-17 per-stack block effect in a power sequence now loads (PowerCount 55→56). Previous dev c3e80e123a592ecd / e720657f9744aff7.
+    private const string DevGoldenRuleset = "58b3cef636e06488";
+    private const string DevGoldenBuild = "250a1283c1556641";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -136,8 +137,9 @@ internal static class SliceMapRoomChecks
     // Same Pendulum addition; previous dev-map ade78c1114859bbf / 30e79a8acac26095.
     // Same CentennialPuzzle addition; previous dev-map 3b104072e22f7fb1 / 3d9836c424faefaa.
     // Same SelfFormingClay addition; previous dev-map 85beb60106ad58a9 / 8262c6c4a0d76aee.
-    private const string DevMapGoldenRuleset = "a2e76db7002d51c1";
-    private const string DevMapGoldenBuild = "c1bfa1c760a80690";
+    // Same per-stack block fix; previous dev-map a2e76db7002d51c1 / c1bfa1c760a80690.
+    private const string DevMapGoldenRuleset = "2e69c1a8e092394a";
+    private const string DevMapGoldenBuild = "257f9b76174e59c7";
 
     public static void DefaultIdentity()
     {

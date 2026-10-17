@@ -2,7 +2,7 @@
 
 2026-10-17：[遗物源清单与实例公共接口](2026-10-17/relic-foundation-2026-10-17.md)记录297件源遗物／300条池成员对账、四件base正式声明，以及RunRelics获得／移除／替换／熔毁、实例计数与有效性查询；27项相关定向检查通过，完整回归、逐件资格与独立证据仍待验证。
 
-2026-10-17：[SelfFormingClay复用受击触发](2026-10-17/relic-self-forming-clay-2026-10-17.md)把上一批的`after-damage-received`接到“下回合格挡”能力上；覆盖推进到83/83可执行、未实现213，并具名保留“现有能力固定给3点而非按层数结算”的差异与`perPowerStack`解析缺口。
+2026-10-17：[SelfFormingClay复用受击触发](2026-10-17/relic-self-forming-clay-2026-10-17.md)把上一批的`after-damage-received`接到“下回合格挡”能力上，并在同轮修好`perPowerStack`解析让能力按层数结算（PowerCount 55→56）；覆盖83/83可执行、未实现213。
 
 2026-10-17：[遗物受击触发与CentennialPuzzle](2026-10-17/relic-damage-received-2026-10-17.md)新增`after-damage-received`触发点（对应源`UnblockedDamage > 0`，过程体延后到抽牌绑定就绪后编译），实现CentennialPuzzle每场战斗首次掉血抽3张；覆盖推进到82/82可执行、未实现214。
 

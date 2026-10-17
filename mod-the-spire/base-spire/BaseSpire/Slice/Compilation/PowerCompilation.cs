@@ -373,6 +373,14 @@ internal static class PowerCompilation
                             scope.Multiply(scope.LocalRef(stacks), scope.Const(perStack)),
                             scope.Const(false), scope.Const(false))));
                 }
+                else if (effect.StartsWith(PowerTriggerEffect.GainBlockPerStackPrefix, StringComparison.Ordinal))
+                {
+                    // 按自身层数给格挡：`gain-block-per-stack:n` → n × 层数（SelfFormingClayPower）。
+                    var perStackBlock = long.Parse(effect[PowerTriggerEffect.GainBlockPerStackPrefix.Length..]);
+                    instances.Add(scope.If(scope.Greater(scope.LocalRef(stacks), scope.Const(0L)),
+                        scope.Call(playerBlockBindings.GainPlayerBlock.Symbol,
+                            scope.Multiply(scope.LocalRef(stacks), scope.Const(perStackBlock)))));
+                }
                 else if (effect.StartsWith(PowerTriggerEffect.GainBlockPrefix, StringComparison.Ordinal))
                 {
                     // 固定数值的格挡（不按层数）：`gain-block:N`�?
