@@ -633,6 +633,40 @@ internal static class RelicContentChecks
             FormalSliceFixture.PlayAt(s, bash, monster);
             Check.Equal(before - 8L, Number(s, monster, "Monster", "Hp"), "a non-Strike attack keeps its own damage");
         });
+        Case(["MiniatureCannon"], "Relic damage: MiniatureCannon adds three damage to upgraded cards only", () =>
+        {
+            var s = New(); Submit(s, "Obtain_MiniatureCannon"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Energy", 10L);
+            var monster = Members(s, "Monsters")[0];
+            var before = Number(s, monster, "Monster", "Hp");
+            var plain = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            FormalSliceFixture.PlayAt(s, plain, monster);
+            Check.Equal(before - 6L, Number(s, monster, "Monster", "Hp"), "a normal card keeps its damage");
+
+            var upgraded = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            SetCardField(s, upgraded, "Upgraded", CoreTheSpire.Engine.Value.Of(true));
+            SetCardField(s, upgraded, "Amount", CoreTheSpire.Engine.Value.Of(9L));
+            before = Number(s, monster, "Monster", "Hp");
+            FormalSliceFixture.PlayAt(s, upgraded, monster);
+            Check.Equal(before - 12L, Number(s, monster, "Monster", "Hp"), "an upgraded card gets nine plus three");
+        });
+        Case(["MysticLighter"], "Relic damage: MysticLighter adds nine damage to enchanted cards only", () =>
+        {
+            var s = New(); Submit(s, "Obtain_MysticLighter"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Energy", 10L);
+            var monster = Members(s, "Monsters")[0];
+            var before = Number(s, monster, "Monster", "Hp");
+            var plain = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            FormalSliceFixture.PlayAt(s, plain, monster);
+            Check.Equal(before - 6L, Number(s, monster, "Monster", "Hp"), "an unenchanted card keeps its damage");
+
+            var enchanted = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            SetCardField(s, enchanted, "EnchantmentId", CoreTheSpire.Engine.Value.Of("base-spire:sown"));
+            SetCardField(s, enchanted, "EnchantmentAmount", CoreTheSpire.Engine.Value.Of(1L));
+            before = Number(s, monster, "Monster", "Hp");
+            FormalSliceFixture.PlayAt(s, enchanted, monster);
+            Check.Equal(before - 15L, Number(s, monster, "Monster", "Hp"), "an enchanted card gets six plus nine");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");
@@ -708,6 +742,9 @@ internal static class RelicContentChecks
 
     private static void SetRun(Session s, string field, Value value) => s.State.RunAtomic(() =>
         s.State.SetField(Members(s, "RunStates").Single(), s.RuleSet.TypeByQualifiedId("base-spire:Run").FieldIndex(field), value));
+
+    private static void SetCardField(Session s, InstanceId card, string field, CoreTheSpire.Engine.Value value) =>
+        s.State.RunAtomic(() => s.State.SetField(card, s.RuleSet.TypeByQualifiedId("base-spire:Card").FieldIndex(field), value));
 
     private static void SetPlayer(Session s, string field, long value) => s.State.RunAtomic(() =>
         s.State.SetField(FormalSliceFixture.Player(s), s.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex(field), CoreTheSpire.Engine.Value.Of(value)));

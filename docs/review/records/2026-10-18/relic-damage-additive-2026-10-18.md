@@ -28,3 +28,16 @@
 
 - 只有受控内容场景证据；无独立双侧、正常整局或公开轨迹，完整回归仍交 Actions。
 - `CardUpgradedOnly`／`CardEnchantedOnly` 已实现但还没有消费者：MiniatureCannon（升级牌 +3）与 MysticLighter（带附魔牌 +9）需要“受控把一张牌设为升级/附魔”的检查写法，留作下一批；那也顺带验证两个过滤分支。
+
+## 补充：两个过滤分支的消费者（同一批次后续）
+
+用受控字段写入补齐另外两件：`SetCardField` 把一张 Strike 设成 `Upgraded=true` 且 `Amount=9`（升级版数值），或写入 `EnchantmentId=base-spire:sown`＋`EnchantmentAmount=1`。
+
+| 遗物 | 源行为 | 场景断言 |
+| --- | --- | --- |
+| MiniatureCannon（Uncommon） | 升级牌 +3 | 普通 Strike 仍 6；升级 Strike 9+3=**12** |
+| MysticLighter（Shop） | 带附魔牌 +9 | 未附魔 Strike 仍 6；附魔 Strike 6+9=**15** |
+
+- 遗物内容组 **89/89 通过**；覆盖 **90/90 可执行**、source=297、**unimplemented 208 → 206**，校验器 exit 0；`unsupported` 324。
+- 身份迁移：dev `632293879b86c7df`／`69c2261c051eafc9`、dev-map `2c975e34a6d16a75`／`6b5c0a092d88fad5`。
+- 受控字段写入是**检查输入**（与 `SetMonsterHp` 同类），不代表正式内容走了升级/附魔路径；两个过滤分支的语义已由场景区分（普通牌不吃加成）。

@@ -1,6 +1,6 @@
 # review历史记录与证据索引
 
-2026-10-18：[遗物伤害加性修正与StrikeDummy／FakeStrikeDummy](2026-10-18/relic-damage-additive-2026-10-18.md)新增modify-damage-additive与牌来源过滤（标签/升级/附魔），并记录标签名实为ase-spire:strike这一事实；覆盖推进到88/88可执行、未实现208。
+2026-10-18：[遗物伤害加性修正与StrikeDummy／FakeStrikeDummy](2026-10-18/relic-damage-additive-2026-10-18.md)新增modify-damage-additive与牌来源过滤（标签/升级/附魔），并记录标签名实为ase-spire:strike这一事实；覆盖推进到90/90可执行、未实现206（含MiniatureCannon与MysticLighter两个过滤分支）。
 
 2026-10-18：[遗物敌人死亡触发与GremlinHorn](2026-10-18/relic-monster-death-2026-10-18.md)新增fter-monster-died触发点（伤害致死分支、过程体延后到抽牌绑定就绪），实现GremlinHorn每个敌人死亡给1能量并抽1张；覆盖推进到86/86可执行、未实现210。
 

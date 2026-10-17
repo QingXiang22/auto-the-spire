@@ -1470,5 +1470,35 @@
         "CardTag": "base-spire:strike"
       }
     ]
+  },
+  {
+    "Name": "MiniatureCannon",
+    "ContentId": "base-spire:miniature-cannon",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/MiniatureCannon.cs",
+    "SourceLine": 11,
+    "Effects": [
+      {
+        "Trigger": "modifier",
+        "Kind": "modify-damage-additive",
+        "Amount": 3,
+        "CardUpgradedOnly": true
+      }
+    ]
+  },
+  {
+    "Name": "MysticLighter",
+    "ContentId": "base-spire:mystic-lighter",
+    "Rarity": "Shop",
+    "SourcePath": "sts2/src/Core/Models/Relics/MysticLighter.cs",
+    "SourceLine": 11,
+    "Effects": [
+      {
+        "Trigger": "modifier",
+        "Kind": "modify-damage-additive",
+        "Amount": 9,
+        "CardEnchantedOnly": true
+      }
+    ]
   }
 ]

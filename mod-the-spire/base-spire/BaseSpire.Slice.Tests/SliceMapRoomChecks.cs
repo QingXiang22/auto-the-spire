@@ -114,8 +114,9 @@ internal static class SliceMapRoomChecks
     // 2026-10-18 ToughBandages adds the relic-only discard hook at the turn-end flush. Previous dev 97704742b08ae2ef / 082df4fc513d85cf.
     // 2026-10-18 GremlinHorn adds the `after-monster-died` relic trigger. Previous dev d38b36c7be4c7782 / 02ba7ba8bc64ff3a.
     // 2026-10-18 StrikeDummy/FakeStrikeDummy add the card-source damage-additive modifier. Previous dev 2bbf020a340fc02e / ec5c1ba232981b77.
-    private const string DevGoldenRuleset = "5858a21346fb08c8";
-    private const string DevGoldenBuild = "29767f2dea35cdc9";
+    // 2026-10-18 MiniatureCannon/MysticLighter exercise the upgraded/enchanted filters. Previous dev 5858a21346fb08c8 / 29767f2dea35cdc9.
+    private const string DevGoldenRuleset = "632293879b86c7df";
+    private const string DevGoldenBuild = "69c2261c051eafc9";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -146,8 +147,9 @@ internal static class SliceMapRoomChecks
     // Same ToughBandages addition; previous dev-map ac0764f3c9e63ad3 / 023957de61c94c87.
     // Same GremlinHorn addition; previous dev-map cd59bdfde4209734 / ae0107d8ff66a60c.
     // Same StrikeDummy/FakeStrikeDummy addition; previous dev-map df81101e617014db / 14b7118cfa1af873.
-    private const string DevMapGoldenRuleset = "95e6cfafcfd4d535";
-    private const string DevMapGoldenBuild = "e32e93050d8cdc68";
+    // Same MiniatureCannon/MysticLighter addition; previous dev-map 95e6cfafcfd4d535 / e32e93050d8cdc68.
+    private const string DevMapGoldenRuleset = "2c975e34a6d16a75";
+    private const string DevMapGoldenBuild = "6b5c0a092d88fad5";
 
     public static void DefaultIdentity()
     {

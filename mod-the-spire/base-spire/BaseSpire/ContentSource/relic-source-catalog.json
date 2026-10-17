@@ -2390,8 +2390,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/MiniatureCannon.cs",
     "SourceSha256": "05f5868866ecd2fef9774e3466a63d57254d81f23e949a373cf3bdd9e8a3252d",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/MiniatureCannon.cs; +3 for upgraded card damage declared and exercised by RelicContentChecks.",
     "Hooks": [
       "ModifyDamageAdditive"
     ]
@@ -2503,8 +2503,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/MysticLighter.cs",
     "SourceSha256": "9f03ea019c5050e6cd08f590b8123513988b4dd0dd8eec2e680f6642ff1cb1d4",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/MysticLighter.cs; +9 for enchanted card damage declared and exercised by RelicContentChecks.",
     "Hooks": [
       "ModifyDamageAdditive"
     ]
