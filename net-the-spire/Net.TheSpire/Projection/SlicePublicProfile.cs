@@ -156,7 +156,7 @@ public static class SlicePublicProfile
     /// <summary>`Create()` 的 kind 表 + 作者独有的药水 kind（默认 Profile 不受影响）。</summary>
     private static IReadOnlyDictionary<string, PublicKindRule> AuthorKinds()
     {
-        // 药水内容 ID 逐字取自作者文本 `Slice/Content/slice-content.author` 的 `potion` 声明（第 135/145 行）。
+        // 药水内容 ID 逐字取自作者文本 `Authoring/Examples/slice-content.author` 的 `potion` 声明（第 135/145 行）。
         // 作者文本新增药水而这里没登记 ⇒ 投影按 N-02-UNDECLARED-CONTENT 显式拒绝（不静默放行）。
         var potionIds = new[]
         {
@@ -522,7 +522,7 @@ public static class SlicePublicProfile
     /// <paramref name="publishInstanceVariables"/>：是否发布卡牌**实例变量**（`Variable_&lt;name&gt;`）。
     /// 默认受控切片**不发布**（具名跳过：它的卡没有变量字段，发布它只会同步改动共享目录与规范字节，
     /// 实测会打掉 net 40 项 + J-01 4 项）；作者 Gym **发布**，因为作者的成长量正是按实例累积的决策事实
-    /// （例：Rampage 的 `extra-damage`，见 `Slice/Content/slice-content.author` 与
+    /// （例：Rampage 的 `extra-damage`，见 `Authoring/Examples/slice-content.author` 与
     /// <c>ironclad-cards.spire:3855-3900</c> 的 `variables`/`modifyCardVariable`）。
     /// 只发布 `Amount` 不足以让消费者解释"这张牌下次打出会打多少"：成长量是**独立于当前 Amount** 的实例事实。
     /// </summary>

@@ -1,5 +1,8 @@
 # core/0.3 同包文本绑定参考
 
+同包文件组合、严格纯文本 manifest 与静态源目录见[包格式参考](package-reference.md)。
+
+
 文档类型：参考（Reference）。core/0.3 在 [core/0.2 规则库](../0.2/authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.1](../0.1/language-reference.md)。活动引擎身份为 `engine/ir@0.4`，Core.TheSpire 包版本为 `0.4.0`。旧冻结版本文件保留为历史合同，不表示活动产物仍为旧身份。
 
 ## 绑定入口
@@ -17,7 +20,7 @@ LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3
 
 `call = { procedure = Grant args = { owner = owner amount = 2 } }` 按参数名绑定；pureCall 同样支持具名参数。缺参、未知参数及重复名拒绝，不以对象枚举顺序猜位置。参数仍有明确类型，Ref(Player) 与 Ref(Power) 不可互换。
 
-宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[生命周期文本库](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/lifecycle-rules.spire)与[base 作者契约](../../0.0.2/authoring-reference.md)。
+宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[生命周期文本库](../../../../tools/base-migration-baseline/BaseSpire/Authoring/Content/lifecycle-rules.spire)与[base 作者契约](../../0.0.2/authoring-reference.md)。
 
 ## 错误定位与身份
 

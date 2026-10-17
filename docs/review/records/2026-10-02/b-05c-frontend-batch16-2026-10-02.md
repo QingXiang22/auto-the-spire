@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十六批）——**生成 / 升级 / 变形**（战斗中改动实例身份或实例字段） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"生成/升级/变形"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（带参数步骤、`generate:`/`becomes:` 命名空间限定）、`Slice/CombatSlicePackage.cs`（`CreateEntity` 生成、`upgrade_hand` 升级、`becomes:` 定义改写）、`BaseSpire.Slice.Tests/SliceFrontendGenerationChecks.cs`（新增 5 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（带参数步骤、`generate:`/`becomes:` 命名空间限定）、`Composition/CombatSlicePackage.cs`（`CreateEntity` 生成、`upgrade_hand` 升级、`becomes:` 定义改写）、`BaseSpire.Slice.Tests/Cards/SliceFrontendGenerationChecks.cs`（新增 5 项） |
 | 状态 | **部分完成（十六批）**：三种能力已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批15](b-05c-frontend-batch15-2026-10-02.md) |
 
@@ -65,9 +65,9 @@
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`Parameterized` 步骤、`UpgradeHand`、参数限定）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`createdSlot` 参数、`UpgradeOne`、生成/变形分支、`CardFields`/`VariableFields` 取 scope）
-- `BaseSpire.Slice.Tests/SliceFrontendGenerationChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`Parameterized` 步骤、`UpgradeHand`、参数限定）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`createdSlot` 参数、`UpgradeOne`、生成/变形分支、`CardFields`/`VariableFields` 取 scope）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendGenerationChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

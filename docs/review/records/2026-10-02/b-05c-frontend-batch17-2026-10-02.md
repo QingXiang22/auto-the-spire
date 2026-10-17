@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十七批）——hook 里更广的步骤面（`apply_power` 可用，其余按**理由**拒绝） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含 hook/选择） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`HookSteps` 扩容 + `HookStepReason`）、`Slice/CombatSlicePackage.cs`（hook 里的目标是 self）、`BaseSpire.Slice.Tests/SliceFrontendHookStepChecks.cs`（新增 2 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`HookSteps` 扩容 + `HookStepReason`）、`Composition/CombatSlicePackage.cs`（hook 里的目标是 self）、`BaseSpire.Slice.Tests/Cards/SliceFrontendHookStepChecks.cs`（新增 2 项） |
 | 状态 | **部分完成（十七批）**：hook 步骤面已扩到 3 个并有逐条理由；B-05c 其余子项仍未开始（见 §4） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批16](b-05c-frontend-batch16-2026-10-02.md) |
 
@@ -58,9 +58,9 @@
 
 ## 5. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`HookSteps` 扩到 3 个、`HookStepReason` 逐条理由）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`HookInstructions` 把 `owner` 同时作为 attacker 与 target）
-- `BaseSpire.Slice.Tests/SliceFrontendHookStepChecks.cs`（新增 2 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`HookSteps` 扩到 3 个、`HookStepReason` 逐条理由）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`HookInstructions` 把 `owner` 同时作为 attacker 与 target）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendHookStepChecks.cs`（新增 2 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

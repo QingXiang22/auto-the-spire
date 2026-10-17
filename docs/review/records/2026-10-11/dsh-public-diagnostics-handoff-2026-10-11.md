@@ -22,7 +22,7 @@ C 包将 `base-spire:Run.MapDraws` 声明为 `FieldVisibility.Hidden`，并保�
 
 ## 修改范围
 
-- `mod-the-spire/base-spire/BaseSpire/Slice/MapRoomWiring.cs`：唯一获准的 base 字段接缝。
+- `mod-the-spire/base-spire/BaseSpire/Rooms/MapRoomWiring.cs`：唯一获准的 base 字段接缝。
 - `net-the-spire/Net.TheSpire.Tests/FormalPathChecks.cs`：目录不泄漏、两 seed 本地词表非空、重复 observe/RNG/状态纯度、非法/幂等/过期路径不泄漏的检查。
 - `net-the-spire/client/net_client.py`：显式独立 Host 选择。
 - `net-the-spire/client/test_map_host.py`：移除公开词表断言，增加所有普通响应诊断泄漏检查与重复 observe 快照一致性。
@@ -38,7 +38,7 @@ C 包将 `base-spire:Run.MapDraws` 声明为 `FieldVisibility.Hidden`，并保�
 
 Python 实际使用环境变量 `NET_THE_SPIRE_HOST_DLL=F:/Scylier-Project/active/auto-the-spire/.artifacts/parallel/dsh-public-diagnostics/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll`，结果：host 21/21、catalog 49/49、trajectory 74/74、rejections 46/46；schema 分组亦执行并记录于公开 NDJSON。日志为 `.audit/dsh-public-diagnostics-2026-10-11/public-map.ndjson`。
 
-根构建命令 `dotnet build AutoTheSpire.sln --artifacts-path F:/Scylier-Project/active/auto-the-spire/.artifacts/parallel/dsh-public-diagnostics` 返回 1。首个错误是并行工作区既有的 `mod-the-spire/base-spire/BaseSpire/Slice/SpirePotionSource.cs(15,15): error CS0103: 当前上下文中不存在名称“EncounterContent”`；本包未修改或修复该药水内容错误。根 Engine/Net/Slice 的最终命令与返回码见对应 `.audit` 日志。
+根构建命令 `dotnet build AutoTheSpire.sln --artifacts-path F:/Scylier-Project/active/auto-the-spire/.artifacts/parallel/dsh-public-diagnostics` 返回 1。首个错误是并行工作区既有的 `mod-the-spire/base-spire/BaseSpire/Potions/SpirePotionSource.cs(15,15): error CS0103: 当前上下文中不存在名称“EncounterContent”`；本包未修改或修复该药水内容错误。根 Engine/Net/Slice 的最终命令与返回码见对应 `.audit` 日志。
 
 ## 最终门槛与身份
 

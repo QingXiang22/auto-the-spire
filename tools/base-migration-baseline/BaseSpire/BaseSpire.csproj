@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <Version>0.4.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.IO.Hashing" Version="9.0.0" />
+    <ProjectReference Include="../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Enemies\Content\*.encounters.json;Run\Content\*.acts.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
+    <!-- 物理目录按领域分类；逻辑资源名保留，使加载顺序与内容摘要不随目录变化。 -->
+    <EmbeddedResource Include="Cards\Content\*.spire;Powers\Content\*.spire;Enemies\Content\*.spire;Potions\Content\*.spire;Authoring\Content\*.spire" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Relics\Content\*.json" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
+    <!-- B-05b 的作者前端文本：切片内容的作者表示，编译到通用 IR（与程序化包同一运行时）。 -->
+    <EmbeddedResource Include="Authoring\Examples\*.author" LogicalName="BaseSpire.SliceAuthor.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

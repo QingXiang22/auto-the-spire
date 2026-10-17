@@ -3,7 +3,7 @@
 本次只读核验让接手者不必重复构建或追问上一段会话，就能确认 ENV-T04 的严格 regression 入口**尚未交付**：合同要求的两个入口都不存在，`test` 子命令未实现，唯一可运行的二进制早于派单时间。T01/T02 所需的 B 双侧证据因此仍未解除依赖。
 
 归属：ENV-T04「严格regression接唯一工厂和独立参考」。本报告是一次维护核验，不认领 B 的生产包。
-接手入口：主清单 ENV-T04 条目；[B 完整交付合同 §4](../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../tools/differential/README.md)。
+接手入口：主清单 ENV-T04 条目；[B 完整交付合同 §4](../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../tools/base-migration-baseline/differential/README.md)。
 交付范围：只读。本会话未修改 `tools/differential/**`、A/B/C 生产代码、core 或主清单任务行。
 本报告记录 2026-10-08 的核验结果；当前排期、状态与认领以主清单为准。
 

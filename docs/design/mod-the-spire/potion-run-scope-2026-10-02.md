@@ -11,7 +11,7 @@
 
 | 内容域 | 旧后端（冻结，可运行） | 新切片（`Engine/` IR） |
 | --- | --- | --- |
-| 药水 | **6** 条（`ContentSource/potions.spire`），另有 1 个药水专用能力（`potion-powers.spire`） | **0**：切片没有药水类型、没有使用动作、没有药水栏 |
+| 药水 | **6** 条（`Potions/Content/potions.spire`），另有 1 个药水专用能力（`potion-powers.spire`） | **0**：切片没有药水类型、没有使用动作、没有药水栏 |
 | run | **1** 个 `run` 定义 + **63** 个遭遇 + 11 个遗物；`run_events` = **0** | **0**：切片是单场战斗，没有 run/房间/奖励/地图 |
 | 遭遇/act 内容 | `Content/*.encounters.json`、`Content/*.acts.json` + `StandardActMapGenerator.cs` | 0（切片只有 2 个写死的邪教徒） |
 

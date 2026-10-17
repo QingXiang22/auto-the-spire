@@ -73,7 +73,7 @@ updated_at: 2026-10-08T23:01:22+08:00
 - 最小复现（真实子进程，rc0）：`python -X utf8 .audit/dsh-env-t03-map-host-2026-10-08/probe_map.py t05-map-alpha --json recon-alpha.jsonl > recon-alpha.txt 2>&1`。
 - 动作前缀（seed `t05-map-alpha`）：`start`(obs 1147) → `ChooseMapPoint` 选 Monster `e30`(obs 1351) → `PlayCard` defend `e78`(obs 1359) → `PlayCard` defend `e79`(obs 1367) → `PlayCard` **strike** `e80`（候选 `c-72a3fe42011dac87`）→ 故障。
 - **最后一致边界** obs **1367**（`status=decision`、`MapPhase=1`）；**首差**就是那一步 strike。`beta` 同形（`strike` 于 obs 1550 后失败，`e90`）。
-- 进程内栈（上一子包已给）：`Session.InvokePure` → `Scheduler.LegalActions` → `ControlSession.Snapshot()` → `ControlHost.Step`；base 声明位置 `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs:281-295`（`Procedure("PowerStacksOf")` 的纯过程体）。
+- 进程内栈（上一子包已给）：`Session.InvokePure` → `Scheduler.LegalActions` → `ControlSession.Snapshot()` → `ControlHost.Step`；base 声明位置 `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs:281-295`（`Procedure("PowerStacksOf")` 的纯过程体）。
 - 本轮 C#/Python 自动检查里，地图进战斗后的第一张可出牌是 `defend`，所以**正常结算、没触发故障**（两组检查都打印/断言了"要么正常结算、要么显式 base 故障"这条口径），故障只在攻击牌上稳定复现——不要因为检查全绿就认为攻击路径已验证。
 
 ## 未验证 / 开放（如实列出，不要当成通过）

@@ -46,9 +46,9 @@
 
 | 位置 | 变化 |
 | --- | --- |
-| `Slice/SliceEncounterPool.cs` | 新增可选参数 `int EliteRoomCount = 0`、`IReadOnlyList<SliceEncounter>? EliteEncounters = null`；新增 `EliteKind = "elite"`、`Elites`、`AllEncounters` 含精英、`Tags`/`EnemyIds` 含精英。既有位置参数调用点无需改动（新参数在 `BossEncounters` 之后）。 |
-| `Slice/RunSourcePoolManifest.cs` | `Elites` 改为取自幕声明 `base-spire.acts.json` 的 `eliteEncounters`（顺序 = 源 `AllEliteEncounters`：BygoneEffigyElite / ByrdonisElite / PhrogParasiteElite）；`Complete` 同时填 `EliteEncounters` 与 `EliteRoomCount = act.EliteQueueCount`（15）。 |
-| `Slice/CombatSlicePackage.cs` | 新声明 `EliteEncounterQueueEntry`/`EliteEncounterQueue`（仅 `initializeNewRun`）+ 两个访问计数；`EnqueueProcedure` 改为接收"目标队列/条目类型/槽位字段/遭遇字段"（`CombatSlicePackage.cs:3328`），弱/普通/精英各建一个程序。 |
+| `Enemies/SliceEncounterPool.cs` | 新增可选参数 `int EliteRoomCount = 0`、`IReadOnlyList<SliceEncounter>? EliteEncounters = null`；新增 `EliteKind = "elite"`、`Elites`、`AllEncounters` 含精英、`Tags`/`EnemyIds` 含精英。既有位置参数调用点无需改动（新参数在 `BossEncounters` 之后）。 |
+| `Run/RunSourcePoolManifest.cs` | `Elites` 改为取自幕声明 `base-spire.acts.json` 的 `eliteEncounters`（顺序 = 源 `AllEliteEncounters`：BygoneEffigyElite / ByrdonisElite / PhrogParasiteElite）；`Complete` 同时填 `EliteEncounters` 与 `EliteRoomCount = act.EliteQueueCount`（15）。 |
+| `Composition/CombatSlicePackage.cs` | 新声明 `EliteEncounterQueueEntry`/`EliteEncounterQueue`（仅 `initializeNewRun`）+ 两个访问计数；`EnqueueProcedure` 改为接收"目标队列/条目类型/槽位字段/遭遇字段"（`CombatSlicePackage.cs:3328`），弱/普通/精英各建一个程序。 |
 | `SinglePlayer/BasePublicSemantics.cs` | 新增 `["EliteEncounterQueue"] = (NotPublished, …, "base-spire:N-02-BLOCKED-ELITE-QUEUE", …)`——新的内部库存**不得**经公开出口泄漏。 |
 | `SinglePlayer/BaseSpireRuntimeFactory.cs`、`SinglePlayer/RunConfiguration.cs` | 构建描述与范围拒绝文案更新（普通/精英是两个独立队列；精英房已接入、战利品差异未建模；`16 槽`→`15 槽`、重抽上限 `2048`→`256` 的旧文案订正）。 |
 
@@ -65,14 +65,14 @@
 
 **④ 检查与选组入口**
 
-- `BaseSpire.Slice.Tests/SliceEncounterQueueChecks.cs`：普通队列仍=独立复算；**新增**"精英队列是独立库存"
+- `BaseSpire.Slice.Tests/Enemies/SliceEncounterQueueChecks.cs`：普通队列仍=独立复算；**新增**"精英队列是独立库存"
   （15 槽、只含源精英池成员、与普通队列零交集、每身份恰好 5 次、逐槽等于独立复算）、"up_front 逐段对账
   （遗物袋 230 + 事件 30 + 普通 15 + 精英 15 + BOSS/古代人 2 = 292）"、"Start 只初始化一次"、
   "`ACT1-BASIC-10` 普通队列逐槽 = 参考侧已核对向量"、"标签回避真的生效（回避/不回避队列必须不同 + 抽取次数逐次相同）"。
-- `BaseSpire.Slice.Tests/SliceMapRoomChecks.cs`：`UnimplementedRooms` 只剩商店；新增
+- `BaseSpire.Slice.Tests/Run/SliceMapRoomChecks.cs`：`UnimplementedRooms` 只剩商店；新增
   "精英房消费者：精英节点按访问计数消费精英队列（内容未支持时具名失败）"，并新增局部入口
   `EliteRoomBoundary()`。
-- `BaseSpire.Slice.Tests/PublicSemanticsChecks.cs`：受阻列表加入 `EliteEncounterQueue`；
+- `BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs`：受阻列表加入 `EliteEncounterQueue`；
   `notPublished` 计数 `4 → 17`（**这条在本包之前就已过期**：T05/T08 期间遗物袋/事件/共享古代人已陆续具名不发布，
   本包只加了 1 项。见[首差与未验证](#首差未验证与边界)）。
 - `BaseSpire.Slice.Tests/Program.cs`：新增 `--encounter-queue-only`、`--elite-room-only`（只覆盖本机制）。
@@ -84,7 +84,7 @@
   per-type `visited % Count` 取模、`MarkVisited` 分支）、`Core/Models/Acts/Overgrowth.cs`
   （`NumberOfWeakEncounters=3`、`BaseNumberOfRooms=15`、`GenerateAllEncounters` 顺序 ⇒ `AllEliteEncounters` 3 项）、
   `Core/Random/Rng.cs` 与引擎 `RandomService.Shuffle`（降序 Fisher-Yates ⇒ n 项 n-1 抽）。
-- 内容来源：`mod-the-spire/base-spire/BaseSpire/Content/base-spire.acts.json`（`eliteEncounters`、`eliteQueueCount=15`）
+- 内容来源：`mod-the-spire/base-spire/BaseSpire/Run/Content/base-spire.acts.json`（`eliteEncounters`、`eliteQueueCount=15`）
   与 `base-spire.encounters.json`。
 - 构建身份：`base-spire-singleplayer-dev-v1` / `base-spire-singleplayer-dev-map-v1`；
   config `RunConfiguration.Ironclad(0, …)`（角色 Ironclad、进阶 0、解锁 all、单人）、源基线 `sts2-frozen-2026-10-05`、

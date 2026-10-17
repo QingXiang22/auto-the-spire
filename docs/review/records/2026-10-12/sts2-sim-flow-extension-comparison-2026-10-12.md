@@ -32,7 +32,7 @@ RunDriver的普通路径可直接追踪为：选择可旅行节点 → ResolveRo
 
 sim的`SunkenStatue`提供两个选项：获得SwordOfStone，或获得随机金币并受到7点伤害。内容方法调用`RelicCmd.Obtain`、`PlayerCmd.GainGold`、`CreatureCmd.Damage`和`Finish`。例如`PlayerCmd.GainGold`本身包含ModifyGoldGained和AfterGoldGained；`RelicCmd.Obtain`包含克隆、owner、持有实例、从袋中移除和AfterObtained。因此叶内容无需再接这些环节。
 
-我们已验收的[GoldEvent接口例子](../../../examples/base-events/GoldEvent.cs)仍需声明ActionBody、Role、Requires、字段读写和Close；开发中的[SunkenStatueEvent](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/SunkenStatueEvent.cs)也直接生成金币/生命写入IR，其遗物选项和脱战死亡明确仍有边界。这里不能用两边行数判断谁更快：注释和实现范围不同，A的文件也尚未验收。真正的结构差别是“调用完整领域操作”与“事件作者拼接状态读写、守卫和收尾”。
+我们已验收的[GoldEvent接口例子](../../../examples/base-events/GoldEvent.cs)仍需声明ActionBody、Role、Requires、字段读写和Close；开发中的[SunkenStatueEvent](../../../../tools/base-migration-baseline/BaseSpire/Rooms/Events/SunkenStatueEvent.cs)也直接生成金币/生命写入IR，其遗物选项和脱战死亡明确仍有边界。这里不能用两边行数判断谁更快：注释和实现范围不同，A的文件也尚未验收。真正的结构差别是“调用完整领域操作”与“事件作者拼接状态读写、守卫和收尾”。
 
 这会影响扩展成本：相同的金币hook、遗物获得、永久牌组变化或脱战死亡，如果没有一个完整共享入口，作者每次都要重新确认该接什么；评审者也要重新检查是否遗漏。注册目录不会自动解决这些问题。
 
@@ -47,9 +47,9 @@ sim的`SunkenStatue`提供两个选项：获得SwordOfStone，或获得随机金
 | 特殊事件交互 | CustomEventDecisionPolicy等按具体事件分派 | 通用公开候选可表达动作，策略仍需识别新语义 | sim也不是全部内容零接线；我们的候选绑定/公开边界有保留价值 |
 | 幕转换/嵌套事件战斗 | RunState/RunDriver有统一方法与房间栈 | 幕转换还未实现，访问phase和奖励/战斗续接分布在多个模块 | 需要整局生命周期契约，而非继续增加散落phase写入 |
 
-base从[RuntimeFactory](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)构建规则、由[Composer](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CombatPackageComposer.cs)安排编译顺序，再由Engine Session执行。编译路径比直接执行C#方法多一层是事实，但这不要求内容作者理解所有Bindings、局部槽位和声明顺序；这些应由编译模块主责处理。
+base从[RuntimeFactory](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)构建规则、由[Composer](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatPackageComposer.cs)安排编译顺序，再由Engine Session执行。编译路径比直接执行C#方法多一层是事实，但这不要求内容作者理解所有Bindings、局部槽位和声明顺序；这些应由编译模块主责处理。
 
-[RewardCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/RewardCompilation.cs)仍因原声明顺序补入卡变量并创建奖励、挂Boss关闭回调；[RoomCompilation](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/RoomCompilation.cs)同时组合地图、初始化、库存与事件服务。拆分降低了搜索范围，但这些接缝尚未全部形成内容作者无需关心的完整能力契约。
+[RewardCompilation](../../../../tools/base-migration-baseline/BaseSpire/Rewards/Compilation/RewardCompilation.cs)仍因原声明顺序补入卡变量并创建奖励、挂Boss关闭回调；[RoomCompilation](../../../../tools/base-migration-baseline/BaseSpire/Rooms/Compilation/RoomCompilation.cs)同时组合地图、初始化、库存与事件服务。拆分降低了搜索范围，但这些接缝尚未全部形成内容作者无需关心的完整能力契约。
 
 [公开运行器](../../../../net-the-spire/client/run_game.py)按MapPhase、动作类别和房型支持集合选择策略。这不是客户端重算游戏规则，但新增决策形态仍需要维护该识别层；Engine暂停/恢复保持唯一权威，不再另造客户端Run调度器。
 

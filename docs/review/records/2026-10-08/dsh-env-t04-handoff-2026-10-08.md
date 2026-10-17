@@ -12,7 +12,7 @@ dispatch_record: .audit/dsh-env-t04-resume-2026-10-08/task-record.json
 本包把 B 线唯一工厂（`BaseSpireRuntimeFactory`）与独立参考适配接到**严格 regression 入口**上：新增 `test --suite regression`、版本化 suite `tools/differential/suites/regression.json` 与薄脚本 `tools/differential/test-env.ps1`；实际双侧执行了原七个可执行 case（`passed` 7）并新增执行 `last-kill-before-terminal`（`passed`，共 8 个双侧通过），保留五个 unsupported 原 ID，并用 13 项有限失败反例证明缺 case/未注册 case/零执行/unsupported/异常/超时/首差/错误终点/缺维度/参考缺失/参考不可用都会让严格入口返回非零。仍未完成的关键范围：`rng-initial-shuffle` 的**双侧**随机比较仍 `blocked_compare`（参考无运行层/字符串 seed 入口，且参考检出领先冻结基线），因此严格 suite 当前是**诚实红态**（rc=1）。本包请求核验；父项 M01 与 ENV-T04 验收仍由负责人决定。
 
 归属：ENV-T04「严格regression接唯一工厂和独立参考」，B 线（`tools/differential/`）。
-接手入口：主清单 [ENV-T04](../../tofix/README.md#env-t04)；[B 完整交付合同 §4](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../../tools/differential/README.md)（新增“严格入口（test）”与 2026-10-08 实测两节）；[实现约束 §9/§12](../../../design/environment-implementation-constraints.md#9-严格对拍suite与断言)。
+接手入口：主清单 [ENV-T04](../../tofix/README.md#env-t04)；[B 完整交付合同 §4](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../../tools/base-migration-baseline/differential/README.md)（新增“严格入口（test）”与 2026-10-08 实测两节）；[实现约束 §9/§12](../../../design/environment-implementation-constraints.md#9-严格对拍suite与断言)。
 交付范围：本会话是 B 线唯一生产执行者；只写 `tools/differential/`、本交接与 `.audit/dsh-env-t04-resume-2026-10-08/`、`artifacts/environment/tests/`。core/base/net/AI/参考玩法与根 solution 未改。
 派单记录：[.audit/dsh-env-t04-resume-2026-10-08/task-record.json](../../../../.audit/dsh-env-t04-resume-2026-10-08/task-record.json)（`task_id` = 本交接 `dispatch_id`，`session_id` 同上）。
 本报告记录 2026-10-08 的交付；当前排期、状态与认领以主清单为准。
@@ -131,7 +131,7 @@ Release 成本测量、公开 Host 轨迹（C 线）、任何训练。未运行�
 ## 维护位置
 
 - 任务状态/认领/证据：主清单 [ENV-T04](../../tofix/README.md#env-t04)（本包只回写该条，不自判父项验收）。
-- 方法与契约：`docs/design/post-core-agent-assignments.md` §4、`docs/design/environment-implementation-constraints.md` §9/§12、[工具 README](../../../../tools/differential/README.md)（本包已更新）。
+- 方法与契约：`docs/design/post-core-agent-assignments.md` §4、`docs/design/environment-implementation-constraints.md` §9/§12、[工具 README](../../../../tools/base-migration-baseline/differential/README.md)（本包已更新）。
 - 本次证据：`artifacts/environment/tests/{regression,negative}/`、`.audit/dsh-env-t04-resume-2026-10-08/`（派单记录、`regression-run.log`、`failure-contract/`、`supporting-checks.log`）。
 - 前序证据：`.audit/dsh-env-t04-implementation-2026-10-07/`（旧会话技能安装与派单记录）、
   [2026-10-08 只读核验](../../tofix/env-t04-verification-2026-10-08.md)（指出当时入口尚未交付）。

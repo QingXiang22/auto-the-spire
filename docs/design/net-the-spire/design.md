@@ -129,7 +129,7 @@ core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义
 
 实现时由base声明 `MapDraws` 为隐藏字段，net沿既有通用派生规则处理，不能按该字段名字硬过滤或另算地图。诊断材料仍保留在Engine权威状态，本地工具/SDK的显式诊断读取可用；此包不新增公共wire操作或为诊断暴露整个State。修改可见性必须更新实际构建/catalog身份与适用C#/Python/schema证据。旧0.1兼容按既有契约，正式0.2目录随规则变更；合法选择、公开句柄、重复提交和随机消费保持可核对。
 
-负责人协调C仅在 `BaseSpire/Slice/MapRoomWiring.cs` 的MapDraws字段声明增加 `visibility: FieldVisibility.Hidden` 及必要邻近注释；该文件其他逻辑与base公共规则包构建器由A维护。此授权是单字段跨线接口，不授权C改玩法、药水、随机算法或DSL。
+负责人协调C仅在 `BaseSpire/Rooms/MapRoomWiring.cs` 的MapDraws字段声明增加 `visibility: FieldVisibility.Hidden` 及必要邻近注释；该文件其他逻辑与base公共规则包构建器由A维护。此授权是单字段跨线接口，不授权C改玩法、药水、随机算法或DSL。
 
 ### ENV-T03公开声明闭合与旧切片后端装配（2026-10-12）
 

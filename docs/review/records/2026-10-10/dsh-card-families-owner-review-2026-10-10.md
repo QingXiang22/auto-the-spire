@@ -4,7 +4,7 @@ Codex `/root` 对DSH已交43张牌进行了独立源码核对与集成检查，�
 
 ## 接手入口与复核裁决
 
-先读主清单T12和[base开发指南](../../../design/mod-the-spire/base-development-guide.md#让新增内容独立于全包大小)，再读本族源类、DSL和检查。DSH原会话 `session-70c7f4c9-c106-4fbc-9fe6-c28ceccd75bf` 已按用户要求暂停，最终投影running=false；本轮不恢复该goal。其固定交接已核对，不能把accepted或129项局部通过当成全环境验收。
+先读主清单T12和[base开发指南](../../../../tools/base-migration-baseline/docs/base-development-guide.md#让新增内容独立于全包大小)，再读本族源类、DSL和检查。DSH原会话 `session-70c7f4c9-c106-4fbc-9fe6-c28ceccd75bf` 已按用户要求暂停，最终投影running=false；本轮不恢复该goal。其固定交接已核对，不能把accepted或129项局部通过当成全环境验收。
 
 43张的普通、直接升级和Armaments真实升级129项已独立重跑，正式定义均实际进入受控Engine牌组。源码核对比较了全部43张的普通费用、类型、稀有度、目标与基础关键词，并逐条审阅效果/升级源行；详见[核对产物](../../../../.audit/dsh-card-review-2026-10-10/source-audit.json)。新增20项真实回合末/开局检查，覆盖Sow/Luminesce/Wisp的保留、Parse/Defy/Defile的虚无和Backstab/BootSequence/DramaticEntrance/Assassinate的固有。此为本地执行与源核对；没有执行独立参考/client对拍，不关闭T12父项。
 

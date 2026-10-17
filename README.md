@@ -1,38 +1,36 @@
 # auto-the-spire
 
-auto-the-spire 为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》训练环境。当前实现包含战斗切片与整局流转骨架，尚未完全完成。开发接手从[文档总入口](./docs/README.md)开始。
+auto-the-spire 的目标是为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》环境。当前先完成纯 DSL 架构迁移；正常单人开局和完整 Run 暂未恢复，不能用现有开发场景训练完整游戏。
 
-各模块按以下方向协作：通用规则内核 `core-the-spire` → 原版内容包 `mod-the-spire/base-spire` 与其他 mod → `net-the-spire` 提供公开观察和合法动作 → `ai-the-spire` 采样、训练及评价。
+通用 Engine 编译并执行 DSL，`mod-the-spire/base-spire/` 仅保存 `.spire` 和静态 `.json`；net Host 加载同一规则包，发布观察和合法动作。Spire 内容配置使用完整 DSL 的模板子集。开发接手从[文档总入口](docs/README.md)和[当前任务](docs/review/tofix/README.md)开始。
 
-## 当前构成
+## 定位内容
 
-- `core-the-spire/Core.TheSpire`：Godot无关的.NET 9/C#规则内核；活动工程只使用通用`Engine/`
-- `mod-the-spire/base-spire`：原版内容包、SinglePlayer开发工厂与战斗/Run实现；具体支持范围和未结项只维护当前清单。
-- `mod-the-spire/test-hook-mod`：历史示例说明；当前目录仅保留 README，不是活动可编译项目。
-- `core-the-spire/Core.TheSpire.Engine.Tests`：通用 Engine 可执行规则检查。
-- `net-the-spire`：已有本机stdio Host、公开投影/内容目录/合法候选及控制客户端，支持受控默认/作者场景。
-- `ai-the-spire`：已有公开编码器、共享小模型、有限PPO、模型包及demo/train/evaluate/resume/diagnose；学习获胜效果尚未成立。
-- `tools/`：仅纳管[维护中的工程工具](tools/README.md)，临时脚本与生成产物留本地。
-- `reference/`：仅纳管拉取源、版本身份及说明，外部依赖由脚本获取。
-- `artifacts/`、`.artifacts/`、`.audit/`：忽略的本地日志、轨迹和构建/验证产物。
-- `sts2/`：源码恢复浏览工程，仅用于核对规则，不是内核编译依赖。
+唯一包入口为 [package.json](mod-the-spire/base-spire/package.json) 和 [base.spire](mod-the-spire/base-spire/base.spire)。卡牌、Power、遗物分别放在 `cards/`、`powers/`、`relics/`；共享规则位于对应领域的 `rules/`，具体内容按来源组分文件。例如 [TheAbacus](mod-the-spire/base-spire/relics/shared/the-abacus.spire) 只配置模板与数值，共享重洗规则在 [draw.spire](mod-the-spire/base-spire/cards/rules/draw.spire)。完整目录约定见[迁移设计](docs/design/mod-the-spire/engine-dsl-migration/plan.md)。
+
+各领域 `catalog.json` 保存源身份与尚未迁移的去向；`definition: null` 不表示可执行。旧 C# 和检查保留在[迁移对照](tools/base-migration-baseline/README.md)，不进入生产 solution，不提供运行回退。
 
 ## 构建与验证
 
-安装 .NET 9 SDK 后，在仓库根目录依次运行：
+在仓库根目录使用 [global.json](global.json) 指定的 .NET SDK：
 
 ```powershell
 dotnet build AutoTheSpire.sln
-dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
-dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
+dotnet run --project tools/base-spire-dev -- validate
+dotnet run --project tools/base-spire-dev -- check
+dotnet run --project net-the-spire/Net.TheSpire.Tests
 ```
 
-干净检出的生产构建不需要 `sts2/`。完整 Slice 套件包含读取同版本原版源码的检查，须在提供本地 `sts2/` 后运行；源码不上传 GitHub，也不作为 GitHub Actions 输入。源码提取、源规则核对和全量文档源链接检查同样留在本地。
+当前包仅支持 `base-spire-dsl-relic-draw-dev-v1`：开发牌堆的抽取、实际重洗、遗物获得／移除与 TheAbacus 的 6 点无加成格挡。它使用 Engine 默认随机 profile，不宣称原版随机布局、卡牌效果或正常 Ironclad 开局。旧场景与 scope 明确返回 `unsupported_capability`。
 
-本地和GitHub的core/base/严格对拍共用[CI检查入口](tools/ci/README.md)。base可显式运行 `--suite runtime`（无原版源码），`--suite source`保留本地源码核对，默认仍为完整组。严格对拍按[参考依赖说明](reference/README.md)从GitHub获取固定上游提交，无须在本仓库保存参考源码或本地补丁；历史文档证据按[归档说明](docs/review/evidence/README.md)恢复。
+构建无需本地 `sts2/` 源码；原版源码核对仍需同版本本地源码。当前 [CI 入口](tools/ci/README.md) 分别验证 core、纯 DSL base、net 与迁移边界。原完整对拍未迁移，执行仍非零；迁移检查通过不代表独立对拍通过。
 
-当前实现是战斗切片与通用整局流转骨架，不代表完整原版模拟。源码依据、已读规则域和待扩展清单见 [`docs/design/sts2-core-source-audit.md`](./docs/design/sts2-core-source-audit.md)；整体契约见 [`docs/design/spec.md`](./docs/design/spec.md)。
+## 模块与文档
 
-## 文档与后续实现
+- [core-the-spire](core-the-spire/README.md)：通用类型、规则编译、状态、事件、随机与 Session。
+- [base 开发指南](docs/design/mod-the-spire/base-development-guide.md)：按领域修改 DSL 和检查行为。
+- [net 协议](docs/design/net-the-spire/protocol.md)：stdio 公开交互；默认 Host 加载纯 DSL 包。
+- [工程工具](tools/README.md)：开发验证、迁移证据和独立参考入口。
+- [AI](ai-the-spire/README.md)：既有客户端与离线组件，训练仍暂缓。
 
-开发接手从[文档总入口](./docs/README.md)开始，再查看[当前任务/P优先级清单](./docs/review/tofix/README.md)及对应角色工作包。当前主线为原版完整单人环境，core消费冻结契约；范围和验收见[ENV任务包](./docs/design/environment-completion-and-differential-v1.md)。公开交互遵守[net协议](./docs/design/net-the-spire/protocol.md)，既有工具用法见[AI README](./ai-the-spire/README.md)。
+完整单人环境的要求和验收范围继续见 [ENV 合同](docs/design/environment-completion-and-differential-v1.md)，本次功能回退没有删除这些目标。

@@ -1,0 +1,141 @@
+package base-spire {
+  power BarricadePower {
+    preventsBlockClear = true
+  }
+
+  power TankPower {
+    incomingDamageModifiers = [modifier(multiplier=2, require=[move], exclude=[unpowered])]
+  }
+
+  power OneTwoPunchPower {
+    rules = { extraAttackPlays = 1 }
+    removeAfterOwnerTurnEnd = true
+  }
+
+  power CorruptionPower {
+    cardRule = cardRule(type=skill, cost=0, resultPile=exhaust)
+  }
+
+  power FreeAttackPower {
+    cardRule = cardRule(type=attack, cost=0, consumeOnPlay=true)
+  }
+
+  power NoEnergyGainPower {
+    preventEnergyGain = true
+    removeAfterOwnerTurnEnd = true
+  }
+
+  power FeelNoPain {
+    trigger = afterCardExhausted
+    effect = gainBlock(1, perPowerStack=FeelNoPain)
+  }
+
+  power RagePower {
+    trigger = afterCardPlayed
+    whenCardType = attack
+    effect = gainBlock(1, perPowerStack=RagePower)
+    removeAfterPlayerTurnEnd = true
+  }
+
+  power JugglingPower {
+    rules = { cloneThirdAttack = true }
+  }
+
+  power FlameBarrierPower {
+    removeAfterOpponentTurnEnd = true
+    events = [event(type=damage, owner=target, require=[move], exclude=[unpowered],
+      positiveAmount=false, effect=scaledAttack(0, 1,
+        count=targetPowerAmount(FlameBarrierPower, target=self), target=target,
+        properties=[unpowered]))]
+  }
+
+  power JuggernautPower {
+    events = [event(type=block, owner=source,
+      effect=randomAttack(scaled(0, 1, count=targetPowerAmount(JuggernautPower, target=self)),
+        properties=[unpowered]))]
+  }
+
+  power RupturePower {
+    rules = { strengthOnOwnerHpLoss = true }
+  }
+
+  power DarkEmbracePower {
+    rules = { drawOnExhaust = true }
+  }
+
+  power ViciousPower {
+    events = [event(type=power, owner=source, power=Vulnerable,
+      ownerTurnOnly=false,
+      effect=draw(scaled(0, 1, count=targetPowerAmount(ViciousPower, target=self))))]
+  }
+
+  power PlatingPower {
+    minimumStartTriggerTurn = 2
+    on = [
+      trigger(event=afterOwnerTurnStart, effect=decrementPower(PlatingPower)),
+      trigger(event=afterOwnerTurnEnd, effect=gainBlock(1, perPowerStack=PlatingPower))
+    ]
+  }
+
+  power ColossusPower {
+    trigger = afterEnemyTurnEnd
+    decrementOnTrigger = true
+    incomingDamageModifiers = [modifier(multiplier=0.5, require=[move], exclude=[unpowered],
+      sourcePower=Vulnerable)]
+  }
+
+  power AggressionPower {
+    rules = { reclaimAttacksBeforeTurn = true }
+  }
+
+  power PyrePower {
+    maxEnergyPerStack = 1
+  }
+
+  power CrueltyPower {
+    vulnerableMultiplierPercentPerStack = 1
+  }
+
+  power SetupStrikePower {
+    isTemporary = true
+    onStackChange = grantPower(Strength, stackDelta)
+    onExpire = grantPower(Strength, negativeSourceStacks)
+    removeAfterOwnerTurnEnd = true
+  }
+
+  power ManglePower {
+    isDebuff = true
+    isTemporary = true
+    onStackChange = grantPower(Strength, negativeStackDelta)
+    onExpire = grantPower(Strength, sourceStacks)
+    removeAfterOwnerTurnEnd = true
+  }
+
+  power CrimsonMantlePower {
+    rules = { selfDamageAtTurnStart = true blockAtTurnStart = true }
+  }
+
+  power InfernoPower {
+    rules = { selfDamageAtTurnStart = true damageAllOnOwnerDamage = true }
+  }
+
+  power StampedePower {
+    rules = { autoPlayHandAttacksAtTurnEnd = true }
+  }
+
+  power HellraiserPower {
+    rules = { autoPlayDrawnStrikes = true }
+  }
+
+  power WellLaidPlansPower {
+    on = [trigger(event=beforeFlushLate,
+      effect=chooseCards(from=hand, prompt="Choose cards to retain", minChoices=0,
+        maxChoices=scaled(0, 1, count=targetPowerAmount(WellLaidPlansPower, target=self)),
+        filter=notRetained, onSelected=retainSelectedCard()))]
+  }
+
+  power UnmovablePower {
+    blockGainModifiers = [modifier(multiplier=2, require=[move], priorEntriesPerStack=1,
+      playerOnly=true)]
+  }
+}

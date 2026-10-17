@@ -38,6 +38,7 @@ docs/architecture/c4/workspace.json
 !/tools/AGENTS.md
 !/tools/README.md
 !/tools/base-spire-dev/
+!/tools/base-migration-baseline/
 !/tools/ci/
 !/tools/collect/
 !/tools/contract-check/

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>13.0</LangVersion>
+    <AssemblyName>Differential</AssemblyName>
+    <RootNamespace>Differential</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
+    <ProjectReference Include="../../mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj" />
+  </ItemGroup>
+
+  <!--
+    参考实现的 ProjectReference **只允许出现在工具/工具测试里**（ENV §5），不进入 core/base/net 的生产依赖。
+    它是**条件引用**：本地没有冻结的参考目录时整个解决方案仍然能构建，此时 compare 明确报
+    unsupported_reference_adapter，而不是靠反射或包装参考执行冒充接入。
+    Include 写**字面路径**（不用属性）——这样依赖审计工具能把它解析成真正的项目名。
+    `-p:ReferenceSimAvailable=false` 可以强制走"没有参考"的分支做回归。
+  -->
+  <PropertyGroup>
+    <ReferenceSimAvailable Condition="Exists('$(MSBuildThisFileDirectory)../../reference/sts2-sim/src/Sts2Sim.Core/Sts2Sim.Core.csproj')">true</ReferenceSimAvailable>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(ReferenceSimAvailable)' == 'true'">
+    <ProjectReference Include="../../reference/sts2-sim/src/Sts2Sim.Core/Sts2Sim.Core.csproj" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(ReferenceSimAvailable)' == 'true'">
+    <DefineConstants>$(DefineConstants);REFERENCE_SIM</DefineConstants>
+  </PropertyGroup>
+</Project>

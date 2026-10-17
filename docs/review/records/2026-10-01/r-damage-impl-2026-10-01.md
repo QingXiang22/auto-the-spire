@@ -15,9 +15,9 @@
 
 | 文件 | 改动 |
 | --- | --- |
-| `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs` | 伤害链改为定点中间量 + 末端单次 `FixedToInt(Truncate)`；新增出手者 Weak ×0.75；`StrengthOf`/`VulnerableStacksOf` 合并为通用纯过程 `PowerStacksOf(Owner, PowerId)`；`ApplyPower` 叠加分支不再重新置位 `SkipNextTick`；类注释同步覆盖范围 |
-| `mod-the-spire/base-spire/BaseSpire/Slice/SliceManifest.cs` | 新增 `WeakId`、`WeakDamageMultiplier = 0.75m`；`VulnerableDamagePercent = 150`（int）改为 `VulnerableDamageMultiplier = 1.5m`（decimal，单一数值来源）；`DamageOrder` 注释写入实现决定、Truncate 依据与未覆盖项；`Powers` 表新增 Weak（2 → 3 项）；修正 Vulnerable 条目"每层 +50%"的旧文字 |
-| `mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceChecks.cs` | 新增 4 项检查（21 → 25）；新增 `DamageScenario`/`GivePower`/`PlayStrikeFor`/`TargetHp` 受控场景辅助；清单检查同步（3 powers、1.5m/0.75m、Weak 在册） |
+| `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs` | 伤害链改为定点中间量 + 末端单次 `FixedToInt(Truncate)`；新增出手者 Weak ×0.75；`StrengthOf`/`VulnerableStacksOf` 合并为通用纯过程 `PowerStacksOf(Owner, PowerId)`；`ApplyPower` 叠加分支不再重新置位 `SkipNextTick`；类注释同步覆盖范围 |
+| `mod-the-spire/base-spire/BaseSpire/Composition/SliceManifest.cs` | 新增 `WeakId`、`WeakDamageMultiplier = 0.75m`；`VulnerableDamagePercent = 150`（int）改为 `VulnerableDamageMultiplier = 1.5m`（decimal，单一数值来源）；`DamageOrder` 注释写入实现决定、Truncate 依据与未覆盖项；`Powers` 表新增 Weak（2 → 3 项）；修正 Vulnerable 条目"每层 +50%"的旧文字 |
+| `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs` | 新增 4 项检查（21 → 25）；新增 `DamageScenario`/`GivePower`/`PlayStrikeFor`/`TargetHp` 受控场景辅助；清单检查同步（3 powers、1.5m/0.75m、Weak 在册） |
 | `core-the-spire/Core.TheSpire/Legacy/State.cs` | **bug 修复**：`ApplyPower` 的置位条件加 `newAmount != 0`，使"把最后一层减到 0"的施加不再把已移除的 power 重新塞回 `SkipNextPowerTriggers` |
 | `core-the-spire/Core.TheSpire.Tests/CombatSliceTests.cs` | 在既有测试 `PlayerDebuffSkipsItsApplicationSideTurnEndAndTicksAfterEnemySide` 内补 2 条断言作为回归（**不新增测试方法**，故执行数仍为 190） |
 | `docs/review/tofix/sts2-slice-value-extraction-2026-10-01.md` | 按证据 §8.10 给差异 D 的**旧表述段落**加一行"已被上一条更正取代，保留原样"标记（不改历史内容） |

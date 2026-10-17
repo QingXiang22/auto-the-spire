@@ -5,7 +5,7 @@
 | 项目 | 内容 |
 | --- | --- |
 | 状态与日期 | 2026-10-01；只读核对，**未修改任何文件** |
-| 用途 | B-01 切片冻结来源清单（[SliceManifest.cs](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SliceManifest.cs)）的证据；B-02 至 B-06 的行为对照基线 |
+| 用途 | B-01 切片冻结来源清单（[SliceManifest.cs](../../../../tools/base-migration-baseline/BaseSpire/Composition/SliceManifest.cs)）的证据；B-02 至 B-06 的行为对照基线 |
 | 权威来源 | `sts2/` 恢复工程；现有 base-spire 内容与旧测试作为对照 |
 | 路径说明 | 本文中的 `State.cs`/`Content.cs`/`Environment.cs`/`Effects.cs` 等旧后端文件均指 `core-the-spire/Core.TheSpire/Legacy/`（2026-10-01 路径迁移） |
 | 缺陷状态 | DampCultist HP 已按本文权威值修复（`enemies.spire` 现为 `default=range(51,53), tough=range(52,54)`）并归档 |
@@ -30,7 +30,7 @@
 | DampCultist 行动序列 | `DampCultist.cs:69-74` | 首招 Incantation（Buff 意图）→ 之后**永久循环** DarkStrike | `enemies.spire:227` `startWith(...) + loop(...)` | ✅ |
 | DampCultist 伤害与首招 Power | `DampCultist.cs:32,34,83` | 出生**无** Power；首招施加 **Ritual 5**（Deadly 6）；攻击 1（Deadly 3） | `enemies.spire:224-225` | ✅ |
 | Ritual 效果 | `Powers/RitualPower.cs:45-57` | 己方回合结束获得等于层数的 Strength，**施加当次跳过** | `enemies.spire:196-200`、`CombatSliceTests.cs:709` | ✅ |
-| Cultists 遭遇编成 | `Models/Encounters/CultistsNormal.cs:11-12,23-24` | CalcifiedCultist 在**前**，DampCultist 在后 | `Content/base-spire.encounters.json:170-172` 同序 | ✅ |
+| Cultists 遭遇编成 | `Models/Encounters/CultistsNormal.cs:11-12,23-24` | CalcifiedCultist 在**前**，DampCultist 在后 | `Enemies/Content/base-spire.encounters.json:170-172` 同序 | ✅ |
 
 ## 差异清单
 
@@ -69,7 +69,7 @@
    TickDownDuration / SelectionScreenPrompt / GetValueIfAscension / ToughEnemies / DeadlyEnemies / "tough" /
    "deadly" / CultistsNormal`；路径 `sts2/src/**`、`sts2/localization/eng/cards.json`、
    `ContentSource/{ironclad-cards,shared-powers,ironclad-powers,enemies}.spire`、
-   `BaseSpire/{BaseSpirePackage.cs,Content/base-spire.encounters.json}`、
+   `BaseSpire/{BaseSpirePackage.cs,Enemies/Content/base-spire.encounters.json}`、
    `core-the-spire/Core.TheSpire/{State.cs,SpireCombatDslCompiler.cs}`、`Core.TheSpire.Tests/CombatSliceTests.cs`、
    `docs/{design,review,dsl}/**`。
    `reference/sts2-sim/` 仅对 Headbutt 做了一次旁证读取（`:26-32`），不作为权威证据身份。

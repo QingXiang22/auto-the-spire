@@ -41,9 +41,9 @@
 
 | 文件 | 变化 | 是否影响判定 |
 | --- | --- | --- |
-| [suites/regression.json](../../../tools/differential/suites/regression.json) | `random-reshuffle-unsupported` 的 `rng_profile`：`unsupported_rng_profile` → `vanilla-compatible@1`；`title`/`provenance`（source 改为真实源定位）/`reference_source` 与 suite 级 `note` 如实改写。ID、`game_seed`、`setup`、3 个 `end_turn`、`expected_terminal`、`contents`/`variants`、四个必需维度（`actions`/`facts`/`pile-order`/`streams`）**全部未动**，分母仍 17 | **是**（这是升级本体） |
-| [BaseBackend.cs](../../../tools/differential/BaseBackend.cs) | 「start 之后消费了新随机数」这条 base 记录 **note 文案**按 Profile 分流：原版兼容 → 「两侧具名流逐边界参与比较」；其余 → 保留「按 `unsupported_rng_profile` 处理，不计通过」。升级前该 note 对本 case 是**错的**（记录会写"不计通过"而严格判定是 `passed`） | **否**（note 不参与比较；实测只有该 case 的 base 记录多/少这一行） |
-| [README.md](../../../tools/differential/README.md) | 新增「重洗严格升级（2026-10-12）」章节（口径核实表、两次完整 17、两个反例）；修正 3 处升级后失效的表述（第 9/25 行与「重洗比较（2026-10-11）」开头），并在参考流包实测处加「已被下一节取代」指针 | 否（文档） |
+| [suites/regression.json](../../../tools/base-migration-baseline/differential/suites/regression.json) | `random-reshuffle-unsupported` 的 `rng_profile`：`unsupported_rng_profile` → `vanilla-compatible@1`；`title`/`provenance`（source 改为真实源定位）/`reference_source` 与 suite 级 `note` 如实改写。ID、`game_seed`、`setup`、3 个 `end_turn`、`expected_terminal`、`contents`/`variants`、四个必需维度（`actions`/`facts`/`pile-order`/`streams`）**全部未动**，分母仍 17 | **是**（这是升级本体） |
+| [BaseBackend.cs](../../../tools/base-migration-baseline/differential/BaseBackend.cs) | 「start 之后消费了新随机数」这条 base 记录 **note 文案**按 Profile 分流：原版兼容 → 「两侧具名流逐边界参与比较」；其余 → 保留「按 `unsupported_rng_profile` 处理，不计通过」。升级前该 note 对本 case 是**错的**（记录会写"不计通过"而严格判定是 `passed`） | **否**（note 不参与比较；实测只有该 case 的 base 记录多/少这一行） |
+| [README.md](../../../tools/base-migration-baseline/differential/README.md) | 新增「重洗严格升级（2026-10-12）」章节（口径核实表、两次完整 17、两个反例）；修正 3 处升级后失效的表述（第 9/25 行与「重洗比较（2026-10-11）」开头），并在参考流包实测处加「已被下一节取代」指针 | 否（文档） |
 | [.audit/…/verify/DifferentialVerify.csproj](../../../.audit/dsh-strict-reshuffle-close-20261012/verify/DifferentialVerify.csproj) | 本包临时验证工程：只编译当前 `tools/differential/*.cs`，依赖全部指向固定闭包 DLL，保留 `REFERENCE_SIM`；输出到本包 `.artifacts`；**不**经 ProjectReference 重编 base，**不**写任何生产 csproj/DLL | 否（工具构建方式） |
 | [.audit/…/verify-reshuffle-stream-identity.py](../../../.audit/dsh-strict-reshuffle-close-20261012/verify-reshuffle-stream-identity.py)、[build-negatives.py](../../../.audit/dsh-strict-reshuffle-close-20261012/build-negatives.py)、[fixed-closure-sha256.txt](../../../.audit/dsh-strict-reshuffle-close-20261012/fixed-closure-sha256.txt) 及各 `*.log` | 本包证据（独立核实脚本、反例构造、日志、固定 DLL SHA） | 否（证据） |
 
@@ -59,7 +59,7 @@
 
 | 口径 | 只读源依据 | 实际边界核实 |
 | --- | --- | --- |
-| **Shuffle 映射** | 源 `sts2/src/Core/Commands/CardPileCmd.cs:876` 与参考 `reference/sts2-sim/.../Commands/CardPileCmd.cs:387` 的重洗都取 run 级 `RunState.Rng.Shuffle`；base 把该流具名为 `SliceManifest.DrawStream` = `base-spire:combat-draw`（`Slice/VanillaRandomLayout.cs:107` 把 `"Shuffle"` 映射到它）；`RngSourceCompat.EngineStreamName("Shuffle")` 直接引用该常量 | 边界 3 的具名流两侧都只有 `base-spire:combat-draw`；参考侧另有 `observed:4:unnamed`（工具侧换对象后的临时槽位）**不并入**具名流 |
+| **Shuffle 映射** | 源 `sts2/src/Core/Commands/CardPileCmd.cs:876` 与参考 `reference/sts2-sim/.../Commands/CardPileCmd.cs:387` 的重洗都取 run 级 `RunState.Rng.Shuffle`；base 把该流具名为 `SliceManifest.DrawStream` = `base-spire:combat-draw`（`Randomness/VanillaRandomLayout.cs:107` 把 `"Shuffle"` 映射到它）；`RngSourceCompat.EngineStreamName("Shuffle")` 直接引用该常量 | 边界 3 的具名流两侧都只有 `base-spire:combat-draw`；参考侧另有 `observed:4:unnamed`（工具侧换对象后的临时槽位）**不并入**具名流 |
 | **单位** | base `core-the-spire/.../Engine/RandomService.cs:292` 每次 `Next()` 使 `Draws++`（raw generator word）；参考单位是 `Rng.Counter`（`reference/.../Random/Rng.cs` 的原生调用计数，记录里写 `native-counter-increments`）；10 张牌降序 Fisher–Yates = **9** 次 | 两侧边界 3 都是 `draws=9`、指纹 `0x268d319817e8d9b3`；本包模型与 `tools/rng-oracle` 独立算出的"9 次后的状态指纹"逐值相同 |
 | **Restore** | `reference/.../Runs/RunRngSet.cs:265-268` 的 `MockRng` 是**换对象**（`_rngs[type] = new Rng(seed)`，计数器归零）；`ReferenceRandomProbe.Restore` 换完必须**重挂基线**（`Restore` 内调 `Baseline()`），前后读数写进 `reference_streams.restore_before/restore_after` | `restore_before.combat-draw = 9` → `restore_after = 0`；初始化期那条同 seed 的临时流留在 `observed:3`（指纹同 `0x268d…`、`Comparable=false`），按**对象身份**分列，没有被当成同一条流 |
 | **实际边界（洗牌输入/输出）** | 源 `CardPileCmd.Shuffle` = `discard + drawPile` → `List.Sort`（`CardModel.CompareTo`：`ModelId.Entry` 序、同级按升级等级）→ 一次 Fisher–Yates | 独立复算得到洗后 10 张 = `04,05,06,08,01,00,09,03,07,02`，与两侧边界 3 的 `pile.hand.initial-slots = start:04,05,06,08,01` / `pile.draw.initial-slots = start:00,09,03,07,02` **逐值一致**；抽牌堆内容序也与 `pile.draw.order` 一致 |
@@ -160,7 +160,7 @@ base 记录的**唯一**差异（`notes` 数组，对比 #1 与 #3）：
 ## 维护位置与自查
 
 - 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（本轮由负责人独自修改）；
-  工具用法与口径写 [tools/differential/README.md](../../../tools/differential/README.md)（新增「重洗严格升级（2026-10-12）」）；
+  工具用法与口径写 [tools/differential/README.md](../../../tools/base-migration-baseline/differential/README.md)（新增「重洗严格升级（2026-10-12）」）；
   长日志与原始证据在 [.audit/dsh-strict-reshuffle-close-20261012](../../../.audit/dsh-strict-reshuffle-close-20261012/)，
   运行产物在 `.artifacts/parallel/dsh-strict-reshuffle-close-20261012`。
 - 接手自查（作者视角，**不是**独立读者验证）：目标与有效状态＝主清单 ENV-T04 行；可复用成果＝固定闭包复算 +

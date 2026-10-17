@@ -11,10 +11,10 @@
 - **本包未完成严格 case 升级，不能验收为 passed。** 原机制可实际运行；两侧 Bash 施加和回合结束后的 Vulnerable 2→1 一致。但保留原全部比较范围时，敌方回合后的牌区构成存在首差，保持 unsupported_rng_profile。无脚本期新随机消费不足以证明初始私有洗牌序列兼容。
 
 ## 最终修改与边界
-- [严格 suite](../../../../tools/differential/suites/regression.json)：只更新目标 case 的实际能力/阻塞说明；原 ID、脚本、seed、setup、必需维度和 17 分母保留。
-- [宽松 fixture](../../../../tools/differential/fixtures/fixtures-v1.json)：目标 case 补来源及准确说明，恢复 unsupported profile。
-- [定向自检](../../../../tools/differential/ComparatorSelfTest.cs)：新增 mutant/vulnerable-duration；原有 field/action/collection/decision/stream 项全部保留。
-- [工具 README](../../../../tools/differential/README.md)：定向能力、命令、首差和未验证范围。
+- [严格 suite](../../../../tools/base-migration-baseline/differential/suites/regression.json)：只更新目标 case 的实际能力/阻塞说明；原 ID、脚本、seed、setup、必需维度和 17 分母保留。
+- [宽松 fixture](../../../../tools/base-migration-baseline/differential/fixtures/fixtures-v1.json)：目标 case 补来源及准确说明，恢复 unsupported profile。
+- [定向自检](../../../../tools/base-migration-baseline/differential/ComparatorSelfTest.cs)：新增 mutant/vulnerable-duration；原有 field/action/collection/decision/stream 项全部保留。
+- [工具 README](../../../../tools/base-migration-baseline/differential/README.md)：定向能力、命令、首差和未验证范围。
 - Comparator.cs 曾尝试专用 profile 与牌区过滤，因违反不缩减原比较范围的约束全部撤销；最终无专用 profile/过滤逻辑。
 - 未修改 base/core/net/AI/reference/公共身份 golden/共享主清单；未重做 Headbutt；未 reset/清理/提交。其他 16 case 未作定向编辑，但没有原始逐字快照，不能声称已完成逐字摘要对照。
 

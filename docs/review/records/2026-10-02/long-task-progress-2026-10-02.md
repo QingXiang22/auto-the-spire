@@ -108,5 +108,5 @@ et:cat:Status。**未完成**：其余基础牌、loseHp+Beckon、典型多敌�
 - P-02：[p-02-2026-10-02.md](p-02-2026-10-02.md)；入口 `python ai-the-spire/tests/p02_measure.py` + `Net.TheSpire.Tests` 的两项进程内测量。
 - D-04：[d-04-2026-10-02.md](d-04-2026-10-02.md)；入口 `python tools/collect/collect.py`、`python ai-the-spire/tests/d04_longrun.py`。
 - B-05a：[b-05a-content-manifest-2026-10-02.md](b-05a-content-manifest-2026-10-02.md)；产物 	ools/content-manifest/manifest-2026-10-02.json。
-- B-05b：[b-05b-slice-frontend-2026-10-02.md](b-05b-slice-frontend-2026-10-02.md)；作者文本 mod-the-spire/base-spire/BaseSpire/Slice/Content/slice-content.author。
+- B-05b：[b-05b-slice-frontend-2026-10-02.md](b-05b-slice-frontend-2026-10-02.md)；作者文本 mod-the-spire/base-spire/BaseSpire/Authoring/Examples/slice-content.author。
 - 历史（本轮只读、不重复实现）：[监督台账](../2026-10-01/supervision-ledger-2026-10-01.md) §3 逐任务表；各任务报告 `r-*`/`a-*`/`n-*`/`p01-*` 同目录。

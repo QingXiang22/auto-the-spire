@@ -205,73 +205,73 @@
   "identity_migration": {
     "resource_byte_changes": [
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/colorless-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/colorless-cards.spire",
         "before_sha256": "e1f6371a33c5204c5368ba581542875ef9983911feb47d95b4edfd095570fff4",
         "after_sha256": "8f58d0040a62eabfab2ffa240c030c6052766255499697127c1014046f7f1bca",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/defect-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/defect-cards.spire",
         "before_sha256": "34ef8c16272a4df722eedc3d6a7d7194140da1ab15bb7f8c02dd8f41724dfb88",
         "after_sha256": "5d5248f15902f14ec35d6a0c6a39bce43e5cfa518576ba78f811b3d41682ae04",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/enemies-glory.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Enemies/Content/enemies-glory.spire",
         "before_sha256": "4d4ff57f398409603b827024575eac9afac90b3251077c238acbe65b492ee70a",
         "after_sha256": "52055c60dbf93ffd3113ff431ef57f9ab3d8cfed630bb347cbf6b9b932e57454",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Enemies/Content/enemies.spire",
         "before_sha256": "bc6f6964733e96e1f45a4d02a08f8fc4488880132747700015613a23952cca4c",
         "after_sha256": "b5238c584305cb85d07d5c9427981ea6c78d1bfcad18ca07e3bb3527b182b394",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/ironclad-cards.spire",
         "before_sha256": "55f379b76c06be2ff2c35345da2644bb2ec289956677382d24403101d2512e54",
         "after_sha256": "79b4ed03aa4fe9872eaf1bdd3dc97709a170d0a12e3150b3f154491dd1624314",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Powers/Content/ironclad-powers.spire",
         "before_sha256": "c60f206794170e267253773fa44d70d112dd6594565d2651938fd6be03a120ac",
         "after_sha256": "7e990b337dad46aa140252168cbd1de6df38f7e1d1e6f9edbc7e1011f055a809",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/necrobinder-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/necrobinder-cards.spire",
         "before_sha256": "b83b449bdba2a55f7ba304956a572627dd49b352da9e58574b53b0b128c202e8",
         "after_sha256": "f7a63054ec448b730ad782daa7660a812827f147a0765798755e724b0011b4a3",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/potion-powers.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Powers/Content/potion-powers.spire",
         "before_sha256": "fdd80835734d8d2307fc3a027305a2a2c961f946e85ffa15c9ffe3ec49cae356",
         "after_sha256": "1f3c01809eea0c68ddfaccce523f3ae80b897f92165ff4e96b94a1dd23f47e81",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/potions.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Potions/Content/potions.spire",
         "before_sha256": "121e32c818cd784be0e822fbbd5140d3fceb651c04c9228ced728d22cfd32d4a",
         "after_sha256": "8278c11a5bce8149959adbb759058676528a31fa568fba384db099cd383ffb2d",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/regent-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/regent-cards.spire",
         "before_sha256": "d5c01ab7e39108ad4fb7791442b6fe1beda1702e0b0b7811f5b31d534244a7da",
         "after_sha256": "38186474a8dd0bc505ba1134b9e8fc82ca3c1aed5b951ed2ef9883b3b5eb468f",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/silent-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/silent-cards.spire",
         "before_sha256": "a043dcad53b2d87656ba25304cd794c2b0d27ba58ca2e85f8e435a9963b5a6d8",
         "after_sha256": "a09c3a8d92a1c6409cc5530c85e571038e1446dac3b646b4fd20c43c18e7c417",
         "change": "CRLF to LF; optional removal of final blank line only"
       },
       {
-        "path": "mod-the-spire/base-spire/BaseSpire/ContentSource/status-cards.spire",
+        "path": "mod-the-spire/base-spire/BaseSpire/Cards/Content/status-cards.spire",
         "before_sha256": "d1fcc5517bf155bd0a1ac3fdac15cdd5e155fbdbf7c136fe06627b5bafa8a2f7",
         "after_sha256": "a2661e568155817c090d7655d72cfe9b83db9a939e4d4f36364d72646b179789",
         "change": "CRLF to LF; optional removal of final blank line only"

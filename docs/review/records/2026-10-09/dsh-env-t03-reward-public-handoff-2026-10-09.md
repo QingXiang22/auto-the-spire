@@ -35,7 +35,7 @@
 
 - 派单 `.audit/dsh-env-t03-reward-public-2026-10-09/task.txt`；设计 `docs/design/net-the-spire/design.md:114-121`（§7.3 完成条件）、`docs/design/net-the-spire/protocol.md` §4–§7、`docs/design/agent-goals.md:37-45`（C 线合同）。
 - 前置接缝 `docs/review/records/2026-10-08/dsh-env-t05-map-room-handoff-2026-10-08.md:44`（奖励阶段插在 `MapPhase=2` 之前）。
-- base 现成钩子：`Slice/CombatSlicePackage.cs:324-342`（Run 账本字段）、`:179-186`（长期牌权威）、`Slice/MapRoomWiring.cs:234-247,441-478`、`Slice/VanillaRandomLayout.cs:45`（`Rewards` 流）。
+- base 现成钩子：`Composition/CombatSlicePackage.cs:324-342`（Run 账本字段）、`:179-186`（长期牌权威）、`Rooms/MapRoomWiring.cs:234-247,441-478`、`Randomness/VanillaRandomLayout.cs:45`（`Rewards` 流）。
 - 既有公开证据与可复用技术：`net-the-spire/client/test_map_host.py`（710 行，5 组）、`.audit/dsh-env-t03-map-host-2026-10-08/probe_map.py`（274 行）。
 - 范围身份参考 `net-the-spire/formal-dev-scopes.md:22-29`（**待更新为最终输入；旧值保留为历史，不追改**）。
 
@@ -55,7 +55,7 @@ dev-map `ruleset a1d8aa9faa64b143` / build `6b25fa16e5b567f4`；这些**不是**
 ## 首个差异
 
 **尚未取得**（未运行）。已知并须分别核实的历史首差：`base-spire:PowerStacksOf` pure-procedure
-（`Slice/CombatSlicePackage.cs:281-295`，原文复现 seed 有 IRCLAD/IRONCLAD 拼写差，两种拼写分别核实）。
+（`Composition/CombatSlicePackage.cs:281-295`，原文复现 seed 有 IRCLAD/IRONCLAD 拼写差，两种拼写分别核实）。
 
 ## 未执行 / 未验证
 

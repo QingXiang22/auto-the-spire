@@ -350,7 +350,7 @@ public enum ValueProp
 
 ## 6. Q6 受控切片当前覆盖到哪
 
-实现位置：`mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs` 的 `DamageMonster`（`:223-265`）与 `DamagePlayer`（`:267-290`）。所有中间量都是 `FieldTypeSchema.Int`（`:228-231`、`:271-273`），即**一进入伤害计算域就是整数**。
+实现位置：`mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs` 的 `DamageMonster`（`:223-265`）与 `DamagePlayer`（`:267-290`）。所有中间量都是 `FieldTypeSchema.Int`（`:228-231`、`:271-273`），即**一进入伤害计算域就是整数**。
 
 ### 6.1 已覆盖
 
@@ -396,7 +396,7 @@ public enum ValueProp
 
 ### 7.2 搜索范围（关键词与路径）
 
-- **路径**：`sts2/src/Core/Commands/`（含 `Commands/Builders/`）、`sts2/src/Core/Entities/Creatures/`、`sts2/src/Core/Hooks/`、`sts2/src/Core/ValueProps/`、`sts2/src/Core/Models/Powers/`、`sts2/src/Core/Models/`、`sts2/src/Core/Localization/DynamicVars/`、`sts2/src/**`（全文关键词扫）、`core-the-spire/Core.TheSpire/Legacy/{State.cs,Effects.cs,Environment.cs,Content.cs,SpireCombatBehaviorDslCompiler.cs}`、`mod-the-spire/base-spire/BaseSpire/{Slice/CombatSlicePackage.cs,Slice/SliceManifest.cs,ContentSource/*.spire}`。
+- **路径**：`sts2/src/Core/Commands/`（含 `Commands/Builders/`）、`sts2/src/Core/Entities/Creatures/`、`sts2/src/Core/Hooks/`、`sts2/src/Core/ValueProps/`、`sts2/src/Core/Models/Powers/`、`sts2/src/Core/Models/`、`sts2/src/Core/Localization/DynamicVars/`、`sts2/src/**`（全文关键词扫）、`core-the-spire/Core.TheSpire/Legacy/{State.cs,Effects.cs,Environment.cs,Content.cs,SpireCombatBehaviorDslCompiler.cs}`、`mod-the-spire/base-spire/BaseSpire/{Composition/CombatSlicePackage.cs,Composition/SliceManifest.cs,ContentSource/*.spire}`。
 - **关键词**：`ModifyDamage`、`ModifyDamageInternal`、`ModifyDamageHookType`、`ModifyDamageAdditive`、`ModifyDamageMultiplicative`、`ModifyDamageCap`、`IsPoweredAttack()`、`Unpowered`、`ValueProp`、`DamageBlockInternal`、`LoseHpInternal`、`DamageResult`、`UnblockedDamage`、`BlockedDamage`、`ModifyHpLost`、`HpLossHookPhase`、`CalculatedDamageVar`、`DamageCmd`、`AttackCommand`、`Floor`、`Round`、`Truncate`、`\(int\)`、`SkipNextDurationTick`、`TickDownDuration`、`Decrement`、`SkipFirstTriggerWhenAppliedToPlayer`、`skipFirstWhenAppliedToPlayer`、`skipFirstWhenAppliedToEnemy`、`SkipNextPowerTriggers`、`OutgoingDamageMultiplier`、`VulnerableMultiplierPercentPerStack`、`HasPowerRole`、`decrementOnTrigger`、`NoDraw`、`Shrink`、`Weak`、`VulnerableDamagePercent`、`DamageOrder`。
 
 ## 8. 实现阶段必须做出的判定（清单）

@@ -1,5 +1,38 @@
 # review历史记录与证据索引
 
+2026-10-18：[纯 DSL base 首批切换](2026-10-18/base-dsl-native-cutover-2026-10-18.md)保存最终目录、生产切换、源范围、实际验证及功能回退边界；[冻结检查清单](2026-10-18/base-dsl-check-disposition.json)逐组保留原检查与 suite 去向。当前状态仍只见主清单。
+
+
+2026-10-18：[base DSL迁移的设计前改动与纠偏记录](2026-10-18/base-dsl-migration-checkpoint-2026-10-18.md)保留用户关于纯DSL和直接切换的决定、已发生的文件移动与加载器实验、实际检查结果和未完成依赖；不是完整迁移验收。接续先读关联规格／设计／任务，当前状态只看主清单。
+
+2026-10-18：[遗物下一批候选评估](2026-10-18/relic-next-batch-assessment-2026-10-18.md)登记UnceasingTop、TheAbacus、BurningSticks、Akabeko、ParryingShield各自缺口与建议顺序（先TheAbacus洗牌时点，再随机单体伤害解锁三件）；无代码改动。
+
+2026-10-18：[遗物伤害加性修正与StrikeDummy／FakeStrikeDummy](2026-10-18/relic-damage-additive-2026-10-18.md)新增modify-damage-additive与牌来源过滤（标签/升级/附魔），并记录标签名实为ase-spire:strike这一事实；覆盖推进到90/90可执行、未实现206（含MiniatureCannon与MysticLighter两个过滤分支）。
+
+2026-10-18：[遗物敌人死亡触发与GremlinHorn](2026-10-18/relic-monster-death-2026-10-18.md)新增fter-monster-died触发点（伤害致死分支、过程体延后到抽牌绑定就绪），实现GremlinHorn每个敌人死亡给1能量并抽1张；覆盖推进到86/86可执行、未实现210。
+
+2026-10-18：[遗物格挡数量条件与Orichalcum](2026-10-18/relic-block-condition-2026-10-18.md)新增BlockAtLeast／BlockAtMost条件，实现Orichalcum“回合末无格挡才补6点”，并记录“回合末遗物派发先于能力回合末链”的顺序假设；覆盖推进到84/84可执行、未实现212。
+
+2026-10-17：[遗物源清单与实例公共接口](2026-10-17/relic-foundation-2026-10-17.md)记录297件源遗物／300条池成员对账、四件base正式声明，以及RunRelics获得／移除／替换／熔毁、实例计数与有效性查询；27项相关定向检查通过，完整回归、逐件资格与独立证据仍待验证。
+
+2026-10-17：[遗物批次尝试记录：回合末弃牌不经过逐张弃牌钩子](2026-10-17/relic-discard-flush-gap-2026-10-17.md)记录回合末手牌处置不逐张派发`on_discard`/`after-card-discarded`的发现、两次失败尝试，以及2026-10-18用最小复现定位后“只接遗物监听”落地ToughBandages（3×弃牌数、SturdyClamp截到10、空手为0）；`on_discard`/Sly在回合末仍未接入。
+
+2026-10-17：[SelfFormingClay复用受击触发](2026-10-17/relic-self-forming-clay-2026-10-17.md)把上一批的`after-damage-received`接到“下回合格挡”能力上，并在同轮修好`perPowerStack`解析让能力按层数结算（PowerCount 55→56）；覆盖83/83可执行、未实现213。
+
+2026-10-17：[遗物受击触发与CentennialPuzzle](2026-10-17/relic-damage-received-2026-10-17.md)新增`after-damage-received`触发点（对应源`UnblockedDamage > 0`，过程体延后到抽牌绑定就绪后编译），实现CentennialPuzzle每场战斗首次掉血抽3张；覆盖推进到82/82可执行、未实现214。
+
+2026-10-17：[遗物共享抽牌效果与Pendulum](2026-10-17/relic-draw-cards-2026-10-17.md)新增`draw-cards`效果种类（复用共享抽牌过程，含重洗／阻止／AfterDraw），实现Pendulum每三回合抽一张且计数跨战斗保留；覆盖推进到81/81可执行、未实现215。
+
+2026-10-17：[遗物手牌数量条件与两件回合结束消费者](2026-10-17/relic-hand-conditions-2026-10-17.md)新增HandAtLeast／HandAtMost手牌条件，实现CloakClasp（按手牌数给Unpowered格挡）与ScreamingFlagon（空手群体伤害）；覆盖推进到80/80可执行、未实现216，并记录“带SturdyClamp观察回合末格挡”的检查写法。
+
+2026-10-17：[遗物回合开始与进入战斗的既有能力消费者](2026-10-17/relic-turn-entry-consumers-2026-10-17.md)用已有触发点与效果种类纳入FestivePopper（首回合群体伤害）与DivineRight（进战斗房得3星），并记录“用同seed参照局测伤害”的写法；覆盖推进到78/78可执行、未实现降到218。
+
+2026-10-17：[遗物消耗触发与无加成群体伤害](2026-10-17/relic-exhaust-area-2026-10-17.md)新增`after-card-exhausted`触发点与`damage-all-enemies`（Unpowered）效果种类，实现LetterOpener、CharonsAshes与MercuryHourglass并用Strength对照验证无加成；覆盖推进到76/76可执行、未实现降到220。
+
+2026-10-17：[遗物卡牌打出触发与四件消费者](2026-10-17/relic-card-play-2026-10-17.md)新增`after-card-played`遗物触发点与牌型过滤，实现Nunchaku、Kunai、Shuriken、OrnamentalFan；覆盖报告推进到73/73可执行、未实现降到223，身份基线随之迁移；独立与公开证据仍缺。
+
+2026-10-17：[遗物球类消费者行为见证](2026-10-17/relic-orb-witness-2026-10-17.md)补五件球类遗物（DataDisk、CrackedCore、SymbioticVirus、RunicCapacitor、InfusedCore）的实际被动／激发伤害、首回合限制与逐战重建证据，消除CI覆盖门槛唯一失败项；覆盖报告为69/69可执行、297件源遗物中227件未裁定，完整回归留给GitHub Actions。
+
 2026-10-17：[静默猎手单人奇巧牌族](2026-10-17/silent-sly-family-2026-10-17.md)记录8张新牌、动态奇巧寿命、嵌套弃牌批次与受击前荆棘，以及整组实现后执行的定向检查；完整回归留给GitHub Actions。
 
 2026-10-17：[静默猎手中毒牌族](2026-10-17/silent-poison-family-2026-10-17.md)记录全部12张中毒牌、共享触发／奇巧、源分母核对和本地定向验证；完整回归在推送后交给GitHub Actions，不替代Silent正式整局验收。

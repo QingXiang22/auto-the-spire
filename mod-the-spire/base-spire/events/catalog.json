@@ -1,0 +1,687 @@
+{
+  "format": "engine-dsl/source-catalog@1",
+  "kind": "event",
+  "source_baseline": "local-sts2-source-2026-10-18",
+  "entries": [
+    {
+      "id": "base-spire:abyssal-baths",
+      "name": "AbyssalBaths",
+      "source_path": "sts2/src/Core/Models/Events/AbyssalBaths.cs",
+      "source_sha256": "0c18e44f010512e3a5b895c7995164152299187a2f6d414e8eda3b8551e0b498",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:amalgamator",
+      "name": "Amalgamator",
+      "source_path": "sts2/src/Core/Models/Events/Amalgamator.cs",
+      "source_sha256": "3fe52907ba8957a1782348dc840aaec7536e51e8c4c63378c26237df7585060d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:aroma-of-chaos",
+      "name": "AromaOfChaos",
+      "source_path": "sts2/src/Core/Models/Events/AromaOfChaos.cs",
+      "source_sha256": "bebbe67ed13d94fb5546c87d92262ace605c52f5c88ab5a6b01f970581fc2dfb",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:battleworn-dummy",
+      "name": "BattlewornDummy",
+      "source_path": "sts2/src/Core/Models/Events/BattlewornDummy.cs",
+      "source_sha256": "2b0158263444e706c1a57b1f9d54f6cc1294339b67a14701b68e05f6446f000a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:brain-leech",
+      "name": "BrainLeech",
+      "source_path": "sts2/src/Core/Models/Events/BrainLeech.cs",
+      "source_sha256": "56830303f470d3ebd3e74de5948a3b5dad6125b23db6b70c9b0081a2fb6acac8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:bugslayer",
+      "name": "Bugslayer",
+      "source_path": "sts2/src/Core/Models/Events/Bugslayer.cs",
+      "source_sha256": "772fd742b0fefeb21a2f849a9d78524e5b7291bf99306cc71c9cd71fe34ce11b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:byrdonis-nest",
+      "name": "ByrdonisNest",
+      "source_path": "sts2/src/Core/Models/Events/ByrdonisNest.cs",
+      "source_sha256": "408c80d0f97fd369e56b9209a65a24da66992e1c2259937b5a152631eac6d40e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:colorful-philosophers",
+      "name": "ColorfulPhilosophers",
+      "source_path": "sts2/src/Core/Models/Events/ColorfulPhilosophers.cs",
+      "source_sha256": "275cd45e34eea3221c5335ac5742918518f9c60ae5ec0fa262a27436a892b38f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:colossal-flower",
+      "name": "ColossalFlower",
+      "source_path": "sts2/src/Core/Models/Events/ColossalFlower.cs",
+      "source_sha256": "bb623a8b816ed8477b2185999af535b16d08cb31950620eec255e4ad6b13b6df",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:crystal-sphere",
+      "name": "CrystalSphere",
+      "source_path": "sts2/src/Core/Models/Events/CrystalSphere.cs",
+      "source_sha256": "888afb8462f2f32c0dab110f3f7aa50964382e17d5fa24b8ed6e47c0876b182e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:darv",
+      "name": "Darv",
+      "source_path": "sts2/src/Core/Models/Events/Darv.cs",
+      "source_sha256": "15a4eea255e064d006d972f9e6abb8c9fc0a24327eeec408fc5c2dd8d9803616",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dense-vegetation",
+      "name": "DenseVegetation",
+      "source_path": "sts2/src/Core/Models/Events/DenseVegetation.cs",
+      "source_sha256": "30111c5079d078af1d77fab3c0f1a412e9f9dc2bf046ab101eb7ab77af07d9e9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:deprecated-ancient-event",
+      "name": "DeprecatedAncientEvent",
+      "source_path": "sts2/src/Core/Models/Events/DeprecatedAncientEvent.cs",
+      "source_sha256": "6759cf195b5fa2ce1b154fb2c6ca5524d6a5ecea00a820c1f62dfd2f025dcff9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:deprecated-event",
+      "name": "DeprecatedEvent",
+      "source_path": "sts2/src/Core/Models/Events/DeprecatedEvent.cs",
+      "source_sha256": "bfd92e4b5b4987a9b807565aa43a535fd6ae8a9aa2c09e83ace84590710c42e7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:doll-room",
+      "name": "DollRoom",
+      "source_path": "sts2/src/Core/Models/Events/DollRoom.cs",
+      "source_sha256": "290dd18e3e975420cd5ff1a94750e6980e0420ff442a4cb220f5de4be783989c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:doors-of-light-and-dark",
+      "name": "DoorsOfLightAndDark",
+      "source_path": "sts2/src/Core/Models/Events/DoorsOfLightAndDark.cs",
+      "source_sha256": "dd3d4ffd117c133f5ffb9970517bee466fbf64a62047c05a01cf47891c5bcbb1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:drowning-beacon",
+      "name": "DrowningBeacon",
+      "source_path": "sts2/src/Core/Models/Events/DrowningBeacon.cs",
+      "source_sha256": "90cd88f0f9b8966dc68d3fa31d970fd1ecd2e8cb921d75ce210722494cb5b485",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:endless-conveyor",
+      "name": "EndlessConveyor",
+      "source_path": "sts2/src/Core/Models/Events/EndlessConveyor.cs",
+      "source_sha256": "33b118724ea7ea5a603370362168f12e171409424360bac806299c22231df120",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fake-merchant",
+      "name": "FakeMerchant",
+      "source_path": "sts2/src/Core/Models/Events/FakeMerchant.cs",
+      "source_sha256": "557635f7534969c62bdcca4d19b9bb19c00c3ec2cfa585932e291037be7b62e0",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:field-of-man-sized-holes",
+      "name": "FieldOfManSizedHoles",
+      "source_path": "sts2/src/Core/Models/Events/FieldOfManSizedHoles.cs",
+      "source_sha256": "32e713203454c923b43f45a6f9d34ee95beadb9ab0f64e40928ae91a5febd590",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:grave-of-the-forgotten",
+      "name": "GraveOfTheForgotten",
+      "source_path": "sts2/src/Core/Models/Events/GraveOfTheForgotten.cs",
+      "source_sha256": "651ff2f100b9964313a2d6b23e15104a86e4458509adbbc0c2602aac09481be6",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hungry-for-mushrooms",
+      "name": "HungryForMushrooms",
+      "source_path": "sts2/src/Core/Models/Events/HungryForMushrooms.cs",
+      "source_sha256": "da5872f6298892d71e7bcf571842bc39ffe0d15521ead55da84aa356066c487c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:infested-automaton",
+      "name": "InfestedAutomaton",
+      "source_path": "sts2/src/Core/Models/Events/InfestedAutomaton.cs",
+      "source_sha256": "e6bebde83ee0efbd36afb0411ec75816efac07095848e3cb75f61bb0a77403b3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:jungle-maze-adventure",
+      "name": "JungleMazeAdventure",
+      "source_path": "sts2/src/Core/Models/Events/JungleMazeAdventure.cs",
+      "source_sha256": "ed6c20878b1bd354d1fa60f915557e86dd370c94259224e99c9219158965e199",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:lost-wisp",
+      "name": "LostWisp",
+      "source_path": "sts2/src/Core/Models/Events/LostWisp.cs",
+      "source_sha256": "df8684ee5931787ed00b8dd7e57aaf26309254d63177dc62e83ea43f01ac0306",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:luminous-choir",
+      "name": "LuminousChoir",
+      "source_path": "sts2/src/Core/Models/Events/LuminousChoir.cs",
+      "source_sha256": "c680ab0135aadf18e00e8e757e47e9b915f691887f153b996b4a6886c2c56b01",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:morphic-grove",
+      "name": "MorphicGrove",
+      "source_path": "sts2/src/Core/Models/Events/MorphicGrove.cs",
+      "source_sha256": "673f0f585cb8a2c164dde8ec68214b0e156c70d047fbbdd9470d73cb1d74918a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:neow",
+      "name": "Neow",
+      "source_path": "sts2/src/Core/Models/Events/Neow.cs",
+      "source_sha256": "6a38ad361deb03867a70eee19cb525b0e428706f63931a2d01b22a58ddec9ba7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:nonupeipe",
+      "name": "Nonupeipe",
+      "source_path": "sts2/src/Core/Models/Events/Nonupeipe.cs",
+      "source_sha256": "7b6e304973c1ef62edbd1a70532719248611c67d1161bfdc7f112089b3e3b63c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:orobas",
+      "name": "Orobas",
+      "source_path": "sts2/src/Core/Models/Events/Orobas.cs",
+      "source_sha256": "76e194696483b32e3d826f724012b40ffa5c23616edf2fe5924a130dc46114f5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:pael",
+      "name": "Pael",
+      "source_path": "sts2/src/Core/Models/Events/Pael.cs",
+      "source_sha256": "3766d412cea01a87c51519f3128ee1ef5e4747b0c3a5c8d9ed80bb649d1c09c3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:potion-courier",
+      "name": "PotionCourier",
+      "source_path": "sts2/src/Core/Models/Events/PotionCourier.cs",
+      "source_sha256": "5a26b63bbbf329c1ac7dee6a5c6d82768f5a3d3d7def574b5d36db39fe0c45d5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:punch-off",
+      "name": "PunchOff",
+      "source_path": "sts2/src/Core/Models/Events/PunchOff.cs",
+      "source_sha256": "18846e81c9d180471c943d3449693db5414c9af9dd4603eaa455a41391a37ec2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ranwid-the-elder",
+      "name": "RanwidTheElder",
+      "source_path": "sts2/src/Core/Models/Events/RanwidTheElder.cs",
+      "source_sha256": "4aeff0aa39c11edbe8e24ec5fd29abf16096a95f0378bebcf4d4de02b937f94c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:reflections",
+      "name": "Reflections",
+      "source_path": "sts2/src/Core/Models/Events/Reflections.cs",
+      "source_sha256": "bb894825b5321da122b6620e0085275dd655dd0cef0ebd798fad8417b1345f1c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:relic-trader",
+      "name": "RelicTrader",
+      "source_path": "sts2/src/Core/Models/Events/RelicTrader.cs",
+      "source_sha256": "5419dab9b0224633381e754fd78157e352c77e8a79f2ebd0281ada39dbffc28c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:room-full-of-cheese",
+      "name": "RoomFullOfCheese",
+      "source_path": "sts2/src/Core/Models/Events/RoomFullOfCheese.cs",
+      "source_sha256": "66ab46a17577db79d2b070c858b2f491225cd45119bd34733705585249d96c72",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:round-tea-party",
+      "name": "RoundTeaParty",
+      "source_path": "sts2/src/Core/Models/Events/RoundTeaParty.cs",
+      "source_sha256": "9e0d686605e1a60286afd52dc3f4b04393ed4a97a3db6a8dfcc42ed20ede19d3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sapphire-seed",
+      "name": "SapphireSeed",
+      "source_path": "sts2/src/Core/Models/Events/SapphireSeed.cs",
+      "source_sha256": "746ef166fc1a60c67da2927152d867a52211a1b9d5556cbd4d5e2f87ded95cf8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:self-help-book",
+      "name": "SelfHelpBook",
+      "source_path": "sts2/src/Core/Models/Events/SelfHelpBook.cs",
+      "source_sha256": "efaa3eeaf96fb3ca30477b12e1598bdb8374d58b87880f8129efa888ee6ed46e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slippery-bridge",
+      "name": "SlipperyBridge",
+      "source_path": "sts2/src/Core/Models/Events/SlipperyBridge.cs",
+      "source_sha256": "2b1863f7d08b809c55eba455bd8482c71ea85e1c848ae3f71eeedd3283ddc818",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:spiraling-whirlpool",
+      "name": "SpiralingWhirlpool",
+      "source_path": "sts2/src/Core/Models/Events/SpiralingWhirlpool.cs",
+      "source_sha256": "a4b472bc58f0e0884c8873aaec97d8e2e6e0eddbf084413356e3c024e8d08955",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:spirit-grafter",
+      "name": "SpiritGrafter",
+      "source_path": "sts2/src/Core/Models/Events/SpiritGrafter.cs",
+      "source_sha256": "8581027042de5886e930d3c92ca1ac813a50b767f1f404c6e19252a73677eb84",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:stone-of-all-time",
+      "name": "StoneOfAllTime",
+      "source_path": "sts2/src/Core/Models/Events/StoneOfAllTime.cs",
+      "source_sha256": "fbf680e9d471b9b7a9e947a717cdf8f6df546b71b803ad6caef83710a1d8ef0e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sunken-statue",
+      "name": "SunkenStatue",
+      "source_path": "sts2/src/Core/Models/Events/SunkenStatue.cs",
+      "source_sha256": "1d41fb47a50b37eeab6e028d8bfb2cdf084a91293c6caf944b1cda86e68b2acc",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sunken-treasury",
+      "name": "SunkenTreasury",
+      "source_path": "sts2/src/Core/Models/Events/SunkenTreasury.cs",
+      "source_sha256": "eb117f6e7b2b8b8e211599f157fa99617e5f834e1dce7c8b0db6569901c9aa77",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:symbiote",
+      "name": "Symbiote",
+      "source_path": "sts2/src/Core/Models/Events/Symbiote.cs",
+      "source_sha256": "eb2f1b0bc9c18dbca1770e3149629eeb840559d151053479b903a96db19dcb1d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tablet-of-truth",
+      "name": "TabletOfTruth",
+      "source_path": "sts2/src/Core/Models/Events/TabletOfTruth.cs",
+      "source_sha256": "9771d5cb6f7c76ba38b4f343160c0e113ac13a067403164fba54992da5d20dee",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tanx",
+      "name": "Tanx",
+      "source_path": "sts2/src/Core/Models/Events/Tanx.cs",
+      "source_sha256": "1709da20c60a0c9893865b57a3973aa57b9431760bef531ae632cbd90a4c4b92",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tea-master",
+      "name": "TeaMaster",
+      "source_path": "sts2/src/Core/Models/Events/TeaMaster.cs",
+      "source_sha256": "fc390aab07ab209f6e9526de52642bf1b5008e60c4e3c5cb5297904cae536198",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tezcatara",
+      "name": "Tezcatara",
+      "source_path": "sts2/src/Core/Models/Events/Tezcatara.cs",
+      "source_sha256": "abac5fe37f8121548d61192316c8bf69b434bf739bd38b53a19b6e942a0289bd",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-architect",
+      "name": "TheArchitect",
+      "source_path": "sts2/src/Core/Models/Events/TheArchitect.cs",
+      "source_sha256": "1be4649bcb56244790c0de270d98ee1f4712267bdfb713ebad7845673df06b08",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-future-of-potions",
+      "name": "TheFutureOfPotions",
+      "source_path": "sts2/src/Core/Models/Events/TheFutureOfPotions.cs",
+      "source_sha256": "78f9d366a76996b8cb2e3b44a6bda61991adeea879d2f89f8202af45524d7388",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-lantern-key",
+      "name": "TheLanternKey",
+      "source_path": "sts2/src/Core/Models/Events/TheLanternKey.cs",
+      "source_sha256": "0eacfc8fd3911a0f86a64c7231cf8932bebbd6a3fbdc0b7ca41c734f112a4454",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-legends-were-true",
+      "name": "TheLegendsWereTrue",
+      "source_path": "sts2/src/Core/Models/Events/TheLegendsWereTrue.cs",
+      "source_sha256": "2e7d7f499ef8639f7b1dee099c29947b705878267121be25822ee8906d003ab5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:this-or-that",
+      "name": "ThisOrThat",
+      "source_path": "sts2/src/Core/Models/Events/ThisOrThat.cs",
+      "source_sha256": "222702a8da5b83ef92c80212d8a55025391ad16b288772e565a7fb3179fbdbf1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tinker-time",
+      "name": "TinkerTime",
+      "source_path": "sts2/src/Core/Models/Events/TinkerTime.cs",
+      "source_sha256": "8deed294ff2ccd7b452379ba78df190e7c8c1eef563d845b9bebe5a5a2c40dde",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:trash-heap",
+      "name": "TrashHeap",
+      "source_path": "sts2/src/Core/Models/Events/TrashHeap.cs",
+      "source_sha256": "e6c2c2fe15e46192a509ce3b4c6f2f7930effff532d77df01f994a3ae29bd226",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:trial",
+      "name": "Trial",
+      "source_path": "sts2/src/Core/Models/Events/Trial.cs",
+      "source_sha256": "46c716d2e077dfc10e0decdaba192880c34d12fbf5102815c1730f76b1bbe716",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:unrest-site",
+      "name": "UnrestSite",
+      "source_path": "sts2/src/Core/Models/Events/UnrestSite.cs",
+      "source_sha256": "9d86af0cf155f27fbe3c7093cad2893af563267c409429df03a5da8c9d4add62",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vakuu",
+      "name": "Vakuu",
+      "source_path": "sts2/src/Core/Models/Events/Vakuu.cs",
+      "source_sha256": "0c9eccda5f33db3944ce70bab06b5a1d04f7dbc877c9c96fd7528e6814568dfe",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:war-historian-repy",
+      "name": "WarHistorianRepy",
+      "source_path": "sts2/src/Core/Models/Events/WarHistorianRepy.cs",
+      "source_sha256": "1e88ffab7cd63423e6c7b7b07afe6ab8683b689cb1f4b3b22d336be3716ac299",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:waterlogged-scriptorium",
+      "name": "WaterloggedScriptorium",
+      "source_path": "sts2/src/Core/Models/Events/WaterloggedScriptorium.cs",
+      "source_sha256": "06f6e6a0fc8821ad02411ca8481479496ddb42b1cf72b0e77e904173b8b4e4f0",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:welcome-to-wongos",
+      "name": "WelcomeToWongos",
+      "source_path": "sts2/src/Core/Models/Events/WelcomeToWongos.cs",
+      "source_sha256": "60f6e916e718960d1d5c117ccd134337e725c9fffd114cd4765d4ca96c7f23b8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:wellspring",
+      "name": "Wellspring",
+      "source_path": "sts2/src/Core/Models/Events/Wellspring.cs",
+      "source_sha256": "c57cfe5da7bc023f4758c518741d61f205eebd0da6d3b4d501cd8d599428d0d9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:whispering-hollow",
+      "name": "WhisperingHollow",
+      "source_path": "sts2/src/Core/Models/Events/WhisperingHollow.cs",
+      "source_sha256": "822e082cab4023a4c55d10c129ee178860c54f2c96cd4f463f629b0dcb5f51ab",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:wood-carvings",
+      "name": "WoodCarvings",
+      "source_path": "sts2/src/Core/Models/Events/WoodCarvings.cs",
+      "source_sha256": "55912c1de946e15f2259d69f69333e8831f8fa4ae75cc760ff386186fcc03dfa",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:zen-weaver",
+      "name": "ZenWeaver",
+      "source_path": "sts2/src/Core/Models/Events/ZenWeaver.cs",
+      "source_sha256": "c06fba76f9c342710be0306dddf2df8dcb885802a4b59afd3737940a60de8bf5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    }
+  ]
+}

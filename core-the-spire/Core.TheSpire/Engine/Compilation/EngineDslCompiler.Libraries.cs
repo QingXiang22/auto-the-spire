@@ -29,7 +29,7 @@ public static partial class EngineDslCompiler
             try
             {
                 if (!File.Exists(path)) throw new DslSourceException(importLocation ?? new(path, 1, 1), $"Rule file not found: '{path}'.");
-                var source = EngineDslParser.Parse(File.ReadAllText(path), path);
+                var source = ReadFragments(path, null, new(_files.Comparer), new(_files.Comparer));
                 var imported = new List<EnginePackage>();
                 var importNodes = source.Members.OfType<DslPropertyNode>().Where(node => node.Name == "imports").ToArray();
                 if (importNodes.Length > 1) throw new DslSourceException(importNodes[1].Location, "Duplicate property 'imports'.");
@@ -53,6 +53,51 @@ public static partial class EngineDslCompiler
                 return package;
             }
             finally { _loading.Remove(path); }
+        }
+
+        // Includes combine one namespace before name binding. Imports continue to link separate packages.
+        private static DslPackageNode ReadFragments(string path, DslPackageNode? root,
+            HashSet<string> visited, HashSet<string> loading)
+        {
+            if (!loading.Add(path)) throw new DslSourceException(new(path, 1, 1), "Cyclic same-package include.");
+            try
+            {
+                if (!File.Exists(path)) throw new DslSourceException(new(path, 1, 1), "Included rule file not found.");
+                var source = EngineDslParser.Parse(File.ReadAllText(path), path);
+                var language = source.Members.OfType<DslPropertyNode>().Where(p => p.Name == "dsl_version").ToArray();
+                if (language.Length != 1 || language[0].Value is not DslStringNode { Value: "core/0.3" })
+                    if (root is not null || source.Members.OfType<DslPropertyNode>().Any(p => p.Name == "includes"))
+                        throw new DslSourceException(source.Location, "Same-package includes require core/0.3 on every file.");
+                if (root is not null && source.Name != root.Name)
+                    throw new DslSourceException(source.Location, "Included namespace must match the entry package.");
+                if (!visited.Add(path)) return source with { Members = [] };
+                var members = new List<DslMemberNode>();
+                foreach (var member in source.Members)
+                {
+                    if (member is DslPropertyNode { Name: "includes" } include)
+                    {
+                        if (source.Members.OfType<DslPropertyNode>().Count(p => p.Name == "includes") != 1
+                            || include.Value is not DslListNode files)
+                            throw new DslSourceException(include.Location, "includes must be one list of relative paths.");
+                        foreach (var item in files.Items)
+                        {
+                            if (item is not DslStringNode file || string.IsNullOrWhiteSpace(file.Value) || Path.IsPathRooted(file.Value))
+                                throw new DslSourceException(item.Location, "Include paths must be nonempty relative strings.");
+                            var fragment = ReadFragments(Path.GetFullPath(file.Value, Path.GetDirectoryName(path)!),
+                                root ?? source, visited, loading);
+                            members.AddRange(fragment.Members);
+                        }
+                    }
+                    else if (root is not null && member is DslPropertyNode property)
+                    {
+                        if (property.Name != "dsl_version")
+                            throw new DslSourceException(property.Location, "Package properties belong in the entry file; fragments contain declarations only.");
+                    }
+                    else members.Add(member);
+                }
+                return source with { Members = members };
+            }
+            finally { loading.Remove(path); }
         }
     }
 }

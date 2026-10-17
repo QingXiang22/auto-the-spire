@@ -133,7 +133,7 @@ backend `net:backend:simulation-0.2-350911d86bad900d` / protocol `0.2` / profile
 
 ## 6. 只读契约复核与文档检查
 
-* **A 侧公开契约只读复核**（不改 A 的文件）：`mod-the-spire/base-spire/BaseSpire/Slice/ShopRoomWiring.cs`
+* **A 侧公开契约只读复核**（不改 A 的文件）：`mod-the-spire/base-spire/BaseSpire/Rooms/Shop/ShopRoomWiring.cs`
   在本包工作期间被 A 持续编辑（复核时 SHA256 `9EE5E0924FC50E31B46183E221773DAC376BB012C72E8111F4F946AEB4D83847`）。
   本包消费的符号未变：五个动作名、`ShopOffers`、`ShopCardRemovalsUsed`、`ShopOffer` 的 12 个公开字段、
   删牌用 `DecisionResponseKind.EntityRef`；`BuyableOffers`（候选域）与 `BuyGuard`（守卫）仍是同一组条件

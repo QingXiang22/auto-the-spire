@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（把 normal/upgraded、目标、X 费、hooks、选择、批处理、实例变量、生成/升级/变形、Power/敌人/药水及 run 作者表示迁入同一前端；保留 0.0.1 兼容入口）——**本批只覆盖一小部分** |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（词表与校验）、`Slice/CombatSlicePackage.cs`（降级）、`BaseSpire.Slice.Tests/SliceFrontendDomainChecks.cs`（新增检查） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（词表与校验）、`Composition/CombatSlicePackage.cs`（降级）、`BaseSpire.Slice.Tests/Authoring/SliceFrontendDomainChecks.cs`（新增检查） |
 | 状态 | **部分完成**：本批交付"效果完全由步骤驱动 + 目标域 `damage_all`"；其余子项仍未开始（见 §4） |
 | 前置 | B-05b（已完成，见 [b-05b](b-05b-slice-frontend-2026-10-02.md)） |
 
@@ -68,10 +68,10 @@
 
 ## 5. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`damage_all` 词表；去掉 kind/step 与 block+damage 的人为限制；
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`damage_all` 词表；去掉 kind/step 与 block+damage 的人为限制；
   新增 `damage`/`damage_all` 互斥校验）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`damage_all` 降级；`authorModel` 显式入参）
-- `BaseSpire.Slice.Tests/SliceFrontendDomainChecks.cs`（新增 4 项检查）、`SliceFrontendChecks.cs`（负例表更新：
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`damage_all` 降级；`authorModel` 显式入参）
+- `BaseSpire.Slice.Tests/Authoring/SliceFrontendDomainChecks.cs`（新增 4 项检查）、`SliceFrontendChecks.cs`（负例表更新：
   把"Skill 声明 damage"换成"damage 与 damage_all 同时出现"）、`SliceFixtures.cs`（`PutInHand` 支持显式升级值，
   测试场景卡不必存在于冻结清单）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态更新）

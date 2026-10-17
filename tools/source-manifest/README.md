@@ -1,5 +1,7 @@
 # 源建局输入静态取证工具（ENV-T04 B 线）
 
+遗物内容与公共接口的静态对账使用本页末尾的[遗物清单入口](#遗物内容与接口统计)。建局源／参考比较继续使用下面的原有入口。
+
 `extract_source_manifest.py` 从**冻结源** `sts2/`（基线 `sts2-frozen-2026-10-05`，core 锚点 `92ccd34`）
 静态提取建局阶段的输入清单，并与 `reference/sts2-sim/` 逐项对照，供 A 线按真实机制实现前置消费。
 
@@ -50,3 +52,20 @@ python tools/source-manifest/extract_source_manifest.py `
 - 本工具属工具层，参考只读；不得把参考数值当作源的期望值写死进生产玩法，也不得用工具补偿生产实现。
 - 本工具不修改 RNG 算法、不修改比较器、不参与严格 suite 判定。
 - 源/参考版本身份以 JSON `identity` 为准；参考仓库 HEAD 不能替代实际文件摘要（存在共享未提交改动）。
+
+## 遗物内容与接口统计
+
+`extract_relic_manifest.py`只读本地`sts2/`，逐源文件提取直接遗物类、各池声明顺序、稀有度、覆写方法／属性的行号、SavedProperty及命令引用导航。`IsAllowed*`覆写单列，单人可达性仍标待源码与路径审查；不由类名或池归属推断资格。不属于RelicModel的目录辅助类单列；任何池或base定义找不到对应遗物类、池声明长度不符或已知语法无法读取时非零退出。
+
+可选`--base-catalog`读取同构建的正式遗物声明输出，分别统计base声明和CanObtain；未给时为null而不是0。输出不宣称实际注册、逐件行为、独立对拍或公开验证。JSON保留逐文件SHA256和生成器／base输入摘要，生成报告留`.audit`。
+
+在仓库根目录执行（需要匹配global.json的.NET SDK、Python及本地源码）：
+
+```powershell
+New-Item -ItemType Directory -Force .audit/relic-inventory | Out-Null
+dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests
+dotnet run --no-build --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --relic-catalog | Set-Content -Encoding utf8 .audit/relic-inventory/base-catalog.json
+python -X utf8 tools/source-manifest/extract_relic_manifest.py --base-catalog .audit/relic-inventory/base-catalog.json --out .audit/relic-inventory/relics.json --markdown .audit/relic-inventory/relics.md
+```
+
+`--source-root`可选择不同本地源目录，默认仓库`sts2`；`--out`与`--markdown`必填。rc0仅表示静态提取与身份对账成功。编译后的`--relic-lifecycle-only`提供独立于本地原版源码的受控生命周期检查，加`--counters-only`只检查同定义不同实例计数隔离；完整回归仍由CI执行。

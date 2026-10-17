@@ -26,7 +26,7 @@
 5. Slippery耗尽后遗留零层实例，现有未格挡伤害才耗层，零层立即销毁；连击后续命中重新判断持有状态。
 6. 最后一敌死亡后牌区选择仍开启，以及Headbutt单候选没有自动选择。牌区选择共享守卫抑制战斗结束后的选牌；Headbutt普通/升级声明autoSelect=true。其他末杀余效和生成候选选择继续沿原流程。
 
-主要代码：`BaseSpire/Slice/RewardWiring.cs`、`Domain/Run/RunRelics.cs`、`Compilation/BattleRoomCompilation.cs`、`CardCompilation.cs`、`Orchestration/PowerRuleRuntime.cs`、`SinglePlayer/EncounterContent.cs`及相应ContentSource。core和参考目录没有改动。
+主要代码：`BaseSpire/Rewards/RewardWiring.cs`、`Domain/Run/RunRelics.cs`、`Compilation/BattleRoomCompilation.cs`、`CardCompilation.cs`、`Orchestration/PowerRuleRuntime.cs`、`SinglePlayer/EncounterContent.cs`及相应ContentSource。core和参考目录没有改动。
 
 参考适配执行原生Elite房间及完整奖励，遇到未适配ExtraRewards明确失败；Headbutt通过原生选牌回调消费共同决定。Power投影用静态定义名/ID对应替代一律去掉_POWER后缀的规则，未共享base的伤害、选择、随机数或结算结果；这不是对规范ID的独立审计。
 

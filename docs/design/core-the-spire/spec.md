@@ -1,5 +1,7 @@
 # core-the-spire specification
 
+2026-10-18架构纠偏：Engine及其完整DSL是主体；Spire为完整DSL的受限内容子集，base玩法由DSL库定义。不得通过把游戏规则移入Engine或保留C#专属效果实现来满足这一目标。能力缺口先用通用文本程序复现；目标及验收见[迁移设计](../mod-the-spire/engine-dsl-migration.md)。本决定不表示完整文本覆盖已实现。
+
 2026-10-05 冻结基线为 engine/ir@0.3，保留 core/0.1 与 core/0.2 语言。启动顺序和枚举域已收口，兼容边界、集合/生命周期与维护规则见 [冻结契约](../../contracts/core-engine-baseline.md)及 [关闭报告](../../review/archived/core-contract-freeze-2026-10-05.md)，优先于下文历史限制。
 
 2026-10-04 当前实现：活动 core 只使用 Engine；core/0.1 ANTLR 基础编译与 core/0.2 DSL 规则库/参数实例化、深冻结、职责拆分、版本化随机注入及有界对拍调试模式已交付，开发者 Session API 保留。当前[架构决定](core-architecture-decisions.md)、[作者入门](../../dsl/core/README.md)和[交付报告](../../review/archived/core-engine-followup-2026-10-04.md)优先于下文历史状态；完整原版与 IDE 插件仍需独立验收。下文 Legacy 兼容章节保留历史背景。
@@ -121,7 +123,7 @@ G=(P,S,I,M,L,T,O,F)
 | --- | --- |
 | 玩家集合 | 运行态持有玩家集合，而不是把玩家身份铺成全局字段；当前实现只要求单人战斗（[Runs.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs)） |
 | `AnyPlayer` 类来源目标 | 保留在原版目标语义中，单人会话语境下投影为当前玩家（药水 `AnyPlayer` → `self`，见 [content-dsl.md](../../dsl/0.0.1/content-dsl.md)） |
-| `multiplayerOnly` 内容 | 仍然注册，但不进入单人卡池、也不是单人合法动作（Demonic Shield、Tank，见 [ironclad-cards.spire:4](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire#L4)） |
+| `multiplayerOnly` 内容 | 仍然注册，但不进入单人卡池、也不是单人合法动作（Demonic Shield、Tank，见 [ironclad-cards.spire:4](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire#L4)） |
 | 多人专属机制的数据位 | 保留定义与可观察字段，但不实现其交互行为（例：Tank 的 Guarded 与队伍伤害分摊，见 [ironclad-dsl-coverage.md](../mod-the-spire/ironclad-dsl-coverage.md)） |
 
 ### 1.2 多人交互行为可以从略

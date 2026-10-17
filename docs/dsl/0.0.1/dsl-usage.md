@@ -27,7 +27,7 @@ using namespace base-spire;
 
 ## 2. 统一使用花括号
 
-卡牌效果应由共享原语组合。普通选牌后的多个操作写在`chooseCard.onSelected`中，数量/资格/实例选择与升级、复制、移动分别表达；短写会展开为相同程序，不为一张卡新增C#执行分支。可运行过的组合片段和适用边界见[通用选牌操作指南](../../design/mod-the-spire/base-development-guide.md#用通用选牌编写卡牌)与[原语契约](../../design/mod-the-spire/card-primitives/spec.md)。
+卡牌效果应由共享原语组合。普通选牌后的多个操作写在`chooseCard.onSelected`中，数量/资格/实例选择与升级、复制、移动分别表达；短写会展开为相同程序，不为一张卡新增C#执行分支。可运行过的组合片段和适用边界见[通用选牌操作指南](../../../tools/base-migration-baseline/docs/base-development-guide.md#用通用选牌编写卡牌)与[原语契约](../../design/mod-the-spire/card-primitives/spec.md)。
 
 集合、配置、表达式和执行内容统一使用 `{}`，新版 DSL 不使用方括号集合。效果原语使用具名块：
 
@@ -225,7 +225,7 @@ card Bash {
 
 多个效果各自的目标用效果内的 `target = context.target` / `context.owner` 指定，与卡牌的目标契约相互独立。
 
-通用语法接受与base正式前端支持分开判断。base正式源已支持 `selectNone = {}`：真实空 `play = {}` 可以正常付款和收尾；无目标卡的执行程序（含嵌套分支）不得消费所选目标。能力牌的默认结果为None，由共享出牌收尾移出战斗牌区，不等同于exhaust，也不触发onExhaust。具体作者检查入口见[base开发指南](../../design/mod-the-spire/base-development-guide.md#让新增内容独立于全包大小)。
+通用语法接受与base正式前端支持分开判断。base正式源已支持 `selectNone = {}`：真实空 `play = {}` 可以正常付款和收尾；无目标卡的执行程序（含嵌套分支）不得消费所选目标。能力牌的默认结果为None，由共享出牌收尾移出战斗牌区，不等同于exhaust，也不触发onExhaust。具体作者检查入口见[base开发指南](../../../tools/base-migration-baseline/docs/base-development-guide.md#让新增内容独立于全包大小)。
 
 更复杂的目标表达式（多目标组合、按条件返回不同选择器）仍需进一步定义。目标查询应读取当前状态；提交动作后，本次选择绑定到执行上下文，供效果获取。
 
@@ -324,13 +324,13 @@ hooks = {
 
 - [旧语法使用说明](./dsl-usage-current.md)：当前可编译语法与示例。
 - [效果原语目录](./primitives.md)：新语法可书写的原语、位置字段映射，以及当前写不出来的原语清单。
-- [Ironclad 卡牌源码](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire)：当前卡牌定义、升级、事件和卡池。
-- [Ironclad Power 源码](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire)：当前 Power 触发和事件行为。
-- [敌人源码](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire)：当前行动效果与行为选择。
+- [Ironclad 卡牌源码](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire)：当前卡牌定义、升级、事件和卡池。
+- [Ironclad Power 源码](../../../tools/base-migration-baseline/BaseSpire/Powers/Content/ironclad-powers.spire)：当前 Power 触发和事件行为。
+- [敌人源码](../../../tools/base-migration-baseline/BaseSpire/Enemies/Content/enemies.spire)：当前行动效果与行为选择。
 - [语法解析器](../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs)：当前语法树和词法规则（2026-10-03 **路径级移动**：原在 `Legacy/`，命名空间不变；同一个解析器现在同时服务旧后端与新 Engine 路径）。
-- [正式卡牌前端](../../../mod-the-spire/base-spire/BaseSpire/Slice/SpireCardSource.cs)与[逐效果编译器](../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectCompiler.cs)：活动 Engine 路径的领域读取与 IR 生成。
-- [正式 Power 前端](../../../mod-the-spire/base-spire/BaseSpire/Slice/SpirePowerSource.cs)与[敌人前端](../../../mod-the-spire/base-spire/BaseSpire/Slice/SpireEnemySource.cs)：活动路径的触发与行为读取。
-- [领域程序定义](../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectProgram.cs)：编译期效果结构；运行状态仍由 Engine 存储。
+- [正式卡牌前端](../../../tools/base-migration-baseline/BaseSpire/Cards/SpireCardSource.cs)与[逐效果编译器](../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/CardEffectCompiler.cs)：活动 Engine 路径的领域读取与 IR 生成。
+- [正式 Power 前端](../../../tools/base-migration-baseline/BaseSpire/Powers/SpirePowerSource.cs)与[敌人前端](../../../tools/base-migration-baseline/BaseSpire/Enemies/SpireEnemySource.cs)：活动路径的触发与行为读取。
+- [领域程序定义](../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/CardEffectProgram.cs)：编译期效果结构；运行状态仍由 Engine 存储。
 
 本文描述新卡牌语法及其当前实现边界。原语目录见 [效果原语目录](./primitives.md)；表达式类型、共享 Power、角色与敌人完整写法、跨包覆盖和加载排序还需后续补齐。卡牌源文件已迁移到该语法并被内容包加载，但规则行为尚未全部通过检查——当前失败项与阻断范围见 [AGENTS.md 合规审计](../../review/archived/agents-md-conformance-2026-09-30.md)。
 
@@ -338,7 +338,7 @@ hooks = {
 
 `chooseCard = { from = hand to = discard count = 2 autoSelect = true }`在一次决策中选择两张手牌，回答后按效果顺序继续执行。`count`是0..9999字面量，省略为1；数量不足时按实际候选数限制。来源支持hand/discard，去向支持不同的hand/discard/exhaust/draw；省略filter表示全部，显式筛选支持attack/nonAttack/upgradeable。draw去向可加`destinationPosition = top`；取回至满手牌时留在弃牌堆。源位置错误、未知/重复字段与其他形态明确拒绝。
 
-新原版内容写`autoSelect = true`对齐原生CardSelectCmd：零候选不提问，恰好够或不足时自动全选；未写保留手动确认。所有状态与决策结果保存在Engine中。复杂操作省略to（或to=none），通过`onSelected`顺序组合`upgradeSelectedCard`、`cloneSelectedCard { pile = discard }`和`moveSelectedCard`等子程序；实例绑定、外层let快照与命名空间链接向子程序传递。短写与完整写法使用同一SelectCardsEffect，未绑定当前牌明确拒绝。实际组合见[选牌操作指南](../../design/mod-the-spire/base-development-guide.md#用通用选牌编写卡牌)。
+新原版内容写`autoSelect = true`对齐原生CardSelectCmd：零候选不提问，恰好够或不足时自动全选；未写保留手动确认。所有状态与决策结果保存在Engine中。复杂操作省略to（或to=none），通过`onSelected`顺序组合`upgradeSelectedCard`、`cloneSelectedCard { pile = discard }`和`moveSelectedCard`等子程序；实例绑定、外层let快照与命名空间链接向子程序传递。短写与完整写法使用同一SelectCardsEffect，未绑定当前牌明确拒绝。实际组合见[选牌操作指南](../../../tools/base-migration-baseline/docs/base-development-guide.md#用通用选牌编写卡牌)。
 
 `hooks = { onDiscard = { modifyEnergy = { amount = 2 } } }` 由手动选择弃牌触发被弃牌实例；普通出牌结果和回合结束不触发。它不支持发起新选择；跨牌Power监听、弃牌历史/Sly仍是后续机制。
 

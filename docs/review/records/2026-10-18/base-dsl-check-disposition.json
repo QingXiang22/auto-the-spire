@@ -1,0 +1,2722 @@
+{
+  "schema": "dsl-migration/check-disposition@1",
+  "source_commit": "0e333be",
+  "contains_uncommitted_baseline_changes": true,
+  "note": "Source inventory is not execution or parity evidence. Every frozen source group remains available; current active generic wire/text-rule and DSL checks run separately.",
+  "groups": [
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/AuthorContractChecks.cs",
+      "sha256": "212e881f1e8633ef23ad68ef657ef514479de71a68717a1d6d01978a9f4bc727",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Power lifecycle: Stampede with no eligible hand attacks skips sampling",
+        "New card lifecycle: {id}/upgraded={upgraded} retain and ethereal at real turn end",
+        "New card lifecycle: {id}/upgraded={upgraded} innate from end of large starting deck",
+        "Author contract: native Beckon empty play avoids its six HP hand-end penalty",
+        "Author contract: Power play leaves combat piles before exhaust rules without exhausting",
+        "Author contract: Havoc forceExhaust does not exhaust a successfully played Power",
+        "Author contract: selectNone permits a real empty play with payment, history and exhaust",
+        "Author contract: common replacements clear play, hooks and keywords independently",
+        "Author contract: selectNone rejects selected-target effects including nested effects",
+        "Author contract: diagnostics load the same Power registry as SinglePlayer, including Dexterity",
+        "Author contract: powers register by supported behavior and preserve mod namespace",
+        "Author contract: external exhaust invokes card hook and a separately registered custom power",
+        "Author contract: an exhaust hook alone does not make manual play exhaust",
+        "Author contract: real Armaments upgrade preserves growth and cost modifiers, then upgrades once",
+        "Author contract: Thrash consumes live BodySlam damage with outgoing modifiers",
+        "Author contract: direct upgraded creation initializes variables, fee and upgraded entry hook"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs",
+      "sha256": "6dee65eb51f6d42dc327908813ae62fbd103d8f465a3aabdf5096f0bb9768a16",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-01 the slice declares and links a frozen package version",
+        "B-01 core declares no STS concept and does not reference the content package",
+        "B-01 the source manifest covers every slice item with a source, checked against sts2",
+        "B-01 an incompatible engine version and a missing dependency are rejected",
+        "B-01 another package can extend slice declarations by qualified id",
+        "B-01 the controlled battle starts with the frozen player, cultists and deck",
+        "B-01 cards with the same definition are still distinct instances",
+        "B-01 the slice is playable through the declared actions",
+        "B-01 ending the turn runs the declared flow in order",
+        "B-02 an attack deals its source damage and block absorbs first",
+        "B-02 Bash applies Vulnerable and the next attack is multiplied by 1.5",
+        "B-02 both cultists open with Ritual and their next turn uses the Strength",
+        "B-02 a slain cultist leaves the living set and the last one ends the battle",
+        "B-02 relentless cultists end the battle in defeat",
+        "B-03 Headbutt damages, then puts a chosen discarded card on top of the draw pile",
+        "B-03 an empty discard pile asks for no choice",
+        "B-04 the first snapshot already states a known absolute position",
+        "B-04 a hidden pile leaks neither its members nor its order",
+        "B-04 drawing a known card revokes its position",
+        "B-04 a reshuffle voids every known position",
+        "R-DAMAGE base 5 with Weak and Vulnerable truncates once at the end, not in the middle",
+        "R-DAMAGE Vulnerable and Weak stacks are a duration, not a multiplier",
+        "R-DAMAGE the player takes the same chain: attacking Weak and player Vulnerable",
+        "R-DAMAGE stacking a power does not re-arm its skipped first turn end",
+        "B-02 the draw pile reshuffles from the discard pile with the package's named stream"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T05",
+        "ENV-T06"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/SliceFrontendChecks.cs",
+      "sha256": "61c7420e5e9a2f2e359a30c8d20e3ee7f886688f06377a1a0c7e8e2aa6fdea2f",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05b 作者文本解析为声明模型（卡牌/能力/敌人/卡组与冻结清单逐条一致）",
+        "B-05b 作者前端在编译期拒绝未支持/不一致的声明（带路径）",
+        "B-05b 作者前端包与程序化包产生同一份声明与行为（基础/升级分别核对）",
+        "B-05b 作者前端包的 Headbutt 续接与已知位置事实不回归"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/SliceFrontendDomainChecks.cs",
+      "sha256": "9bb36f522f757bc3c52947befccee3107e9d6b12b4ee262bc63c9ccf26b4a7f8",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c target domain: 语法接受 damage_all，且拒绝目标域不明确的组合（带路径）",
+        "B-05c target domain: damage_all 对每个敌人各打一次，数值来自声明且不串对象 [真实]",
+        "B-05c 效果完全由步骤驱动：同一张卡可以既造成伤害又获得格挡（kind 只作元数据）",
+        "B-05c 冻结作者文本不受影响：卡组与四张卡的步骤逐条不变"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/CapacityPrerequisiteChecks.cs",
+      "sha256": "b970a0ee866690274577515b7f99f85607c5cc69420b90a694ab20370f9882ba",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "容量前置：中间墨仔三连击逐次反伤，滑溜耗尽销毁，后两次各受4伤害",
+        "容量前置：完全格挡保留滑溜，首次掉血耗尽，下一击不再封顶",
+        "容量前置：头槌lethal={lethal}，单候选自动置顶，结束战斗不选牌"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/CardSelectionChecks.cs",
+      "sha256": "48a05282eefaf2966ca72b5ac60814ad3db00f8a0d24e231ab3dc86978c7de8b",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Selection: Acrobatics/{upgraded} draws before pause and pays once",
+        "Selection: Prepared/{upgraded} exact count and automatic insufficient candidates",
+        "Selection: Hologram/{upgraded} block then discard recovery and variant result",
+        "Selection: zero/empty/automatic exact candidates continue remaining effects",
+        "Selection: filtered candidates and common exhaust hook",
+        "Selection: full hand recovery stays in discard",
+        "Selection: existing discard-to-draw-top pauses and draws the chosen identity",
+        "Selection: discard hook fires only for the selected manual discard",
+        "Selection composition: one selected identity upgrades, clones and moves before remaining effects",
+        "Selection composition: lexical count, nested power links and current-card restrictions",
+        "Selection: invalid fields and unsupported hook decisions reject at source"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/CloneCardChecks.cs",
+      "sha256": "e7f4c0e12ee6c03c0dcda971105304cd9b76485fd4de4aa5a8a7c20f65a9e4b9",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T05 Anger：正式源的 `cloneCard` 叶被降级，anger 不再出现在未支持名单里",
+        "ENV-T05 Anger：只支持 `pile = discard`；别的牌区/缺 pile/额外字段带源位置失败",
+        "ENV-T05 正式 Anger（普通）：费用 0、造成 6、只问一次目标，弃牌堆多出一个同定义的独立克隆 [真实]",
+        "ENV-T05 正式 Anger（升级）：造成 8，克隆保留升级形态与升级数值",
+        "ENV-T05 克隆：保存创建时的实例变量与临时费用状态，之后改源不污染克隆 [真实]",
+        "ENV-T05 克隆：最后击杀之后复制仍然执行，原牌走完出牌尾 [真实]",
+        "ENV-T05 克隆：没有长期来源、长期牌组不增长，进入下一场战斗也不会被带过去 [真实]",
+        "ENV-T05 克隆：hook 里复制继续被拒绝（步骤不在 hook 允许面内）",
+        "ENV-T05 作者步骤：`clone_card_to_discard` 在词表里、可解析、不可批次、不在 hook 允许面内",
+        "ENV-T05 作者步骤：`.author` 路径打出后弃牌堆多出一个同定义克隆 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T05"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/EffectProgramChecks.cs",
+      "sha256": "2b165a6f1c41a64bc93bea33630cbbdd031acceb45d1e9e52a306db775fd3ec9",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Effect program: distinct literal amounts and upgraded variants survive lowering",
+        "Effect program: fixed and conditional powers have independent ids, stacks and targets",
+        "Effect program: display metadata cannot replace two explicit damage arguments",
+        "Effect program: a conditional in the middle and nested branch preserve sequence",
+        "Effect program: repeat executes the entire block and reads live state at each effect",
+        "Effect program: zero repeat is empty and the following effect still executes",
+        "Effect program: a variable write changes only subsequent dynamic effects",
+        "Effect program: target power reads observe earlier effects without replacing literal amounts",
+        "Effect program: X effects read captured payment after subsequent energy changes",
+        "Effect program: random effects do not overwrite the selected target",
+        "Effect program: normal and upgraded hooks use independent ordered programs",
+        "Effect program: a conditional-only hook remains executable and a nested hook choice is rejected",
+        "Effect program: entering another combat uses the copied card's upgraded hook",
+        "Effect program: final kill completes later effects, hooks and result area before permanent commit",
+        "Effect program: missing nested references fail with source location instead of becoming empty effects"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T05"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/NextTurnDrawChecks.cs",
+      "sha256": "841069a3c26135af5a8bf16afa12644ac756bfec59ce6df379af5b371c557785",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Next-turn draw: Predator/{mode} pays and damages before deferred draw",
+        "Next-turn draw: two Predator plays stack and consume once",
+        "Next-turn draw: hand limit still consumes the bonus",
+        "Next-turn draw: NoDraw blocks cards but not one-time consumption",
+        "Next-turn draw: newly applied turn-start power waits; existing stacks use current magnitude",
+        "Next-turn draw: enemy power does not modify the player's hand draw",
+        "Next-turn draw: unrelated negative stat stacks survive turn-start capture",
+        "Next-turn draw: unsupported rule shapes are rejected"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/NextTurnEnergyChecks.cs",
+      "sha256": "888f878562aa4a64ffb52aa113e866cc555bc492dd6cbc94d2dc8fd860822cf5",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Next-turn energy: Outmaneuver/{mode} pays now, gains after reset, removes once",
+        "Next-turn energy: repeated plays stack into one deferred grant",
+        "Next-turn energy: energy-gain prevention still consumes the once-only power",
+        "Next-turn energy: maximum-energy modifiers apply before temporary bonus",
+        "Next-turn energy: a mod registers the same mechanic under its own namespace",
+        "Next-turn energy: an enemy-owned power cannot grant player energy",
+        "Next-turn energy: lifecycle calls reject missing or unavailable context",
+        "Next-turn energy: invalid rule shapes do not register"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/OrchestrationChecks.cs",
+      "sha256": "7fae10aa53b878df6d10d704b5b6b538651ce6451bf0cc48b08130980e0b52ce",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Orchestration: played identity remains known in hidden draw pile, without revealing other cards",
+        "Orchestration: lethal first hit skips dead target on later hits, preserving parent effects",
+        "Orchestration: repeated random hits stop when no targets remain",
+        "Orchestration: nested count restores the outer snapshot after inner shadow and pile mutation",
+        "Orchestration: count cannot escape a block or branch, or bind itself",
+        "Orchestration: repeated physical card records separate finished executions",
+        "Orchestration: battle HP-loss counter resets at room entry while run HP persists",
+        "Orchestration: a mod caller repeats the shared pipeline with one payment, one target and one result move",
+        "Orchestration: draw-until continues on attack, stops on skill and respects the hand cap",
+        "Orchestration: draw-until stops cleanly under NoDraw and empty piles",
+        "Orchestration: Havoc uses ordinary hooks/history/result with free automatic play and random target",
+        "Orchestration: autoplay captures a batch before child draws and never reselects drawn cards",
+        "Orchestration: nested autoplay completes outer later effects and hooks after final kill",
+        "Orchestration: unplayable autoplay reaches result without effects/payment/history",
+        "Orchestration: X autoplay pays once, snapshots X before child energy gain and shares manual pipeline",
+        "Orchestration: explicit generation initializes variant, transient cost and source identity",
+        "Orchestration: unsupported command shapes and missing full generation pool fail with source location",
+        "Orchestration: actual Pillage, Havoc and Cascade source variants execute through the shared procedures"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/RemainingCardFamiliesChecks.cs",
+      "sha256": "1deb1ffaf8bb6f4e274e6de97734efc7f0c7862eeab71b8da501bc6fd472d520",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T12 {entry.Family} {entry.Id}/{mode}: formal registration, cost, targets, piles and source values"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T12"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SilentPoisonChecks.cs",
+      "sha256": "c86c2ea03d651d35b776f03376c983e532668e1fe45e603b262defe103ce90f0",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Silent poison: source pool and directly referenced powers identify the complete family",
+        "Silent poison: all 12 source identities, metadata and power links load",
+        "Silent poison: {entry.Id}/{mode} source effects, payment and result",
+        "Silent poison: BubbleBubble requires target poison / upgraded={up}",
+        "Silent poison: Accelerant real card ticks decreasing amounts / upgraded={up}",
+        "Silent poison: NoxiousFumes starts next turn, stacks and repeats / upgraded={up}",
+        "Silent poison: CorrosiveWave counts actual draws and expires before hand draw / upgraded={up}",
+        "Silent poison: Envenom only unblocked powered attacks / upgraded={up}",
+        "Silent poison: Outbreak counts applications, carries remainder and ignores poison ticks / upgraded={up}",
+        "Silent poison: Haze Sly is free on manual discard, ordinary hand flush does not play / upgraded={up}",
+        "Silent poison: Artifact blocks one application without advancing Outbreak",
+        "Silent poison: lethal PoisonedStab does not attach poison to a dead target",
+        "Silent poison: Envenom-triggered Outbreak emits each death once",
+        "Silent poison: Haze waits for the full selected discard batch",
+        "Silent poison: random bounces stop sampling after Outbreak clears the living set",
+        "Silent poison: Outbreak remainder crosses turns and ignores decrement events",
+        "Silent poison: Mirage excludes dead targets and applies ordinary Dexterity and Frail",
+        "Silent poison: CorrosiveWave does not fire for prevented draws",
+        "Silent poison: lethal CorrosiveWave/Outbreak stops the remaining draw"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SilentSlyChecks.cs",
+      "sha256": "869ce35b2443062157fdd35bfe55853e0305f2c5ad363c94d76affc12b548460",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Sly: independent native single-player keyword family and grant consumers",
+        "Sly: {entry.Id}/{mode} actual formal effects and cost",
+        "Sly: discarded {entry.Id}/upgraded={up} plays free once",
+        "Sly: HandTrick selects exactly non-Sly Skills and preserves unchosen instances",
+        "Sly: HandTrick empty domain and singleton never fabricate a choice",
+        "Sly: temporary grant survives replay but expires in every combat pile",
+        "Sly: MasterPlanner grants Skill-only battle state and never rewrites permanent cards",
+        "Sly: clone copies keyword states independently, upgrade preserves and next combat resets",
+        "Sly: nested discard cannot consume or replay the outer batch entries",
+        "Sly: temporary clone keeps independent state and expires outside the hand",
+        "Sly: transformation creates a fresh instance without the granted keyword",
+        "Sly: repeated MasterPlanner grants one keyword, not extra executions",
+        "Thorns: before powered hit amount={amount}, blocked={blocked}",
+        "Thorns: lethal retaliation completes current hit, later hits from dead dealer skip",
+        "Thorns: unpowered damage does not retaliate; attacker block absorbs unpowered counter",
+        "Sly: unsupported grant and selector shapes fail at their source"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFormalSourceChecks.cs",
+      "sha256": "38479e943a7c5298472f4dbe0e296c51ff0e950fb3992e02589f1139bb25a93b",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "W-06 正式源：自报的'行为已验证'内容 id 都在正式降级集里 [真实]",
+        "W-06 正式源：嵌入资源枚举到全部 `*-cards.spire`（真实加载入口）",
+        "W-06 正式源：声明/解析/降级/未支持**四态分开**，降级集确定 [真实]",
+        "W-06 正式源：AST 声明集与旧后端路径一致（同一解析器，双后端）",
+        "W-06 正式源：能力引用要**链接**（名字→id）；链接不上记为未支持而不是猜 id [真实]",
+        "W-06 正式源：多原语按**源内顺序**降级；未支持的构造被明确记录（不静默丢弃）",
+        "W-06 正式源：基础/升级伤害与格挡按声明生效，且来源逐字来自正式源 [真实]",
+        "W-06 正式源：`keywords = { exhaust }` 降级成消耗（进入消耗区而非弃牌堆）[真实]",
+        "W-06 正式源：`keywords = { unplayable }` 的牌不作为可出牌候选 [真实]",
+        "W-06 正式源：`draw` 原语按声明抽牌，且消耗型状态牌照常消耗 [真实]",
+        "W-06 正式源：`selectSelf` 的牌不需要目标（目标语义随声明降级）[真实]",
+        "W-06 正式源：多原语牌按源内顺序生效（IronWave：先格挡后伤害）[真实]",
+        "W-06 正式源：`applyPower` 打在**所选目标**上，且顺序是「先伤害后能力」 [真实]",
+        "W-06 正式源：`applyPower`（自己）与 `attack`+`draw` 组合 [真实]",
+        "W-06 正式源：`loseHp` + `target = allEnemies` 的全体攻击（Breakthrough）[真实]",
+        "W-06 正式源：`block-count` 数值来源（BodySlam 打=自己的格挡；Entrench 格挡翻倍）[真实]",
+        "W-06 正式源：`exhaust-count` 数值来源（AshenStrike = 6 + 3×消耗数）[真实]",
+        "W-06 正式源：`hand-count:Attack` 数值来源（ExpectAFight 能量=手牌攻击数）[真实]",
+        "W-06 正式源：FeelNoPain 的**消耗触发**按声明给格挡（正式能力源）[真实]",
+        "W-06 正式源：RagePower 的**打出攻击后触发**与回合末移除（正式能力源）[真实]",
+        "W-06 正式源：`preventsBlockClear` 机制（Barricade 让格挡跨回合保留）[真实]",
+        "W-06 正式源：`incomingDamageModifiers` 机制（Tank 让受击伤害翻倍）[真实]",
+        "W-06 正式源：`events` 机制（FlameBarrier 受伤后反击 + 对手回合末移除）[真实]",
+        "W-06 正式源：回合开始触发（DemonForm 每回合按层数加力量）[真实]",
+        "W-06 正式源：牌规则 `cardRule`——Corruption 让技能牌 0 费且消耗 [真实]",
+        "W-06 正式源：牌规则 `cardRule`——FreeAttack 让攻击牌 0 费且打出后消耗该能力 [真实]",
+        "W-06 正式源：获得格挡后触发 + 随机目标攻击（Juggernaut，无修正）[真实]",
+        "W-06 正式源：`sequence` + `removePower` 机制（SelfFormingClay：格挡 3 点后移除自己）[真实]",
+        "W-06 正式源：卡级 hooks（Infection 的 turnEndInHand 扣 HP）[真实]",
+        "W-06 正式源：小写能力名也能链接（Uppercut 的 weak/vulnerable 两个能力）[真实]",
+        "W-06 正式源：条件效果 `if`（Spite：本回合掉过 HP 才打两次）[真实]",
+        "W-06 正式源：条件效果 `if`（EvilEye：本回合消耗过牌才给两次格挡）[真实]",
+        "W-06 正式源：批次 `repeat`（TwinStrike 打两次）[真实]",
+        "W-06 正式源：`chooseCard`（Headbutt：从弃牌堆选一张放到抽牌堆顶）[真实]",
+        "W-06 正式源：`chooseCard`（BurningPact：选一张手牌消耗并触发消耗链）[真实]",
+        "W-06 正式源：`chooseCard`（Brand：自损 1 + 选牌消耗 + 自加 1 层力量）[真实]",
+        "W-06 正式源：随机目标攻击（SwordBoomerang：3 次随机 3 点，力量照常生效）[真实]",
+        "W-06 正式源：随机移动手牌 `randomMoveCard`（TrueGrit 随机消耗一张手牌）[真实]",
+        "W-06 正式源：随机移动手牌 `randomMoveCard`（Cinder 打 18 点并随机消耗一张手牌）[真实]",
+        "W-06 正式源：手牌升级（Armaments：普通形态只升级选中那一张，升级形态升级整手）[真实]",
+        "W-06 正式源：治疗 `heal`（NotYet 回 10 点，且不超过最大生命）[真实]",
+        "W-06 正式源：击杀奖励 `onFatal`（Feed：打死目标才 +3 最大生命）[真实]",
+        "W-06 正式源：`applyScaledPower`（Dominate：按目标身上的易伤层数给自己加力量）[真实]",
+        "W-06 正式源：`targetPowerAmount` 数值来源（Bully：4 + 2 × 目标易伤层数，随后照常过易伤乘区）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendAmountSourceChecks.cs",
+      "sha256": "fcbb726a04c7a6ae169a5897c8937170e314003dbfc8a580880f9c2b1315f842",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 状态来源：解析 amount-source，与固定 amount 冲突时拒绝（带路径）",
+        "B-05c 状态来源：`hand-count` 在打出那一刻读取手牌数（同一张牌两种结果）[真实]",
+        "B-05c 状态来源：`discard-count` 读弃牌堆，冻结作者文本不受影响"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendBasicCardChecks.cs",
+      "sha256": "ee4a518d59e3bfea0d870c6b00f3c42ceacc5408f5fef4550f012c6cabb756af",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 基础牌：三张卡的来源数值与步骤逐条对照（含升级形态）",
+        "B-06a 基础牌：IronWave 同时给格挡与伤害；TwinStrike 打两次且力量**每击**都生效 [真实]",
+        "B-06a 基础牌：Breakthrough 对**每个**敌人各打一次，播放者自损固定 1 点 [真实]",
+        "B-06a 胜利终局：清空全部敌人 → 最后一间房才 Victory，且终局回合取自当前玩家回合 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendBatchChecks.cs",
+      "sha256": "2353d16553b258e10cf5483ce18e59a1e9bca7be847da54b602312f884c73ccb",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 批次：`xN` 被解析为批次，不可重复的步骤写批次会被拒绝（带路径）",
+        "B-05c 批次：`damage x3` 在同一目标上打三次、数值取声明值 [真实]",
+        "B-05c 批次：`block x4` 加四次格挡，且批次不消费随机流 [真实]",
+        "B-05c 批次：hook 里也能写批次（`on_exhaust` 的 damage_all/block）[真实]",
+        "B-05c 批次：冻结作者文本没有批次（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendBeckonChecks.cs",
+      "sha256": "868a81a4ec7c04051e99f4b058806fc1dcfc888c2cb5c0232612a912dd661994",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a HP 损失：`lose_hp` 可在端末 hook 里声明，且它不进消耗区也不消失 [真实]",
+        "B-06a HP 损失：绕过格挡（先给 10 格挡，仍然扣 6）[真实]",
+        "B-06a HP 损失：不走修正链（玩家有力量/易伤也仍是 6）[真实]",
+        "B-06a HP 损失：扣到 0 触发**失败**终局（与伤害同一次序）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendConditionalChecks.cs",
+      "sha256": "33cf773d818e2279d5f8008763d8de1ed369c68e605e19ef583f1531b33ff477",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 条件选择：`damage_lowest` 自动选生命最低的敌人，且与其它目标域互斥（带路径）",
+        "B-05c 条件选择：`damage_lowest` 命中的是生命最低者，不是第一个成员 [真实]",
+        "B-05c 条件选择：`top_attack_from_discard` 的候选只有攻击牌 [真实]",
+        "B-05c 条件选择：没有攻击牌可弃时不提问 [真实]",
+        "B-05c 条件选择：冻结作者文本没有这两个步骤（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendCostModifierChecks.cs",
+      "sha256": "5c8d0c7e0d8398d73a697fc1be939a08d9756dbad7e78fa0955137ab39813b87",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 费用修正：解析 `modify_cost:<n>`（可负）与 `played-count:<Kind>`；越界被拒",
+        "B-06a 费用修正：修正**逐实例**且会改变**下一次**实际扣费 [真实]",
+        "B-06a 费用修正：修正不会让有效费用变负（扣费下限 0）[真实]",
+        "B-06a 费用修正：回合末清零（`expires = { turnEnd }`）[真实]",
+        "B-06a 费用修正：`played-count:Attack` 数的是本回合已打出的攻击牌 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendCrossEntityChecks.cs",
+      "sha256": "7ee9d613326c57b581933e6e2583a97fdadabfe66bd3d13b0519a8be7251f819",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 跨实体来源：解析 `apply_power_self_from_target`；引用未声明能力被拒",
+        "B-06a 跨实体来源：Dominate 读**施加之后**的目标易伤层数（0 → +1 力量）[真实]",
+        "B-06a 跨实体来源：目标原本就有易伤时读的是**总层数**（2 → 上 1 层 → 读 3）[真实]",
+        "B-06a 跨实体来源：升级形态先上 2 层，因此读到 2 [真实]",
+        "B-06a 跨实体来源：冻结作者文本声明了 Dominate（来源行与两形态次序）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendDrawChecks.cs",
+      "sha256": "7110c33f20fb113a4a84542b101fe4d745f7ec6f12a756c77b4a5732740db982",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 抽牌：`draw:<n>` 被解析（两形态可不同），非法字面量被拒绝",
+        "B-06a 抽牌：PommelStrike 打出后手牌净增（普通 +1、升级 +2）[真实]",
+        "B-06a 抽牌：ShrugItOff 先格挡再抽牌；抽牌堆耗尽时按命名流重洗 [真实]",
+        "B-06a 抽牌：冻结作者文本声明了这两张卡（来源行与两形态抽牌数）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendEnergyChecks.cs",
+      "sha256": "8a9e869a8cdab7a4b4c5bd8c240f1af948cb3481bca2920fe6858fed2d3570eb",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 能量：解析 `hand-count:<Kind>`、`gain_energy`、`prevent-energy-gain`；非法值被拒",
+        "B-06a 能量：ExpectAFight 按**手牌里攻击牌数量**获得能量，随后本回合**拿不到**能量 [真实]",
+        "B-06a 能量：回合末移除'禁止获得能量'，下一回合恢复 [真实]",
+        "B-06a 能量：冻结作者文本声明了 NoEnergyGainPower 与 ExpectAFight"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendEntrenchChecks.cs",
+      "sha256": "a75871afd579de3ecef8b62fc25700608cdb9b69ed523f507080a7c4bf290e85",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 每变体费用：`cost` 变体键覆盖卡牌级费用，越界被拒绝",
+        "B-06a 以格挡为来源：Entrench 让格挡**翻倍**（读的是打出时的格挡）[真实]",
+        "B-06a 每变体费用：升级形态只花 1 点能量（费用随升级真的变了）[真实]",
+        "B-06a 以格挡为来源：冻结作者文本声明了 Entrench（来源行与两形态费用）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendGenerationChecks.cs",
+      "sha256": "0fcd703b271d5f43ee53421ea42b3365ca06a1366e571bbfeb169a2532f5f123",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 生成/升级/变形：解析三种步骤，缺参数的写法被拒绝（带路径）",
+        "B-05c 生成：手牌里多出一个**新实例**，它可以被正常打出 [真实]",
+        "B-05c 升级：手牌里的牌全部变成升级形态并换成升级数值 [真实]",
+        "B-05c 变形：打出后这张牌变成目标定义、数值重置为普通形态 [真实]",
+        "B-05c 生成/升级/变形：冻结作者文本没有这三种步骤（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendHookChecks.cs",
+      "sha256": "feb43757c266a2a102c48c46c8f8cffd8fe5ade563885656026b3bbaab3c56e6",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c hooks: 语法接受外部消耗 hook，并拒绝未知/超能力的 hook 声明（带路径）",
+        "B-05c hooks: 普通变体打出即消耗并触发 on_exhaust [真实]",
+        "B-05c hooks: 升级变体未声明 hook 时不触发（**不隐式继承**）[真实]",
+        "B-05c hooks: turn_end_in_hand 在回合结束按声明数值触发，然后牌照常进弃牌堆 [真实]",
+        "B-05c hooks: 冻结作者文本没有被本批改动"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendHookStepChecks.cs",
+      "sha256": "9bec0dda7e2a89319cfe1cce4ad11c9bc8b1b7dbc4ab498c4473131069fd55fa",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c hook 步骤面：apply_power 可在 hook 里用；其余步骤被拒时给出**具体理由**",
+        "B-05c hook 步骤面：hook 里的 apply_power 把能力加在**玩家自己**身上 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendInflameChecks.cs",
+      "sha256": "852ebe7085e39f894467bc80ee94865e1a614e898371b4a91fdd81ddea29e2c9",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 自我施加能力：解析、与全体/单目标共存、缺 power/stacks 被拒",
+        "B-06a 自我施加能力：Inflame 给玩家 2 层力量，且**跨回合不衰减** [真实]",
+        "B-06a 自我施加能力：升级形态给 3 层 [真实]",
+        "B-06a 自我施加能力：冻结作者文本声明了 Inflame（来源行与两形态层数）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendInstanceVariableChecks.cs",
+      "sha256": "ed874929c0bc0957e93215248e666d3707ee980978a6f55ed8c0b0724b6ec8f4",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 实例变量：解析 variable/grow，悬空引用与不可达声明被拒绝（带路径）",
+        "B-05c 实例变量：同一实例重复打出读到被写回后的值 [真实]",
+        "B-05c 实例变量：不同实例的值互不影响 [真实]",
+        "B-05c 实例变量：冻结作者文本没有实例变量（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendIroncladCompletionChecks.cs",
+      "sha256": "152e84b316e0ee5921164f40230faf4139d561bb3af63e979ab2fd7251c19a9e",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T05 家族 1：Whirlwind `repeatForX` —— X 只作用于**次数**，每击是字面 5（升级 8）",
+        "ENV-T05 家族 1：TearAsunder 命中数 = 1 + 本场战斗玩家掉血**事件次数**",
+        "ENV-T05 家族 1：PerfectedStrike `cardsWithTag` 数全场带 Strike 标签的牌",
+        "ENV-T05 家族 2：FiendFire 的快照**先于**消耗 —— 命中数取打出时的手牌张数",
+        "ENV-T05 家族 2：SecondWind `filter = nonAttack` 只消耗非攻击牌，每张给 5 格挡（升级 7）",
+        "ENV-T05 家族 2：PrimalForce 把手牌里的攻击牌替换成 GiantRock"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T05"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendMoltenFistChecks.cs",
+      "sha256": "7b8f77dcdc42543ba64fa5faac987def8f1e96b088ddde758520818be5ea0540",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 MoltenFist：10 伤害；目标有易伤 ⇒ 易伤翻倍，没有易伤 ⇒ 不加 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendMultiSelectChecks.cs",
+      "sha256": "12ab73e34a50586c18a63d76c1af2cefa1d8aae2fa0e0d7e9320c622234af5f7",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 多选：语法接受 `top_attacks_from_discard x2`（批次是「最多选几张」）",
+        "B-05c 多选：一次提问最多两张、候选只有攻击牌，且每个引用恰好置顶一次 [真实]",
+        "B-05c 多选：候选不足时按可用数选；候选为空时不提问 [真实]",
+        "B-05c 多选：新 IR 节点被转储器认识（规则集身份文本包含 list[...]）",
+        "B-05c 多选：冻结作者文本没有多选步骤（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendNoDrawChecks.cs",
+      "sha256": "1de6d8a048393ddb5ae332c6577b44309be57b3e4875a71ad65727a312e4ecda",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 NoDraw：BattleTrance 先抽 3 张再施加阻止；随后抽 1 张的牌被挡住（带对照）[真实]",
+        "ENV-02 NoDraw：在该侧回合结束时移除，下一回合照常抽满 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendObservationPurityChecks.cs",
+      "sha256": "392dd99c6ce600c7678a55ff048f58e27810e28abc9534aea651f5d5b34c3292",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-01 观察不消耗随机数：读动作/决策/字段前后随机流计数不变（带消耗反例）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendPlatingChecks.cs",
+      "sha256": "1a366203aa8baac0a25ede0b4fdb2d471abf5d3ebf24aa8047baeec7f389646a",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 Plating：回合开始减 1 层、回合末按层数给格挡（打出 StoneArmor，带对照）[真实]",
+        "ENV-02 Plating：回合开始确实递减（4 → 3），且层数不跨回合自行清零 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendPlayConditionalChecks.cs",
+      "sha256": "595545fe3e460cedac725b4289b96a53f42d13b010e5505187f58d688addfe18",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 条件效果：解析 `if { condition then else }`；与 steps 二选一、未知谓词被拒",
+        "B-06a 条件效果：本回合**没**失去生命 → else 分支（5 点）[真实]",
+        "B-06a 条件效果：本回合**失去过**生命 → then 分支（两段 5 = 10）[真实]",
+        "B-06a 条件效果：谓词在**新回合开始**清零（又回到 5 点）[真实]",
+        "B-06a 条件效果：冻结作者文本声明了 Spite 的两分支"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendPlayHookChecks.cs",
+      "sha256": "47f37e15a2a815f15b65712015b3955e06aff29218d83c778b8f5544ef623dc1",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 三个出牌期 hook：语法与逐变体独立性（不隐式继承，带路径）",
+        "B-05c on_enter_combat：开局按声明数值触发一次 [真实]",
+        "B-05c before_card_played 与 after_card_played 在该牌效果前后各触发一次 [真实]",
+        "B-05c 三个新 hook 在冻结作者文本里都不存在（默认路径与冻结数据不被改动）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendPyreChecks.cs",
+      "sha256": "c1296dbc4b7e3e9ac4e0cf10c233fd53b97827bd3cde35901e64aacedcf1d56c",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 PyrePower：每层 +1 最大能量，在回合开始的能量重置处生效并跨回合保留 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRampageChecks.cs",
+      "sha256": "3ff246be9128e85f27230bb827ad5cf6875f0601c6e7336263cae1613675b8aa",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 累加变量：解析 `grow-amount`；缺 grow / 越界 / 非法值被拒绝",
+        "B-06a 累加变量：Rampage 第一次 9、第二次 14（读的是写回后的值）[真实]",
+        "B-06a 累加变量：升级形态每次 +9（第二次 18）[真实]",
+        "B-06a 累加变量：冻结作者文本声明了 Rampage（来源行、来源与写回量）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRampageVariableChecks.cs",
+      "sha256": "c5241cbf7cfce36f48dec088640993ab5cd30fa806bfe53ad7c985ee67bf77ae",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 Rampage：伤害读卡牌实例变量，且每次打出把变量 +5（跨两回合）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRandomChecks.cs",
+      "sha256": "fdf1f9febc1ff22c325c6aca01cf404dca7d14259a16a8f720c8d0d987b2feee",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c random target: 语法接受 damage_random，且目标确定方式必须唯一（带路径）",
+        "B-05c random target: 消费点有来源（每次恰好一次命名流，且不动重洗流）[真实]",
+        "B-05c random target: 候选顺序不是插入顺序（倒转集合成员后同种子仍选同一实例）[真实]",
+        "B-05c random target: 不同种子会选出不同目标（随机流真的被消费）[真实]",
+        "B-05c random target: 冻结作者文本没有随机目标牌（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRetainChecks.cs",
+      "sha256": "9e1445c7bc38f1c9c4c5bcbe2a5674500b11296aa0ccb1ab253b1888db57de32",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c retain：`retain` 逐变体解析，非法值被拒绝（带路径）",
+        "B-05c retain：普通形态留在手牌、升级形态照常弃掉 [真实]",
+        "B-05c retain：保留的牌仍然触发 `turn_end_in_hand`（时点没变）[真实]",
+        "B-05c retain：冻结作者文本没有 retain（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRoomAdvanceChecks.cs",
+      "sha256": "09856979e021ab150f214ffd22154bf86267a1dc874c9d6480398b9edb7ec547",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-03 房间推进：胜利结算后 EnterNextRoom 使房间号 +1、结算标记复位、幂等键留在上一间房 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRunSettlementChecks.cs",
+      "sha256": "5a01a9a69294c8f542ccd8336b866af46c440d16570a4c3d8a6bec07f5fc0073",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-03 前置：敌人全灭触发结算，整局 Hp / 幂等键 / BattleSettled 都被写回 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRunStateChecks.cs",
+      "sha256": "16ecda93e03dabfc6dfba29aeca085d00b19e7c54d54a1de98b0be6bee1ff676",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-07a 整局：`run { … }` 声明被解析（未知键被拒）",
+        "B-07a 整局：`Run` 单例在开局被创建，且带着声明的数值 [真实]",
+        "B-07a 写回：胜利后整局 HP = 玩家收尾 HP，且 BattleSettled 置位 [真实]",
+        "B-07a 写回：只死一个敌人时**不**结算（战斗未结束）[真实]",
+        "B-07a 写回：失败（HP 损失路径）也写回一次 [真实]",
+        "W-05 长期牌组：按声明逐张建立，且与战斗实例是**两批独立实例** [真实]",
+        "W-05 长期牌组：战斗里**生成**的牌不进长期组（D5③）[真实]",
+        "B-07a 整局：程序化路径（无作者文本）不建 Run 实体与集合（包形状不变）",
+        "W-05 两房间：HP 从整局延续，第二间房重建敌人与牌区 [真实]",
+        "W-05 两房间：长期牌组里的升级会进入第二间房（同定义实例分别升级）[真实]",
+        "W-05 两房间：临时生成的牌不污染长期组，也不进入第二间房 [真实]",
+        "W-05 两房间：结算按房间幂等（第二间房可再结算一次）[真实]",
+        "W-05 房间奖励：升级长期实例（每间房一次，且升级形态进入下一间房）[真实]",
+        "W-05 房间奖励：跳过奖励不影响进入下一间房（奖励与结算分开）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T02"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendRunWiringChecks.cs",
+      "sha256": "c689af867bd192ffa31369b6812ee4aa0a344e343a33b0f98adc1cc5da859a5c",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-03 前置：正式构建里有唯一的整局实例，且字段初值来自声明的 run 段 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendScaledAmountChecks.cs",
+      "sha256": "3c789fc068132715416b7258737cbc1f2e677c84dd44315f31bde1dea99d7442",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 缩放来源：解析 `exhaust-count` 与 `amount-base`/`amount-per-count`；越界被拒",
+        "B-06a 缩放来源：AshenStrike 伤害 = 6 + 3 ×（消耗区牌数）[真实]",
+        "B-06a 缩放来源：消耗区有 2 张时伤害 12（6 + 3×2）[真实]",
+        "B-06a 缩放来源：升级只改 perCount（2 张时 6 + 4×2 = 14）[真实]",
+        "B-06a 缩放来源：冻结作者文本声明了 AshenStrike 的两形态缩放参数"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendSettlementChecks.cs",
+      "sha256": "c5a29b2f8fe2508533c3973b3de0920ace936b1fac85773bda4c875dd634c5a5",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T02 结算：最后击杀的父效果余效（Feed +3 最大生命）进整局并被下一间房继承 [真实]",
+        "ENV-T02 结算：战斗未结束时的 Feed 只改战斗副本，整局最大生命不动 [真实]",
+        "ENV-T02 结算：最后一间房的最后击杀余效仍进整局（在胜利终局之前）[真实]",
+        "ENV-T02 结算：整局只在结算时整体写回，不做实时镜像；写回集合只有 Hp/MaxHp [真实]",
+        "ENV-T02 写回矩阵：长期牌组是权威，战斗副本换房重建且临时费用清零 [真实]",
+        "ENV-T02 结算：最后击杀的出牌收尾（after_card_played 钩子、离开 InPlay）在终局之前跑完 [真实]",
+        "ENV-T02 写回矩阵：战斗副本按实例记录长期来源；同定义不同实例的永久变化互不影响 [真实]",
+        "ENV-T02 结算：末杀发生在条件分支里时，分支后的收尾仍在终局之前跑完 [真实]",
+        "ENV-T02 结算：消耗牌末杀时，消耗摆放与 after_card_exhausted 反应在终局之前跑完 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T02"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendStatusCardChecks.cs",
+      "sha256": "3414d755395e1f8b4c62bfc7778c939fee21ee06edce6500b617c03d29d2bdc2",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 状态牌：`kind = Status` + `unplayable`/`ethereal` 被解析，非法布尔值被拒绝",
+        "B-06a 状态牌：`unplayable` 的牌不进合法提交组合，强制提交被 guard 拒绝 [真实]",
+        "B-06a 状态牌：`ethereal` 端末进消耗区，普通牌照常进弃牌堆 [真实]",
+        "B-06a 状态牌：冻结作者文本声明了 Dazed，且它不在起始卡组里（不改变受控场景）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendUnpoweredChecks.cs",
+      "sha256": "84ade7fa1e74f370ca26ef2e80bc1c7c05daba42779a05d7e70d51de1d80ce2a",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 属性门控：解析 properties，未知属性被拒绝（带路径）",
+        "B-05c 属性门控：unpowered 攻击跳过 Strength/Weak/Vulnerable，powered 照旧 [真实]",
+        "B-05c 属性门控：unpowered 药水同样跳过修正 [真实]",
+        "B-05c 属性门控：冻结作者文本没有 unpowered（默认路径行为不变）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFrontendXCostChecks.cs",
+      "sha256": "d2e0e9b34b49eb3f65a887b451d072888e59bd88fe735498f4b41fcc4e9106f9",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c X cost: `cost = X` 被解析为 X 费，固定 amount 与它冲突时拒绝（带路径）",
+        "B-05c X cost: 捕获时点是打出那一刻的剩余能量（3 点 → 3，2 点 → 2，0 点 → 0）[真实]",
+        "B-05c X cost: 0 能量时 X 费牌仍合法，非 X 费牌仍按声明费用扣费 [真实]",
+        "B-05c X cost: 冻结作者文本没有 X 费牌（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SownChecks.cs",
+      "sha256": "d776280a36116180a80d19c7c360527247074cc84f71b8dda7bad5a1b7b6cdc8",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "SapphireSeed: heal precedes upgrade choice; duplicate identity preserved, replay rejected",
+        "SapphireSeed: Plant selects non-first real instance, excludes unplayable and already enchanted cards",
+        "SapphireSeed: empty and singleton upgrade/enchant domains follow source automatic selection",
+        "Sown: card pays before benefit, once per copy, even blocked gain consumes attachment",
+        "Sown: Anger clones preserve creation-time attachment status; clones are independent",
+        "Sown: final kill triggers attachment, owner death before trigger suppresses it",
+        "Sown: permanent random transform creates an unattached replacement and preserves other instances",
+        "Sown: planted upgraded permanent instance survives settlement and refreshes only on next battle copy"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/UnblockedCardFamiliesChecks.cs",
+      "sha256": "b5d88b30aa88b92ebd371364d03d49c182168321a1925a2b1634067f533a21fd",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T12 unblocked01 {id}/{mode}: subsequent benefit, timing and None result",
+        "ENV-T12 unblocked01 debris: real empty play pays, records and exhausts",
+        "ENV-T12 unblocked01 debris: real Armaments cannot upgrade and unplayed card discards"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T12"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/XCardFamilyChecks.cs",
+      "sha256": "6a2cced532672f86a7b9679f9647a3fc39d33ce19a9d6f4395a727f29630a16f",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T12 unblocked02 skewer/{mode}: source X cost, X=0/1/3, targets and piles",
+        "ENV-T12 unblocked02 skewer/{mode}: per-hit Strength, Weak rounding and block consumption"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T12"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/CombatDoomChecks.cs",
+      "sha256": "30211715a76657db61ad15600603849f01c701239491f446f711ea275a584d7b",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Doom: explicit resolution threshold {stacks} ignores block",
+        "Doom: explicit batch kills all captured enemies and settles victory",
+        "Doom: enemy side resolves before owner turn end",
+        "Doom: player dies before turn end orb and enemy actions",
+        "Doom: nonempty resolution blocks rejected"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/CombatForgeChecks.cs",
+      "sha256": "0dd80ffa47c9abe993bf8c31cdbd813d1c765bbe70783ce6c7d65b3e046d7b62",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Forge: RefineBlade/{upgraded} creates once, grows exhausted instances and preserves identity"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/CombatOrbChecks.cs",
+      "sha256": "f56658d9daba9da25034545797db38825551bcbdc45f86013b2600ad9d355b03",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Orbs: zero capacity respects character base slots/{baseSlots}",
+        "Orbs: overflow evokes front; removing slots discards back without evoke",
+        "Orbs: non-dequeue repeats preserve identity and plasma is independent of focus",
+        "Orbs: glass captures passive before decay and evokes twice remaining value",
+        "Orbs: Focus/{focus} clamps passive growth but does not modify stored Dark evoke",
+        "Orbs: {kind} actual DSL channel and evoke vector",
+        "Orbs: malformed author effects fail loading"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/CombatOstyChecks.cs",
+      "sha256": "288329bd4f438f6a83297d2224736042433b2bdc439752fffbc289ed68bfdb5b",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Osty: enemy powered attacks redirect after block and dead pet stops protecting",
+        "Osty: actual DSL summon/{upgraded}, growth, death and same-instance revival",
+        "Osty: zero summon, empty heal and loss do not create pets",
+        "Osty: only living pet attacks, without player Strength",
+        "Osty: malformed fields and duplicate amounts explicitly rejected"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/CombatPoisonChecks.cs",
+      "sha256": "609d6bf6bd56fcd445c836f8e79c96e78eb88d4e82b4d543a6ae0019075b09d0",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Poison: actual DSL application and hp loss cap consume independently",
+        "Poison: dead opposing Accelerant is excluded",
+        "Poison: enemy source vector with Accelerant {extra}",
+        "Poison: lethal enemy damage removes victim before action and settles",
+        "Poison: player uses living opposing Accelerant sum and counts damage hits",
+        "Poison: lethal player damage removes dead-owner powers before terminal"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/CombatStarsChecks.cs",
+      "sha256": "9ef0d2eebd3396ae80cd36f9688e3a7dad6d5557491e596fd9a3333bbe8bbd54",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Stars: GatherLight/{upgraded} source block and gain persist across turns",
+        "Stars: composed gain, set and overdraw preserve order and floor at zero",
+        "Stars: unsupported target and duplicate amount fail author loading",
+        "Stars: fixed cost/{upgraded} guards shortage and charges both resources once",
+        "Stars: X payment captured before effects and independent of energy X",
+        "Stars: payment snapshot rejected without star X context"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/ConsecutiveAttackChecks.cs",
+      "sha256": "2674d1e47a56ad2ebae46f4b527e9a06c564c7cf57da6b5fdd58403ae997e106",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T05 挂起态 LegalActions 不得报错：第二张攻击牌 + 手牌含不可支付牌 [真实]",
+        "ENV-T05 有 Corruption 时技能牌 0 费规则真实生效，且挂起态查询安全 [真实]",
+        "ENV-T05 无 Corruption 时技能牌不享受 0 费规则（有/无 Power 可区分）[真实]",
+        "ENV-T05 同定义多实例：归属/堆叠语义不变，挂起态查询仍安全 [真实]",
+        "ENV-T05 重复 observe/LegalActions 不改变玩法与随机流 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T05"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Combat/NativeAttackSequenceChecks.cs",
+      "sha256": "d23c7054c60cf3c8160edc3dd6cec26e96e04bc1def375e0976cd46a2eb316f2",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T06 攻击序列族：受控初态无无关能力，三张牌由正式包真实注册 [真实·受控初态]",
+        "ENV-T06 攻击序列族：声明→解析→降级→逐效果程序四态与原版契约对齐（不静默省略）[真实·声明/降级层]",
+        "ENV-T06 攻击序列族：TwinStrike 普通形态对同一目标打两次 5 [真实·受控初态]",
+        "ENV-T06 攻击序列族：TwinStrike 两击各自吃一次逐击加成（力量 2 ⇒ 14，一击 10 只会有 12）[真实·受控初态]",
+        "ENV-T06 攻击序列族：TwinStrike 升级形态 7×2（只置升级标记，不写数值槽）[真实·受控初态]",
+        "ENV-T06 攻击序列族：Bash 先打 8 再上 2 层易伤（不是被自己的易伤放大成 12）[真实·受控初态]",
+        "ENV-T06 攻击序列族：Bash 的对照形态（目标已有 2 层易伤 ⇒ 伤害确实是 12）[真实·受控初态]",
+        "ENV-T06 攻击序列族：Bash 升级形态 10 后 3 层易伤 [真实·受控初态]",
+        "ENV-T06 攻击序列族：Thunderclap 普通形态给**两个**敌人各打 4 各上 1 层，且不提问 [真实·受控初态]",
+        "ENV-T06 攻击序列族：Thunderclap 先各打 4 后各上 1 层，且后排的易伤对后续真的生效 [真实·受控初态]",
+        "ENV-T06 攻击序列族：Thunderclap 升级形态各打 7、各上 1 层 [真实·受控初态]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T06"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceByrdonisChecks.cs",
+      "sha256": "ce6653a79f880fe7a0205722ae0e4ba0a83837bc28cc8d88d21ea2b8092f35f3",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Byrdonis 正式注册、普通HP范围与 tough/deadly 声明不倒置",
+        "Byrdonis SWOOP17 → PECK(3+1)×3 → SWOOP19；Territorial不消耗且固定循环不抽AI",
+        "Territorial按当前层数与拥有者侧触发；玩家不是敌方participants，不得额外触发"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceEncounterFormationChecks.cs",
+      "sha256": "ec31b330dfdb8bb0621406b026356b9d37ded74fd3830cfea900ef196496dae6",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "[BASE-02 编队] 第一间房带编队时：阵容 = 独立复算（含组内不重复与位次顺序）[真实]",
+        "[BASE-02 编队] 五个带编队遭遇的槽位/编队形状逐条等于源码",
+        "[BASE-02 编队] 派生流：每个 (带编队遭遇, 楼层) 一条流，种子按源公式显式种好",
+        "[BASE-02 编队] 三个编队遭遇已进池：派生流按 (遭遇 × 楼层) 条数种好、且不消费随机数",
+        "[BASE-02 编队] 未进池的编队遭遇（缺 ConstrictPower）逐条带原因，不被静默丢掉",
+        "[BASE-02 编队] 整幕队列里出现编队遭遇时，房间出生的阵容仍等于独立复算 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceEncounterQueueChecks.cs",
+      "sha256": "76b3661a0519c2de2a607cdd6be454f6589ce0933f2bc8063a9abdda746bf911",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "[ENV-T08 队列] 普通队列 = 15 槽的独立复算；精英槽必须落在独立集合 [真实]",
+        "[ENV-T08 队列] 精英队列 = 独立库存（15 槽、仅源精英池成员、与普通队列零交集、逐槽同复算）[真实]",
+        "[ENV-T08 初始化] up_front 逐段对账（遗物袋/事件/普通/精英/BOSS/古代人）+ 同 seed 重放一致 + 计数独立 [真实]",
+        "[ENV-T08 初始化] Start 只初始化一次：第二次 Start 具名失败且不重建库存 [真实]",
+        "[ENV-T08 队列] ACT1-BASIC-10 的普通队列逐槽 = 跨实现已核对向量（参考侧重放）[真实]",
+        "[BASE-02 队列] 标签回避真的生效：抽到与上一个共享标签的成员必须重抽（回避/不回避队列必须不同）[真实]",
+        "[BASE-02 队列] 谓词预扫失败：这次抓取零抽取，再无约束抓一次（标签全相同的合成池）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T08"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceEnemyAddCardsChecks.cs",
+      "sha256": "2a3eebf5a5d3917d859eb95aa1cb6f27335bf388fe108553059ac082c2a40170",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "[BASE-02 addCards] 解析：牌区/位置/张数逐项校验，未支持写法与悬空卡名在解析期拒绝",
+        "[BASE-02 addCards] discard/bottom：每次行动把 3 张状态牌追加到弃牌堆，且不抽任何随机数 [真实]",
+        "[BASE-02 addCards] draw/random：位置 = 独立复算的 `NextInt(当前张数+1)`，每张各一次抽取 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceEnemyStateMachineChecks.cs",
+      "sha256": "a2d22196cc88de82449c4369a29af63f601324b6871d927f2a72d2c43e24de07",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "[BASE-02 状态机] 正式源敌人全部降级成完整状态图（行动都有后继、引用都在声明里）",
+        "[BASE-02 状态机] Mawler 的状态图逐条等于 Mawler.cs（首动 Claw、三候选权重/门槛）",
+        "[BASE-02 状态机] Flyconid 的开场池/后续池与候选权重、冷却逐条等于 Flyconid.cs",
+        "[BASE-02 状态机] ShrinkerBeetle / Nibbit 的固定链与 cycle 展开一致（含首个行动的入口）",
+        "[BASE-02 状态机] 未支持的候选/条件/图形态在解析期逐条拒绝并附原因（不产生近似敌人）",
+        "[BASE-02 状态机] 首动不掷点、意图 = 初始行动，且首动之后立刻被 CannotRepeat 挡住 [真实]",
+        "[BASE-02 状态机] 权重桶/一次性/连续上限的实际序列 = 独立复算（同一 monster_ai 种子）[真实]",
+        "[BASE-02 状态机] 冷却窗口与「全部门槛挡住」的实际序列 = 独立复算（含计数证据）[真实]",
+        "[BASE-02 状态机] 有序条件分支：生命阈值决定行动、两只怪结果不同、全程不掷点 [真实]",
+        "[BASE-02 状态机] 全部门槛挡住：仍然恰好抽一次，并命中第一个分支 [真实]",
+        "[ENV-T01 权重] 源 float32 分桶：`<= 0f` 命中、`NextFloat` 只转一次、边界与整数近似不同",
+        "[ENV-T01 权重] 分桶算术 = 判别检查自带的第二份源语义转写（含 bits 全边界与随机采样）",
+        "[ENV-T01 权重] 分数权重/门槛置 0 的真实选取 = 独立复算，且整数近似会给出不同候选 [真实]",
+        "[ENV-T01 身份] 权重是资产内容（进规则身份），且资产声明的后端由宿主强制",
+        "[ENV-T01 真实内容] 源里的分数权重按源写成小数、逐位等于 float32，且未加载原因逐条点名 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T01"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceFrontendEnemyProgramChecks.cs",
+      "sha256": "34a7e4b7cc38aa4e455c5bcff929fd37202aab4a3a002e6208db23c4eb3922a1",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 敌人行动程序：解析 move/cycle，并拒绝不可达行动、缺程序与错误循环（带路径）",
+        "B-05c 敌人行动程序：开场念咒、此后每回合暗击，数值来自声明的字段引用 [真实]",
+        "B-05c 敌人行动程序：冻结作者文本已声明行动程序，且作者路径与程序化路径行为一致 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/PotionFlowChecks.cs",
+      "sha256": "20655d6245ff00fe39532c664b7f47281edaf3250de0b9dfa11fd37f825fee0a",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "药水：完整48项生成元数据逐项核对独立源码及池顺序",
+        "药水：稀有度阈值使用源float32含边界比较",
+        "药水：生成实物恰好两抽，完整池稀有度和ID匹配，未支持瓶可持有不可空用",
+        "药水：满栏保留奖励，取消零变更，显式丢弃后复用第一空槽，不挤压其他瓶",
+        "药水：任意来源获得保留实例，满栏失败不移动，hook只在入栏后触发",
+        "药水：正规奖励drop={drop}实际11/13抽，领取/跳过才关闭，重复提交拒绝",
+        "药水：满栏正规奖励保留，显式丢弃再领取；跳过清候选无补抽",
+        "AttackPotion候选：{mode}完整池一次洗牌、暂停续接和清理",
+        "药水：作者全体敌人程序不提问、不空用，复用同一效果编译器",
+        "药水：正式Block不受Dexterity/Frail修正，使用保留空槽且不付能量",
+        "药水：正式Strength/Fire的目标、unpowered与消耗，共用动作尾",
+        "药水：正式{id}独立效果与目标",
+        "药水：正式{id}独立效果与生命周期",
+        "药水：尚未实现的瓶明确不可用，丢弃保持可操作",
+        "药水：正式Fire末次击杀先消耗再结算，进入下一房保留其他瓶实例/槽号"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/PotionReuseChecks.cs",
+      "sha256": "cd6ba4d6d8ff98b89cdacb7476e6f2269eaa421c0f3a13c60236815caefa7490",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "药水复用：正式资源加载、普通Power链接及原11瓶保留",
+        "药水复用：ExplosiveAmpoule群体10 unpowered/{mode}，免费且只消耗一次",
+        "药水复用：ExplosiveAmpoule全体末次击杀后仍销毁瓶并完成结算尾",
+        "药水复用：HeartOfIron 7层→6→5→4，后续格挡实效与对照/modifiers={modifiers}",
+        "药水复用：LiquidBronze实际授予3荆棘、免费且只消耗一次",
+        "药水复用：LiquidBronze链接玩家荆棘而不回退未实现的敌人同名Power"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/SliceFrontendBlessingChecks.cs",
+      "sha256": "08a6e09510c632d7d234a1c6a483c3e3f6992774e84c97a65d82f89c2d86e1e5",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 整手升级药水：声明被解析，且用后整手牌变成升级形态 [真实]",
+        "B-05c 整手升级药水：冻结作者文本声明了它是 self 目标、且已进药水栏"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Potions/SliceFrontendPotionChecks.cs",
+      "sha256": "d64a9647c1ea36d555e7c191f3483b158ff6d71585226403a1ee5b00934061c9",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 药水：解析 potion/potions，非法稀有度·用法·目标·步骤被拒绝（带路径）",
+        "B-05c 药水：自我目标药水生效、离开栏位、且不消耗能量 [真实]",
+        "B-05c 药水：敌人目标药水先提问再结算，且只消耗那一瓶 [真实]",
+        "W-01 药水栏槽位：容量 = SliceManifest.PotionSlotCount，越界由引擎拒绝 [真实]",
+        "B-05c 药水：冻结作者文本没有药水（默认路径形状不变）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceConstrictChecks.cs",
+      "sha256": "716e9692edb61994dc2b745bc3c1fe9de3b1d906c5a596681f6c675e39d6a9b2",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "[BASE-02 startingPowers] 出生期挂能力：出生即有声明层数，回合末按声明递减/转化 [真实]",
+        "[BASE-02 Constrict] 拥有者回合末按层数受 unpowered 伤害：易伤在场也不放大，层数不衰减 [真实]",
+        "[BASE-02 Constrict] SlitheringStrangler 已进包：行动程序 = constrict → 二选一 → 回到 constrict"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrailChecks.cs",
+      "sha256": "4227d8ed1da038bb7c65581ec50c7d52bd52ab7b5db79e0a87fe829aea828dde",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "[BASE-02 Dexterity] 加性格挡在乘性阶段之前：Defend 5 + 3 层 = 8；再叠 Frail 2 ⇒ (5+2)×0.75=5 [真实]",
+        "[BASE-02 Frail] 玩家获得格挡乘 0.75 并只截断一次（Defend 5 → 3，不是 5 也不是 4）[真实]",
+        "[BASE-02 Frail] 施加当回合不递减，之后每个**敌人**回合末递减 1 [真实]",
+        "[BASE-02 Frail] 敌人自己的获得格挡也过同一修正阶段（10 → 7）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendApplyPowerAllChecks.cs",
+      "sha256": "c125e91567a5c66594fc12cedb29675d81adcd2e6b2b0b9f556410b4deb13aa3",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 对全体施加能力：解析、与 apply_power 互斥、缺 power/stacks 被拒",
+        "B-06a 对全体施加能力：Thunderclap 给**每个**敌人各上 1 层易伤，且不提问 [真实]",
+        "B-06a 对全体施加能力：升级形态打 7 并仍然各上 1 层 [真实]",
+        "B-06a 对全体施加能力：冻结作者文本声明了 Thunderclap（来源行与两形态）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendColossusChecks.cs",
+      "sha256": "a18206386e5841515b9ddfaa3bbc83cf4ec4b481ca45ec04e181abe2cf1d047b",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 ColossusPower：只有**攻击者**身上有易伤时才减半（三组对照）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendCrueltyChecks.cs",
+      "sha256": "567c3aca90c729d5262447b8d14ed6e02af37836f18638dd896bdc1a21f0c8dd",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 CrueltyPower：**攻击者**每层把易伤倍率抬 1 个百分点（四组对照）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendDamageCapChecks.cs",
+      "sha256": "19d6a209a8d5e9460cf4370731939317d2ba533e1d6f497e4cbdf8c883654beb",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 伤害上限：解析 damage-cap，非法值被拒绝（带路径）",
+        "B-05c 伤害上限：上限在乘法之后、截断之前作用于 decimal [真实]",
+        "B-05c 伤害上限：上限作用在**乘法结果**上，而不是原始基础值 [真实]",
+        "B-05c 伤害上限：冻结作者文本没有上限声明（默认路径不受影响）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendDamageModifierChecks.cs",
+      "sha256": "e8c4aadd3d3adf6f07d68dfd007f2f1eeb21cbd51fa117d6ad8e3eb8d487a0e7",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 伤害修正：解析 damage 声明的四种形态，非法值被拒绝（带路径）",
+        "B-05c 伤害修正：作者路径复现 R-DAMAGE 反例（5 × 0.75 × 1.5 = 5.625 → 5）[真实]",
+        "B-05c 伤害修正：冻结作者文本声明了三个修正，且与程序化路径一致 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendManglePowerChecks.cs",
+      "sha256": "317e24a58131ffbe536c92d48f03a7209428bb1ee5b292fd6b5d2bb380362a12",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 Mangle：先造成 15 伤害，目标存活时才施加 ManglePower（压低血量即不施加）[真实]",
+        "ENV-02 Mangle：ManglePower 给拥有者 −10 力量，并在**敌方**回合末移除且回补 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendMultiPowerChecks.cs",
+      "sha256": "1cc56d827c054436df278d08791222971cc2a469bff152a490cbfd2d46a73d15",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 多能力同牌：解析逐步骤层数；没有字面量时才要求卡牌级 stacks",
+        "B-06a 多能力同牌：FightMe 打两段 5 点，给自己 +3、给目标 +1 [真实]",
+        "B-06a 多能力同牌：升级形态两段 6、给自己 +4、目标 +1 [真实]",
+        "B-06a 多能力同牌：冻结作者文本声明了 FightMe（来源行与两形态逐步骤层数）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendPowerPlayedTriggerChecks.cs",
+      "sha256": "2acc90dbdd37c0b837f2d045f914b8e7f300af32c231a922a5eacc02a519ae3a",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 出牌触发点：解析 after_card_played + when-card-type + remove；非法值被拒",
+        "B-06a 出牌触发点：打出**攻击**加格挡，打出**技能**不加；升级 5 层给 +5 [真实]",
+        "B-06a 出牌触发点：升级 5 层 → 每次攻击 +5 [真实]",
+        "B-06a 出牌触发点：回合末把整个能力移除（下一回合不再触发）[真实]",
+        "B-06a 出牌触发点：冻结作者文本声明了 RagePower 与 Rage（来源行与两形态层数）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendPowerProgramChecks.cs",
+      "sha256": "29634658d681486630010fab7521490e98dc43b8a4ffb9360fb39396a1d8bda4",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-05c 能力行为：解析 owner-turn-end，非法值与缺声明被拒绝（带路径）",
+        "B-05c 能力行为：作者路径与程序化路径的时长/Ritual 语义一致 [真实]",
+        "B-05c 能力行为：Ritual 按声明在端末转成力量，且力量自己不再衰减 [真实]",
+        "B-05c 能力行为：冻结作者文本声明了四个能力的回合末行为"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendPowerTriggerChecks.cs",
+      "sha256": "c2cdb2484bf7aa5b4fada96024cc19fe4a508b69288d36f543d7f49c040d50c0",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "B-06a 触发点：解析 trigger/when-card-type/trigger-effect；未实现的时点被拒绝",
+        "B-06a 触发点：有 FeelNoPain 时消耗一张牌 → 每层 +1 格挡 [真实]",
+        "B-06a 触发点：没有该能力时不触发；不消耗的牌也不触发 [真实]",
+        "B-06a 触发点：升级形态（4 层）给 +4；端末因 ethereal 被消耗也触发 [真实]",
+        "B-06a 触发点：冻结作者文本声明了 FeelNoPain 的触发点与触发效果"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendShrinkChecks.cs",
+      "sha256": "37bc5b6cb5930b9661439e369cce5b203fba87380c42bf658344f2d3f0c93a2a",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Shrink源声明：负层数无限持续仍乘0.7且不衰减，正层数到期移除、零层数无倍率",
+        "B-05c 出手倍率：Shrink 按来源声明为固定 ×0.70（不是按层数）[真实]",
+        "B-05c 出手倍率：Shrink 与 Weak 叠乘、且被 unpowered 跳过 [真实]",
+        "B-05c 出手倍率：BeetleJuice 药水给所选敌人上 4 层 Shrink [真实]",
+        "B-05c 出手倍率：冻结作者文本声明了 Shrink 与 BeetleJuice"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendTemporaryStrengthChecks.cs",
+      "sha256": "1ce6a1850d6c59747f9642823e4c77fecf63384d46e742782d97aa639179dc28",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 临时力量（正）：施加时 +2 力量，拥有者回合末移除并回补 0（带对照）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendUnmovableChecks.cs",
+      "sha256": "c8279ac31d1f735b459a6629dc6587551c5da5223da643269cddd1348d552bd2",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 Unmovable：同回合第一次获得格挡翻倍、第二次不翻倍（带对照）[真实]",
+        "ENV-02 Unmovable：计数按回合清零（下一回合第一次又翻倍）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Powers/SliceFrontendViciousChecks.cs",
+      "sha256": "ec69a03785ca241bde8bf9b82071fd00fa0512776b9aa30bd817af6069ad4a1f",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-02 Vicious：施加易伤后按层数抽牌（带对照）[真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs",
+      "sha256": "f58fd00952777c1afcaa5712898f0353c6ef193bdef014a7978a168e53803cab",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T05",
+        "ENV-T06",
+        "ENV-T08",
+        "ENV-T09"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Randomness/SliceVanillaSeedLayoutChecks.cs",
+      "sha256": "68de7dd0474bdea2486bad6efca392d89dc1e2f2a089d1ee446f870cb59c6b35",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-01 布局：流名字的 SnakeCase 与神谕一致（命名层）",
+        "ENV-01 布局：run/player/内容流种子与神谕逐值一致（哈希层）",
+        "ENV-01 布局：按布局种出来的 Shuffle 流，读数与洗牌与神谕一致（端到端）",
+        "ENV-01 布局：非原版 Profile 上套用原版布局被拒绝（不静默分歧）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Randomness/SourceStableShuffleChecks.cs",
+      "sha256": "ee2089032d463a0d03abcfe69b9e729ab5d9d05701502c4e96040cf346b7acb1",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "SourceStableShuffle: 排序键口径（Slugify / Entry@等级 / 序数比较）",
+        "SourceStableShuffle: 源 List<T>.Sort 置换（含 17 张同键与 IR 逐步下标契约）",
+        "SourceStableShuffle: 卡实例排序键随创建/复制/升级路径一致（隐藏元数据）",
+        "SourceStableShuffle: 原 ENV-T04 10 张重洗按源预排序（首差消除，流抽数不变）",
+        "SourceStableShuffle: 17 张同键实例重洗按源算法（>16 内省排序并列次序）"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04",
+        "ENV-T06"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Randomness/VanillaSeedLayoutVectors.cs",
+      "sha256": "d62e712fc2b347e4f659708e936685ca1da4f2f1c74b4c4ea84b25216f6bc277",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Relics/RelicContentChecks.cs",
+      "sha256": "0e3971d75e855bc61c60764aadf5d16430825c365dbe34fade5a735231327b46",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Relic shuffle: TheAbacus grants six block once per reshuffle for draw and autoplay",
+        "Relic content: {name} obtained health/gold persist into combat",
+        "Relic content: source identity-only badges and fallback acquisition",
+        "Relic content: PotionBelt adds two stable usable slots and persists across combat",
+        "Relic content: {name} completed-combat hook commits once",
+        "Relic content: {name} applies its power on each combat entry",
+        "Relic content: {name} first-turn block and turn lifetime",
+        "Relic content: {name} energy triggers on the source turn only",
+        "Relic content: {name} heals on first turn only",
+        "Relic content: {name} applies one debuff to all enemies",
+        "Relic content: {name} adds block after clearing the specified turn",
+        "Relic content: SlingOfCourage applies only in an Elite room",
+        "Relic content: fifth Elite victory replaces SwordOfStone in place",
+        "Relic orbs: CrackedCore channels one Lightning on the source turn and its passive damages an enemy",
+        "Relic orbs: DataDisk Focus raises actual Lightning passive damage and is applied once per room",
+        "Relic orbs: SymbioticVirus channels one Dark on the source turn and only its stored value grows",
+        "Relic orbs: RunicCapacitor slots hold three real channels and reset per battle",
+        "Relic orbs: InfusedCore channels three Lightning and modifies the value it keeps",
+        "Relic card play: {name} grants its power on every third Attack of a turn",
+        "Relic card play: OrnamentalFan grants unpowered block on every third Attack of a turn",
+        "Relic card play: Nunchaku keeps its Attack counter across battles and grants energy on the tenth",
+        "Relic card play: LetterOpener damages every enemy on the third Skill of a turn",
+        "Relic exhaust: CharonsAshes damages every enemy whenever a card is exhausted",
+        "Relic turn end: CloakClasp gains one unpowered block per hand card and none on an empty hand",
+        "Relic turn end: ScreamingFlagon damages every enemy only when the hand is empty",
+        "Relic passive: {name} modifies hand draw for exactly the source turns",
+        "Relic passive: BigMushroom gains max HP and reduces only first hand draw",
+        "Relic passive: BoomingConch first-turn Elite draw and energy share qualification",
+        "Relic passive: Bread first turn loses energy then gains max energy on later turns",
+        "Relic passive: IceCream resets first turn and preserves unspent energy thereafter",
+        "Relic passive: Sozu raises max energy, prevents procurement, and removal releases both",
+        "Relic passive: RunicPyramid prevents ordinary flush, preserves hand limit and still exhausts Ethereal",
+        "Relic conditions: Brimstone increases both sides once per player turn",
+        "Relic conditions: SparklingRouge grants both powers on turn three only",
+        "Relic conditions: Pantograph heals only before Boss combat and caps at maximum",
+        "Relic conditions: RingingTriangle retains first hand but flushes later hands",
+        "Relic conditions: SturdyClamp retains at most ten block and removal stops retention",
+        "Relic conditions: MeatOnTheBone inclusive half-HP threshold precedes ordinary victory healing",
+        "Relic conditions: {name} counter persists across battles and wraps at its source period",
+        "Relic conditions: {name} changes stars at the source lifecycle point",
+        "Relic conditions: MercuryHourglass damages every enemy at each player turn start",
+        "Relic conditions: FestivePopper damages every enemy on the first turn only",
+        "Relic conditions: Pendulum draws on every third player turn and keeps its counter across battles",
+        "Relic damage: CentennialPuzzle draws three cards on the first unblocked hit of a combat",
+        "Relic damage: SelfFormingClay pays three block per unblocked hit through its stacking power",
+        "Relic conditions: Orichalcum grants six block at turn end only when already unblocked",
+        "Relic discard: ToughBandages gains three unpowered block per discarded card",
+        "Relic death: GremlinHorn grants one energy and one card when an enemy dies",
+        "Relic damage: StrikeDummy adds three damage to Strike-tagged cards only",
+        "Relic damage: FakeStrikeDummy adds one damage to Strike-tagged cards only",
+        "Relic damage: MiniatureCannon adds three damage to upgraded cards only",
+        "Relic damage: MysticLighter adds nine damage to enchanted cards only",
+        "Relic conditions: DivineRight grants three stars on each combat room entry",
+        "Relic rooms: MealTicket heals on actual Shop entry and next combat inherits it",
+        "Relic rooms: EternalFeather counts complete groups of five permanent cards",
+        "Relic rooms: RegalPillow modifies resting, not entering, and removal releases the bonus",
+        "Relic rooms: {name} charges on rest entry and consumes bonus exactly once",
+        "Relic rooms: Planisphere follows Unknown map identity when actual room is combat"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": "TheAbacus draw/shuffle cases only"
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Relics/RelicCoverageChecks.cs",
+      "sha256": "3fb4424e09cd9377cd862a185f9eb2804c71dd178987e309c1d4226a6c495da0",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Relics CI: every executable definition has a passed behavior witness; full source denominator retained"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Relics/RelicLifecycleChecks.cs",
+      "sha256": "1abe9c7c51c5e87356f82fa19e25e404cc5f50a3051694b1b13240c2fc0920cd",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Relics: replacement preserves position, resets state and removes before obtaining",
+        "Relics: removing a captured first instance does not remove its neighbour",
+        "Relics: wax melting keeps identity, order and counter, but disables active queries",
+        "Relics: normal and already melted relics fail the wax guard",
+        "Relics: counters are isolated and reject inactive instances",
+        "Relics: unknown replacement fails before removing old instance",
+        "Relics: unsupported trigger/effect combinations fail instead of masquerading as healing",
+        "Relics: identical definitions still have independent instance counters"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Relics/RelicSourceChecks.cs",
+      "sha256": "c33e71d2ea227060ffd64e11f35498e05bffb633159e023b2c9f93bf35c6a6de",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Relic source: all 297 classes, hashes and complete pool membership match local sts2"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Relics/TreasureRelicBagChecks.cs",
+      "sha256": "ec86753083da8c51db006110bfd185adf69a54f6df89e6d98230404b3d0f2b31",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "宝箱遗物袋取出与回退",
+        "宝箱遗物袋池外校验"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Rooms/AromaOfChaosChecks.cs",
+      "sha256": "f236037df68975fe9705a2d396542bdd63f94f6010ad697066ff7284ea175629",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "AromaOfChaos upgrade: selected duplicate alone changes; visit resumes after decision and rejects replay",
+        "AromaOfChaos transform: one event draw after selection, new ordinary instance appended, other duplicate survives",
+        "AromaOfChaos selectors: empty domain closes without RNG, one eligible card executes without a decision"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Rooms/EventDomainChecks.cs",
+      "sha256": "baca1b6faa6209ae71e322948843fde3736d98179ed3177fb64c01d95dc915c1",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "RUN-GOLD-01: source hook order, single evaluation and distinct command snapshots",
+        "RUN-GOLD-01: zero or negative final gain does not deduct or invoke AfterGained",
+        "EVT-CHOICE-02/03 RUN-HEAL-01: continuation, eligibility, bounded heal and final closure",
+        "RUN-DAMAGE/DEATH-01: actual SunkenStatue uses shared commands and closes before defeat"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Rooms/ShopFlowChecks.cs",
+      "sha256": "b97406f66d62fd4b1fc05e3398499971a9b1f02435cf0254f0f71826252109de",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "T09.2 shop entry: 14 source slots / colored type sequence / colorless source identity / one on-sale slot",
+        "T09.2 streams: entering the shop consumes exactly 28 Shops / 14 Rewards draws; prices in source ranges",
+        "T09.2 streams: every colored rarity equals the independent replay (Rewards offset is read-only)",
+        "T09.2 cannot afford: empty candidate domain, guard rejects, state unchanged and leaving still legal",
+        "T09.2 belt full: empty candidate domain, guard rejects, gold and belt unchanged, leaving still legal",
+        "T09.2 unsupported item: no candidate binding, guard rejects; wrong phase cannot buy either",
+        "T09.2 buy card+potion+relic: real long-term card / belt slot / owned relic, charged once, not buyable twice",
+        "T09.2 removal: two same-definition instances, exactly the selected one removed, +1 counter, once per shop, higher price next shop",
+        "T09.2 removal while broke: empty candidate domain, guard rejects, no pending decision",
+        "T09.2 repeated observation / legal-action queries rebuild nothing and consume no randomness",
+        "T09.2 reachability: from a normal Start, public actions reach a real Shop node and leave it"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T09"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Rooms/TreasureRoomChecks.cs",
+      "sha256": "a0c0de450c0b7c88da02b4f029a66574c24b98ee5af037050a1423f7122c181b",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "T05 宝箱：完整源池袋序、独立稀有度流、开奖移除、开箱金币与跳过互斥 [受控游标]",
+        "T05 遗物获得：持有实例、获得效果、重复拒绝 [受控候选/HP，非正常通关]",
+        "T05 稀有度：float32阈值舍入 [纯源边界]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Rooms/UnknownRoomChecks.cs",
+      "sha256": "7859452eb9a67c50978de71dd498d5c687993daa802fed9bfb1e56c7d99ed421",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T09 事件：源身份与注册模块 ID 的转换（逐字相等、越界名字建包期失败）",
+        "ENV-T09 问号房：seed L 第一次判定 = 事件/SunkenStatue，赔率按源 float32 累加，选项真实写回并恢复旅行 [真实]",
+        "ENV-T09 问号房：判成商店时复用真实商店（相位/离店守卫按实际房型），命中即复位到 base [真实]",
+        "ENV-T09 问号房：上一间房是商店时 Shop 被拉黑（同样赔率改判事件），且拉黑类型不累加 [真实]",
+        "ENV-T09 问号房 → 普通战斗：消费普通遭遇队列并推进 per-type 访问计数 [真实]",
+        "ENV-T09 问号房 → 精英：按实际房型走独立精英队列并出生 Byrdonis，不退回普通队列 [受控赔率]",
+        "ENV-T09 问号房 → 宝箱：宝箱守卫按实际房型开放开箱动作 [真实]",
+        "ENV-T09 事件：抽到未实现的源身份时具名失败（会话 Faulted，不提供伪造离场）[真实]",
+        "ENV-T09 事件：已访问身份被跳过、计数前进，选中的是下一个身份 [真实]",
+        "ENV-T09 事件生命周期：资格不满足会跳过，全部走完按源允许重复 [受控初态]",
+        "ENV-T09 源资格独立于效果：跳过第一幕禁用事件和70%生命以上的UnrestSite [受控队列]",
+        "ENV-T09 未支持的源资格明确失败，不作为恒true或静默缩池 [受控队列]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T09"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Run/PublicSemanticsChecks.cs",
+      "sha256": "8dd93e241d8016e6ebe206a00ced6b5e7a0147ba6438debd5e9c1c34c0fc0459",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "ENV-T03 公开语义元数据与实际规则集闭合：每条集合有用途、每个终局有解释 [真实]",
+        "ENV-T03 内容 ID 目录 = 实际加载内容（未支持的源声明不进目录）[真实]",
+        "ENV-T03 集合用途按实际可见性解释：牌堆/有序流程/受阻不发布各有依据 [真实]",
+        "ENV-T03 判别：公开顺序集合不落 NotPublished/丢序 Group，owner 进入摘要 [真实]",
+        "ENV-T03 已知位置角色绑定真实字段与公开牌堆 [真实]",
+        "ENV-T03 终局解释是声明的 win/loss，不由名字猜 [真实]",
+        "ENV-T03 真实会话里声明的 pile_ref/owner 种类唯一解析 [真实]",
+        "ENV-T03 同配置稳定、不含每局 seed，内容变更影响身份 [真实]",
+        "ENV-T03 元数据只读：字典与目录都不能被外部篡改 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Run/RunDomainChecks.cs",
+      "sha256": "4668784ff0ab170468c79e769f75d4ad93418bdd63041fb7cdb4ec981d162720",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Run operations: source values captured once and spending floors at zero",
+        "Run relics: obtained effects use shared hooks after both bags removed and instance added",
+        "Run deck: acquire preserves selected identity, hooks observe membership before removal"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Run/RunLifecycleChecks.cs",
+      "sha256": "861a1f3d13b14536f44365325a25b7647091b5195e00fb4b40a1c8606b529db6",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "Run lifecycle: enemy block expires on its own turn, Barricade preserves it",
+        "Run event: SlipperyBridge previews nonbasic, pays/rerolls then removes exactly its preview",
+        "Run event: all-basic repeated definitions use fallback and keep skipped identities unique",
+        "Run event: lethal hold completes its effect then terminates without travel",
+        "Run eligibility: SlipperyBridge requires TotalFloor above six, counted from visited rooms"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Run/SinglePlayerStartChecks.cs",
+      "sha256": "36671daa7f2eb0ea269e8376e3b16697c2debebbe9d9857f168540e70f308d42",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "BASE-01 构建描述：dev 范围、Ironclad 身份、真实起始资源，且不含每局 seed [真实]",
+        "BASE-01 同一配置两次构造得到同一静态规则身份（seed 不进规则身份）[真实]",
+        "BASE-01 会话创建路径：配置完成但**尚未 Start**，且一个随机数都没消费 [真实]",
+        "BASE-01 真实开局：起始牌组/生命/金币来自角色定义（不是诊断牌组）[真实]",
+        "BASE-02 敌人出生生命：按 `Niche` 流掷点、双端包含、Hp==MaxHp，且可独立复算 [真实]",
+        "BASE-01-R1 范围身份：只有 dev 可实现，Ironclad/full 在建局前拒绝且不生成 Session [真实]",
+        "BASE-01-R2 起始牌序：长期牌组逐位等于来源声明顺序，不是排序后的多重集 [真实]",
+        "BASE-01-R2 洗牌输入：独立复算 Fisher-Yates 复现抽牌堆，证明洗牌前是声明顺序 [真实]",
+        "BASE-01-R3 源基线：未知基线拒绝，描述绑定实际内容摘要与随机布局 [真实]",
+        "BASE-01 真实遭遇：第一间房的敌人来自**正式遭遇池**（不是固定两个 Cultist）[真实]",
+        "BASE-01 开局洗牌：战斗牌堆用原版 `Shuffle` 流洗过，且不同 seed 得到不同顺序 [真实]",
+        "BASE-01 独立会话互不污染：同 seed 独立开局，改动一个不影响另一个 [真实]",
+        "BASE-01 拒绝契约：不支持的进阶/角色在建局前失败，不退回 Ironclad 或进阶 0 [真实]",
+        "BASE-01 seed 处理：原始与实际接受值一致（命令行 seed 不做标准化）[真实]",
+        "BASE-01 正式开局可实际推进：只用公开动作走到真实胜负或房间范围尽头 [真实]",
+        "BASE-01 房间推进：清房后 `EnterNextRoom` 合法，且下一间房的敌人来自池里**另一个**遭遇 [真实]",
+        "BASE-02 起始遗物（Burning Blood）：战斗胜利后回 6 血并被最大生命截断 [真实]",
+        "BASE-02 遗物回血不越过最大生命：78 血清场后是 80，不是 84 [真实]",
+        "Relics: melted starter remains owned but victory healing is suppressed [controlled]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Run/SliceMapRoomChecks.cs",
+      "sha256": "9a28c6f680b00f546b9722197ded3b3fc90d99edf58df06e170d74846ea4f399",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [
+        "T05 身份：dev 默认规则与公开构建摘要匹配已复核核心编排基线 [真实]",
+        "T05 身份：dev-map 与 dev 同工厂但规则和公开构建身份不同 [真实]",
+        "T05 两 seed 轨迹：物化节点逐 cell 等于移植件重放、强制行与配额符合源、两 seed 几何不同 [真实]",
+        "T05 合法性：起始点候选恰为第 1 行节点；非相邻节点与战斗中选择都被拒、状态逐字段不变 [真实]",
+        "T05 未实现房型：商店已实现，不再是具名 Fail 的房型 [真实]",
+        "ENV-T08 精英房消费者：精英节点按访问计数消费**精英队列**（内容未支持时具名失败）[真实]",
+        "T05 结算出口：清房与奖励动作后 MapPhase=2、候选与当前节点子节点一致 [受控HP，非通关轨迹]",
+        "T05 奖励终局边界：boss={boss} potion={potionDropped} [受控奖励初态，非通关轨迹]",
+        "T05 Rest：30%截断、上限、满血与重复拒绝 [受控游标/HP，非通关轨迹]",
+        "T05 Smith：只升级所选实例、保留成长和费用修正 [受控游标/牌面，非通关轨迹]",
+        "T05 抽数与流：地图流消费量等于重放字数、账目闭合、选择不重复生成 [真实]"
+      ],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T06",
+        "ENV-T08",
+        "ENV-T09"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Shared/Check.cs",
+      "sha256": "0930a23138aafedead71759dd44af230394c88eb565e160cef82ef5d5c641102",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Shared/FormalSliceFixture.cs",
+      "sha256": "94a7306c139141f8b257b1e9fc0fca7ab9c94199592d0a56a87255f23c5a2fa5",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/BaseSpire.Slice.Tests/Shared/SliceFixtures.cs",
+      "sha256": "504b2be03a9d88eef80f588b1f73f4a01671c19f80ece45cd63eac4331e531b0",
+      "category": "old-base",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/AcceptanceChecks.cs",
+      "sha256": "5bfc803ae031994440af1e5b163ca79563ecfc2074a3e614047842eaf3cf563d",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/ControlChecks.cs",
+      "sha256": "80857db9065cb25e46adc97c82a228f87cdafeffcf304baa0efc27af5fe7e0e8",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/DeclarationClosure.cs",
+      "sha256": "75173f09c63955ede1331ea7f330c02234688af01486aa22b9b06ec574a3be82",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/DeclarationDump.cs",
+      "sha256": "fb02ff59657d6005a50e37001e5fe10347b893a6f64f114b5c10172fd0f420d5",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/FormalPathChecks.cs",
+      "sha256": "8e70633c24c370286e44896fc49529dea9934227629fe4da9dfc49e0bce5bf6d",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/MeasurementChecks.cs",
+      "sha256": "39fd09953c71ac35e36dd5701c8ca60574f40c7b44361cca396158589154a116",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/net-tests/SnapshotChecks.cs",
+      "sha256": "35c0ea62e28707559b2d1ddf98349e91fef02ae3ae0df3c37eb40014c20a882f",
+      "category": "old-net-base-coupling",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ActTransitionChecks.cs",
+      "sha256": "e09ee733a266156f61b173f7011841d4782b57923800c698d5923982b3f4bf9e",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/BaseBackend.cs",
+      "sha256": "5271ad52b438b7ce2fd8e6d9dad78e8f6f09cce933eb9a2856000598403ff9be",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/Comparator.cs",
+      "sha256": "39e2c6b7c8839da7d361453f0b939fe3161939174755938a45aa16025fe5dd51",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ComparatorSelfTest.cs",
+      "sha256": "bdbe64210558de403ac2b3a2d6513f3ce16504146ae5d831f6dfc808b1c8a53d",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/CompareCommand.cs",
+      "sha256": "403d2ed0a6ac9814a6c7c7d88e21c48f7543113bff22bba97904c4cc9915124b",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ControlledInit.cs",
+      "sha256": "5c06b80a032811154d9bae6055e456f1bcc58fc3c0eefdd6323f4e5b62717b71",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/EngineSnapshot.cs",
+      "sha256": "13ba0ac45db7baab571eaf1f486b53d9ee9a492b60e65c2f7cc50a4ca8627072",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/EventContentChecks.cs",
+      "sha256": "a832bf76c54678963e6cd8147f718bdc934b5df02dfe848ced8b0478a56bba7b",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/EventModuleChecks.cs",
+      "sha256": "3fb06cc65cd6e752c597dc1422c9641a151a5637cee4f1cbf020792d84bac6fb",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/FixtureSuite.cs",
+      "sha256": "7aabe677294e2ac1a00babc9434b2706a7dfd4228732297f0cc0c8f79bb33dac",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": true,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/InitUpFrontDiagnosis.cs",
+      "sha256": "ce0a0635345bbdca2a0290a9a2d6cd1f11631466ef7a164ff246daab5afa99b9",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/InventoryCommand.cs",
+      "sha256": "0fd9a3de08cd7412861308bd3c3b7c17cfd951330094d854c84f84c0d6ce921b",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/IsolatedEventSession.cs",
+      "sha256": "fc31c52b8072440bf39e22a1bb20986c3e72f34ffca162c2ed84a6bf057937bd",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/MapFacts.cs",
+      "sha256": "922489c6669bd534eb65e0f55b7aac02fa90d158898eccfd967ac093d13aa87a",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/MapSnapshot.cs",
+      "sha256": "8b4267c4101feed15bebec7dcbe1d3bd4a0521d6b84196e2111a584f78f4fbf5",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/NormalRewardEntry.cs",
+      "sha256": "15bfdde092dcf6d95e5b91241eb7a71f665f2c0c163a8fa2e6f5b585f5c57b28",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/NormalRewardReference.cs",
+      "sha256": "02b939da1a5ffaedbb66e20f053b8f75e549a3dd6ec6625ce0688e372897ae95",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": true,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/NormalRunEntry.cs",
+      "sha256": "708363c4c58ff0b57ac4868a6e9fd947a80d0a5b357c5afffd682a25e1fb12a1",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/NormalRunReferenceRooms.cs",
+      "sha256": "47fd5099d38936d9d32c63959c4dfafdaf739d5445ad461f87095bf99d80c45b",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/Program.cs",
+      "sha256": "3fd20e23a5515b730d970d149baa32bbf0aed0c87599b2c3b9654f8bd5a3c67b",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": true,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/Records.cs",
+      "sha256": "4e42c79be6fd702551db21957784995c16374dab43aafd13b30d6a261a88fb9f",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ReferenceBackend.cs",
+      "sha256": "795fdef338095a9753293c11f981a683c7bb0f4bc3fc679247bfc49d317b2ceb",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ReferenceMapEntry.cs",
+      "sha256": "6c9a40ea812549299b53d6364b5f31a8a0d7dfb4c9ff18521c550d5541cd198b",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ReferenceRandomProbe.cs",
+      "sha256": "20ab4dc2c65b7b85ce27670fd916405caa8a219772ff66f0fb428071ec932d20",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/ReferenceRunEntry.cs",
+      "sha256": "5f562eb90e54e476090b1d0659a4b1dd59b8be2df68cd69b55d4ecd12c9ee043",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": true,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/Repo.cs",
+      "sha256": "2b6d1163be0c0c6055096167ad3b96b60e07bd7e56f6fe887e6887473d949574",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/RngCrossCheck.cs",
+      "sha256": "8d529493a238a1c12bbb485c19447d711d9c5fdd5e5650f40b8d27a6acaff94c",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/RngSourceCompat.cs",
+      "sha256": "1e2a4caab9f2ae99516c70fe5c17adb2090aa6c2c767ec3490f73cd1255b212a",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": true,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/RunCommand.cs",
+      "sha256": "b82ccdf27a70951e1ba38ee8c79a052904c679161011564b206bd60fbbeb9fb9",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/SownCombatChecks.cs",
+      "sha256": "bd6d6deb38cfa6fdd54a5e38b88803bec2b32f7280aa3160b11253ee7dc2d4bc",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/StartupTrace.cs",
+      "sha256": "baf7ff5d13184ea04f2c1a77964a63ea55e08d6c6611391f832014389f13dc59",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/TestCommand.cs",
+      "sha256": "66245052685c722514099da278fc1e89992ccf797ceb41bfffc1732910a46448",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": true,
+      "contract_ids": [
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/V109RandomChecks.cs",
+      "sha256": "9333abef64c7a9e7d672061d7d37f213a190574ff76c1cf574ab48415154e505",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [
+        "ENV-T03",
+        "ENV-T04"
+      ],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/VanillaModels.cs",
+      "sha256": "f465e432be0a83e5bb6b149ecaa12637b5f8de832e29d723bf7b76f720370430",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/VerifyCommand.cs",
+      "sha256": "88543969736564bd82911710a5f092852ee983ff06189e5d2bca6bf649a69622",
+      "category": "old-independent-adapter",
+      "disposition": "requires-dsl-remigration",
+      "executed_in_current_gate": false,
+      "literal_scenario_names": [],
+      "dynamic_or_helper_cases": false,
+      "contract_ids": [],
+      "replacement_scope": null
+    }
+  ],
+  "suites": [
+    {
+      "source": "tools/base-migration-baseline/differential/suites/ironclad-act1.json",
+      "active_definition": "tools/differential/suites/ironclad-act1.json",
+      "sha256": "374b58beb0bd527e71b933b1d78b888bdaeb22308559ccba4e7830628a2d2f4c",
+      "expected_case_ids": [
+        "ironclad-act1-original-seed",
+        "ironclad-act1-continuation"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-aroma.json",
+      "active_definition": "tools/differential/suites/normal-aroma.json",
+      "sha256": "7831ab590335c2d7148e18cde0813fe95d4ce1eddc26526b7673336773116f0f",
+      "expected_case_ids": [
+        "normal-aroma-upgrade",
+        "normal-aroma-transform"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-held-potion.json",
+      "active_definition": "tools/differential/suites/normal-held-potion.json",
+      "sha256": "7743a8196283f5b34b2c8cec071c6aada183697278132633c55136c6d738c684",
+      "expected_case_ids": [
+        "normal-held-potion-second-combat"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-post-event.json",
+      "active_definition": "tools/differential/suites/normal-post-event.json",
+      "sha256": "7d20d2b2f2e920d9a0d8387c1c5b692117e7603ab99767960fc3a351a8d7ce09",
+      "expected_case_ids": [
+        "normal-post-event-upgrade",
+        "normal-post-event-transform"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-potion-capacity.json",
+      "active_definition": "tools/differential/suites/normal-potion-capacity.json",
+      "sha256": "1379b4fef9003f2a56c2aa806d5661e272c6277411c7fc909881d0873e336b26",
+      "expected_case_ids": [
+        "normal-capacity-skip",
+        "normal-capacity-discard"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-potion-reward.json",
+      "active_definition": "tools/differential/suites/normal-potion-reward.json",
+      "sha256": "84766513fde2923b307ca315e8a862d106cfe3e92a0b33240d1eab06d3816e7e",
+      "expected_case_ids": [
+        "normal-potion-reward-take",
+        "normal-potion-reward-discard"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-potion-use.json",
+      "active_definition": "tools/differential/suites/normal-potion-use.json",
+      "sha256": "5a4b9a0a843f6490cf626cea92e1f11115032ae3e146e1bcb0cdfc00994f662b",
+      "expected_case_ids": [
+        "normal-potion-use-first",
+        "normal-potion-use-cancel"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-reward-prefix.json",
+      "active_definition": "tools/differential/suites/normal-reward-prefix.json",
+      "sha256": "2ac359682e4977666d3214f15c6d9d570f7c7b3d968bd1456155068f1a4e2a85",
+      "expected_case_ids": [
+        "normal-first-reward-take",
+        "normal-first-reward-skip"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-tablet.json",
+      "active_definition": "tools/differential/suites/normal-tablet.json",
+      "sha256": "c7a92c177542edf6ca5f6c00af845089b1bc9121f2909cfab807003ee56bd33e",
+      "expected_case_ids": [
+        "normal-default-plan-tablet-death"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/normal-two-combats.json",
+      "active_definition": "tools/differential/suites/normal-two-combats.json",
+      "sha256": "16bf4ba84965f30f1e9817f7d4ac75ac5745da943ae0216e6b5792d06f6e32a8",
+      "expected_case_ids": [
+        "normal-two-combats-skip"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    },
+    {
+      "source": "tools/base-migration-baseline/differential/suites/regression.json",
+      "active_definition": "tools/differential/suites/regression.json",
+      "sha256": "12cb26913aae2788425f797499f131923433c64d8662945d0f32a057832a786e",
+      "expected_case_ids": [
+        "strike-normal",
+        "strike-upgraded",
+        "defend-normal",
+        "defend-upgraded",
+        "bash-then-strike-vulnerable",
+        "bash-upgraded",
+        "candidate-scope-partly-playable",
+        "headbutt-mid-choice",
+        "enemy-death-aftermath",
+        "power-turn-end-decay",
+        "vulnerable-decay-via-bash",
+        "random-reshuffle-unsupported",
+        "last-kill-before-terminal",
+        "rng-initial-shuffle",
+        "factory-wiring-dev-scope",
+        "map-generated-alpha",
+        "map-generated-beta"
+      ],
+      "current_status": "unsupported",
+      "executed": 0
+    }
+  ],
+  "retired_cli_examples": [
+    "docs/examples/base-events/BaseEventsExample.csproj",
+    "docs/examples/base-room/BaseRoomExample.csproj"
+  ],
+  "retained_active_groups": [
+    "net-the-spire/Net.TheSpire.Tests/CrossEndChecks.cs",
+    "net-the-spire/Net.TheSpire.Tests/DeclarationExtensionChecks.cs"
+  ],
+  "new_migration_checks": [
+    "tools/base-spire-dev/PackageChecks.cs",
+    "net-the-spire/Net.TheSpire.Tests/BaseDslPathChecks.cs"
+  ],
+  "hash_encoding": "utf8-lf"
+}

@@ -15,7 +15,7 @@ dispatch_record: .audit/dsh-env-t04-map-differential-2026-10-08/task-record.json
 `required` 与失败分类全部保留，新 case 不替代任何原 unsupported / `rng-initial-shuffle`，不关闭 M01。
 
 - 归属：ENV-T04「严格regression接唯一工厂和独立参考」，B 线（`tools/differential/`）。
-- 接手入口：主清单 [ENV-T04](../../tofix/README.md#env-t04)；[B 完整交付合同](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../../tools/differential/README.md)。
+- 接手入口：主清单 [ENV-T04](../../tofix/README.md#env-t04)；[B 完整交付合同](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../../tools/base-migration-baseline/differential/README.md)。
 - 交付范围：本会话是 B 线本包唯一生产执行者；只写 `tools/differential/`、必要 tools 文档、本交接与
   `.audit/dsh-env-t04-map-differential-2026-10-08/`。base / net / core / sts2 / reference / solution / 主清单只读。
 - 派单记录：[.audit/dsh-env-t04-map-differential-2026-10-08/task-record.json](../../../../.audit/dsh-env-t04-map-differential-2026-10-08/task-record.json)。

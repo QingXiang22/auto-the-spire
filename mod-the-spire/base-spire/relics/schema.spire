@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity Relic {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    Holder = { type = Ref(Player) visibility = Hidden }
+    DefinitionId = { type = String(length = 64) }
+    IsMelted = { type = Bool default = false }
+    Counter = { type = Int(min = 0, max = 999999) default = 0 visibility = Hidden }
+  }
+}
+collection Relics { element = Relic ordered = true }
+event RelicObtained { payload = { owner = Ref(Player) relic = Ref(Relic) } }
+event RelicRemoved { payload = { owner = Ref(Player) relic = Ref(Relic) } }

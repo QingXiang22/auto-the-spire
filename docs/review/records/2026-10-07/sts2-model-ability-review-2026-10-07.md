@@ -13,8 +13,8 @@
 | 模型 | STS2需要表达的内容 | 当前落点与能力判断 |
 | --- | --- | --- |
 | P | 玩家控制身份；敌人自动行动 | 工厂创建单人participant，动作按role校验，敌方行动由规则程序执行；敌人实体不必对应外部participant |
-| S | Run、战斗、牌区、角色属性、效果及历史事实 | [CombatSlicePackage](../../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs)声明实体/字段/集合/关系；`MoveHistory*`、一次性行动标记、`LostHpThisTurn`、`LongTermSource`把影响后续规则的事实存进Engine |
-| I | 内容与配置、开局状态、随机流 | [BaseSpireRuntimeFactory](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)构建共享RuleSet并为每局建独立Session；开局前种流，初始化由`SetupBattle`/`StartNextRoom`执行 |
+| S | Run、战斗、牌区、角色属性、效果及历史事实 | [CombatSlicePackage](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs)声明实体/字段/集合/关系；`MoveHistory*`、一次性行动标记、`LostHpThisTurn`、`LongTermSource`把影响后续规则的事实存进Engine |
+| I | 内容与配置、开局状态、随机流 | [BaseSpireRuntimeFactory](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)构建共享RuleSet并为每局建独立Session；开局前种流，初始化由`SetupBattle`/`StartNextRoom`执行 |
 | M,L | 当前允许操作、费用/目标、选牌/响应 | `PlayCard`/`EndTurn`等声明候选与guard；目标与多选由决策指令询问，等待时保存执行帧。复杂候选仍可由查询与条件组合 |
 | T | 费用支付、牌移动、钩子、修正、伤害、结算及永久提交 | base构造程序/事件IR，由唯一Session调度器执行；复杂数值可使用既有Compute接口，不能让计算后端暗中改变状态或消费随机 |
 | O | 手牌/弃牌、牌库数量、合法看到的牌、敌人意图 | `PlayerView`与`KnownCard`/reveal定义当前公开事实，隐藏牌库身份和顺序；已知信息由包维护，不依靠AI补算隐藏状态 |
@@ -27,13 +27,13 @@
 - **实体持有属性，行为独立执行。** Engine中的Card/Player/Power只有字段；行为在Procedure/Action中。`AuthorCard.NormalSteps`及hooks是编译输入的程序数据，不是运行态卡实体的方法。
 - **状态只有一份运行权威。** Run与战斗副本都在Engine存储；`CommitPermanent`定义写回，`LongTermSource`按实例区分来源。编译期的`SliceAuthorModel`及只读构建描述不构成另一份局内RunState。
 - **结算仍由唯一调度器推进。** `CombatSlicePackage`用C#构造IR属于游戏前端/组包职责；C#文件较长不等于另建运行时。当前文本规则库尚未充分承载这些程序，是作者组织方式的交付问题。
-- **随机计算职责分开。** `SampleInt`消费显式流， [SourceWeightedPickBackend](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceWeightedPick.cs)只根据输入计算结果，返回后由IR推进。原版float32算法不用写成core内置游戏分支。
+- **随机计算职责分开。** `SampleInt`消费显式流， [SourceWeightedPickBackend](../../../../tools/base-migration-baseline/BaseSpire/Randomness/SourceWeightedPick.cs)只根据输入计算结果，返回后由IR推进。原版float32算法不用写成core内置游戏分支。
 
 ## 4. 实际偏离与缺口
 
 ### 4.1 数值转移有实际反例（ENV-T06）
 
-工厂使用 [RuleSetBuilder默认配置](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)： [NumericProfile.Default](../../../../core-the-spire/Core.TheSpire/Engine/Value.cs)保留两位小数，`AddFixed`/`MultiplyFixed`等每步量化。伤害IR使用这些运算；“只在最后转整数”没有消除中间的小数量化。
+工厂使用 [RuleSetBuilder默认配置](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)： [NumericProfile.Default](../../../../core-the-spire/Core.TheSpire/Engine/Value.cs)保留两位小数，`AddFixed`/`MultiplyFixed`等每步量化。伤害IR使用这些运算；“只在最后转整数”没有消除中间的小数量化。
 
 原版 [Hook.ModifyDamageInternal](../../../../sts2/src/Core/Hooks/Hook.cs)用decimal累计修正， [Creature.LoseHpInternal](../../../../sts2/src/Core/Entities/Creatures/Creature.cs)最终转整数。隔离探针使用真实dev工厂、正式Strike战斗副本和已加载的Strength/Shrink/Cruelty/Vulnerable：
 
@@ -49,7 +49,7 @@
 
 ### 4.2 流程状态仍是线性战斗切片（ENV-T05/09/10）
 
-`Run.CurrentRoom`、`SettledRoom`、`RewardTaken`足以区分当前简化流程，但 [EnterNextRoom/UpgradeLongTermCard](../../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs)还表示连续战斗与每房一次升级，缺少真实地图后继、房间事件、战斗奖励和幕转换。 [工厂](../../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)也明确用房间号替代地图楼层进行遭遇派生。
+`Run.CurrentRoom`、`SettledRoom`、`RewardTaken`足以区分当前简化流程，但 [EnterNextRoom/UpgradeLongTermCard](../../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs)还表示连续战斗与每房一次升级，缺少真实地图后继、房间事件、战斗奖励和幕转换。 [工厂](../../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs)也明确用房间号替代地图楼层进行遭遇派生。
 
 这是S/I/L/T相对完整STS2的范围简化，已经按dev身份说明；不能把这份切片状态定义当作最终STS2模型。已有字段/关系、候选与程序可表达正式流程，不需要为了补地图先改变内核架构。
 

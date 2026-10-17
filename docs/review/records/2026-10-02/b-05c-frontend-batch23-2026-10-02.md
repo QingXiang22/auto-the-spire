@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-05c**（第二十三批）——**`BlessingOfTheForge`**（升级整手牌的药水，纯内容） |
-| 权威 | 冻结药水语法：`ContentSource/potions.spire:19`（`usage = combatOnly`、`target = self`、`use = upgradeCards(pile=hand)`）；[开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Slice/Content/slice-content.author`（药水声明 + 栏位）、`BaseSpire.Slice.Tests/SliceFrontendBlessingChecks.cs`（新增 2 项） |
+| 权威 | 冻结药水语法：`Potions/Content/potions.spire:19`（`usage = combatOnly`、`target = self`、`use = upgradeCards(pile=hand)`）；[开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
+| 负责范围 | `Authoring/Examples/slice-content.author`（药水声明 + 栏位）、`BaseSpire.Slice.Tests/Potions/SliceFrontendBlessingChecks.cs`（新增 2 项） |
 | 状态 | **部分完成（二十三批）**：已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批16](b-05c-frontend-batch16-2026-10-02.md)（`upgrade_hand`）、[批20](b-05c-frontend-batch20-2026-10-02.md)（药水机制） |
 
@@ -15,7 +15,7 @@
 ```
 potion blessing-of-the-forge {
   name = BlessingOfTheForge  rarity = uncommon  usage = combat-only  target = self
-  source = base-spire/ContentSource/potions.spire  line = 19
+  source = base-spire/Potions/Content/potions.spire  line = 19
   use { amount = 0  steps = [upgrade_hand] }
 }
 potions { beetle-juice  blessing-of-the-forge }
@@ -62,8 +62,8 @@ potions { beetle-juice  blessing-of-the-forge }
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/Content/slice-content.author`（`potion blessing-of-the-forge` + 栏位）
-- `BaseSpire.Slice.Tests/SliceFrontendBlessingChecks.cs`（新增 2 项）、`SliceChecks.cs`（注册）、
+- `BaseSpire/Authoring/Examples/slice-content.author`（`potion blessing-of-the-forge` + 栏位）
+- `BaseSpire.Slice.Tests/Potions/SliceFrontendBlessingChecks.cs`（新增 2 项）、`SliceChecks.cs`（注册）、
   `SliceFrontendPotionChecks.cs`（冻结药水计数 1→2）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 

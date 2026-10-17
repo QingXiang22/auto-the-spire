@@ -55,10 +55,10 @@ updated_at: 2026-10-09T16:56:00+08:00
 
 ### 本包写入的两个文件（都在测试侧，生产/组包器改动 = 0）
 
-- 新增 `mod-the-spire/base-spire/BaseSpire.Slice.Tests/NativeAttackSequenceChecks.cs`（303 行，11 条 `Check.Run`）：
+- 新增 `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Combat/NativeAttackSequenceChecks.cs`（303 行，11 条 `Check.Run`）：
   `internal static class NativeAttackSequenceChecks`，只复用 `FormalSliceFixture`，不复制运行调度器；
   受控写只限 `FormalSliceFixture.GivePower`（力量/易伤）与本地 `MarkUpgraded`（只写卡实例的 Bool `Upgraded`）。
-- 修改 `mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceChecks.cs`：仅 +1 行注册
+- 修改 `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs`：仅 +1 行注册
   `NativeAttackSequenceChecks.Run();`（在 `ConsecutiveAttackChecks.Run();` 之后）。
 - **未修改** `ironclad-cards.spire`（其 `LastWriteTime` 为 2026-10-01 23:14，本会话 2026-10-09 16:xx 未触碰）。
 
@@ -98,7 +98,7 @@ updated_at: 2026-10-09T16:56:00+08:00
 | 解决方案构建 | `dotnet build AutoTheSpire.sln` | 0；0 警告 0 错误 | `gate-1-build.log`；只证明编译通过，**不**代表 .spire 解析/注册/行为 |
 | Engine 测试 | `dotnet run --no-build --project core-the-spire/Core.TheSpire.Engine.Tests` | 0；`All 95 engine checks passed.` | `gate-2-engine-tests.log`；与基线 95/95 一致 |
 | 非地图 Slice | `dotnet run --no-build --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --combat-only` | 0；`All 365 slice checks excluding map checks passed`（`ok` 行 365；基线 354 + 本包 11） | `gate-3-slice-combat-only.log` |
-| 完整 Slice（含地图） | `dotnet run --no-build --project mod-the-spire/base-spire/BaseSpire.Slice.Tests` | **非 0**（`-532462766`）；跑到 340 条 `ok` 后在 `SliceMapRoomChecks.Identity()` 抛 `base-spire: 奖励牌池对账失败：源单机清单有 25 项没有进内容池…`（`aggression, anger, cascade, …`，出自 `Slice/RewardWiring.cs:692`） | `gate-4-slice-full.log`；**与基线同一个 ENV-T05 缺口（25 张奖励池卡）**，名单里没有本族三张牌；本包未删池/改门槛/改 golden |
+| 完整 Slice（含地图） | `dotnet run --no-build --project mod-the-spire/base-spire/BaseSpire.Slice.Tests` | **非 0**（`-532462766`）；跑到 340 条 `ok` 后在 `SliceMapRoomChecks.Identity()` 抛 `base-spire: 奖励牌池对账失败：源单机清单有 25 项没有进内容池…`（`aggression, anger, cascade, …`，出自 `Rewards/RewardWiring.cs:692`） | `gate-4-slice-full.log`；**与基线同一个 ENV-T05 缺口（25 张奖励池卡）**，名单里没有本族三张牌；本包未删池/改门槛/改 golden |
 | 纯文档门槛 | `python tools/doc-check/check_docs.py` | 0；`scanned 320 Markdown files / 0 problem(s)` | `gate-5-doc-check.log` |
 | 空白/行尾 | `git diff --check` | 0（stderr 只有工作区既有的 LF→CRLF 警告） | `gate-6-git-diff-check.log`；注意 `BaseSpire.Slice.Tests/` 是未跟踪目录，`git diff --check` **看不到**本包两个文件，另行人工核对新文件尾随空白 = 0 行 |
 
@@ -113,7 +113,7 @@ updated_at: 2026-10-09T16:56:00+08:00
 - **生产首差：无**。三张牌的声明/目标域/逐击/顺序/升级与原版逐项一致，卡块一字未改。
 - **测试侧首个差异（已修正，记录以便复核维护成本）**：最初写的 "两次打出 Thunderclap" 判别手段撞到引擎侧
   `unexpected EngineFaultException: MembershipConflict: #120 is already a member of 'base-spire:PlayedThisTurn'`
-  —— 同一卡实例在同一回合二次打出（从弃牌堆拿回手牌再打）被 `Slice/CombatSlicePackage.cs:239` 的集合成员资格拒绝。
+  —— 同一卡实例在同一回合二次打出（从弃牌堆拿回手牌再打）被 `Composition/CombatSlicePackage.cs:239` 的集合成员资格拒绝。
   判别手段因此改为"Thunderclap + 一张 8 点攻击打后排"（第 10 条）。完整最小复现、异常原文、原版依据与所需语义见
   [`replay-same-instance-membership-conflict.md`](../../../../.audit/dsh-env-t06-native-attack-sequences-2026-10-09/replay-same-instance-membership-conflict.md)。
 - **需 Codex 处理的明确契约缺口**：`PlayedThisTurn` 不能用"实例集合"承载"本回合已完成的出牌计数"。原版按**历史事件**计数
@@ -138,9 +138,9 @@ updated_at: 2026-10-09T16:56:00+08:00
    而运行时是 `base-spire:vulnerable`；`FormalSliceFixture.SetNumber` 只写 `long`，Bool `Upgraded` 需自己用 `Value.Of(true)`。
 4. 运行期首个差异即上面的 `MembershipConflict`（1 次），改判别手段后 11/11 通过。
 5. 进入组包器（packager）的生产改动：**0**（本包只加测试文件与 1 行注册）。读到的生产文件：
-   `Sources/ironclad-cards.spire`（三块与池行）、`Slice/SpireCardSource.cs`（`Source`/`Declaration`/`Variant`、
-   `LoadResource`/`Parse`/`Lower`、目标域映射 `:1650-1697`）、`Slice/FormalSpirePackage.cs`、`Slice/SliceManifest.cs`
-   （`:144-164` 常量、`:349` Bash 清单项、`:357` 力量摘要）、`Slice/CombatSlicePackage.cs`
+   `Sources/ironclad-cards.spire`（三块与池行）、`Cards/SpireCardSource.cs`（`Source`/`Declaration`/`Variant`、
+   `LoadResource`/`Parse`/`Lower`、目标域映射 `:1650-1697`）、`Composition/FormalSpirePackage.cs`、`Composition/SliceManifest.cs`
+   （`:144-164` 常量、`:349` Bash 清单项、`:357` 力量摘要）、`Composition/CombatSlicePackage.cs`
    （`:167`/`:239`/`:238`/`:4441-4448`/`:4666`/`:4697`）、`sts2` 侧 `TwinStrike.cs`/`Bash.cs`/`Thunderclap.cs`/
    `DamageCmd.cs`/`AttackCommand.cs`/`PowerCmd.cs`/`CombatState.cs:142`/`Normality.cs:33`/`Fetch.cs:30`。
 

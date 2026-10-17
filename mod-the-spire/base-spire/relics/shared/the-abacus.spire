@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# sts2/src/Core/Models/Relics/TheAbacus.cs:18,22-29. Six unpowered block after the owner's shuffle.
+use TheAbacus {
+  template = AfterShuffleBlockRelic
+  args = { definition = "base-spire:the-abacus" amount = 6 }
+}

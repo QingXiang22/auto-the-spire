@@ -2,11 +2,11 @@
 
 日期：2026-10-12。Codex `/root`按用户派单完成ENV-T09共享操作与ENV-T06原语组合重构，当前认领/范围只看[主清单](../../tofix/README.md)。本记录描述实际代码和证据，不关闭完整房间族、多幕、全部卡牌或原版环境。没有派发会话、提交共享工作区、修改core或参考玩法。
 
-接手新增内容时先查[公共能力入口](../../../design/mod-the-spire/room-compile-reference.md#按操作查找已有公共能力)，按[选牌组合指南](../../../design/mod-the-spire/base-development-guide.md#用通用选牌编写卡牌)写本内容的条件/数值/顺序。已有能力直接组合；新机制补对应领域规格与操作，再接实际消费者。不得恢复已经移除的步骤执行器。
+接手新增内容时先查[公共能力入口](../../../design/mod-the-spire/room-compile-reference.md#按操作查找已有公共能力)，按[选牌组合指南](../../../../tools/base-migration-baseline/docs/base-development-guide.md#用通用选牌编写卡牌)写本内容的条件/数值/顺序。已有能力直接组合；新机制补对应领域规格与操作，再接实际消费者。不得恢复已经移除的步骤执行器。
 
 ## 实际交付
 
-`Slice/Domain/Run/RunResources`补LoseGold/GainMaxHp；`RunRelics.Obtain`集中受支持遗物实例创建、玩家/共享袋移除和AfterObtained，复用同一个资源服务。`RunDeck.Create/Acquire/Remove`集中永久牌组操作，捕获实例引用、保持候选身份，并提供入组后与移除前的编译hook接缝。资源输入只读一次，局内可变状态仍在Engine。
+`Run/RunResources`补LoseGold/GainMaxHp；`RunRelics.Obtain`集中受支持遗物实例创建、玩家/共享袋移除和AfterObtained，复用同一个资源服务。`RunDeck.Create/Acquire/Remove`集中永久牌组操作，捕获实例引用、保持候选身份，并提供入组后与移除前的编译hook接缝。资源输入只读一次，局内可变状态仍在Engine。
 
 `RoomCompilation.RoomServices`一次创建这些能力，商店、宝箱、营火、奖励和普通事件共享所需操作。商店减少遗物字段参数，购买/删牌保留各自支付顺序和正式决定；宝箱注册只传package。袋抽取、价格/回复量、已领取/已售和访问关闭仍由来源拥有；没有搬动随机抽取。具体限制见[整局公共操作契约](../../../design/mod-the-spire/run-domain/spec.md)。
 

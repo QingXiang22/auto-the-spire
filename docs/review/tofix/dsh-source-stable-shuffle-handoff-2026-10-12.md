@@ -1,7 +1,7 @@
 # ENV-T06 源 `StableShuffle` 重洗预排序交接 — 2026-10-12
 
 本包修掉源 `StableShuffle` 缺失的**预排序**：base 里正常抽牌与效果抽牌共用的唯一重洗入口
-（[CardDrawProcedures.Reshuffle](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDrawProcedures.cs)）
+（[CardDrawProcedures.Reshuffle](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDrawProcedures.cs)）
 现在按源 `CardPileCmd.Shuffle` 的顺序执行「清已知位置 → 弃牌堆逐张并入抽牌堆 → **按源 `CardModel.CompareTo`
 排序** → 一次 Fisher–Yates」。ENV-T04 受控重洗 case 的残余首个差异（两侧洗牌**输入顺序**不同）因此消除；随机流
 条数与抽牌 hook 次数不变。没有扩大引擎架构，也没有补卡牌。
@@ -35,11 +35,11 @@
 
 **新增：源排序键（窄编译辅助元数据）**
 
-- [CardSchema](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardSchema.cs) 新增**隐藏**字段
+- [CardSchema](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardSchema.cs) 新增**隐藏**字段
   `SourceOrderKey`（`FieldTypeSchema.String(64)`，`FieldVisibility.Hidden`），内容 = `源 Entry@升级等级`
   （例：`STRIKE_IRONCLAD@0` / `BASH@1`）。Entry 由**声明名**经源 `StringHelper.Slugify` 还原（大写下划线），
   不是内容 id 的逆向转写：两者只在「连续大写结尾」这类名字上不等价（源 `AB` → `A_B`，内容 id 逆向只剩 `AB`）。
-- 写出点只有 [CardDefinitions](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDefinitions.cs)
+- 写出点只有 [CardDefinitions](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDefinitions.cs)
   的 `Fields`（受控切片：用 `SliceCard.Name`）、`New`（作者定义，含生成/变形/奖励/商店长期卡）、`Copy`（克隆与
   长期→战斗副本）、`Upgrade`（运行时升级，键随升级换成 `@1`）。定义 id → Entry 的表由 `source.Cards` 的声明名
   建成，缺表时回退到内容 id 逆向（当前内容两者逐张一致，见检查）。
@@ -47,7 +47,7 @@
 
 **新增：源预排序（纯计算 + IR 实现）**
 
-- [SourceStableShuffle](../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceStableShuffle.cs)（新文件，命名空间
+- [SourceStableShuffle](../../../tools/base-migration-baseline/BaseSpire/Randomness/SourceStableShuffle.cs)（新文件，命名空间
   `BaseSpire.Slice`）：`Slugify`、键编解码、源比较 `(Entry 序数, 升级等级)`、`Order`（源 `List<T>.Sort` 置换）、
   `NextIndex`（IR 每一步的当前下标）、资产声明与后端 `TryExecute`。
 - 源 `StableShuffle` 的排序是 `List<T>.Sort()`（**内省排序**）：≥16 张同键实例的并列次序**不等于**稳定排序。
@@ -57,24 +57,24 @@
 - `CardDrawProcedures.Reshuffle` 的指令序列：`clearKnown` → 弃牌堆逐张移入抽牌堆 → 拼键快照 blob →
   `Repeat` 逐步 `Compute` + `MoveInCollection(..., End)` → 一次 `ShuffleCollection(DrawStream)`。触发条件与源
   `ShuffleIfNecessary` 一致（抽牌堆空且弃牌堆非空），因此合并顺序就是弃牌堆顺序；`One`/`Until` 共用本入口。
-- 资产声明在 [CardCompilation.Draw](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/CardCompilation.cs)
+- 资产声明在 [CardCompilation.Draw](../../../tools/base-migration-baseline/BaseSpire/Cards/Compilation/CardCompilation.cs)
   （`SourceStableShuffle.Declare(package, cardSchema.SourceOrderKey)`）；执行分派在
-  [SourceWeightedPickBackend](../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceWeightedPick.cs)（与加权分桶
+  [SourceWeightedPickBackend](../../../tools/base-migration-baseline/BaseSpire/Randomness/SourceWeightedPick.cs)（与加权分桶
   同一个 `BackendId`，引擎每会话只装一个后端）。`BaseSpireComputeBackend` 的 default 分支逐字转发到它，
   因此受控切片/对拍（`SourceWeightedPickBackend`）与 dev-map（`BaseSpireComputeBackend`）两条路径一致；
   `SourceActMapCompute.cs` 未改。
 - 作者/维护者指南：[重洗的源预排序](../../design/mod-the-spire/control-flow-modules.md#重洗的源预排序stableshuffle)
-  与[新增共享状态字段](../../design/mod-the-spire/base-development-guide.md#新增共享状态字段)的编译辅助元数据例外说明。
+  与[新增共享状态字段](../../../tools/base-migration-baseline/docs/base-development-guide.md#新增共享状态字段)的编译辅助元数据例外说明。
 
 **检查（`BaseSpire.Slice.Tests`）**
 
-- 新增 [SourceStableShuffleChecks](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SourceStableShuffleChecks.cs)
+- 新增 [SourceStableShuffleChecks](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Randomness/SourceStableShuffleChecks.cs)
   5 项：①键口径（Slugify/键/比较，含「声明名 vs 内容 id 逆向不等价」的判别向量）；②源置换（10 张起始牌堆、
   17 张同键的 `List<T>.Sort` 置换，并与稳定排序可判别）+ IR 逐步下标契约；③真实卡实例上的键随创建/复制/运行时
   升级（Armaments）一致；④**端到端**：ENV-T04 同 seed/同流位置的 10 张重洗牌序 + 流抽数 9 次不变；
   ⑤**端到端**：17 张同键（>16）重洗按源算法（含 16 次抽取）。注册：`--reshuffle-only`、
-  [Program](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/Program.cs) 完整入口与
-  [SliceChecks.RunAll](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceChecks.cs)。
+  [Program](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs) 完整入口与
+  [SliceChecks.RunAll](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs)。
 - **三处既有检查的必要适配**（都因这次语义修正而必须改，均已在代码注释里写明原因）：
   ① `SliceChecks.AttackUntilOutOfAttacks` 改为只从 `LegalAction.Bindings`（guard 已通过）里挑攻击牌——它原先按
   `Candidates`（全部手牌）贪心，源排序把 `BASH` 稳定排到最前时会出现「最前面的攻击牌付不起、但同手牌里有付得起
@@ -178,7 +178,7 @@
 
 - 任务状态/认领/下一成果只回写[主清单 ENV-T06](../../review/tofix/README.md#env-t06)（本轮由负责人独自修改）；机制用法写
   [base 控制流模块](../../design/mod-the-spire/control-flow-modules.md#重洗的源预排序stableshuffle)与
-  [base 开发指南](../../design/mod-the-spire/base-development-guide.md#新增共享状态字段)；证据与长日志在
+  [base 开发指南](../../../tools/base-migration-baseline/docs/base-development-guide.md#新增共享状态字段)；证据与长日志在
   [.audit/dsh-source-stable-shuffle-20261012](../../../.audit/dsh-source-stable-shuffle-20261012/)，构建在
   `.artifacts/parallel/dsh-source-stable-shuffle-20261012`。
 - 预期读者能定位：目标与有效状态（主清单 ENV-T06）、可复用成果（「已交付与接口变化」）、第一步（「接手后先做什么」2）、

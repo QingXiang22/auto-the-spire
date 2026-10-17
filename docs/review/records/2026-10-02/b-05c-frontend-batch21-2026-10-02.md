@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第二十一批）——**出手方属性门控（`unpowered`）** |
 | 权威 | 来源见 [r-damage-source-evidence-2026-10-01.md](../2026-10-01/r-damage-source-evidence-2026-10-01.md) §2.5/§6/§8.5（`ValuePropExtensions.cs:5-12` 的 `IsPoweredAttack()`、`StrengthPower.cs:21`、`WeakPower.cs:30`、`VulnerablePower.cs:33`） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`properties = [unpowered]`：牌/药水/敌人行动三处声明）、`Slice/CombatSlicePackage.cs`（`DamageMonster`/`DamagePlayer` 新增 `Powered` 参数 + 阶段门控）、`BaseSpire.Slice.Tests/SliceFrontendUnpoweredChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`properties = [unpowered]`：牌/药水/敌人行动三处声明）、`Composition/CombatSlicePackage.cs`（`DamageMonster`/`DamagePlayer` 新增 `Powered` 参数 + 阶段门控）、`BaseSpire.Slice.Tests/Cards/SliceFrontendUnpoweredChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（二十一批）**：属性门控已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批20](b-05c-frontend-batch20-2026-10-02.md)、[药水与 run 范围说明](../../../design/mod-the-spire/potion-run-scope-2026-10-02.md) |
 
@@ -67,9 +67,9 @@
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`properties` 键、`ParseUnpowered`、三处模型字段）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`Powered` 参数 + `If(powered, …)` 门控 + 全部调用点）
-- `BaseSpire.Slice.Tests/SliceFrontendUnpoweredChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`properties` 键、`ParseUnpowered`、三处模型字段）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`Powered` 参数 + `If(powered, …)` 门控 + 全部调用点）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendUnpoweredChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未提交、未清理共享工作区。

@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第七批）——**条件选择**（用既有查询原语表达） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"选择"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（两个新步骤）、`Slice/CombatSlicePackage.cs`（`Sort`/`Where` 降级）、`BaseSpire.Slice.Tests/SliceFrontendConditionalChecks.cs`（新增 5 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（两个新步骤）、`Composition/CombatSlicePackage.cs`（`Sort`/`Where` 降级）、`BaseSpire.Slice.Tests/Cards/SliceFrontendConditionalChecks.cs`（新增 5 项） |
 | 状态 | **部分完成（七批）**：条件选择已交付；**多选（`EntityRefList` 消费端）仍未做**（需要先补 `Engine/`，见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批6](b-05c-frontend-batch6-2026-10-02.md) |
 
@@ -60,9 +60,9 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`damage_lowest`/`top_attack_from_discard` 词表与目标域互斥）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（两个步骤的降级；`AttackCardsInDiscard(scope)` 过滤查询）
-- `BaseSpire.Slice.Tests/SliceFrontendConditionalChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`damage_lowest`/`top_attack_from_discard` 词表与目标域互斥）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（两个步骤的降级；`AttackCardsInDiscard(scope)` 过滤查询）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendConditionalChecks.cs`（新增 5 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

@@ -21,28 +21,28 @@ updated_at: 2026-10-11T12:05:25+08:00
 
 ### A：统一定义与输入适配
 
-- [CardDefinition/CardVariant](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardDefinition.cs)保存program/hooks、cost/X、结果区、变量、关键词及卡级池/标签/升级资格。正式dispatcher、支付、生成/变形、升级、保留/Innate、休息升级及奖励配方消费规范化定义。
-- [CardDefinitions](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDefinitions.cs)生成实例初始化全部变量（未声明值为0），升级增加定义差额，保留已有成长与费用修饰。变形不残留原定义变量。
-- [LegacyCardAdapter](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/LegacyCardAdapter.cs)仅在输入时将诊断.author变为同一typed program。X回归根因是literal amount=0错误成为常量，而支付已经正确捕获PaidX；修为PaidX表达式，复用原3/2/0和支付时点检查。诊断自目标药水亦在输入层修复。
+- [CardDefinition/CardVariant](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/CardDefinition.cs)保存program/hooks、cost/X、结果区、变量、关键词及卡级池/标签/升级资格。正式dispatcher、支付、生成/变形、升级、保留/Innate、休息升级及奖励配方消费规范化定义。
+- [CardDefinitions](../../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDefinitions.cs)生成实例初始化全部变量（未声明值为0），升级增加定义差额，保留已有成长与费用修饰。变形不残留原定义变量。
+- [LegacyCardAdapter](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/LegacyCardAdapter.cs)仅在输入时将诊断.author变为同一typed program。X回归根因是literal amount=0错误成为常量，而支付已经正确捕获PaidX；修为PaidX表达式，复用原3/2/0和支付时点检查。诊断自目标药水亦在输入层修复。
 - 旧步骤执行器已删除，不以空program回退。AuthorCard旧摘要及Amount/PowerId/Stacks实例字段仍供兼容展示，不作为正式效果执行权威。Thrash不再读Amount摘要：使用variant typed DamageValue，经原 outgoing damage modifier后成长再消耗；BodySlam正常/升级的Block7+Strength2判别分别得到13/15。
-- 当时`CardCommandCompiler`承担命令，中央CombatSlicePackage保留组包接线；源链接Generate/Becomes内容引用，完整variant统一hooks派发。（2026-10-12链接维护：该类已由[类型化效果编译器](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/CardEffectCompiler.cs)与可组合原语替换，原交付判断对应当时版本。）
+- 当时`CardCommandCompiler`承担命令，中央CombatSlicePackage保留组包接线；源链接Generate/Becomes内容引用，完整variant统一hooks派发。（2026-10-12链接维护：该类已由[类型化效果编译器](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/CardEffectCompiler.cs)与可组合原语替换，原交付判断对应当时版本。）
 
 ### B：真实文本生命周期
 
-- [生命周期文本库](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/lifecycle-rules.spire)的core/0.3 `GrantDeferredEnergy`接收owner Ref(Player)、power Ref(Power)、amount Int，具名调用同包HostGainDeferredEnergy后destroy power。
-- [PowerRuleRuntime](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/PowerRuleRuntime.cs)通过BindInto现有EnginePackageBuilder绑定；宿主保留NoEnergyGain检查，受阻仍按原时点移除。正式EnergyNextTurnPower与测试第二份mymod Recovery均由DSL具名调用同过程，不增加PowerRuleKind或第二调度器。
+- [生命周期文本库](../../../../tools/base-migration-baseline/BaseSpire/Authoring/Content/lifecycle-rules.spire)的core/0.3 `GrantDeferredEnergy`接收owner Ref(Player)、power Ref(Power)、amount Int，具名调用同包HostGainDeferredEnergy后destroy power。
+- [PowerRuleRuntime](../../../../tools/base-migration-baseline/BaseSpire/Powers/Runtime/PowerRuleRuntime.cs)通过BindInto现有EnginePackageBuilder绑定；宿主保留NoEnergyGain检查，受阻仍按原时点移除。正式EnergyNextTurnPower与测试第二份mymod Recovery均由DSL具名调用同过程，不增加PowerRuleKind或第二调度器。
 - 编译/链接要求完整且唯一参数；afterEnergyReset只提供owner/power/stacks，card/target不可用。缺power、错误上下文和重复参数按原文件定位拒绝。既有9项生命周期检查通过，包含叠层、NoEnergyGain、升级与命名空间。
 
 ### C：base/0.0.2 作者输入
 
-- [CardSourceExpansion](../../../../mod-the-spire/base-spire/BaseSpire/Slice/CardSourceExpansion.cs)按显式版本扩展common及normal/upgraded编译期values；variant逐字段整体替换，无深合并。空play/hooks/keywords明确清空；重复配置、未知values和非整数保留原始位置报错。
-- [SourceEffectPrograms](../../../../mod-the-spire/base-spire/BaseSpire/Slice/Effects/SourceEffectPrograms.cs)编译组合数值：PaidX、变量/local、block、pile/power来源与add/subtract/multiply/divide/minimum/maximum。typed IR执行；一般来源实时读，let及repeat次数进入时快照。递归验证未知变量/local和选中目标依赖，不忽略scope。
-- 正式[Ironclad内容](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire)迁移Whirlwind PaidX次数、Stoke/FiendFire快照与pile算术；[次回合内容](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/next-turn-cards.spire)迁移Predator/Outmaneuver common/values；既有实例变量/hook/清空合约及[作者示例](../../../examples/base-card-mod/two-hits.spire)实跑。其他0.0.1内容显式兼容适配，不声称全仓源文件都改写为新语法。
+- [CardSourceExpansion](../../../../tools/base-migration-baseline/BaseSpire/Cards/CardSourceExpansion.cs)按显式版本扩展common及normal/upgraded编译期values；variant逐字段整体替换，无深合并。空play/hooks/keywords明确清空；重复配置、未知values和非整数保留原始位置报错。
+- [SourceEffectPrograms](../../../../tools/base-migration-baseline/BaseSpire/Cards/Effects/SourceEffectPrograms.cs)编译组合数值：PaidX、变量/local、block、pile/power来源与add/subtract/multiply/divide/minimum/maximum。typed IR执行；一般来源实时读，let及repeat次数进入时快照。递归验证未知变量/local和选中目标依赖，不忽略scope。
+- 正式[Ironclad内容](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire)迁移Whirlwind PaidX次数、Stoke/FiendFire快照与pile算术；[次回合内容](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/next-turn-cards.spire)迁移Predator/Outmaneuver common/values；既有实例变量/hook/清空合约及[作者示例](../../../examples/base-card-mod/two-hits.spire)实跑。其他0.0.1内容显式兼容适配，不声称全仓源文件都改写为新语法。
 - 新参考：[base/0.0.2](../../../dsl/0.0.2/authoring-reference.md)、[core/0.3](../../../dsl/core/0.3/authoring-reference.md)。旧冻结文档保留历史事实。
 
 ### D：地图完成结果复用
 
-- [SourceActMapCompute](../../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceActMapCompute.cs)完成结果Cells/Edges为不可变数组；BaseSpireComputeBackend只缓存本实例最后一个Done结果，以实际blob+rooms为键，未完成前缀不缓存。正式工厂每Session创建backend，不缓存可变Session/State，也不改IR随机抽取顺序。
+- [SourceActMapCompute](../../../../tools/base-migration-baseline/BaseSpire/Maps/SourceActMapCompute.cs)完成结果Cells/Edges为不可变数组；BaseSpireComputeBackend只缓存本实例最后一个Done结果，以实际blob+rooms为键，未完成前缀不缓存。正式工厂每Session创建backend，不缓存可变Session/State，也不改IR随机抽取顺序。
 - 两seed严格地图对拍已通过；完整Slice已执行原事实/边/流检查：alpha nodes51 words/draws292；beta nodes61 words/draws265。未测同条件前后耗时，不宣称量化性能提升。
 
 ### E：版本、身份与集成

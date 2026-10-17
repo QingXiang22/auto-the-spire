@@ -22,11 +22,22 @@ internal static class TextRuleScenario
     /// <summary>场景名，与 <c>--scenario</c> 取值一致。</summary>
     public const string Scenario = "text-rules";
 
+    public static TextRuleScenarioSetup CreatePackage(string manifestPath, string? scope = null,
+        int ledgerCapacity = 4096, string? defaultGameSeed = null)
+    {
+        var package = DslPackage.Load(manifestPath, scope);
+        var spec = TextRuleProviderSpec.Load(package.PublicMetadataPath);
+        if (spec.ScenarioProfile != package.Scope) throw new FormatException("Package scope and public metadata disagree.");
+        spec = spec with { Metadata = spec.Metadata with { StaticBuildIdentity = spec.Metadata.StaticBuildIdentity + "|package=" + package.Digest } };
+        return Create([package.EntryPath], spec, ledgerCapacity, defaultGameSeed, package.Rules);
+    }
+
     public static TextRuleScenarioSetup Create(
         IReadOnlyList<string> rulePaths,
         TextRuleProviderSpec spec,
         int ledgerCapacity = 4096,
-        string? defaultGameSeed = null)
+        string? defaultGameSeed = null,
+        RuleSet? compiledRules = null)
     {
         ArgumentNullException.ThrowIfNull(rulePaths);
         ArgumentNullException.ThrowIfNull(spec);
@@ -36,7 +47,7 @@ internal static class TextRuleScenario
         }
 
         // 通用规则提供方：core 的 DSL 编译器加载入口文件与其递归 imports，按依赖序编译。
-        var rules = EngineDslCompiler.LoadFiles([.. rulePaths]);
+        var rules = compiledRules ?? EngineDslCompiler.LoadFiles([.. rulePaths]);
 
         // 公开构建身份必须反映规则包本身：把它折进 BuilderSet 的语义身份 RuleSet.Identity，
         // 这样「只在规则包里新增公开字段/合法动作」也一定会换 ruleset_id/catalog_id；

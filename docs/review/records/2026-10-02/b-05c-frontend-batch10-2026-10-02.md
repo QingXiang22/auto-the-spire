@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十批）——**保留时点（retain）** |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"保留时点有独立检查"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`retain` 解析与逐变体模型）、`Slice/CombatSlicePackage.cs`（端末取舍程序）、`BaseSpire.Slice.Tests/SliceFrontendRetainChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`retain` 解析与逐变体模型）、`Composition/CombatSlicePackage.cs`（端末取舍程序）、`BaseSpire.Slice.Tests/Cards/SliceFrontendRetainChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（十批）**：保留时点已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批9](b-05c-frontend-batch9-2026-10-02.md) |
 
@@ -64,9 +64,9 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`retain` 键、`NormalRetain`/`UpgradedRetain`、`ParseRetain`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`EndTurnHandSteps` 与 `KeepOrDiscard`；程序化路径保持原样）
-- `BaseSpire.Slice.Tests/SliceFrontendRetainChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`retain` 键、`NormalRetain`/`UpgradedRetain`、`ParseRetain`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`EndTurnHandSteps` 与 `KeepOrDiscard`；程序化路径保持原样）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendRetainChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

@@ -366,7 +366,7 @@
       "rng_profile": "controlled-no-random@1",
       "provenance": {
         "kind": "controlled_state",
-        "source": "mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire",
+        "source": "mod-the-spire/base-spire/BaseSpire/Cards/Content/ironclad-cards.spire",
         "note": "专门钉住候选列表的投影口径：如果候选取成'候选参数的整个定义域'，1 点能量时手里那张 2 费的 Bash 也会被列进候选，而参考侧用 CardModel.CanPlay 过滤后只剩 Strike。现在候选改取'可提交绑定里出现过的取值'，两侧应当一致只报 Strike。脚本只打这张 Strike，不结束回合，因此不涉及对端私有随机。"
       },
       "setup": {
@@ -609,7 +609,7 @@
       "rng_profile": "controlled-state-no-random@1",
       "provenance": {
         "kind": "controlled_state",
-        "source": "mod-the-spire/base-spire/BaseSpire/ContentSource/shared-powers.spire",
+        "source": "mod-the-spire/base-spire/BaseSpire/Powers/Content/shared-powers.spire",
         "note": "setup.powers 表示脚本前已经持有的能力，不是本回合新施加。两侧独立按作者声明/源Power构造：持续型能力保留衰减行为，初始不跳过首次拥有者回合末；此处易伤初态2层实际2→1。Reference ApplyInternal 不经过 PowerCmd.Apply 的玩家负面能力首次跳过设置。真实Bash施加路径仍见 vulnerable-decay-via-bash；完整牌区及脚本实际零随机门槛保留。"
       },
       "setup": {
@@ -852,7 +852,7 @@
       "rng_profile": "vanilla-compatible@1",
       "provenance": {
         "kind": "controlled_state",
-        "source": "sts2/src/Core/Commands/CardPileCmd.cs:864-876; mod-the-spire/base-spire/BaseSpire/Slice/SliceManifest.cs:DrawStream; mod-the-spire/base-spire/BaseSpire/Slice/VanillaRandomLayout.cs:107",
+        "source": "sts2/src/Core/Commands/CardPileCmd.cs:864-876; mod-the-spire/base-spire/BaseSpire/Composition/SliceManifest.cs:DrawStream; mod-the-spire/base-spire/BaseSpire/Randomness/VanillaRandomLayout.cs:107",
         "note": "原 `unsupported_rng_profile` 声明（ENV-01 未接通、base 缺源 StableShuffle 预排序）已被两项交付消除：源预排序（ENV-T06）与参考侧逐边界具名流读数（ENV-T04 参考流边界包）。2026-10-12 原地升级为现有 `vanilla-compatible@1`：ID/seed/动作/终点/维度全部不变，只把「该 Profile 下不可判定」改成真的按具名流逐步比较。映射/单位/Restore 已按只读源与实际边界核实（`sts2/src/Core/Commands/CardPileCmd.cs:876` 与 `reference/.../Commands/CardPileCmd.cs:387` 都用 run 级 `Rng.Shuffle`；base 把该流具名为 `SliceManifest.DrawStream`；`RngSourceCompat.RestoreStream` 换的是 `RunRngSet.MockRng` 新对象并把基线重挂）。"
       },
       "setup": {
@@ -968,7 +968,7 @@
       "rng_profile": "controlled-no-random@1",
       "provenance": {
         "kind": "controlled_state",
-        "source": "mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs:972-1030（BattleEndTail）",
+        "source": "mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs:972-1030（BattleEndTail）",
         "note": "ENV-T02 的判别点：胜利判定必须挂在动作体末尾（BattleEndTail），不能在伤害结算中途 SetTerminal 截掉父效果余效与出牌收尾。受控把两只敌人压到 1/5 血，第一张 Strike 击杀前排、第二张 Bash 击杀**最后一只**敌人；最后一个边界同时检查终局、牌区与玩家剩余资源。敌人语义槽位按**存活集合**编号（`AssignSlots` 用 LivingEnemies，与参考侧 combat.Enemies 同口径），所以击杀前排后存活的那只重新编号为 enemy:0——第二张牌的目标就写 enemy:0，这本身也钉住了两侧的存活投影口径。本 case 只覆盖战斗层终局边界：Run 级长期写回与跨房（Feed MaxHp 等）仍依赖 T05 的真实房间流程，不在本 case 内声称。"
       },
       "setup": {
@@ -1033,7 +1033,7 @@
       "rng_profile": "vanilla-compatible@1",
       "provenance": {
         "kind": "normal_start",
-        "source": "mod-the-spire/base-spire/BaseSpire/Slice/VanillaRandomLayout.cs; sts2/src/Core/Runs/RunRngSet.cs:104-119; sts2/src/Core/Random/Rng.cs:52-55",
+        "source": "mod-the-spire/base-spire/BaseSpire/Randomness/VanillaRandomLayout.cs; sts2/src/Core/Runs/RunRngSet.cs:104-119; sts2/src/Core/Random/Rng.cs:52-55",
         "note": "ENV-T01/T03 要求的源随机双侧 case：base 侧走唯一工厂的正常开局（字符串 seed → 流布局 → 开局洗牌/抽牌），随机 Profile 为原版兼容。参考侧走**运行层入口**（RunState(string seed) → 玩家/遗物袋 → 首个普通战斗 Enter，含参考自己的遭遇取用、怪物出生、Rng.Shuffle 与起手抽取），并用登记在案的窄源版本兼容 Profile（tools/differential/RngSourceCompat.cs，profile_id=source-compat-sts2-frozen@1）**只替换具名流种子派生**。已确认的派生差异是：完整字符串哈希（sts2 是 31 位 int 循环后转 uint；参考是 XxHash64/ulong）、命名流哈希与相加宽度（uint 回绕 vs ulong）、以及 old 前缀解释。**参考的默认构造仍是 usesSemanticKeys=false 的顺序保真路径（不是重键，重键只在显式 CreateKeyed）**；MegaRandom/抽样/游戏效果未改。"
       },
       "setup": {},
@@ -1107,7 +1107,7 @@
       "rng_profile": "vanilla-compatible@1",
       "provenance": {
         "kind": "normal_start",
-        "source": "sts2/src/Core/Map/StandardActMap.cs:87-114; mod-the-spire/base-spire/BaseSpire/Slice/SourceMap/*; reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs",
+        "source": "sts2/src/Core/Map/StandardActMap.cs:87-114; mod-the-spire/base-spire/BaseSpire/Maps/Generation/*; reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs",
         "note": "ENV-T04 地图机制双侧 case（kind=map）：base 侧走**唯一正式工厂**的正常开局（dev-map 范围，字符串 seed → act_1_map 命名流 → 地图生成），事实只从引擎公开投影 base-spire:MapNodes / base-spire:MapChildren 读，**不**用 SourceActMapCompute 把抽数词表反推成网格。参考侧只走**独立地图生成入口**（Rng(act_1_map) → Overgrowth.GetMapPointTypes → StandardActMap），不建 RunState、不复制 base 结果、不用 golden 答案。工具层只替换已裁定的具名流种子派生（RngSourceCompat@source-compat-sts2-frozen@1），参考生成算法/遍历/剪枝语义未改。比较单位是逐条事实路径：map.count / map.rows / map.cols / map.words_consumed / map.start / map.boss / map.second_boss / 每个 map.node.[c,r].type / 每条 map.edge.[pc,pr]->[cc,cr]，不是只比数量。**本 case 只覆盖地图生成机制，不证明多房间推进/奖励/结算跑通。**"
       },
       "setup": {},
@@ -1138,7 +1138,7 @@
       "rng_profile": "vanilla-compatible@1",
       "provenance": {
         "kind": "normal_start",
-        "source": "sts2/src/Core/Map/StandardActMap.cs:87-114; mod-the-spire/base-spire/BaseSpire/Slice/SourceMap/*; reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs",
+        "source": "sts2/src/Core/Map/StandardActMap.cs:87-114; mod-the-spire/base-spire/BaseSpire/Maps/Generation/*; reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs",
         "note": "与 map-generated-alpha 同一机制、同一 Profile、同一比较维度与同一门槛，只换原始字符串 seed（t05-map-beta）——**不是换弱 case、不是补抽**：两个 seed 都必须在同一严格 suite 里实际执行并计入 17 分母。base 侧仍走唯一正式工厂的正常开局（dev-map），事实只读引擎公开投影、流只投影 base-spire:run:act_1_map；参考侧仍走独立地图生成入口，不建 RunState、不复制 base 结果。若某个 seed diverged，如实给出最后一致边界与首差，不换 seed、不删分母。**本 case 只覆盖地图生成机制，不证明多房间推进/奖励/结算跑通。**"
       },
       "setup": {},

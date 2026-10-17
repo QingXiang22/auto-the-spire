@@ -154,8 +154,8 @@ python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.
 [:182](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L182)（`LegalAction` = `_profile.Actions.Keys`）、
 [:183](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L183)（`TerminalResult` = `_profile.Terminals.Keys`）；
 对照 [:171–174](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L171-L174)（`Pile`/`Sequence` 用 `PileTypeId`/`SequenceTypeId`）。
-net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../../../net-the-spire/Net.TheSpire.Tests/FormalPathChecks.cs#L552)）与
-`Pile` 逐项（[ControlChecks.cs:240](../../../net-the-spire/Net.TheSpire.Tests/ControlChecks.cs#L240)），
+net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../../../tools/base-migration-baseline/net-tests/FormalPathChecks.cs#L552)）与
+`Pile` 逐项（[ControlChecks.cs:240](../../../tools/base-migration-baseline/net-tests/ControlChecks.cs#L240)），
 所以 `Entity`/`Relation`/`LegalAction`/`TerminalResult` 的短名从未被检查。这是 2026-10-07「公开语义透传」
 迁移引入的，不是商店引入的，**不影响**本包商店结论（商店动作/字段/序列在这四处都能逐项对应）。
 裁决要么让 Host 发完整声明 ID，要么由负责人修订 `I-71`/`I-84` 在 0.2 下的口径——本包两条路都不做。

@@ -20,7 +20,7 @@
 而当前实现两侧正好相反：
 
 - 引擎侧：`core-the-spire/Core.TheSpire/Engine/Projection.cs` 的 `IsIdentityHidden` —— 只要某实例是**任一** `IdentityVisible=false` 集合的成员，就**整体不进投影**（这条规则有回归检查 `K-06 projections hide private, hidden, unordered and identity-hidden data` 保护"不透传内部牌序"，不能直接删）。
-- 切片侧：`mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs` 把 `DrawPile.IdentityVisible=false`、`OrderVisible=false`；已知顶牌改用**独立公开事实实体** `KnownCard{CardId, Pile, Position}` 表达（放在公开集合 `Known` 里，位置用 `CollectionIndex(drawPile, card)` 现算）。
+- 切片侧：`mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs` 把 `DrawPile.IdentityVisible=false`、`OrderVisible=false`；已知顶牌改用**独立公开事实实体** `KnownCard{CardId, Pile, Position}` 表达（放在公开集合 `Known` 里，位置用 `CollectionIndex(drawPile, card)` 现算）。
 
 **后果**：N-02 拿不到既能作 `card_ref`（要实例引用）又满足 `⊆ visible_members`（要属于该牌堆的可见成员）的对象。切片给的是**定义 ID**（`base-spire:strike-ironclad`）加位置，不是实例引用；而那张实例被引擎隐藏，无法出现在快照的 `entities` 里。于是 B-04 的验收项"第一份输入就能表示置顶后位置 0"**无法经协议原生结构表达**。
 

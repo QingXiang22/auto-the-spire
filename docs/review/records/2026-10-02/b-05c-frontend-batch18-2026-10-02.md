@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十八批）——**伤害上限阶段（cap）**，补齐 `SliceManifest` 与 R-DAMAGE 证据标注的缺口 |
 | 权威 | 来源次序见 [r-damage-source-evidence-2026-10-01.md](../2026-10-01/r-damage-source-evidence-2026-10-01.md) §1.3/§2.5/§6（`Hook.cs:2511-2557` + `:1565`）；[开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`damage-cap` 解析）、`Slice/CombatSlicePackage.cs`（`CapStage`）、`BaseSpire.Slice.Tests/SliceFrontendDamageCapChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`damage-cap` 解析）、`Composition/CombatSlicePackage.cs`（`CapStage`）、`BaseSpire.Slice.Tests/Powers/SliceFrontendDamageCapChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（十八批）**：cap 阶段已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批17](b-05c-frontend-batch17-2026-10-02.md) |
 
@@ -62,9 +62,9 @@ R-DAMAGE 证据里其余"未覆盖区"（Weak/Shrink 出手倍率、`Unpowered` 
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorPower.DamageCap`、键表、`ParseDamageCap`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`CapStage` + 插入到乘法与下限之间）
-- `BaseSpire.Slice.Tests/SliceFrontendDamageCapChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorPower.DamageCap`、键表、`ParseDamageCap`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`CapStage` + 插入到乘法与下限之间）
+- `BaseSpire.Slice.Tests/Powers/SliceFrontendDamageCapChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

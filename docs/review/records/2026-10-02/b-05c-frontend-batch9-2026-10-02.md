@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第九批）——**敌人的行动程序**作者化（此前只作者化了它们的数据） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"Power/敌人/药水及 run"） |
-| 负责范围 | `Slice/Content/slice-content.author`（两个敌人的行动声明）、`Slice/SliceAuthorFrontend.cs`（move/cycle 解析与校验）、`Slice/CombatSlicePackage.cs`（按定义 + MoveIndex 分派的通用程序）、`BaseSpire.Slice.Tests/SliceFrontendEnemyProgramChecks.cs`（新增 3 项） |
+| 负责范围 | `Authoring/Examples/slice-content.author`（两个敌人的行动声明）、`Authoring/SliceAuthorFrontend.cs`（move/cycle 解析与校验）、`Composition/CombatSlicePackage.cs`（按定义 + MoveIndex 分派的通用程序）、`BaseSpire.Slice.Tests/Enemies/SliceFrontendEnemyProgramChecks.cs`（新增 3 项） |
 | 状态 | **部分完成（九批）**：敌人行动程序已作者化；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批8](b-05c-frontend-batch8-2026-10-02.md) |
 
@@ -82,10 +82,10 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 7. 修改文件
 
-- `BaseSpire/Slice/Content/slice-content.author`（两个敌人的 `move`/`cycle`）
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorMove`/`AuthorMoveStep`、`ParseMoves`/`ParseCycle`、5 条校验）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（按定义 + MoveIndex 分派的通用敌人程序；字段引用求值）
-- `BaseSpire.Slice.Tests/SliceFrontendEnemyProgramChecks.cs`（新增 3 项）、8 个既有场景文本补行动程序、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/Examples/slice-content.author`（两个敌人的 `move`/`cycle`）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorMove`/`AuthorMoveStep`、`ParseMoves`/`ParseCycle`、5 条校验）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（按定义 + MoveIndex 分派的通用敌人程序；字段引用求值）
+- `BaseSpire.Slice.Tests/Enemies/SliceFrontendEnemyProgramChecks.cs`（新增 3 项）、8 个既有场景文本补行动程序、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

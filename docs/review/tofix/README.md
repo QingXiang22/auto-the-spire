@@ -8,7 +8,7 @@
 
 ## 当前目标
 
-目标是同版本原版的五角色完整单人环境。当前先完成 **M01：从公开接口正常开局，完成地图→战斗→奖励→返回地图，并与独立参考逐步比较**。已有第一幕流程和许多局部能力，仍不能据此认定完整环境已经完成。
+目标是同版本原版的五角色完整单人环境。2026-10-18用户已将当前顺序改为先完成 **CORE-AUTHOR-05：按规格驱动完成纯DSL base目录与切换**，允许未迁移玩法暂时报未支持。随后继续 **M01：从公开接口正常开局，完成地图→战斗→奖励→返回地图，并与独立参考逐步比较**；原完整范围与下表阶段验收不删减。已有旧路径的第一幕与局部证据，不能据此认定新DSL环境已具备对应能力。
 
 **实施主线**：按照下面的领域分类组织实现；共享能力由内容调用，模块先独立验证，再在集成窗口接回正常Run。近期集成目标仍是Ironclad首幕Boss奖励关闭，然后是真实跨幕与完整胜负。Feed、药水、随机行为和永久写回是验收点；M01原条件保留。
 
@@ -21,9 +21,9 @@
 | M03 | 五角色、全部支持进阶与完整单人内容 | 每个角色正常多幕胜负，内容、变体、来源与各层验证完整 |
 | M04 | 可供后续 AI 使用的环境候选 | 最终 120 对矩阵、覆盖、差异裁决、公开轨迹和 Release 成本通过审查 |
 
-**当前可运行边界**：原seed已连续完成七场战斗、Aroma、宝箱、营火和SlipperyBridge，经过138个稳定边界到达地图节点(0,12)的PhrogParasite精英入口；此前路径与独立参考一致，公开Host重放到同一边界。继续该路径依赖仍暂缓的敌人召唤机制。另一固定策略已走到真实死亡并完成双侧与公开闭环；首幕完成目标仍未通过，不能据此前缀关闭M01/M02。见[连续Run集成交付](../records/2026-10-17/ironclad-run-integration-2026-10-17.md)。
+**切换前历史可运行边界（当前纯 DSL 未恢复）**：原seed已连续完成七场战斗、Aroma、宝箱、营火和SlipperyBridge，经过138个稳定边界到达地图节点(0,12)的PhrogParasite精英入口；此前路径与独立参考一致，公开Host重放到同一边界。继续该路径依赖仍暂缓的敌人召唤机制。另一固定策略已走到真实死亡并完成双侧与公开闭环；首幕完成目标仍未通过，不能据此前缀关闭M01/M02。见[连续Run集成交付](../records/2026-10-17/ironclad-run-integration-2026-10-17.md)。
 
-**跨幕接续**：显式`dev-run`已接通默认三幕预生成、地图和切幕生命周期，三组seed的九张地图/队列/RNG与原生参考一致，受控公开切幕通过。正常原seed现已越过TabletOfTruth五页至真实死亡：39边界双侧一致，同计划55次公开提交通过。选择回复分支则推进137次至BygoneEffigyElite缺敌人行为；另两seed仍分别缺WoodCarvings效果、Cheese公开二选应答（规则层Gorge已对照通过）。单幕身份因事件内容增加已迁移；后续古代人、TheArchitect与完整四幕仍未交付。见[跨幕交付](../records/2026-10-17/default-act-transition-2026-10-17.md)与[第一幕事件接续](../records/2026-10-17/act1-event-continuation-2026-10-17.md)。
+**切换前跨幕证据（当前纯 DSL 未恢复）**：显式`dev-run`已接通默认三幕预生成、地图和切幕生命周期，三组seed的九张地图/队列/RNG与原生参考一致，受控公开切幕通过。正常原seed现已越过TabletOfTruth五页至真实死亡：39边界双侧一致，同计划55次公开提交通过。选择回复分支则推进137次至BygoneEffigyElite缺敌人行为；另两seed仍分别缺WoodCarvings效果、Cheese公开二选应答（规则层Gorge已对照通过）。单幕身份因事件内容增加已迁移；后续古代人、TheArchitect与完整四幕仍未交付。见[跨幕交付](../records/2026-10-17/default-act-transition-2026-10-17.md)与[第一幕事件接续](../records/2026-10-17/act1-event-continuation-2026-10-17.md)。
 
 **领域交付补充**：事件层已有独立访问入口及JungleMazeAdventure、MorphicGrove完整选项，相关共享多张选择可复用；Jungle独行保留具名参考RNG差异。见[事件层记录](../records/2026-10-17/event-layer-batch-2026-10-17.md)。后续按[推进顺序](#推进顺序)集中交付，不按固定seed首错来回切换领域；PhrogParasite的召唤暂停继续有效。
 
@@ -58,6 +58,14 @@
 | **后续AI与指定mod** | AI／共享Transformer和训练暂缓；指定mod需用户明确范围，其他工作沿原触发条件 | [指定mod](#env-t16)、[W完整范围](#项目长期范围)、[暂停项](#暂缓和另行安排的工作) |
 
 ## 当前交付
+
+2026-10-18用户确认架构纠偏：**CORE-AUTHOR-05：Engine DSL主体与Spire子集迁移**，Codex `/root`，首批 T00～T06 已完成本地集成，待同提交 CI 与 PR 审阅。用户要求 base 严格只用 DSL／必要 JSON，直接切换并接受未迁移玩法暂时报未支持；按 [spec](../../design/mod-the-spire/engine-dsl-migration/spec.md)、[plan](../../design/mod-the-spire/engine-dsl-migration/plan.md)、[tasks](../../design/mod-the-spire/engine-dsl-migration/tasks.md)实施。默认 Host 和工具已改为通用 DSL 包加载；当前仅支持遗物抽牌开发 scope，TheAbacus 有实际 DSL 行为见证，原 297 件源范围保留。solution 构建、Engine 105 项、包行为 11 项、Net 350 项及迁移边界通过，原 regression 仍明确退出 3、零执行，不能当作独立比较通过。实际身份、目录、检查与回退范围见[首批交付](../records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，设计前工作区事实见[纠偏记录](../records/2026-10-18/base-dsl-migration-checkpoint-2026-10-18.md)。下一成果先为同提交 CI 与审阅，随后按机制依赖恢复资源／伤害／回合和相关内容；完整游戏迁移、正常 Run 与原 ENV/W 验收均未完成。不恢复 C# 玩法，不派并行 agent。
+
+2026-10-18原 **BASE-LAYOUT-01** 的目录与未提交修改审阅纳入CORE-AUTHOR-05，不再单独推进C#领域目录方案。原29份DSL正文与目录移动证据保留；TheAbacus的C#补全只作迁移行为依据。后续目录以CORE-AUTHOR-05的plan为准，纯DSL交付不能用文件移动或局部构建代替。
+
+2026-10-17用户指令继续实现全部遗物并核查CI：**ENV-T09-PR02-CONTENT**，原DSH认领；2026-10-18用户已令Codex `/root`接管并转向CORE-AUTHOR-05，旧C#内容扩张暂缓。目标为297件源遗物逐件完成适用性／行为／验证去向，单人适用效果和必要共享机制进入正式内容及生产生命周期；多人专用／废弃按源码裁定，不以空效果注册。修改base遗物内容／共享资源与生命周期／定向检查、tools统计／CI接线及文档，不修改独立参考玩法；每组实现后按相关用例验证，最后核对全量覆盖。当前组先接获得资源、战斗结束、精英计数替换及战斗进入消费者，接着按完整依赖清单连续推进；同时补无需本地原版源码的逐件CI覆盖报告及遗漏失败门槛。上一批FOUNDATION的接口与证据直接复用。2026-10-17～18续批把可执行遗物从4件扩到90件（球类、卡牌打出触发、消耗与无加成群体伤害、回合开始与战斗进入、手牌数量条件、共享抽牌、受击触发、格挡数量条件、回合末弃牌监听、敌人死亡触发、带牌来源过滤的伤害加性修正等批次），CI覆盖门槛保持通过（90/90可执行；源分母297、未实现206，`--require-complete`仍不成立）；各批的源依据、命令、场景与已知差异见[records索引](../records/README.md)对应记录。逐件资格与完整效果继续缺，不关闭PR02；完整回归留给Actions，当前297件不因原CI的runtime组通过而视为已覆盖。
+
+2026-10-17用户确认先做遗物统计与公共接口：**ENV-T09-PR02-FOUNDATION**，Codex `/root`，待验证（本批实现与本地定向检查完成，完整CI与独立／公开证据未取得）。本批只读对账297件源遗物、300条池成员、4件base声明，扩展RunRelics的实例计数、有效性查询、Obtain／Remove／Replace／Melt及编译期生命周期接缝，迁移现有四件遗物调用方；27项相关定向检查通过。修改base领域／装配／检查、tools/source-manifest和文档，未改core／参考／net协议，未批量添加遗物效果。依据、实际命令／身份和统计见[本批记录](../records/2026-10-17/relic-foundation-2026-10-17.md)，接口见[整局公共操作](../../design/mod-the-spire/run-domain/spec.md#遗物实例与生命周期)。下一成果为同提交CI及后续真实遗物消费者；逐件单人资格、完整效果和正常路径仍缺，不关闭PR02。下段奇巧牌族已结束编码窗口，保留待CI证据。
 
 2026-10-17接续开发：**ENV-T12-SILENT-SLY：静默猎手单人奇巧牌族**，Codex `/root`认领，待验证（整组实现及本地轻量检查完成，等待CI）；基线main/f1cd726，分支codex/silent-sly-family-20261017。本批新增Abrasive、FlickFlack、Reflex、Ricochet、Tactician、Untouchable、HandTrick、MasterPlanner，连同已交付Haze验证全部单人原生奇巧及授予奇巧的消费者；Sneaky为多人内容，不纳入单人行为。修改边界为base内容、效果前端、卡实例复制／清理、选牌及Power触发、受影响公开映射和定向测试／文档；不改core或参考玩法。目标为普通／升级、手动与弃牌自动打出、临时／战斗内奇巧寿命、受击前荆棘及实例隔离全部可验证。52项奇巧、68项中毒、14项选牌、24项编排、10项公开语义、26项net快照及3项源码检查通过；命令及边界见[交付记录](../records/2026-10-17/silent-sly-family-2026-10-17.md)。下一成果为同提交GitHub Actions四组完整回归通过；不在中途运行耗时全套。上一批中毒牌族已在PR #6及#4合入main，Actions四组全绿（39026606947），完整Silent开局／整局合同继续开放。
 
@@ -179,7 +187,7 @@ T09-PR05原为组合合同，拆分的是上述两个职责，保留同一原ID�
 
 **接手先做**：复用v0.109随机布局、显式内容元数据及共同动作计划。两例首战、两场连续正常战斗与实际药水领取已双侧通过；MonsterAi保持run级共享流，独立怪物流旧判断已撤回。复用原seed容量两例的已通过证据，继续后续房间；完整UsePotion候选与AttackPotion独立执行已通过，继续保留比较维度。随机迁移历史见[原交付](env-t04-v109-random-2026-10-15.md)，旧远端会话状态不由本地结果推断。
 
-**实现与验证入口**：[严格对拍工具](../../../tools/differential/README.md)、[正常初始化审计交接](dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。
+**实现与验证入口**：[严格对拍工具](../../../tools/base-migration-baseline/differential/README.md)、[正常初始化审计交接](dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。
 
 **执行登记**：`session-e524322c-614d-4142-b393-2ab4a0c80829`；[派发记录](../../../.audit/dsh-normal-initialization-audit-20261013/task-record.json)、[已交审计与提案](dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。该子包原登记“进行中”，交接已有待复核材料；本次不推断远端会话已停止，也不把提案当作参考修改授权。
 
@@ -359,7 +367,7 @@ T09-PR05原为组合合同，拆分的是上述两个职责，保留同一原ID�
 <details>
 <summary>遗物实例与生命周期（ENV-T09-PR02 · P2 · 待认领）</summary>
 
-**已有基础与剩余工作**：已有四种效果及Obtain；补计数／局内变量、Remove/Replace/Melt、开局／战斗／回合／房间与修正参与者，按源资格获得
+**已有基础与剩余工作**：已有四件正式效果及Obtain／Remove／Replace／Melt、隐藏实例Counter与有效性查询，本批状态和证据只维护[当前交付](#当前交付)；继续完整局内变量／StackCount／历史、真实遗物消费者、开局／战斗／回合／房间与修正参与者及源资格
 
 **依赖与完成条件**：依T06-PR01/02的适用hook；SwordOfStone按精英胜利计数并原位替换，获得／移除效果各一次；源遗物袋不按可执行子集缩小，未知效果继续失败
 

@@ -26,14 +26,14 @@
 
 ### 2.1 问号概率与源池选择（共享模块一）
 
-- `Slice/Rooms/Unknown/UnknownMapPointOdds.cs`：源 `Odds/UnknownMapPointOdds.cs` 的 `Roll` 纯函数 +
+- `Rooms/Unknown/UnknownMapPointOdds.cs`：源 `Odds/UnknownMapPointOdds.cs` 的 `Roll` 纯函数 +
   后端分派。初值 0.1f/-1f/0.02f/0.03f、**逐项 float32 累加**（不是 LINQ `Sum` 的 double 累加器）、
   阈值 `roll <= sum`、"命中复位到 base / 未命中按 base 累加"、负赔率不进累加但照样变负。
   赔率状态以 **float32 位型**存在 `Run.Unknown{Monster,Elite,Treasure,Shop}Odds`（隐藏字段，默认值即源初值）。
-- `Slice/Rooms/Unknown/UnknownRoomWiring.cs`：声明上述字段与计算资产 `base-spire:UnknownMapPointOddsRoll`
+- `Rooms/Unknown/UnknownRoomWiring.cs`：声明上述字段与计算资产 `base-spire:UnknownMapPointOddsRoll`
   （后端 `base-spire-source-float32@1`，按 `asset.Entry` 分派，见 `SourceActMapCompute.cs`）；
   提供源黑名单 `BuildRoomTypeBlacklist`（上一间房是 Shop，或当前节点子节点全是 Shop）。
-- `Slice/Rooms/Unknown/UnknownRoomEntry.cs`：`MapPointType.Unknown` 的进入处理器。顺序按源：
+- `Rooms/Unknown/UnknownRoomEntry.cs`：`MapPointType.Unknown` 的进入处理器。顺序按源：
   **先黑名单 → 再判定 → 再进入**；判定结果写 `Run.ActualRoomType`（源 `MapPointHistoryEntry.RoomType`），
   **地图节点 `Type` 保持 `Unknown`**；判成战斗/精英/宝箱/商店时直接调用
   `MapRoomEntry.Standard(...)` 的**同一批** `Enter`（不复制房型逻辑），判成事件时走生命周期 + 目录分派；
@@ -41,7 +41,7 @@
 
 ### 2.2 事件访问生命周期（共享模块二）
 
-`Slice/Rooms/Events/EventVisitLifecycle.cs`：`Declare` 拥有事件状态（`Run.CurrentEventId` 公开、
+`Rooms/Events/EventVisitLifecycle.cs`：`Declare` 拥有事件状态（`Run.CurrentEventId` 公开、
 `Run.EventsVisited`/`Run.EventPageGold` 隐藏、`RunVisitedEvents` 集合、事件级随机资产
 `base-spire:SourceEventNextInt`）；`Pull` 逐行照抄 `RoomSet.EnsureNextEventIsValid` +
 `ActModel.PullNextEvent`（`eventsVisited % Count` → 资格 → 已访问跳过 → `AddVisitedEvent`；
@@ -51,14 +51,14 @@
 
 ### 2.3 源身份 ↔ 注册 ID 的转换
 
-`Slice/Rooms/Events/EventSourceIdentity.cs`：模块 ID **逐字等于**源事件类名（`Models/Events/<Name>.cs`）。
+`Rooms/Events/EventSourceIdentity.cs`：模块 ID **逐字等于**源事件类名（`Models/Events/<Name>.cs`）。
 映射刻意是恒等——`EventRoomCatalog.Enter` 的运行时分派只有 IR 字符串相等这一种原语，任何重命名都会让
 分派永远落到"未注册"分支；这里的价值是**建包期校验**：不在 `RunSourcePoolManifest.Events` 里的名字直接抛错。
 未实现的源身份不登记、不替换，选中时由目录显式失败。
 
 ### 2.4 第一个真实事件：`SunkenStatue`
 
-`Slice/Rooms/Events/SunkenStatueEvent.cs`（源 `Models/Events/SunkenStatue.cs`）：
+`Rooms/Events/SunkenStatueEvent.cs`（源 `Models/Events/SunkenStatue.cs`）：
 
 - 进入时按源 `CalculateVars` 掷一笔**事件级** `Rng.NextInt(-10, 11)`（流 `base-spire:event:SUNKEN_STATUE`，
   种子按源公式 `runSeed + slot + hash(Slugify("SunkenStatue"))`，建局时按源池全量种好），
@@ -179,15 +179,15 @@
 
 新增（本包生产代码）：
 
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Unknown/UnknownMapPointOdds.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Unknown/UnknownRoomWiring.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Unknown/UnknownRoomEntry.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/EventVisitLifecycle.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/EventRandom.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/EventSourceIdentity.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/EventModules.cs`
-- `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/SunkenStatueEvent.cs`
-- `mod-the-spire/base-spire/BaseSpire.Slice.Tests/UnknownRoomChecks.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Unknown/UnknownMapPointOdds.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Unknown/UnknownRoomWiring.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Unknown/UnknownRoomEntry.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Events/EventVisitLifecycle.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Events/EventRandom.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Events/EventSourceIdentity.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Events/EventModules.cs`
+- `mod-the-spire/base-spire/BaseSpire/Rooms/Events/SunkenStatueEvent.cs`
+- `mod-the-spire/base-spire/BaseSpire.Slice.Tests/Rooms/UnknownRoomChecks.cs`
 
 修改（仅本包接口）：
 
@@ -195,14 +195,14 @@
   进入前写实际房型；核心分派未改）
 - `RoomCompileContext.cs`（`At` 改按实际房型）
 - `BattleRoomCompilation.cs`（`IsMonsterRoom`/`IsEliteRoom` 两行守卫改按实际房型）
-- `Compilation/RoomCompilation.cs`、`Compilation/CompilationBindings.cs`（组合问号房/事件三件套）
+- `Rooms/Compilation/RoomCompilation.cs`、`Composition/CompilationBindings.cs`（组合问号房/事件三件套）
 - `RunInitializationWiring.cs`（暴露 `RoomIdentity`/`RoomId` 两个符号）
 - `VanillaRandomLayout.cs`（`Slugify`、事件级流名/种子）
 - `SinglePlayer/BaseSpireRuntimeFactory.cs`（建局种事件级流；dev-map 描述与相位表）
 - `SinglePlayer/BasePublicSemantics.cs`（`RunVisitedEvents` 具名不发布）
 - `SinglePlayer/RunConfiguration.cs`（`DevMap` 范围说明）
-- `Slice/SourceActMapCompute.cs`（计算后端多分派两条纯计算条目）
-- `BaseSpire.Slice.Tests/SliceMapRoomChecks.cs`（dev-map 身份迁移常量、种子流 12+3+1+31）
+- `Maps/SourceActMapCompute.cs`（计算后端多分派两条纯计算条目）
+- `BaseSpire.Slice.Tests/Run/SliceMapRoomChecks.cs`（dev-map 身份迁移常量、种子流 12+3+1+31）
 - `BaseSpire.Slice.Tests/Program.cs`（`--unknown-room-only` 入口）
 - `docs/design/mod-the-spire/how-to-add-a-room.md`、`docs/design/mod-the-spire/room-compile-reference.md`
 

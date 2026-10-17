@@ -27,7 +27,7 @@
 
 ## 2. 交付的公开接口（B/C 共用，一次登记）
 
-登记位置：[`mod-the-spire/base-spire/README.md`](../../../../mod-the-spire/base-spire/README.md) 的「正式单人入口」一节
+登记位置：[`mod-the-spire/base-spire/README.md`](../../../../tools/base-migration-baseline/README.md) 的「正式单人入口」一节
 （签名 + 创建示例 + **当前 dev 限制表** + 身份字段 + 流名映射表）。
 
 | 类型 | 文件 | 关键行 |
@@ -96,7 +96,7 @@ run.Start();                                                            // 每�
 | 起始资源 | `.author` 的 `run {}` | 同上（80/80、99 金；`Ironclad.cs:33,35`） |
 | 起始遗物 | 无 | `SpireRelics` 声明表（`BurningBlood.cs:14-22`） |
 | 敌人 | `.author` 两个 Cultist + 固定遭遇 | `ContentSource/enemies*.spire`（`SpireEnemySource`） |
-| 遭遇与幕池 | 固定遭遇 | `Content/base-spire.acts.json` + `base-spire.encounters.json` |
+| 遭遇与幕池 | 固定遭遇 | `Run/Content/base-spire.acts.json` + `base-spire.encounters.json` |
 | 随机 | 引擎默认 Profile | `mega-random/xoshiro256ss-splitmix64@1` + `vanilla-uniform@1`，15 条流按原版公式显式种 |
 | 胜利 | 按房间计数发 Victory | **不发**（正式构建 `terminalOnConfiguredRoomCount: false`） |
 
@@ -107,7 +107,7 @@ run.Start();                                                            // 每�
 ## 5. 起始遗物效果（Burning Blood）
 
 - 声明式机制（**不为每件遗物写 C# 效果类**）：
-  `mod-the-spire/base-spire/BaseSpire/Slice/SliceRelics.cs` —— `SliceRelic` / `SliceRelicEffect` /
+  `mod-the-spire/base-spire/BaseSpire/Relics/SliceRelics.cs` —— `SliceRelic` / `SliceRelicEffect` /
   `RelicTriggers` / `RelicEffectKinds` / `SpireRelics`（声明表 + `UnsupportedReason` 构建期校验）。
 - 运行时：`CombatSlicePackage.cs` 的 `RelicVictorySteps`（战斗胜利尾，**在结算写回整局之前**）+
   `Relic` 实体与 `Relics` 集合（属整局状态，进观看者投影）。
@@ -201,9 +201,9 @@ ruleset=35143f321aa02ef6  卡=68  能力=25  敌人=21  起始牌组=10  弱遭�
 
 | 组件 | 实现文件 | 对齐来源 |
 | --- | --- | --- |
-| 状态模型（行动 / 随机分支 / 有序条件分支） | `BaseSpire/Slice/SliceEnemyBehavior.cs`（新） | `MoveState` / `RandomBranchState` / `ConditionalBranchState` |
-| `behavior` → 状态图 | `BaseSpire/Slice/SpireEnemySource.cs`（`BehaviorBuilder`，替换 `FlattenBehavior`） | 每只敌人的 `GenerateMoveStateMachine` |
-| 状态图 → Engine IR（选取 + 执行） | `BaseSpire/Slice/CombatSlicePackage.cs`（`SelectEnemyMove` / `MachinePerform`） | `MonsterModel.RollMove` / `PerformMove` / `FindNextMoveState` |
+| 状态模型（行动 / 随机分支 / 有序条件分支） | `BaseSpire/Enemies/SliceEnemyBehavior.cs`（新） | `MoveState` / `RandomBranchState` / `ConditionalBranchState` |
+| `behavior` → 状态图 | `BaseSpire/Enemies/SpireEnemySource.cs`（`BehaviorBuilder`，替换 `FlattenBehavior`） | 每只敌人的 `GenerateMoveStateMachine` |
+| 状态图 → Engine IR（选取 + 执行） | `BaseSpire/Composition/CombatSlicePackage.cs`（`SelectEnemyMove` / `MachinePerform`） | `MonsterModel.RollMove` / `PerformMove` / `FindNextMoveState` |
 
 状态**在 Engine 里**：`Monster` 上新增隐藏字段 `MachineState`、`PerformedFirstMove`、`LastMove`、
 `MoveRunLength`、`MoveHistory0..K-1`（冷却窗口）、`MoveUsed_<行动>`（`UseOnlyOnce`）。公开事实**没有新增**：
@@ -220,7 +220,7 @@ ruleset=35143f321aa02ef6  卡=68  能力=25  敌人=21  起始牌组=10  弱遭�
 - 每次落到随机分支**恰好一次** `monster_ai` 抽取；行动→行动的固定转移与有序条件分支**0 次**；全部门槛
   挡住时原版仍然抽一次并命中第一个分支（`NextFloat(0)` ⇒ `num <= 0`），本实现用 `SampleInt(0,1)` 精确复现。
 
-### 8.1.1 判别性检查（`BaseSpire.Slice.Tests/SliceEnemyStateMachineChecks.cs`，新增 10 条）
+### 8.1.1 判别性检查（`BaseSpire.Slice.Tests/Enemies/SliceEnemyStateMachineChecks.cs`，新增 10 条）
 
 - **形状 vs 源码**：Mawler（首动 Claw、三候选 `CannotRepeat`/`UseOnlyOnce`/`CannotRepeat`、权重全 1）、
   Flyconid（初始是**分支**、开场池 2 候选、后续池 3 候选、冷却 3/2/0、三个行动都指回后续池）、
@@ -296,7 +296,7 @@ ruleset=35143f321aa02ef6  卡=68  能力=25  敌人=21  起始牌组=10  弱遭�
 
 ## 8.2 交给 B / C 的本批交接（内容 ID、身份、语义动作、诊断维度）
 
-- **内容 ID / 来源顺序**：新进池 `base-spire:mawler-normal`（`Content/base-spire.encounters.json` 顺序不变）；
+- **内容 ID / 来源顺序**：新进池 `base-spire:mawler-normal`（`Enemies/Content/base-spire.encounters.json` 顺序不变）；
   敌人声明顺序 = `enemies*.spire` 文件序（`SpireEnemySource.EnemyResources()` 排序），行动顺序 = `actions(...)`
   声明顺序，分支候选顺序 = `candidate(...)` 声明顺序（**顺序参与行为**，B 不能重排）。
 - **规则 / 构建身份**：`Describe().RulesetId=d1056ff67e84805c`（本批内容 + IR 变化后必须换 id）；
@@ -382,7 +382,7 @@ ruleset=35143f321aa02ef6  卡=68  能力=25  敌人=21  起始牌组=10  弱遭�
   （`(Get-Content -Raw) -replace … | Set-Content -NoNewline`）。这一次往返把文件按系统代码页解码又编码，
   **每个损坏点丢一个字节**。同类操作（含 `Set-Content` 默认编码）以后一律禁止用于源码；
   源码改写只用 edit/write 工具或显式 UTF-8 的二进制安全脚本。
-- **损坏范围**（可核对）：`mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs`
+- **损坏范围**（可核对）：`mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs`
   共 **1235 个字符**被替换/丢失，分布在 **572 行**；其中 **19 处字符串字面量**连同**收尾引号**一起被吃掉，
   导致编译失败（CS1010/CS1002/CS1023 一类）。注释与消息里的中文首当其冲。
 - **恢复过程**：

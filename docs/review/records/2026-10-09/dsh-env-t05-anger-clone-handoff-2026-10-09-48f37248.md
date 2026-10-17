@@ -30,7 +30,7 @@ updated_at: 2026-10-09T23:40:00+08:00
 打出 Anger 时在弃牌堆创建一个**同定义的独立战斗实例**，保存打出时刻的升级形态、实例变量与临时费用修正，
 且不进入长期牌组。
 
-- **正式 Anger 原文未改**：`mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire:1300-1339`
+- **正式 Anger 原文未改**：`mod-the-spire/base-spire/BaseSpire/Cards/Content/ironclad-cards.spire:1300-1339`
   （normal `:1313`、upgraded `:1331` 各一处 `cloneCard = { pile = discard }`）。同版本源无实际偏差，
   SHA256 前后一致（`bd32a7ba709f78908d724231ea1ff65ec87b99f30753060c55cf43c782d2cc5e`），
   未重排 `ironclad-cards.spire`、未动 IroncladCardPool、未删该效果。
@@ -41,10 +41,10 @@ updated_at: 2026-10-09T23:40:00+08:00
 
 | 落点 | 变更 |
 | --- | --- |
-| `mod-the-spire/base-spire/BaseSpire/Slice/SpireCardSource.cs` | 新增 `Primitive("clone-card", 0, 1, "", "", 0, "", 0, 0, AuthorSteps.CloneCardToDiscard)` 叶读取器 `CloneCardStep`（调用点 `:1503` 注释 / `:1506` 调用）；`PrimitivesOf` 在 `chooseCard` 分支后新增 `cloneCard` 分支；`StepsFrom` 新增 `case "clone-card"` |
-| `mod-the-spire/base-spire/BaseSpire/Slice/SliceAuthorFrontend.cs` | 新具名作者步骤 `public const string CloneCardToDiscard = "clone_card_to_discard"`；登记进 `AuthorSteps.All`（否则 `.author` 报 `unknown_step`）与 `NonRepeatable`（配 `NonRepeatableReason`）；**不**登记进 `HookSteps` ⇒ hook 内复制继续被 `ValidateHookProgram` 拒绝 |
-| `mod-the-spire/base-spire/BaseSpire/Slice/Effects/SourceEffectPrograms.cs` | `ReadEffectProgram` 的 `choose-card` 显式适配旁新增 `clone-card → new LegacyCardEffect(new(primitive.StepKind, primitive.Count), property.Location)`；沿用既有 `LegacyCardEffect` 接缝，**未改** `CardEffectProgram` / `CardEffectCompiler` / `CardEffectExpressions` 的数字语义或接口 |
-| `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs` | (a) `:195` 新增隐藏可选引用字段 `Card.CloneOf`（`FieldTypeSchema.RefTo(card)`，`visibility: Hidden`，`optional: true`，比照既有 `Card.LongTermSource` 的发布边界）；(b) `:2601` 新增具名共享复制过程 `CloneCardFields(IrScope, Expr source)`；(c) `:2956` `StepInstructions` 新增 `case AuthorSteps.CloneCardToDiscard` |
+| `mod-the-spire/base-spire/BaseSpire/Cards/SpireCardSource.cs` | 新增 `Primitive("clone-card", 0, 1, "", "", 0, "", 0, 0, AuthorSteps.CloneCardToDiscard)` 叶读取器 `CloneCardStep`（调用点 `:1503` 注释 / `:1506` 调用）；`PrimitivesOf` 在 `chooseCard` 分支后新增 `cloneCard` 分支；`StepsFrom` 新增 `case "clone-card"` |
+| `mod-the-spire/base-spire/BaseSpire/Authoring/SliceAuthorFrontend.cs` | 新具名作者步骤 `public const string CloneCardToDiscard = "clone_card_to_discard"`；登记进 `AuthorSteps.All`（否则 `.author` 报 `unknown_step`）与 `NonRepeatable`（配 `NonRepeatableReason`）；**不**登记进 `HookSteps` ⇒ hook 内复制继续被 `ValidateHookProgram` 拒绝 |
+| `mod-the-spire/base-spire/BaseSpire/Cards/Effects/SourceEffectPrograms.cs` | `ReadEffectProgram` 的 `choose-card` 显式适配旁新增 `clone-card → new LegacyCardEffect(new(primitive.StepKind, primitive.Count), property.Location)`；沿用既有 `LegacyCardEffect` 接缝，**未改** `CardEffectProgram` / `CardEffectCompiler` / `CardEffectExpressions` 的数字语义或接口 |
+| `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs` | (a) `:195` 新增隐藏可选引用字段 `Card.CloneOf`（`FieldTypeSchema.RefTo(card)`，`visibility: Hidden`，`optional: true`，比照既有 `Card.LongTermSource` 的发布边界）；(b) `:2601` 新增具名共享复制过程 `CloneCardFields(IrScope, Expr source)`；(c) `:2956` `StepInstructions` 新增 `case AuthorSteps.CloneCardToDiscard` |
 
 `Legacy` 槽由既有 `CardEffectCompiler` 的 `bindings.Legacy(step)` 接到 `StepInstructions`，
 所以**新叶穿过同一条 Engine IR 执行路径**，没有新的调度器、没有在 C# 里驱动 Session、
@@ -70,8 +70,8 @@ updated_at: 2026-10-09T23:40:00+08:00
 ## 4. 已读 / 已改文件
 
 **已改（允许写清单内，全部在清单范围内）**：上表 4 个生产文件；
-`mod-the-spire/base-spire/BaseSpire.Slice.Tests/CloneCardChecks.cs`（新建，9 组判别）；
-`BaseSpire.Slice.Tests/SliceChecks.cs`（**仅**注册 `CloneCardChecks.Run();`，紧邻既有 `ConsecutiveAttackChecks.Run();` 之后，即 `:98`）；
+`mod-the-spire/base-spire/BaseSpire.Slice.Tests/Cards/CloneCardChecks.cs`（新建，9 组判别）；
+`BaseSpire.Slice.Tests/Authoring/SliceChecks.cs`（**仅**注册 `CloneCardChecks.Run();`，紧邻既有 `ConsecutiveAttackChecks.Run();` 之后，即 `:98`）；
 `BaseSpire.Slice.Tests/Program.cs`（**仅**在现有 `--effects-only` 入口注册，不新增调度器）；
 `docs/dsl/0.0.1/dsl-usage.md`（作者说明，新增 §7 内的 `cloneCard` 支持形状段）；
 `docs/review/tofix/README.md`（本包状态/证据一段）。
@@ -86,7 +86,7 @@ updated_at: 2026-10-09T23:40:00+08:00
 ## 5. 构建 / Profile / seed
 
 - 构建：`dotnet build AutoTheSpire.sln`（本包结束时用 `--no-incremental` 串行跑一次）→ **exit 0**，0 错误、3 警告；
-  3 个警告全是既有且与新增代码无关（`Slice/SourceMap/ActMap.cs(42,37)` CS8600、`ActMap.cs(60,33)` CS8600、`Slice/SpirePowerSource.cs(1241,39)` CS8604）。
+  3 个警告全是既有且与新增代码无关（`Maps/Generation/ActMap.cs(42,37)` CS8600、`ActMap.cs(60,33)` CS8600、`Powers/SpirePowerSource.cs(1241,39)` CS8604）。
 - Profile：默认 dev 规则集（未切 `dev-map`，未缩池、未加占位卡）。
 - seed：正式源夹具固定 `20261001UL`（`FormalSliceFixture.NewFormal()`），与本包所有判别一致。
 

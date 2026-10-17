@@ -1,6 +1,8 @@
 # mod-the-spire specification
 
-当前实施细则见[ENV实现约束](../environment-implementation-constraints.md)：正式SinglePlayer工厂、单一内容源、权威状态/生命周期、完整房间与两侧case。禁止把旧Legacy/作者原型成果直接计入正式Engine或另造一套C#状态机。
+2026-10-18用户确认的目标：base是使用Engine完整DSL的规则库与Spire内容包；Spire是该DSL的受限子集。具体效果、生命周期和整局流程不长期依赖C#游戏规则生成器。旧 C# 领域模块已退出生产，只在 tools 迁移对照保存。当前包仅支持遗物抽牌开发 scope；正常 Run 与未迁移内容明确未支持。目录拆分不构成完整玩法验收。目标、现状及迁移次序见[Engine DSL迁移设计](engine-dsl-migration.md)。
+
+完整环境恢复的细则见[ENV实现约束](../environment-implementation-constraints.md)：正式SinglePlayer工厂、单一内容源、权威状态/生命周期、完整房间与两侧case。禁止把旧Legacy/作者原型成果直接计入正式Engine或另造一套C#状态机。
 
 > 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
 
@@ -33,7 +35,7 @@ STS mod 可显式依赖 base-spire，扩展其开放的 Schema、内容、事件
 
 ## 4. 当前实现与迁移
 
-以下是 2026-10-01 设计时点的迁移背景，不能据此选择当前生产后端：当时 base-spire 已注册较多 STS 内容，并使用 core 内的 STS 类型；`.spire` 0.0.1 作者约定保持兼容。迁移计划是先迁通用存储/调度，再迁 STS 编译扩展和规则切片，逐步把专用语义从 core 移到游戏包。当前活动路径按[ENV实现约束](../environment-implementation-constraints.md)执行。
+以下是 2026-10-01 设计时点的迁移背景，不能据此选择当前生产后端：当时 base-spire 已注册较多 STS 内容，并使用 core 内的 STS 类型；`.spire` 0.0.1 作者约定保持兼容。迁移计划是先迁通用存储/调度，再迁 STS 编译扩展和规则切片，逐步把专用语义从 core 移到游戏包。当前纯 DSL 加载按[迁移规格](engine-dsl-migration/spec.md)执行，完整环境合同继续保留。
 
 当前 base-spire 完整性目标仍为恢复源码快照的单人玩法闭环；其他游戏包用于证明通用性，不把现有内容注册数量当作完整规则等价证据。迁移验收区分解析器接受、实际加载、行为检查和源规则差分。
 
@@ -48,7 +50,7 @@ STS mod 可显式依赖 base-spire，扩展其开放的 Schema、内容、事件
 ## 5. 永久状态写回矩阵（ENV-T02）
 
 要求出处：[ENV实现约束](../environment-implementation-constraints.md) 的"写回矩阵必须标清字段来源/提交点/失效点"。
-玩家战斗生命副本的提交点是[SettlementCompilation.Settlement](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/SettlementCompilation.cs)声明的 `CommitPermanent` 过程，它把玩家**战斗副本**的 `Hp`、`MaxHp`
+玩家战斗生命副本的提交点是[SettlementCompilation.Settlement](../../../tools/base-migration-baseline/BaseSpire/Combat/Compilation/SettlementCompilation.cs)声明的 `CommitPermanent` 过程，它把玩家**战斗副本**的 `Hp`、`MaxHp`
 整体写回整局 `Run` 实例。`SettleBattle`负责房间幂等提交，`BattleEndTail`生成外层动作的结算尾；下一房的副本重建由`BattleRoomCompilation.RoomTransition`生成。完整模块分工见[编译模块参考](package-compilation-reference.md)。资源的归属与提交如下：
 
 | 状态 | 权威归属（非战斗时） | 战斗副本来源 | 提交点 | 重建/失效点 |
@@ -66,5 +68,5 @@ STS mod 可显式依赖 base-spire，扩展其开放的 Schema、内容、事件
 `endTurnBody`、`UsePotion` 的 `useBody` 各一处），既不在伤害步骤里、也不在效果步骤表里，因此"最后一次击杀"
 之后的父效果余效（Feed 的 `on_fatal_gain_max_hp`、遗物回血、实例变量写回）、条件分支、`after_card_played`
 钩子、`InPlay` 移除、`consumeOnPlay` 消耗、消耗区摆放与结果区处理都先跑完，才 `SettleBattle` → `CommitPermanent`
-→ `SetTerminal`。针对性检查见 `BaseSpire.Slice.Tests/SliceFrontendSettlementChecks.cs`（源关系、条件分支末杀、
+→ `SetTerminal`。针对性检查见 `BaseSpire.Slice.Tests/Cards/SliceFrontendSettlementChecks.cs`（源关系、条件分支末杀、
 消耗牌末杀三条各自钉住一类收尾）。

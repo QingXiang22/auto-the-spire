@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第六批）——效果批次（`damage x3` / `block x2`）与**逐变体步骤序列** |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"批处理"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`AuthorStep`/批次解析/逐变体模型）、`Slice/CombatSlicePackage.cs`（`Repeat` 降级 + 按 (定义, 升级) 分派）、`BaseSpire.Slice.Tests/SliceFrontendBatchChecks.cs`（新增 5 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`AuthorStep`/批次解析/逐变体模型）、`Composition/CombatSlicePackage.cs`（`Repeat` 降级 + 按 (定义, 升级) 分派）、`BaseSpire.Slice.Tests/Cards/SliceFrontendBatchChecks.cs`（新增 5 项） |
 | 状态 | **部分完成（六批）**：批次与逐变体已交付；**多选（`EntityRefList`）未做**，需要先补引擎能力（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批5](b-05c-frontend-batch5-2026-10-02.md) |
 
@@ -68,9 +68,9 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`AuthorStep`、批次解析与规则、逐变体步骤、`NormalExhaustsSelf`/`UpgradedExhaustsSelf`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`Repeat` 批次降级、按 (定义, 升级) 分派效果与结果区）
-- `BaseSpire.Slice.Tests/SliceFrontendBatchChecks.cs`（新增 5 项）、既有 5 个前端检查文件改为按步骤名/逐变体断言
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`AuthorStep`、批次解析与规则、逐变体步骤、`NormalExhaustsSelf`/`UpgradedExhaustsSelf`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`Repeat` 批次降级、按 (定义, 升级) 分派效果与结果区）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendBatchChecks.cs`（新增 5 项）、既有 5 个前端检查文件改为按步骤名/逐变体断言
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`（本批只用既有 `Repeat`/`IfElse` 原语）、Legacy、net、Python 侧。未提交、未清理共享工作区。

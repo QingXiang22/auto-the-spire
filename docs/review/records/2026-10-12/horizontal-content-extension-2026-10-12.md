@@ -5,7 +5,7 @@
 ## 扩展接口
 
 - 卡牌：`SpireCardSource.CardResources()`按`BaseSpire.ContentSource.*-cards.spire`排序发现；怪物：`SpireEnemySource.EnemyResources()`按`enemies*.spire`发现。`BaseSpire.csproj`嵌入所有`ContentSource/*.spire`，`SinglePlayerContentSource`逐资源降级并汇总；正式当前加载176卡/38敌人，无逐内容注册白名单。资源加载与源卡池/遭遇池资格是两件事，不以注册数宣称完整语义覆盖。
-- 地图：新增`Slice/Rooms/MapRoomEntry`，现有房型进入指令移到`Standard`组合，原`RegisterChooseMapPoint`签名仍兼容；新重载接处理器列表，重复类型拒绝，未登记类型明确失败。旧房型的声明/IR顺序保持，具体新房型只增加模块和组合项。
+- 地图：新增`Rooms/MapRoomEntry`，现有房型进入指令移到`Standard`组合，原`RegisterChooseMapPoint`签名仍兼容；新重载接处理器列表，重复类型拒绝，未登记类型明确失败。旧房型的声明/IR顺序保持，具体新房型只增加模块和组合项。
 - 事件：`IEventRoomModule`分别拥有ID、进入与选项编译；`EventRoomCatalog`按登记顺序生成分派，不依赖具体事件类。`EventCompileContext`绑定实际Engine字段与phase，各动作按当前ID/phase守卫，关闭清当前ID并恢复旅行。它们不保存Session、RunState或随机状态。源选择器与可执行目录分开，未注册的已选事件明确失败。
 - `docs/examples/base-events/GoldEvent.cs`与`HealEvent.cs`独立文件共享目录。例子通过真实地图选点进入预置事件，分别金币10→17、生命50→55，关闭后phase2、事件清空、旧选择不再合法；重复ID及未知已选事件反例成立。它是受控接口例子，没有运行源问号概率或原版事件池。
 

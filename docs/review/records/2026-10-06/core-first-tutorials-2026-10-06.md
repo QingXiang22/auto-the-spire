@@ -37,7 +37,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj 
 ## 工程与文档检查
 
 - `dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests`：95/95，退出0，[日志](../../../../.audit/core-tutorials-2026-10-06/engine.log)。
-- `dotnet build AutoTheSpire.sln`：退出1，0警告/6错误，[日志](../../../../.audit/core-tutorials-2026-10-06/build.log)。首错为 `BaseSpire.Slice.Tests/SliceEnemyStateMachineChecks.cs:641` 的CS0103，`CandidateLines` 未定义；同文件还有 `ParseCandidateWeights` / `fogmog` 未定义。这些文件不在本次修改范围。
+- `dotnet build AutoTheSpire.sln`：退出1，0警告/6错误，[日志](../../../../.audit/core-tutorials-2026-10-06/build.log)。首错为 `BaseSpire.Slice.Tests/Enemies/SliceEnemyStateMachineChecks.cs:641` 的CS0103，`CandidateLines` 未定义；同文件还有 `ParseCandidateWeights` / `fogmog` 未定义。这些文件不在本次修改范围。
 - `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests`：同样被上述编译错误阻断，检查未执行，不记为通过，[日志](../../../../.audit/core-tutorials-2026-10-06/slice.log)。net套件未重跑，本次不改网络模块。
 - `python tools/doc-check/check_docs.py` 与 `git diff --check`：退出0；链接/锚点无问题，差异无空白错误，[文档日志](../../../../.audit/core-tutorials-2026-10-06/doc-check.log)、[差异日志](../../../../.audit/core-tutorials-2026-10-06/diff-check.log)。
 

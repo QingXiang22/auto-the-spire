@@ -17,9 +17,9 @@
 
 ## 文件清单
 
-- 卡声明：[silent-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/silent-cards.spire)、[colorless-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/colorless-cards.spire)、[status-cards.spire](../../../../mod-the-spire/base-spire/BaseSpire/ContentSource/status-cards.spire)。跨文件复用现有Dexterity/Strength/PlatingPower。
-- 数值检查：[RemainingCardFamiliesChecks.cs](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/RemainingCardFamiliesChecks.cs)，仅追加四张Case与明确ResultNone字段，旧断言未放宽。
-- 独立收益/时序和真实分层证据：[UnblockedCardFamiliesChecks.cs](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/UnblockedCardFamiliesChecks.cs)；最小入口：[Program.cs](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/Program.cs)。
+- 卡声明：[silent-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/silent-cards.spire)、[colorless-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/colorless-cards.spire)、[status-cards.spire](../../../../tools/base-migration-baseline/BaseSpire/Cards/Content/status-cards.spire)。跨文件复用现有Dexterity/Strength/PlatingPower。
+- 数值检查：[RemainingCardFamiliesChecks.cs](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/RemainingCardFamiliesChecks.cs)，仅追加四张Case与明确ResultNone字段，旧断言未放宽。
+- 独立收益/时序和真实分层证据：[UnblockedCardFamiliesChecks.cs](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/UnblockedCardFamiliesChecks.cs)；最小入口：[Program.cs](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Program.cs)。
 - 综合证据：[audit目录](../../../../.audit/dsh-card-boundaries-content-2026-10-10/coverage-matrix.md)；只维护主清单本次执行者认领段。
 
 ## 实际命令与结果
@@ -43,7 +43,7 @@
 
 四卡局部检查与本交接已完成后继续Skewer。原生[Skewer.cs:16–37](../../../../sts2/src/Core/Models/Cards/Skewer.cs#L16)与[SilentCardPool:97](../../../../sts2/src/Core/Models/CardPools/SilentCardPool.cs#L97)：X费用、AnyEnemy、每击8→11、已付X次攻击、无Exhaust。声明使用现有repeatForX，未新增公共机制。
 
-新增[XCardFamilyChecks.cs](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/XCardFamilyChecks.cs)，三种模式分别运行X=0/1/3（共9种数值场景，按模式聚合为3项检查），验证实际支付、一次目标决策、仅选中敌人受击、弃牌结果和X=0记录。另三种模式的独立逐击检查使用Strength+2、Weak逐击取整、目标Block5：普通每击floor((8+2)×0.75)=7，三击扣除Block后HP损失16；升级每击floor((11+2)×0.75)=9，损失22，判别逐击计算与一击乘X的区别。
+新增[XCardFamilyChecks.cs](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/XCardFamilyChecks.cs)，三种模式分别运行X=0/1/3（共9种数值场景，按模式聚合为3项检查），验证实际支付、一次目标决策、仅选中敌人受击、弃牌结果和X=0记录。另三种模式的独立逐击检查使用Strength+2、Weak逐击取整、目标Block5：普通每击floor((8+2)×0.75)=7，三击扣除Block后HP损失16；升级每击floor((11+2)×0.75)=9，损失22，判别逐击计算与一击乘X的区别。
 
 实际执行：`dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests/BaseSpire.Slice.Tests.csproj` exit0（[构建日志](../../../../.audit/dsh-card-boundaries-content-2026-10-10/build-skewer.log)）；同实际DLL `--x-card-family-only --benefits-only` exit0 / 3项（[逐击收益](../../../../.audit/dsh-card-boundaries-content-2026-10-10/skewer-benefits.log)），先于同DLL `--x-card-family-only` exit0 / 3项、内部9种X场景（[完整族](../../../../.audit/dsh-card-boundaries-content-2026-10-10/skewer-values.log)）。最终默认Slice运行也实际先执行了四卡139+11以及Skewer3+3，全部成功输出，随后才进入旧检查失败。
 
@@ -58,7 +58,7 @@
 | `dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests/BaseSpire.Slice.Tests.csproj` | 0 | [Slice构建](../../../../.audit/dsh-card-boundaries-content-2026-10-10/build-slice-final.log) |
 | `dotnet mod-the-spire/base-spire/BaseSpire.Slice.Tests/bin/Debug/net9.0/BaseSpire.Slice.Tests.dll` | -532462766（Windows进程3762504530） | [Slice最终](../../../../.audit/dsh-card-boundaries-content-2026-10-10/slice-final.log)，新检查156项成功输出后，旧正式源固定数量断言失败 |
 
-首差原文：`W-06 正式源：声明/解析/降级/未支持**四态分开**，降级集确定 [真实]: 状态牌源声明 2 张: expected '2', got '3'`，栈定位[SliceFormalSourceChecks.cs:104](../../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceFormalSourceChecks.cs#L104)。Debris合法新增让旧Status资源固定数量从2变3；没有编辑旧Slice检查或放宽断言。完整Slice在这处提前结束，其后检查（含公开固定身份）未执行，不能把未到达的身份门槛说成实际身份首差。数量基线及随内容变化的公开身份迁移均交Codex集成。未跑全solution/net/公开Act1或严格双端/client环境。
+首差原文：`W-06 正式源：声明/解析/降级/未支持**四态分开**，降级集确定 [真实]: 状态牌源声明 2 张: expected '2', got '3'`，栈定位[SliceFormalSourceChecks.cs:104](../../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Cards/SliceFormalSourceChecks.cs#L104)。Debris合法新增让旧Status资源固定数量从2变3；没有编辑旧Slice检查或放宽断言。完整Slice在这处提前结束，其后检查（含公开固定身份）未执行，不能把未到达的身份门槛说成实际身份首差。数量基线及随内容变化的公开身份迁移均交Codex集成。未跑全solution/net/公开Act1或严格双端/client环境。
 
 ## 剩余机制与下一可继续族
 

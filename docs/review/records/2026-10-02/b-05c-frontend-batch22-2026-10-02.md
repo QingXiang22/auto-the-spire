@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第二十二批）——**出手倍率型能力（`Shrink`）**，补齐 R-DAMAGE 证据里的"出手倍率"未覆盖区，并解锁 `BeetleJuice` |
 | 权威 | 来源：`sts2/src/Core/Models/Powers/ShrinkPower.cs`（本批逐条核对）；[r-damage-source-evidence](../2026-10-01/r-damage-source-evidence-2026-10-01.md) §6/§8.5；[开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移) |
-| 负责范围 | `Slice/Content/slice-content.author`（`power shrink` + `potion beetle-juice` + 栏位）、`Slice/SliceAuthorFrontend.cs`（药水/栏位的双向可达性校验）、`BaseSpire.Slice.Tests/SliceFrontendShrinkChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/Examples/slice-content.author`（`power shrink` + `potion beetle-juice` + 栏位）、`Authoring/SliceAuthorFrontend.cs`（药水/栏位的双向可达性校验）、`BaseSpire.Slice.Tests/Powers/SliceFrontendShrinkChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（二十二批）**：Shrink 与 BeetleJuice 已交付；B-05c 其余子项仍未开始（见 §5） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批21](b-05c-frontend-batch21-2026-10-02.md) |
 

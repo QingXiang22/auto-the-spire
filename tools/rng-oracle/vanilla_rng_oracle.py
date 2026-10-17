@@ -347,7 +347,7 @@ def emit_layout_csharp(layout: dict, path: pathlib.Path) -> None:
     lines.append("// 本文件由 tools/rng-oracle/vanilla_rng_oracle.py 生成——不要手改。")
     lines.append("// 重新生成：")
     lines.append("//   python tools/rng-oracle/vanilla_rng_oracle.py "
-                 "--cs-layout mod-the-spire/base-spire/BaseSpire.Slice.Tests/VanillaSeedLayoutVectors.cs")
+                 "--cs-layout mod-the-spire/base-spire/BaseSpire.Slice.Tests/Randomness/VanillaSeedLayoutVectors.cs")
     lines.append("//")
     lines.append("// 只按只读原版源码的**独立重写**生成：")
     for source in layout["source"]:

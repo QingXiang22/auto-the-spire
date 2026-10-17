@@ -13,7 +13,7 @@ updated_at: 2026-10-08T23:46:53+08:00
 
 ## 一句话
 
-PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能量付不起的牌"会求值 `CardRuleCostAllows`，其中含纯过程调用 `CallPure(base-spire:PowerStacksOf)`；会话此刻正挂起在第二张攻击牌的目标决策上（`AwaitingDecision`），`InvokePure` 无法 drain ⇒ `SessionStateInvalid`，`Fatal` 再把只读查询升级为**会话级 `Faulted`**。修复=把这个守卫用的纯过程调用**内联为等价查询表达式**（同一 relation、同一选序、同一"未找到即 0"语义），只改 `Slice/CombatSlicePackage.cs` 一处；core 一行未动。
+PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能量付不起的牌"会求值 `CardRuleCostAllows`，其中含纯过程调用 `CallPure(base-spire:PowerStacksOf)`；会话此刻正挂起在第二张攻击牌的目标决策上（`AwaitingDecision`），`InvokePure` 无法 drain ⇒ `SessionStateInvalid`，`Fatal` 再把只读查询升级为**会话级 `Faulted`**。修复=把这个守卫用的纯过程调用**内联为等价查询表达式**（同一 relation、同一选序、同一"未找到即 0"语义），只改 `Composition/CombatSlicePackage.cs` 一处；core 一行未动。
 
 ## 归属
 
@@ -50,7 +50,7 @@ PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能�
 | 顺序门（C 停止后才改 base 生产与构建） | ✅ 见上第 6 条；本包所有构建都在 `23:09:28` 之后 |
 | 串行 root build → Engine → Slice | ✅ root 0 错（2.8s）→ Engine 95/95（1.08s）→ Slice 344/344（259.38s） |
 | net 公开连续攻击 + 旧 0.1 兼容 | ✅ Host 四条探针；0.1 `legacy-slice --seed 7` 连续 3 次攻击全 ok；net 套件 415/415（118.68s） |
-| 新增有限针对性行为检查覆盖根因与真实调用链 | ✅ `BaseSpire.Slice.Tests/ConsecutiveAttackChecks.cs` 5 条，走真实 `base-spire:PlayCard` 动作与真实守卫（见下） |
+| 新增有限针对性行为检查覆盖根因与真实调用链 | ✅ `BaseSpire.Slice.Tests/Combat/ConsecutiveAttackChecks.cs` 5 条，走真实 `base-spire:PlayCard` 动作与真实守卫（见下） |
 | 保存真实 NDJSON/config/seed/run_id/状态与诊断前缀 | ✅ 每步完整响应 NDJSON 落在 `.audit/…/logs/{before,after}/<run>/0*.json`；探针 stdout 打印诊断前缀；差分 `run_id` 见下 |
 | 边界外依赖明确 blocked、能交的先交 | ✅ 无阻塞；core 缺口以**提案**形式交负责人（不改 core，见"差异、阻塞与未验证"） |
 
@@ -69,7 +69,7 @@ PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能�
 - **机制（逐环由源读 + 取证确认）**：
   1. 第二张攻击牌需要选目标 ⇒ 该 step 结束时 `Status == AwaitingDecision`（`_pending` 未清）；net 的 `Settle` 无条件 `Snapshot()`，而 `Snapshot` 一定调 `Session.LegalActions`（`ControlSession.cs:327-333`）。
   2. `LegalActions`（`Scheduler.cs:211-269`）对每个候选求值 `Eval(probe, action.Guard)`（`:251`）；PlayCard 候选域＝整只手牌 ⇒ 手牌里**每一张**都会过守卫。
-  3. PlayCard 守卫（`Slice/CombatSlicePackage.cs:4052-4056`）＝ `Or(EnergyIsEnough(), CardRuleCostAllows(...))`，`LogicExpr` 短路（`Session.Expressions.cs:42-48`）⇒ **只有能量付不起的牌**才求值右侧。
+  3. PlayCard 守卫（`Composition/CombatSlicePackage.cs:4052-4056`）＝ `Or(EnergyIsEnough(), CardRuleCostAllows(...))`，`LogicExpr` 短路（`Session.Expressions.cs:42-48`）⇒ **只有能量付不起的牌**才求值右侧。
   4. 修复前 `CardRuleCostAllows`（`:3939-3960`）右侧含 `Greater(CallPure(PowerStacksOf, …), 0)`（原 `:3948-3951`）⇒ `CallPureExpr → InvokePure`（`Session.Expressions.cs:127-140`）；挂起态下 `DrainTo(depth)` 不推进 ⇒ `:133 if (_stack.Count > depth)` 抛 `Faults.Of(EngineFaultCode.SessionStateInvalid, "pure procedure … cannot suspend")`。**错误文案与真实条件不符：纯过程体本身不会挂起，是会话此刻已挂起。**
   5. `Fatal` 把 `Status` 置 `Faulted` ⇒ 该 step 变成 `backend_fault`，同一 session 后续请求全部失败。
   6. **实测状态完全吻合**：修复前 `logs/before/dev-strike-strike/02-answer-1.json` 显示挂起前玩家 `Energy=2`、手牌 `[strike(1), bash(2), defend(1), defend(1)]`；第二张 Strike 花 1 费后剩 `Energy=1`，手牌 Bash(2) **不可支付** ⇒ 守卫右侧必被求值。（对照：第二张 Defend 不产生目标决策 ⇒ 会话仍 `Running` ⇒ `InvokePure` 正常 drain ⇒ 成功。）
@@ -77,7 +77,7 @@ PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能�
 
 ## 实际修复（唯一生产改动）
 
-`mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs`，`CardRuleCostAllows` 内，原 `:3948-3951` → 现 `:3948-3958`（`before`/`after` 快照见 `.audit/…/{before,after}/CombatSlicePackage.cs`）：
+`mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs`，`CardRuleCostAllows` 内，原 `:3948-3951` → 现 `:3948-3958`（`before`/`after` 快照见 `.audit/…/{before,after}/CombatSlicePackage.cs`）：
 
 ```diff
              foreach (var rule in rules)
@@ -101,7 +101,7 @@ PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能�
 
 **旧路径不受影响的结构性论据**：循环遍历的是 `author.Powers` 里声明的 `cardRule`；`author is null` 或无此类能力时循环不执行 ⇒ 生成的 IR 与修复前**逐字相同**（0.1 程序化切片、无 Power 的 formal 场景都走这条）。
 
-## 新增检查（`BaseSpire.Slice.Tests/ConsecutiveAttackChecks.cs`，5 条，已注册）
+## 新增检查（`BaseSpire.Slice.Tests/Combat/ConsecutiveAttackChecks.cs`，5 条，已注册）
 
 注册点：`SliceChecks.cs:95 ConsecutiveAttackChecks.Run();`（紧随 `PublicSemanticsChecks.Run();`）。全部走真实生产包 + 真实 `base-spire:PlayCard` 动作与真实守卫，不添加镜像实现断言：
 
@@ -142,8 +142,8 @@ PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能�
 
 **产物哈希**
 
-- `mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs` sha256 `8345B0F8F0A94665E3D2FDEDC273C68351ABCC9ED4A303671BFD0B85E3417A26`（306358 B；`before` = `6CF29560405509C01A257E72F730B1D81965E32D0FC268632D0380B284074771`，305677 B）。
-- `BaseSpire.Slice.Tests/ConsecutiveAttackChecks.cs` sha256 `D541815AE8372C2DC167B7F082ECFD0B7F6B08E20FAD1E06DAB2FD00E95CFF66`（11623 B）；`SliceChecks.cs` `B10EE2FAB9DFF1243CF8BE1F419F4FB91B2E3BB4397450FAEE62B20DCC58D524`；`SliceMapRoomChecks.cs` `B1107404252DC471C4943FC9AF5BDE139F854376CEC841AD5E46D4B1F0441DA8`。
+- `mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs` sha256 `8345B0F8F0A94665E3D2FDEDC273C68351ABCC9ED4A303671BFD0B85E3417A26`（306358 B；`before` = `6CF29560405509C01A257E72F730B1D81965E32D0FC268632D0380B284074771`，305677 B）。
+- `BaseSpire.Slice.Tests/Combat/ConsecutiveAttackChecks.cs` sha256 `D541815AE8372C2DC167B7F082ECFD0B7F6B08E20FAD1E06DAB2FD00E95CFF66`（11623 B）；`SliceChecks.cs` `B10EE2FAB9DFF1243CF8BE1F419F4FB91B2E3BB4397450FAEE62B20DCC58D524`；`SliceMapRoomChecks.cs` `B1107404252DC471C4943FC9AF5BDE139F854376CEC841AD5E46D4B1F0441DA8`。
 - DLL：`Net.TheSpire.Host.dll` `B1A0B73F3D6FC9E5CC5AB4FD6BB15EEEE8739468AF6B989FE1DFA373861038D4`（43008 B，23:17:42）、`Net.TheSpire.dll` `B2BA55134E650E6EA66F61B86B881F495B1B21562DB12A4F568B2C1809F33EE7`、`Net.TheSpire.Tests.dll` `8BFA4D50EB6FE8FBFABB82F4B7AE8C15790E529556886C229453D00BB9400A56`、`BaseSpire.dll` `28A02EDFBB0F6EB7E7740240F528E56FF061D7C2F03A7F270389B9BA48D7C93A`（846336 B，23:20:55）、`BaseSpire.Slice.Tests.dll` `B2D0C01A713A8621127F32FE25AAF7DEF16FC9E2CB6AC0463FF8FA9473EC3BE6`。
 - 修复前 Host 二进制（= 复现所用）：`net-the-spire/Net.TheSpire.Host/bin/Debug/net9.0/Net.TheSpire.Host.dll` `LastWriteTime 2026-10-08 22:21:33`。
 
@@ -162,8 +162,8 @@ PlayCard 守卫在执行**只读查询**（`Session.LegalActions`）时对"能�
 
 ## 维护位置
 
-- 生产改动：`mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs`（`CardRuleCostAllows`，`:3939-3960`）。
-- 检查：`mod-the-spire/base-spire/BaseSpire.Slice.Tests/ConsecutiveAttackChecks.cs`（新增）+ `SliceChecks.cs`（注册）+ `SliceMapRoomChecks.cs:39-40`（golden 重基线）。
+- 生产改动：`mod-the-spire/base-spire/BaseSpire/Composition/CombatSlicePackage.cs`（`CardRuleCostAllows`，`:3939-3960`）。
+- 检查：`mod-the-spire/base-spire/BaseSpire.Slice.Tests/Combat/ConsecutiveAttackChecks.cs`（新增）+ `SliceChecks.cs`（注册）+ `SliceMapRoomChecks.cs:39-40`（golden 重基线）。
 - 诊断与证据：`.audit/dsh-env-t05-consecutive-attack-2026-10-08/`
   - `diagnosis.md`（根因分析全文）、`task.txt`/`task-record.json`（派单）；
   - `before/`、`after/`（修复前后源码快照 + 哈希）、`patch/ConsecutiveAttackChecks.cs`；

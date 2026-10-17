@@ -1,12 +1,15 @@
 # Run与房间编译接口
 
+> 2026-10-18：本页保留旧 C# base 的教程／接口依据，所列运行路径已退出生产，当前不能照此执行。纯 DSL 开发请从[开发指南](base-development-guide.md)与[包格式参考](../../dsl/core/0.3/package-reference.md)开始；原功能需按迁移任务恢复。
+
+
 文档类型：参考（Reference）。适用于base地图房间的C#编译接口。实例调用见[房间操作指南](how-to-add-a-room.md)。本页不维护任务状态。
 
 ## 共用上下文
 
 多幕开发配置的幕计划、预生成/活动队列、全局楼层及切幕入口见[默认幕计划与跨幕生命周期](act-transitions.md)。`dev-map`保留单幕语义，`dev-run`显式启用默认三幕计划；完整Ironclad身份另行验收。
 
-[RoomCompileContext](../../../mod-the-spire/base-spire/BaseSpire/Slice/RoomCompileContext.cs)的完整构造签名：
+[RoomCompileContext](../../../tools/base-migration-baseline/BaseSpire/Rooms/RoomCompileContext.cs)的完整构造签名：
 
 ```csharp
 RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
@@ -14,7 +17,7 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
     CollectionSymbol LongTermDeck, MapRoomWiring Map)
 ```
 
-由[RoomCompilation.RoomServices](../../../mod-the-spire/base-spire/BaseSpire/Slice/Compilation/RoomCompilation.cs)创建一次，`RoomCompilation.Rooms`传给具体房间。所有字段/集合必须来自同一个正在编译的包；它们是符号，不能当作可变C#游戏对象。
+由[RoomCompilation.RoomServices](../../../tools/base-migration-baseline/BaseSpire/Rooms/Compilation/RoomCompilation.cs)创建一次，`RoomCompilation.Rooms`传给具体房间。所有字段/集合必须来自同一个正在编译的包；它们是符号，不能当作可变C#游戏对象。
 
 | 成员 | 用途/前置条件 |
 | --- | --- |
@@ -29,7 +32,7 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 
 ## 横向注册地图入口与事件
 
-相关接口位于 `BaseSpire/Slice/Rooms/`，都是编译期对象：
+相关接口位于 `BaseSpire/Rooms/`，都是编译期对象：
 
 | 接口 | 语义 |
 | --- | --- |
@@ -75,7 +78,7 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 
 ## 房间与阶段
 
-入口定义在[MapRoomWiring](../../../mod-the-spire/base-spire/BaseSpire/Slice/MapRoomWiring.cs)。
+入口定义在[MapRoomWiring](../../../tools/base-migration-baseline/BaseSpire/Rooms/MapRoomWiring.cs)。
 
 | 阶段 | 值 | 归属/合法操作 |
 | --- | ---: | --- |
@@ -111,21 +114,22 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 
 | 要做的操作 | 现有入口 | 调用时保留的边界 |
 | --- | --- | --- |
-| 脱战获得金币、伤害、回复 | [RunResources](../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunResources.cs)的`GainGold` / `DamageOutsideCombat` / `HealLivingPlayer` | 生成IR；金币hook链须与当前内容匹配，伤害限定当前Unblockable\|Unpowered范围，回复不复活。选项数值和访问收尾由调用方或事件编译器决定；见[契约](event-domain/spec.md) |
+| 脱战获得金币、伤害、回复 | [RunResources](../../../tools/base-migration-baseline/BaseSpire/Run/RunResources.cs)的`GainGold` / `DamageOutsideCombat` / `HealLivingPlayer` | 生成IR；金币hook链须与当前内容匹配，伤害限定当前Unblockable\|Unpowered范围，回复不复活。选项数值和访问收尾由调用方或事件编译器决定；见[契约](event-domain/spec.md) |
 | 支出金币、增加生命上限 | `RunResources.LoseGold(scope, run, amount)` / `GainMaxHp(scope, run, amount)` | 非负输入快照；支出最低0，购买先用Requires校验够钱；增加上限后回复实际增量。历史分类及完整修正参与者未支持 |
 | 非卡牌来源失去生命上限 | `RunResources.LoseMaxHp(scope, run, amount)` | 快照非负输入；先按新上限损失超出部分的当前生命，再将MaxHp最低设为1。复用脱战伤害；历史、修正及死亡阻止参与者尚未齐全 |
-| 获得遗物 | [RunRelics.Obtain(scope, run, definition)](../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunRelics.cs) | 受支持不可叠加身份创建→玩家/共享袋移除→AfterObtained复用同一RunResources。Supported是可获得效果名单，抽取和来源收尾另归房间；未知效果明确失败 |
+| 获得遗物 | [RunRelics.Obtain(scope, run, definition)](../../../tools/base-migration-baseline/BaseSpire/Relics/RunRelics.cs) | 受支持不可叠加身份创建→玩家/共享袋移除→AfterObtained复用同一RunResources。Supported是可获得效果名单，抽取和来源收尾另归房间；未知效果明确失败 |
+| 遗物实例与生命周期 | `RelicSchema.Declare(package, collectionName = "Relics")`；`RunRelics.IsOwned(scope, relic)` / `IsActive(scope, relic)` / `HasActive(scope, definition)`；`Obtain(scope, run, definition, index = null, isWax = false)`；`Remove(scope, run, relic)` / `Replace(scope, run, original, definition)` / `Melt(scope, run, relic)`；`SetCounter(scope, relic, value)` / `AddCounter(scope, relic, amount)` | 共享Engine实例配方，替换保位并重置计数；仅蜡质可熔毁，保留持有但停效。`AfterObtained`／`AfterRemoved`为构建期注入的`(scope, run, relic) → Inst[]`；准确顺序、范围和未支持项见[生命周期契约](run-domain/spec.md#遗物实例与生命周期) |
 | 战斗奖励遗物抽取 | `RunRelics.DrawReward(scope, run, identityField, rarityField) → Inst[]` | 玩家袋已初始化；在卡牌奖励之后用Player.Rewards抽一次稀有度，按玩家袋前端取身份并同时移出共享袋。字段由RewardWiring拥有，领取复用Obtain；空袋回退尚未获独立双侧验收 |
-| 永久牌组创建、获得、移除 | [RunDeck.Create / Acquire / Remove](../../../mod-the-spire/base-spire/BaseSpire/Slice/Domain/Run/RunDeck.cs) | Create使用New配方；Acquire保留实例、调用方先移出候选；Remove校验永久成员并先BeforeRemoved。当前无获得替换参与者，源全部hook/历史仍未支持；见[整局契约](run-domain/spec.md) |
+| 永久牌组创建、获得、移除 | [RunDeck.Create / Acquire / Remove](../../../tools/base-migration-baseline/BaseSpire/Cards/RunDeck.cs) | Create使用New配方；Acquire保留实例、调用方先移出候选；Remove校验永久成员并先BeforeRemoved。当前无获得替换参与者，源全部hook/历史仍未支持；见[整局契约](run-domain/spec.md) |
 | 永久牌组选择升级／变换 | `RunDeck.SelectForUpgrade(scope)` / `SelectForTransform(scope, run, stream)` | 空域不提问，唯一候选自动选，多候选Engine暂停；升级保留实例，变换支持完整Ironclad普通池并追加新实例。源事件传自己的流；其他池、附着和全部参与者仍未支持 |
 | 同时选择多张永久牌 | `RunDeck.SelectMany(scope, count, eligible, prompt, onSelected)` | 一次EntityRefList决策恰选count张，按答案顺序执行；候选≤count时自动处理全部，Engine快照防止新变换实例重新入选。公开多选依T03，不降低真实数量约束 |
 | 按有序永久候选随机选一张 | `RunDeck.SelectRandom(scope, candidates, stream, onSelected)` | 非空域恰好一抽，回调收到所选真实实例；单候选仍抽取，空域失败。CanRemove / HasRarity供内容组合资格，移除仍单独复用Remove |
 | 非战斗均匀卡牌奖励 | `RunCardRewards(package, deck).Choose(scope, run, pool, count, take)` | 完整且有序的候选池由来源提供；Rewards无放回抽定义，沿源NoUpgradeRoll，不改稀有度偏移。Engine恰选take张并保留实例，清理余项；当前公开协议尚不能提交多选，不能宣称此形状公开可用 |
-| 普通事件选项 | [ChoiceEventModule](../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/EventChoices.cs)和`EventChoice` | 共享Role、访问/存活守卫及死亡/结束尾；内容只给初始化、可用条件和效果，事件战斗返回尚非此能力 |
-| 新卡字段、复制、升级 | [CardDefinitions](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDefinitions.cs)的`New` / `Copy` / `Upgrade` | 统一变量、源排序键和升级增量；New/Copy不创建实体或完成长期获得流程，Copy的clone策略与战斗副本策略不同 |
-| 卡牌附魔首批 | [CardEnchantments](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardEnchantments.cs)的`CanEnchantPermanent(scope, card)` / `ApplySown(scope, card)` | 调用方提供永久牌选择域；只支持Sown，资格拒绝Status／Curse／Quest、不可打出的永久牌及已附魔实例。附魔身份／层数／Disabled属于卡实例，Copy保留独立状态、Upgrade保留附魔、New不继承旧附魔；后继出牌复用AfterBody，完整范围见[原语契约](card-primitives/spec.md#卡牌附魔首批sown) |
-| 战斗牌堆移动、消耗、克隆、变形 | [CardPileProcedures](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardPileProcedures.cs)的`MoveChosen` / `Move` / `Clone` / `Transform` | 仅战斗牌堆。手动选择用MoveChosen保留入手限制、置顶记录与手动弃牌回调；Move不等同手动弃牌，不用于永久牌组移除 |
-| 药水容量与奖励入栏 | [PotionInventoryRules](../../../mod-the-spire/base-spire/BaseSpire/Slice/PotionInventoryRules.cs)的`HasSpace` / `Acquire` / `Fields` | Acquire从该模块Rewards取首项，不自行校验所有调用前置条件；调用方先保证有奖励且有空槽。Fields只给实例字段，不完成入栏 |
+| 普通事件选项 | [ChoiceEventModule](../../../tools/base-migration-baseline/BaseSpire/Rooms/EventChoices.cs)和`EventChoice` | 共享Role、访问/存活守卫及死亡/结束尾；内容只给初始化、可用条件和效果，事件战斗返回尚非此能力 |
+| 新卡字段、复制、升级 | [CardDefinitions](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDefinitions.cs)的`New` / `Copy` / `Upgrade` | 统一变量、源排序键和升级增量；New/Copy不创建实体或完成长期获得流程，Copy的clone策略与战斗副本策略不同 |
+| 卡牌附魔首批 | [CardEnchantments](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardEnchantments.cs)的`CanEnchantPermanent(scope, card)` / `ApplySown(scope, card)` | 调用方提供永久牌选择域；只支持Sown，资格拒绝Status／Curse／Quest、不可打出的永久牌及已附魔实例。附魔身份／层数／Disabled属于卡实例，Copy保留独立状态、Upgrade保留附魔、New不继承旧附魔；后继出牌复用AfterBody，完整范围见[原语契约](card-primitives/spec.md#卡牌附魔首批sown) |
+| 战斗牌堆移动、消耗、克隆、变形 | [CardPileProcedures](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardPileProcedures.cs)的`MoveChosen` / `Move` / `Clone` / `Transform` | 仅战斗牌堆。手动选择用MoveChosen保留入手限制、置顶记录与手动弃牌回调；Move不等同手动弃牌，不用于永久牌组移除 |
+| 药水容量与奖励入栏 | [PotionInventoryRules](../../../tools/base-migration-baseline/BaseSpire/Potions/PotionInventoryRules.cs)的`HasSpace` / `Acquire` / `Fields` | Acquire从该模块Rewards取首项，不自行校验所有调用前置条件；调用方先保证有奖励且有空槽。Fields只给实例字段，不完成入栏 |
 | 房间适用条件与回到地图 | `RoomCompileContext.At` / `CloseVisit` | At使用本次实际房型；CloseVisit只恢复旅行阶段，房间自己的已领取标记、候选清理、战斗提交或终局判断不能省略 |
 
 正式装配在`RoomCompilation.RoomServices`创建同一个RunResources及RunRelics/RunDeck，商店、宝箱、营火、奖励和事件按需要消费。新增来源传入该服务，不各自创建默认无hook服务。初始审阅见[日期记录](../../review/records/2026-10-12/shared-domain-method-review-2026-10-12.md)，当前范围以[整局公共操作契约](run-domain/spec.md)为准，排期只看主清单。
@@ -146,13 +150,13 @@ RoomCompileContext(EntityTypeSymbol RunType, CollectionSymbol Runs,
 | 商店声明与进入 | `new ShopRoomWiring(package, room, deck, inventory, potions, resources, relicCommands, backendId = BaseSpireComputeBackend.BackendId)`；进入为 `shop.Enter(scope, run) → Inst[]` | deck为RunDeck，其他依赖分别为RunInitializationWiring/PotionInventoryRules/RunResources/RunRelics；使用原源池/随机顺序生成库存，购买/删牌复用公共操作 |
 | 商店动作 | `shop.RegisterActions(package)` | 买卡/买遗物/买药水/删牌/离店；买不起、满栏、已售、不可买都**不在候选域**且被守卫拒绝（不 Fault）；删牌走正式 `Decide` |
 
-源码：[卡牌配方](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardDefinitions.cs)、[药水库存](../../../mod-the-spire/base-spire/BaseSpire/Slice/PotionInventoryRules.cs)、[宝箱](../../../mod-the-spire/base-spire/BaseSpire/Slice/TreasureRoomWiring.cs)、[初始化库存](../../../mod-the-spire/base-spire/BaseSpire/Slice/RunInitializationWiring.cs)、[商店](../../../mod-the-spire/base-spire/BaseSpire/Slice/ShopRoomWiring.cs)、[商店纯计算](../../../mod-the-spire/base-spire/BaseSpire/Slice/ShopCompute.cs)、[无色源清单](../../../mod-the-spire/base-spire/BaseSpire/Slice/ColorlessShopPool.cs)、[问号赔率](../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Unknown/UnknownMapPointOdds.cs)、[事件生命周期与随机](../../../mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/EventVisitLifecycle.cs)。
+源码：[卡牌配方](../../../tools/base-migration-baseline/BaseSpire/Cards/Runtime/CardDefinitions.cs)、[药水库存](../../../tools/base-migration-baseline/BaseSpire/Potions/PotionInventoryRules.cs)、[宝箱](../../../tools/base-migration-baseline/BaseSpire/Rooms/Treasure/TreasureRoomWiring.cs)、[初始化库存](../../../tools/base-migration-baseline/BaseSpire/Run/RunInitializationWiring.cs)、[商店](../../../tools/base-migration-baseline/BaseSpire/Rooms/Shop/ShopRoomWiring.cs)、[商店纯计算](../../../tools/base-migration-baseline/BaseSpire/Rooms/Shop/ShopCompute.cs)、[无色源清单](../../../tools/base-migration-baseline/BaseSpire/Cards/Pools/ColorlessShopPool.cs)、[问号赔率](../../../tools/base-migration-baseline/BaseSpire/Rooms/Unknown/UnknownMapPointOdds.cs)、[事件生命周期与随机](../../../tools/base-migration-baseline/BaseSpire/Rooms/Events/EventVisitLifecycle.cs)。
 
 商店的稀有度/价格计算资产与地图资产共用同一个 `BackendId`，按 `asset.Entry` 在
-[`BaseSpireComputeBackend.Execute`](../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceActMapCompute.cs) 里分派（先商店、再奖励、再问号赔率与事件随机、最后加权取样）。
+[`BaseSpireComputeBackend.Execute`](../../../tools/base-migration-baseline/BaseSpire/Maps/SourceActMapCompute.cs) 里分派（先商店、再奖励、再问号赔率与事件随机、最后加权取样）。
 
 ## 接线迁移
 
 营火旧`Register(package, map, runs, hp, maxHp, deck, ...)`改为传入`RoomCompileContext`；宝箱旧构造的Run/map/gold参数也从上下文读取。正式规则包构建器已迁移。额外的卡牌/遗物/药水依赖仍显式传入，不通过全局服务查询。
 
-本次上下文提取保留原指令语义和随机调用。构建身份由实际规则产物派生；其他初始化补丁导致的身份变化按其工作包单独结算。后续机制新增公开状态仍须维护[公开语义](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BasePublicSemantics.cs)。
+本次上下文提取保留原指令语义和随机调用。构建身份由实际规则产物派生；其他初始化补丁导致的身份变化按其工作包单独结算。后续机制新增公开状态仍须维护[公开语义](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BasePublicSemantics.cs)。

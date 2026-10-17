@@ -27,21 +27,21 @@
 
 ### 实际调用序列
 
-base 正常入口为[BaseBackend:280–287](../../../tools/differential/BaseBackend.cs#L280-L287)的工厂 `CreateSession → Start` 一次，无 setup 手牌/清场。生产调用落在[CombatSlicePackage:3512–3554](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3512-L3554)：`SetupBattle → EnqueueEncounter_weak(0) → SampleInt(PoolStream,0,total)`。逐次轨迹的调度记录首个 RandomCall 是 `0→1`，前面没有共享/玩家遗物袋或事件列表消费；[抽取语句:3327–3337](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3327-L3337)。15 普通槽位加拒绝重抽合计 17。
+base 正常入口为[BaseBackend:280–287](../../../tools/base-migration-baseline/differential/BaseBackend.cs#L280-L287)的工厂 `CreateSession → Start` 一次，无 setup 手牌/清场。生产调用落在[CombatSlicePackage:3512–3554](../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L3512-L3554)：`SetupBattle → EnqueueEncounter_weak(0) → SampleInt(PoolStream,0,total)`。逐次轨迹的调度记录首个 RandomCall 是 `0→1`，前面没有共享/玩家遗物袋或事件列表消费；[抽取语句:3327–3337](../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L3327-L3337)。15 普通槽位加拒绝重抽合计 17。
 
-reference 独立正常入口为[ReferenceRunEntry:101–122](../../../tools/differential/ReferenceRunEntry.cs#L101-L122)：`new RunState → Apply(12 run streams) → Player.CreateForNewRun → AddPlayer → RoomFactory.CreateRoom → PushRoom → Enter`。实测第 1 次：`Player.CreateForNewRun → RunState.CreatePlayerRelicGrabBag:249 → RelicGrabBag..ctor:40 → Rng.Shuffle:497 → NextInt:178`。共享袋112次，玩家袋118次，创建玩家后累计230；共享古代人洗牌0，事件31项洗牌30次，累计260。第一个普通遭遇抽取是第 **261** 次，前状态 `0x9e38e4fd548739b3`、`NextDouble() = 0.24789939941295447`，路径 `Room.Enter → EnsureRoomsGenerated → GenerateAllActRooms → GenerateActRooms:308 → PickEncounter → PickMonsterEncounter → PickWithoutRepeating → GrabBag.GrabAndRemove → GrabIndex`。普通队列16次→276，精英17次→293，Boss1次→294，古代人1次→295；[阶段证据](../../../.audit/dsh-startup-alignment-2026-10-11/final-diagnosis/init-upfront-diagnosis.json)独立副本重放与实际总数一致。
+reference 独立正常入口为[ReferenceRunEntry:101–122](../../../tools/base-migration-baseline/differential/ReferenceRunEntry.cs#L101-L122)：`new RunState → Apply(12 run streams) → Player.CreateForNewRun → AddPlayer → RoomFactory.CreateRoom → PushRoom → Enter`。实测第 1 次：`Player.CreateForNewRun → RunState.CreatePlayerRelicGrabBag:249 → RelicGrabBag..ctor:40 → Rng.Shuffle:497 → NextInt:178`。共享袋112次，玩家袋118次，创建玩家后累计230；共享古代人洗牌0，事件31项洗牌30次，累计260。第一个普通遭遇抽取是第 **261** 次，前状态 `0x9e38e4fd548739b3`、`NextDouble() = 0.24789939941295447`，路径 `Room.Enter → EnsureRoomsGenerated → GenerateAllActRooms → GenerateActRooms:308 → PickEncounter → PickMonsterEncounter → PickWithoutRepeating → GrabBag.GrabAndRemove → GrabIndex`。普通队列16次→276，精英17次→293，Boss1次→294，古代人1次→295；[阶段证据](../../../.audit/dsh-startup-alignment-2026-10-11/final-diagnosis/init-upfront-diagnosis.json)独立副本重放与实际总数一致。
 
 源依据：[RunManager.InitializeNewRun:445–461](../../../sts2/src/Core/Runs/RunManager.cs#L445-L461)明确先 `State.SharedRelicGrabBag.Populate(...,State.Rng.UpFront)`，再逐玩家 `PopulateRelicGrabBagIfNecessary`；[参考已有生命周期:239–257](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L239-L257)已经接入这两袋。故没有遗漏一个可由工具接入的现成参考入口。源在完整初始化前置袋消费这一点支持 reference，不支持 base dev 的直接队列起点；**这不是裁决 reference 全内容/全版本均正确**。参考有效内容池/解锁过滤与源完整池仍须后续独立核对。
 
 ### 洗牌前输入和调用路径
 
-各侧首次 Shuffle 之前独立读取的起始牌序均为 `StrikeIronclad×5, DefendIronclad×4, Bash×1`，顺序相同，没有设牌。参考[Player:277–286](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs#L277-L286)复制 Deck 后调用 DrawPile.RandomizeOrderInternal；[CardPile:60–65](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPile.cs#L60-L65)交给 Rng.Shuffle。base [CombatSlicePackage:3227–3235](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3227-L3235)复制长期牌组再 ShuffleCollection。bounds 依次10、9、8、7、6、5、4、3、2，双方结果依次 `2,0,0,6,5,3,2,0,1`；每次前状态见逐次轨迹。该 seed 的起始 Shuffle 接入/采样未见差异，不扩展为真实重洗一致性结论。
+各侧首次 Shuffle 之前独立读取的起始牌序均为 `StrikeIronclad×5, DefendIronclad×4, Bash×1`，顺序相同，没有设牌。参考[Player:277–286](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs#L277-L286)复制 Deck 后调用 DrawPile.RandomizeOrderInternal；[CardPile:60–65](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPile.cs#L60-L65)交给 Rng.Shuffle。base [CombatSlicePackage:3227–3235](../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L3227-L3235)复制长期牌组再 ShuffleCollection。bounds 依次10、9、8、7、6、5、4、3、2，双方结果依次 `2,0,0,6,5,3,2,0,1`；每次前状态见逐次轨迹。该 seed 的起始 Shuffle 接入/采样未见差异，不扩展为真实重洗一致性结论。
 
 ## 最小可实施机制包建议（交负责人拆包，不是本会话新认领）
 
 受阻 case 为 `rng-initial-shuffle`，依赖 ENV-T08/base 真正新 Run 初始化；并非整个工具工作都停止。
 
-1. **第一段真实遗物袋生命周期**：在[正式工厂 CreateSession 配置:111–179](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L111-L179)及[SetupBattle:3512–3554](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3512-L3554)之间，由 base 主责确定新 Run 的源等价阶段。源共享袋按解锁池/稀有度桶顺序洗牌，然后每玩家袋；保留真正可取用的袋状态与幂等性，不做弃用随机占位。dev-map 已有共享袋能力可评估复用，但不能修改原 case scope 来绕开 dev 缺口。针对该 seed 首次调用应变为共享袋洗牌用途，后续玩家袋和计数须来自真实池，而不是硬编码112/118。
+1. **第一段真实遗物袋生命周期**：在[正式工厂 CreateSession 配置:111–179](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L111-L179)及[SetupBattle:3512–3554](../../../tools/base-migration-baseline/BaseSpire/Composition/CombatSlicePackage.cs#L3512-L3554)之间，由 base 主责确定新 Run 的源等价阶段。源共享袋按解锁池/稀有度桶顺序洗牌，然后每玩家袋；保留真正可取用的袋状态与幂等性，不做弃用随机占位。dev-map 已有共享袋能力可评估复用，但不能修改原 case scope 来绕开 dev 缺口。针对该 seed 首次调用应变为共享袋洗牌用途，后续玩家袋和计数须来自真实池，而不是硬编码112/118。
 2. **第二段完整幕预生成**：按[源 RunManager:668–691](../../../sts2/src/Core/Runs/RunManager.cs#L668-L691)与[参考 RunState:271–353](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L271-L353)核对共享古代人、事件、普通、精英、Boss、古代人的顺序、池内容/过滤、拒绝重抽。base dev 普通池目前是支持子集，不能在工具替换为参考池或按 seed 特判。前置阶段实装以后，普通队列输入池差异仍可能产生新首个差异；本包不承诺只补两袋即可完整通过。
 3. **门槛**：先同原 seed 原 case 的阶段/首样本对齐，再保留敌人/牌区/streams全比较；共享生产改动由负责人按根测试取舍执行受影响 Slice/消费者与最终集成，最后完整17。保留已过两seed地图输入。重洗包独立调查，不扩大全局 Profile。
 
@@ -49,8 +49,8 @@ reference 独立正常入口为[ReferenceRunEntry:101–122](../../../tools/diff
 
 ## 本包修改与诊断边界
 
-- 新增[StartupTrace](../../../tools/differential/StartupTrace.cs)：工具出口记录 actual reference run 流的 counter/bounds/样本/前状态/调用栈，首次Shuffle输入；副本预测期间暂停全局observer并恢复，不消费原对象。
-- [InitUpFrontDiagnosis:309](../../../tools/differential/InitUpFrontDiagnosis.cs#L309)在原阶段重放匹配后调用新轨迹诊断；[工具说明](../../../tools/differential/README.md#命令状态)记录出口与覆盖边界。
+- 新增[StartupTrace](../../../tools/base-migration-baseline/differential/StartupTrace.cs)：工具出口记录 actual reference run 流的 counter/bounds/样本/前状态/调用栈，首次Shuffle输入；副本预测期间暂停全局observer并恢复，不消费原对象。
+- [InitUpFrontDiagnosis:309](../../../tools/base-migration-baseline/differential/InitUpFrontDiagnosis.cs#L309)在原阶段重放匹配后调用新轨迹诊断；[工具说明](../../../tools/base-migration-baseline/differential/README.md#命令状态)记录出口与覆盖边界。
 - 正常 base 工厂没有公开debug注入参数；因此**另外**用相同不可变 Rules、公开seed列表、角色、compute/backend/Profile创建 instrumented replay，不代替正常Run。透明Profile转发并开既有SessionDebugTrace；实测 facts与全部RNG diagnostics匹配真实工厂，DroppedRecords=0。这里不是受控setup注入，但仍是单列重放证据。
 - 逐次参考采样覆盖12 run流中实际触及的UpFront/Niche/Shuffle；玩家/内容/临时/怪物RNG及构造期间独立地图流未做本包逐次全覆盖。Profile保持run-only，不改变参考玩家原生派生。正常suite与原受控case仍分列。
 - 没有运行行为修复，所以不添加没有判别增益的case。复用严格case、比较器负例及独立48源Profile向量；新诊断保留“重放facts/RNG必须等真实工厂且轨迹不截断”的失败门槛。

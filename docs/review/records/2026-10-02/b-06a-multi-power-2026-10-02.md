@@ -5,8 +5,8 @@
 | 项目 | 内容 |
 | --- | --- |
 | 任务 ID | **B-06a 基础战斗内容批**（第十一小批）——**多能力同牌**（同一张牌、同一能力、两个收受者、两种层数）+ `FightMe` |
-| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`ContentSource/ironclad-cards.spire:3321` |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`apply_power:<n>`/`apply_power_self:<n>`/`apply_power_all:<n>` 字面量层数、`IsStep`、`stacks` 要求按需）、`Slice/CombatSlicePackage.cs`（三条新分支）、`Slice/Content/slice-content.author`（FightMe）、`net` 目录、切片检查（新增 4 项） |
+| 权威 | [开工清单 §14](../../../design/implementation-kickoff.md)（B-06a 行）；来源：`Cards/Content/ironclad-cards.spire:3321` |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`apply_power:<n>`/`apply_power_self:<n>`/`apply_power_all:<n>` 字面量层数、`IsStep`、`stacks` 要求按需）、`Composition/CombatSlicePackage.cs`（三条新分支）、`Authoring/Examples/slice-content.author`（FightMe）、`net` 目录、切片检查（新增 4 项） |
 | 状态 | **本小批完成**；B-06a 其余子项仍未完成（见 §5） |
 | 前置 | 第十小批（出牌触发点 + 回合末移除） |
 
@@ -75,9 +75,9 @@ count = { targetPowerAmount = { power = Vulnerable } } }`（"给自己加等于*
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（三种带层数的施加形式、`IsStep`、`stacks` 按需）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（三条参数形式的分支）
-- `BaseSpire/Slice/Content/slice-content.author`（FightMe + 表示说明注释）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（三种带层数的施加形式、`IsStep`、`stacks` 按需）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（三条参数形式的分支）
+- `BaseSpire/Authoring/Examples/slice-content.author`（FightMe + 表示说明注释）
 - `net-the-spire/Net.TheSpire/Projection/SlicePublicProfile.cs`（目录内容 ID）
 - 切片检查：`SliceFrontendMultiPowerChecks.cs`（新增 4 项）、`SliceFixtures.cs`、`SliceChecks.cs`
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）

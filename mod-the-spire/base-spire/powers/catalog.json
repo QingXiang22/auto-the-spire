@@ -1,0 +1,2607 @@
+{
+  "format": "engine-dsl/source-catalog@1",
+  "kind": "power",
+  "source_baseline": "local-sts2-source-2026-10-18",
+  "entries": [
+    {
+      "id": "base-spire:accelerant-power",
+      "name": "AccelerantPower",
+      "source_path": "sts2/src/Core/Models/Powers/AccelerantPower.cs",
+      "source_sha256": "729954cec2d05992e3a1b432f30716341b120f14b60b9addffa11a09762107a3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:accuracy-power",
+      "name": "AccuracyPower",
+      "source_path": "sts2/src/Core/Models/Powers/AccuracyPower.cs",
+      "source_sha256": "22736807d152180bb76327ab736c32471ee1f6df5ed4ff1c026d280a5f086742",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:adaptable-power",
+      "name": "AdaptablePower",
+      "source_path": "sts2/src/Core/Models/Powers/AdaptablePower.cs",
+      "source_sha256": "723505a7771691849975e9a70c4432b6977346df345260de5d5b5677c16ff5cb",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:afterimage-power",
+      "name": "AfterimagePower",
+      "source_path": "sts2/src/Core/Models/Powers/AfterimagePower.cs",
+      "source_sha256": "3be9b90bcf030f9c09c89f6ae4a32db52e3d89479ca5f3d300cc0deadd0b1f1a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:aggression-power",
+      "name": "AggressionPower",
+      "source_path": "sts2/src/Core/Models/Powers/AggressionPower.cs",
+      "source_sha256": "fb1e98f4f2eb27c090ddf7401c0ba66d895fd892994980f357a29f28a6ecc47d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:anticipate-power",
+      "name": "AnticipatePower",
+      "source_path": "sts2/src/Core/Models/Powers/AnticipatePower.cs",
+      "source_sha256": "d412f46d02c0b8999b3e8e35fd05a95f247448cd5d005313be193e1e89ba5b09",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:arsenal-power",
+      "name": "ArsenalPower",
+      "source_path": "sts2/src/Core/Models/Powers/ArsenalPower.cs",
+      "source_sha256": "b7ac0881a99191bc700229a9a379ca68c3b710bbfcb908efa22cc41a46275607",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:artifact-power",
+      "name": "ArtifactPower",
+      "source_path": "sts2/src/Core/Models/Powers/ArtifactPower.cs",
+      "source_sha256": "d2b7f2c1bfc36466e5ab0bd4e4581697c8299ce579c6f978a4fe7a1535c9eb3a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:asleep-power",
+      "name": "AsleepPower",
+      "source_path": "sts2/src/Core/Models/Powers/AsleepPower.cs",
+      "source_sha256": "352eba38f33d8167954fb291723704293f89a47e1b2634edf359f1679ad4cfbc",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:automation-power",
+      "name": "AutomationPower",
+      "source_path": "sts2/src/Core/Models/Powers/AutomationPower.cs",
+      "source_sha256": "22c77a537a6211b3cca03251ff6b5d4e145de732ca613cad6cfdfd374aa6ffdd",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:back-attack-left-power",
+      "name": "BackAttackLeftPower",
+      "source_path": "sts2/src/Core/Models/Powers/BackAttackLeftPower.cs",
+      "source_sha256": "82ab43de2361ab56a790f203d079f446062a4a6cba25fddd38a64e02eb4acd44",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:back-attack-right-power",
+      "name": "BackAttackRightPower",
+      "source_path": "sts2/src/Core/Models/Powers/BackAttackRightPower.cs",
+      "source_sha256": "b36b013710f34b4feb8f8e13103607d1a0d34295204b2616d114642cc6d26339",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:barricade",
+      "name": "BarricadePower",
+      "source_path": "sts2/src/Core/Models/Powers/BarricadePower.cs",
+      "source_sha256": "6dbe0c789b106b530314e05e9bf78fed2033bfcbfcd4dc01a041a105d6647138",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:battleworn-dummy-time-limit-power",
+      "name": "BattlewornDummyTimeLimitPower",
+      "source_path": "sts2/src/Core/Models/Powers/BattlewornDummyTimeLimitPower.cs",
+      "source_sha256": "23ac088a8bac66ca30804788e1162bb2c23725da1d605ec8fe7c14053d32a929",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:beacon-of-hope-power",
+      "name": "BeaconOfHopePower",
+      "source_path": "sts2/src/Core/Models/Powers/BeaconOfHopePower.cs",
+      "source_sha256": "686ba2d306a7a95fdd86683cbffe7f331235ce5aa016d2ed7adc7aefede6350b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:biased-cognition-power",
+      "name": "BiasedCognitionPower",
+      "source_path": "sts2/src/Core/Models/Powers/BiasedCognitionPower.cs",
+      "source_sha256": "b2c52719432a9634e2f7825a42cb2a3856bad246fe0b57974299f4a7584c1703",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:black-hole-power",
+      "name": "BlackHolePower",
+      "source_path": "sts2/src/Core/Models/Powers/BlackHolePower.cs",
+      "source_sha256": "0513478ad7310329c379841f5c1dff1633141ebf8129574b04fdfd87a3c9ef50",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:block-next-turn-power",
+      "name": "BlockNextTurnPower",
+      "source_path": "sts2/src/Core/Models/Powers/BlockNextTurnPower.cs",
+      "source_sha256": "666bbdba0697277a65cb9b07bdb7da5f48a98e0f27fe6cd678a698f69b05ee8f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:blur-power",
+      "name": "BlurPower",
+      "source_path": "sts2/src/Core/Models/Powers/BlurPower.cs",
+      "source_sha256": "b9534c0df2051f9904533099ff3027b0e798a1e1b9504fa5e0b23a33c223b262",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:borrowed-time-power",
+      "name": "BorrowedTimePower",
+      "source_path": "sts2/src/Core/Models/Powers/BorrowedTimePower.cs",
+      "source_sha256": "9444e480d8dcd03c2095274297ad9b6e91ab1d560c3802cc443cb00dc91b31e9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:buffer-power",
+      "name": "BufferPower",
+      "source_path": "sts2/src/Core/Models/Powers/BufferPower.cs",
+      "source_sha256": "28fa586cb53ebe5c7282f9b40fb1dbef563c5553a0868b3a3b2d1f9a6faf010d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:burrowed-power",
+      "name": "BurrowedPower",
+      "source_path": "sts2/src/Core/Models/Powers/BurrowedPower.cs",
+      "source_sha256": "26b2428c3e323b6a620a959a43c4aebcfb518f8daa660b4ec128263bad25ff97",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:burst-power",
+      "name": "BurstPower",
+      "source_path": "sts2/src/Core/Models/Powers/BurstPower.cs",
+      "source_sha256": "3bb6c17fda29f63119cfd27887cef0b521a81a4008fef59e3fd1d806644e194a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:calamity-power",
+      "name": "CalamityPower",
+      "source_path": "sts2/src/Core/Models/Powers/CalamityPower.cs",
+      "source_sha256": "9e290f2e563ad3eef8c0322b3d08beedd004dfebd9e0f19bd0121abb9117dd61",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:calcify-power",
+      "name": "CalcifyPower",
+      "source_path": "sts2/src/Core/Models/Powers/CalcifyPower.cs",
+      "source_sha256": "35a021160b441f9b15a15d3bb159f8a435cbd5a984adbf7036a9556132cded4e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:call-of-the-void-power",
+      "name": "CallOfTheVoidPower",
+      "source_path": "sts2/src/Core/Models/Powers/CallOfTheVoidPower.cs",
+      "source_sha256": "c18a0786f1a314cbcf789b34774f0f8a2dcb0d4b161d6c4f2efd407e9d3fd484",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:chains-of-binding-power",
+      "name": "ChainsOfBindingPower",
+      "source_path": "sts2/src/Core/Models/Powers/ChainsOfBindingPower.cs",
+      "source_sha256": "24cd416a187757169fef5b1c444da83b2a35b17841948c031bec1a195aea61c4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:child-of-the-stars-power",
+      "name": "ChildOfTheStarsPower",
+      "source_path": "sts2/src/Core/Models/Powers/ChildOfTheStarsPower.cs",
+      "source_sha256": "34980b08f2d2bbc30331d3f54eef2ba0683a80e3231ec13435ae4bdbbb79fc2e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:clarity-power",
+      "name": "ClarityPower",
+      "source_path": "sts2/src/Core/Models/Powers/ClarityPower.cs",
+      "source_sha256": "a527146329c4ed902ff589ba79bd4d5ea0dd9eb1948902ec0add3d668b4153d7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:colossus-power",
+      "name": "ColossusPower",
+      "source_path": "sts2/src/Core/Models/Powers/ColossusPower.cs",
+      "source_sha256": "5124825b7e280ec51ff427abf3b2c7dc55f2441b2e8d9f53469ab058136788e9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:confused-power",
+      "name": "ConfusedPower",
+      "source_path": "sts2/src/Core/Models/Powers/ConfusedPower.cs",
+      "source_sha256": "2ce86c463aaaf186986a2de947690e6c61819e3bc6cf9b55517f2f8a7a864e30",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:conqueror-power",
+      "name": "ConquerorPower",
+      "source_path": "sts2/src/Core/Models/Powers/ConquerorPower.cs",
+      "source_sha256": "1a760eccc12dc74223dd939e9d100b1bbf683404f03726b3f33bd75090bab736",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:constrict-power",
+      "name": "ConstrictPower",
+      "source_path": "sts2/src/Core/Models/Powers/ConstrictPower.cs",
+      "source_sha256": "cd695b3f700abcb147c6a68242850d13b8c2c03b63be48ad0aaa16a5154f32df",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:consuming-shadow-power",
+      "name": "ConsumingShadowPower",
+      "source_path": "sts2/src/Core/Models/Powers/ConsumingShadowPower.cs",
+      "source_sha256": "b3ef1ae7c42b56d1a9dd6ce793ca4a7fc43ce6011a5e5c5df7266e1a72aee3aa",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:coolant-power",
+      "name": "CoolantPower",
+      "source_path": "sts2/src/Core/Models/Powers/CoolantPower.cs",
+      "source_sha256": "22808ac4b11e3791c71b76bb5ec7ee7ea51c860526502eb6313b7d1b4ded214e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:coordinate-power",
+      "name": "CoordinatePower",
+      "source_path": "sts2/src/Core/Models/Powers/CoordinatePower.cs",
+      "source_sha256": "bfdaa6a9e6de5c9a8012add044c124d6fbfa519b1c180797b69934c2f4e5f894",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:corrosive-wave-power",
+      "name": "CorrosiveWavePower",
+      "source_path": "sts2/src/Core/Models/Powers/CorrosiveWavePower.cs",
+      "source_sha256": "82a70f5a8f4a2a7c3cac3b710cd92f17e4a86318550f20e81620e448ddf4a54d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:corruption-power",
+      "name": "CorruptionPower",
+      "source_path": "sts2/src/Core/Models/Powers/CorruptionPower.cs",
+      "source_sha256": "c727aff77fb6162d21824db13fd438335db40afb5e1c6512383ef27178f04450",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:countdown-power",
+      "name": "CountdownPower",
+      "source_path": "sts2/src/Core/Models/Powers/CountdownPower.cs",
+      "source_sha256": "adec6145740feed2e9a1be9365a2ce2975302271a0e366d53e7a53e4cd48baec",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:covered-power",
+      "name": "CoveredPower",
+      "source_path": "sts2/src/Core/Models/Powers/CoveredPower.cs",
+      "source_sha256": "2a23a7b1271ef776538f831e4b015c214bd11f5a22696492eff20727d52ba249",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:crab-rage-power",
+      "name": "CrabRagePower",
+      "source_path": "sts2/src/Core/Models/Powers/CrabRagePower.cs",
+      "source_sha256": "c4665003b762626b27cdd46690ba789390261bb685699f4406b893607dcb812a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:creative-ai-power",
+      "name": "CreativeAiPower",
+      "source_path": "sts2/src/Core/Models/Powers/CreativeAiPower.cs",
+      "source_sha256": "ff782b9bcbf218e9a5f98e8d25e19826b30a27be24a587c28fd8dbd2aae97537",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:crimson-mantle-power",
+      "name": "CrimsonMantlePower",
+      "source_path": "sts2/src/Core/Models/Powers/CrimsonMantlePower.cs",
+      "source_sha256": "a9319ea9b6f56cb6cdb259e6bca72844c5ce12abd73d2916550e3bbb9001c2a7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:cruelty-power",
+      "name": "CrueltyPower",
+      "source_path": "sts2/src/Core/Models/Powers/CrueltyPower.cs",
+      "source_sha256": "c36e414226a11ef82fe64b4900eff2c53ce28193d88d908516111fdcad95e0ba",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:crush-under-power",
+      "name": "CrushUnderPower",
+      "source_path": "sts2/src/Core/Models/Powers/CrushUnderPower.cs",
+      "source_sha256": "99f377d52ef6297217066893435afc388c152ad3a37676207b8a6add2229e5c1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:curious-power",
+      "name": "CuriousPower",
+      "source_path": "sts2/src/Core/Models/Powers/CuriousPower.cs",
+      "source_sha256": "29761d0618952415c9776f192ff2cba09a13b023409a774666db9d1a313a72e7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:curl-up-power",
+      "name": "CurlUpPower",
+      "source_path": "sts2/src/Core/Models/Powers/CurlUpPower.cs",
+      "source_sha256": "f87569390c94e7fd6a766917f5736a25f403b52ae7d15e4f1fbbe6f2265ba5c7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dampen-power",
+      "name": "DampenPower",
+      "source_path": "sts2/src/Core/Models/Powers/DampenPower.cs",
+      "source_sha256": "fa9bbe1976184c24cd7c0f504f2aa00dc3efb67bc7a84983200f6b3f0376e136",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:danse-macabre-power",
+      "name": "DanseMacabrePower",
+      "source_path": "sts2/src/Core/Models/Powers/DanseMacabrePower.cs",
+      "source_sha256": "86a5c164e0ba79d5021fd938c292d194d1358532c7b3341235575b83666f0b11",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dark-embrace-power",
+      "name": "DarkEmbracePower",
+      "source_path": "sts2/src/Core/Models/Powers/DarkEmbracePower.cs",
+      "source_sha256": "78eeedaa2a4620ca5e0d2c21a9f6c311e63d664e62c0ede844a90c813149a688",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dark-shackles-power",
+      "name": "DarkShacklesPower",
+      "source_path": "sts2/src/Core/Models/Powers/DarkShacklesPower.cs",
+      "source_sha256": "3316d6036eb0858a23c837820fda873f04ba3e0c782a7c8de6c10ffac0bef77b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:debilitate-power",
+      "name": "DebilitatePower",
+      "source_path": "sts2/src/Core/Models/Powers/DebilitatePower.cs",
+      "source_sha256": "331c228a8d4aac882def861ed8925ba920d348c1dc8c1ef1cce293a88a072f23",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:demesne-power",
+      "name": "DemesnePower",
+      "source_path": "sts2/src/Core/Models/Powers/DemesnePower.cs",
+      "source_sha256": "17297bbb58868387a7d295e4c345333f4462b662f9d4fa5a9143ec841567d649",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:demise-power",
+      "name": "DemisePower",
+      "source_path": "sts2/src/Core/Models/Powers/DemisePower.cs",
+      "source_sha256": "ed7620787e663a59e20b5e49da1b4a4230b2280ab704da7252e5ea26323cc014",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:demon-form",
+      "name": "DemonFormPower",
+      "source_path": "sts2/src/Core/Models/Powers/DemonFormPower.cs",
+      "source_sha256": "8c5b4dbd0d3cbec51cc7ba947ee9cce833f11153928144bc201601cf150b67a8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:devour-life-power",
+      "name": "DevourLifePower",
+      "source_path": "sts2/src/Core/Models/Powers/DevourLifePower.cs",
+      "source_sha256": "565854c2e0424463bd89a8baa3dfc73973b9c37a0ecf22ab086d8490eec99465",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dexterity-power",
+      "name": "DexterityPower",
+      "source_path": "sts2/src/Core/Models/Powers/DexterityPower.cs",
+      "source_sha256": "f6b561122838f50bda6bb7c3e9e42a54d738ad2f7b8ca6009963896107bac1e9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:diamond-diadem-power",
+      "name": "DiamondDiademPower",
+      "source_path": "sts2/src/Core/Models/Powers/DiamondDiademPower.cs",
+      "source_sha256": "ae0b9456de48c6fb1844ae21c4e9dae1431966df88a0724d1df63ed2abc10251",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:die-for-you-power",
+      "name": "DieForYouPower",
+      "source_path": "sts2/src/Core/Models/Powers/DieForYouPower.cs",
+      "source_sha256": "86c72f94ab4828a22d03b7f33e77dd174298f88cfd9881e0fda3786b5871ed6b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:disintegration-power",
+      "name": "DisintegrationPower",
+      "source_path": "sts2/src/Core/Models/Powers/DisintegrationPower.cs",
+      "source_sha256": "78cf03d5a7a8110d1dab32fe5114299d1ed4d8d7066ba9e8dc7e685b4241946c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:doom-power",
+      "name": "DoomPower",
+      "source_path": "sts2/src/Core/Models/Powers/DoomPower.cs",
+      "source_sha256": "ac475918f6347a8821fef8672b5f5cc10875832ab65b50df395c88408054b2ee",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:double-damage-power",
+      "name": "DoubleDamagePower",
+      "source_path": "sts2/src/Core/Models/Powers/DoubleDamagePower.cs",
+      "source_sha256": "1ad0477a787c03b9c2b7a1c0a22cb434786dfdbf71ccd5f442a322e7599d06a7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:draw-cards-next-turn-power",
+      "name": "DrawCardsNextTurnPower",
+      "source_path": "sts2/src/Core/Models/Powers/DrawCardsNextTurnPower.cs",
+      "source_sha256": "875680aaac78af8f377d51d5a530913cbbaffa7e1029ac1587d89bb87170138e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:duplication-power",
+      "name": "DuplicationPower",
+      "source_path": "sts2/src/Core/Models/Powers/DuplicationPower.cs",
+      "source_sha256": "cc799f3fcaec3d89cb7de84f800ba5bdb31677cb8699c7e5694d340c97e32ee4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:dying-star-power",
+      "name": "DyingStarPower",
+      "source_path": "sts2/src/Core/Models/Powers/DyingStarPower.cs",
+      "source_sha256": "06198bbe0697d2e02a313de10d3993276c7d7e53e1da481f34e440e2ea690225",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:echo-form-power",
+      "name": "EchoFormPower",
+      "source_path": "sts2/src/Core/Models/Powers/EchoFormPower.cs",
+      "source_sha256": "378d7159f3dec78d1e339297d926c5eb90868972cfe86c1777d7764b8ecd3a5d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:energy-next-turn-power",
+      "name": "EnergyNextTurnPower",
+      "source_path": "sts2/src/Core/Models/Powers/EnergyNextTurnPower.cs",
+      "source_sha256": "f9a54839aa3b5e9e101d6005f540cdc29c4d419955b33c00df48929447be85b9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:enfeebling-touch-power",
+      "name": "EnfeeblingTouchPower",
+      "source_path": "sts2/src/Core/Models/Powers/EnfeeblingTouchPower.cs",
+      "source_sha256": "536da5a9043992a4dc233098fc917429da5a6b4a4b19c0e334a95c5aa7d5380a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:enrage-power",
+      "name": "EnragePower",
+      "source_path": "sts2/src/Core/Models/Powers/EnragePower.cs",
+      "source_sha256": "2f25e3f9b2ec859a236dc2a54e3be3d8b9bd0fe5b73d8dd7d4480fb112b45072",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:entropy-power",
+      "name": "EntropyPower",
+      "source_path": "sts2/src/Core/Models/Powers/EntropyPower.cs",
+      "source_sha256": "43dafb0a79118f62645ebe337655f690bb7d2ae409df7113f2af1299c8e7dc32",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:envenom-power",
+      "name": "EnvenomPower",
+      "source_path": "sts2/src/Core/Models/Powers/EnvenomPower.cs",
+      "source_sha256": "e972c436d96962037b6308d9f0d2a74e4d2bb19052a53c166dd7845b6f0c3087",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:escape-artist-power",
+      "name": "EscapeArtistPower",
+      "source_path": "sts2/src/Core/Models/Powers/EscapeArtistPower.cs",
+      "source_sha256": "490abb0e9eca5e133f3231741e363dce71afb1ded375bd45aebd922719f2f244",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fan-of-knives-power",
+      "name": "FanOfKnivesPower",
+      "source_path": "sts2/src/Core/Models/Powers/FanOfKnivesPower.cs",
+      "source_sha256": "1a72a27c76f9811d161adbc98090166905ac45627418d15b08b0eb13159922d8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:fasten-power",
+      "name": "FastenPower",
+      "source_path": "sts2/src/Core/Models/Powers/FastenPower.cs",
+      "source_sha256": "c013d5f2ac01a30c31ace98710f5c007dde536a7196e97b95cf790f41b6f5097",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:feeding-frenzy-power",
+      "name": "FeedingFrenzyPower",
+      "source_path": "sts2/src/Core/Models/Powers/FeedingFrenzyPower.cs",
+      "source_sha256": "5d64456fe4de34dfffedbb893a1b6fc55b0b6cedcc769c473d9817690a34d591",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:feel-no-pain-power",
+      "name": "FeelNoPainPower",
+      "source_path": "sts2/src/Core/Models/Powers/FeelNoPainPower.cs",
+      "source_sha256": "8cfece87071e6a71e832918c48f77da8fc06ff7490a05b4182cc2fb89e77c049",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:feral-power",
+      "name": "FeralPower",
+      "source_path": "sts2/src/Core/Models/Powers/FeralPower.cs",
+      "source_sha256": "e1bbfc212c7de690fe6b3244ab1c5953c4d5b7009f9d755de0c1cd849150386b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:flame-barrier",
+      "name": "FlameBarrierPower",
+      "source_path": "sts2/src/Core/Models/Powers/FlameBarrierPower.cs",
+      "source_sha256": "99e6bba488c4fd8bee98d6f76b129a0d94983d468f8a6bcf3dba736682d6201f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:flanking-power",
+      "name": "FlankingPower",
+      "source_path": "sts2/src/Core/Models/Powers/FlankingPower.cs",
+      "source_sha256": "3b236392e7ce1e578137a0b4384c67fa6c6b6247f690cacd1641f07890d43749",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:flex-potion-power",
+      "name": "FlexPotionPower",
+      "source_path": "sts2/src/Core/Models/Powers/FlexPotionPower.cs",
+      "source_sha256": "d8cc899a7e4f52164f5a97cf86a5ff3b609f699d7e5f53c1f868f0ac63ebe6bd",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:flutter-power",
+      "name": "FlutterPower",
+      "source_path": "sts2/src/Core/Models/Powers/FlutterPower.cs",
+      "source_sha256": "5746c575f76d22fe8ec8bc0c83747771df0527df8792120ec9e2148393aa338d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:focused-strike-power",
+      "name": "FocusedStrikePower",
+      "source_path": "sts2/src/Core/Models/Powers/FocusedStrikePower.cs",
+      "source_sha256": "6e2209e50125d0ac72de0ace76147b408cf28acdbbd0cfe67a0ae30442a99995",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:focus-power",
+      "name": "FocusPower",
+      "source_path": "sts2/src/Core/Models/Powers/FocusPower.cs",
+      "source_sha256": "7eb737066e10aabf6364edbe8869c194c916b287602d6124c918b4a94578fc89",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:forbidden-grimoire-power",
+      "name": "ForbiddenGrimoirePower",
+      "source_path": "sts2/src/Core/Models/Powers/ForbiddenGrimoirePower.cs",
+      "source_sha256": "0783be19f0ccfeafdc9e06052381798c0ff7fca13b54e0ad3b2ebc07b6eac3ad",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:foregone-conclusion-power",
+      "name": "ForegoneConclusionPower",
+      "source_path": "sts2/src/Core/Models/Powers/ForegoneConclusionPower.cs",
+      "source_sha256": "42f08fbbd9952760224e48e47cd06f24cab2ae8d7194c6bdb7ee4cea1de3e349",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:frail-power",
+      "name": "FrailPower",
+      "source_path": "sts2/src/Core/Models/Powers/FrailPower.cs",
+      "source_sha256": "3334f1dda0a5cff6a1373c71456313fdfd23f200c96512336df29ae8e4246dbe",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:free-attack-power",
+      "name": "FreeAttackPower",
+      "source_path": "sts2/src/Core/Models/Powers/FreeAttackPower.cs",
+      "source_sha256": "ab02fe2ab264c5ee912b5c80f92c76155a9c3193305db32d0387c9201135b2d2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:free-power-power",
+      "name": "FreePowerPower",
+      "source_path": "sts2/src/Core/Models/Powers/FreePowerPower.cs",
+      "source_sha256": "223f1667033126d1e8a7c11421320daa656de881cae46533965ab554f95317d6",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:free-skill-power",
+      "name": "FreeSkillPower",
+      "source_path": "sts2/src/Core/Models/Powers/FreeSkillPower.cs",
+      "source_sha256": "d96f9dc2b22a6cce4da15fa7c363f590f2d3579ffce59bcba908aa6f2e447353",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:friendship-power",
+      "name": "FriendshipPower",
+      "source_path": "sts2/src/Core/Models/Powers/FriendshipPower.cs",
+      "source_sha256": "3942402ee5399830c37dfd80a7942d2dc02357780fa86b9d59f587a3e5dd292c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:furnace-power",
+      "name": "FurnacePower",
+      "source_path": "sts2/src/Core/Models/Powers/FurnacePower.cs",
+      "source_sha256": "965d019e4823e201040961a3ff36db582c07641a19dd2bd8921e4c4c494f5b4d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:galvanic-power",
+      "name": "GalvanicPower",
+      "source_path": "sts2/src/Core/Models/Powers/GalvanicPower.cs",
+      "source_sha256": "8f6d64791cc13686fac6402e7b0ff6fa73019ccb9ca90a7302c0c8516270ad8a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:genesis-power",
+      "name": "GenesisPower",
+      "source_path": "sts2/src/Core/Models/Powers/GenesisPower.cs",
+      "source_sha256": "03f7d66afffa6ad0d7546b6e88ba0f348050d033d17116370333f32ae19034a1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:gigantification-power",
+      "name": "GigantificationPower",
+      "source_path": "sts2/src/Core/Models/Powers/GigantificationPower.cs",
+      "source_sha256": "8b9cdb9a5336edb19f611dd60a237dd47445cc640ba528740ef16efcc88ab507",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:gravity-power",
+      "name": "GravityPower",
+      "source_path": "sts2/src/Core/Models/Powers/GravityPower.cs",
+      "source_sha256": "5a075293b04ca1108583fee95fa554d81cb329cc44390bda1039441c32dc3521",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:guarded-power",
+      "name": "GuardedPower",
+      "source_path": "sts2/src/Core/Models/Powers/GuardedPower.cs",
+      "source_sha256": "593b32d070ab3838ea323aae39eff09adf150df27cfd96f90e019a679a9089de",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hailstorm-power",
+      "name": "HailstormPower",
+      "source_path": "sts2/src/Core/Models/Powers/HailstormPower.cs",
+      "source_sha256": "c4a12ef6e596fd14dcc13619f18ec7541e50138a1d8860e8649117b9aad72c11",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hammer-time-power",
+      "name": "HammerTimePower",
+      "source_path": "sts2/src/Core/Models/Powers/HammerTimePower.cs",
+      "source_sha256": "75e24fad378584bad42a2574e5b5af5fa417c95304133524e1f262b372a25429",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hang-power",
+      "name": "HangPower",
+      "source_path": "sts2/src/Core/Models/Powers/HangPower.cs",
+      "source_sha256": "a78303ebec05fd34b3fb9a9302fc2c8913211aa10c4d0b74b597dbfb4eba8bb7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hardened-shell-power",
+      "name": "HardenedShellPower",
+      "source_path": "sts2/src/Core/Models/Powers/HardenedShellPower.cs",
+      "source_sha256": "330eff68db3dc0ac9b8552ee4bd9d520b6c00d9d4eff34d4d50821fec333bf5b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hard-to-kill-power",
+      "name": "HardToKillPower",
+      "source_path": "sts2/src/Core/Models/Powers/HardToKillPower.cs",
+      "source_sha256": "83489b8cfa6b18aeaf70e4de1c0980d5110d5cc3ab6af59301383b8f9d50f612",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hatch-power",
+      "name": "HatchPower",
+      "source_path": "sts2/src/Core/Models/Powers/HatchPower.cs",
+      "source_sha256": "74404f7ee9cefb090d8ead41acab256149aecb64fe482609a9bbc5f78be59014",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:haunt-power",
+      "name": "HauntPower",
+      "source_path": "sts2/src/Core/Models/Powers/HauntPower.cs",
+      "source_sha256": "7b1ce29d7e32465160ad5f3b5c21360213feeb7bb945a2eaba71b5e5b99c03ba",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:heist-power",
+      "name": "HeistPower",
+      "source_path": "sts2/src/Core/Models/Powers/HeistPower.cs",
+      "source_sha256": "0f0259a6b3aacf62e888c92cf628d6f9bdb6f9baa07c53d99b8384e6d9c3a0ae",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:helical-dart-power",
+      "name": "HelicalDartPower",
+      "source_path": "sts2/src/Core/Models/Powers/HelicalDartPower.cs",
+      "source_sha256": "1d8b5f435a834b996f4587f420f7fcfde2581c315b61799989ebe0a71dd3cc64",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hello-world-power",
+      "name": "HelloWorldPower",
+      "source_path": "sts2/src/Core/Models/Powers/HelloWorldPower.cs",
+      "source_sha256": "4b4cbb2515fda4d3f4e04fadf1b61ef2be913b6e87d464d1863c9e0695327012",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hellraiser-power",
+      "name": "HellraiserPower",
+      "source_path": "sts2/src/Core/Models/Powers/HellraiserPower.cs",
+      "source_sha256": "ac2a3ccd714f886dc9744cf340ba09597e961e20c35ef7499b97604fb82cbfef",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hex-power",
+      "name": "HexPower",
+      "source_path": "sts2/src/Core/Models/Powers/HexPower.cs",
+      "source_sha256": "2589e1ef80f95ee7e2a3ada0bca7c121a5907bd52ab5ecede3fdd1fb2b83ce8d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:high-voltage-power",
+      "name": "HighVoltagePower",
+      "source_path": "sts2/src/Core/Models/Powers/HighVoltagePower.cs",
+      "source_sha256": "87c5dbf1b4bdfc5a6a0666fdb8ad8b663f20972ff6cf454b9dbb1a2c458614ad",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:hotfix-power",
+      "name": "HotfixPower",
+      "source_path": "sts2/src/Core/Models/Powers/HotfixPower.cs",
+      "source_sha256": "afbf8f5b22aca994e94af1836f137de70bb40939a03108df208a9ddb0333ee69",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:illusion-power",
+      "name": "IllusionPower",
+      "source_path": "sts2/src/Core/Models/Powers/IllusionPower.cs",
+      "source_sha256": "8cd53d7562a2182d4a32dd3eb92c0ace57b20bfbee5c40de32c4079308f9772c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:imbalanced-power",
+      "name": "ImbalancedPower",
+      "source_path": "sts2/src/Core/Models/Powers/ImbalancedPower.cs",
+      "source_sha256": "387473388009d7ed5b47aca9ae0eeb305cc331e001471ba3ce3395849184a19d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:improvement-power",
+      "name": "ImprovementPower",
+      "source_path": "sts2/src/Core/Models/Powers/ImprovementPower.cs",
+      "source_sha256": "e6e1cf00387038223cae65477192d63ce0f4ba09c8b59bc435ffc9f0653dea33",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:inferno-power",
+      "name": "InfernoPower",
+      "source_path": "sts2/src/Core/Models/Powers/InfernoPower.cs",
+      "source_sha256": "37f6cc144213a345db6ddb7e2b4e91c70ea67ac0c52a6ef529b3f1fac28b61e2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:infested-power",
+      "name": "InfestedPower",
+      "source_path": "sts2/src/Core/Models/Powers/InfestedPower.cs",
+      "source_sha256": "4fa2e48adbf754e27359529f42aebaa1511eae8b2e8ade544a6484b79d62757e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:infinite-blades-power",
+      "name": "InfiniteBladesPower",
+      "source_path": "sts2/src/Core/Models/Powers/InfiniteBladesPower.cs",
+      "source_sha256": "fbd4967937fe8cbda153b7b2be97b01c74cb999ff197917477e28b56bc95249a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:intangible-power",
+      "name": "IntangiblePower",
+      "source_path": "sts2/src/Core/Models/Powers/IntangiblePower.cs",
+      "source_sha256": "86a2e1989d424b90dd6b35592a9dcaa356454ef3a6eac9bc21f5f76209fe4b87",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:intercept-power",
+      "name": "InterceptPower",
+      "source_path": "sts2/src/Core/Models/Powers/InterceptPower.cs",
+      "source_sha256": "d201357dfcf8d54905f76debe1fcc48743c706dc13d222bf39f4d9447eb8be99",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:iteration-power",
+      "name": "IterationPower",
+      "source_path": "sts2/src/Core/Models/Powers/IterationPower.cs",
+      "source_sha256": "24027c14ac29fa1713092ad9c23411cb6369e271bb136aa88e2553e09e9815a3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:juggernaut-power",
+      "name": "JuggernautPower",
+      "source_path": "sts2/src/Core/Models/Powers/JuggernautPower.cs",
+      "source_sha256": "0b1b726e0ef4b220d56194110286b4cda5bab270ae48615298804f5e717acae2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:juggling-power",
+      "name": "JugglingPower",
+      "source_path": "sts2/src/Core/Models/Powers/JugglingPower.cs",
+      "source_sha256": "ce01a890dc764c8540e9ab5c8cafa9eb32fc3cf640170b7cbf379143c5d86fd0",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:knockdown-power",
+      "name": "KnockdownPower",
+      "source_path": "sts2/src/Core/Models/Powers/KnockdownPower.cs",
+      "source_sha256": "62292e11087e518cb570896ba3908d5d9d30ca50d98f647bb13cf7aa9bfb74b8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:leadership-power",
+      "name": "LeadershipPower",
+      "source_path": "sts2/src/Core/Models/Powers/LeadershipPower.cs",
+      "source_sha256": "f9e2718c99688430ca91936530d16a5db646204e40a020744733033647d4c461",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:lethality-power",
+      "name": "LethalityPower",
+      "source_path": "sts2/src/Core/Models/Powers/LethalityPower.cs",
+      "source_sha256": "db4fd2c432b2f811518f3ac2f93c41077f4e4ce2a33151315ce0e3dccb0d69db",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:lightning-rod-power",
+      "name": "LightningRodPower",
+      "source_path": "sts2/src/Core/Models/Powers/LightningRodPower.cs",
+      "source_sha256": "c9c48ca89dddf12de765e16da4c1ef2c598a45af0a625e5ae4854a70ef9ef356",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:loop-power",
+      "name": "LoopPower",
+      "source_path": "sts2/src/Core/Models/Powers/LoopPower.cs",
+      "source_sha256": "de887dd54fd1a0ec9980c50d846a9e21fd4408e2e1cb0082def393ddc3ff327b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:machine-learning-power",
+      "name": "MachineLearningPower",
+      "source_path": "sts2/src/Core/Models/Powers/MachineLearningPower.cs",
+      "source_sha256": "0a52283d33aefa108ccabb73feb2dc6360e0b8090c225aba699f78a27ba44bd3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:magic-bomb-power",
+      "name": "MagicBombPower",
+      "source_path": "sts2/src/Core/Models/Powers/MagicBombPower.cs",
+      "source_sha256": "cacb1b0420a40f813916184c1bbc5725b350510c315502e0cf10f1f9780b114a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mangle-power",
+      "name": "ManglePower",
+      "source_path": "sts2/src/Core/Models/Powers/ManglePower.cs",
+      "source_sha256": "b85f6318f75b5e630a69d6a83a17dd4640e1ea2d140e81f9ac87ac53fb6aa47c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:master-planner-power",
+      "name": "MasterPlannerPower",
+      "source_path": "sts2/src/Core/Models/Powers/MasterPlannerPower.cs",
+      "source_sha256": "c983c56fa42610b95d28a0e72bfe65793fc24bde028efe0d549e9a232e098190",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mayhem-power",
+      "name": "MayhemPower",
+      "source_path": "sts2/src/Core/Models/Powers/MayhemPower.cs",
+      "source_sha256": "1751d0f06cabc4b703cba47d05df43c8a006e5c0f2672af984bb8197096bce53",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:mind-rot-power",
+      "name": "MindRotPower",
+      "source_path": "sts2/src/Core/Models/Powers/MindRotPower.cs",
+      "source_sha256": "cfa6c7cf4b2d9d8e879591fc5003603d03b2c6dec697a7d918c27125e2c98507",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:minion-power",
+      "name": "MinionPower",
+      "source_path": "sts2/src/Core/Models/Powers/MinionPower.cs",
+      "source_sha256": "8acbaf43969b256e0777bed2371830f7399e8c32fc45c8c35a3de7cde8b8c392",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:monarchs-gaze-power",
+      "name": "MonarchsGazePower",
+      "source_path": "sts2/src/Core/Models/Powers/MonarchsGazePower.cs",
+      "source_sha256": "3e58721b0c701c1764ada1ebee5e79ad869dc30e70e8b32d91fb0a7a381e44e1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:monarchs-gaze-strength-down-power",
+      "name": "MonarchsGazeStrengthDownPower",
+      "source_path": "sts2/src/Core/Models/Powers/MonarchsGazeStrengthDownPower.cs",
+      "source_sha256": "bb55d980ea5ed3475643fa0aba8593669d838fe897e218100c66038f57219b3a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:monologue-power",
+      "name": "MonologuePower",
+      "source_path": "sts2/src/Core/Models/Powers/MonologuePower.cs",
+      "source_sha256": "841af4eaec5673fbfb5f53ed9e8118d914fd221f7b09b3f1fa421f02a1531ae5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:necro-mastery-power",
+      "name": "NecroMasteryPower",
+      "source_path": "sts2/src/Core/Models/Powers/NecroMasteryPower.cs",
+      "source_sha256": "9de328ce325ca761d0d322737dd80c2828caf6564e385e8fcc4fa50177a926ed",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:nemesis-power",
+      "name": "NemesisPower",
+      "source_path": "sts2/src/Core/Models/Powers/NemesisPower.cs",
+      "source_sha256": "b932a083b96fb18b906c132cb6858d28fb7be09d1ba8e6f9ffa8f88d0097a2b1",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:neurosurge-power",
+      "name": "NeurosurgePower",
+      "source_path": "sts2/src/Core/Models/Powers/NeurosurgePower.cs",
+      "source_sha256": "5683b2c73a25794348e24fcaaa73a1b1ee124c60f2d295617a2db275b07771ab",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:nightmare-power",
+      "name": "NightmarePower",
+      "source_path": "sts2/src/Core/Models/Powers/NightmarePower.cs",
+      "source_sha256": "a6c867bdead07240edb31f4dc62f127d25c87dbca7a7d83f6caa9756be93b9b4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:no-block-power",
+      "name": "NoBlockPower",
+      "source_path": "sts2/src/Core/Models/Powers/NoBlockPower.cs",
+      "source_sha256": "6ae0456bfa1b7e97ff744dfb90c10987f0d2bf467487458ac3007736bffdc934",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:no-draw-power",
+      "name": "NoDrawPower",
+      "source_path": "sts2/src/Core/Models/Powers/NoDrawPower.cs",
+      "source_sha256": "6e53b8ff5cd97e40d9377cd5b3ba8fdcc2366b03b485a6a63f32cb148ba07a19",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:no-energy-gain",
+      "name": "NoEnergyGainPower",
+      "source_path": "sts2/src/Core/Models/Powers/NoEnergyGainPower.cs",
+      "source_sha256": "951b1f4d7d5565f52c99adf2fe8501aa5e1871849ffff2ada894723cbe7a5d5a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:nostalgia-power",
+      "name": "NostalgiaPower",
+      "source_path": "sts2/src/Core/Models/Powers/NostalgiaPower.cs",
+      "source_sha256": "8bcbbef46b0ac296b9dcc145f11d8cdc0cdf09d14af1c55fd3ebc3bb7a9d727a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:noxious-fumes-power",
+      "name": "NoxiousFumesPower",
+      "source_path": "sts2/src/Core/Models/Powers/NoxiousFumesPower.cs",
+      "source_sha256": "438e1b766b1aa3f7f11051bc6895e1847ae147e60b8f82bbdefffadd27314150",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:oblivion-power",
+      "name": "OblivionPower",
+      "source_path": "sts2/src/Core/Models/Powers/OblivionPower.cs",
+      "source_sha256": "0379e740a2c63cf98ef2af226f634e5d0748ef45ba4f94452e1244f04707f239",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:one-two-punch-power",
+      "name": "OneTwoPunchPower",
+      "source_path": "sts2/src/Core/Models/Powers/OneTwoPunchPower.cs",
+      "source_sha256": "177ce685cca074e13c4a8dc743e93d6c86a1dd78726db30b801a343937a06ccc",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:orbit-power",
+      "name": "OrbitPower",
+      "source_path": "sts2/src/Core/Models/Powers/OrbitPower.cs",
+      "source_sha256": "165516c40ff375ed71551c28fb6ef03ed73ea35e3aef8b5208407859fe5875ad",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:outbreak-power",
+      "name": "OutbreakPower",
+      "source_path": "sts2/src/Core/Models/Powers/OutbreakPower.cs",
+      "source_sha256": "42e81cfb06b51f27b504a218f68fe80daf693025cc804a677b1b3b048ed84219",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:pagestorm-power",
+      "name": "PagestormPower",
+      "source_path": "sts2/src/Core/Models/Powers/PagestormPower.cs",
+      "source_sha256": "371e6bc3d8f337ada7aba9319a74e1f67c5d67f6eed2443ec6185add036ad7f7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:painful-stabs-power",
+      "name": "PainfulStabsPower",
+      "source_path": "sts2/src/Core/Models/Powers/PainfulStabsPower.cs",
+      "source_sha256": "974919dd70325e64566f2de147ea2d25c6c6637f8b29ececb101c99309595452",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:pale-blue-dot-power",
+      "name": "PaleBlueDotPower",
+      "source_path": "sts2/src/Core/Models/Powers/PaleBlueDotPower.cs",
+      "source_sha256": "30b6f7fb920ba6067267f87d6d9fecf0f699b62e485d87475e054e7cf04203ca",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:panache-power",
+      "name": "PanachePower",
+      "source_path": "sts2/src/Core/Models/Powers/PanachePower.cs",
+      "source_sha256": "fe4c17b2ca5f88dee957bf4db7b41aa64402e9de35d2ec60c6fff79149326e8f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:paper-cuts-power",
+      "name": "PaperCutsPower",
+      "source_path": "sts2/src/Core/Models/Powers/PaperCutsPower.cs",
+      "source_sha256": "35dad1ac863dd37db0014259e7e3788f876dc99ac65636c9375af3f5d372c199",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:parry-power",
+      "name": "ParryPower",
+      "source_path": "sts2/src/Core/Models/Powers/ParryPower.cs",
+      "source_sha256": "646c792a5061dbcede7aa6813d7be70419626ad52fc9d8536723d3ae9f9b69d5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:personal-hive-power",
+      "name": "PersonalHivePower",
+      "source_path": "sts2/src/Core/Models/Powers/PersonalHivePower.cs",
+      "source_sha256": "e7eed9c2a33a0e2a033a67780901064c8be03a0844c8222bd3950dcbc635e62a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:phantom-blades-power",
+      "name": "PhantomBladesPower",
+      "source_path": "sts2/src/Core/Models/Powers/PhantomBladesPower.cs",
+      "source_sha256": "37fa919f21536318ec4a73ee31e95d74cb7922ebce8bc364a805683db0079371",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:piercing-wail-power",
+      "name": "PiercingWailPower",
+      "source_path": "sts2/src/Core/Models/Powers/PiercingWailPower.cs",
+      "source_sha256": "8a41636924a082abe7e2d97323ce2a59f04de778141828c4724a18378d39d491",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:pillar-of-creation-power",
+      "name": "PillarOfCreationPower",
+      "source_path": "sts2/src/Core/Models/Powers/PillarOfCreationPower.cs",
+      "source_sha256": "29871770a56ab8e5cd744b9a8afdb3893c387d040868b90427f5fc372e39b130",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:plating-power",
+      "name": "PlatingPower",
+      "source_path": "sts2/src/Core/Models/Powers/PlatingPower.cs",
+      "source_sha256": "f8e6f35b5df38ec5d79234ccc25a8e6e51f65ef01db10043be23c5bee64c377a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:plow-power",
+      "name": "PlowPower",
+      "source_path": "sts2/src/Core/Models/Powers/PlowPower.cs",
+      "source_sha256": "045457b351fa481f884064529dee3d223d25252c74caeda05c0e2e32d0be85ab",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:poison-power",
+      "name": "PoisonPower",
+      "source_path": "sts2/src/Core/Models/Powers/PoisonPower.cs",
+      "source_sha256": "7cf6dfc3987122ccc4a8a0d175871435a30bf0a756b171eb30019a693441b609",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:possess-speed-power",
+      "name": "PossessSpeedPower",
+      "source_path": "sts2/src/Core/Models/Powers/PossessSpeedPower.cs",
+      "source_sha256": "2d50b16d65f8cff238d24e2ee1dab8697699426e34d75d1fc8befa8d5244e823",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:possess-strength-power",
+      "name": "PossessStrengthPower",
+      "source_path": "sts2/src/Core/Models/Powers/PossessStrengthPower.cs",
+      "source_sha256": "02845e1c055e88e4301efe7db612ca8176deca5677a0eb73ce46cf33888ac385",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:prep-time-power",
+      "name": "PrepTimePower",
+      "source_path": "sts2/src/Core/Models/Powers/PrepTimePower.cs",
+      "source_sha256": "f4a4e01acd5d028bb9b68a8bfd844581fa8a11be6270acb31f1c51a661de0e0f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:pyre-power",
+      "name": "PyrePower",
+      "source_path": "sts2/src/Core/Models/Powers/PyrePower.cs",
+      "source_sha256": "29db6bf96fd85e9d0a689c10d67ac5448dc84abd00691cc09033c3449d8c794f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:radiance-power",
+      "name": "RadiancePower",
+      "source_path": "sts2/src/Core/Models/Powers/RadiancePower.cs",
+      "source_sha256": "220f403861db919ac7c4f7d6b6349335e0372f19bacfa4310c204aacab5352f0",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:rage-power",
+      "name": "RagePower",
+      "source_path": "sts2/src/Core/Models/Powers/RagePower.cs",
+      "source_sha256": "19f1631dca760fb5a22f079e921a2cc88cb9cdba3481254dc427b94fa0793e9f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:rampart-power",
+      "name": "RampartPower",
+      "source_path": "sts2/src/Core/Models/Powers/RampartPower.cs",
+      "source_sha256": "8fa6e74049e1c66a8b286852f7503ea00cf2e24c1333cabaf59f6d2172d21509",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ravenous-power",
+      "name": "RavenousPower",
+      "source_path": "sts2/src/Core/Models/Powers/RavenousPower.cs",
+      "source_sha256": "a30a7510c09c20596699801d31139e1146a2eed9122d62653b05414a36a2e7fd",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:reaper-form-power",
+      "name": "ReaperFormPower",
+      "source_path": "sts2/src/Core/Models/Powers/ReaperFormPower.cs",
+      "source_sha256": "bb9e8e0a9a7b0fa9f750b70e947380bd025db6441f1dbb070f5403f73999a360",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:reattach-power",
+      "name": "ReattachPower",
+      "source_path": "sts2/src/Core/Models/Powers/ReattachPower.cs",
+      "source_sha256": "8c4cb5d6e51625fc9f826e8b2d38861b3113a72659e1a00b0561b305f794e7ba",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:rebound-power",
+      "name": "ReboundPower",
+      "source_path": "sts2/src/Core/Models/Powers/ReboundPower.cs",
+      "source_sha256": "2258238edbdb427536c52a0121c62e04f5c80718ce1d78d0f1de3a0db0e172c8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:reflect-power",
+      "name": "ReflectPower",
+      "source_path": "sts2/src/Core/Models/Powers/ReflectPower.cs",
+      "source_sha256": "8983c8f1f50b7c34032bc6ae7809463ccf148f574e462746048b40539b254abf",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:regen-power",
+      "name": "RegenPower",
+      "source_path": "sts2/src/Core/Models/Powers/RegenPower.cs",
+      "source_sha256": "df12e59b8bfbe3278fcfb4d5e71441b3741468b049bbcc4510664b00d1f1dbe9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:reptile-trinket-power",
+      "name": "ReptileTrinketPower",
+      "source_path": "sts2/src/Core/Models/Powers/ReptileTrinketPower.cs",
+      "source_sha256": "cdc0280fb932d0e2d7b187969501ef3958201416f5b8d161895bc05d01b02895",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:retain-hand-power",
+      "name": "RetainHandPower",
+      "source_path": "sts2/src/Core/Models/Powers/RetainHandPower.cs",
+      "source_sha256": "7c1e6c6c9b6368b87a9be81a3d5c0d3bc07bda781416846a82c6d5e212c03055",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ringing-power",
+      "name": "RingingPower",
+      "source_path": "sts2/src/Core/Models/Powers/RingingPower.cs",
+      "source_sha256": "538a11b4caaa682cd26705cb27616b6f3e7608b5572d11a46a80170e58563c55",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:ritual-power",
+      "name": "RitualPower",
+      "source_path": "sts2/src/Core/Models/Powers/RitualPower.cs",
+      "source_sha256": "68fb6b795725dfc7c771dcce7b93d6d12b04871289d9d1cf2b5767a8b8a397c4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:rolling-boulder-power",
+      "name": "RollingBoulderPower",
+      "source_path": "sts2/src/Core/Models/Powers/RollingBoulderPower.cs",
+      "source_sha256": "765452fd6c4621e2645b7cbc95b2e5f4c0c0f6c4a5d6d55b7dfd8584ca7ae0ba",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:royalties-power",
+      "name": "RoyaltiesPower",
+      "source_path": "sts2/src/Core/Models/Powers/RoyaltiesPower.cs",
+      "source_sha256": "b5ff371c30f50a63d126020b31ceb84c0ee9b90ea852935238141d675cbea3c7",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:rupture-power",
+      "name": "RupturePower",
+      "source_path": "sts2/src/Core/Models/Powers/RupturePower.cs",
+      "source_sha256": "c2a59a15cc8628370abec825ccaf9ed52b4c7a6da0327347da198840822b3001",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sandpit-power",
+      "name": "SandpitPower",
+      "source_path": "sts2/src/Core/Models/Powers/SandpitPower.cs",
+      "source_sha256": "3f580babc9ff97b54541d5e2a254708558c71418875f023ae04a2ed43ee668f8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:seeking-edge-power",
+      "name": "SeekingEdgePower",
+      "source_path": "sts2/src/Core/Models/Powers/SeekingEdgePower.cs",
+      "source_sha256": "3d4525dddea81b37b56cd3f4ecb34e5e917aa3f8dfd4cd99007cb2c82321101c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:self-forming-clay",
+      "name": "SelfFormingClayPower",
+      "source_path": "sts2/src/Core/Models/Powers/SelfFormingClayPower.cs",
+      "source_sha256": "f56401efa59b39c48e6226b6d0e664783582d4a8a4ec0f795e9476a2be97f816",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sentry-mode-power",
+      "name": "SentryModePower",
+      "source_path": "sts2/src/Core/Models/Powers/SentryModePower.cs",
+      "source_sha256": "cfbc1ea8df052123ce73c7ee3ace20579edfde69aa2bec7c1fccc73219f64f38",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:serpent-form-power",
+      "name": "SerpentFormPower",
+      "source_path": "sts2/src/Core/Models/Powers/SerpentFormPower.cs",
+      "source_sha256": "c3a849921e381d0cad60665cc0ed31497dd9c1c81535d47a1c3b53e792c8d719",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:setup-strike-power",
+      "name": "SetupStrikePower",
+      "source_path": "sts2/src/Core/Models/Powers/SetupStrikePower.cs",
+      "source_sha256": "ee02d3b1f0071ffaf13680dc63af6d0a101f9ac96764a2cc665324b0c5bc44b5",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shackling-potion-power",
+      "name": "ShacklingPotionPower",
+      "source_path": "sts2/src/Core/Models/Powers/ShacklingPotionPower.cs",
+      "source_sha256": "6ebd779ad359fb1c5063cea8d7ec240b45999897126ef29efa4b9e9a215520ef",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shadowmeld-power",
+      "name": "ShadowmeldPower",
+      "source_path": "sts2/src/Core/Models/Powers/ShadowmeldPower.cs",
+      "source_sha256": "b7a9bb1846f338ef0dfa821f9e74efa7622b486ce863d9c5dc5b50cfa0afaf58",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shadow-step-power",
+      "name": "ShadowStepPower",
+      "source_path": "sts2/src/Core/Models/Powers/ShadowStepPower.cs",
+      "source_sha256": "abd1b909f56bef10c159c92ec61e5d01ac36db83f81d9703e5ec587b23511562",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shriek-power",
+      "name": "ShriekPower",
+      "source_path": "sts2/src/Core/Models/Powers/ShriekPower.cs",
+      "source_sha256": "86c99c98810147015a31f6bbfededd6c1d12b6b782ced705583acf6624d00971",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shrink-power",
+      "name": "ShrinkPower",
+      "source_path": "sts2/src/Core/Models/Powers/ShrinkPower.cs",
+      "source_sha256": "d9ca7fb61a812764570a9673bd2223e97d1c34ef98c6b4088ca528cb91a78b16",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:shroud-power",
+      "name": "ShroudPower",
+      "source_path": "sts2/src/Core/Models/Powers/ShroudPower.cs",
+      "source_sha256": "439e8e76496ded83b4270ee1900db17f376225cba4c599690f2825011480ced2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sic-em-power",
+      "name": "SicEmPower",
+      "source_path": "sts2/src/Core/Models/Powers/SicEmPower.cs",
+      "source_sha256": "2a984d242bd43dfca4ce82616e0f54ba11b89de012270033a4071d2476d8d5c2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:signal-boost-power",
+      "name": "SignalBoostPower",
+      "source_path": "sts2/src/Core/Models/Powers/SignalBoostPower.cs",
+      "source_sha256": "4ecee2e0c030be49db1ce775b88c4de9b8dd8700d03cbae49fbcbe04ee459c1c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:skittish-power",
+      "name": "SkittishPower",
+      "source_path": "sts2/src/Core/Models/Powers/SkittishPower.cs",
+      "source_sha256": "4c98d0d082a19634912b43812fdfbf003c8e05b8ec01f01ebb5c00d917102a77",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sleight-of-flesh-power",
+      "name": "SleightOfFleshPower",
+      "source_path": "sts2/src/Core/Models/Powers/SleightOfFleshPower.cs",
+      "source_sha256": "80d3e9aaec9bbe0ea1f29386989da0af4a5171b35d79303eb92701966eaae21d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slippery-power",
+      "name": "SlipperyPower",
+      "source_path": "sts2/src/Core/Models/Powers/SlipperyPower.cs",
+      "source_sha256": "fcdb8aea24e7e7b6b898305b0e03abead53fd28d0e9a4b9a11a91aa8c91e7528",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sloth-power",
+      "name": "SlothPower",
+      "source_path": "sts2/src/Core/Models/Powers/SlothPower.cs",
+      "source_sha256": "7060129f270363ab07dcbea78a2d468c238b0cf3b46729fea11a7fe185331382",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slow-power",
+      "name": "SlowPower",
+      "source_path": "sts2/src/Core/Models/Powers/SlowPower.cs",
+      "source_sha256": "fc83ae0948dac34e1f7faa79df9b91219d9051e1787daebe49615b3f78eb0713",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:slumber-power",
+      "name": "SlumberPower",
+      "source_path": "sts2/src/Core/Models/Powers/SlumberPower.cs",
+      "source_sha256": "ba48005a7937de1de66c412dcaf903cbd7e92a584952d5d7ead966e20259ca0e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:smoggy-power",
+      "name": "SmoggyPower",
+      "source_path": "sts2/src/Core/Models/Powers/SmoggyPower.cs",
+      "source_sha256": "52be6a0899d38a310c9fc880e83e833d10cbf43dc3228fc10935d8797ee165e3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:smokestack-power",
+      "name": "SmokestackPower",
+      "source_path": "sts2/src/Core/Models/Powers/SmokestackPower.cs",
+      "source_sha256": "fc6510f1f8388031308eb5ee9004c0780f856c7b54eb869d513c1a1d5bc3d1d0",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sneaky-power",
+      "name": "SneakyPower",
+      "source_path": "sts2/src/Core/Models/Powers/SneakyPower.cs",
+      "source_sha256": "4ffb6bece5809595cdc9e8665367db3b1ebef1f800bd5559081dbdb37ac434f3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:soar-power",
+      "name": "SoarPower",
+      "source_path": "sts2/src/Core/Models/Powers/SoarPower.cs",
+      "source_sha256": "191880c34e5cd6a8f9d3fa2f939915abea12a27cd5a1cc48f6c28ad41993c1d4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:spectrum-shift-power",
+      "name": "SpectrumShiftPower",
+      "source_path": "sts2/src/Core/Models/Powers/SpectrumShiftPower.cs",
+      "source_sha256": "e7e6391869bcfa2b9440593fd7f7abbb33ab5ad2c685847511cb726695679bd3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:speed-potion-power",
+      "name": "SpeedPotionPower",
+      "source_path": "sts2/src/Core/Models/Powers/SpeedPotionPower.cs",
+      "source_sha256": "12b9e0a97c2268e667e537418e09f4c8f54f61ff98176b358eeb4540a493b53b",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:speedster-power",
+      "name": "SpeedsterPower",
+      "source_path": "sts2/src/Core/Models/Powers/SpeedsterPower.cs",
+      "source_sha256": "79ae0acdb18508e151e55b60507518debc31d6224ba414e2cc2aecbaad512dcd",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:spinner-power",
+      "name": "SpinnerPower",
+      "source_path": "sts2/src/Core/Models/Powers/SpinnerPower.cs",
+      "source_sha256": "9276f4ab94e00c097a0b7fcb38daffb602dbe3cf05fdfc2947ad85c3a4c097c2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:spirit-of-ash-power",
+      "name": "SpiritOfAshPower",
+      "source_path": "sts2/src/Core/Models/Powers/SpiritOfAshPower.cs",
+      "source_sha256": "d199d9ea6d4ee33249421af5b4843b583f115f8961f8e4385c90e20d5874d15d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:stampede-power",
+      "name": "StampedePower",
+      "source_path": "sts2/src/Core/Models/Powers/StampedePower.cs",
+      "source_sha256": "7add49127fff1914f86b2c8a2143ab8422fe41ad36d39102af3bf0d5f2763b51",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:star-next-turn-power",
+      "name": "StarNextTurnPower",
+      "source_path": "sts2/src/Core/Models/Powers/StarNextTurnPower.cs",
+      "source_sha256": "71b8dec594b8bdbaed9160b7357de34e1d5c5c4d6494001a3b5fa395f4615784",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:steam-eruption-power",
+      "name": "SteamEruptionPower",
+      "source_path": "sts2/src/Core/Models/Powers/SteamEruptionPower.cs",
+      "source_sha256": "30d9a85e43722e337b23c8b12fbafe9b7dbf5cef0dbb883d3bba04f34de0a852",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:stock-power",
+      "name": "StockPower",
+      "source_path": "sts2/src/Core/Models/Powers/StockPower.cs",
+      "source_sha256": "9568b1b064341f83732d8703d160e636495609c20e070a6d50d65b6c56df4d3f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:storm-power",
+      "name": "StormPower",
+      "source_path": "sts2/src/Core/Models/Powers/StormPower.cs",
+      "source_sha256": "c9f98dda6fbde878c658790dd574837a5196a64dc6a11684a77ca1b46d678b7a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:strangle-power",
+      "name": "StranglePower",
+      "source_path": "sts2/src/Core/Models/Powers/StranglePower.cs",
+      "source_sha256": "b62b0cee78456da85e0ceec4b478106c5a5d510217cc81975fb4f4cdc796c0b3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:stratagem-power",
+      "name": "StratagemPower",
+      "source_path": "sts2/src/Core/Models/Powers/StratagemPower.cs",
+      "source_sha256": "74a9f1cdb8ad450d8a7b0fa30d24122ba8d97ea077288c76fa1303b95ac2a1a3",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:strength-power",
+      "name": "StrengthPower",
+      "source_path": "sts2/src/Core/Models/Powers/StrengthPower.cs",
+      "source_sha256": "267b986f0d1fc9666919f8ef2e3f714114f40355506a74c5bcc3977c283ffe49",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:subroutine-power",
+      "name": "SubroutinePower",
+      "source_path": "sts2/src/Core/Models/Powers/SubroutinePower.cs",
+      "source_sha256": "bd95052382fafc202e100a7323debb981cb8abcd680e60d1b806de3b6dabb362",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:suck-power",
+      "name": "SuckPower",
+      "source_path": "sts2/src/Core/Models/Powers/SuckPower.cs",
+      "source_sha256": "a506c8e188ddff174b75b3906b6dc3c69bdc8d043529204466f1a7a791abb8ef",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:summon-next-turn-power",
+      "name": "SummonNextTurnPower",
+      "source_path": "sts2/src/Core/Models/Powers/SummonNextTurnPower.cs",
+      "source_sha256": "acfa19815256123586061dc1c9826fa9853c8af21d728c0632224537c557b621",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:surprise-power",
+      "name": "SurprisePower",
+      "source_path": "sts2/src/Core/Models/Powers/SurprisePower.cs",
+      "source_sha256": "fb21c38261dc713279719feacbb628053fa5a1e9c9f361957d6c1dd8e20ebe2e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:surrounded-power",
+      "name": "SurroundedPower",
+      "source_path": "sts2/src/Core/Models/Powers/SurroundedPower.cs",
+      "source_sha256": "4fc7a5ced6a6058ea6c9c2bd624fe16b00e9aa8edd014d6924810091396a2db4",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:swipe-power",
+      "name": "SwipePower",
+      "source_path": "sts2/src/Core/Models/Powers/SwipePower.cs",
+      "source_sha256": "8800ca6b31089f72bc6929036c4251bcb6fabf179c57f1e9e3e1e28086937cd9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:sword-sage-power",
+      "name": "SwordSagePower",
+      "source_path": "sts2/src/Core/Models/Powers/SwordSagePower.cs",
+      "source_sha256": "0326a0d988f0482d1c09faaa403b0ea48ae386fa70e71612c5db6c515bdaf5f9",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:synchronize-power",
+      "name": "SynchronizePower",
+      "source_path": "sts2/src/Core/Models/Powers/SynchronizePower.cs",
+      "source_sha256": "2c93d2199c2db586191169b033ebb8bf20046f8b42cbb2fe2c289dd86d4a96ab",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tag-team-power",
+      "name": "TagTeamPower",
+      "source_path": "sts2/src/Core/Models/Powers/TagTeamPower.cs",
+      "source_sha256": "cfd243deddf6ee822c914359e3f5add7c070951c6bdc6faeb5487f92421331de",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tainted-power",
+      "name": "TaintedPower",
+      "source_path": "sts2/src/Core/Models/Powers/TaintedPower.cs",
+      "source_sha256": "b75eaaedc2769ca6acf717a0d62aa06e9afe839d390c06900d7c0723292eac11",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tangled-power",
+      "name": "TangledPower",
+      "source_path": "sts2/src/Core/Models/Powers/TangledPower.cs",
+      "source_sha256": "e1c23f2fb06950bb6b7abcb8a16d02367a3bcd99e2bbc59497f63ddfb9707d16",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tank-power",
+      "name": "TankPower",
+      "source_path": "sts2/src/Core/Models/Powers/TankPower.cs",
+      "source_sha256": "a0a049bdb4de4df697c7917dd6f36b46ab7b9f689ddbd09454d4573c25383bb8",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:temporary-dexterity-power",
+      "name": "TemporaryDexterityPower",
+      "source_path": "sts2/src/Core/Models/Powers/TemporaryDexterityPower.cs",
+      "source_sha256": "7725a5a992e86c33dee268870c29dd4ddd3358bb7061a37b6da64dd919761fbc",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:temporary-focus-power",
+      "name": "TemporaryFocusPower",
+      "source_path": "sts2/src/Core/Models/Powers/TemporaryFocusPower.cs",
+      "source_sha256": "1e007c2e28629a0493c7b9080d1579e4b0fc0d2f9a692f0ae6f7d5329a7f6668",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:temporary-strength-power",
+      "name": "TemporaryStrengthPower",
+      "source_path": "sts2/src/Core/Models/Powers/TemporaryStrengthPower.cs",
+      "source_sha256": "0b0ae6f9f69dd2a451b4f307b51b2c69b00515114660c26e9e7d3b472b25a398",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tender-power",
+      "name": "TenderPower",
+      "source_path": "sts2/src/Core/Models/Powers/TenderPower.cs",
+      "source_sha256": "e9447d941f791d35bd5286977052a9413447cf46e946f980e790ce39999a0009",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:territorial-power",
+      "name": "TerritorialPower",
+      "source_path": "sts2/src/Core/Models/Powers/TerritorialPower.cs",
+      "source_sha256": "be17aecee5adf974dcaf3d4db1da47d87f2c3a22db800ede40abac5cb59f382f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-bomb-power",
+      "name": "TheBombPower",
+      "source_path": "sts2/src/Core/Models/Powers/TheBombPower.cs",
+      "source_sha256": "bbfc081dcb14921dfebd945d102dfc4b394a7e290665cef97e41f7e8b351cc38",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-gambit-power",
+      "name": "TheGambitPower",
+      "source_path": "sts2/src/Core/Models/Powers/TheGambitPower.cs",
+      "source_sha256": "911c5d25e3d10e6d8bdef3d14b4d8ace23c354514eff2ba8758b114cbabbd3cc",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-hunt-power",
+      "name": "TheHuntPower",
+      "source_path": "sts2/src/Core/Models/Powers/TheHuntPower.cs",
+      "source_sha256": "c4cbc1ca00adc533fe6109b4017678b86a7c8d980557d3de1df4637e09323c3e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:the-sealed-throne-power",
+      "name": "TheSealedThronePower",
+      "source_path": "sts2/src/Core/Models/Powers/TheSealedThronePower.cs",
+      "source_sha256": "8f9eb2768d7f8180dedb299dc761da2cc8d7e1bbb96a428e20407b55d39c7c9f",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:thievery-power",
+      "name": "ThieveryPower",
+      "source_path": "sts2/src/Core/Models/Powers/ThieveryPower.cs",
+      "source_sha256": "62b6c27e34859003de32552302da65a2c8a7a5d8bf0df51cf3ab0ad79c59090a",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:thorns-power",
+      "name": "ThornsPower",
+      "source_path": "sts2/src/Core/Models/Powers/ThornsPower.cs",
+      "source_sha256": "96167a3d1513ad6da621861e3f64fc2d8ddc7cad618b54131c0955297c22912c",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:thunder-power",
+      "name": "ThunderPower",
+      "source_path": "sts2/src/Core/Models/Powers/ThunderPower.cs",
+      "source_sha256": "d2269d7f49e91d7990f90653d874059b00674825ed6445595f5de5db2fb5aeec",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tools-of-the-trade-power",
+      "name": "ToolsOfTheTradePower",
+      "source_path": "sts2/src/Core/Models/Powers/ToolsOfTheTradePower.cs",
+      "source_sha256": "3c05022444fb9e9b92c3848a61e52937c3150c6a6db094ec4b77537f6f696488",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:toric-toughness-power",
+      "name": "ToricToughnessPower",
+      "source_path": "sts2/src/Core/Models/Powers/ToricToughnessPower.cs",
+      "source_sha256": "43c92a2c1b54633d5a9023bf861f3c831555ce1274f913adf620bcc4ad904400",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tracking-power",
+      "name": "TrackingPower",
+      "source_path": "sts2/src/Core/Models/Powers/TrackingPower.cs",
+      "source_sha256": "661faa5c70589a3df5181d43aa4571dd9ce13d5b66ef6a1d1a2b8868fb6b562e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:trash-to-treasure-power",
+      "name": "TrashToTreasurePower",
+      "source_path": "sts2/src/Core/Models/Powers/TrashToTreasurePower.cs",
+      "source_sha256": "0dcc9c857c42d27a40b2b08bec0b1434cbfe3f66846c7fa8da470426ff6f0947",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:tyranny-power",
+      "name": "TyrannyPower",
+      "source_path": "sts2/src/Core/Models/Powers/TyrannyPower.cs",
+      "source_sha256": "36c1797857596812f91a3e96d01d4a07699b931a94d76feb7564c0a6d78887df",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:unmovable-power",
+      "name": "UnmovablePower",
+      "source_path": "sts2/src/Core/Models/Powers/UnmovablePower.cs",
+      "source_sha256": "1289b35e643369d24cfa0cb27b0dac9815379ffa134f257dd3975c06ac3d3c75",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:veilpiercer-power",
+      "name": "VeilpiercerPower",
+      "source_path": "sts2/src/Core/Models/Powers/VeilpiercerPower.cs",
+      "source_sha256": "a84a7b2fdc404afe09a4e00eb276d4a837458a06a2b60af6b7572dbaf35fb70e",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vicious-power",
+      "name": "ViciousPower",
+      "source_path": "sts2/src/Core/Models/Powers/ViciousPower.cs",
+      "source_sha256": "cd7e95ace8000dba8ce4b1c72f38c54de4b4f64136ee2cb59db35617d3041129",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vigor-power",
+      "name": "VigorPower",
+      "source_path": "sts2/src/Core/Models/Powers/VigorPower.cs",
+      "source_sha256": "9b10573ada4e2e70ecb78ccaa761869480b974ee0b9ad4d09cdb1b240ca58ca2",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vital-spark-power",
+      "name": "VitalSparkPower",
+      "source_path": "sts2/src/Core/Models/Powers/VitalSparkPower.cs",
+      "source_sha256": "2d94496d634bb3f41afb05e9ef7bda2ba265da062bc904caf42c78d7b832e30d",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:void-form-power",
+      "name": "VoidFormPower",
+      "source_path": "sts2/src/Core/Models/Powers/VoidFormPower.cs",
+      "source_sha256": "a6cb026447b66cccf410a794abadb7bfe12eb8f15b0e85ff89cd2f7586972046",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:vulnerable-power",
+      "name": "VulnerablePower",
+      "source_path": "sts2/src/Core/Models/Powers/VulnerablePower.cs",
+      "source_sha256": "8fd6a82db0c6dd460a2f1d118628c4ab2600dc97f93a31c672e84ee4a3147126",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:waste-away-power",
+      "name": "WasteAwayPower",
+      "source_path": "sts2/src/Core/Models/Powers/WasteAwayPower.cs",
+      "source_sha256": "6a905f4d91131232d03005e8232d31b4843b9315d51445a46a8e44bf572f9a96",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:weak-power",
+      "name": "WeakPower",
+      "source_path": "sts2/src/Core/Models/Powers/WeakPower.cs",
+      "source_sha256": "b33ac1a44ff5edb75d6e5776627259b2bac2b4e6ab1905cab3d60b0cfa32a426",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:well-laid-plans-power",
+      "name": "WellLaidPlansPower",
+      "source_path": "sts2/src/Core/Models/Powers/WellLaidPlansPower.cs",
+      "source_sha256": "c448e174b9c79756c5b48bd85334dd7fa6c8a6b119ab41b2041446ced00e4907",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:withering-presence-power",
+      "name": "WitheringPresencePower",
+      "source_path": "sts2/src/Core/Models/Powers/WitheringPresencePower.cs",
+      "source_sha256": "55a7c2e6f89b2e83dd6dd20630e86a1d29175b26db3b2cdbbddfcb93fcae03df",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    },
+    {
+      "id": "base-spire:wraith-form-power",
+      "name": "WraithFormPower",
+      "source_path": "sts2/src/Core/Models/Powers/WraithFormPower.cs",
+      "source_sha256": "252ebf8da61188051a2d40c4c6a69e920c08f721f0e066705d765cc2e3e45287",
+      "pools": [],
+      "eligibility": "unreviewed",
+      "evidence": "",
+      "definition": null
+    }
+  ]
+}

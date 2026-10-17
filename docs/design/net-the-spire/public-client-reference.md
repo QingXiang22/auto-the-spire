@@ -52,8 +52,8 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 | 当前可提交操作、目标或选牌答案 | 当前snapshot的`legal_actions` |
 | 公开字段、集合和引用结构 | `get_catalog`及0.2 schema |
 | 起始身份与实际支持场景 | 本次`describe` |
-| 长期牌组/药水/遗物集合用途 | [BasePublicSemantics](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BasePublicSemantics.cs)提供，Host转换后发布 |
-| base到net语义转换缺口 | [FormalDevMetadata](../../../net-the-spire/Net.TheSpire.Host/FormalDevMetadata.cs) |
+| 长期牌组/药水/遗物集合用途 | [BasePublicSemantics](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BasePublicSemantics.cs)提供，Host转换后发布 |
+| base到net语义转换缺口 | [FormalDevMetadata](../../../tools/base-migration-baseline/net-host/FormalDevMetadata.cs) |
 | 公开动作的真实游戏行为 | 对应base机制模块；客户端不重写玩法 |
 
 `Run.ActCompleted`和地图阶段属于base玩法；终局结论读取`terminal_result.outcome`。单幕完成、步数截止、故障和执行不确定均不等于整局胜利。

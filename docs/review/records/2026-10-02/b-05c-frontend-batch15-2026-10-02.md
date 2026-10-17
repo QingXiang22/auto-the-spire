@@ -6,7 +6,7 @@
 | --- | --- |
 | 任务 ID | **B-05c**（第十五批）——**可变实例量**（效果把值写回这张牌，后续读出；B-05a 记的 `variables` + `instance.VariableOffsets` 的最小等价物） |
 | 权威 | [开工清单 §14](../../../design/implementation-kickoff.md#14-m1后阶段二sts作者前端与内容迁移)（B-05c 行含"实例变量"） |
-| 负责范围 | `Slice/SliceAuthorFrontend.cs`（`variable`/`grow`/`variable:` 解析与校验）、`Slice/CombatSlicePackage.cs`（每实例字段、读出、写回）、`BaseSpire.Slice.Tests/SliceFrontendInstanceVariableChecks.cs`（新增 4 项） |
+| 负责范围 | `Authoring/SliceAuthorFrontend.cs`（`variable`/`grow`/`variable:` 解析与校验）、`Composition/CombatSlicePackage.cs`（每实例字段、读出、写回）、`BaseSpire.Slice.Tests/Cards/SliceFrontendInstanceVariableChecks.cs`（新增 4 项） |
 | 状态 | **部分完成（十五批）**：可变实例量已交付；B-05c 其余子项仍未开始（见 §4） |
 | 前置 | [批1](b-05c-frontend-batch1-2026-10-02.md) … [批14](b-05c-frontend-batch14-2026-10-02.md) |
 
@@ -68,9 +68,9 @@ hook 里更广的步骤面（`target`/`apply_power`/`top_from_discard`/`exhaust_
 
 ## 6. 修改文件
 
-- `BaseSpire/Slice/SliceAuthorFrontend.cs`（`variable` 数据块、`grow`、`variable:` 来源、`unreachable_variable`）
-- `BaseSpire/Slice/CombatSlicePackage.cs`（`Variable_*` 字段分配、初值、`AmountFrom` 的变量分支、`GrowChain`）
-- `BaseSpire.Slice.Tests/SliceFrontendInstanceVariableChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
+- `BaseSpire/Authoring/SliceAuthorFrontend.cs`（`variable` 数据块、`grow`、`variable:` 来源、`unreachable_variable`）
+- `BaseSpire/Composition/CombatSlicePackage.cs`（`Variable_*` 字段分配、初值、`AmountFrom` 的变量分支、`GrowChain`）
+- `BaseSpire.Slice.Tests/Cards/SliceFrontendInstanceVariableChecks.cs`（新增 4 项）、`SliceChecks.cs`（注册）
 - `docs/review/tofix/long-task-progress-2026-10-02.md`（状态）
 
 未修改：`Engine/`、Legacy、net、Python 侧。未提交、未清理共享工作区。

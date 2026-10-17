@@ -10,9 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Net.TheSpire/Net.TheSpire.csproj" />
-    <ProjectReference Include="../../mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj" />
+    <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
   </ItemGroup>
-  <!-- 检查项目要复用 Host 的组合层（唯一的 base→net 转换点），不复制一份到测试里。 -->
+  <!-- 检查项目要复用 Host 的组合层（通用 DSL→net 转换点），不复制一份到测试里。 -->
   <ItemGroup>
     <InternalsVisibleTo Include="Net.TheSpire.Tests" />
   </ItemGroup>

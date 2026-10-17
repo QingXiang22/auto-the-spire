@@ -1,0 +1,15 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity Card {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    Label = { type = String(length = 64) default = "development-card" }
+  }
+}
+collection Hand { element = Card capacity = 10 ordered = true }
+collection DrawPile { element = Card ordered = true identity_visible = false order_visible = false }
+collection DiscardPile { element = Card ordered = true }
+event AfterShuffle { payload = { owner = Ref(Player) } }
+event AfterCardDrawn { payload = { owner = Ref(Player) card = Ref(Card) } }

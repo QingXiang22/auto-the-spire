@@ -420,7 +420,7 @@ flowchart TD
 | 目标按条件筛选/排序 | ❌ `TargetSelector` 7 个封闭枚举 | ✅ `Query` 有 `Where`/`Sort`/`Take`/`Skip`/`First`/`Count`/`Exists`/`Aggregate`；算术含 `Minimum`/`Maximum` |
 | `min`/`clamp` 值原语 | ❌ 缺 | ✅ 已有 |
 
-验证状态：`Engine` 检查 32/32、`base-spire` 切片检查 21/21 通过；其中 [SliceChecks.cs:150-162](../../../mod-the-spire/base-spire/BaseSpire.Slice.Tests/SliceChecks.cs#L150-L162) 直接验证了"第二个包扩展 `base-spire` 的 `Player` 类型并追加字段"，`Monster`/`Player`/`Power` 均已标 `ExtensibleFields`。
+验证状态：`Engine` 检查 32/32、`base-spire` 切片检查 21/21 通过；其中 [SliceChecks.cs:150-162](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Authoring/SliceChecks.cs#L150-L162) 直接验证了"第二个包扩展 `base-spire` 的 `Player` 类型并追加字段"，`Monster`/`Player`/`Power` 均已标 `ExtensibleFields`。
 
 **因此 §5 的模块切分需要重做一次的前提变成**：先决定内容落在哪套后端。若走通用引擎，M3（高度）、M7（能力）就是"注册一个新包"，而不是"改内核"；真正的待决项变成下面三条（来自同期审计 [core-the-spire-completeness-audit-2026-10-01.md](../../review/records/2026-10-01/core-the-spire-completeness-audit-2026-10-01.md)）：
 
@@ -472,9 +472,9 @@ flowchart TD
 
 ### 实例（比文档更能说明"现在能写成什么样"）
 
-- [ironclad-cards.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-cards.spire)（99 KB，96 张卡）
-- [ironclad-powers.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/ironclad-powers.spire)、[enemies.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/enemies.spire)（47 KB）
-- [state.spire](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/state.spire)（4 条 `state` 声明示例）
-- [BaseSpirePackage.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/mod-the-spire/base-spire/BaseSpire.Legacy/BaseSpirePackage.cs)：角色注册（第 212 行）、遗物行为（`IRuleHook` 实现，第 411-537 行）
+- [ironclad-cards.spire](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire)（99 KB，96 张卡）
+- [ironclad-powers.spire](../../../tools/base-migration-baseline/BaseSpire/Powers/Content/ironclad-powers.spire)、[enemies.spire](../../../tools/base-migration-baseline/BaseSpire/Enemies/Content/enemies.spire)（47 KB）
+- [state.spire](../../../tools/base-migration-baseline/BaseSpire/Authoring/Content/state.spire)（4 条 `state` 声明示例）
+- [BaseSpirePackage.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/tools/base-migration-baseline/BaseSpire.Legacy/BaseSpirePackage.cs)：角色注册（第 212 行）、遗物行为（`IRuleHook` 实现，第 411-537 行）
 
 > **检阅时优先看三处**：`primitives.md §2/§3/§4` 的三张表（能写什么）、`Content.cs` 的 `CardDefinition` 钩子清单（6 个）与 `PowerTrigger`（11 个）、`Effects.cs` 的 `TargetSelector`（7 个）。这三处直接决定 §8.2 表格里的四个缺口是否成立。

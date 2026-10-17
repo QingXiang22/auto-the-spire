@@ -26,7 +26,7 @@ dotnet build tools/differential/Differential.csproj --artifacts-path .artifacts/
 dotnet .artifacts/event-layer-20261017/bin/Differential/debug/Differential.dll event-modules --event MorphicGrove --output .audit/event-layer-20261017/morphic-final
 ```
 
-预期18项通过、rc0。省略`--event`会执行全部7模块的进入检查与本轮完整行为检查；Jungle独行有具名参考差异，因此完整命令预期rc1，不是正常通关门槛替代品。工具用法见[独立事件模块验证](../../../../tools/differential/README.md#独立事件模块验证)，语义与源顺序见[事件契约](../../../design/mod-the-spire/event-domain/spec.md)。
+预期18项通过、rc0。省略`--event`会执行全部7模块的进入检查与本轮完整行为检查；Jungle独行有具名参考差异，因此完整命令预期rc1，不是正常通关门槛替代品。工具用法见[独立事件模块验证](../../../../tools/base-migration-baseline/differential/README.md#独立事件模块验证)，语义与源顺序见[事件契约](../../../design/mod-the-spire/event-domain/spec.md)。
 
 ## 生产改动
 
