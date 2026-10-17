@@ -55,6 +55,18 @@ Haze的永久Sly沿共享手动弃牌流程：先移动整个已选批次并执�
 
 定向入口`--poison-only`覆盖实际加载、三种升级路径、生命周期及组合边界；`--suite source`从本地原版池及直接Power引用独立核对分母。广覆盖回归在整组本地轻量检查后由GitHub Actions执行。
 
+## 静默猎手奇巧牌族
+
+源依据为Cards/Abrasive、FlickFlack、Reflex、Ricochet、Tactician、Untouchable、Haze的CanonicalKeywords，HandTrick.OnPlay、MasterPlannerPower.AfterCardPlayed，以及CardModel.IsSlyThisTurn／EndOfTurnCleanup／DeepCloneFields。全部单人原生奇巧7张，Haze复用已交付；HandTrick与MasterPlanner是另外两张授予奇巧的消费者。多人Sneaky保持原范围，不进入单人牌池。
+
+卡定义的原生Sly与卡实例AddedSly、SingleTurnSly共同决定实际奇巧。HandTrick先获得7／10格挡，再从手牌中选择恰好一张Skill且当前非奇巧的实例，本回合生效；空域不问，单候选自动处理，多候选暂停，不能用nonAttack放入Power／Status。MasterPlanner在每次技能打完后授予该实例本场战斗持续的Sly；普通／升级费用2／1，重复获得不产生重复自动出牌。两种状态在Engine卡实例公开字段中维护，升级保留、战斗克隆复制且隔离，新实例／变换不继承，战斗副本不写回长期牌组。
+
+手动弃牌先捕获奇巧资格、移动并完成整个批次的弃牌hook，再顺序免费自动打出；普通清手不触发。SingleTurnSly在回合末对本场全部实例清理，AddedSly跨回合保留至战斗结束；不影响定义Sly。嵌套弃牌批次各自结算，已排队卡不因后续资格变化重复入队。
+
+Abrasive先给1敏捷再给4／6荆棘。ThornsPower在敌人powered攻击计算伤害后、格挡及生命结算前，对攻击者造成等同层数的unpowered伤害；全挡和零伤害攻击仍触发，直接掉血及unpowered伤害不触发。反击杀死攻击者时当前命中仍完成，下一次命中因来源已死亡而跳过；反击不套玩家力量或敌人易伤，但攻击者格挡仍可吸收。
+
+验证覆盖全部新牌普通／创建升级／实际升级，原生与授予Sly的免费出牌、空域／精确Skill筛选／状态隔离、批次顺序、跨回合清理和复制升级，以及反击的时点与末杀边界。本地只运行受影响定向组；完整回归交给推送后的Actions。
+
 ## Osty 基础生命周期
 
 依据OstyCmd.Summon与CreatureCmd.GainMaxHp：summonOsty(amount)零值无操作，首次创建归属玩家的独立宠物；存活时同时增加MaxHP/HP，死亡保留身份，复活以本次amount重设MaxHP/HP。healOsty只治疗存活宠物并封顶；loseOstyHp为不经格挡的生命损失，死亡不移除实体；ostyAttack只允许存活宠物攻击当前所选敌人，基础伤害不使用玩家Strength。金额使用共享数值表达式，负值显式拒绝。

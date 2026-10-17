@@ -1979,6 +1979,8 @@ public static partial class SpireCardSource
             {
                 var canonical = powers.Values.FirstOrDefault(id => string.Equals(id, raw, StringComparison.OrdinalIgnoreCase));
                 if (canonical is not null) return canonical;
+                var qualified = powers.Values.FirstOrDefault(id => string.Equals(id, $"{packageId}:{raw}", StringComparison.OrdinalIgnoreCase));
+                if (qualified is not null) return qualified;
                 foreach (var entry in powers)
                 {
                     if (string.Equals(entry.Key, raw, StringComparison.OrdinalIgnoreCase))

@@ -68,7 +68,17 @@ Power 声明 `role = Poison` 或 `role = Accelerant`，卡牌通过已有 `apply
 | `applyPowerOnUnblockedAttack` | 玩家powered攻击造成正的未格挡伤害后，给仍存活的目标按层数施加指定Power；每次命中分别判断 |
 | `damageAllEveryThirdPower` | 玩家每成功施加指定Power三次，对存活敌人造成等同自身层数的unpowered伤害；余数跨回合保留，公开为Power的`ApplicationCount` |
 
-卡牌`applyPower`可显式写`target = randomEnemy`，每次施加独立消耗一次CombatTargets抽取，空域不抽。原生`keywords = { sly }`在手动弃牌后排队，整批弃牌结束后沿共享自动出牌流程免费打出；普通回合末清手不触发。这里只支持定义上的永久奇巧，临时授予奇巧另属附着能力。静默猎手正式开局和完整角色范围仍查主清单。
+卡牌`applyPower`可显式写`target = randomEnemy`，每次施加独立消耗一次CombatTargets抽取，空域不抽。静默猎手正式开局和完整角色范围仍查主清单。
+
+### 奇巧与授予状态
+
+原生`keywords = { sly }`、实例`AddedSly`和`SingleTurnSly`任一生效时，手动弃牌会将该实例排队。整个弃牌批次完成后，按源顺序沿共享自动出牌流程免费打出，普通回合末清手不触发。嵌套弃牌使用独立批次，不能消费外层尚未执行的条目。
+
+`chooseCard`支持`filter = nonSlySkill`，仅接受当前没有奇巧的Skill，排除Power、Status、Attack及已授予状态；它与`nonAttack`不同。选择体`onSelected = { grantSelectedSly = {} }`给当前绑定实例授予本回合奇巧，参数块必须为空，无选择或forEachCard上下文拒绝。HandTrick组合此筛选及效果；空域不问、唯一候选在`autoSelect = true`时自动处理。
+
+Power声明`rules = { grantSlyAfterSkill = true }`在拥有者每次打完Skill后设置该牌的`AddedSly`。本回合状态在回合末清理，本场状态保留到战斗结束；升级保留两者，战斗克隆按创建时状态复制，新实例及变换不继承，永久牌组不从战斗副本写回。实际字段由正式公开Profile发布。
+
+Power声明`rules = { retaliateBeforeAttack = true }`在敌方powered攻击结算格挡／生命前，按自身层数对攻击者造成unpowered反击；零伤害／全挡也触发，unpowered攻击不触发。当前命中在反击击杀攻击者后仍完成，后续命中跳过死者来源。Abrasive使用此规则；它不同于火焰屏障的受击后反击。源顺序与范围见[奇巧牌族契约](../../design/mod-the-spire/character-combat/spec.md#静默猎手奇巧牌族)。
 
 ### 灾厄
 

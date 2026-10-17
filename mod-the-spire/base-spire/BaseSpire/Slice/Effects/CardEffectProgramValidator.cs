@@ -43,7 +43,7 @@ public static class CardEffectProgramValidator
                     case ForEachCardEffect each: Visit(each.Body, names, true); break;
                     case SelectCardsEffect select: Visit(select.OnSelected, names, true); break;
                     case RandomCardEffect random: Visit(random.OnSelected, names, true); break;
-                    case MoveSelectedCardEffect or TransformSelectedCardEffect or UpgradeSelectedCardEffect when !cardBound:
+                    case MoveSelectedCardEffect or TransformSelectedCardEffect or UpgradeSelectedCardEffect or GrantSelectedSlyEffect when !cardBound:
                         problems.Add($"{effect.Source}: this effect requires an enclosing card selection or forEachCard"); break;
                     case CloneCardEffect { Selected: true } when !cardBound:
                         problems.Add($"{effect.Source}: selected clone requires an enclosing card selection or forEachCard"); break;

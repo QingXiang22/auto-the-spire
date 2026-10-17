@@ -38,8 +38,8 @@ public static partial class SpireCardSource
                     problems.Add($"{property.Location}: use onSelected/moveSelectedCard to compose movement; to must be none or omitted");
                 var filterField = fields.LastOrDefault(f => f.Name == "filter");
                 var filter = FilterOf(filterField, where, ref problems);
-                if (filterField is not null && NameOf(filterField.Value) is not ("attack" or "nonAttack" or "upgradeable"))
-                    problems.Add($"{filterField.Location}: chooseCard filter must be attack, nonAttack or upgradeable");
+                if (filterField is not null && NameOf(filterField.Value) is not ("attack" or "nonAttack" or "upgradeable" or "nonSlySkill"))
+                    problems.Add($"{filterField.Location}: chooseCard filter must be attack, nonAttack, upgradeable or nonSlySkill");
                 var count = IntegerFieldOf(fields, "count", where, 1, ref problems);
                 var position = fields.LastOrDefault(f => f.Name == "destinationPosition");
                 var top = position is not null;
@@ -84,6 +84,12 @@ public static partial class SpireCardSource
             {
                 if (property.Value is not DslBlockNode { Members.Count: 0 }) problems.Add($"{property.Location}: upgradeSelectedCard requires an empty block");
                 else effects.Add(new UpgradeSelectedCardEffect(property.Location));
+                continue;
+            }
+            if (property.Name == "grantSelectedSly")
+            {
+                if (property.Value is not DslBlockNode { Members.Count: 0 }) problems.Add($"{property.Location}: grantSelectedSly requires an empty block");
+                else effects.Add(new GrantSelectedSlyEffect(property.Location));
                 continue;
             }
             if (property.Name == "cloneSelectedCard")
@@ -506,7 +512,7 @@ public static partial class SpireCardSource
                     problems.Add($"{property.Location}: pool requires one or more card = Definition entries");
                 var count = ReadCommandCount(fields.LastOrDefault(f => f.Name == "count"), ref problems);
                 var filter = FilterOf(fields.LastOrDefault(f => f.Name == "type"), property.Location.ToString(), ref problems);
-                if (filter == CardEffectCardFilter.Upgradeable) problems.Add($"{property.Location}: generation type supports attack or nonAttack only");
+                if (filter is CardEffectCardFilter.Upgradeable or CardEffectCardFilter.NonSlySkill) problems.Add($"{property.Location}: generation type supports attack or nonAttack only");
                 bool Flag(string name) => fields.LastOrDefault(f => f.Name == name)?.Value is DslBooleanNode flag && flag.Value;
                 foreach (var field in fields.Where(f => f.Name is "upgraded" or "distinct" or "choose" or "allowCancel"))
                     if (field.Value is not DslBooleanNode) problems.Add($"{field.Location}: {field.Name} must be boolean");
@@ -748,6 +754,7 @@ public static partial class SpireCardSource
             "attack" or "Attack" => (CardEffectCardFilter?)CardEffectCardFilter.Attack,
             "nonAttack" or "NonAttack" or "skill" => CardEffectCardFilter.NonAttack,
             "upgradeable" => CardEffectCardFilter.Upgradeable,
+            "nonSlySkill" => CardEffectCardFilter.NonSlySkill,
             _ => null,
         };
         if (filter is null) problems.Add($"{field.Location}: unsupported forEachCard filter '{name}'");
@@ -810,7 +817,7 @@ public static partial class SpireCardSource
     {
         foreach (var effect in program.Effects)
         {
-            if (effect is SelectCardsEffect or RandomCardEffect or UpgradeSelectedCardEffect or CloneCardEffect
+            if (effect is SelectCardsEffect or RandomCardEffect or UpgradeSelectedCardEffect or GrantSelectedSlyEffect or CloneCardEffect
                 or ModifyPlayedCardCostEffect or CreateDefinedCardEffect or RewritePlayedCardEffect)
                 problems.Add($"{effect.Source}: hook cannot initiate card selection, upgrade or cloning");
             if (effect is AutoPlayCardEffect or GenerateCardsEffect or ForgeCardEffect)

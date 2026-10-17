@@ -59,9 +59,11 @@
 
 ## 当前交付
 
-2026-10-17用户 `/goal` 授权集中完成一个较大主题，本批固定为 **ENV-T12-SILENT-POISON：静默猎手全部12张中毒相关卡牌**，替代本批所需内容的批量补卡暂停。Codex `/root` 认领，状态待验证（实现及本地定向检查完成，等待推送后CI）；修改边界为base内容、作者前端、共享战斗触发和Slice定向测试及必要文档，不修改core或参考玩法。范围为Accelerant、BouncingFlask、BubbleBubble、CorrosiveWave、DeadlyPoison、Envenom、Haze、Mirage、NoxiousFumes、Outbreak、PoisonedStab、Snakebite，包含普通／升级、Haze永久奇巧、随机目标、实际施毒来源计数、抽牌／攻击触发与全体中毒转格挡。12张正式加载及68项Poison定向检查、源清单核对已通过；交付与命令见[本批记录](../records/2026-10-17/silent-poison-family-2026-10-17.md)。下一成果为同提交GitHub Actions四组完整回归通过；本地先完成受影响轻量检查，完整回归仅推送后由GitHub Actions运行。不以该内容族交付宣称Silent正式开局、多幕或完整角色已验收。下列Sown批次保留历史范围与缺口。
+2026-10-17接续开发：**ENV-T12-SILENT-SLY：静默猎手单人奇巧牌族**，Codex `/root`认领，待验证（整组实现及本地轻量检查完成，等待CI）；基线main/f1cd726，分支codex/silent-sly-family-20261017。本批新增Abrasive、FlickFlack、Reflex、Ricochet、Tactician、Untouchable、HandTrick、MasterPlanner，连同已交付Haze验证全部单人原生奇巧及授予奇巧的消费者；Sneaky为多人内容，不纳入单人行为。修改边界为base内容、效果前端、卡实例复制／清理、选牌及Power触发、受影响公开映射和定向测试／文档；不改core或参考玩法。目标为普通／升级、手动与弃牌自动打出、临时／战斗内奇巧寿命、受击前荆棘及实例隔离全部可验证。52项奇巧、68项中毒、14项选牌、24项编排、10项公开语义、26项net快照及3项源码检查通过；命令及边界见[交付记录](../records/2026-10-17/silent-sly-family-2026-10-17.md)。下一成果为同提交GitHub Actions四组完整回归通过；不在中途运行耗时全套。上一批中毒牌族已在PR #6及#4合入main，Actions四组全绿（39026606947），完整Silent开局／整局合同继续开放。
 
-以下表格保留上一批Sown＋SapphireSeed的承诺与证据缺口；本批中毒牌族的状态与范围维护在上段。其余类别保持粗粒度。
+上一批 **ENV-T12-SILENT-POISON** 已完成12张中毒牌及受控行为，PR #6及#4已合入main，Actions四组完整回归通过（39026606947）。交付与验证边界见[中毒牌族记录](../records/2026-10-17/silent-poison-family-2026-10-17.md)，不据此关闭Silent正式开局／多幕或原版逐卡对拍合同。
+
+以下表格保留上一批Sown＋SapphireSeed的承诺与证据缺口；本批奇巧牌族的状态与范围维护在上段。其余类别保持粗粒度。
 
 | 项目 | 本批约定 |
 | --- | --- |

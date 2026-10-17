@@ -7,6 +7,7 @@ namespace BaseSpire.Slice.Orchestration;
 public sealed class CardSelectionProcedures(CardSchema schema, CardPileSymbols piles,
     Func<IrScope, Expr, Expr> isAttack, Func<IrScope, Expr, Expr> canUpgrade)
 {
+    public Func<IrScope, Expr, Expr> IsNonSlySkill { get; init; } = (_, _) => throw new InvalidOperationException("Sly skill filter binding missing");
     public Inst[] Emit(IrScope scope, SelectCardsEffect effect, Func<Expr, Inst[]> apply)
     {
         var candidates = scope.Collection(piles[effect.From]);
@@ -16,6 +17,7 @@ public sealed class CardSelectionProcedures(CardSchema schema, CardPileSymbols p
             CardEffectCardFilter.Attack => scope.Where(candidates, card => isAttack(scope, card)),
             CardEffectCardFilter.NonAttack => scope.Where(candidates, card => scope.Not(isAttack(scope, card))),
             CardEffectCardFilter.Upgradeable => scope.Where(candidates, card => canUpgrade(scope, card)),
+            CardEffectCardFilter.NonSlySkill => scope.Where(candidates, card => IsNonSlySkill(scope, card)),
             _ => throw new ArgumentOutOfRangeException(nameof(effect)),
         };
         var count = scope.Local("selectionCount", FieldTypeSchema.Int(0, 9999));

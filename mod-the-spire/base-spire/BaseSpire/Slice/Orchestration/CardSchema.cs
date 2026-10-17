@@ -9,10 +9,12 @@ public sealed record CardSchema(EntityTypeSymbol Type, FieldSymbol Definition, F
     FieldSymbol LongTermSource, FieldSymbol CloneOf, FieldSymbol FreeUntilPlayed,
     FieldSymbol SourceOrderKey, FieldSymbol Enchantment, FieldSymbol EnchantmentAmount, FieldSymbol EnchantmentDisabled)
 {
+    public FieldSymbol AddedSly { get; init; } = null!;
+    public FieldSymbol SingleTurnSly { get; init; } = null!;
     public static CardSchema Declare(EnginePackageBuilder package, EnumTypeSymbol kind)
     {
         var type = package.EntityType("Card");
-        return new(type,
+        return new CardSchema(type,
             type.AddField("DefinitionId", FieldTypeSchema.String(64)),
             type.AddField("Kind", FieldTypeSchema.EnumOf(kind)),
             type.AddField("Upgraded", FieldTypeSchema.Bool()),
@@ -34,6 +36,10 @@ public sealed record CardSchema(EntityTypeSymbol Type, FieldSymbol Definition, F
                 visibility: FieldVisibility.Hidden),
             type.AddField("EnchantmentId", FieldTypeSchema.String(64)),
             type.AddField("EnchantmentAmount", FieldTypeSchema.Int(0, 999999)),
-            type.AddField("EnchantmentDisabled", FieldTypeSchema.Bool()));
+            type.AddField("EnchantmentDisabled", FieldTypeSchema.Bool()))
+        {
+            AddedSly = type.AddField("AddedSly", FieldTypeSchema.Bool()),
+            SingleTurnSly = type.AddField("SingleTurnSly", FieldTypeSchema.Bool()),
+        };
     }
 }

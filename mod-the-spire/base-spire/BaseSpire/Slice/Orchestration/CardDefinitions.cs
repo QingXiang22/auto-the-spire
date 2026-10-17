@@ -41,6 +41,11 @@ public sealed class CardDefinitions(CardSchema schema, EnumTypeSymbol kind, Slic
 
     public CardDefinition Definition(string id) => Compiled.FirstOrDefault(card => card.Id == id)
         ?? throw Faults.Schema($"Card definition '{id}' is not registered");
+    public Expr IsSly(IrScope s, Expr card) => Compiled.Where(c => c.Normal.Sly || c.Upgraded.Sly).Aggregate(
+        s.Or(s.Field(card, schema.AddedSly), s.Field(card, schema.SingleTurnSly)), (test, c) =>
+            s.Or(test, s.And(s.Equal(s.Field(card, schema.Definition), s.Const(c.Id)),
+                s.Or(s.And(s.Field(card, schema.Upgraded), s.Const(c.Upgraded.Sly)),
+                    s.And(s.Not(s.Field(card, schema.Upgraded)), s.Const(c.Normal.Sly))))));
     public (FieldSymbol Field, Expr Value)[] Fields(IrScope scope, SliceCard card, bool upgraded,
         bool unplayable = false, bool ethereal = false) =>
     [
@@ -70,6 +75,7 @@ public sealed class CardDefinitions(CardSchema schema, EnumTypeSymbol kind, Slic
             (schema.CostModifier, scope.Const(0L)), (schema.Amount, scope.Const((long)variant.DisplayAmount)),
             (schema.PowerId, scope.Const(variant.DisplayPowerId)), (schema.PowerStacks, scope.Const((long)variant.DisplayStacks)),
             (schema.SourceOrderKey, scope.Const(SourceOrderKeyOf(card.Id, upgraded))),
+            (schema.AddedSly, scope.Const(false)), (schema.SingleTurnSly, scope.Const(false)),
             .. variables.Select(entry => (entry.Value, scope.Const((long)variant.Variables.GetValueOrDefault(entry.Key)))),
         ];
     }
@@ -86,6 +92,8 @@ public sealed class CardDefinitions(CardSchema schema, EnumTypeSymbol kind, Slic
         (schema.Enchantment, scope.Field(card, schema.Enchantment)),
         (schema.EnchantmentAmount, scope.Field(card, schema.EnchantmentAmount)),
         (schema.EnchantmentDisabled, scope.Field(card, schema.EnchantmentDisabled)),
+        (schema.AddedSly, clone ? scope.Field(card, schema.AddedSly) : scope.Const(false)),
+        (schema.SingleTurnSly, clone ? scope.Field(card, schema.SingleTurnSly) : scope.Const(false)),
         (clone ? schema.CloneOf : schema.LongTermSource, card),
         (schema.FreeUntilPlayed, clone ? scope.Field(card, schema.FreeUntilPlayed) : scope.Const(false)),
         .. variables.Select(entry => (entry.Value, (Expr)scope.Field(card, entry.Value))),

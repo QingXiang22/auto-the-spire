@@ -38,6 +38,8 @@ public sealed record CardEffectBindings(
         throw new InvalidOperationException("autoPlay: no shared play pipeline was wired");
 
     public Expr? PlayedCard { get; init; }
+    public Func<Expr, Expr> IsNonSlySkill { get; init; } = _ => throw new InvalidOperationException("Sly skill filter binding missing");
+    public Func<Expr, Inst[]> GrantSelectedSly { get; init; } = _ => throw new InvalidOperationException("Sly grant binding missing");
     public Func<Inst[]> AfterDiscardBatch { get; init; } = () => [];
     public Func<CardEffectOperation, Expr, Inst[]> Stars { get; init; } = (_, _) => throw new InvalidOperationException("stars binding missing");
     public Func<ForgeCardEffect, Expr, Inst[]> Forge { get; init; } = (_, _) => throw new InvalidOperationException("forge binding missing");
@@ -86,6 +88,8 @@ public static class CardEffectCompiler
                     break;
                 case UpgradeSelectedCardEffect upgrade:
                     instructions.AddRange(bindings.UpgradeCard(Current(environment.SelectedCard, upgrade.Source))); break;
+                case GrantSelectedSlyEffect sly:
+                    instructions.AddRange(bindings.GrantSelectedSly(Current(environment.SelectedCard, sly.Source))); break;
                 case CloneCardEffect clone:
                     instructions.AddRange(bindings.CloneCard(Current(clone.Selected ? environment.SelectedCard : bindings.PlayedCard, clone.Source), clone.To)); break;
                 case ModifyPlayedCardCostEffect cost:
@@ -182,6 +186,7 @@ public static class CardEffectCompiler
             CardEffectCardFilter.Attack => scope.Where(cards, held => bindings.IsAttackCard(held)),
             CardEffectCardFilter.NonAttack => scope.Where(cards, held => scope.Not(bindings.IsAttackCard(held))),
             CardEffectCardFilter.Upgradeable => scope.Where(cards, bindings.CanUpgrade),
+            CardEffectCardFilter.NonSlySkill => scope.Where(cards, bindings.IsNonSlySkill),
             _ => throw new InvalidOperationException($"unsupported card filter {filter}"),
         };
     }

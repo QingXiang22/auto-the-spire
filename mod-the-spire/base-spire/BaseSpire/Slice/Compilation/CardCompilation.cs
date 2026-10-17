@@ -329,6 +329,9 @@ internal static class CardCompilation
             unpowered)
         {
             PlayedCard = cardRef,
+            IsNonSlySkill = instance => scope.And(scope.Equal(scope.Field(instance,cardsBindings.CardKindField),scope.EnumConst(battleBindings.CardKind,"Skill")),
+                scope.Not(cardsBindings.CardDefinitions.IsSly(scope,instance))),
+            GrantSelectedSly = instance => [scope.SetField(instance,cardsBindings.CardSchema.SingleTurnSly,scope.Const(true))],
             AfterDiscardBatch = () => [powerRulesBindings.PowerRules.Call(scope,"AfterDiscardBatch")],
             Osty = (effect, amount) => [scope.If(scope.And(scope.Not(scope.Field(owner, playerBindings.PlayerBattleSettled)),
                 scope.Exists(scope.Collection(pilesBindings.Monsters))), effect.Operation == "ostyAttack"
@@ -372,7 +375,9 @@ internal static class CardCompilation
                 new CardSelectionProcedures(cardsBindings.CardSchema,
                 new(pilesBindings.Hand, pilesBindings.DrawPile, pilesBindings.DiscardPile, pilesBindings.ExhaustPile, pilesBindings.InPlay),
                 (s, instance) => s.Equal(s.Field(instance, cardsBindings.CardKindField), s.EnumConst(battleBindings.CardKind, "Attack")),
-                (s, instance) => cardsBindings.CardDefinitions.CanUpgrade(s, instance)).Emit(scope, effect, apply))],
+                (s, instance) => cardsBindings.CardDefinitions.CanUpgrade(s, instance))
+                { IsNonSlySkill = (s,instance) => s.And(s.Equal(s.Field(instance,cardsBindings.CardKindField),s.EnumConst(battleBindings.CardKind,"Skill")),
+                    s.Not(cardsBindings.CardDefinitions.IsSly(s,instance))) }.Emit(scope, effect, apply))],
             GenerateCards = (count, effect) => new CardGenerationRules(cardsBindings.CardSchema, cardsBindings.CardDefinitions,
                 new(pilesBindings.Hand, pilesBindings.DrawPile, pilesBindings.DiscardPile, pilesBindings.ExhaustPile, pilesBindings.InPlay),
                 (s, instance) => DispatchCardHook(s, instance, AuthorSteps.HookOnEnterCombat)).Emit(scope, owner, count, effect)
@@ -397,8 +402,8 @@ internal static class CardCompilation
                     scope.SetField(scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)), playerBindings.PlayerExhaustedCard, scope.Const(true)),
                 .. DispatchCardHook(scope, cardRef, AuthorSteps.HookOnExhaust), scope.Call(exhaustTriggerBindings.TriggerAfterExhaust.Symbol)],
                 (scope, cardRef) => DispatchCardHook(scope, cardRef, AuthorSteps.HookOnEnterCombat),
-                (scope, cardRef) => [.. DispatchCardHook(scope, cardRef, AuthorSteps.HookOnDiscard),
-                    .. powerRulesBindings.PowerRules.QueueSly(scope,cardRef)],
+                (scope, cardRef) => [.. powerRulesBindings.PowerRules.QueueSly(scope,cardRef),
+                    .. DispatchCardHook(scope, cardRef, AuthorSteps.HookOnDiscard)],
                 (scope, cardRef) => [scope.Call(knowledgeCommandsBindings.RecordKnownTop.Symbol, scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)), cardRef)]);
 
     internal static Inst[] DispatchCardHook(

@@ -88,8 +88,10 @@ internal static class SliceMapRoomChecks
     // 2026-10-17: card attachment fields/copy policy and post-body Sown trigger; controlled/native/public witnesses.
     // 2026-10-17: 12 Silent poison cards, owner-origin application hooks, Sly discard queue and public counter.
     // Focused evidence: SilentPoisonChecks; previous dev 475abd581a69694c / 161d18afa369a767.
-    private const string DevGoldenRuleset = "db7ab18e687e380d";
-    private const string DevGoldenBuild = "feb3f5074952e499";
+    // 2026-10-17: complete solo Sly family, dynamic keyword lifetimes, isolated discard batches and before-hit Thorns.
+    // Previous dev db7ab18e687e380d / feb3f5074952e499; focused witnesses: SilentSlyChecks.
+    private const string DevGoldenRuleset = "8b9877853c09390b";
+    private const string DevGoldenBuild = "155131ed9ad8a8f7";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -104,8 +106,9 @@ internal static class SliceMapRoomChecks
     // Isolated real-catalogue checks: .audit/event-layer-20261017/; native Jungle solo RNG gap remains explicit.
     // Sown/SapphireSeed and actual card-copy semantics: .audit/sown-20261017/.
     // Previous dev-map 34b51c466486b0f9 / d96534dd8df06257.
-    private const string DevMapGoldenRuleset = "2958d9e779c64116";
-    private const string DevMapGoldenBuild = "46130439a68eedb3";
+    // Previous dev-map 2958d9e779c64116 / 46130439a68eedb3.
+    private const string DevMapGoldenRuleset = "639897b31bed14b7";
+    private const string DevMapGoldenBuild = "ee9f39726c390d25";
 
     public static void DefaultIdentity()
     {

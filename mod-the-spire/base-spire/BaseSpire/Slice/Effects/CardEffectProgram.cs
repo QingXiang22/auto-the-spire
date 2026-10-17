@@ -46,6 +46,7 @@ public sealed record DynamicRepeatCardEffect(CardEffectAmount Count, CardEffectP
     DslSourceLocation Source) : CardEffect(Source);
 
 public sealed record UpgradeSelectedCardEffect(DslSourceLocation Source) : CardEffect(Source);
+public sealed record GrantSelectedSlyEffect(DslSourceLocation Source) : CardEffect(Source);
 public sealed record CloneCardEffect(CardEffectPile To, bool Selected, DslSourceLocation Source) : CardEffect(Source);
 public sealed record ModifyPlayedCardCostEffect(long Delta, DslSourceLocation Source) : CardEffect(Source);
 public sealed record CreateDefinedCardEffect(string CardId, DslSourceLocation Source) : CardEffect(Source);
@@ -123,7 +124,7 @@ public sealed record ExhaustAttackAndGrowEffect(string Variable, DslSourceLocati
 public sealed record AutoPlaySelfEffect(CardEffectPile From, DslSourceLocation Source) : CardEffect(Source);
 
 public enum CardEffectPile { Hand, Draw, Discard, Exhaust, InPlay }
-public enum CardEffectCardFilter { Any, Attack, NonAttack, Upgradeable }
+public enum CardEffectCardFilter { Any, Attack, NonAttack, Upgradeable, NonSlySkill }
 
 public enum CardEffectOperation { Damage, GainBlock, GainEnergy, Draw, LoseHp, Heal, ApplyPower, GainMaxHp, GainStars, LoseStars, SetStars }
 public enum CardEffectTarget { Owner, Selected, AllEnemies, RandomEnemy, LowestHp }

@@ -1,4 +1,11 @@
 package base-spire {
+  # Sources: Models/Powers/MasterPlannerPower.cs, ThornsPower.cs
+  power MasterPlannerPower {
+    rules = { grantSlyAfterSkill = true }
+  }
+  power ThornsPower {
+    rules = { retaliateBeforeAttack = true }
+  }
   # Source: Models/Powers/CorrosiveWavePower.cs
   power CorrosiveWavePower {
     rules = { applyPowerOnDraw = Poison }
