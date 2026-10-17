@@ -1963,8 +1963,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/Kunai.cs",
     "SourceSha256": "bb48d7cf19478b640767541970003600c6fb2a63e8024ca302b5ca8d6a1303a3",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/Kunai.cs; per-turn Attack counter and Dexterity grant declared and exercised by RelicContentChecks.",
     "Hooks": [
       "BeforeSideTurnStart",
       "AfterCardPlayed",
@@ -2593,8 +2593,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/Nunchaku.cs",
     "SourceSha256": "8ea6106cfd41e1cb3bc5e0485dfd067aa1e33e3c367ac836f04c8097d5d65ecb",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/Nunchaku.cs; persistent Attack counter and energy grant declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterCardPlayed"
     ]
@@ -2701,8 +2701,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/OrnamentalFan.cs",
     "SourceSha256": "9757638c32682400389a5ff510f0053c1fc8846a134559d48160cf39a6e8ec48",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/OrnamentalFan.cs; per-turn Attack counter and unpowered block grant declared and exercised by RelicContentChecks.",
     "Hooks": [
       "BeforeSideTurnStart",
       "AfterCardPlayed",
@@ -3716,8 +3716,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/Shuriken.cs",
     "SourceSha256": "84e88016f29547096b35597e17833a4856818beced7da4901d911a00f4b42786",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/Shuriken.cs; per-turn Attack counter and Strength grant declared and exercised by RelicContentChecks.",
     "Hooks": [
       "BeforeSideTurnStart",
       "AfterCardPlayed",

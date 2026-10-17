@@ -126,6 +126,7 @@ internal static class RelicContentChecks
             Submit(s, "BeginMonster"); Check.Equal(3L, Power(s, "base-spire:strength"), "replacement works next combat");
         });
         RunOrbs();
+        RunCardPlay();
         RunPassives();
         RunConditions();
         RunRooms();
@@ -212,6 +213,60 @@ internal static class RelicContentChecks
             Check.Equal(1, Members(s, "OrbQueue").Count, "passive does not consume the orb");
             Submit(s, "BeginMonster");
             Check.Equal(1, Members(s, "OrbQueue").Count, "next battle rebuilds one orb from the source channel count");
+        });
+    }
+
+    public static void RunCardPlay()
+    {
+        foreach (var (name, power) in new[] { ("Kunai", "base-spire:dexterity-power"), ("Shuriken", "base-spire:strength") })
+            Case([name], $"Relic card play: {name} grants its power on every third Attack of a turn", () =>
+            {
+                var s = New(); Submit(s, "Obtain_" + name); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+                SetPlayer(s, "Energy", 10L);
+                PlayAttack(s); PlayAttack(s);
+                Check.Equal(0L, Power(s, power), "two Attacks do not trigger");
+                PlayAttack(s); Check.Equal(1L, Power(s, power), "third Attack grants one stack");
+                PlayAttack(s); PlayAttack(s);
+                Check.Equal(1L, Power(s, power), "next two Attacks do not trigger");
+                PlayAttack(s); Check.Equal(2L, Power(s, power), "sixth Attack grants again");
+                Submit(s, "EndTurn");
+                Check.Equal(2L, Power(s, power), "granted stacks persist into the next turn");
+                SetPlayer(s, "Energy", 10L);
+                PlayAttack(s); PlayAttack(s);
+                Check.Equal(2L, Power(s, power), "the per-turn counter restarts");
+                PlayAttack(s); Check.Equal(3L, Power(s, power), "third Attack of the new turn grants again");
+            });
+        Case(["OrnamentalFan"], "Relic card play: OrnamentalFan grants unpowered block on every third Attack of a turn", () =>
+        {
+            var s = New(); Submit(s, "Obtain_OrnamentalFan"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Energy", 10L);
+            PlayAttack(s); PlayAttack(s);
+            Check.Equal(0L, PlayerNumber(s, "Block"), "two Attacks do not grant block");
+            PlayAttack(s); Check.Equal(4L, PlayerNumber(s, "Block"), "third Attack grants four block");
+            PlayAttack(s); PlayAttack(s); PlayAttack(s);
+            Check.Equal(8L, PlayerNumber(s, "Block"), "sixth Attack grants again");
+            Submit(s, "EndTurn"); SetPlayer(s, "Energy", 10L);
+            PlayAttack(s); PlayAttack(s);
+            Check.Equal(0L, PlayerNumber(s, "Block"), "the per-turn counter restarts after the turn clears block");
+            PlayAttack(s); Check.Equal(4L, PlayerNumber(s, "Block"), "third Attack of the new turn grants again");
+        });
+        Case(["Nunchaku"], "Relic card play: Nunchaku keeps its Attack counter across battles and grants energy on the tenth", () =>
+        {
+            var s = New(); Submit(s, "Obtain_Nunchaku"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Energy", 20L);
+            for (var i = 0; i < 4; i++) PlayAttack(s);
+            Check.Equal(4L, RelicDisplay(s, "base-spire:nunchaku"), "persistent counter after four Attacks");
+            Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            Check.Equal(4L, RelicDisplay(s, "base-spire:nunchaku"), "battle transition does not reset the source counter");
+            SetPlayer(s, "Energy", 10L);
+            for (var i = 0; i < 4; i++) PlayAttack(s);
+            SetPlayer(s, "Energy", 5L);
+            PlayAttack(s);
+            Check.Equal(4L, PlayerNumber(s, "Energy"), "ninth Attack grants nothing");
+            SetPlayer(s, "Energy", 5L);
+            PlayAttack(s);
+            Check.Equal(5L, PlayerNumber(s, "Energy"), "tenth Attack refunds its cost with one energy");
+            Check.Equal(0L, RelicDisplay(s, "base-spire:nunchaku"), "counter wraps at ten");
         });
     }
 
@@ -488,6 +543,14 @@ internal static class RelicContentChecks
         { var pending = s.PendingDecision!; s.Answer(new DecisionAnswer(pending.RequestId, [pending.Candidates[0]])); }
         Check.False(s.Status == SessionStatus.Faulted, $"{name}: {s.Fault}");
     }
+    private static void PlayAttack(Session s, string cardId = "base-spire:strike-ironclad")
+    {
+        var card = FormalSliceFixture.MoveToHand(s, cardId);
+        FormalSliceFixture.PlayAt(s, card, Members(s, "Monsters")[0]);
+        Check.False(s.Status == SessionStatus.Faulted, "card play: " + s.Fault);
+    }
+    private static long RelicDisplay(Session s, string contentId) => Number(s,
+        Members(s, "Relics").Single(r => Value(s, r, "Relic", "DefinitionId").AsString() == contentId), "Relic", "DisplayAmount");
     private static void SetMonsterHp(Session s, long hp)
     {
         foreach (var monster in Members(s, "Monsters").ToArray())

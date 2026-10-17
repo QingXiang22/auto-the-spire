@@ -335,10 +335,13 @@ internal static class DamageCompilation
         return new PlayedTriggerBindings(triggerAfterPlayed, playedForTrigger);
     }
 
-    internal static void PlayedTriggerBody(PlayedTriggerBindings playedTriggerBindings, TriggerChainCallback TriggerChain)
+    internal static void PlayedTriggerBody(PlayedTriggerBindings playedTriggerBindings, TriggerChainCallback TriggerChain,
+        Func<ProcedureBuilder, Expr, Inst[]>? relicAfterPlayed = null)
     {
-        playedTriggerBindings.TriggerAfterPlayed.Body(TriggerChain(playedTriggerBindings.TriggerAfterPlayed, AuthorPowerTrigger.AfterCardPlayed,
-            playedTriggerBindings.TriggerAfterPlayed.Param(playedTriggerBindings.PlayedForTrigger)));
+        var played = playedTriggerBindings.TriggerAfterPlayed.Param(playedTriggerBindings.PlayedForTrigger);
+        playedTriggerBindings.TriggerAfterPlayed.Body([
+            .. TriggerChain(playedTriggerBindings.TriggerAfterPlayed, AuthorPowerTrigger.AfterCardPlayed, played),
+            .. relicAfterPlayed?.Invoke(playedTriggerBindings.TriggerAfterPlayed, played) ?? []]);
 
     }
 

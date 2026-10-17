@@ -10,7 +10,8 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
     BattleBindings battle, PlayerBindings player, PilesBindings piles, RelicsBindings relics,
     RunStateBindings runState, RunCollectionsBindings runCollections, RoomServicesBindings services,
     EventsBindings events, PowerCommandsBindings powers, Func<IrScope, Expr, Inst[]> gainBlock,
-    Func<IrScope, Expr> energyBlocked, Func<IrScope, string, string, Expr, Inst[]> orbEffect)
+    Func<IrScope, Expr> energyBlocked, Func<IrScope, string, string, Expr, Inst[]> orbEffect,
+    Func<IrScope, Expr, string, Expr> cardKindIs)
 {
     private int nextLocal;
     private readonly Dictionary<string, ProcedureSymbol> modifiers = new(StringComparer.Ordinal);
@@ -43,7 +44,10 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
     internal Inst[] Dispatch(IrScope s, string trigger) => Dispatch(s, trigger, false);
     internal Inst[] DispatchRun(IrScope s, string trigger) => Dispatch(s, trigger, true);
 
-    private Inst[] Dispatch(IrScope s, string trigger, bool outsideCombat)
+    /// <summary>`after-card-played`：牌型过滤需要把刚打出的那张牌传进来（空＝任意牌）。</summary>
+    internal Inst[] DispatchCard(IrScope s, string trigger, Expr card) => Dispatch(s, trigger, false, card);
+
+    private Inst[] Dispatch(IrScope s, string trigger, bool outsideCombat, Expr? card = null)
     {
         if (!relics.HasRelics || options.RelicLibrary is null) return [];
         var definitions = options.RelicLibrary.Where(r => r.Effects.Any(e => e.Trigger == trigger)).ToArray();
@@ -58,7 +62,7 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
             {
                 var effects = new List<Inst>();
                 foreach (var effect in definition.Effects.Where(e => e.Trigger == trigger))
-                    effects.Add(s.If(Condition(s, effect, instance, outsideCombat), Effect(s, instance, effect, outsideCombat)));
+                    effects.Add(s.If(Condition(s, effect, instance, outsideCombat, card), Effect(s, instance, effect, outsideCombat)));
                 body.Add(s.If(s.Equal(s.LocalRef(id), s.Const(definition.ContentId)), effects.ToArray()));
             }
             // An earlier listener may have removed a later member of the snapshot.
@@ -67,9 +71,11 @@ internal sealed class RelicCompilation(PackageBuildOptions options, ContentBindi
         })];
     }
 
-    private Expr Condition(IrScope s, SliceRelicEffect effect, Expr instance, bool outsideCombat = false)
+    private Expr Condition(IrScope s, SliceRelicEffect effect, Expr instance, bool outsideCombat = false, Expr? card = null)
     {
         Expr condition = s.Const(true);
+        if (effect.CardKind.Length > 0)
+            condition = s.And(condition, card is null ? s.Const(false) : cardKindIs(s, card, effect.CardKind));
         if (effect.CounterEquals >= 0)
             condition = s.And(condition, s.Equal(s.Field(instance, relics.Schema!.Counter), s.Const((long)effect.CounterEquals)));
         if (effect.HpAtMostPercent > 0)

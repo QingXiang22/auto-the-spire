@@ -22,6 +22,8 @@ public sealed record SliceRelicEffect(string Trigger, string Kind, int Amount)
     public string AmountSource { get; init; } = "constant";
     public int Divisor { get; init; } = 1;
     public string OrbKind { get; init; } = "";
+    /// <summary>牌型过滤（空＝任意牌）；当前只用于 <see cref="RelicTriggers.AfterCardPlayed"/>。</summary>
+    public string CardKind { get; init; } = "";
 }
 
 /// <summary>
@@ -52,6 +54,8 @@ public static class RelicTriggers
     public const string AfterCombatVictory = "after-combat-victory";
 
     public const string AfterObtained = "after-obtained";
+    /// <summary>一张牌打出之后（来源 `RelicModel.AfterCardPlayed`）。</summary>
+    public const string AfterCardPlayed = "after-card-played";
     public const string AfterCombatEnd = "after-combat-end";
     public const string AfterCombatRoomEntered = "after-combat-room-entered";
     public const string BeforeCombatStart = "before-combat-start";
@@ -67,7 +71,8 @@ public static class RelicTriggers
     public const string AfterSideTurnEnd = "after-side-turn-end";
     public const string AfterCombatVictoryEarly = "after-combat-victory-early";
     public const string AfterRoomEntered = "after-room-entered";
-    public static readonly IReadOnlyList<string> All = [AfterCombatVictory, AfterObtained, AfterCombatEnd,
+    public static readonly IReadOnlyList<string> All = [AfterCombatVictory, AfterObtained, AfterCardPlayed,
+        AfterCombatEnd,
         AfterCombatRoomEntered, BeforeCombatStart, AfterSideTurnStart, AfterPlayerTurnStartLate,
         BeforeSideTurnStart, AfterBlockCleared, BeforeHandDraw, AfterPlayerTurnStart, AfterEnergyReset, Modifier,
         BeforeSideTurnEnd, AfterSideTurnEnd, AfterCombatVictoryEarly, AfterRoomEntered];
@@ -170,6 +175,8 @@ public static class SpireRelics
                     or RelicEffectKinds.Heal or RelicEffectKinds.HealToFull or RelicEffectKinds.HealMaxHpPercent or RelicEffectKinds.GainPotionSlots,
                 RelicTriggers.AfterCombatEnd => effect.Kind is RelicEffectKinds.GainMaxHp or RelicEffectKinds.Heal,
                 RelicTriggers.AfterCombatVictory or RelicTriggers.AfterCombatVictoryEarly => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.CountAndReplace,
+                RelicTriggers.AfterCardPlayed => effect.Kind is RelicEffectKinds.GainEnergy or RelicEffectKinds.ApplyPower
+                    or RelicEffectKinds.GainBlock or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter,
                 RelicTriggers.AfterRoomEntered => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.SetCounter,
                 RelicTriggers.Modifier => effect.Kind is RelicEffectKinds.ModifyHandDraw or RelicEffectKinds.ModifyMaxEnergy
                     or RelicEffectKinds.RetainEnergy or RelicEffectKinds.RetainHand or RelicEffectKinds.PreventPotionProcurement or RelicEffectKinds.RetainedBlockLimit
@@ -182,8 +189,11 @@ public static class SpireRelics
                 || effect.MinimumTurn < 0 || effect.MaximumTurn < 0 || effect.MaximumTurn > 0 && effect.MinimumTurn > effect.MaximumTurn
                 || effect.CounterModulo < 0 || effect.CounterEquals < -1 || effect.HpAtMostPercent is < 0 or > 100
                 || effect.Target is not ("owner" or "enemies") || effect.RoomType is not ("" or "Elite" or "Boss" or "Monster" or "RestSite" or "Shop" or "Event" or "Treasure")
-                || effect.MapPointType is not ("" or "Unknown") || effect.Divisor < 1 || effect.AmountSource is not ("constant" or "permanent-deck" or "hand"))
+                || effect.MapPointType is not ("" or "Unknown") || effect.Divisor < 1 || effect.AmountSource is not ("constant" or "permanent-deck" or "hand")
+                || effect.CardKind is not ("" or "Attack" or "Skill" or "Power"))
                 return $"{relic.Name} 的效果参数不合法";
+            if (effect.CardKind.Length > 0 && effect.Trigger != RelicTriggers.AfterCardPlayed)
+                return $"{relic.Name} 的触发点 '{effect.Trigger}' 不支持牌型过滤";
             if (effect.Kind == RelicEffectKinds.ChannelOrb && effect.OrbKind is not ("Lightning" or "Frost" or "Dark" or "Plasma" or "Glass")
                 || effect.Kind != RelicEffectKinds.ChannelOrb && effect.OrbKind.Length > 0)
                 return $"{relic.Name} 的充能球参数不合法";

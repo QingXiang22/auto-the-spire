@@ -80,7 +80,8 @@ internal static class CombatPackageComposer
         var relicPrograms = new RelicCompilation(options, contentBindings, battleBindings, playerBindings, pilesBindings,
             relicsBindings, runStateBindings, runCollectionsBindings, roomServicesBindings, eventsBindings,
             powerCommandsBindings, (s, amount) => [.. BlockGainSteps(s, amount, true)], EnergyGainBlocked,
-            (s, operation, kind, amount) => orbs!.Emit(s, new OrbCardEffect(operation, kind, CardEffectAmount.Literal(0), true, new("relics.json", 1, 1)), amount));
+            (s, operation, kind, amount) => orbs!.Emit(s, new OrbCardEffect(operation, kind, CardEffectAmount.Literal(0), true, new("relics.json", 1, 1)), amount),
+            (s, card, kind) => s.Equal(s.Field(card, cardsBindings.CardKindField), s.EnumConst(battleBindings.CardKind, kind)));
         if (potionsBindings.Potions is { } potionInventory)
         {
             potionInventory.ShouldAcquire = (s, _) => s.Not(relicPrograms.Has(s, RelicEffectKinds.PreventPotionProcurement));
@@ -140,7 +141,8 @@ internal static class CombatPackageComposer
         pilesBindings.Lifecycle.ResetAdditional = scope => [scope.ForEach(scope.Collection(orbs.Queue), item => [scope.Destroy(item)]), .. osty?.Reset(scope) ?? []];
         eventsBindings.Projection.Type(orbs.Entity);
         var playedTriggerBindings = DamageCompilation.PlayedTrigger(contentBindings, cardsBindings);
-        DamageCompilation.PlayedTriggerBody(playedTriggerBindings, TriggerChain);
+        DamageCompilation.PlayedTriggerBody(playedTriggerBindings, TriggerChain,
+            (scope, card) => relicPrograms.DispatchCard(scope, RelicTriggers.AfterCardPlayed, card));
         // Knowledge, turns and enemy selection.
         var knowledgeCommandsBindings = CardCompilation.KnowledgeCommands(
             contentBindings, playerBindings, cardsBindings, knowledgeBindings, pilesBindings);

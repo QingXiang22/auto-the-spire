@@ -1100,5 +1100,118 @@
         "Amount": 1
       }
     ]
+  },
+  {
+    "Name": "Nunchaku",
+    "ContentId": "base-spire:nunchaku",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/Nunchaku.cs",
+    "SourceLine": 15,
+    "Effects": [
+      {
+        "Trigger": "after-card-played",
+        "Kind": "add-counter",
+        "Amount": 1,
+        "CardKind": "Attack",
+        "CounterModulo": 10
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "gain-energy",
+        "Amount": 1,
+        "CardKind": "Attack",
+        "CounterEquals": 0
+      }
+    ],
+    "ShowCounter": true
+  },
+  {
+    "Name": "Kunai",
+    "ContentId": "base-spire:kunai",
+    "Rarity": "Rare",
+    "SourcePath": "sts2/src/Core/Models/Relics/Kunai.cs",
+    "SourceLine": 18,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-start",
+        "Kind": "set-counter",
+        "Amount": 0
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "add-counter",
+        "Amount": 1,
+        "CardKind": "Attack",
+        "CounterModulo": 3
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "apply-power",
+        "Amount": 1,
+        "PowerId": "base-spire:dexterity-power",
+        "CardKind": "Attack",
+        "CounterEquals": 0
+      }
+    ],
+    "ShowCounter": true
+  },
+  {
+    "Name": "Shuriken",
+    "ContentId": "base-spire:shuriken",
+    "Rarity": "Rare",
+    "SourcePath": "sts2/src/Core/Models/Relics/Shuriken.cs",
+    "SourceLine": 18,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-start",
+        "Kind": "set-counter",
+        "Amount": 0
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "add-counter",
+        "Amount": 1,
+        "CardKind": "Attack",
+        "CounterModulo": 3
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "apply-power",
+        "Amount": 1,
+        "PowerId": "base-spire:strength",
+        "CardKind": "Attack",
+        "CounterEquals": 0
+      }
+    ],
+    "ShowCounter": true
+  },
+  {
+    "Name": "OrnamentalFan",
+    "ContentId": "base-spire:ornamental-fan",
+    "Rarity": "Rare",
+    "SourcePath": "sts2/src/Core/Models/Relics/OrnamentalFan.cs",
+    "SourceLine": 18,
+    "Effects": [
+      {
+        "Trigger": "before-side-turn-start",
+        "Kind": "set-counter",
+        "Amount": 0
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "add-counter",
+        "Amount": 1,
+        "CardKind": "Attack",
+        "CounterModulo": 3
+      },
+      {
+        "Trigger": "after-card-played",
+        "Kind": "gain-block",
+        "Amount": 4,
+        "CardKind": "Attack",
+        "CounterEquals": 0
+      }
+    ],
+    "ShowCounter": true
   }
 ]
