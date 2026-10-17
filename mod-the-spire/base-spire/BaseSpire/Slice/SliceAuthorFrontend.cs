@@ -544,6 +544,7 @@ public sealed record AuthorPower(
     int BlockGainAdditivePerStack = 0)
 {
     public IReadOnlyList<PowerRule> Rules { get; init; } = [];
+    public bool NegativeStacksAreInfinite { get; init; }
 }
 
 /// <summary>

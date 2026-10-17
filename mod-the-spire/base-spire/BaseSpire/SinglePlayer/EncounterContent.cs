@@ -19,6 +19,7 @@ public sealed record EncounterDeclaration(
     IReadOnlyList<EncounterFormation> Formations,
     IReadOnlyList<EncounterSlot> Slots)
 {
+    public IReadOnlyDictionary<int, string> StartingActionsByEnemyIndex { get; init; } = new Dictionary<int, string>();
     /// <summary>编队条数（报告与校验用）。</summary>
     public int FormationCount => Formations.Count;
 
@@ -96,7 +97,7 @@ public static class EncounterContent
                         // 缺省权重 1；权重参与编队抽取（当前内容全是 1 ⇒ 均匀抽一次）。
                         Math.Max(1, Int(formation, "weight")),
                         Strings(formation, "enemyIds"),
-                        ReadSlots(formation)));
+                        ReadSlots(formation)) { StartingActionsByEnemyIndex = ReadStartingActions(formation) });
                 }
             }
 
@@ -107,11 +108,17 @@ public static class EncounterContent
                 Strings(node, "enemyIds"),
                 Strings(node, "tags"),
                 formations,
-                ReadSlots(node)));
+                ReadSlots(node)) { StartingActionsByEnemyIndex = ReadStartingActions(node) });
         }
 
         return result;
     }
+
+    private static IReadOnlyDictionary<int, string> ReadStartingActions(JsonElement node) =>
+        node.TryGetProperty("startingActionsByEnemyIndex", out var actions)
+            ? actions.EnumerateObject().ToDictionary(action => int.Parse(action.Name, System.Globalization.CultureInfo.InvariantCulture),
+                action => action.Value.GetString() ?? throw new InvalidOperationException("Starting action must be a string"))
+            : new Dictionary<int, string>();
 
     /// <summary>`enemySlots[]` → 槽位模型（缺失 `enemyChoices` 的槽位被跳过 = 声明错误由调用方核对）。</summary>
     private static IReadOnlyList<EncounterSlot> ReadSlots(JsonElement node)

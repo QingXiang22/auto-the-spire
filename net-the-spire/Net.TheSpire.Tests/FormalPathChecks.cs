@@ -52,6 +52,10 @@ internal static class FormalPathChecks
             MapDeclarationsDerivedFromEngine);
         yield return ("G-03 dev-map 开局：MapPhase/MapNodes/CurrentNode 公开，ChooseMapPoint 候选恰为公开后继 [真实]",
             MapInitialCandidates);
+        yield return ("G-06 dev-run 受控幕结束：公开切幕保留长期资源，旧句柄退出、重发幂等，古代人缺口明确拒绝",
+            MultiActPublicBoundary);
+        yield return ("Sown public: actual Plant choice, attachment fields, replay and subsequent combat copy [controlled visit]",
+            SownPublicVisit);
         yield return ("G-04 两 seed 合法选 Monster 进既有战斗；幂等重发、非法/过期拒绝且抽数与状态不变 [真实]",
             MapChooseAndRejections);
         yield return ("G-05 dev-map 载荷同批通过 0.2 wire schema；出牌要么正常结算要么显式 base 故障 [真实]",
@@ -1092,9 +1096,9 @@ internal static class FormalPathChecks
     /// <summary>G-01：命令行范围选择入口；同一当前构建的缺省/dev 入口身份一致，内容变化允许摘要迁移。</summary>
     private static void MapScopeSelection()
     {
-        Check.Sequence(new[] { "dev", "dev-map" },
+        Check.Sequence(new[] { "dev", "dev-map", "dev-run" },
             FormalDevScenario.SelectableScopes.Select(scope => scope.Name),
-            "命令行可选范围恰好是 base 已实现的两个范围（顺序稳定）");
+            "命令行显式区分单幕与多幕开发范围（顺序稳定）");
         Check.Equal(BaseSpireScope.Dev, FormalDevScenario.ScopeIdForName("dev")!,
             "dev 名字映射到 base 的 dev 范围常量");
         Check.Equal(BaseSpireScope.DevMap, FormalDevScenario.ScopeIdForName("dev-map")!,
@@ -1313,6 +1317,108 @@ internal static class FormalPathChecks
                 $"{seed}：本包需要至少一个公开的 Monster 后继才能验证「选择 → 进入既有战斗」"
                 + $"（实际类型：{string.Join("/", choices.Select(choice => MapNodeTypeOf(snapshot, choice)))}）");
         }
+    }
+
+    private static void SownPublicVisit()
+    {
+        var host = NewHost(FormalDevScenario.CreateFactory(BaseSpireScope.DevRun), out _);
+        var started = Start(host, "sown-start", "ENV-T04-RNG-SHUFFLE-001");
+        Check.True(started.Ok, "formal start");
+        var sid = StringField(started, "session_id")!;
+        var control = host.GetSessionForTests(sid); var engine = control.EngineForTests;
+        var owner = engine.State.AllInstances(engine.RuleSet.TypeByQualifiedId("base-spire:Run").Id).Single();
+        Value Read(CoreTheSpire.Engine.InstanceId id, string name) => engine.State.GetField(id, engine.RuleSet.Type(engine.State.TypeIdOf(id)).FieldIndex(name));
+        void Set(CoreTheSpire.Engine.InstanceId id, string name, Value value) => engine.State.SetField(id, engine.RuleSet.Type(engine.State.TypeIdOf(id)).FieldIndex(name), value);
+        var deck = engine.State.CollectionMembers(engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:LongTermDeck").Id).ToArray();
+        // Explicit controlled visit; no assertion of natural event selection or normal victory.
+        engine.State.RunAtomic(() => { Set(owner, "CurrentEventId", Value.Of("SapphireSeed")); Set(owner, "MapPhase", Value.Of(8L)); });
+        var before = (WireObject)Field(Observe(host, sid), "snapshot");
+        var plant = LegalActions(before).Single(a => ActionType(a).EndsWith(":SapphireSeedPlant", StringComparison.Ordinal));
+        var pause = DispatchStep(host, sid, ObservationId(before), CandidateId(plant));
+        Check.True(pause.Ok, pause.Error?.Message ?? "real event action");
+        var pending = (WireObject)Field(pause, "snapshot");
+        var chosen = deck[6]; var chosenRef = control.Snapshot().InstanceRefs[chosen];
+        var answer = LegalActions(pending).Single(a => ActionType(a).EndsWith("answer_decision", StringComparison.Ordinal) && CandidateRefs(a).Contains(chosenRef));
+        Check.Equal(deck.Length, LegalActions(pending).Count, "all actual eligible permanent instances published");
+        var request = Req("sown-answer", Operation.Step, ("session_id", WireValue.Str(sid)),
+            ("expected_observation_id", WireValue.Integer(ObservationId(pending))), ("candidate_id", WireValue.Str(CandidateId(answer))));
+        var applied = host.Dispatch(request); Check.True(applied.Ok, applied.Error?.Message ?? "Plant answer");
+        Check.Equal(WireCanonical.Text(applied.ToWire()), WireCanonical.Text(host.Dispatch(request).ToWire()), "answer replay identical");
+        var after = (WireObject)Field(applied, "snapshot");
+        var permanent = EntityOfRef(after, chosenRef);
+        Check.Equal("base-spire:sown", MapText(permanent, "base-spire:Card.EnchantmentId"), "public attachment identity");
+        Check.Equal(1L, MapInt(permanent, "base-spire:Card.EnchantmentAmount"), "public magnitude");
+        Check.False(MapBool(permanent, "base-spire:Card.EnchantmentDisabled"), "permanent normal state");
+        var stale = DispatchStep(host, sid, ObservationId(pending), CandidateId(answer));
+        Check.False(stale.Ok, "old observation rejected");
+        Check.Equal("stale_observation", stale.Error!.Code, "replay with new request does not apply twice");
+        var relation = engine.RuleSet.Relations.Single(r => r.QualifiedId == "base-spire:MapChildren");
+        var nodes = engine.State.CollectionMembers(engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:MapNodes").Id);
+        var parent = nodes.First(p => engine.State.RelationTargets(relation.Id, p).Any(c => Read(c, "Type").AsEnumOrdinal() == 5));
+        engine.State.RunAtomic(() => { Set(owner, "CurrentNode", Value.OfRef(parent)); Set(owner, "MapFloor", Value.Of(Read(parent, "Row").AsInt() + 1)); });
+        var travel = (WireObject)Field(Observe(host, sid), "snapshot");
+        var next = LegalActions(travel).First(a => ActionType(a) == ChooseMapPointActionId && MapNodeTypeOf(travel, MapText(a, "base-spire:ChooseMapPoint.Node")) == "Monster");
+        Check.True(DispatchStep(host, sid, ObservationId(travel), CandidateId(next)).Ok, "actual battle entry");
+        var copy = engine.State.AllInstances(engine.RuleSet.TypeByQualifiedId("base-spire:Card").Id).Single(c => Read(c, "LongTermSource").Kind == ValueKind.Ref && Read(c, "LongTermSource").AsRef() == chosen);
+        engine.State.RunAtomic(() => {
+            foreach (var name in new[] { "DrawPile", "DiscardPile", "ExhaustPile" }) { var pile = engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name); if (engine.State.IsMember(pile.Id, copy)) engine.State.RemoveFromCollection(pile.Id, copy); }
+            var hand = engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand"); if (!engine.State.IsMember(hand.Id, copy)) engine.State.AddToCollection(hand.Id, copy);
+        });
+        var combat = (WireObject)Field(Observe(host, sid), "snapshot"); var copyRef = control.Snapshot().InstanceRefs[copy];
+        var play = LegalActions(combat).Single(a => ActionType(a).EndsWith(":PlayCard", StringComparison.Ordinal) && CandidateRefs(a).Contains(copyRef));
+        Check.True(DispatchStep(host, sid, ObservationId(combat), CandidateId(play)).Ok, "public play actual attached copy");
+        var end = (WireObject)Field(Observe(host, sid), "snapshot");
+        Check.True(MapBool(EntityOfRef(end, copyRef), "base-spire:Card.EnchantmentDisabled"), "battle attachment consumed publicly");
+        Check.False(MapBool(EntityOfRef(end, chosenRef), "base-spire:Card.EnchantmentDisabled"), "permanent status remains normal");
+    }
+
+    private static void MultiActPublicBoundary()
+    {
+        var host = NewHost(FormalDevScenario.CreateFactory(BaseSpireScope.DevRun), out _);
+        var started = Start(host, "multi-start", "ENV-T04-RNG-SHUFFLE-001");
+        Check.True(started.Ok, $"multi-act start must succeed: {started.Error?.Message}");
+        var sessionId = StringField(started, "session_id")!;
+        var initial = (WireObject)Field(started, "snapshot");
+        var oldNodes = MapNodeRefs(initial);
+        var engine = host.GetSessionForTests(sessionId).EngineForTests;
+        var runType = engine.RuleSet.TypeByQualifiedId("base-spire:Run");
+        var run = engine.State.AllInstances(runType.Id).Single();
+        var originals = new[] { "LongTermDeck", "Relics", "PotionBelt" }.ToDictionary(name => name,
+            name => engine.State.CollectionMembers(engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name).Id).ToArray());
+        engine.State.RunAtomic(() =>
+        {
+            foreach (var (name, value) in new[] { ("CurrentRoom", 7L), ("SettledRoom", 7L), ("Hp", 37L), ("Gold", 234L), ("MapPhase", 6L) })
+                engine.State.SetField(run, runType.FieldIndex(name), Value.Of(value));
+            engine.State.SetField(run, runType.FieldIndex("ActCompleted"), Value.Of(true));
+        });
+        var observed = host.Dispatch(Req("multi-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId))));
+        Check.True(observed.Ok, $"controlled completed-act boundary must project: {observed.Error?.Message}");
+        var before = (WireObject)Field(observed, "snapshot");
+        var candidate = LegalActions(before).Single(a => ActionType(a).EndsWith(":ContinueToNextAct", StringComparison.Ordinal));
+        var upFront = engine.Random.DrawCount(BaseSpire.Slice.VanillaRandomLayout.EngineStreamName("UpFront"));
+        var request = Req("multi-next", Operation.Step, ("session_id", WireValue.Str(sessionId)),
+            ("expected_observation_id", WireValue.Integer(ObservationId(before))), ("candidate_id", WireValue.Str(CandidateId(candidate))));
+        var response = host.Dispatch(request);
+        Check.True(response.Ok, $"actual public transition must succeed: {response.Error?.Message}");
+        Check.Equal(WireCanonical.Text(response.ToWire()), WireCanonical.Text(host.Dispatch(request).ToWire()), "replayed transition must return its original response");
+        var snapshot = (WireObject)Field(response, "snapshot"); var publicRun = EntityOfKind(snapshot, MapRunKindId);
+        Check.Equal(1L, MapInt(publicRun, "base-spire:Run.CurrentActIndex"), "one public transition enters Hive");
+        Check.Equal("base-spire:hive-act", MapText(publicRun, "base-spire:Run.ActId"), "act identity is publicly visible");
+        Check.Equal(37L, MapInt(publicRun, "base-spire:Run.Hp"), "health survives the transition");
+        Check.Equal(234L, MapInt(publicRun, "base-spire:Run.Gold"), "gold survives the transition");
+        Check.False(MapNodeRefs(snapshot).Any(oldNodes.Contains), "new map cannot reuse destroyed old map handles");
+        foreach (var (name, ids) in originals)
+            Check.Sequence(ids, engine.State.CollectionMembers(engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name).Id), name + " preserves its real instances");
+        Check.Equal(upFront, engine.Random.DrawCount(BaseSpire.Slice.VanillaRandomLayout.EngineStreamName("UpFront")), "public transition never regenerates rooms");
+        var stale = host.Dispatch(Req("multi-stale", Operation.Step, ("session_id", WireValue.Str(sessionId)),
+            ("expected_observation_id", WireValue.Integer(ObservationId(snapshot))), ("candidate_id", WireValue.Str(CandidateId(candidate)))));
+        Check.False(stale.Ok, "old transition candidate is invalid at the next act");
+        var ancient = LegalActions(snapshot).Single(a => ActionType(a) == ChooseMapPointActionId);
+        Check.Equal("Ancient", MapNodeTypeOf(snapshot, MapText(ancient, "base-spire:ChooseMapPoint.Node")), "next-act ancient cannot be silently skipped");
+        var frontier = host.Dispatch(Req("multi-ancient", Operation.Step, ("session_id", WireValue.Str(sessionId)),
+            ("expected_observation_id", WireValue.Integer(ObservationId(snapshot))), ("candidate_id", WireValue.Str(CandidateId(ancient)))));
+        Check.False(frontier.Ok, "unimplemented ancient effect is a genuine boundary");
+        Check.True(frontier.Error!.Message.Contains("ancient event", StringComparison.Ordinal), "failure names the actual missing ancient behavior");
     }
 
     /// <summary>

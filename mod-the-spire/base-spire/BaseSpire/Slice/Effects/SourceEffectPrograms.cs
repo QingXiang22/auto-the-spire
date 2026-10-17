@@ -496,7 +496,7 @@ public static partial class SpireCardSource
             if (property.Name == "generateCards")
             {
                 var fields = (property.Value as DslBlockNode)?.Members.OfType<DslPropertyNode>().ToArray() ?? [];
-                foreach (var field in fields.Where(f => f.Name is not ("count" or "pool" or "type" or "upgraded" or "distinct" or "cost")))
+                foreach (var field in fields.Where(f => f.Name is not ("count" or "pool" or "type" or "upgraded" or "distinct" or "cost" or "choose" or "allowCancel")))
                     problems.Add($"{field.Location}: unsupported generateCards field '{field.Name}'");
                 var pool = fields.LastOrDefault(f => f.Name == "pool")?.Value as DslBlockNode;
                 if (pool is null) problems.Add($"{property.Location}: generateCards requires an explicit pool; the complete character generation pool is not registered yet");
@@ -508,14 +508,17 @@ public static partial class SpireCardSource
                 var filter = FilterOf(fields.LastOrDefault(f => f.Name == "type"), property.Location.ToString(), ref problems);
                 if (filter == CardEffectCardFilter.Upgradeable) problems.Add($"{property.Location}: generation type supports attack or nonAttack only");
                 bool Flag(string name) => fields.LastOrDefault(f => f.Name == name)?.Value is DslBooleanNode flag && flag.Value;
-                foreach (var field in fields.Where(f => f.Name is "upgraded" or "distinct"))
+                foreach (var field in fields.Where(f => f.Name is "upgraded" or "distinct" or "choose" or "allowCancel"))
                     if (field.Value is not DslBooleanNode) problems.Add($"{field.Location}: {field.Name} must be boolean");
-                if (Flag("distinct") && count != CardEffectAmount.Literal(1)) problems.Add($"{property.Location}: distinct generation currently supports literal count=1 only");
+                if (Flag("choose") && (!Flag("distinct") || count.Source != CardAmountSource.Literal || count.Constant is < 1 or > 999 || count.Operator is not null))
+                    problems.Add($"{property.Location}: choose generation requires distinct=true and literal count=1..999");
+                if (Flag("allowCancel") && !Flag("choose")) problems.Add($"{property.Location}: allowCancel requires choose=true");
+                if (Flag("distinct") && !Flag("choose") && count != CardEffectAmount.Literal(1)) problems.Add($"{property.Location}: direct distinct generation currently supports literal count=1 only");
                 var cost = fields.LastOrDefault(f => f.Name == "cost");
                 if (cost is not null && (cost.Value is not DslNumberNode n || n.Literal != "0"))
                     problems.Add($"{cost.Location}: explicit generation supports cost=0 (free through first play or turn end) only");
                 effects.Add(new GenerateCardsEffect(count, filter ?? CardEffectCardFilter.Any, Flag("upgraded"), Flag("distinct"),
-                    cost is not null, property.Location) { Pool = ids, CharacterPool = characterPool is null ? "" : NameOf(characterPool.Value) });
+                    cost is not null, property.Location) { Pool = ids, CharacterPool = characterPool is null ? "" : NameOf(characterPool.Value), Choose = Flag("choose"), AllowCancel = Flag("allowCancel") });
                 continue;
             }
             var numericProperties = property.Value is DslBlockNode numericBlock

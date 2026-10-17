@@ -71,19 +71,44 @@ internal static class SliceMapRoomChecks
     // both RulesetId and SemanticsDigest remain equal to the Byrdonis baseline. This is a source-byte
     // identity migration, not a rule change. Evidence: docs/review/records/2026-10-15/workspace-baseline-review-2026-10-15.md.
     // Previous public builds: dev=859e3c9a561bd7ff; dev-map=e8a6ccf78f186dda.
-    private const string DevGoldenRuleset = "d8685ae01adaad51";
-    private const string DevGoldenBuild = "7a8a8f419b9b5b2a";
+    // 2026-10-15: enemy block multipliers require a held power; expiring duration powers are removed.
+    // Normal first-combat differential witnesses: .audit/env-t04-combat-continuation/normal-4.
+    // Unique-group formation selection now preserves its first hit (normal-two-combats witness).
+    // AttackPotion offer generation and consumption-before-effect decision; independent selection/cancel
+    // trajectories and source shuffle witnesses: .audit/env-t06-offer/.
+    // Shrink declares negative infinite duration; damage/tick IR now preserves its -1 sentinel.
+    // Third normal combat after AromaOfChaos independently compared: .audit/post-event-20261016/.
+    // Previous dev b6472f08ed1c4f87 / 4b14a623a7f07d57; dev-map 31802bab1575fbaf / 3f2336d912772e4f.
+    // 2026-10-16 capacity: Elite rewards, visited-floor encounter seeds, Inklet HP/starting move,
+    // spent hp cap removal and ending/singleton Headbutt selection. Strict/public evidence: .audit/capacity-20261016/.
+    // Previous dev 2df4b453b15febbf / b8d3a04a74271921; dev-map 1f864e09b839c59b / 23b8f78062613886.
+    // 2026-10-17 normal Run: own-turn enemy block clear, confirmed-death power removal,
+    // and SlipperyBridge permanent preview/removal. Source/native prefix: .audit/act1-run-20261016/.
+    // Previous dev aad01bb0852d0d7d / 48e4a0d6e545db41; dev-map 59937585291f40b1 / b91254a8b3d86d80.
+    // 2026-10-17: card attachment fields/copy policy and post-body Sown trigger; controlled/native/public witnesses.
+    private const string DevGoldenRuleset = "475abd581a69694c";
+    private const string DevGoldenBuild = "161d18afa369a767";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
-    private const string DevMapGoldenRuleset = "a50a3463cb78a08d";
-    private const string DevMapGoldenBuild = "428c24b3fb3b38d5";
+    // 2026-10-16: independent source eligibility rejects Act 1-ineligible events without shrinking the pool.
+    // Original-seed normal prefix selects AromaOfChaos on both sides; source threshold/unsupported witnesses
+    // and actual descriptors: .audit/env-progress-20261016/. Previous: 9e6fdbefe8520a40 / 536dc2bc2b1c3e58.
+    // AromaOfChaos adds both source options and persistent selection/transform IR. Both branches
+    // independently compared and publicly replayed: .audit/aroma-20261016/. Dev scope remains unchanged.
+    // 2026-10-17: TabletOfTruth page/resource IR, uniform noncombat rewards and WoodCarvings eligibility.
+    // Native event execution and normal five-page Run comparison: .audit/act1-events-20261017/.
+    // 2026-10-17: complete JungleMazeAdventure/MorphicGrove modules, simultaneous deck selection.
+    // Isolated real-catalogue checks: .audit/event-layer-20261017/; native Jungle solo RNG gap remains explicit.
+    // Sown/SapphireSeed and actual card-copy semantics: .audit/sown-20261017/.
+    private const string DevMapGoldenRuleset = "34b51c466486b0f9";
+    private const string DevMapGoldenBuild = "d96534dd8df06257";
 
     public static void DefaultIdentity()
     {
         Check.Run("T05 身份：dev 默认规则与公开构建摘要匹配已复核核心编排基线 [真实]", () =>
         {
-            var dev = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.Dev));
+            var dev = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.Dev));
             Check.Equal(DevGoldenRuleset, dev.Describe().RulesetId, "verified dev ruleset identity");
             Check.Equal(DevGoldenBuild, dev.Describe().PublicBuildId, "verified dev public build identity");
         });
@@ -110,8 +135,8 @@ internal static class SliceMapRoomChecks
     {
         Check.Run("T05 身份：dev-map 与 dev 同工厂但规则和公开构建身份不同 [真实]", () =>
         {
-            var dev = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.Dev));
-            var map = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.DevMap));
+            var dev = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.Dev));
+            var map = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.DevMap));
 
             Check.Equal(BaseSpireScope.DevMap, map.Describe().ScopeId, "dev-map 的范围身份原样进入构建描述");
             Check.Equal(DevMapGoldenRuleset, map.Describe().RulesetId, "verified dev-map ruleset identity");
@@ -447,7 +472,7 @@ internal static class SliceMapRoomChecks
                     "精英房不得推进普通访问计数（两个消费者互相独立）");
                 Check.True(Monsters(session).Count > 0, "精英房真的出生了敌人");
 
-                // 清场 + 奖励出口：精英房与普通战斗房共用同一条结算路径（精英战利品差异不在本包范围）。
+                // 受控清场验证精英消费者与完整奖励出口；正常原seed证据另在容量suite。
                 var player = FormalSliceFixture.Player(session);
                 FormalSliceFixture.SetNumber(session, player, FormalSliceFixture.PlayerTypeId, "Hp", 60);
                 foreach (var monster in Monsters(session))
@@ -463,6 +488,8 @@ internal static class SliceMapRoomChecks
                 }
 
                 Check.Equal(0, Monsters(session).Count, "精英敌人已清空");
+                Check.True(Flag(session, run, RunTypeId, "RewardRelicPresent"), "精英必须生成真实遗物奖励");
+                Check.True(Int(session, run, RunTypeId, "RewardGold") is >= 35 and <= 45, "精英金币范围");
                 ResolveFormalReward(session);
                 Check.Equal(2L, Int(session, run, RunTypeId, "MapPhase"), "精英房结算后回到选图相位");
                 Check.True(Legal(session, ChooseAction) is not null, "精英房结算后可以继续旅行");
@@ -562,6 +589,8 @@ internal static class SliceMapRoomChecks
                     session.State.SetField(run, runType.FieldIndex(RewardWiring.GoldTakenFieldName), Value.Of(0L));
                     session.State.SetField(run, runType.FieldIndex(RewardWiring.PotionDroppedFieldName), Value.Of(potionDropped));
                     session.State.SetField(run, runType.FieldIndex(RewardWiring.PotionResolvedFieldName), Value.Of(0L));
+                    session.State.SetField(run, runType.FieldIndex("RewardRelicPresent"), Value.Of(false));
+                    session.State.SetField(run, runType.FieldIndex("RewardRelicResolved"), Value.Of(true));
                 });
 
                 Submit(session, Legal(session, RewardWiring.TakeGoldActionName)!);
@@ -659,7 +688,7 @@ internal static class SliceMapRoomChecks
     {
         Check.Run("T05 抽数与流：地图流消费量等于重放字数、账目闭合、选择不重复生成 [真实]", () =>
         {
-            var factory = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.DevMap));
+            var factory = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.DevMap));
             var run = factory.CreateSession(DevSeedA);
             Check.Equal(0L, run.Session.Random.TotalDraws, "建局（工厂）阶段一个随机数都不能消费");
             run.Start();
@@ -700,7 +729,7 @@ internal static class SliceMapRoomChecks
 
     private static Session NewRun(string seed)
     {
-        var run = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.DevMap)).CreateSession(seed);
+        var run = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.DevMap)).CreateSession(seed);
         run.Start();
         return run.Session;
     }
@@ -727,6 +756,16 @@ internal static class SliceMapRoomChecks
         var potion = Legal(session, RewardWiring.SkipPotionActionName);
         if (potion is not null)
             Submit(session, potion);
+        var relic = Legal(session, RewardWiring.SkipRelicActionName);
+        if (relic is not null)
+        {
+            Check.Equal(3L, Int(session, RunInstance(session), RunTypeId, "MapPhase"), "其他奖励解决后仍须处理精英遗物");
+            Check.True(Legal(session, ChooseAction) is null, "遗物未解决不能旅行");
+            var draws = session.Random.TotalDraws;
+            Submit(session, relic);
+            Check.Equal(draws, session.Random.TotalDraws, "跳过遗物不补抽");
+            Check.True(Legal(session, RewardWiring.SkipRelicActionName) is null, "遗物解决不能重复");
+        }
     }
 
     private static LegalAction? Legal(Session session, string actionId)

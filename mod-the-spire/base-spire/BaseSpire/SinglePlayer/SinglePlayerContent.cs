@@ -167,7 +167,7 @@ public static class SinglePlayerContentSource
                 declaration.AllPossibleEnemyIds,
                 declaration.Tags,
                 declaration.Formations,
-                declaration.Slots));
+                declaration.Slots) { StartingActionsByEnemyIndex = declaration.StartingActionsByEnemyIndex });
         }
 
         foreach (var encounterId in act.BossEncounters)
@@ -186,7 +186,7 @@ public static class SinglePlayerContentSource
             }
 
             bosses.Add(new SliceEncounter(declaration.Id, "boss", declaration.AllPossibleEnemyIds,
-                declaration.Tags, declaration.Formations, declaration.Slots));
+                declaration.Tags, declaration.Formations, declaration.Slots) { StartingActionsByEnemyIndex = declaration.StartingActionsByEnemyIndex });
         }
 
         if (weak.Count == 0 || normal.Count == 0)

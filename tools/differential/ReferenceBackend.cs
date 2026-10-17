@@ -49,6 +49,10 @@ internal static class ReferenceBackends
 /// </summary>
 internal static class ReferenceBackend
 {
+    // Static content-identity correspondence only; no base behavior or runtime answers enter reference execution.
+    private static readonly Lazy<IReadOnlyDictionary<string, string>> PowerIds = new(() =>
+        BaseSpire.SinglePlayer.SinglePlayerContentSource.Shared.Model.Powers.ToDictionary(
+            p => BaseSpire.Slice.VanillaRandomLayout.SourceEventEntry(p.Name), p => p.Id, StringComparer.Ordinal));
     public const string Name = "reference:sts2-sim";
     public const string Version = "env-00-compare@1";
 
@@ -490,6 +494,12 @@ internal static class ReferenceBackend
         }
 
         var entry = id.Entry;
+        if (id.Category == "POWER")
+        {
+            if (PowerIds.Value.TryGetValue(entry, out var exact)) return exact;
+            if (entry.EndsWith("_POWER", StringComparison.Ordinal)
+                && PowerIds.Value.TryGetValue(entry[..^"_POWER".Length], out var shortName)) return shortName;
+        }
         // 原版的 entry 是"类型名"的 UPPER_SNAKE（VulnerablePower → VULNERABLE_POWER），
         // 而本项目的能力 id 去掉了 Power 后缀（base-spire:vulnerable）——这是规范 id 表的既定规则。
         if (entry.EndsWith("_POWER", StringComparison.Ordinal))
@@ -504,7 +514,7 @@ internal static class ReferenceBackend
         ModelDb.All<T>().FirstOrDefault(model => Project(model.Id) == ourId)
         ?? throw new CheckFailed($"参考内容里找不到 '{ourId}'（该内容尚未迁移或命名规则不同）");
 
-    private static string SlotOf(CombatState combat, Player player, CardModel card)
+    internal static string SlotOf(CombatState combat, Player player, CardModel card)
     {
         var state = player.PlayerCombatState!;
         foreach (var (pile, key) in new (CardPile Pile, string Key)[]

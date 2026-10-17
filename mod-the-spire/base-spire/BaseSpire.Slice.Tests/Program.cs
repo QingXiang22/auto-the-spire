@@ -33,7 +33,31 @@ internal static class Program
         {
             foreach (var scope in new[] { BaseSpire.SinglePlayer.BaseSpireScope.Dev, BaseSpire.SinglePlayer.BaseSpireScope.DevMap })
                 Console.WriteLine(JsonSerializer.Serialize(new BaseSpire.SinglePlayer.BaseSpireRuntimeFactory(
-                    BaseSpire.SinglePlayer.RunConfiguration.Ironclad(0, scope)).Describe()));
+                    BaseSpire.SinglePlayer.RunConfiguration.FrozenIronclad(0, scope)).Describe()));
+            return 0;
+        }
+        if (args.Contains("--shrink-only", StringComparer.Ordinal))
+        {
+            SliceFrontendShrinkChecks.Run();
+            Console.WriteLine($"All {Check.Passed} Shrink checks passed (finite/infinite source duration and damage).");
+            return 0;
+        }
+        if (args.Contains("--run-lifecycle-only", StringComparer.Ordinal))
+        {
+            RunLifecycleChecks.Run();
+            Console.WriteLine($"All {Check.Passed} Run lifecycle checks passed.");
+            return 0;
+        }
+        if (args.Contains("--sown-only", StringComparer.Ordinal))
+        {
+            SownChecks.Run();
+            Console.WriteLine($"All {Check.Passed} Sown/SapphireSeed checks passed (controlled visits and combats).");
+            return 0;
+        }
+        if (args.Contains("--capacity-prerequisites-only", StringComparer.Ordinal))
+        {
+            CapacityPrerequisiteChecks.Run();
+            Console.WriteLine($"All {Check.Passed} controlled capacity prerequisite checks passed.");
             return 0;
         }
         if (args.Contains("--potion-reuse-only", StringComparer.Ordinal))
@@ -233,6 +257,8 @@ internal static class Program
         var reportDirectory = ReadOption(args, "--report");
         PotionFlowChecks.Run(includeSource: suite == "all");
         PotionReuseChecks.Run();
+        CapacityPrerequisiteChecks.Run();
+        RunLifecycleChecks.Run();
         CombatStarsChecks.Run();
         CombatForgeChecks.Run();
         CombatOrbChecks.Run();
@@ -250,6 +276,7 @@ internal static class Program
         ShopFlowChecks.Run();
         UnknownRoomChecks.Run();
         EventDomainChecks.Run();
+        SownChecks.Run();
         RunDomainChecks.Run();
         var passed = SliceChecks.RunAll(includeMap);
         Console.WriteLine(includeMap ? $"All {passed} slice checks passed (suite={suite})."

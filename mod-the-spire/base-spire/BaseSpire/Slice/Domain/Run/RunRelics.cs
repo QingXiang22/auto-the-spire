@@ -13,6 +13,40 @@ public sealed class RunRelics(RelicSchema schema, RunInitializationWiring invent
     public IReadOnlyList<SliceRelic> Supported { get; } = [.. library.Where(CanObtain)];
     private int nextLocal;
 
+    /// <summary>RelicReward source draw: one Rewards rarity roll, player bag front, then shared bag removal.</summary>
+    public Inst[] DrawReward(IrScope s, Expr run, FieldSymbol identity, FieldSymbol rarity)
+    {
+        var package = s.Package;
+        var asset = package.Declarations.OfType<ComputeAssetSymbol>().SingleOrDefault(a => a.Name == "RewardRelicRarity");
+        if (asset is null)
+        {
+            asset = package.ComputeAsset("RewardRelicRarity"); asset.BackendId = BaseSpireComputeBackend.BackendId;
+            asset.SourcePath = "sts2/src/Core/Factories/RelicFactory.cs";
+            asset.SourceHash = "RelicFactory.RollRarity:float32:0.5:0.83@1";
+            asset.Entry = "TreasureRelicRarity"; // Same source RollRarity pure function as treasure/shop.
+            asset.Input("Payload", FieldTypeSchema.Int(0, TreasureRelicRules.RandomSpan - 1));
+            asset.Output("Rarity", FieldTypeSchema.String(16));
+        }
+        var payload = s.Local($"rewardRelicPayload{nextLocal++}", FieldTypeSchema.Int(0, TreasureRelicRules.RandomSpan - 1));
+        var rolled = s.Local($"rewardRelicRarity{nextLocal++}", FieldTypeSchema.String(16));
+        var found = s.Local($"rewardRelicFound{nextLocal++}", FieldTypeSchema.Bool());
+        List<Inst> steps = [s.SampleInt(VanillaRandomLayout.EnginePlayerStreamName("Rewards"), s.Const(0L), s.Const(TreasureRelicRules.RandomSpan), payload),
+            s.Compute(asset, [(asset.Inputs.Single(), s.LocalRef(payload))], [(asset.Outputs.Single(), rolled)]),
+            s.SetField(run, identity, s.Const("base-spire:circlet")), s.SetField(run, rarity, s.Const("None")),
+            s.SetLocal(found, s.Const(false))];
+        foreach (var bucket in new[] { "Common", "Uncommon", "Rare" })
+        {
+            var bag = inventory.PlayerBags[bucket]; var head = s.First(s.Collection(bag));
+            steps.Add(s.If(s.And(s.Not(s.LocalRef(found)), s.And(s.Equal(s.LocalRef(rolled), s.Const(bucket)), s.Greater(s.Count(s.Collection(bag)), s.Const(0L)))),
+                [s.SetField(run, identity, s.Field(head, inventory.PlayerId)), s.SetField(run, rarity, s.Const(bucket)),
+                 s.Destroy(head), s.SetLocal(found, s.Const(true))]));
+            if (bucket != "Rare") steps.Add(s.If(s.And(s.Not(s.LocalRef(found)), s.Equal(s.LocalRef(rolled), s.Const(bucket))),
+                s.SetLocal(rolled, s.Const(bucket == "Common" ? "Uncommon" : "Rare"))));
+        }
+        steps.AddRange(inventory.RemoveFromShared(s, s.Field(run, identity)));
+        return [.. steps];
+    }
+
     public static bool CanObtain(SliceRelic relic) =>
         string.IsNullOrEmpty(SpireRelics.UnsupportedReason(relic))
         && relic.Effects.Where(effect => effect.Trigger == RelicTriggers.AfterObtained)

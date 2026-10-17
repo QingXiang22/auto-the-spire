@@ -458,6 +458,8 @@ class FixedOrderPolicy:
             return self._shop_removal_decision(snapshot, entities, candidates)
         scored = []
         for index, cand in enumerate(candidates):
+            if not cand.get("fields") and any(c.get("fields") for c in candidates):
+                continue  # Optional cancellation is explicit; this policy chooses a real offered instance.
             ref = first_field_value(cand)
             target = entities.get(ref)
             kind = short(target.get("kind_id")) if target else None
@@ -572,6 +574,12 @@ class FixedOrderPolicy:
             return self._answer_decision(snapshot, by_name["net.answer_decision"])
         if flag(run, "ActCompleted") or "ContinueToNextAct" in by_name:
             self.act_completed_seen = True
+            act_index = field(run, "CurrentActIndex")
+            act_count = field(run, "ActCount")
+            if (isinstance(act_index, int) and isinstance(act_count, int)
+                    and 0 <= act_index < act_count - 1 and "ContinueToNextAct" in by_name):
+                return Decision(by_name["ContinueToNextAct"][0], "ContinueToNextAct",
+                                f"run: 已完成幕 {act_index + 1}，进入源幕计划的下一幕（共 {act_count} 幕）")
             if not self.step_frontier:
                 return Stop("act_completed_dev_boundary",
                             "Run.ActCompleted=true 且公开候选只剩 ContinueToNextAct：本构建的幕转换未接线，"
@@ -610,10 +618,11 @@ class FixedOrderPolicy:
 
         # 奖励阶段：先领金币/卡牌/药水，领不了就按公开顺序跳过（含药水满栏时的跳过）。
         if any(name in by_name for name in ("TakeRewardGold", "TakeRewardCard", "TakeRewardPotion",
-                                            "SkipRewardCard", "SkipRewardPotion")):
+                                            "SkipRewardCard", "SkipRewardPotion", "TakeRewardRelic", "SkipRewardRelic")):
             preference = ["TakeRewardGold", "TakeRewardCard",
                           "TakeRewardPotion" if self.potion_policy == "take" else None,
-                          "SkipRewardPotion", "SkipRewardCard"]
+                          "SkipRewardPotion", "SkipRewardCard",
+                          "TakeRewardRelic" if self.relic_policy == "take" else None, "SkipRewardRelic"]
             for name in preference:
                 if name and name in by_name:
                     return Decision(by_name[name][0], name,
@@ -845,7 +854,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout", type=float, default=60.0, help="单次请求超时秒数（默认 60）")
     parser.add_argument("--frame-limit", type=int, default=None, help="转发给宿主的 --frame-limit")
     parser.add_argument("--relic-policy", choices=("skip", "take"), default="skip",
-                        help="宝箱遗物：skip=只跳过（默认），take=尝试领取（未实现效果会被宿主具名拒绝）")
+                        help="宝箱及战斗奖励遗物：skip=只跳过（默认），take=尝试领取（未实现效果会被宿主具名拒绝）")
     parser.add_argument("--potion-policy", choices=("take", "skip"), default="take",
                         help="奖励药水：take=有位置就领（默认），skip=总是跳过")
     parser.add_argument("--use-potions", action="store_true",

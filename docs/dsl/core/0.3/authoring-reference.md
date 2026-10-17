@@ -11,7 +11,7 @@ var package = builder.Build();
 
 BindInto 将文本声明绑定到已有 EnginePackageBuilder 的宿主类型与符号；namespace 必须与 builder 的 PackageId 相同。builder 单次 Build 冻结后不可再绑定。它不生成第二个执行器；过程调用、事件和状态均使用同一 typed IR 和 Session。
 
-LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；template 实例可使用注册的扩展声明。缺依赖、符号冲突、无效类型或参数仍由编译/链接拒绝。显式 `core/0.1`、`core/0.2` 输入继续接受，活动编译身份记录 core/0.3。
+LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3` template 实例可使用注册的扩展声明。缺依赖、符号冲突、无效类型或参数仍由编译/链接拒绝。显式 `core/0.1`、`core/0.2` 输入继续接受，前端身份按输入版本记录为 `core-dsl/0.1`、`core-dsl/0.2` 或 `core-dsl/0.3`，并计入模板及扩展身份。依据为 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)；`BindInto` 会把文本前端身份追加到目标构建器身份。
 
 ## 具名调用
 

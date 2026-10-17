@@ -1,15 +1,15 @@
 # auto-the-spire
 
-auto-the-spire 为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》训练环境。当前实现包含战斗切片与整局流转骨架，尚不代表完整原版模拟。开发接手从[文档总入口](./docs/README.md)开始。
+auto-the-spire 为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》训练环境。当前实现包含战斗切片与整局流转骨架，尚未完全完成。开发接手从[文档总入口](./docs/README.md)开始。
 
 各模块按以下方向协作：通用规则内核 `core-the-spire` → 原版内容包 `mod-the-spire/base-spire` 与其他 mod → `net-the-spire` 提供公开观察和合法动作 → `ai-the-spire` 采样、训练及评价。
 
 ## 当前构成
 
-- `core-the-spire/Core.TheSpire`：Godot无关的.NET 9/C#规则内核；活动工程只使用通用`Engine/`，旧STS后端/消费者已从当前树删除，历史见[Legacy归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。
+- `core-the-spire/Core.TheSpire`：Godot无关的.NET 9/C#规则内核；活动工程只使用通用`Engine/`
 - `mod-the-spire/base-spire`：原版内容包、SinglePlayer开发工厂与战斗/Run实现；具体支持范围和未结项只维护当前清单。
 - `mod-the-spire/test-hook-mod`：历史示例说明；当前目录仅保留 README，不是活动可编译项目。
-- `core-the-spire/Core.TheSpire.Engine.Tests`：通用 Engine 可执行规则检查；旧后端与旧消费者仅保留在Git历史，见 [Legacy 归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)。
+- `core-the-spire/Core.TheSpire.Engine.Tests`：通用 Engine 可执行规则检查。
 - `net-the-spire`：已有本机stdio Host、公开投影/内容目录/合法候选及控制客户端，支持受控默认/作者场景。
 - `ai-the-spire`：已有公开编码器、共享小模型、有限PPO、模型包及demo/train/evaluate/resume/diagnose；学习获胜效果尚未成立。
 - `tools/`：仅纳管[维护中的工程工具](tools/README.md)，临时脚本与生成产物留本地。

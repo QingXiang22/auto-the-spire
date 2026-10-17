@@ -87,17 +87,18 @@ public sealed class RunInitializationWiring
         }
     }
 
-    public Inst[] GenerateEventQueue(IrScope s, Expr run)
+    public Inst[] GenerateEventQueue(IrScope s, Expr run, IReadOnlyList<string>? events = null, bool initializeShared = true)
     {
         var created = s.Local("runRoomIdentity", FieldTypeSchema.Binding());
-        var steps = new List<Inst>
+        var steps = new List<Inst>();
+        if (initializeShared) steps.AddRange(new Inst[]
         {
             // RunManager.GenerateRooms shuffles shared ancients first. Darv is only assigned
             // to later acts, not Overgrowth; a singleton shuffle naturally consumes zero.
             s.CreateEntity(roomIdentity, s.EntityScope(run), created, [(roomId, s.Const("Darv"))], SharedAncients),
             s.ShuffleCollection(SharedAncients, VanillaRandomLayout.EngineStreamName("UpFront")),
-        };
-        foreach (var id in RunSourcePoolManifest.Events)
+        });
+        foreach (var id in events ?? RunSourcePoolManifest.Events)
             steps.Add(s.CreateEntity(roomIdentity, s.EntityScope(run), created, [(roomId, s.Const(id))], Events));
         steps.Add(s.ShuffleCollection(Events, VanillaRandomLayout.EngineStreamName("UpFront")));
         return [.. steps];
@@ -106,11 +107,13 @@ public sealed class RunInitializationWiring
     /// <summary>`ActModel.GenerateRooms` picks the boss and the act ancient with one bounded draw each,
     /// both on the run's `up_front` stream, in that order. The draw index selects an identity from the
     /// source pool; the drawn value is never discarded and the pool is never filtered by effect support.</summary>
-    public Inst[] GenerateBossAndAncient(IrScope s, Expr run, SliceEncounterPool pool)
+    public Inst[] GenerateBossAndAncient(IrScope s, Expr run, SliceEncounterPool pool,
+        Func<IrScope, Expr, Inst[]>? generateAncient = null)
     {
         var steps = new List<Inst>();
         Pick(pool.PoolStream, [.. pool.Bosses.Select(boss => boss.EncounterId)], Boss, "runBossIndex", "boss");
-        Pick(pool.PoolStream, RunSourcePoolManifest.Ancients, Ancient, "runAncientIndex", "ancient");
+        if (generateAncient is null) Pick(pool.PoolStream, RunSourcePoolManifest.Ancients, Ancient, "runAncientIndex", "ancient");
+        else steps.AddRange(generateAncient(s, run));
         return [.. steps];
 
         void Pick(string stream, IReadOnlyList<string> identities, FieldSymbol target, string local, string kind)

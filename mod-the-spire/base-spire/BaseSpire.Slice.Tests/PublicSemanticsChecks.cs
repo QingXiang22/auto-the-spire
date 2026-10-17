@@ -21,7 +21,7 @@ internal static class PublicSemanticsChecks
     private const string RelicTypeId = "base-spire:Relic";
     private const string KnownCardTypeId = "base-spire:KnownCard";
 
-    private static BaseSpireRuntimeFactory Factory() => new(RunConfiguration.Ironclad());
+    private static BaseSpireRuntimeFactory Factory() => new(RunConfiguration.FrozenIronclad());
 
     public static void Run()
     {
@@ -180,6 +180,7 @@ internal static class PublicSemanticsChecks
             var expectedSequences = new Dictionary<string, string>(StringComparer.Ordinal)
             {
                 ["base-spire:PlayedThisTurn"] = "base-spire:Player",
+                ["base-spire:GeneratedCardOffers"] = "base-spire:Player",
                 ["base-spire:Monsters"] = "base-spire:Player",
                 ["base-spire:Known"] = "base-spire:Player",
                 ["base-spire:RunStates"] = "base-spire:Run",
@@ -266,7 +267,9 @@ internal static class PublicSemanticsChecks
 
             var sequences = semantics.Collections.Count(pair => pair.Value.Use == BasePublicCollectionUse.Sequence);
             var notPublished = semantics.Collections.Count(pair => pair.Value.Use == BasePublicCollectionUse.NotPublished);
-            Check.Equal(9, sequences, "本构建的公开有序流程条数（含药水栏、奖励药水与充能球队列）");
+            var offers = rules.Collections.Single(item => item.QualifiedId == "base-spire:GeneratedCardOffers");
+            Check.True(offers.IdentityVisible && offers.OrderVisible && offers.SizeVisible,
+                "生成候选的成员、顺序与数量公开，玩家据此作出选择");
             Check.Equal(BasePublicCollectionUse.Sequence, semantics.Collections["base-spire:OrbQueue"].Use, "orb order published");
             Check.Equal("base-spire:Player", semantics.Collections["base-spire:OrbQueue"].OwnerKindEngineTypeId, "orb queue belongs to combat player");
             foreach (var id in new[] { "base-spire:PotionBelt", "base-spire:RewardPotions" })
@@ -276,12 +279,13 @@ internal static class PublicSemanticsChecks
                 Check.Equal("base-spire:Run", semantics.Collections[id].OwnerKindEngineTypeId,
                     $"'{id}' 属于跨房间的Run");
             }
-            // ENV-T08（2026-10-11）复核：这条计数在 T05/T08 期间已经过期——整幕内部库存（4 个遗物袋 ×2 组、
-            // 事件队列、共享古代人）、奖励候选与执行历史都已是具名不发布；本包只额外加了 `EliteEncounterQueue`
-            // 一项（16 → 17）。计数按**当前**意图表维护，不改变"每条集合都必须发布或具名不发布"的契约
-            // （逐条判别在下面的循环与 ENV-T03 元数据闭合检查里）。
-            Check.Equal(17, notPublished,
-                "整幕内部库存（遗物袋/事件/共享古代人/普通与精英队列）、奖励候选与执行历史都必须具名不发布");
+            var generationPool = rules.Collections.Single(item => item.QualifiedId == "base-spire:GenerationPool");
+            Check.False(generationPool.IdentityVisible || generationPool.OrderVisible || generationPool.SizeVisible,
+                "完整生成池的临时洗牌状态不得公开");
+            Check.Equal(BasePublicCollectionUse.NotPublished, semantics.Collections[generationPool.QualifiedId].Use,
+                "完整生成池不进入公开集合");
+            Check.Equal("BASE-INTERNAL-GENERATION-POOL", semantics.Collections[generationPool.QualifiedId].SkipRuleId,
+                "完整生成池使用明确的不发布规则");
             Check.Equal("BASE-INTERNAL-PLAY-HISTORY", semantics.Collections["base-spire:CardPlayHistory"].SkipRuleId,
                 "执行历史必须具名不发布，公开 PlayedThisTurn 仍保持 sequence");
             Console.WriteLine($"      ENV-T03 集合用途：sequence={sequences} notPublished={notPublished} "

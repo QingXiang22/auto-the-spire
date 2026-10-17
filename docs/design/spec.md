@@ -10,7 +10,7 @@
 
 ## 1. 目标与范围
 
-本项目以通用桌游规则引擎为底座，优先为 AI 提供可复现、可观测、可控且可扩展的《杀戮尖塔 2》训练环境。引擎的通用性需要非 STS 规则夹具验证；STS 仍是当前产品与内容完整性的优先目标。工作按依赖关系分三阶段推进：
+本项目以通用桌游规则引擎为底座，优先为 AI 提供可复现、可观测、可控且可扩展的《杀戮尖塔 2》训练环境。引擎的通用性需要非 STS 规则测试场景验证；STS 仍是当前产品与内容完整性的优先目标。工作按依赖关系分三阶段推进：
 
 1. **通用内核 `core-the-spire`**：建立游戏包可声明的类型化状态、集合/关系、动作、规则程序、事件、选择续接、随机数与观察契约。它不内置 STS 实体类型或规则。通过小型非 STS 游戏包验证通用性，并通过计算后端接口接入 Lua。
 2. **原版规则包 `mod-the-spire/base-spire`**：通过相同接口定义 STS 的实体、卡牌/敌人/地图内容、伤害/回合/奖励等规则与完整流程，先完成可校验的战斗切片，再扩展整局，并与真实游戏行为对照。
@@ -161,7 +161,7 @@ C# 是 `core-the-spire` 的既定实现语言。恢复源码中的 [`Rng`](../..
 
 Run 事件池提供 Event/Ancient 内容定义、按源顺序生成和可观察 ID 选择；RunEventDefinition 可组织多个带描述的页面，选项可转场并保留整局状态；事件选项可声明组合式 RunCondition（run 指标比较、遗物/药水持有、All/Any/Not），观察视图暴露 IsEnabled，合法动作与观察共用同一条件判定；RunEffect DSL 支持金币、治疗、失血、最大生命增减、加入卡牌、授予已注册遗物，以及暂停续接的单牌升级/移除选择。
 
-`enterRunCombat` 可从事件压入声明式 encounter；战斗结束后可恢复事件原页面和后续选项，也可按内容配置结束父事件，二者共用通用房间栈及 `CombatEnvironment` 接缝。
+`enterRunCombat` 可从事件压入声明式 encounter；战斗结束后可恢复事件原页面和后续选项，也可按内容配置结束父事件，二者共用通用房间栈及 `CombatEnvironment` 接口。
 
 已提供受控的 C# 自定义 run 效果 handler 供 mod 扩展；原版事件条件和完整效果仍待迁移。
 
@@ -183,7 +183,7 @@ Run 事件池提供 Event/Ancient 内容定义、按源顺序生成和可观察 
 
 效果需要跨多个命令保留结算前的读数时，使用 `withCount` / `savedCount` 的词法绑定，不能把临时读数写进整局或战斗 mod 变量。绑定随续接上下文穿过顺序、条件、重复和所有选择；独立触发效果及自动打出的子卡有自己的绑定作用域。注册时拒绝越界读取；当前队列使用值类型条目，绑定仅在进入作用域时分配，不在结算热路径解析 DSL。
 
-战斗玩家显式保留角色 ID，与玩家实体 ID 分离。整局进入战斗自动提供角色 ID，独立战斗夹具可显式传入。`generateCards` 按角色引用的内容池采样，默认全解锁，应用可生成标记及原版稀有度排除条件；从独立 `combat-card-generation` 流先采样完整批次，再逐张添加稳定身份的新战斗实例，每张生成事件可暂停并续接。生成仅影响战斗牌区。当前内容池覆盖部分原版，手牌容量、模式限制及完整原版生成 Hook 仍待补齐。
+战斗玩家显式保留角色 ID，与玩家实体 ID 分离。整局进入战斗自动提供角色 ID，独立战斗测试场景可显式传入。`generateCards` 按角色引用的内容池采样，默认全解锁，应用可生成标记及原版稀有度排除条件；从独立 `combat-card-generation` 流先采样完整批次，再逐张添加稳定身份的新战斗实例，每张生成事件可暂停并续接。生成仅影响战斗牌区。当前内容池覆盖部分原版，手牌容量、模式限制及完整原版生成 Hook 仍待补齐。
 
 卡牌实例上的能量费用修饰是有序、不可变的数据，记录绝对设置/相对增量、仅降低选项，以及回合末/打出完成/战斗末的失效条件；生成和选牌效果共用同一 `costModifier` 契约。牌区移动与升级保留修饰；费用降低升级按原版规则截断已有绝对修饰。局部修饰先于全局 Power 费用规则，X 费仍花费当前能量。打出失效必须等回放和消耗回调全部完成，回合末失效必须等 flush 回调全部完成；失效事件可经同一队列暂停续接。当前仅建模能量费用，星星费用与完整全局 Hook 仍待实现。
 
@@ -201,14 +201,14 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 
 ## 6. 首个战斗校验案例
 
-现有“铁甲战士 `56/65` 生命、`5` 打击／`4` 防御／`1` 痛击、咔咔先施加 `仪式(5)` 再以基础伤害 `3` 攻击”的叙述保留为**内核测试夹具**，不标注为未经修改的原版遭遇。手牌、抽牌顺序、敌人生命、能量及地图位置均由夹具显式指定。
+现有“铁甲战士 `56/65` 生命、`5` 打击／`4` 防御／`1` 痛击、咔咔先施加 `仪式(5)` 再以基础伤害 `3` 攻击”的叙述保留为**内核测试场景**，不标注为未经修改的原版遭遇。手牌、抽牌顺序、敌人生命、能量及地图位置均由测试场景显式指定。
 
 源码对照给出两个必须修正的事实：
 
-1. 接近此行为的原版敌人 [`DampCultist`](../../sts2/src/Core/Models/Monsters/DampCultist.cs) 使用“念咒 → 循环黑暗打击”的行动状态机。通常条件下念咒施加 `仪式(5)`、攻击基础伤害为 `1`；启用 `DeadlyEnemies` 条件时相应数值是 `6` 和 `3`。因此“仪式 5、攻击 3”是混合参数的测试夹具。
-2. 原版 [`RitualPower`](../../sts2/src/Core/Models/Powers/RitualPower.cs) 在持有者**阵营回合结束后**施加力量；敌人刚施加仪式的那次结束会跳过。以夹具的 `仪式(5)`、基础攻击 `3`，且没有其他修正为例：首次行动施加仪式；第二次行动攻击造成 `3`，该回合结束后获得 5 力量；第三次行动攻击造成 `8`。此前“第二次行动在回合开始获得力量并打出 8”的描述不符合这份源码。
+1. 接近此行为的原版敌人 [`DampCultist`](../../sts2/src/Core/Models/Monsters/DampCultist.cs) 使用“念咒 → 循环黑暗打击”的行动状态机。通常条件下念咒施加 `仪式(5)`、攻击基础伤害为 `1`；启用 `DeadlyEnemies` 条件时相应数值是 `6` 和 `3`。因此“仪式 5、攻击 3”是混合参数的测试场景。
+2. 原版 [`RitualPower`](../../sts2/src/Core/Models/Powers/RitualPower.cs) 在持有者**阵营回合结束后**施加力量；敌人刚施加仪式的那次结束会跳过。以测试场景的 `仪式(5)`、基础攻击 `3`，且没有其他修正为例：首次行动施加仪式；第二次行动攻击造成 `3`，该回合结束后获得 5 力量；第三次行动攻击造成 `8`。此前“第二次行动在回合开始获得力量并打出 8”的描述不符合这份源码。
 
-第一批校验分为两条：内核夹具验证命令、阶段和重放；`base-spire` 对照用真实 `DampCultist` 的难度参数和时序验证原版一致性。攻击意图伤害由视图根据当前状态计算，原版 [`AttackIntent`](../../sts2/src/Core/MonsterMoves/Intents/AttackIntent.cs) 也调用伤害修正逻辑来产生展示值；实际显示细节仍需运行真实游戏比对。
+第一批校验分为两条：内核测试场景验证命令、阶段和重放；`base-spire` 对照用真实 `DampCultist` 的难度参数和时序验证原版一致性。攻击意图伤害由视图根据当前状态计算，原版 [`AttackIntent`](../../sts2/src/Core/MonsterMoves/Intents/AttackIntent.cs) 也调用伤害修正逻辑来产生展示值；实际显示细节仍需运行真实游戏比对。
 
 ## 7. 源码观察与设计影响
 
@@ -232,11 +232,11 @@ Hook 要覆盖内容生命周期、伤害与状态结算、回合和阵营阶段
 5. **原版标准地图切片已建立**：`base-spire` 实现 Overgrowth、Hive、Glory、Underdocks 的单人地图参数，以及路径生成、节点类型分配、限制、路径剪枝/修复和网格后处理；地图入口 Ancient 会成为每幕开头待处理事件。
 6. **Unknown 房间赔率已建立**：`core-the-spire` 提供规则定义配置及跨节点累计/重置运行态；`base-spire` 配置原版 Monster/Elite/Treasure/Shop 初始赔率并由 Event 承接剩余概率。运行支持按原版字符串种子哈希初始化随机流。
 7. **源码审计已建索引**：`docs/design/sts2-core-source-audit.md` 记录当前核查来源、实现映射、待深读规则域和明确的等价性限制。
-8. **遭遇、整局战斗与奖励接缝已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；EnemyActionTransition 可按权重随机选择，也可按顺序匹配回合、槽位、生命/格挡、存活敌人数及 Power 条件，且确定性条件分支不消耗敌人 AI 随机流；base-spire 用其复刻 Nibbit 的单体/双体开局行为；整局可按 encounter 定义启动战斗并在胜负时回写。遭遇支持固定敌人、随机候选池、组内不重复和以一次抽样选择的关联整组阵型；formation 可携带槽位开场动作，ScrollsOfBiting 用一次 formation 抽样选出原版三只敌人的开场动作轮转。敌人阵容在进入 run 房间时抽取并保存在房间视图，启动战斗时沿用该阵容。战斗胜利进入统一奖励阶段，支持金币、三选一卡与遗物的领取/跳过；精英可生成遗物。宝箱房提供开箱动作，发放 42–52 金币并抽取一件遗物；共享宝箱袋与玩家奖励袋分别维护，玩家袋由共享遗物及匹配当前角色的 `CharacterPoolIds` 遗物构成。遗物领取时从两袋移除，跳过宝箱遗物只消耗共享袋中的选项。`base-spire` 已注册 Burning Blood、Anchor、Vajra、Ironclad 专属的 Charon's Ashes、Self-Forming Clay、Red Skull、Demon Tongue、Paper Phrog、Ruined Helmet 与兜底 Circlet；Anchor、Vajra 在战斗开始时生效，Charon's Ashes 在消耗牌后造成 3 点无力量加成的全体伤害，Self-Forming Clay 在玩家受伤后累积 Power，并于下一回合开始按层数获得格挡后清除，Red Skull 随玩家当前生命跨越 50% 阈值添加/移除力量，Demon Tongue 在玩家回合每回合首次受到伤害后按伤害量治疗，Paper Phrog 将玩家对易伤敌人的 powered move 倍率提升至 1.75；Ruined Helmet 在每场战斗首次获得正向力量时将其加倍。战斗 DSL 支持 Heal 与 LoseMaxHp 效果，生命变化事件可以驱动规则。伤害 DSL 区分 Move、Unpowered、Unblockable 属性，并以规则 hook 扩展易伤倍率；实际攻击与意图观测共用伤害计算。稀有度抽取与预洗牌袋已分离，但原版遗物池成员、可用性 Hook 和完整 RNG 调用次序仍需逐调用对照。普通战斗三选一卡按角色引用池及赔率生成；最后一幕 Boss 不生成默认奖励。Ironclad 的 87 张源卡池成员均有 DSL 声明，其中 85 张进入单人池，Demonic Shield 与 Tank 标记为多人专属；药水已有通用定义、战斗使用动作及 Fire Potion、Block Potion、Strength Potion、Blessing of the Forge、Beetle Juice 和 Flex Potion 的效果；固定槽位可观察和消费，普通/精英/非最终 Boss 通过 0.4 起始 pity odds 生成可领取的药水奖励，容量满时只能跳过。战斗内药水生成已使用 `GeneratePotionEffect` 和独立 `combat-potion-generation` 流，按角色药水池、稀有度及可生成标记取样，并在单次批量中避免重复；原版完整药水池、除 Potion Belt 外的容量变化遗物、非战斗/自动药水、完整 Boss 规则、全部原版遗物效果和遗物池仍待迁移。`
+8. **遭遇、整局战斗与奖励接口已建立**：encounter 可包含有序的多个敌人，敌人各自持有行动状态机并依次行动，支持选敌目标；EnemyActionTransition 可按权重随机选择，也可按顺序匹配回合、槽位、生命/格挡、存活敌人数及 Power 条件，且确定性条件分支不消耗敌人 AI 随机流；base-spire 用其复刻 Nibbit 的单体/双体开局行为；整局可按 encounter 定义启动战斗并在胜负时回写。遭遇支持固定敌人、随机候选池、组内不重复和以一次抽样选择的关联整组阵型；formation 可携带槽位开场动作，ScrollsOfBiting 用一次 formation 抽样选出原版三只敌人的开场动作轮转。敌人阵容在进入 run 房间时抽取并保存在房间视图，启动战斗时沿用该阵容。战斗胜利进入统一奖励阶段，支持金币、三选一卡与遗物的领取/跳过；精英可生成遗物。宝箱房提供开箱动作，发放 42–52 金币并抽取一件遗物；共享宝箱袋与玩家奖励袋分别维护，玩家袋由共享遗物及匹配当前角色的 `CharacterPoolIds` 遗物构成。遗物领取时从两袋移除，跳过宝箱遗物只消耗共享袋中的选项。`base-spire` 已注册 Burning Blood、Anchor、Vajra、Ironclad 专属的 Charon's Ashes、Self-Forming Clay、Red Skull、Demon Tongue、Paper Phrog、Ruined Helmet 与兜底 Circlet；Anchor、Vajra 在战斗开始时生效，Charon's Ashes 在消耗牌后造成 3 点无力量加成的全体伤害，Self-Forming Clay 在玩家受伤后累积 Power，并于下一回合开始按层数获得格挡后清除，Red Skull 随玩家当前生命跨越 50% 阈值添加/移除力量，Demon Tongue 在玩家回合每回合首次受到伤害后按伤害量治疗，Paper Phrog 将玩家对易伤敌人的 powered move 倍率提升至 1.75；Ruined Helmet 在每场战斗首次获得正向力量时将其加倍。战斗 DSL 支持 Heal 与 LoseMaxHp 效果，生命变化事件可以驱动规则。伤害 DSL 区分 Move、Unpowered、Unblockable 属性，并以规则 hook 扩展易伤倍率；实际攻击与意图观测共用伤害计算。稀有度抽取与预洗牌袋已分离，但原版遗物池成员、可用性 Hook 和完整 RNG 调用次序仍需逐调用对照。普通战斗三选一卡按角色引用池及赔率生成；最后一幕 Boss 不生成默认奖励。Ironclad 的 87 张源卡池成员均有 DSL 声明，其中 85 张进入单人池，Demonic Shield 与 Tank 标记为多人专属；药水已有通用定义、战斗使用动作及 Fire Potion、Block Potion、Strength Potion、Blessing of the Forge、Beetle Juice 和 Flex Potion 的效果；固定槽位可观察和消费，普通/精英/非最终 Boss 通过 0.4 起始 pity odds 生成可领取的药水奖励，容量满时只能跳过。战斗内药水生成已使用 `GeneratePotionEffect` 和独立 `combat-potion-generation` 流，按角色药水池、稀有度及可生成标记取样，并在单次批量中避免重复；原版完整药水池、除 Potion Belt 外的容量变化遗物、非战斗/自动药水、完整 Boss 规则、全部原版遗物效果和遗物池仍待迁移。`
 
 运行 `dotnet run --project core-the-spire/Core.TheSpire.Tests` 执行无外部测试包依赖的规则检查；运行 `dotnet build AutoTheSpire.sln` 构建当前项目。当前检查覆盖地图图校验、可达节点选择、房间结果资源回写、跨幕推进、多敌战斗和终局，但不等同于原版整局支持。
 
-后续补齐 Ironclad 与其他角色的完整 card pool、卡牌实例永久修改和玩家奖励 odds，完成卡牌奖励源规则差分，再迁移完整 potion pool 成员及容量变化规则、完整遗物池成员和遗物 Hook；PotionDefinition 已支持共享池/角色池归属，GameDefinition 可按角色查询合并后的药水池；Treasure/Elite 的 Relic 奖励流程已有通用内容定义与选择阶段，角色专属池结构已建并迁入 Charon's Ashes、Self-Forming Clay、Red Skull、Demon Tongue，但多数原版成员、可用性 Hook 和全量效果尚未实现。战斗事件 Hook 已可将事件映射到 Effect DSL 并选择事件参与者作为执行者，Heal Effect 会发出生命变化事件；伤害节点区分 Move、Unpowered、Unblockable，但完整原版事件顺序、修正 Hook 与伤害阶段仍需对照。RunEvent 与 RunEffect DSL 已支持基础资源变化、最大生命增减和单牌升级/移除选择；最大生命损失当前尚未接入统一 HP loss / Damage Hook。RunDefinition 可声明 Final event，终局只能通过带 WinRunEffect 的合法选项完成。继续迁移原版 Architect 与事件内容、条件和更完整的选项效果；并扩充真实 Act encounter/Event/Ancient 内容池及可用性筛选、双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化、商店和其他非战斗房间。营火已提供治疗/升级选择，但仍缺全部原版选项修改 hook。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接缝可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗、运行奖励决策并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
+后续补齐 Ironclad 与其他角色的完整 card pool、卡牌实例永久修改和玩家奖励 odds，完成卡牌奖励源规则差分，再迁移完整 potion pool 成员及容量变化规则、完整遗物池成员和遗物 Hook；PotionDefinition 已支持共享池/角色池归属，GameDefinition 可按角色查询合并后的药水池；Treasure/Elite 的 Relic 奖励流程已有通用内容定义与选择阶段，角色专属池结构已建并迁入 Charon's Ashes、Self-Forming Clay、Red Skull、Demon Tongue，但多数原版成员、可用性 Hook 和全量效果尚未实现。战斗事件 Hook 已可将事件映射到 Effect DSL 并选择事件参与者作为执行者，Heal Effect 会发出生命变化事件；伤害节点区分 Move、Unpowered、Unblockable，但完整原版事件顺序、修正 Hook 与伤害阶段仍需对照。RunEvent 与 RunEffect DSL 已支持基础资源变化、最大生命增减和单牌升级/移除选择；最大生命损失当前尚未接入统一 HP loss / Damage Hook。RunDefinition 可声明 Final event，终局只能通过带 WinRunEffect 的合法选项完成。继续迁移原版 Architect 与事件内容、条件和更完整的选项效果；并扩充真实 Act encounter/Event/Ancient 内容池及可用性筛选、双 boss 选择、战斗中的牌组状态变化、真实敌人 HP/意图初始化、商店和其他非战斗房间。营火已提供治疗/升级选择，但仍缺全部原版选项修改 hook。通用房间栈已支持把子房间压入活动房间并在完成后返回父房间；整局战斗接口可根据房间选择共享 run 随机流、从整局牌组洗牌发起多敌战斗、运行奖励决策并回写终局生命。地图生成已按源码实现并进行多 Act、多种子确定性与布局检查；仍需接入可运行原版构建或实际游戏，对固定 seed 地图做逐点差分校验。每个规则域都增加源码映射和行为校验；完成标准是全单人玩法闭环与内容覆盖，不以当前整局骨架宣称完整原版兼容。
 
 ## 9. 待验证事项
 

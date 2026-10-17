@@ -1,3 +1,5 @@
+using CoreTheSpire.Engine;
+
 namespace BaseSpire.Slice.Rooms;
 
 /// <summary>
@@ -13,8 +15,15 @@ namespace BaseSpire.Slice.Rooms;
 public static class EventModules
 {
     /// <summary>本构建登记的可执行事件模块（顺序即动作登记顺序，不是事件池顺序）。</summary>
-    public static IReadOnlyList<IEventRoomModule> Create(EventVisitState state) =>
+    public static IReadOnlyList<IEventRoomModule> Create(EventVisitState state, EnginePackageBuilder package) =>
     [
         new SunkenStatueEvent(state),
+        new AromaOfChaosEvent(),
+        new SlipperyBridgeEvent(package),
+        new TabletOfTruthEvent(),
+        new RoomFullOfCheeseEvent(package),
+        new JungleMazeAdventureEvent(package),
+        new MorphicGroveEvent(),
+        new SapphireSeedEvent(),
     ];
 }

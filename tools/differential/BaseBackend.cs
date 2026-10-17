@@ -286,8 +286,10 @@ internal static class BaseBackend
     /// </summary>
     private static BaseSpireRunSession OpenFormalSession(string gameSeed, string baseScope)
     {
-        var scope = baseScope == BaseScopes.DevMap ? BaseSpireScope.DevMap : BaseSpireScope.Dev;
-        var factory = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, scope));
+        var scope = baseScope switch { BaseScopes.DevRun => BaseSpireScope.DevRun,
+            BaseScopes.DevMap => BaseSpireScope.DevMap, _ => BaseSpireScope.Dev };
+        var factory = new BaseSpireRuntimeFactory(scope == BaseSpireScope.DevRun
+            ? RunConfiguration.Ironclad(0, scope) : RunConfiguration.FrozenIronclad(0, scope));
         var run = factory.CreateSession(gameSeed);
         run.Start();
         return run;
@@ -350,7 +352,7 @@ internal static class BaseBackend
         BaseSpireRuntimeFactory factory;
         try
         {
-            factory = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.Dev));
+            factory = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.Dev));
         }
         catch (Exception failure)
         {
@@ -362,15 +364,15 @@ internal static class BaseBackend
         }
 
         ExpectRejected(rejections, "scope=Ironclad",
-            () => new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.Ironclad)));
+            () => new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.Ironclad)));
         ExpectRejected(rejections, "scope=Full",
-            () => new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.Full)));
+            () => new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.Full)));
         ExpectRejected(rejections, "ascension=1",
-            () => new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(1)));
+            () => new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(1)));
         ExpectRejected(rejections, "character=Silent",
             () => new BaseSpireRuntimeFactory(new RunConfiguration { Character = "Silent" }));
         ExpectRejected(rejections, "scope=unknown",
-            () => new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, "base-spire-made-up-v1")));
+            () => new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, "base-spire-made-up-v1")));
         ExpectRejected(rejections, "source_baseline=unknown",
             () => new BaseSpireRuntimeFactory(new RunConfiguration
             {

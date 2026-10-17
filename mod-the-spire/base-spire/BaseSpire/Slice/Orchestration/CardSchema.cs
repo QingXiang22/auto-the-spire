@@ -7,7 +7,7 @@ public sealed record CardSchema(EntityTypeSymbol Type, FieldSymbol Definition, F
     FieldSymbol Upgraded, FieldSymbol Unplayable, FieldSymbol Ethereal, FieldSymbol Cost,
     FieldSymbol CostModifier, FieldSymbol Amount, FieldSymbol PowerId, FieldSymbol PowerStacks,
     FieldSymbol LongTermSource, FieldSymbol CloneOf, FieldSymbol FreeUntilPlayed,
-    FieldSymbol SourceOrderKey)
+    FieldSymbol SourceOrderKey, FieldSymbol Enchantment, FieldSymbol EnchantmentAmount, FieldSymbol EnchantmentDisabled)
 {
     public static CardSchema Declare(EnginePackageBuilder package, EnumTypeSymbol kind)
     {
@@ -31,6 +31,9 @@ public sealed record CardSchema(EntityTypeSymbol Type, FieldSymbol Definition, F
             // 它是**编译辅助元数据**（定义不变量 + 当前升级形态），隐藏、不进公开输入；
             // 创建/复制/升级（普通、升级、克隆、变形）都必须写出它，否则重洗时读空值会直接报错。
             type.AddField("SourceOrderKey", FieldTypeSchema.String(SourceStableShuffle.MaxKeyLength),
-                visibility: FieldVisibility.Hidden));
+                visibility: FieldVisibility.Hidden),
+            type.AddField("EnchantmentId", FieldTypeSchema.String(64)),
+            type.AddField("EnchantmentAmount", FieldTypeSchema.Int(0, 999999)),
+            type.AddField("EnchantmentDisabled", FieldTypeSchema.Bool()));
     }
 }

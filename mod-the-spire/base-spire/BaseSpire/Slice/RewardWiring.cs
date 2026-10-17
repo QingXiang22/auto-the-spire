@@ -55,6 +55,8 @@ public sealed class RewardWiring
     public const string SkipCardActionName = "SkipRewardCard";
     public const string TakePotionActionName = "TakeRewardPotion";
     public const string SkipPotionActionName = "SkipRewardPotion";
+    public const string TakeRelicActionName = "TakeRewardRelic";
+    public const string SkipRelicActionName = "SkipRewardRelic";
 
     public const string GoldFieldName = "RewardGold";
     public const string GoldTakenFieldName = "RewardGoldTaken";
@@ -105,6 +107,8 @@ public sealed class RewardWiring
     private readonly string poolSpec;
     private readonly string rewardsStream;
     private PotionInventoryRules? potions;
+    private RunRelics? relics;
+    private FieldSymbol? relicPresent, relicResolved, relicIdentity;
 
     private RewardWiring(
         CollectionSymbol runStates,
@@ -188,7 +192,8 @@ public sealed class RewardWiring
         Func<IrScope, CardDefinition, bool, IReadOnlyList<(FieldSymbol Field, Expr Value)>> cardFields,
         Func<IrScope, IReadOnlyList<Inst>>? afterClose = null,
         Func<IrScope, Expr>? isBoss = null,
-        PotionInventoryRules? potions = null)
+        PotionInventoryRules? potions = null,
+        Func<IrScope, Expr>? isElite = null, RunRelics? relics = null, FieldSymbol? actIndex = null)
     {
         ArgumentNullException.ThrowIfNull(package);
         ArgumentNullException.ThrowIfNull(cards);
@@ -207,6 +212,10 @@ public sealed class RewardWiring
         var potionResolved = runEntity.AddField(PotionResolvedFieldName, FieldTypeSchema.Int(0, 999));
         var potionOdds = runEntity.AddField(PotionOddsFieldName, FieldTypeSchema.Int(0, BitsMax));
         var cardOdds = runEntity.AddField(CardOddsFieldName, FieldTypeSchema.Int(0, BitsMax));
+        var relicPresent = relics is null ? null : runEntity.AddField("RewardRelicPresent", FieldTypeSchema.Bool());
+        var relicResolved = relics is null ? null : runEntity.AddField("RewardRelicResolved", FieldTypeSchema.Bool());
+        var relicIdentity = relics is null ? null : runEntity.AddField("RewardRelicId", FieldTypeSchema.String(64));
+        var relicRarity = relics is null ? null : runEntity.AddField("RewardRelicRarity", FieldTypeSchema.String(16));
 
         var rarityFields = new FieldSymbol[CardOptionCount];
         var indexFields = new FieldSymbol[CardOptionCount];
@@ -224,13 +233,20 @@ public sealed class RewardWiring
 
         var createRewardCard = BuildCreateRewardCard(package, runStates, cardEntity, rewardCards, pool, cardFields);
         var openRewards = BuildOpenRewards(package, runStates, rewardCards, runMapPhase, rewardGold, potionDropped,
-            potionOdds, cardOdds, rarityFields, indexFields, upgradedFields, assets, spec, stream, createRewardCard, isBoss, potions);
+            potionOdds, cardOdds, rarityFields, indexFields, upgradedFields, assets, spec, stream, createRewardCard, isBoss, potions, isElite,
+            relics is null ? null : (s, run) =>
+            [s.SetField(run, relicPresent!, isElite?.Invoke(s) ?? s.Const(false)),
+             s.SetField(run, relicResolved!, s.Not(isElite?.Invoke(s) ?? s.Const(false))),
+             s.SetField(run, relicIdentity!, s.Const(string.Empty)), s.SetField(run, relicRarity!, s.Const(string.Empty)),
+                s.If(isElite?.Invoke(s) ?? s.Const(false), relics.DrawReward(s, run, relicIdentity!, relicRarity!))], actIndex);
         var closeRewards = BuildCloseRewards(package, runStates, rewardCards, runCurrentRoom, runRewardTaken, runMapPhase,
-            goldTaken, potionDropped, potionResolved, afterClose, potions);
+            goldTaken, potionDropped, potionResolved, afterClose, potions, relicPresent, relicResolved);
 
         return new RewardWiring(runStates, deck, cardEntity, rewardCards, resources, runCurrentRoom, runRewardTaken,
             runMapPhase, rewardGold, goldTaken, potionDropped, potionResolved, potionOdds, cardOdds, rarityFields,
-            indexFields, upgradedFields, openRewards, createRewardCard, closeRewards, assets, spec, stream, pool) { potions = potions };
+            indexFields, upgradedFields, openRewards, createRewardCard, closeRewards, assets, spec, stream, pool)
+            { potions = potions, relics = relics, relicPresent = relicPresent, relicResolved = relicResolved,
+              relicIdentity = relicIdentity };
     }
 
     /// <summary>
@@ -262,6 +278,19 @@ public sealed class RewardWiring
         RegisterSkipCard(package);
         RegisterTakePotion(package);
         RegisterSkipPotion(package);
+        RegisterRelic(package, take: true);
+        RegisterRelic(package, take: false);
+    }
+
+    private void RegisterRelic(EnginePackageBuilder package, bool take)
+    {
+        if (relics is null) return;
+        var body = package.ActionBody(package.Action(take ? TakeRelicActionName : SkipRelicActionName));
+        var run = body.First(body.Collection(runStates)); body.Role(SliceManifest.PlayerRole);
+        body.Requires(body.And(body.Equal(body.Field(run, runMapPhase), body.Const((long)RewardPhase)),
+            body.And(body.Field(run, relicPresent!), body.Not(body.Field(run, relicResolved!)))));
+        body.Body([.. take ? relics.Obtain(body, run, body.Field(run, relicIdentity!)) : [],
+            body.SetField(run, relicResolved!, body.Const(true)), body.Call(closeRewards.Symbol)]);
     }
 
     private void RegisterTakeGold(EnginePackageBuilder package)
@@ -421,7 +450,8 @@ public sealed class RewardWiring
         Assets assets,
         string poolSpec,
         string rewardsStream,
-        ProcedureBuilder createRewardCard, Func<IrScope, Expr>? isBoss, PotionInventoryRules? potions)
+        ProcedureBuilder createRewardCard, Func<IrScope, Expr>? isBoss, PotionInventoryRules? potions,
+        Func<IrScope, Expr>? isElite, Func<IrScope, Expr, Inst[]>? relicRewards, FieldSymbol? actIndex)
     {
         var open = package.Procedure(OpenRewardsProcedureName);
         var run = open.First(open.Collection(runStates));
@@ -436,6 +466,7 @@ public sealed class RewardWiring
         var upgraded = open.Local("rewardUpgraded", FieldTypeSchema.Bool());
         var spec = open.Const(poolSpec);
         var boss = isBoss?.Invoke(open) ?? open.Const(false);
+        var elite = isElite?.Invoke(open) ?? open.Const(false);
 
         var steps = new List<Inst>
         {
@@ -448,7 +479,7 @@ public sealed class RewardWiring
             {
                 (assets.DropBits, open.LocalRef(bits)),
                 (assets.DropCurrent, open.Field(run, potionOdds)),
-                (assets.DropIsElite, open.Const(false)),
+                (assets.DropIsElite, elite),
             }, new (FieldSymbol, int)[]
             {
                 (assets.DropDropped, dropped),
@@ -460,8 +491,10 @@ public sealed class RewardWiring
             // ② 金币值（源 `GoldReward.Populate` → `NextInt(min, max + 1)`）：1 抽。
             open.IfElse(boss,
                 [open.SampleInt(rewardsStream, open.Const(100L), open.Const(101L), gold)],
-                [open.SampleInt(rewardsStream, open.Const((long)RewardCompute.DefaultMinGold),
-                    open.Const((long)RewardCompute.DefaultMaxGold + 1), gold)]),
+                [open.IfElse(elite,
+                    [open.SampleInt(rewardsStream, open.Const(35L), open.Const(46L), gold)],
+                    [open.SampleInt(rewardsStream, open.Const((long)RewardCompute.DefaultMinGold),
+                        open.Const((long)RewardCompute.DefaultMaxGold + 1), gold)])]),
             open.SetField(run, rewardGold, open.LocalRef(gold)),
         };
 
@@ -497,6 +530,7 @@ public sealed class RewardWiring
                 (assets.RarityIdxA, blacklistA),
                 (assets.RarityIdxB, blacklistB),
                 (assets.RarityBoss, boss),
+                (assets.RarityElite, elite),
             }, new (FieldSymbol, int)[]
             {
                 (assets.RarityOut, rarity),
@@ -543,7 +577,7 @@ public sealed class RewardWiring
                         (assets.UpSpec, spec),
                         (assets.UpIndex, open.LocalRef(index)),
                         // 源 `player.RunState.CurrentActIndex`：幕 1 = 0（0 基）。
-                        (assets.UpAct, open.Const(0L)),
+                        (assets.UpAct, actIndex is null ? open.Const(0L) : open.Field(run, actIndex)),
                     }, new (FieldSymbol, int)[]
                     {
                         (assets.UpOut, upgraded),
@@ -554,6 +588,7 @@ public sealed class RewardWiring
         }
 
         // ⑤ 相位 = 奖励开放（3）：`ChooseMapPoint` 的 {0, 2} 守卫在此不成立 ⇒ 奖励关闭前不能旅行。
+        steps.AddRange(relicRewards?.Invoke(open, run) ?? []);
         steps.Add(open.SetField(run, runMapPhase, open.Const((long)RewardPhase)));
 
         open.Body(steps.ToArray());
@@ -570,7 +605,8 @@ public sealed class RewardWiring
         FieldSymbol goldTaken,
         FieldSymbol potionDropped,
         FieldSymbol potionResolved,
-        Func<IrScope, IReadOnlyList<Inst>>? afterClose, PotionInventoryRules? potions)
+        Func<IrScope, IReadOnlyList<Inst>>? afterClose, PotionInventoryRules? potions,
+        FieldSymbol? relicPresent, FieldSymbol? relicResolved)
     {
         var close = package.Procedure(CloseRewardsProcedureName);
         var run = close.First(close.Collection(runStates));
@@ -584,10 +620,12 @@ public sealed class RewardWiring
                     close.Not(close.Field(run, potionDropped)),
                     close.Equal(close.Field(run, potionResolved), close.Field(run, runCurrentRoom)))));
 
+        if (relicResolved is not null) done = close.And(done, close.Field(run, relicResolved));
         close.Body(close.If(done, [
             close.ForEach(close.Collection(rewardCards), each => new Inst[] { close.Destroy(each) }),
             .. (potions?.ClearReward(close) ?? []),
             close.SetField(run, potionDropped, close.Const(false)),
+            .. relicPresent is null ? Array.Empty<Inst>() : [close.SetField(run, relicPresent, close.Const(false))],
             close.SetField(run, runMapPhase, close.Const(2L)),
             .. (afterClose?.Invoke(close) ?? []),
         ]));
@@ -619,6 +657,7 @@ public sealed class RewardWiring
         var rarityIdxA = rarity.Input("IdxA", FieldTypeSchema.Int(0, PoolIndexMax));
         var rarityIdxB = rarity.Input("IdxB", FieldTypeSchema.Int(0, PoolIndexMax));
         var rarityBoss = rarity.Input("Boss", FieldTypeSchema.Bool());
+        var rarityElite = rarity.Input("Elite", FieldTypeSchema.Bool());
         var rarityOut = rarity.Output("Rarity", FieldTypeSchema.Int(0, RewardRarity.Quest));
         var rarityNext = rarity.Output("Next", FieldTypeSchema.Int(0, BitsMax));
 
@@ -658,7 +697,7 @@ public sealed class RewardWiring
 
         return new Assets(
             drop, dropBits, dropCurrent, dropIsElite, dropDropped, dropNext,
-            rarity, rarityBits, raritySpec, rarityCurrent, rarityIdxA, rarityIdxB, rarityBoss, rarityOut, rarityNext,
+            rarity, rarityBits, raritySpec, rarityCurrent, rarityIdxA, rarityIdxB, rarityBoss, rarityElite, rarityOut, rarityNext,
             count, countSpec, countRarity, countIdxA, countIdxB, countOut,
             pick, pickSpec, pickRarity, pickIndex, pickIdxA, pickIdxB, pickOut,
             upgrade, upBits, upSpec, upIndex, upAct, upOut);
@@ -805,6 +844,7 @@ public sealed class RewardWiring
         FieldSymbol RarityIdxA,
         FieldSymbol RarityIdxB,
         FieldSymbol RarityBoss,
+        FieldSymbol RarityElite,
         FieldSymbol RarityOut,
         FieldSymbol RarityNext,
         ComputeAssetSymbol CardCount,

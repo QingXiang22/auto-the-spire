@@ -54,11 +54,11 @@ card Sweep {
 
 Power 声明 `role = Poison` 或 `role = Accelerant`，卡牌通过已有 `applyPower` 挂载/叠层，不增加逐卡执行器。分别解析自定义Power和卡牌时，`SpireCardSource.Parse` 第三个参数必须传入声明名称到ID的映射；只写命名空间不能替代声明表链接。
 
-拥有者阵营回合开始时触发中毒，次数为 `min(Poison层数, 1 + 存活对手Accelerant层数总和)`；每次按当前层数造成无格挡/无力量修正伤害，存活后递减，耗尽销毁。既有生命损失上限仍适用。当前接缝只覆盖玩家/敌人、掉血计数与既有死亡结算，不代表完整CreatureCmd.Damage或宠物支持。回合顺序与未支持hook见[中毒契约](../../design/mod-the-spire/character-combat/spec.md#poison-基础生命周期)。
+拥有者阵营回合开始时触发中毒，次数为 `min(Poison层数, 1 + 存活对手Accelerant层数总和)`；每次按当前层数造成无格挡/无力量修正伤害，存活后递减，耗尽销毁。既有生命损失上限仍适用。当前接口只覆盖玩家/敌人、掉血计数与既有死亡结算，不代表完整CreatureCmd.Damage或宠物支持。回合顺序与未支持hook见[中毒契约](../../design/mod-the-spire/character-combat/spec.md#poison-基础生命周期)。
 
 ### 灾厄
 
-灾厄基础入口：Power 声明 `role = Doom` 后可通过 `applyPower` 挂载；卡牌 `resolveDoom = {}` 立即解析敌方灾厄。参数块必须为空，无注册 Doom Power 时编译失败。两侧回合结束前也会按 HP ≤ 正灾厄层数批量捕获并致死，不走格挡或伤害修正。`DiedToDoom` 批次事件仅为接缝，死亡防止、复活与完整源hook仍未实现，详见[灾厄基础契约](../../design/mod-the-spire/character-combat/spec.md#doom-基础接缝)。
+灾厄基础入口：Power 声明 `role = Doom` 后可通过 `applyPower` 挂载；卡牌 `resolveDoom = {}` 立即解析敌方灾厄。参数块必须为空，无注册 Doom Power 时编译失败。两侧回合结束前也会按 HP ≤ 正灾厄层数批量捕获并致死，不走格挡或伤害修正。`DiedToDoom` 批次事件仅为接口，死亡防止、复活与完整源hook仍未实现，详见[灾厄基础契约](../../design/mod-the-spire/character-combat/spec.md#doom-基础接缝)。
 
 ### 充能球
 
@@ -77,7 +77,7 @@ kind仅接受Lightning/Frost/Dark/Plasma/Glass，amount接受组合数值，缺�
 
 `starCost = N`声明独立于能量费用的非负整数星星费用；`starCost = X`在支付阶段捕获全部现有星星。`PaidStarX`读取该快照，后续获得/失去星星不改变它。普通/升级费用按完整变体展开，手动出牌同时检查两种资源；自动出牌不扣资源。当前不支持星星费用修正、以星星代付能量及X值修正参与者，不能据此声称完整摄政王支持。
 
-`gainStars = { amount = N }`、`loseStars = { amount = N }`、`setStars = { amount = N }`接受组合数值，目标仅为owner；可显式写`target = context.owner`。输入捕获一次、负数失败，失去最低0；设定增加走获得接缝，减少直接设定。星星保留到下一回合，进入下一战斗清零。当前声明范围为0～99999。
+`gainStars = { amount = N }`、`loseStars = { amount = N }`、`setStars = { amount = N }`接受组合数值，目标仅为owner；可显式写`target = context.owner`。输入捕获一次、负数失败，失去最低0；设定增加走获得接口，减少直接设定。星星保留到下一回合，进入下一战斗清零。当前声明范围为0～99999。
 
 `forge = { card = Blade variable = Damage amount = N }`链接同源声明的武器及两变体都有的实例变量。非消耗区没有该武器时生成普通实例，满手进入弃牌堆；随后增加所有战斗牌区中该定义实例的变量，包括消耗区。升级/普通数值可用values；数量捕获一次、负数失败、生成不抽随机数。当前未实现临时dupe身份、CreatedThroughForge及全部AfterForge参与者；此入口只交付生成/成长共享机制，不等于完整SovereignBlade特殊Power行为。参见[角色战斗能力契约](../../../docs/design/mod-the-spire/character-combat/spec.md)。
 
@@ -86,5 +86,9 @@ owner、选中敌人 target、卡牌实例变量及 lexical local 是不同上�
 正式能力可声明 `rules = { afterEnergyReset = GrantDeferredEnergy(owner=context.owner, power=context.power, amount=context.power.stacks) }`。参数必须具名、完整且无未知名；本 hook 提供 owner/power/stacks，不提供 card/target。宿主声明类型，文本过程在同一 EnginePackageBuilder 中经 core/0.3 BindInto 绑定，最终统一 Build 冻结。机制体见[生命周期文本库](../../../mod-the-spire/base-spire/BaseSpire/ContentSource/lifecycle-rules.spire)。能量受阻时仍按原时点移除一次性能力。
 
 ## 迁移检查
+
+能力声明可使用 `negativeStacksAreInfinite = true` 配合固定伤害倍率及回合末衰减：负的非零层数仍应用倍率且不会按回合衰减，正层数继续按原时点处理，零层数不应用倍率。Shrink用此声明表达来源的无限持续；未声明的Weak/Vulnerable仍按正持续层数门控。该属性必须为布尔值，当前不表示所有能力的负层数合并、覆盖或其他hook均已支持，见[机制契约](../../design/mod-the-spire/card-primitives/spec.md#负层数无限持续的伤害倍率)。
+
+生成候选选择使用`generateCards = { pool = { character = IroncladCardPool } count = 3 type = attack distinct = true choose = true allowCancel = true cost = 0 }`。当前完整角色池仅注册Ironclad；也可用显式`pool = { card = Name ... }`。`choose=true`要求`distinct=true`及1..999的整数字面量count；`allowCancel`仅可与choose一起使用。完整合法池洗牌一次再取count个候选，选择一个或取消；所选真实实例入手（满手进入弃牌），未选清理，续接不补抽。选择模式的cost=0持续到回合结束；原直接生成模式保持首次打出或回合结束清理。详见[机制契约](../../design/mod-the-spire/card-primitives/spec.md#生成候选并选择env-t06-pr05)。
 
 先用工具 check 检查链接，再 play 普通/升级实际实例。已有实例升级增加定义差额，保留成长与临时费用修饰；生成升级实例使用升级初值，不等同于升级命令。整包身份、地图、公开 Run 与严格对拍须另按对应门槛验证，check 注册成功不能替代行为验收。

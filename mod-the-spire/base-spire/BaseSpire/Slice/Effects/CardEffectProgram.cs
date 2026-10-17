@@ -110,6 +110,8 @@ public sealed record GenerateCardsEffect(CardEffectAmount Count, CardEffectCardF
 {
     public ImmutableArray<string> Pool { get; init; } = [];
     public string CharacterPool { get; init; } = "";
+    public bool Choose { get; init; }
+    public bool AllowCancel { get; init; }
 }
 
 public sealed record ModifyPowerVariableEffect(string PowerId, string Variable, long Delta, DslSourceLocation Source) : CardEffect(Source);

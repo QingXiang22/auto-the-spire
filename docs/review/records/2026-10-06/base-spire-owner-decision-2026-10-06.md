@@ -2,7 +2,7 @@
 
 # base-spire 负责人复核、决策与接续（2026-10-06）
 
-本轮按用户要求承担负责人审阅、决策、规划及文档维护，没有接管生产编码或派出agent。进度只维护[唯一清单](../../tofix/README.md#01-core冻结后的分派与下一步)；本文给出判断依据与派单合同，更新[base实施编排](../../../design/mod-the-spire/base-spire-implementation-plan.md)和[agent goals](../../../design/agent-goals.md)。[A阻塞交接](../2026-10-05/a-line-blocked-handoff-2026-10-05.md)及[A综合报告](../2026-10-05/a-base-line-audit-2026-10-05.md)保留执行者原文，不代表本轮结论。
+本轮按用户要求承担负责人审阅、决策、规划及文档维护，没有接管生产编码或派出agent。进度只维护[唯一清单](../../tofix/README.md#当前任务)；本文给出判断依据与派单合同，更新[base实施编排](../../../design/mod-the-spire/base-spire-implementation-plan.md)和[agent goals](../../../design/agent-goals.md)。[A阻塞交接](../2026-10-05/a-line-blocked-handoff-2026-10-05.md)及[A综合报告](../2026-10-05/a-base-line-audit-2026-10-05.md)保留执行者原文，不代表本轮结论。
 
 ## 1. 复核范围与当前判断
 

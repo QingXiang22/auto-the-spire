@@ -41,7 +41,7 @@ STS mod 可显式依赖 base-spire，扩展其开放的 Schema、内容、事件
 
 游戏包同时声明观察政策与可见信息更新；net 的机制覆盖表引用这些来源与行为证据，AI 不自行重放规则。公共 Schema/动作/事件/随机契约变化同时记录旧/新语义、编译结果、迁移文件和验收，不因旧 DSL 能解析就宣称已迁到通用引擎。
 
-2026-10-03迁移边界：现有`.author`是通用IR作者原型/受控夹具入口，正式作者约定仍为DSL 0.0.1；两解析器分读不同文件和旧后端继续加载不等于正式作者源已迁移。新机制可复用该原型，但生产路径需将实际0.0.1内容在游戏侧lower到Engine并给出加载/行为证据，避免长期维护两份内容。冻结旧后端用于兼容/对照，切换默认入口须等当前范围闭合。当前任务见[W-01/W-05/W-06](../implementation-kickoff.md#193-可连续执行的工作包)。
+2026-10-03迁移边界：现有`.author`是通用IR作者原型/预设状态的测试场景入口，正式作者约定仍为DSL 0.0.1；两解析器分读不同文件和旧后端继续加载不等于正式作者源已迁移。新机制可复用该原型，但生产路径需将实际0.0.1内容在游戏侧lower到Engine并给出加载/行为证据，避免长期维护两份内容。冻结旧后端用于兼容/对照，切换默认入口须等当前范围全部完成。当前任务见[W-01/W-05/W-06](../implementation-kickoff.md#193-可连续执行的工作包)。
 
 参考：[ironclad-dsl-coverage.md](ironclad-dsl-coverage.md)。
 
@@ -59,12 +59,12 @@ STS mod 可显式依赖 base-spire，扩展其开放的 Schema、内容、事件
 | `Run.RewardTaken` | 整局 `Run` 实例 | 无副本 | `UpgradeLongTermCard`（与结算分开，按房间至多一次） | 换房后重新武装 |
 | 长期牌组 `LongTermDeck` | 整局集合（每张牌一个长期实例） | `StartNextRoom` 逐张 `CreateEntity` + `CopyCardFields` 复制出**新的**战斗实例 | `UpgradeLongTermCard` 按**实例**写长期实例（参数就是所选长期实例；`DefinitionId` 只用于取升级变体的数值） | 战斗牌区在换房时整体销毁；战斗实例的临时字段（如 `CostModifier`）按矩阵清零，不回写长期 |
 | 战斗副本 → 长期来源 | 每张副本一个**隐藏引用字段** `Card.LongTermSource` | `CopyCardFields` 在复制时写入，指向被复制的那张长期实例 | 关系本身不改状态（永久变化按它定位长期实例） | 副本销毁时随之消失；同定义的不同实例各有各的来源，**不按 `DefinitionId` 合并** |
-| 遗物 / 药水 | 整局 `Run` 作用域实体 | 起始遗物 Burning Blood 的胜利回血在结算**之前**改战斗副本；药水使用后销毁实例 | HP变化随 `CommitPermanent` 生效，药水栏跨房间保留 | 药水完整生成元数据与栏位见[药水契约](potion-inventory/spec.md)，使用支持单独记账 |
+| 遗物 / 药水 | 整局 `Run` 作用域实体 | 起始遗物 Burning Blood 的胜利回血在结算**之前**改战斗副本；药水使用后销毁实例 | HP变化随 `CommitPermanent` 生效，药水栏跨房间保留 | 药水完整生成元数据与栏位见[药水契约](potion-inventory/spec.md)，使用支持单独记录 |
 | 敌人、能力、牌区、`NextMove` 等 | 无（纯战斗态） | 战斗内创建 | 不写回 | 换房时全部销毁并重新建立 |
 
 **余效与终局时序**：胜利判定只挂在**动作体末尾**（`BattleEndTail`：`PlayCard` 的 `playBody`、`EndTurn` 的
 `endTurnBody`、`UsePotion` 的 `useBody` 各一处），既不在伤害步骤里、也不在效果步骤表里，因此"最后一次击杀"
 之后的父效果余效（Feed 的 `on_fatal_gain_max_hp`、遗物回血、实例变量写回）、条件分支、`after_card_played`
 钩子、`InPlay` 移除、`consumeOnPlay` 消耗、消耗区摆放与结果区处理都先跑完，才 `SettleBattle` → `CommitPermanent`
-→ `SetTerminal`。判别检查见 `BaseSpire.Slice.Tests/SliceFrontendSettlementChecks.cs`（源关系、条件分支末杀、
+→ `SetTerminal`。针对性检查见 `BaseSpire.Slice.Tests/SliceFrontendSettlementChecks.cs`（源关系、条件分支末杀、
 消耗牌末杀三条各自钉住一类收尾）。

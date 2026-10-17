@@ -57,6 +57,15 @@ internal static class Comparator
 
         if (left.Status == "faulted" || right.Status == "faulted")
         {
+            var faultLastConsistent = "（无：第 0 个边界之前就不同）";
+            for (var index = 0; index < Math.Min(left.Boundaries.Count, right.Boundaries.Count); index++)
+            {
+                var first = CompareBoundary(left, right, index, faultLastConsistent, reproduction,
+                    left.RngProfile == RngProfiles.VanillaCompatible && right.RngProfile == RngProfiles.VanillaCompatible);
+                if (first.Count > 0) return new ComparisonResult(left.CaseId, "fault",
+                    $"left={left.Status}:{left.Detail} right={right.Status}:{right.Detail}", first);
+                faultLastConsistent = BoundaryLabel(left.Boundaries[index]);
+            }
             return new ComparisonResult(left.CaseId, "fault",
                 $"left={left.Status}:{left.Detail} right={right.Status}:{right.Detail}", []);
         }

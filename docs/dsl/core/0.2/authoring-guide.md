@@ -2,7 +2,7 @@
 
 本文供你查询 core/0.2 的导入、模板、参数和实例配置。基础声明、表达式、查询和命令沿用 [core/0.1 参考](../0.1/language-reference.md)。
 
-初次使用时，从 [作者入门](../README.md) 开始，再对照带注释的 [配置入口](../../../examples/core-choice-counter/game.spire)和[规则库](../../../examples/core-choice-counter/rules/score-race.spire)。本文描述截至 2026-10-04 已实现的作者层。
+初次使用时，从 [作者入门](../README.md) 开始，再对照带注释的 [配置入口](../../../examples/core-choice-counter/game.spire)和[规则库](../../../examples/core-choice-counter/rules/score-race.spire)。本文聚焦 `core/0.2` 输入；运行时版本与加载接口于 2026-10-15 按活动代码核对，新增作者能力见 [core/0.3 参考](../0.3/authoring-reference.md)。
 
 ## 1. 三种复用单位
 
@@ -12,7 +12,7 @@
 | `template` | 类型、过程、动作、事件、观察等一组声明 | 编译时展开并绑定 |
 | `use` | 某模板的一次具名实例及配置值 | 编译时选库、校验参数、生成规则 |
 
-不为模板新增运行时对象或第二解释器。现有低层声明可以与模板实例放在同一配置包中。只有新的文件导入/模板/实例写法要求 `dsl_version = "core/0.2"`；旧 `core/0.1` 文件继续支持并保留原编译身份。
+不为模板新增运行时对象或第二解释器。现有低层声明可以与模板实例放在同一配置包中。文件导入/模板/实例写法要求 `dsl_version` 为 `core/0.2` 或 `core/0.3`；旧 `core/0.1` 文件继续支持并保留对应的前端身份。
 
 ## 2. 文件导入与包依赖
 
@@ -25,7 +25,7 @@ use Game { template = counters:ScoreRace }
 
 `imports` 是字符串路径列表，路径相对于**声明该导入的文件**解析；库可以继续导入其他库。`LoadFiles("game.spire")` 递归加载依赖，按规范化路径去重，循环导入、缺失文件、多个文件声明同一包 ID 都报错。导入的库自动进入当前包依赖并参与链接。命名空间是包 ID，文件路径不充当内容 ID。
 
-`LoadFiles` 默认加载核心语言文件，当前没有扩展注册参数。需要自定义声明扩展的宿主使用 `Compile(..., dependencies: ..., extensions: ...)`：自己取得依赖包，DSL 用 `dependencies = [counters]` 显式声明依赖，编译后统一交给 `RuleSetBuilder`。`Compile` 不读取磁盘，含 `imports` 时明确拒绝；不暗中按 sourceName 加载文件。
+`LoadFiles(params string[] paths)` 加载核心语言文件；需要自定义声明扩展时，使用 `LoadFiles(paths, extensions, dependencies)` 重载，返回已链接的 `RuleSet`。单份文本可用 `Compile(..., dependencies: ..., extensions: ...)`：自己取得依赖包，DSL 用 `dependencies = [counters]` 显式声明依赖，编译后统一交给 `RuleSetBuilder`。`Compile` 不读取磁盘，含 `imports` 时明确拒绝；不暗中按 sourceName 加载文件。签名见 [EngineDslCompiler.cs](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。
 
 依赖包导出的模板可以复用；模板内部使用的库依赖按传递闭包解析。最终链接仍须提供全部依赖包。导入表示可用的定义与依赖，不保证初始化按导入书写顺序执行。
 
@@ -48,7 +48,7 @@ template ScoreRace {
 
 `parameters` 可省略；每个参数必须有 `type`，`default` 可省略。没有默认值的参数必须由 `use.args` 提供。模板参数当前支持 **Int、Bool、String、Fixed、List(Int)** 字面量；复用已有形状及范围/长度检查，不允许实体引用、运行时表达式、可执行代码或任意对象作为配置参数。
 
-`body` 必须是声明块，支持核心声明和嵌套 `use`；可以有 `start` 初始化入口列表。不能在 body 内改命名空间、语言版本、依赖、导入或定义模板；当前不支持 `IEngineDslExtension` 自定义声明。模板及模板内声明、实例名使用简单名称，不含 `:` 或 `.`。
+`body` 必须是声明块，支持核心声明和嵌套 `use`；可以有 `start` 初始化入口列表。不能在 body 内改命名空间、语言版本、依赖、导入或定义模板。`core/0.2` 输入的 body 不支持 `IEngineDslExtension` 自定义声明；需要该能力时使用 [core/0.3](../0.3/authoring-reference.md) 并注册相应扩展。模板及模板内声明、实例名使用简单名称，不含 `:` 或 `.`。
 
 模板发布时验证参数形状、默认值、结构和 `arg` 占位符；未实例化的 body 不保证已经完成全部名称/类型/行为检查。只有实例化、链接、运行的证据才能分别证明那些阶段，不能用“库文件可解析”代替验证。
 
@@ -84,7 +84,7 @@ template Pair {
 }
 ```
 
-此段展示组合语法，调用者再导入 pairs 库并 `use Game { template = pairs:Pair }`。这些实例拥有隔离的声明，但仍处于同一个 Session 并共享整局终局；共享玩家、轮次、资源或组合胜负需明确设计。本版未增加“向模板注入另一个实例的实体类型/行为”的参数能力，真实消费者提出需求后再扩展。
+此段展示组合语法，调用者再导入 pairs 库并 `use Game { template = pairs:Pair }`。这些实例拥有隔离的声明，但仍处于同一个 Session 并共享整局终局；共享玩家、轮次、资源或组合胜负需明确设计。本版未增加“向模板注入另一个实例的实体类型/行为”的参数能力，实际调用方提出需求后再扩展。
 
 模板的 `start` 自动收集到调用包的启动入口。engine/ir@0.3 按包链接顺序、包内登记顺序执行；模板按 use 展开顺序登记。一个入口暂停时先完成其续接，再执行剩余入口；有依赖时应明确导入/登记顺序，也可在单个 Setup 中顺序调用。旧 0.2 的 LIFO 排列须迁移，见 [冻结基线](../../../contracts/core-engine-baseline.md)。
 
@@ -92,7 +92,7 @@ template Pair {
 
 | 项目 | 约束 |
 | --- | --- |
-| 版本 | 前端身份为 `core-dsl/0.2`；运行时为 `engine/ir@0.3`；语言写法保持 core/0.2 |
+| 版本 | 本页输入的前端身份含 `core-dsl/0.2`；活动运行时为 `engine/ir@0.4`；语言写法保持 core/0.2。`engine/ir@0.3` 是历史冻结基线 |
 | 库身份 | 模板声明、参数和默认值的规范化 AST 哈希进入编译身份，包括未实例化的模板；依赖包参与最终规则身份 |
 | 无语义变化 | 注释、源码路径和源码位置不改变身份；版本/配置/展开后的规则改变身份 |
 | 报错来源 | 参数错误定位配置文件；展开后的绑定错误保留库位置，并附实例名及 use 位置 |

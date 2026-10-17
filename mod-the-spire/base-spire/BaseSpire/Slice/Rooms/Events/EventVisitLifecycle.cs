@@ -6,9 +6,8 @@ namespace BaseSpire.Slice.Rooms;
 /// 源 <c>EventModel.IsAllowed(runState)</c> 的**可选**覆盖声明。源里有多个事件覆盖了它
 /// （例如 `UnrestSite` 要求生命 ≤ 70%、`RelicTrader` 要求第二幕且持有 5 件可交易遗物）。
 ///
-/// 只有已经实现的事件模块才可能声明它；未实现的源身份按源**默认实现**（恒等 true）参与资格判定，
-/// 随后在 `EventRoomCatalog.Enter` 的未注册分支显式失败。这条边界是明确的：本构建不假装知道
-/// 未实现事件的资格规则，也不缩池来绕开它。
+/// 模块可覆盖独立源资格表；未实现模块的身份仍由 SourceEventEligibility 判定，
+/// 尚未实现的资格明确失败，不以默认 true 改变原版池选择。
 /// </summary>
 public interface IEventEligibility
 {
@@ -150,19 +149,17 @@ public sealed class EventVisitLifecycle
             scope.Add(scope.Field(run, state.EventsVisited), scope.Const(1L))),
     ];
 
-    /// <summary>资格判定：模块声明的源 `IsAllowed` 覆盖，未声明（含未实现事件）按源默认 `true`。</summary>
+    /// <summary>资格与效果注册分开；模块显式覆盖优先，其余使用独立源资格表。</summary>
     private IEnumerable<Inst> Eligibility(IrScope scope, Expr run, int candidate, int eligible)
     {
-        yield return scope.SetLocal(eligible, scope.Const(true));
-        foreach (var module in modules)
+        yield return scope.SetLocal(eligible, scope.Const(false));
+        foreach (var sourceName in context.SourceEvents ?? RunSourcePoolManifest.Events)
         {
-            if (module is not IEventEligibility declared)
-            {
-                continue;
-            }
-
-            yield return scope.If(scope.Equal(scope.LocalRef(candidate), scope.Const(module.Id)),
-                scope.SetLocal(eligible, declared.IsAllowed(scope, context, run)));
+            var declared = modules.FirstOrDefault(module => module.Id == sourceName) as IEventEligibility;
+            var steps = declared is not null && context.Room.Map.RunActIndex is null
+                ? new[] { scope.SetLocal(eligible, declared.IsAllowed(scope, context, run)) }
+                : SourceEventEligibility.Evaluate(scope, context, run, sourceName, eligible);
+            yield return scope.If(scope.Equal(scope.LocalRef(candidate), scope.Const(sourceName)), steps);
         }
     }
 

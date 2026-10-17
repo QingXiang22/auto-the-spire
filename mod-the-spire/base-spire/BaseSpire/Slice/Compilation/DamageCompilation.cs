@@ -475,10 +475,13 @@ internal static class DamageCompilation
                     scope.CallPure(powerQueryBindings.PowerStacksOf.Symbol, owner, scope.Const(power.Id))));
                 // ENV-02：受击修正可以带**来源条件**——只有当攻击者身上有该能力时修正才生�?
                 //（来�?`ColossusPower.ModifyDamageMultiplicative` �?`dealer.HasPower<VulnerablePower>()`）�?
+                var held = power.NegativeStacksAreInfinite
+                    ? scope.NotEqual(scope.LocalRef(stacksSlot), scope.Const(0L))
+                    : scope.Greater(scope.LocalRef(stacksSlot), scope.Const(0L));
                 var applies = power.DamageModifierSourcePower.Length == 0
-                    ? scope.Greater(scope.LocalRef(stacksSlot), scope.Const(0L))
+                    ? held
                     : scope.And(
-                        scope.Greater(scope.LocalRef(stacksSlot), scope.Const(0L)),
+                        held,
                         scope.Greater(
                             scope.CallPure(powerQueryBindings.PowerStacksOf.Symbol, attacker,
                                 scope.Const(power.DamageModifierSourcePower)),

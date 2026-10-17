@@ -87,7 +87,8 @@ internal static class TurnCompilation
         PilesBindings pilesBindings,
         EnemyTurnBindings enemyTurnBindings,
         HardcodedEnemyMoveCallback HardcodedEnemyMove,
-        DeclaredEnemyMoveCallback DeclaredEnemyMove, Func<IrScope, Inst[]>? enemyPoison)
+        DeclaredEnemyMoveCallback DeclaredEnemyMove, Func<IrScope, Inst[]>? enemyPoison,
+        BlockClearPreventedCallback BlockClearPrevented)
     {
         // B-05c：作者路径下敌人�?*行动程序**（不只是数据）也来自作者文本：
         //   move incantation { ritual = first-ritual }
@@ -95,6 +96,9 @@ internal static class TurnCompilation
         //   cycle = [incantation, dark-strike xforever]
         // 降级�?�?MoveIndex 分派 + 最后一个行动永远重�?的通用程序；程序化路径保持原来的两分支程序�?
         enemyTurnBindings.StartEnemyTurn.Body([
+            enemyTurnBindings.StartEnemyTurn.ForEach(enemyTurnBindings.StartEnemyTurn.Collection(pilesBindings.Monsters), each =>
+                [enemyTurnBindings.StartEnemyTurn.If(enemyTurnBindings.StartEnemyTurn.Not(BlockClearPrevented(enemyTurnBindings.StartEnemyTurn, each)),
+                    enemyTurnBindings.StartEnemyTurn.SetField(each, enemiesBindings.MonsterBlock, enemyTurnBindings.StartEnemyTurn.Const(0L)))]),
             .. enemyPoison is null ? Array.Empty<Inst>() : enemyPoison(enemyTurnBindings.StartEnemyTurn),
             enemyTurnBindings.StartEnemyTurn.ForEach(enemyTurnBindings.StartEnemyTurn.Collection(pilesBindings.Monsters), each =>
             {
@@ -331,7 +335,11 @@ internal static class TurnCompilation
 
         Inst BehaviourFor(AuthorPower entry, Expr subject) => entry.OwnerTurnEnd switch
         {
-            PowerTurnEnd.Tick => turnEndBindings.ResolveTurnEnd.If(turnEndBindings.ResolveTurnEnd.Field(subject, powerBindings.PowerTicks),
+            PowerTurnEnd.Tick => turnEndBindings.ResolveTurnEnd.If(
+                turnEndBindings.ResolveTurnEnd.And(turnEndBindings.ResolveTurnEnd.Field(subject, powerBindings.PowerTicks),
+                    entry.NegativeStacksAreInfinite
+                        ? turnEndBindings.ResolveTurnEnd.GreaterOrEqual(turnEndBindings.ResolveTurnEnd.Field(subject, powerBindings.PowerStacks), turnEndBindings.ResolveTurnEnd.Const(0L))
+                        : turnEndBindings.ResolveTurnEnd.Const(true)),
                 turnEndBindings.ResolveTurnEnd.IfElse(
                     turnEndBindings.ResolveTurnEnd.Equal(turnEndBindings.ResolveTurnEnd.Field(subject, powerBindings.PowerSkip), turnEndBindings.ResolveTurnEnd.Const(true)),
                     new[] { turnEndBindings.ResolveTurnEnd.SetField(subject, powerBindings.PowerSkip, turnEndBindings.ResolveTurnEnd.Const(false)) },
@@ -340,6 +348,10 @@ internal static class TurnCompilation
                             turnEndBindings.ResolveTurnEnd.SetField(subject, powerBindings.PowerStacks,
                                 turnEndBindings.ResolveTurnEnd.Subtract(turnEndBindings.ResolveTurnEnd.Field(subject, powerBindings.PowerStacks),
                                     turnEndBindings.ResolveTurnEnd.Const(1L))),
+                            turnEndBindings.ResolveTurnEnd.If(
+                                turnEndBindings.ResolveTurnEnd.LessOrEqual(turnEndBindings.ResolveTurnEnd.Field(subject, powerBindings.PowerStacks),
+                                    turnEndBindings.ResolveTurnEnd.Const(0L)),
+                                turnEndBindings.ResolveTurnEnd.Destroy(subject)),
                     })),
             // `remove`：回合末把整个能力移除（来源 removeAfterPlayerTurnEnd），不做时长递减�?
             // ENV-02：若�?*临时力量**能力，移除的同一刻回�?`−符�?× 层数` 力量

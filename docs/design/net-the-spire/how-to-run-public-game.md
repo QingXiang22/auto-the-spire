@@ -80,7 +80,7 @@ python -X utf8 -u net-the-spire/client/run_game.py --host-dll $publicHostDll --s
 
 查看输出目录的`summary.json`确定终局或停止原因，`frames.ndjson`保存原始帧。具体策略与选项见[运行器说明](../../../net-the-spire/client/run_game.md)。运行器已经复用同一个快照访问模块。
 
-新增决策只改`FixedOrderPolicy`的相应分支，消费当前公开候选；连接恢复、公开句柄生成和游戏结算分别由NetClient、Host和base规则拥有。房间接线后，负责人再用新DLL复放，旧DLL运行结果不升级为新构建证据。
+新增决策只改`FixedOrderPolicy`的相应分支，消费当前公开候选；连接恢复、公开句柄生成和游戏结算分别由NetClient、Host和base规则拥有。房间接入后，负责人再用新DLL复放，旧DLL运行结果不升级为新构建证据。
 
 ## 6. 在商店里做一次公开交互
 
@@ -102,7 +102,7 @@ python -X utf8 -u net-the-spire/client/run_game.py --host-dll $publicHostDll --s
   --seed SEED-TEXT --output .audit/shop-room-example --max-actions 400 --shop-room auto --shop-policy buy
 ```
 
-`--shop-room auto`（默认）在**进入地图节点之前**读`get_catalog`的`declarations.action_types`：五个商店动作（`BuyShopCard`/`BuyShopRelic`/`BuyShopPotion`/`RemoveShopCard`/`LeaveShop`）都声明了才把`Shop`当已接线房型；没有声明的宿主（例如还没有商店的构建）保持原来的`unsupported_map_room`边界，不改整局状态。`--shop-room enter`强制进店，用于对尚未接线的宿主取回具名失败。
+`--shop-room auto`（默认）在**进入地图节点之前**读取 `get_catalog` 的 `declarations.action_types`。五个商店动作（`BuyShopCard`/`BuyShopRelic`/`BuyShopPotion`/`RemoveShopCard`/`LeaveShop`）全部声明后，才把 `Shop` 视为已接入的房型。宿主没有声明这些动作时，例如构建尚不支持商店，仍返回 `unsupported_map_room`，不改整局状态。`--shop-room enter` 强制进店，可用于检查宿主对未接入房型返回的具体错误。
 
 商店的具体事实都在公开快照里，客户端不重判规则：
 
@@ -131,4 +131,4 @@ flowchart LR
     Policy --> Transport
 ```
 
-客户端开发从右侧三个节点入手。源码导航和响应结构见[接口参考](public-client-reference.md)，无需先重读全部Host或base组包器。
+客户端开发从右侧三个节点入手。源码导航和响应结构见[接口参考](public-client-reference.md)，无需先重读全部Host或base规则包构建器。

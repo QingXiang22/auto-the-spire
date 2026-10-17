@@ -62,7 +62,7 @@ internal static class CompareCommand
         }
 
         // -- 2. 比较器自检（受控错误记录必须被抓到） ----------------------------------------------------------
-        var selfTest = ComparatorSelfTest.Run(baseRecords, reproduction);
+        var selfTest = ComparatorSelfTest.Run(baseRecords, reproduction, suite.Cases);
         var selfTestFailures = selfTest.Count(item => !item.Detected);
 
         // -- 3. 与参考侧比较 --------------------------------------------------------------------------------
@@ -102,7 +102,8 @@ internal static class CompareCommand
             {
                 try
                 {
-                    reference = ReferenceBackends.Run(fixture);
+                    reference = fixture.Kind == CaseKinds.NormalReward
+                        ? NormalRewardEntry.RunReference(fixture, record) : ReferenceBackends.Run(fixture);
                     referenceRan++;
                     Directory.CreateDirectory(referenceRecordsDirectory);
                     File.WriteAllText(Path.Combine(referenceRecordsDirectory, record.CaseId + ".json"),

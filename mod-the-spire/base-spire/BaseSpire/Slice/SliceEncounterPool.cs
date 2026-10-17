@@ -23,6 +23,7 @@ public sealed record EncounterFormation(
     IReadOnlyList<string> EnemyIds,
     IReadOnlyList<EncounterSlot> Slots)
 {
+    public IReadOnlyDictionary<int, string> StartingActionsByEnemyIndex { get; init; } = new Dictionary<int, string>();
     /// <summary>这条编队可能出现的全部敌人（直接列出的 + 槽位候选；顺序稳定、去重）。</summary>
     public IReadOnlyList<string> AllEnemyIds =>
     [
@@ -48,6 +49,7 @@ public sealed record SliceEncounter(
     /// <summary>顶层槽位（`formations` 为空时使用的单编队形状）。</summary>
     IReadOnlyList<EncounterSlot> Slots)
 {
+    public IReadOnlyDictionary<int, string> StartingActionsByEnemyIndex { get; init; } = new Dictionary<int, string>();
     /// <summary>这条遭遇**全部可能出现**的敌人（固定名单 + 编队/槽位候选）。</summary>
     public IReadOnlyList<string> AllEnemyIds =>
     [
@@ -111,6 +113,7 @@ public sealed record SliceEncounterPool(
     /// 两个 per-type 访问计数（`RoomSet.NextEliteEncounter` / `NextNormalEncounter`）。</summary>
     IReadOnlyList<SliceEncounter>? EliteEncounters = null)
 {
+    public string RandomLayoutId { get; init; } = BaseSpire.SinglePlayer.RunRandomLayout.Frozen;
     /// <summary>弱遭遇池的种类标签（来源 `isWeak = true`）。</summary>
     public const string WeakKind = "weak";
 

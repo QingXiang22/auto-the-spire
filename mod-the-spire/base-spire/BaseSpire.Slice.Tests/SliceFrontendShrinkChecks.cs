@@ -50,6 +50,32 @@ internal static class SliceFrontendShrinkChecks
 
     public static void Run()
     {
+        Check.Run("Shrink源声明：负层数无限持续仍乘0.7且不衰减，正层数到期移除、零层数无倍率", () =>
+        {
+            var source = SpirePowerSource.Parse("""
+                package base-spire { power Shrink {
+                    outgoingDamageMultiplier = 0.7
+                    negativeStacksAreInfinite = true
+                } }
+                """, "shrink-infinite-source");
+            var declared = source.Powers.Single();
+            Check.True(declared.NegativeStacksAreInfinite, "DSL lowering preserves source infinite sentinel");
+            Check.True(FormalSpirePackage.Load().Model.Powers.Single(p => p.Id == "base-spire:shrink").NegativeStacksAreInfinite,
+                "actual formal Shrink uses the declared policy");
+            var model = SliceAuthorFrontend.Parse(ScenarioText, "shrink-infinite");
+            model = model with { Powers = model.Powers.Select(p => p.Id == "base-spire:shrink" ? declared : p).ToArray() };
+            foreach (var (stacks, damage, remaining) in new[] { (-1, 7L, -1L), (0, 10L, 0L), (1, 7L, 0L), (4, 7L, 3L) })
+            {
+                var session = Build(model);
+                var monster = SliceFixtures.Cultist(session, SliceManifest.CalcifiedCultistId);
+                var player = SliceFixtures.Player(session);
+                Attach(session, monster, "base-spire:shrink", stacks);
+                var before = SliceFixtures.Number(session, player, SliceFixtures.PlayerTypeId, "Hp");
+                EndTurn(session); EndTurn(session);
+                Check.Equal(damage, before - SliceFixtures.Number(session, player, SliceFixtures.PlayerTypeId, "Hp"), "source damage for stacks=" + stacks);
+                Check.Equal(remaining, Stacks(session, monster, "base-spire:shrink"), "source duration for stacks=" + stacks);
+            }
+        });
         Check.Run("B-05c 出手倍率：Shrink 按来源声明为固定 ×0.70（不是按层数）[真实]", () =>
         {
             var model = SliceAuthorFrontend.Parse(ScenarioText, "shrink");

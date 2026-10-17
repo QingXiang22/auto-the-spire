@@ -92,6 +92,21 @@ public sealed class RunResources(FieldSymbol hp, FieldSymbol maxHp, FieldSymbol 
             .. HealLivingPlayer(scope, run, read)];
     }
 
+    /// <summary>Source noncard max-HP loss: damage any excess current HP first, then clamp the new maximum to one.</summary>
+    public Inst[] LoseMaxHp(IrScope scope, Expr run, Expr amount)
+    {
+        var value = Snapshot(scope, "MaxHpLoss");
+        var maximum = Snapshot(scope, "NewMaxHp");
+        var read = scope.LocalRef(value);
+        var next = scope.LocalRef(maximum);
+        return [scope.SetLocal(value, amount),
+            scope.If(scope.Less(read, scope.Const(0L)), scope.Fail("Max HP loss cannot be negative")),
+            scope.SetLocal(maximum, scope.Subtract(scope.Field(run, maxHp), read)),
+            scope.If(scope.Less(next, scope.Field(run, hp)),
+                DamageOutsideCombat(scope, run, scope.Subtract(scope.Field(run, hp), next))),
+            scope.SetField(run, maxHp, scope.Maximum(scope.Const(1L), next))];
+    }
+
     public Expr IsDead(IrScope scope, Expr run) => scope.Equal(scope.Field(run, hp), scope.Const(0L));
 
     /// <summary>Emitted by the action boundary after effects and event cleanup; noncombat has no turn.</summary>

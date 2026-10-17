@@ -1915,6 +1915,7 @@ card Headbutt {
                         to = draw
                         prompt = "Choose a card from discard"
                         destinationPosition = top
+                        autoSelect = true
                     }
         }
         hooks = {
@@ -1936,6 +1937,7 @@ card Headbutt {
                         to = draw
                         prompt = "Choose a card from discard"
                         destinationPosition = top
+                        autoSelect = true
                     }
         }
         hooks = {

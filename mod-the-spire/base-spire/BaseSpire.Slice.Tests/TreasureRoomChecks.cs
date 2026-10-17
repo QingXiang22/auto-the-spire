@@ -11,7 +11,7 @@ internal static class TreasureRoomChecks
         Check.Run("T05 宝箱：完整源池袋序、独立稀有度流、开奖移除、开箱金币与跳过互斥 [受控游标]", () =>
         {
             const string seed = "ACT1-TREASURE";
-            var runtime = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.DevMap)).CreateSession(seed);
+            var runtime = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.DevMap)).CreateSession(seed);
             runtime.Start(); var s = runtime.Session; var run = Members(s, "RunStates").Single();
             var rng = new RandomService(VanillaRandomLayout.RunSeed(seed), VanillaRandomLayout.AlgorithmId,
                 VanillaRandomLayout.DrawProfileId, VanillaRandomLayout.Profile);
@@ -53,7 +53,7 @@ internal static class TreasureRoomChecks
         {
             foreach(var (id, hpGain,goldGain) in new[]{("base-spire:pear",10L,0L),("base-spire:mango",14L,0L),("base-spire:old-coin",0L,300L)})
             {
-                var runtime=new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0,BaseSpireScope.DevMap)).CreateSession("ACT1-PICKUP");
+                var runtime=new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0,BaseSpireScope.DevMap)).CreateSession("ACT1-PICKUP");
                 runtime.Start();var s=runtime.Session;var run=Members(s,"RunStates").Single();EnterTreasure(s,run);Submit(s,"OpenTreasureChest");
                 s.State.RunAtomic(()=>{Set(s,run,"Hp",Value.Of(10L));Set(s,run,"TreasureRelicId",Value.Of(id));});
                 var beforeGold=Get(s,run,"Run","Gold").AsInt();var beforeMax=Get(s,run,"Run","MaxHp").AsInt();

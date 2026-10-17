@@ -8,6 +8,13 @@ namespace BaseSpire.Slice.Compilation;
 
 internal static class BattleRoomCompilation
 {
+    internal static Inst[] ClearCombat(IrScope s, Expr player, BattleBindings battle, EnemiesBindings enemies,
+        PilesBindings piles, KnowledgeCommandsBindings knowledge, RunCollectionsBindings run, bool includeDead)
+        => [s.Call(knowledge.ClearKnown.Symbol),
+            s.ForEach(includeDead ? s.Type(enemies.Monster, battle.BattleScope) : s.Collection(piles.Monsters), monster =>
+                [s.ForEach(s.Relation(piles.Powers, monster), power => [s.Destroy(power)]), s.Destroy(monster)]),
+            s.ForEach(s.Relation(piles.Powers, player), power => [s.Destroy(power)]),
+            s.If(s.Const(true), piles.Lifecycle.EndBattle(s, player, battle.BattleScope, run.LongTermDeck!))];
     internal static RoomTransitionBindings RoomTransition(
         PackageBuildOptions options,
         ContentBindings contentBindings,
@@ -86,8 +93,17 @@ internal static class BattleRoomCompilation
             /// </list>
             /// </summary>
             Inst[] SpawnMonster(IrScope scope, SliceEnemy definition, Expr scopeExpr, int resultSlot,
-                CollectionSymbol collection, int? spawnHpOverride = null)
+                CollectionSymbol collection, int? spawnHpOverride = null, string? startingAction = null)
             {
+                if (startingAction is not null)
+                {
+                    var move = definition.Behavior?.MoveStates.SingleOrDefault(state =>
+                        $"{contentBindings.Package.PackageId}:{SpireEnemySource.ToId(state.Move)}" == startingAction);
+                    if (move is null)
+                        return [scope.Fail($"Enemy '{definition.ContentId}' cannot start with undeclared action '{startingAction}'")];
+                    definition = definition with { FirstMove = move.Move,
+                        Behavior = definition.Behavior! with { InitialState = move.Id } };
+                }
                 if (options.SpawnHpStream is null || spawnHpOverride is not null)
                 {
                     return
@@ -194,8 +210,8 @@ internal static class BattleRoomCompilation
             ///       非随机槽取唯一候选（0 次抽取）；</item>
             /// <item>最后按**名单/槽位顺序**逐名出生（抽取顺序不影响出生顺序，因此阵容位次与源一致）；</item>
             /// <item>抽取用**遭遇派生流**（`(遭遇, 楼层)` 一条，种子来源见
-            ///       <see cref="VanillaRandomLayout.EncounterSeed"/>）；楼层取 `Run.CurrentRoom`
-            ///       （地图未接入时的显式替代）。</item>
+            ///       <see cref="VanillaRandomLayout.EncounterSeed"/>）；地图范围按已访问节点数计TotalFloor，
+            ///       非地图范围才用Run.CurrentRoom替代。当前仅首幕，跨幕须接累计访问历史。</item>
             /// </list>
             /// </summary>
             Inst FormationSpawn(ProcedureBuilder room, SliceEncounter encounter)
@@ -209,8 +225,12 @@ internal static class BattleRoomCompilation
 
                 var steps = new List<Inst>();
                 var entry = VanillaRandomLayout.SourceEntry(encounter.EncounterId);
-                var rooms = options.EncounterPool!.RoomCount;
-                var floor = room.Field(roomRun, runStateBindings.RunCurrentRoom!);
+                var map = roomServicesBindings.ActMap;
+                var rooms = map is null ? options.EncounterPool!.RoomCount : MapRoomWiring.MaxRow;
+                var floor = map is null ? room.Field(roomRun, runStateBindings.RunCurrentRoom!)
+                    : map.RunTotalFloor is not null ? room.Field(roomRun, map.RunTotalFloor)
+                    : room.Count(room.Where(room.Collection(map.Nodes), node => room.Field(node, map.NodeVisited)));
+                if (options.ActPlan is not null) rooms = options.ActPlan.Acts.Sum(a => a.NormalRooms + 2);
 
                 // ① 本间房的派生流名（楼层是运行期值 ⇒ 在 1..房间数 上分派一次；流已在建局时种好）。
                 var streamSlot = room.Local($"encounterStream{formationLocalNames.Next()}", FieldTypeSchema.String(64));
@@ -256,8 +276,9 @@ internal static class BattleRoomCompilation
                 var steps = new List<Inst>();
                 if (formation.EnemyIds.Count > 0)
                 {
-                    steps.AddRange(formation.EnemyIds.SelectMany(enemyId =>
-                        SpawnMonster(scope, EnemyOf(enemyId), roomScope, roomMonster, pilesBindings.Monsters)));
+                    steps.AddRange(formation.EnemyIds.SelectMany((enemyId, index) =>
+                        SpawnMonster(scope, EnemyOf(enemyId), roomScope, roomMonster, pilesBindings.Monsters,
+                            startingAction: formation.StartingActionsByEnemyIndex.GetValueOrDefault(index))));
                     return steps.ToArray();
                 }
 
@@ -329,7 +350,8 @@ internal static class BattleRoomCompilation
                         var choice = slot.EnemyChoices[candidate];
                         Inst[] take =
                         [
-                            scope.If(scope.Equal(scope.LocalRef(cursor), scope.LocalRef(drawn)),
+                            scope.If(scope.And(scope.Not(scope.LocalRef(taken)),
+                                scope.Equal(scope.LocalRef(cursor), scope.LocalRef(drawn))),
                             [
                                 scope.SetLocal(picks[index], scope.Const(choice)),
                                 scope.SetLocal(taken, scope.Const(true)),
@@ -492,8 +514,8 @@ internal static class BattleRoomCompilation
                         : encounter.HasFormationProgram
                         ? new[] { FormationSpawn(room, encounter) }
                         : encounter.EnemyIds
-                            .SelectMany(enemyId => SpawnMonster(room, EnemyOf(enemyId), roomScope, roomMonster,
-                                pilesBindings.Monsters))
+                            .SelectMany((enemyId, enemyIndex) => SpawnMonster(room, EnemyOf(enemyId), roomScope, roomMonster,
+                                pilesBindings.Monsters, startingAction: encounter.StartingActionsByEnemyIndex.GetValueOrDefault(enemyIndex)))
                             .ToArray();
                     if (index == encounters.Count - 1)
                     {
@@ -512,24 +534,16 @@ internal static class BattleRoomCompilation
                 return room.If(room.Const(true), steps.ToArray());
             }
 
-            var roomSteps = new List<Inst>
-            {
+            List<Inst> roomSteps =
+            [
                 // �?新房间号：本房间的结算守卫因此是新的（一个不重置的全局布尔代表不了所有房间）�?
                 startNextRoom.SetField(roomRun, runStateBindings.RunCurrentRoom!,
                     startNextRoom.Add(startNextRoom.Field(roomRun, runStateBindings.RunCurrentRoom!),
                         startNextRoom.Const(1L))),
                 // �?清掉上一间房留下的一切：已知事实（它们引用战斗牌，留着会变成悬空引用）�?
                 //    敌人及其能力、玩家身上的能力、以及战斗牌区里�?*全部**牌（含临时生成的）�?
-                startNextRoom.Call(knowledgeCommandsBindings.ClearKnown.Symbol),
-                startNextRoom.ForEach(startNextRoom.Collection(pilesBindings.Monsters), each => new[]
-                {
-                    startNextRoom.ForEach(startNextRoom.Relation(pilesBindings.Powers, each),
-                        power => new[] { startNextRoom.Destroy(power) }),
-                    startNextRoom.Destroy(each),
-                }),
-                startNextRoom.ForEach(startNextRoom.Relation(pilesBindings.Powers, roomPlayer),
-                    power => new[] { startNextRoom.Destroy(power) }),
-                startNextRoom.If(startNextRoom.Const(true), pilesBindings.Lifecycle.EndBattle(startNextRoom, roomPlayer, battleBindings.BattleScope, runCollectionsBindings.LongTermDeck!)),
+                .. ClearCombat(startNextRoom, roomPlayer, battleBindings, enemiesBindings, pilesBindings,
+                    knowledgeCommandsBindings, runCollectionsBindings, options.ActPlan is not null),
                 // �?玩家�?*整局**状态重置（HP/最�?HP 延续，格�?能量/回合/守卫复位）�?
                 startNextRoom.SetField(roomPlayer, playerBindings.PlayerHp, startNextRoom.Field(roomRun, runStateBindings.RunHp!)),
                 startNextRoom.SetField(roomPlayer, playerBindings.PlayerMaxHp, startNextRoom.Field(roomRun, runStateBindings.RunMaxHp!)),
@@ -557,7 +571,7 @@ internal static class BattleRoomCompilation
                     c=>startNextRoom.CollectionIndex(pilesBindings.DrawPile,c),descending:true),c=>[
                         startNextRoom.RemoveFromCollection(pilesBindings.DrawPile,c),startNextRoom.AddToCollection(pilesBindings.DrawPile,c,InsertPosition.Start)]),
                 startNextRoom.Call(playerTurnBindings.StartPlayerTurn.Symbol),
-            };
+            ];
             startNextRoom.Body(roomSteps.ToArray());
         }
 

@@ -10,7 +10,7 @@
 - 理解各部分的关系：读[规则与宿主](rules-and-host.md)。
 - 第一次编写规则：从[第一次写规则](../../dsl/core/first-rule.md)开始。
 
-更新：2026-10-04。本文说明活动 `Core.TheSpire/Engine/` 的实际接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.1` 基础文本编译与 `core/0.2` DSL 规则库配置层已交付。本文 C# 片段说明宿主与底层接口，不是规则作者必须采用的形式。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
+版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.1` 提供基础声明，`core/0.2` 提供 DSL 规则库配置，`core/0.3` 增加同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
 
 ## 0. 规则作者写文件，宿主调用 SDK
 
@@ -18,7 +18,7 @@
 
 配置式 DSL 不局限于静态数值，它也可以用结构化规则块表达顺序、分支和状态变化，由引擎解释执行。一般游戏规则不应因为有行为就转回手写 C#；确需新通用原语、编译扩展或宿主集成时才涉及底层代码。
 
-文本入口是 `EngineDslCompiler.Compile` / `LoadFiles`，C# 入口是 `EnginePackageBuilder`。两者生成同一种规则表示。基础文本语言和可加载教程已经交付，见[原语参考](../../dsl/core/0.1/language-reference.md)；新增[core/0.2 规则库配置](../../dsl/core/0.2/authoring-guide.md)先展开模板，再走相同绑定/链接/执行；STS 内容语言仍属于 base。
+文本入口是 `EngineDslCompiler.Compile` / `LoadFiles`，C# 入口是 `EnginePackageBuilder`。两者生成同一种规则表示。基础文本语言见[原语参考](../../dsl/core/0.1/language-reference.md)；[core/0.2 规则库配置](../../dsl/core/0.2/authoring-guide.md)先展开模板，再走相同绑定/链接/执行。[core/0.3](../../dsl/core/0.3/authoring-reference.md)还可通过 `BindInto` 将文本绑定到宿主已有的包构建器；STS 内容语言仍属于 base。
 
 ## 1. 先理解引擎在执行什么
 
@@ -47,14 +47,14 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-2026-10-05 当前冻结范围及版本迁移见 [core 冻结基线](../../contracts/core-engine-baseline.md)，运行语义为 engine/ir@0.3。
+活动包版本为 `0.4.0`，运行语义身份为 `engine/ir@0.4`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 冻结基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前冻结状态见 [CORE-AUTHOR-04](../../review/tofix/README.md#core-author-04)。
 
 当前入口及能力边界：
 
 | 项目 | 当前状态 |
 | --- | --- |
 | C# 构建器、IR、链接检查、Session | 可运行；与文本入口共用链接器/执行器 |
-| 通用文本 DSL | core/0.1 基础声明及 core/0.2 imports/template/use 已交付；DSL 规则库配置从文件实际运行 |
+| 通用文本 DSL | 接受 core/0.1、core/0.2、core/0.3；基础声明、imports/template/use、同包绑定与具名调用共用 IR 和 Session |
 | base 的 STS 内容 DSL | 属于游戏前端，生成通用引擎可执行内容；覆盖范围由 base 的证据说明 |
 | ANTLR、编辑器/LSP 插件 | ANTLR 4.13.1 已接入；具体编辑器插件尚未交付 |
 | 对拍专用调试模式、内核职责拆分 | 同一 Session 按职责拆分；可选有界轨迹已接入 tools |
@@ -75,13 +75,22 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 `LoadFiles` 递归处理相对 imports 并去重。`Compile` 不读取文件，只接受显式包依赖。
 
-需要注册游戏自定义声明扩展时，宿主使用 Compile 的 extensions 参数，再统一链接；当前 LoadFiles 没有扩展注册参数。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体限制见 [规则库指南](../../dsl/core/0.2/authoring-guide.md)。
+需要游戏自定义声明扩展时，按输入选择以下入口。签名来源为 [EngineDslCompiler.cs](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)：
+
+| 入口 | 输入与结果 | 使用条件 |
+| --- | --- | --- |
+| `Compile(source, sourceName, dependencies, extensions)` | 编译单份文本，返回 `EnginePackage` | 显式传入包依赖；不读取 imports 文件，之后由 `RuleSetBuilder` 链接 |
+| `LoadFiles(params string[] paths)` | 递归加载入口及相对 imports，返回 `RuleSet` | 不需要注册扩展时使用 |
+| `LoadFiles(paths, extensions, dependencies)` | 扩展感知的文件加载，返回 `RuleSet` | `paths` 为 `IEnumerable<string>`；`extensions` 必填，`dependencies` 可省略 |
+| `BindInto(source, package, sourceName, dependencies, extensions)` | 绑定到已有 `EnginePackageBuilder`，返回 `void` | 文本 namespace 与目标包 `PackageId` 相同；完成所有绑定后再调用一次 `Build()` |
+
+`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器身份进入规则身份；不要用旧产物身份标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../dsl/core/0.2/authoring-guide.md)与[同包绑定参考](../../dsl/core/0.3/authoring-reference.md)。
 
 ### 2.2 进阶例子：动作内选择、暂停及事件
 
 游戏规则在 [counter.spire](../../examples/core-choice-counter/counter.spire)，通用宿主在 [Program.cs](../../examples/core-choice-counter/Program.cs)，工程在 [CoreChoiceCounter.csproj](../../examples/core-choice-counter/CoreChoiceCounter.csproj)。宿主没有手写 BuildRules；从文件读取类型、初始实例、动作、事件、选择、投影和终局。无需 base/net 或外部游戏，不加入主 solution。
 
-从仓库根执行，需要 .NET 9 SDK：
+从仓库根执行，需要 [global.json](../../../global.json) 指定的 .NET SDK `9.0.306`：
 
 ```powershell
 dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj -- docs/examples/core-choice-counter/counter.spire "1,0"
@@ -111,7 +120,7 @@ var session = new Session(rules, 42, ["player"]);
 session.Start();
 ```
 
-游戏扩展使用 `Compile(..., extensions: ...)` 后仍由 RuleSetBuilder 链接。定义与执行源码位置贯通，不另建文本解释器。
+游戏扩展使用 `Compile(..., extensions: ...)` 后仍由 `RuleSetBuilder` 链接；从文件加载时可使用上表的扩展感知 `LoadFiles` 重载。定义与执行源码位置贯通，不另建文本解释器。
 
 ## 3. 底层构建器怎样表达规则包
 
@@ -123,7 +132,7 @@ session.Start();
 
 | 名称 | 含义 | 使用位置 |
 | --- | --- | --- |
-| `EntityTypeSymbol`、`FieldSymbol` 等 | 作者持有的声明 | 组包与构建 IR |
+| `EntityTypeSymbol`、`FieldSymbol` 等 | 作者持有的声明 | 规则包构建与构建 IR |
 | `EntityTypeDefinition`、`ActionDefinition` 等 | 链接后分配内部编号的定义 | RuleSet 与运行时 API |
 | `InstanceId` | 一份实体实例的引用 | 字段、查询结果、决策候选 |
 | `ScopeId` | 一份生命周期作用域的引用 | 创建实体、程序执行上下文 |
@@ -159,7 +168,7 @@ unit.OwnerFieldName = "Owner";
 
 ### 3.4 IR 是程序描述，C# 是构建工具
 
-`IrScope` 提供表达式、查询和指令辅助方法。调用 `SetField` 会得到一条指令；将它放入 `Body` 或嵌套 Block 才会运行。作者 C# 的 `if` 和 lambda 在组包时执行，不能替代游戏运行时条件。
+`IrScope` 提供表达式、查询和指令辅助方法。调用 `SetField` 会得到一条指令；将它放入 `Body` 或嵌套 Block 才会运行。作者 C# 的 `if` 和 lambda 在规则包构建时执行，不能替代游戏运行时条件。
 
 ```csharp
 var body = package.ActionBody(package.Action("Heal"));
@@ -172,7 +181,7 @@ body.Body(body.If(body.Less(body.Field(refExpr, health), body.Const(100L)),
         body.Add(body.Field(refExpr, health), body.Const(1L)))));
 ```
 
-这段里的 `Less` 在执行时读取血量；`body.If` 构造一个条件节点。`Where(query, item => ...)` 的 lambda 构造谓词 IR，也是在组包时调用。
+这段里的 `Less` 在执行时读取血量；`body.If` 构造一个条件节点。`Where(query, item => ...)` 的 lambda 构造谓词 IR，也是在规则包构建时调用。
 
 常用入口如下；准确签名以 [PackageBuilder.cs](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) 与 [Ir.cs](../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) 为准：
 
@@ -347,7 +356,7 @@ tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规�
 | 文件 | 主要职责 |
 | --- | --- |
 | [Schema.cs](../../../core-the-spire/Core.TheSpire/Engine/Schema.cs) | 作者声明、字段形状、链接后定义 |
-| [PackageBuilder.cs](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) | 构建器、作者 IR 辅助方法、组包产物 |
+| [PackageBuilder.cs](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) | 构建器、作者 IR 辅助方法、规则包构建产物 |
 | [Ir.cs](../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) | 表达式、查询、指令、原语签名 |
 | [RuleSet.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs) | 名称链接、ID、引用解析、IR dump 与身份摘要 |
 | [RuleSetData.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSetData.cs) | RuleSet 查询接口 |

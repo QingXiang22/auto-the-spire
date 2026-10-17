@@ -6,7 +6,7 @@
 - url: `https://124.221.182.144`（[派发记录](../../../.audit/dsh-unknown-room-modules-20261012/task-record.json)、[短工作包](../../../.audit/dsh-unknown-room-modules-20261012/task.txt)）
 - delivery_status: `ready_for_review`（本包交付的行为与证据已在正常公开流程上实地跑通；**不等于验收**：本包不关闭父项 ENV-T09、不启动下一包、不写主清单）
 
-> 主清单由 Codex 单写：本包**没有**修改 [主清单](README.md)。对应条目
+> 主清单由 Codex 独自修改：本包**没有**修改 [主清单](README.md)。对应条目
 > `ENV-T09 / ENV-T09-unknown-room-modules-20261012` 需由负责人按本交接更新认领/证据行。
 
 ## 1. 本包交付的用途与接手第一步
@@ -20,7 +20,7 @@
    表示"跑到步数上限"，第 46/47 步就是本包交付的行为。
 2. 需要改事件内容时读[问号事件接入指南](../../design/mod-the-spire/how-to-add-a-room.md#横向扩展问号事件)，
    接口速查见[编译接口参考](../../design/mod-the-spire/room-compile-reference.md#横向注册地图入口与事件)。
-3. 需要复核局部判别时跑 `--unknown-room-only`（第 3 节 4 号命令）。
+3. 需要复核局部检查时跑 `--unknown-room-only`（第 3 节 4 号命令）。
 
 ## 2. 已交付能力（按机制，不是按文件）
 
@@ -37,7 +37,7 @@
   **先黑名单 → 再判定 → 再进入**；判定结果写 `Run.ActualRoomType`（源 `MapPointHistoryEntry.RoomType`），
   **地图节点 `Type` 保持 `Unknown`**；判成战斗/精英/宝箱/商店时直接调用
   `MapRoomEntry.Standard(...)` 的**同一批** `Enter`（不复制房型逻辑），判成事件时走生命周期 + 目录分派；
-  判出未接线房型显式 `Fail`。
+  判出未接入房型显式 `Fail`。
 
 ### 2.2 事件访问生命周期（共享模块二）
 
@@ -96,7 +96,7 @@
 | 1 | `dotnet build mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj -p:ArtifactsPath=<A>/build` | 0 | 0 error / 4 warning（既有） | 本节 |
 | 2 | `dotnet build net-the-spire/Net.TheSpire.Host/Net.TheSpire.Host.csproj -p:ArtifactsPath=<A>/build` | 0 | 0 error（**net 源码未改**，只按本包 Base 编译固定组合层） | Host SHA256 见 §5 |
 | 3 | `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -p:ArtifactsPath=<A>/build -- --report <A>/report` | 0 | **785 passed / 0 failed**（本包前基线 775；+10 为本包新增），行为报告 53 条 | [slice-full.log](../../../.artifacts/parallel/dsh-unknown-room-modules-20261012/slice-full.log)、`<A>/report/slice-behavior-report.json` |
-| 4 | `dotnet run --project …/BaseSpire.Slice.Tests -- --unknown-room-only` | 0 | **10 项局部判别全过** | `<A>/unknown-room-checks.log` |
+| 4 | `dotnet run --project …/BaseSpire.Slice.Tests -- --unknown-room-only` | 0 | **10 项局部检查全过** | `<A>/unknown-room-checks.log` |
 | 5 | `dotnet run --project docs/examples/base-events -p:ArtifactsPath=<A>/build` | 0 | 两个独立模块例子原样通过（选项隔离/永久写回/关闭/重复 ID 拒绝/未注册显式失败） | `<A>/base-events-example.log` |
 | 6 | `python -X utf8 -u <A>/verify_source_vectors.py` | 0 | 独立来源复算（Python 重写 hash/xoshiro/float32 赔率） | `<A>/source-vectors-seed-L.txt` |
 | 7 | `python -X utf8 -u <A>/drive_unknown.py --host-dll <A>/build/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll --scope dev-map --seed ENV-T03-SEED-L --output <A>/runs/seed-L-unknown --max-actions 48 --use-potions --shop-room auto --shop-policy buy --shop-buy-kind card --shop-remove` | **3**（`step_limit`，不是故障） | **48 步**；第 46/47 步即本包目标 | `<A>/seed-L-drive.log`、`steps.ndjson`、`<A>/seed-L-unknown-evidence.json` |
@@ -129,18 +129,18 @@
    DeadlyEvents 修饰符、`GoldenCompass`/`JuzuBracelet`/`LanternKey` 遗物等当前既不在 dev-map 的
    可见遗物集合里、也没有效果实现；本包调用源的**默认实现**（恒等）。这些内容落地时必须从这里接。
 3. **未实现源事件的 `IsAllowed` 未建模**：未登记模块的源身份按源默认 `true` 参与资格判定，
-   随后在目录分派处具名失败。也就是说，若某个未实现事件在源里**本应被跳过**，本构建会在它上面失败
+   随后在目录分派处报错并指出不支持的对象。也就是说，若某个未实现事件在源里**本应被跳过**，本构建会在它上面失败
    而不是跳过它（失败是显式的，不静默替代）。本包只实现了 `SunkenStatue`（源无覆盖）。
 4. **事件级随机流的"再次开始"语义**：源每次 `BeginEvent` 新建 `Rng`（计数器 0），同一事件在同一局
    再次开始时得到同一串随机数；引擎流有计数器，第二次访问会前进。当前幕内不可能重复访问源身份
    （31 个事件在一个幕里走不完一轮），因此本条不可达。
-5. **`SunkenStatueDiveIntoWater` 的脱战死亡路径未接线**：生命截断到 0，源在 0 之后走死亡/终局；
+5. **`SunkenStatueDiveIntoWater` 的脱战死亡路径未接入**：生命截断到 0，源在 0 之后走死亡/终局；
    本流程生命充裕（67 → 60）未触发，因此整局终局仍未验证。
 6. **`SunkenStatueGrabSword` 未实现**：需要 `SwordOfStone` 的获得与效果（遗物效果族）。选择它会
    Fault 整个会话（显式）。这是**内容依赖受阻**，不是本机制缺口；最小后续形状是"遗物获得 + 该效果"
    两项之一落地后再放开该选项。
 7. **精英内容依赖**：seed L 的精英队列首槽 `base-spire:byrdonis-elite` 的敌人 `base-spire:byrdonis`
-   尚未加载 ⇒ 走问号房判成精英时具名失败（与直接走精英节点同样的既有内容边界）。本包用失败消息
+   尚未加载 ⇒ 走问号房判成精英时报错并指出不支持的对象（与直接走精英节点同样的既有内容边界）。本包用失败消息
    点名精英队列遭遇来判别"没有退回普通队列"。
 8. **地图驱动器的 `Elite` 边界**：`net-the-spire/client/run_game.py` 的 `IMPLEMENTED_MAP_TYPES`
    不含 `Elite`，因此第 7 条命令在 48 步后继续时会停在精英节点（`unsupported_map_room`）。这与本包
@@ -189,7 +189,7 @@
 - `mod-the-spire/base-spire/BaseSpire/Slice/Rooms/Events/SunkenStatueEvent.cs`
 - `mod-the-spire/base-spire/BaseSpire.Slice.Tests/UnknownRoomChecks.cs`
 
-修改（仅本包接缝）：
+修改（仅本包接口）：
 
 - `MapRoomWiring.cs`（`RoomType` 枚举、`Run.ActualRoomType`、`EventPhase` 上界、`AtRoomType`、
   进入前写实际房型；核心分派未改）

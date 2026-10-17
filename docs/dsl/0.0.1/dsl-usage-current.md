@@ -275,7 +275,7 @@ package training-mod {
   权重的声明按源写成 `weight=0.4`/`0.6`（Fogmog，`Fogmog.cs:46-47`）与 `weight=0.083333336`
   （= `1f/12f`）/`0.75`（Two-Tailed Rat，`TwoTailedRat.cs:125-128`），整套算术与原版逐位一致。
   **注意**：这两只敌人**当前都未进包**（行动里用到 `summonEnemy` 等未实现原语，逐条记在未支持清单与其
-  遭遇排除列表里）；分数权重的运行时判别证据来自受控敌人文本（`SliceEnemyStateMachineChecks`），
+  遭遇排除列表里）；分数权重的运行时验证证据来自受控敌人文本（`SliceEnemyStateMachineChecks`），
   内容侧的权重字面量与未加载原因也由同一检查钉住。
 - 已支持：`addCards(<卡名>, count=, pile=hand|draw|discard, position=bottom|top|random, target=player)`
   与 `startingPowers = [power(<能力>, <层数>)]`（检查见 `SliceEnemyAddCardsChecks`）。

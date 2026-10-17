@@ -1,16 +1,16 @@
 # Host 声明闭合与切片后端依赖交接 — 2026-10-12
 
-本包把公开运行构造的两处缺口一起收口：`describe` 的结构声明改用**同一 `get_catalog` 已发布的公开 ID**（I-71/I-84），旧切片/作者场景的宿主构造补上**规则包声明的计算后端**注入缝。修好后 net 检查在原 416 项全通过的基础上新增 2 项闭合判别（418/418），并在新构建的真实 Host 上录得 0.2 契约 **0 违规**的购买/离店与删牌轨迹。完整整局仍未通关，两条轨迹都在 Unknown 节点按 `unsupported_map_room` 停止。
+本包把公开运行构造的两处缺口一起收口：`describe` 的结构声明改用**同一 `get_catalog` 已发布的公开 ID**（I-71/I-84），旧切片/作者场景的宿主构造补上**规则包声明的计算后端**注入缝。修好后 net 检查在原 416 项全通过的基础上新增 2 项一致性检查（418/418），并在新构建的真实 Host 上录得 0.2 契约 **0 违规**的购买/离店与删牌轨迹。完整整局仍未通关，两条轨迹都在 Unknown 节点按 `unsupported_map_room` 停止。
 
 归属：`ENV-T03` / `ENV-T03-host-declarations-close-20261012`（负责人 2026-10-12 裁决：修 Host 实现，沿用 I71/I84，不放宽 schema/契约）。
 派发记录：`session-162ee024-d56e-4165-acf9-9f2350d6409d` / 请求 `f7ea0456-d926-4504-9758-b1e0b5001813`，见[本包 task-record](../../../.audit/dsh-host-declarations-close-20261012/task-record.json)与[短工作包](../../../.audit/dsh-host-declarations-close-20261012/task.txt)。
-接手入口：[主清单 ENV-T03 项](../tofix/README.md#env-t03)当前认领与完成条件；契约规则见 [net 0.1 不变量 I-71/I-84](../../contracts/net/0.1/invariants.md)（0.2 沿用），实现接缝说明见 [net 设计 §7 新增小节](../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
+接手入口：[主清单 ENV-T03 项](../tofix/README.md#env-t03)当前认领与完成条件；契约规则见 [net 0.1 不变量 I-71/I-84](../../contracts/net/0.1/invariants.md)（0.2 沿用），实现接口说明见 [net 设计 §7 新增小节](../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
 交付范围：`net-the-spire/Net.TheSpire/Control`、`net-the-spire/Net.TheSpire.Tests`、`net-the-spire/Net.TheSpire.Host` 旧切片装配、`docs/design/net-the-spire/design.md`、本包 audit 与 `.artifacts/parallel/dsh-host-declarations-close-20261012`。
 本报告记录 2026-10-12 的交付；当前排期、状态与认领只以主清单为准。
 
 ## 接手后先做什么
 
-1. 先看[主清单 ENV-T03 项](../tofix/README.md#env-t03)：本包已交付的是「声明闭合 + 旧切片后端注入 + 一条真实商店帧」；**不要**重做 SourceStableShuffle 源预排序、Engine/Slice 套件、17 条对拍或五角色矩阵。
+1. 先看[主清单 ENV-T03 项](../tofix/README.md#env-t03)：本包已交付的是「声明一致性 + 旧切片后端注入 + 一条真实商店帧」；**不要**重做 SourceStableShuffle 源预排序、Engine/Slice 套件、17 条对拍或五角色矩阵。
 2. 复核算力最小的一步（新共同闭包）：
 
    ```powershell
@@ -44,17 +44,17 @@
 `ControlHost`/`ControlSession` 的**旧切片构造**各加一个可选 `IComputeBackend?` 参数并转交 `new Session(..., computeBackend:)`；正式 `ISessionSource` 路径不变（后端仍由 base 工厂在建会话时装好，控制入口只 Start 一次、保留正式 RNG/后端）。装配点在组合层（认识 base 包的一侧）：
 
 - `Net.TheSpire.Host/Program.cs` 的 `legacy-slice` 分支传 `BaseSpireComputeBackend.Instance`；
-- `Net.TheSpire.Tests` 的三个切片夹具（`AcceptanceChecks`/`ControlChecks`/`MeasurementChecks`）同样注入。
+- `Net.TheSpire.Tests` 的三个切片测试场景（`AcceptanceChecks`/`ControlChecks`/`MeasurementChecks`）同样注入。
 
 通用控制层不认识任何游戏 ID 或玩法，也不 new 第二份后端；不传时保持旧行为（执行该资产时报 `Unsupported`）。
 
-**3. 新增声明闭合判别（一组，2 项）**
+**3. 新增声明一致性检查（一组，2 项）**
 
 - `Net.TheSpire.Tests/DeclarationClosure.cs`（新）：`Unclosed` / `EngineKeysUsedAsDeclarationIds` 判据 + 0.1 切片真实宿主的正例，并在同一检查里用**引擎键反例**自证判据可区分（把 Entity 换成 `base-spire:Player`/`base-spire:Card`，判据必须报出 2 条）；
-- `FormalPathChecks` 新增 `G-06`：0.2 dev-map 宿主真实 `describe` + `get_catalog`，逐条闭合、四类结构非空、ID 是 `net:` 公开形态；
-- `Program.cs` 注册新组。判别读的是**两次真实请求的 wire**，不是 Profile 内部清单。
+- `FormalPathChecks` 新增 `G-06`：0.2 dev-map 宿主真实 `describe` + `get_catalog`，逐条核对声明是否一致、四类结构非空、ID 是 `net:` 公开形态；
+- `Program.cs` 注册新组。检查读取的是**两次真实请求的 wire**，不是 Profile 内部清单。
 
-**4. 文档**：`docs/design/net-the-spire/design.md` 新增“ENV-T03 公开声明闭合与旧切片后端装配（2026-10-12）”，记申请 ID 空间、过滤规则与注入缝的实际用法。
+**4. 文档**：`docs/design/net-the-spire/design.md` 新增“ENV-T03 公开声明一致性与旧切片后端配置（2026-10-12）”，记申请 ID 空间、过滤规则与注入缝的实际用法。
 
 ## 验证与证据
 
@@ -97,14 +97,14 @@
 
 - 完整整局仍未通关：两条轨迹都在 Unknown 节点停止（offered=`['Unknown']`），不记整局通过、不伪造胜负。
 - Unknown-room 整合：A 正在并发写真实 Unknown（本包工作期间 `base-spire/.../BaseSpireRuntimeFactory.cs` 的 mtime 仍被 A 更新），本包未读其半成品、未重构建 base，所有帧都来自负责人共同闭包的固定 DLL。整合后的新共同闭包复核由 Codex 决定。
-- 旧切片 `legacy-slice` 的**计算资产执行路径**只在检查夹具里被真实触发（V-03/V-09/V-10 的 SourceStableShuffleOrder），stdio 冒烟只覆盖 0.1 协议形状与装配，未在 stdio 上跑到重洗。
+- 旧切片 `legacy-slice` 的**计算资产执行路径**只在测试场景里被真实触发（V-03/V-09/V-10 的 SourceStableShuffleOrder），stdio 冒烟只覆盖 0.1 协议形状与装配，未在 stdio 上跑到重洗。
 - 未验证与本体适配器、训练入口或完整 0.2 父项完成条件相关的任何部分。
 
 **依赖**：无阻塞依赖。`ENV-T09-unknown-room-modules-20261012`（A）决定 Unknown 房型能否继续；本次不改动、也不等待它。
 
 ## 维护位置
 
-- 任务状态/认领/完成条件：主清单 [`ENV-T03`](../tofix/README.md#env-t03)（**Codex 单写**，本包未改主清单）。
+- 任务状态/认领/完成条件：主清单 [`ENV-T03`](../tofix/README.md#env-t03)（**Codex 独自修改**，本包未改主清单）。
 - 规则与实现方法：`docs/contracts/net/0.1/invariants.md`（I-71/I-84，未改）、[net 设计 §7 新增小节](../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
 - 本包证据：`.audit/dsh-host-declarations-close-20261012/`（脚本 + 校验结果）与 `.artifacts/parallel/dsh-host-declarations-close-20261012/{build,runs,logs}/`；长日志只放这两处，不复制进主清单。
 - 修改的生产文件：`net-the-spire/Net.TheSpire/Control/{ControlHost,ControlSession}.cs`、`net-the-spire/Net.TheSpire.Host/Program.cs`、`net-the-spire/Net.TheSpire.Tests/{AcceptanceChecks,ControlChecks,MeasurementChecks,FormalPathChecks,Program}.cs`、新增 `net-the-spire/Net.TheSpire.Tests/DeclarationClosure.cs`；未触碰 base/core/tools/schema/协议语义/公共主清单。

@@ -1,0 +1,76 @@
+{
+  "suite": "normal-two-combats",
+  "fixtures_version": "normal-two-combats@1",
+  "note": "Two actual consecutive Monster combats on the original skip seed; common semantic actions, no state injection.",
+  "target_scope": "base-spire-singleplayer-dev-map-v1",
+  "build_identity": {
+    "scope": "base-spire-singleplayer-dev-map-v1",
+    "character": "Ironclad",
+    "ascension": 0,
+    "source_baseline": "sts2-frozen-2026-10-05",
+    "reference": "Native sequential reference; actual loaded DLL SHA256 in each reference record",
+    "note": "Content baseline frozen; random layout sts2-v0.109-xxhash64@1; no reference modifications"
+  },
+  "expected_case_ids": [
+    "normal-two-combats-skip"
+  ],
+  "cases": [
+    {
+      "id": "normal-two-combats-skip",
+      "title": "Two normal consecutive combats, skip cards/potions and take gold",
+      "rng_profile": "vanilla-compatible@1",
+      "provenance": {
+        "kind": "normal_run",
+        "source": "sts2/src/Core/Rooms/CombatRoom.cs; sts2/src/Core/Rewards/RewardsSet.cs",
+        "note": "Actual normal lifecycle, visible-bash-strike-defend@1 policy"
+      },
+      "setup": {},
+      "script": [
+        {
+          "action": "normal_reward_skip"
+        }
+      ],
+      "reference_scope": "compared",
+      "group": "normal-reward",
+      "kind": "normal-reward",
+      "base_source": "formal-dev-factory",
+      "base_scope": "dev-map",
+      "game_seed": "ENV-T04-RNG-SHUFFLE-001",
+      "initialization": "Independent normal factory/RunState; Start once; no state writes",
+      "contents": [
+        "normal-victory",
+        "gold",
+        "card-reward",
+        "potion-reward",
+        "permanent-writeback",
+        "map-travel",
+        "second-normal-combat",
+        "cross-room-permanent-state"
+      ],
+      "variants": [
+        "skip"
+      ],
+      "required_dimensions": [
+        "actions",
+        "decisions",
+        "facts",
+        "pile-order",
+        "power",
+        "streams",
+        "rewards",
+        "permanent-inventory",
+        "reward-closure"
+      ],
+      "semantic_actions": [
+        "visible-bash-strike-defend@1",
+        "first-legal-monster-coordinate",
+        "skip-card",
+        "skip-potion-if-present",
+        "take-gold"
+      ],
+      "expected_terminal": "running",
+      "reference_source": "Independent RunState/RoomFactory/CombatRoom.ResolveOutcomeAsync(true), TakeableReward.Skip/Take",
+      "normal_combat_count": 2
+    }
+  ]
+}

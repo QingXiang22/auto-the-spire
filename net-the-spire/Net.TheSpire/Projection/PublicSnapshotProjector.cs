@@ -33,7 +33,8 @@ public sealed record CandidateBinding(
     ActionDefinition? Action,
     IReadOnlyList<Value> Arguments,
     long? DecisionRequestId = null,
-    InstanceId? DecisionInstance = null);
+    InstanceId? DecisionInstance = null,
+    bool EmptyDecision = false);
 
 /// <summary>一条**显式**不发布的公开事实：带规则号与理由，用来证明没有静默丢弃。</summary>
 public sealed record SkippedPublicFact(string EngineQualifiedId, string RuleId, string Reason);
@@ -441,7 +442,14 @@ public sealed class PublicSnapshotProjector
                 }
 
                 var declared = disposition.Published;
-                var enumTypeId = type.TryFieldIndex(field.Name, out var index) ? type.Fields[index].EnumTypeId : -1;
+                var coreField = type.TryFieldIndex(field.Name, out var index) ? type.Fields[index] : null;
+                if (coreField is { Optional: true } && field.Value.Kind == ValueKind.None && !declared.Required)
+                {
+                    skipped.Add(new SkippedPublicFact($"{instance.TypeId}.{field.Name}", "N-02-OPTIONAL-ABSENT",
+                        "可选Engine字段当前为None，按字段可选契约省略；不编码成零、空引用或字段not_applicable。"));
+                    continue;
+                }
+                var enumTypeId = coreField?.EnumTypeId ?? -1;
                 fields.Add(EncodeField(declared, field.Value, enumTypeId, ids,
                     $"{instance.TypeId}.{field.Name}", $"snapshot.entities[{publicId}].fields[{declared.FieldId}]"));
             }
@@ -863,11 +871,12 @@ public sealed class PublicSnapshotProjector
     private (List<LegalActionDto>, List<CandidateBinding>) BuildDecisionAnswers(DecisionRequest pending,
         IReadOnlyDictionary<InstanceId, string> ids)
     {
-        if (pending.Kind != DecisionResponseKind.EntityRef)
+        if (pending.Kind is not (DecisionResponseKind.EntityRef or DecisionResponseKind.EntityRefList))
             throw new PublicMappingException("TODO-N02-DECISION-KIND",
                 $"暂停的应答种类是 {pending.Kind}，协议快照的候选只能表达实体引用应答（protocol.md:98 的具名 entity_ref）；" +
                 "需要协议/协调者裁定该形状，映射层不发明第二个应答结构");
-        if (pending.Minimum != 1 || pending.Maximum != 1)
+        if (pending.Maximum != 1 || pending.Minimum is < 0 or > 1
+            || pending.Kind == DecisionResponseKind.EntityRef && pending.Minimum != 1)
             throw new PublicMappingException("TODO-N02-MULTI-SELECT",
                 $"暂停要求选择 {pending.Minimum}..{pending.Maximum} 个实例，而 step 一次只完成一个候选" +
                 "（protocol.md:179）；该形状需要协议裁定，映射层不放宽数量约束", "snapshot.legal_actions");
@@ -878,6 +887,13 @@ public sealed class PublicSnapshotProjector
         var rule = _profile.AnswerAction;
         var declared = rule.Parameters[0];
         var entries = new List<(LegalActionDto Action, CandidateBinding Binding)>();
+        if (pending.Minimum == 0)
+        {
+            if (declared.Required) throw new PublicMappingException(
+                "TODO-N02-OPTIONAL-ANSWER", "Profile must declare the answer instance optional before publishing cancellation.");
+            var empty = BuildEntry(rule.ActionTypeId, [], null, [], _candidateNamespace);
+            entries.Add((empty.Action, empty.Binding with { DecisionRequestId = pending.RequestId, EmptyDecision = true }));
+        }
         foreach (var candidate in pending.Candidates)
         {
             var publicId = RequirePublicId(ids, candidate, "I-22", "snapshot.legal_actions");

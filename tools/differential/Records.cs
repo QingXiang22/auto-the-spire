@@ -75,6 +75,10 @@ internal sealed record ReferenceStreamBoundary(
 /// <summary>一个当前合法动作：动作 id + 候选实例（按语义槽位） + 可绑定的参数组合数。</summary>
 internal sealed record ActionOption(string Action, IReadOnlyList<string> Candidates, int Bindings);
 
+internal sealed record NormalSemanticAction(string Action, string? Token,
+    IReadOnlyList<ActionOption> BeforeActions, IReadOnlyList<FactSnapshot> BeforeVisible,
+    IReadOnlyList<DecisionSnapshot> Decisions);
+
 /// <summary>
 /// 一个**待回答的逻辑决策点**：候选（按语义槽位）、最少/最多可选数量、以及最终选择。
 /// <paramref name="Kind"/> 与 <paramref name="Prompt"/> 是各后端自己的表述，只写进记录供人读，**不参与比较**
@@ -135,7 +139,7 @@ internal sealed record FactoryWiringSnapshot(
     IReadOnlyList<string> Rejections);
 
 /// <summary>参考身份里的一条流：原版流类型名 → 引擎流名 → **源版本派生的**种子。</summary>
-internal sealed record ReferenceStreamSeed(string SourceType, string EngineStream, uint Seed);
+internal sealed record ReferenceStreamSeed(string SourceType, string EngineStream, ulong Seed);
 
 /// <summary>参考身份里的一份实际源文件摘要（不拿 HEAD 代替）。</summary>
 internal sealed record ReferenceFileDigest(string Path, string Sha256);
@@ -151,7 +155,7 @@ internal sealed record ReferenceIdentity(
     string Enablement,
     string Scope,
     string StringSeed,
-    uint SourceRunSeed,
+    ulong SourceRunSeed,
     IReadOnlyList<ReferenceStreamSeed> Streams,
     IReadOnlyList<string> Replaces,
     IReadOnlyList<string> NotReplaced,
@@ -215,6 +219,7 @@ internal sealed record CaseRecord(
     /// <summary>参考侧逐边界随机流证据（只在参考后端产出的记录上有值；base 侧为 null）。</summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ReferenceStreamEvidence? ReferenceStreams { get; init; }
+    public IReadOnlyList<NormalSemanticAction>? SemanticActions { get; init; }
 }
 
 internal sealed record EngineTraceEntry(long Sequence, string Kind, string? Subject, string? Detail,

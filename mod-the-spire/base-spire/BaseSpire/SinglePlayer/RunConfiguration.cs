@@ -44,9 +44,11 @@ public static class BaseSpireScope
     /// 未实现房型仍具名失败、不伪装空事件，因此它**不等于** Ironclad/full 闭合。
     /// </summary>
     public const string DevMap = "base-spire-singleplayer-dev-map-v1";
+    /// <summary>Default three-act development plan; missing encounters/ancients remain explicit boundaries.</summary>
+    public const string DevRun = "base-spire-singleplayer-dev-run-v1";
 
     /// <summary>已知范围 id 的完整集合（用于区分"未知 id"与"已知但尚未实现"）。</summary>
-    public static readonly IReadOnlyList<string> Known = [Dev, DevMap, Ironclad, Full];
+    public static readonly IReadOnlyList<string> Known = [Dev, DevMap, DevRun, Ironclad, Full];
 
     /// <summary>
     /// **当前可实现**的范围：dev 与 T05 的 dev-map。正式内容仍是子集（地图只到"能生成并选择，
@@ -54,11 +56,12 @@ public static class BaseSpireScope
     /// 但没有事件/幕转换/四幕终局，药水取得仍因内容未装载而具名受阻），因此不能发布 Ironclad/full 身份。
     /// 开启某个范围的条件是相应能力与内容真实闭合，而不是把这里的字符串改一下。
     /// </summary>
-    public static readonly IReadOnlyList<string> Implemented = [Dev, DevMap];
+    public static readonly IReadOnlyList<string> Implemented = [Dev, DevMap, DevRun];
 
     /// <summary>某个范围为什么还不能实现（用于拒绝时的可读信息）。</summary>
     public static string NotImplementedReason(string scopeId) => scopeId switch
     {
+        DevRun => "默认三幕开发配置：开局预生成及跨幕生命周期已接入；后续古代人、未实现敌人/事件与TheArchitect仍具名失败，不代表完整Ironclad验收",
         // 已接入的东西不再列：起始遗物效果（Burning Blood 胜利回血）、敌人出生生命掷点（`Niche` 流）、
         // 起始牌序/起始资源、**敌人行动状态机**与**整幕遭遇队列**（GrabBag + 标签回避）都已进入正式构建，
         // 因此这里只列**真的还缺**的范围。
@@ -105,6 +108,9 @@ public sealed record RunConfiguration
 
     public RunMode Mode { get; init; } = RunMode.SinglePlayer;
 
+    public string RandomLayoutId { get; init; } = RunRandomLayout.V109;
+    public string ContentMetadataVersion { get; init; } = SinglePlayerContentVersions.Current;
+
     /// <summary>源基线身份：必须是 <see cref="BaseSpireSourceBaselines.Supported"/> 里的一个（R3）。</summary>
     public string SourceBaselineId { get; init; } = BaseSpireSourceBaselines.Frozen;
 
@@ -115,11 +121,18 @@ public sealed record RunConfiguration
     public static RunConfiguration Ironclad(int ascension = 0, string scopeId = BaseSpireScope.Dev) =>
         new() { Character = BaseSpireCharacters.IroncladId, Ascension = ascension, ScopeId = scopeId };
 
+    /// <summary>Explicit historical hash32 configuration for recorded source-baseline regressions.</summary>
+    public static RunConfiguration FrozenIronclad(int ascension = 0, string scopeId = BaseSpireScope.Dev) =>
+        Ironclad(ascension, scopeId) with { RandomLayoutId = RunRandomLayout.Frozen, ContentMetadataVersion = SinglePlayerContentVersions.Frozen };
+
     /// <summary>解析并校验：返回角色定义；任何不支持项在这里失败（不是在建局中途）。</summary>
     public BaseSpireCharacter Resolve()
     {
         // R3：源基线先校验。未知基线下的"内容/数值从哪来"无从核对，因此不能构建。
         BaseSpireSourceBaselines.Require(SourceBaselineId);
+        _ = new RunRandomLayout(RandomLayoutId);
+        if (ScopeId == BaseSpireScope.DevRun && (RandomLayoutId != RunRandomLayout.V109 || ContentMetadataVersion != SinglePlayerContentVersions.Current))
+            throw new NotSupportedException("The multi-act development plan requires explicit v0.109 RNG/content metadata; legacy single-act scopes remain available");
 
         if (Mode != RunMode.SinglePlayer)
         {
@@ -146,7 +159,7 @@ public sealed record RunConfiguration
             throw new NotSupportedException($"角色 {character.Name} 未支持：{character.NotPlayableReason}");
         }
 
-        if (ScopeId is not (BaseSpireScope.Dev or BaseSpireScope.DevMap
+        if (ScopeId is not (BaseSpireScope.Dev or BaseSpireScope.DevMap or BaseSpireScope.DevRun
             or BaseSpireScope.Ironclad or BaseSpireScope.Full))
         {
             throw new ArgumentException(

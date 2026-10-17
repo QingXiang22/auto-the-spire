@@ -121,6 +121,7 @@ public static class SpirePowerSource
         string Source)
     {
         public IReadOnlyList<PowerRule> Rules { get; init; } = [];
+        public bool NegativeStacksAreInfinite { get; init; }
     }
 
     /// <summary>一份能力源的降级结果（四态）。</summary>
@@ -271,6 +272,7 @@ public static class SpirePowerSource
         var whenCardType = string.Empty;
         var triggerEffect = string.Empty;
         var preventEnergyGain = false;
+        var negativeStacksAreInfinite = false;
         var modifierSourcePower = string.Empty;
         var blockGainMultiplier = string.Empty;
         var blockGainPriorEntries = 0;
@@ -364,6 +366,10 @@ public static class SpirePowerSource
                 case "cardRule":
                     ReadCardRule(property.Value, node.Name, ref cardRuleType, ref cardRuleCost,
                         ref cardRuleResultPile, ref cardRuleConsumeOnPlay, ref problems);
+                    break;
+                case "negativeStacksAreInfinite":
+                    if (property.Value is DslBooleanNode declaredInfinite) negativeStacksAreInfinite = declaredInfinite.Value;
+                    else problems.Add($"{node.Name}.negativeStacksAreInfinite requires a boolean");
                     break;
                 case "decrementOnTrigger":
                     if (property.Value is DslBooleanNode { Value: true })
@@ -527,7 +533,8 @@ public static class SpirePowerSource
             whenCardType, triggerEffect, preventEnergyGain, preventsBlockClear, modifierSourcePower,
             maxEnergyPerStack, vulnerablePercentPerStack, temporaryStrength, cardRuleType,
             cardRuleCost, cardRuleResultPile, cardRuleConsumeOnPlay, blockGainMultiplier,
-            blockGainPriorEntries, blockGainAdditive, effectText, sourcePath) { Rules = rules };
+            blockGainPriorEntries, blockGainAdditive, effectText, sourcePath)
+            { Rules = rules, NegativeStacksAreInfinite = negativeStacksAreInfinite };
     }
 
     /// <summary>
@@ -1631,6 +1638,7 @@ public static class SpirePowerSource
             BlockGainPriorEntriesPerStack: declaration.BlockGainPriorEntriesPerStack,
             BlockGainAdditivePerStack: declaration.BlockGainAdditivePerStack,
             SourcePath: declaration.Source,
-            SourceLine: declaration.Line) { Rules = declaration.Rules };
+            SourceLine: declaration.Line)
+            { Rules = declaration.Rules, NegativeStacksAreInfinite = declaration.NegativeStacksAreInfinite };
     }
 }

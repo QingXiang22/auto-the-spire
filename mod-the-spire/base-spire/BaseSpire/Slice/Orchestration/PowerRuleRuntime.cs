@@ -86,7 +86,9 @@ public sealed class PowerRuleRuntime
         foreach(var (p,r) in Rules(PowerRuleKind.HpLossCap))
             result.Add(s.ForEach(s.Where(s.Relation(powers,target),x=>Present(s,x,p.Id)),instance=>[
                 s.If(s.Greater(s.LocalRef(damageSlot),absorbed),
-                    s.SetLocal(damageSlot,s.Add(absorbed,s.Minimum(s.Subtract(s.LocalRef(damageSlot),absorbed),s.Const((long)r.Amount)))),Tick(s,instance))]));
+                    s.SetLocal(damageSlot,s.Add(absorbed,s.Minimum(s.Subtract(s.LocalRef(damageSlot),absorbed),s.Const((long)r.Amount)))),
+                    Tick(s,instance),
+                    s.If(s.Equal(s.Field(instance,stacks),s.Const(0L)),s.Destroy(instance)))]));
         return [..result];
     }
     public Inst[] ModifyVariable(IrScope s,string powerId,string variable,long amount)

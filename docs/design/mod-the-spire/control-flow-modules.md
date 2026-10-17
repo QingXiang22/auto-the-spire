@@ -1,6 +1,6 @@
 # Base 共享控制流程与职责边界
 
-文档类型：解释（Explanation）。本页解释 base 如何借鉴本地 sim 的命令、出牌和生命周期分工。生产由 `CombatSlicePackage` 进入 `Compilation/CombatPackageComposer` 接线，[Orchestration 模块](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardPlayPipeline.cs)生成冻结 Engine IR，Session 执行它。任务状态只在[主清单](../../review/tofix/README.md#env-t06)，实现范围由[规格](base-orchestration/spec.md)定义，验证证据见[实施复核](../../review/records/2026-10-10/base-orchestration-2026-10-10.md)。
+文档类型：解释（Explanation）。本页解释 base 如何借鉴本地 sim 的命令、出牌和生命周期分工。生产由 `CombatSlicePackage` 进入 `Compilation/CombatPackageComposer` 接入，[Orchestration 模块](../../../mod-the-spire/base-spire/BaseSpire/Slice/Orchestration/CardPlayPipeline.cs)生成冻结 Engine IR，Session 执行它。任务状态只在[主清单](../../review/tofix/README.md#env-t06)，实现范围由[规格](base-orchestration/spec.md)定义，验证证据见[实施复核](../../review/records/2026-10-10/base-orchestration-2026-10-10.md)。
 
 ## 借鉴的分工
 
@@ -13,7 +13,7 @@
 | [AutoPlayCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/AutoPlayCmd.cs) | `AutoPlayProcedures` 先收集一批牌，再调用同一个 `ExecuteCardPlay` |
 | [CardPileCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/CardPileCmd.cs) / [CardCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/CardCmd.cs) | 牌区命令统一处理抽牌、重洗、消耗、克隆、真实替代和生成 |
 | [PlayerCombatState](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/PlayerCombatState.cs) | Engine事件实体记录每次执行，生命周期模块清理回合历史与战斗计数 |
-| [RunEngine](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunEngine.cs) | Run/地图/房间/奖励继续由独立接线拥有，不交给卡牌效果 |
+| [RunEngine](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunEngine.cs) | Run/地图/房间/奖励继续由独立接入拥有，不交给卡牌效果 |
 
 这里借鉴职责和时序，不引用 sim 的运行时、async 调度器或可变战斗对象。规则依据由同版本 `sts2/` 源码裁决；参考侧保持独立，顺序随机模式、有意偏离及完整原版对拍仍需对应证据。
 
@@ -49,7 +49,7 @@
 - 排序键是卡实例上的**隐藏编译辅助元数据** `SourceOrderKey`（`ENTRY@升级等级`）。Entry 由**声明名**按 `StringHelper.Slugify` 还原，不是内容 id 的逆向转写（两者不恒等）；`CardDefinitions` 的 `Fields`/`New`/`Copy`/`Upgrade` 是写出它的唯一入口，新增创建、复制或升级路径必须一并写出，否则重洗读空值直接失败。
 - 排序由纯计算资产 `SourceStableShuffleOrder`（[SourceStableShuffle](../../../mod-the-spire/base-spire/BaseSpire/Slice/SourceStableShuffle.cs)）给出：对下标数组用源比较器调用 `List<T>.Sort(...)`，因此 ≥16 张同键实例的并列次序与源的内省排序逐位一致（稳定排序在实测的重复实例输入里约 3/4 与其不同）。IR 每一步只取"目标顺序第 k 张当前的下标"并把该牌移到末尾，不新增运行态、不消耗随机数。
 - 后端按 `asset.Entry` 分派：受控切片与对拍使用 `SourceWeightedPickBackend`，`BaseSpireComputeBackend` 的 default 分支逐字转发到它，两条会话路径因此一致。
-- 局部判别：`BaseSpire.Slice.Tests --reshuffle-only`（键口径、源置换、创建/复制/升级路径、10 张 ENV-T04 case 与 17 张同键的端到端牌序）。卡类型新增隐藏字段、`DrawCards` 多了计算与移动指令，规则身份与公开构建身份随之变化，需要统一迁移基线。
+- 局部检查：`BaseSpire.Slice.Tests --reshuffle-only`（键口径、源置换、创建/复制/升级路径、10 张 ENV-T04 case 与 17 张同键的端到端牌序）。卡类型新增隐藏字段、`DrawCards` 多了计算与移动指令，规则身份与公开构建身份随之变化，需要统一迁移基线。
 
 `Effects/EffectCompileScope` 管词法计数和当前牌绑定。进入内层块创建子环境，离开后恢复外层；分支不会改变兄弟环境。`CardEffectExpressions` 在每个使用位置读取活状态，`CardEffectCompiler` 只编译效果。
 
@@ -82,6 +82,6 @@ flowchart TD
 
 Pillage 只声明攻击后 `drawUntil`；Havoc/Cascade 只声明 `autoPlay`。作者不实现重洗、容量、随机目标、费用、历史或收尾。PrimalForce 复用变形命令，定义不再改写旧实例。扩展已有原语时可只改 `.spire` 和行为案例；新增共享能力才涉及对应领域节点、编译分支、命令模块和一处能力绑定。
 
-公共组包已按[编译模块参考](package-compilation-reference.md)拆开；根入口安排顺序，敌人、能力、房间和奖励各由显式依赖模块编译。未迁移的选择叶走显式兼容接缝。完整角色生成池与其他原版能力也未因此完成。明确接口能减少需要理解的关系，但不能把文件拆分或检查通过直接换算成 token/训练吞吐改善；同任务上下文和性能实测见阶段证据。
+公共规则包构建已按[编译模块参考](package-compilation-reference.md)拆开；根入口安排顺序，敌人、能力、房间和奖励各由显式依赖模块编译。未迁移的选择叶走显式兼容接口。完整角色生成池与其他原版能力也未因此完成。明确接口能减少需要理解的关系，但不能把文件拆分或检查通过直接换算成 token/训练吞吐改善；同任务上下文和性能实测见阶段证据。
 
 按职责定位和运行检查见[base开发指南](base-development-guide.md)。在规则上写内容见[modding指南](modding-guide.md)，通用设计方法见[可维护规则集指南](maintainable-rule-sets.md)。

@@ -257,7 +257,11 @@ public sealed class ControlSession
         entry!.State = LedgerState.Settling;
         try
         {
-            if (binding.DecisionRequestId is { } decisionRequestId && binding.DecisionInstance is { } instance)
+            if (binding.DecisionRequestId is { } emptyRequest && binding.EmptyDecision)
+            {
+                _session.Answer(new DecisionAnswer(emptyRequest, Instances: []));
+            }
+            else if (binding.DecisionRequestId is { } decisionRequestId && binding.DecisionInstance is { } instance)
             {
                 // 决策候选：投影器已把 RequestId 与所选实例写进绑定，直接还原为一条应答。
                 _session.Answer(new DecisionAnswer(decisionRequestId, Instances: [instance]));

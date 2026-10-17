@@ -549,6 +549,12 @@ public static class SlicePublicProfile
                 // B-06a：临时费用修正（来源 modifySelectedCardCost）。**发布**：有效费用是
                 // max(0, Cost + CostModifier)，只发布 Cost 会让消费方看到的费用与合法动作不一致。
                 ["CostModifier"] = Number(CardType, "CostModifier"),
+                ["EnchantmentId"] = Disposition<PublishedField>.Skip("N-02-LEGACY-ATTACHMENT-SCOPE",
+                    "旧0.1受控切片不提供附魔消费者；正式0.2由规则声明派生并发布附魔字段"),
+                ["EnchantmentAmount"] = Disposition<PublishedField>.Skip("N-02-LEGACY-ATTACHMENT-SCOPE",
+                    "旧0.1受控切片不提供附魔消费者；正式0.2由规则声明派生发布"),
+                ["EnchantmentDisabled"] = Disposition<PublishedField>.Skip("N-02-LEGACY-ATTACHMENT-SCOPE",
+                    "旧0.1受控切片不提供附魔消费者；正式0.2由规则声明派生发布"),
                 // W-01：作者内容的卡牌实例变量（`Variable_<name>`，例：Rampage 的成长量 extra-damage）。
                 ["Variable_extra-damage"] = publishInstanceVariables
                     ? Number(CardType, "Variable_extra-damage")

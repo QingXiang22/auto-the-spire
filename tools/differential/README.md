@@ -1,5 +1,7 @@
 # differential：ENV 环境的审计与对拍工具
 
+2026-10-15：正式默认随机布局已采用 `sts2-v0.109-xxhash64@1`。`v109-rng --output <目录>` 独立核对6个原始seed的根、12条run流、3条player流、地图、UpFront计数/指纹及完整单人奖励池元数据；两例首战还核对实际使用的共享MonsterAi流。此专项不代表完整环境验收。参考保持只读，证据记录实际加载DLL摘要。原regression17显式使用历史hash32配置，正常奖励前缀及normal-two-combats使用v0.109原生参考。
+
 ENV-T04 完整受控初始化入口为 `setup.initial_piles`（`ordered-starting-piles@1`），来源固定为 `Ironclad.StartingDeck+controlled-slice@1`。`hand/draw/discard/exhaust` 必须全部显式列出，每项带 `slot/card/upgraded`；校验源起始牌总集合、槽位唯一性与原 hand/discard 一致性。仅四个已授权原 case 使用原 `game_seed` 和 `source-compat-sts2-frozen@1` 的既有三类派生。两侧在 Start 后、脚本前分别从自己的来源牌组构造；脚本入口没有设牌、补抽或重设随机动作。未声明 case 保留旧路径。
 
 `controlled-state-no-random@1` 只有完整声明再次验证、实际 start 边界的全部有序槽位与定义匹配、双方脚本计数实测增量均为 0 才可计入 passed。原 `controlled-no-random@1` 的 end_turn 限制保留。原 facts/actions/decisions/power 与全部牌区顺序仍参与比较，额外记录持久 `pile.*.initial-slots`；期间新造且未登记的实例标记 unknown。
@@ -16,15 +18,23 @@ ENV-T04 完整受控初始化入口为 `setup.initial_piles`（`ordered-starting
 
 ## 正常首战奖励前缀
 
+`normal-two-combats` 使用同一入口和 `normal_combat_count=2`，在首场奖励关闭后继续真实合法选点并完成第二场；`normal-potion-reward@2` 保留实际领取并新增领取后丢弃用例。领取例设置 `require_potion_acquisition=true`，两侧均须实际执行TakeRewardPotion且奖励关闭后库存非空；`normal_reward_take_discard` 策略要求真实领取、丢弃和最终空库存，无掉落不能通过。参考通过公开PotionCmd.Discard执行丢弃，战斗中用CanUseManually保留原生UsePotion候选。`normal-held-potion` 已接通AttackPotion持药续战；`normal-potion-use` 通过原生PotionCmd.Use及选择适配实际执行使用/取消，不能省略未支持使用候选制造通过。
+
+`normal-aroma` 在同一原seed的两战领取路线后进入首个合法Unknown节点，要求真实选中AromaOfChaos，分别执行 `normal_aroma_upgrade` 与 `normal_aroma_transform`，完成选牌并回到旅行。参考使用RoomFactory/EventRoom/EventModel.ChooseOption，公开RunDriver构造只安装外部决策源，不推进游戏。候选按本地永久牌组位置对应，另外以 `deck.origins.order` 保留各侧原生实例的首次出现编号，移除后不复用、不按结果牌名重匹配。事件拥有的Rng对象按源事件身份显式映射到比较流；反例验证实例来源与事件随机消费错误会失败。
+
+`normal-post-event` 在两条事件分支后继续第三场正常战斗并关闭真实奖励，策略为 `normal_aroma_upgrade_next_combat` / `normal_aroma_transform_next_combat`，`normal_combat_count=3`。事件后优先公开Power牌，随后沿Bash/Strike/Defend的可见策略；不读取隐藏来源作选择。用例必须实际打出事件改过的牌，并验证每张永久牌的战斗副本、结算后的永久实例/形态不被临时变化覆盖。必需维度 `combat-copy-origins` 要求所有战斗边界具备五个牌区的来源事实；两侧通过LongTermSource/DeckVersion独立读取。调换同定义牌的来源编号也会被比较器拒绝。
+
+`normal-potion-capacity`在原seed继续五场Monster及一场真实Elite，旧字段`normal_combat_count=6`计战斗房间总数。Aroma升级公开Bash；优先FlameBarrier、可从公开弃牌找回FlameBarrier的Headbutt、Power及Bash/Strike/Defend，目标取公开最低HP。三瓶由前三次真实掉落取得，精英再掉落时分别跳过或丢弃中间瓶后领取同一实例；断言槽位0/2不变、奖励来源不变、操作无额外随机，以及真实精英遗物显式跳过后整组奖励关闭。药水语义token按当前非空库存位置编号，实际槽位与实例来源另行比较。参考保留实际Elite房型、原生遗物/额外奖励和原生选牌，未知额外奖励明确失败。Power身份映射只共享定义名/ID对应，不共享任何玩法结果。
+
 使用 [normal-reward-prefix suite](suites/normal-reward-prefix.json) 检查正常首战胜利、真实奖励生成、领取或跳过以及永久资源提交。它独立于原 regression17，不能用受控机制结果替代正常 Run。实现入口为 [base 与共同可见候选策略](NormalRewardEntry.cs) 和 [独立参考生命周期](NormalRewardReference.cs)。
 
-本套件要求 `formal-dev-factory`、`dev-map`、原始字符串 seed、空 setup，以及一个 `normal_reward_take` 或 `normal_reward_skip` 策略动作。`visible-bash-strike-defend@1` 在每侧分别读取当前合法候选：选坐标序数最小的合法 Monster 点，优先 Bash、Strike、Defend，同优先级选手牌槽位序数最小者；目标取本侧合法首项。奖励顺序为首张牌领取或跳过、存在药水时领取或跳过、领取金币。完整展开动作保存在每侧边界 kind/label 中。相同策略不保证分叉后的具体动作前缀相同；比较器在最早共同边界报差，不重排后续记录来匹配。
+本套件要求 `formal-dev-factory`、`dev-map`、原始字符串 seed、空 setup，以及一个 `normal_reward_take` 或 `normal_reward_skip` 策略动作。base 从可见合法候选生成一条动作计划：选坐标序数最小的合法 Monster 点，优先 Bash、Strike、Defend，同优先级选手牌槽位序数最小者；记录实际目标决策。参考独立执行同一动作、当地牌槽和目标语义，每步提交前核对完整合法候选、可见牌定义和奖励候选。缺失、多义或不合法时停止，不回退到参考侧首项。奖励顺序为首张牌领取或跳过、存在药水时领取或跳过、领取金币。`semantic_actions` 保存共同计划，边界 kind/label 保存实际展开动作；候选集合、牌定义和目标篡改负例必须在提交前被拒绝。
 
-base 仅由正式工厂创建并 Start 一次，所有变化来自合法提交。参考使用正常 RunState、Player、MapTravel、RoomFactory、CombatRoom；实际战胜后调用 `ResolveOutcomeAsync(true)`，再调用真实 `SelectOption`、`Take`、`Skip`。不直接调用奖励生成函数代替战斗。两侧事实包括完整地图点/连线、合法后继旅行候选、战斗牌区/能力、长期金币/Hp/MaxHp、按永久牌组位置区分的实例与升级、药水容量/库存、奖励金额/牌序/稀有度/升级/药水存在及解决状态。牌组位置并非跨牌组变动的通用稳定身份；本入口只覆盖追加或跳过，不覆盖移除、变形或下一场复制来源验证。
+base 仅由正式工厂创建并 Start 一次，所有变化来自合法提交。参考使用正常 RunState、Player、MapTravel、RoomFactory、CombatRoom；实际战胜后调用 `ResolveOutcomeAsync(true)`，再调用真实 `SelectOption`、`Take`、`Skip`。不直接调用奖励生成函数代替战斗。两侧事实包括完整地图点/连线、合法后继旅行候选、战斗牌区/能力、长期金币/Hp/MaxHp、永久牌组来源与升级、药水容量/库存、奖励金额/牌序/稀有度/升级/药水存在及解决状态。牌组位置用于本次候选选择，跨变换身份由独立来源编号保留；当前只覆盖已登记路线，不代表全部移除/变换、附着或下一场复制来源验收。
 
-额外必需维度 `rewards`、`permanent-inventory`、`reward-closure` 分别要求真实奖励事实、每个边界都有长期资源/库存事实，以及最后边界为 travel-ready 且有合法旅行候选。终点是奖励关闭后可旅行，**没有提交后继旅行或验证下一战斗初始化**。原 `run` 命令仍是旧受控探针，不具有本套件的正常奖励语义。
+额外必需维度 `rewards`、`permanent-inventory`、`reward-closure` 分别要求真实奖励事实、每个边界都有长期资源/库存事实，以及最后边界为 travel-ready 且有合法旅行候选。默认一场用例停在奖励关闭后；两场用例会提交后继旅行并比较第二场初始化与结算。原 `run` 命令仍是旧受控探针，不具有本套件的正常奖励语义。
 
-本入口保留参考正常地图的限制：RunState 构造时已用原生根 seed 生成地图；既有 `RngSourceCompat.Apply` 只替换尚未消费的 run 具名流，不改该地图或玩家 Rewards 流。原生地图/玩家/动态 RNG 均保留真实读数和观测证据，不补抽、不替换地图、不删去缺映射域以制造一致。边界 Streams 是该时刻的累计状态；ReferenceStreams 另保留初始化和实际被触及的增量边界证据。未映射动态流只作证据，不假称与 base 同单位。
+本入口两侧均使用 v0.109 派生。参考使用原生 RunState，不调用 `RngSourceCompat.Apply`，通过公开 CurrentAncientEventType 完成其原生惰性预生成后记录首次边界。边界 Streams 仅记录已消费流的累计状态；地图流按其明确诊断名映射，其他动态流保留证据。战斗中 player.hp 是实时值，run.hp 为永久提交投影，在参考真实胜利结算后更新。
 
 共享固定闭包验证时，不用本工具生产 ProjectReference 重编 base/reference。在仓库根目录运行本包隔离工程和它的 DLL：
 
@@ -197,8 +207,7 @@ dotnet .artifacts/parallel/dsh-reshuffle-followup-20261011/bin/Debug/net9.0/Diff
   属**预防性对齐**）。`RngSourceCompat.UnverifiedKeyNames` 另列 6 条**尚未核对到引擎常量**的合成键
   （`UnknownMapPoint`/`CombatPotionGeneration`/`CombatEnergyCosts`/`MonsterAi`/`CombatOrbs`/`TreasureRoomRelics`）：
   它们同样是"一旦被消费才显形"的隐患，本包只如实登记，不猜 base 的名字、不改 base 常量。
-  另有两条**不是漏映射**：`act_<n>_map` 与 `MonsterAi` 在源里由内容 `new Rng(...)` 构造，不走 `RunRngSet`，
-  因此按动态流保留原始名。
+  该历史说明中MonsterAi归属有误：当前参考的MonsterModel.RollMove经CombatState.MonsterAiRng在顺序模式使用RunRngSet.MonsterAi；地图仍为独立派生流。两场正常战斗已验证共享MonsterAi计数/指纹。
 - **缺维度门槛收紧到"真有具名流读数"**：`streams` 维度要求某个边界存在 `Draws > 0` 的具名流；
   `TestCommand` 另加流证据自洽检查——声明 `rng_consumed_by_script` 却没有任何具名流边界读数（缺证据而非零消费），
   或脚本期间**实际增长**的具名流在逐边界读数里覆盖不到，都判 `missing_dimension`。初始化期消费的具名流不算脚本消费。
@@ -755,3 +764,38 @@ base 侧只停在 Start 之后的地图相位（`session_status=Running`、无�
 选择语义（参考侧没有对应动作模型，故 base 侧动作表为空）、多房间推进、房间奖励与结算；base 侧选中
 尚未实现的房型仍具名 Fail，本包不声称跑通。地图 case 的负数判别只用上述两项反例，未覆盖
 "`base_scope=dev`（无地图投影）"这类误配。
+
+
+### 连续首幕运行
+
+`ironclad-act1`复用正常工厂、共同动作和独立参考，`normal_act1`持续运行至实际死亡、首幕完成或具名失败，2000步上限只作为超时保护；不按战斗场次成功停止。`choose=defensive`是该脚本的公开防守策略选项，低生命时优先Defend，其余规则只读取公开定义、生命、牌区和地图类型。
+
+suite保留原seed的真实死亡控制例和必须到达首幕完成的连续例；后者遇到暂缓的PhrogParasite时仍返回非零。base失败但已有成功动作时，参考继续独立执行该成功前缀，比较所有稳定边界，失败动作不伪造执行；前缀一致仍不能把整局判为通过。normal-run记录的reward-closure维度检查历史上真实发生的奖励→合法旅行，不要求死亡终点仍可旅行；旧前缀suite保持末边界关闭要求。
+
+营火使用原生RestSiteRoom与实际Heal/Smith命令。参考TreasureRoom.Enter会自动取得遗物，无法表示真实跳过，因此连续适配按恢复源码的进入/开箱边界组合原生RNG、共享遗物袋与金币/获得命令；该适配在记录中明确注明，不宣称调用了原生自动领取入口，也未借用base计算结果。商店和额外房间能力未适配时明确失败。
+
+### 默认三幕与受控切幕核对
+
+`act-transition --output <目录>`从正式`dev-run`工厂正常Start，独立创建原生`RunState(Overgrowth,Hive,Glory)`。使用三个已登记seed逐幕核对事件/普通/精英队列、Boss和古代人，以及地图节点/连边/随机消费/指纹；预生成身份全量比较，未执行内容不因缺实现被过滤。
+
+核对切幕边界时显式预置双方的已访问坐标，并在base设定幕结束、资源/槽位及旧战斗残留，随后提交真实ContinueToNextAct。此部分标记`controlledTransition=true, normalVictoryEvidence=false`，不能算正常Boss胜利或四幕对拍。检查奖励未关闭拒绝、库存实例与空槽保留、全局幂等键、地图/旧战斗清理、不得重复UpFront，以及第三幕后TheArchitect仍明确失败。参考私有预生成库存通过只读诊断读取，不修改参考源码、随机数或玩法。缺参考/异常/任一差异均非零。
+
+### 第一幕多页与非战斗卡牌奖励
+
+`event-content --output <目录>`经下述独立事件入口执行TabletOfTruth五页、回复／放弃／致死、唯一及空升级域，以及RoomFullOfCheese八选二的候选定义、顺序、保留实例和清理；参考独立创建原生默认计划和真实事件。逐边界比较HP/MaxHp、永久牌组、实际事件与Rewards流的抽数／指纹；未消费流只核对零抽数。WoodCarvings有／无可移除基础牌资格的两例仍从正式`dev-run`真实问号入口验证，效果未支持仍具名失败。输出明确标记`controlledInitialState=true, normalVictoryEvidence=false`，不是正常通关证据。
+
+`test --suite normal-tablet --output <目录>`独立从默认三幕正常开局，原固定seed实际经过TabletOfTruth五页和后续战斗至真实死亡；要求恰好发生五次解读。支持`base_scope=dev-run`，初始化与单幕`dev-map`分列，原首幕完成失败例保留。此套件只证明正常事件、长期状态和死亡闭环；完整首幕胜利仍按`ironclad-act1`及整局合同验收。RoomFullOfCheese的Engine二选行为与公开协议多选缺口分开报告，不用单选替代二选。
+
+### 独立事件模块验证
+
+`event-modules [--event <源类名>] --output <目录>`使用工具侧`IsolatedEventSession`，不运行地图生成、正常遭遇或敌人。它加载正式ContentSource和版本化元数据，共用生产CardDefinitions、RunDeck、RunResources、EventModules、EventRoomCatalog与Compute后端；工具只提供已声明的受控Run资源／牌组初态和访问动作。通过真实`catalogue.Enter`初始化事件，再执行真实选项，不手工伪造某一事件的页字段。没有第二套玩法或事件ID分派表。
+
+省略`--event`时，对全部已注册模块执行进入检查，再检查JungleMazeAdventure与MorphicGrove的完整行为；指定已注册源类名时只进入对应模块，已有定向行为检查一并运行。MorphicGrove覆盖100金币资格边界、全部金币先扣、一次两张选择／非法重复答案不变、0/1/2候选自动处理、替换实例／顺序／随机指纹及Loner资源。Jungle覆盖两笔float32金币初始化、两分支与独行致死后的金币余效。
+
+原生JungleMazeAdventure明确记录偏离#84：SOLO_QUEST省略两次视觉列表洗牌抽数。工具保留严格参考的2抽与生产4抽差异，单列`known_reference_divergences`并返回1；资源与从源方法组合的独立向量另行核对，不修改参考、补抽或将该分支计为严格通过。`--event MorphicGrove`可独立返回0，不受此差异、敌人缺失或公开多选协议影响。所有结果标明`controlledEventVisits=true, normalVictoryEvidence=false`；正常Run集成仍用严格suite与公开Host。
+
+### Sown与SapphireSeed验证
+
+`event-modules --event SapphireSeed --output <目录>`经真实目录Enter执行三组固定seed的Eat／首张Plant比较，并验证完整永久候选与零随机消费；非首张Plant保留参考自动首选的明确差异，整体返回1，不冒充完整双侧通过。非首张选择、空域／单候选、跨战斗与复制隔离的源行为判别在Slice的`--sown-only`入口。
+
+`sown-combat --output <目录>`独立运行生产规则和原生CombatEngine，对照普通／升级Defend附着Sown后连续两次出牌的能量、格挡和附魔状态，共4个边界；使用受控战斗初态，不比较建局洗牌或宣称正常通关。另只读记录原生CreateClone保留Disabled、通用MutableClone重置的路径差异，参考不修改。异常或可比行为不一致返回非零。公开受控访问由net的正式工厂／ControlHost检查Plant候选、字段、请求重放、过期拒绝及后续战斗副本；正常开局轨迹仍须另列证据。

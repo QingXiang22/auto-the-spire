@@ -4,6 +4,8 @@
 
 ## 连接和响应
 
+Host的`--scope dev-map`选择单幕开发配置；`--scope dev-run`选择默认三幕开发计划。两者构建身份不同，不可混用catalog/候选/回放。多幕配置公开CurrentActIndex/ActId/ActCount，客户端在计划内的幕结束后消费当前ContinueToNextAct；缺少多幕事实或已到计划末尾时，保留开发边界，不能推断整局胜利。实际状态与能力见[跨幕契约](../mod-the-spire/act-transitions.md)。
+
 [NetClient](../../../net-the-spire/client/net_client.py)返回响应信封`{request_id, ok, result或error, ...}`。先检查`ok`再读取`result`；`error`按原样保留。
 
 | 方法 | 参数 | 成功的`result` |
@@ -40,6 +42,8 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 | `first_field_value(candidate)` | 第一个`known`参数值；只适用于已确认参数位置的策略 |
 
 种类/集合/关系访问函数接受短名，也接受完整公开ID。多mod同名时从目录取完整ID；字段短名需要在已确认的实体种类上使用。`flag`和`all_known`分别用于公开布尔字段和候选字段状态。
+
+正式0.2的可选单选会同时发布带Instance字段的`net.answer_decision`候选，以及fields=[]的取消候选。客户端若选择取消，仍提交该候选当前的candidate_id；不自行构造空实例、虚拟卡牌或应答请求。必须选择的目标不会发布取消候选。GeneratedCardOffers是独立公开候选序列，所选实例随后进入Hand或DiscardPile，未选实例不再出现。
 
 ## 下游需要什么
 

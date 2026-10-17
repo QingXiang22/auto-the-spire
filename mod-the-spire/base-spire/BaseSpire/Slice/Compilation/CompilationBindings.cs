@@ -186,7 +186,8 @@ internal sealed record RoomServicesBindings(
     RunDeck? DeckCommands,
     TreasureRoomWiring? Treasure,
     ShopRoomWiring? Shop,
-    UnknownRoomsBindings? Unknown);
+    UnknownRoomsBindings? Unknown,
+    RunActWiring? Acts = null);
 
 /// <summary>
 /// ENV-T09-unknown-room-modules-20261012：问号房 + 事件访问三件套的编译期绑定。

@@ -938,7 +938,7 @@ internal static class ShopFlowChecks
 
     private static Session NewRun(string seed)
     {
-        var run = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.DevMap)).CreateSession(seed);
+        var run = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.DevMap)).CreateSession(seed);
         run.Start();
         return run.Session;
     }

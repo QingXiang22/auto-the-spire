@@ -10,7 +10,8 @@ internal static class CombatPackageComposer
 {
     internal static EnginePackageBuilder Build(PackageBuildOptions options)
     {
-        if (options.InitializeNewRun && options.EncounterPool is not null) options = options with { EncounterPool = RunSourcePoolManifest.Complete(options.EncounterPool) };
+        if (options.InitializeNewRun && options.EncounterPool is not null && options.ActPlan is null)
+            options = options with { EncounterPool = RunSourcePoolManifest.Complete(options.EncounterPool) };
         // Declaration order is part of the rules identity. Declare handles before binding their bodies.
         // Content and state vocabulary. Each declaration returns only its downstream handles.
         var contentBindings = ContentCompilation.Content(options);
@@ -140,7 +141,7 @@ internal static class CombatPackageComposer
             doom is null ? null : scope => [doom.Resolve(scope, true)]);
         TurnCompilation.EnemyTurnBody(
             contentBindings, enemiesBindings, pilesBindings, enemyTurnBindings, HardcodedEnemyMove,
-            DeclaredEnemyMove, poison is null ? null : scope => [poison.Resolve(scope, true)]);
+            DeclaredEnemyMove, poison is null ? null : scope => [poison.Resolve(scope, true)], BlockClearPrevented);
         var drawBindings = CardCompilation.Draw(
             contentBindings, battleBindings, playerBindings, cardsBindings, pilesBindings, powerQueryBindings,
             powerCommandsBindings, powerRulesBindings, knowledgeCommandsBindings, DrawPrevented);
@@ -186,7 +187,24 @@ internal static class CombatPackageComposer
             roomTransitionBindings);
         RoomCompilation.Rooms(
             options, contentBindings, cardsBindings, runStateBindings, relicsBindings, runCollectionsBindings,
-            roomServicesBindings, rewardsBindings, roomTransitionBindings);
+            roomServicesBindings, rewardsBindings, roomTransitionBindings, encounterPoolBindings, runEncountersBindings, scope =>
+            {
+                var player = scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope));
+                var run = scope.First(scope.Collection(runCollectionsBindings.RunStates!));
+                return [.. BattleRoomCompilation.ClearCombat(scope, player, battleBindings, enemiesBindings, pilesBindings,
+                    knowledgeCommandsBindings, runCollectionsBindings, includeDead: true),
+                    scope.SetField(player, playerBindings.PlayerHp, scope.Field(run, runStateBindings.RunHp!)),
+                    scope.SetField(player, playerBindings.PlayerMaxHp, scope.Field(run, runStateBindings.RunMaxHp!)),
+                    scope.SetField(player, playerBindings.PlayerBlock, scope.Const(0L)),
+                    scope.SetField(player, playerBindings.PlayerEnergy, scope.Const(0L)),
+                    scope.SetField(player, playerBindings.PlayerStars, scope.Const(0L)),
+                    scope.SetField(player, playerBindings.PlayerOrbSlots, scope.Const((long)(contentBindings.Author?.BaseOrbSlots ?? 0))),
+                    scope.SetField(player, playerBindings.PlayerLostHp, scope.Const(false)),
+                    scope.SetField(player, playerBindings.PlayerExhaustedCard, scope.Const(false)),
+                    scope.SetField(player, playerBindings.PlayerBlockGains, scope.Const(0L)),
+                    scope.SetField(player, playerBindings.PlayerTurn, scope.Const(0L)),
+                    scope.SetField(player, playerBindings.PlayerBattleSettled, scope.Const(true))];
+            });
         return contentBindings.Package;
 
         // These adapters only wire explicit module interfaces; mechanic implementations live in the modules.
@@ -215,7 +233,13 @@ internal static class CombatPackageComposer
         Inst[] MultiplicativeStage(ProcedureBuilder scope, int amountSlot, int fixedSlot, int stacksSlot, Expr attacker,
                 Expr target) => DamageCompilation.MultiplicativeStage(
             contentBindings, powerQueryBindings, scope, amountSlot, fixedSlot, stacksSlot, attacker, target);
-        Inst[] SettleTail(IrScope scope) => SettlementCompilation.SettleTail(runStateBindings, settlementBindings, scope);
+        Inst[] SettleTail(IrScope scope)
+        {
+            var owner = scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope));
+            return [scope.If(scope.Equal(scope.Field(owner, playerBindings.PlayerHp), scope.Const(0L)),
+                scope.ForEach(scope.Relation(pilesBindings.Powers, owner), power => [scope.Destroy(power)])),
+                .. SettlementCompilation.SettleTail(runStateBindings, settlementBindings, scope)];
+        }
         Inst[] RelicVictorySteps(IrScope scope) => SettlementCompilation.RelicVictorySteps(
             options, battleBindings, playerBindings, relicsBindings, scope);
         Inst[] VictoryTail(IrScope scope, Expr turn) => SettlementCompilation.VictoryTail(

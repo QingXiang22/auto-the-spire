@@ -9,7 +9,7 @@
 
 接手第一步：读取[最终实际汇总](../../../.audit/dsh-potion-public-2026-10-11/final.summary.json)及[原始帧](../../../.audit/dsh-potion-public-2026-10-11/final.frames.jsonl)，逐组核验 `status/rc/assertions/steps/branches`。审阅通过后由 Codex 更新[主清单 T03](README.md#env-t03)。执行者交付后停止，不续派、不提交。
 
-本包新增[药水 Python 检查](../../../net-the-spire/client/test_potion_host.py)与[测试使用说明](../../../net-the-spire/client/README.md)。标准 NetClient、Host/C#、base/core/tools/reference/sts2/AI、MapRoomWiring、公共 Boss 夹具及主清单均未修改。检查走 describe/catalog/start/observe/公开候选/step，按运行期声明读取内容和容量。没有生产客户端缺口或跨模块修复。
+本包新增[药水 Python 检查](../../../net-the-spire/client/test_potion_host.py)与[测试使用说明](../../../net-the-spire/client/README.md)。标准 NetClient、Host/C#、base/core/tools/reference/sts2/AI、MapRoomWiring、公共 Boss 回放数据及主清单均未修改。检查走 describe/catalog/start/observe/公开候选/step，按运行期声明读取内容和容量。没有生产客户端缺口或跨模块修复。
 
 ## Host 与来源
 

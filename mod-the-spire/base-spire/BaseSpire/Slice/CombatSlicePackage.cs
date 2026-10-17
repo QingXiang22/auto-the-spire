@@ -70,12 +70,12 @@ public static class CombatSlicePackage
         //    `Run.CurrentNode`/`MapPhase`/`MapFloor`/`MapNodeCount`/`MapDraws`、`ChooseMapPoint` 动作，
         //    开局从新流 `base-spire:run:act_1_map` 逐笔重放生成整幕地图；
         //    关闭时（受控切片与既有夹具）声明、IR、摘要、行为逐字不变。
-        bool actMapEnabled = false, bool initializeNewRun = false)
+        bool actMapEnabled = false, bool initializeNewRun = false, BaseSpire.SinglePlayer.RunActPlan? actPlan = null)
     {
         return Compilation.CombatPackageComposer.Build(new Compilation.PackageBuildOptions(
             includeTestHeadbutt, fromAuthorText, authorModel, swapEncounterOrder, sameDefinitionEnemyPair,
             packageVersion, encounterPool, shuffleBattleDeck, terminalOnConfiguredRoomCount,
-            relicLibrary, startingRelics, spawnHpStream, actMapEnabled, initializeNewRun));
+            relicLibrary, startingRelics, spawnHpStream, actMapEnabled, initializeNewRun, actPlan));
     }
 
     /// <summary>把内�?id / 标签名变成合法的字段名末段（`base-spire:crawler` �?`base_spire_crawler`）�?/summary>

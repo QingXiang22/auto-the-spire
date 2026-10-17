@@ -7,7 +7,7 @@
 - delivery_status: ready_for_review
 - updated_at: 2026-10-11T12:47:29+08:00
 
-本包交付正常开局的逐次随机消费证据，让 Codex 能拆分真实 base 初始化机制包；**没有消除原开局首差，也不申请关闭 ENV-T04 / CORE-AUTHOR-04 / M01**。当前认领与依赖只维护在[主清单 ENV-T04](README.md#env-t04)。验收者为 Codex 负责人；此处是执行者交付，不是负责人验收。
+本包交付正常开局的逐次随机消费证据，让 Codex 能拆分真实 base 初始化机制包；**没有消除原开局首个差异，也不申请关闭 ENV-T04 / CORE-AUTHOR-04 / M01**。当前认领与依赖只维护在[主清单 ENV-T04](README.md#env-t04)。验收者为 Codex 负责人；此处是执行者交付，不是负责人验收。
 
 ## 接手后先做什么
 
@@ -22,8 +22,8 @@
 | 真实涉及的 run 流 | base / reference 累计 | 第一次消费及差异 |
 | --- | --- | --- |
 | UpFront | 17 / 295 | 两侧第 1 次前状态指纹都为 `0x422dd5ee644eb169`。base 遭遇队列抽取 `[0,4) → 2`；reference 共享遗物袋首桶洗牌 `[0,30) → 21`。**相同初始流状态、不同调用用途/输入界限**，不能把样本值不同归为源随机算法错误。 |
-| Niche | 1 / 1 | seed `52833259`，前状态 `0xccc58273a333ad53`，双方 `[0,3) → 1`，未发现本流样本首差。用于怪物出生 HP 偏移；敌人身份已经因 UpFront 不同，所以不能据此宣称敌人 HP 全等。 |
-| Shuffle | 9 / 9 | seed `1863647213`，首前状态 `0xaf4310fd7c212fde`，双方 `[0,10) → 2`；9 次样本与每次前状态逐项一致，无本次初始化洗牌样本首差。 |
+| Niche | 1 / 1 | seed `52833259`，前状态 `0xccc58273a333ad53`，双方 `[0,3) → 1`，未发现本流样本首个差异。用于怪物出生 HP 偏移；敌人身份已经因 UpFront 不同，所以不能据此宣称敌人 HP 全等。 |
+| Shuffle | 9 / 9 | seed `1863647213`，首前状态 `0xaf4310fd7c212fde`，双方 `[0,10) → 2`；9 次样本与每次前状态逐项一致，无本次初始化洗牌样本首个差异。 |
 
 ### 实际调用序列
 
@@ -35,17 +35,17 @@ reference 独立正常入口为[ReferenceRunEntry:101–122](../../../tools/diff
 
 ### 洗牌前输入和调用路径
 
-各侧首次 Shuffle 之前独立读取的起始牌序均为 `StrikeIronclad×5, DefendIronclad×4, Bash×1`，顺序相同，没有设牌。参考[Player:277–286](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs#L277-L286)复制 Deck 后调用 DrawPile.RandomizeOrderInternal；[CardPile:60–65](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPile.cs#L60-L65)交给 Rng.Shuffle。base [CombatSlicePackage:3227–3235](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3227-L3235)复制长期牌组再 ShuffleCollection。bounds 依次10、9、8、7、6、5、4、3、2，双方结果依次 `2,0,0,6,5,3,2,0,1`；每次前状态见逐次轨迹。该 seed 的起始 Shuffle 接线/采样未见差异，不扩展为真实重洗一致性结论。
+各侧首次 Shuffle 之前独立读取的起始牌序均为 `StrikeIronclad×5, DefendIronclad×4, Bash×1`，顺序相同，没有设牌。参考[Player:277–286](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs#L277-L286)复制 Deck 后调用 DrawPile.RandomizeOrderInternal；[CardPile:60–65](../../../reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPile.cs#L60-L65)交给 Rng.Shuffle。base [CombatSlicePackage:3227–3235](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3227-L3235)复制长期牌组再 ShuffleCollection。bounds 依次10、9、8、7、6、5、4、3、2，双方结果依次 `2,0,0,6,5,3,2,0,1`；每次前状态见逐次轨迹。该 seed 的起始 Shuffle 接入/采样未见差异，不扩展为真实重洗一致性结论。
 
 ## 最小可实施机制包建议（交负责人拆包，不是本会话新认领）
 
 受阻 case 为 `rng-initial-shuffle`，依赖 ENV-T08/base 真正新 Run 初始化；并非整个工具工作都停止。
 
 1. **第一段真实遗物袋生命周期**：在[正式工厂 CreateSession 配置:111–179](../../../mod-the-spire/base-spire/BaseSpire/SinglePlayer/BaseSpireRuntimeFactory.cs#L111-L179)及[SetupBattle:3512–3554](../../../mod-the-spire/base-spire/BaseSpire/Slice/CombatSlicePackage.cs#L3512-L3554)之间，由 base 主责确定新 Run 的源等价阶段。源共享袋按解锁池/稀有度桶顺序洗牌，然后每玩家袋；保留真正可取用的袋状态与幂等性，不做弃用随机占位。dev-map 已有共享袋能力可评估复用，但不能修改原 case scope 来绕开 dev 缺口。针对该 seed 首次调用应变为共享袋洗牌用途，后续玩家袋和计数须来自真实池，而不是硬编码112/118。
-2. **第二段完整幕预生成**：按[源 RunManager:668–691](../../../sts2/src/Core/Runs/RunManager.cs#L668-L691)与[参考 RunState:271–353](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L271-L353)核对共享古代人、事件、普通、精英、Boss、古代人的顺序、池内容/过滤、拒绝重抽。base dev 普通池目前是支持子集，不能在工具替换为参考池或按 seed 特判。前置阶段实装以后，普通队列输入池差异仍可能产生新首差；本包不承诺只补两袋即可完整通过。
+2. **第二段完整幕预生成**：按[源 RunManager:668–691](../../../sts2/src/Core/Runs/RunManager.cs#L668-L691)与[参考 RunState:271–353](../../../reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs#L271-L353)核对共享古代人、事件、普通、精英、Boss、古代人的顺序、池内容/过滤、拒绝重抽。base dev 普通池目前是支持子集，不能在工具替换为参考池或按 seed 特判。前置阶段实装以后，普通队列输入池差异仍可能产生新首个差异；本包不承诺只补两袋即可完整通过。
 3. **门槛**：先同原 seed 原 case 的阶段/首样本对齐，再保留敌人/牌区/streams全比较；共享生产改动由负责人按根测试取舍执行受影响 Slice/消费者与最终集成，最后完整17。保留已过两seed地图输入。重洗包独立调查，不扩大全局 Profile。
 
-可继续事项：工具能对后续新构建运行本包诊断；原14双侧case和受控Power/实例槽位检查均可复用。`random-reshuffle-unsupported`仍为原受控初始化的 boundary3 牌槽顺序首差；本包**没有证明与正常开局同因**，不以 UpFront 初始阶段缺失替它定案。
+可继续事项：工具能对后续新构建运行本包诊断；原14双侧case和受控Power/实例槽位检查均可复用。`random-reshuffle-unsupported`仍为原受控初始化的 boundary3 牌槽顺序首个差异；本包**没有证明与正常开局同因**，不以 UpFront 初始阶段缺失替它定案。
 
 ## 本包修改与诊断边界
 
@@ -68,7 +68,7 @@ reference 独立正常入口为[ReferenceRunEntry:101–122](../../../tools/diff
 | --- | --- | --- | --- |
 | 最终隔离构建 | `dotnet build tools/differential --artifacts-path .artifacts/parallel/dsh-startup-alignment` | 0；既有ComparatorSelfTest:67 CS8602警告 | [最终构建日志](../../../.audit/dsh-startup-alignment-2026-10-11/build-final-fixed.txt) |
 | 逐次诊断 | `dotnet $dll init-upfront --seed ENV-T04-RNG-SHUFFLE-001 --records .audit/dsh-core-author-04-2026-10-11/regression/records --output $audit/final-diagnosis` | 0；阶段总数匹配、重放匹配工厂、无截断；**不是开局通过** | [诊断日志](../../../.audit/dsh-startup-alignment-2026-10-11/final-diagnosis.txt)及前述两个JSON |
-| 原定向case | `dotnet $dll test --suite regression --only rng-initial-shuffle --output $audit/directed` | 1；1执行/complete=false，敌人首差；子集无decision mutant目标自检失败1，不宣称门槛全过 | [定向日志](../../../.audit/dsh-startup-alignment-2026-10-11/directed.txt) |
+| 原定向case | `dotnet $dll test --suite regression --only rng-initial-shuffle --output $audit/directed` | 1；1执行/complete=false，敌人首个差异；子集无decision mutant目标自检失败1，不宣称门槛全过 | [定向日志](../../../.audit/dsh-startup-alignment-2026-10-11/directed.txt) |
 | 最终完整regression（一次） | `dotnet $dll test --suite regression --output $audit/regression` | **1；17/17执行，base17/reference16；14双侧passed/1单侧self_checked/2未过，自检22项0失败** | [报告](../../../.audit/dsh-startup-alignment-2026-10-11/regression/regression.json)、[日志](../../../.audit/dsh-startup-alignment-2026-10-11/regression.txt) |
 | 既有独立源向量 | `dotnet $dll rng --output $audit/rng` | 0；5读数seed一致，8布局差异已登记、未登记0，48源Profile向量失败0 | [日志](../../../.audit/dsh-startup-alignment-2026-10-11/rng.txt)、[实际报告](../../../.audit/dsh-startup-alignment-2026-10-11/rng-crosscheck.json) |
 

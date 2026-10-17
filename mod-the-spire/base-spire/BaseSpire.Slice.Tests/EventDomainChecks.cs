@@ -9,6 +9,7 @@ internal static class EventDomainChecks
 {
     public static void Run()
     {
+        AromaOfChaosChecks.Run();
         Check.Run("RUN-GOLD-01: source hook order, single evaluation and distinct command snapshots", () =>
         {
             var fixture = Build((_, _) => new ProbeEvent(context =>

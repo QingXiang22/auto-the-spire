@@ -146,7 +146,7 @@ internal static class TestCommand
         }
 
         // -- 2. 比较器自检：受控错误记录必须被抓到（与 compare 共用同一份自检） ------------------------------
-        var selfTest = ComparatorSelfTest.Run(baseRecords, command);
+        var selfTest = ComparatorSelfTest.Run(baseRecords, command, selected);
         var selfTestFailures = selfTest.Count(item => !item.Detected);
 
         // -- 3. 判定与退出码 --------------------------------------------------------------------------------
@@ -318,7 +318,8 @@ internal static class TestCommand
             verdict = "timeout";
             detail = baseRecord.Detail;
         }
-        else if (baseBroken)
+        else if (baseBroken && !(fixture.Kind == CaseKinds.NormalReward && fixture.Script.Single().Action == "normal_act1"
+            && baseRecord.SemanticActions is { Count: > 0 }))
         {
             verdict = baseRecord.Status;
             detail = baseRecord.Detail;
@@ -372,7 +373,8 @@ internal static class TestCommand
         }
         else
         {
-            var (ran, timedOut, failure) = Guarded(() => ReferenceBackends.Run(fixture), caseTimeoutMs);
+            var (ran, timedOut, failure) = Guarded(() => fixture.Kind == CaseKinds.NormalReward
+                ? NormalRewardEntry.RunReference(fixture, baseRecord) : ReferenceBackends.Run(fixture), caseTimeoutMs);
             if (timedOut)
             {
                 verdict = "timeout";
@@ -510,9 +512,18 @@ internal static class TestCommand
                 Dimensions.Permanent => record.Boundaries.Count > 0 && record.Boundaries.All(item =>
                     new[] { "run.gold", "run.hp", "run.max_hp", "deck.order", "deck.instance_count", "potion.capacity", "potion.inventory" }
                         .All(path => item.Facts.Any(f => f.Path == path))),
-                Dimensions.RewardClosure => record.Boundaries.LastOrDefault() is { } last
+                Dimensions.RewardClosure => record.BackendVersion == "normal-run@1"
+                    ? Enumerable.Range(1, Math.Max(0, record.Boundaries.Count - 1)).Any(i =>
+                        record.Boundaries[i - 1].Facts.Any(f => f.Path == "run.phase" && f.Value == "rewards")
+                        && record.Boundaries[i].Facts.Any(f => f.Path == "run.phase" && f.Value == "travel-ready")
+                        && record.Boundaries[i].Actions.Any(a => a.Action == "base-spire:ChooseMapPoint" && a.Candidates.Count > 0))
+                    : record.Boundaries.LastOrDefault() is { } last
                     && last.Facts.Any(f => f.Path == "run.phase" && f.Value == "travel-ready")
                     && last.Actions.Any(a => a.Action == "base-spire:ChooseMapPoint" && a.Candidates.Count > 0),
+                Dimensions.CombatOrigins => record.Boundaries.Any(b => b.Facts.Any(f => f.Path == "run.phase" && f.Value == "combat"))
+                    && record.Boundaries.Where(b => b.Facts.Any(f => f.Path == "run.phase" && f.Value == "combat"))
+                        .All(b => new[] { "hand", "draw", "discard", "exhaust", "play" }
+                            .All(pile => b.Facts.Any(f => f.Path == "pile." + pile + ".origins"))),
                 Dimensions.Trace => record.EngineTrace is { Records.Count: > 0 },
                 Dimensions.Terminal => !string.IsNullOrWhiteSpace(record.Terminal),
                 _ => false,

@@ -17,8 +17,8 @@ internal static class PotionReuseChecks
         Check.Run("药水复用：正式资源加载、普通Power链接及原11瓶保留", () =>
         {
             Check.Equal(48, Content.Model.PotionPool.Count, "完整池不缩减");
-            Check.Equal(13, Content.Model.Potions.Count, "只新增两瓶经过后续判别的效果");
-            Check.Equal(35, Content.Model.PotionPool.Count(p => p.UnsupportedUseReason.Length > 0), "未支持仍具名");
+            Check.Equal(14, Content.Model.Potions.Count, "包含已验证生成选择机制的AttackPotion");
+            Check.Equal(34, Content.Model.PotionPool.Count(p => p.UnsupportedUseReason.Length > 0), "未支持仍具名");
             foreach (var id in new[] { "beetle-juice", "blessing-of-the-forge", "block-potion", "dexterity-potion",
                 "energy-potion", "fire-potion", "flex-potion", "strength-potion", "swift-potion", "vulnerable-potion", "weak-potion" })
                 Check.True(Content.Model.Potions.Any(p => p.Id == "base-spire:" + id), "保留原效果 " + id);
@@ -36,7 +36,7 @@ internal static class PotionReuseChecks
                 || p.Resource.EndsWith("ironclad-powers.spire", StringComparison.Ordinal)
                 || p.Resource.EndsWith("enemies.spire", StringComparison.Ordinal)))
                 Console.WriteLine($"SOURCE {source.Resource} {source.Digest}");
-            Console.WriteLine($"CONTENT digest={Content.ContentDigest}; seed=20261011; controlled inventory/turns; supported=13 unsupported=35");
+            Console.WriteLine($"CONTENT digest={Content.ContentDigest}; seed=20261011; controlled inventory/turns; supported={Content.Model.Potions.Count} unsupported={Content.Model.PotionPool.Count(p => p.UnsupportedUseReason.Length > 0)}");
         });
 
         foreach (var mode in new[] { "plain", "strength", "weak", "vulnerable", "combined" })
@@ -155,7 +155,7 @@ internal static class PotionReuseChecks
 
     private static Session New()
     {
-        var model = SliceAuthorFrontend.Load() with { Powers = Content.Model.Powers,
+        var model = SliceAuthorFrontend.Load() with { Cards = Content.Model.Cards, Powers = Content.Model.Powers,
             Potions = Content.Model.Potions, PotionPool = Content.Model.PotionPool, Belt = [] };
         var builder = new RuleSetBuilder(); builder.Add(CombatSlicePackage.Build(authorModel: model).Build());
         var s = new Session(builder.Build(), 20261011UL, [SliceManifest.PlayerRole], computeBackend: BaseSpireComputeBackend.Instance);

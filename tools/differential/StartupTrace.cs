@@ -75,7 +75,7 @@ internal static class StartupTrace
         }
         finally { RngDiagnostics.DrawObserver = previous; }
 
-        var factory = new BaseSpireRuntimeFactory(RunConfiguration.Ironclad(0, BaseSpireScope.Dev));
+        var factory = new BaseSpireRuntimeFactory(RunConfiguration.FrozenIronclad(0, BaseSpireScope.Dev));
         var normal = factory.CreateSession(seed);
         normal.Start();
         // Existing factory exposes no debug/profile injection. Replay exactly its immutable Rules and published configuration;
@@ -121,7 +121,7 @@ internal static class StartupTrace
         private readonly Dictionary<string, int> counters = new();
         public Action<string>? BeforeDraw { get; set; }
         public List<Draw> Draws { get; } = [];
-        public ObservedProfile(IEnumerable<(string Type, string Stream, uint Seed)> seeds) =>
+        public ObservedProfile(IEnumerable<(string Type, string Stream, ulong Seed)> seeds) =>
             streams = seeds.GroupBy(x => (ulong)x.Seed).ToDictionary(g => g.Key, g => string.Join("|", g.Select(x => x.Stream)));
         public string AlgorithmId => inner.AlgorithmId;
         public string DrawProfileId => inner.DrawProfileId;

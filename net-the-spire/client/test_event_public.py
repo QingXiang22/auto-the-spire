@@ -114,6 +114,17 @@ class EventPolicyChecks(unittest.TestCase):
     def test_frontier_remains_non_victory_boundary(self):
         snap = event_snapshot("", [option("next", "ContinueToNextAct")], phase=6)
         self.assertEqual(shop_policy().choose(snap).reason, "act_completed_dev_boundary")
+
+    def test_multiact_plan_continues_without_frontier_probe(self):
+        snap = event_snapshot("", [option("next", "ContinueToNextAct")], phase=6)
+        run = snap["entities"][0]
+        run["fields"].extend([
+            {"field_id": "net:field:base-spire:Run.CurrentActIndex", "state": "known", "value": "0"},
+            {"field_id": "net:field:base-spire:Run.ActCount", "state": "known", "value": "3"},
+        ])
+        self.assertEqual(shop_policy().choose(snap).action, "ContinueToNextAct")
+        run["fields"][-2]["value"] = "2"
+        self.assertEqual(shop_policy().choose(snap).reason, "act_completed_dev_boundary")
         self.assertEqual(shop_policy(step_frontier=True).choose(snap).candidate["candidate_id"], "next")
 
 

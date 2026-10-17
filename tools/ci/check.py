@@ -1,4 +1,4 @@
-"""Run the same core, base, or differential checks locally and in GitHub Actions."""
+"""Run broad regression checks in GitHub Actions or explicitly on local request."""
 from __future__ import annotations
 
 import argparse
@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=["core", "base", "differential"])
+    parser.add_argument("suite", choices=["core", "base", "net", "differential"])
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -36,6 +36,9 @@ def main() -> int:
         commands = [build(project), run(project) + ["--", "--suite", "runtime", "--report", str(output / "behavior")],
                     build("tools/base-spire-dev/BaseSpire.Dev.csproj"),
                     [sys.executable, "-X", "utf8", "tools/base-spire-dev/verify_examples.py"]]
+    elif args.suite == "net":
+        project = "net-the-spire/Net.TheSpire.Tests"
+        commands = [build(project), run(project)]
     else:
         project = "tools/differential/Differential.csproj"
         commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],

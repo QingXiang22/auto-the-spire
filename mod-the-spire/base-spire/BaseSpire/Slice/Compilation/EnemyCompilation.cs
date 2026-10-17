@@ -634,10 +634,14 @@ internal static class EnemyCompilation
         }
         foreach (var power in donors)
         {
-            yield return enemyTurnBindings.StartEnemyTurn.SetLocal(fixedSlot, enemyTurnBindings.StartEnemyTurn.Multiply(
+            yield return enemyTurnBindings.StartEnemyTurn.If(
+                enemyTurnBindings.StartEnemyTurn.Greater(
+                    enemyTurnBindings.StartEnemyTurn.CallPure(powerQueryBindings.PowerStacksOf.Symbol, monster, enemyTurnBindings.StartEnemyTurn.Const(power.Id)),
+                    enemyTurnBindings.StartEnemyTurn.Const(0L)),
+                enemyTurnBindings.StartEnemyTurn.SetLocal(fixedSlot, enemyTurnBindings.StartEnemyTurn.Multiply(
                 enemyTurnBindings.StartEnemyTurn.LocalRef(fixedSlot),
                 enemyTurnBindings.StartEnemyTurn.Const(decimal.Parse(power.BlockGainMultiplier,
-                    System.Globalization.CultureInfo.InvariantCulture))));
+                    System.Globalization.CultureInfo.InvariantCulture)))));
         }
 
         yield return enemyTurnBindings.StartEnemyTurn.SetLocal(fixedSlot,

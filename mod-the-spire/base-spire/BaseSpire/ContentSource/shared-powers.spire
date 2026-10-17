@@ -36,6 +36,7 @@ package base-spire {
   }
 
   power Shrink {
+    negativeStacksAreInfinite = true
     outgoingDamageMultiplier = 0.7
     removeWhenApplierDies = true
     isDebuff = true
