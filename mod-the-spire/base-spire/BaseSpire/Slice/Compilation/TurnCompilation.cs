@@ -133,14 +133,17 @@ internal static class TurnCompilation
         EnemySelectionBindings enemySelectionBindings,
         MaxEnergyBonusCallback MaxEnergyBonus,
         BlockClearPreventedCallback BlockClearPrevented,
-        InnateCallback Innate, Func<IrScope, Inst[]> orbTurnStart, Func<IrScope, Inst[]>? playerPoison)
+        InnateCallback Innate, Func<IrScope, Inst[]> orbTurnStart, Func<IrScope, Inst[]>? playerPoison,
+        Func<IrScope, string, Inst[]>? relicEffects = null, Func<IrScope, Expr, Expr>? modifyHandDraw = null,
+        Func<IrScope, Expr>? retainEnergy = null, Func<IrScope, Expr>? retainedBlockLimit = null)
     {
 
         var startPlayerTurn = contentBindings.Package.Procedure("StartPlayerTurn");
 
         var turnPlayer = startPlayerTurn.First(startPlayerTurn.Type(playerBindings.Player, battleBindings.BattleScope));
 
-        var handDraw = powerRulesBindings.PowerRules.HandDraw(startPlayerTurn, startPlayerTurn.Const((long)SliceManifest.DrawPerTurn));
+        var baseHandDraw = startPlayerTurn.Const((long)SliceManifest.DrawPerTurn);
+        var handDraw = powerRulesBindings.PowerRules.HandDraw(startPlayerTurn, modifyHandDraw?.Invoke(startPlayerTurn, baseHandDraw) ?? baseHandDraw);
 
         startPlayerTurn.Body([
             // BASE-02 �?1：玩家回合开始先让每只怪按状态机选取行动（原�?`PrepareForNextTurn` �?`RollMove`
@@ -155,16 +158,25 @@ internal static class TurnCompilation
             // the recovered turn start resets the play history before setting energy
             // (Environment.cs:760-772; the slice declares it as the first step after the turn counter).
             startPlayerTurn.If(startPlayerTurn.Const(true), pilesBindings.Lifecycle.BeginTurn(startPlayerTurn, turnPlayer)),
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.BeforeSideTurnStart) ?? [],
             powerRulesBindings.PowerRules.Call(startPlayerTurn, "CaptureTurnStart"),
             startPlayerTurn.SetField(turnPlayer, powerRulesBindings.PowerRules.EndingTurn, startPlayerTurn.Const(false)),
-            startPlayerTurn.SetField(turnPlayer, playerBindings.PlayerEnergy,
-                startPlayerTurn.Add(startPlayerTurn.Field(turnPlayer, playerBindings.PlayerMaxEnergy),
-                    MaxEnergyBonus(startPlayerTurn, turnPlayer))),
+            startPlayerTurn.IfElse(retainEnergy?.Invoke(startPlayerTurn) ?? startPlayerTurn.Const(false),
+                [startPlayerTurn.SetField(turnPlayer, playerBindings.PlayerEnergy,
+                    startPlayerTurn.Add(startPlayerTurn.Field(turnPlayer, playerBindings.PlayerEnergy),
+                        startPlayerTurn.Add(startPlayerTurn.Field(turnPlayer, playerBindings.PlayerMaxEnergy), MaxEnergyBonus(startPlayerTurn, turnPlayer))))],
+                [startPlayerTurn.SetField(turnPlayer, playerBindings.PlayerEnergy,
+                    startPlayerTurn.Add(startPlayerTurn.Field(turnPlayer, playerBindings.PlayerMaxEnergy), MaxEnergyBonus(startPlayerTurn, turnPlayer)))]),
             powerRulesBindings.PowerRules.Call(startPlayerTurn, "AfterEnergyReset"),
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.AfterEnergyReset) ?? [],
             powerRulesBindings.PowerRules.Call(startPlayerTurn, "BeforeHandDraw"),
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.BeforeHandDraw) ?? [],
             // W-06：格挡在回合开始清�?*除非**持有 `preventsBlockClear` 的能力（Barricade）�?
-            startPlayerTurn.If(startPlayerTurn.Not(BlockClearPrevented(startPlayerTurn, turnPlayer)),
-                startPlayerTurn.SetField(turnPlayer, playerBindings.PlayerBlock, startPlayerTurn.Const(0L))),
+            startPlayerTurn.If(startPlayerTurn.And(startPlayerTurn.Greater(startPlayerTurn.Field(turnPlayer, playerBindings.PlayerTurn), startPlayerTurn.Const(1L)),
+                startPlayerTurn.Not(BlockClearPrevented(startPlayerTurn, turnPlayer))),
+                startPlayerTurn.SetField(turnPlayer, playerBindings.PlayerBlock,
+                    startPlayerTurn.Minimum(startPlayerTurn.Field(turnPlayer, playerBindings.PlayerBlock), retainedBlockLimit?.Invoke(startPlayerTurn) ?? startPlayerTurn.Const(0L)))),
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.AfterBlockCleared) ?? [],
             // W-06：`trigger = afterPlayerTurnStart` 的声明式链（DemonFormPower：每回合开始按层数加力量）�?
             // 位置：回合计�?能量/格挡重置之后、抽牌之前（来源�?turn start 触发时点）�?
             startPlayerTurn.Call(turnStartTriggerBindings.TriggerTurnStart.Symbol),
@@ -174,6 +186,9 @@ internal static class TurnCompilation
                     startPlayerTurn.Count(startPlayerTurn.Where(startPlayerTurn.Collection(pilesBindings.DrawPile),c=>Innate(startPlayerTurn,c)))))],
                 [startPlayerTurn.Call(drawBindings.Draw, handDraw.Count)]),
             powerRulesBindings.PowerRules.Call(startPlayerTurn, "AfterTurnStart"),
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.AfterPlayerTurnStart) ?? [],
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.AfterPlayerTurnStartLate) ?? [],
+            .. relicEffects?.Invoke(startPlayerTurn, RelicTriggers.AfterSideTurnStart) ?? [],
             .. playerPoison is null ? Array.Empty<Inst>() : playerPoison(startPlayerTurn),
             startPlayerTurn.If(startPlayerTurn.Const(true), orbTurnStart(startPlayerTurn)),
             startPlayerTurn.Emit(eventsBindings.TurnStarted, (eventsBindings.TurnStartedTurn, startPlayerTurn.Field(turnPlayer, playerBindings.PlayerTurn)))]);
@@ -200,9 +215,10 @@ internal static class TurnCompilation
         DispatchCardHookCallback DispatchCardHook,
         EndTurnHandStepsCallback EndTurnHandSteps,
         ClearCostModifierCallback ClearCostModifier, Func<IrScope, Inst[]> orbTurnEnd,
-        Func<IrScope, Inst[]>? playerDoom)
+        Func<IrScope, Inst[]>? playerDoom, Func<IrScope, string, Inst[]>? relicEffects = null)
     {
         playerTurnEndBindings.EndPlayerTurn.Body([
+            .. relicEffects?.Invoke(playerTurnEndBindings.EndPlayerTurn, RelicTriggers.BeforeSideTurnEnd) ?? [],
             .. playerDoom is null ? Array.Empty<Inst>() : new[] { playerTurnEndBindings.EndPlayerTurn.If(playerTurnEndBindings.EndPlayerTurn.Const(true), playerDoom(playerTurnEndBindings.EndPlayerTurn)) },
             playerTurnEndBindings.EndPlayerTurn.If(playerTurnEndBindings.EndPlayerTurn.Const(true), orbTurnEnd(playerTurnEndBindings.EndPlayerTurn)),
             powerRulesBindings.PowerRules.Call(playerTurnEndBindings.EndPlayerTurn, "EndTurnAuto"),
@@ -220,6 +236,7 @@ internal static class TurnCompilation
             playerTurnEndBindings.EndPlayerTurn.Call(turnEndBindings.ResolveTurnEnd.Symbol, playerTurnEndBindings.EndPlayerTurn.First(playerTurnEndBindings.EndPlayerTurn.Type(playerBindings.Player, battleBindings.BattleScope)),
                 playerTurnEndBindings.EndPlayerTurn.Const("player"), playerTurnEndBindings.EndPlayerTurn.Const(true)),
             powerRulesBindings.PowerRules.Call(playerTurnEndBindings.EndPlayerTurn, "AfterTurnEnd"),
+            .. relicEffects?.Invoke(playerTurnEndBindings.EndPlayerTurn, RelicTriggers.AfterSideTurnEnd) ?? [],
             playerTurnEndBindings.EndPlayerTurn.SetField(playerTurnEndBindings.EndPlayerTurn.First(playerTurnEndBindings.EndPlayerTurn.Type(playerBindings.Player, battleBindings.BattleScope)), powerRulesBindings.PowerRules.EndingTurn, playerTurnEndBindings.EndPlayerTurn.Const(true)),
             playerTurnEndBindings.EndPlayerTurn.Call(enemyTurnBindings.StartEnemyTurn.Symbol),
             playerTurnEndBindings.EndPlayerTurn.Call(playerTurnBindings.StartPlayerTurn.Symbol)]);
@@ -474,7 +491,7 @@ internal static class TurnCompilation
         CardsBindings cardsBindings,
         PilesBindings pilesBindings,
         PlayerTurnEndBindings playerTurnEndBindings,
-        Expr cardInHand)
+        Expr cardInHand, Expr? retainHand = null)
     {
         Inst Discard() => playerTurnEndBindings.EndPlayerTurn.If(playerTurnEndBindings.EndPlayerTurn.Const(true),
             playerTurnEndBindings.EndPlayerTurn.RemoveFromCollection(pilesBindings.Hand, cardInHand),
@@ -482,7 +499,7 @@ internal static class TurnCompilation
         Inst Keep() => playerTurnEndBindings.EndPlayerTurn.If(playerTurnEndBindings.EndPlayerTurn.Const(false));
 
         var cards = cardsBindings.CardDefinitions.Compiled.ToList();
-        return Branch(0);
+        return retainHand is null ? Branch(0) : playerTurnEndBindings.EndPlayerTurn.IfElse(retainHand, [Keep()], [Branch(0)]);
 
         Inst Branch(int index)
         {

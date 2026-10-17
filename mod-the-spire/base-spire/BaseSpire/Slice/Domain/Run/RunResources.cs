@@ -71,6 +71,12 @@ public sealed class RunResources(FieldSymbol hp, FieldSymbol maxHp, FieldSymbol 
         ];
     }
 
+    public Inst[] HealToFull(IrScope scope, Expr owner) =>
+        HealLivingPlayer(scope, owner, scope.Subtract(scope.Field(owner, maxHp), scope.Field(owner, hp)));
+
+    public Inst[] HealMaxHpPercent(IrScope scope, Expr owner, int percent) =>
+        HealLivingPlayer(scope, owner, scope.Divide(scope.Multiply(scope.Field(owner, maxHp), scope.Const((long)percent)), scope.Const(100L)));
+
     public Inst[] LoseGold(IrScope scope, Expr run, Expr amount)
     {
         var value = Snapshot(scope, "GoldLoss");

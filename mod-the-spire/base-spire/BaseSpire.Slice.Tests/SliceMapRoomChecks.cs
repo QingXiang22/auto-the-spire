@@ -90,8 +90,14 @@ internal static class SliceMapRoomChecks
     // Focused evidence: SilentPoisonChecks; previous dev 475abd581a69694c / 161d18afa369a767.
     // 2026-10-17: complete solo Sly family, dynamic keyword lifetimes, isolated discard batches and before-hit Thorns.
     // Previous dev db7ab18e687e380d / feb3f5074952e499; focused witnesses: SilentSlyChecks.
-    private const string DevGoldenRuleset = "87b1e83c4318a488";
-    private const string DevGoldenBuild = "d3484e3e0486354a";
+    // 2026-10-17 relic foundation: instance Counter/IsWax/IsMelted schema, shared construction and
+    // source-order victory listeners excluding melted relics. Controlled lifecycle/factory checks:
+    // .audit/relic-foundation-20261017/. Previous dev 87b1e83c4318a488 / d3484e3e0486354a.
+    // 2026-10-17 relic content batch: 69 declared relic effects, FocusPower role, PlatingPower first-turn
+    // rule and orb consumers move the content/semantics digests again (same build/check entry:
+    // `--relic-content-only`, `--describe-build`). Previous dev 2ee95d1e50b93b0a / 6ccdb4ee30acd725.
+    private const string DevGoldenRuleset = "2b67d3cf8a4731f4";
+    private const string DevGoldenBuild = "e3f4afd5fb459d40";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -107,8 +113,10 @@ internal static class SliceMapRoomChecks
     // Sown/SapphireSeed and actual card-copy semantics: .audit/sown-20261017/.
     // Previous dev-map 34b51c466486b0f9 / d96534dd8df06257.
     // Previous dev-map 2958d9e779c64116 / 46130439a68eedb3.
-    private const string DevMapGoldenRuleset = "6ed7062e03b9867d";
-    private const string DevMapGoldenBuild = "74ef43415f47d401";
+    // Same relic schema/lifecycle migration; previous dev-map 6ed7062e03b9867d / 74ef43415f47d401.
+    // Same relic content batch as dev; previous dev-map 466c1e5dbb31bf7d / 8c82420f95a29547.
+    private const string DevMapGoldenRuleset = "84b4dbd80cb769ea";
+    private const string DevMapGoldenBuild = "42889d7374f76501";
 
     public static void DefaultIdentity()
     {

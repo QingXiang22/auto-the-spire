@@ -34,6 +34,7 @@ def main() -> int:
     elif args.suite == "base":
         project = "mod-the-spire/base-spire/BaseSpire.Slice.Tests"
         commands = [build(project), run(project) + ["--", "--suite", "runtime", "--report", str(output / "behavior")],
+                    [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/relic-coverage.json")],
                     build("tools/base-spire-dev/BaseSpire.Dev.csproj"),
                     [sys.executable, "-X", "utf8", "tools/base-spire-dev/verify_examples.py"]]
     elif args.suite == "net":

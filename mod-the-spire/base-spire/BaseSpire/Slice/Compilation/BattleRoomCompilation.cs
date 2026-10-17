@@ -35,7 +35,7 @@ internal static class BattleRoomCompilation
         DispatchCardHookCallback DispatchCardHook,
         MonsterFieldsCallback MonsterFields,
         SpawnStartingPowersCallback SpawnStartingPowers,
-        InnateCallback Innate)
+        InnateCallback Innate, Func<IrScope, string, Inst[]>? relicEffects = null)
     {
         var formationLocalNames = new CompilationSlots();
 
@@ -570,6 +570,9 @@ internal static class BattleRoomCompilation
                 startNextRoom.ForEach(startNextRoom.Sort(startNextRoom.Where(startNextRoom.Collection(pilesBindings.DrawPile),c=>Innate(startNextRoom,c)),
                     c=>startNextRoom.CollectionIndex(pilesBindings.DrawPile,c),descending:true),c=>[
                         startNextRoom.RemoveFromCollection(pilesBindings.DrawPile,c),startNextRoom.AddToCollection(pilesBindings.DrawPile,c,InsertPosition.Start)]),
+                .. relicEffects?.Invoke(startNextRoom, RelicTriggers.AfterCombatRoomEntered) ?? [],
+                .. relicEffects?.Invoke(startNextRoom, RelicTriggers.AfterRoomEntered) ?? [],
+                .. relicEffects?.Invoke(startNextRoom, RelicTriggers.BeforeCombatStart) ?? [],
                 startNextRoom.Call(playerTurnBindings.StartPlayerTurn.Symbol),
             ];
             startNextRoom.Body(roomSteps.ToArray());

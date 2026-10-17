@@ -33,19 +33,22 @@ internal static class RoomCompilation
             actMap = MapRoomWiring.Declare(contentBindings.Package, eventsBindings.Projection, runStateBindings.RunEntity!, options.ActPlan is not null);
         }
 
-        RunInitializationWiring? runInitialization = runStateBindings.HasRun && (options.InitializeNewRun || actMap is not null)
+        RunInitializationWiring? runInitialization = runStateBindings.HasRun && (options.InitializeNewRun || actMap is not null || relicsBindings.HasRelics)
             ? new RunInitializationWiring(contentBindings.Package, runStateBindings.RunEntity!) : null;
 
         RoomCompileContext? rooms = actMap is not null
             ? new(runStateBindings.RunEntity!, runCollectionsBindings.RunStates!, runStateBindings.RunHp!, runStateBindings.RunMaxHp!, runStateBindings.RunGold!, runCollectionsBindings.LongTermDeck!, actMap) : null;
 
-        RunResources? resources = rooms is not null
-            ? new RunResources(rooms, eventsBindings.Defeat, eventsBindings.DefeatTurn) : null;
+        RunResources? resources = runStateBindings.HasRun
+            ? new RunResources(runStateBindings.RunHp!, runStateBindings.RunMaxHp!, runStateBindings.RunGold!,
+                eventsBindings.Defeat, eventsBindings.DefeatTurn) : null;
         RunDeck? deckCommands = rooms is not null ? new RunDeck(cardsBindings.CardDefinitions, rooms.LongTermDeck) : null;
         RunRelics? relicCommands = resources is not null && runInitialization is not null && relicsBindings.HasRelics
-            ? new RunRelics(new(relicsBindings.Relic!, relicsBindings.RelicDefinition!,
-                relicsBindings.RelicRarity!, relicsBindings.Relics!), runInitialization, resources, options.RelicLibrary ?? [])
+            ? new RunRelics(relicsBindings.Schema!, runInitialization, resources, options.RelicLibrary ?? [],
+                potionsBindings.Potions is null ? null : potionsBindings.Potions.GainSlots)
             : null;
+        relicCommands?.DeclareObtainProcedure(contentBindings.Package, runStateBindings.RunEntity!);
+        relicCommands?.DeclareRemoveProcedure(contentBindings.Package, runStateBindings.RunEntity!);
         TreasureRoomWiring? treasure = rooms is not null && runInitialization is not null && relicCommands is not null
             ? new TreasureRoomWiring(contentBindings.Package, rooms, runInitialization, resources!, relicCommands) : null;
 
@@ -96,7 +99,8 @@ internal static class RoomCompilation
         RoomServicesBindings roomServicesBindings,
         RewardsBindings rewardsBindings,
         RoomTransitionBindings roomTransitionBindings, EncounterPoolBindings pools, RunEncountersBindings visits,
-        Func<IrScope, Inst[]> clearCombat)
+        Func<IrScope, Inst[]> clearCombat, Func<IrScope, string, Inst[]>? relicEffects = null,
+        Func<IrScope, Expr, Expr>? modifyRestHeal = null)
     {
 
         // T05：地图 scope 的房间选择入口。`EnterNextRoom` 在上面被显式跳过（它是非地图 scope 的
@@ -106,12 +110,16 @@ internal static class RoomCompilation
             // 入口组合：直接房型沿用 `MapRoomEntry.Standard` 的原始顺序与实现，问号房是**追加**的一项；
             // 问号房内部复用同一批 Standard 记录进入战斗/精英/宝箱/商店，不复制房型逻辑。
             var standard = MapRoomEntry.Standard(roomServicesBindings.ActMap,
-                roomTransitionBindings.StartNextRoom!, roomServicesBindings.Treasure!, roomServicesBindings.Shop!);
+                roomTransitionBindings.StartNextRoom!, roomServicesBindings.Treasure!, roomServicesBindings.Shop!)
+                .Select(entry => entry.PointType is "RestSite" or "Shop" or "Treasure"
+                    ? new MapRoomEntry(entry.PointType, (s, run, node) => [.. entry.Enter(s, run, node),
+                        .. relicEffects?.Invoke(s, RelicTriggers.AfterRoomEntered) ?? []]) : entry).ToArray();
             var entries = new List<MapRoomEntry>(standard);
             if (roomServicesBindings.Unknown is { } unknown)
             {
                 entries.Add(UnknownRoomEntry.Create(roomServicesBindings.ActMap, standard, unknown.Odds,
-                    unknown.Events, unknown.EventContext, unknown.Catalog));
+                    unknown.Events, unknown.EventContext, unknown.Catalog,
+                    s => relicEffects?.Invoke(s, RelicTriggers.AfterRoomEntered) ?? []));
             }
 
             if (roomServicesBindings.Acts is { } actRun)
@@ -121,7 +129,7 @@ internal static class RoomCompilation
                     roomServicesBindings.RunInitialization!, pools, visits, roomServicesBindings.Unknown!, runStateBindings, clearCombat));
 
             RestSiteWiring.Register(contentBindings.Package, roomServicesBindings.Rooms!, roomServicesBindings.Resources!,
-                cardsBindings.CardDefinitions);
+                cardsBindings.CardDefinitions, modifyRestHeal);
             roomServicesBindings.Treasure!.RegisterActions(contentBindings.Package);
             roomServicesBindings.Shop!.RegisterActions(contentBindings.Package);
             // 事件：注册处只列模块（`EventModules`），目录负责按源身份分派；未登记身份显式失败。

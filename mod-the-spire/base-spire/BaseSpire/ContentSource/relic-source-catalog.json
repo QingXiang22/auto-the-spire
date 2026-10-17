@@ -1,0 +1,4662 @@
+[
+  {
+    "Name": "Akabeko",
+    "ContentId": "base-spire:akabeko",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Akabeko.cs",
+    "SourceSha256": "9830d073950698faa2093a9f5a819cef82ff6ce6d0cc61f6e760f32ddb66e8f1",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "AlchemicalCoffer",
+    "ContentId": "base-spire:alchemical-coffer",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/AlchemicalCoffer.cs",
+    "SourceSha256": "dad43aa45dc0568be7649bfea518e3627083b45a0bb0ec2a231bc2c678e24dbc",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "AmethystAubergine",
+    "ContentId": "base-spire:amethyst-aubergine",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/AmethystAubergine.cs",
+    "SourceSha256": "59f3533e35ad801483504882dd62b788bdd6e125f3b67b58b7e42c10b966ed99",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyRewards",
+      "AfterModifyingRewards"
+    ]
+  },
+  {
+    "Name": "Anchor",
+    "ContentId": "base-spire:anchor",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Anchor.cs",
+    "SourceSha256": "98ff3fac934c05c8e555fc4c4a445d0b738ade5b6981b96905c002dcdc0b6a3f",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Anchor.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "ArcaneScroll",
+    "ContentId": "base-spire:arcane-scroll",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ArcaneScroll.cs",
+    "SourceSha256": "eabd745376504e970df173c16792db4b80dc4f99d7c0391cc25d359c1b5ced83",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "ArchaicTooth",
+    "ContentId": "base-spire:archaic-tooth",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ArchaicTooth.cs",
+    "SourceSha256": "90352ca4f6f728900dc9ea520280d63a491b18cdefec34b0822001ba3b1c8fab",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCloned",
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "ArtOfWar",
+    "ContentId": "base-spire:art-of-war",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ArtOfWar.cs",
+    "SourceSha256": "e23963ead3ca613bc8a7b94b1acdd6954b3b4d56652e9e4511ec8de208ab1a53",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed",
+      "AfterSideTurnEnd",
+      "AfterEnergyReset",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Astrolabe",
+    "ContentId": "base-spire:astrolabe",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Astrolabe.cs",
+    "SourceSha256": "40cd9b942196872739d0ec8590c681b5cb9746b24a63be28c92e84b5b3a791dc",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "BagOfMarbles",
+    "ContentId": "base-spire:bag-of-marbles",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BagOfMarbles.cs",
+    "SourceSha256": "b7732368b40c8b5f8672b945a43f8a5d174ae70025da693bc271097cd9a51507",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BagOfMarbles.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "BagOfPreparation",
+    "ContentId": "base-spire:bag-of-preparation",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BagOfPreparation.cs",
+    "SourceSha256": "eacd8ae84497413deb98844719df3a6dcd1626642609660e02d947a6b73b3b5a",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BagOfPreparation.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ModifyHandDraw"
+    ]
+  },
+  {
+    "Name": "BeatingRemnant",
+    "ContentId": "base-spire:beating-remnant",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BeatingRemnant.cs",
+    "SourceSha256": "ce18187be2a6006b74fc30627da617813f43f8f478b6e9a50eefcfffbc50dc01",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyHpLostAfterOsty",
+      "AfterModifyingHpLostAfterOsty",
+      "AfterDamageReceived",
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "BeautifulBracelet",
+    "ContentId": "base-spire:beautiful-bracelet",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BeautifulBracelet.cs",
+    "SourceSha256": "272da308d4165885a6ffebfc635169684439cf02cbe22d0ada1994005a6e60c2",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Bellows",
+    "ContentId": "base-spire:bellows",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Bellows.cs",
+    "SourceSha256": "8ce21c07e3e136efea0655c1d7028131bd91f08156ac9628a8653418bb64d47c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "BeltBuckle",
+    "ContentId": "base-spire:belt-buckle",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BeltBuckle.cs",
+    "SourceSha256": "860e63d5cd988cffb84c4b63178adc7a018b4071be2e783900766cb5096d158a",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "BeforeCombatStart",
+      "AfterCombatEnd",
+      "AfterPotionProcured",
+      "AfterPotionDiscarded",
+      "AfterPotionUsed",
+      "AfterCombatVictory"
+    ]
+  },
+  {
+    "Name": "BigHat",
+    "ContentId": "base-spire:big-hat",
+    "Rarity": "Rare",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BigHat.cs",
+    "SourceSha256": "1d34d43209bd648c88adf52867bd39f95cb973849d5dfe5131a559fec56beb92",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "BigMushroom",
+    "ContentId": "base-spire:big-mushroom",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BigMushroom.cs",
+    "SourceSha256": "1ae4612bf38153236819d1eef9639c3dbe0fcccf846002aab52764febff2da4b",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BigMushroom.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "AfterObtained",
+      "AfterRoomEntered",
+      "ModifyHandDraw"
+    ]
+  },
+  {
+    "Name": "BiiigHug",
+    "ContentId": "base-spire:biiig-hug",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BiiigHug.cs",
+    "SourceSha256": "42fd9229890804c543ed593da217cb33244e976593e08132094ed7024a984ff4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "AfterShuffle"
+    ]
+  },
+  {
+    "Name": "BingBong",
+    "ContentId": "base-spire:bing-bong",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BingBong.cs",
+    "SourceSha256": "7446cda65ad33bbd45bfc8af8188360ae5c5944996beb3788cb147054e0e3673",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardChangedPiles"
+    ]
+  },
+  {
+    "Name": "BlackBlood",
+    "ContentId": "base-spire:black-blood",
+    "Rarity": "Starter",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BlackBlood.cs",
+    "SourceSha256": "10c4527d76977872177344e215b745b4decf97efd4be353c0513d2bb0dcb9e35",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BlackBlood.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterCombatVictory"
+    ]
+  },
+  {
+    "Name": "BlackStar",
+    "ContentId": "base-spire:black-star",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BlackStar.cs",
+    "SourceSha256": "371cd9d9cc175ea364e5e0fc519b6020ecbd8d8c2a91b98187cb432397b6bedf",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRewards"
+    ]
+  },
+  {
+    "Name": "BlessedAntler",
+    "ContentId": "base-spire:blessed-antler",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BlessedAntler.cs",
+    "SourceSha256": "ecaef3a2c4b84669d016fbca64c3be3f29886a4bbfd5ed09e5633164b63a9b83",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "BloodSoakedRose",
+    "ContentId": "base-spire:blood-soaked-rose",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BloodSoakedRose.cs",
+    "SourceSha256": "af608a0c48bdfaa8f77518efe70066e4d583dce2d9d3221f93ba21adfeb8c642",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "ModifyMaxEnergy"
+    ]
+  },
+  {
+    "Name": "BloodVial",
+    "ContentId": "base-spire:blood-vial",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BloodVial.cs",
+    "SourceSha256": "abf8d39062447c2cfc857ad2d8b10682fed23b05f7bd1d5a656add38574cad56",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BloodVial.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterPlayerTurnStartLate"
+    ]
+  },
+  {
+    "Name": "BoneFlute",
+    "ContentId": "base-spire:bone-flute",
+    "Rarity": "Common",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BoneFlute.cs",
+    "SourceSha256": "e19b9221887899c7d2d559e2478f310241a0a71ffa7731fe6ca53ff17e2c33e8",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterAttack"
+    ]
+  },
+  {
+    "Name": "BoneTea",
+    "ContentId": "base-spire:bone-tea",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BoneTea.cs",
+    "SourceSha256": "53d7719be1e78f550de0b38ea64b7fc6030b327debedacd8adbc9da778ed02af",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "Bookmark",
+    "ContentId": "base-spire:bookmark",
+    "Rarity": "Rare",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Bookmark.cs",
+    "SourceSha256": "03807e14008c7f754264a2ee0582cfed2c20c11541916cc789aafa6d268e018f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterFlush"
+    ]
+  },
+  {
+    "Name": "BookOfFiveRings",
+    "ContentId": "base-spire:book-of-five-rings",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BookOfFiveRings.cs",
+    "SourceSha256": "d5221a3d85bc9a7c9dd1579bbbbd22539d74fed1d8d9e9399352de961f4f3cab",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "AfterCardChangedPiles"
+    ]
+  },
+  {
+    "Name": "BookRepairKnife",
+    "ContentId": "base-spire:book-repair-knife",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BookRepairKnife.cs",
+    "SourceSha256": "86c31c0e368ec042e25f2b1604ae281f1ee5759f581b0f681f70a371b4671984",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDiedToDoom"
+    ]
+  },
+  {
+    "Name": "BoomingConch",
+    "ContentId": "base-spire:booming-conch",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BoomingConch.cs",
+    "SourceSha256": "2c918532e9ef8ef9ef8039640d4caddc1820d040dadd9bfc6ef96b020e6f6adb",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BoomingConch.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ModifyHandDraw",
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "BoundPhylactery",
+    "ContentId": "base-spire:bound-phylactery",
+    "Rarity": "Starter",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BoundPhylactery.cs",
+    "SourceSha256": "2f43f01ffdaa9f22cbe884a9dfa6d3095017ce18a6d3359291dc93af96ea5eac",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart",
+      "AfterEnergyResetLate"
+    ]
+  },
+  {
+    "Name": "BowlerHat",
+    "ContentId": "base-spire:bowler-hat",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BowlerHat.cs",
+    "SourceSha256": "08a67eb28b82670f7448623a0da9bab4edb9039ed190f3e98d3c8dccef972c5a",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "ModifyGoldGained",
+      "AfterModifyingGoldGained"
+    ]
+  },
+  {
+    "Name": "Bread",
+    "ContentId": "base-spire:bread",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Bread.cs",
+    "SourceSha256": "c92e600ab2ac01cdf8bc46a9aedb27e9fa5c2189a9608e0bc5311c6a506dfdab",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Bread.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "BrilliantScarf",
+    "ContentId": "base-spire:brilliant-scarf",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BrilliantScarf.cs",
+    "SourceSha256": "457e775fa8a740f0277478597e766d7dbfd26310947a42f5887e4499ff8e9d4c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyEnergyCostInCombatLate",
+      "TryModifyStarCost",
+      "BeforeSideTurnStart",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Brimstone",
+    "ContentId": "base-spire:brimstone",
+    "Rarity": "Shop",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Brimstone.cs",
+    "SourceSha256": "a0dd24b9ee088f61b29920b3809dd8f229d8be3a98c2f8453abbaf6282faa8e0",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/Brimstone.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "BronzeScales",
+    "ContentId": "base-spire:bronze-scales",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BronzeScales.cs",
+    "SourceSha256": "e8384062180cd7238d96dcfb19023e5f1235bfeb32584b73e53e548b7d2cc3b7",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BronzeScales.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "BurningBlood",
+    "ContentId": "base-spire:burning-blood",
+    "Rarity": "Starter",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BurningBlood.cs",
+    "SourceSha256": "31fba8ba9a3e64f48c28ea463851fdb33d5f210e181da3a1ee56a53f128020be",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/BurningBlood.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterCombatVictory"
+    ]
+  },
+  {
+    "Name": "BurningSticks",
+    "ContentId": "base-spire:burning-sticks",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/BurningSticks.cs",
+    "SourceSha256": "eca2b3559028efe244a04d3ba510d9c7d16c3fe10c5356aad0de9fe9cf4335f5",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterCardExhausted",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Byrdpip",
+    "ContentId": "base-spire:byrdpip",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Byrdpip.cs",
+    "SourceSha256": "d409ee6c9a01726692451583f64935790da7a336aef881cd54a77a3b2a77001c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "CallingBell",
+    "ContentId": "base-spire:calling-bell",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CallingBell.cs",
+    "SourceSha256": "d14d071b73f697816c35d048ccc1714f39adc3591c437e0730c6557f043c2fcb",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Candelabra",
+    "ContentId": "base-spire:candelabra",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Candelabra.cs",
+    "SourceSha256": "4d0df94401557ab0c30880eb54ef440974b7a400eaea066ad780636988397fca",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Candelabra.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "CaptainsWheel",
+    "ContentId": "base-spire:captains-wheel",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CaptainsWheel.cs",
+    "SourceSha256": "779fdaacd8df73c32009d56a21a2164c963361e04dd91c73c87c802a6e5ffb9c",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/CaptainsWheel.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterBlockCleared"
+    ]
+  },
+  {
+    "Name": "Cauldron",
+    "ContentId": "base-spire:cauldron",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Cauldron.cs",
+    "SourceSha256": "76e102424c3b2f1c215eb8a38290987a275af962859eb3d54d39f564626b4ddd",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "CentennialPuzzle",
+    "ContentId": "base-spire:centennial-puzzle",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CentennialPuzzle.cs",
+    "SourceSha256": "f7645036f0fb53e6d5b5bf1fe20f6f30efbf25ddc3508e25937e1fed81d399be",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDamageReceived",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Chandelier",
+    "ContentId": "base-spire:chandelier",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Chandelier.cs",
+    "SourceSha256": "c227c2467e89726f43025893db32c0489b593ecdadfeab7352f98681985a0553",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Chandelier.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "CharonsAshes",
+    "ContentId": "base-spire:charons-ashes",
+    "Rarity": "Rare",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CharonsAshes.cs",
+    "SourceSha256": "3fc02c10a0383654496839c7fb0b47012e5601f1f61349a113d24a91d3b7c784",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardExhausted"
+    ]
+  },
+  {
+    "Name": "ChemicalX",
+    "ContentId": "base-spire:chemical-x",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ChemicalX.cs",
+    "SourceSha256": "86d1b7f27cbc9e6de97f1f7f14f616bb6b8dcf3022e993301d6648ee353561c4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCardPlayed",
+      "ModifyXValue"
+    ]
+  },
+  {
+    "Name": "ChoicesParadox",
+    "ContentId": "base-spire:choices-paradox",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ChoicesParadox.cs",
+    "SourceSha256": "348908ceee13245d09f08a3811273e45b35b91562a4bb65efd2cfe155426c85b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "ChosenCheese",
+    "ContentId": "base-spire:chosen-cheese",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ChosenCheese.cs",
+    "SourceSha256": "c871eafc231db7cd82b6f7e01a52ed6ef4d4f061f83278f5d32af0abe5177083",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/ChosenCheese.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Circlet",
+    "ContentId": "base-spire:circlet",
+    "Rarity": "None",
+    "Pools": [
+      "FallbackRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Circlet.cs",
+    "SourceSha256": "c6cc1772002a01ff519a12a26e98568ef3b1fa88d17198b32c4d31ecec1e9a06",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Circlet.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": []
+  },
+  {
+    "Name": "Claws",
+    "ContentId": "base-spire:claws",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Claws.cs",
+    "SourceSha256": "1c193dc5abe43c81d6e7e82f1da0f798f1cf1f9645e0bd676b4c4076e1c79fe1",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "CloakClasp",
+    "ContentId": "base-spire:cloak-clasp",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CloakClasp.cs",
+    "SourceSha256": "75ac4318ed01a96762daf6aff676fd8f8fa2f5ee806a5aca8e5ce2501fa41315",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnEnd"
+    ]
+  },
+  {
+    "Name": "CrackedCore",
+    "ContentId": "base-spire:cracked-core",
+    "Rarity": "Starter",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CrackedCore.cs",
+    "SourceSha256": "40f3c1a27dafe3933911587ffe7bc9dad32e0767a31677e98f2eaa2cca6a4d7d",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local combat hooks in sts2/src/Core/Models/Relics/CrackedCore.cs; shares production CombatOrbs and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "Crossbow",
+    "ContentId": "base-spire:crossbow",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Crossbow.cs",
+    "SourceSha256": "bfa426b3aaf4be1309fcf286dec412d21cf53562130f5d4a742b50ec7937d84e",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "CursedPearl",
+    "ContentId": "base-spire:cursed-pearl",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/CursedPearl.cs",
+    "SourceSha256": "1b803e433c688503f84815e2901b488172bd125b366d1af5790f9806d7bbda83",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "DarkstonePeriapt",
+    "ContentId": "base-spire:darkstone-periapt",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DarkstonePeriapt.cs",
+    "SourceSha256": "5665d04871e816f3d265677dba2f8c2db67e1ca75f664eaa308262e51b9ed690",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardChangedPiles"
+    ]
+  },
+  {
+    "Name": "DataDisk",
+    "ContentId": "base-spire:data-disk",
+    "Rarity": "Common",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DataDisk.cs",
+    "SourceSha256": "8e5544dff7e15f3b2be6cdc414961c72a9edf033229b7be09df9bfc363400f9a",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local combat hooks in sts2/src/Core/Models/Relics/DataDisk.cs; shares production CombatOrbs and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "DaughterOfTheWind",
+    "ContentId": "base-spire:daughter-of-the-wind",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DaughterOfTheWind.cs",
+    "SourceSha256": "eaa60675beccf94e4fb250c39311e6bc2ec4eed8a280503f51d8739ba63f7312",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "DelicateFrond",
+    "ContentId": "base-spire:delicate-frond",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DelicateFrond.cs",
+    "SourceSha256": "57014cd2fca5615f90d315f99a347a8a76fcfb91f382e9e0a28cf981e9eb2207",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "DemonTongue",
+    "ContentId": "base-spire:demon-tongue",
+    "Rarity": "Rare",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DemonTongue.cs",
+    "SourceSha256": "1c29bfc23f1c5b4e9a7b2eb57df62371bcf329e1030cc2adcf22815630be00e3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDamageReceived",
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "DeprecatedRelic",
+    "ContentId": "base-spire:deprecated-relic",
+    "Rarity": "None",
+    "Pools": [
+      "DeprecatedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DeprecatedRelic.cs",
+    "SourceSha256": "bd9abe68cd84cf662fa0cfcd632fe857a9138b4a8dab533dada800d54d5757bd",
+    "Eligibility": "excluded-deprecated",
+    "EligibilityEvidence": "Saved history placeholder; DeprecatedRelic.cs summary",
+    "Hooks": []
+  },
+  {
+    "Name": "DiamondDiadem",
+    "ContentId": "base-spire:diamond-diadem",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DiamondDiadem.cs",
+    "SourceSha256": "ac009fe45c7f396eb2c955ca47f2935c750ef909fdb0038217f252da22e6740f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed",
+      "BeforeSideTurnEnd",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "DingyRug",
+    "ContentId": "base-spire:dingy-rug",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DingyRug.cs",
+    "SourceSha256": "5e26343e9ccd5a8502f60cd41230b406da786ec43205767c2bbd0d1ddc216bd2",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyCardRewardCreationOptions"
+    ]
+  },
+  {
+    "Name": "DistinguishedCape",
+    "ContentId": "base-spire:distinguished-cape",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DistinguishedCape.cs",
+    "SourceSha256": "53c4b3a2993ae9c05d93d3b9c00ef63b9396ae73ebc51ce390db3a1f838a018c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "DivineDestiny",
+    "ContentId": "base-spire:divine-destiny",
+    "Rarity": "Starter",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DivineDestiny.cs",
+    "SourceSha256": "13e69a023e2d54d1f4a257d3ae5cd3d461de156b985d03ee17251dd211619071",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/DivineDestiny.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "DivineRight",
+    "ContentId": "base-spire:divine-right",
+    "Rarity": "Starter",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DivineRight.cs",
+    "SourceSha256": "ef14501b8c60ef746470f82e9cb0ac4c36d4d7af7ffa71d137f3c0bf2c6052fc",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "DollysMirror",
+    "ContentId": "base-spire:dollys-mirror",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DollysMirror.cs",
+    "SourceSha256": "b9c34c6903d11e36e9fdf72197b52632da3cd42f09ae068b5d8a45f3f8d9faab",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "DragonFruit",
+    "ContentId": "base-spire:dragon-fruit",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DragonFruit.cs",
+    "SourceSha256": "4914df6dc4fc7da532cf7be4be1898ce8c8cb2ac53d4fd53109d9ee22ce0b19a",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "AfterGoldGained"
+    ]
+  },
+  {
+    "Name": "DreamCatcher",
+    "ContentId": "base-spire:dream-catcher",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DreamCatcher.cs",
+    "SourceSha256": "0fd6aa6000854137c24ea7cf2dbfd7f21ce6e479767752808a7f42cbeef2cb08",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRestSiteHealRewards",
+      "ModifyExtraRestSiteHealText"
+    ]
+  },
+  {
+    "Name": "Driftwood",
+    "ContentId": "base-spire:driftwood",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Driftwood.cs",
+    "SourceSha256": "3c65f9ae8b6386c4e4c0b93f817432a57705a39240b65b128e907ff01201ca56",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRewardsLate"
+    ]
+  },
+  {
+    "Name": "DustyTome",
+    "ContentId": "base-spire:dusty-tome",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/DustyTome.cs",
+    "SourceSha256": "5827f26305687d17a79b79d8764684b80c433f123acd0baee796f8effb18b213",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Ectoplasm",
+    "ContentId": "base-spire:ectoplasm",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Ectoplasm.cs",
+    "SourceSha256": "1b77126b1327c3d8549c0ddbe105a5237bd6bcb51816c4175ebae0e9793af374",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyGoldGained",
+      "AfterModifyingGoldGained",
+      "ModifyMaxEnergy"
+    ]
+  },
+  {
+    "Name": "ElectricShrymp",
+    "ContentId": "base-spire:electric-shrymp",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ElectricShrymp.cs",
+    "SourceSha256": "86c23229644cd22b0b3f213e61072016af5159d443b1c5d336684a060256d43e",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "EmberTea",
+    "ContentId": "base-spire:ember-tea",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/EmberTea.cs",
+    "SourceSha256": "659a9fe36eed0030a6b65d660b6b068be1a827557093cbeb2ec6a2a9a59a6a52",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "EmotionChip",
+    "ContentId": "base-spire:emotion-chip",
+    "Rarity": "Rare",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/EmotionChip.cs",
+    "SourceSha256": "fd07683fd6db89c00a7bbf809cc7aa55ee6be64761f32fc9153b5d11b62412c9",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDamageReceived",
+      "AfterPlayerTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "EmptyCage",
+    "ContentId": "base-spire:empty-cage",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/EmptyCage.cs",
+    "SourceSha256": "e3914ef17da0f19f29ab5a811579d56e8e76e354990029ab355ffa99ef0b467f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "EternalFeather",
+    "ContentId": "base-spire:eternal-feather",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/EternalFeather.cs",
+    "SourceSha256": "5f3d2237bd7abafe9e29273fe482a798f5e87ec8a64979787ff04878c44d237b",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/EternalFeather.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "FakeAnchor",
+    "ContentId": "base-spire:fake-anchor",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeAnchor.cs",
+    "SourceSha256": "cebcd73581a376c8554f9f48d8a8ccd11691a9d4420a53e1b4e1b759f9ead478",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/FakeAnchor.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "FakeBloodVial",
+    "ContentId": "base-spire:fake-blood-vial",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeBloodVial.cs",
+    "SourceSha256": "c8e2dc6d0da77d82e8efcc80312214455dcd8551e4aa88e8d8b5da59479e18b0",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/FakeBloodVial.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterPlayerTurnStartLate"
+    ]
+  },
+  {
+    "Name": "FakeHappyFlower",
+    "ContentId": "base-spire:fake-happy-flower",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeHappyFlower.cs",
+    "SourceSha256": "a9cb825590c51d337830f5dd368b8117adfb2bcaf3037104af91096a1f846e26",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/FakeHappyFlower.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "FakeLeesWaffle",
+    "ContentId": "base-spire:fake-lees-waffle",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeLeesWaffle.cs",
+    "SourceSha256": "51de16476caa44e6c254d26088d98f97f0d4249407edf71bf9e23bcf86f3c144",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/FakeLeesWaffle.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "FakeMango",
+    "ContentId": "base-spire:fake-mango",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeMango.cs",
+    "SourceSha256": "60265d18b59426a8ba6f22e77f7cdb2d96854780d642b18afe788ab6508a0d7a",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/FakeMango.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "FakeMerchantsRug",
+    "ContentId": "base-spire:fake-merchants-rug",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeMerchantsRug.cs",
+    "SourceSha256": "0b9c0c7b21c71e9c74d8c36d8ccd680c63264b453271dc3a2bb1b4df3f94fc67",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/FakeMerchantsRug.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": []
+  },
+  {
+    "Name": "FakeOrichalcum",
+    "ContentId": "base-spire:fake-orichalcum",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeOrichalcum.cs",
+    "SourceSha256": "19898aff7669a04cf96df195f44b521bdc03786c6675b824c73dee374ab4a52f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnEndVeryEarly",
+      "BeforeSideTurnEnd",
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "FakeSneckoEye",
+    "ContentId": "base-spire:fake-snecko-eye",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeSneckoEye.cs",
+    "SourceSha256": "2aaa92e06de3319bcaa2f0b6098e049916fcf9c7ed573852782ca4c86dc8cb46",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "FakeStrikeDummy",
+    "ContentId": "base-spire:fake-strike-dummy",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeStrikeDummy.cs",
+    "SourceSha256": "e496856ab5aa4b00beadf5ade4bbbaebcecdf1aed1d63fe557be243a55e3ed2d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageAdditive"
+    ]
+  },
+  {
+    "Name": "FakeVenerableTeaSet",
+    "ContentId": "base-spire:fake-venerable-tea-set",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FakeVenerableTeaSet.cs",
+    "SourceSha256": "7cc418ea8791ad7cef5a5b80d17401fba454762cf733b862b3583573d964efbf",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/FakeVenerableTeaSet.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterEnergyReset"
+    ]
+  },
+  {
+    "Name": "FencingManual",
+    "ContentId": "base-spire:fencing-manual",
+    "Rarity": "Common",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FencingManual.cs",
+    "SourceSha256": "28e6ad831d8dfb4d43f38888a51c60c84038fae5791dbc165507a6e1d6d44248",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "FestivePopper",
+    "ContentId": "base-spire:festive-popper",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FestivePopper.cs",
+    "SourceSha256": "5e182352e86b9e3263fa43fa903e426524194f82fcb70b819eb5cb1d7f77bea2",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "Fiddle",
+    "ContentId": "base-spire:fiddle",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Fiddle.cs",
+    "SourceSha256": "25c81448c3022a3326c720199033045f99b7d2ae10dc57fc432a745d31ed2d15",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyHandDrawLate",
+      "ShouldDraw",
+      "AfterPreventingDraw"
+    ]
+  },
+  {
+    "Name": "FishingRod",
+    "ContentId": "base-spire:fishing-rod",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FishingRod.cs",
+    "SourceSha256": "11223b914e2f53009d3a19211c794a1607879df387abc8916862cb47b7f80ee3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "ForgottenSoul",
+    "ContentId": "base-spire:forgotten-soul",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ForgottenSoul.cs",
+    "SourceSha256": "2b8384567b2d2f07405ce88a3c956bdee3e163bc5cc60499a939763fb24789ac",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardExhausted"
+    ]
+  },
+  {
+    "Name": "FragrantMushroom",
+    "ContentId": "base-spire:fragrant-mushroom",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FragrantMushroom.cs",
+    "SourceSha256": "e4fa785eb885e2feed7025e1b2ec1da07050191b6dbe13a59c77bd58feea3d32",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "FresnelLens",
+    "ContentId": "base-spire:fresnel-lens",
+    "Rarity": "Event",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FresnelLens.cs",
+    "SourceSha256": "d5d1047c713d3f9a7aa90e2c059be75d2b98c490515604e03368070c8c51ca29",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyCardRewardOptionsLate",
+      "ModifyMerchantCardCreationResults",
+      "TryModifyCardBeingAddedToDeck"
+    ]
+  },
+  {
+    "Name": "FrozenEgg",
+    "ContentId": "base-spire:frozen-egg",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FrozenEgg.cs",
+    "SourceSha256": "aec5a53b6e8522d976c1f25f971b9015e142b5e5c436855856f6db45883eef64",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyCardRewardOptionsLate",
+      "ModifyMerchantCardCreationResults",
+      "TryModifyCardBeingAddedToDeck"
+    ]
+  },
+  {
+    "Name": "FuneraryMask",
+    "ContentId": "base-spire:funerary-mask",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FuneraryMask.cs",
+    "SourceSha256": "12a6069dd9097ae7ba215b7177913a13cadc34e815988ca911e48883db2d55a5",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "FurCoat",
+    "ContentId": "base-spire:fur-coat",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/FurCoat.cs",
+    "SourceSha256": "8056d59d831baca66e3ac490e7436d9d3c36a4cc795f32d99b083bff12fb4811",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "ModifyGeneratedMapLate",
+      "BeforeCombatStart",
+      "AfterCreatureAddedToCombat"
+    ]
+  },
+  {
+    "Name": "GalacticDust",
+    "ContentId": "base-spire:galactic-dust",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GalacticDust.cs",
+    "SourceSha256": "4dbbec7a0f7d08241d8f885387f8a8294f4ecfbafe25d7b3c467198c8203344a",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterStarsSpent"
+    ]
+  },
+  {
+    "Name": "GamblingChip",
+    "ContentId": "base-spire:gambling-chip",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GamblingChip.cs",
+    "SourceSha256": "2fdc2bcebb168ab0e8320447de000ca949a9221be8a552e851e9596e79bda9ce",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "GamePiece",
+    "ContentId": "base-spire:game-piece",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GamePiece.cs",
+    "SourceSha256": "34f9ee4fd7f277c46e6d45dee0daf5e6fdf0d9242e52497892cb591fa35f2acd",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "GhostSeed",
+    "ContentId": "base-spire:ghost-seed",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GhostSeed.cs",
+    "SourceSha256": "d702bfbc26515c8260af8f0c0cb89f5c808bc7ae0ba46cd5ecd2c974739b3b79",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardEnteredCombat",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "Girya",
+    "ContentId": "base-spire:girya",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Girya.cs",
+    "SourceSha256": "f661b2052bf27786adfbb2e132917c2b9eacada7716bc65c547e0d96f2f2c29d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "AfterRoomEntered",
+      "TryModifyRestSiteOptions"
+    ]
+  },
+  {
+    "Name": "GlassEye",
+    "ContentId": "base-spire:glass-eye",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GlassEye.cs",
+    "SourceSha256": "60cf6f0050b44bd8c166710f2716621a2fd753e6d4827ccb242307663cc80cce",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Glitter",
+    "ContentId": "base-spire:glitter",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Glitter.cs",
+    "SourceSha256": "505eb47ba8ea3897a583a4549744e8bdd8a0629e0e3560f5afff723af71017f9",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyCardRewardOptionsLate"
+    ]
+  },
+  {
+    "Name": "GnarledHammer",
+    "ContentId": "base-spire:gnarled-hammer",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GnarledHammer.cs",
+    "SourceSha256": "970c8cd600eef09cc034bff1fb606510e22d2070f396ad6c83ec8fc0ad439d42",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "GoldenCompass",
+    "ContentId": "base-spire:golden-compass",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GoldenCompass.cs",
+    "SourceSha256": "42c762bb01f547f72cb138f56e117906362ec24e45e9b63d78b2b24fd384bf56",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "ModifyGeneratedMap",
+      "ModifyUnknownMapPointRoomTypes"
+    ]
+  },
+  {
+    "Name": "GoldenPearl",
+    "ContentId": "base-spire:golden-pearl",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GoldenPearl.cs",
+    "SourceSha256": "aefb5939930f8c29c46093dc2fd65c40ddd54a59f3d20fba13fca119b31b1cc2",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/GoldenPearl.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "GoldPlatedCables",
+    "ContentId": "base-spire:gold-plated-cables",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GoldPlatedCables.cs",
+    "SourceSha256": "a926de60d7795220a13500dec580e1022514f68f5c4853f7f33b3315dd627b87",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyOrbPassiveTriggerCounts",
+      "AfterModifyingOrbPassiveTriggerCount"
+    ]
+  },
+  {
+    "Name": "Gorget",
+    "ContentId": "base-spire:gorget",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Gorget.cs",
+    "SourceSha256": "28db32949fc3678c6818d1738976d766b44602d3b33e016559716b65f49528c0",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Gorget.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "GremlinHorn",
+    "ContentId": "base-spire:gremlin-horn",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/GremlinHorn.cs",
+    "SourceSha256": "efd3596289c07e81978ff5856183cfe3d24ab3ca99eb79efb056b6705dad3d2a",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDeath"
+    ]
+  },
+  {
+    "Name": "HandDrill",
+    "ContentId": "base-spire:hand-drill",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/HandDrill.cs",
+    "SourceSha256": "fc1490c4487a1d9e1e3664b276f32030ac101ddefb4087f1432d378bd3d9196f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDamageGiven"
+    ]
+  },
+  {
+    "Name": "HappyFlower",
+    "ContentId": "base-spire:happy-flower",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/HappyFlower.cs",
+    "SourceSha256": "b9ec4d3da0083557829c4859b5cc708036f4e4c412a60e5def2b1e780258b89d",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/HappyFlower.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "HeftyTablet",
+    "ContentId": "base-spire:hefty-tablet",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/HeftyTablet.cs",
+    "SourceSha256": "fba80305dafa18c29b55f9b054c5ec85da80dad870c19ddb721ac386667caa60",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "HelicalDart",
+    "ContentId": "base-spire:helical-dart",
+    "Rarity": "Rare",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/HelicalDart.cs",
+    "SourceSha256": "432deaa5ac8c4e695e390d0bacef2956b04ac8d42ed3369294853d5f153c3e21",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "HistoryCourse",
+    "ContentId": "base-spire:history-course",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/HistoryCourse.cs",
+    "SourceSha256": "52e276e91f28d1e748bb3066846ee7140fd38b4a1d4295a364e3ef6cd32d8913",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterAutoPrePlayPhaseEntered"
+    ]
+  },
+  {
+    "Name": "HornCleat",
+    "ContentId": "base-spire:horn-cleat",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/HornCleat.cs",
+    "SourceSha256": "3133977859920dc0c3802f2dd83109ac49a2a03d56432b84a814aa6367b75405",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/HornCleat.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterBlockCleared"
+    ]
+  },
+  {
+    "Name": "IceCream",
+    "ContentId": "base-spire:ice-cream",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/IceCream.cs",
+    "SourceSha256": "2984b432e1b1bef5f6eebc9cacf5b13d7c2a380ce987b9a6fab898907c36ac36",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/IceCream.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ShouldPlayerResetEnergy"
+    ]
+  },
+  {
+    "Name": "InfusedCore",
+    "ContentId": "base-spire:infused-core",
+    "Rarity": "Starter",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/InfusedCore.cs",
+    "SourceSha256": "47576c5b01c16a84556a0b01ef86d34b7482618ce09b2454c66941221f97e12d",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local combat hooks in sts2/src/Core/Models/Relics/InfusedCore.cs; shares production CombatOrbs and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart",
+      "ModifyOrbValue"
+    ]
+  },
+  {
+    "Name": "IntimidatingHelmet",
+    "ContentId": "base-spire:intimidating-helmet",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/IntimidatingHelmet.cs",
+    "SourceSha256": "ac36a4c3c3a9422e690b01e9934a88713323c6306a13da54a0049036898eeced",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCardPlayed"
+    ]
+  },
+  {
+    "Name": "IronClub",
+    "ContentId": "base-spire:iron-club",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/IronClub.cs",
+    "SourceSha256": "427bb4a254261a9447f0f07f44a1497acb055ac3b597a64cbe33112d02e88a64",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "IvoryTile",
+    "ContentId": "base-spire:ivory-tile",
+    "Rarity": "Rare",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/IvoryTile.cs",
+    "SourceSha256": "f2a51b2ed8a5b9c11aba24389ad28fc31f3c13b15cb54cbc9d918098cfcf32c1",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "JeweledMask",
+    "ContentId": "base-spire:jeweled-mask",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/JeweledMask.cs",
+    "SourceSha256": "4644779aa6c0d91b9af7e622255334784ea2d4f244bea283edbb87d75987f190",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "JewelryBox",
+    "ContentId": "base-spire:jewelry-box",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/JewelryBox.cs",
+    "SourceSha256": "2f0e58263e30eb2424729bc2939944957b4f955217e26b6a9cf564aaca8bf562",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "JossPaper",
+    "ContentId": "base-spire:joss-paper",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/JossPaper.cs",
+    "SourceSha256": "04747430a9331da625ee5d6ac9f1aa8525731fc9551753141056d777cf9d5394",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardExhausted",
+      "AfterSideTurnEnd",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "JuzuBracelet",
+    "ContentId": "base-spire:juzu-bracelet",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/JuzuBracelet.cs",
+    "SourceSha256": "b8ea3a98fe6c025fd9c5cf946f113634529e3a7c7b0fa25d3e9a75ba48004a5b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "ModifyUnknownMapPointRoomTypes"
+    ]
+  },
+  {
+    "Name": "Kaleidoscope",
+    "ContentId": "base-spire:kaleidoscope",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Kaleidoscope.cs",
+    "SourceSha256": "454fc4b785cfda483d243298557900a6655ffba32a06625c76b0abb2fe817a93",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowedAtNeow",
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Kifuda",
+    "ContentId": "base-spire:kifuda",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Kifuda.cs",
+    "SourceSha256": "33b60398eaa5934f76fb0fe6227b6da45b390ad8a7cf1052ba6b2e8c0eeaaece",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Kunai",
+    "ContentId": "base-spire:kunai",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Kunai.cs",
+    "SourceSha256": "bb48d7cf19478b640767541970003600c6fb2a63e8024ca302b5ca8d6a1303a3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Kusarigama",
+    "ContentId": "base-spire:kusarigama",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Kusarigama.cs",
+    "SourceSha256": "b112114270aece981c780520f6b28d8dfc51b7503cf97f65cc833467c0b4cea3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart",
+      "AfterSideTurnEnd",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Lantern",
+    "ContentId": "base-spire:lantern",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Lantern.cs",
+    "SourceSha256": "5f94cfba304860c3e63b9e64e249b79c8214f448075767962abac4607a57fbb9",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Lantern.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "LargeCapsule",
+    "ContentId": "base-spire:large-capsule",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LargeCapsule.cs",
+    "SourceSha256": "9334abe165bee7677d92f281451e53c2cb23d1715674e848c75848c0ea6fe301",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "LastingCandy",
+    "ContentId": "base-spire:lasting-candy",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "EventRelicPool",
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LastingCandy.cs",
+    "SourceSha256": "801946313b3b6d574dd42665c7d1490396d04d163a8a7183007eb3ef170270dd",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyCardRewardOptions",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "LavaLamp",
+    "ContentId": "base-spire:lava-lamp",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LavaLamp.cs",
+    "SourceSha256": "6b9cb312d88eb5c78af6ceabdb53f2411febf3f1069f8d57fa77cdd06026242f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterDamageReceived",
+      "TryModifyCardRewardOptionsLate"
+    ]
+  },
+  {
+    "Name": "LavaRock",
+    "ContentId": "base-spire:lava-rock",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LavaRock.cs",
+    "SourceSha256": "21a8a39249c142cd86afc342425289583f67ad6c5faa7ab7692517ee381e868d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRewards"
+    ]
+  },
+  {
+    "Name": "LeadPaperweight",
+    "ContentId": "base-spire:lead-paperweight",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LeadPaperweight.cs",
+    "SourceSha256": "f0ba899063c95c0125f24047ef179e93e96ad10b4650d0a187ba2719de72478c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "LeafyPoultice",
+    "ContentId": "base-spire:leafy-poultice",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LeafyPoultice.cs",
+    "SourceSha256": "5b3024e25256087792a079ba8ba3347f6833d8346dfa5db0e829a21cb6a13858",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "LeesWaffle",
+    "ContentId": "base-spire:lees-waffle",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LeesWaffle.cs",
+    "SourceSha256": "f196ef79d95b68155195e8171448c098fdc2342a3935f4c88de3a66a9521a019",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/LeesWaffle.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "LetterOpener",
+    "ContentId": "base-spire:letter-opener",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LetterOpener.cs",
+    "SourceSha256": "5cd2960d0aaaa19d794d518f3a6b80157668d5c8a866eef512eb2486b3584d9c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart",
+      "AfterSideTurnStart",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "LizardTail",
+    "ContentId": "base-spire:lizard-tail",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LizardTail.cs",
+    "SourceSha256": "a9423ed11b35a3874e293da8488d6ca817e66a893de5bf7f53246955f0db5f08",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ShouldDieLate",
+      "AfterPreventingDeath"
+    ]
+  },
+  {
+    "Name": "LoomingFruit",
+    "ContentId": "base-spire:looming-fruit",
+    "Rarity": "Ancient",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LoomingFruit.cs",
+    "SourceSha256": "37aaa8935c88bfce9776f51d7df4370731896d3d8570b07d385d47216daa0fbd",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/LoomingFruit.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "LordsParasol",
+    "ContentId": "base-spire:lords-parasol",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LordsParasol.cs",
+    "SourceSha256": "70a71afe9eecf1e3c2ae38b2eada99d79f283fb6594311aca87161caf230bb00",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "LostCoffer",
+    "ContentId": "base-spire:lost-coffer",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LostCoffer.cs",
+    "SourceSha256": "18b093f60d5c22964977b5509defb3ec2a3a1ef177e30c2c0c2e957a23bcbb29",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "LostWisp",
+    "ContentId": "base-spire:lost-wisp",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LostWisp.cs",
+    "SourceSha256": "728b375c3312e5e0d90ba858b47f787f208f2aedd725ee012ac2d10383f5bae3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "LuckyFysh",
+    "ContentId": "base-spire:lucky-fysh",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LuckyFysh.cs",
+    "SourceSha256": "a013ec2f29b21af6f09b9add8c41606b45e1e85224d2d32b359dc6e832bc88e3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "AfterCardChangedPiles"
+    ]
+  },
+  {
+    "Name": "LunarPastry",
+    "ContentId": "base-spire:lunar-pastry",
+    "Rarity": "Rare",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/LunarPastry.cs",
+    "SourceSha256": "de3cd67046d43d896c7420a641d81680e7d10c4298a713ac7f9328e5b9f12a34",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/LunarPastry.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnEnd"
+    ]
+  },
+  {
+    "Name": "Mango",
+    "ContentId": "base-spire:mango",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Mango.cs",
+    "SourceSha256": "e76c97e377e887229e3492d9bcf3cda05fec8c476335b5a59e240af050857e2a",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Mango.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "MassiveScroll",
+    "ContentId": "base-spire:massive-scroll",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MassiveScroll.cs",
+    "SourceSha256": "2690eb2bb5ee1b049004a83e6f4cf7819eea03a7c867b121f802c7c5ec21c3da",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "MawBank",
+    "ContentId": "base-spire:maw-bank",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MawBank.cs",
+    "SourceSha256": "e5e1730c5bd76a6da7c058a923c8862dff9ab9faf2bc077c36bf8bffb2b18530",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterItemPurchased"
+    ]
+  },
+  {
+    "Name": "MealTicket",
+    "ContentId": "base-spire:meal-ticket",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MealTicket.cs",
+    "SourceSha256": "bb5680ce54ecfcdf32fea90758d9fa223cfd03fc806e5d84802674a0a3b24c59",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/MealTicket.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "IsAllowed",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "MeatCleaver",
+    "ContentId": "base-spire:meat-cleaver",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MeatCleaver.cs",
+    "SourceSha256": "7afde0bde5327a5552954983f53bd7435ac63a931dc1f7888342f53eb44aa5c8",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRestSiteOptions"
+    ]
+  },
+  {
+    "Name": "MeatOnTheBone",
+    "ContentId": "base-spire:meat-on-the-bone",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MeatOnTheBone.cs",
+    "SourceSha256": "ec1ba2f6be333d98fa2d0b869a11ff38ba74836ef6a0bb83fa967b1cd3cba0e7",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/MeatOnTheBone.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "BeforeCombatStart",
+      "AfterCurrentHpChanged",
+      "AfterCombatVictoryEarly"
+    ]
+  },
+  {
+    "Name": "MembershipCard",
+    "ContentId": "base-spire:membership-card",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MembershipCard.cs",
+    "SourceSha256": "d32f6da3398dcc99a71289c1d19411ca6523acacba7e635bd8e09e8d5735b4e7",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMerchantPrice"
+    ]
+  },
+  {
+    "Name": "MercuryHourglass",
+    "ContentId": "base-spire:mercury-hourglass",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MercuryHourglass.cs",
+    "SourceSha256": "916280bc3a6627c90ed9ff2868adafcdb1f59f7941427156fc61a957d2147a50",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "Metronome",
+    "ContentId": "base-spire:metronome",
+    "Rarity": "Rare",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Metronome.cs",
+    "SourceSha256": "c1cd02df521af182c852c593ff4ff840c0087cd912f1e7c31596a4a223acdf54",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterOrbChanneled",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "MiniatureCannon",
+    "ContentId": "base-spire:miniature-cannon",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MiniatureCannon.cs",
+    "SourceSha256": "05f5868866ecd2fef9774e3466a63d57254d81f23e949a373cf3bdd9e8a3252d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageAdditive"
+    ]
+  },
+  {
+    "Name": "MiniatureTent",
+    "ContentId": "base-spire:miniature-tent",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MiniatureTent.cs",
+    "SourceSha256": "3c7d4a9f2b7abe226730c9036a7659595a1324c6e07ef6dcb7af29e7a2496737",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ShouldDisableRemainingRestSiteOptions"
+    ]
+  },
+  {
+    "Name": "MiniRegent",
+    "ContentId": "base-spire:mini-regent",
+    "Rarity": "Rare",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MiniRegent.cs",
+    "SourceSha256": "2d4323e61d24f80129d8e0cc8805254f7359360c45b6e1702219ad3e58922cb5",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterStarsSpent",
+      "BeforeSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "MoltenEgg",
+    "ContentId": "base-spire:molten-egg",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MoltenEgg.cs",
+    "SourceSha256": "90cbfbecffcbeb45a3672ee6c5eb8f8123df8c67a6c999da2640aeb88709035d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyCardRewardOptionsLate",
+      "ModifyMerchantCardCreationResults",
+      "TryModifyCardBeingAddedToDeck"
+    ]
+  },
+  {
+    "Name": "MrStruggles",
+    "ContentId": "base-spire:mr-struggles",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MrStruggles.cs",
+    "SourceSha256": "8d1944ef8a94433c1251f9e9c5af24aacfd2db1a883ff21445095892083e58ab",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "MummifiedHand",
+    "ContentId": "base-spire:mummified-hand",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MummifiedHand.cs",
+    "SourceSha256": "0bd21d0452d23178bf35fd826337240b294949ed6b9687aa7f8a682dd1fd47d4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "MusicBox",
+    "ContentId": "base-spire:music-box",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MusicBox.cs",
+    "SourceSha256": "2d8c255e081979c6f2a634c99be8c621ab1b4a380b094233c0110c142c494942",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCardPlayed",
+      "AfterCardPlayed",
+      "BeforeSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "MysticLighter",
+    "ContentId": "base-spire:mystic-lighter",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/MysticLighter.cs",
+    "SourceSha256": "9f03ea019c5050e6cd08f590b8123513988b4dd0dd8eec2e680f6642ff1cb1d4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageAdditive"
+    ]
+  },
+  {
+    "Name": "NeowsBones",
+    "ContentId": "base-spire:neows-bones",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NeowsBones.cs",
+    "SourceSha256": "b48efa4ddbced3291cc24b3a04febdbded0ce7496b0c75589ba68106d1017083",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "NeowsTalisman",
+    "ContentId": "base-spire:neows-talisman",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NeowsTalisman.cs",
+    "SourceSha256": "0ffc51f1bfd0ee42bab82a0627237c2fa1733417c7994d04903479f640333c01",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "NeowsTorment",
+    "ContentId": "base-spire:neows-torment",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NeowsTorment.cs",
+    "SourceSha256": "01ab3f42278e11b463bdb169ff85cd8afe7973786d5aa171298543f673559ee3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "NewLeaf",
+    "ContentId": "base-spire:new-leaf",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NewLeaf.cs",
+    "SourceSha256": "b51bb2ed41fdf5c7ebf4d89c807e551caa6131b9430a6e0fe2eed2c8ab8b2c8c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "NinjaScroll",
+    "ContentId": "base-spire:ninja-scroll",
+    "Rarity": "Shop",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NinjaScroll.cs",
+    "SourceSha256": "eb1d8df3a7d0bf99da257c02b2d26c101ae522ee9a1747cf1cce38e84fa4cdfe",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "Nunchaku",
+    "ContentId": "base-spire:nunchaku",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Nunchaku.cs",
+    "SourceSha256": "8ea6106cfd41e1cb3bc5e0485dfd067aa1e33e3c367ac836f04c8097d5d65ecb",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "NutritiousOyster",
+    "ContentId": "base-spire:nutritious-oyster",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NutritiousOyster.cs",
+    "SourceSha256": "9153f3de2830a0cb283885cad8350eea9b34e3e1b96eff342ec4e0bf409c6dd3",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/NutritiousOyster.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "NutritiousSoup",
+    "ContentId": "base-spire:nutritious-soup",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/NutritiousSoup.cs",
+    "SourceSha256": "4f3550177969082d71b31ea73ac20a244ddf8bb67a934e61fbce15854ef88197",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "OddlySmoothStone",
+    "ContentId": "base-spire:oddly-smooth-stone",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/OddlySmoothStone.cs",
+    "SourceSha256": "9d271ac71df30cd48a649b51ac01051c32a2b207e290e7ca9e6b6722f9219fbd",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/OddlySmoothStone.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "OldCoin",
+    "ContentId": "base-spire:old-coin",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/OldCoin.cs",
+    "SourceSha256": "7b2264737b59b6d74fcd82fff956a498b197774f5e743059c5cf614677b42d54",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/OldCoin.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "IsAllowed",
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "OrangeDough",
+    "ContentId": "base-spire:orange-dough",
+    "Rarity": "Rare",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/OrangeDough.cs",
+    "SourceSha256": "28008d69f709665184a21dde94e629a4ab9e8bfc0c59cfa014a17c53fd21de11",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "Orichalcum",
+    "ContentId": "base-spire:orichalcum",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Orichalcum.cs",
+    "SourceSha256": "75f295aa8fd693ec6dd81e2fab24f048d5b8bcb2d9de906ec93859f044cb7826",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnEndVeryEarly",
+      "BeforeSideTurnEnd",
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "OrnamentalFan",
+    "ContentId": "base-spire:ornamental-fan",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/OrnamentalFan.cs",
+    "SourceSha256": "9757638c32682400389a5ff510f0053c1fc8846a134559d48160cf39a6e8ec48",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Orrery",
+    "ContentId": "base-spire:orrery",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Orrery.cs",
+    "SourceSha256": "edcd9692994c134a718de4a9d3ee44abd9519c3961b947c5417c1be7f20b697c",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PaelsBlood",
+    "ContentId": "base-spire:paels-blood",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsBlood.cs",
+    "SourceSha256": "cb81740f0a4c67b887f2ca9d7cb7c2687cea9bece83328345c3f3ebb61b2c52a",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/PaelsBlood.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ModifyHandDraw"
+    ]
+  },
+  {
+    "Name": "PaelsClaw",
+    "ContentId": "base-spire:paels-claw",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsClaw.cs",
+    "SourceSha256": "b178f36b520389743cd1d6888a2664933c8fb3188273bd9041bdda6b5ef32aa1",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PaelsEye",
+    "ContentId": "base-spire:paels-eye",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsEye.cs",
+    "SourceSha256": "053d28f51e9364d3edd275791a8400026faaad9ab6b5b829783ff140206d2a09",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "BeforeCardPlayed",
+      "AfterSideTurnStart",
+      "ShouldTakeExtraTurn",
+      "BeforeSideTurnEndEarly",
+      "AfterTakingExtraTurn",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PaelsFlesh",
+    "ContentId": "base-spire:paels-flesh",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsFlesh.cs",
+    "SourceSha256": "c0b37d85548c8eda1e5ec8283444c47628a29fcdab4e47d65d1425ff6d43037d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "BeforeCombatStart",
+      "BeforeSideTurnStart",
+      "AfterSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PaelsGrowth",
+    "ContentId": "base-spire:paels-growth",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsGrowth.cs",
+    "SourceSha256": "09068dd3f2ecaf6a6dbf607f35d314dfcf1b3e1b7856df5875533ffc5a6a8194",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "TryModifyRestSiteOptions"
+    ]
+  },
+  {
+    "Name": "PaelsHorn",
+    "ContentId": "base-spire:paels-horn",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsHorn.cs",
+    "SourceSha256": "48feb9b51f0cba55fc5b007a613270f4d3d71804b497b675792092ee69a6724b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PaelsLegion",
+    "ContentId": "base-spire:paels-legion",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsLegion.cs",
+    "SourceSha256": "3abab827243cb26b1f6ddf5d67e17f503559dca582c19b02bebdcdcf363bbbb1",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "BeforeCombatStart",
+      "ModifyBlockMultiplicative",
+      "AfterModifyingBlockAmount",
+      "AfterCardPlayed",
+      "AfterSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PaelsTears",
+    "ContentId": "base-spire:paels-tears",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsTears.cs",
+    "SourceSha256": "616621a64ceb83d62b93a5ad935478970fc78662c3cd48e00d2dfbee66ee42df",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnEnd",
+      "AfterSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PaelsTooth",
+    "ContentId": "base-spire:paels-tooth",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsTooth.cs",
+    "SourceSha256": "07143ec9bea0bfb05508ebbc9cbf8dbd62d3571294bed8c0aec5d366651e4efc",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCloned",
+      "AfterObtained",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PaelsWing",
+    "ContentId": "base-spire:paels-wing",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaelsWing.cs",
+    "SourceSha256": "d99f86bb92cc6a0c6fb753ffe4a0a517ff76d815f55c08001630625f86857430",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyCardRewardAlternatives"
+    ]
+  },
+  {
+    "Name": "PandorasBox",
+    "ContentId": "base-spire:pandoras-box",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PandorasBox.cs",
+    "SourceSha256": "fde8d4ed05ab3bffdef3c7402475800f07ccc44a67f22b7a530976ad78db9ca7",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Pantograph",
+    "ContentId": "base-spire:pantograph",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Pantograph.cs",
+    "SourceSha256": "ef3b9dccda9320794e1113859932e6dece3d50a3613a19bf8fcc687dc3187f04",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/Pantograph.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterRoomEntered",
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "PaperKrane",
+    "ContentId": "base-spire:paper-krane",
+    "Rarity": "Rare",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaperKrane.cs",
+    "SourceSha256": "3e5f2ab5f2036e61c21a3a9021aacf0cc95a9b947d634ffd67a7a0e431f31606",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": []
+  },
+  {
+    "Name": "PaperPhrog",
+    "ContentId": "base-spire:paper-phrog",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PaperPhrog.cs",
+    "SourceSha256": "a4e1e2330d7b651a82386d5454a9c32039ee812d82ebbc48e7bc3198b9e307c8",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": []
+  },
+  {
+    "Name": "ParryingShield",
+    "ContentId": "base-spire:parrying-shield",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ParryingShield.cs",
+    "SourceSha256": "793c17645dfbbe9aaa75bde59c2be3a7715b767126e8f21b407886f8d6b52e53",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnEnd"
+    ]
+  },
+  {
+    "Name": "Pear",
+    "ContentId": "base-spire:pear",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Pear.cs",
+    "SourceSha256": "87c39f523195105ffad7f240251af0873ea3dc88bc8e113db3790f764ff8e19f",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Pear.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Pendulum",
+    "ContentId": "base-spire:pendulum",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Pendulum.cs",
+    "SourceSha256": "348a11de259d9a3a8450fd6cdf030a21f05c7f9ed1765a04a32b9642eedc52bf",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PenNib",
+    "ContentId": "base-spire:pen-nib",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PenNib.cs",
+    "SourceSha256": "00d76bae480cd2eecd7e698a7f3d96641190f92b2b5efa8800e84059792c1c47",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageMultiplicative",
+      "BeforeCardPlayed",
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "Permafrost",
+    "ContentId": "base-spire:permafrost",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Permafrost.cs",
+    "SourceSha256": "0c85a2f04a6c0275b0aae2686c92a7ec1ed803afd23c3b9f93d12b821bee1034",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "PetrifiedToad",
+    "ContentId": "base-spire:petrified-toad",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PetrifiedToad.cs",
+    "SourceSha256": "752203f1b5953df8fd9af65f038d256f2cde8df6fc195518cf14006c1af70439",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStartLate"
+    ]
+  },
+  {
+    "Name": "PhialHolster",
+    "ContentId": "base-spire:phial-holster",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PhialHolster.cs",
+    "SourceSha256": "dadb65062e363fd8ff0a6df8ac1c6876c67339534d89e845ca18fde4dc29fe34",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PhilosophersStone",
+    "ContentId": "base-spire:philosophers-stone",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PhilosophersStone.cs",
+    "SourceSha256": "380de5267b699e661b33788bee393c793f326fe9668c9ab8a7d5195e1c171bc5",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "AfterCreatureAddedToCombat",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "PhylacteryUnbound",
+    "ContentId": "base-spire:phylactery-unbound",
+    "Rarity": "Starter",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PhylacteryUnbound.cs",
+    "SourceSha256": "7340fdbc9e8e533fc1ddf50c516c6ea543fb866f6c938f17dee95a23d9f400b0",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart",
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "Planisphere",
+    "ContentId": "base-spire:planisphere",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Planisphere.cs",
+    "SourceSha256": "95b115178a88ff3d6be88a8586c3413c8184dd480200fa2d2090dce628dfefce",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/Planisphere.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "IsAllowed",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "Pocketwatch",
+    "ContentId": "base-spire:pocketwatch",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Pocketwatch.cs",
+    "SourceSha256": "3edba3e227bd844eea5e98b3db8c2cbe1864f8df22ad341e07003a6f7c040908",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed",
+      "ModifyHandDraw",
+      "AfterModifyingHandDraw",
+      "BeforeSideTurnStart",
+      "AfterSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "PollinousCore",
+    "ContentId": "base-spire:pollinous-core",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PollinousCore.cs",
+    "SourceSha256": "58d3bed387d66ccb814a0064c3cbd40303e7fb4b65b2801d373054763071b76e",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart",
+      "AfterCombatEnd",
+      "ModifyHandDraw",
+      "AfterModifyingHandDraw"
+    ]
+  },
+  {
+    "Name": "Pomander",
+    "ContentId": "base-spire:pomander",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Pomander.cs",
+    "SourceSha256": "bb6349ff81efe7c0753b9200824095b15233c7aef425011c8556be508c70673b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PotionBelt",
+    "ContentId": "base-spire:potion-belt",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PotionBelt.cs",
+    "SourceSha256": "23350bf9f3e8666a395580317ffa822a5a7609ab1629a5296c8be8c88811b277",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/PotionBelt.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PowerCell",
+    "ContentId": "base-spire:power-cell",
+    "Rarity": "Rare",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PowerCell.cs",
+    "SourceSha256": "8664d2057055e28661a7296219417c6a8aefd8c6507fc5de22852c049fa344dc",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "PrayerWheel",
+    "ContentId": "base-spire:prayer-wheel",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PrayerWheel.cs",
+    "SourceSha256": "4a2667a79695d082cb2cb9de0d61a4f786801f89e3db2803f7b24f06c2828cf9",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRewards"
+    ]
+  },
+  {
+    "Name": "PrecariousShears",
+    "ContentId": "base-spire:precarious-shears",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PrecariousShears.cs",
+    "SourceSha256": "a97b07b298c989c0a0843f95876e8cf58670fb525fb449ed5c127c6504b6a3c0",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PreciseScissors",
+    "ContentId": "base-spire:precise-scissors",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PreciseScissors.cs",
+    "SourceSha256": "7424ab04ad194529d5b8432ceca9fd1700232737f6eac3b0f7254fe052090611",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PreservedFog",
+    "ContentId": "base-spire:preserved-fog",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PreservedFog.cs",
+    "SourceSha256": "6d9ebf8110fd55ec6e258ffa0a56b007185df3db80157d6e5a75e448a4638ba3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "PrismaticGem",
+    "ContentId": "base-spire:prismatic-gem",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PrismaticGem.cs",
+    "SourceSha256": "bfc7bdc2a1701fb665991987d295b8065d142e9b55b14f34d3a7c4eb809a991f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "ModifyCardRewardCreationOptions"
+    ]
+  },
+  {
+    "Name": "PumpkinCandle",
+    "ContentId": "base-spire:pumpkin-candle",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PumpkinCandle.cs",
+    "SourceSha256": "46b9d1b08ffa0a4336c1be84dc2b0f6147e40a0d1a3c5f27a25d21f1446a854b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "ModifyMaxEnergy",
+      "AfterCombatEnd",
+      "TryModifyRestSiteOptions"
+    ]
+  },
+  {
+    "Name": "PunchDagger",
+    "ContentId": "base-spire:punch-dagger",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/PunchDagger.cs",
+    "SourceSha256": "c8375eb3f32473c7f818671cc9ba2ff055b5b8c4f2191ca8b234fe5b6d0c37e9",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "RadiantPearl",
+    "ContentId": "base-spire:radiant-pearl",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RadiantPearl.cs",
+    "SourceSha256": "e45921485827b7ea4f50e67fbe0e81f36931f4c793b0d0aa15cc31b9d2a6f798",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "RainbowRing",
+    "ContentId": "base-spire:rainbow-ring",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RainbowRing.cs",
+    "SourceSha256": "da0037c87a9901c408094cf76a142d1da59e84eadb4774d3ec5322a64f76a977",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "RazorTooth",
+    "ContentId": "base-spire:razor-tooth",
+    "Rarity": "Rare",
+    "Pools": [
+      "EventRelicPool",
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RazorTooth.cs",
+    "SourceSha256": "411407b14ab21d23593b6808b25eb952fd4f876555491828407899413aa1f39a",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "RedMask",
+    "ContentId": "base-spire:red-mask",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RedMask.cs",
+    "SourceSha256": "af6b08546432a8d8b7b46f3b6f4c2bcbaa0a6e4cc30a1e049093609c01d72727",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/RedMask.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "RedSkull",
+    "ContentId": "base-spire:red-skull",
+    "Rarity": "Common",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RedSkull.cs",
+    "SourceSha256": "69a66d7b4953b5fbfaecb892e7460bc3e0959a7ce1638be28cf71a0428c7de32",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterCombatEnd",
+      "AfterCurrentHpChanged"
+    ]
+  },
+  {
+    "Name": "Regalite",
+    "ContentId": "base-spire:regalite",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Regalite.cs",
+    "SourceSha256": "977f2edd5321aec7c3ef617d0b2c70fa375c63b344fa5e946c87bad72484d6a9",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardGeneratedForCombat"
+    ]
+  },
+  {
+    "Name": "RegalPillow",
+    "ContentId": "base-spire:regal-pillow",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RegalPillow.cs",
+    "SourceSha256": "85c34e64bcf0a77b47b991b5241b241af467f71075c33c347df296259b67196a",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/RegalPillow.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "ModifyRestSiteHealAmount",
+      "AfterRestSiteHeal",
+      "ModifyExtraRestSiteHealText",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "ReptileTrinket",
+    "ContentId": "base-spire:reptile-trinket",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ReptileTrinket.cs",
+    "SourceSha256": "7b1977f36988d20b9d19a3837c19649d61abe7e05fd260b6fb11f30922623f2e",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPotionUsed"
+    ]
+  },
+  {
+    "Name": "RingingTriangle",
+    "ContentId": "base-spire:ringing-triangle",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RingingTriangle.cs",
+    "SourceSha256": "a308897b83c3e544a12e6cc06cd6e8d24b26ca936fe4166d6cc19a4b07126255",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/RingingTriangle.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "ShouldFlush"
+    ]
+  },
+  {
+    "Name": "RingOfTheDrake",
+    "ContentId": "base-spire:ring-of-the-drake",
+    "Rarity": "Starter",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RingOfTheDrake.cs",
+    "SourceSha256": "0098c3db30287962fbdc0ea1ee97fdca0751f1749059c1c027c8394c2a0bd9b7",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/RingOfTheDrake.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ModifyHandDraw"
+    ]
+  },
+  {
+    "Name": "RingOfTheSnake",
+    "ContentId": "base-spire:ring-of-the-snake",
+    "Rarity": "Starter",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RingOfTheSnake.cs",
+    "SourceSha256": "321c41c14c4ce0dd326d77aa7d11514c18da410d0f58e48367e1055a973e2610",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/RingOfTheSnake.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ModifyHandDraw"
+    ]
+  },
+  {
+    "Name": "RippleBasin",
+    "ContentId": "base-spire:ripple-basin",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RippleBasin.cs",
+    "SourceSha256": "e849490ee4fe8dc38ea645df20eb5233aae6af8ab965bfe24c11793c4c46ece7",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnEnd",
+      "AfterCardPlayed",
+      "BeforeSideTurnStart",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "RoyalPoison",
+    "ContentId": "base-spire:royal-poison",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RoyalPoison.cs",
+    "SourceSha256": "79d4f5ed5e22eb7a497ddd0642b7eeeb6600ed90aa2fabac4bfa20a5986ec444",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "RoyalStamp",
+    "ContentId": "base-spire:royal-stamp",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RoyalStamp.cs",
+    "SourceSha256": "40d1a611916277df573e146683e1b5ab921e9188c21420be327cba56df18d6c6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "RuinedHelmet",
+    "ContentId": "base-spire:ruined-helmet",
+    "Rarity": "Rare",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RuinedHelmet.cs",
+    "SourceSha256": "e5952b7724fd38381d248fbb0d38755695e6afa9d9809f1929fd2fffda5160c6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyPowerAmountReceived",
+      "AfterModifyingPowerAmountReceived",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "RunicCapacitor",
+    "ContentId": "base-spire:runic-capacitor",
+    "Rarity": "Shop",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RunicCapacitor.cs",
+    "SourceSha256": "3f5ebef0654babaa36e019886799d0c77b39493c12f66fe8fb17f4569cd0981d",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local combat hooks in sts2/src/Core/Models/Relics/RunicCapacitor.cs; shares production CombatOrbs and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "RunicPyramid",
+    "ContentId": "base-spire:runic-pyramid",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/RunicPyramid.cs",
+    "SourceSha256": "35d7d24f8037ed1ea3cc273feb3f7e0216865b4469da8be6352ce94c7b82dca0",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/RunicPyramid.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ShouldFlush"
+    ]
+  },
+  {
+    "Name": "Sai",
+    "ContentId": "base-spire:sai",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Sai.cs",
+    "SourceSha256": "49bf579ad10937264e4a1fc8280809dde99c322393e78ea0539f8d51d755f094",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Sai.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "SandCastle",
+    "ContentId": "base-spire:sand-castle",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SandCastle.cs",
+    "SourceSha256": "d1c52bc62e986500a9233f1672a9771503ae962319c553e672ccf777f702697b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "ScreamingFlagon",
+    "ContentId": "base-spire:screaming-flagon",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ScreamingFlagon.cs",
+    "SourceSha256": "7395ea69243cb1a4f93009ef257dc87c98a6e8298f91d24ce0aed3d48c8f2e40",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnEnd"
+    ]
+  },
+  {
+    "Name": "ScrollBoxes",
+    "ContentId": "base-spire:scroll-boxes",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ScrollBoxes.cs",
+    "SourceSha256": "6049a885980117cf519d04731172f1875703cbded52dc70456178f70f4e960fd",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowedAtNeow",
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "SeaGlass",
+    "ContentId": "base-spire:sea-glass",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SeaGlass.cs",
+    "SourceSha256": "a8282988ccbb5aca3295efde40e64cba2ab070b3df15bde932c582bbb99d8944",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "SealOfGold",
+    "ContentId": "base-spire:seal-of-gold",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SealOfGold.cs",
+    "SourceSha256": "6b0397f5fc34675a9e470fe1f5c637ab538da6ffdc6ef3017229ce2d28d2c6f0",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "SelfFormingClay",
+    "ContentId": "base-spire:self-forming-clay",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "IroncladRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SelfFormingClay.cs",
+    "SourceSha256": "c67dff243bb62af45f53fa2bb9a94d1bb30066a34ad0d730a44a04c44dd73ad7",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterDamageReceived"
+    ]
+  },
+  {
+    "Name": "SereTalon",
+    "ContentId": "base-spire:sere-talon",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SereTalon.cs",
+    "SourceSha256": "7da5f7020726ae3c961dec0fc70df3d0a98b5ab94073fac6f32ccf4039837b51",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Shovel",
+    "ContentId": "base-spire:shovel",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Shovel.cs",
+    "SourceSha256": "c447504ba362307f5b3080c7951910b83f4b71d4d8b5f36bc738dadf5f580833",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyRestSiteOptions"
+    ]
+  },
+  {
+    "Name": "Shuriken",
+    "ContentId": "base-spire:shuriken",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Shuriken.cs",
+    "SourceSha256": "84e88016f29547096b35597e17833a4856818beced7da4901d911a00f4b42786",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "SignetRing",
+    "ContentId": "base-spire:signet-ring",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SignetRing.cs",
+    "SourceSha256": "08886f64bba23dded181c114145a6cee6b579c217aac140e2a0270fa1f842059",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/SignetRing.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "SilkenTress",
+    "ContentId": "base-spire:silken-tress",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SilkenTress.cs",
+    "SourceSha256": "090f137bf91354c1af950b4dcc2f5bd87e0e6aff8ef6d4cfc888843d9140e2e4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "TryModifyCardRewardOptionsLate",
+      "AfterModifyingCardRewardOptions"
+    ]
+  },
+  {
+    "Name": "SilverCrucible",
+    "ContentId": "base-spire:silver-crucible",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SilverCrucible.cs",
+    "SourceSha256": "3bfaac956339f8fcab7b01911c41080bf4cd39224b19c1d5ed523e0ee6c04359",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyCardRewardOptionsLate",
+      "AfterModifyingCardRewardOptions",
+      "AfterRoomEntered",
+      "ShouldGenerateTreasure"
+    ]
+  },
+  {
+    "Name": "SlingOfCourage",
+    "ContentId": "base-spire:sling-of-courage",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SlingOfCourage.cs",
+    "SourceSha256": "c7405661e6647e334d69c34e4e793e8468f6468e21110a074a307969f80d7314",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/SlingOfCourage.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "SmallCapsule",
+    "ContentId": "base-spire:small-capsule",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SmallCapsule.cs",
+    "SourceSha256": "cfb272ab5e3257470dfaa8feb8dde7c67ea0c7c486d8009bad9caa5d3c25b2b2",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "SneckoEye",
+    "ContentId": "base-spire:snecko-eye",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SneckoEye.cs",
+    "SourceSha256": "121fc0295cc47ff00e9e9bae0cc7cb0bd26e074dd82a08694026ce8d80a5ed64",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "BeforeCombatStart",
+      "ModifyHandDraw"
+    ]
+  },
+  {
+    "Name": "SneckoSkull",
+    "ContentId": "base-spire:snecko-skull",
+    "Rarity": "Common",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SneckoSkull.cs",
+    "SourceSha256": "4d954b0eb98b5c1f15a383015bdc715f900203a9e622da2b81598c61ff19db7d",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyPowerAmountGivenAdditive",
+      "AfterModifyingPowerAmountGiven"
+    ]
+  },
+  {
+    "Name": "Sozu",
+    "ContentId": "base-spire:sozu",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Sozu.cs",
+    "SourceSha256": "f91bf90297f47bd2b9dac224078f2c1cd8f4604d981a9a5a3b5ce7461ecfc250",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Sozu.cs; complete gameplay methods and source pool reviewed",
+    "Hooks": [
+      "ShouldProcurePotion",
+      "ModifyMaxEnergy"
+    ]
+  },
+  {
+    "Name": "SparklingRouge",
+    "ContentId": "base-spire:sparkling-rouge",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "EventRelicPool",
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SparklingRouge.cs",
+    "SourceSha256": "b227dc365984af3432368f0919767681cbfd0838294b6b629870de96f26c909e",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/SparklingRouge.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "AfterBlockCleared"
+    ]
+  },
+  {
+    "Name": "SpikedGauntlets",
+    "ContentId": "base-spire:spiked-gauntlets",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SpikedGauntlets.cs",
+    "SourceSha256": "78733958b4e5af1b410fcd4b12112836d43b3c1df2957edf363e7352d41eaac8",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "TryModifyEnergyCostInCombat"
+    ]
+  },
+  {
+    "Name": "StoneCalendar",
+    "ContentId": "base-spire:stone-calendar",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/StoneCalendar.cs",
+    "SourceSha256": "8d76aea271f42aa65add76121ab50b965fd2be7fd369fbe301a1bb6349cf1fab",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterSideTurnStart",
+      "BeforeSideTurnEnd",
+      "AfterCombatEnd",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "StoneCracker",
+    "ContentId": "base-spire:stone-cracker",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/StoneCracker.cs",
+    "SourceSha256": "91625cf37608a41ee28be8df6ff254f57fac6bb79c68a4e57cacc5d800bdb9f2",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "StoneHumidifier",
+    "ContentId": "base-spire:stone-humidifier",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/StoneHumidifier.cs",
+    "SourceSha256": "f495f06e200b31704f5ed577a3ed260a9ea4bcd0ac957966f95f345a7c02ab47",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRestSiteHeal",
+      "ModifyExtraRestSiteHealText"
+    ]
+  },
+  {
+    "Name": "Storybook",
+    "ContentId": "base-spire:storybook",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Storybook.cs",
+    "SourceSha256": "0847791283c30cd2977998bec7b6015228727617fe95bb5d87164c106600cb9f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Strawberry",
+    "ContentId": "base-spire:strawberry",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Strawberry.cs",
+    "SourceSha256": "2dcaa250e85d9bf5aceade5a472003aceb7a0a9976b3975ea89cce8eb4fbc1cd",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Strawberry.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "StrikeDummy",
+    "ContentId": "base-spire:strike-dummy",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/StrikeDummy.cs",
+    "SourceSha256": "b2644e4578edaa03100f4e88f9a7b1f6992c414fb4e1aa73dd5af1b9fc5d0238",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageAdditive"
+    ]
+  },
+  {
+    "Name": "SturdyClamp",
+    "ContentId": "base-spire:sturdy-clamp",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SturdyClamp.cs",
+    "SourceSha256": "b4af1e8341e94ce45095b2c2aa62cc2a2d7ea4ac72ae70dd989b1a54382781de",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/SturdyClamp.cs; full gameplay effects declared and exercised by RelicContentChecks.",
+    "Hooks": [
+      "ShouldClearBlock",
+      "AfterPreventingBlockClear"
+    ]
+  },
+  {
+    "Name": "SwordOfJade",
+    "ContentId": "base-spire:sword-of-jade",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SwordOfJade.cs",
+    "SourceSha256": "ac076ada1d74acd3a6a80ff48dd50341bb65753d5b702a71fb950d349ecc4116",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/SwordOfJade.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "SwordOfStone",
+    "ContentId": "base-spire:sword-of-stone",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SwordOfStone.cs",
+    "SourceSha256": "a33f24ba9483daab1cd75ac4161efb980236b80ee1dc49c86a5a654fe6d3d196",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/SwordOfStone.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": [
+      "AfterCombatVictory"
+    ]
+  },
+  {
+    "Name": "SymbioticVirus",
+    "ContentId": "base-spire:symbiotic-virus",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "DefectRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/SymbioticVirus.cs",
+    "SourceSha256": "22c6555a79c8fba8053ef370b675ab11b676a3d6ab5be4fb78e70380fbf92c63",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local combat hooks in sts2/src/Core/Models/Relics/SymbioticVirus.cs; shares production CombatOrbs and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "TanxsWhistle",
+    "ContentId": "base-spire:tanxs-whistle",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TanxsWhistle.cs",
+    "SourceSha256": "72f36d38b260e5f1fbebb7188a17ea0924b880a9ea23a4b97516672e93aa0f7f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "TeaOfDiscourtesy",
+    "ContentId": "base-spire:tea-of-discourtesy",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TeaOfDiscourtesy.cs",
+    "SourceSha256": "f88dd42ac45c179cafb4a900e0e1d40fdab521b8bac97f48ed50889099b04b6f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart"
+    ]
+  },
+  {
+    "Name": "TheAbacus",
+    "ContentId": "base-spire:the-abacus",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TheAbacus.cs",
+    "SourceSha256": "934cf5666c28725bc372fcf3268f69b069644e83aae470750530f306eff89546",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterShuffle"
+    ]
+  },
+  {
+    "Name": "TheBoot",
+    "ContentId": "base-spire:the-boot",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TheBoot.cs",
+    "SourceSha256": "29950f1eab051c52efd4ca5daaa157e390d397a660dd88560339aeb90615fc86",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyHpLostAfterOstyLate",
+      "AfterModifyingHpLostAfterOsty"
+    ]
+  },
+  {
+    "Name": "TheCourier",
+    "ContentId": "base-spire:the-courier",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TheCourier.cs",
+    "SourceSha256": "7a008927c51cc9d4079997f88838e65a7bdfab8612b92d502d4f999c760d89e6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMerchantPrice",
+      "ShouldRefillMerchantEntry"
+    ]
+  },
+  {
+    "Name": "ThrowingAxe",
+    "ContentId": "base-spire:throwing-axe",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ThrowingAxe.cs",
+    "SourceSha256": "284e439904b8861d4d06f097a3d9bea6281bcb29c79d0819a37b3be9ad2e334f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterRoomEntered",
+      "ModifyCardPlayCount",
+      "AfterModifyingCardPlayCount",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Tingsha",
+    "ContentId": "base-spire:tingsha",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Tingsha.cs",
+    "SourceSha256": "a0bc3e5558babcddb0f145a467c740476cb07c669c11df7c4358a5a377b850b3",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardDiscarded"
+    ]
+  },
+  {
+    "Name": "TinyMailbox",
+    "ContentId": "base-spire:tiny-mailbox",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TinyMailbox.cs",
+    "SourceSha256": "f35a567b7e9da044bf93f673b4da0824cee6ffd699954751d341fc65fedbeeeb",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyRestSiteHealRewards",
+      "ModifyExtraRestSiteHealText"
+    ]
+  },
+  {
+    "Name": "ToastyMittens",
+    "ContentId": "base-spire:toasty-mittens",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ToastyMittens.cs",
+    "SourceSha256": "e9fc650353af30b49bf80c6da752d110657e3033c604ec1d103b4b4170f93e65",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "Toolbox",
+    "ContentId": "base-spire:toolbox",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Toolbox.cs",
+    "SourceSha256": "7cab88c919fa476747367b9cd7cbc2647ae7a826878af00f2c7ff7fb7f3e37a6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeHandDraw"
+    ]
+  },
+  {
+    "Name": "TouchOfOrobas",
+    "ContentId": "base-spire:touch-of-orobas",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TouchOfOrobas.cs",
+    "SourceSha256": "48acb77fa4da966d310629db2ff1f36137da3145447b5b65f2c039186f6d3e32",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCloned",
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "ToughBandages",
+    "ContentId": "base-spire:tough-bandages",
+    "Rarity": "Rare",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ToughBandages.cs",
+    "SourceSha256": "7713a46cf28a67a8cc3aa622030bfc7ea69ae8d2e9cc3c416305fade348e2aad",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardDiscarded"
+    ]
+  },
+  {
+    "Name": "ToxicEgg",
+    "ContentId": "base-spire:toxic-egg",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ToxicEgg.cs",
+    "SourceSha256": "63039163f5079f4663ebd0ae84b277c4678c7d3ada3ad4bf717469dc8af1e027",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyCardRewardOptionsLate",
+      "ModifyMerchantCardCreationResults",
+      "TryModifyCardBeingAddedToDeck"
+    ]
+  },
+  {
+    "Name": "ToyBox",
+    "ContentId": "base-spire:toy-box",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/ToyBox.cs",
+    "SourceSha256": "593daf3098d43b7e3f341f6f5acb5abed125f77d09e705787100d75bfcf70fd6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "TriBoomerang",
+    "ContentId": "base-spire:tri-boomerang",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TriBoomerang.cs",
+    "SourceSha256": "e8016f86246a295247d5432a9f604d47f68da4fac0932ae8411896e4d8a89725",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "TungstenRod",
+    "ContentId": "base-spire:tungsten-rod",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TungstenRod.cs",
+    "SourceSha256": "cc0cff46dd907d89e5e4b8bb5c3f78e920b557a36ccc2d614242b785dad83d92",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyHpLostAfterOsty",
+      "AfterModifyingHpLostAfterOsty"
+    ]
+  },
+  {
+    "Name": "TuningFork",
+    "ContentId": "base-spire:tuning-fork",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TuningFork.cs",
+    "SourceSha256": "dedf6ee6982716a8405bf8a926980b9ca496af1131b130cae6c546c28d0a63f9",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCardPlayed"
+    ]
+  },
+  {
+    "Name": "TwistedFunnel",
+    "ContentId": "base-spire:twisted-funnel",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SilentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/TwistedFunnel.cs",
+    "SourceSha256": "f3c5dcec16fe810e2717d35e52b84cf12c08c004311907f19d162916347c2d6f",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "UnceasingTop",
+    "ContentId": "base-spire:unceasing-top",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/UnceasingTop.cs",
+    "SourceSha256": "8b5cce4ca6f9cb69fd3a5555bd1e5ecbc8e6a797640eafd0f99207c2531adfb6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterHandEmptied"
+    ]
+  },
+  {
+    "Name": "UndyingSigil",
+    "ContentId": "base-spire:undying-sigil",
+    "Rarity": "Shop",
+    "Pools": [
+      "NecrobinderRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/UndyingSigil.cs",
+    "SourceSha256": "31430245db2163662f74b53a9ed0bcefb338d714907cf45dc0af0ccca66237a4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageMultiplicative"
+    ]
+  },
+  {
+    "Name": "UnsettlingLamp",
+    "ContentId": "base-spire:unsettling-lamp",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/UnsettlingLamp.cs",
+    "SourceSha256": "15593f1802a8d32588eefbe2ea67bec959b5e2e850a771491b71f10f6d079013",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart",
+      "BeforePowerAmountChanged",
+      "ModifyPowerAmountGivenMultiplicative",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "Vajra",
+    "ContentId": "base-spire:vajra",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Vajra.cs",
+    "SourceSha256": "a64a6f1095845ef116f8cbfb0b8711ebfdf1a2fd31af942de9d69ff356a63ed8",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/Vajra.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "Vambrace",
+    "ContentId": "base-spire:vambrace",
+    "Rarity": "Uncommon",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Vambrace.cs",
+    "SourceSha256": "06f1b1706f4c30425b3d5b4d36901381f69bb3e39896684aee7d56c814a50686",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "BeforeCombatStart",
+      "ModifyBlockMultiplicative",
+      "AfterModifyingBlockAmount",
+      "AfterCardPlayed",
+      "AfterCombatEnd"
+    ]
+  },
+  {
+    "Name": "VelvetChoker",
+    "ContentId": "base-spire:velvet-choker",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/VelvetChoker.cs",
+    "SourceSha256": "fce1765ed52d7c67a63377d1852a2e9e7a94e7b0734fb04a04039d756338ed62",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "ShouldPlay",
+      "AfterCardPlayed",
+      "AfterRoomEntered",
+      "AfterCombatEnd",
+      "BeforeSideTurnStart"
+    ]
+  },
+  {
+    "Name": "VenerableTeaSet",
+    "ContentId": "base-spire:venerable-tea-set",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/VenerableTeaSet.cs",
+    "SourceSha256": "73676273a2f06723d7a74614d2600530606dd6ad393dd11e698b27b30cf608d5",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/VenerableTeaSet.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
+    "Hooks": [
+      "AfterRoomEntered",
+      "AfterEnergyReset"
+    ]
+  },
+  {
+    "Name": "VeryHotCocoa",
+    "ContentId": "base-spire:very-hot-cocoa",
+    "Rarity": "Ancient",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/VeryHotCocoa.cs",
+    "SourceSha256": "4779eab578ba15e26e83ea3e6c51ec261eaeed65011b99f61ade10ecff0cbd7c",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/VeryHotCocoa.cs; full gameplay body and source pool reviewed",
+    "Hooks": [
+      "AfterSideTurnStart"
+    ]
+  },
+  {
+    "Name": "VexingPuzzlebox",
+    "ContentId": "base-spire:vexing-puzzlebox",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/VexingPuzzlebox.cs",
+    "SourceSha256": "7a384f3f5378bdea1afea9050a15a8f99f5a46363261200d9fc7352573552db4",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterPlayerTurnStart"
+    ]
+  },
+  {
+    "Name": "VitruvianMinion",
+    "ContentId": "base-spire:vitruvian-minion",
+    "Rarity": "Shop",
+    "Pools": [
+      "RegentRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/VitruvianMinion.cs",
+    "SourceSha256": "b526aa5f2152331da911dfe2168c7be91c5e61b5174b52f338eb850c501cd1bc",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyDamageMultiplicative",
+      "ModifyBlockMultiplicative"
+    ]
+  },
+  {
+    "Name": "WarHammer",
+    "ContentId": "base-spire:war-hammer",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WarHammer.cs",
+    "SourceSha256": "953e57c7d32846b421e9742cb287ef2f63aadd14a85930595f557ded9c0ed695",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCombatVictory"
+    ]
+  },
+  {
+    "Name": "WarPaint",
+    "ContentId": "base-spire:war-paint",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WarPaint.cs",
+    "SourceSha256": "898cfd36c7a76da4454700cdf19566f1406eafb434823830914ccf6a9f4234d6",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "Whetstone",
+    "ContentId": "base-spire:whetstone",
+    "Rarity": "Common",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/Whetstone.cs",
+    "SourceSha256": "45b465e6d17369add45a92abfe455b95a07e9701ea1a8460d8deeade301160ad",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterObtained"
+    ]
+  },
+  {
+    "Name": "WhisperingEarring",
+    "ContentId": "base-spire:whispering-earring",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WhisperingEarring.cs",
+    "SourceSha256": "03095decbb2a557c2d0edf2cae5418dc899fb49bf45ff2190c85d5ded854e57b",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "ModifyMaxEnergy",
+      "AfterAutoPrePlayPhaseEnteredLate"
+    ]
+  },
+  {
+    "Name": "WhiteBeastStatue",
+    "ContentId": "base-spire:white-beast-statue",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WhiteBeastStatue.cs",
+    "SourceSha256": "e19e8b6b47e69e52e8eafb6dccdafce618a091e0103780ca6e25722887513878",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "ShouldForcePotionReward"
+    ]
+  },
+  {
+    "Name": "WhiteStar",
+    "ContentId": "base-spire:white-star",
+    "Rarity": "Rare",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WhiteStar.cs",
+    "SourceSha256": "c6b7bcce31a38d9a0587feea331f7ddb966a994641a9ff86f91e124ad05ca5d7",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "TryModifyRewards"
+    ]
+  },
+  {
+    "Name": "WingCharm",
+    "ContentId": "base-spire:wing-charm",
+    "Rarity": "Shop",
+    "Pools": [
+      "SharedRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WingCharm.cs",
+    "SourceSha256": "c1f5f7bc6965bb3c9fa1f0692ffe79d0c9a1365d88aa49f8fc823aedef200534",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "TryModifyCardRewardOptionsLate"
+    ]
+  },
+  {
+    "Name": "WingedBoots",
+    "ContentId": "base-spire:winged-boots",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WingedBoots.cs",
+    "SourceSha256": "54fd8fbff5402199fbe1fec313ee1332edd02c1a90afbb4e12819d47cbbbb8fa",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "IsAllowed",
+      "ShouldAllowFreeTravel",
+      "AfterRoomEntered"
+    ]
+  },
+  {
+    "Name": "WongoCustomerAppreciationBadge",
+    "ContentId": "base-spire:wongo-customer-appreciation-badge",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WongoCustomerAppreciationBadge.cs",
+    "SourceSha256": "96367b0126f15cff0536f7aebc330ff8e591db165bd981de1b29cf3f1611f2a6",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "sts2/src/Core/Models/Relics/WongoCustomerAppreciationBadge.cs; actual gameplay body and source pool reviewed for this definition",
+    "Hooks": []
+  },
+  {
+    "Name": "WongosMysteryTicket",
+    "ContentId": "base-spire:wongos-mystery-ticket",
+    "Rarity": "Event",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/WongosMysteryTicket.cs",
+    "SourceSha256": "005a872b116ceefb7c43c6ab99549b10b1c0e380767903cc8de6787dd1a8ed1e",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCombatEnd",
+      "TryModifyRewards",
+      "AfterModifyingRewards"
+    ]
+  },
+  {
+    "Name": "YummyCookie",
+    "ContentId": "base-spire:yummy-cookie",
+    "Rarity": "Ancient",
+    "Pools": [
+      "EventRelicPool"
+    ],
+    "SourcePath": "sts2/src/Core/Models/Relics/YummyCookie.cs",
+    "SourceSha256": "f95edd4932a09f5f1d56318263551f0eb1e29406939abcc8f4497cfe302856dd",
+    "Eligibility": "unreviewed",
+    "EligibilityEvidence": "",
+    "Hooks": [
+      "AfterCloned",
+      "AfterObtained"
+    ]
+  }
+]

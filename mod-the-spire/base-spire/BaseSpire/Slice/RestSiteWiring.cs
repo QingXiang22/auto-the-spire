@@ -7,7 +7,7 @@ namespace BaseSpire.Slice;
 public static class RestSiteWiring
 {
     public static void Register(EnginePackageBuilder package, RoomCompileContext room, RunResources resources,
-        CardDefinitions recipes)
+        CardDefinitions recipes, Func<IrScope, Expr, Expr>? modifyHeal = null)
     {
         var schema = recipes.Schema;
         var maxHp = room.MaxHp;
@@ -18,7 +18,8 @@ public static class RestSiteWiring
         Expr AtRestSite(IrScope scope, Expr run) =>
             room.At(scope, run, MapRoomWiring.RestSitePhase, "RestSite");
         restBody.Requires(AtRestSite(restBody, restRun));
-        var healAmount = restBody.Divide(restBody.Multiply(restBody.Field(restRun, maxHp), restBody.Const(3L)), restBody.Const(10L));
+        Expr healAmount = restBody.Divide(restBody.Multiply(restBody.Field(restRun, maxHp), restBody.Const(3L)), restBody.Const(10L));
+        healAmount = modifyHeal?.Invoke(restBody, healAmount) ?? healAmount;
         restBody.Body([.. resources.HealLivingPlayer(restBody, restRun, healAmount),
             room.CloseVisit(restBody, restRun)]);
 

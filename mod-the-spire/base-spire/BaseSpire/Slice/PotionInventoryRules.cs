@@ -22,11 +22,17 @@ public sealed class PotionInventoryRules
     private readonly IReadOnlyDictionary<string, AuthorPotion> effects;
     private readonly ProcedureBuilder generate;
     private int nextLocal;
-    public Func<IrScope, Expr, Expr> ShouldAcquire { get; init; } = (scope, _) => scope.Const(true);
+    private ProcedureBuilder? acquireProcedure;
+    private readonly EntityTypeSymbol? capacityOwner;
+    public FieldSymbol? MaxSlots { get; }
+    public const int MaximumSlots = 999;
+    public Func<IrScope, Expr, Expr> ShouldAcquire { get; set; } = (scope, _) => scope.Const(true);
     public Func<IrScope, Expr, Inst[]> AfterAcquired { get; init; } = (_, _) => [];
 
-    public PotionInventoryRules(EnginePackageBuilder package, SliceAuthorModel model)
+    public PotionInventoryRules(EnginePackageBuilder package, SliceAuthorModel model, EntityTypeSymbol? capacityOwner = null)
     {
+        this.capacityOwner = capacityOwner;
+        MaxSlots = capacityOwner?.AddField("MaxPotionCount", FieldTypeSchema.Int(0, MaximumSlots), Value.Of((long)SliceManifest.PotionSlotCount));
         effects = model.Potions.ToDictionary(p => p.Id, StringComparer.Ordinal);
         Pool = model.PotionPool.Count > 0 ? model.PotionPool : [.. model.Potions.Select(p =>
             new PotionDefinition(p.Id, p.Name, p.Rarity, p.Usage, p.Target, p.SourcePath, ""))];
@@ -35,13 +41,13 @@ public sealed class PotionInventoryRules
         Rarity = Entity.AddField("Rarity", FieldTypeSchema.String(16));
         Target = Entity.AddField("Target", FieldTypeSchema.String(16));
         Usage = Entity.AddField("Usage", FieldTypeSchema.String(16));
-        SlotIndex = Entity.AddField("SlotIndex", FieldTypeSchema.Int(-1, SliceManifest.PotionSlotCount - 1));
+        SlotIndex = Entity.AddField("SlotIndex", FieldTypeSchema.Int(-1, MaximumSlots - 1));
         UseSupported = Entity.AddField("UseSupported", FieldTypeSchema.Bool());
         UnsupportedReason = Entity.AddField("UnsupportedUseReason", FieldTypeSchema.String(2048));
         Amount = Entity.AddField("Amount", FieldTypeSchema.Int(0, 999));
         PowerId = Entity.AddField("PowerId", FieldTypeSchema.String(64));
         PowerStacks = Entity.AddField("PowerStacks", FieldTypeSchema.Int(-99, 99));
-        Belt = package.Collection("PotionBelt", Entity); Belt.Capacity = SliceManifest.PotionSlotCount;
+        Belt = package.Collection("PotionBelt", Entity); Belt.Capacity = MaximumSlots;
         Rewards = package.Collection("RewardPotions", Entity); Rewards.Capacity = 1;
         generate = BuildGenerate(package);
     }
@@ -59,7 +65,15 @@ public sealed class PotionInventoryRules
         ];
     }
 
-    public Expr HasSpace(IrScope s) => s.Less(s.Count(s.Collection(Belt)), s.Const((long)SliceManifest.PotionSlotCount));
+    public Expr Capacity(IrScope s) => MaxSlots is null ? s.Const((long)SliceManifest.PotionSlotCount)
+        : s.Field(s.First(s.Type(capacityOwner!)), MaxSlots);
+    public Expr HasSpace(IrScope s) => s.Less(s.Count(s.Collection(Belt)), Capacity(s));
+    public Inst[] GainSlots(IrScope s, Expr amount)
+    {
+        if (MaxSlots is null) throw new InvalidOperationException("Potion capacity owner is not wired");
+        var owner = s.First(s.Type(capacityOwner!));
+        return [s.SetField(owner, MaxSlots, s.Add(s.Field(owner, MaxSlots), amount))];
+    }
     public IReadOnlyList<Inst> ClearReward(IrScope s) =>
         [s.ForEach(s.Collection(Rewards), potion => [s.Destroy(potion)])];
     public IReadOnlyList<Inst> Generate(IrScope s, Expr owner) => [s.Call(generate.Symbol, owner)];
@@ -71,29 +85,35 @@ public sealed class PotionInventoryRules
 
     public IReadOnlyList<Inst> Acquire(IrScope s, Expr potion, CollectionSymbol? source = null)
     {
+        if (acquireProcedure is not null && source is null) return [s.Call(acquireProcedure.Symbol, potion)];
         var suffix = nextLocal++;
         var selectedSlot = s.Local($"receivedPotion{suffix}", FieldTypeSchema.RefTo(Entity));
         var selected = s.LocalRef(selectedSlot);
-        var free = s.Local($"firstFreePotionSlot{suffix}", FieldTypeSchema.Int(-1, SliceManifest.PotionSlotCount - 1));
+        var free = s.Local($"firstFreePotionSlot{suffix}", FieldTypeSchema.Int(0, MaximumSlots));
         var steps = new List<Inst> {
             s.SetLocal(selectedSlot, potion),
-            s.SetLocal(free, s.Const(-1L)),
+            s.SetLocal(free, s.Const(0L)),
         };
-        for (var index = 0; index < SliceManifest.PotionSlotCount; index++)
-        {
-            var slot = s.Const((long)index);
-            steps.Add(s.If(s.And(s.Equal(s.LocalRef(free), s.Const(-1L)),
-                s.Not(s.Exists(s.Where(s.Collection(Belt), p => s.Equal(s.Field(p, SlotIndex), slot))))),
-                s.SetLocal(free, slot)));
-        }
+        steps.Add(s.Repeat(Capacity(s), s.If(s.Exists(s.Where(s.Collection(Belt),
+            p => s.Equal(s.Field(p, SlotIndex), s.LocalRef(free)))), s.SetLocal(free, s.Add(s.LocalRef(free), s.Const(1L))))));
         var acquired = new List<Inst> { s.SetField(selected, SlotIndex, s.LocalRef(free)) };
         if (source is not null) acquired.Add(s.RemoveFromCollection(source, selected));
         acquired.Add(s.AddToCollection(Belt, selected, InsertPosition.AtIndex,
             s.Count(s.Where(s.Collection(Belt), entry => s.Less(s.Field(entry, SlotIndex), s.LocalRef(free))))));
         acquired.AddRange(AfterAcquired(s, selected));
-        steps.Add(s.If(s.And(s.GreaterOrEqual(s.LocalRef(free), s.Const(0L)),
+        steps.Add(s.If(s.And(s.Less(s.LocalRef(free), Capacity(s)),
             s.And(s.Less(s.CollectionIndex(Belt, selected), s.Const(0L)), ShouldAcquire(s, selected))), acquired.ToArray()));
         return steps;
+    }
+
+    public ProcedureSymbol DeclareAcquireProcedure(EnginePackageBuilder package)
+    {
+        if (acquireProcedure is not null) return acquireProcedure.Symbol;
+        var body = package.Procedure("AcquirePotion");
+        var potion = body.Param("Potion", FieldTypeSchema.RefTo(Entity));
+        body.Body(Acquire(body, body.Param(potion)).ToArray());
+        acquireProcedure = body;
+        return body.Symbol;
     }
 
     public void RegisterDiscard(EnginePackageBuilder package, Func<IrScope, Expr>? allowed = null)

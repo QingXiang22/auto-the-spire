@@ -69,6 +69,12 @@ public static class SinglePlayerContentSource
         var unsupported = new List<(string Item, string Reason)>();
         // R3：把**实际读到**的每个源资源的内容摘要记下来。没有这一步，"绑定了某一源基线"只是标签。
         var sourceDigests = new List<(string Resource, string Digest)>();
+        foreach (var resource in new[] { SpireRelics.Resource, RelicSourceCatalog.Resource })
+            sourceDigests.Add((resource, EncounterContent.Digest(EncounterContent.ReadText(resource))));
+        var executableRelics = SpireRelics.All.Select(r => r.ContentId).ToHashSet(StringComparer.Ordinal);
+        unsupported.AddRange(RelicSourceCatalog.All.Where(r => !executableRelics.Contains(r.ContentId))
+            .Select(r => ($"relic:{r.Name}", r.Eligibility.StartsWith("excluded-", StringComparison.Ordinal)
+                ? r.EligibilityEvidence : "Source relic effect/eligibility is not implemented")));
 
         // ① 能力：正式 `*-powers.spire` **以及** `enemies*.spire` 里的 `power` 声明。
         //    敌人行动会 `applyPower(Ritual, …)` 一类，只加载 `-powers.spire` 会让这些敌人变成

@@ -547,6 +547,7 @@ public sealed record AuthorPower(
 {
     public IReadOnlyList<PowerRule> Rules { get; init; } = [];
     public bool NegativeStacksAreInfinite { get; init; }
+    public int MinimumStartTriggerTurn { get; init; }
 }
 
 /// <summary>

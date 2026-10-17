@@ -395,13 +395,13 @@ internal static class CombatSchema
         return new EventsBindings(turnStarted, turnStartedTurn, cardPlayed, cardPlayedCard, damageDealt, damageDealtTarget, damageDealtAmount, playerDamaged, playerDamagedAttacker, playerDamagedAmount, monsterDied, monsterDiedMonster, victory, victoryTurn, defeat, defeatTurn, projection);
     }
 
-    internal static PotionsBindings Potions(ContentBindings contentBindings, EventsBindings eventsBindings)
+    internal static PotionsBindings Potions(ContentBindings contentBindings, EventsBindings eventsBindings, PlayerBindings playerBindings)
     {
 
         // PotionInventoryRules owns potion schema, slots and reward candidates.
         var hasPotions = contentBindings.Author is not null && (contentBindings.Author.Potions.Count > 0 || contentBindings.Author.Belt.Count > 0 || contentBindings.Author.PotionPool.Count > 0);
 
-        var potions = hasPotions ? new PotionInventoryRules(contentBindings.Package, contentBindings.Author!) : null;
+        var potions = hasPotions ? new PotionInventoryRules(contentBindings.Package, contentBindings.Author!, playerBindings.Player) : null;
 
         var potion = potions?.Entity;
 

@@ -338,8 +338,8 @@ public sealed class BaseSpireRuntimeFactory
                 "胜利条件：地图scope的Boss战斗结算先打开奖励，全部奖励解决后写 `Run.ActCompleted = true` 与相位6；"
                 + "普通房间仅返回选图相位。幕完成保持Running；幕转换尚未接线，不能继续，也不代表整局Victory；"
                 + "正常开局轨迹的证据按本构建单独记录，不以身份声明替代验收。");
-            Replace("遗物：", "遗物：BurningBlood胜利回血与Pear/Mango/OldCoin获得效果已接入；"
-                + "完整共享宝箱身份袋不等于完整遗物行为，其他候选领取具名失败，合法跳过保留；药水领取、固定槽位、显式丢弃及已支持的使用效果已接入。");
+            Replace("遗物：", $"遗物：正式效果库已加载{SpireRelics.All.Count}件定义，源身份清单为{RelicSourceCatalog.All.Count}件；"
+                + "声明、实际行为与CI证据分别对账；未知效果领取具名失败，合法跳过保留。药水容量是玩家持久状态，槽位编号在领取／丢弃及跨房时保持稳定。");
             Replace("遭遇队列：", "遭遇队列：dev-map与默认scope共用同一条整幕初始化，前置消费（共享/玩家遗物袋、"
                 + "共享古代人、事件列表）、弱/普通队列、精英队列与BOSS/幕古代人都按源顺序在同一 `up_front` 流上执行；"
                 + "普通队列与精英队列是**两个独立集合**、各有自己的 per-type 访问计数（源 `RoomSet`），"

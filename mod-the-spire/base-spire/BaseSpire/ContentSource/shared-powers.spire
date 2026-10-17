@@ -1,4 +1,8 @@
 package base-spire {
+  power FocusPower {
+    role = Focus
+  }
+
   power Poison {
     role = Poison
   }

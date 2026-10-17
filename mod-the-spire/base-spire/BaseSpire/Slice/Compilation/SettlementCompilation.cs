@@ -139,49 +139,6 @@ internal static class SettlementCompilation
         SettlementBindings settlementBindings,
         IrScope scope) => runStateBindings.HasRun ? [scope.Call(settlementBindings.SettleBattle!.Symbol)] : [];
 
-    internal static Inst[] RelicVictorySteps(
-        PackageBuildOptions options,
-        BattleBindings battleBindings,
-        PlayerBindings playerBindings,
-        RelicsBindings relicsBindings,
-        IrScope scope)
-    {
-        if (!relicsBindings.HasRelics || options.RelicLibrary is null)
-        {
-            return [];
-        }
-
-        var relicPlayer = scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope));
-        var steps = new List<Inst>();
-        foreach (var declared in options.RelicLibrary)
-        {
-            var reason = SpireRelics.UnsupportedReason(declared);
-            if (reason.Length > 0)
-            {
-                throw Unsupported($"relic '{declared.ContentId}'", reason);
-            }
-
-            foreach (var effect in declared.Effects.Where(candidate =>
-                         string.Equals(candidate.Trigger, RelicTriggers.AfterCombatVictory, StringComparison.Ordinal)))
-            {
-                // 拥有�?*没死**才回血（`BurningBlood.cs:18`），回血被最大生命截�?
-                // （`CreatureCmd.Heal:698`）�?
-                steps.Add(scope.If(
-                    scope.And(
-                        scope.Exists(scope.Where(scope.Collection(relicsBindings.Relics!),
-                            entry => (Expr)scope.Equal(scope.Field(entry, relicsBindings.RelicDefinition!),
-                                scope.Const(declared.ContentId)))),
-                        scope.Greater(scope.Field(relicPlayer, playerBindings.PlayerHp), scope.Const(0L))),
-                    scope.SetField(relicPlayer, playerBindings.PlayerHp,
-                        scope.Minimum(scope.Field(relicPlayer, playerBindings.PlayerMaxHp),
-                            scope.Add(scope.Field(relicPlayer, playerBindings.PlayerHp),
-                                scope.Const((long)effect.Amount))))));
-            }
-        }
-
-        return steps.ToArray();
-    }
-
     internal static Inst[] VictoryTail(
         PackageBuildOptions options,
         EventsBindings eventsBindings,

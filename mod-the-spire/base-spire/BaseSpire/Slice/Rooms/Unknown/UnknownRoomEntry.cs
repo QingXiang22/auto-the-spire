@@ -31,7 +31,8 @@ public static class UnknownRoomEntry
     /// 这样问号房与直接房型走的是同一份进入逻辑（含各自的相位与随机调用）。
     /// </summary>
     public static MapRoomEntry Create(MapRoomWiring map, IReadOnlyList<MapRoomEntry> standard, UnknownRoomWiring odds,
-        EventVisitLifecycle events, EventCompileContext eventContext, EventRoomCatalog catalog)
+        EventVisitLifecycle events, EventCompileContext eventContext, EventRoomCatalog catalog,
+        Func<IrScope, Inst[]>? afterEventEntered = null)
     {
         ArgumentNullException.ThrowIfNull(map);
         ArgumentNullException.ThrowIfNull(standard);
@@ -71,7 +72,7 @@ public static class UnknownRoomEntry
 
             // 源 `CreateRoom` 的分派：Monster/Elite/Boss → 战斗房，Treasure → 宝箱，Shop → 商店，
             // Event → 事件房（这里复用 Standard 的入口；Boss 不在问号房赔率里，走到它就是显式失败）。
-            var eventPath = new EventPath(events, eventContext, catalog, map, scope, run, node);
+            var eventPath = new EventPath(events, eventContext, catalog, map, scope, run, node, afterEventEntered);
             var branches = new (string RoomType, Inst[] Body)[]
             {
                 (UnknownRoomWiring.RoomTypeMember(UnknownMapPointOdds.Monster),
@@ -102,7 +103,7 @@ public static class UnknownRoomEntry
     private sealed class EventPath
     {
         internal EventPath(EventVisitLifecycle events, EventCompileContext context, EventRoomCatalog catalog,
-            MapRoomWiring map, IrScope scope, Expr run, Expr node)
+            MapRoomWiring map, IrScope scope, Expr run, Expr node, Func<IrScope, Inst[]>? afterEntered)
         {
             var pull = events.Pull(scope, run);
             Steps =
@@ -111,6 +112,7 @@ public static class UnknownRoomEntry
                 .. pull.Steps,
                 .. events.MarkVisited(scope, run),
                 catalog.Enter(scope, context, run, scope.LocalRef(pull.IdSlot)),
+                .. afterEntered?.Invoke(scope) ?? [],
             ];
         }
 

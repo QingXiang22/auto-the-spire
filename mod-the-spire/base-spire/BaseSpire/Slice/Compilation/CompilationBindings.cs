@@ -147,7 +147,8 @@ internal sealed record RelicsBindings(
     EntityTypeSymbol? Relic,
     FieldSymbol? RelicDefinition,
     FieldSymbol? RelicRarity,
-    CollectionSymbol? Relics);
+    CollectionSymbol? Relics,
+    Domain.Run.RelicSchema? Schema);
 
 internal sealed record EncounterPoolBindings(
     EntityTypeSymbol? PoolEntry,

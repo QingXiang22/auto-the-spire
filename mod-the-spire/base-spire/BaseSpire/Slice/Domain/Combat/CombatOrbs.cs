@@ -8,6 +8,7 @@ public sealed class CombatOrbs
     public FieldSymbol Slots { get; }
     public CollectionSymbol Queue { get; }
     public EntityTypeSymbol Entity => orb;
+    public Func<IrScope, string, Expr, Expr> ModifyValue { get; init; } = (_, _, amount) => amount;
     private readonly EntityTypeSymbol orb;
     private readonly FieldSymbol kind;
     private readonly FieldSymbol value;
@@ -81,17 +82,18 @@ public sealed class CombatOrbs
     {
         var target = scope.Local("orbTarget", FieldTypeSchema.Binding());
         var glassAmount = scope.Local("glassAmount", FieldTypeSchema.Int(0, 99999));
-        Expr Modified(long baseValue) => scope.Maximum(scope.Const(0L), scope.Add(scope.Const(baseValue), focus(scope, owner(scope))));
+        Expr Modified(long baseValue) => ModifyValue(scope, "Lightning", scope.Maximum(scope.Const(0L), scope.Add(scope.Const(baseValue), focus(scope, owner(scope)))));
+        Expr OtherModified(long baseValue) => scope.Maximum(scope.Const(0L), scope.Add(scope.Const(baseValue), focus(scope, owner(scope))));
         Expr glass = scope.Maximum(scope.Const(0L), scope.Add(scope.Field(item, value), focus(scope, owner(scope))));
         Inst Hit(Expr enemy, Expr amount) => scope.Call(damage, owner(scope), enemy, amount, scope.Const(false));
         var live = scope.Where(scope.Collection(enemies), enemy => scope.Greater(scope.Field(enemy, hp), scope.Const(0L)));
         return [scope.If(scope.Equal(scope.Field(item, kind), scope.Const("Lightning")),
                 [scope.If(scope.Exists(live), [scope.SamplePick(SliceManifest.RandomTargetStream, live, target), Hit(scope.LocalRef(target), Modified(evoke ? 8 : 3))])]),
-            scope.If(scope.Equal(scope.Field(item, kind), scope.Const("Frost")), block(scope, Modified(evoke ? 5 : 2))),
+            scope.If(scope.Equal(scope.Field(item, kind), scope.Const("Frost")), block(scope, OtherModified(evoke ? 5 : 2))),
             scope.If(scope.Equal(scope.Field(item, kind), scope.Const("Plasma")), energy(scope, scope.Const(evoke ? 2L : 1L))),
             scope.If(scope.Equal(scope.Field(item, kind), scope.Const("Dark")), evoke
                 ? [scope.If(scope.Exists(live), Hit(scope.First(scope.Sort(live, enemy => scope.Field(enemy, hp))), scope.Field(item, value)))]
-                : [scope.SetField(item, value, scope.Add(scope.Field(item, value), Modified(6)))]),
+                : [scope.SetField(item, value, scope.Add(scope.Field(item, value), OtherModified(6)))]),
             scope.If(scope.And(scope.Equal(scope.Field(item, kind), scope.Const("Glass")), scope.Greater(glass, scope.Const(0L))),
                 [scope.SetLocal(glassAmount, glass),
                     .. evoke ? Array.Empty<Inst>() : new[] { scope.SetField(item, value, scope.Maximum(scope.Const(0L), scope.Subtract(scope.Field(item, value), scope.Const(1L)))) },

@@ -113,38 +113,7 @@ internal static class SinglePlayerStartChecks
                 "诊断牌组特征卡（Offering 等非起始牌）不得出现在正式开局");
         });
 
-        Check.Run("BASE-02 起始遗物（Burning Blood）：战斗胜利后回 6 血并被最大生命截断 [真实]", () =>
-        {
-            var session = Factory().CreateSession(MilestoneSeed);
-            session.Start();
-
-            // 遗物实例在**整局**状态里（跨房间保留），身份来自角色注册表。
-            var relics = session.Session.State.CollectionMembers(Collection(session, "base-spire:Relics"))
-                .Select(instance => Definition(session, instance, "base-spire:Relic"))
-                .ToList();
-            Check.Sequence(["base-spire:burning-blood"], relics,
-                "开局遗物栏 = 角色注册表声明的起始遗物（来源 Ironclad.cs:57）");
-
-            // 受控初始化（**明示的机制 case 初始化**）：玩家 40 血、敌人 1 血，然后只用公开动作在同一回合内清场。
-            var player = Only(session, "base-spire:Player");
-            SetNumber(session, player, "base-spire:Player", "Hp", 40);
-            KillAllInTurn(session);
-            var run = Only(session, RunTypeId);
-            Check.Equal(46L, Number(session, run, RunTypeId, "Hp"),
-                "清场后整局 HP = 40 + 6（Burning Blood 的 AfterCombatVictory 回血）");
-        });
-
-        Check.Run("BASE-02 遗物回血不越过最大生命：78 血清场后是 80，不是 84 [真实]", () =>
-        {
-            var session = Factory().CreateSession(MilestoneSeed);
-            session.Start();
-            var player = Only(session, "base-spire:Player");
-            SetNumber(session, player, "base-spire:Player", "Hp", 78);
-            KillAllInTurn(session);
-            var run = Only(session, RunTypeId);
-            Check.Equal(80L, Number(session, run, RunTypeId, "Hp"),
-                "回血被最大生命截断（来源 CreatureCmd.Heal:698）");
-        });
+        RunRelicChecks();
 
         Check.Run("BASE-02 敌人出生生命：按 `Niche` 流掷点、双端包含、Hp==MaxHp，且可独立复算 [真实]", () =>
         {
@@ -553,6 +522,60 @@ internal static class SinglePlayerStartChecks
         if (cardRef.Kind != ValueKind.Ref) return false;
         var field = session.Session.RuleSet.TypeByQualifiedId(CardTypeId).FieldIndex("Kind");
         return session.Session.State.GetField(cardRef.AsRef(), field).AsEnumOrdinal() == 0;
+    }
+
+    public static void RunRelicChecks()
+    {
+        Check.Run("BASE-02 起始遗物（Burning Blood）：战斗胜利后回 6 血并被最大生命截断 [真实]", () =>
+        {
+            var session = Factory().CreateSession(MilestoneSeed);
+            session.Start();
+
+            // 遗物实例在**整局**状态里（跨房间保留），身份来自角色注册表。
+            var relics = session.Session.State.CollectionMembers(Collection(session, "base-spire:Relics"))
+                .Select(instance => Definition(session, instance, "base-spire:Relic"))
+                .ToList();
+            Check.Sequence(["base-spire:burning-blood"], relics,
+                "开局遗物栏 = 角色注册表声明的起始遗物（来源 Ironclad.cs:57）");
+
+            // 受控初始化（**明示的机制 case 初始化**）：玩家 40 血、敌人 1 血，然后只用公开动作在同一回合内清场。
+            var player = Only(session, "base-spire:Player");
+            SetNumber(session, player, "base-spire:Player", "Hp", 40);
+            KillAllInTurn(session);
+            var run = Only(session, RunTypeId);
+            Check.Equal(46L, Number(session, run, RunTypeId, "Hp"),
+                "清场后整局 HP = 40 + 6（Burning Blood 的 AfterCombatVictory 回血）");
+        });
+
+        Check.Run("BASE-02 遗物回血不越过最大生命：78 血清场后是 80，不是 84 [真实]", () =>
+        {
+            var session = Factory().CreateSession(MilestoneSeed);
+            session.Start();
+            var player = Only(session, "base-spire:Player");
+            SetNumber(session, player, "base-spire:Player", "Hp", 78);
+            KillAllInTurn(session);
+            var run = Only(session, RunTypeId);
+            Check.Equal(80L, Number(session, run, RunTypeId, "Hp"),
+                "回血被最大生命截断（来源 CreatureCmd.Heal:698）");
+        });
+
+        Check.Run("Relics: melted starter remains owned but victory healing is suppressed [controlled]", () =>
+        {
+            var session = Factory().CreateSession(MilestoneSeed);
+            session.Start();
+            var relic = session.Session.State.CollectionMembers(Collection(session, "base-spire:Relics")).Single();
+            var type = session.Session.RuleSet.TypeByQualifiedId("base-spire:Relic");
+            // Explicit mechanism fixture; Melt command semantics are checked separately.
+            session.Session.State.RunAtomic(() =>
+            {
+                session.Session.State.SetField(relic, type.FieldIndex("IsWax"), Value.Of(true));
+                session.Session.State.SetField(relic, type.FieldIndex("IsMelted"), Value.Of(true));
+            });
+            SetNumber(session, Only(session, "base-spire:Player"), "base-spire:Player", "Hp", 40);
+            KillAllInTurn(session);
+            Check.Equal(40L, Number(session, Only(session, RunTypeId), RunTypeId, "Hp"), "melted relic cannot heal");
+            Check.Equal(relic, session.Session.State.CollectionMembers(Collection(session, "base-spire:Relics")).Single(), "inventory retained");
+        });
     }
 
     /// <summary>

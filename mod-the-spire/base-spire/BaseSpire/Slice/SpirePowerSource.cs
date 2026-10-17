@@ -125,6 +125,7 @@ public static class SpirePowerSource
     {
         public IReadOnlyList<PowerRule> Rules { get; init; } = [];
         public bool NegativeStacksAreInfinite { get; init; }
+        public int MinimumStartTriggerTurn { get; init; }
     }
 
     /// <summary>一份能力源的降级结果（四态）。</summary>
@@ -284,6 +285,7 @@ public static class SpirePowerSource
         var triggerEffect = string.Empty;
         var preventEnergyGain = false;
         var negativeStacksAreInfinite = false;
+        var minimumStartTriggerTurn = 0;
         var modifierSourcePower = string.Empty;
         var blockGainMultiplier = string.Empty;
         var blockGainPriorEntries = 0;
@@ -305,6 +307,11 @@ public static class SpirePowerSource
         {
             switch (property.Name)
             {
+                case "minimumStartTriggerTurn":
+                    if (property.Value is DslNumberNode turn && turn.TryGetInt32(out var minimum) && minimum >= 0)
+                        minimumStartTriggerTurn = minimum;
+                    else problems.Add($"{node.Name}.minimumStartTriggerTurn requires a nonnegative integer");
+                    break;
                 case "rules":
                     rules = PowerRuleSource.Read(property.Value, problems);
                     break;
@@ -545,7 +552,7 @@ public static class SpirePowerSource
             maxEnergyPerStack, vulnerablePercentPerStack, temporaryStrength, cardRuleType,
             cardRuleCost, cardRuleResultPile, cardRuleConsumeOnPlay, blockGainMultiplier,
             blockGainPriorEntries, blockGainAdditive, effectText, sourcePath)
-            { Rules = rules, NegativeStacksAreInfinite = negativeStacksAreInfinite };
+            { Rules = rules, NegativeStacksAreInfinite = negativeStacksAreInfinite, MinimumStartTriggerTurn = minimumStartTriggerTurn };
     }
 
     /// <summary>
@@ -1650,6 +1657,7 @@ public static class SpirePowerSource
             BlockGainAdditivePerStack: declaration.BlockGainAdditivePerStack,
             SourcePath: declaration.Source,
             SourceLine: declaration.Line)
-            { Rules = declaration.Rules, NegativeStacksAreInfinite = declaration.NegativeStacksAreInfinite };
+            { Rules = declaration.Rules, NegativeStacksAreInfinite = declaration.NegativeStacksAreInfinite,
+                MinimumStartTriggerTurn = declaration.MinimumStartTriggerTurn };
     }
 }

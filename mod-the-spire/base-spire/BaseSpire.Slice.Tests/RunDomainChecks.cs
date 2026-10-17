@@ -46,10 +46,8 @@ internal static class RunDomainChecks
         var gold = runType.AddField("Gold", FieldTypeSchema.Int(0, 99999));
         var witness = runType.AddField("HookWitness", FieldTypeSchema.Int(0, 9));
         var runs = p.Collection("Runs", runType);
-        var relicType = p.EntityType("Relic");
-        var relicId = relicType.AddField("DefinitionId", FieldTypeSchema.String(64));
-        var rarity = relicType.AddField("Rarity", FieldTypeSchema.String(16));
-        var owned = p.Collection("OwnedRelics", relicType);
+        var relicSchema = RelicSchema.Declare(p, "OwnedRelics");
+        var owned = relicSchema.Owned;
         var inventory = new RunInitializationWiring(p, runType);
         var defeat = p.TerminalResult("Defeat"); var turn = defeat.AddField("Turn", FieldTypeSchema.Int(0, 999));
         var resources = new RunResources(hp, maxHp, gold, defeat, turn, new(
@@ -58,7 +56,7 @@ internal static class RunDomainChecks
                 s.And(s.Equal(s.Count(s.Collection(inventory.PlayerBags["Rare"])), s.Const(0L)),
                     s.Equal(s.Count(s.Collection(inventory.SharedBags["Rare"])), s.Const(0L)))),
                 s.SetField(run, witness, s.Const(1L)))], (_, _, _) => []));
-        var relics = new RunRelics(new(relicType, relicId, rarity, owned), inventory, resources, SpireRelics.All);
+        var relics = new RunRelics(relicSchema, inventory, resources, SpireRelics.All);
         var kinds = p.Enum("CardKind"); kinds.Member("Attack").Member("Skill").Member("Power").Member("Status");
         var schema = CardSchema.Declare(p, kinds);
         var deckCards = p.Collection("Deck", schema.Type); var candidates = p.Collection("Candidates", schema.Type);

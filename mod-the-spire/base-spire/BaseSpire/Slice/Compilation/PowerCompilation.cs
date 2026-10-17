@@ -355,6 +355,9 @@ internal static class PowerCompilation
             instances.Add(scope.SetLocal(stacks,
                 scope.CallPure(powerQueryBindings.PowerStacksOf.Symbol, scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)),
                     scope.Const(power.Id))));
+            if (power.MinimumStartTriggerTurn > 0)
+                instances.Add(scope.If(scope.Less(scope.Field(scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)),
+                    playerBindings.PlayerTurn), scope.Const((long)power.MinimumStartTriggerTurn)), scope.SetLocal(stacks, scope.Const(0L))));
             // 一次触发可以有**多个效果**（`sequence(A, B)` 降级�?`A|B`）：按声明顺序逐个展开�?
             foreach (var effect in power.TriggerEffect.Split(PowerTriggerEffect.SequenceSeparator))
             {

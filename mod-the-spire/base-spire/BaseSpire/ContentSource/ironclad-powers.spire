@@ -70,6 +70,7 @@ package base-spire {
   }
 
   power PlatingPower {
+    minimumStartTriggerTurn = 2
     on = [
       trigger(event=afterOwnerTurnStart, effect=decrementPower(PlatingPower)),
       trigger(event=afterOwnerTurnEnd, effect=gainBlock(1, perPowerStack=PlatingPower))

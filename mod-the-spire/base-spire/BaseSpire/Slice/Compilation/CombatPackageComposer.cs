@@ -52,7 +52,7 @@ internal static class CombatPackageComposer
         if (contentBindings.Author?.Cards.Any(card => UsesOsty(card.NormalProgram) || UsesOsty(card.UpgradedProgram)
             || (card.NormalHooks.Programs?.Values.Any(UsesOsty) ?? false) || (card.UpgradedHooks.Programs?.Values.Any(UsesOsty) ?? false)) == true
             || contentBindings.Author?.Potions.Any(potion => UsesOsty(potion.Program)) == true) Osty();
-        var potionsBindings = CombatSchema.Potions(contentBindings, eventsBindings);
+        var potionsBindings = CombatSchema.Potions(contentBindings, eventsBindings, playerBindings);
         // Run resources, source pools, rooms and rewards must exist before settlement IR.
         var runStateBindings = RunSchema.RunState(options, contentBindings);
         var relicsBindings = RunSchema.Relics(options, contentBindings, eventsBindings, runStateBindings);
@@ -70,12 +70,22 @@ internal static class CombatPackageComposer
             contentBindings, battleBindings, playerBindings, runStateBindings, runCollectionsBindings,
             roomServicesBindings, rewardsBindings);
         var powerCommandsBindings = PowerCompilation.PowerCommands(contentBindings, powerBindings, pilesBindings);
+        var playerBlockBindings = DamageCompilation.PlayerBlock(contentBindings, battleBindings, playerBindings);
         SettlementCompilation.SettlementBinding(
             battleBindings, playerBindings, runStateBindings, runCollectionsBindings, roomServicesBindings,
             rewardsBindings, settlementBindings);
         var powerRulesBindings = PowerCompilation.PowerRules(
             contentBindings, battleBindings, playerBindings, cardsBindings, powerBindings, pilesBindings,
             runCollectionsBindings);
+        var relicPrograms = new RelicCompilation(options, contentBindings, battleBindings, playerBindings, pilesBindings,
+            relicsBindings, runStateBindings, runCollectionsBindings, roomServicesBindings, eventsBindings,
+            powerCommandsBindings, (s, amount) => [.. BlockGainSteps(s, amount, true)], EnergyGainBlocked,
+            (s, operation, kind, amount) => orbs!.Emit(s, new OrbCardEffect(operation, kind, CardEffectAmount.Literal(0), true, new("relics.json", 1, 1)), amount));
+        if (potionsBindings.Potions is { } potionInventory)
+        {
+            potionInventory.ShouldAcquire = (s, _) => s.Not(relicPrograms.Has(s, RelicEffectKinds.PreventPotionProcurement));
+            potionInventory.DeclareAcquireProcedure(contentBindings.Package);
+        }
         var monsterDamageBindings = DamageCompilation.MonsterDamage(contentBindings, playerBindings, enemiesBindings);
         DamageCompilation.MonsterDamageBody(
             enemiesBindings, pilesBindings, eventsBindings, powerRulesBindings, monsterDamageBindings,
@@ -111,7 +121,6 @@ internal static class CombatPackageComposer
         DamageCompilation.PlayerDamageBody(
             playerBindings, enemiesBindings, eventsBindings, powerRulesBindings, afterDamageBindings, playerDamageBindings,
             DamageChain, SettleTail, osty);
-        var playerBlockBindings = DamageCompilation.PlayerBlock(contentBindings, battleBindings, playerBindings);
         DamageCompilation.PlayerBlockBody(contentBindings, playerBindings, playerBlockBindings, RandomAttackChain);
         var turnStartTriggerBindings = DamageCompilation.TurnStartTrigger(contentBindings);
         DamageCompilation.TurnStartTriggerBody(turnStartTriggerBindings, GrantPowerChain);
@@ -126,7 +135,8 @@ internal static class CombatPackageComposer
             (scope, amount) => [.. BlockGainSteps(scope, amount, true)],
             (scope, amount) => [scope.If(scope.Not(EnergyGainBlocked(scope)), scope.SetField(scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)),
                 playerBindings.PlayerEnergy, scope.Add(scope.Field(scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)), playerBindings.PlayerEnergy), amount)))],
-            pilesBindings.Monsters, enemiesBindings.MonsterHp, monsterDamageBindings.DamageMonster.Symbol, contentBindings.Author?.BaseOrbSlots ?? 0);
+            pilesBindings.Monsters, enemiesBindings.MonsterHp, monsterDamageBindings.DamageMonster.Symbol, contentBindings.Author?.BaseOrbSlots ?? 0)
+        { ModifyValue = (s, kind, amount) => kind == "Lightning" ? relicPrograms.Modify(s, RelicEffectKinds.ModifyLightningOrbValue, amount) : amount };
         pilesBindings.Lifecycle.ResetAdditional = scope => [scope.ForEach(scope.Collection(orbs.Queue), item => [scope.Destroy(item)]), .. osty?.Reset(scope) ?? []];
         eventsBindings.Projection.Type(orbs.Entity);
         var playedTriggerBindings = DamageCompilation.PlayedTrigger(contentBindings, cardsBindings);
@@ -150,20 +160,22 @@ internal static class CombatPackageComposer
         var playerTurnBindings = TurnCompilation.PlayerTurn(
             contentBindings, battleBindings, playerBindings, pilesBindings, eventsBindings, powerRulesBindings,
             turnStartTriggerBindings, drawBindings, enemySelectionBindings, MaxEnergyBonus, BlockClearPrevented,
-            Innate, scope => orbs.Passive(scope, true), poison is null ? null : scope => [poison.Resolve(scope, false)]);
+            Innate, scope => orbs.Passive(scope, true), poison is null ? null : scope => [poison.Resolve(scope, false)], relicPrograms.Dispatch,
+            (s, amount) => relicPrograms.Modify(s, RelicEffectKinds.ModifyHandDraw, amount), s => relicPrograms.Has(s, RelicEffectKinds.RetainEnergy),
+            s => relicPrograms.Modify(s, RelicEffectKinds.RetainedBlockLimit, s.Const(0L)));
         var playerTurnEndBindings = TurnCompilation.PlayerTurnEnd(contentBindings);
         TurnCompilation.PlayerTurnEndBody(
             battleBindings, playerBindings, pilesBindings, powerRulesBindings, turnEndBindings,
             enemyTurnBindings, playerTurnBindings, playerTurnEndBindings, DispatchCardHook, EndTurnHandSteps,
             ClearCostModifier, scope => orbs.Passive(scope, false),
-            doom is null ? null : scope => [doom.Resolve(scope, false)]);
+            doom is null ? null : scope => [doom.Resolve(scope, false)], relicPrograms.Dispatch);
         // Room transitions and real new-Run initialization.
         var setupBindings = NewRunCompilation.Setup(contentBindings);
         var roomTransitionBindings = BattleRoomCompilation.RoomTransition(
             options, contentBindings, battleBindings, playerBindings, enemiesBindings, cardsBindings,
             pilesBindings, runStateBindings, encounterPoolBindings, runEncountersBindings,
             runCollectionsBindings, roomServicesBindings, knowledgeCommandsBindings, enemySelectionBindings,
-            playerTurnBindings, EnemyOf, DispatchCardHook, MonsterFields, SpawnStartingPowers, Innate);
+            playerTurnBindings, EnemyOf, DispatchCardHook, MonsterFields, SpawnStartingPowers, Innate, relicPrograms.Dispatch);
         var encounterQueuesBindings = EncounterCompilation.EncounterQueues(options, encounterPoolBindings, EnqueueProcedure);
         NewRunCompilation.NewRun(
             options, contentBindings, battleBindings, playerBindings, enemiesBindings, cardsBindings,
@@ -204,7 +216,7 @@ internal static class CombatPackageComposer
                     scope.SetField(player, playerBindings.PlayerBlockGains, scope.Const(0L)),
                     scope.SetField(player, playerBindings.PlayerTurn, scope.Const(0L)),
                     scope.SetField(player, playerBindings.PlayerBattleSettled, scope.Const(true))];
-            });
+            }, relicPrograms.DispatchRun, (s, amount) => relicPrograms.Modify(s, RelicEffectKinds.ModifyRestHeal, amount));
         return contentBindings.Package;
 
         // These adapters only wire explicit module interfaces; mechanic implementations live in the modules.
@@ -223,8 +235,8 @@ internal static class CombatPackageComposer
             contentBindings, powerQueryBindings, scope, owner);
         Expr DrawPrevented(IrScope scope, Expr owner) => PowerCompilation.DrawPrevented(
             contentBindings, powerQueryBindings, scope, owner);
-        Expr MaxEnergyBonus(IrScope scope, Expr owner) => PowerCompilation.MaxEnergyBonus(
-            contentBindings, powerQueryBindings, scope, owner);
+        Expr MaxEnergyBonus(IrScope scope, Expr owner) => relicPrograms.Modify(scope, RelicEffectKinds.ModifyMaxEnergy,
+            PowerCompilation.MaxEnergyBonus(contentBindings, powerQueryBindings, scope, owner));
         Inst PotionEffectChain(IrScope scope, Expr potionRef, Expr owner, int targetSlot, string targetKind) => PowerCompilation.PotionEffectChain(
             contentBindings, pilesBindings, potionsBindings, CompileEffects, scope, potionRef, owner,
             targetSlot, targetKind);
@@ -240,8 +252,9 @@ internal static class CombatPackageComposer
                 scope.ForEach(scope.Relation(pilesBindings.Powers, owner), power => [scope.Destroy(power)])),
                 .. SettlementCompilation.SettleTail(runStateBindings, settlementBindings, scope)];
         }
-        Inst[] RelicVictorySteps(IrScope scope) => SettlementCompilation.RelicVictorySteps(
-            options, battleBindings, playerBindings, relicsBindings, scope);
+        Inst[] RelicVictorySteps(IrScope scope) => [.. relicPrograms.Dispatch(scope, RelicTriggers.AfterCombatEnd),
+            .. relicPrograms.Dispatch(scope, RelicTriggers.AfterCombatVictoryEarly),
+            .. relicPrograms.Dispatch(scope, RelicTriggers.AfterCombatVictory)];
         Inst[] VictoryTail(IrScope scope, Expr turn) => SettlementCompilation.VictoryTail(
             options, eventsBindings, runStateBindings, runCollectionsBindings, SettleTail, RelicVictorySteps,
             scope, turn);
@@ -292,7 +305,8 @@ internal static class CombatPackageComposer
             exhaustTriggerBindings, playerTurnEndBindings, TurnEndHookChain, DispatchCardHook, KeepOrDiscard,
             cardInHand);
         Inst KeepOrDiscard(Expr cardInHand) => TurnCompilation.KeepOrDiscard(
-            cardsBindings, pilesBindings, playerTurnEndBindings, cardInHand);
+            cardsBindings, pilesBindings, playerTurnEndBindings, cardInHand,
+            relicPrograms.Has(playerTurnEndBindings.EndPlayerTurn, RelicEffectKinds.RetainHand));
         Inst TurnEndHookChain(Expr cardInHand) => TurnCompilation.TurnEndHookChain(
             playerTurnEndBindings, DispatchCardHook, cardInHand);
         Inst[] SpawnStartingPowers(IrScope scope, SliceEnemy definition, int monsterSlot) => CombatantCompilation.SpawnStartingPowers(

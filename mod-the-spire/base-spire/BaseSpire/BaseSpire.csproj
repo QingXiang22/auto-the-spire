@@ -14,6 +14,7 @@
     <EmbeddedResource Include="Content\*.encounters.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Content\*.acts.json" LogicalName="BaseSpire.Content.%(Filename)%(Extension)" />
     <EmbeddedResource Include="ContentSource\*.spire" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="ContentSource\*relic*.json" LogicalName="BaseSpire.ContentSource.%(Filename)%(Extension)" />
     <!-- B-05b 的作者前端文本：切片内容的作者表示，编译到通用 IR（与程序化包同一运行时）。 -->
     <EmbeddedResource Include="Slice\Content\*.author" LogicalName="BaseSpire.SliceAuthor.%(Filename)%(Extension)" />
   </ItemGroup>

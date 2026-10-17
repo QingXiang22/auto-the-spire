@@ -57,13 +57,11 @@ internal static class RunSchema
         // 只声明定义与效果；具体某件遗物是否在本局持有由开局实例决定�?
         var hasRelics = runStateBindings.HasRun && options.RelicLibrary is { Count: > 0 };
 
-        var relic = hasRelics ? contentBindings.Package.EntityType("Relic") : null;
-
-        var relicDefinition = hasRelics ? relic!.AddField("DefinitionId", FieldTypeSchema.String(64)) : null;
-
-        var relicRarity = hasRelics ? relic!.AddField("Rarity", FieldTypeSchema.String(16)) : null;
-
-        var relics = hasRelics ? contentBindings.Package.Collection("Relics", relic!) : null;
+        var schema = hasRelics ? Domain.Run.RelicSchema.Declare(contentBindings.Package) : null;
+        var relic = schema?.Type;
+        var relicDefinition = schema?.Definition;
+        var relicRarity = schema?.Rarity;
+        var relics = schema?.Owned;
 
         if (hasRelics)
         {
@@ -71,7 +69,7 @@ internal static class RunSchema
             eventsBindings.Projection.Type(relic!);
         }
 
-        return new RelicsBindings(hasRelics, relic, relicDefinition, relicRarity, relics);
+        return new RelicsBindings(hasRelics, relic, relicDefinition, relicRarity, relics, schema);
     }
 
     internal static RunCollectionsBindings RunCollections(

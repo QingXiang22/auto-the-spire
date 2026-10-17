@@ -25,6 +25,7 @@ internal static class Program
         }
         if (suite == "source")
         {
+            RelicSourceChecks.Run();
             PotionFlowChecks.RunSourceChecks();
             SilentPoisonChecks.RunSourceChecks();
             SilentSlyChecks.RunSourceChecks();
@@ -37,6 +38,48 @@ internal static class Program
                 Console.WriteLine(JsonSerializer.Serialize(new BaseSpire.SinglePlayer.BaseSpireRuntimeFactory(
                     BaseSpire.SinglePlayer.RunConfiguration.FrozenIronclad(0, scope)).Describe()));
             return 0;
+        }
+        if (args.Contains("--relic-catalog", StringComparer.Ordinal))
+        {
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                scope = "formal-relic-declarations",
+                definitions = SpireRelics.All.Select(relic => new
+                {
+                    relic.ContentId, relic.Name, relic.Rarity, relic.SourcePath, relic.SourceLine,
+                    relic.Effects, CanObtain = Slice.Domain.Run.RunRelics.CanObtain(relic),
+                    UnsupportedReason = SpireRelics.UnsupportedReason(relic),
+                }),
+            }));
+            return 0;
+        }
+        if (args.Contains("--relic-lifecycle-only", StringComparer.Ordinal))
+        {
+            if (args.Contains("--counters-only", StringComparer.Ordinal))
+            {
+                RelicLifecycleChecks.RunCounterIsolation();
+                Console.WriteLine($"All {Check.Passed} same-definition relic counter checks passed.");
+                return 0;
+            }
+            RelicLifecycleChecks.Run();
+            RunDomainChecks.Run();
+            SinglePlayerStartChecks.RunRelicChecks();
+            Console.WriteLine($"All {Check.Passed} relic lifecycle and Run domain checks passed (controlled; no independent reference claim).");
+            return 0;
+        }
+        if (args.Contains("--relic-content-only", StringComparer.Ordinal))
+        {
+            var relicReport = ReadOption(args, "--report");
+            try
+            {
+                if (args.Contains("--rooms-only", StringComparer.Ordinal)) RelicContentChecks.RunRooms();
+                else if (args.Contains("--conditions-only", StringComparer.Ordinal)) RelicContentChecks.RunConditions();
+                else if (args.Contains("--passives-only", StringComparer.Ordinal)) RelicContentChecks.RunPassives();
+                else RelicContentChecks.Run(ReadOption(args, "--relic"));
+                Console.WriteLine($"All {Check.Passed} relic content checks passed (controlled formal content).");
+                return 0;
+            }
+            finally { if (relicReport is not null) RelicCoverageChecks.Write(relicReport); }
         }
         if (args.Contains("--public-semantics-only", StringComparer.Ordinal))
         {
@@ -271,6 +314,9 @@ internal static class Program
             return 0;
         }
         var reportDirectory = ReadOption(args, "--report");
+        RelicLifecycleChecks.Run();
+        RelicContentChecks.Run();
+        if (suite == "all") RelicSourceChecks.Run();
         PotionFlowChecks.Run(includeSource: suite == "all");
         PotionReuseChecks.Run();
         CapacityPrerequisiteChecks.Run();
@@ -324,6 +370,7 @@ internal static class Program
         };
 
         Directory.CreateDirectory(reportDirectory);
+        RelicCoverageChecks.Write(reportDirectory);
         var path = Path.Combine(reportDirectory, "slice-behavior-report.json");
         File.WriteAllText(path,
             report.ToJsonString(new JsonSerializerOptions { WriteIndented = true }), new UTF8Encoding(false));

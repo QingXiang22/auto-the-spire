@@ -122,6 +122,19 @@ internal static class NewRunCompilation
             }
         }
 
+        // BASE-02：起始遗物实例（来自角色注册表；遗物�?*整局**状态，跨房间保留）�?
+        if (relicsBindings.HasRelics && options.StartingRelics is not null)
+        {
+            foreach (var relicId in options.StartingRelics)
+            {
+                var declared = options.RelicLibrary!.FirstOrDefault(candidate =>
+                    string.Equals(candidate.ContentId, relicId, StringComparison.Ordinal))
+                    ?? throw Unsupported($"starting relic '{relicId}'", "没有对应的遗物声明");
+                setupSteps.Add(setupBindings.Setup.CreateEntity(relicsBindings.Relic!, setupBindings.Setup.LocalRef(setupBindings.BattleLocal), setupBindings.CreatedLocal,
+                    relicsBindings.Schema!.New(setupBindings.Setup, declared), relicsBindings.Relics!));
+            }
+        }
+
         // 每个牌区一个可识别实体（公开快照�?kind_id 唯一匹配 pile_ref）；**跨房间存�?*，因此只建一次�?
         foreach (var area in pilesBindings.AreaEntities)
             setupSteps.Add(setupBindings.Setup.CreateEntity(area, setupBindings.Setup.LocalRef(setupBindings.BattleLocal), setupBindings.CreatedLocal, []));
@@ -250,22 +263,6 @@ internal static class NewRunCompilation
             if (roomServicesBindings.ActMap is null)
             {
                 setupSteps.Add(setupBindings.Setup.Call(roomTransitionBindings.StartNextRoom!.Symbol));
-            }
-        }
-
-        // BASE-02：起始遗物实例（来自角色注册表；遗物�?*整局**状态，跨房间保留）�?
-        if (relicsBindings.HasRelics && options.StartingRelics is not null)
-        {
-            foreach (var relicId in options.StartingRelics)
-            {
-                var declared = options.RelicLibrary!.FirstOrDefault(candidate =>
-                    string.Equals(candidate.ContentId, relicId, StringComparison.Ordinal))
-                    ?? throw Unsupported($"starting relic '{relicId}'", "没有对应的遗物声明");
-                setupSteps.Add(setupBindings.Setup.CreateEntity(relicsBindings.Relic!, setupBindings.Setup.LocalRef(setupBindings.BattleLocal), setupBindings.CreatedLocal,
-                    [
-                        (relicsBindings.RelicDefinition!, setupBindings.Setup.Const(declared.ContentId)),
-                        (relicsBindings.RelicRarity!, setupBindings.Setup.Const(declared.Rarity)),
-                    ], relicsBindings.Relics!));
             }
         }
 
