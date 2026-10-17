@@ -1421,5 +1421,24 @@
         "Amount": 3
       }
     ]
+  },
+  {
+    "Name": "GremlinHorn",
+    "ContentId": "base-spire:gremlin-horn",
+    "Rarity": "Uncommon",
+    "SourcePath": "sts2/src/Core/Models/Relics/GremlinHorn.cs",
+    "SourceLine": 12,
+    "Effects": [
+      {
+        "Trigger": "after-monster-died",
+        "Kind": "gain-energy",
+        "Amount": 1
+      },
+      {
+        "Trigger": "after-monster-died",
+        "Kind": "draw-cards",
+        "Amount": 1
+      }
+    ]
   }
 ]

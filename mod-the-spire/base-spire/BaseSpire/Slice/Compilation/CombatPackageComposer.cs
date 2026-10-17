@@ -98,9 +98,11 @@ internal static class CombatPackageComposer
             potionInventory.DeclareAcquireProcedure(contentBindings.Package);
         }
         monsterDamageBindings = DamageCompilation.MonsterDamage(contentBindings, playerBindings, enemiesBindings);
+        // 敌人死亡后的遗物监听同样先建过程符号，过程体在抽牌绑定就绪后补（见下方 Body）。
+        var relicAfterMonsterDied = contentBindings.Package.Procedure("RelicAfterMonsterDied");
         DamageCompilation.MonsterDamageBody(
             enemiesBindings, pilesBindings, eventsBindings, powerRulesBindings, monsterDamageBindings,
-            DamageChain);
+            DamageChain, scope => [scope.Call(relicAfterMonsterDied.Symbol)]);
         var playerHpLossBindings = DamageCompilation.PlayerHpLoss(contentBindings, battleBindings, playerBindings);
         DamageCompilation.PlayerHpLossBody(playerBindings, eventsBindings, powerRulesBindings, playerHpLossBindings, SettleTail);
         BaseSpire.Slice.Domain.Combat.CombatPoison? poison = null;
@@ -172,6 +174,7 @@ internal static class CombatPackageComposer
             powerCommandsBindings, powerRulesBindings, knowledgeCommandsBindings, DrawPrevented);
         // 抽牌绑定就绪后再补受击遗物监听的过程体（过程体里可能用到抽牌）。
         relicAfterDamage.Body(relicPrograms.Dispatch(relicAfterDamage, RelicTriggers.AfterDamageReceived));
+        relicAfterMonsterDied.Body(relicPrograms.Dispatch(relicAfterMonsterDied, RelicTriggers.AfterMonsterDied));
         var enemySelectionBindings = EnemyCompilation.EnemySelection(contentBindings, enemiesBindings);
         EnemyCompilation.EnemySelectionBody(contentBindings, enemiesBindings, enemySelectionBindings, SelectMachine);
         var playerTurnBindings = TurnCompilation.PlayerTurn(

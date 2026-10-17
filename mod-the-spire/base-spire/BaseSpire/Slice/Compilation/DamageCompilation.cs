@@ -47,7 +47,8 @@ internal static class DamageCompilation
         EventsBindings eventsBindings,
         PowerRulesBindings powerRulesBindings,
         MonsterDamageBindings monsterDamageBindings,
-        DamageChainCallback DamageChain)
+        DamageChainCallback DamageChain,
+        Func<ProcedureBuilder, Inst[]>? relicAfterMonsterDied = null)
     {
         monsterDamageBindings.DamageMonster.Body(monsterDamageBindings.DamageMonster.If(monsterDamageBindings.DamageMonster.Greater(
             monsterDamageBindings.DamageMonster.Field(monsterDamageBindings.HitTargetRef, enemiesBindings.MonsterHp), monsterDamageBindings.DamageMonster.Const(0L)),
@@ -68,12 +69,15 @@ internal static class DamageCompilation
                     (eventsBindings.DamageDealtAmount, monsterDamageBindings.DamageMonster.LocalRef(monsterDamageBindings.HitDamage))),
                 monsterDamageBindings.DamageMonster.If(monsterDamageBindings.DamageMonster.Equal(monsterDamageBindings.DamageMonster.Field(monsterDamageBindings.HitTargetRef, enemiesBindings.MonsterHp),
                         monsterDamageBindings.DamageMonster.Const(0L)),
+                    [
                     monsterDamageBindings.DamageMonster.Emit(eventsBindings.MonsterDied, (eventsBindings.MonsterDiedMonster, monsterDamageBindings.HitTargetRef)),
                     // A dead monster leaves the living set immediately, so it can never be a later target.
                     // ENV-T02：**刻意不在这里**判胜利——最后一次击杀只是伤害结算里的一步，父效果余效
                     // （Feed 的 `on_fatal_gain_max_hp`、遗物回血、实例变量写回）与出牌收尾还要继续跑；
                     // 胜利判定统一挂在**动作体末尾**的 `BattleEndTail`（`PlayCard`/`EndTurn`/`UsePotion`）。
-                    monsterDamageBindings.DamageMonster.RemoveFromCollection(pilesBindings.Monsters, monsterDamageBindings.HitTargetRef)),
+                    monsterDamageBindings.DamageMonster.RemoveFromCollection(pilesBindings.Monsters, monsterDamageBindings.HitTargetRef),
+                    .. relicAfterMonsterDied?.Invoke(monsterDamageBindings.DamageMonster) ?? [],
+                    ]),
                 monsterDamageBindings.DamageMonster.If(monsterDamageBindings.DamageMonster.And(
                     monsterDamageBindings.DamageMonster.Param(monsterDamageBindings.HitPowered),
                     monsterDamageBindings.DamageMonster.And(monsterDamageBindings.DamageMonster.Greater(

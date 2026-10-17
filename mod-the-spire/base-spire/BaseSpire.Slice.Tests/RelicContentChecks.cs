@@ -591,6 +591,20 @@ internal static class RelicContentChecks
             Submit(empty, "EndTurn");
             Check.Equal(0L, PlayerNumber(empty, "Block"), "an already empty hand discards nothing and gains no block");
         });
+        Case(["GremlinHorn"], "Relic death: GremlinHorn grants one energy and one card when an enemy dies", () =>
+        {
+            var s = New(); Submit(s, "Obtain_GremlinHorn"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            var weak = Members(s, "Monsters")[0];
+            FormalSliceFixture.SetNumber(s, weak, "base-spire:Monster", "Hp", 1L);
+            SetPlayer(s, "Energy", 10L);
+            var monsters = Members(s, "Monsters").Count;
+            var card = FormalSliceFixture.MoveToHand(s, "base-spire:strike-ironclad");
+            FormalSliceFixture.PlayAt(s, card, weak);
+            Check.False(s.Status == SessionStatus.Faulted, "kill: " + s.Fault);
+            Check.Equal(monsters - 1, Members(s, "Monsters").Count, "one enemy died");
+            Check.Equal(10L, PlayerNumber(s, "Energy"), "the kill refunds the energy spent on the attack");
+            Check.Equal(5, Members(s, "Hand").Count, "the kill draws one card back");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");

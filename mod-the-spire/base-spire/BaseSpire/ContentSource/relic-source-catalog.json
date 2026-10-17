@@ -1687,8 +1687,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/GremlinHorn.cs",
     "SourceSha256": "efd3596289c07e81978ff5856183cfe3d24ab3ca99eb79efb056b6705dad3d2a",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local enemy-death hook in sts2/src/Core/Models/Relics/GremlinHorn.cs; energy and card draw declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterDeath"
     ]
