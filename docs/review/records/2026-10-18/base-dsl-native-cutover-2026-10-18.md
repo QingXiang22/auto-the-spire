@@ -16,7 +16,7 @@
 
 本地环境：Windows／PowerShell，.NET SDK 9.0.306，Python 3.12。Engine 源语言 core/0.3；Engine 项目版本 0.4.0。包随机 profile 为 engine-default，实际为 `xoshiro256ss/splitmix64@1` 与 `rejection-uniform@1`，开发洗牌流 `base-spire:development-shuffle`。纯包行为固定 seed 20261018，通用 validate 启动 seed 42，Host 默认字符串 seed BASE-DSL-00；未将这些结果声明为原版随机等价。
 
-最终 DSL 包摘要 `2fff0c90cf80043863ca91437de3123ea5d76273c894d96eab02aefcf6eb8d9c`，规则身份 `5d15e09b3bf25600`。摘要覆盖所有规范文本和静态数据，规则身份由实际编译产物给出；二者不包含局内 seed。记录绑定本次最终工作树，提交后可通过 PR 与 Actions 关联代码身份。
+最终 DSL 包摘要 `2fff0c90cf80043863ca91437de3123ea5d76273c894d96eab02aefcf6eb8d9c`，规则身份 `5d15e09b3bf25600`。摘要覆盖所有规范文本和静态数据，规则身份由实际编译产物给出；二者不包含局内 seed。生产变更提交为 `a8d8645f2c56a441806fe828242850ef91c2dca5`，已推送 [PR #9](https://github.com/QingXiang22/auto-the-spire/pull/9)；[首轮 Actions](https://github.com/QingXiang22/auto-the-spire/actions/runs/39060816791) 与该提交关联，core／base／net／migration 四组已实际完成并全部通过；最终检查状态在 PR 汇总。后续两处追溯说明因现有分支受 PR 规则保护而另走文档 PR，未绕过规则直接更新分支。
 
 ## 源范围与旧检查去向
 
