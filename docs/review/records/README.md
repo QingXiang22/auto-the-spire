@@ -2,6 +2,8 @@
 
 2026-10-17：[遗物源清单与实例公共接口](2026-10-17/relic-foundation-2026-10-17.md)记录297件源遗物／300条池成员对账、四件base正式声明，以及RunRelics获得／移除／替换／熔毁、实例计数与有效性查询；27项相关定向检查通过，完整回归、逐件资格与独立证据仍待验证。
 
+2026-10-17：[遗物回合开始与进入战斗的既有能力消费者](2026-10-17/relic-turn-entry-consumers-2026-10-17.md)用已有触发点与效果种类纳入FestivePopper（首回合群体伤害）与DivineRight（进战斗房得3星），并记录“用同seed参照局测伤害”的写法；覆盖推进到78/78可执行、未实现降到218。
+
 2026-10-17：[遗物消耗触发与无加成群体伤害](2026-10-17/relic-exhaust-area-2026-10-17.md)新增`after-card-exhausted`触发点与`damage-all-enemies`（Unpowered）效果种类，实现LetterOpener、CharonsAshes与MercuryHourglass并用Strength对照验证无加成；覆盖推进到76/76可执行、未实现降到220。
 
 2026-10-17：[遗物卡牌打出触发与四件消费者](2026-10-17/relic-card-play-2026-10-17.md)新增`after-card-played`遗物触发点与牌型过滤，实现Nunchaku、Kunai、Shuriken、OrnamentalFan；覆盖报告推进到73/73可执行、未实现降到223，身份基线随之迁移；独立与公开证据仍缺。

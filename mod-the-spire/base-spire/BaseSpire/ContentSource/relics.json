@@ -1270,5 +1270,34 @@
         "Amount": 3
       }
     ]
+  },
+  {
+    "Name": "FestivePopper",
+    "ContentId": "base-spire:festive-popper",
+    "Rarity": "Common",
+    "SourcePath": "sts2/src/Core/Models/Relics/FestivePopper.cs",
+    "SourceLine": 12,
+    "Effects": [
+      {
+        "Trigger": "after-player-turn-start",
+        "Kind": "damage-all-enemies",
+        "Amount": 9,
+        "OnTurn": 1
+      }
+    ]
+  },
+  {
+    "Name": "DivineRight",
+    "ContentId": "base-spire:divine-right",
+    "Rarity": "Starter",
+    "SourcePath": "sts2/src/Core/Models/Relics/DivineRight.cs",
+    "SourceLine": 11,
+    "Effects": [
+      {
+        "Trigger": "after-combat-room-entered",
+        "Kind": "gain-stars",
+        "Amount": 3
+      }
+    ]
   }
 ]

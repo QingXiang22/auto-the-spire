@@ -102,8 +102,10 @@ internal static class SliceMapRoomChecks
     // damage reuse the shared monster damage command. Previous dev daa13b3bc7f1567c / cee2fcf4a4a63f5a.
     // 2026-10-17 MercuryHourglass continues the same area damage at the player-turn-start trigger.
     // Previous dev 28ac6d84bc73f96d / 9b1e393422bebc75.
-    private const string DevGoldenRuleset = "ea4d576da58dae95";
-    private const string DevGoldenBuild = "5e89ed3d07e0b338";
+    // 2026-10-17 FestivePopper/DivineRight reuse first-turn area damage and combat-entry stars.
+    // Previous dev ea4d576da58dae95 / 5e89ed3d07e0b338.
+    private const string DevGoldenRuleset = "775b4fee84aa7800";
+    private const string DevGoldenBuild = "b103e81fede9d804";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -124,8 +126,9 @@ internal static class SliceMapRoomChecks
     // Same relic card-play batch; previous dev-map 84b4dbd80cb769ea / 42889d7374f76501.
     // Same relic exhaust batch; previous dev-map bf88d25972f155d9 / 9a5285f99cadfca6.
     // Same MercuryHourglass addition; previous dev-map 83238c8da492af09 / 70132d1bb1df4034.
-    private const string DevMapGoldenRuleset = "e95e223845ed0846";
-    private const string DevMapGoldenBuild = "e7c9eb9bb55a084b";
+    // Same FestivePopper/DivineRight batch; previous dev-map e95e223845ed0846 / e7c9eb9bb55a084b.
+    private const string DevMapGoldenRuleset = "443d0d6515615aa3";
+    private const string DevMapGoldenBuild = "4e39836a700af26d";
 
     public static void DefaultIdentity()
     {

@@ -450,6 +450,26 @@ internal static class RelicContentChecks
             Submit(s, "EndTurn");
             Check.Equal(before - perHit, MonsterHpTotal(s), "source area damage stays unpowered");
         });
+        Case(["FestivePopper"], "Relic conditions: FestivePopper damages every enemy on the first turn only", () =>
+        {
+            // 同 seed 的参照局给出这批敌人未受遗物影响的开局生命；差异即首回合的群体伤害。
+            var reference = New(); Submit(reference, "BeginMonster");
+            var s = New(); Submit(s, "Obtain_FestivePopper"); Submit(s, "BeginMonster");
+            Check.Equal(Members(reference, "Monsters").Count, Members(s, "Monsters").Count, "same encounter for both runs");
+            Check.Equal(MonsterHpTotal(reference) - 9L * Members(s, "Monsters").Count, MonsterHpTotal(s),
+                "first turn damages every enemy for nine");
+            SetMonsterHp(s, 500L); SetPlayer(s, "Hp", 95L);
+            var before = MonsterHpTotal(s);
+            Submit(s, "EndTurn");
+            Check.Equal(before, MonsterHpTotal(s), "later turns do not damage");
+        });
+        Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
+        {
+            var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");
+            Check.Equal(3L, PlayerNumber(s, "Stars"), "first entry grants three stars");
+            Submit(s, "BeginMonster");
+            Check.Equal(3L, PlayerNumber(s, "Stars"), "battle reset re-grants without accumulating");
+        });
     }
 
     public static void RunRooms()
@@ -615,6 +635,7 @@ internal static class RelicContentChecks
             FormalSliceFixture.SetNumber(s, monster, "base-spire:Monster", "Hp", hp);
     }
     private static long MonsterHpTotal(Session s) => Members(s, "Monsters").Sum(m => Number(s, m, "Monster", "Hp"));
+    private static long MonsterMaxHpTotal(Session s) => Members(s, "Monsters").Sum(m => Number(s, m, "Monster", "MaxHp"));
     private static IReadOnlyList<InstanceId> Members(Session s, string name) => s.State.CollectionMembers(s.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name).Id);
     private static Value Value(Session s, InstanceId instance, string type, string field) => s.State.GetField(instance, s.RuleSet.TypeByQualifiedId("base-spire:" + type).FieldIndex(field));
     private static long Number(Session s, InstanceId instance, string type, string field) => Value(s, instance, type, field).AsInt();

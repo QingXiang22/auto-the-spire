@@ -1002,8 +1002,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/DivineRight.cs",
     "SourceSha256": "ef14501b8c60ef746470f82e9cb0ac4c36d4d7af7ffa71d137f3c0bf2c6052fc",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local combat-room-entry hook in sts2/src/Core/Models/Relics/DivineRight.cs; three-star grant declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterRoomEntered"
     ]
@@ -1356,8 +1356,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/FestivePopper.cs",
     "SourceSha256": "5e182352e86b9e3263fa43fa903e426524194f82fcb70b819eb5cb1d7f77bea2",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local turn-start hook in sts2/src/Core/Models/Relics/FestivePopper.cs; first-turn-only unpowered area damage declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterPlayerTurnStart"
     ]
