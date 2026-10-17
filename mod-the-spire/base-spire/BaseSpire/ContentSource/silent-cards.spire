@@ -1,4 +1,5 @@
 using namespace base-spire;
+dsl_version = "base/0.0.2";
 
 # Source: sts2/src/Core/Models/Cards/Finisher.cs:21-46
 card Finisher {
@@ -313,4 +314,100 @@ card Scare {
  upgradeable = true
  normal = { type = skill rarity = uncommon cost = 0 target = { selectAll = {} } keywords = { exhaust } play = { applyPower = { power = Weak stacks = 1 target = allEnemies } } hooks = {} }
  upgraded = { type = skill rarity = uncommon cost = 0 target = { selectAll = {} } keywords = {  } play = { applyPower = { power = Weak stacks = 1 target = allEnemies } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/DeadlyPoison.cs
+card DeadlyPoison {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { applyPower = { power = Poison stacks = 5 } } hooks = {} }
+    upgraded = { type = skill rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { applyPower = { power = Poison stacks = 7 } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/PoisonedStab.cs
+card PoisonedStab {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 6 } applyPower = { power = Poison stacks = 3 } } hooks = {} }
+    upgraded = { type = attack rarity = common cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { attack = { damage = 8 } applyPower = { power = Poison stacks = 4 } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Snakebite.cs
+card Snakebite {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = common cost = 2 target = { selectOne = { from = context.opponents where = alive } } keywords = { retain } play = { applyPower = { power = Poison stacks = 7 } } hooks = {} }
+    upgraded = { type = skill rarity = common cost = 2 target = { selectOne = { from = context.opponents where = alive } } keywords = { retain } play = { applyPower = { power = Poison stacks = 10 } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Haze.cs
+card Haze {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = uncommon cost = 3 target = { selectAll = {} } keywords = { sly } play = { applyPower = { power = Poison stacks = 4 target = allEnemies } } hooks = {} }
+    upgraded = { type = skill rarity = uncommon cost = 3 target = { selectAll = {} } keywords = { sly } play = { applyPower = { power = Poison stacks = 6 target = allEnemies } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Accelerant.cs
+card Accelerant {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = power rarity = rare cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = Accelerant stacks = 1 target = context.owner } } hooks = {} }
+    upgraded = { type = power rarity = rare cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = Accelerant stacks = 2 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/BouncingFlask.cs
+card BouncingFlask {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = uncommon cost = 2 target = { selectNone = {} } keywords = {} play = { repeat = { count = 3 effect = { applyPower = { power = Poison stacks = 3 target = randomEnemy } } } } hooks = {} }
+    upgraded = { type = skill rarity = uncommon cost = 2 target = { selectNone = {} } keywords = {} play = { repeat = { count = 4 effect = { applyPower = { power = Poison stacks = 3 target = randomEnemy } } } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/BubbleBubble.cs
+card BubbleBubble {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = uncommon cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { if = { condition = { hasPower = { power = Poison target = context.target } } then = { applyPower = { power = Poison stacks = 9 target = context.target } } } } hooks = {} }
+    upgraded = { type = skill rarity = uncommon cost = 1 target = { selectOne = { from = context.opponents where = alive } } keywords = {} play = { if = { condition = { hasPower = { power = Poison target = context.target } } then = { applyPower = { power = Poison stacks = 12 target = context.target } } } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/CorrosiveWave.cs
+card CorrosiveWave {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = rare cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = CorrosiveWavePower stacks = 2 target = context.owner } } hooks = {} }
+    upgraded = { type = skill rarity = rare cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = CorrosiveWavePower stacks = 3 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Envenom.cs
+card Envenom {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = power rarity = rare cost = 2 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = EnvenomPower stacks = 1 target = context.owner } } hooks = {} }
+    upgraded = { type = power rarity = rare cost = 2 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = EnvenomPower stacks = 2 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Mirage.cs
+card Mirage {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = skill rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = { exhaust } play = { gainBlock = { amount = enemyPowerSum(power=Poison) } } hooks = {} }
+    upgraded = { type = skill rarity = uncommon cost = 0 target = { selectSelf = {} } keywords = { exhaust } play = { gainBlock = { amount = enemyPowerSum(power=Poison) } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/NoxiousFumes.cs
+card NoxiousFumes {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = power rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = NoxiousFumesPower stacks = 2 target = context.owner } } hooks = {} }
+    upgraded = { type = power rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = NoxiousFumesPower stacks = 3 target = context.owner } } hooks = {} }
+}
+
+# Source: sts2/src/Core/Models/Cards/Outbreak.cs
+card Outbreak {
+    pools = { SilentCardPool }
+    upgradeable = true
+    normal = { type = power rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = OutbreakPower stacks = 11 target = context.owner } } hooks = {} }
+    upgraded = { type = power rarity = uncommon cost = 1 target = { selectSelf = {} } keywords = {} play = { applyPower = { power = OutbreakPower stacks = 15 target = context.owner } } hooks = {} }
 }

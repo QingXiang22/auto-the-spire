@@ -36,6 +36,7 @@ card Sweep {
 
 - `pileCount(pile=hand)`：具名 pile 可为 hand/draw/discard/exhaust。
 - `powerAmount(target=context.target,power=POWER)`：显式目标与已链接能力；无选中目标的内容不能使用它。
+- `enemyPowerSum(power=POWER)`：实时汇总存活敌人的已链接能力层数，不请求选择目标；Mirage组合此数值与正常格挡修正。
 - `variables.NAME`：已声明卡牌实例变量；未知变量拒绝。
 - `PaidX`：支付阶段、扣除能量前捕获的 X；效果之后改变能量不会改变该快照。
 - `let = { name = n value = pileCount(pile=hand) effect = { ... } }`：进入时求值一次；body 用 `locals.n`，离开后不可见，内层同名不覆盖外层。
@@ -55,6 +56,19 @@ card Sweep {
 Power 声明 `role = Poison` 或 `role = Accelerant`，卡牌通过已有 `applyPower` 挂载/叠层，不增加逐卡执行器。分别解析自定义Power和卡牌时，`SpireCardSource.Parse` 第三个参数必须传入声明名称到ID的映射；只写命名空间不能替代声明表链接。
 
 拥有者阵营回合开始时触发中毒，次数为 `min(Poison层数, 1 + 存活对手Accelerant层数总和)`；每次按当前层数造成无格挡/无力量修正伤害，存活后递减，耗尽销毁。既有生命损失上限仍适用。当前接口只覆盖玩家/敌人、掉血计数与既有死亡结算，不代表完整CreatureCmd.Damage或宠物支持。回合顺序与未支持hook见[中毒契约](../../design/mod-the-spire/character-combat/spec.md#poison-基础生命周期)。
+
+### 中毒内容的触发规则
+
+正式中毒内容的触发能力使用以下`rules`字段，值必须是已链接的Power名称：
+
+| 字段 | 触发与效果 |
+| --- | --- |
+| `applyPowerOnDraw` | 每张实际抽入手牌的牌触发一次，对存活敌人按拥有者此能力层数施加指定Power；手牌已满或NoDraw阻止时不触发 |
+| `applyPowerAtTurnStart` | 玩家回合开始完成抽牌后，对存活敌人按层数施加指定Power |
+| `applyPowerOnUnblockedAttack` | 玩家powered攻击造成正的未格挡伤害后，给仍存活的目标按层数施加指定Power；每次命中分别判断 |
+| `damageAllEveryThirdPower` | 玩家每成功施加指定Power三次，对存活敌人造成等同自身层数的unpowered伤害；余数跨回合保留，公开为Power的`ApplicationCount` |
+
+卡牌`applyPower`可显式写`target = randomEnemy`，每次施加独立消耗一次CombatTargets抽取，空域不抽。原生`keywords = { sly }`在手动弃牌后排队，整批弃牌结束后沿共享自动出牌流程免费打出；普通回合末清手不触发。这里只支持定义上的永久奇巧，临时授予奇巧另属附着能力。静默猎手正式开局和完整角色范围仍查主清单。
 
 ### 灾厄
 

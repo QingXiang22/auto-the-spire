@@ -7,6 +7,7 @@ namespace BaseSpire.Slice.Effects;
 /// <summary>Immutable lexical bindings used only while generating IR, never gameplay state.</summary>
 public sealed record EffectCompileScope(Expr? SelectedCard, ImmutableDictionary<string, Expr> Counts)
 {
+    public bool DeferDiscardFlush { get; init; }
     public static EffectCompileScope Empty { get; } = new(null,
         ImmutableDictionary.Create<string, Expr>(StringComparer.Ordinal));
     public EffectCompileScope BindCount(string name, Expr value) => this with { Counts = Counts.SetItem(name, value) };

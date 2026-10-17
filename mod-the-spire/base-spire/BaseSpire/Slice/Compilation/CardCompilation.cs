@@ -87,7 +87,8 @@ internal static class CardCompilation
         var sourceOrder = SourceStableShuffle.Declare(contentBindings.Package, cardsBindings.CardSchema.SourceOrderKey);
         var cardDraw = new CardDrawProcedures(new(pilesBindings.Hand, pilesBindings.DrawPile, pilesBindings.DiscardPile, pilesBindings.ExhaustPile, pilesBindings.InPlay),
             cardsBindings.CardKindField, battleBindings.CardKind, knowledgeCommandsBindings.ClearKnown.Symbol, knowledgeCommandsBindings.RevokeKnown.Symbol,
-            scope => DrawPrevented(scope, scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope))),
+            scope => scope.Or(DrawPrevented(scope, scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope))),
+                scope.Not(scope.Exists(scope.Collection(pilesBindings.Monsters)))),
             sourceOrder,
             (scope, drawn) => [powerRulesBindings.PowerRules.Call(scope, "AfterDraw", drawn)]);
 
@@ -211,6 +212,8 @@ internal static class CardCompilation
             (s, c) => CloneToHand(s, c), (s, c) => DispatchCardHook(s, c, AuthorSteps.HookOnEnterCombat),
             s => s.And(s.Greater(s.Field(s.First(s.Type(playerBindings.Player, battleBindings.BattleScope)), playerBindings.PlayerHp), s.Const(0L)), s.Exists(s.Collection(pilesBindings.Monsters))))
         {
+            CanReceivePower = (s, target) => s.Or(s.Equal(target,s.First(s.Type(playerBindings.Player,battleBindings.BattleScope))),
+                s.GreaterOrEqual(s.CollectionIndex(pilesBindings.Monsters,target),s.Const(0L))),
             GainEnergy = (s, amount) => [s.If(s.Not(EnergyGainBlocked(s)),
                     s.SetField(s.First(s.Type(playerBindings.Player,battleBindings.BattleScope)), playerBindings.PlayerEnergy,
                         s.Add(s.Field(s.First(s.Type(playerBindings.Player,battleBindings.BattleScope)), playerBindings.PlayerEnergy), amount)))]
@@ -268,6 +271,7 @@ internal static class CardCompilation
                     EnemyHp: enemiesBindings.MonsterHp, Variables: cardsBindings.VariableFields, PowerStacks: powerQueryBindings.PowerStacksOf.Symbol)
     {
         InPlay = pilesBindings.InPlay,
+        Enemies = pilesBindings.Monsters,
         History = pilesBindings.PlayHistory,
         HpLossCount = playerBindings.PlayerHpLossCount,
         HasTag = (tag, instance) => HasTag(scope, instance, tag),
@@ -312,7 +316,7 @@ internal static class CardCompilation
         var randomTargetSlot = scope.Local("effectRandomTarget", FieldTypeSchema.Binding());
         return CardEffectCompiler.Compile(scope, program, new CardEffectBindings(
             owner, selectedTarget, scope.Collection(pilesBindings.Monsters), randomTargetSlot,
-            playerBindings.PlayerHp, playerBindings.PlayerMaxHp, enemiesBindings.MonsterHp, monsterDamageBindings.DamageMonster.Symbol, powerCommandsBindings.ApplyPower.Symbol, drawBindings.Draw, playerHpLossBindings.LosePlayerHp.Symbol,
+            playerBindings.PlayerHp, playerBindings.PlayerMaxHp, enemiesBindings.MonsterHp, monsterDamageBindings.DamageMonster.Symbol, powerRulesBindings.PowerRules.ApplyOwnedPower.Symbol, drawBindings.Draw, playerHpLossBindings.LosePlayerHp.Symbol,
             expressions.Amount, expressions.Condition, amount => [.. BlockGainSteps(scope, amount, unpowered)],
             amount => [scope.If(scope.Not(EnergyGainBlocked(scope)), scope.SetField(owner, playerBindings.PlayerEnergy,
                     scope.Add(scope.Field(owner, playerBindings.PlayerEnergy), amount)))],
@@ -325,6 +329,7 @@ internal static class CardCompilation
             unpowered)
         {
             PlayedCard = cardRef,
+            AfterDiscardBatch = () => [powerRulesBindings.PowerRules.Call(scope,"AfterDiscardBatch")],
             Osty = (effect, amount) => [scope.If(scope.And(scope.Not(scope.Field(owner, playerBindings.PlayerBattleSettled)),
                 scope.Exists(scope.Collection(pilesBindings.Monsters))), effect.Operation == "ostyAttack"
                 ? osty!().Attack(scope, owner, selectedTarget, amount, monsterDamageBindings.DamageMonster.Symbol)
@@ -385,13 +390,15 @@ internal static class CardCompilation
         PilesBindings pilesBindings,
         ExhaustTriggerBindings exhaustTriggerBindings,
         KnowledgeCommandsBindings knowledgeCommandsBindings,
+        PowerRulesBindings powerRulesBindings,
         DispatchCardHookCallback DispatchCardHook) => new(cardsBindings.CardSchema, cardsBindings.CardDefinitions,
                 new CardPileSymbols(pilesBindings.Hand, pilesBindings.DrawPile, pilesBindings.DiscardPile, pilesBindings.ExhaustPile, pilesBindings.InPlay),
                 (scope, cardRef) => [
                     scope.SetField(scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)), playerBindings.PlayerExhaustedCard, scope.Const(true)),
                 .. DispatchCardHook(scope, cardRef, AuthorSteps.HookOnExhaust), scope.Call(exhaustTriggerBindings.TriggerAfterExhaust.Symbol)],
                 (scope, cardRef) => DispatchCardHook(scope, cardRef, AuthorSteps.HookOnEnterCombat),
-                (scope, cardRef) => DispatchCardHook(scope, cardRef, AuthorSteps.HookOnDiscard),
+                (scope, cardRef) => [.. DispatchCardHook(scope, cardRef, AuthorSteps.HookOnDiscard),
+                    .. powerRulesBindings.PowerRules.QueueSly(scope,cardRef)],
                 (scope, cardRef) => [scope.Call(knowledgeCommandsBindings.RecordKnownTop.Symbol, scope.First(scope.Type(playerBindings.Player, battleBindings.BattleScope)), cardRef)]);
 
     internal static Inst[] DispatchCardHook(

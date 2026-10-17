@@ -26,6 +26,7 @@ internal static class Program
         if (suite == "source")
         {
             PotionFlowChecks.RunSourceChecks();
+            SilentPoisonChecks.RunSourceChecks();
             Console.WriteLine($"All {Check.Passed} source checks passed (requires local sts2).");
             return 0;
         }
@@ -34,6 +35,13 @@ internal static class Program
             foreach (var scope in new[] { BaseSpire.SinglePlayer.BaseSpireScope.Dev, BaseSpire.SinglePlayer.BaseSpireScope.DevMap })
                 Console.WriteLine(JsonSerializer.Serialize(new BaseSpire.SinglePlayer.BaseSpireRuntimeFactory(
                     BaseSpire.SinglePlayer.RunConfiguration.FrozenIronclad(0, scope)).Describe()));
+            return 0;
+        }
+        if (args.Contains("--public-semantics-only", StringComparer.Ordinal))
+        {
+            PublicSemanticsChecks.Run();
+            SliceMapRoomChecks.DefaultIdentity();
+            Console.WriteLine($"All {Check.Passed} public semantics checks passed.");
             return 0;
         }
         if (args.Contains("--shrink-only", StringComparer.Ordinal))
@@ -75,6 +83,7 @@ internal static class Program
         if (args.Contains("--poison-only", StringComparer.Ordinal))
         {
             CombatPoisonChecks.Run();
+            SilentPoisonChecks.Run();
             Console.WriteLine($"All {Check.Passed} Poison checks passed (controlled source contract witnesses).");
             return 0;
         }
@@ -264,6 +273,7 @@ internal static class Program
         CombatOrbChecks.Run();
         CombatDoomChecks.Run();
         CombatPoisonChecks.Run();
+        SilentPoisonChecks.Run();
         CombatOstyChecks.Run();
         NextTurnEnergyChecks.Run();
         NextTurnDrawChecks.Run();

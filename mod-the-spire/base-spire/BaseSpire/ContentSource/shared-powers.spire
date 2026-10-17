@@ -1,4 +1,12 @@
 package base-spire {
+  power Poison {
+    role = Poison
+  }
+
+  power Accelerant {
+    role = Accelerant
+  }
+
   power Strength {
     role = Strength
   }

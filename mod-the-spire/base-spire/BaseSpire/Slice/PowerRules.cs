@@ -8,10 +8,11 @@ public enum PowerRuleKind
     ExtraAttackPlays, DrawOnExhaust, CloneThirdAttack, ReclaimAttacksBeforeTurn,
     SelfDamageAtTurnStart, BlockAtTurnStart, StrengthOnOwnerHpLoss,
     DamageAllOnOwnerDamage, AutoPlayDrawnStrikes, AutoPlayHandAttacksAtTurnEnd, HpLossCap, EnergyAfterResetOnce,
-    HandDrawNextTurnOnce
+    HandDrawNextTurnOnce, ApplyPowerOnDraw, ApplyPowerAtTurnStart, ApplyPowerOnUnblockedAttack, DamageAllEveryThirdPower
 }
 public sealed record PowerRule(PowerRuleKind? Kind, int Amount, DslSourceLocation Source)
 {
+    public string Reference { get; init; } = "";
     public string Hook { get; init; } = "";
     public string Procedure { get; init; } = "";
     public IReadOnlyDictionary<string, DslValueNode> Arguments { get; init; } = new Dictionary<string, DslValueNode>();
@@ -28,6 +29,10 @@ public static class PowerRuleSource
         ["hpLossCap"] = PowerRuleKind.HpLossCap,
         ["energyAfterResetOnce"] = PowerRuleKind.EnergyAfterResetOnce,
         ["handDrawNextTurnOnce"] = PowerRuleKind.HandDrawNextTurnOnce,
+        ["applyPowerOnDraw"] = PowerRuleKind.ApplyPowerOnDraw,
+        ["applyPowerAtTurnStart"] = PowerRuleKind.ApplyPowerAtTurnStart,
+        ["applyPowerOnUnblockedAttack"] = PowerRuleKind.ApplyPowerOnUnblockedAttack,
+        ["damageAllEveryThirdPower"] = PowerRuleKind.DamageAllEveryThirdPower,
     };
     public static IReadOnlyList<PowerRule> Read(DslValueNode value, List<string> problems)
     {
@@ -54,6 +59,14 @@ public static class PowerRuleSource
             }
             if (member is not DslPropertyNode p || !Names.TryGetValue(p.Name, out var kind))
             { problems.Add($"{member.Location}: unsupported power rule"); continue; }
+            if (kind is PowerRuleKind.ApplyPowerOnDraw or PowerRuleKind.ApplyPowerAtTurnStart
+                or PowerRuleKind.ApplyPowerOnUnblockedAttack or PowerRuleKind.DamageAllEveryThirdPower)
+            {
+                if (p.Value is not DslNameNode reference) { problems.Add($"{p.Location}: {p.Name} requires a power reference"); continue; }
+                if (rules.Any(r => r.Kind == kind)) problems.Add($"{p.Location}: duplicate rule {p.Name}");
+                rules.Add(new(kind, kind == PowerRuleKind.DamageAllEveryThirdPower ? 3 : 1, p.Location) { Reference = reference.Name });
+                continue;
+            }
             var amount = p.Value is DslBooleanNode { Value: true } ? 1 : p.Value is DslNumberNode n && int.TryParse(n.Literal, out var number) ? number : 0;
             if (amount < 1 || amount > 99) { problems.Add($"{p.Location}: {p.Name} requires true or integer 1..99"); continue; }
             if (kind is not (PowerRuleKind.ExtraAttackPlays or PowerRuleKind.HpLossCap)

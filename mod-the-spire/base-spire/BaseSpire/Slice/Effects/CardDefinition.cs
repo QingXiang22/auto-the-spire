@@ -18,6 +18,7 @@ public sealed record CardVariant(int Cost, bool Unpowered, CardResultPolicy Resu
     public bool Unplayable { get; init; }
     public bool Ethereal { get; init; }
     public bool Innate { get; init; }
+    public bool Sly { get; init; }
     public string Rarity { get; init; } = "";
     // Diagnostic instance fields are not executable effect facts.
     public int DisplayAmount { get; init; }
@@ -75,6 +76,7 @@ public sealed record CardDefinition(string Id, CardVariant Normal, CardVariant U
                 Unplayable = upgraded ? source.UpgradedUnplayable : source.NormalUnplayable,
                 Ethereal = upgraded ? source.UpgradedEthereal : source.NormalEthereal,
                 Innate = upgraded ? source.UpgradedInnate : source.NormalInnate,
+                Sly = upgraded ? source.UpgradedSly : source.NormalSly,
                 Rarity = upgraded ? source.UpgradedRarity : source.Rarity,
                 DisplayAmount = upgraded ? source.UpgradedAmount : source.NormalAmount,
                 DisplayPowerId = source.PowerId,

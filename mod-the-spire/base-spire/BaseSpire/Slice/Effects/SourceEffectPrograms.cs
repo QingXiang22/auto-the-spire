@@ -568,6 +568,7 @@ public static partial class SpireCardSource
                         "owner" => CardEffectTarget.Owner,
                         "target" => CardEffectTarget.Selected,
                         "allEnemies" => CardEffectTarget.AllEnemies,
+                        "randomEnemy" => CardEffectTarget.RandomEnemy,
                         _ => CardEffectTarget.Selected,
                     };
                 if (operation == CardEffectOperation.LoseHp && raw.Target is not ("" or "owner"))
@@ -647,6 +648,8 @@ public static partial class SpireCardSource
         }
         if (node is DslCallNode call)
         {
+            if (call.Name == "enemyPowerSum" && call.Arguments.Count == 1 && call.Arguments[0].Name == "power")
+                return new(CardAmountSource.EnemyPowerSum,0,1,NameOf(call.Arguments[0].Value));
             if (call.Name is "add" or "subtract" or "multiply" or "divide" or "minimum" or "maximum")
             {
                 if (call.Arguments.Count != 2 || call.Arguments.Any(a => a.Name is not null))
@@ -840,7 +843,7 @@ public static partial class SpireCardSource
         {
             Reference = amount.Source switch
             {
-                CardAmountSource.TargetPower => resolve(amount.Reference, source),
+                CardAmountSource.TargetPower or CardAmountSource.EnemyPowerSum => resolve(amount.Reference, source),
                 CardAmountSource.CardsWithTag => resolveTag(amount.Reference, source),
                 _ => amount.Reference,
             },
