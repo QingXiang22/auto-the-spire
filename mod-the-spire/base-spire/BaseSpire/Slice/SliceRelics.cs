@@ -112,6 +112,9 @@ public static class RelicEffectKinds
     public const string SetCounter = "set-counter";
     /// <summary>对全部存活敌人造成**无加成**伤害（源 `ValueProp.Unpowered`）。</summary>
     public const string DamageAllEnemies = "damage-all-enemies";
+
+    /// <summary>抽 N 张牌（复用共享抽牌过程，含重洗、抽牌阻止与 AfterDraw）。</summary>
+    public const string DrawCards = "draw-cards";
     public const string ModifyRestHeal = "modify-rest-heal";
     public const string ChannelOrb = "channel-orb";
     public const string AddOrbSlots = "add-orb-slots";
@@ -119,7 +122,7 @@ public static class RelicEffectKinds
     public static readonly IReadOnlyList<string> All = [Heal, GainMaxHp, GainGold, HealToFull, HealMaxHpPercent,
         GainPotionSlots, CountAndReplace, ApplyPower, GainBlock, GainEnergy, LoseEnergy, ModifyHandDraw, ModifyMaxEnergy,
         RetainEnergy, RetainHand, PreventPotionProcurement, RetainedBlockLimit, AddCounter, GainStars, SetCounter, ModifyRestHeal,
-        ChannelOrb, AddOrbSlots, ModifyLightningOrbValue, DamageAllEnemies];
+        ChannelOrb, AddOrbSlots, ModifyLightningOrbValue, DamageAllEnemies, DrawCards];
 }
 
 /// <summary>
@@ -188,7 +191,8 @@ public static class SpireRelics
                     or RelicEffectKinds.GainBlock or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter
                     or RelicEffectKinds.DamageAllEnemies,
                 RelicTriggers.AfterCardExhausted => effect.Kind is RelicEffectKinds.DamageAllEnemies,
-                RelicTriggers.AfterPlayerTurnStart => effect.Kind is RelicEffectKinds.DamageAllEnemies,
+                RelicTriggers.AfterPlayerTurnStart => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.DrawCards
+                    or RelicEffectKinds.AddCounter or RelicEffectKinds.SetCounter,
                 RelicTriggers.BeforeSideTurnEnd => effect.Kind is RelicEffectKinds.DamageAllEnemies or RelicEffectKinds.GainBlock,
                 RelicTriggers.AfterRoomEntered => effect.Kind is RelicEffectKinds.Heal or RelicEffectKinds.SetCounter,
                 RelicTriggers.Modifier => effect.Kind is RelicEffectKinds.ModifyHandDraw or RelicEffectKinds.ModifyMaxEnergy

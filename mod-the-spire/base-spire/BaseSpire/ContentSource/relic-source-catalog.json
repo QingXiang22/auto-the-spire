@@ -2991,8 +2991,8 @@
     ],
     "SourcePath": "sts2/src/Core/Models/Relics/Pendulum.cs",
     "SourceSha256": "348a11de259d9a3a8450fd6cdf030a21f05c7f9ed1765a04a32b9642eedc52bf",
-    "Eligibility": "unreviewed",
-    "EligibilityEvidence": "",
+    "Eligibility": "singleplayer",
+    "EligibilityEvidence": "Source owner-local turn-start hook in sts2/src/Core/Models/Relics/Pendulum.cs; persistent three-turn counter and shared draw declared and exercised by RelicContentChecks.",
     "Hooks": [
       "AfterPlayerTurnStart",
       "AfterCombatEnd"

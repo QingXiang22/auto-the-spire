@@ -106,8 +106,9 @@ internal static class SliceMapRoomChecks
     // Previous dev ea4d576da58dae95 / 5e89ed3d07e0b338.
     // 2026-10-17 CloakClasp/ScreamingFlagon add hand-size conditions (HandAtLeast/HandAtMost) at turn end.
     // Previous dev 775b4fee84aa7800 / b103e81fede9d804.
-    private const string DevGoldenRuleset = "2d6cc019dfe1a98d";
-    private const string DevGoldenBuild = "f66c39dcd9474851";
+    // 2026-10-17 Pendulum adds the shared `draw-cards` relic effect. Previous dev 2d6cc019dfe1a98d / f66c39dcd9474851.
+    private const string DevGoldenRuleset = "8f6d5a74a9f0e49d";
+    private const string DevGoldenBuild = "ac56bbdcf1117d15";
     // Event-domain contract: shared choice guards, gold snapshots and noncombat defeat tail change event IR.
     // Previous dev-map ruleset=e19e4e5b63d0dd01 build=110a5b7867698e0c; dev has no event module and is unchanged.
     // Previous dev-map 639ca07b5a486fbd / 6127d4d3959c048c.
@@ -130,8 +131,9 @@ internal static class SliceMapRoomChecks
     // Same MercuryHourglass addition; previous dev-map 83238c8da492af09 / 70132d1bb1df4034.
     // Same FestivePopper/DivineRight batch; previous dev-map e95e223845ed0846 / e7c9eb9bb55a084b.
     // Same CloakClasp/ScreamingFlagon batch; previous dev-map 443d0d6515615aa3 / 4e39836a700af26d.
-    private const string DevMapGoldenRuleset = "ade78c1114859bbf";
-    private const string DevMapGoldenBuild = "30e79a8acac26095";
+    // Same Pendulum addition; previous dev-map ade78c1114859bbf / 30e79a8acac26095.
+    private const string DevMapGoldenRuleset = "3b104072e22f7fb1";
+    private const string DevMapGoldenBuild = "3d9836c424faefaa";
 
     public static void DefaultIdentity()
     {

@@ -29,6 +29,7 @@ internal static class CombatPackageComposer
         var powerQueryBindings = PowerCompilation.PowerQuery(contentBindings, powerBindings, pilesBindings);
         BaseSpire.Slice.Domain.Combat.CombatOrbs? orbs = null;
         MonsterDamageBindings? monsterDamageBindings = null;
+        DrawBindings? drawBindings = null;
         BaseSpire.Slice.Domain.Combat.CombatDoom? doom = null;
         BaseSpire.Slice.Domain.Combat.CombatOsty? osty = null;
         BaseSpire.Slice.Domain.Combat.CombatOsty Osty()
@@ -88,7 +89,9 @@ internal static class CombatPackageComposer
                 s.If(s.Greater(s.Field(enemy, enemiesBindings.MonsterHp), s.Const(0L)),
                     s.Call(monsterDamageBindings!.DamageMonster.Symbol,
                         s.First(s.Type(playerBindings.Player, battleBindings.BattleScope)), enemy,
-                        s.Maximum(s.Const(0L), amount), s.Const(false)))])]);
+                        s.Maximum(s.Const(0L), amount), s.Const(false)))])],
+            // 抽牌：与回合开始/卡牌效果共用同一个抽牌过程（含重洗、阻止与 AfterDraw）。
+            (s, amount) => [s.Call(drawBindings!.Draw, s.Maximum(s.Const(0L), amount))]);
         if (potionsBindings.Potions is { } potionInventory)
         {
             potionInventory.ShouldAcquire = (s, _) => s.Not(relicPrograms.Has(s, RelicEffectKinds.PreventPotionProcurement));
@@ -162,7 +165,7 @@ internal static class CombatPackageComposer
         TurnCompilation.EnemyTurnBody(
             contentBindings, enemiesBindings, pilesBindings, enemyTurnBindings, HardcodedEnemyMove,
             DeclaredEnemyMove, poison is null ? null : scope => [poison.Resolve(scope, true)], BlockClearPrevented);
-        var drawBindings = CardCompilation.Draw(
+        drawBindings = CardCompilation.Draw(
             contentBindings, battleBindings, playerBindings, cardsBindings, pilesBindings, powerQueryBindings,
             powerCommandsBindings, powerRulesBindings, knowledgeCommandsBindings, DrawPrevented);
         var enemySelectionBindings = EnemyCompilation.EnemySelection(contentBindings, enemiesBindings);

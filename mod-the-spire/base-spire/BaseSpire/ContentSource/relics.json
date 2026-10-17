@@ -1330,5 +1330,27 @@
         "HandAtMost": 0
       }
     ]
+  },
+  {
+    "Name": "Pendulum",
+    "ContentId": "base-spire:pendulum",
+    "Rarity": "Common",
+    "SourcePath": "sts2/src/Core/Models/Relics/Pendulum.cs",
+    "SourceLine": 14,
+    "Effects": [
+      {
+        "Trigger": "after-player-turn-start",
+        "Kind": "add-counter",
+        "Amount": 1,
+        "CounterModulo": 3
+      },
+      {
+        "Trigger": "after-player-turn-start",
+        "Kind": "draw-cards",
+        "Amount": 1,
+        "CounterEquals": 0
+      }
+    ],
+    "ShowCounter": true
   }
 ]

@@ -505,6 +505,23 @@ internal static class RelicContentChecks
             Submit(s, "EndTurn");
             Check.Equal(before, MonsterHpTotal(s), "later turns do not damage");
         });
+        Case(["Pendulum"], "Relic conditions: Pendulum draws on every third player turn and keeps its counter across battles", () =>
+        {
+            var s = New(); Submit(s, "Obtain_Pendulum"); Submit(s, "BeginMonster"); SetMonsterHp(s, 500L);
+            SetPlayer(s, "Hp", 95L);
+            Check.Equal(5, Members(s, "Hand").Count, "first turn draws the normal hand");
+            Submit(s, "EndTurn");
+            Check.Equal(5, Members(s, "Hand").Count, "second turn does not draw");
+            Submit(s, "EndTurn");
+            Check.Equal(6, Members(s, "Hand").Count, "third turn draws one extra card");
+
+            var carried = New(); Submit(carried, "Obtain_Pendulum"); Submit(carried, "BeginMonster");
+            SetMonsterHp(carried, 500L); SetPlayer(carried, "Hp", 95L);
+            Submit(carried, "EndTurn");
+            Check.Equal(5, Members(carried, "Hand").Count, "second turn still does not draw");
+            Submit(carried, "BeginMonster"); SetMonsterHp(carried, 500L);
+            Check.Equal(6, Members(carried, "Hand").Count, "the carried counter completes the period in the next battle");
+        });
         Case(["DivineRight"], "Relic conditions: DivineRight grants three stars on each combat room entry", () =>
         {
             var s = New(); Submit(s, "Obtain_DivineRight"); Submit(s, "BeginMonster");
