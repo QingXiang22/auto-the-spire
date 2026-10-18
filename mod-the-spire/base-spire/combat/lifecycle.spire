@@ -90,6 +90,9 @@ procedure BeginDevelopmentCombat {
     set = { target = owner field = Player.Room value = "battle" }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.CombatActive value = true }
+    if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
+      shuffle = { collection = DrawPile stream = "base-spire:development-shuffle" }
+    } }
     emit = { event = BeforeCombatStart payload = { owner = owner } }
   }
 }
@@ -136,6 +139,9 @@ procedure BeginDevelopmentTurn {
     set = { target = owner field = Player.Energy value = pureCall(GetMaxEnergy, owner) }
     set = { target = owner field = Player.TurnOpen value = true }
     emit = { event = AfterSideTurnStarted payload = { owner = owner } }
+    if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
+      call = { procedure = DrawDevelopmentTurnHand args = { owner = owner } }
+    } }
     emit = { event = AfterPlayerTurnStart payload = { owner = owner } }
     emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } }
   }

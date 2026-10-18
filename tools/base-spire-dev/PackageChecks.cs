@@ -111,7 +111,7 @@ internal static partial class PackageChecks
             var relics = rows.RootElement.GetProperty("entries"); Equal(297, relics.GetArrayLength(), "independent frozen source denominator");
             var migrated = relics.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
-            Equal("base-spire:anchor,base-spire:bag-of-marbles,base-spire:blood-vial,base-spire:bronze-scales,base-spire:fake-anchor,base-spire:gremlin-horn,base-spire:happy-flower,base-spire:horn-cleat,base-spire:lantern,base-spire:meat-on-the-bone,base-spire:mercury-hourglass,base-spire:oddly-smooth-stone,base-spire:orichalcum,base-spire:pendulum,base-spire:strawberry,base-spire:the-abacus,base-spire:vajra", string.Join(",", migrated), "actual migrated identities, not a reduced source denominator");
+            Equal("base-spire:anchor,base-spire:bag-of-marbles,base-spire:blood-vial,base-spire:bronze-scales,base-spire:burning-blood,base-spire:fake-anchor,base-spire:gremlin-horn,base-spire:happy-flower,base-spire:horn-cleat,base-spire:lantern,base-spire:meat-on-the-bone,base-spire:mercury-hourglass,base-spire:oddly-smooth-stone,base-spire:orichalcum,base-spire:pendulum,base-spire:strawberry,base-spire:the-abacus,base-spire:vajra", string.Join(",", migrated), "actual migrated identities, not a reduced source denominator");
         });
         Case("DB-R10: same package has stable identities and sessions do not share state", () =>
         {
@@ -138,6 +138,7 @@ internal static partial class PackageChecks
         var potions = RunPotionChecks(package, Case);
         var rooms = RunRestSiteChecks(package, Case);
         Merge(RunPermanentDeckChecks(package, Case), rooms);
+        Merge(RunCharacterStartChecks(package, Case), witnesses);
         var rewards = RunRewardChecks(package, Case);
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);

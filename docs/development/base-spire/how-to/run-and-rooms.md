@@ -1,10 +1,14 @@
 # 开发角色、房间与完整 Run
 
-文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。当前 SetupDevelopmentDraw 仅创建开发玩家和三张牌；以下是恢复完整 Run 的开发方法，不提供已实现的旧 SinglePlayer 工厂或房间 C# 接口。
+文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
 先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
 
 ## 定义角色、进阶与正常开局
+
+在开发 scope 的干净初态提交 `Ironclad.Initialize`，可建立 80 HP、99 金币、5 Strike／4 Defend／1 Bash 的永久牌组及 BurningBlood。它拒绝覆盖已获得的牌、物品、房间或战斗进度。接着用真实遭遇的 `Spawn` 或开发目标入口建敌人，再提交 `BeginDevelopmentCombat` 和 `BeginDevelopmentTurn`：新副本先用开发流洗牌，回合自动抽五张；后续回合也自动抽牌，首回合按 Innate 优先并扩展抽取数量至十张上限。不要再手动补五次 Draw。旧机制探针没有初始化角色时仍手动抽牌。
+
+BurningBlood 在实际胜利时治疗 6 并封顶；跨战保留永久牌组、生命与遗物。此入口不包含 Neow、进阶、地图或原版随机流，不能当作正常 Run。准确守卫、顺序与边界见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
 
 在 characters 的内容配置保存角色身份、源池归属及参数，在 run 的 DSL 初始化流程创建权威角色／永久牌组／遗物／药水／资源与源随机状态。区分基础角色配置、进阶修正和 Neow 等正常开局选项。
 

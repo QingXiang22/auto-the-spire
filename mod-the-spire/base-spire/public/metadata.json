@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.5.0-dsl.27",
+  "static_build_id": "base-spire-dsl-0.5.0-dsl.28",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -25,7 +25,8 @@
         "base-spire:orichalcum",
         "base-spire:pendulum",
         "base-spire:strawberry",
-        "base-spire:meat-on-the-bone"
+        "base-spire:meat-on-the-bone",
+        "base-spire:burning-blood"
       ]
     },
     "base-spire:Enemy": {

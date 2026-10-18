@@ -39,9 +39,9 @@
       "source_path": "sts2/src/Core/Models/Characters/Ironclad.cs",
       "source_sha256": "d38ef18057517516e7d7e133d8d3b660001c995af763b444894e06263ecb454e",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer-supported",
+      "evidence": "Source starting resources and ordered deck; development initialization and victory-heal checks; no independent parity",
+      "definition": "characters/ironclad.spire"
     },
     {
       "id": "base-spire:necrobinder",

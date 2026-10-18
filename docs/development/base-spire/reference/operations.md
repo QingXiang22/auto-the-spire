@@ -4,6 +4,8 @@
 
 ## 状态与事件
 
+角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
+
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
 | [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
@@ -83,7 +85,8 @@
 | Draw／DiscardHand | 无参数，role=player | Draw 使用 first(type(Player))；DiscardHand 将全局 Hand 移到 DiscardPile；均是开发动作 |
 | [BeginDevelopmentCombat](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | action 与同名过程：inactive 时先置 Block=0、TurnNumber=0、Energy=0、TurnOpen=false、CombatActive=true，再 emit BeforeCombatStart；已活跃时报 "Development combat is already active"。不是正常战斗初始化 |
 | EndDevelopmentCombat | owner=Ref(Player) | action 与同名过程：只在活跃时允许，置 CombatActive=false，不发开始事件也不发胜利；不活跃时报 "Development combat is not active" |
-| BeginDevelopmentTurn | owner=Ref(Player) | action 与同名过程：活跃且回合门关闭时允许；先自增 TurnNumber，回合号大于 1 时清空格挡并发 AfterBlockCleared，再按 GetMaxEnergy 重置能量、打开回合门，最后依次发 AfterTurnStarted 与 AfterPlayerTurnStartLate。不抽牌 |
+| BeginDevelopmentTurn | owner=Ref(Player) | action 与同名过程：活跃且回合门关闭时允许；自增 TurnNumber，非首回合按 retain-block 资格清格挡并发 AfterBlockCleared，执行早期 Power 反应，重置能量、打开回合门，再发 AfterSideTurnStarted；AutoDrawPerTurn 大于 0 时先 DrawDevelopmentTurnHand，最后发 AfterPlayerTurnStart 与 Late |
+| DrawDevelopmentTurnHand | owner=Ref(Player) | 以 AutoDrawPerTurn 为基础，首回合逐张把 Innate 移到顶部，抽取数至少为 Innate 数且至多十张；调用 DrawCards，继承满手／禁止抽牌和真实抽牌事件。不实现附魔底部排序或完整手牌修正 |
 | EndDevelopmentTurn | owner=Ref(Player) | action 与同名过程：活跃且回合门打开时允许；把 Hand 移到 DiscardPile 并关闭回合门；不结算敌方回合、不发胜利、不逐张派发弃牌钩子 |
 | [AddDevelopmentTarget](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | owner=Ref(Player) | 过程与公开 action：在 owner 作用域创建一个 Hp／MaxHp 为 40、DefinitionId 为 `base-spire:development-target` 的 Enemy；不是遭遇或原版怪物生成 |
 | [SetupDevelopmentDraw](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | 无参数；根 start 调用一次 | 创建一个 Player 和弃牌堆三张开发 Card；不提供正常 Run 初始化 |
