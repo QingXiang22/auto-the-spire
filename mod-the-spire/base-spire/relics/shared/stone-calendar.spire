@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/StoneCalendar.cs; SHA256 retained in relics/catalog.json.
+use StoneCalendar { template = TurnEndDamageRelic args = { definition = "base-spire:stone-calendar" turn = 7 damage = 52 } }

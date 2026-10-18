@@ -39,7 +39,7 @@ procedure RestAtDevelopmentCampfire {
   parameters = { owner = Ref(Player) }
   body = {
     call = { procedure = RequireUnusedRestSite args = { owner = owner } }
-    call = { procedure = Heal args = { owner = owner amount = divide(multiply(field(owner, Player.MaxHp), 30), 100) } }
+    call = { procedure = Heal args = { owner = owner amount = add(divide(multiply(field(owner, Player.MaxHp), 30), 100), pureCall(RelicRestHealBonus, owner)) } }
     set = { target = owner field = Player.RoomUsed value = true }
   }
 }

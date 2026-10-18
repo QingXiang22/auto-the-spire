@@ -2,6 +2,7 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 procedure ObtainRelic {
+  # Shared acquisition: pickup subscribers execute after the new instance enters inventory.
   parameters = { owner = Ref(Player) definition = String(length = 64) }
   locals = { instance = Binding }
   body = {
@@ -11,6 +12,22 @@ procedure ObtainRelic {
     }
     emit = { event = RelicObtained payload = { owner = owner relic = instance } }
   }
+}
+procedure HasActiveRelic {
+  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) } result = Bool
+  body = { return = { value = exists(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), definition))))) } }
+}
+procedure HasOwnedRelic {
+  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) } result = Bool
+  body = { return = { value = exists(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), equal(field(r, Relic.DefinitionId), definition)))) } }
+}
+procedure RelicFirstTurnDrawBonus {
+  pure = true parameters = { owner = Ref(Player) } result = Int
+  body = { return = { value = aggregate(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), not(field(r, Relic.IsMelted)))), Sum, r, field(r, Relic.FirstTurnDrawBonus)) } }
+}
+procedure RelicRestHealBonus {
+  pure = true parameters = { owner = Ref(Player) } result = Int
+  body = { return = { value = aggregate(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), not(field(r, Relic.IsMelted)))), Sum, r, field(r, Relic.RestHealBonus)) } }
 }
 procedure RemoveRelic {
   parameters = { instance = Ref(Relic) }

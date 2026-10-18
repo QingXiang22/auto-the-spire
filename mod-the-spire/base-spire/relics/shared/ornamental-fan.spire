@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/OrnamentalFan.cs; SHA256 retained in relics/catalog.json.
+use OrnamentalFan { template = CardCountRelic args = { definition = "base-spire:ornamental-fan" kind = "attack" every = 3 perTurn = true block = 4 } }

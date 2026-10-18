@@ -89,6 +89,7 @@ procedure DrawDevelopmentTurnHand {
   body = {
     let = { into = amount value = field(owner, Player.AutoDrawPerTurn) }
     if = { condition = equal(field(owner, Player.TurnNumber), 1) then = {
+      let = { into = amount value = add(amount, pureCall(RelicFirstTurnDrawBonus, owner)) }
       let = { into = amount value = minimum(10, maximum(amount, count(where(collection(DrawPile), card, field(card, Card.Innate))))) }
       forEach = {
         query = where(collection(DrawPile), card, field(card, Card.Innate)) item = innate

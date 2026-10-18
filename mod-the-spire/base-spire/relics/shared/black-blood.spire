@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/BlackBlood.cs; SHA256 retained in relics/catalog.json.
+use BlackBlood { template = CombatEndHealRelic args = { definition = "base-spire:black-blood" heal = 12 threshold = 100 } }

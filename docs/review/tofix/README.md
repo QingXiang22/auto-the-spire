@@ -10,7 +10,7 @@
 
 目标是同版本原版的五角色完整单人环境。2026-10-18用户已将当前顺序改为先完成 **CORE-AUTHOR-05：按规格驱动完成纯DSL base目录与切换**，允许未迁移玩法暂时报未支持。随后继续 **M01：从公开接口正常开局，完成地图→战斗→奖励→返回地图，并与独立参考逐步比较**；原完整范围与下表阶段验收不删减。已有旧路径的第一幕与局部证据，不能据此认定新DSL环境已具备对应能力。
 
-**实施主线**：按照下面的领域分类组织实现；共享能力由内容调用，模块先独立验证，再在集成窗口接回正常Run。近期集成目标仍是Ironclad首幕Boss奖励关闭，然后是真实跨幕与完整胜负。Feed、药水、随机行为和永久写回是验收点；M01原条件保留。
+**实施主线**：2026-10-18用户最新要求优先补全base-spire内容，当前接续全遗物，按共享生命周期成组实现并逐件保留行为见证；只补内容所需公共能力。正常Run集成继续保留为后续验收目标，不据内容定义数量关闭Ironclad首幕、跨幕或完整胜负。Feed、药水、随机行为和永久写回的M01原条件保留。
 
 | 阶段 | 要交付什么 | 什么时候可以结束 |
 | --- | --- | --- |
@@ -58,6 +58,8 @@
 | **后续AI与指定mod** | AI／共享Transformer和训练暂缓；指定mod需用户明确范围，其他工作沿原触发条件 | [指定mod](#env-t16)、[W完整范围](#项目长期范围)、[暂停项](#暂缓和另行安排的工作) |
 
 ## 当前交付
+
+2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-01：全遗物接续首组** 的本地交付，待验证；用户最新顺序为base-spire内容补全优先。基于 `fdf310a`／RNG PR #18（四组CI全通过），分支 `codex/relic-content-wave1-20261018`，base `0.5.0-dsl.31`。本组补Pear、Mango、LeesWaffle、FakeLeesWaffle、OldCoin、BlackBlood、CaptainsWheel、BagOfPreparation、RegalPillow、Nunchaku、Kunai、Shuriken、OrnamentalFan、LetterOpener、StoneCalendar、CentennialPuzzle共16件；拾取经RelicObtained，首回合／营火动态修正、实例出牌计数、首次受损抽牌及末杀收尾已接入。20项遗物定向、338项包行为、111项内核、30项公开路径与覆盖门槛通过；源297件保留，34件实际见证、262件未实现、1件源废弃排除。必要通用维护仅将模板实例容量256增至8192，32层／递归／4096成员保护保持。契约见[遗物生命周期](../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)，实际来源、命令和接手入口见[交付记录](../records/2026-10-18/relic-content-wave1-2026-10-18.md)。本组编码窗口结束；下一成果继续遗物伤害／费用修正或拾取永久升级机制，按源补真实消费者。全遗物、独立原版对拍、正常来源与Run未关闭，其他暂停项保持。
 
 2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RNG-RESTORE-01：原版随机机制恢复** 的本地交付，待验证；基于 `faceab9`／卡牌奖励PR #17，分支 `codex/vanilla-rng-restore-20261018`。base `0.5.0-dsl.30` 已选择vanilla-uniform@1，纯DSL恢复UTF-16字符串seed→12条run／3条player流及内容种子公式、源初始／排序重洗、卡牌随机选择和共享Rewards游标，精确binary32替代24-bit开发网格。通用core补随机DSL／包会话工厂、未消费种子快照及原版布尔映射修正；运行身份迁移为engine/ir@0.5／core0.5.0，旧0.4包须重建。10组独立源向量、110项内核、318项包行为、374项公开接口、85/85铁甲卡牌和18件遗物见证门槛通过，迁移合同与769份文档检查通过。准确职责见[随机契约](../../design/mod-the-spire/run-domain/randomness.md)，来源、命令、版本迁移和未验证见[交付记录](../records/2026-10-18/vanilla-rng-restore-2026-10-18.md)。本批编码窗口结束；下一机制包恢复药水掉落及真实奖励前置消费，或地图／楼层上下文，不补抽伪造对齐。完整Run／Neow／地图、遭遇内容流和整局参考对拍仍未验收，父项及暂停项不关闭。
 

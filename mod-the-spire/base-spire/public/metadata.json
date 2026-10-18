@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.5.0-dsl.30",
+  "static_build_id": "base-spire-dsl-0.5.0-dsl.31",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -26,7 +26,23 @@
         "base-spire:pendulum",
         "base-spire:strawberry",
         "base-spire:meat-on-the-bone",
-        "base-spire:burning-blood"
+        "base-spire:burning-blood",
+        "base-spire:bag-of-preparation",
+        "base-spire:black-blood",
+        "base-spire:captains-wheel",
+        "base-spire:centennial-puzzle",
+        "base-spire:fake-lees-waffle",
+        "base-spire:kunai",
+        "base-spire:lees-waffle",
+        "base-spire:letter-opener",
+        "base-spire:mango",
+        "base-spire:nunchaku",
+        "base-spire:old-coin",
+        "base-spire:ornamental-fan",
+        "base-spire:pear",
+        "base-spire:regal-pillow",
+        "base-spire:shuriken",
+        "base-spire:stone-calendar"
       ]
     },
     "base-spire:Enemy": {

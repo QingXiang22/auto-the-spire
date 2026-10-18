@@ -17,6 +17,13 @@ internal static class RuleLibraryChecks
 
     public static void Run()
     {
+        Check.Run("LIBRARY content packages above 256 template instances load without relaxing recursion protection", () =>
+        {
+            var source = "using namespace many; dsl_version = \"core/0.3\" template Item { body = { procedure Value { pure = true result = Int body = { return = { value = 7 } } } } } "
+                + string.Join(" ", Enumerable.Range(0, 300).Select(i => "use Item" + i + " { template = Item }"));
+            var rules = new RuleSetBuilder().Add(EngineDslCompiler.Compile(source)).Build();
+            Check.Equal(300, rules.Procedures.Count, "every configured content template actually linked");
+        });
         Check.Run("LIBRARY author config imports real DSL rules and enumerates direct choices", () =>
         {
             var session = new Session(EngineDslCompiler.LoadFiles(Fixture), 42, ["player"]);

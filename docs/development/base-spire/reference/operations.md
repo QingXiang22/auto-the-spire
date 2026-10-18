@@ -39,6 +39,18 @@
 
 ## 过程与公开动作
 
+遗物共享生命周期新增以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
+
+| 遗物入口 | 参数 | 行为与边界 |
+| --- | --- | --- |
+| HasOwnedRelic／HasActiveRelic | owner: Ref(Player)、definition: String(64)，pure→Bool | 前者检查库存身份，包含熔化实例；后者还要求未熔化。防止重复拾取使用Owned，动态效果使用Active |
+| RelicFirstTurnDrawBonus／RelicRestHealBonus | owner: Ref(Player)，pure→Int | 汇总本持有者未熔化实例的修正元数据；移除立即失效，查询不写状态 |
+| ObtainMaxHpRelic模板 | definition、amount、fullHeal=false | 通过RelicObtained触发IncreaseMaxHp，必要时HealToMaximum；不在动作尾部重复奖励。供Strawberry／Pear／Mango／LeesWaffle复用 |
+| CardCountRelic模板 | definition、kind、every、perTurn，以及energy／block／damage／power／powerKind／stacks | AfterCardPlayed按实际次数推进独立Relic.Counter；perTurn在战斗开场和玩家回合早期重置，否则跨战保留；重复／自动各计一次，多段攻击只计一次 |
+| GainGold | owner: Ref(Player)、amount: Int(0..99999) | 共享已迁移金币获得，沿用99999上限；尚无完整获得金币修正参与者，金币奖励与OldCoin共用 |
+| HealToMaximum | owner: Ref(Player) | 计算MaxHp-Hp并调用Heal；支持最大生命至999999，不替代复活或完整治疗修正 |
+| BeforePlayerTurnStart／BeforePlayerTurnEnd | owner: Ref(Player)，事件 | 前者在回合号增加后、抽牌／自动出牌前；后者在回合末自动出牌后、普通弃牌前。StoneCalendar致胜后不再执行敌方行动 |
+
 卡牌奖励保存在公开 CardRewardOptions；Player.CardRewardPending 表示该条目尚可选择，CardRarityOffset 是隐藏的跨奖励偏移。Card.Rarity 与 CardBlueprint.Rarity 为 String(16)，由源内容配置。下列入口限首幕 A0、全部解锁 Ironclad 开发配置；算法及未支持范围见[奖励契约](../../../design/mod-the-spire/combat-rewards/spec.md)。
 
 | 奖励入口 | 参数 | 行为 |
@@ -96,7 +108,7 @@
 | EndDevelopmentCombat | owner=Ref(Player) | action 与同名过程：只在活跃时允许，置 CombatActive=false，不发开始事件也不发胜利；不活跃时报 "Development combat is not active" |
 | BeginDevelopmentTurn | owner=Ref(Player) | action 与同名过程：活跃且回合门关闭时允许；自增 TurnNumber，非首回合按 retain-block 资格清格挡并发 AfterBlockCleared，执行早期 Power 反应，重置能量、打开回合门，再发 AfterSideTurnStarted；AutoDrawPerTurn 大于 0 时先 DrawDevelopmentTurnHand，最后发 AfterPlayerTurnStart 与 Late |
 | DrawDevelopmentTurnHand | owner=Ref(Player) | 以 AutoDrawPerTurn 为基础，首回合逐张把 Innate 移到顶部，抽取数至少为 Innate 数且至多十张；调用 DrawCards，继承满手／禁止抽牌和真实抽牌事件。不实现附魔底部排序或完整手牌修正 |
-| EndDevelopmentTurn | owner=Ref(Player) | action 与同名过程：活跃且回合门打开时允许；把 Hand 移到 DiscardPile 并关闭回合门；不结算敌方回合、不发胜利、不逐张派发弃牌钩子 |
+| EndDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门打开时允许；先回合末自动出牌，再BeforePlayerTurnEnd；仍活跃才弃牌、发AfterTurnEnded并处理能力及敌方阶段。末杀后停止后续阶段，不逐张派发弃牌钩子 |
 | [AddDevelopmentTarget](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | owner=Ref(Player) | 过程与公开 action：在 owner 作用域创建一个 Hp／MaxHp 为 40、DefinitionId 为 `base-spire:development-target` 的 Enemy；不是遭遇或原版怪物生成 |
 | [SetupDevelopmentDraw](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | 无参数；根 start 调用一次 | 创建一个 Player 和弃牌堆三张开发 Card；不提供正常 Run 初始化 |
 

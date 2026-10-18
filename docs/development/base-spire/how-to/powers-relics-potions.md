@@ -1,6 +1,6 @@
 # 开发 Power、遗物与药水
 
-文档类型：操作指南（How-to）。先从对应 catalog 查源身份，再区分“已有模板配置”和“缺共享生命周期”。当前正式 DSL 交付遗物开发实例、开发牌堆与出牌链（含消耗堆、Power 牌离场、失去生命）、战斗／回合资源（格挡、生命、能量、回合计数、回合末 debuff 减层）、伤害与格挡吸收、Strength／Vulnerable／Dexterity 修正参与者，以及 8 件遗物触发与 25 张牌；能力的施加／移除反应、敌方行动和药水仍需先恢复完整机制。
+文档类型：操作指南（How-to）。先从对应 catalog 查源身份，再区分“已有模板配置”和“缺共享生命周期”。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[主清单](../../../review/tofix/README.md#当前交付)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
 
 ## 实现 Power 生命周期
 
@@ -16,6 +16,10 @@
 复用当前 [ObtainRelic／RemoveRelic](../reference/operations.md) 时，遵守入库后发获得事件、出库后发移除事件、随后销毁的顺序。获得过程本身不去重，模板 action 的守卫才限制当前开发范围的重复 definition。需要正常库存资格、唯一性或奖励获得时先补对应契约。
 
 新触发先列 owner／source／target、调用时点、是否需要有效实例、每个实例的计数与清理、允许取消／暂停的位置。共享规则过滤 Holder 和 IsMelted，内容文件只配置模板；学习路径见[共享触发教程](../tutorials/shared-rule.md)。
+
+拾取资源放在RelicObtained订阅中，使显式开发获得、角色初始化和未来奖励消费者都经过同一生命周期；不要仅写在Obtain动作尾部。ObtainMaxHpRelic供Strawberry／Pear／Mango及LeesWaffle复用；PickupResourceRelic供金币和百分比治疗复用。移除不撤回已经获得的最大生命或金币。
+
+出牌计数模板CardCountRelic按真实AfterCardPlayed逐次计数，自动／重复打出分别计算，多段攻击只计一次。perTurn决定回合开始早期重置或跨战保留，实例计数不能从全局出牌数反推。首回合抽牌和营火治疗修正通过当前有效实例动态查询；移除／熔化后停止参与。共享参数、完整消费者和边界见[遗物生命周期契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
 
 替换与熔化尚无正式 DSL 操作。实现时明确：旧获得效果如何撤回，新获得效果何时生效，是否保留同一实例／计数，熔化时保留哪些库存事实与触发，跨战如何重建。不能仅写 DefinitionId 或 IsMelted 就宣称完整生命周期。
 

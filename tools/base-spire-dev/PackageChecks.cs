@@ -111,7 +111,7 @@ internal static partial class PackageChecks
             var relics = rows.RootElement.GetProperty("entries"); Equal(297, relics.GetArrayLength(), "independent frozen source denominator");
             var migrated = relics.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
-            Equal("base-spire:anchor,base-spire:bag-of-marbles,base-spire:blood-vial,base-spire:bronze-scales,base-spire:burning-blood,base-spire:fake-anchor,base-spire:gremlin-horn,base-spire:happy-flower,base-spire:horn-cleat,base-spire:lantern,base-spire:meat-on-the-bone,base-spire:mercury-hourglass,base-spire:oddly-smooth-stone,base-spire:orichalcum,base-spire:pendulum,base-spire:strawberry,base-spire:the-abacus,base-spire:vajra", string.Join(",", migrated), "actual migrated identities, not a reduced source denominator");
+            Equal("base-spire:anchor,base-spire:bag-of-marbles,base-spire:bag-of-preparation,base-spire:black-blood,base-spire:blood-vial,base-spire:bronze-scales,base-spire:burning-blood,base-spire:captains-wheel,base-spire:centennial-puzzle,base-spire:fake-anchor,base-spire:fake-lees-waffle,base-spire:gremlin-horn,base-spire:happy-flower,base-spire:horn-cleat,base-spire:kunai,base-spire:lantern,base-spire:lees-waffle,base-spire:letter-opener,base-spire:mango,base-spire:meat-on-the-bone,base-spire:mercury-hourglass,base-spire:nunchaku,base-spire:oddly-smooth-stone,base-spire:old-coin,base-spire:orichalcum,base-spire:ornamental-fan,base-spire:pear,base-spire:pendulum,base-spire:regal-pillow,base-spire:shuriken,base-spire:stone-calendar,base-spire:strawberry,base-spire:the-abacus,base-spire:vajra", string.Join(",", migrated), "actual migrated identities, not a reduced source denominator");
         });
         Case("DB-R10: same package has stable identities and sessions do not share state", () =>
         {
@@ -135,6 +135,7 @@ internal static partial class PackageChecks
         Merge(RunFlameBarrierChecks(package, Case), cards);
         Merge(RunRelicBatch5Checks(package, Case), witnesses);
         Merge(RunRelicBatch6Checks(package, Case), witnesses);
+        Merge(RunRelicContentChecks(package, Case), witnesses);
         var potions = RunPotionChecks(package, Case);
         var rooms = RunRestSiteChecks(package, Case);
         Merge(RunPermanentDeckChecks(package, Case), rooms);
