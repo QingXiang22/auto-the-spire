@@ -1,0 +1,13 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Inflame.cs: cost 1, CardType.Power, StrengthPower 2 on the owner; OnUpgrade adds 1 Strength.
+# A power card leaves play after resolving, which is why leavesPlay is true here.
+use Inflame {
+  template = CardDefinition
+  args = { definition = "base-spire:inflame" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = true }
+}
+use InflameStrength {
+  template = ApplySelfPowerEffect
+  args = { definition = "base-spire:inflame" power = "base-spire:strength-power" kind = "damage-additive" stacks = 2 upgradedStacks = 3 }
+}

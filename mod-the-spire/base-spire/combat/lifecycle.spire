@@ -1,0 +1,182 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Mechanism-development boundaries, not normal combat setup, turns, victory or Run settlement.
+event BeforeCombatStart { payload = { owner = Ref(Player) } }
+# sts2 Creature.AfterTurnStart -> CombatManager.Hook.AfterBlockCleared, dispatched for every creature starting the turn.
+event AfterBlockCleared { payload = { owner = Ref(Player) } }
+# Development time point after energy reset. Vanilla splits this across AfterEnergyReset and AfterSideTurnStart.
+event AfterSideTurnStarted { payload = { owner = Ref(Player) } }
+# Development time point for the player turn-start hooks (vanilla runs Early, AfterPlayerTurnStart, then Late).
+event AfterPlayerTurnStart { payload = { owner = Ref(Player) } }
+# Development time point for the late player turn-start hooks (vanilla AfterPlayerTurnStartLate).
+event AfterPlayerTurnStartLate { payload = { owner = Ref(Player) } }
+# Development end-of-turn time point: the hand is discarded first, then this fires before the turn gate closes.
+event AfterTurnEnded { payload = { owner = Ref(Player) } }
+# An enemy reached zero HP from above. Vanilla also removes the creature and fires death hooks; this scope
+# only reports the transition and recomputes the combat outcome.
+event EnemyDied { payload = { target = Ref(Enemy) } }
+# The development combat finished: victory when no hittable enemy remains, defeat when the player reaches 0 HP.
+event CombatEnded { payload = { owner = Ref(Player) victory = Bool } }
+# One enemy's turn. The enemy content template subscribes and filters by its DefinitionId.
+event EnemyTurnStarted { payload = { owner = Ref(Player) target = Ref(Enemy) } }
+# The enemy phase finished; source duration tick-down happens here rather than at the player's end of turn.
+event AfterEnemyTurnEnded { payload = { owner = Ref(Player) } }
+
+# Source order for a finished combat: the state is closed before listeners observe it. Rewards, Run
+# settlement and the engine terminal are not migrated. Victory is only evaluated when an enemy dies, so a
+# development combat without targets is never silently won; defeat is evaluated on every player HP loss.
+procedure CheckCombatVictory {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))
+      then = {
+        if = {
+          condition = not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))))
+          then = {
+            set = { target = owner field = Player.CombatOutcome value = "victory" }
+            set = { target = owner field = Player.TurnOpen value = false }
+            set = { target = owner field = Player.CombatActive value = false }
+            emit = { event = CombatEnded payload = { owner = owner victory = true } }
+          }
+        }
+      }
+    }
+  }
+}
+procedure CheckCombatDefeat {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))
+      then = {
+        if = {
+          condition = equal(field(owner, Player.Hp), 0)
+          then = {
+            set = { target = owner field = Player.CombatOutcome value = "defeat" }
+            set = { target = owner field = Player.TurnOpen value = false }
+            set = { target = owner field = Player.CombatActive value = false }
+            emit = { event = CombatEnded payload = { owner = owner victory = false } }
+          }
+        }
+      }
+    }
+  }
+}
+
+procedure BeginDevelopmentCombat {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = equal(field(owner, Player.Room), "rewards")
+      then = { fail = { message = "Close development rewards before starting combat" } }
+    }
+    if = {
+      condition = field(owner, Player.CombatActive)
+      then = { fail = { message = "Development combat is already active" } }
+    }
+    set = { target = owner field = Player.Block value = 0 }
+    set = { target = owner field = Player.TurnNumber value = 0 }
+    set = { target = owner field = Player.Energy value = 0 }
+    set = { target = owner field = Player.TurnOpen value = false }
+    set = { target = owner field = Player.CombatOutcome value = "none" }
+    set = { target = owner field = Player.Room value = "battle" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    set = { target = owner field = Player.CombatActive value = true }
+    emit = { event = BeforeCombatStart payload = { owner = owner } }
+  }
+}
+procedure EndDevelopmentCombat {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(field(owner, Player.CombatActive))
+      then = { fail = { message = "Development combat is not active" } }
+    }
+    set = { target = owner field = Player.CombatActive value = false }
+    set = { target = owner field = Player.Room value = "none" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    call = { procedure = ClearCombatPowers }
+  }
+}
+
+# Source order: turn number increments, block is cleared except on turn 1 (Creature.AfterTurnStart
+# returns early for the player's first turn), AfterBlockCleared runs, energy is reset to MaxEnergy,
+# then the side/player turn-start hooks run.
+procedure BeginDevelopmentTurn {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(field(owner, Player.CombatActive))
+      then = { fail = { message = "Development combat is not active" } }
+    }
+    if = {
+      condition = field(owner, Player.TurnOpen)
+      then = { fail = { message = "Development turn is already open" } }
+    }
+    set = { target = owner field = Player.TurnNumber value = add(field(owner, Player.TurnNumber), 1) }
+    set = { target = owner field = Player.LostHpThisTurn value = false }
+    set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
+    if = {
+      condition = greater(field(owner, Player.TurnNumber), 1)
+      then = {
+        set = { target = owner field = Player.Block value = 0 }
+        emit = { event = AfterBlockCleared payload = { owner = owner } }
+      }
+    }
+    set = { target = owner field = Player.Energy value = field(owner, Player.MaxEnergy) }
+    set = { target = owner field = Player.TurnOpen value = true }
+    emit = { event = AfterSideTurnStarted payload = { owner = owner } }
+    emit = { event = AfterPlayerTurnStart payload = { owner = owner } }
+    emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } }
+  }
+}
+# End of the player's turn. The hand is discarded, the player's end-of-turn time point runs, then every
+# hittable enemy takes its turn and the enemy phase closes (which is where debuffs tick down). Victory and
+# rewards are handled by the damage paths; per-card discard hooks are not migrated.
+procedure EndDevelopmentTurn {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(field(owner, Player.CombatActive))
+      then = { fail = { message = "Development combat is not active" } }
+    }
+    if = {
+      condition = not(field(owner, Player.TurnOpen))
+      then = { fail = { message = "Development turn is not open" } }
+    }
+    forEach = {
+      query = collection(Hand) item = card
+      body = {
+        removeFromCollection = { collection = Hand item = card }
+        addToCollection = { collection = DiscardPile item = card }
+      }
+    }
+    emit = { event = AfterTurnEnded payload = { owner = owner } }
+    call = { procedure = RunEnemyTurn args = { owner = owner } }
+    call = { procedure = ExpireTurnEndPowers }
+    set = { target = owner field = Player.TurnOpen value = false }
+  }
+}
+
+action BeginDevelopmentCombat {
+  role = player
+  requires = and(not(field(first(type(Player)), Player.CombatActive)), not(equal(field(first(type(Player)), Player.Room), "rewards")))
+  body = { call = { procedure = BeginDevelopmentCombat args = { owner = first(type(Player)) } } }
+}
+action EndDevelopmentCombat {
+  role = player
+  requires = field(first(type(Player)), Player.CombatActive)
+  body = { call = { procedure = EndDevelopmentCombat args = { owner = first(type(Player)) } } }
+}
+action BeginDevelopmentTurn {
+  role = player
+  requires = and(field(first(type(Player)), Player.CombatActive), not(field(first(type(Player)), Player.TurnOpen)))
+  body = { call = { procedure = BeginDevelopmentTurn args = { owner = first(type(Player)) } } }
+}
+action EndDevelopmentTurn {
+  role = player
+  requires = and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen))
+  body = { call = { procedure = EndDevelopmentTurn args = { owner = first(type(Player)) } } }
+}

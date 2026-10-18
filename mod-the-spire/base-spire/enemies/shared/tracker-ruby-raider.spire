@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: TrackerRubyRaider.cs; Ascension 0 initial HP 21..25 (development spawn uses the minimum) and TRACK applies FrailPower 2 then HOUNDS_MOVE hits 1 damage eight times and repeats.
+use TrackerRubyRaider {
+  template = DebuffThenMultiAttackEnemy
+  args = { definition = "base-spire:tracker-ruby-raider" hp = 21 frail = 2 damage = 1 hits = 8 }
+}

@@ -2,7 +2,7 @@ using System.Text.Json;
 using CoreTheSpire;
 using CoreTheSpire.Engine;
 
-internal static class PackageChecks
+internal static partial class PackageChecks
 {
     public static int Run(string manifest, string? reportDirectory = null)
     {
@@ -104,12 +104,14 @@ internal static class PackageChecks
             File.WriteAllText(expression.Path(content), File.ReadAllText(expression.Path(content)).Replace("amount = 6", "amount = add(3, 3)", StringComparison.Ordinal));
             Throws<DslSourceException>(() => expression.Load());
         });
-        Case("DB-A05/A10: old scopes are rejected and the 297 source relics yield one DSL definition", () =>
+        Case("DB-A05/A10: old scopes are rejected and source definitions exactly match supported relics", () =>
         {
             Throws<NotSupportedException>(() => DslPackage.Load(manifest, "base-spire-singleplayer-dev-map-v1"));
             using var rows = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "relics/catalog.json")));
             var relics = rows.RootElement.GetProperty("entries"); Equal(297, relics.GetArrayLength(), "independent frozen source denominator");
-            Equal(1, relics.EnumerateArray().Count(row => row.GetProperty("definition").ValueKind == JsonValueKind.String), "only actual DSL content counts");
+            var migrated = relics.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == JsonValueKind.String)
+                .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
+            Equal("base-spire:anchor,base-spire:bag-of-marbles,base-spire:blood-vial,base-spire:bronze-scales,base-spire:fake-anchor,base-spire:gremlin-horn,base-spire:happy-flower,base-spire:horn-cleat,base-spire:lantern,base-spire:meat-on-the-bone,base-spire:mercury-hourglass,base-spire:oddly-smooth-stone,base-spire:orichalcum,base-spire:pendulum,base-spire:strawberry,base-spire:the-abacus,base-spire:vajra", string.Join(",", migrated), "actual migrated identities, not a reduced source denominator");
         });
         Case("DB-R10: same package has stable identities and sessions do not share state", () =>
         {
@@ -117,6 +119,30 @@ internal static class PackageChecks
             var one = Start(package); var two = Start(package); Submit(one, "TheAbacus.Obtain"); Submit(one, "Draw");
             Equal(0L, Block(two), "independent session state"); Equal(3, Members(two, "DiscardPile").Count, "independent piles");
         });
+        var witnesses = RunCombatStartChecks(package, Case);
+        void Merge(Dictionary<string, string[]> rows, Dictionary<string, string[]> into)
+        {
+            foreach (var row in rows)
+                into[row.Key] = into.TryGetValue(row.Key, out var existing) ? existing.Concat(row.Value).ToArray() : row.Value;
+        }
+        Merge(RunCombatTurnChecks(package, Case), witnesses);
+        Merge(RunDamageChecks(package, Case), witnesses);
+        var cards = RunCardPlayChecks(package, Case);
+        Merge(RunPowerChecks(package, Case), cards);
+        Merge(RunCardBatchChecks(package, Case), cards);
+        Merge(RunCombatEndChecks(package, Case), cards);
+        Merge(RunBronzeScalesChecks(package, Case), witnesses);
+        Merge(RunFlameBarrierChecks(package, Case), cards);
+        Merge(RunRelicBatch5Checks(package, Case), witnesses);
+        Merge(RunRelicBatch6Checks(package, Case), witnesses);
+        var potions = RunPotionChecks(package, Case);
+        var rooms = RunRestSiteChecks(package, Case);
+        var rewards = RunRewardChecks(package, Case);
+        Merge(RunCardBatch3Checks(package, Case), cards);
+        Merge(RunCardBatch4Checks(package, Case), cards);
+        var enemies = RunEnemyTurnChecks(package, Case);
+        var encounters = RunEncounterChecks(package, Case);
+        witnesses.Add("base-spire:the-abacus", scenarios.Take(5).ToArray());
         Console.WriteLine($"All {passed} pure DSL package checks passed. This is a mechanism-development scope, not full-game parity.");
         if (reportDirectory is not null)
         {
@@ -125,7 +151,13 @@ internal static class PackageChecks
             {
                 schema = "engine-dsl/package-behavior@1", package_digest = package.Digest, ruleset = package.Rules.Identity,
                 scope = package.Scope, scenarios, independent_verified = false,
-                content = new[] { new { id = "base-spire:the-abacus", passed_scenarios = scenarios.Take(5).ToArray() } },
+                content = witnesses.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                cards = cards.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                enemies = enemies.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                encounters = encounters.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                potions = potions.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                rooms = rooms.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                rewards = rewards.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
             }, new JsonSerializerOptions { WriteIndented = true }));
         }
         return 0;

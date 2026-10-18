@@ -1,0 +1,14 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development encounter pool entry. It carries the candidate identity and HP for formations that choose their
+# monsters randomly (source `enemySlots` with chooseRandomly / uniqueChoiceGroup). The entries are internal to
+# the spawn procedure and are not part of the public projection.
+entity EnemyPoolEntry {
+  owner = Owner
+  fields = {
+    DefinitionId = { type = String(length = 64) }
+    Hp = { type = Int(min = 1, max = 9999) default = 1 }
+  }
+}
+collection EnemyPool { element = EnemyPoolEntry ordered = true }

@@ -13,7 +13,21 @@ internal static class BaseDslPathChecks
     public static IEnumerable<(string Name, Action Body)> Build()
     {
         yield return ("DB-A11 pure DSL package describe/catalog/start/step/observe publishes the real effect", Trajectory);
-        yield return ("DB-A11 real stdio process runs the same package and public trajectory", StdioTrajectory);
+        yield return ("DB-A11 real stdio process runs the same package and public trajectory", () => StdioTrajectory("draw"));
+        yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
+        yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
+        yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
+        yield return ("CP08 real stdio card play spends energy and damages the target", () => StdioTrajectory("card"));
+        yield return ("CP18 real stdio Iron Wave gains block and then damages the target", () => StdioTrajectory("ironwave"));
+        yield return ("CP25 real stdio exhaust skill publishes its block and leaves no card in the discard pile", () => StdioTrajectory("exhaust"));
+        yield return ("CP34 real stdio Bash publishes its damage and the vulnerable stacks it applies", () => StdioTrajectory("bash"));
+        yield return ("CP38 real stdio power card grants strength and leaves play", () => StdioTrajectory("inflame"));
+        yield return ("CP44 real stdio all-enemies attack hits the development target", () => StdioTrajectory("thunderclap"));
+        yield return ("CP48 real stdio the last kill publishes the victory outcome", () => StdioTrajectory("kill"));
+        yield return ("RW06 real stdio claims the visible gold reward and closes it once", () => StdioTrajectory("reward-claim"));
+        yield return ("RW07 real stdio skips the visible gold reward without crediting gold", () => StdioTrajectory("reward-skip"));
+        yield return ("CP56 real stdio the HP-loss flag drives the extra Spite hit", () => StdioTrajectory("spite"));
+        yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -73,7 +87,7 @@ internal static class BaseDslPathChecks
         }
     }
 
-    private static void StdioTrajectory()
+    private static void StdioTrajectory(string mode)
     {
         var host = TextRuleScenario.CreatePackage(Manifest).Host;
         var info = new ProcessStartInfo("dotnet") { WorkingDirectory = Root(), RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true };
@@ -96,18 +110,137 @@ internal static class BaseDslPathChecks
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
             var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str("BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
-            foreach (var action in new[] { "TheAbacus.Obtain", "Draw" })
+            (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                var candidate = snapshot.LegalActions.Single(a => a.ActionType.EndsWith(":" + action, StringComparison.Ordinal));
-                Send(Request("pipe-" + action, Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
-                snapshot = Snapshot(Send(Request("pipe-observe-" + action, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                "start" => [
+                    ("Anchor.Obtain", "0", false, "0", "0", false, ""), ("FakeAnchor.Obtain", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "14", true, "0", "0", false, ""), ("EndDevelopmentCombat", "14", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "14", true, "0", "0", false, "")],
+                "turn" => [
+                    ("Lantern.Obtain", "0", false, "0", "0", false, ""), ("HornCleat.Obtain", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "4", "1", true, ""), ("EndDevelopmentTurn", "0", true, "4", "1", false, ""),
+                    ("BeginDevelopmentTurn", "14", true, "3", "2", true, "")],
+                "damage" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("MercuryHourglass.Obtain", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "37"), ("EndDevelopmentTurn", "0", true, "3", "1", false, "37"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, "34")],
+                "card" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("Strike.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "2", "1", true, "34")],
+                "ironwave" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("IronWave.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "5", true, "2", "1", true, "35")],
+                "exhaust" => [
+                    ("Impervious.AddToHand", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
+                    ("PlayCardFromHand", "30", true, "1", "1", true, "")],
+                "bash" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("Bash.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "1", "1", true, "32")],
+                "inflame" => [
+                    ("Inflame.AddToHand", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
+                    ("PlayCardFromHand", "0", true, "2", "1", true, "")],
+                "kill" or "reward-claim" or "reward-skip" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("Bludgeon.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("UpgradeCardInHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", false, "0", "1", false, "0")],
+                "spite" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("Spite.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("Bloodletting.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayCardFromHand", "0", true, "5", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "5", "1", true, "30")],
+                "wurm" => [
+                    ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "55"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "55"),
+                    ("EndDevelopmentTurn", "0", true, "3", "1", false, "55")],
+                "thunderclap" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("Thunderclap.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayCardFromHand", "0", true, "2", "1", true, "36")],
+                _ => [("TheAbacus.Obtain", "0", false, "0", "0", false, ""), ("Draw", "6", false, "0", "0", false, "")],
+            };
+            var stepNumber = 0;
+            foreach (var step in sequence)
+            {
+                var candidate = snapshot.LegalActions.Single(a => a.ActionType.EndsWith(":" + step.Action, StringComparison.Ordinal));
+                var suffix = (++stepNumber).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                Send(Request("pipe-step-" + suffix, Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
+                snapshot = Snapshot(Send(Request("pipe-observe-" + suffix, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                Check.Equal(step.Block, Public(snapshot, "Player.Block"), "real host exposes the expected block at every step");
+                Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
+                Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");
+                if (step.Target.Length > 0) Check.Equal(step.Target, Public(snapshot, "Enemy.Hp"), "public development target HP follows the real damage result");
+                var active = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.CombatActive", StringComparison.Ordinal));
+                Check.Equal(step.Active, ((WireBool)active.Value!).Value, "public lifecycle state");
+                var open = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.TurnOpen", StringComparison.Ordinal));
+                Check.Equal(step.TurnOpen, ((WireBool)open.Value!).Value, "public turn gate");
+                Check.Equal(!step.Active && Public(snapshot, "Player.Room") != "rewards", snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentCombat", StringComparison.Ordinal)), "begin candidate follows real phase and rewards");
+                Check.Equal(step.Active, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentCombat", StringComparison.Ordinal)), "end candidate follows real phase");
+                Check.Equal(step.Active && !step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentTurn", StringComparison.Ordinal)), "turn candidate follows the real turn gate");
+                Check.Equal(step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentTurn", StringComparison.Ordinal)), "end turn candidate follows the real turn gate");
             }
-            var block = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.Block", StringComparison.Ordinal));
-            Check.Equal("6", ((WireString)block.Value!).Value, "real host exposes actual DSL block");
+            if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");
+            if (mode is "kill" or "reward-claim" or "reward-skip") Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "the public combat outcome follows the last kill");
+            if (mode is "reward-claim" or "reward-skip")
+            {
+                bool Has(string action) => snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:" + action);
+                void StepReward(string action)
+                {
+                    var candidate = snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + action);
+                    Send(Request("pipe-reward-" + action, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
+                    snapshot = Snapshot(Send(Request("pipe-reward-observe-" + action, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                }
+                var amount = long.Parse(Public(snapshot, "Player.GoldRewardAmount"), System.Globalization.CultureInfo.InvariantCulture);
+                Check.True(amount is >= 10 and <= 20, "public reward amount is in the source range");
+                Check.Equal("99", Public(snapshot, "Player.Gold"), "offering has not granted gold");
+                Check.Equal("rewards", Public(snapshot, "Player.Room"), "the reward screen is open");
+                Check.True(PublicBool(snapshot, "Player.GoldRewardPending"), "the pending entry is public");
+                Check.True(Has("ClaimDevelopmentGoldReward") && Has("CloseDevelopmentRewards"), "claim and skip are real public candidates");
+                Check.False(Has("BeginDevelopmentCombat") || Has("EnterDevelopmentRestSite") || Has("LeaveDevelopmentRoom"), "room transitions cannot bypass rewards");
+                if (mode == "reward-claim")
+                {
+                    StepReward("ClaimDevelopmentGoldReward");
+                    Check.False(Has("ClaimDevelopmentGoldReward"), "claim cannot be repeated");
+                    Check.Equal("rewards", Public(snapshot, "Player.Room"), "claiming keeps the screen open");
+                }
+                StepReward("CloseDevelopmentRewards");
+                Check.Equal((mode == "reward-claim" ? 99 + amount : 99).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "gold reflects claim or skip");
+                Check.Equal("0", Public(snapshot, "Player.GoldRewardAmount"), "the saved amount is cleared");
+                Check.False(PublicBool(snapshot, "Player.GoldRewardPending"), "the entry is cleared");
+                Check.Equal("none", Public(snapshot, "Player.Room"), "explicit close leaves rewards");
+                Check.False(Has("ClaimDevelopmentGoldReward") || Has("CloseDevelopmentRewards"), "no stale reward candidates");
+                Check.True(Has("BeginDevelopmentCombat") && Has("EnterDevelopmentRestSite"), "next rooms become available");
+            }
+            if (mode == "spite") Check.True(PublicBool(snapshot, "Player.LostHpThisTurn"), "the per-turn HP-loss flag is public");
+            if (mode == "wurm") { Check.Equal("76", Public(snapshot, "Player.Hp"), "the enemy attack reached the public player HP"); Check.Equal("buff", Public(snapshot, "Enemy.Intent"), "the next intent is public"); }
             process.StandardInput.Close(); Check.True(process.WaitForExit(10000), "host exits after EOF"); Check.Equal(0, process.ExitCode, "host exit");
         }
         finally { if (!process.HasExited) process.Kill(true); }
     }
+
+    private static bool PublicBool(PublicSnapshotDto snapshot, string field) =>
+        ((WireBool)snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":" + field, StringComparison.Ordinal)).Value!).Value;
+
+    private static string Public(PublicSnapshotDto snapshot, string field) =>
+        ((WireString)snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":" + field, StringComparison.Ordinal)).Value!).Value;
 
     private static void UnknownMetadata()
     {

@@ -1,0 +1,115 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Potion content definition: identity plus a development Obtain action that puts the potion into the shared
+# three-slot inventory. Vanilla potion drops come from rewards, shops and events, which are not migrated.
+template PotionDefinition {
+  parameters = { definition = { type = String(length = 64) } }
+  body = {
+    action Obtain {
+      role = player
+      locals = { potion = Binding }
+      body = {
+        create = { type = Potion scope = frameScope() into = potion collection = Potions fields = { DefinitionId = arg(definition) } }
+      }
+    }
+  }
+}
+
+# Potion effects. They all subscribe to the potion events and filter on the potion definition, so a content file
+# combines one definition with the effects it needs.
+template PotionBlockEffect {
+  parameters = { definition = { type = String(length = 64) } block = { type = Int(min = 0, max = 999) } }
+  body = {
+    procedure WhenUsed {
+      parameters = { owner = Ref(Player) potion = Ref(Potion) }
+      body = {
+        if = {
+          condition = equal(field(potion, Potion.DefinitionId), arg(definition))
+          then = { call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(block) } } }
+        }
+      }
+    }
+    subscription OnPotionUsed { event = PotionUsed reaction = WhenUsed }
+  }
+}
+template PotionEnergyEffect {
+  parameters = { definition = { type = String(length = 64) } energy = { type = Int(min = 0, max = 9) } }
+  body = {
+    procedure WhenUsed {
+      parameters = { owner = Ref(Player) potion = Ref(Potion) }
+      body = {
+        if = {
+          condition = equal(field(potion, Potion.DefinitionId), arg(definition))
+          then = { call = { procedure = GainEnergy args = { owner = owner amount = arg(energy) } } }
+        }
+      }
+    }
+    subscription OnPotionUsed { event = PotionUsed reaction = WhenUsed }
+  }
+}
+template PotionDrawEffect {
+  parameters = { definition = { type = String(length = 64) } cards = { type = Int(min = 0, max = 9) } }
+  body = {
+    procedure WhenUsed {
+      parameters = { owner = Ref(Player) potion = Ref(Potion) }
+      body = {
+        if = {
+          condition = equal(field(potion, Potion.DefinitionId), arg(definition))
+          then = { call = { procedure = DrawCards args = { owner = owner count = arg(cards) } } }
+        }
+      }
+    }
+    subscription OnPotionUsed { event = PotionUsed reaction = WhenUsed }
+  }
+}
+# FruitJuice.cs uses CreatureCmd.GainMaxHp, which raises max HP and then heals the same amount.
+template PotionMaxHpEffect {
+  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 1, max = 999) } }
+  body = {
+    procedure WhenUsed {
+      parameters = { owner = Ref(Player) potion = Ref(Potion) }
+      body = {
+        if = {
+          condition = equal(field(potion, Potion.DefinitionId), arg(definition))
+          then = {
+            set = { target = owner field = Player.MaxHp value = add(field(owner, Player.MaxHp), arg(amount)) }
+            call = { procedure = Heal args = { owner = owner amount = arg(amount) } }
+          }
+        }
+      }
+    }
+    subscription OnPotionUsed { event = PotionUsed reaction = WhenUsed }
+  }
+}
+template PotionHealPercentEffect {
+  parameters = { definition = { type = String(length = 64) } percent = { type = Int(min = 1, max = 100) } }
+  body = {
+    procedure WhenUsed {
+      parameters = { owner = Ref(Player) potion = Ref(Potion) }
+      body = {
+        if = {
+          condition = equal(field(potion, Potion.DefinitionId), arg(definition))
+          then = { call = { procedure = Heal args = { owner = owner amount = divide(multiply(field(owner, Player.MaxHp), arg(percent)), 100) } } }
+        }
+      }
+    }
+    subscription OnPotionUsed { event = PotionUsed reaction = WhenUsed }
+  }
+}
+# FirePotion.cs deals unpowered damage, so Strength and Vulnerable do not apply.
+template PotionDamageEffect {
+  parameters = { definition = { type = String(length = 64) } damage = { type = Int(min = 0, max = 999) } }
+  body = {
+    procedure WhenUsedOnTarget {
+      parameters = { owner = Ref(Player) potion = Ref(Potion) target = Ref(Enemy) }
+      body = {
+        if = {
+          condition = equal(field(potion, Potion.DefinitionId), arg(definition))
+          then = { call = { procedure = DamageEnemy args = { target = target amount = arg(damage) } } }
+        }
+      }
+    }
+    subscription OnPotionUsedOnTarget { event = PotionUsedOnTarget reaction = WhenUsedOnTarget }
+  }
+}

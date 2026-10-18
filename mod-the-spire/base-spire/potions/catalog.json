@@ -57,9 +57,9 @@
       "pools": [
         "SharedPotionPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Potions/BlockPotion.cs; Common combat-only potion reviewed in DSL-POTION-01: BlockVar(12, Unpowered)",
+      "definition": "potions/shared/block-potion.spire"
     },
     {
       "id": "base-spire:blood-potion",
@@ -67,9 +67,9 @@
       "source_path": "sts2/src/Core/Models/Potions/BloodPotion.cs",
       "source_sha256": "14e162c222286871396d85d6393ae371a1681d9021c1be51f3571341f80fa951",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Potions/BloodPotion.cs; Common any-time potion reviewed in DSL-POTION-01: heals HealPercent 20 of max HP",
+      "definition": "potions/shared/blood-potion.spire"
     },
     {
       "id": "base-spire:bone-brew",
@@ -217,9 +217,9 @@
       "pools": [
         "SharedPotionPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Potions/EnergyPotion.cs; Common combat-only potion reviewed in DSL-POTION-01: EnergyVar(2)",
+      "definition": "potions/shared/energy-potion.spire"
     },
     {
       "id": "base-spire:entropic-brew",
@@ -275,9 +275,9 @@
       "pools": [
         "SharedPotionPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Potions/FirePotion.cs; Common combat-only potion reviewed in DSL-POTION-01: DamageVar(20, Unpowered) against one enemy",
+      "definition": "potions/shared/fire-potion.spire"
     },
     {
       "id": "base-spire:flex-potion",
@@ -333,9 +333,9 @@
       "pools": [
         "SharedPotionPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Potions/FruitJuice.cs; Rare any-time potion reviewed in DSL-POTION-01: MaxHpVar(5) through GainMaxHp",
+      "definition": "potions/shared/fruit-juice.spire"
     },
     {
       "id": "base-spire:fysh-oil",
@@ -701,9 +701,9 @@
       "pools": [
         "SharedPotionPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Potions/SwiftPotion.cs; Common combat-only potion reviewed in DSL-POTION-01: CardsVar(3) drawn",
+      "definition": "potions/shared/swift-potion.spire"
     },
     {
       "id": "base-spire:touch-of-insanity",

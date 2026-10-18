@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Shockwave.cs: cost 2, CardKeyword.Exhaust, applies the "Power" var (3) as WeakPower and
+# VulnerablePower to every enemy; OnUpgrade raises the power var by 2 so both debuffs become 5.
+use Shockwave {
+  template = CardDefinition
+  args = { definition = "base-spire:shockwave" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
+}
+use ShockwaveWeak {
+  template = ApplyAllEnemiesPowerEffect
+  args = { definition = "base-spire:shockwave" power = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 3 upgradedStacks = 5 }
+}
+use ShockwaveVulnerable {
+  template = ApplyAllEnemiesPowerEffect
+  args = { definition = "base-spire:shockwave" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 upgradedStacks = 5 }
+}

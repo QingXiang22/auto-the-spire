@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: ShrugItOff.cs: cost 1, BlockVar(8, Move) plus CardsVar(1); OnUpgrade adds 3 block only.
+use ShrugItOff {
+  template = CardDefinition
+  args = { definition = "base-spire:shrug-it-off" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+}
+use ShrugItOffBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:shrug-it-off" block = 8 upgradedBlock = 11 }
+}
+use ShrugItOffDraw {
+  template = DrawEffect
+  args = { definition = "base-spire:shrug-it-off" cards = 1 upgradedCards = 1 }
+}

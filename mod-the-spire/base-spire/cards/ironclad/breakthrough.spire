@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Breakthrough.cs: cost 1, HpLossVar(1) as unblockable unpowered damage then DamageVar(9, Move) to all
+# enemies; OnUpgrade adds 4 damage. The HP loss is declared first so it happens before the attack.
+use Breakthrough {
+  template = CardDefinition
+  args = { definition = "base-spire:breakthrough" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+}
+use BreakthroughLoseHp {
+  template = LoseHpEffect
+  args = { definition = "base-spire:breakthrough" hp = 1 upgradedHp = 1 }
+}
+use BreakthroughDamage {
+  template = AttackAllEnemiesEffect
+  args = { definition = "base-spire:breakthrough" damage = 9 upgradedDamage = 13 hits = 1 upgradedHits = 1 }
+}

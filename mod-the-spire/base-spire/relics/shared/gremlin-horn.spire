@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: GremlinHorn.cs; Uncommon relic, EnergyVar(1) and CardsVar(1) when a monster dies.
+use GremlinHorn {
+  template = EnemyDiedEnergyDrawRelic
+  args = { definition = "base-spire:gremlin-horn" energy = 1 cards = 1 }
+}

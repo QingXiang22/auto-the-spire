@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Anchor.cs CanonicalVars and BeforeCombatStart: 10 unpowered block.
+use Anchor {
+  template = BeforeCombatStartBlockRelic
+  args = { definition = "base-spire:anchor" amount = 10 }
+}

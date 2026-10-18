@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: MoltenFist.cs: cost 1, CardKeyword.Exhaust, DamageVar(10, Move) then Vulnerable applied equal to
+# the target's current Vulnerable stacks (doubling it); OnUpgrade adds 4 damage.
+use MoltenFist {
+  template = CardDefinition
+  args = { definition = "base-spire:molten-fist" cost = 1 upgradedCost = 1 targeted = true exhausts = true leavesPlay = false }
+}
+use MoltenFistDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:molten-fist" damage = 10 upgradedDamage = 14 hits = 1 }
+}
+use MoltenFistAmplify {
+  template = AmplifyVulnerableEffect
+  args = { definition = "base-spire:molten-fist" }
+}

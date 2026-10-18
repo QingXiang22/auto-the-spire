@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BodySlam.cs: cost 1 and OnUpgrade lowers the cost by 1; damage equals the player's block.
+use BodySlam {
+  template = CardDefinition
+  args = { definition = "base-spire:body-slam" cost = 1 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
+}
+use BodySlamDamage {
+  template = DamageEqualBlockEffect
+  args = { definition = "base-spire:body-slam" }
+}

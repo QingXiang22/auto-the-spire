@@ -1,0 +1,18 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# CreatureCmd.Heal: heal and clamp to MaxHp. Revive, healing modifiers and death are not migrated.
+procedure Heal {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  body = {
+    set = { target = owner field = Player.Hp value = minimum(field(owner, Player.MaxHp), add(field(owner, Player.Hp), amount)) }
+  }
+}
+
+# PlayerCmd.GainEnergy: add energy without clamping to MaxEnergy.
+procedure GainEnergy {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  body = {
+    set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), amount)) }
+  }
+}

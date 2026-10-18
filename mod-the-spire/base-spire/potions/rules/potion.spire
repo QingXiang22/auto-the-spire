@@ -1,0 +1,55 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development potion use: the potion must be in the inventory, the effect listeners run while it is still
+# there, and it is then removed and destroyed. Vanilla additionally checks potion usage windows (combat only /
+# any time) and targets; those checks are not migrated, except that a targeted potion needs a hittable enemy.
+procedure UsePotionCommon {
+  parameters = { owner = Ref(Player) potion = Ref(Potion) }
+  body = {
+    if = {
+      condition = less(collectionIndex(Potions, potion), 0)
+      then = { fail = { message = "Potion is not in the inventory" } }
+    }
+  }
+}
+procedure ConsumePotion {
+  parameters = { potion = Ref(Potion) }
+  body = {
+    removeFromCollection = { collection = Potions item = potion }
+    destroy = { target = potion }
+  }
+}
+procedure UsePotion {
+  parameters = { owner = Ref(Player) potion = Ref(Potion) }
+  body = {
+    call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
+    emit = { event = PotionUsed payload = { owner = owner potion = potion } }
+    call = { procedure = ConsumePotion args = { potion = potion } }
+  }
+}
+procedure UsePotionOnTarget {
+  parameters = { owner = Ref(Player) potion = Ref(Potion) }
+  body = {
+    call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
+    emit = {
+      event = PotionUsedOnTarget
+      payload = { owner = owner potion = potion target = first(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))) }
+    }
+    call = { procedure = ConsumePotion args = { potion = potion } }
+  }
+}
+
+action UsePotion {
+  role = player
+  parameters = { potion = Ref(Potion) }
+  candidates = { parameter = potion query = collection(Potions) }
+  body = { call = { procedure = UsePotion args = { owner = first(type(Player)) potion = potion } } }
+}
+action UsePotionOnTarget {
+  role = player
+  parameters = { potion = Ref(Potion) }
+  candidates = { parameter = potion query = collection(Potions) }
+  requires = exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)))
+  body = { call = { procedure = UsePotionOnTarget args = { owner = first(type(Player)) potion = potion } } }
+}

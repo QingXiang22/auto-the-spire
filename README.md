@@ -21,7 +21,7 @@ dotnet run --project tools/base-spire-dev -- check
 dotnet run --project net-the-spire/Net.TheSpire.Tests
 ```
 
-当前包仅支持 `base-spire-dsl-relic-draw-dev-v1`：开发牌堆的抽取、实际重洗、遗物获得／移除与 TheAbacus 的 6 点无加成格挡。它使用 Engine 默认随机 profile，不宣称原版随机布局、卡牌效果或正常 Ironclad 开局。旧场景与 scope 明确返回 `unsupported_capability`。
+当前包仅支持 `base-spire-dsl-relic-draw-dev-v1`（该 scope 名是首批遗留名，实际能力见下）：开发牌堆的抽取、实际重洗、遗物获得／移除、TheAbacus 的 6 点重洗后无加成格挡、Anchor／FakeAnchor 的战斗开始 10／4 格挡、显式开发态战斗与回合（生命、能量、回合计数、格挡清理、敌方阶段与 debuff 减层、胜利／失败判定）、伤害与格挡吸收、绕过格挡的失去生命、开发态出牌（费用、Hand→InPlay→弃牌堆／消耗堆／离场、值升级与可组合效果），以及 Strength／Vulnerable／Dexterity／Frail／Thorns 修正与反击参与者（Weak 只记录层数）。已迁移内容 17 件遗物、30 张牌（Ironclad 28 张＋无色 Shockwave）、9 只敌人、6 瓶药水、营火休息房与战斗金币奖励（FuzzyWurmCrawler、Twig Slime S、Assassin／Axe／Brute／Crossbow／Tracker Ruby Raider、Bowlbug Egg、Stabbot）；开发伤害目标由显式动作创建。它使用 Engine 默认随机 profile，不宣称原版随机布局、原版目标选择、原版怪物或正常 Ironclad 开局。旧场景与 scope 明确返回 `unsupported_capability`。
 
 构建无需本地 `sts2/` 源码；原版源码核对仍需同版本本地源码。当前 [CI 入口](tools/ci/README.md) 分别验证 core、纯 DSL base、net 与迁移边界。原完整对拍未迁移，执行仍非零；迁移检查通过不代表独立对拍通过。
 

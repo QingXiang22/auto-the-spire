@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: EnergyPotion.cs; Common combat-only potion, EnergyVar(2).
+use EnergyPotion {
+  template = PotionDefinition
+  args = { definition = "base-spire:energy-potion" }
+}
+use EnergyPotionEffect {
+  template = PotionEnergyEffect
+  args = { definition = "base-spire:energy-potion" energy = 2 }
+}

@@ -5,7 +5,72 @@ entity Player {
   owner = Owner
   fields = {
     Owner = { type = Participant default = participant(1) }
+    # Development baseline: Ironclad's StartingHp in sts2/src/Core/Models/Characters/Ironclad.cs.
+    Hp = { type = Int(min = 0, max = 999999) default = 80 }
+    MaxHp = { type = Int(min = 0, max = 999999) default = 80 }
+    Energy = { type = Int(min = 0, max = 999) default = 0 }
+    MaxEnergy = { type = Int(min = 0, max = 999) default = 3 }
+    TurnNumber = { type = Int(min = 0, max = 999) default = 0 }
+    # Development turn gate. Vanilla tracks PlayerTurnPhase instead; that lifecycle is not migrated.
+    TurnOpen = { type = Bool default = false }
     Block = { type = Int(min = 0, max = 999) default = 0 }
     DrawBlocked = { type = Bool default = false }
+    CombatActive = { type = Bool default = false }
+    # Development combat outcome: none while it runs, then victory or defeat. Run settlement, rewards and
+    # the true engine terminal are not migrated.
+    CombatOutcome = { type = String(length = 16) default = "none" }
+    # Development stand-ins for the source's per-turn combat history (Spite, EvilEye). Both reset at turn start.
+    LostHpThisTurn = { type = Bool default = false }
+    ExhaustedCardThisTurn = { type = Bool default = false }
+    # Development room state: "none" outside a room, or the room kind while the room is being visited.
+    Room = { type = String(length = 16) default = "none" }
+    # One-shot room options (campfire rest) set this until the room is left.
+    RoomUsed = { type = Bool default = false }
+    # Set while a campfire forge is waiting for the card choice.
+    PendingForge = { type = Bool default = false }
+    # Run currency. Ironclad StartingGold is 99 in sts2/src/Core/Models/Characters/Ironclad.cs.
+    Gold = { type = Int(min = 0, max = 99999) default = 99 }
+    # The development reward screen stores its roll until explicitly claimed or closed.
+    GoldRewardPending = { type = Bool default = false }
+    GoldRewardAmount = { type = Int(min = 0, max = 99999) default = 0 }
   }
 }
+
+# Development damage target. Vanilla monster behaviour, intents and encounters are migrated only as far as the
+# enemy content templates implement them; instances are created by explicit development actions.
+entity Enemy {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    DefinitionId = { type = String(length = 64) }
+    Hp = { type = Int(min = 0, max = 999999) default = 0 }
+    MaxHp = { type = Int(min = 0, max = 999999) default = 0 }
+    Block = { type = Int(min = 0, max = 999) default = 0 }
+    # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
+    MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
+    # Public development intent name ("none", "attack", "buff", ...); no intent damage value is published.
+    Intent = { type = String(length = 32) default = "none" }
+  }
+}
+
+# Development power instance. Vanilla powers attach to a Creature; this scope keeps either a player or an
+# enemy holder, so the two holder references are optional and exactly one is set. Duration/tick-down,
+# power types, negative-stack rules beyond the field range and power reactions are not migrated.
+entity Power {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    DefinitionId = { type = String(length = 64) }
+    # Modifier role the rules query by, set by the content template: damage-additive, damage-taken-multiplier,
+    # damage-dealt-multiplier, block-additive or none. It keeps the modifier chain free of per-power IDs.
+    Kind = { type = String(length = 32) default = "none" }
+    HolderPlayer = { type = Ref(Player) optional = true }
+    HolderEnemy = { type = Ref(Enemy) optional = true }
+    Stacks = { type = Int(min = -999, max = 999) default = 0 }
+    # Source PowerCmd.Apply grace: a debuff applied to the player skips its first duration tick.
+    SkipTick = { type = Bool default = false }
+    # Powers whose lifetime is the current player turn (FlameBarrierPower) are removed at its end.
+    ExpiresAtTurnEnd = { type = Bool default = false }
+  }
+}
+collection Powers { element = Power ordered = true }

@@ -8,3 +8,28 @@ procedure GainUnpoweredBlock {
     set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), amount)) }
   }
 }
+
+# CreatureCmd.GainBlock with ValueProp.Move: card and power block that modifier participants apply to.
+# DexterityPower is the additive participant and FrailPower the x0.75 multiplier; the source gates both on
+# powered card block, so relic and power block outside cards stay on GainUnpoweredBlock. The multiplier is
+# applied to the additive total with integer floor.
+procedure GainBlock {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  locals = { dexterity = Int frail = Int total = Int }
+  body = {
+    let = {
+      into = dexterity
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "block-additive"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
+    }
+    let = {
+      into = frail
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "block-dealt-multiplier"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
+    }
+    let = { into = total value = maximum(0, add(amount, dexterity)) }
+    if = {
+      condition = greater(frail, 0)
+      then = { let = { into = total value = divide(multiply(total, 3), 4) } }
+    }
+    set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), total)) }
+  }
+}

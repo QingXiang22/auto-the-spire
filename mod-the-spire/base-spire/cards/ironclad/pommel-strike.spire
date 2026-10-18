@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: PommelStrike.cs: cost 1, DamageVar(9, Move) plus CardsVar(1); OnUpgrade adds 1 damage and 1 card.
+use PommelStrike {
+  template = CardDefinition
+  args = { definition = "base-spire:pommel-strike" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use PommelStrikeDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:pommel-strike" damage = 9 upgradedDamage = 10 hits = 1 }
+}
+use PommelStrikeDraw {
+  template = DrawEffect
+  args = { definition = "base-spire:pommel-strike" cards = 1 upgradedCards = 2 }
+}

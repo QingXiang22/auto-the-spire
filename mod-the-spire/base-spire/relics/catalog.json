@@ -49,7 +49,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "sts2/src/Core/Models/Relics/Anchor.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "definition": "relics/shared/anchor.spire"
     },
     {
       "id": "base-spire:arcane-scroll",
@@ -108,8 +108,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/BagOfMarbles.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/BagOfMarbles.cs; Common relic reviewed in DSL-RELIC-BATCH-05: PowerVar<VulnerablePower>(1) applied to every hittable enemy when a combat begins",
+      "definition": "relics/shared/bag-of-marbles.spire"
     },
     {
       "id": "base-spire:bag-of-preparation",
@@ -277,7 +277,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "sts2/src/Core/Models/Relics/BloodVial.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "definition": "relics/shared/blood-vial.spire"
     },
     {
       "id": "base-spire:bone-flute",
@@ -420,8 +420,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/BronzeScales.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/BronzeScales.cs; Common relic granting ThornsPower 3 when a combat starts, reviewed in DSL-THORNS-01",
+      "definition": "relics/shared/bronze-scales.spire"
     },
     {
       "id": "base-spire:burning-blood",
@@ -925,7 +925,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "sts2/src/Core/Models/Relics/FakeAnchor.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "definition": "relics/shared/fake-anchor.spire"
     },
     {
       "id": "base-spire:fake-blood-vial",
@@ -1308,8 +1308,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local enemy-death hook in sts2/src/Core/Models/Relics/GremlinHorn.cs; energy and card draw declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/GremlinHorn.cs; Uncommon relic reviewed in DSL-RELIC-BATCH-05: EnergyVar(1) plus CardsVar(1) whenever a monster dies",
+      "definition": "relics/shared/gremlin-horn.spire"
     },
     {
       "id": "base-spire:hand-drill",
@@ -1333,7 +1333,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/HappyFlower.cs; full gameplay effects declared and exercised by RelicContentChecks.",
-      "definition": null
+      "definition": "relics/shared/happy-flower.spire"
     },
     {
       "id": "base-spire:hefty-tablet",
@@ -1381,7 +1381,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "sts2/src/Core/Models/Relics/HornCleat.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "definition": "relics/shared/horn-cleat.spire"
     },
     {
       "id": "base-spire:ice-cream",
@@ -1549,7 +1549,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "sts2/src/Core/Models/Relics/Lantern.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "definition": "relics/shared/lantern.spire"
     },
     {
       "id": "base-spire:large-capsule",
@@ -1801,8 +1801,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/MeatOnTheBone.cs; full gameplay effects declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/MeatOnTheBone.cs; Rare relic reviewed in DSL-RELIC-BATCH-06: HealVar(12) when the combat ends with HP at or below 50 percent of max HP",
+      "definition": "relics/shared/meat-on-the-bone.spire"
     },
     {
       "id": "base-spire:membership-card",
@@ -1826,7 +1826,7 @@
       ],
       "eligibility": "singleplayer",
       "evidence": "Source owner-local player-turn-start hook in sts2/src/Core/Models/Relics/MercuryHourglass.cs; unpowered damage to all hittable enemies declared and exercised by RelicContentChecks.",
-      "definition": null
+      "definition": "relics/shared/mercury-hourglass.spire"
     },
     {
       "id": "base-spire:metronome",
@@ -2041,8 +2041,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/OddlySmoothStone.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/OddlySmoothStone.cs; Common relic reviewed in DSL-RELIC-BATCH-05: PowerVar<DexterityPower>(1) applied to the owner when a combat begins",
+      "definition": "relics/shared/oddly-smooth-stone.spire"
     },
     {
       "id": "base-spire:old-coin",
@@ -2077,8 +2077,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local very-early/end-of-turn hooks in sts2/src/Core/Models/Relics/Orichalcum.cs; block-only-when-empty rule declared at the earlier relic turn-end site and exercised by RelicContentChecks (ordering note retained).",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Orichalcum.cs; Uncommon relic reviewed in DSL-RELIC-BATCH-06: BlockVar(6, Unpowered) at end of turn when the owner has no block",
+      "definition": "relics/shared/orichalcum.spire"
     },
     {
       "id": "base-spire:ornamental-fan",
@@ -2305,8 +2305,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local turn-start hook in sts2/src/Core/Models/Relics/Pendulum.cs; persistent three-turn counter and shared draw declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Pendulum.cs; Common relic reviewed in DSL-RELIC-BATCH-06: CardsVar(1) every Turns 3 owner turn starts",
+      "definition": "relics/shared/pendulum.spire"
     },
     {
       "id": "base-spire:pen-nib",
@@ -3039,8 +3039,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Strawberry.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Strawberry.cs; Common relic reviewed in DSL-RELIC-BATCH-06: MaxHpVar(7) raised on pickup and the same amount healed",
+      "definition": "relics/shared/strawberry.spire"
     },
     {
       "id": "base-spire:strike-dummy",
@@ -3363,8 +3363,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Vajra.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Vajra.cs; Common relic reviewed in DSL-RELIC-BATCH-05: PowerVar<StrengthPower>(1) applied to the owner when a combat begins",
+      "definition": "relics/shared/vajra.spire"
     },
     {
       "id": "base-spire:vambrace",

@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: IronWave.cs: cost 1, BlockVar(5, Move) then DamageVar(5, Move) in OnPlay; OnUpgrade adds 2 to both.
+use IronWave {
+  template = CardDefinition
+  args = { definition = "base-spire:iron-wave" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use IronWaveBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:iron-wave" block = 5 upgradedBlock = 7 }
+}
+use IronWaveDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:iron-wave" damage = 5 upgradedDamage = 7 hits = 1 }
+}

@@ -1,0 +1,104 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development rest site (campfire). HealRestSiteOption.cs heals floor(MaxHp * 0.3) and SmithRestSiteOption
+# upgrades one card; the room offers a single option per visit. This scope exposes the forge as two steps
+# (choose the option, then the card) because the DSL has no card-choice decision here. Entering a room replaces
+# the previous one and leaving resets the kind so a stale room cannot be used later.
+procedure EnterDevelopmentRestSite {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = equal(field(owner, Player.Room), "rewards")
+      then = { fail = { message = "Close development rewards before entering a rest site" } }
+    }
+    set = { target = owner field = Player.Room value = "rest-site" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    set = { target = owner field = Player.PendingForge value = false }
+  }
+}
+procedure RestAtDevelopmentCampfire {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(equal(field(owner, Player.Room), "rest-site"))
+      then = { fail = { message = "The player is not at a rest site" } }
+    }
+    if = {
+      condition = field(owner, Player.RoomUsed)
+      then = { fail = { message = "The rest site option was already used" } }
+    }
+    call = { procedure = Heal args = { owner = owner amount = divide(multiply(field(owner, Player.MaxHp), 30), 100) } }
+    set = { target = owner field = Player.RoomUsed value = true }
+  }
+}
+procedure ForgeAtDevelopmentCampfire {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(equal(field(owner, Player.Room), "rest-site"))
+      then = { fail = { message = "The player is not at a rest site" } }
+    }
+    if = {
+      condition = field(owner, Player.RoomUsed)
+      then = { fail = { message = "The rest site option was already used" } }
+    }
+    set = { target = owner field = Player.RoomUsed value = true }
+    set = { target = owner field = Player.PendingForge value = true }
+  }
+}
+procedure ForgeCardInHand {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = {
+      condition = not(field(owner, Player.PendingForge))
+      then = { fail = { message = "No campfire forge is pending" } }
+    }
+    if = {
+      condition = less(collectionIndex(Hand, card), 0)
+      then = { fail = { message = "Card is not in hand" } }
+    }
+    call = { procedure = UpgradeCard args = { card = card } }
+    set = { target = owner field = Player.PendingForge value = false }
+  }
+}
+procedure LeaveDevelopmentRoom {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = equal(field(owner, Player.Room), "rewards")
+      then = { fail = { message = "Use CloseDevelopmentRewards to leave rewards" } }
+    }
+    set = { target = owner field = Player.Room value = "none" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    set = { target = owner field = Player.PendingForge value = false }
+  }
+}
+
+action EnterDevelopmentRestSite {
+  role = player
+  requires = not(equal(field(first(type(Player)), Player.Room), "rewards"))
+  body = { call = { procedure = EnterDevelopmentRestSite args = { owner = first(type(Player)) } } }
+}
+action RestAtDevelopmentCampfire {
+  role = player
+  requires = and(equal(field(first(type(Player)), Player.Room), "rest-site"), not(field(first(type(Player)), Player.RoomUsed)))
+  body = { call = { procedure = RestAtDevelopmentCampfire args = { owner = first(type(Player)) } } }
+}
+action ForgeAtDevelopmentCampfire {
+  role = player
+  requires = and(equal(field(first(type(Player)), Player.Room), "rest-site"), not(field(first(type(Player)), Player.RoomUsed)))
+  body = { call = { procedure = ForgeAtDevelopmentCampfire args = { owner = first(type(Player)) } } }
+}
+action ForgeCardInHand {
+  role = player
+  parameters = { card = Ref(Card) }
+  candidates = { parameter = card query = where(collection(Hand), candidate, not(field(candidate, Card.Upgraded))) }
+  requires = field(first(type(Player)), Player.PendingForge)
+  body = { call = { procedure = ForgeCardInHand args = { owner = first(type(Player)) card = card } } }
+}
+action LeaveDevelopmentRoom {
+  role = player
+  requires = not(equal(field(first(type(Player)), Player.Room), "rewards"))
+  body = { call = { procedure = LeaveDevelopmentRoom args = { owner = first(type(Player)) } } }
+}

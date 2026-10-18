@@ -4,7 +4,7 @@
 
 这份手册面向维护原版内容与共享玩法的开发者。先通过两篇教程学会使用 DSL 模板和编写共享规则，再按领域指南开发。你不需要先通读旧组包器、Host 或全部恢复源码。
 
-适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有遗物抽牌开发场景可执行；普通卡牌、Power、药水、敌人、正常开局和 Run 仍待迁移。各领域指南覆盖这些内容的开发方法，不能据此认定它们已可玩。实际能力读取 manifest，任务认领与剩余范围只看[主清单](../../review/tofix/README.md#当前交付)。
+适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有遗物实例、开发牌堆、开发态战斗／回合资源（含敌方阶段、debuff 减层与胜利／失败判定）、伤害与绕过格挡的失去生命、开发态出牌（含消耗堆与 Power 牌离场）与 Strength／Vulnerable／Dexterity 修正场景可执行（17 件遗物、30 张牌、9 只敌人与 6 瓶药水有正式定义与行为见证，效果模板可组合，开发伤害目标由显式动作创建）；原版目标选择、卡牌获得途径、原版敌方 AI／遭遇编队、药水、其余原版怪物、正常开局和 Run 仍待迁移。各领域指南覆盖这些内容的开发方法，不能据此认定它们已可玩。实际能力读取 manifest，任务认领与剩余范围只看[主清单](../../review/tofix/README.md#当前交付)。
 
 ## 从教程开始
 

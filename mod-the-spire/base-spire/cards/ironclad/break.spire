@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Break.cs: cost 1, DamageVar(20, Move) then VulnerablePower 5 on the target; OnUpgrade adds
+# 10 damage and 2 Vulnerable.
+use Break {
+  template = CardDefinition
+  args = { definition = "base-spire:break" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use BreakDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:break" damage = 20 upgradedDamage = 30 hits = 1 }
+}
+use BreakVulnerable {
+  template = ApplyEnemyPowerEffect
+  args = { definition = "base-spire:break" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 5 upgradedStacks = 7 }
+}

@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.5.0-dsl.1",
+  "static_build_id": "base-spire-dsl-0.5.0-dsl.25",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -9,7 +9,96 @@
     "base-spire:Relic": {
       "field_name": "DefinitionId",
       "content_ids": [
-        "base-spire:the-abacus"
+        "base-spire:the-abacus",
+        "base-spire:anchor",
+        "base-spire:fake-anchor",
+        "base-spire:lantern",
+        "base-spire:blood-vial",
+        "base-spire:horn-cleat",
+        "base-spire:happy-flower",
+        "base-spire:mercury-hourglass",
+        "base-spire:bronze-scales",
+        "base-spire:vajra",
+        "base-spire:oddly-smooth-stone",
+        "base-spire:bag-of-marbles",
+        "base-spire:gremlin-horn",
+        "base-spire:orichalcum",
+        "base-spire:pendulum",
+        "base-spire:strawberry",
+        "base-spire:meat-on-the-bone"
+      ]
+    },
+    "base-spire:Enemy": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:development-target",
+        "base-spire:fuzzy-wurm-crawler",
+        "base-spire:twig-slime-s",
+        "base-spire:assassin-ruby-raider",
+        "base-spire:bowlbug-egg",
+        "base-spire:brute-ruby-raider",
+        "base-spire:stabbot",
+        "base-spire:axe-ruby-raider",
+        "base-spire:crossbow-ruby-raider",
+        "base-spire:tracker-ruby-raider"
+      ]
+    },
+    "base-spire:Card": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:development-card",
+        "base-spire:strike-ironclad",
+        "base-spire:defend-ironclad",
+        "base-spire:twin-strike",
+        "base-spire:pommel-strike",
+        "base-spire:shrug-it-off",
+        "base-spire:iron-wave",
+        "base-spire:anger",
+        "base-spire:body-slam",
+        "base-spire:impervious",
+        "base-spire:offering",
+        "base-spire:bloodletting",
+        "base-spire:bludgeon",
+        "base-spire:bash",
+        "base-spire:uppercut",
+        "base-spire:shockwave",
+        "base-spire:inflame",
+        "base-spire:taunt",
+        "base-spire:tremble",
+        "base-spire:thunderclap",
+        "base-spire:blood-wall",
+        "base-spire:spite",
+        "base-spire:evil-eye",
+        "base-spire:break",
+        "base-spire:howl-from-beyond",
+        "base-spire:hemokinesis",
+        "base-spire:breakthrough",
+        "base-spire:conflagration",
+        "base-spire:dismantle",
+        "base-spire:molten-fist",
+        "base-spire:flame-barrier"
+      ]
+    },
+    "base-spire:Potion": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:fire-potion",
+        "base-spire:block-potion",
+        "base-spire:energy-potion",
+        "base-spire:swift-potion",
+        "base-spire:fruit-juice",
+        "base-spire:blood-potion"
+      ]
+    },
+    "base-spire:Power": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:strength-power",
+        "base-spire:vulnerable-power",
+        "base-spire:weak-power",
+        "base-spire:dexterity-power",
+        "base-spire:frail-power",
+        "base-spire:thorns-power"
       ]
     }
   },
@@ -32,6 +121,36 @@
       "use": "not_published",
       "rule_id": "DB-DEVELOPMENT-PILES",
       "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+    },
+    "base-spire:InPlay": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-PILES",
+      "reason": "The development in-play pile exists only while a card resolves; no vanilla play-history contract is migrated. Public counts and entities remain declaration-derived."
+    },
+    "base-spire:ExhaustPile": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-PILES",
+      "reason": "Only the development Exhaust card keyword feeds this pile; no vanilla exhaust-history contract is migrated. Public counts and entities remain declaration-derived."
+    },
+    "base-spire:Powers": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-POWERS",
+      "reason": "A development power may be held by a player or an enemy, which the current group/sequence collection metadata cannot express; power entities and their stacks stay declaration-derived and public."
+    },
+    "base-spire:Potions": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-POTIONS",
+      "reason": "The three-slot development potion inventory has no vanilla drop, shop or usage-window contract; potion entities remain declaration-derived and public."
+    },
+    "base-spire:EnemyPool": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-ENCOUNTER",
+      "reason": "Temporary encounter candidate pool; entries only exist while a development formation is being spawned and are cleared before it returns."
+    },
+    "base-spire:RemovedFromCombat": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-PILES",
+      "reason": "Vanilla returns a resolved CardType.Power card to the master deck; this scope keeps those instances here, with no public pile contract. Public counts and entities remain declaration-derived."
     }
   },
   "terminal_outcomes": {},

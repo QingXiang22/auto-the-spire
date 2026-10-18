@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Orichalcum.cs; Uncommon relic, BlockVar(6, Unpowered) gained at end of turn when the owner has no block.
+use Orichalcum {
+  template = TurnEndNoBlockRelic
+  args = { definition = "base-spire:orichalcum" block = 6 }
+}

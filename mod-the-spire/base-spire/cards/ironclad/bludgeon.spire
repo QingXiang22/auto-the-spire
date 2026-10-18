@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Bludgeon.cs: cost 3, DamageVar(32, Move), TargetType.AnyEnemy, OnUpgrade adds 10 damage.
+use Bludgeon {
+  template = CardDefinition
+  args = { definition = "base-spire:bludgeon" cost = 3 upgradedCost = 3 targeted = true exhausts = false leavesPlay = false }
+}
+use BludgeonDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:bludgeon" damage = 32 upgradedDamage = 42 hits = 1 }
+}

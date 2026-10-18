@@ -1,0 +1,37 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# HappyFlower.cs: on every owner turn start the instance counter advances modulo `turns`; at zero,
+# gain energy. The source keeps TurnsSeen across combats ([SavedProperty]), so the counter is not
+# reset by the development lifecycle.
+template EveryTurnsEnergyRelic {
+  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 0, max = 999) } turns = { type = Int(min = 1, max = 999) } }
+  body = {
+    procedure WhenTurnStarted {
+      parameters = { owner = Ref(Player) }
+      body = {
+        forEach = {
+          query = collection(Relics) item = relic
+          body = {
+            if = {
+              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+              then = {
+                set = { target = relic field = Relic.Counter value = modulo(add(field(relic, Relic.Counter), 1), arg(turns)) }
+                if = {
+                  condition = equal(field(relic, Relic.Counter), 0)
+                  then = { call = { procedure = GainEnergy args = { owner = owner amount = arg(amount) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnTurnStart { event = AfterSideTurnStarted reaction = WhenTurnStarted }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

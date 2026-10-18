@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: MercuryHourglass.cs CanonicalVars and AfterPlayerTurnStart: three unpowered damage to all enemies.
+use MercuryHourglass {
+  template = TurnStartDamageAllEnemiesRelic
+  args = { definition = "base-spire:mercury-hourglass" amount = 3 }
+}

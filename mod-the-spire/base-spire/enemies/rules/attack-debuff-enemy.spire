@@ -1,0 +1,39 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Stabbot.cs (Ascension 0): MinInitialHp 18; its only move STAB_MOVE deals 11 damage and then applies
+# FrailPower 1 to the target, looping forever. The development spawn uses the minimum initial HP.
+template AttackDebuffEnemy {
+  parameters = {
+    definition = { type = String(length = 64) }
+    hp = { type = Int(min = 1, max = 9999) }
+    damage = { type = Int(min = 0, max = 999) }
+    frail = { type = Int(min = 1, max = 999) }
+  }
+  body = {
+    procedure WhenEnemyTurn {
+      parameters = { owner = Ref(Player) target = Ref(Enemy) }
+      body = {
+        if = {
+          condition = equal(field(target, Enemy.DefinitionId), arg(definition))
+          then = {
+            call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = arg(damage) } }
+            call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" kind = "block-dealt-multiplier" stacks = arg(frail) } }
+            set = { target = target field = Enemy.Intent value = "attack" }
+          }
+        }
+      }
+    }
+    subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
+    action Spawn {
+      role = player
+      locals = { target = Binding }
+      body = {
+        create = {
+          type = Enemy scope = frameScope() into = target
+          fields = { DefinitionId = arg(definition) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
+        }
+      }
+    }
+  }
+}

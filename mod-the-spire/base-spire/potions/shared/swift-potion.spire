@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: SwiftPotion.cs; Common combat-only potion, CardsVar(3) drawn.
+use SwiftPotion {
+  template = PotionDefinition
+  args = { definition = "base-spire:swift-potion" }
+}
+use SwiftPotionEffect {
+  template = PotionDrawEffect
+  args = { definition = "base-spire:swift-potion" cards = 3 }
+}

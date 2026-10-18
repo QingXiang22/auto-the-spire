@@ -1,0 +1,21 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Uppercut.cs: cost 2, DamageVar(13, Move) then the "Power" var (1) applied as WeakPower and
+# VulnerablePower; OnUpgrade raises the power var by 1 so both debuffs become 2.
+use Uppercut {
+  template = CardDefinition
+  args = { definition = "base-spire:uppercut" cost = 2 upgradedCost = 2 targeted = true exhausts = false leavesPlay = false }
+}
+use UppercutDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:uppercut" damage = 13 upgradedDamage = 13 hits = 1 }
+}
+use UppercutWeak {
+  template = ApplyEnemyPowerEffect
+  args = { definition = "base-spire:uppercut" power = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 upgradedStacks = 2 }
+}
+use UppercutVulnerable {
+  template = ApplyEnemyPowerEffect
+  args = { definition = "base-spire:uppercut" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 upgradedStacks = 2 }
+}

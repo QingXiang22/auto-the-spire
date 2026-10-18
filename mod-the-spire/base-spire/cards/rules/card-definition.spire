@@ -1,0 +1,37 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Card definition content. Vanilla cost, rarity, type and upgrade metadata live in the card model; this
+# development scope only carries identity, cost, the targeted flag and the definition-level cost upgrade.
+template CardDefinition {
+  parameters = {
+    definition = { type = String(length = 64) }
+    cost = { type = Int(min = 0, max = 9) }
+    upgradedCost = { type = Int(min = 0, max = 9) }
+    targeted = { type = Bool }
+    exhausts = { type = Bool }
+    leavesPlay = { type = Bool }
+  }
+  body = {
+    procedure WhenCardUpgraded {
+      parameters = { card = Ref(Card) }
+      body = {
+        if = {
+          condition = equal(field(card, Card.DefinitionId), arg(definition))
+          then = { set = { target = card field = Card.Cost value = arg(upgradedCost) } }
+        }
+      }
+    }
+    subscription OnCardUpgraded { event = CardUpgraded reaction = WhenCardUpgraded }
+    action AddToHand {
+      role = player
+      locals = { card = Binding }
+      body = {
+        create = {
+          type = Card scope = frameScope() into = card collection = Hand
+          fields = { DefinitionId = arg(definition) Cost = arg(cost) Label = arg(definition) Targeted = arg(targeted) Exhausts = arg(exhausts) LeavesPlay = arg(leavesPlay) }
+        }
+      }
+    }
+  }
+}

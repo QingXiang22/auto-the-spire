@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Bash.cs: cost 2, DamageVar(8, Move) then VulnerablePower 2 on the target; OnUpgrade adds
+# 2 damage and 1 Vulnerable. The damage effect is declared first so the power lands after the hit.
+use Bash {
+  template = CardDefinition
+  args = { definition = "base-spire:bash" cost = 2 upgradedCost = 2 targeted = true exhausts = false leavesPlay = false }
+}
+use BashDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:bash" damage = 8 upgradedDamage = 10 hits = 1 }
+}
+use BashVulnerable {
+  template = ApplyEnemyPowerEffect
+  args = { definition = "base-spire:bash" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 2 upgradedStacks = 3 }
+}

@@ -1,0 +1,13 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: EvilEye.cs: cost 1, BlockVar(8, Move), gains its block once, or twice when a card was exhausted
+# this turn; OnUpgrade adds 3 block.
+use EvilEye {
+  template = CardDefinition
+  args = { definition = "base-spire:evil-eye" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+}
+use EvilEyeBlock {
+  template = FlaggedBlockMultiplierEffect
+  args = { definition = "base-spire:evil-eye" block = 8 upgradedBlock = 11 flag = "exhausted-card" }
+}

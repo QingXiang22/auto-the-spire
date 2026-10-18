@@ -29,9 +29,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/AssassinRubyRaider.cs",
       "source_sha256": "1ded70b4d0a355ab0d0b14e5cdafb3576df1c0504b88aaa837c66fa6744b6564",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/AssassinRubyRaider.cs; Ruby Raider enemy reviewed in DSL-ENEMY-BATCH-02: Ascension 0 initial HP 18..23, single KILLSHOT_MOVE for 10, one-move loop",
+      "definition": "enemies/shared/assassin-ruby-raider.spire"
     },
     {
       "id": "base-spire:axebot",
@@ -49,9 +49,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/AxeRubyRaider.cs",
       "source_sha256": "3ba51c335698440e17d819ff2f25b4f0668c83b490e373198934b5814739f38d",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/AxeRubyRaider.cs; Ruby Raider enemy reviewed in DSL-ENEMY-BATCH-04: Ascension 0 initial HP 20..22, SWING_1/SWING_2 deal 5 and gain 5 block, BIG_SWING deals 12, chained",
+      "definition": "enemies/shared/axe-ruby-raider.spire"
     },
     {
       "id": "base-spire:battle-friend-v1",
@@ -99,9 +99,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/BowlbugEgg.cs",
       "source_sha256": "c7bdba96f3ae387cbe6189e5a844d6f05d3fcf0a5aa9e5e06d276ba723c8d1ec",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/BowlbugEgg.cs; Act 1 normal enemy reviewed in DSL-ENEMY-BATCH-03: Ascension 0 initial HP 21..22, BITE_MOVE 7 damage plus 7 block, one-move loop",
+      "definition": "enemies/shared/bowlbug-egg.spire"
     },
     {
       "id": "base-spire:bowlbug-nectar",
@@ -139,9 +139,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/BruteRubyRaider.cs",
       "source_sha256": "3b99a34ef4bf1eb2a1acb2d7ce8adaf5c722e594ac6842a3c2d028cf2a74b4f9",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/BruteRubyRaider.cs; Ruby Raider enemy reviewed in DSL-ENEMY-BATCH-03: Ascension 0 initial HP 30..33, BEAT_MOVE 7 damage then ROAR_MOVE StrengthPower 3, alternating",
+      "definition": "enemies/shared/brute-ruby-raider.spire"
     },
     {
       "id": "base-spire:bygone-effigy",
@@ -219,9 +219,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/CrossbowRubyRaider.cs",
       "source_sha256": "1e8bc45eea94eb686aa9c29ad3cd7cea6c78ab9358a4da82132664d2df24c116",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/CrossbowRubyRaider.cs; Ruby Raider enemy reviewed in DSL-ENEMY-BATCH-04: Ascension 0 initial HP 18..21, RELOAD gains 3 block then FIRE deals 14, alternating",
+      "definition": "enemies/shared/crossbow-ruby-raider.spire"
     },
     {
       "id": "base-spire:crusher",
@@ -429,9 +429,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/FuzzyWurmCrawler.cs",
       "source_sha256": "1b985c2625c86375a377bb8f124e339cba9af66ce4c6b7d0d5f4548662ce8bb8",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/FuzzyWurmCrawler.cs; Act 1 normal enemy reviewed in DSL-ENEMY-TURN-01: HP 55..57 at Ascension 0, FIRST_ACID_GOOP 4 damage, INHALE StrengthPower 7, deterministic rotation.",
+      "definition": "enemies/shared/fuzzy-wurm-crawler.spire"
     },
     {
       "id": "base-spire:gas-bomb",
@@ -959,9 +959,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/Stabbot.cs",
       "source_sha256": "f705f81b577321c520e9349a15c499811a485e9151a241545e33c9efea18a091",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/Stabbot.cs; Act 1 normal enemy reviewed in DSL-ENEMY-BATCH-03: Ascension 0 initial HP 18..23, STAB_MOVE 11 damage plus FrailPower 1, one-move loop",
+      "definition": "enemies/shared/stabbot.spire"
     },
     {
       "id": "base-spire:ten-hp-monster",
@@ -1109,9 +1109,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/TrackerRubyRaider.cs",
       "source_sha256": "d4a177e9a9668f6c185482d4b8ec00746818391f1d9fa86421bfc0569afdc6ad",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/TrackerRubyRaider.cs; Ruby Raider enemy reviewed in DSL-ENEMY-BATCH-04: Ascension 0 initial HP 21..25, TRACK applies FrailPower 2 then HOUNDS hits 1 damage eight times and repeats",
+      "definition": "enemies/shared/tracker-ruby-raider.spire"
     },
     {
       "id": "base-spire:tunneler",
@@ -1149,9 +1149,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/TwigSlimeS.cs",
       "source_sha256": "20df69868780ab61d8fd0e33aaeda150928ab98bc35c5276a2271563c4b46c0b",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Monsters/TwigSlimeS.cs; Act 1 normal enemy reviewed in DSL-ENEMY-BATCH-02: Ascension 0 initial HP 7..11, single TACKLE_MOVE for 4, one-move loop",
+      "definition": "enemies/shared/twig-slime-s.spire"
     },
     {
       "id": "base-spire:two-tailed-rat",

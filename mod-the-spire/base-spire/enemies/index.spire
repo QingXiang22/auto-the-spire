@@ -1,0 +1,3 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+includes = ["rules/fuzzy-wurm-crawler.spire", "shared/fuzzy-wurm-crawler.spire", "rules/single-attack-enemy.spire", "shared/twig-slime-s.spire", "shared/assassin-ruby-raider.spire", "rules/attack-defend-enemy.spire", "shared/bowlbug-egg.spire", "rules/attack-buff-enemy.spire", "shared/brute-ruby-raider.spire", "rules/attack-debuff-enemy.spire", "shared/stabbot.spire", "rules/raider-rotations.spire", "shared/axe-ruby-raider.spire", "shared/crossbow-ruby-raider.spire", "shared/tracker-ruby-raider.spire"]

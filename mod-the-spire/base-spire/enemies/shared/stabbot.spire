@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Stabbot.cs; Ascension 0 initial HP 18..23 (development spawn uses the minimum) and STAB_MOVE 11 damage plus FrailPower 1 on the target, one-move loop.
+use Stabbot {
+  template = AttackDebuffEnemy
+  args = { definition = "base-spire:stabbot" hp = 18 damage = 11 frail = 1 }
+}

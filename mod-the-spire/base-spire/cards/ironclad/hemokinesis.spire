@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Hemokinesis.cs: cost 1, HpLossVar(2) as unblockable unpowered damage then DamageVar(15, Move) on the
+# target; OnUpgrade adds 5 damage. Order matters: the HP loss happens before the attack.
+use Hemokinesis {
+  template = CardDefinition
+  args = { definition = "base-spire:hemokinesis" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use HemokinesisLoseHp {
+  template = LoseHpEffect
+  args = { definition = "base-spire:hemokinesis" hp = 2 upgradedHp = 2 }
+}
+use HemokinesisDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:hemokinesis" damage = 15 upgradedDamage = 20 hits = 1 }
+}

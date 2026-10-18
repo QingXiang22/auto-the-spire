@@ -10,8 +10,14 @@ internal static class Program
 {
     public static int Main(string[] args)
     {
+        if (args.Length > 0 && (args.Length != 1 || args[0] != "--base-dsl-only"))
+        {
+            Console.Error.WriteLine("Usage: Net.TheSpire.Tests [--base-dsl-only]");
+            return 2;
+        }
         // Migration gate: generic wire and text-rule behavior. Retired base checks remain individually inventoried.
-        var checks = CrossEndChecks.Build().Concat(DeclarationExtensionChecks.Build()).Concat(BaseDslPathChecks.Build()).ToList();
+        var checks = (args.Length == 1 ? BaseDslPathChecks.Build() :
+            CrossEndChecks.Build().Concat(DeclarationExtensionChecks.Build()).Concat(BaseDslPathChecks.Build())).ToList();
         var passed = 0;
         var failed = 0;
         foreach (var (name, body) in checks)

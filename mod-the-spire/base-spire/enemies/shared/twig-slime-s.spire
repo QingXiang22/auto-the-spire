@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: TwigSlimeS.cs; Ascension 0: initial HP 7..11 (development spawn uses the minimum) and TACKLE for 4.
+use TwigSlimeS {
+  template = SingleAttackEnemy
+  args = { definition = "base-spire:twig-slime-s" hp = 7 damage = 4 }
+}

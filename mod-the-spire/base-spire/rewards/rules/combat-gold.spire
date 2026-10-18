@@ -1,0 +1,71 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Monster-room gold reward. EncounterModel.MinGoldReward / MaxGoldReward are 10..20 for RoomType.Monster at
+# Ascension 0, and the source rolls inside that inclusive range. sampleInt is half-open, so the upper bound is
+# 21. The roll uses the named development stream, not the source run RNG, so the exact sequence is not
+# reproduced. Elite and boss ranges, gold proportion for escapes and other reward kinds are not migrated.
+# Source GoldReward.Populate stores the amount; OnSelect grants gold only when the player claims it.
+procedure OfferCombatGold {
+  parameters = { owner = Ref(Player) }
+  locals = { amount = Int }
+  body = {
+    if = {
+      condition = equal(field(owner, Player.Room), "rewards")
+      then = { fail = { message = "Close the previous development rewards first" } }
+    }
+    sampleInt = { stream = "base-spire:development-reward" min = 10 max = 21 into = amount }
+    set = { target = owner field = Player.GoldRewardAmount value = amount }
+    set = { target = owner field = Player.GoldRewardPending value = true }
+    set = { target = owner field = Player.Room value = "rewards" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    set = { target = owner field = Player.PendingForge value = false }
+  }
+}
+procedure WhenCombatEnded {
+  parameters = { owner = Ref(Player) victory = Bool }
+  body = {
+    if = {
+      condition = and(victory, greater(field(owner, Player.Hp), 0))
+      then = { call = { procedure = OfferCombatGold args = { owner = owner } } }
+    }
+  }
+}
+subscription OnCombatEnded { event = CombatEnded reaction = WhenCombatEnded }
+
+procedure ClaimDevelopmentGoldReward {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(and(equal(field(owner, Player.Room), "rewards"), field(owner, Player.GoldRewardPending)))
+      then = { fail = { message = "No development gold reward is pending" } }
+    }
+    set = { target = owner field = Player.Gold value = minimum(99999, add(field(owner, Player.Gold), field(owner, Player.GoldRewardAmount))) }
+    set = { target = owner field = Player.GoldRewardPending value = false }
+    set = { target = owner field = Player.GoldRewardAmount value = 0 }
+  }
+}
+procedure CloseDevelopmentRewards {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = {
+      condition = not(equal(field(owner, Player.Room), "rewards"))
+      then = { fail = { message = "No development rewards are open" } }
+    }
+    set = { target = owner field = Player.GoldRewardPending value = false }
+    set = { target = owner field = Player.GoldRewardAmount value = 0 }
+    set = { target = owner field = Player.Room value = "none" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    set = { target = owner field = Player.PendingForge value = false }
+  }
+}
+action ClaimDevelopmentGoldReward {
+  role = player
+  requires = and(equal(field(first(type(Player)), Player.Room), "rewards"), field(first(type(Player)), Player.GoldRewardPending))
+  body = { call = { procedure = ClaimDevelopmentGoldReward args = { owner = first(type(Player)) } } }
+}
+action CloseDevelopmentRewards {
+  role = player
+  requires = equal(field(first(type(Player)), Player.Room), "rewards")
+  body = { call = { procedure = CloseDevelopmentRewards args = { owner = first(type(Player)) } } }
+}
