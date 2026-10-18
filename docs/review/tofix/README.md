@@ -59,7 +59,7 @@
 
 ## 当前交付
 
-2026-10-18，Codex `/root` 按用户指令接手 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01：战斗金币奖励领取与关闭**，待验证；用户确认 DSH 已停止。`0.5.0-dsl.25` 已实现胜利生成待领金额、领取一次、关闭可跳过、关闭前拒绝跨房；144 项包行为、18 项定向公开检查（含真实 stdio 领取／跳过）、加载和遗物见证检查通过。当前 DSL 定义为卡牌 30、遗物 17、敌人 9、遭遇 2、药水 6；正常单人 scope、源随机与正常 Run 尚未恢复，CI 与原版独立对拍未取得。修改 base 的 rewards／Player 字段／必要入口守卫、包外检查与文档；不改 Engine／Host 玩法或暂停项。下一可验成果为收口接手时遗留的营火锻造原稿（当前操作开发手牌，尚无对应行为证据），先补资格／选择寿命契约与判别，再接后续奖励内容。完整进度核对、实际命令、未验证与历史证据见[本次记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md)，接口见[奖励契约](../../design/mod-the-spire/combat-rewards/spec.md)。
+2026-10-18，Codex `/root` 按用户指令接手 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01：战斗金币奖励领取与关闭**，待验证；用户确认 DSH 已停止。`0.5.0-dsl.25` 已实现胜利生成待领金额、领取一次、关闭可跳过、关闭前拒绝跨房；144 项包行为、18 项定向公开检查（含真实 stdio 领取／跳过）、加载和遗物见证检查通过。当前 DSL 定义为卡牌 30、遗物 17、敌人 9、遭遇 2、药水 6；正常单人 scope、源随机与正常 Run 尚未恢复；[草稿 PR #12](https://github.com/QingXiang22/auto-the-spire/pull/12) 已创建，实现提交 `2caf090` 的 core／base／net／migration 四组 [CI](https://github.com/QingXiang22/auto-the-spire/actions/runs/39096365923) 全通过，原版独立对拍仍未取得。修改 base 的 rewards／Player 字段／必要入口守卫、包外检查与文档；不改 Engine／Host 玩法或暂停项。下一可验成果为收口接手时遗留的营火锻造原稿（当前操作开发手牌，尚无对应行为证据），先补资格／选择寿命契约与判别，再接后续奖励内容。完整进度核对、实际命令、未验证与历史证据见[本次记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md)，接口见[奖励契约](../../design/mod-the-spire/combat-rewards/spec.md)。
 
 此前 25 批接续的原文与直接证据已并入[接手复核记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md#接手时逐批证据原文)，保留各批范围、失败与未验证项；不作为另一份当前排期。
 
