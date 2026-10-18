@@ -23,6 +23,8 @@
 
 替换与熔化尚无正式 DSL 操作。实现时明确：旧获得效果如何撤回，新获得效果何时生效，是否保留同一实例／计数，熔化时保留哪些库存事实与触发，跨战如何重建。不能仅写 DefinitionId 或 IsMelted 就宣称完整生命周期。
 
+伤害与能量参与者使用CombatModifierRelic配置StrikeDamageBonus或RetainEnergy，完整调用方通过DamageEnemyPowered显式传owner和card，不能借全局当前牌推断来源。Strike加成在虚弱／易伤前参与；ResetTurnEnergy在首回合重置，后续按有效保留资格补最大能量，再发AfterEnergyReset。NoAttackTurnEnergyRelic在AfterCardPlayed记录本实例攻击标志、AfterTurnEnded交接，并在AfterEnergyReset奖励上一回合未攻击者；重置与奖励分开，前者不受禁止获得能量影响，后者调用GainEnergy。
+
 主动／回合／战斗／受伤／死亡／抽牌等遗物分别消费相应共享机制。涉及长期最大生命、金币或永久牌组时，调用 Run 的权威操作，避免战斗副本与永久状态重复获利。验证一次获得／一次移除、实际触发、不持有／熔化负例、计数边界、两实例／持有者隔离和跨战重建。
 
 源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[遗物原合同](../../../review/tofix/README.md#env-t09)继续有效。

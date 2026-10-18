@@ -7,7 +7,8 @@ event BeforePlayerTurnStart { payload = { owner = Ref(Player) } }
 event BeforePlayerTurnEnd { payload = { owner = Ref(Player) } }
 # sts2 Creature.AfterTurnStart -> CombatManager.Hook.AfterBlockCleared, dispatched for every creature starting the turn.
 event AfterBlockCleared { payload = { owner = Ref(Player) } }
-# Development time point after energy reset. Vanilla splits this across AfterEnergyReset and AfterSideTurnStart.
+event AfterEnergyReset { payload = { owner = Ref(Player) } }
+# Side turn-start reactions run after the separate energy reset event.
 event AfterSideTurnStarted { payload = { owner = Ref(Player) } }
 # Development time point for the player turn-start hooks (vanilla runs Early, AfterPlayerTurnStart, then Late).
 event AfterPlayerTurnStart { payload = { owner = Ref(Player) } }
@@ -139,7 +140,8 @@ procedure BeginDevelopmentTurn {
       }
     }
     call = { procedure = BeforeTurnPowerReactions args = { owner = owner } }
-    set = { target = owner field = Player.Energy value = pureCall(GetMaxEnergy, owner) }
+    call = { procedure = ResetTurnEnergy args = { owner = owner } }
+    emit = { event = AfterEnergyReset payload = { owner = owner } }
     set = { target = owner field = Player.TurnOpen value = true }
     emit = { event = AfterSideTurnStarted payload = { owner = owner } }
     if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {

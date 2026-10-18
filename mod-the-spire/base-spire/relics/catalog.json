@@ -83,9 +83,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Relics/ArtOfWar.cs; complete source hooks and values reviewed; DSL wave2 behavior witnesses; independent parity and normal source acquisition unverified",
+      "definition": "relics/shared/art-of-war.spire"
     },
     {
       "id": "base-spire:astrolabe",
@@ -1020,8 +1020,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/FakeStrikeDummy.cs; +1 for Strike-tagged damage declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/FakeStrikeDummy.cs; complete source hooks and values reviewed; DSL wave2 behavior witnesses; independent parity and normal source acquisition unverified",
+      "definition": "relics/shared/fake-strike-dummy.spire"
     },
     {
       "id": "base-spire:fake-venerable-tea-set",
@@ -1392,8 +1392,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/IceCream.cs; complete gameplay methods and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/IceCream.cs; complete source hooks and values reviewed; DSL wave2 behavior witnesses; independent parity and normal source acquisition unverified",
+      "definition": "relics/shared/ice-cream.spire"
     },
     {
       "id": "base-spire:infused-core",
@@ -3051,8 +3051,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/StrikeDummy.cs; +3 for Strike-tagged damage declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/StrikeDummy.cs; complete source hooks and values reviewed; DSL wave2 behavior witnesses; independent parity and normal source acquisition unverified",
+      "definition": "relics/shared/strike-dummy.spire"
     },
     {
       "id": "base-spire:sturdy-clamp",

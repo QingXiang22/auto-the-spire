@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/ArtOfWar.cs; SHA256 retained in relics/catalog.json.
+use ArtOfWar { template = NoAttackTurnEnergyRelic args = { definition = "base-spire:art-of-war" energy = 1 } }

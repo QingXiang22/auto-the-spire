@@ -5,6 +5,7 @@ internal static partial class PackageChecks
     public static int RunRelicContentOnly(DslPackage package)
     {
         var count = 0; RunRelicContentChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
+        RunRelicModifierChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         Console.WriteLine($"All {count} focused relic-content checks passed; full check is required for coverage evidence."); return 0;
     }
     private static Dictionary<string, string[]> RunRelicContentChecks(DslPackage package, Action<string, Action> check)

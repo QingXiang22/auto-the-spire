@@ -27,7 +27,7 @@ template AttackEffect {
             }
             repeat = {
               count = arg(hits)
-              body = { call = { procedure = DamageEnemyPowered args = { target = target amount = amount } } }
+              body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
             }
           }
         }
@@ -100,7 +100,7 @@ template DamageEqualBlockEffect {
       body = {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = { call = { procedure = DamageEnemyPowered args = { target = target amount = field(owner, Player.Block) } } }
+          then = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = field(owner, Player.Block) } } }
         }
       }
     }
@@ -189,7 +189,7 @@ template AttackAllEnemiesEffect {
               body = {
                 repeat = {
                   count = count
-                  body = { call = { procedure = DamageEnemyPowered args = { target = enemy amount = amount } } }
+                  body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = enemy amount = amount } } }
                 }
               }
             }
@@ -368,7 +368,7 @@ template FlaggedHitsAttackEffect {
             }
             repeat = {
               count = count
-              body = { call = { procedure = DamageEnemyPowered args = { target = target amount = amount } } }
+              body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
             }
           }
         }
@@ -450,7 +450,7 @@ template VulnerableHitsAttackEffect {
             }
             repeat = {
               count = count
-              body = { call = { procedure = DamageEnemyPowered args = { target = target amount = amount } } }
+              body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
             }
           }
         }

@@ -6,6 +6,16 @@ procedure GetMaxEnergy {
   body = { return = { value = add(field(owner, Player.MaxEnergy), pureCall(PlayerPowerAmount, owner, "max-energy")) } }
 }
 
+# CombatManager.ResetPlayerEnergy: resetting/refilling is not PlayerCmd.GainEnergy.
+procedure ResetTurnEnergy {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = { condition = and(greater(field(owner, Player.TurnNumber), 1), pureCall(RelicRetainsEnergy, owner)) then = {
+      set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), pureCall(GetMaxEnergy, owner))) }
+    } else = { set = { target = owner field = Player.Energy value = minimum(999, pureCall(GetMaxEnergy, owner)) } } }
+  }
+}
+
 # CreatureCmd.Heal: heal and clamp to MaxHp. Revive, healing modifiers and death are not migrated.
 procedure Heal {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
