@@ -32,7 +32,7 @@
 
 ## 未完成与验收限制
 
-没有运行独立原版对拍、正常 Run、完整 Engine／net／迁移回归、120 对矩阵或性能；广覆盖留 CI。金币沿用开发命名流，只覆盖 Monster 区间，没有卡牌／药水／遗物奖励、Elite／Boss、金币修正参与者或永久 Run；胜利余效与奖励显示的完整源顺序仍未迁移。营火锻造原稿保留，尚无本次行为见证。原 ENV/W 父项继续开放。
+本地没有运行独立原版对拍、正常 Run、完整 Engine／net／迁移回归、120 对矩阵或性能。实现提交 `2caf090` 已推送至 [草稿 PR #12](https://github.com/QingXiang22/auto-the-spire/pull/12)，[PR CI](https://github.com/QingXiang22/auto-the-spire/actions/runs/39096365923) 的 core／base／net／migration 四组全部通过（`gh run watch --exit-status` 返回 0）；CI 仍不包含原版独立对拍或正常 Run。金币沿用开发命名流，只覆盖 Monster 区间，没有卡牌／药水／遗物奖励、Elite／Boss、金币修正参与者或永久 Run；胜利余效与奖励显示的完整源顺序仍未迁移。营火锻造原稿保留，尚无本次行为见证。原 ENV/W 父项继续开放。
 
 ## 接手时逐批证据原文
 
