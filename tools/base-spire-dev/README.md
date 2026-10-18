@@ -14,6 +14,8 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 遗物内容接续组可用 `check --relic-content-only` 定向验证拾取资源、动态抽牌／营火治疗、出牌计数和首次受损抽牌。该命令不生成覆盖报告；形成逐件证据时仍运行完整 `check --report`，再由 `tools/ci/check_relic_coverage.py` 核对实际定义与见证。源目录保持297项，不能把局部通过写成全遗物完成。
 
+简单拾取资源的数值差异复用逐件表驱动；同组统一验证本次实例／持有者隔离、直接获得、拾取前失效、移除不撤回、重新获得与跨战不重放。真实stdio还执行五件资源拾取及逐件移除，公开最大生命／生命／金币保持永久结果。商店价格、Ancient来源和资源修正者仍按各领域合同恢复，不把显式开发获得当作正常来源。
+
 同一遗物定向入口还执行ChemicalX的捕获／支付与效果X分离、零能量、普通／升级、嵌套自动与重复出牌、实例／持有者隔离、移除／熔化、纯查询和选牌暂停续接判别。原版星星X、正常商店获得与独立对拍仍未验证；契约见[效果X修正](../../docs/design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 拾取随机升级组也使用`check --relic-content-only`，验证Whetstone／WarPaint／SandCastle的类型／张数、完整Niche洗牌、固定源选中实例／事件顺序／游标、重复获得、嵌套调用、无临时状态残留及两战副本。向量只来自独立源码神谕，生成方式见[rng-oracle](../rng-oracle/README.md)；公开stdio逐件观察永久升级和实际攻击／格挡，不构成正常Run。

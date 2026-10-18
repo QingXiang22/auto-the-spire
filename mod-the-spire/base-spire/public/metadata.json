@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.6.0-dsl.35",
+  "static_build_id": "base-spire-dsl-0.6.0-dsl.36",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -50,7 +50,12 @@
         "base-spire:chemical-x",
         "base-spire:whetstone",
         "base-spire:war-paint",
-        "base-spire:sand-castle"
+        "base-spire:sand-castle",
+        "base-spire:fake-mango",
+        "base-spire:looming-fruit",
+        "base-spire:nutritious-oyster",
+        "base-spire:signet-ring",
+        "base-spire:golden-pearl"
       ]
     },
     "base-spire:Enemy": {

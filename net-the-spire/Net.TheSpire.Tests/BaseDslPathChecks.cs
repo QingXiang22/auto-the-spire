@@ -39,6 +39,7 @@ internal static class BaseDslPathChecks
         yield return ("CR real stdio starter cards defeat an enemy and acquire one of three permanent rewards", () => StdioTrajectory("card-reward-claim"));
         yield return ("CR real stdio skips card rewards and closes without acquiring a card", () => StdioTrajectory("card-reward-skip"));
         yield return ("RL real stdio pickup relics publish permanent HP and gold gains", () => StdioTrajectory("relic-pickups"));
+        yield return ("RL real stdio five simple pickups expose exact resources and removal preserves permanent gains", () => StdioTrajectory("simple-resources"));
         yield return ("RL real stdio third attack triggers OrnamentalFan exactly once", () => StdioTrajectory("relic-counter"));
         yield return ("RM real stdio StrikeDummy and FakeStrikeDummy add damage before block", () => StdioTrajectory("relic-strike"));
         yield return ("RM real stdio IceCream carries energy and ArtOfWar rewards the previous empty turn", () => StdioTrajectory("relic-energy"));
@@ -156,6 +157,12 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "simple-resources" => [
+                    ("FakeMango.Obtain", "0", false, "0", "0", false, ""),
+                    ("LoomingFruit.Obtain", "0", false, "0", "0", false, ""),
+                    ("NutritiousOyster.Obtain", "0", false, "0", "0", false, ""),
+                    ("SignetRing.Obtain", "0", false, "0", "0", false, ""),
+                    ("GoldenPearl.Obtain", "0", false, "0", "0", false, "")],
                 "pickup-upgrade-whetstone" or "pickup-upgrade-war-paint" or "pickup-upgrade-sand-castle" => [
                     ("Strike.Obtain", "0", false, "0", "0", false, ""),
                     ("Defend.Obtain", "0", false, "0", "0", false, ""),
@@ -380,6 +387,24 @@ internal static class BaseDslPathChecks
                 var card = snapshot.Entities.Single(e => e.ContentId == "base-spire:whirlwind");
                 Check.Equal("3", ((WireString)card.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value, "captured X public");
                 Check.True(((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.IsX", StringComparison.Ordinal)).Value!).Value, "X marker public");
+            }
+            if (mode == "simple-resources")
+            {
+                Check.Equal("125", Public(snapshot, "Player.MaxHp"), "source 80 plus 3 plus 31 plus 11 maximum HP");
+                Check.Equal("125", Public(snapshot, "Player.Hp"), "pickup healing matches max HP increments");
+                Check.Equal("1248", Public(snapshot, "Player.Gold"), "source 99 plus 999 plus 150 gold");
+                foreach (var slug in new[] { "fake-mango", "looming-fruit", "nutritious-oyster", "signet-ring", "golden-pearl" })
+                {
+                    var relic = snapshot.Entities.Single(e => e.ContentId == "base-spire:" + slug);
+                    var candidate = snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:RemoveOwnedRelic" && a.Fields.Any(f => f.Value is WireString value && value.Value == relic.InstanceId));
+                    var id = "pipe-resource-remove-" + ++stepNumber;
+                    Send(Request(id, Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
+                    snapshot = Snapshot(Send(Request(id + "-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                    Check.Equal("125", Public(snapshot, "Player.MaxHp"), "removal never revokes permanent max HP");
+                    Check.Equal("125", Public(snapshot, "Player.Hp"), "removal never revokes healing");
+                    Check.Equal("1248", Public(snapshot, "Player.Gold"), "removal never revokes permanent gold");
+                }
+                Check.False(snapshot.Entities.Any(e => e.KindId == "net:kind:base-spire:Relic"), "actual removed instances disappear from the public state");
             }
             if (mode == "relic-pickups")
             {

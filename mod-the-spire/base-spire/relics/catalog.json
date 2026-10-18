@@ -972,8 +972,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/FakeMango.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "FakeMango.AfterObtained: max HP +3 then heal 3; Event rarity, MerchantCost=50 retained as source only; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/fake-mango.spire"
     },
     {
       "id": "base-spire:fake-merchants-rug",
@@ -1272,8 +1272,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/GoldenPearl.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "GoldenPearl.AfterObtained: gain 150 gold; Ancient rarity; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/golden-pearl.spire"
     },
     {
       "id": "base-spire:gold-plated-cables",
@@ -1669,8 +1669,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/LoomingFruit.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "LoomingFruit.AfterObtained: max HP +31 then heal 31; Ancient rarity; save UniqueId changes icon only; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/looming-fruit.spire"
     },
     {
       "id": "base-spire:lords-parasol",
@@ -2017,8 +2017,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/NutritiousOyster.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "NutritiousOyster.AfterObtained: max HP +11 then heal 11; Ancient rarity; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/nutritious-oyster.spire"
     },
     {
       "id": "base-spire:nutritious-soup",
@@ -2870,8 +2870,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/SignetRing.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "SignetRing.AfterObtained: gain 999 gold; Ancient rarity; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/signet-ring.spire"
     },
     {
       "id": "base-spire:silken-tress",

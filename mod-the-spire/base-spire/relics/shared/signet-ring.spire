@@ -1,0 +1,4 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use SignetRing { template = PickupResourceRelic args = { definition = "base-spire:signet-ring" gold = 999 } }

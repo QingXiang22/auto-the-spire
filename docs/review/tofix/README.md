@@ -59,6 +59,8 @@
 
 ## 当前交付
 
+2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-05：简单拾取资源**，对应RELIC-G19，P1／待验证。基于`7c8dd04`／PR #23，base `0.6.0-dsl.36`，沿现有遗物开发分支接续。已实现FakeMango／LoomingFruit／NutritiousOyster最大生命+3／31／11，SignetRing／GoldenPearl金币+999／150；两种模板统一绑定本次有效实例，修复其他持有者阻止本玩家开发获得的守卫，拾取前移除／熔化不再发放资源。60项遗物定向、378项包行为、37项公开路径和solution构建通过；47件实际见证／297来源／249未实现／1源排除，铁甲85/85保持。修改两模板／五件内容／元数据、包外检查和文档，未改core／参考／随机或正常来源。来源、身份、命令与边界见[交付记录](../records/2026-10-18/relic-simple-pickups-2026-10-18.md)，方法见[开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后按G04核对回合触发组源条件与共享模板。正常Run、独立原版双侧及父项未验收，暂停项保持。
+
 2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-04：拾取随机永久升级**，对应RELIC-G01，P1／待验证。基于`7ff95ca`／PR #23，沿现有遗物开发分支接续，base `0.6.0-dsl.35`。已按用户要求建立下方20组与依赖／验收／重排方法，并交付Whetstone／WarPaint／SandCastle共用的永久资格筛选、完整Niche稳定洗牌后截取及原实例UpgradeCard；每调用独立临时状态，支持嵌套并返回清理。53项遗物定向、371项包行为、36项公开路径、3组独立源向量及solution构建通过；42件遗物实际见证／297来源／254未实现／1源排除，铁甲85/85保持。修改base卡牌／遗物／元数据、包外工具／源向量／公开检查及文档，未改core或参考。方法见[遗物开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)，接口、身份、来源和实际证据见[交付记录](../records/2026-10-18/relic-groups-and-pickup-upgrades-2026-10-18.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后认领G19简单拾取资源子包。正常来源、独立原版双侧、正常Run及父项不关闭，暂停项保持。
 
 2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-03：Chemical X 与效果 X 修正**，P1／待验证。基于main／`3a160c6`（统一监听及指南已合并），分支`codex/relic-chemical-x-20261018`，base `0.6.0-dsl.34`。新增pure ResolveEnergyXValue／ModifyXValue实例监听，ChemicalX只给效果X+2，不改捕获、支付或能量；Whirlwind／Cascade普通、升级、自动、重复及暂停续接均实际执行。43项遗物定向、361项包行为、33项公开路径及solution构建通过；39件遗物实际见证／297来源／257未实现／1源排除，铁甲85/85保持。修改base共享X接缝／内容／元数据、tools与net包外检查和文档，未改core／参考。准确边界见[遗物契约](../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)，身份、来源、命令与失败修正见[交付记录](../records/2026-10-18/relic-chemical-x-2026-10-18.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后接拾取永久升级机制。星星X、正常商店来源、独立原版对拍、正常Run及父项仍未关闭，暂停项保持。
@@ -149,7 +151,7 @@
 | RELIC-G16 地图、古代人与跨域长期效果 | GoldenCompass、JuzuBracelet、WingedBoots、FurCoat、LordsParasol | P3／待认领 | 正常地图／房间／Ancient上下文；按跨域真实消费者收口 |
 | RELIC-G17 遗物替换／熔化 | SwordOfStone、TouchOfOrobas、ToyBox及升级遗物 | P2／待认领 | 完整Replace／Melt、旧状态清理、新拾取和实例身份；不能只改字段 |
 | RELIC-G18 其他角色与特殊规则 | CrackedCore、GoldPlatedCables、BigHat、MiniRegent、Byrdpip、PaelsLegion等 | P3／暂缓 | 各自角色资源／召唤依原授权恢复，不将通用物品分支一并暂停 |
-| RELIC-G19 拾取基础资源 | FakeMango、LoomingFruit、NutritiousOyster、SignetRing、GoldenPearl等 | P1／待认领 | 核对完整源方法，复用已有最大生命／金币拾取模板，永久结果不因移除撤回 |
+| RELIC-G19 拾取基础资源 | FakeMango、LoomingFruit、NutritiousOyster、SignetRing、GoldenPearl | P1／待验证 | CONTENT-05已交付；逐件数值、拾取失效／持有者隔离及公开证据见当前交付，待PR／CI审阅；正常来源未验收 |
 | RELIC-G20 源特例复核与归组 | 尚未确定主要机制、只有属性覆写或有多个跨域阶段的剩余条目 | P2／待认领 | 从完整catalog核对遗漏；记录源方法／属性与组依赖，无法归类不表示排除或自动暂停 |
 
 ## 归属与依赖

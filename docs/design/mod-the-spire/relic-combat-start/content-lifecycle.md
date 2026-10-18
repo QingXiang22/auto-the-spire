@@ -10,6 +10,10 @@ Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Ku
 
 ## 状态、接口与顺序
 
+简单拾取资源组（DSL-RELIC-CONTENT-05／RELIC-G19）复用ObtainMaxHpRelic与PickupResourceRelic：FakeMango最大生命+3、LoomingFruit+31、NutritiousOyster+11，均同时治疗相同数值；SignetRing获得999金币、GoldenPearl获得150金币。完整AfterObtained已核对；FakeMango的MerchantCost=50保留为来源事实，当前不据此宣称商店定价；LoomingFruit的存档UniqueId仅决定图标，不消费玩法随机或改变数值。
+
+两模板以RelicObtained的本次relic绑定有效持有实例，按库存顺序响应并在执行前复核资格；早期订阅移除或熔化本次遗物后，不再发放拾取资源。当前实例获得一次，旧同定义实例不会因新获得而重发；开发动作按本持有者HasOwnedRelic阻止重复，包括熔化但仍持有的实例，其他持有者不阻止本玩家开发获得。移除不撤回永久生命／治疗／金币；移除后再次真实获得新实例按源再发一次。开战／回合／结束不重放拾取，也不消费随机。参数差异用逐件表驱动见证，机制验证拾取失效、两持有者和同定义新实例；正常来源资格及资源修正者仍按原范围恢复。
+
 现行统一接入见[通知与修正监听](../effect-listeners.md)。通知和修正均声明instances，按实际库存顺序响应；主流程不再调用遗物专属查询。
 
 所有局内状态在Engine实体。Relic.Counter保持独立实例计数，OncePerCombat使用标志仍归Relic，ArtOfWar私有标志归ArtOfWar.State。提供pure HasActiveRelic(owner,definition)与共用有效实例筛选；修正参与者由模板声明纯监听，不在Host按ID分派。
