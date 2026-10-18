@@ -10,6 +10,9 @@ entity Card {
     DefinitionId = { type = String(length = 64) default = "base-spire:development-card" }
     Cost = { type = Int(min = 0, max = 9) default = 0 }
     Upgraded = { type = Bool default = false }
+    # Only migrated definitions implement a single source upgrade; development placeholders do not.
+    CanUpgrade = { type = Bool default = false }
+    PermanentSource = { type = Ref(Card) optional = true visibility = Hidden }
     # Development stand-in for vanilla TargetType: targeted cards need an enemy and are played by PlayAttackFromHand.
     Targeted = { type = Bool default = false }
     # Vanilla CardKeyword.Exhaust: the card goes to the exhaust pile instead of the discard pile after resolving.
@@ -18,6 +21,8 @@ entity Card {
     LeavesPlay = { type = Bool default = false }
   }
 }
+collection RunDeck { element = Card ordered = true }
+event CardObtained { payload = { owner = Ref(Player) card = Ref(Card) } }
 collection Hand { element = Card capacity = 10 ordered = true }
 collection DrawPile { element = Card ordered = true identity_visible = false order_visible = false }
 collection DiscardPile { element = Card ordered = true }
@@ -25,8 +30,8 @@ collection DiscardPile { element = Card ordered = true }
 collection InPlay { element = Card ordered = true }
 # Vanilla exhaust pile. Only cards that resolve with CardKeyword.Exhaust reach it; no other exhaust source is migrated.
 collection ExhaustPile { element = Card ordered = true }
-# Vanilla removes a resolved CardType.Power card from combat and returns it to the master deck; this scope has
-# no master deck, so the dev scope keeps those instances here instead of leaving them unattached.
+# Resolved Power instances remain here until the next combat rebuild. RunDeck keeps permanent instances
+# separately; putting a combat copy here must never move or overwrite its permanent source.
 collection RemovedFromCombat { element = Card ordered = true }
 event AfterShuffle { payload = { owner = Ref(Player) } }
 event AfterCardDrawn { payload = { owner = Ref(Player) card = Ref(Card) } }

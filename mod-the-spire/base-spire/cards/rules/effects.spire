@@ -123,7 +123,8 @@ template AddCopyEffect {  parameters = { definition = { type = String(length = 6
               fields = {
                 DefinitionId = field(card, Card.DefinitionId) Cost = field(card, Card.Cost)
                 Label = field(card, Card.Label) Targeted = field(card, Card.Targeted) Upgraded = field(card, Card.Upgraded)
-                Exhausts = field(card, Card.Exhausts)
+                Owner = field(card, Card.Owner) CanUpgrade = field(card, Card.CanUpgrade)
+                Exhausts = field(card, Card.Exhausts) LeavesPlay = field(card, Card.LeavesPlay)
               }
             }
           }

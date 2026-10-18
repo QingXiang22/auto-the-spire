@@ -137,6 +137,7 @@ internal static partial class PackageChecks
         Merge(RunRelicBatch6Checks(package, Case), witnesses);
         var potions = RunPotionChecks(package, Case);
         var rooms = RunRestSiteChecks(package, Case);
+        Merge(RunPermanentDeckChecks(package, Case), rooms);
         var rewards = RunRewardChecks(package, Case);
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);

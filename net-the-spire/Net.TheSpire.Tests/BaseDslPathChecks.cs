@@ -26,6 +26,8 @@ internal static class BaseDslPathChecks
         yield return ("CP48 real stdio the last kill publishes the victory outcome", () => StdioTrajectory("kill"));
         yield return ("RW06 real stdio claims the visible gold reward and closes it once", () => StdioTrajectory("reward-claim"));
         yield return ("RW07 real stdio skips the visible gold reward without crediting gold", () => StdioTrajectory("reward-skip"));
+        yield return ("PD09 real stdio smith upgrades a permanent card and its combat copy deals upgraded damage", () => StdioTrajectory("smith-select"));
+        yield return ("PD10 real stdio smith cancellation preserves the room option and permanent deck", () => StdioTrajectory("smith-cancel"));
         yield return ("CP56 real stdio the HP-loss flag drives the extra Spite hit", () => StdioTrajectory("spite"));
         yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
@@ -112,6 +114,9 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "smith-select" or "smith-cancel" => [
+                    ("Strike.Obtain", "0", false, "0", "0", false, ""), ("Strike.Obtain", "0", false, "0", "0", false, ""),
+                    ("EnterDevelopmentRestSite", "0", false, "0", "0", false, ""), ("ForgeAtDevelopmentCampfire", "0", false, "0", "0", false, "")],
                 "start" => [
                     ("Anchor.Obtain", "0", false, "0", "0", false, ""), ("FakeAnchor.Obtain", "0", false, "0", "0", false, ""),
                     ("BeginDevelopmentCombat", "14", true, "0", "0", false, ""), ("EndDevelopmentCombat", "14", false, "0", "0", false, ""),
@@ -191,13 +196,51 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Active, ((WireBool)active.Value!).Value, "public lifecycle state");
                 var open = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.TurnOpen", StringComparison.Ordinal));
                 Check.Equal(step.TurnOpen, ((WireBool)open.Value!).Value, "public turn gate");
-                Check.Equal(!step.Active && Public(snapshot, "Player.Room") != "rewards", snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentCombat", StringComparison.Ordinal)), "begin candidate follows real phase and rewards");
+                Check.Equal(!step.Active && Public(snapshot, "Player.Room") == "none", snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentCombat", StringComparison.Ordinal)), "begin candidate follows real phase and room closure");
                 Check.Equal(step.Active, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentCombat", StringComparison.Ordinal)), "end candidate follows real phase");
                 Check.Equal(step.Active && !step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentTurn", StringComparison.Ordinal)), "turn candidate follows the real turn gate");
                 Check.Equal(step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentTurn", StringComparison.Ordinal)), "end turn candidate follows the real turn gate");
             }
             if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");
             if (mode is "kill" or "reward-claim" or "reward-skip") Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "the public combat outcome follows the last kill");
+            if (mode is "smith-select" or "smith-cancel")
+            {
+                var cancel = mode == "smith-cancel";
+                bool Has(string name) => snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:" + name);
+                bool Upgraded(EntityDto card) => ((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.Upgraded", StringComparison.Ordinal)).Value!).Value;
+                void StepSmith(LegalActionDto candidate)
+                {
+                    var id = "pipe-smith-" + ++stepNumber;
+                    Send(Request(id, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
+                    snapshot = Snapshot(Send(Request(id + "-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                }
+                void StepNamed(string name) => StepSmith(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + name));
+                Check.True(PublicBool(snapshot, "Player.PendingForge"), "smith is pending in the public engine snapshot");
+                Check.False(PublicBool(snapshot, "Player.RoomUsed"), "the option has not been consumed");
+                Check.Equal(3, snapshot.LegalActions.Count, "two permanent choices plus cancellation");
+                Check.True(snapshot.LegalActions.All(a => a.ActionType == "net:action:net.answer_decision"), "only real decision answers are available while paused");
+                Check.Equal(2, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "the permanent deck is publicly visible");
+                var choice = cancel ? snapshot.LegalActions.Single(a => a.Fields.Count == 0) : snapshot.LegalActions.Last(a => a.Fields.Count > 0);
+                var chosenId = cancel ? null : ((WireString)choice.Fields.Single().Value!).Value;
+                StepSmith(choice);
+                Check.False(PublicBool(snapshot, "Player.PendingForge"), "answer clears the pending marker");
+                Check.Equal(!cancel, PublicBool(snapshot, "Player.RoomUsed"), "only successful smith spends the option");
+                Check.Equal(cancel ? 0 : 1, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Card" && Upgraded(e)), "only the selected permanent instance upgraded");
+                if (!cancel) Check.True(Upgraded(snapshot.Entities.Single(e => e.InstanceId == chosenId)), "the exact selected handle upgraded");
+                if (cancel)
+                {
+                    Check.True(Has("RestAtDevelopmentCampfire") && Has("ForgeAtDevelopmentCampfire"), "cancellation leaves both options available");
+                    StepNamed("RestAtDevelopmentCampfire");
+                }
+                StepNamed("LeaveDevelopmentRoom"); StepNamed("AddDevelopmentTarget"); StepNamed("BeginDevelopmentCombat");
+                StepNamed("Draw"); StepNamed("Draw"); StepNamed("BeginDevelopmentTurn");
+                var attack = snapshot.LegalActions.Where(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand")
+                    .First(a => Upgraded(snapshot.Entities.Single(e => e.InstanceId == ((WireString)a.Fields.Single().Value!).Value)) == !cancel);
+                StepSmith(attack);
+                Check.Equal(cancel ? "34" : "31", Public(snapshot, "Enemy.Hp"), "the actual combat copy uses its permanent upgrade state");
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Card.PermanentSource", StringComparison.Ordinal), "hidden source references stay out of the public payload");
+            }
             if (mode is "reward-claim" or "reward-skip")
             {
                 bool Has(string action) => snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:" + action);

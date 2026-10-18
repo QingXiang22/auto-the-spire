@@ -28,7 +28,7 @@ internal static partial class PackageChecks
             var capped = Start(package); Submit(capped, "EnterDevelopmentRestSite"); Set(capped, Player(capped), "Player", "Hp", Value.Of(79L));
             Submit(capped, "RestAtDevelopmentCampfire"); Equal(80L, Hp(capped), "the heal stops at maximum HP");
         });
-        Case("CP114: resting requires a rest site and a battle room clears it", () =>
+        Case("CP114: resting requires a rest site and combat cannot bypass its closing step", () =>
         {
             var s = Start(package);
             True(!Legal(s, "RestAtDevelopmentCampfire"), "no rest candidate outside a rest site");
@@ -41,7 +41,9 @@ internal static partial class PackageChecks
             var forced = Start(copy.Load());
             Throws<EngineFaultException>(() => forced.Submit(forced.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:ForceRest"), forced.Participant(0), []));
             Equal(SessionStatus.Faulted, forced.Status, "the procedure itself also refuses outside a rest site");
-            var battle = Start(package); Submit(battle, "EnterDevelopmentRestSite"); Submit(battle, "BeginDevelopmentCombat");
+            var battle = Start(package); Submit(battle, "EnterDevelopmentRestSite");
+            True(!Legal(battle, "BeginDevelopmentCombat"), "the unfinished rest site cannot be bypassed");
+            Submit(battle, "RestAtDevelopmentCampfire"); Submit(battle, "LeaveDevelopmentRoom"); Submit(battle, "BeginDevelopmentCombat");
             Equal("battle", Room(battle), "starting a battle replaces the room"); Equal("none", Room(Start(package)), "a fresh session starts outside any room");
             Submit(battle, "EndDevelopmentCombat"); Equal("none", Room(battle), "ending the battle leaves the room");
         });

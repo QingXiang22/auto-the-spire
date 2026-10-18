@@ -23,13 +23,27 @@ template CardDefinition {
       }
     }
     subscription OnCardUpgraded { event = CardUpgraded reaction = WhenCardUpgraded }
+    procedure Obtain {
+      parameters = { owner = Ref(Player) }
+      body = {
+        call = {
+          procedure = ObtainPermanentCard
+          args = { owner = owner definition = arg(definition) cost = arg(cost) targeted = arg(targeted) exhausts = arg(exhausts) leavesPlay = arg(leavesPlay) }
+        }
+      }
+    }
+    action Obtain {
+      role = player
+      requires = and(equal(field(first(type(Player)), Player.Room), "none"), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0)))
+      body = { call = { procedure = Obtain args = { owner = first(type(Player)) } } }
+    }
     action AddToHand {
       role = player
       locals = { card = Binding }
       body = {
         create = {
           type = Card scope = frameScope() into = card collection = Hand
-          fields = { DefinitionId = arg(definition) Cost = arg(cost) Label = arg(definition) Targeted = arg(targeted) Exhausts = arg(exhausts) LeavesPlay = arg(leavesPlay) }
+          fields = { DefinitionId = arg(definition) Cost = arg(cost) Label = arg(definition) CanUpgrade = true Targeted = arg(targeted) Exhausts = arg(exhausts) LeavesPlay = arg(leavesPlay) }
         }
       }
     }

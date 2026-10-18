@@ -59,7 +59,9 @@
 
 ## 当前交付
 
-2026-10-18，Codex `/root` 按用户指令接手 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01：战斗金币奖励领取与关闭**，待验证；用户确认 DSH 已停止。`0.5.0-dsl.25` 已实现胜利生成待领金额、领取一次、关闭可跳过、关闭前拒绝跨房；144 项包行为、18 项定向公开检查（含真实 stdio 领取／跳过）、加载和遗物见证检查通过。当前 DSL 定义为卡牌 30、遗物 17、敌人 9、遭遇 2、药水 6；正常单人 scope、源随机与正常 Run 尚未恢复；[草稿 PR #12](https://github.com/QingXiang22/auto-the-spire/pull/12) 已创建，实现提交 `2caf090` 的 core／base／net／migration 四组 [CI](https://github.com/QingXiang22/auto-the-spire/actions/runs/39096365923) 全通过，原版独立对拍仍未取得。修改 base 的 rewards／Player 字段／必要入口守卫、包外检查与文档；不改 Engine／Host 玩法或暂停项。下一可验成果为收口接手时遗留的营火锻造原稿（当前操作开发手牌，尚无对应行为证据），先补资格／选择寿命契约与判别，再接后续奖励内容。完整进度核对、实际命令、未验证与历史证据见[本次记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md)，接口见[奖励契约](../../design/mod-the-spire/combat-rewards/spec.md)。
+2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-DECK-SMITH-01：永久牌组、战斗副本与营火锻造** 的本地交付，待验证；基于未合并的 PR #12／#13。包 `0.5.0-dsl.26` 已有独立 RunDeck、30 个定义的具名获得入口、战斗副本重建、原生可取消的营火永久选牌和升级，取消不消耗选项、临时升级不反写；补齐房间进入／离场与死亡守卫。152 项包行为、20 项公开路径（含真实 stdio 选牌／取消及 9／6 伤害）、当前包遗物见证门槛与 759 份文档检查通过；广覆盖见本分支 CI，不据此关闭原版对拍或正常 Run。修改纯 DSL base、必要元数据、包外检查与文档，未改 Engine／Host 玩法。下一成果从本永久牌组继续恢复真实 Ironclad 起始牌组／起始遗物或卡牌奖励来源；不得用缩减源池随机发牌冒充正式奖励。资格、状态寿命和未支持范围见[契约](../../design/mod-the-spire/permanent-deck-smith/spec.md)，实际命令、失败修复与接手步骤见[交付记录](../records/2026-10-18/permanent-deck-smith-2026-10-18.md)。
+
+2026-10-18，Codex `/root` 按用户指令接手 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01：战斗金币奖励领取与关闭**，待验证；用户确认 DSH 已停止。`0.5.0-dsl.25` 已实现胜利生成待领金额、领取一次、关闭可跳过、关闭前拒绝跨房；144 项包行为、18 项定向公开检查（含真实 stdio 领取／跳过）、加载和遗物见证检查通过。当前 DSL 定义为卡牌 30、遗物 17、敌人 9、遭遇 2、药水 6；正常单人 scope、源随机与正常 Run 尚未恢复；[草稿 PR #12](https://github.com/QingXiang22/auto-the-spire/pull/12) 已创建，实现提交 `2caf090` 的 core／base／net／migration 四组 [CI](https://github.com/QingXiang22/auto-the-spire/actions/runs/39096365923) 全通过，原版独立对拍仍未取得。修改 base 的 rewards／Player 字段／必要入口守卫、包外检查与文档；不改 Engine／Host 玩法或暂停项。该批编码窗口结束；遗留营火锻造已由本页当前首项接续，旧原稿不再作为待交付入口。完整进度核对、实际命令、未验证与历史证据见[本次记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md)，接口见[奖励契约](../../design/mod-the-spire/combat-rewards/spec.md)。
 
 此前 25 批接续的原文与直接证据已并入[接手复核记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md#接手时逐批证据原文)，保留各批范围、失败与未验证项；不作为另一份当前排期。
 
