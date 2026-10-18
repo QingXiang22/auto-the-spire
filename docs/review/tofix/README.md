@@ -897,6 +897,8 @@ W-01～08 保留全项目范围。它们说明最终要交付什么；当前执�
 
 ## 本次文档整理
 
+2026-10-18，Codex /root 已完成统一监听的skill与编写指南补充，待PR审阅。项目skill增加统一监听约束与路由，新指南给出通知／pure修正、实例顺序、Power对照、状态归属和旧行为迁移方法；机制迁移、战斗、物品指南、导航及架构解释同步更新。仓库与用户级skill入口校验通过，779份文档检查0问题，指南两段代码在隔离副本实际得到通知2／4／6／6和共同伤害修正11。未修改生产玩法，证据见[统一监听记录补充](../records/2026-10-18/effect-listener-unification-2026-10-18.md#skill与编写指南补充)，无待续编码工作。
+
 2026-10-18，Codex `/root` 按用户指令完成 CORE-AUTHOR-05 的人类开发手册与 agent skill，本地已验证，待 PR 审阅。基线 main/807d17d；[人类手册](../../development/base-spire/README.md)覆盖全部游戏开发领域，含两篇从隔离初态逐步走通的教程；[项目 skill](../../../.agents/skills/base-spire-development/SKILL.md)复用同一文档并提供有界来源定位。实际得到 6→8、逐抽 2／4／6／6、无遗物 0 和组合 10／12／14；定位助手 9 项演练、skill 元信息／引用及 720 份文档检查通过。未修改生产玩法，未运行远程 DSH 或独立 agent 评审；尚缺领域只给恢复方法，不计可玩支持。范围与验收见[交付约定](../../design/mod-the-spire/base-development-docs.md)，结果与未验证项见[记录](../records/2026-10-18/base-development-manual-skill-2026-10-18.md)。后续恢复玩法时同步维护准确操作和对应领域指南，原完整范围不变。
 
 2026-10-17按当前workflow-b审阅修订计划：保留领域分类，新增唯一当前交付，首批收窄为Sown＋SapphireSeed；明确每批即时集成、Neow先于正常首幕验收、PR主要归属及历史认领。当前稿待用户review，未开工；五项审阅发现的处理与验证附在[规划记录](../records/2026-10-17/domain-task-plan-2026-10-17.md)。

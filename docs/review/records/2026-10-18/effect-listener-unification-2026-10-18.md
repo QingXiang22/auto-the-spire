@@ -46,3 +46,11 @@ foldEvent依次调用pure监听者，将返回值作为下一监听者首参；�
 独立原版两侧执行0，首差不适用；正常Run、多人、未迁移内容、替换与正式熔化操作仍开放。Power目录260项仍保留definition=null，本批迁移的是已有能力消费者，不计为260种内容实现。广覆盖和迁移检查由Actions承担，本地未重复训练、性能或正常整局套件。
 
 交接按auto-the-spire-handoff接手自查，未派独立agent；状态只回写主清单，接口维护契约和作者参考，日志留.audit不提交。本地AGENTS.md不提交。
+
+## skill与编写指南补充
+
+同日按用户补充要求更新base-spire-development skill，明确统一监听约束并路由到[监听编写指南](../../../development/base-spire/how-to/write-effect-listeners.md)。指南以实际通知模板和Strength纯修正为例，说明入口选择、实例绑定、顺序、专属状态、旧行为迁移及验证；机制迁移、战斗、物品指南和架构解释同步链接。手册入口移除过时内容件数及未实现描述，能力状态继续查主清单与实际报告。
+
+用户级skill为仓库目录的联接，修改项目SKILL.md即同步生效；两种入口均经skill-creator的quick_validate.py校验通过。python -X utf8 tools/doc-check/check_docs.py实际扫描779份Markdown、0问题，git diff --check通过。未修改生产玩法，未重复全量游戏检查。
+
+从新指南提取两段代码，在.audit/listener-skill-guide-check隔离副本中替换／注册并实际执行：通知通过run_relic_lesson.py真实stdio得到2／4／6／6，报告为.audit/listener-skill-guide-notification.json；Strength示例经validate启动探针与StrikeDummy共同得到伤害11，不是只检查解析成功。该副本不进入正式内容或原版覆盖结算。

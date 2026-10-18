@@ -14,6 +14,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[主清单](../../../docs/review/tofix/README.md)维护状态，[迁移规格](../../../docs/design/mod-the-spire/engine-dsl-migration/spec.md)定义纯包边界。
 
 - base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，共享过程放领域 rules，具体 catalog definition 只用模板 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
+- 遗物与Power统一按[监听编写指南](../../../docs/development/base-spire/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。
 - scope 从实际 package.json 读取。静态源条目、DSL 定义、行为见证、独立比较与正常 Run 分别结算；definition=null 不计支持。
 - 旧 C#／旧作者语法只在 `tools/base-migration-baseline/` 取证，不恢复生产依赖。原源池、资格与严格用例分母保持；未迁移显式失败，不删池、补答案或注册空效果。
 - 新共享机制先补对应 spec 的状态、输入、顺序、寿命、失败和验证，再写 DSL。通用语言缺口用最小文本复现按现有授权处理；本 skill 不授权解除暂停、重开冻结核心或派出远程 agent。
@@ -26,6 +27,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 | 新共享触发／生命周期 | [机制迁移](../../../docs/development/base-spire/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/development/base-spire/reference/operations.md)；语法实践看[共享规则教程](../../../docs/development/base-spire/tutorials/shared-rule.md) |
 | 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/development/base-spire/how-to/cards-and-combat.md) | 目标源类／共享契约，不通读全部 Cards |
 | Power、遗物、药水 | [Power 与物品](../../../docs/development/base-spire/how-to/powers-relics-potions.md) | 目标生命周期和一个真实调用方 |
+| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/development/base-spire/how-to/write-effect-listeners.md) | [领域契约](../../../docs/design/mod-the-spire/effect-listeners.md)与[通用签名](../../../docs/dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
 | 敌人、行动、遭遇 | [敌人与遭遇](../../../docs/development/base-spire/how-to/enemies-and-encounters.md) | 对应敌人／遭遇与随机契约 |
 | 角色、房间、地图、奖励、跨幕／终局 | [Run 与房间](../../../docs/development/base-spire/how-to/run-and-rooms.md) | 本次拥有状态的领域契约及必要消费者 |
 | 加载失败、公开结果或覆盖问题 | [验证与排障](../../../docs/development/base-spire/how-to/verify-and-debug.md) | 报错文件附近；包字段只查[格式参考](../../../docs/dsl/core/0.3/package-reference.md) |
@@ -54,6 +56,8 @@ rg -n -C 8 'AfterShuffle|Block' sts2/src/Core/Models/Relics/TheAbacus.cs
 ## 实施与验证
 
 复用准确的完整领域操作，不把字段更新当作获得／复制／死亡等完整行为。按显式 index 组合，JSON 只描述静态来源／元信息；公开内容列表与源目录各按其职责维护。
+
+编写监听时先区分通知产生副作用与pure修正返回计算值。instances筛选资格，reaction末参接收当前listener，instance_order表达实际实例顺序；专属状态按能力／实例保存并随获得、移除和跨战清理。按改动选择能区分顺序、失效、嵌套／暂停和查询只读的验证；完整规则及示例维护在指南，不在skill复制另一套接口。
 
 选择上面验证指南中与修改相符的命令。`validate` 证明加载和启动；当前 `check` 是固定正式行为验证，不能通用证明任意新内容。教学驱动只提供实际公开观测，不产生原版覆盖资格。新增正式内容的行为见证必须实际执行，独立对拍未运行就保持未验证。
 
