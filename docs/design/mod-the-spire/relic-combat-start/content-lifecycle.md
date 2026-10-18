@@ -62,6 +62,20 @@ Sai使用TurnStartBlockRelic，每次本持有者AfterSideTurnStarted调用GainU
 
 三模板均按实际库存顺序绑定有效、未熔化且Holder匹配的实例，执行前由统一调度重查资格。开发Obtain仅检查本持有者已有定义，不让其他持有者阻止获得；直接ObtainRelic同样触发后续回合效果。同定义实例分别计数并各自贡献。非法重复BeginDevelopmentTurn在发布通知前拒绝，不能推进计数或重复奖励。判别复用回合测试，补每件数值见证、跨战、新实例、失效与持有者隔离、NoEnergyGain和资源封顶；公开stdio从实际获得到多回合和跨战结果。正常来源／Run和独立原版双侧仍未验证。
 
+## 无状态攻击修正（DSL-RELIC-CONTENT-07／RELIC-G05）
+
+MiniatureCannon的完整ModifyDamageAdditive对有牌源、牌已升级的加成攻击加3；源资格为攻击者是本持有者或牌属于本持有者，二者满足其一即可。UpgradedAttackDamageRelic监听ModifyAttackAdditive，牌为空先跳过，再按Card.Upgraded及显式owner／Card.Owner与本实例Holder判断；不要求Strike标签，不直接改基础伤害。当前DamageEnemyPowered的owner表示玩家攻击者，不能借CurrentPlay猜牌源；召唤物攻击仍未恢复。加值与力量／Strike加值同在乘法前，每段攻击分别应用，自动和重复读取各自实际牌源。
+
+PaperPhrog由原VulnerablePower查询攻击者持有遗物后，将目标易伤倍率从1.5加0.25；无易伤不生效，不增强持有者自身受到的易伤。PaperKrane由原WeakPower查询目标持有遗物后，将攻击者虚弱倍率从0.75减0.15；无虚弱不减伤，也不增强持有者自己攻击时的虚弱。恢复的消费者分别是玩家攻击敌人和敌人攻击玩家，双侧身份与源谓词一致；不能把两件作为整段伤害的固定乘数。
+
+新增pure修正通知`ModifyVulnerableMultiplier(value: Int, owner: Ref(Player), card: Binding, target: Binding)`，value单位为百分数点，Vulnerable实例确认目标且层数>0后才以150征询，之后加已有Cruelty的百分数点，再乘当前伤害。新增`ModifyEnemyWeakMultiplier(value: Int, owner: Ref(Player), attacker: Ref(Enemy))`，owner为防守玩家；EnemyWeak确认攻击者且层数>0后以75征询再乘伤害。参数化StatusMultiplierRelic的vulnerableBonus=25或weakReduction=15，默认各为0，只对有效且Holder匹配的实例贡献。两个站点不在无状态时调用，不修改Power层数，也不改变时长与衰减。
+
+乘法仍沿现有10000定点链保留小数，最终只在扣格挡前向下取整；例如升级Strike9+力量1+Cannon3，经玩家虚弱0.75及目标易伤(1.5+0.25+Cruelty0.20)，最终floor(13*0.75*1.95)=19，再扣格挡。敌方(基础13+力量1)*0.60*玩家易伤1.5=12.6，最终12再扣格挡。未加成伤害／直接失血不经过这些站点。监听只读，不写状态、不消费随机或缓存；移除／熔化即时失效，开发获得仅按持有者去重。现有取整精度及百分数域保持，未来更细小数倍率另补契约。
+
+直接ObtainRelic允许开发夹具创建同定义多实例，沿统一监听约定分别贡献；weakReduction返回的倍率最低为0，不能产生负伤害导致加血或增加格挡。正常库存唯一性仍待来源域恢复，该开发多实例折叠不作为原版GetRelic只取一件的独立比较证据。
+
+判别包含三件实际获得及数值、Cannon未升级／非Strike／多段与重复／自动、两个倍率的有无状态／错误侧／其他敌人、Cruelty叠加与最终取整、实例失效／持有者隔离、重复pure查询和Thrash预览消费者。公开stdio从真实获得、升级牌／施加状态到伤害与敌方阶段，不注入结果。正常来源、独立原版双侧及正常Run仍未验证；Akabeko、PenNib和MysticLighter需要各自完整机制，不归本切片。
+
 ## 判别与边界
 
 逐件真实获得／触发的数值见证；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证拾取、计数、Strike伤害和跨回合能量消费者，覆盖门槛要求所有新增definition有实际场景。

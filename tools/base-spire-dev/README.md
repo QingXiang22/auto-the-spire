@@ -18,6 +18,8 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 遗物定向入口也执行CombatTurnRelicChecks：指定回合能量、每3／5次跨战计数和Sai每回合无加成格挡；复用已有回合门、移除／熔化与持有者隔离判别，补NoEnergyGain、资源上限、不同实例进度及Anchor／HornCleat组合。公开stdio的turn-start-resources轨迹实际获得五件遗物，执行第1至4回合，再跨战验证花朵第5次与Cocoa叠加；不注入资源结果。
 
+AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog／PaperKrane：升级资格、显式攻击者或牌拥有者、有无状态与正确敌人、力量／虚弱／易伤／Cruelty／格挡顺序、移除／熔化、自动／重复和只读预览。公开cannon-phrog轨迹从永久升级到实际Bash易伤与升级Strike伤害；paper-krane轨迹实际施加Shockwave，再观察敌人的攻击／增益／攻击三回合，未注入伤害结果。
+
 同一遗物定向入口还执行ChemicalX的捕获／支付与效果X分离、零能量、普通／升级、嵌套自动与重复出牌、实例／持有者隔离、移除／熔化、纯查询和选牌暂停续接判别。原版星星X、正常商店获得与独立对拍仍未验证；契约见[效果X修正](../../docs/design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 拾取随机升级组也使用`check --relic-content-only`，验证Whetstone／WarPaint／SandCastle的类型／张数、完整Niche洗牌、固定源选中实例／事件顺序／游标、重复获得、嵌套调用、无临时状态残留及两战副本。向量只来自独立源码神谕，生成方式见[rng-oracle](../rng-oracle/README.md)；公开stdio逐件观察永久升级和实际攻击／格挡，不构成正常Run。

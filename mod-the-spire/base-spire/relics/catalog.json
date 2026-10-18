@@ -1849,8 +1849,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/MiniatureCannon.cs; +3 for upgraded card damage declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/MiniatureCannon.cs; complete gameplay and actual Power consumers reviewed; attack modifier checks exercise the source predicate; normal source and independent reference unverified",
+      "definition": "relics/shared/miniature-cannon.spire"
     },
     {
       "id": "base-spire:miniature-tent",
@@ -2256,9 +2256,9 @@
       "pools": [
         "SilentRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Relics/PaperKrane.cs; complete gameplay and actual Power consumers reviewed; attack modifier checks exercise the source predicate; normal source and independent reference unverified",
+      "definition": "relics/shared/paper-krane.spire"
     },
     {
       "id": "base-spire:paper-phrog",
@@ -2268,9 +2268,9 @@
       "pools": [
         "IroncladRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Relics/PaperPhrog.cs; complete gameplay and actual Power consumers reviewed; attack modifier checks exercise the source predicate; normal source and independent reference unverified",
+      "definition": "relics/shared/paper-phrog.spire"
     },
     {
       "id": "base-spire:parrying-shield",

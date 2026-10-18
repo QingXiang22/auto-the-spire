@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: PaperKrane.cs; source hash retained in relics/catalog.json.
+use PaperKrane { template = StatusMultiplierRelic args = { definition = "base-spire:paper-krane" weakReduction = 15 } }

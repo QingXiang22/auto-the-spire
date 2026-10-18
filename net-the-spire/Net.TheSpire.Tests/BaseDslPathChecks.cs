@@ -44,6 +44,8 @@ internal static class BaseDslPathChecks
         yield return ("RM real stdio StrikeDummy and FakeStrikeDummy add damage before block", () => StdioTrajectory("relic-strike"));
         yield return ("RM real stdio IceCream carries energy and ArtOfWar rewards the previous empty turn", () => StdioTrajectory("relic-energy"));
         yield return ("TC real stdio five turn-start relics expose exact energy, block and cross-combat flower progress", () => StdioTrajectory("turn-start-resources"));
+        yield return ("AM real stdio MiniatureCannon and PaperPhrog enhance a permanent upgraded card against real Vulnerable", () => StdioTrajectory("cannon-phrog"));
+        yield return ("AM real stdio PaperKrane reduces actual weak enemy attacks before and after its Strength buff", () => StdioTrajectory("paper-krane"));
         yield return ("CX real stdio ChemicalX increases effect hits at three and zero energy without changing raw captured X", () => StdioTrajectory("chemical-x"));
         foreach (var relic in new[] { "whetstone", "war-paint", "sand-castle" })
             yield return ("UP real stdio permanent pickup upgrade and actual combat copy: " + relic, () => StdioTrajectory("pickup-upgrade-" + relic));
@@ -158,6 +160,30 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "cannon-phrog" => [
+                    ("MiniatureCannon.Obtain", "0", false, "0", "0", false, ""),
+                    ("PaperPhrog.Obtain", "0", false, "0", "0", false, ""),
+                    ("Strike.Obtain", "0", false, "0", "0", false, ""),
+                    ("Whetstone.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("Bash.AddToHand", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "1", "1", true, "32"),
+                    ("Draw", "0", true, "1", "1", true, "32"),
+                    ("PlayAttackFromHand", "0", true, "0", "1", true, "11")],
+                "paper-krane" => [
+                    ("PaperKrane.Obtain", "0", false, "0", "0", false, ""),
+                    ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "55"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "55"),
+                    ("Shockwave.AddToHand", "0", true, "3", "1", true, "55"),
+                    ("PlayCardFromHand", "0", true, "1", "1", true, "55"),
+                    ("EndDevelopmentTurn", "0", true, "1", "1", false, "55"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, "55"),
+                    ("EndDevelopmentTurn", "0", true, "3", "2", false, "55"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "3", true, "55"),
+                    ("EndDevelopmentTurn", "0", true, "3", "3", false, "55")],
                 "turn-start-resources" => [
                     ("Candelabra.Obtain", "0", false, "0", "0", false, ""),
                     ("Chandelier.Obtain", "0", false, "0", "0", false, ""),
@@ -349,6 +375,7 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
                 Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");
                 if (step.Target.Length > 0) Check.Equal(step.Target, Public(snapshot, "Enemy.Hp"), "public development target HP follows the real damage result");
+                if (mode == "paper-krane" && step.Action == "EndDevelopmentTurn") Check.Equal(step.Turn == "3" ? "72" : "78", Public(snapshot, "Player.Hp"), "actual weak attacks use .60, including Strength before the third-turn attack");
                 var active = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.CombatActive", StringComparison.Ordinal));
                 Check.Equal(step.Active, ((WireBool)active.Value!).Value, "public lifecycle state");
                 var open = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.TurnOpen", StringComparison.Ordinal));

@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: PaperPhrog.cs; source hash retained in relics/catalog.json.
+use PaperPhrog { template = StatusMultiplierRelic args = { definition = "base-spire:paper-phrog" vulnerableBonus = 25 } }

@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: MiniatureCannon.cs; source hash retained in relics/catalog.json.
+use MiniatureCannon { template = UpgradedAttackDamageRelic args = { definition = "base-spire:miniature-cannon" amount = 3 } }

@@ -1,7 +1,7 @@
 {
   "format": "engine-dsl/package@1",
   "id": "base-spire",
-  "version": "0.6.0-dsl.37",
+  "version": "0.6.0-dsl.38",
   "language": "core/0.3",
   "entry": "base.spire",
   "public_metadata": "public/metadata.json",

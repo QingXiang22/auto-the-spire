@@ -29,6 +29,8 @@
 
 伤害与能量参与者使用CombatModifierRelic订阅ModifyAttackAdditive和ShouldResetEnergy，主流程通过foldEvent征询监听者。DamageEnemyPowered显式传owner和card；Strike加成在虚弱／易伤前参与。ResetTurnEnergy依ShouldResetEnergy结果重置或补最大能量，再发AfterEnergyReset。NoAttackTurnEnergyRelic监听出牌、回合末和能量重置，状态归ArtOfWar.State，获得时创建、移除时清理。完整顺序及签名见[统一监听契约](../../../design/mod-the-spire/effect-listeners.md)。
 
+升级牌加伤使用UpgradedAttackDamageRelic，MiniatureCannon配置amount=3；判断实际Card.Upgraded，并保留源“攻击者或牌拥有者满足其一”的资格，不限Strike。PaperPhrog／PaperKrane使用StatusMultiplierRelic，在对应Power确认正层状态后，分别经ModifyVulnerableMultiplier／ModifyEnemyWeakMultiplier调整百分数点，再计算伤害。不要把1.75／0.60作为总伤害固定倍率，也不要在Power中按遗物ID查询。移除／熔化由实例订阅即时失效；计算仍在最终扣格挡前取整一次。参数见[操作参考](../reference/operations.md)，完整边界见[无状态攻击修正契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#无状态攻击修正dsl-relic-content-07relic-g05)。
+
 效果 X 参与者复用 `XValueRelic` 模板，ChemicalX配置amount=2；通过ModifyXValue pure监听返回新值，不改Card.PaidX或Player.Energy。卡牌效果调用ResolveEnergyXValue，支付仍用GetCardEnergyCost。移除／熔化立即失效，重复效果重新查询监听；星星 X 尚未接入。完整边界见[效果X契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 主动／回合／战斗／受伤／死亡／抽牌等遗物分别消费相应共享机制。涉及长期最大生命、金币或永久牌组时，调用 Run 的权威操作，避免战斗副本与永久状态重复获利。验证一次获得／一次移除、实际触发、不持有／熔化负例、计数边界、两实例／持有者隔离和跨战重建。

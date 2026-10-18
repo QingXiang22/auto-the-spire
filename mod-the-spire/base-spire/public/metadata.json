@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.6.0-dsl.37",
+  "static_build_id": "base-spire-dsl-0.6.0-dsl.38",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -60,7 +60,10 @@
         "base-spire:chandelier",
         "base-spire:very-hot-cocoa",
         "base-spire:fake-happy-flower",
-        "base-spire:sai"
+        "base-spire:sai",
+        "base-spire:miniature-cannon",
+        "base-spire:paper-phrog",
+        "base-spire:paper-krane"
       ]
     },
     "base-spire:Enemy": {

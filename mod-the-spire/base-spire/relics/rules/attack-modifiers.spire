@@ -1,0 +1,65 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# MiniatureCannon: powered, upgraded card attack; holder is the dealer OR the card's owner.
+template UpgradedAttackDamageRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    amount = { type = Int(min = 0, max = 999) }
+  }
+  body = {
+    procedure Damage {
+      pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Relic) }
+      result = Int body = {
+        if = { condition = not(isNone(card)) then = {
+          if = { condition = and(field(card, Card.Upgraded), or(equal(field(listener, Relic.Holder), owner), equal(field(card, Card.Owner), field(field(listener, Relic.Holder), Player.Owner)))) then = {
+            return = { value = add(value, arg(amount)) }
+          } }
+        } }
+        return = { value = value }
+      }
+    }
+    subscription Damage {
+      event = ModifyAttackAdditive reaction = Damage
+      instances = where(collection(Relics), r, and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))
+      instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}
+
+# PaperPhrog / PaperKrane: adjust the status multiplier, not the complete attack damage.
+template StatusMultiplierRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    vulnerableBonus = { type = Int(min = 0, max = 100) default = 0 }
+    weakReduction = { type = Int(min = 0, max = 75) default = 0 }
+  }
+  body = {
+    procedure Vulnerable {
+      pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Relic) }
+      result = Int body = { return = { value = add(value, arg(vulnerableBonus)) } }
+    }
+    subscription Vulnerable {
+      event = ModifyVulnerableMultiplier reaction = Vulnerable
+      instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition)))))
+      instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    procedure Weak {
+      pure = true parameters = { value = Int owner = Ref(Player) attacker = Ref(Enemy) listener = Ref(Relic) }
+      result = Int body = { return = { value = maximum(0, subtract(value, arg(weakReduction))) } }
+    }
+    subscription Weak {
+      event = ModifyEnemyWeakMultiplier reaction = Weak
+      instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition)))))
+      instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

@@ -34,7 +34,7 @@ procedure Vulnerable {
   result = Int body = {
     if = {
       condition = and(equal(field(listener, Power.HolderEnemy), target), greater(field(listener, Power.Stacks), 0)) then = {
-        return = { value = divide(multiply(value, add(150, pureCall(PlayerPowerAmount, owner, "vulnerable-bonus"))), 100) }
+        return = { value = divide(multiply(value, add(foldEvent(ModifyVulnerableMultiplier, 150, owner, card, target), pureCall(PlayerPowerAmount, owner, "vulnerable-bonus"))), 100) }
       }
     }
     return = { value = value }
@@ -66,7 +66,7 @@ procedure EnemyWeak {
   result = Int body = {
     if = {
       condition = and(equal(field(listener, Power.HolderEnemy), attacker), greater(field(listener, Power.Stacks), 0)) then = {
-        return = { value = divide(multiply(value, 3), 4) }
+        return = { value = divide(multiply(value, foldEvent(ModifyEnemyWeakMultiplier, 75, owner, attacker)), 100) }
       }
     }
     return = { value = value }
