@@ -7,6 +7,7 @@ internal static partial class PackageChecks
         var count = 0; RunRelicContentChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         RunRelicModifierChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         RunXValueRelicChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
+        RunPickupUpgradeChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         RunEffectListenerChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         Console.WriteLine($"All {count} focused relic-content checks passed; full check is required for coverage evidence."); return 0;
     }

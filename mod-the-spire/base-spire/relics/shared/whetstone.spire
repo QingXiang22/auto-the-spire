@@ -1,0 +1,4 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use Whetstone { template = PickupRandomUpgradeRelic args = { definition = "base-spire:whetstone" kind = "attack" amount = 2 } }

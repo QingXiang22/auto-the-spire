@@ -18,6 +18,14 @@ python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanil
 
 ## 两层向量
 
+拾取随机升级的冻结向量独立生成：
+
+```powershell
+python -X utf8 tools/rng-oracle/pickup_upgrade_vectors.py --output tools/base-spire-dev/fixtures/pickup-upgrade-vectors.json
+```
+
+该神谕只导入本目录的原版RNG重写，读取三件遗物／卡牌／排序／随机源并保存hash，不导入Engine或base DSL。三个预定seed对比连续两次Whetstone、WarPaint、SandCastle的选中实例、升级事件顺序及共用Niche游标；候选范围小于16，等键顺序适用当前.NET小范围插入排序，不将此向量扩张为大型等键牌组或正常Run对拍。
+
 纯DSL恢复使用新的源消费者向量入口：
 
 ```powershell

@@ -4,7 +4,7 @@
 
 2026-10-17按用户要求重新规划，并依据当前workflow-b审阅修订；用户随后指令继续推进，Codex `/root`按当前交付接续Sown＋SapphireSeed，暂停项保持。**部分交付、待验证、整体已验收分别记录**；计划修订不代表新增玩法验收。
 
-[领域任务](#当前任务) · [当前交付](#当前交付) · [归属与依赖](#归属与依赖) · [推进顺序](#推进顺序) · [每批集成](#每批集成与重排条件) · [原任务合同](#任务详情) · [完整环境范围](#完整环境的验收范围)
+[领域任务](#当前任务) · [当前交付](#当前交付) · [遗物分组](#遗物分组任务) · [归属与依赖](#归属与依赖) · [推进顺序](#推进顺序) · [每批集成](#每批集成与重排条件) · [原任务合同](#任务详情) · [完整环境范围](#完整环境的验收范围)
 
 ## 当前目标
 
@@ -58,6 +58,8 @@
 | **后续AI与指定mod** | AI／共享Transformer和训练暂缓；指定mod需用户明确范围，其他工作沿原触发条件 | [指定mod](#env-t16)、[W完整范围](#项目长期范围)、[暂停项](#暂缓和另行安排的工作) |
 
 ## 当前交付
+
+2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-04：拾取随机永久升级**，对应RELIC-G01，P1／待验证。基于`7ff95ca`／PR #23，沿现有遗物开发分支接续，base `0.6.0-dsl.35`。已按用户要求建立下方20组与依赖／验收／重排方法，并交付Whetstone／WarPaint／SandCastle共用的永久资格筛选、完整Niche稳定洗牌后截取及原实例UpgradeCard；每调用独立临时状态，支持嵌套并返回清理。53项遗物定向、371项包行为、36项公开路径、3组独立源向量及solution构建通过；42件遗物实际见证／297来源／254未实现／1源排除，铁甲85/85保持。修改base卡牌／遗物／元数据、包外工具／源向量／公开检查及文档，未改core或参考。方法见[遗物开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)，接口、身份、来源和实际证据见[交付记录](../records/2026-10-18/relic-groups-and-pickup-upgrades-2026-10-18.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后认领G19简单拾取资源子包。正常来源、独立原版双侧、正常Run及父项不关闭，暂停项保持。
 
 2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-03：Chemical X 与效果 X 修正**，P1／待验证。基于main／`3a160c6`（统一监听及指南已合并），分支`codex/relic-chemical-x-20261018`，base `0.6.0-dsl.34`。新增pure ResolveEnergyXValue／ModifyXValue实例监听，ChemicalX只给效果X+2，不改捕获、支付或能量；Whirlwind／Cascade普通、升级、自动、重复及暂停续接均实际执行。43项遗物定向、361项包行为、33项公开路径及solution构建通过；39件遗物实际见证／297来源／257未实现／1源排除，铁甲85/85保持。修改base共享X接缝／内容／元数据、tools与net包外检查和文档，未改core／参考。准确边界见[遗物契约](../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)，身份、来源、命令与失败修正见[交付记录](../records/2026-10-18/relic-chemical-x-2026-10-18.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后接拾取永久升级机制。星星X、正常商店来源、独立原版对拍、正常Run及父项仍未关闭，暂停项保持。
 
@@ -122,6 +124,33 @@
 参考的SapphireSeed.Plant自动选首张，不能当作玩家任选实例的正确性依据；已实测其Sown通用MutableClone重置状态，但CreateClone经CloneForCombat恢复状态，后者可实际比较。可比部分使用独立原生执行，非首张选择按只读sts2源场景核验并具名保留差异，不改参考、不自动代选。对应比较保持blocked_compare，不计整批完整通过。
 
 验证已扩展`event-modules --event SapphireSeed`，包含Eat、首张Plant比较及非首张差异；Slice的`--sown-only`验证实例与两战寿命，`sown-combat`核对实际出牌。检查范围和运行命令见本批记录；受控访问不替代正常路线，正常探索失败不替换原固定验收case。
+
+## 遗物分组任务
+
+本表维护全遗物主线的机制分组及排期；名字为候选示例，完整来源仍以catalog为准。每组按真实源方法进一步拆完整子包，只有参数不同才直接共享模板；已交付的其他内容不重做。设计、风险与G01实施步骤见[开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)。共用主责Codex `/root`，未认领组不占生产窗口，其他角色及召唤／复活暂停保持。
+
+| 组／机制 | 候选与合批边界 | 优先级／状态 | 依赖及下一可验成果 |
+| --- | --- | --- | --- |
+| RELIC-G01 拾取随机永久升级 | Whetstone、WarPaint、SandCastle；类型／张数参数化 | P1／待验证 | CONTENT-04已交付；固定源向量、两战及公开证据见当前交付，待PR／CI审阅；正常来源未验收 |
+| RELIC-G02 永久选牌修改 | Pomander、YummyCookie、EmptyCage、PreciseScissors；升级与移除分别子包 | P2／待认领 | 原生永久多选、取消和完整移除；暂停续接不重放拾取 |
+| RELIC-G03 卡牌创建修正 | MoltenEgg、ToxicEgg、FrozenEgg；附魔参与者另接依赖 | P2／待认领 | 奖励展示／商店创建／入组前修正与NoHookUpgrades三处完整消费者 |
+| RELIC-G04 回合资源与开场效果 | Candelabra、Chandelier、VeryHotCocoa、FakeHappyFlower、Sai；按事件和资源子包 | P1／待认领 | 复用监听与资源；回合条件、NoEnergyGain、实例计数及移除 |
+| RELIC-G05 攻击与格挡修正 | Akabeko、PenNib、MiniatureCannon、MysticLighter、PaperPhrog、PaperKrane | P1／待认领 | 显式牌源／目标和pure修正；一次消耗／多段／重复及计算阶段分别验收 |
+| RELIC-G06 出牌／牌区反应 | GamePiece、JossPaper、CharonsAshes、ToughBandages、Tingsha、UnceasingTop | P1／待认领 | 缺失弃牌／手空通知先补契约；计数、嵌套抽牌及末杀余效 |
+| RELIC-G07 抽牌、留牌与行动限制 | Pocketwatch、Fiddle、RunicPyramid、RingingTriangle、VelvetChoker、SneckoEye | P2／待认领 | 手牌清理／可出牌守卫／随机费用；纯查询与跨回合历史一致 |
+| RELIC-G08 受损、阈值与死亡 | RedSkull、SelfFormingClay、DemonTongue、TungstenRod、TheBoot、LizardTail、FragrantMushroom | P2／待认领 | 最终失血与防止死亡顺序；伤害修正和死亡防止分别子包 |
+| RELIC-G09 药水库存与触发 | PotionBelt、AlchemicalCoffer、PhialHolster、Sozu、ReptileTrinket | P2／待认领 | 动态容量、获得／拒绝／满栏／使用，掉落消费由G10提供 |
+| RELIC-G10 奖励生成与资格 | WhiteBeastStatue、BlackStar、PrayerWheel、WhiteStar、Orrery、AmethystAubergine | P2／待认领 | 真实奖励前置消费、容器及完整池；卡牌／药水／遗物奖励分子包 |
+| RELIC-G11 房间与长期资源 | VenerableTeaSet、FakeVenerableTeaSet、EternalFeather、MealTicket、Pantograph、MawBank | P2／待认领 | 房间类型／历史、离场与下战重置；不拿开发战斗当真实房间 |
+| RELIC-G12 商店参与者 | MembershipCard、TheCourier、WongoCustomerAppreciationBadge、FakeMerchantsRug | P2／待认领 | 价格／补货与真实商店库存；静态资格也须源依据 |
+| RELIC-G13 营火参与者 | Girya、Shovel、MeatCleaver、MiniatureTent、StoneHumidifier、DreamCatcher | P2／待认领 | 选项修改、费用、一次到访、取消及产生奖励；不重做已有休息 |
+| RELIC-G14 永久生成／复制／变换 | Astrolabe、PandorasBox、NewLeaf、DollysMirror及生成牌拾取者 | P2／待认领 | 完整获得／移除／复制／变换、源池与随机流；先交共享操作再接内容 |
+| RELIC-G15 附魔与关键词 | GnarledHammer、Kifuda、PunchDagger、RoyalStamp、FresnelLens、WingCharm | P3／待认领 | 源附着身份／替换／升级／复制及资格；不把注册名当行为 |
+| RELIC-G16 地图、古代人与跨域长期效果 | GoldenCompass、JuzuBracelet、WingedBoots、FurCoat、LordsParasol | P3／待认领 | 正常地图／房间／Ancient上下文；按跨域真实消费者收口 |
+| RELIC-G17 遗物替换／熔化 | SwordOfStone、TouchOfOrobas、ToyBox及升级遗物 | P2／待认领 | 完整Replace／Melt、旧状态清理、新拾取和实例身份；不能只改字段 |
+| RELIC-G18 其他角色与特殊规则 | CrackedCore、GoldPlatedCables、BigHat、MiniRegent、Byrdpip、PaelsLegion等 | P3／暂缓 | 各自角色资源／召唤依原授权恢复，不将通用物品分支一并暂停 |
+| RELIC-G19 拾取基础资源 | FakeMango、LoomingFruit、NutritiousOyster、SignetRing、GoldenPearl等 | P1／待认领 | 核对完整源方法，复用已有最大生命／金币拾取模板，永久结果不因移除撤回 |
+| RELIC-G20 源特例复核与归组 | 尚未确定主要机制、只有属性覆写或有多个跨域阶段的剩余条目 | P2／待认领 | 从完整catalog核对遗漏；记录源方法／属性与组依赖，无法归类不表示排除或自动暂停 |
 
 ## 归属与依赖
 

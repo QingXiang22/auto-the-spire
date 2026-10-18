@@ -2761,9 +2761,9 @@
       "pools": [
         "EventRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "SandCastle.AfterObtained: full StableShuffle on RunState.Rng.Niche then Take, original permanent instances upgraded; source pool and rarity retained; DSL witnesses required, independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/sand-castle.spire"
     },
     {
       "id": "base-spire:screaming-flagon",
@@ -3458,9 +3458,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "WarPaint.AfterObtained: full StableShuffle on RunState.Rng.Niche then Take, original permanent instances upgraded; source pool and rarity retained; DSL witnesses required, independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/war-paint.spire"
     },
     {
       "id": "base-spire:whetstone",
@@ -3470,9 +3470,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "Whetstone.AfterObtained: full StableShuffle on RunState.Rng.Niche then Take, original permanent instances upgraded; source pool and rarity retained; DSL witnesses required, independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/whetstone.spire"
     },
     {
       "id": "base-spire:whispering-earring",

@@ -38,6 +38,16 @@ ArtOfWar.State按遗物实例保存ThisTurn和LastTurn，获得时创建、移�
 
 验收需区分0／正能量、普通／升级、与无遗物基线及非 X 牌的差别；每次重复只支付一次且不重复叠加修正；Havoc／Cascade 的嵌套自动 X 捕获正确；移除／熔化／不同持有者及同定义两实例隔离；X 查询多次调用不改变状态、版本或随机游标；在首次效果后的移除使后续重复使用新监听集合。覆盖报告必须包含实际 ChemicalX 获得和触发，公开真实stdio执行3能量Whirlwind产生5段攻击，保留PaidX=3且能量降为0。
 
+## 拾取随机永久升级（DSL-RELIC-CONTENT-04／RELIC-G01）
+
+源Whetstone与WarPaint在AfterObtained分别筛选可升级Attack／Skill，StableShuffle(Niche)后Take(2)；SandCastle筛选所有可升级牌后Take(6)。已升级和CanUpgrade=false不入候选，仅处理该持有者RunDeck中的永久实例。按SourceCardSortKey使用源非稳定排序，再完整降序Fisher-Yates；即使只取前两张也消费全部候选n−1次Niche，空／单张不消费。不得改用CombatCardSelection、Rewards或逐次samplePick，不发战斗AfterShuffle，不移动RunDeck成员或改变顺序。
+
+cards拥有`UpgradeRandomPermanentCards(owner: Ref(Player), kind: String(16), amount: Int(1..999))`完整操作，kind仅接受attack／skill／all，非法参数在创建选择状态或消费随机之前拒绝。每次调用有独立临时选择实体和按序号排列的候选引用；排序与洗牌只改选择状态。选择完成后按选中顺序调用UpgradeCard，在原永久实例上应用定义层升级并发CardUpgraded；后续战斗副本保留升级。临时状态逐项销毁、最后销毁操作实体，允许嵌套升级事件开启另一选择而不污染父调用。临时类型不进入PlayerView。
+
+遗物用统一实例订阅监听RelicObtained，instances只选本次relic且仍有效、未熔化；模板参数仅有definition、kind、amount。直接调用ObtainRelic与开发获得动作共用此链，每次真实获得只触发一次；移除不撤回已发生的永久升级，开战／回合不重新执行。当前只交付显式获得，常见／Ancient来源资格保持原源池，不宣称正常地图来源已经恢复。
+
+判别包括每件正例、类型筛选、0／1／不足／超过N张、已升级和不支持升级的排除、重复定义实例身份及RunDeck顺序不变；固定源向量比较选中实例／升级事件顺序／Niche游标，并验证其他流不变、不触发TheAbacus。嵌套获得用不同调用状态隔离，返回后无选择实体残留；两场战斗复制与移除后的永久结果保留。公开stdio从实际永久牌组获得遗物并消费升级副本，不人工注入升级结果。
+
 ## 判别与边界
 
 逐件真实获得／触发的数值见证；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证拾取、计数、Strike伤害和跨回合能量消费者，覆盖门槛要求所有新增definition有实际场景。

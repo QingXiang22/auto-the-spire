@@ -1,0 +1,4 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use SandCastle { template = PickupRandomUpgradeRelic args = { definition = "base-spire:sand-castle" kind = "all" amount = 6 } }

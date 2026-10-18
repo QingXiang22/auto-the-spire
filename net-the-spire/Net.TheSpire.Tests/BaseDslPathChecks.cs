@@ -43,6 +43,8 @@ internal static class BaseDslPathChecks
         yield return ("RM real stdio StrikeDummy and FakeStrikeDummy add damage before block", () => StdioTrajectory("relic-strike"));
         yield return ("RM real stdio IceCream carries energy and ArtOfWar rewards the previous empty turn", () => StdioTrajectory("relic-energy"));
         yield return ("CX real stdio ChemicalX increases effect hits at three and zero energy without changing raw captured X", () => StdioTrajectory("chemical-x"));
+        foreach (var relic in new[] { "whetstone", "war-paint", "sand-castle" })
+            yield return ("UP real stdio permanent pickup upgrade and actual combat copy: " + relic, () => StdioTrajectory("pickup-upgrade-" + relic));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -154,6 +156,17 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "pickup-upgrade-whetstone" or "pickup-upgrade-war-paint" or "pickup-upgrade-sand-castle" => [
+                    ("Strike.Obtain", "0", false, "0", "0", false, ""),
+                    ("Defend.Obtain", "0", false, "0", "0", false, ""),
+                    (mode == "pickup-upgrade-whetstone" ? "Whetstone.Obtain" : mode == "pickup-upgrade-war-paint" ? "WarPaint.Obtain" : "SandCastle.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("Draw", "0", true, "0", "0", false, "40"),
+                    ("Draw", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "2", "1", true, mode == "pickup-upgrade-war-paint" ? "34" : "31"),
+                    ("PlayCardFromHand", mode == "pickup-upgrade-whetstone" ? "5" : "8", true, "1", "1", true, mode == "pickup-upgrade-war-paint" ? "34" : "31")],
                 "chemical-x" => [
                     ("ChemicalX.Obtain", "0", false, "0", "0", false, ""),
                     ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
@@ -324,6 +337,18 @@ internal static class BaseDslPathChecks
                 var captured = snapshot.Entities.Where(e => e.ContentId == "base-spire:whirlwind")
                     .Select(e => ((WireString)e.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value).Order().ToArray();
                 Check.True(captured.SequenceEqual(new[] { "0", "3" }), "public captures remain zero and three despite two additional hits each");
+            }
+            if (mode.StartsWith("pickup-upgrade-", StringComparison.Ordinal))
+            {
+                var permanent = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Select(m => m.EntityRef).ToHashSet();
+                Check.Equal(2, permanent.Count, "original permanent instances remain in the deck");
+                foreach (var card in snapshot.Entities.Where(e => e.KindId == "net:kind:base-spire:Card"))
+                {
+                    var upgraded = ((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.Upgraded", StringComparison.Ordinal)).Value!).Value;
+                    var expected = card.ContentId == "base-spire:strike-ironclad" ? mode != "pickup-upgrade-war-paint" : mode != "pickup-upgrade-whetstone";
+                    Check.Equal(expected, upgraded, "both permanent and combat instances expose the real source upgrade");
+                }
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("PermanentUpgrade", StringComparison.Ordinal), "temporary selection state stays out of public snapshots");
             }
             if (mode is "explicit-target" or "hand-exhaust")
             {

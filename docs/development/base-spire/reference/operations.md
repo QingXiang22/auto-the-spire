@@ -4,6 +4,8 @@
 
 ## 状态与事件
 
+拾取时随机升级永久牌使用[`UpgradeRandomPermanentCards(owner,kind,amount)`](../../../../mod-the-spire/base-spire/cards/rules/random-permanent-upgrade.spire)：owner为Ref(Player)，kind只接受attack／skill／all，amount为Int(1..999)。操作拥有资格筛选、SourceCardSortKey、完整Niche洗牌、原实例UpgradeCard及临时状态清理；不改RunDeck顺序，不触发战斗洗牌事件。调用方法和边界见[遗物指南](../how-to/powers-relics-potions.md)。
+
 能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`Card.PaidX` 保存原捕获值，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
