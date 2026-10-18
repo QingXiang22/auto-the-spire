@@ -43,6 +43,7 @@ internal static class BaseDslPathChecks
         yield return ("RL real stdio third attack triggers OrnamentalFan exactly once", () => StdioTrajectory("relic-counter"));
         yield return ("RM real stdio StrikeDummy and FakeStrikeDummy add damage before block", () => StdioTrajectory("relic-strike"));
         yield return ("RM real stdio IceCream carries energy and ArtOfWar rewards the previous empty turn", () => StdioTrajectory("relic-energy"));
+        yield return ("TC real stdio five turn-start relics expose exact energy, block and cross-combat flower progress", () => StdioTrajectory("turn-start-resources"));
         yield return ("CX real stdio ChemicalX increases effect hits at three and zero energy without changing raw captured X", () => StdioTrajectory("chemical-x"));
         foreach (var relic in new[] { "whetstone", "war-paint", "sand-castle" })
             yield return ("UP real stdio permanent pickup upgrade and actual combat copy: " + relic, () => StdioTrajectory("pickup-upgrade-" + relic));
@@ -157,6 +158,26 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "turn-start-resources" => [
+                    ("Candelabra.Obtain", "0", false, "0", "0", false, ""),
+                    ("Chandelier.Obtain", "0", false, "0", "0", false, ""),
+                    ("VeryHotCocoa.Obtain", "0", false, "0", "0", false, ""),
+                    ("FakeHappyFlower.Obtain", "0", false, "0", "0", false, ""),
+                    ("Sai.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "7", true, "7", "1", true, "40"),
+                    ("EndDevelopmentTurn", "7", true, "7", "1", false, "40"),
+                    ("BeginDevelopmentTurn", "7", true, "5", "2", true, "40"),
+                    ("EndDevelopmentTurn", "7", true, "5", "2", false, "40"),
+                    ("BeginDevelopmentTurn", "7", true, "6", "3", true, "40"),
+                    ("EndDevelopmentTurn", "7", true, "6", "3", false, "40"),
+                    ("BeginDevelopmentTurn", "7", true, "3", "4", true, "40"),
+                    ("EndDevelopmentCombat", "7", false, "3", "4", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "7", true, "8", "1", true, "40"),
+                    ("EndDevelopmentTurn", "7", true, "8", "1", false, "40"),
+                    ("BeginDevelopmentTurn", "7", true, "5", "2", true, "40")],
                 "simple-resources" => [
                     ("FakeMango.Obtain", "0", false, "0", "0", false, ""),
                     ("LoomingFruit.Obtain", "0", false, "0", "0", false, ""),

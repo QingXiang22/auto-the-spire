@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: FakeHappyFlower.cs CanonicalVars and AfterSideTurnStart.
+use FakeHappyFlower {
+  template = EveryTurnsEnergyRelic
+  args = { definition = "base-spire:fake-happy-flower" amount = 1 turns = 5 }
+}

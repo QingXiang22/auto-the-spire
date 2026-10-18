@@ -52,6 +52,16 @@ cards拥有`UpgradeRandomPermanentCards(owner: Ref(Player), kind: String(16), am
 
 判别包括每件正例、类型筛选、0／1／不足／超过N张、已升级和不支持升级的排除、重复定义实例身份及RunDeck顺序不变；固定源向量比较选中实例／升级事件顺序／Niche游标，并验证其他流不变、不触发TheAbacus。嵌套获得用不同调用状态隔离，返回后无选择实体残留；两场战斗复制与移除后的永久结果保留。公开stdio从实际永久牌组获得遗物并消费升级副本，不人工注入升级结果。
 
+## 回合开始资源（DSL-RELIC-CONTENT-06／RELIC-G04）
+
+Candelabra在本持有者第2回合GainEnergy(2)，Chandelier在第3回合GainEnergy(3)，VeryHotCocoa在TurnNumber<=1时GainEnergy(4)。三者复用TurnStartEnergyRelic；新增throughTurn布尔参数，默认false保持精确相等，true使用小于等于turn，保留Cocoa源条件。当前回合入口先递增编号再发通知，首个可达回合为1。拾取和开战不回能，每战重新按本场回合号判断。
+
+FakeHappyFlower复用EveryTurnsEnergyRelic(amount=1,turns=5)，每次本持有者AfterSideTurnStarted先将本实例Counter加1模5，归零时才GainEnergy。计数跨战保留，获得新实例从0开始；NoEnergyGain只抑制奖励，不阻止计数递增或归零。移除／熔化后不再推进计数。视觉状态、等待动画和源商店价格不属于本次玩法恢复。
+
+Sai使用TurnStartBlockRelic，每次本持有者AfterSideTurnStarted调用GainUnpoweredBlock(7)，不受敏捷／脆弱影响。此事件位于清除格挡、AfterBlockCleared、能量重置之后、起手抽牌之前；不能复用HornCleat的AfterBlockCleared，因为首回合不清格挡。首回合叠加Anchor，次回合先清理再叠加HornCleat与Sai。资源沿现有上限999，能量走GainEnergy并受NoEnergyGain限制，重置MaxEnergy不受该限制。
+
+三模板均按实际库存顺序绑定有效、未熔化且Holder匹配的实例，执行前由统一调度重查资格。开发Obtain仅检查本持有者已有定义，不让其他持有者阻止获得；直接ObtainRelic同样触发后续回合效果。同定义实例分别计数并各自贡献。非法重复BeginDevelopmentTurn在发布通知前拒绝，不能推进计数或重复奖励。判别复用回合测试，补每件数值见证、跨战、新实例、失效与持有者隔离、NoEnergyGain和资源封顶；公开stdio从实际获得到多回合和跨战结果。正常来源／Run和独立原版双侧仍未验证。
+
 ## 判别与边界
 
 逐件真实获得／触发的数值见证；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证拾取、计数、Strike伤害和跨回合能量消费者，覆盖门槛要求所有新增definition有实际场景。

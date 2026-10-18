@@ -480,8 +480,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Candelabra.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Candelabra.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/candelabra.spire"
     },
     {
       "id": "base-spire:captains-wheel",
@@ -528,8 +528,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Chandelier.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Chandelier.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/chandelier.spire"
     },
     {
       "id": "base-spire:charons-ashes",
@@ -948,8 +948,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/FakeHappyFlower.cs; full gameplay effects declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/FakeHappyFlower.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/fake-happy-flower.spire"
     },
     {
       "id": "base-spire:fake-lees-waffle",
@@ -2750,8 +2750,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Sai.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Sai.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/sai.spire"
     },
     {
       "id": "base-spire:sand-castle",
@@ -3411,8 +3411,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/VeryHotCocoa.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/VeryHotCocoa.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/very-hot-cocoa.spire"
     },
     {
       "id": "base-spire:vexing-puzzlebox",

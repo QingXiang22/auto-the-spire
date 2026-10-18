@@ -1,0 +1,26 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Sai.cs: AfterSideTurnStart, after block clearing and energy reset, including turn one.
+template TurnStartBlockRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    amount = { type = Int(min = 0, max = 999) }
+  }
+  body = {
+    procedure WhenTurnStarted {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      body = { call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(amount) } } }
+    }
+    subscription OnTurnStart {
+      event = AfterSideTurnStarted reaction = WhenTurnStarted
+      instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition)))))
+      instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player
+      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Candelabra.cs CanonicalVars and AfterSideTurnStart.
+use Candelabra {
+  template = TurnStartEnergyRelic
+  args = { definition = "base-spire:candelabra" amount = 2 turn = 2 }
+}

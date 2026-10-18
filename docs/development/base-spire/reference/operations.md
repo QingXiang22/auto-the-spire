@@ -26,8 +26,9 @@
 | RelicObtained／RelicRemoved | owner: Ref(Player)、relic: Ref(Relic) | 获得时已入库存；移除时已出库存，事件执行后才销毁实例 |
 | [BeforeCombatStart](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | 只在 Idle→Active 的开发态开始操作中发出；监听器观察到 CombatActive=true 且本场初始 Block 已清 0，之后获得的格挡保留 |
 | AfterBlockCleared | owner: Ref(Player) | 回合号大于 1 的开始时，先清空格挡再发出；与源 `Creature.AfterTurnStart`→`Hook.AfterBlockCleared` 的顺序一致，第一回合不发 |
-| [AfterSideTurnStarted](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | 能量按 GetMaxEnergy 重置之后发出；原版把这段拆成 AfterEnergyReset 与 AfterSideTurnStart，本包只发一个开发时点 |
-| AfterPlayerTurnStart | owner: Ref(Player) | 紧随 AfterSideTurnStarted 发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
+| AfterEnergyReset | owner: Ref(Player) | ResetTurnEnergy重置／补足能量后发出，早于打开回合门和AfterSideTurnStarted；ArtOfWar在此奖励 |
+| [AfterSideTurnStarted](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | AfterEnergyReset完成并打开回合门后发出，早于起手抽牌；TurnStartEnergyRelic、EveryTurnsEnergyRelic与Sai在此奖励 |
+| AfterPlayerTurnStart | owner: Ref(Player) | AfterSideTurnStarted和起手抽牌后发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
 | AfterPlayerTurnStartLate | owner: Ref(Player) | 紧随 AfterPlayerTurnStart 发出，对应原版 AfterPlayerTurnStartLate；三个玩家回合开始时点都在同一执行栈内按声明顺序完成 |
 | AfterTurnEnded | owner: Ref(Player) | 回合末自动打出后弃掉手牌，再发出；临时玩家侧 Power 随后清理，debuff 的减层在敌方阶段结束时发生 |
 | EnemyDied | target: Ref(Enemy) | 敌人生命从正数到 0 时发出一次；原版的移除生物与死亡钩子未迁移 |
@@ -54,6 +55,9 @@
 | NoAttackTurnEnergyRelic模板 | definition、energy: Int(0..999) | ArtOfWar.State按遗物实例保存私有标志，获得时创建、移除时清理；AfterCardPlayed记录本拥有者攻击，AfterTurnEnded转交；AfterEnergyReset在非首回合且上回合无攻击时GainEnergy，再清理标志；ArtOfWar配置1 |
 | ObtainMaxHpRelic模板 | definition、amount、fullHeal=false | 通过RelicObtained触发IncreaseMaxHp，必要时HealToMaximum；不在动作尾部重复奖励。供Strawberry／Pear／Mango／LeesWaffle复用 |
 | CardCountRelic模板 | definition、kind、every、perTurn，以及energy／block／damage／power／powerKind／stacks | AfterCardPlayed按实际次数推进独立Relic.Counter；perTurn在战斗开场和玩家回合早期重置，否则跨战保留；重复／自动各计一次，多段攻击只计一次 |
+| TurnStartEnergyRelic模板 | definition: String(64)、amount: Int(0..999)、turn: Int(1..999)、throughTurn: Bool=false | AfterSideTurnStarted调用GainEnergy；默认TurnNumber==turn，throughTurn=true时<=turn；NoEnergyGain抑制奖励 |
+| EveryTurnsEnergyRelic模板 | definition: String(64)、amount: Int(0..999)、turns: Int(1..999) | 每次本持有者回合开始将本实例Counter加1模turns；归零GainEnergy，计数跨战保留且不受NoEnergyGain抑制 |
+| TurnStartBlockRelic模板 | definition: String(64)、amount: Int(0..999) | AfterSideTurnStarted每回合调用GainUnpoweredBlock，包含首回合；不使用敏捷／脆弱修正 |
 | GainGold | owner: Ref(Player)、amount: Int(0..99999) | 共享已迁移金币获得，沿用99999上限；尚无完整获得金币修正参与者，金币奖励与OldCoin共用 |
 | HealToMaximum | owner: Ref(Player) | 计算MaxHp-Hp并调用Heal；支持最大生命至999999，不替代复活或完整治疗修正 |
 | BeforePlayerTurnStart／BeforePlayerTurnEnd | owner: Ref(Player)，事件 | 前者在回合号增加后、抽牌／自动出牌前；后者在回合末自动出牌后、普通弃牌前。StoneCalendar致胜后不再执行敌方行动 |

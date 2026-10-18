@@ -1,19 +1,20 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-# Lantern.cs: AfterSideTurnStart on the owner's first turn, gain one energy.
+# Owner-side turn energy: exact turn by default; VeryHotCocoa uses TurnNumber <= 1.
 
 template TurnStartEnergyRelic {
   parameters = {
     definition = { type = String(length = 64) }
     amount = { type = Int(min = 0, max = 999) }
     turn = { type = Int(min = 1, max = 999) }
+    throughTurn = { type = Bool default = false }
   }
   body = {
     procedure WhenTurnStarted {
       parameters = { owner = Ref(Player) listener = Ref(Relic) }
       body = {
         if = {
-          condition = equal(field(owner, Player.TurnNumber), arg(turn))
+          condition = or(equal(field(owner, Player.TurnNumber), arg(turn)), and(arg(throughTurn), less(field(owner, Player.TurnNumber), arg(turn))))
           then = {
             call = {
               procedure = GainEnergy args = {
@@ -29,7 +30,7 @@ template TurnStartEnergyRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
       body = {
         call = {
           procedure = ObtainRelic args = {

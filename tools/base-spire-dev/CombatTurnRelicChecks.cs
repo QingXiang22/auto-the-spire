@@ -88,15 +88,15 @@ internal static partial class PackageChecks
             var bare = Start(package); Submit(bare, "BeginDevelopmentCombat");
             Submit(bare, "BeginDevelopmentTurn"); Equal(3L, Energy(bare), "no relic means no gain"); Equal(80L, Hp(bare), "no relic means no heal");
             Submit(bare, "EndDevelopmentTurn"); Submit(bare, "BeginDevelopmentTurn"); Equal(0L, Block(bare), "no relic means no block");
-            foreach (var symbol in new[] { "Lantern", "BloodVial", "HornCleat", "HappyFlower" })
+            foreach (var symbol in new[] { "Lantern", "BloodVial", "HornCleat", "HappyFlower", "Candelabra", "Chandelier", "VeryHotCocoa", "FakeHappyFlower", "Sai" })
             {
                 var removed = Start(package); Submit(removed, symbol + ".Obtain"); Submit(removed, "RemoveOwnedRelic", Members(removed, "Relics").Single());
                 Set(removed, Player(removed), "Player", "Hp", Value.Of(70L)); Submit(removed, "BeginDevelopmentCombat");
-                for (var turn = 0; turn < 3; turn++) { Submit(removed, "BeginDevelopmentTurn"); Submit(removed, "EndDevelopmentTurn"); }
+                for (var turn = 0; turn < 5; turn++) { Submit(removed, "BeginDevelopmentTurn"); Submit(removed, "EndDevelopmentTurn"); }
                 Equal(3L, Energy(removed), symbol + ": removed instance grants no energy"); Equal(70L, Hp(removed), symbol + ": removed instance heals nothing"); Equal(0L, Block(removed), symbol + ": removed instance grants no block");
                 var melted = Start(package); Submit(melted, symbol + ".Obtain"); Set(melted, Members(melted, "Relics").Single(), "Relic", "IsMelted", Value.Of(true));
                 Set(melted, Player(melted), "Player", "Hp", Value.Of(70L)); Submit(melted, "BeginDevelopmentCombat");
-                for (var turn = 0; turn < 3; turn++) { Submit(melted, "BeginDevelopmentTurn"); Submit(melted, "EndDevelopmentTurn"); }
+                for (var turn = 0; turn < 5; turn++) { Submit(melted, "BeginDevelopmentTurn"); Submit(melted, "EndDevelopmentTurn"); }
                 Equal(3L, Energy(melted), symbol + ": melted instance grants no energy"); Equal(70L, Hp(melted), symbol + ": melted instance heals nothing"); Equal(0L, Block(melted), symbol + ": melted instance grants no block");
             }
             using var copy = new Copy(package.Root);
@@ -105,6 +105,11 @@ internal static partial class PackageChecks
                   create = { type = Player scope = frameScope() into = other }
                   call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:lantern" } }
                   call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:horn-cleat" } }
+                  call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:candelabra" } }
+                  call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:chandelier" } }
+                  call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:very-hot-cocoa" } }
+                  call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:fake-happy-flower" } }
+                  call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:sai" } }
                 } }
                 action MakeTurnOwner { role = player body = { call = { procedure = MakeTurnOwner } } }
                 action BeginOtherTurn { role = player body = { call = { procedure = BeginDevelopmentCombat args = { owner = first(skip(type(Player), 1)) } } call = { procedure = BeginDevelopmentTurn args = { owner = first(skip(type(Player), 1)) } } } }
@@ -113,7 +118,16 @@ internal static partial class PackageChecks
             Equal(3L, Energy(owners), "first owner has no relic and gains nothing"); Equal(0L, Block(owners), "first owner gets no block");
             var other = owners.State.AllInstances(owners.RuleSet.TypeByQualifiedId("base-spire:Player").Id).Last();
             Submit(owners, "EndDevelopmentTurn"); Submit(owners, "BeginOtherTurn");
-            Equal(4L, PlayerEnergy(owners, other), "second owner gains its own energy"); Equal(0L, Block(owners), "first owner is untouched");
+            Equal(8L, PlayerEnergy(owners, other), "second owner gains Lantern and Cocoa energy"); Equal(7L, IntField(owners, other, "Player", "Block"), "second owner gets Sai block"); Equal(0L, Block(owners), "first owner is untouched");
+            foreach (var name in new[] { "Candelabra", "Chandelier", "VeryHotCocoa", "FakeHappyFlower", "Sai" })
+            {
+                True(Legal(owners, name + ".Obtain"), "other holder does not block development acquisition"); Submit(owners, name + ".Obtain");
+                True(!Legal(owners, name + ".Obtain"), "same holder cannot obtain a duplicate through the development action");
+            }
+            Submit(owners, "BeginDevelopmentTurn"); Equal(5L, Energy(owners), "first holder gets its own Candelabra on turn two"); Equal(7L, Block(owners), "first holder gets its own Sai");
+            Equal(8L, PlayerEnergy(owners, other), "first holder turn leaves other energy unchanged");
+            foreach (var relic in Members(owners, "Relics").Where(r => owners.State.GetField(r, owners.RuleSet.TypeByQualifiedId("base-spire:Relic").FieldIndex("DefinitionId")).AsString() == "base-spire:fake-happy-flower"))
+                Equal(1L, IntField(owners, relic, "Relic", "Counter"), "each holder flower counts only its own turn");
         });
 
         Own("base-spire:lantern", "TC05 Lantern: one energy on the owner's first turn only", () =>
@@ -152,6 +166,96 @@ internal static partial class PackageChecks
             Equal(2L, Counter(s), "counter advanced modulo three and survives between turns");
             Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             Equal(4L, Energy(s), "the persisted counter activates on the next combat's first turn");
+        });
+
+        var timedEnergy = new[] {
+            (Name: "Candelabra", Id: "base-spire:candelabra", Turn: 2, Amount: 2L),
+            (Name: "Chandelier", Id: "base-spire:chandelier", Turn: 3, Amount: 3L),
+            (Name: "VeryHotCocoa", Id: "base-spire:very-hot-cocoa", Turn: 1, Amount: 4L)
+        };
+        foreach (var row in timedEnergy)
+            Own(row.Id, "TC timed energy: " + row.Name + " triggers on its source turn in each combat", () =>
+            {
+                var s = Start(package); Submit(s, row.Name + ".Obtain"); Equal(0L, Energy(s), "pickup grants no energy");
+                for (var combat = 0; combat < 2; combat++)
+                {
+                    Submit(s, "BeginDevelopmentCombat"); Equal(0L, Energy(s), "combat start grants no energy");
+                    for (var turn = 1; turn <= 5; turn++)
+                    {
+                        Submit(s, "BeginDevelopmentTurn"); Equal(turn == row.Turn ? 3L + row.Amount : 3L, Energy(s), "source energy on turn " + turn);
+                        Submit(s, "EndDevelopmentTurn");
+                    }
+                    Submit(s, "EndDevelopmentCombat");
+                }
+                Equal(0L, s.Random.TotalDraws, "turn rewards consume no random");
+            });
+        Own("base-spire:fake-happy-flower", "TC FakeHappyFlower: fifth turn, cross-combat persistence and fresh acquisition counter", () =>
+        {
+            var s = Start(package); Submit(s, "FakeHappyFlower.Obtain"); Submit(s, "BeginDevelopmentCombat");
+            for (var turn = 1; turn <= 9; turn++)
+            {
+                Submit(s, "BeginDevelopmentTurn"); Equal(turn == 5 ? 4L : 3L, Energy(s), "fifth owner turn only");
+                Equal((long)(turn % 5), Counter(s), "instance counter modulo five"); Submit(s, "EndDevelopmentTurn");
+            }
+            Submit(s, "EndDevelopmentCombat"); Equal(4L, Counter(s), "combat end preserves count");
+            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Equal(4L, Energy(s), "tenth observed turn rewards in new combat"); Equal(0L, Counter(s), "reward resets counter");
+            Submit(s, "RemoveOwnedRelic", Members(s, "Relics").Single()); Submit(s, "FakeHappyFlower.Obtain"); Equal(0L, Counter(s), "new instance starts fresh");
+            IcNextTurn(s); Equal(3L, Energy(s), "fresh instance does not inherit old progress"); Equal(1L, Counter(s), "fresh progress");
+        });
+        Own("base-spire:sai", "TC Sai: first-turn Anchor and second-turn HornCleat stack after clearing, block stays unpowered", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("sai-powers.spire", """
+                action BlockModifiers { role = player body = {
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe-dexterity" kind = "block-additive" stacks = 20 } }
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe-frail" kind = "block-dealt-multiplier" stacks = 20 } }
+                } }
+                action PoweredBlockProbe { role = player body = { call = { procedure = GainBlock args = { owner = first(type(Player)) amount = 5 } } } }
+                """);
+            var s = Start(copy.Load()); Submit(s, "Anchor.Obtain"); Submit(s, "HornCleat.Obtain"); Submit(s, "Sai.Obtain"); Equal(0L, Block(s), "pickup grants no block");
+            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BlockModifiers"); Equal(10L, Block(s), "Anchor at combat start only");
+            Submit(s, "BeginDevelopmentTurn"); Equal(17L, Block(s), "turn one keeps Anchor and adds seven unpowered");
+            IcNextTurn(s); Equal(21L, Block(s), "turn two clears old block, then fourteen plus seven");
+            IcNextTurn(s); Equal(7L, Block(s), "later turn clears and grants seven");
+            Submit(s, "PoweredBlockProbe"); Equal(25L, Block(s), "same active modifiers affect powered block: floor((5+20)*0.75)=18");
+            Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Equal(17L, Block(s), "new combat includes first-turn Sai again");
+        });
+        Case("TC energy restrictions: reset bypasses NoEnergyGain, every source reward obeys it, counters still advance; energy caps at 999", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("turn-energy-restriction.spire", """
+                action BlockTurnEnergy { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe" kind = "no-energy-gain" stacks = 1 } } } }
+                """);
+            var variant = copy.Load();
+            foreach (var row in timedEnergy.Select(r => (r.Name, r.Turn)).Append((Name: "FakeHappyFlower", Turn: 5)))
+            {
+                var s = Start(variant); Submit(s, row.Name + ".Obtain"); Submit(s, "BeginDevelopmentCombat");
+                for (var turn = 1; turn <= row.Turn; turn++)
+                {
+                    Submit(s, "BlockTurnEnergy"); Submit(s, "BeginDevelopmentTurn"); Equal(3L, Energy(s), "reset works but award is suppressed: " + row.Name); Submit(s, "EndDevelopmentTurn");
+                }
+                if (row.Name == "FakeHappyFlower") { Equal(0L, Counter(s), "suppressed fifth-turn reward still resets progress"); Submit(s, "BeginDevelopmentTurn"); Equal(3L, Energy(s), "suppressed award is not deferred"); Equal(1L, Counter(s), "next count"); }
+                var capped = Start(package); Submit(capped, row.Name + ".Obtain"); Set(capped, Player(capped), "Player", "MaxEnergy", Value.Of(998L)); Submit(capped, "BeginDevelopmentCombat");
+                for (var turn = 1; turn <= row.Turn; turn++) { Submit(capped, "BeginDevelopmentTurn"); if (turn == row.Turn) Equal(999L, Energy(capped), "award clamps to resource cap"); Submit(capped, "EndDevelopmentTurn"); }
+            }
+        });
+        Case("TC instance progress: duplicate flowers count independently, melted instances freeze, removed instances restart; Sai caps block", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("duplicate-turn-relics.spire", """
+                action ExtraFlower { role = player body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = "base-spire:fake-happy-flower" } } } }
+                """);
+            var s = Start(copy.Load()); Submit(s, "FakeHappyFlower.Obtain"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            var first = Members(s, "Relics").Single(); Submit(s, "ExtraFlower"); var second = Members(s, "Relics").Last();
+            for (var turn = 2; turn <= 4; turn++) IcNextTurn(s);
+            Equal(4L, IntField(s, first, "Relic", "Counter"), "first flower sees four"); Equal(3L, IntField(s, second, "Relic", "Counter"), "second sees three");
+            var version = s.StateVersion; Throws<EngineFaultException>(() => s.Submit(s.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:BeginDevelopmentTurn"), s.Participant(0), []));
+            Equal(version, s.StateVersion, "rejected repeated turn cannot advance counters");
+            Set(s, first, "Relic", "IsMelted", Value.Of(true)); IcNextTurn(s); Equal(3L, Energy(s), "melted flower skips its due reward"); Equal(4L, IntField(s, first, "Relic", "Counter"), "melted count frozen");
+            IcNextTurn(s); Equal(4L, Energy(s), "second instance independently reaches five");
+            Submit(s, "RemoveOwnedRelic", first); Submit(s, "ExtraFlower"); Equal(0L, IntField(s, Members(s, "Relics").Last(), "Relic", "Counter"), "new counter replaces removed progress");
+            var block = Start(package); Submit(block, "Sai.Obtain"); Submit(block, "BeginDevelopmentCombat"); Set(block, Player(block), "Player", "Block", Value.Of(997L));
+            Submit(block, "BeginDevelopmentTurn"); Equal(999L, Block(block), "Sai respects the block cap");
         });
 
         foreach (var list in witness.Values) list.InsertRange(0, shared);

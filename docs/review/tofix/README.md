@@ -59,6 +59,8 @@
 
 ## 当前交付
 
+2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-06：回合开始资源**，对应RELIC-G04，P1／待验证。基于`4061360`／PR #23，base `0.6.0-dsl.37`。Candelabra／Chandelier／VeryHotCocoa分别在第2／3／首回合回能2／3／4，Cocoa保留源<=1条件；FakeHappyFlower每5次本持有者回合回能1且跨战计数；Sai每回合获得7无加成格挡。三模板按有效实例监听，开发获得守卫按持有者隔离。77项遗物定向、385项包行为、38项公开路径、覆盖门槛及solution构建通过；52件实际见证／297来源／244未实现／1源排除，铁甲85/85保持。修改base遗物／元数据、tools／net包外检查和契约／手册，未改core／参考。来源、身份、命令与边界见[交付记录](../records/2026-10-18/relic-turn-start-resources-2026-10-18.md)，方法见[开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后按G05核对攻击与格挡修正源方法、拆分一次消耗与计算阶段。正常来源、独立原版双侧、正常Run及父项未验收，暂停项保持。
+
 2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-05：简单拾取资源**，对应RELIC-G19，P1／待验证。基于`7c8dd04`／PR #23，base `0.6.0-dsl.36`，沿现有遗物开发分支接续。已实现FakeMango／LoomingFruit／NutritiousOyster最大生命+3／31／11，SignetRing／GoldenPearl金币+999／150；两种模板统一绑定本次有效实例，修复其他持有者阻止本玩家开发获得的守卫，拾取前移除／熔化不再发放资源。60项遗物定向、378项包行为、37项公开路径和solution构建通过；47件实际见证／297来源／249未实现／1源排除，铁甲85/85保持。修改两模板／五件内容／元数据、包外检查和文档，未改core／参考／随机或正常来源。来源、身份、命令与边界见[交付记录](../records/2026-10-18/relic-simple-pickups-2026-10-18.md)，方法见[开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后按G04核对回合触发组源条件与共享模板。正常Run、独立原版双侧及父项未验收，暂停项保持。
 
 2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-04：拾取随机永久升级**，对应RELIC-G01，P1／待验证。基于`7ff95ca`／PR #23，沿现有遗物开发分支接续，base `0.6.0-dsl.35`。已按用户要求建立下方20组与依赖／验收／重排方法，并交付Whetstone／WarPaint／SandCastle共用的永久资格筛选、完整Niche稳定洗牌后截取及原实例UpgradeCard；每调用独立临时状态，支持嵌套并返回清理。53项遗物定向、371项包行为、36项公开路径、3组独立源向量及solution构建通过；42件遗物实际见证／297来源／254未实现／1源排除，铁甲85/85保持。修改base卡牌／遗物／元数据、包外工具／源向量／公开检查及文档，未改core或参考。方法见[遗物开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)，接口、身份、来源和实际证据见[交付记录](../records/2026-10-18/relic-groups-and-pickup-upgrades-2026-10-18.md)。本批编码窗口结束；下一成果为本批PR／CI审阅，随后认领G19简单拾取资源子包。正常来源、独立原版双侧、正常Run及父项不关闭，暂停项保持。
@@ -136,7 +138,7 @@
 | RELIC-G01 拾取随机永久升级 | Whetstone、WarPaint、SandCastle；类型／张数参数化 | P1／待验证 | CONTENT-04已交付；固定源向量、两战及公开证据见当前交付，待PR／CI审阅；正常来源未验收 |
 | RELIC-G02 永久选牌修改 | Pomander、YummyCookie、EmptyCage、PreciseScissors；升级与移除分别子包 | P2／待认领 | 原生永久多选、取消和完整移除；暂停续接不重放拾取 |
 | RELIC-G03 卡牌创建修正 | MoltenEgg、ToxicEgg、FrozenEgg；附魔参与者另接依赖 | P2／待认领 | 奖励展示／商店创建／入组前修正与NoHookUpgrades三处完整消费者 |
-| RELIC-G04 回合资源与开场效果 | Candelabra、Chandelier、VeryHotCocoa、FakeHappyFlower、Sai；按事件和资源子包 | P1／待认领 | 复用监听与资源；回合条件、NoEnergyGain、实例计数及移除 |
+| RELIC-G04 回合资源与开场效果 | Candelabra、Chandelier、VeryHotCocoa、FakeHappyFlower、Sai；按事件和资源子包 | P1／待验证 | CONTENT-06已交付五件；77项定向／385项包行为／38项公开路径及52件见证，待PR／CI审阅；正常来源未验收 |
 | RELIC-G05 攻击与格挡修正 | Akabeko、PenNib、MiniatureCannon、MysticLighter、PaperPhrog、PaperKrane | P1／待认领 | 显式牌源／目标和pure修正；一次消耗／多段／重复及计算阶段分别验收 |
 | RELIC-G06 出牌／牌区反应 | GamePiece、JossPaper、CharonsAshes、ToughBandages、Tingsha、UnceasingTop | P1／待认领 | 缺失弃牌／手空通知先补契约；计数、嵌套抽牌及末杀余效 |
 | RELIC-G07 抽牌、留牌与行动限制 | Pocketwatch、Fiddle、RunicPyramid、RingingTriangle、VelvetChoker、SneckoEye | P2／待认领 | 手牌清理／可出牌守卫／随机费用；纯查询与跨回合历史一致 |

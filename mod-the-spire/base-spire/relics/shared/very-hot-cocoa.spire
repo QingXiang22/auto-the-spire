@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: VeryHotCocoa.cs CanonicalVars and AfterSideTurnStart.
+use VeryHotCocoa {
+  template = TurnStartEnergyRelic
+  args = { definition = "base-spire:very-hot-cocoa" amount = 4 turn = 1 throughTurn = true }
+}

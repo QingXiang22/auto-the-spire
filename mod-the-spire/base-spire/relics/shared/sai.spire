@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Sai.cs CanonicalVars and AfterSideTurnStart.
+use Sai {
+  template = TurnStartBlockRelic
+  args = { definition = "base-spire:sai" amount = 7 }
+}

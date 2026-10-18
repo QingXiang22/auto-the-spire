@@ -1,6 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-# HappyFlower.cs: on every owner turn start the instance counter advances modulo `turns`; at zero,
+# HappyFlower.cs / FakeHappyFlower.cs: every owner turn advances the instance counter modulo `turns`; at zero,
 # gain energy. The source keeps TurnsSeen across combats ([SavedProperty]), so the counter is not
 # reset by the development lifecycle.
 
@@ -32,7 +32,7 @@ template EveryTurnsEnergyRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
       body = {
         call = {
           procedure = ObtainRelic args = {

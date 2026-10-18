@@ -1,5 +1,7 @@
 # review历史记录与证据索引
 
+2026-10-18：[五件回合开始资源遗物](2026-10-18/relic-turn-start-resources-2026-10-18.md)记录Candelabra／Chandelier／VeryHotCocoa／FakeHappyFlower／Sai、回能与跨战计数／无加成格挡模板、77项遗物定向／385项包行为／38项公开路径及52件实际见证；正常来源、Run与独立原版双侧仍未验收。
+
 2026-10-18：[五件简单拾取资源遗物](2026-10-18/relic-simple-pickups-2026-10-18.md)记录FakeMango／LoomingFruit／NutritiousOyster／SignetRing／GoldenPearl、两模板有效实例订阅与持有者守卫、60项遗物定向／378项包行为／37项公开路径及47件实际见证；正常来源、Run与独立原版双侧仍未验收。
 
 2026-10-18：[遗物分组与拾取随机永久升级](2026-10-18/relic-groups-and-pickup-upgrades-2026-10-18.md)记录20组任务规划、257件未迁移源入口／hash核对、Whetstone／WarPaint／SandCastle共享操作与独立源向量、53项遗物定向／371项包行为／36项公开路径及42件遗物见证；正常来源、Run与独立整局仍未验收。
