@@ -77,8 +77,18 @@ template EveryTurnsDrawRelic {
 # Strawberry.cs: GainMaxHp adds the amount to max HP and then heals the same amount, so obtaining the relic
 # raises both MaxHp and Hp by its value.
 template ObtainMaxHpRelic {
-  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 1, max = 999) } }
+  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 1, max = 999) } fullHeal = { type = Bool default = false } }
   body = {
+    procedure WhenObtained {
+      parameters = { owner = Ref(Player) relic = Ref(Relic) }
+      body = {
+        if = { condition = equal(field(relic, Relic.DefinitionId), arg(definition)) then = {
+          call = { procedure = IncreaseMaxHp args = { owner = owner amount = arg(amount) } }
+          if = { condition = arg(fullHeal) then = { call = { procedure = HealToMaximum args = { owner = owner } } } }
+        } }
+      }
+    }
+    subscription OnObtained { event = RelicObtained reaction = WhenObtained }
     action Obtain {
       role = player
       locals = { owner = Binding }
@@ -86,7 +96,6 @@ template ObtainMaxHpRelic {
       body = {
         let = { into = owner value = first(type(Player)) }
         call = { procedure = ObtainRelic args = { owner = owner definition = arg(definition) } }
-        call = { procedure = IncreaseMaxHp args = { owner = owner amount = arg(amount) } }
       }
     }
   }

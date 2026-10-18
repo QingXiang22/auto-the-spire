@@ -120,8 +120,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/BagOfPreparation.cs; complete gameplay methods and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/BagOfPreparation.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/bag-of-preparation.spire"
     },
     {
       "id": "base-spire:beating-remnant",
@@ -228,8 +228,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/BlackBlood.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/BlackBlood.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/black-blood.spire"
     },
     {
       "id": "base-spire:black-star",
@@ -492,8 +492,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/CaptainsWheel.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/CaptainsWheel.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/captains-wheel.spire"
     },
     {
       "id": "base-spire:cauldron",
@@ -516,8 +516,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local damage-received hook in sts2/src/Core/Models/Relics/CentennialPuzzle.cs; once-per-combat three-card draw declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/CentennialPuzzle.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/centennial-puzzle.spire"
     },
     {
       "id": "base-spire:chandelier",
@@ -960,8 +960,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/FakeLeesWaffle.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/FakeLeesWaffle.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/fake-lees-waffle.spire"
     },
     {
       "id": "base-spire:fake-mango",
@@ -1524,8 +1524,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/Kunai.cs; per-turn Attack counter and Dexterity grant declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Kunai.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/kunai.spire"
     },
     {
       "id": "base-spire:kusarigama",
@@ -1633,8 +1633,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/LeesWaffle.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/LeesWaffle.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/lees-waffle.spire"
     },
     {
       "id": "base-spire:letter-opener",
@@ -1645,8 +1645,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/LetterOpener.cs; per-turn Skill counter and unpowered area damage declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/LetterOpener.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/letter-opener.spire"
     },
     {
       "id": "base-spire:lizard-tail",
@@ -1741,8 +1741,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Mango.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Mango.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/mango.spire"
     },
     {
       "id": "base-spire:massive-scroll",
@@ -2005,8 +2005,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/Nunchaku.cs; persistent Attack counter and energy grant declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Nunchaku.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/nunchaku.spire"
     },
     {
       "id": "base-spire:nutritious-oyster",
@@ -2053,8 +2053,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/OldCoin.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/OldCoin.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/old-coin.spire"
     },
     {
       "id": "base-spire:orange-dough",
@@ -2089,8 +2089,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/OrnamentalFan.cs; per-turn Attack counter and unpowered block grant declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/OrnamentalFan.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/ornamental-fan.spire"
     },
     {
       "id": "base-spire:orrery",
@@ -2293,8 +2293,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Pear.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Pear.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/pear.spire"
     },
     {
       "id": "base-spire:pendulum",
@@ -2618,8 +2618,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/RegalPillow.cs; formal room/resource lifecycle and controlled behavior witnesses in RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/RegalPillow.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/regal-pillow.spire"
     },
     {
       "id": "base-spire:reptile-trinket",
@@ -2858,8 +2858,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local card-played hook in sts2/src/Core/Models/Relics/Shuriken.cs; per-turn Attack counter and Strength grant declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Shuriken.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/shuriken.spire"
     },
     {
       "id": "base-spire:signet-ring",
@@ -2991,8 +2991,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/StoneCalendar.cs; source lifecycle and values reviewed; DSL content-wave1 execution witnesses required; normal source pools and independent parity not verified",
+      "definition": "relics/shared/stone-calendar.spire"
     },
     {
       "id": "base-spire:stone-cracker",

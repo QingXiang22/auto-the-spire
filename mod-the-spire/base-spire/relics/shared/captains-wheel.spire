@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/CaptainsWheel.cs; SHA256 retained in relics/catalog.json.
+use CaptainsWheel { template = BlockClearedBlockRelic args = { definition = "base-spire:captains-wheel" amount = 18 turn = 3 } }

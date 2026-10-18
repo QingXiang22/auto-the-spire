@@ -38,6 +38,8 @@ internal static class BaseDslPathChecks
         yield return ("IS real stdio initializes the source Ironclad deck and draws five combat copies", () => StdioTrajectory("ironclad-start"));
         yield return ("CR real stdio starter cards defeat an enemy and acquire one of three permanent rewards", () => StdioTrajectory("card-reward-claim"));
         yield return ("CR real stdio skips card rewards and closes without acquiring a card", () => StdioTrajectory("card-reward-skip"));
+        yield return ("RL real stdio pickup relics publish permanent HP and gold gains", () => StdioTrajectory("relic-pickups"));
+        yield return ("RL real stdio third attack triggers OrnamentalFan exactly once", () => StdioTrajectory("relic-counter"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -149,6 +151,22 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "relic-pickups" => [
+                    ("Pear.Obtain", "0", false, "0", "0", false, ""),
+                    ("Mango.Obtain", "0", false, "0", "0", false, ""),
+                    ("OldCoin.Obtain", "0", false, "0", "0", false, ""),
+                    ("LeesWaffle.Obtain", "0", false, "0", "0", false, "")],
+                "relic-counter" => [
+                    ("OrnamentalFan.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("Strike.AddToHand", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "2", "1", true, "34"),
+                    ("Strike.AddToHand", "0", true, "2", "1", true, "34"),
+                    ("PlayAttackFromHand", "0", true, "1", "1", true, "28"),
+                    ("Strike.AddToHand", "0", true, "1", "1", true, "28"),
+                    ("PlayAttackFromHand", "4", true, "0", "1", true, "22")],
                 "card-reward-claim" or "card-reward-skip" => [
                     ("Ironclad.Initialize", "0", false, "0", "0", false, ""),
                     ("TwigSlimeS.Spawn", "0", false, "0", "0", false, "7"),
@@ -298,6 +316,14 @@ internal static class BaseDslPathChecks
                 var card = snapshot.Entities.Single(e => e.ContentId == "base-spire:whirlwind");
                 Check.Equal("3", ((WireString)card.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value, "captured X public");
                 Check.True(((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.IsX", StringComparison.Ordinal)).Value!).Value, "X marker public");
+            }
+            if (mode == "relic-pickups")
+            {
+                Check.Equal("111", Public(snapshot, "Player.MaxHp"), "source 80 plus 10 plus 14 plus 7 maximum HP");
+                Check.Equal("111", Public(snapshot, "Player.Hp"), "waffle heals to increased maximum");
+                Check.Equal("399", Public(snapshot, "Player.Gold"), "source 300 gold obtained once");
+                Check.Equal(4, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Relic"), "all four actual relic instances visible");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:OldCoin.Obtain"), "owned pickup cannot be repeated");
             }
             if (mode == "ironclad-start")
             {

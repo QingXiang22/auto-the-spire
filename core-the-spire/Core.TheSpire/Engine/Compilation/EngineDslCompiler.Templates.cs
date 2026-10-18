@@ -103,7 +103,7 @@ public static partial class EngineDslCompiler
             {
                 if (use.Name.Contains(':') || use.Name.Contains('.')) throw Error(use.Location, "use names must be local simple names.");
                 if (!instances.Add(prefix)) throw Error(use.Location, $"Duplicate template instance '{prefix}'.");
-                if (++uses > 256 || stack.Count >= 32) throw Error(use.Location, "Template expansion limit exceeded (256 instances, depth 32).");
+                if (++uses > 8192 || stack.Count >= 32) throw Error(use.Location, "Template expansion limit exceeded (8192 instances, depth 32).");
                 var p = Properties.Of(new DslBlockNode(use.Members, use.Location), "template", "args");
                 var reference = p.Required("template");
                 var name = Text(reference);

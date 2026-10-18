@@ -9,6 +9,9 @@ entity Relic {
     DefinitionId = { type = String(length = 64) }
     IsMelted = { type = Bool default = false }
     Counter = { type = Int(min = 0, max = 999999) default = 0 visibility = Hidden }
+    UsedThisCombat = { type = Bool default = false visibility = Hidden }
+    FirstTurnDrawBonus = { type = Int(min = 0, max = 10) default = 0 visibility = Hidden }
+    RestHealBonus = { type = Int(min = 0, max = 999) default = 0 visibility = Hidden }
   }
 }
 collection Relics { element = Relic ordered = true }

@@ -44,7 +44,7 @@ procedure ClaimDevelopmentGoldReward {
       condition = not(and(equal(field(owner, Player.Room), "rewards"), field(owner, Player.GoldRewardPending)))
       then = { fail = { message = "No development gold reward is pending" } }
     }
-    set = { target = owner field = Player.Gold value = minimum(99999, add(field(owner, Player.Gold), field(owner, Player.GoldRewardAmount))) }
+    call = { procedure = GainGold args = { owner = owner amount = field(owner, Player.GoldRewardAmount) } }
     set = { target = owner field = Player.GoldRewardPending value = false }
     set = { target = owner field = Player.GoldRewardAmount value = 0 }
   }

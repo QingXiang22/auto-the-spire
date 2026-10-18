@@ -8,10 +8,18 @@ procedure GetMaxEnergy {
 
 # CreatureCmd.Heal: heal and clamp to MaxHp. Revive, healing modifiers and death are not migrated.
 procedure Heal {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
   body = {
     set = { target = owner field = Player.Hp value = minimum(field(owner, Player.MaxHp), add(field(owner, Player.Hp), amount)) }
   }
+}
+procedure HealToMaximum {
+  parameters = { owner = Ref(Player) }
+  body = { call = { procedure = Heal args = { owner = owner amount = maximum(0, subtract(field(owner, Player.MaxHp), field(owner, Player.Hp))) } } }
+}
+procedure GainGold {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 99999) }
+  body = { set = { target = owner field = Player.Gold value = minimum(99999, add(field(owner, Player.Gold), amount)) } }
 }
 
 # PlayerCmd.GainEnergy: add energy without clamping to MaxEnergy.

@@ -3,6 +3,8 @@ dsl_version = "core/0.3"
 
 # Mechanism-development boundaries, not normal combat setup, turns, victory or Run settlement.
 event BeforeCombatStart { payload = { owner = Ref(Player) } }
+event BeforePlayerTurnStart { payload = { owner = Ref(Player) } }
+event BeforePlayerTurnEnd { payload = { owner = Ref(Player) } }
 # sts2 Creature.AfterTurnStart -> CombatManager.Hook.AfterBlockCleared, dispatched for every creature starting the turn.
 event AfterBlockCleared { payload = { owner = Ref(Player) } }
 # Development time point after energy reset. Vanilla splits this across AfterEnergyReset and AfterSideTurnStart.
@@ -128,6 +130,7 @@ procedure BeginDevelopmentTurn {
     set = { target = owner field = Player.TurnNumber value = add(field(owner, Player.TurnNumber), 1) }
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
+    emit = { event = BeforePlayerTurnStart payload = { owner = owner } }
     if = {
       condition = and(greater(field(owner, Player.TurnNumber), 1), equal(pureCall(PlayerPowerAmount, owner, "retain-block"), 0))
       then = {
@@ -161,19 +164,22 @@ procedure EndDevelopmentTurn {
       then = { fail = { message = "Development turn is not open" } }
     }
     call = { procedure = BeforeTurnEndPowerReactions args = { owner = owner } }
-    forEach = {
-      query = collection(Hand) item = card
-      body = {
-        removeFromCollection = { collection = Hand item = card }
-        addToCollection = { collection = DiscardPile item = card }
+    if = { condition = field(owner, Player.CombatActive) then = { emit = { event = BeforePlayerTurnEnd payload = { owner = owner } } } }
+    if = { condition = field(owner, Player.CombatActive) then = {
+      forEach = {
+        query = collection(Hand) item = card
+        body = {
+          removeFromCollection = { collection = Hand item = card }
+          addToCollection = { collection = DiscardPile item = card }
+        }
       }
-    }
-    emit = { event = AfterTurnEnded payload = { owner = owner } }
-    call = { procedure = SideEndPowerReactions args = { owner = owner } }
-    call = { procedure = RunEnemyTurn args = { owner = owner } }
-    call = { procedure = ExpireTurnEndPowers }
-    call = { procedure = ResetCardTurnCosts }
-    set = { target = owner field = Player.TurnOpen value = false }
+      emit = { event = AfterTurnEnded payload = { owner = owner } }
+      call = { procedure = SideEndPowerReactions args = { owner = owner } }
+      call = { procedure = RunEnemyTurn args = { owner = owner } }
+      call = { procedure = ExpireTurnEndPowers }
+      call = { procedure = ResetCardTurnCosts }
+      set = { target = owner field = Player.TurnOpen value = false }
+    } }
   }
 }
 

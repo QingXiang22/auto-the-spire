@@ -15,10 +15,12 @@ try
     var ironcladOnly = false;
     var cardRewardsOnly = false;
     var rngOnly = false;
+    var relicContentOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
+        else if (args[index] == "--relic-content-only") relicContentOnly = true;
         else if (args[index] == "--rng-only") rngOnly = true;
         else if (args[index] == "--card-rewards-only") cardRewardsOnly = true;
         else if (args[index] == "--scope") scope = Input();
@@ -35,6 +37,8 @@ try
     if (command == "check" && cardRewardsOnly) return PackageChecks.RunCardRewardsOnly(package);
     if (rngOnly && (command != "check" || report is not null || cardRewardsOnly || ironcladOnly)) throw new ArgumentException("--rng-only requires check without other focused flags or report.");
     if (command == "check" && rngOnly) return PackageChecks.RunSourceRandomOnly(package);
+    if (relicContentOnly && (command != "check" || report is not null || ironcladOnly || rngOnly || cardRewardsOnly)) throw new ArgumentException("--relic-content-only requires check without other focused flags or report.");
+    if (command == "check" && relicContentOnly) return PackageChecks.RunRelicContentOnly(package);
     if (command == "check") return ironcladOnly ? PackageChecks.RunIroncladOnly(package) : PackageChecks.Run(manifest, report);
     if (command == "validate")
     {
