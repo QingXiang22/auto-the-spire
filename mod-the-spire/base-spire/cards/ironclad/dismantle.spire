@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # Vulnerable; OnUpgrade adds 2 damage.
 use Dismantle {
   template = CardDefinition
-  args = { rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 8 upgradedBaseDamage = 10 kind = "attack" strikeTag = false definition = "base-spire:dismantle" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { sourceEntry = "DISMANTLE" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 8 upgradedBaseDamage = 10 kind = "attack" strikeTag = false definition = "base-spire:dismantle" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use DismantleDamage {
   template = VulnerableHitsAttackEffect

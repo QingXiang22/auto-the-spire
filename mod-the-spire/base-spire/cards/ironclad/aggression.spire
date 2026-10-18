@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Aggression.cs; SHA-256 retained in cards/catalog.json.
-use Aggression { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:aggression" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true upgradedInnate = true } }
+use Aggression { template = CardDefinition args = { sourceEntry = "AGGRESSION" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:aggression" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true upgradedInnate = true } }
 use AggressionEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:aggression" power = "base-spire:aggression-power" kind = "upgrade-discard-attacks" stacks = 1 upgradedStacks = 1 } }

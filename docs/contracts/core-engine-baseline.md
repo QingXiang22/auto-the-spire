@@ -16,6 +16,8 @@
 
 ## 1. 固定的结构与接口职责
 
+2026-10-18用户授权的DSL-RNG-RESTORE-01已将活动运行身份迁移为engine/ir@0.5、Core.TheSpire 0.5.0；上表保留冻结时点。新增随机DSL接口、显式种子快照及vanilla布尔映射修正见[当前作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。旧0.4包及回放需要重建／分身份保存，不能冒名续接；其他冻结职责继续适用。
+
 作者 DSL 和 EnginePackageBuilder 共用类型化 IR、RuleSetBuilder 链接器及唯一 Session 调度器。通用能力包括类型/字段/枚举、实例、集合/关系/作用域、查询、动作及其有限候选、过程、事件/订阅、暂停续接、终局、随机、数值、观察与窄调试。
 
 宿主可使用 EngineDslCompiler.Compile/LoadFiles、EnginePackageBuilder、RuleSetBuilder 及 Session.Start/LegalActions/Submit/Answer/Step/Observe。现有开发者 State/RNG 访问保留；冻结不新增限权 facade，也不新增自动游戏推进器。正式对外身份/协议由 net 处理。

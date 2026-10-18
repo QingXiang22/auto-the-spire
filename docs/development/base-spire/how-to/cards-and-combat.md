@@ -1,6 +1,6 @@
 # 开发卡牌与共享战斗机制
 
-文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包已有完整单人铁甲战士定义所需的出牌／牌区、显式选敌与手牌选择、X 费、自动出牌、生成、伤害与 Power 修正、永久牌组及战斗副本；准确签名见[铁甲战士共享操作](../../../design/mod-the-spire/ironclad-dsl/shared-operations.md)。原版随机流、获得修正、附着、正常初态和完整 Run 仍需恢复。以下按任务选择现有操作或恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
+文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包已有完整单人铁甲战士定义所需的出牌／牌区、显式选敌与手牌选择、X 费、自动出牌、生成、伤害与 Power 修正、永久牌组及战斗副本；准确签名见[铁甲战士共享操作](../../../design/mod-the-spire/ironclad-dsl/shared-operations.md)。原版随机机制与已迁移消费者已恢复；完整随机前置消费、获得修正、附着、正常初态和完整 Run 仍需恢复。以下按任务选择现有操作或恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
 
 先读[准确操作](../reference/operations.md)确认边界，再到 cards/catalog 定位具体源类。需求与判断意图参考[卡牌原语契约](../../../design/mod-the-spire/card-primitives/spec.md)及[主清单的共享机制](../../../review/tofix/README.md#env-t06)，这些旧契约中的接口名不自动成为新 DSL 接口。
 
@@ -25,7 +25,7 @@
 
 已迁移定义的 `CardDefinition` 会生成 `<名称>.Obtain` 开发动作与同名过程，例如 `Strike.Obtain`；它调用 `ObtainPermanentCard`，把独立实例放入公开的 `RunDeck` 并发 `CardObtained`。当前只允许存活玩家在房间外、战斗外获得；不生成随机奖励，也不代表原版获得修正已恢复。干净初态也可用 `Ironclad.Initialize` 一次建立源起始牌组和遗物，见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
 
-一旦建立永久牌组，后续 `BeginDevelopmentCombat` 调用 `BuildCombatDeck`：清理旧非永久牌，按永久顺序复制到 DrawPile，保留普通／升级及费用等已有字段，隐藏的 `PermanentSource` 指向具体来源实例。不会把战斗升级反写到 RunDeck；临时生成、消耗和 Power 牌不会混入下一场。显式初始化 Ironclad 后，开战追加开发流初始洗牌，回合自动抽五张并处理首回合 Innate；其他机制探针仍用公开 `Draw` 显式抽牌。原版洗牌算法及流未恢复。营火消费者见[房间指南](run-and-rooms.md)，准确边界见[永久牌组与锻造契约](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
+一旦建立永久牌组，后续 `BeginDevelopmentCombat` 调用 `BuildCombatDeck`：清理旧非永久牌，按永久顺序复制到 DrawPile，保留普通／升级及费用等已有字段，隐藏的 `PermanentSource` 指向具体来源实例。不会把战斗升级反写到 RunDeck；临时生成、消耗和 Power 牌不会混入下一场。显式初始化 Ironclad 后，开战追加原版流初始洗牌，回合自动抽五张并处理首回合 Innate；其他机制探针仍用公开 `Draw` 显式抽牌。原版洗牌算法与流布局已恢复，整局前置消费仍需接续；见[随机契约](../../../design/mod-the-spire/run-domain/randomness.md)。营火消费者见[房间指南](run-and-rooms.md)，准确边界见[永久牌组与锻造契约](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
 
 先分别定义移动、获得、生成、复制、变换、升级和移除的完整行为。移动必须维护原集合、目标容量、身份及事件；复制要规定永久 ID、成长、费用修改、附着、临时标记的保留／清除。不能把 `create Card` 当作任意复制操作。
 

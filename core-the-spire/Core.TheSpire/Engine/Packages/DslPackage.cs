@@ -41,7 +41,7 @@ public sealed class DslPackage
             throw new NotSupportedException($"unsupported_capability: scope '{Scope}': " +
                 (unsupported.TryGetProperty(Scope, out var why) ? why.GetString() : "This scope is not implemented by the DSL package."));
         RandomProfile = Text(manifest, "random_profile");
-        if (RandomProfile != "engine-default") throw new NotSupportedException("unsupported_capability: package random profile is not implemented.");
+        if (RandomProfile is not ("engine-default" or RandomService.VanillaDrawProfileId)) throw new NotSupportedException("unsupported_capability: package random profile is not implemented.");
         EntryPath = Resolve(Text(manifest, "entry"));
         PublicMetadataPath = Resolve(Text(manifest, "public_metadata"));
         CatalogPaths = Strings(manifest.GetProperty("catalogs")).Select(Resolve).ToArray();
@@ -72,6 +72,13 @@ public sealed class DslPackage
     }
 
     public static DslPackage Load(string manifestPath, string? scope = null) => new(manifestPath, scope);
+
+    /// <summary>Returns a configured, unstarted session; game-owned DSL defines stream seeds at start.</summary>
+    public Session CreateSession(ulong seed, IReadOnlyList<string> participantRoles, string? gameSeed = null) =>
+        new(Rules, seed, participantRoles,
+            randomAlgorithmId: RandomProfile == "engine-default" ? RandomService.DefaultAlgorithmId : RandomService.VanillaAlgorithmId,
+            randomDrawProfileId: RandomProfile == "engine-default" ? RandomService.DefaultDrawProfileId : RandomService.VanillaDrawProfileId,
+            gameSeed: gameSeed);
 
     private string Resolve(string relative)
     {

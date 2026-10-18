@@ -50,7 +50,7 @@ internal static partial class PackageChecks
         {
             string Formation(DslPackage rules, ulong seed)
             {
-                var session = new Session(rules.Rules, seed, ["player"]); session.Start(); Healthy(session);
+                var session = rules.CreateSession(seed, ["player"]); session.Start(); Healthy(session);
                 Submit(session, "RubyRaidersNormal.Spawn");
                 return string.Join(",", Targets(session).Select(target => session.State.GetField(target, EnemyField(session, "DefinitionId")).AsString()));
             }

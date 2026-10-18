@@ -126,7 +126,7 @@ public sealed class RandomService
     public void SeedStream(string stream, ulong seed)
     {
         var name = RequireName(stream);
-        if (_streams.ContainsKey(name))
+        if (_streams.ContainsKey(name) || _explicitSeeds.ContainsKey(name))
         {
             throw Faults.Of(EngineFaultCode.Unsupported,
                 $"stream '{name}' already exists; a stream seed can only be set before its first draw");
@@ -213,7 +213,8 @@ public sealed class RandomService
     public RandomSnapshot Capture()
     {
         var streams = _creationOrder.Select(name => _streams[name].Capture()).ToArray();
-        return new RandomSnapshot(AlgorithmId, DrawProfileId, SessionSeed, TotalDraws, Array.AsReadOnly(streams));
+        return new RandomSnapshot(AlgorithmId, DrawProfileId, SessionSeed, TotalDraws, Array.AsReadOnly(streams))
+        { ExplicitSeeds = new System.Collections.ObjectModel.ReadOnlyDictionary<string, ulong>(new Dictionary<string, ulong>(_explicitSeeds)) };
     }
 
     /// <summary>Restores a matching position. Validate all streams before replacing current storage.</summary>
@@ -230,7 +231,10 @@ public sealed class RandomService
             if (!restored.TryAdd(RequireName(saved.Name), new RandomStream(saved.Name, generator, saved.Draws)))
                 throw Faults.Of(EngineFaultCode.SnapshotInvalid, $"snapshot repeats stream '{saved.Name}'");
         }
-        _streams.Clear(); _creationOrder.Clear();
+        var seeds = new Dictionary<string, ulong>(StringComparer.Ordinal);
+        foreach (var seed in snapshot.ExplicitSeeds) seeds.Add(RequireName(seed.Key), seed.Value);
+        _streams.Clear(); _creationOrder.Clear(); _explicitSeeds.Clear();
+        foreach (var seed in seeds) _explicitSeeds.Add(seed.Key, seed.Value);
         foreach (var (name, stream) in restored) { _streams.Add(name, stream); _creationOrder.Add(name); }
         TotalDraws = snapshot.TotalDraws;
     }
@@ -322,4 +326,8 @@ public sealed record RandomSnapshot(
     string DrawProfileId,
     ulong SessionSeed,
     long TotalDraws,
-    IReadOnlyList<RandomStreamSnapshot> Streams);
+    IReadOnlyList<RandomStreamSnapshot> Streams)
+{
+    public IReadOnlyDictionary<string, ulong> ExplicitSeeds { get; init; } =
+        new System.Collections.ObjectModel.ReadOnlyDictionary<string, ulong>(new Dictionary<string, ulong>());
+}

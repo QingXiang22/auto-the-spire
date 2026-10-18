@@ -10,6 +10,22 @@ public sealed partial class Session
         {
             case ConstExpr constant:
                 return constant.Value;
+            case RandomValueExpr randomValue:
+            {
+                Value Arg(int index) => Eval(call, randomValue.Arguments[index]);
+                float Float(int index) => Binary32.Read(Arg(index).AsInt());
+                return randomValue.Op switch
+                {
+                    RandomValueOp.GameSeed => Value.Of(GameSeed),
+                    RandomValueOp.Hash32 => Value.Of(Binary32.Hash32(Arg(0).AsString())),
+                    RandomValueOp.Float32 => Value.Of(Binary32.Bits(Arg(0).Kind == ValueKind.Fixed ? (float)Arg(0).AsDecimal() : (float)Arg(0).AsInt())),
+                    RandomValueOp.Float32Add => Value.Of(Binary32.Bits(Float(0) + Float(1))),
+                    RandomValueOp.Float32Minimum => Value.Of(Binary32.Bits(MathF.Min(Float(0), Float(1)))),
+                    RandomValueOp.Float32Less => Value.Of(Float(0) < Float(1)),
+                    RandomValueOp.Float32LessOrEqual => Value.Of(Float(0) <= Float(1)),
+                    _ => throw Faults.Schema("Unknown random value operation"),
+                };
+            }
 
             case LocalExpr local:
                 return call.Slots[local.Slot];

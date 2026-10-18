@@ -13,6 +13,7 @@ internal static class BaseDslPathChecks
     public static IEnumerable<(string Name, Action Body)> Build()
     {
         yield return ("DB-A11 pure DSL package describe/catalog/start/step/observe publishes the real effect", Trajectory);
+        yield return ("RNG package host uses the source stream layout and isolates repeated seeds", SourceRandomSessions);
         yield return ("DB-A11 real stdio process runs the same package and public trajectory", () => StdioTrajectory("draw"));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
@@ -52,6 +53,33 @@ internal static class BaseDslPathChecks
         new(id, operation, new WireObject(fields.Select(p => new KeyValuePair<string, WireValue>(p.Key, p.Value))));
     private static WireValue Field(ResponseDto response, string name) => ((WireObject)response.Result!).Get(name)!;
     private static PublicSnapshotDto Snapshot(ResponseDto response) => PublicSnapshotDto.FromWire(Field(response, "snapshot"), NetProtocol.V02);
+
+    private static void SourceRandomSessions()
+    {
+        var host = TextRuleScenario.CreatePackage(Manifest).Host;
+        var source = host.SourceForTests!;
+        Check.Equal(RandomService.VanillaDrawProfileId, source.RngProfileId, "describe provider reports actual source mapping");
+        var one = source.CreateSession("BASE-DSL-STDIO-00");
+        var two = source.CreateSession("BASE-DSL-STDIO-00");
+        var other = source.CreateSession("abc");
+        foreach (var provided in new[] { one, two, other })
+        {
+            var s = provided.Session; Check.Equal(0L, s.Random.TotalDraws, "factory returns unstarted session without random draws"); s.Start();
+            foreach (var name in new[] { "Ironclad.Initialize", "BeginDevelopmentCombat", "BeginDevelopmentTurn" })
+                s.Submit(s.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:" + name), s.Participant(0), []);
+            Check.Equal(9L, s.Random.DrawCount("base-spire:run:shuffle"), "one initial shuffle");
+            Check.Equal(RandomService.VanillaDrawProfileId, s.Random.DrawProfileId, "factory and provider agree");
+        }
+        string Hand(CoreTheSpire.Engine.Session s)
+        {
+            var cards = s.State.CollectionMembers(s.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand").Id);
+            var field = s.RuleSet.TypeByQualifiedId("base-spire:Card").FieldIndex("DefinitionId");
+            return string.Join(",", cards.Select(c => s.State.GetField(c, field).AsString()));
+        }
+        Check.Equal(Hand(one.Session), Hand(two.Session), "same seed repeats source hand across independent sessions");
+        Check.False(Hand(one.Session) == Hand(other.Session), "different source seed changes this fixed opening");
+        Check.Equal(host.Profile.RulesetId, TextRuleScenario.CreatePackage(Manifest, defaultGameSeed: "abc").Host.Profile.RulesetId, "game seed is absent from static identity");
+    }
 
     private static void Trajectory()
     {

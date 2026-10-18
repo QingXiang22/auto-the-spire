@@ -31,8 +31,8 @@ internal static partial class PackageChecks
             Submit(s, "Draw"); Equal(0L, Block(s), "melted instance is inactive");
             var blocked = Start(package); Submit(blocked, "TheAbacus.Obtain");
             Set(blocked, Player(blocked), "Player", "DrawBlocked", Value.Of(true));
-            var before = blocked.Random.DrawCount("base-spire:development-shuffle"); Submit(blocked, "Draw");
-            Equal(before, blocked.Random.DrawCount("base-spire:development-shuffle"), "blocked draw consumes no shuffle random samples");
+            var before = blocked.Random.DrawCount("base-spire:run:shuffle"); Submit(blocked, "Draw");
+            Equal(before, blocked.Random.DrawCount("base-spire:run:shuffle"), "blocked draw consumes no shuffle random samples");
             Equal(3, Members(blocked, "DiscardPile").Count, "blocked draw leaves discard intact"); Equal(0L, Block(blocked), "no block");
         });
         Case("DB-A06: shuffle listeners complete before AfterCardDrawn", () =>
@@ -141,6 +141,7 @@ internal static partial class PackageChecks
         Merge(RunCharacterStartChecks(package, Case), witnesses);
         var rewards = RunRewardChecks(package, Case);
         Merge(RunCardRewardChecks(package, Case), rewards);
+        RunSourceRandomChecks(package, Case);
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);
         Merge(RunIroncladChecks(package, Case), cards);
@@ -167,7 +168,7 @@ internal static partial class PackageChecks
         return 0;
     }
 
-    private static Session Start(DslPackage package) { var s = new Session(package.Rules, 20261018, ["player"]); s.Start(); Healthy(s); return s; }
+    private static Session Start(DslPackage package) { var s = package.CreateSession(20261018, ["player"]); s.Start(); Healthy(s); return s; }
     private static InstanceId Player(Session s) => s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Player").Id).First();
     private static long Block(Session s) => s.State.GetField(Player(s), s.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex("Block")).AsInt();
     private static IReadOnlyList<InstanceId> Members(Session s, string name) => s.State.CollectionMembers(s.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name).Id);

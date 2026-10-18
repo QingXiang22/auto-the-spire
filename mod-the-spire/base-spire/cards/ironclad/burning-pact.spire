@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/BurningPact.cs; SHA-256 retained in cards/catalog.json.
-use BurningPact { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:burning-pact" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use BurningPact { template = CardDefinition args = { sourceEntry = "BURNING_PACT" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:burning-pact" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use BurningPactEffect1 { template = SelectExhaustEffect args = { definition = "base-spire:burning-pact" } }
 use BurningPactEffect2 { template = DrawEffect args = { definition = "base-spire:burning-pact" cards = 2 upgradedCards = 3 } }

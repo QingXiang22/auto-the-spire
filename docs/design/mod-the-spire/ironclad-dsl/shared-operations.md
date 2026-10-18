@@ -47,6 +47,6 @@ CardPlays／CardLibrary 和内部引用不作为完整公开历史或牌区发�
 
 `ApplyPlayerPower`／`ApplyEnemyPower` 维护同身份、同持有者的叠加。`combat/ironclad-powers.spire` 消费机制角色，覆盖耗尽抽牌／格挡、受损 Strength／群伤、每回合 Strength／自伤／格挡、第三次攻击复制、下一攻击重复、抽到 Strike 自动打出、回合末自动打出、临时 Strength 恢复和费用／格挡／伤害修正。Rupture 的牌源自伤 Strength 延后到该次出牌结束；敌方阶段不触发 Rupture／Inferno。Power 通用目录仍保留 260 项来源，不能把这些角色处理器视为全 Power 目录已迁移。
 
-随机选择使用命名的 engine-default 流：`combat-card-selection`、`combat-targets`、`combat-card-generation`，重洗与 Stampede 使用 `development-shuffle`，名称均有 `base-spire:` 前缀。空资格不抽样，连续命中重建存活候选。它们不复现原版 RNG 算法、UnstableShuffle 或 run 流消耗。
+随机选择使用 `vanilla-uniform@1` 与源布局：`base-spire:run:combat_card_selection`、`base-spire:run:combat_targets`、`base-spire:run:combat_card_generation`；初始洗牌、弃牌重洗与 Stampede 共用 `base-spire:run:shuffle`。空资格不抽样，连续命中重建存活候选。初始洗牌直接 Fisher-Yates，重洗先按源条目与升级排序；精确布局和整局前置消费边界见[随机契约](../run-domain/randomness.md)。
 
 显式 `Ironclad.Initialize` 已接入源基础初态、开发流初始洗牌、自动回合抽牌和首回合 Innate 排序，准确入口见[角色初态契约](../character-combat/ironclad-start.md)。本页不承诺含 Neow 的正常角色开局、解锁进度、多人、无限生命目标、附魔／其他未迁移 Power、正常 Run 或原版逐步一致；继承开发范围的资源字段上限。需要这些行为时继续扩展对应契约，不在内容里绕过共享接口。

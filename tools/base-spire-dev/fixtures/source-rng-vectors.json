@@ -1,0 +1,1996 @@
+{
+  "schema": "base-spire/source-rng-vectors@1",
+  "source_sha256": {
+    "sts2/src/Core/Random/MegaRandom.cs": "a4544672d4909c878266e1b6e5597bca8771585c4106f3119044cc8a1ad0984b",
+    "sts2/src/Core/Random/Rng.cs": "99a404a807dae7b3c786821b3c287e6518b573f58265f98feaa63132748b7f40",
+    "sts2/src/Core/Random/PlayerRngSet.cs": "b78ee7acccf4e3751c66487270106ba6d2bbd4eba16862cb636741a10abeccae",
+    "sts2/src/Core/Runs/RunRngSet.cs": "059f7ab16345cb1147d68c540ed1a24f66f4b14e370b6c1f019cde6fbac80784",
+    "sts2/src/Core/Helpers/StringHelper.cs": "fe7c73c12cd9d09225efcf9a24c6d0f7e719bc97cba9e95b6dcc26179f72efbb",
+    "sts2/src/Core/Extensions/ListExtensions.cs": "b1e5f234732e5f2031f5f6ef17e70ea043c36e9e0f61e7c353ca8d4198470496",
+    "sts2/src/Core/Models/CardModel.cs": "2e0c6eea66dfc1098c82386fa15838c6d376a83953a895c028b4f2ef60816919",
+    "sts2/src/Core/Odds/CardRarityOdds.cs": "e712d54a40e08b7353e9299c61a3ef73bb249a6347af88c4b0f6d1c14cd1ff0a",
+    "sts2/src/Core/Odds/PlayerOddsSet.cs": "b9b134ecbb3c402b79a9e7cfcfe12a850ac6ede1bd8dad884842795c857582d7",
+    "sts2/src/Core/Factories/CardFactory.cs": "05ae21c288e6a68d64d8d43c42866579432b72ec30791153b0e11d29cf799f83",
+    "sts2/src/Core/Models/CardPools/IroncladCardPool.cs": "98aa14d13c962dab79573dfcae53ace20553d7fa6d2828193d9f379e3dce8e2c",
+    "sts2/src/Core/Models/Cards/Aggression.cs": "f93b9da1d02671aa49f21db9f84948e35242caa8b85df8954722d5b362f4956c",
+    "sts2/src/Core/Models/Cards/Anger.cs": "29c2089f03c9a9fba166986bf4e8e7461ae1cd033eb589c8c3fcd1627b541d03",
+    "sts2/src/Core/Models/Cards/Armaments.cs": "1d9aafe923fea28d05883a6b847396ab42b2cb008ae60eff22acbc1ac9b6ac26",
+    "sts2/src/Core/Models/Cards/AshenStrike.cs": "7024789ffbcf1e36cd296f9cce1b8909a61bf01728152e1b9f558572dcb6e01c",
+    "sts2/src/Core/Models/Cards/Barricade.cs": "71b82ac3b4c8e22d7b1b2606d296b6760b27c80ffce8999c87764bf3aa0e6f21",
+    "sts2/src/Core/Models/Cards/Bash.cs": "368bb650d332984a512142ad3dc5870339b0814b1b92a9abca7f06910efec9f7",
+    "sts2/src/Core/Models/Cards/BattleTrance.cs": "572c91bff78707a7eb406dc893f17377d1c733db4dbbd4609fb5a70f53ebea88",
+    "sts2/src/Core/Models/Cards/BloodWall.cs": "2ce56cad532dec9dc04fe8cdfebb5af4d867f97b40d56faa11b2b31883b7165e",
+    "sts2/src/Core/Models/Cards/Bloodletting.cs": "3787518b201654ff4b0cc050eaa0c61237d0ee3a1b0a147c37a50a66e98c323f",
+    "sts2/src/Core/Models/Cards/Bludgeon.cs": "2770f0c34b301cc901d0f9865192f83847b7d4c0687ff393c9d36e21fd9c6ab8",
+    "sts2/src/Core/Models/Cards/BodySlam.cs": "b554a0550946c792f2564eb1bb1a2f028679ab3a39c6d5166ffc5f9d3089b4d3",
+    "sts2/src/Core/Models/Cards/Brand.cs": "a446f7f575b20e103fbf23f5bdc90ad48b9570d7e8a0f08fa2eaf3a78676dede",
+    "sts2/src/Core/Models/Cards/Break.cs": "911170f2aef4662fb0c22de295f55c5844e0811663e1cdd002cfe046c8581312",
+    "sts2/src/Core/Models/Cards/Breakthrough.cs": "ecf88399ce7afd4ca6c49766c54956b72929bef1259570d0f9a62d27913f0110",
+    "sts2/src/Core/Models/Cards/Bully.cs": "779897707970d9e46565efeab5e1c2e17e6ddb8fe327c474661c280bf01fce78",
+    "sts2/src/Core/Models/Cards/BurningPact.cs": "b802324268261d68dec777a4198b9532b86a1e9633b7e2de62c4d88f9c096ef5",
+    "sts2/src/Core/Models/Cards/Cascade.cs": "1609222e13b28784d26afa5d7629940ae9c7062760aa5f9e845ad9ee676c4f6e",
+    "sts2/src/Core/Models/Cards/Cinder.cs": "b7ad61466591c09416980950d3629bfe28f7a41c7f88b40bfeef02d20c55d96f",
+    "sts2/src/Core/Models/Cards/Colossus.cs": "7deb9179bd046acf49527bf9a2dfbd261747bc6e81027f362d136dbeef22b7fa",
+    "sts2/src/Core/Models/Cards/Conflagration.cs": "2824cf8a8e7256b8a362d824e04e3848d34c908d3fee010c2949e5facbfb39d8",
+    "sts2/src/Core/Models/Cards/Corruption.cs": "86d7a2632443ca7d763c957f93c66c6dd440bbcb7770b440f59c1098bba75ed2",
+    "sts2/src/Core/Models/Cards/CrimsonMantle.cs": "46e68d6155ed33d5453c4427592828d4589e9e2c670666ff53dde1ee760de723",
+    "sts2/src/Core/Models/Cards/Cruelty.cs": "a395863cfb5d8d79dc37cdae9ef2ec8bcf5df8d6fa8a21796cacf9bb46dcfa34",
+    "sts2/src/Core/Models/Cards/DarkEmbrace.cs": "8c01995865f494962c9a456cf5cbee438a393825049de60b939ee8eda501ef24",
+    "sts2/src/Core/Models/Cards/DefendIronclad.cs": "f2707481e0be1a5e856cab0dc788fb520e80fe3dff9c0a0f53869b857b8c7740",
+    "sts2/src/Core/Models/Cards/DemonForm.cs": "668a291971ddf0f55638f93fab2a87a479598f5a285076dff72b82edbb7dcf7a",
+    "sts2/src/Core/Models/Cards/DemonicShield.cs": "69fea0b8ae81d1b823da636eb8654317c9be610bb5aedc150ddbb7b87afc1b59",
+    "sts2/src/Core/Models/Cards/Dismantle.cs": "f05eee5269c09b30362631cc022d55c7c9ffe50926fa6f12b1a7312ab22e9853",
+    "sts2/src/Core/Models/Cards/Dominate.cs": "a1dc4446e5f82c80480718c920c9309667898a564a127c46e56fd8e6e9f52e7e",
+    "sts2/src/Core/Models/Cards/DrumOfBattle.cs": "a6a0c53a80614a1069b08675b71ddba1c9d15218de5a243c6075f91c899dd884",
+    "sts2/src/Core/Models/Cards/EvilEye.cs": "e0dd0995e6aa163633e0d5722d6c7f35683294104a2e7f343fb4e81002a486de",
+    "sts2/src/Core/Models/Cards/ExpectAFight.cs": "75afb2bf5aa6262d3e2a01bce0d456b87731b87c4956c9499b9dd03e9c2b826f",
+    "sts2/src/Core/Models/Cards/Feed.cs": "e2ed8ecbf992205df6032f182a23a351b8f32c7358d38552048e1db904ddf525",
+    "sts2/src/Core/Models/Cards/FeelNoPain.cs": "e9b652eb19a412b5f748528ef586d489d6402782405024ef117f17ec2b19257d",
+    "sts2/src/Core/Models/Cards/FiendFire.cs": "d13c22a1cc57fdc71ceb86811d03c7463b1e12d4984618c36f4228329437a329",
+    "sts2/src/Core/Models/Cards/FightMe.cs": "37d5267fc20684e8d320112cf0f4c7900b4e630e31b96338e9d1a5ae0b2e172d",
+    "sts2/src/Core/Models/Cards/FlameBarrier.cs": "8f3cf2ecc74813d99dafec741623da84af9ee9f20df8b7ebeb04137e085618d2",
+    "sts2/src/Core/Models/Cards/ForgottenRitual.cs": "73102d95acdb93d50706a4660cd71978441088ed659c688a4932a815da77e291",
+    "sts2/src/Core/Models/Cards/Havoc.cs": "d4bc82f11ad9ef1ac000709dae9d57df51e7253049821e2a238d85ebdfc355bc",
+    "sts2/src/Core/Models/Cards/Headbutt.cs": "bed1dd135e0dcf0bbf1329231e30cd2c6aeb98d094670dbc243672dc287be77c",
+    "sts2/src/Core/Models/Cards/Hellraiser.cs": "48e8afb46028a32de0a7d01dea6a0269a9d4d079723e2ed4664e2afe451330c8",
+    "sts2/src/Core/Models/Cards/Hemokinesis.cs": "7c6c14611887c121058c70268677e8f90f61c44b68cf6bab25d3324bc86d2003",
+    "sts2/src/Core/Models/Cards/HowlFromBeyond.cs": "140f3bc98dd8d3634fb50c6a9101478c07857598a6449412956763ecf1ed65e0",
+    "sts2/src/Core/Models/Cards/Impervious.cs": "9a97b3091857c8f7ed35281b9ca1fa20af707bc56c17df651fec464e9bb79552",
+    "sts2/src/Core/Models/Cards/InfernalBlade.cs": "f74fdf5b2750e2ded89ceb780ffd4d762dd57488ad21584e1c9eaa82f679dc0b",
+    "sts2/src/Core/Models/Cards/Inferno.cs": "61a885725e242acb055502b51479c7fc9f9410aaa627f67812f61af87de27919",
+    "sts2/src/Core/Models/Cards/Inflame.cs": "adacf6eebe8337b67563e62dfee2bb3370fb65ff99bb5072ae2360cf966ad810",
+    "sts2/src/Core/Models/Cards/IronWave.cs": "842df21871b44f19af5e9848dc71ebfb5fe9c9832aa308584b95a0b20b0f2ca4",
+    "sts2/src/Core/Models/Cards/Juggernaut.cs": "7b2ac0d9d3e9f2771b6d6b15876cf99ff589a380ce4b4d72e0c2c214a2451579",
+    "sts2/src/Core/Models/Cards/Juggling.cs": "0a4d2a82704fe2d3b381ac3f7c298a4f4f911ac7b5dd754ab6ba49f56b190290",
+    "sts2/src/Core/Models/Cards/Mangle.cs": "e51907ffcc7c766f0baf42cdc41ecbdd7b562b884c46d666d86c9b2939526ad3",
+    "sts2/src/Core/Models/Cards/MoltenFist.cs": "35a3922f45fd0a09dcf7a4cb894a352deb0f4d9d221d8ec4c9d5d5564d41b8a5",
+    "sts2/src/Core/Models/Cards/NotYet.cs": "21ef8b51093329ca22f1fb830b3d18c39863cf8c5deb94339a15c0dbaf2923a2",
+    "sts2/src/Core/Models/Cards/Offering.cs": "4c46c4634993cbecb34b587c5b2a83477a722da86339fb3b24e6ebd0a3147db1",
+    "sts2/src/Core/Models/Cards/OneTwoPunch.cs": "c6b3cf08f00742415d55da841989c93c1ca5576beceb3b11858265df1c32e2e3",
+    "sts2/src/Core/Models/Cards/PactsEnd.cs": "c924fae262fbe5b9c429436e31ed6076e47bae12f322ed42301ce71086901052",
+    "sts2/src/Core/Models/Cards/PerfectedStrike.cs": "d3c99b130922f4ed892e14a7f05278fc474d03d3a27ecd7301cc977e177735c7",
+    "sts2/src/Core/Models/Cards/Pillage.cs": "2590dc1223707c3b0f93d1c58ae914b54db0de346bf44a66e416dfde8ab3b6ed",
+    "sts2/src/Core/Models/Cards/PommelStrike.cs": "3a3330a2970eda5de7a717121aa9f7973b918ded9da5678240e514740f56a681",
+    "sts2/src/Core/Models/Cards/PrimalForce.cs": "688d0745593b8b71db07fe55d542e162a7a6dc9780278144071dab369f353ccb",
+    "sts2/src/Core/Models/Cards/Pyre.cs": "762838f7db1f5110ff3d462fc9cb103638a8c9199db95ad96684de05afa62fbd",
+    "sts2/src/Core/Models/Cards/Rage.cs": "ca126d5e9f49350158798985389427f9c124a07474fa0ed9fa1a06fdcfa9f08a",
+    "sts2/src/Core/Models/Cards/Rampage.cs": "aea1b8eda1a15597c0263b20c5e1aa85e62fd861d0d2cf3263a779758a94f96c",
+    "sts2/src/Core/Models/Cards/Rupture.cs": "910670cb0b0b8e2b443acc2c737a99c03b458a3fadbad4335e6b0f2858d62d79",
+    "sts2/src/Core/Models/Cards/SecondWind.cs": "dcfc892a918145a24ad9e11eaa945b0f07f147547a27b100469b31516b5c494d",
+    "sts2/src/Core/Models/Cards/SetupStrike.cs": "608e2c4aadffa5b2521f23e802a64bc9be00457bf6ab207540b089401468af5d",
+    "sts2/src/Core/Models/Cards/ShrugItOff.cs": "4ddebe1b0328ce5ebceca212b97bb5989d4492d94b29568c4e3c442a6bb19870",
+    "sts2/src/Core/Models/Cards/Spite.cs": "790529f8b68821a35fa0c5ae285d46db80f60586067db46b8d429b1e53495132",
+    "sts2/src/Core/Models/Cards/Stampede.cs": "85bb2ae1cd06a165b134172482c972643d5ff9685a0102da3cfae2da0eba6c0c",
+    "sts2/src/Core/Models/Cards/Stoke.cs": "d3c70d52fe6678775d0279ed0b1e810806b0cf29999c3c74b2ed8e8a282090b6",
+    "sts2/src/Core/Models/Cards/Stomp.cs": "0cdf6de7d279ff5fb1f3bfe99dd8eab793b137b86d4c5d67e26665bb1cc50882",
+    "sts2/src/Core/Models/Cards/StoneArmor.cs": "208b95d5af886537f7526ce104226b6eec00c0156063062fd6e1c39cbaa3f230",
+    "sts2/src/Core/Models/Cards/StrikeIronclad.cs": "b9514c7880abc575abc7a6e572273e1cb64a4a092192f83af7d4e3b6c211c388",
+    "sts2/src/Core/Models/Cards/SwordBoomerang.cs": "c2158cac3112be02890e281ac32cd61ff13efc048a8f97e2fd71ee2ab265aa2d",
+    "sts2/src/Core/Models/Cards/Tank.cs": "7d8a24c77c1548fa6972430e4c20d2d3da18481388029e33d615cd3983a2034a",
+    "sts2/src/Core/Models/Cards/Taunt.cs": "8a0bb5f3d10f5e8ec6a9cf685dacfe687a5fc84f5346a61204b3205f1858d4d4",
+    "sts2/src/Core/Models/Cards/TearAsunder.cs": "420206af4340353b34934718085ab27ed69c4b72783e169bf0403c8b23d2e8b8",
+    "sts2/src/Core/Models/Cards/Thrash.cs": "f2b5b5395f30bc61ff798b5e44bb581077db3645fa942634a01147be279082d8",
+    "sts2/src/Core/Models/Cards/Thunderclap.cs": "e37f9e89989c192156cd650e8ba6b6d316e9e4aa9fd0f04a0a8ef90399620e81",
+    "sts2/src/Core/Models/Cards/Tremble.cs": "87308806d019335117c87fec728f399f91ac329d4b534d0f5ecce977b71bc9cd",
+    "sts2/src/Core/Models/Cards/TrueGrit.cs": "7d34fdf40fbbba5389b200cac9746ac0597471744c1db16ac23f16b83f97956d",
+    "sts2/src/Core/Models/Cards/TwinStrike.cs": "87131a9fa3797d8bc26be299aafc745ab698082346b98cbf6ac91d2697f63b29",
+    "sts2/src/Core/Models/Cards/Unmovable.cs": "77495e893e781107168673e5e593d994a3035a61d929408752ccae444de4c906",
+    "sts2/src/Core/Models/Cards/Unrelenting.cs": "50640fe1545fc2d3ee11f0fdcda98910bacadb8a3c1ad648c32f35846cfa51ca",
+    "sts2/src/Core/Models/Cards/Uppercut.cs": "a9d2d834247eb1b141fb0e80d33bf1108f0bf6620bd044caf1face8c285aa1fd",
+    "sts2/src/Core/Models/Cards/Vicious.cs": "61ce974ed2486108fa6f779ea573054c855d2d643429b52313988e8862271d7c",
+    "sts2/src/Core/Models/Cards/Whirlwind.cs": "ffdb3485ce9ae1ed83f8cb076faf6aa4020813131e05e26ee5731220914aafe2"
+  },
+  "reward_scope": "migrated gold/card calls; excludes potion-roll and normal Run prerequisites",
+  "vectors": [
+    {
+      "seed": "20261018",
+      "run_seed": 490222908,
+      "streams": {
+        "base-spire:run:up_front": 3550443159,
+        "base-spire:run:shuffle": 2798503583,
+        "base-spire:run:unknown_map_point": 91991552,
+        "base-spire:run:combat_card_generation": 3495649264,
+        "base-spire:run:combat_potion_generation": 1339210239,
+        "base-spire:run:combat_card_selection": 862094772,
+        "base-spire:run:combat_energy_costs": 3268852266,
+        "base-spire:run:combat_targets": 2016154143,
+        "base-spire:run:monster_ai": 2194125519,
+        "base-spire:run:niche": 987689629,
+        "base-spire:run:combat_orbs": 1738172037,
+        "base-spire:run:treasure_room_relics": 2891025976,
+        "base-spire:player:rewards": 31174870,
+        "base-spire:player:shops": 2910018327,
+        "base-spire:player:transformations": 358277532
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          78,
+          67,
+          74,
+          41
+        ],
+        "base-spire:run:shuffle": [
+          92,
+          84,
+          8,
+          5
+        ],
+        "base-spire:run:unknown_map_point": [
+          25,
+          13,
+          38,
+          81
+        ],
+        "base-spire:run:combat_card_generation": [
+          81,
+          46,
+          82,
+          66
+        ],
+        "base-spire:run:combat_potion_generation": [
+          24,
+          28,
+          43,
+          76
+        ],
+        "base-spire:run:combat_card_selection": [
+          20,
+          22,
+          88,
+          64
+        ],
+        "base-spire:run:combat_energy_costs": [
+          86,
+          36,
+          9,
+          69
+        ],
+        "base-spire:run:combat_targets": [
+          64,
+          60,
+          56,
+          49
+        ],
+        "base-spire:run:monster_ai": [
+          73,
+          2,
+          31,
+          95
+        ],
+        "base-spire:run:niche": [
+          10,
+          72,
+          90,
+          36
+        ],
+        "base-spire:run:combat_orbs": [
+          38,
+          96,
+          65,
+          13
+        ],
+        "base-spire:run:treasure_room_relics": [
+          91,
+          2,
+          83,
+          34
+        ],
+        "base-spire:player:rewards": [
+          74,
+          50,
+          13,
+          45
+        ],
+        "base-spire:player:shops": [
+          84,
+          43,
+          59,
+          73
+        ],
+        "base-spire:player:transformations": [
+          44,
+          38,
+          62,
+          42
+        ]
+      },
+      "float32_bits_first8": [
+        1061121759,
+        1057129517,
+        1041174259,
+        1055597890,
+        1059028762,
+        1058702451,
+        1059492554,
+        1059762994
+      ],
+      "initial_order": [
+        6,
+        1,
+        5,
+        2,
+        3,
+        4,
+        8,
+        0,
+        7,
+        9
+      ],
+      "reshuffle_order": [
+        3,
+        2,
+        8,
+        0,
+        6,
+        5,
+        7,
+        4,
+        9,
+        1
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 3340047533,
+      "rewards": [
+        {
+          "gold": 18,
+          "cards": [
+            {
+              "id": "base-spire:blood-wall",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:pommel-strike",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:armaments",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 19,
+          "cards": [
+            {
+              "id": "base-spire:inflame",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:blood-wall",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:inferno",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "777",
+      "run_seed": 2576306303,
+      "streams": {
+        "base-spire:run:up_front": 1341559258,
+        "base-spire:run:shuffle": 589619682,
+        "base-spire:run:unknown_map_point": 2178074947,
+        "base-spire:run:combat_card_generation": 1286765363,
+        "base-spire:run:combat_potion_generation": 3425293634,
+        "base-spire:run:combat_card_selection": 2948178167,
+        "base-spire:run:combat_energy_costs": 1059968365,
+        "base-spire:run:combat_targets": 4102237538,
+        "base-spire:run:monster_ai": 4280208914,
+        "base-spire:run:niche": 3073773024,
+        "base-spire:run:combat_orbs": 3824255432,
+        "base-spire:run:treasure_room_relics": 682142075,
+        "base-spire:player:rewards": 2117258265,
+        "base-spire:player:shops": 701134426,
+        "base-spire:player:transformations": 2444360927
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          53,
+          2,
+          1,
+          79
+        ],
+        "base-spire:run:shuffle": [
+          35,
+          57,
+          21,
+          48
+        ],
+        "base-spire:run:unknown_map_point": [
+          85,
+          81,
+          55,
+          39
+        ],
+        "base-spire:run:combat_card_generation": [
+          34,
+          45,
+          33,
+          4
+        ],
+        "base-spire:run:combat_potion_generation": [
+          33,
+          65,
+          62,
+          45
+        ],
+        "base-spire:run:combat_card_selection": [
+          65,
+          20,
+          82,
+          54
+        ],
+        "base-spire:run:combat_energy_costs": [
+          6,
+          1,
+          40,
+          74
+        ],
+        "base-spire:run:combat_targets": [
+          38,
+          15,
+          59,
+          63
+        ],
+        "base-spire:run:monster_ai": [
+          24,
+          83,
+          59,
+          37
+        ],
+        "base-spire:run:niche": [
+          2,
+          6,
+          71,
+          41
+        ],
+        "base-spire:run:combat_orbs": [
+          44,
+          21,
+          40,
+          51
+        ],
+        "base-spire:run:treasure_room_relics": [
+          7,
+          6,
+          71,
+          35
+        ],
+        "base-spire:player:rewards": [
+          46,
+          32,
+          10,
+          13
+        ],
+        "base-spire:player:shops": [
+          51,
+          26,
+          87,
+          84
+        ],
+        "base-spire:player:transformations": [
+          69,
+          91,
+          46,
+          9
+        ]
+      },
+      "float32_bits_first8": [
+        1055661770,
+        1051216543,
+        1037011999,
+        1041127365,
+        1064693910,
+        1062684463,
+        1062451460,
+        1054937667
+      ],
+      "initial_order": [
+        8,
+        7,
+        4,
+        2,
+        0,
+        6,
+        9,
+        1,
+        5,
+        3
+      ],
+      "reshuffle_order": [
+        0,
+        8,
+        7,
+        1,
+        6,
+        9,
+        2,
+        3,
+        5,
+        4
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 1131163632,
+      "rewards": [
+        {
+          "gold": 15,
+          "cards": [
+            {
+              "id": "base-spire:bully",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:thunderclap",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:tremble",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 16,
+          "cards": [
+            {
+              "id": "base-spire:blood-wall",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:body-slam",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:true-grit",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "ENV-IRONCLAD-001",
+      "run_seed": 968783790,
+      "streams": {
+        "base-spire:run:up_front": 4029004041,
+        "base-spire:run:shuffle": 3277064465,
+        "base-spire:run:unknown_map_point": 570552434,
+        "base-spire:run:combat_card_generation": 3974210146,
+        "base-spire:run:combat_potion_generation": 1817771121,
+        "base-spire:run:combat_card_selection": 1340655654,
+        "base-spire:run:combat_energy_costs": 3747413148,
+        "base-spire:run:combat_targets": 2494715025,
+        "base-spire:run:monster_ai": 2672686401,
+        "base-spire:run:niche": 1466250511,
+        "base-spire:run:combat_orbs": 2216732919,
+        "base-spire:run:treasure_room_relics": 3369586858,
+        "base-spire:player:rewards": 509735752,
+        "base-spire:player:shops": 3388579209,
+        "base-spire:player:transformations": 836838414
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          24,
+          17,
+          69,
+          62
+        ],
+        "base-spire:run:shuffle": [
+          53,
+          40,
+          63,
+          90
+        ],
+        "base-spire:run:unknown_map_point": [
+          1,
+          17,
+          35,
+          94
+        ],
+        "base-spire:run:combat_card_generation": [
+          83,
+          34,
+          19,
+          88
+        ],
+        "base-spire:run:combat_potion_generation": [
+          29,
+          6,
+          99,
+          96
+        ],
+        "base-spire:run:combat_card_selection": [
+          55,
+          17,
+          58,
+          88
+        ],
+        "base-spire:run:combat_energy_costs": [
+          8,
+          0,
+          41,
+          6
+        ],
+        "base-spire:run:combat_targets": [
+          20,
+          8,
+          52,
+          94
+        ],
+        "base-spire:run:monster_ai": [
+          39,
+          40,
+          46,
+          63
+        ],
+        "base-spire:run:niche": [
+          55,
+          64,
+          92,
+          48
+        ],
+        "base-spire:run:combat_orbs": [
+          7,
+          72,
+          49,
+          29
+        ],
+        "base-spire:run:treasure_room_relics": [
+          18,
+          30,
+          24,
+          28
+        ],
+        "base-spire:player:rewards": [
+          14,
+          25,
+          96,
+          93
+        ],
+        "base-spire:player:shops": [
+          1,
+          89,
+          8,
+          9
+        ],
+        "base-spire:player:transformations": [
+          38,
+          96,
+          57,
+          71
+        ]
+      },
+      "float32_bits_first8": [
+        1041712408,
+        1048654703,
+        1064847011,
+        1064299407,
+        1062549667,
+        1044528192,
+        1050915891,
+        1057828247
+      ],
+      "initial_order": [
+        0,
+        4,
+        7,
+        8,
+        2,
+        1,
+        6,
+        9,
+        3,
+        5
+      ],
+      "reshuffle_order": [
+        0,
+        2,
+        1,
+        7,
+        8,
+        5,
+        4,
+        3,
+        6,
+        9
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 3818608415,
+      "rewards": [
+        {
+          "gold": 11,
+          "cards": [
+            {
+              "id": "base-spire:vicious",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:bloodletting",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:twin-strike",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 19,
+          "cards": [
+            {
+              "id": "base-spire:anger",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:cinder",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:unrelenting",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "BASE-DSL-STDIO-00",
+      "run_seed": 3730402860,
+      "streams": {
+        "base-spire:run:up_front": 2495655815,
+        "base-spire:run:shuffle": 1743716239,
+        "base-spire:run:unknown_map_point": 3332171504,
+        "base-spire:run:combat_card_generation": 2440861920,
+        "base-spire:run:combat_potion_generation": 284422895,
+        "base-spire:run:combat_card_selection": 4102274724,
+        "base-spire:run:combat_energy_costs": 2214064922,
+        "base-spire:run:combat_targets": 961366799,
+        "base-spire:run:monster_ai": 1139338175,
+        "base-spire:run:niche": 4227869581,
+        "base-spire:run:combat_orbs": 683384693,
+        "base-spire:run:treasure_room_relics": 1836238632,
+        "base-spire:player:rewards": 3271354822,
+        "base-spire:player:shops": 1855230983,
+        "base-spire:player:transformations": 3598457484
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          26,
+          71,
+          13,
+          29
+        ],
+        "base-spire:run:shuffle": [
+          73,
+          69,
+          13,
+          41
+        ],
+        "base-spire:run:unknown_map_point": [
+          48,
+          91,
+          50,
+          76
+        ],
+        "base-spire:run:combat_card_generation": [
+          8,
+          76,
+          64,
+          88
+        ],
+        "base-spire:run:combat_potion_generation": [
+          25,
+          42,
+          35,
+          19
+        ],
+        "base-spire:run:combat_card_selection": [
+          86,
+          9,
+          87,
+          83
+        ],
+        "base-spire:run:combat_energy_costs": [
+          25,
+          21,
+          3,
+          32
+        ],
+        "base-spire:run:combat_targets": [
+          9,
+          44,
+          77,
+          38
+        ],
+        "base-spire:run:monster_ai": [
+          35,
+          2,
+          25,
+          13
+        ],
+        "base-spire:run:niche": [
+          53,
+          1,
+          32,
+          39
+        ],
+        "base-spire:run:combat_orbs": [
+          41,
+          86,
+          33,
+          62
+        ],
+        "base-spire:run:treasure_room_relics": [
+          73,
+          96,
+          45,
+          24
+        ],
+        "base-spire:player:rewards": [
+          18,
+          1,
+          26,
+          6
+        ],
+        "base-spire:player:shops": [
+          32,
+          49,
+          2,
+          66
+        ],
+        "base-spire:player:transformations": [
+          44,
+          21,
+          51,
+          77
+        ]
+      },
+      "float32_bits_first8": [
+        1044536658,
+        1012684089,
+        1048936625,
+        1032041757,
+        1063814520,
+        1051554515,
+        1062021579,
+        1057677453
+      ],
+      "initial_order": [
+        4,
+        9,
+        0,
+        3,
+        5,
+        8,
+        2,
+        1,
+        6,
+        7
+      ],
+      "reshuffle_order": [
+        8,
+        7,
+        3,
+        1,
+        2,
+        9,
+        0,
+        5,
+        6,
+        4
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 2285260189,
+      "rewards": [
+        {
+          "gold": 12,
+          "cards": [
+            {
+              "id": "base-spire:evil-eye",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:cinder",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:blood-wall",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 15,
+          "cards": [
+            {
+              "id": "base-spire:breakthrough",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:forgotten-ritual",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:thunderclap",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "ABC",
+      "run_seed": 2549457738,
+      "streams": {
+        "base-spire:run:up_front": 1314710693,
+        "base-spire:run:shuffle": 562771117,
+        "base-spire:run:unknown_map_point": 2151226382,
+        "base-spire:run:combat_card_generation": 1259916798,
+        "base-spire:run:combat_potion_generation": 3398445069,
+        "base-spire:run:combat_card_selection": 2921329602,
+        "base-spire:run:combat_energy_costs": 1033119800,
+        "base-spire:run:combat_targets": 4075388973,
+        "base-spire:run:monster_ai": 4253360349,
+        "base-spire:run:niche": 3046924459,
+        "base-spire:run:combat_orbs": 3797406867,
+        "base-spire:run:treasure_room_relics": 655293510,
+        "base-spire:player:rewards": 2090409700,
+        "base-spire:player:shops": 674285861,
+        "base-spire:player:transformations": 2417512362
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          53,
+          70,
+          75,
+          52
+        ],
+        "base-spire:run:shuffle": [
+          49,
+          49,
+          65,
+          25
+        ],
+        "base-spire:run:unknown_map_point": [
+          59,
+          86,
+          45,
+          85
+        ],
+        "base-spire:run:combat_card_generation": [
+          34,
+          33,
+          29,
+          30
+        ],
+        "base-spire:run:combat_potion_generation": [
+          64,
+          61,
+          68,
+          61
+        ],
+        "base-spire:run:combat_card_selection": [
+          19,
+          62,
+          33,
+          19
+        ],
+        "base-spire:run:combat_energy_costs": [
+          70,
+          85,
+          3,
+          2
+        ],
+        "base-spire:run:combat_targets": [
+          47,
+          45,
+          40,
+          96
+        ],
+        "base-spire:run:monster_ai": [
+          99,
+          70,
+          99,
+          17
+        ],
+        "base-spire:run:niche": [
+          80,
+          86,
+          98,
+          27
+        ],
+        "base-spire:run:combat_orbs": [
+          10,
+          72,
+          60,
+          51
+        ],
+        "base-spire:run:treasure_room_relics": [
+          73,
+          43,
+          61,
+          30
+        ],
+        "base-spire:player:rewards": [
+          37,
+          52,
+          63,
+          86
+        ],
+        "base-spire:player:shops": [
+          1,
+          95,
+          16,
+          89
+        ],
+        "base-spire:player:transformations": [
+          78,
+          1,
+          50,
+          63
+        ]
+      },
+      "float32_bits_first8": [
+        1052754534,
+        1057390124,
+        1059233063,
+        1063090841,
+        1064613207,
+        1048299874,
+        1054622092,
+        1052979148
+      ],
+      "initial_order": [
+        3,
+        7,
+        8,
+        2,
+        0,
+        6,
+        1,
+        5,
+        9,
+        4
+      ],
+      "reshuffle_order": [
+        8,
+        7,
+        9,
+        4,
+        0,
+        3,
+        6,
+        2,
+        1,
+        5
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 1104315067,
+      "rewards": [
+        {
+          "gold": 14,
+          "cards": [
+            {
+              "id": "base-spire:pommel-strike",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:body-slam",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:thunderclap",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 16,
+          "cards": [
+            {
+              "id": "base-spire:stampede",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:molten-fist",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:rage",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "abc",
+      "run_seed": 3974378154,
+      "streams": {
+        "base-spire:run:up_front": 2739631109,
+        "base-spire:run:shuffle": 1987691533,
+        "base-spire:run:unknown_map_point": 3576146798,
+        "base-spire:run:combat_card_generation": 2684837214,
+        "base-spire:run:combat_potion_generation": 528398189,
+        "base-spire:run:combat_card_selection": 51282722,
+        "base-spire:run:combat_energy_costs": 2458040216,
+        "base-spire:run:combat_targets": 1205342093,
+        "base-spire:run:monster_ai": 1383313469,
+        "base-spire:run:niche": 176877579,
+        "base-spire:run:combat_orbs": 927359987,
+        "base-spire:run:treasure_room_relics": 2080213926,
+        "base-spire:player:rewards": 3515330116,
+        "base-spire:player:shops": 2099206277,
+        "base-spire:player:transformations": 3842432778
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          37,
+          76,
+          0,
+          72
+        ],
+        "base-spire:run:shuffle": [
+          21,
+          80,
+          7,
+          12
+        ],
+        "base-spire:run:unknown_map_point": [
+          15,
+          68,
+          39,
+          65
+        ],
+        "base-spire:run:combat_card_generation": [
+          34,
+          59,
+          11,
+          56
+        ],
+        "base-spire:run:combat_potion_generation": [
+          72,
+          67,
+          38,
+          35
+        ],
+        "base-spire:run:combat_card_selection": [
+          33,
+          0,
+          11,
+          60
+        ],
+        "base-spire:run:combat_energy_costs": [
+          86,
+          60,
+          27,
+          16
+        ],
+        "base-spire:run:combat_targets": [
+          55,
+          17,
+          62,
+          71
+        ],
+        "base-spire:run:monster_ai": [
+          12,
+          14,
+          47,
+          1
+        ],
+        "base-spire:run:niche": [
+          21,
+          51,
+          25,
+          54
+        ],
+        "base-spire:run:combat_orbs": [
+          21,
+          94,
+          14,
+          97
+        ],
+        "base-spire:run:treasure_room_relics": [
+          46,
+          76,
+          93,
+          10
+        ],
+        "base-spire:player:rewards": [
+          40,
+          38,
+          73,
+          71
+        ],
+        "base-spire:player:shops": [
+          15,
+          85,
+          16,
+          92
+        ],
+        "base-spire:player:transformations": [
+          13,
+          46,
+          17,
+          43
+        ]
+      },
+      "float32_bits_first8": [
+        1053829012,
+        1053145572,
+        1060861236,
+        1060521644,
+        1059417371,
+        1059884631,
+        1061117394,
+        1064173279
+      ],
+      "initial_order": [
+        9,
+        5,
+        1,
+        4,
+        3,
+        6,
+        8,
+        0,
+        7,
+        2
+      ],
+      "reshuffle_order": [
+        3,
+        1,
+        0,
+        5,
+        9,
+        6,
+        4,
+        8,
+        7,
+        2
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 2529235483,
+      "rewards": [
+        {
+          "gold": 14,
+          "cards": [
+            {
+              "id": "base-spire:shrug-it-off",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:pommel-strike",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:body-slam",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 12,
+          "cards": [
+            {
+              "id": "base-spire:iron-wave",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:infernal-blade",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:headbutt",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "斩杀尖塔2",
+      "run_seed": 617808221,
+      "streams": {
+        "base-spire:run:up_front": 3678028472,
+        "base-spire:run:shuffle": 2926088896,
+        "base-spire:run:unknown_map_point": 219576865,
+        "base-spire:run:combat_card_generation": 3623234577,
+        "base-spire:run:combat_potion_generation": 1466795552,
+        "base-spire:run:combat_card_selection": 989680085,
+        "base-spire:run:combat_energy_costs": 3396437579,
+        "base-spire:run:combat_targets": 2143739456,
+        "base-spire:run:monster_ai": 2321710832,
+        "base-spire:run:niche": 1115274942,
+        "base-spire:run:combat_orbs": 1865757350,
+        "base-spire:run:treasure_room_relics": 3018611289,
+        "base-spire:player:rewards": 158760183,
+        "base-spire:player:shops": 3037603640,
+        "base-spire:player:transformations": 485862845
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          14,
+          38,
+          87,
+          8
+        ],
+        "base-spire:run:shuffle": [
+          95,
+          86,
+          13,
+          60
+        ],
+        "base-spire:run:unknown_map_point": [
+          85,
+          59,
+          19,
+          14
+        ],
+        "base-spire:run:combat_card_generation": [
+          4,
+          73,
+          56,
+          86
+        ],
+        "base-spire:run:combat_potion_generation": [
+          84,
+          16,
+          40,
+          51
+        ],
+        "base-spire:run:combat_card_selection": [
+          32,
+          40,
+          48,
+          30
+        ],
+        "base-spire:run:combat_energy_costs": [
+          80,
+          35,
+          18,
+          27
+        ],
+        "base-spire:run:combat_targets": [
+          50,
+          41,
+          64,
+          19
+        ],
+        "base-spire:run:monster_ai": [
+          66,
+          43,
+          79,
+          92
+        ],
+        "base-spire:run:niche": [
+          35,
+          44,
+          23,
+          52
+        ],
+        "base-spire:run:combat_orbs": [
+          91,
+          95,
+          33,
+          13
+        ],
+        "base-spire:run:treasure_room_relics": [
+          46,
+          13,
+          45,
+          71
+        ],
+        "base-spire:player:rewards": [
+          47,
+          14,
+          14,
+          89
+        ],
+        "base-spire:player:shops": [
+          11,
+          82,
+          65,
+          42
+        ],
+        "base-spire:player:transformations": [
+          6,
+          55,
+          14,
+          56
+        ]
+      },
+      "float32_bits_first8": [
+        1056113162,
+        1041770441,
+        1041842062,
+        1063557684,
+        1044705413,
+        1059264663,
+        1043618232,
+        1059120699
+      ],
+      "initial_order": [
+        2,
+        5,
+        0,
+        3,
+        8,
+        6,
+        4,
+        1,
+        7,
+        9
+      ],
+      "reshuffle_order": [
+        0,
+        9,
+        2,
+        7,
+        4,
+        5,
+        3,
+        1,
+        8,
+        6
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 3467632846,
+      "rewards": [
+        {
+          "gold": 15,
+          "cards": [
+            {
+              "id": "base-spire:colossus",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:rage",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:anger",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 15,
+          "cards": [
+            {
+              "id": "base-spire:iron-wave",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:armaments",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:ashen-strike",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "A😀B",
+      "run_seed": 3980066918,
+      "streams": {
+        "base-spire:run:up_front": 2745319873,
+        "base-spire:run:shuffle": 1993380297,
+        "base-spire:run:unknown_map_point": 3581835562,
+        "base-spire:run:combat_card_generation": 2690525978,
+        "base-spire:run:combat_potion_generation": 534086953,
+        "base-spire:run:combat_card_selection": 56971486,
+        "base-spire:run:combat_energy_costs": 2463728980,
+        "base-spire:run:combat_targets": 1211030857,
+        "base-spire:run:monster_ai": 1389002233,
+        "base-spire:run:niche": 182566343,
+        "base-spire:run:combat_orbs": 933048751,
+        "base-spire:run:treasure_room_relics": 2085902690,
+        "base-spire:player:rewards": 3521018880,
+        "base-spire:player:shops": 2104895041,
+        "base-spire:player:transformations": 3848121542
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          86,
+          53,
+          40,
+          79
+        ],
+        "base-spire:run:shuffle": [
+          0,
+          1,
+          24,
+          11
+        ],
+        "base-spire:run:unknown_map_point": [
+          91,
+          89,
+          10,
+          30
+        ],
+        "base-spire:run:combat_card_generation": [
+          82,
+          12,
+          59,
+          85
+        ],
+        "base-spire:run:combat_potion_generation": [
+          20,
+          92,
+          33,
+          4
+        ],
+        "base-spire:run:combat_card_selection": [
+          91,
+          60,
+          9,
+          43
+        ],
+        "base-spire:run:combat_energy_costs": [
+          15,
+          28,
+          80,
+          8
+        ],
+        "base-spire:run:combat_targets": [
+          61,
+          86,
+          72,
+          10
+        ],
+        "base-spire:run:monster_ai": [
+          35,
+          19,
+          67,
+          55
+        ],
+        "base-spire:run:niche": [
+          41,
+          75,
+          66,
+          24
+        ],
+        "base-spire:run:combat_orbs": [
+          63,
+          66,
+          31,
+          46
+        ],
+        "base-spire:run:treasure_room_relics": [
+          86,
+          15,
+          29,
+          55
+        ],
+        "base-spire:player:rewards": [
+          19,
+          68,
+          43,
+          20
+        ],
+        "base-spire:player:shops": [
+          71,
+          64,
+          34,
+          24
+        ],
+        "base-spire:player:transformations": [
+          95,
+          55,
+          97,
+          9
+        ]
+      },
+      "float32_bits_first8": [
+        1044908666,
+        1060102465,
+        1054734162,
+        1045296210,
+        1044461645,
+        1056694980,
+        1057612433,
+        1051608672
+      ],
+      "initial_order": [
+        6,
+        7,
+        5,
+        3,
+        4,
+        2,
+        8,
+        1,
+        9,
+        0
+      ],
+      "reshuffle_order": [
+        7,
+        9,
+        8,
+        2,
+        5,
+        4,
+        1,
+        3,
+        6,
+        0
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 2534924247,
+      "rewards": [
+        {
+          "gold": 12,
+          "cards": [
+            {
+              "id": "base-spire:headbutt",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:infernal-blade",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:hemokinesis",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 15,
+          "cards": [
+            {
+              "id": "base-spire:anger",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:sword-boomerang",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:uppercut",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": " seed ",
+      "run_seed": 3886757763,
+      "streams": {
+        "base-spire:run:up_front": 2652010718,
+        "base-spire:run:shuffle": 1900071142,
+        "base-spire:run:unknown_map_point": 3488526407,
+        "base-spire:run:combat_card_generation": 2597216823,
+        "base-spire:run:combat_potion_generation": 440777798,
+        "base-spire:run:combat_card_selection": 4258629627,
+        "base-spire:run:combat_energy_costs": 2370419825,
+        "base-spire:run:combat_targets": 1117721702,
+        "base-spire:run:monster_ai": 1295693078,
+        "base-spire:run:niche": 89257188,
+        "base-spire:run:combat_orbs": 839739596,
+        "base-spire:run:treasure_room_relics": 1992593535,
+        "base-spire:player:rewards": 3427709725,
+        "base-spire:player:shops": 2011585886,
+        "base-spire:player:transformations": 3754812387
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          57,
+          24,
+          82,
+          57
+        ],
+        "base-spire:run:shuffle": [
+          0,
+          39,
+          6,
+          20
+        ],
+        "base-spire:run:unknown_map_point": [
+          62,
+          30,
+          4,
+          90
+        ],
+        "base-spire:run:combat_card_generation": [
+          37,
+          88,
+          60,
+          11
+        ],
+        "base-spire:run:combat_potion_generation": [
+          56,
+          43,
+          34,
+          68
+        ],
+        "base-spire:run:combat_card_selection": [
+          49,
+          88,
+          56,
+          24
+        ],
+        "base-spire:run:combat_energy_costs": [
+          98,
+          32,
+          59,
+          40
+        ],
+        "base-spire:run:combat_targets": [
+          85,
+          27,
+          74,
+          5
+        ],
+        "base-spire:run:monster_ai": [
+          26,
+          63,
+          68,
+          91
+        ],
+        "base-spire:run:niche": [
+          53,
+          3,
+          9,
+          95
+        ],
+        "base-spire:run:combat_orbs": [
+          61,
+          50,
+          64,
+          87
+        ],
+        "base-spire:run:treasure_room_relics": [
+          33,
+          31,
+          14,
+          77
+        ],
+        "base-spire:player:rewards": [
+          6,
+          63,
+          98,
+          45
+        ],
+        "base-spire:player:shops": [
+          62,
+          74,
+          63,
+          57
+        ],
+        "base-spire:player:transformations": [
+          13,
+          58,
+          30,
+          97
+        ]
+      },
+      "float32_bits_first8": [
+        1031873566,
+        1059289811,
+        1065021107,
+        1055552365,
+        1062098239,
+        1057340988,
+        1049114396,
+        1062997859
+      ],
+      "initial_order": [
+        8,
+        5,
+        7,
+        2,
+        6,
+        4,
+        1,
+        9,
+        3,
+        0
+      ],
+      "reshuffle_order": [
+        9,
+        5,
+        3,
+        6,
+        0,
+        1,
+        8,
+        2,
+        7,
+        4
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 2441615092,
+      "rewards": [
+        {
+          "gold": 10,
+          "cards": [
+            {
+              "id": "base-spire:twin-strike",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:iron-wave",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:headbutt",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 13,
+          "cards": [
+            {
+              "id": "base-spire:feel-no-pain",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:havoc",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:one-two-punch",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3175926989,
+          "counter": 20
+        }
+      ]
+    },
+    {
+      "seed": "",
+      "run_seed": 757602046,
+      "streams": {
+        "base-spire:run:up_front": 3817822297,
+        "base-spire:run:shuffle": 3065882721,
+        "base-spire:run:unknown_map_point": 359370690,
+        "base-spire:run:combat_card_generation": 3763028402,
+        "base-spire:run:combat_potion_generation": 1606589377,
+        "base-spire:run:combat_card_selection": 1129473910,
+        "base-spire:run:combat_energy_costs": 3536231404,
+        "base-spire:run:combat_targets": 2283533281,
+        "base-spire:run:monster_ai": 2461504657,
+        "base-spire:run:niche": 1255068767,
+        "base-spire:run:combat_orbs": 2005551175,
+        "base-spire:run:treasure_room_relics": 3158405114,
+        "base-spire:player:rewards": 298554008,
+        "base-spire:player:shops": 3177397465,
+        "base-spire:player:transformations": 625656670
+      },
+      "int100_first4": {
+        "base-spire:run:up_front": [
+          33,
+          96,
+          42,
+          4
+        ],
+        "base-spire:run:shuffle": [
+          26,
+          47,
+          55,
+          97
+        ],
+        "base-spire:run:unknown_map_point": [
+          43,
+          65,
+          90,
+          99
+        ],
+        "base-spire:run:combat_card_generation": [
+          39,
+          43,
+          24,
+          25
+        ],
+        "base-spire:run:combat_potion_generation": [
+          64,
+          39,
+          21,
+          14
+        ],
+        "base-spire:run:combat_card_selection": [
+          96,
+          93,
+          64,
+          24
+        ],
+        "base-spire:run:combat_energy_costs": [
+          91,
+          31,
+          49,
+          71
+        ],
+        "base-spire:run:combat_targets": [
+          93,
+          27,
+          6,
+          80
+        ],
+        "base-spire:run:monster_ai": [
+          54,
+          53,
+          57,
+          31
+        ],
+        "base-spire:run:niche": [
+          18,
+          92,
+          59,
+          30
+        ],
+        "base-spire:run:combat_orbs": [
+          65,
+          55,
+          11,
+          78
+        ],
+        "base-spire:run:treasure_room_relics": [
+          40,
+          70,
+          2,
+          33
+        ],
+        "base-spire:player:rewards": [
+          38,
+          11,
+          42,
+          80
+        ],
+        "base-spire:player:shops": [
+          85,
+          6,
+          14,
+          19
+        ],
+        "base-spire:player:transformations": [
+          95,
+          22,
+          1,
+          58
+        ]
+      },
+      "float32_bits_first8": [
+        1053041520,
+        1038231785,
+        1054420425,
+        1062115921,
+        1064995959,
+        1057379447,
+        1064256606,
+        1050695911
+      ],
+      "initial_order": [
+        3,
+        5,
+        9,
+        0,
+        1,
+        7,
+        6,
+        8,
+        4,
+        2
+      ],
+      "reshuffle_order": [
+        0,
+        3,
+        7,
+        2,
+        6,
+        8,
+        5,
+        1,
+        4,
+        9
+      ],
+      "shuffle_counter": 18,
+      "content_seed_slot2_mixin7": 3607426671,
+      "rewards": [
+        {
+          "gold": 14,
+          "cards": [
+            {
+              "id": "base-spire:forgotten-ritual",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:molten-fist",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:pillage",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 3164854026,
+          "counter": 10
+        },
+        {
+          "gold": 12,
+          "cards": [
+            {
+              "id": "base-spire:stampede",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:drum-of-battle",
+              "upgraded": false
+            },
+            {
+              "id": "base-spire:headbutt",
+              "upgraded": false
+            }
+          ],
+          "offset_bits": 1008981770,
+          "counter": 20
+        }
+      ]
+    }
+  ]
+}

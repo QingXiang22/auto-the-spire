@@ -65,6 +65,13 @@ public static partial class EngineDslCompiler
                         Text(args.Required("member", 1))),
                     "field" => _scope.Field(E("target", 0), _compiler.Field(args.Required("field", 1))),
                     "frameScope" => new FrameScopeExpr(),
+                    "gameSeed" => new RandomValueExpr(RandomValueOp.GameSeed),
+                    "hash32" => new RandomValueExpr(RandomValueOp.Hash32, E("text", 0)),
+                    "float32" => new RandomValueExpr(RandomValueOp.Float32, E("value", 0)),
+                    "float32Add" => new RandomValueExpr(RandomValueOp.Float32Add, E("left", 0), E("right", 1)),
+                    "float32Minimum" => new RandomValueExpr(RandomValueOp.Float32Minimum, E("left", 0), E("right", 1)),
+                    "float32Less" => new RandomValueExpr(RandomValueOp.Float32Less, E("left", 0), E("right", 1)),
+                    "float32LessOrEqual" => new RandomValueExpr(RandomValueOp.Float32LessOrEqual, E("left", 0), E("right", 1)),
                     "entityScope" => _scope.EntityScope(E("entity", 0)),
                     "add" => _scope.Add(E("left", 0), E("right", 1)),
                     "subtract" => _scope.Subtract(E("left", 0), E("right", 1)),
@@ -156,7 +163,8 @@ public static partial class EngineDslCompiler
                         var item = args.Required("item", 1);
                         var key = args.Required("key", 2);
                         var descending = Boolean(args.Optional("descending", 3), false);
-                        result = _scope.Sort(source, expression => Binding(item, expression, () => Expression(key)), descending);
+                        var query = (SortQuery)_scope.Sort(source, expression => Binding(item, expression, () => Expression(key)), descending);
+                        result = Boolean(args.Optional("stable", 4), true) ? query : new SortQuery(query.Source, query.Key, query.Descending, query.ItemSlot, false);
                         break;
                     }
                     case "take": result = _scope.Take(Query(args.Required("query", 0)), Expression(args.Required("count", 1))); break;

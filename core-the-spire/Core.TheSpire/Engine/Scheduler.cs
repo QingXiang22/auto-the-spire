@@ -108,7 +108,7 @@ public sealed partial class Session
         SessionBudget? budget = null, IComputeBackend? computeBackend = null,
         string randomAlgorithmId = RandomService.DefaultAlgorithmId,
         string randomDrawProfileId = RandomService.DefaultDrawProfileId, SessionDebugOptions? debug = null,
-        IRandomProfile? randomProfile = null)
+        IRandomProfile? randomProfile = null, string? gameSeed = null)
     {
         RuleSet = ruleSet ?? throw new ArgumentNullException(nameof(ruleSet));
         ArgumentNullException.ThrowIfNull(participantRoles);
@@ -118,6 +118,7 @@ public sealed partial class Session
         State = new SessionState(ruleSet);
         Random = new RandomService(seed, randomAlgorithmId, randomDrawProfileId, randomProfile);
         Seed = seed;
+        GameSeed = gameSeed ?? seed.ToString(System.Globalization.CultureInfo.InvariantCulture);
         Debug = debug is null ? null : new SessionDebugTrace(debug);
 
         for (var i = 0; i < participantRoles.Count; i++)
@@ -135,6 +136,7 @@ public sealed partial class Session
             "random=" + Random.AlgorithmId,
             "draw=" + Random.DrawProfileId,
             "participants=" + string.Join(",", _roleNames));
+        if (gameSeed is not null) Identity += "|game-seed=" + Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(gameSeed)));
     }
 
     public RuleSet RuleSet { get; }
@@ -148,6 +150,7 @@ public sealed partial class Session
     public IComputeBackend? ComputeBackend { get; }
 
     public ulong Seed { get; }
+    public string GameSeed { get; }
 
     /// <summary>Session identity: rule set identity, seed fingerprint, random configuration and participant roles.</summary>
     public string Identity { get; }

@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/FeelNoPain.cs; SHA-256 retained in cards/catalog.json.
-use FeelNoPain { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:feel-no-pain" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use FeelNoPain { template = CardDefinition args = { sourceEntry = "FEEL_NO_PAIN" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:feel-no-pain" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use FeelNoPainEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:feel-no-pain" power = "base-spire:feel-no-pain-power" kind = "block-on-exhaust" stacks = 3 upgradedStacks = 4 } }

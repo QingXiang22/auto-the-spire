@@ -14,7 +14,7 @@ procedure OfferCombatGold {
       condition = equal(field(owner, Player.Room), "rewards")
       then = { fail = { message = "Close the previous development rewards first" } }
     }
-    sampleInt = { stream = "base-spire:development-reward" min = 10 max = 21 into = amount }
+    sampleInt = { stream = "base-spire:player:rewards" min = 10 max = 21 into = amount }
     set = { target = owner field = Player.GoldRewardAmount value = amount }
     set = { target = owner field = Player.GoldRewardPending value = true }
     set = { target = owner field = Player.Room value = "rewards" }

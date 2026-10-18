@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: Impervious.cs: cost 2, BlockVar(30, Move), CardKeyword.Exhaust, OnUpgrade adds 10 block.
 use Impervious {
   template = CardDefinition
-  args = { rarity = "rare" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:impervious" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
+  args = { sourceEntry = "IMPERVIOUS" rarity = "rare" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:impervious" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
 }
 use ImperviousBlock {
   template = BlockEffect

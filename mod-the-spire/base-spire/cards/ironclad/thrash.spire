@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Thrash.cs; SHA-256 retained in cards/catalog.json.
-use Thrash { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:thrash" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 6 } }
+use Thrash { template = CardDefinition args = { sourceEntry = "THRASH" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:thrash" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 6 } }
 use ThrashEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:thrash" hits = 2 upgradedHits = 2 hitScale = "fixed" } }
 use ThrashEffect2 { template = AbsorbAttackDamageEffect args = { definition = "base-spire:thrash" } }

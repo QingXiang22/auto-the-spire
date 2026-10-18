@@ -18,6 +18,15 @@ python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanil
 
 ## 两层向量
 
+纯DSL恢复使用新的源消费者向量入口：
+
+```powershell
+python -X utf8 tools/rng-oracle/dsl_rng_vectors.py --output tools/base-spire-dev/fixtures/source-rng-vectors.json
+dotnet run --project tools/base-spire-dev -- check --rng-only
+```
+
+生成需要本地sts2源；CI消费冻结JSON无需源码。向量保存98份源SHA256，独立生成10组UTF-16字符串seed、12条run／3条player流、精确binary32位型、初始／重洗排列与两轮金币／卡牌奖励。奖励向量限定已迁移的操作序列，不包含药水掉落判定、正常Run初始化前置消费或参考模拟器执行，不能据此关闭原严格套件。大型同键牌组的 .NET 排序行为不由十张起始牌向量覆盖。原命令中的旧Slice向量路径为迁移前历史，当前可执行消费者以此入口为准。
+
 | 层 | 内容 | 谁检查 |
 | --- | --- | --- |
 | **读数** | 原始字、`NextInt(100)`、`NextInt(1,7)`、`NextDouble`、10 张牌洗牌排列、消耗计数 | `Core.TheSpire.Engine.Tests` |

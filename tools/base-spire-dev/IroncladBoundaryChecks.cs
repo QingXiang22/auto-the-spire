@@ -6,7 +6,7 @@ internal static partial class PackageChecks
     {
         Session Combat(long seed = 20261018)
         {
-            var s = new Session(package.Rules, checked((ulong)seed), ["player"]); s.Start(); Healthy(s);
+            var s = package.CreateSession(checked((ulong)seed), ["player"]); s.Start(); Healthy(s);
             Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             foreach (var c in Members(s, "DiscardPile").ToArray()) s.State.RunAtomic(() => s.State.DestroyInstance(c));
             Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(1000L)); Set(s, Player(s), "Player", "Energy", Value.Of(30L)); return s;
@@ -105,7 +105,7 @@ internal static partial class PackageChecks
             var s = Combat(); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(3L)); Submit(s, "AddDevelopmentTarget");
             IcPlay(s, IcAdd(s, "SwordBoomerang", true));
             var totalHp = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).Sum(e => IntField(s, e, "Enemy", "Hp")); Equal(31L, totalHp, "four hits, including retarget after lethal");
-            var before = s.Random.DrawCount("base-spire:combat-card-selection"); IcPlay(s, IcAdd(s, "Cinder")); Equal(before, s.Random.DrawCount("base-spire:combat-card-selection"), "empty random card domain consumes nothing");
+            var before = s.Random.DrawCount("base-spire:run:combat_card_selection"); IcPlay(s, IcAdd(s, "Cinder")); Equal(before, s.Random.DrawCount("base-spire:run:combat_card_selection"), "empty random card domain consumes nothing");
         });
         check("IC temporary costs: upgrade cannot remove a this-turn free override; Stomp entering mid-turn uses finished history", () =>
         {

@@ -2,7 +2,7 @@ using CoreTheSpire.Engine;
 
 internal static partial class PackageChecks
 {
-    private const string RewardStream = "base-spire:development-reward";
+    private const string RewardStream = "base-spire:player:rewards";
 
     private static Dictionary<string, string[]> RunRewardChecks(DslPackage package, Action<string, Action> check)
     {
@@ -15,7 +15,7 @@ internal static partial class PackageChecks
             {
                 Session Offered()
                 {
-                    var s = new Session(package.Rules, seed, ["player"]); s.Start(); Healthy(s);
+                    var s = package.CreateSession(seed, ["player"]); s.Start(); Healthy(s);
                     WinRewardCombat(s);
                     Equal(99L, Field(s, "Gold"), "an offered reward is not yet owned");
                     Equal("rewards", Room(s), "the reward screen opens after victory");

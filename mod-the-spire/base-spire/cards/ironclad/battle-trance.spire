@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/BattleTrance.cs; SHA-256 retained in cards/catalog.json.
-use BattleTrance { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:battle-trance" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use BattleTrance { template = CardDefinition args = { sourceEntry = "BATTLE_TRANCE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:battle-trance" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use BattleTranceEffect1 { template = DrawEffect args = { definition = "base-spire:battle-trance" cards = 3 upgradedCards = 4 } }
 use BattleTranceEffect2 { template = ApplySelfPowerEffect args = { definition = "base-spire:battle-trance" power = "base-spire:no-draw-power" kind = "no-draw" stacks = 1 upgradedStacks = 1 } }

@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Bully.cs; SHA-256 retained in cards/catalog.json.
-use Bully { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:bully" cost = 0 upgradedCost = 0 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 4 damageScale = "vulnerable-count" damageFactor = 2 upgradedDamageFactor = 3 } }
+use Bully { template = CardDefinition args = { sourceEntry = "BULLY" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:bully" cost = 0 upgradedCost = 0 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 4 damageScale = "vulnerable-count" damageFactor = 2 upgradedDamageFactor = 3 } }
 use BullyEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:bully" hits = 1 upgradedHits = 1 hitScale = "fixed" } }

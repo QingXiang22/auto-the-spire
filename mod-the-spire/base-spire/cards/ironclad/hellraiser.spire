@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Hellraiser.cs; SHA-256 retained in cards/catalog.json.
-use Hellraiser { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:hellraiser" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use Hellraiser { template = CardDefinition args = { sourceEntry = "HELLRAISER" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:hellraiser" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use HellraiserEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:hellraiser" power = "base-spire:hellraiser-power" kind = "autoplay-drawn-strikes" stacks = 1 upgradedStacks = 1 } }

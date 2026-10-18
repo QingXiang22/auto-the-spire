@@ -14,6 +14,7 @@ entity Card {
     CanUpgrade = { type = Bool default = false }
     Kind = { type = String(length = 16) default = "skill" }
     Rarity = { type = String(length = 16) default = "none" }
+    SourceEntry = { type = String(length = 64) default = "DEVELOPMENT_CARD" }
     StrikeTag = { type = Bool default = false }
     IsX = { type = Bool default = false }
     PaidX = { type = Int(min = 0, max = 999) default = 0 }

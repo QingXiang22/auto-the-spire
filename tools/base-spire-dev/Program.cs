@@ -14,10 +14,12 @@ try
     string? scope = null, report = null;
     var ironcladOnly = false;
     var cardRewardsOnly = false;
+    var rngOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
+        else if (args[index] == "--rng-only") rngOnly = true;
         else if (args[index] == "--card-rewards-only") cardRewardsOnly = true;
         else if (args[index] == "--scope") scope = Input();
         else if (args[index] == "--report") report = Input();
@@ -31,10 +33,12 @@ try
     if (ironcladOnly && (command != "check" || report is not null)) throw new ArgumentException("--ironclad-only requires check without --report; run the full check to produce coverage evidence.");
     if (cardRewardsOnly && (command != "check" || report is not null || ironcladOnly)) throw new ArgumentException("--card-rewards-only requires check without --report or --ironclad-only.");
     if (command == "check" && cardRewardsOnly) return PackageChecks.RunCardRewardsOnly(package);
+    if (rngOnly && (command != "check" || report is not null || cardRewardsOnly || ironcladOnly)) throw new ArgumentException("--rng-only requires check without other focused flags or report.");
+    if (command == "check" && rngOnly) return PackageChecks.RunSourceRandomOnly(package);
     if (command == "check") return ironcladOnly ? PackageChecks.RunIroncladOnly(package) : PackageChecks.Run(manifest, report);
     if (command == "validate")
     {
-        var session = new Session(package.Rules, 42, ["player"]);
+        var session = package.CreateSession(42, ["player"]);
         session.Start();
         if (session.Status == SessionStatus.Faulted) throw new InvalidOperationException(session.Fault?.ToString());
     }

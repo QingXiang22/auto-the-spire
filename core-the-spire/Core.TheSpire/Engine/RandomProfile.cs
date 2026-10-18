@@ -64,7 +64,7 @@ internal sealed class BuiltInRandomProfile(bool doubleTruncation) : IRandomProfi
     public string DrawProfileId => doubleTruncation ? RandomService.VanillaDrawProfileId : RandomService.DefaultDrawProfileId;
     public IRandomGenerator Create(ulong seed) => new Xoshiro256StarStar(seed, protectZeroState: !doubleTruncation);
     public double DrawDouble(Func<ulong> next) => (next() >> 11) * (1.0 / 9007199254740992.0);
-    public bool DrawBool(Func<ulong> next) => doubleTruncation ? (next() >> 63) != 0 : (next() & 1UL) != 0;
+    public bool DrawBool(Func<ulong> next) => doubleTruncation ? (next() >> 63) == 0 : (next() & 1UL) != 0;
     public long DrawBounded(Func<ulong> next, long minInclusive, long maxExclusive)
     {
         var span = maxExclusive - minInclusive;

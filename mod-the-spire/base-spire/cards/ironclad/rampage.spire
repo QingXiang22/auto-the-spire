@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Rampage.cs; SHA-256 retained in cards/catalog.json.
-use Rampage { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:rampage" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 9 } }
+use Rampage { template = CardDefinition args = { sourceEntry = "RAMPAGE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:rampage" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 9 } }
 use RampageEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:rampage" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use RampageEffect2 { template = GrowDamageEffect args = { definition = "base-spire:rampage" growth = 5 upgradedGrowth = 9 } }

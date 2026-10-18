@@ -425,8 +425,9 @@ public sealed class FilterQuery(Query source, Expr predicate, int itemSlot) : Qu
     public override string ToString() => $"filter({Source})";
 }
 
-public sealed class SortQuery(Query source, Expr key, bool descending, int itemSlot) : Query
+public sealed class SortQuery(Query source, Expr key, bool descending, int itemSlot, bool stable = true) : Query
 {
+    public bool Stable { get; } = stable;
     public Query Source { get; } = source;
 
     public Expr Key { get; } = key;
@@ -906,6 +907,7 @@ public static class PrimitiveSignatures
             new("expr.logic", [EngineEffect.PureExpression]),
             new("expr.not", [EngineEffect.PureExpression]),
             new("expr.convert", [EngineEffect.PureExpression]),
+            new("expr.randomValue", [EngineEffect.PureExpression]),
             new("expr.enum", [EngineEffect.PureExpression]),
             new("expr.count", readPure),
             new("expr.collectionIndex", readPure),
@@ -935,6 +937,8 @@ public static class PrimitiveSignatures
             new("inst.setRelation", [EngineEffect.WritesState]),
             new("inst.clearRelation", [EngineEffect.WritesState]),
             new("inst.sampleInt", [EngineEffect.ConsumesRandom]),
+            new("inst.seedStream", [EngineEffect.WritesState]),
+            new("inst.sampleFloat32", [EngineEffect.ConsumesRandom]),
             new("inst.samplePick", [EngineEffect.ConsumesRandom]),
             new("inst.emitEvent", [EngineEffect.EmitsEvent]),
             new("inst.requestDecision", [EngineEffect.RequestsDecision]),

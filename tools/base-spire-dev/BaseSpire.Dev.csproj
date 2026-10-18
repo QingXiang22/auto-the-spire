@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="fixtures/ironclad-source-metadata.json" />
+    <EmbeddedResource Include="fixtures/source-rng-vectors.json" />
     <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <ProjectReference Include="../../net-the-spire/Net.TheSpire.Host/Net.TheSpire.Host.csproj" />
   </ItemGroup>

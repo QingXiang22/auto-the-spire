@@ -73,6 +73,11 @@ public sealed partial class Session
                     keys[index] = (source[index], Eval(call, sort.Key));
                 }
 
+                if (!sort.Stable)
+                {
+                    Array.Sort(keys, (left, right) => sort.Descending ? ValueComparer.Instance.Compare(right.Key, left.Key) : ValueComparer.Instance.Compare(left.Key, right.Key));
+                    return keys.Select(pair => pair.Item).ToArray();
+                }
                 var ordered = keys.OrderBy(pair => pair.Key, ValueComparer.Instance)
                     .AsEnumerable();
                 if (sort.Descending) ordered = ordered.Reverse();

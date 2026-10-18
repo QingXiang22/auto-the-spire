@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/PrimalForce.cs; SHA-256 retained in cards/catalog.json.
-use PrimalForce { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:primal-force" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use PrimalForce { template = CardDefinition args = { sourceEntry = "PRIMAL_FORCE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:primal-force" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use PrimalForceEffect1 { template = TransformHandAttacksEffect args = { definition = "base-spire:primal-force" } }

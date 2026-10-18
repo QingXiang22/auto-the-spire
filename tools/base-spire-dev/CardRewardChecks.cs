@@ -3,8 +3,8 @@ using CoreTheSpire.Engine;
 
 internal static partial class PackageChecks
 {
-    private const string CardRarityStream = "base-spire:development-card-rarity";
-    private const string CardRewardStream = "base-spire:development-card-reward";
+    private const string CardRarityStream = "base-spire:player:rewards";
+    private const string CardRewardStream = "base-spire:player:rewards";
 
     public static int RunCardRewardsOnly(DslPackage package)
     {
@@ -19,7 +19,7 @@ internal static partial class PackageChecks
         void Case(string name, Action body) { check(name, body); cases.Add(name); }
         Session Offered(DslPackage? input = null, ulong seed = 20261018)
         {
-            var s = new Session((input ?? package).Rules, seed, ["player"]); s.Start(); Healthy(s);
+            var s = (input ?? package).CreateSession(seed, ["player"]); s.Start(); Healthy(s);
             Submit(s, "Ironclad.Initialize"); Submit(s, "TwigSlimeS.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             while (Active(s))
             {
@@ -30,7 +30,7 @@ internal static partial class PackageChecks
             Equal("victory", Outcome(s), "actual seven-HP enemy defeated using starter cards");
             return s;
         }
-        long Cursor(Session s) => s.Random.DrawCount(CardRewardStream) + s.Random.DrawCount(CardRarityStream);
+        long Cursor(Session s) => s.Random.DrawCount(CardRewardStream);
 
         Case("CR01: reward eligibility follows all 80 source cards and their rarity order, including Feed and NotYet", () =>
         {
@@ -55,9 +55,9 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root);
             var vectors = new (long Roll, long Offset, string Rarity)[] {
-                (0, -5, "uncommon"), (5872025, -5, "uncommon"), (5872026, -5, "common"),
-                (503316, 0, "rare"), (503317, 0, "uncommon"), (6710886, 0, "uncommon"), (6710887, 0, "common"),
-                (7214202, 40, "rare"), (7214203, 40, "uncommon"), (13421772, 40, "uncommon"), (13421773, 40, "common") };
+                (0, 3175926989, "uncommon"), (1051931442, 3175926989, "uncommon"), (1051931443, 3175926989, "common"),
+                (1022739086, 0, "rare"), (1022739087, 0, "uncommon"), (1053609164, 0, "uncommon"), (1053609165, 0, "common"),
+                (1054615797, 1053609165, "rare"), (1054615798, 1053609165, "uncommon"), (1061997772, 1053609165, "uncommon"), (1061997773, 1053609165, "common") };
             var assertions = string.Join(Environment.NewLine, vectors.Select(v => $"if = {{ condition = not(equal(pureCall(ClassifyCombatRewardRarity, {v.Roll}, {v.Offset}), \"{v.Rarity}\")) then = {{ fail = {{ message = \"rarity threshold mismatch\" }} }} }}"));
             copy.Include("rarity-boundaries.spire", "action CheckThresholds { role = player body = { " + assertions + " } }");
             Submit(Start(copy.Load()), "CheckThresholds");
@@ -76,7 +76,7 @@ internal static partial class PackageChecks
             Equal(10, Members(s, "RunDeck").Count, "offers are not permanent cards yet");
             True(options.All(c => !Hand(s).Contains(c) && !Members(s, "DiscardPile").Contains(c)), "offers are not in combat piles");
             Equal(0, Members(s, "CardRewardPool").Count, "temporary source eligibility cleaned up");
-            Equal(-2L, IntField(s, Player(s), "Player", "CardRarityOffset"), "initial three nonrare rolls advance offset from minus five");
+            Equal(3164854026L, IntField(s, Player(s), "Player", "CardRarityOffset"), "initial three nonrare rolls advance offset from minus five");
             var before = Cursor(s); s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0));
             Equal(before, Cursor(s), "observation and candidates do not reroll");
         });
@@ -136,8 +136,8 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root);
             var path = copy.Path("rewards/rules/combat-cards.spire"); var text = File.ReadAllText(path)
-                .Replace("sampleInt = { stream = \"base-spire:development-card-rarity\" min = 0 max = 16777216 into = roll }", "let = { into = roll value = 0 }")
-                .Replace("sampleInt = { stream = \"base-spire:development-card-reward\" min = 0 max = 16777216 into = upgradeRoll }", "let = { into = upgradeRoll value = 0 }");
+                .Replace("sampleFloat32 = { stream = \"base-spire:player:rewards\" into = roll }", "let = { into = roll value = 0 }")
+                .Replace("sampleFloat32 = { stream = \"base-spire:player:rewards\" into = upgradeRoll }", "let = { into = upgradeRoll value = 0 }");
             File.WriteAllText(path, text);
             copy.Include("rarity-probe.spire", """
                 action RarityProbe { role = player locals = { rarity = String(length = 16) } body = {
@@ -149,12 +149,12 @@ internal static partial class PackageChecks
                 } }
                 """);
             var probe = copy.Load(); var s = Start(probe);
-            Set(s, Player(s), "Player", "CardRarityOffset", Value.Of(40L)); Submit(s, "RarityProbe");
-            Equal(-5L, IntField(s, Player(s), "Player", "CardRarityOffset"), "rare resets offset"); Submit(s, "FallbackProbe");
+            Set(s, Player(s), "Player", "CardRarityOffset", Value.Of(1053609165L)); Submit(s, "RarityProbe");
+            Equal(3175926989L, IntField(s, Player(s), "Player", "CardRarityOffset"), "rare resets offset"); Submit(s, "FallbackProbe");
             var upgraded = Offered(probe); True(Members(upgraded, "CardRewardOptions").All(c => CardUpgraded(upgraded, c)), "source <= zero upgrade boundary");
-            File.WriteAllText(path, text.Replace("into = roll value = 0", "into = roll value = 16777215"));
-            var cap = Start(copy.Load()); Set(cap, Player(cap), "Player", "CardRarityOffset", Value.Of(40L)); Submit(cap, "RarityProbe");
-            Equal(40L, IntField(cap, Player(cap), "Player", "CardRarityOffset"), "nonrare growth capped");
+            File.WriteAllText(path, text.Replace("into = roll value = 0", "into = roll value = 1065353216"));
+            var cap = Start(copy.Load()); Set(cap, Player(cap), "Player", "CardRarityOffset", Value.Of(1053609165L)); Submit(cap, "RarityProbe");
+            Equal(1053609165L, IntField(cap, Player(cap), "Player", "CardRarityOffset"), "nonrare growth capped");
         });
         Case("CR08: invalid choices and direct acquisition bypass do not gain cards, defeat does not roll", () =>
         {

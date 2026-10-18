@@ -74,6 +74,7 @@ procedure BuildCombatDeck {
               fields = {
                 Kind = field(permanent, Card.Kind) StrikeTag = field(permanent, Card.StrikeTag)
                 Rarity = field(permanent, Card.Rarity)
+                SourceEntry = field(permanent, Card.SourceEntry)
                 IsX = field(permanent, Card.IsX) BaseCost = field(permanent, Card.BaseCost)
                 BaseDamage = field(permanent, Card.BaseDamage) DamageScale = field(permanent, Card.DamageScale) DamageFactor = field(permanent, Card.DamageFactor) DiscountsOnAttack = field(permanent, Card.DiscountsOnAttack) AutoFromExhaustAtTurnEnd = field(permanent, Card.AutoFromExhaustAtTurnEnd) Innate = field(permanent, Card.Innate)
                 Owner = field(owner, Player.Owner) DefinitionId = field(permanent, Card.DefinitionId)

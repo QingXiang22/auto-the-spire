@@ -23,6 +23,7 @@ internal static class EngineChecks
         DecisionChecks();
         RandomChecks();
         VanillaRandomChecks.Run();
+        RandomDslChecks.Run();
         ProjectionChecks();
         RevealChecks.Run();
         RequiredRefChecks.Run();

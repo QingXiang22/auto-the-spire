@@ -1,15 +1,14 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# A0 RegularEncounter thresholds. The integer grid is a declared development mapping,
-# not vanilla NextFloat or a vanilla stream seed. Offset mutation precedes rarity fallback.
+# A0 source binary32 thresholds and offset accumulation on the shared player Rewards stream.
 procedure ClassifyCombatRewardRarity {
   pure = true
-  parameters = { roll = Int(min = 0, max = 16777215) offset = Int(min = -5, max = 40) }
+  parameters = { roll = Int offset = Int }
   result = String(length = 16)
   body = {
-    if = { condition = less(multiply(roll, 100), multiply(add(3, offset), 16777216)) then = { return = { value = "rare" } } }
-    if = { condition = less(multiply(roll, 100), multiply(add(40, offset), 16777216)) then = { return = { value = "uncommon" } } }
+    if = { condition = float32Less(roll, float32Add(float32(0.03), offset)) then = { return = { value = "rare" } } }
+    if = { condition = float32Less(roll, float32Add(float32(0.37), float32Add(float32(0.03), offset))) then = { return = { value = "uncommon" } } }
     return = { value = "common" }
   }
 }
@@ -18,12 +17,12 @@ procedure RollCombatRewardRarity {
   locals = { roll = Int rarity = String(length = 16) }
   result = String(length = 16)
   body = {
-    sampleInt = { stream = "base-spire:development-card-rarity" min = 0 max = 16777216 into = roll }
+    sampleFloat32 = { stream = "base-spire:player:rewards" into = roll }
     let = { into = rarity value = pureCall(ClassifyCombatRewardRarity, roll, field(owner, Player.CardRarityOffset)) }
     if = {
       condition = equal(rarity, "rare")
-      then = { set = { target = owner field = Player.CardRarityOffset value = -5 } }
-      else = { set = { target = owner field = Player.CardRarityOffset value = minimum(40, add(field(owner, Player.CardRarityOffset), 1)) } }
+      then = { set = { target = owner field = Player.CardRarityOffset value = float32(-0.05) } }
+      else = { set = { target = owner field = Player.CardRarityOffset value = float32Minimum(float32(0.4), float32Add(field(owner, Player.CardRarityOffset), float32(0.01))) } }
     }
     return = { value = rarity }
   }
@@ -70,11 +69,11 @@ procedure OfferCombatCards {
     repeat = { count = 3 body = {
       call = { procedure = RollCombatRewardRarity args = { owner = owner } into = rarity }
       let = { into = rarity value = pureCall(ResolveCombatRewardRarity, rarity) }
-      samplePick = { stream = "base-spire:development-card-reward" candidates = where(collection(CardRewardPool), b, equal(field(b, CardBlueprint.Rarity), rarity)) into = chosen }
+      samplePick = { stream = "base-spire:player:rewards" candidates = where(collection(CardRewardPool), b, equal(field(b, CardBlueprint.Rarity), rarity)) into = chosen }
       removeFromCollection = { collection = CardRewardPool item = chosen }
       call = { procedure = CreateCardInstance args = { owner = owner definition = field(chosen, CardBlueprint.DefinitionId) } into = card }
-      sampleInt = { stream = "base-spire:development-card-reward" min = 0 max = 16777216 into = upgradeRoll }
-      if = { condition = equal(upgradeRoll, 0) then = { call = { procedure = UpgradeCard args = { card = card } } } }
+      sampleFloat32 = { stream = "base-spire:player:rewards" into = upgradeRoll }
+      if = { condition = float32LessOrEqual(upgradeRoll, float32(0)) then = { call = { procedure = UpgradeCard args = { card = card } } } }
       addToCollection = { collection = CardRewardOptions item = card }
     } }
     forEach = { query = collection(CardRewardPool) item = entry body = { removeFromCollection = { collection = CardRewardPool item = entry } } }

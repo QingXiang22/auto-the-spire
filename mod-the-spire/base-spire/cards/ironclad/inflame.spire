@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # A power card leaves play after resolving, which is why leavesPlay is true here.
 use Inflame {
   template = CardDefinition
-  args = { rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "power" strikeTag = false definition = "base-spire:inflame" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = true }
+  args = { sourceEntry = "INFLAME" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "power" strikeTag = false definition = "base-spire:inflame" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = true }
 }
 use InflameStrength {
   template = ApplySelfPowerEffect

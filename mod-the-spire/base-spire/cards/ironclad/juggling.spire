@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Juggling.cs; SHA-256 retained in cards/catalog.json.
-use Juggling { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:juggling" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true upgradedInnate = true } }
+use Juggling { template = CardDefinition args = { sourceEntry = "JUGGLING" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:juggling" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true upgradedInnate = true } }
 use JugglingEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:juggling" power = "base-spire:juggling-power" kind = "third-attack-copy" stacks = 1 upgradedStacks = 1 } }

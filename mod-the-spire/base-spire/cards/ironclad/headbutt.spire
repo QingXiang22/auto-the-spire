@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Headbutt.cs; SHA-256 retained in cards/catalog.json.
-use Headbutt { template = CardDefinition args = { rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:headbutt" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 12 } }
+use Headbutt { template = CardDefinition args = { sourceEntry = "HEADBUTT" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:headbutt" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 12 } }
 use HeadbuttEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:headbutt" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use HeadbuttEffect2 { template = ReturnDiscardToTopEffect args = { definition = "base-spire:headbutt" } }
