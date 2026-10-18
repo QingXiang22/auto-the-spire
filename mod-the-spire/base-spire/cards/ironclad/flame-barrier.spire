@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # OnUpgrade adds 4 block and 2 damage back.
 use FlameBarrier {
   template = CardDefinition
-  args = { definition = "base-spire:flame-barrier" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:flame-barrier" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
 }
 use FlameBarrierBlock {
   template = BlockEffect

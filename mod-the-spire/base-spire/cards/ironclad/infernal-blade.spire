@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/InfernalBlade.cs; SHA-256 retained in cards/catalog.json.
+use InfernalBlade { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:infernal-blade" cost = 1 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
+use InfernalBladeEffect1 { template = GenerateAttackEffect args = { definition = "base-spire:infernal-blade" } }

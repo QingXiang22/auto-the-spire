@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: DefendIronclad.cs CanonicalVars and OnUpgrade: cost 1, 5 block, +3 when upgraded.
 use Defend {
   template = CardDefinition
-  args = { definition = "base-spire:defend-ironclad" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = false baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:defend-ironclad" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use DefendBlock {
   template = BlockEffect

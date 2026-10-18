@@ -8,11 +8,11 @@ dotnet run --project tools/base-spire-dev -- describe
 dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/behavior
 ```
 
-`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则身份、scope 和源／DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及 TheAbacus 的行为见证，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py) 消费。
+`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则身份、scope 和源／DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为见证，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。铁甲战士定向调试可用 `check --ironclad-only`，它不生成整包覆盖报告；最终仍运行完整 `check --report`。
 
 可在命令后传入其他 manifest 路径，再使用 `--scope <id>`。本版 `check` 用于当前 base 开发范围；仅通用加载验证使用 `validate`。退出码 0 为当前命令完成，2 为格式／加载失败，3 为未支持。旧 `play`、`probe` 和直接传卡牌 `.spire` 的入口明确返回 3。
 
-当前 `base-spire-dsl-relic-draw-dev-v1` 只实现遗物实例、抽牌／重洗、TheAbacus／Anchor／FakeAnchor 的格挡触发链、Lantern／BloodVial／HornCleat／HappyFlower 所依赖的开发态战斗与回合资源（生命、能量、回合计数、格挡清理、回合末 debuff 减层、胜利／失败判定、敌方阶段）、MercuryHourglass 所用的无加成伤害与格挡吸收（开发目标由 `AddDevelopmentTarget` 创建）、开发态出牌链（含消耗堆、Power 牌离场与失去生命）、Strength／Vulnerable／Dexterity／Frail／Thorns 修正与反击参与者、三十张正式牌、九只敌人、六瓶药水、营火休息房与战斗金币奖励。未迁移原版目标选择、卡牌获得途径、原版敌方 AI／意图数值与遭遇编队、其余原版怪物和 Run，不能通过旧命令执行；[旧作者工具源码](../base-migration-baseline/base-spire-dev/Program.cs)仅作迁移依据。目录及后续恢复见[规格与设计](../../docs/design/mod-the-spire/engine-dsl-migration.md)。
+`base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/design/mod-the-spire/ironclad-dsl/shared-operations.md)。正常角色开局、自动起手抽牌、原版随机流和正常 Run 不属于此 scope；不使用旧 C# 运行回退。当前数量与交付证据从[主清单](../../docs/review/tofix/README.md#当前交付)定位。
 
 分阶段学习与实际公开结果见[base 开发教程](../../docs/development/base-spire/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为见证。
 

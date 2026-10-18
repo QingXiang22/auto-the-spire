@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Armaments.cs; SHA-256 retained in cards/catalog.json.
+use Armaments { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:armaments" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use ArmamentsEffect1 { template = BlockEffect args = { definition = "base-spire:armaments" block = 5 upgradedBlock = 5 } }
+use ArmamentsEffect2 { template = UpgradeHandEffect args = { definition = "base-spire:armaments" } }

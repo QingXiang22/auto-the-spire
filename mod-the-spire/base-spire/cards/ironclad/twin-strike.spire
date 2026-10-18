@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: TwinStrike.cs: cost 1, DamageVar(5, Move) with WithHitCount(2), OnUpgrade adds 2 per hit.
 use TwinStrike {
   template = CardDefinition
-  args = { definition = "base-spire:twin-strike" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 5 upgradedBaseDamage = 7 kind = "attack" strikeTag = true definition = "base-spire:twin-strike" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use TwinStrikeDamage {
   template = AttackEffect

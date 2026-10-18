@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/CrimsonMantle.cs; SHA-256 retained in cards/catalog.json.
+use CrimsonMantle { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:crimson-mantle" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use CrimsonMantleEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:crimson-mantle" power = "base-spire:crimson-mantle-power" kind = "turn-self-damage-block" stacks = 8 upgradedStacks = 10 } }

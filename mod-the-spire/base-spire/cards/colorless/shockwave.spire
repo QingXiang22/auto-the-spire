@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # VulnerablePower to every enemy; OnUpgrade raises the power var by 2 so both debuffs become 5.
 use Shockwave {
   template = CardDefinition
-  args = { definition = "base-spire:shockwave" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
+  args = { baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:shockwave" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
 }
 use ShockwaveWeak {
   template = ApplyAllEnemiesPowerEffect

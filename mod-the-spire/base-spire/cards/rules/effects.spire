@@ -100,7 +100,7 @@ template DamageEqualBlockEffect {
       body = {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = { call = { procedure = DamageEnemy args = { target = target amount = field(owner, Player.Block) } } }
+          then = { call = { procedure = DamageEnemyPowered args = { target = target amount = field(owner, Player.Block) } } }
         }
       }
     }
@@ -118,15 +118,8 @@ template AddCopyEffect {  parameters = { definition = { type = String(length = 6
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            create = {
-              type = Card scope = frameScope() into = copy collection = DiscardPile
-              fields = {
-                DefinitionId = field(card, Card.DefinitionId) Cost = field(card, Card.Cost)
-                Label = field(card, Card.Label) Targeted = field(card, Card.Targeted) Upgraded = field(card, Card.Upgraded)
-                Owner = field(card, Card.Owner) CanUpgrade = field(card, Card.CanUpgrade)
-                Exhausts = field(card, Card.Exhausts) LeavesPlay = field(card, Card.LeavesPlay)
-              }
-            }
+            call = { procedure = CloneCombatCard args = { owner = owner source = card } into = copy }
+            addToCollection = { collection = DiscardPile item = copy }
           }
         }
       }

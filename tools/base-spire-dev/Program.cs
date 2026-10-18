@@ -12,10 +12,12 @@ try
     }
     var manifest = "mod-the-spire/base-spire/package.json";
     string? scope = null, report = null;
+    var ironcladOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
-        if (args[index] == "--scope") scope = Input();
+        if (args[index] == "--ironclad-only") ironcladOnly = true;
+        else if (args[index] == "--scope") scope = Input();
         else if (args[index] == "--report") report = Input();
         else if (index == 1 && !args[index].StartsWith("--", StringComparison.Ordinal)) manifest = args[index];
         else throw new ArgumentException("Unknown option: " + args[index]);
@@ -24,7 +26,8 @@ try
     var package = DslPackage.Load(manifest, scope);
     var metadata = TextRuleProviderSpec.Load(package.PublicMetadataPath);
     if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
-    if (command == "check") return PackageChecks.Run(manifest, report);
+    if (ironcladOnly && (command != "check" || report is not null)) throw new ArgumentException("--ironclad-only requires check without --report; run the full check to produce coverage evidence.");
+    if (command == "check") return ironcladOnly ? PackageChecks.RunIroncladOnly(package) : PackageChecks.Run(manifest, report);
     if (command == "validate")
     {
         var session = new Session(package.Rules, 42, ["player"]);

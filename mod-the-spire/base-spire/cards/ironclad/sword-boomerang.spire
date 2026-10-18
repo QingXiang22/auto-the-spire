@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/SwordBoomerang.cs; SHA-256 retained in cards/catalog.json.
+use SwordBoomerang { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:sword-boomerang" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 3 upgradedBaseDamage = 3 } }
+use SwordBoomerangEffect1 { template = RandomHitsEffect args = { definition = "base-spire:sword-boomerang" hits = 3 upgradedHits = 4 } }

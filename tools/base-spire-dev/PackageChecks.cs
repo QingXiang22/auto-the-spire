@@ -141,6 +141,7 @@ internal static partial class PackageChecks
         var rewards = RunRewardChecks(package, Case);
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);
+        Merge(RunIroncladChecks(package, Case), cards);
         var enemies = RunEnemyTurnChecks(package, Case);
         var encounters = RunEncounterChecks(package, Case);
         witnesses.Add("base-spire:the-abacus", scenarios.Take(5).ToArray());

@@ -1,10 +1,23 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Card definition content. Vanilla cost, rarity, type and upgrade metadata live in the card model; this
-# development scope only carries identity, cost, the targeted flag and the definition-level cost upgrade.
+# Shared executable definition registration, creation metadata and one source upgrade.
+# Content leaves configure this template and compose effect templates; they contain no procedures.
 template CardDefinition {
   parameters = {
+    damageScale = { type = String(length = 32) default = "none" }
+    damageFactor = { type = Int default = 0 }
+    upgradedDamageFactor = { type = Int default = 0 }
+    discountsOnAttack = { type = Bool default = false }
+    autoFromExhaustAtTurnEnd = { type = Bool default = false }
+    inIroncladPool = { type = Bool default = false }
+    generatable = { type = Bool default = false }
+    kind = { type = String(length = 16) default = "skill" }
+    strikeTag = { type = Bool default = false }
+    isX = { type = Bool default = false }
+    baseDamage = { type = Int(min = 0, max = 999) default = 0 }
+    upgradedBaseDamage = { type = Int(min = 0, max = 999) default = 0 }
+    upgradedInnate = { type = Bool default = false }
     definition = { type = String(length = 64) }
     cost = { type = Int(min = 0, max = 9) }
     upgradedCost = { type = Int(min = 0, max = 9) }
@@ -13,12 +26,51 @@ template CardDefinition {
     leavesPlay = { type = Bool }
   }
   body = {
+    procedure Register {
+      locals = { entry = Binding }
+      body = {
+        create = { type = CardBlueprint scope = frameScope() into = entry collection = CardLibrary fields = {
+          DefinitionId = arg(definition) Kind = arg(kind) InIroncladPool = arg(inIroncladPool) Generatable = arg(generatable)
+        } }
+      }
+    }
+    subscription OnRegister { event = RegisterCardDefinitions reaction = Register }
+    procedure Initialize {
+      parameters = { card = Ref(Card) }
+      body = {
+        if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+          set = { target = card field = Card.Cost value = arg(cost) }
+          set = { target = card field = Card.BaseCost value = arg(cost) }
+          set = { target = card field = Card.BaseDamage value = arg(baseDamage) }
+          set = { target = card field = Card.DamageScale value = arg(damageScale) }
+          set = { target = card field = Card.DamageFactor value = arg(damageFactor) }
+          set = { target = card field = Card.DiscountsOnAttack value = arg(discountsOnAttack) }
+          set = { target = card field = Card.AutoFromExhaustAtTurnEnd value = arg(autoFromExhaustAtTurnEnd) }
+          set = { target = card field = Card.Kind value = arg(kind) }
+          set = { target = card field = Card.StrikeTag value = arg(strikeTag) }
+          set = { target = card field = Card.IsX value = arg(isX) }
+          set = { target = card field = Card.Targeted value = arg(targeted) }
+          set = { target = card field = Card.Exhausts value = arg(exhausts) }
+          set = { target = card field = Card.LeavesPlay value = arg(leavesPlay) }
+          set = { target = card field = Card.CanUpgrade value = true }
+        } }
+      }
+    }
+    subscription OnCreated { event = CardCreated reaction = Initialize }
     procedure WhenCardUpgraded {
       parameters = { card = Ref(Card) }
       body = {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = { set = { target = card field = Card.Cost value = arg(upgradedCost) } }
+          then = {
+            if = { condition = not(field(card, Card.CostResetAtTurnEnd)) then = {
+              set = { target = card field = Card.Cost value = arg(upgradedCost) }
+            } }
+            set = { target = card field = Card.BaseCost value = arg(upgradedCost) }
+            set = { target = card field = Card.BaseDamage value = arg(upgradedBaseDamage) }
+            set = { target = card field = Card.DamageFactor value = arg(upgradedDamageFactor) }
+            set = { target = card field = Card.Innate value = arg(upgradedInnate) }
+          }
         }
       }
     }
@@ -28,7 +80,7 @@ template CardDefinition {
       body = {
         call = {
           procedure = ObtainPermanentCard
-          args = { owner = owner definition = arg(definition) cost = arg(cost) targeted = arg(targeted) exhausts = arg(exhausts) leavesPlay = arg(leavesPlay) }
+          args = { owner = owner definition = arg(definition) cost = arg(cost) targeted = arg(targeted) exhausts = arg(exhausts) leavesPlay = arg(leavesPlay) kind = arg(kind) strikeTag = arg(strikeTag) isX = arg(isX) baseDamage = arg(baseDamage) }
         }
       }
     }
@@ -41,10 +93,8 @@ template CardDefinition {
       role = player
       locals = { card = Binding }
       body = {
-        create = {
-          type = Card scope = frameScope() into = card collection = Hand
-          fields = { DefinitionId = arg(definition) Cost = arg(cost) Label = arg(definition) CanUpgrade = true Targeted = arg(targeted) Exhausts = arg(exhausts) LeavesPlay = arg(leavesPlay) }
-        }
+        call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = arg(definition) } into = card }
+        call = { procedure = AddGeneratedToHand args = { card = card } }
       }
     }
   }

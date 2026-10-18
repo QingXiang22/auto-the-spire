@@ -35,7 +35,8 @@ def main() -> int:
         project = "tools/base-spire-dev/BaseSpire.Dev.csproj"
         commands = [build(project), run(project) + ["--", "validate"],
                     run(project) + ["--", "check", "--report", str(output / "behavior")],
-                    [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/package-behavior.json")]]
+                    [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/package-behavior.json")],
+                    [sys.executable, "-X", "utf8", "tools/ci/check_card_coverage.py", str(output / "behavior/package-behavior.json"), "--require-ironclad-complete"]]
     elif args.suite == "net":
         project = "net-the-spire/Net.TheSpire.Tests"
         commands = [build(project), run(project)]

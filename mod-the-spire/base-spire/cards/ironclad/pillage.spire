@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Pillage.cs; SHA-256 retained in cards/catalog.json.
+use Pillage { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:pillage" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 9 } }
+use PillageEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:pillage" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
+use PillageEffect2 { template = DrawUntilNonAttackEffect args = { definition = "base-spire:pillage" } }

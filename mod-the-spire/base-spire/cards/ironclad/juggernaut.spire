@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Juggernaut.cs; SHA-256 retained in cards/catalog.json.
+use Juggernaut { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:juggernaut" cost = 2 upgradedCost = 2 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use JuggernautEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:juggernaut" power = "base-spire:juggernaut-power" kind = "block-random-damage" stacks = 6 upgradedStacks = 8 } }

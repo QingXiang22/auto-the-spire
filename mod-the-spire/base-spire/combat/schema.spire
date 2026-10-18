@@ -30,6 +30,13 @@ entity Player {
     PendingForge = { type = Bool default = false }
     # Opt-in permanent deck for this development scope. A normal character setup is not migrated.
     UsesRunDeck = { type = Bool default = false }
+    PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    PlaySequence = { type = Int default = 0 }
+    CurrentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
+    CurrentCard = { type = Ref(Card) optional = true visibility = Hidden }
+    LastDrawn = { type = Ref(Card) optional = true visibility = Hidden }
+    HpLossCount = { type = Int default = 0 }
+    EnemyPhase = { type = Bool default = false }
     # Run currency. Ironclad StartingGold is 99 in sts2/src/Core/Models/Characters/Ironclad.cs.
     Gold = { type = Int(min = 0, max = 99999) default = 99 }
     # The development reward screen stores its roll until explicitly claimed or closed.
@@ -56,8 +63,8 @@ entity Enemy {
 }
 
 # Development power instance. Vanilla powers attach to a Creature; this scope keeps either a player or an
-# enemy holder, so the two holder references are optional and exactly one is set. Duration/tick-down,
-# power types, negative-stack rules beyond the field range and power reactions are not migrated.
+# enemy holder, so the two holder references are optional and exactly one is set. Modifier roles, duration
+# flags and per-instance counters implement the migrated reactions; other power families remain unsupported.
 entity Power {
   owner = Owner
   fields = {
@@ -72,6 +79,9 @@ entity Power {
     # Source PowerCmd.Apply grace: a debuff applied to the player skips its first duration tick.
     SkipTick = { type = Bool default = false }
     # Powers whose lifetime is the current player turn (FlameBarrierPower) are removed at its end.
+    ExpiresBeforeEnemy = { type = Bool default = false }
+    Counter = { type = Int default = 0 }
+    SelfDamage = { type = Int default = 0 }
     ExpiresAtTurnEnd = { type = Bool default = false }
   }
 }

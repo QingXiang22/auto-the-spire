@@ -75,7 +75,8 @@ internal static partial class PackageChecks
             var cards = rows.RootElement.GetProperty("entries"); Equal(578, cards.GetArrayLength(), "independent frozen card source denominator");
             var migrated = cards.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == System.Text.Json.JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
-            Equal("base-spire:anger,base-spire:bash,base-spire:blood-wall,base-spire:bloodletting,base-spire:bludgeon,base-spire:body-slam,base-spire:break,base-spire:breakthrough,base-spire:conflagration,base-spire:defend-ironclad,base-spire:dismantle,base-spire:evil-eye,base-spire:flame-barrier,base-spire:hemokinesis,base-spire:howl-from-beyond,base-spire:impervious,base-spire:inflame,base-spire:iron-wave,base-spire:molten-fist,base-spire:offering,base-spire:pommel-strike,base-spire:shockwave,base-spire:shrug-it-off,base-spire:spite,base-spire:strike-ironclad,base-spire:taunt,base-spire:thunderclap,base-spire:tremble,base-spire:twin-strike,base-spire:uppercut", string.Join(",", migrated), "actual migrated card identities");
+            var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).Concat(["base-spire:giant-rock", "base-spire:shockwave"]).Order(StringComparer.Ordinal);
+            True(migrated.SequenceEqual(expected), "actual complete singleplayer Ironclad roster plus two external definitions");
         });
         Case("CP09: targeted and untargeted cards are offered by different play actions", () =>
         {

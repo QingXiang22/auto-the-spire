@@ -44,8 +44,8 @@ internal static partial class PackageChecks
             copy.Include("enemy-weaken.spire", """
                 action WeakenTarget { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 } } } }
                 """);
-            var weak = Start(copy.Load()); Submit(weak, "FuzzyWurmCrawler.Spawn"); Submit(weak, "WeakenTarget");
-            Submit(weak, "BeginDevelopmentCombat"); Submit(weak, "BeginDevelopmentTurn"); Submit(weak, "EndDevelopmentTurn");
+            var weak = Start(copy.Load()); Submit(weak, "FuzzyWurmCrawler.Spawn");
+            Submit(weak, "BeginDevelopmentCombat"); Submit(weak, "WeakenTarget"); Submit(weak, "BeginDevelopmentTurn"); Submit(weak, "EndDevelopmentTurn");
             Equal(77L, Hp(weak), "a weakened goop deals 4 x 0.75 rounded down to 3");
         });
         Case("CP59: debuff durations tick down after the enemy phase, not at the player's end of turn", () =>

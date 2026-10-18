@@ -16,7 +16,7 @@ procedure HasUpgradablePermanentCards {
 procedure ObtainPermanentCard {
   parameters = {
     owner = Ref(Player) definition = String(length = 64) cost = Int(min = 0, max = 9)
-    targeted = Bool exhausts = Bool leavesPlay = Bool
+    targeted = Bool exhausts = Bool leavesPlay = Bool kind = String(length = 16) strikeTag = Bool isX = Bool baseDamage = Int(min = 0, max = 999)
   }
   locals = { card = Binding }
   body = {
@@ -28,10 +28,11 @@ procedure ObtainPermanentCard {
       type = Card scope = entityScope(owner) into = card collection = RunDeck
       fields = {
         Owner = field(owner, Player.Owner) DefinitionId = definition Label = definition Cost = cost
-        CanUpgrade = true Targeted = targeted Exhausts = exhausts LeavesPlay = leavesPlay
+        CanUpgrade = true Kind = kind StrikeTag = strikeTag IsX = isX BaseCost = cost BaseDamage = baseDamage Targeted = targeted Exhausts = exhausts LeavesPlay = leavesPlay
       }
     }
     set = { target = owner field = Player.UsesRunDeck value = true }
+    emit = { event = CardCreated payload = { card = card } }
     emit = { event = CardObtained payload = { owner = owner card = card } }
   }
 }
@@ -43,6 +44,8 @@ procedure BuildCombatDeck {
   parameters = { owner = Ref(Player) }
   locals = { copy = Binding }
   body = {
+    call = { procedure = ResetCardTurnCosts }
+    call = { procedure = ClearCardPlayHistory args = { owner = owner } }
     if = {
       condition = field(owner, Player.UsesRunDeck)
       then = {
@@ -58,6 +61,9 @@ procedure BuildCombatDeck {
             create = {
               type = Card scope = entityScope(owner) into = copy collection = DrawPile
               fields = {
+                Kind = field(permanent, Card.Kind) StrikeTag = field(permanent, Card.StrikeTag)
+                IsX = field(permanent, Card.IsX) BaseCost = field(permanent, Card.BaseCost)
+                BaseDamage = field(permanent, Card.BaseDamage) DamageScale = field(permanent, Card.DamageScale) DamageFactor = field(permanent, Card.DamageFactor) DiscountsOnAttack = field(permanent, Card.DiscountsOnAttack) AutoFromExhaustAtTurnEnd = field(permanent, Card.AutoFromExhaustAtTurnEnd) Innate = field(permanent, Card.Innate)
                 Owner = field(owner, Player.Owner) DefinitionId = field(permanent, Card.DefinitionId)
                 Label = field(permanent, Card.Label) Cost = field(permanent, Card.Cost)
                 Upgraded = field(permanent, Card.Upgraded) CanUpgrade = field(permanent, Card.CanUpgrade)

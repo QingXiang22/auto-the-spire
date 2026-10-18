@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Cascade.cs; SHA-256 retained in cards/catalog.json.
+use Cascade { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:cascade" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false isX = true } }
+use CascadeEffect1 { template = AutoplayTopEffect args = { definition = "base-spire:cascade" xCost = true } }

@@ -1,11 +1,11 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: HowlFromBeyond.cs: cost 3, DamageVar(16, Move) to all enemies, CardKeyword.Exhaust; OnUpgrade adds
-# 5 damage. The source also auto-plays this card when it is exhausted by another effect, which is not migrated.
+# Source: HowlFromBeyond.cs: cost 3, 16/21 damage to all enemies. No innate Exhaust keyword;
+# if it is in ExhaustPile at the end-of-turn auto-post-play phase, it plays itself for free.
 use HowlFromBeyond {
   template = CardDefinition
-  args = { definition = "base-spire:howl-from-beyond" cost = 3 upgradedCost = 3 targeted = false exhausts = true leavesPlay = false }
+  args = { inIroncladPool = true generatable = true autoFromExhaustAtTurnEnd = true baseDamage = 16 upgradedBaseDamage = 21 kind = "attack" strikeTag = false definition = "base-spire:howl-from-beyond" cost = 3 upgradedCost = 3 targeted = false exhausts = false leavesPlay = false }
 }
 use HowlFromBeyondDamage {
   template = AttackAllEnemiesEffect

@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Cruelty.cs; SHA-256 retained in cards/catalog.json.
+use Cruelty { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:cruelty" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use CrueltyEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:cruelty" power = "base-spire:cruelty-power" kind = "vulnerable-bonus" stacks = 25 upgradedStacks = 50 } }

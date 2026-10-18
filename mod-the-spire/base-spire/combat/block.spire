@@ -5,7 +5,10 @@ dsl_version = "core/0.3"
 procedure GainUnpoweredBlock {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
   body = {
-    set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), amount)) }
+    if = { condition = greater(amount, 0) then = {
+      set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), amount)) }
+      emit = { event = PlayerBlockGained payload = { owner = owner amount = amount } }
+    } }
   }
 }
 
@@ -30,6 +33,13 @@ procedure GainBlock {
       condition = greater(frail, 0)
       then = { let = { into = total value = divide(multiply(total, 3), 4) } }
     }
-    set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), total)) }
+    if = { condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)), not(equal(r, field(owner, Player.CurrentPlay))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), pureCall(PlayerPowerAmount, owner, "early-block-double")) then = { let = { into = total value = multiply(total, 2) } } }
+    if = { condition = greater(total, 0) then = {
+      set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), total)) }
+      if = { condition = not(isNone(field(owner, Player.CurrentPlay))) then = { set = { target = field(owner, Player.CurrentPlay) field = CardPlayRecord.PoweredBlocks value = add(field(field(owner, Player.CurrentPlay), CardPlayRecord.PoweredBlocks), 1) } } }
+      emit = { event = PlayerBlockGained payload = { owner = owner amount = total } }
+    } }
   }
 }
+
+event PlayerBlockGained { payload = { owner = Ref(Player) amount = Int } }

@@ -25,8 +25,9 @@ procedure DrawOne {
   parameters = { owner = Ref(Player) }
   locals = { drawn = Binding }
   body = {
+    set = { target = owner field = Player.LastDrawn value = none }
     if = {
-      condition = and(not(field(owner, Player.DrawBlocked)), less(count(collection(Hand)), 10))
+      condition = and(and(not(field(owner, Player.DrawBlocked)), equal(pureCall(PlayerPowerAmount, owner, "no-draw"), 0)), less(count(collection(Hand)), 10))
       then = {
         call = { procedure = ReshuffleDiscard args = { owner = owner } }
         let = { into = drawn value = first(collection(DrawPile)) }
@@ -35,7 +36,10 @@ procedure DrawOne {
           then = {
             removeFromCollection = { collection = DrawPile item = drawn }
             addToCollection = { collection = Hand item = drawn }
+            set = { target = owner field = Player.LastDrawn value = drawn }
+            call = { procedure = EarlyDrawPowerReactions args = { owner = owner card = drawn } }
             emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } }
+            set = { target = owner field = Player.LastDrawn value = drawn }
           }
         }
       }
@@ -49,7 +53,7 @@ action Draw {
 # Shared "draw N cards" operation used by card effects. Each card goes through DrawOne, so reshuffle,
 # the hand limit, draw blocking and AfterCardDrawn keep their existing order.
 procedure DrawCards {
-  parameters = { owner = Ref(Player) count = Int(min = 0, max = 9) }
+  parameters = { owner = Ref(Player) count = Int(min = 0, max = 999) }
   body = {
     repeat = {
       count = count

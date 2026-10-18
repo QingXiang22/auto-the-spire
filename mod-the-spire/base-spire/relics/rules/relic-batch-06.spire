@@ -86,8 +86,7 @@ template ObtainMaxHpRelic {
       body = {
         let = { into = owner value = first(type(Player)) }
         call = { procedure = ObtainRelic args = { owner = owner definition = arg(definition) } }
-        set = { target = owner field = Player.MaxHp value = add(field(owner, Player.MaxHp), arg(amount)) }
-        call = { procedure = Heal args = { owner = owner amount = arg(amount) } }
+        call = { procedure = IncreaseMaxHp args = { owner = owner amount = arg(amount) } }
       }
     }
   }

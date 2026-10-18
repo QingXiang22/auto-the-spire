@@ -2,8 +2,8 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Development power lifecycle. Vanilla PowerCmd.Apply merges stacks into an existing power of the same
-# definition on the same creature; a new instance is created only when none exists. Duration tick-down,
-# removal, power types and apply reactions are not migrated.
+# definition on the same creature; a new instance is created only when none exists. Single-stack roles,
+# temporary powers and the required Ironclad reactions are handled here and in ironclad-powers.spire.
 # Kind is the modifier role the damage/block rules query by, so no rule branches on a power ID.
 
 procedure ApplyPlayerPower {
@@ -22,8 +22,14 @@ procedure ApplyPlayerPower {
           fields = { Owner = field(owner, Player.Owner) DefinitionId = definition Kind = kind HolderPlayer = owner Stacks = stacks SkipTick = true }
         }
       }
-      else = { set = { target = existing field = Power.Stacks value = add(field(existing, Power.Stacks), stacks) } }
+      else = {
+        if = { condition = not(or(equal(kind, "corruption"), equal(kind, "autoplay-drawn-strikes"))) then = { set = { target = existing field = Power.Stacks value = add(field(existing, Power.Stacks), stacks) } } }
+      }
     }
+    if = { condition = or(equal(kind, "turn-self-damage-block"), equal(kind, "hp-loss-area-damage")) then = { set = { target = existing field = Power.SelfDamage value = add(field(existing, Power.SelfDamage), 1) } } }
+    if = { condition = equal(kind, "third-attack-copy") then = { set = { target = existing field = Power.Counter value = pureCall(AttacksPlayedThisTurn, owner) } } }
+    if = { condition = or(or(equal(kind, "no-draw"), equal(kind, "no-energy-gain")), or(equal(kind, "attack-block"), equal(kind, "repeat-next-attack"))) then = { set = { target = existing field = Power.ExpiresBeforeEnemy value = true } } }
+
   }
 }
 procedure ApplyEnemyPower {
@@ -44,6 +50,10 @@ procedure ApplyEnemyPower {
       }
       else = { set = { target = existing field = Power.Stacks value = add(field(existing, Power.Stacks), stacks) } }
     }
+    if = { condition = and(equal(kind, "damage-taken-multiplier"), greater(stacks, 0)) then = {
+      call = { procedure = DrawCards args = { owner = first(type(Player)) count = pureCall(PlayerPowerAmount, first(type(Player)), "vulnerable-draw") } }
+    } }
+
   }
 }
 

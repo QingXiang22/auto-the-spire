@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # VulnerablePower; OnUpgrade raises the power var by 1 so both debuffs become 2.
 use Uppercut {
   template = CardDefinition
-  args = { definition = "base-spire:uppercut" cost = 2 upgradedCost = 2 targeted = true exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 13 upgradedBaseDamage = 13 kind = "attack" strikeTag = false definition = "base-spire:uppercut" cost = 2 upgradedCost = 2 targeted = true exhausts = false leavesPlay = false }
 }
 use UppercutDamage {
   template = AttackEffect

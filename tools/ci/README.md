@@ -12,11 +12,19 @@ python tools/ci/check.py migration
 | 组 | 实际执行 | 结论边界 |
 | --- | --- | --- |
 | core | 构建并执行通用 Engine 检查，包括同包文件组合 | 不等于原版玩法验收 |
-| base | 通用加载并启动纯 DSL 包、执行当前机制行为、核对 DSL 遗物见证 | 仅遗物抽牌开发范围；297 件源遗物中当前 1 件具有 DSL 行为见证 |
+| base | 通用加载并启动纯 DSL 包、执行当前机制行为、核对 DSL 遗物及卡牌见证 | 开发 scope；卡牌门槛要求源池 85 张单人铁甲战士完整且有实际行为见证，保留 87 项来源及两项多人排除 |
 | net | 通用 wire／text-rules 检查和纯 DSL 公开路径，包含真实 stdio 子进程 | 原正常 Run 的 snapshot／control／formal 检查尚未迁移 |
 | migration | 构建依赖隔离、153 个冻结源组与 11 份原 suite 定义校验、原 regression 逐项报未支持 | 检查迁移契约，不执行独立原版比较 |
 
 首次非零使当前组失败。原始日志、退出码及 `result.json` 写入 `.artifacts/ci/<组名>/`，Actions 上传各组 artifact。base 的行为报告标记 `independent_verified: false`；迁移清单中的原检查均标记未执行。冻结文本 SHA256 采用 UTF-8 与 LF，跨检出换行保持一致。
+
+卡牌门槛可单独复查：
+
+```powershell
+python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behavior.json --require-ironclad-complete
+```
+
+它校验当前包摘要、578 项全卡来源、冻结铁甲池及源 SHA、普通／升级元数据对应的行为报告和全部已声明卡牌见证；不将局部 Ironclad 门槛解释为全卡或原版独立比较通过。冻结元数据来自主源快照，CI 不需要本地 `sts2/`。
 
 ## 原完整对拍与覆盖缺口
 

@@ -2,8 +2,8 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Enemy attack (source DamageCmd.Attack(...).FromMonster, a powered attack). Modifier participants run in the
-# source order: the attacker's additive Strength and x0.75 Weak, then the defender's x1.5 Vulnerable, all with
-# integer floor. Enemy Strength/Weak are read from Powers held by the attacking enemy; the player's Vulnerable
+# source order: the attacker's additive Strength and x0.75 Weak, then the defender's x1.5 Vulnerable, with
+# one final integer floor after Colossus. Enemy Strength/Weak are read from Powers held by the attacking enemy; the player's Vulnerable
 # from Powers held by the defending player. Block absorbs first and the player HP floor stays zero.
 procedure DamagePlayerPowered {
   parameters = { attacker = Ref(Enemy) owner = Ref(Player) amount = Int(min = 0, max = 999) }
@@ -30,7 +30,7 @@ procedure DamagePlayerPowered {
       condition = greater(thorns, 0)
       then = { call = { procedure = DamageEnemy args = { target = attacker amount = thorns } } }
     }
-    let = { into = scaled value = maximum(0, add(amount, strength)) }
+    let = { into = scaled value = multiply(maximum(0, add(amount, strength)), 10000) }
     if = {
       condition = greater(weak, 0)
       then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } }
@@ -39,12 +39,14 @@ procedure DamagePlayerPowered {
       condition = greater(vulnerable, 0)
       then = { let = { into = scaled value = divide(multiply(scaled, 3), 2) } }
     }
+    if = { condition = and(greater(pureCall(PlayerPowerAmount, owner, "halve-vulnerable-attacks"), 0), greater(pureCall(EnemyPowerAmount, attacker, "damage-taken-multiplier"), 0)) then = { let = { into = scaled value = divide(scaled, 2) } } }
+    let = { into = scaled value = divide(scaled, 10000) }
     let = { into = blocked value = minimum(field(owner, Player.Block), scaled) }
     set = { target = owner field = Player.Block value = subtract(field(owner, Player.Block), blocked) }
     set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), subtract(scaled, blocked))) }
     if = {
       condition = greater(subtract(scaled, blocked), 0)
-      then = { set = { target = owner field = Player.LostHpThisTurn value = true } }
+      then = { call = { procedure = RecordPlayerHpLoss args = { owner = owner } } }
     }
     call = { procedure = CheckCombatDefeat args = { owner = owner } }
   }
@@ -55,6 +57,7 @@ procedure DamagePlayerPowered {
 procedure RunEnemyTurn {
   parameters = { owner = Ref(Player) }
   body = {
+    set = { target = owner field = Player.EnemyPhase value = true }
     forEach = {
       query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
       body = {
@@ -65,6 +68,7 @@ procedure RunEnemyTurn {
       }
     }
     emit = { event = AfterEnemyTurnEnded payload = { owner = owner } }
+    set = { target = owner field = Player.EnemyPhase value = false }
   }
 }
 
