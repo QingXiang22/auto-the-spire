@@ -13,6 +13,7 @@ template CardDefinition {
     inIroncladPool = { type = Bool default = false }
     generatable = { type = Bool default = false }
     kind = { type = String(length = 16) default = "skill" }
+    rarity = { type = String(length = 16) default = "none" }
     strikeTag = { type = Bool default = false }
     isX = { type = Bool default = false }
     baseDamage = { type = Int(min = 0, max = 999) default = 0 }
@@ -30,7 +31,7 @@ template CardDefinition {
       locals = { entry = Binding }
       body = {
         create = { type = CardBlueprint scope = frameScope() into = entry collection = CardLibrary fields = {
-          DefinitionId = arg(definition) Kind = arg(kind) InIroncladPool = arg(inIroncladPool) Generatable = arg(generatable)
+          DefinitionId = arg(definition) Kind = arg(kind) Rarity = arg(rarity) InIroncladPool = arg(inIroncladPool) Generatable = arg(generatable)
         } }
       }
     }
@@ -47,6 +48,7 @@ template CardDefinition {
           set = { target = card field = Card.DiscountsOnAttack value = arg(discountsOnAttack) }
           set = { target = card field = Card.AutoFromExhaustAtTurnEnd value = arg(autoFromExhaustAtTurnEnd) }
           set = { target = card field = Card.Kind value = arg(kind) }
+          set = { target = card field = Card.Rarity value = arg(rarity) }
           set = { target = card field = Card.StrikeTag value = arg(strikeTag) }
           set = { target = card field = Card.IsX value = arg(isX) }
           set = { target = card field = Card.Targeted value = arg(targeted) }

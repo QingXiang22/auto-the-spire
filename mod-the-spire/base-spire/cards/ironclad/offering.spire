@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # CardKeyword.Exhaust; OnUpgrade adds 2 cards.
 use Offering {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:offering" cost = 0 upgradedCost = 0 targeted = false exhausts = true leavesPlay = false }
+  args = { rarity = "rare" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:offering" cost = 0 upgradedCost = 0 targeted = false exhausts = true leavesPlay = false }
 }
 use OfferingLoseHp {
   template = LoseHpEffect

@@ -14,7 +14,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": true
+      "upgraded_innate": true,
+      "rarity": "rare"
     },
     {
       "name": "Anger",
@@ -28,7 +29,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Armaments",
@@ -42,7 +44,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "AshenStrike",
@@ -56,7 +59,8 @@
       "strike_tag": true,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Barricade",
@@ -70,7 +74,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Bash",
@@ -84,7 +89,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "basic"
     },
     {
       "name": "BattleTrance",
@@ -98,7 +104,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Bloodletting",
@@ -112,7 +119,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "BloodWall",
@@ -126,7 +134,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Bludgeon",
@@ -140,7 +149,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "BodySlam",
@@ -154,7 +164,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Brand",
@@ -168,7 +179,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Break",
@@ -182,7 +194,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "ancient"
     },
     {
       "name": "Breakthrough",
@@ -196,7 +209,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Bully",
@@ -210,7 +224,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "BurningPact",
@@ -224,7 +239,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Cascade",
@@ -238,7 +254,8 @@
       "strike_tag": false,
       "is_x": true,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Cinder",
@@ -252,7 +269,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Colossus",
@@ -266,7 +284,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Conflagration",
@@ -280,7 +299,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Corruption",
@@ -294,7 +314,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "ancient"
     },
     {
       "name": "CrimsonMantle",
@@ -308,7 +329,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Cruelty",
@@ -322,7 +344,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "DarkEmbrace",
@@ -336,7 +359,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "DefendIronclad",
@@ -350,7 +374,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "basic"
     },
     {
       "name": "DemonForm",
@@ -364,7 +389,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "DemonicShield",
@@ -378,7 +404,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Dismantle",
@@ -392,7 +419,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Dominate",
@@ -406,7 +434,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "DrumOfBattle",
@@ -420,7 +449,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "EvilEye",
@@ -434,7 +464,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "ExpectAFight",
@@ -448,7 +479,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Feed",
@@ -462,7 +494,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "FeelNoPain",
@@ -476,7 +509,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "FiendFire",
@@ -490,7 +524,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "FightMe",
@@ -504,7 +539,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "FlameBarrier",
@@ -518,7 +554,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "ForgottenRitual",
@@ -532,7 +569,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "GiantRock",
@@ -546,7 +584,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "token"
     },
     {
       "name": "Havoc",
@@ -560,7 +599,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Headbutt",
@@ -574,7 +614,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Hellraiser",
@@ -588,7 +629,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Hemokinesis",
@@ -602,7 +644,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "HowlFromBeyond",
@@ -616,7 +659,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Impervious",
@@ -630,7 +674,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "InfernalBlade",
@@ -644,7 +689,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Inferno",
@@ -658,7 +704,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Inflame",
@@ -672,7 +719,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "IronWave",
@@ -686,7 +734,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Juggernaut",
@@ -700,7 +749,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Juggling",
@@ -714,7 +764,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": true
+      "upgraded_innate": true,
+      "rarity": "uncommon"
     },
     {
       "name": "Mangle",
@@ -728,7 +779,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "MoltenFist",
@@ -742,7 +794,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "NotYet",
@@ -756,7 +809,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Offering",
@@ -770,7 +824,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "OneTwoPunch",
@@ -784,7 +839,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "PactsEnd",
@@ -798,7 +854,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "PerfectedStrike",
@@ -812,7 +869,8 @@
       "strike_tag": true,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Pillage",
@@ -826,7 +884,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "PommelStrike",
@@ -840,7 +899,8 @@
       "strike_tag": true,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "PrimalForce",
@@ -854,7 +914,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Pyre",
@@ -868,7 +929,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Rage",
@@ -882,7 +944,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Rampage",
@@ -896,7 +959,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Rupture",
@@ -910,7 +974,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "SecondWind",
@@ -924,7 +989,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "SetupStrike",
@@ -938,7 +1004,8 @@
       "strike_tag": true,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "ShrugItOff",
@@ -952,7 +1019,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Spite",
@@ -966,7 +1034,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Stampede",
@@ -980,7 +1049,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Stoke",
@@ -994,7 +1064,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Stomp",
@@ -1008,7 +1079,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "StoneArmor",
@@ -1022,7 +1094,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "StrikeIronclad",
@@ -1036,7 +1109,8 @@
       "strike_tag": true,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "basic"
     },
     {
       "name": "SwordBoomerang",
@@ -1050,7 +1124,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Tank",
@@ -1064,7 +1139,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Taunt",
@@ -1078,7 +1154,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "TearAsunder",
@@ -1092,7 +1169,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Thrash",
@@ -1106,7 +1184,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Thunderclap",
@@ -1120,7 +1199,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Tremble",
@@ -1134,7 +1214,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": true,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "TrueGrit",
@@ -1148,7 +1229,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "TwinStrike",
@@ -1162,7 +1244,8 @@
       "strike_tag": true,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "common"
     },
     {
       "name": "Unmovable",
@@ -1176,7 +1259,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "rare"
     },
     {
       "name": "Unrelenting",
@@ -1190,7 +1274,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Uppercut",
@@ -1204,7 +1289,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Vicious",
@@ -1218,7 +1304,8 @@
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     },
     {
       "name": "Whirlwind",
@@ -1232,7 +1319,8 @@
       "strike_tag": false,
       "is_x": true,
       "exhausts": false,
-      "upgraded_innate": false
+      "upgraded_innate": false,
+      "rarity": "uncommon"
     }
   ]
 }

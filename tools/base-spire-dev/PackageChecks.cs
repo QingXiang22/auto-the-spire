@@ -140,6 +140,7 @@ internal static partial class PackageChecks
         Merge(RunPermanentDeckChecks(package, Case), rooms);
         Merge(RunCharacterStartChecks(package, Case), witnesses);
         var rewards = RunRewardChecks(package, Case);
+        Merge(RunCardRewardChecks(package, Case), rewards);
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);
         Merge(RunIroncladChecks(package, Case), cards);

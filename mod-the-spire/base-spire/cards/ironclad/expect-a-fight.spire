@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/ExpectAFight.cs; SHA-256 retained in cards/catalog.json.
-use ExpectAFight { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:expect-a-fight" cost = 2 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use ExpectAFight { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:expect-a-fight" cost = 2 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use ExpectAFightEffect1 { template = HandAttackEnergyEffect args = { definition = "base-spire:expect-a-fight" } }

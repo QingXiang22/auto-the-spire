@@ -9,7 +9,7 @@
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
 | [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
-| [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；卡面没有原版稀有度字段 |
+| [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；Rarity 字段保存源稀有度，奖励资格与战斗生成资格分别维护 |
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；Kind: String(32)=`none`；HolderPlayer／HolderEnemy: 可选 Ref；Stacks: Int(-999..999)=0 | 开发能力实例：两个持有者引用恰好设置一个；Kind 是规则查询用的修正角色，因此修正链不按能力 ID 分支；所需 Ironclad 角色具有时长、移除和反应；其他 Power 仍未迁移 |
 | Powers | 有序 Power 集合 | 按持有者与 DefinitionId 合并层数；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
@@ -38,6 +38,15 @@
 | CardExhausted | owner: Ref(Player)、card: Ref(Card) | 任何受支持的完整耗尽操作把牌移入 ExhaustPile 后发出；订阅时可确认卡已在消耗堆 |
 
 ## 过程与公开动作
+
+卡牌奖励保存在公开 CardRewardOptions；Player.CardRewardPending 表示该条目尚可选择，CardRarityOffset 是隐藏的跨奖励偏移。Card.Rarity 与 CardBlueprint.Rarity 为 String(16)，由源内容配置。下列入口限首幕 A0、全部解锁 Ironclad 开发配置；算法及未支持范围见[奖励契约](../../../design/mod-the-spire/combat-rewards/spec.md)。
+
+| 奖励入口 | 参数 | 行为 |
+| --- | --- | --- |
+| OfferCombatCards | owner: Ref(Player) | 由战斗胜利编排调用，生成三张不重复奖励；依次稀有度抽样及偏移更新、缺稀有度回退、候选抽取、升级抽样。不是公开发牌动作 |
+| ClaimDevelopmentCardReward | owner: Ref(Player)、card: Ref(Card) | 公开 action 冻结本玩家的 CardRewardOptions 候选；过程调用 ObtainCardReward，将同一实例入永久牌组并销毁未选项。保留金币与 rewards 房间 |
+| SkipDevelopmentCardReward | owner: Ref(Player) | 要求 rewards 且有待领卡；销毁所有候选，不抽随机、不增加永久牌，金币保持 |
+| CloseDevelopmentRewards | owner: Ref(Player) | 同时清理所有未领卡牌及金币，再离开奖励房；关闭前不得跨房 |
 
 | 声明 | 准确参数 | 行为与边界 |
 | --- | --- | --- |

@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/PerfectedStrike.cs; SHA-256 retained in cards/catalog.json.
-use PerfectedStrike { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:perfected-strike" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 damageScale = "strike-count" damageFactor = 2 upgradedDamageFactor = 3 } }
+use PerfectedStrike { template = CardDefinition args = { rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:perfected-strike" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 damageScale = "strike-count" damageFactor = 2 upgradedDamageFactor = 3 } }
 use PerfectedStrikeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:perfected-strike" hits = 1 upgradedHits = 1 hitScale = "fixed" } }

@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Dominate.cs; SHA-256 retained in cards/catalog.json.
-use Dominate { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:dominate" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = true exhausts = true leavesPlay = false } }
+use Dominate { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:dominate" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = true exhausts = true leavesPlay = false } }
 use DominateEffect1 { template = ApplyEnemyPowerEffect args = { definition = "base-spire:dominate" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 upgradedStacks = 2 } }
 use DominateEffect2 { template = DominateStrengthEffect args = { definition = "base-spire:dominate" } }

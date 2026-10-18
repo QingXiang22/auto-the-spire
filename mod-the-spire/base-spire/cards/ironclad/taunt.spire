@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # OnUpgrade adds 1 block and 1 Vulnerable. A targeted skill, so its block resolves before the debuff.
 use Taunt {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:taunt" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:taunt" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use TauntBlock {
   template = BlockEffect

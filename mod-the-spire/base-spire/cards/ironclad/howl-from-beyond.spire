@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # if it is in ExhaustPile at the end-of-turn auto-post-play phase, it plays itself for free.
 use HowlFromBeyond {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = true autoFromExhaustAtTurnEnd = true baseDamage = 16 upgradedBaseDamage = 21 kind = "attack" strikeTag = false definition = "base-spire:howl-from-beyond" cost = 3 upgradedCost = 3 targeted = false exhausts = false leavesPlay = false }
+  args = { rarity = "uncommon" inIroncladPool = true generatable = true autoFromExhaustAtTurnEnd = true baseDamage = 16 upgradedBaseDamage = 21 kind = "attack" strikeTag = false definition = "base-spire:howl-from-beyond" cost = 3 upgradedCost = 3 targeted = false exhausts = false leavesPlay = false }
 }
 use HowlFromBeyondDamage {
   template = AttackAllEnemiesEffect

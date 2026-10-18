@@ -13,6 +13,7 @@ entity Card {
     # Only migrated definitions implement a single source upgrade; development placeholders do not.
     CanUpgrade = { type = Bool default = false }
     Kind = { type = String(length = 16) default = "skill" }
+    Rarity = { type = String(length = 16) default = "none" }
     StrikeTag = { type = Bool default = false }
     IsX = { type = Bool default = false }
     PaidX = { type = Int(min = 0, max = 999) default = 0 }
@@ -82,6 +83,7 @@ entity CardBlueprint {
   fields = {
     DefinitionId = { type = String(length = 64) }
     Kind = { type = String(length = 16) }
+    Rarity = { type = String(length = 16) default = "none" }
     InIroncladPool = { type = Bool default = false }
     Generatable = { type = Bool default = false }
   }

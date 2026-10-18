@@ -1,0 +1,118 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# A0 RegularEncounter thresholds. The integer grid is a declared development mapping,
+# not vanilla NextFloat or a vanilla stream seed. Offset mutation precedes rarity fallback.
+procedure ClassifyCombatRewardRarity {
+  pure = true
+  parameters = { roll = Int(min = 0, max = 16777215) offset = Int(min = -5, max = 40) }
+  result = String(length = 16)
+  body = {
+    if = { condition = less(multiply(roll, 100), multiply(add(3, offset), 16777216)) then = { return = { value = "rare" } } }
+    if = { condition = less(multiply(roll, 100), multiply(add(40, offset), 16777216)) then = { return = { value = "uncommon" } } }
+    return = { value = "common" }
+  }
+}
+procedure RollCombatRewardRarity {
+  parameters = { owner = Ref(Player) }
+  locals = { roll = Int rarity = String(length = 16) }
+  result = String(length = 16)
+  body = {
+    sampleInt = { stream = "base-spire:development-card-rarity" min = 0 max = 16777216 into = roll }
+    let = { into = rarity value = pureCall(ClassifyCombatRewardRarity, roll, field(owner, Player.CardRarityOffset)) }
+    if = {
+      condition = equal(rarity, "rare")
+      then = { set = { target = owner field = Player.CardRarityOffset value = -5 } }
+      else = { set = { target = owner field = Player.CardRarityOffset value = minimum(40, add(field(owner, Player.CardRarityOffset), 1)) } }
+    }
+    return = { value = rarity }
+  }
+}
+procedure HasCombatRewardRarity {
+  pure = true parameters = { rarity = String(length = 16) } result = Bool
+  body = { return = { value = exists(where(collection(CardRewardPool), b, equal(field(b, CardBlueprint.Rarity), rarity))) } }
+}
+procedure ResolveCombatRewardRarity {
+  pure = true parameters = { rarity = String(length = 16) } result = String(length = 16)
+  locals = { available = String(length = 16) }
+  body = {
+    let = { into = available value = rarity }
+    repeat = { count = 3 body = {
+      if = { condition = pureCall(HasCombatRewardRarity, available) then = { return = { value = available } } }
+      if = {
+        condition = equal(available, "common") then = { let = { into = available value = "uncommon" } }
+        else = { if = { condition = equal(available, "uncommon") then = { let = { into = available value = "rare" } } else = { let = { into = available value = "common" } } } }
+      }
+    } }
+    return = { value = "none" }
+  }
+}
+procedure ValidateCombatCardReward {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = { condition = or(field(owner, Player.CardRewardPending), exists(collection(CardRewardOptions))) then = { fail = { message = "Close the previous card reward first" } } }
+    if = { condition = not(equal(count(where(collection(CardLibrary), b, field(b, CardBlueprint.InIroncladPool))), 85)) then = { fail = { message = "unsupported_capability: complete 85-card singleplayer Ironclad pool required" } } }
+    if = {
+      condition = not(equal(count(where(collection(CardLibrary), b, and(field(b, CardBlueprint.InIroncladPool), or(equal(field(b, CardBlueprint.Rarity), "common"), or(equal(field(b, CardBlueprint.Rarity), "uncommon"), equal(field(b, CardBlueprint.Rarity), "rare")))))), 80))
+      then = { fail = { message = "unsupported_capability: complete 80-card Ironclad reward pool required" } }
+    }
+  }
+}
+procedure OfferCombatCards {
+  parameters = { owner = Ref(Player) }
+  locals = { rarity = String(length = 16) chosen = Binding card = Binding upgradeRoll = Int }
+  body = {
+    call = { procedure = ValidateCombatCardReward args = { owner = owner } }
+    forEach = {
+      query = where(collection(CardLibrary), b, and(field(b, CardBlueprint.InIroncladPool), or(equal(field(b, CardBlueprint.Rarity), "common"), or(equal(field(b, CardBlueprint.Rarity), "uncommon"), equal(field(b, CardBlueprint.Rarity), "rare"))))) item = entry
+      body = { addToCollection = { collection = CardRewardPool item = entry } }
+    }
+    repeat = { count = 3 body = {
+      call = { procedure = RollCombatRewardRarity args = { owner = owner } into = rarity }
+      let = { into = rarity value = pureCall(ResolveCombatRewardRarity, rarity) }
+      samplePick = { stream = "base-spire:development-card-reward" candidates = where(collection(CardRewardPool), b, equal(field(b, CardBlueprint.Rarity), rarity)) into = chosen }
+      removeFromCollection = { collection = CardRewardPool item = chosen }
+      call = { procedure = CreateCardInstance args = { owner = owner definition = field(chosen, CardBlueprint.DefinitionId) } into = card }
+      sampleInt = { stream = "base-spire:development-card-reward" min = 0 max = 16777216 into = upgradeRoll }
+      if = { condition = equal(upgradeRoll, 0) then = { call = { procedure = UpgradeCard args = { card = card } } } }
+      addToCollection = { collection = CardRewardOptions item = card }
+    } }
+    forEach = { query = collection(CardRewardPool) item = entry body = { removeFromCollection = { collection = CardRewardPool item = entry } } }
+    set = { target = owner field = Player.CardRewardPending value = true }
+  }
+}
+procedure ClearCombatCardReward {
+  parameters = { owner = Ref(Player) }
+  body = {
+    forEach = {
+      query = where(collection(CardRewardOptions), card, equal(field(card, Card.Owner), field(owner, Player.Owner))) item = card
+      body = { destroy = { target = card } }
+    }
+    set = { target = owner field = Player.CardRewardPending value = false }
+  }
+}
+procedure ClaimDevelopmentCardReward {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    call = { procedure = ObtainCardReward args = { owner = owner card = card } }
+    call = { procedure = ClearCombatCardReward args = { owner = owner } }
+  }
+}
+procedure SkipDevelopmentCardReward {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.Room), "rewards"), and(field(owner, Player.CardRewardPending), greater(field(owner, Player.Hp), 0)))) then = { fail = { message = "No card reward is pending" } } }
+    call = { procedure = ClearCombatCardReward args = { owner = owner } }
+  }
+}
+action ClaimDevelopmentCardReward {
+  role = player parameters = { card = Ref(Card) }
+  candidates = { parameter = card query = where(collection(CardRewardOptions), c, equal(field(c, Card.Owner), field(first(type(Player)), Player.Owner))) }
+  requires = and(equal(field(first(type(Player)), Player.Room), "rewards"), and(field(first(type(Player)), Player.CardRewardPending), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0))))
+  body = { call = { procedure = ClaimDevelopmentCardReward args = { owner = first(type(Player)) card = card } } }
+}
+action SkipDevelopmentCardReward {
+  role = player
+  requires = and(equal(field(first(type(Player)), Player.Room), "rewards"), and(field(first(type(Player)), Player.CardRewardPending), greater(field(first(type(Player)), Player.Hp), 0)))
+  body = { call = { procedure = SkipDevelopmentCardReward args = { owner = first(type(Player)) } } }
+}

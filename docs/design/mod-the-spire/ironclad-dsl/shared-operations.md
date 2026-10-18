@@ -8,7 +8,9 @@
 
 | 入口 | 参数与返回 | 语义与边界 |
 | --- | --- | --- |
-| `CardDefinition` 模板 | `definition`、普通／升级费用、类型、目标、关键词、伤害元数据；可选 `inIroncladPool`／`generatable` | 自动注册可执行定义。源池资格和生成资格分别声明；不把目录中未实现的行注册成空卡。内容叶只组合模板 |
+| `CardDefinition` 模板 | `definition`、普通／升级费用、类型、`rarity`、目标、关键词、伤害元数据；可选 `inIroncladPool`／`generatable` | 自动注册可执行定义。源池资格、奖励稀有度和战斗生成资格分别声明；内容叶只组合模板 |
+| `CreateCardInstance` | `owner, definition` → Binding | 验证可执行定义、创建独立实例并发 CardCreated，尚未入牌区或战斗，不发 CardEnteredCombat；奖励复用该入口 |
+| `ObtainCardReward` | `owner, card` | 只在存活、非战斗且存在本玩家待领卡牌奖励时，将所选同一实例从 CardRewardOptions 移至 RunDeck，再发 CardObtained；保留升级，未选清理由奖励域完成 |
 | `CreateCombatCard` | `owner, definition` → Binding | 从已注册定义创建全新战斗实例，初始化字段后发 `CardEnteredCombat(clone=false)`；未知定义在创建前明确失败。尚不入牌区 |
 | `CloneCombatCard` | `owner, source` → Binding | 保留实际升级、类型、Strike 标签、成长、费用修改与回合末自动打出能力；不携带 PermanentSource、当前 PaidX 或强制耗尽结果。发 `clone=true`，避免 Stomp 重复初始化减费 |
 | `AddGeneratedToHand` | `card` | 未入牌区的新建／复制实例进入手牌；满十张则进入弃牌堆。不是普通抽牌，不发抽牌事件 |

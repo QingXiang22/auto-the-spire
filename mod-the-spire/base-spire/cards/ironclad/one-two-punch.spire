@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/OneTwoPunch.cs; SHA-256 retained in cards/catalog.json.
-use OneTwoPunch { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:one-two-punch" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use OneTwoPunch { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:one-two-punch" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use OneTwoPunchEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:one-two-punch" power = "base-spire:one-two-punch-power" kind = "repeat-next-attack" stacks = 1 upgradedStacks = 2 } }

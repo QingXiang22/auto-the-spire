@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.5.0-dsl.28",
+  "static_build_id": "base-spire-dsl-0.5.0-dsl.29",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -249,6 +249,15 @@
       "use": "not_published",
       "rule_id": "DB-DEVELOPMENT-DEFINITIONS",
       "reason": "Static all-unlocked source pool definition data; not a combat pile."
+    },
+    "base-spire:CardRewardOptions": {
+      "use": "group",
+      "owner_kind_type_id": "base-spire:Player"
+    },
+    "base-spire:CardRewardPool": {
+      "use": "not_published",
+      "rule_id": "DB-REWARD-POOL",
+      "reason": "Temporary reward generation eligibility is internal and cleared before the stable public boundary."
     }
   },
   "terminal_outcomes": {},

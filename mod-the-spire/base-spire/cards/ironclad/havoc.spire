@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Havoc.cs; SHA-256 retained in cards/catalog.json.
-use Havoc { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:havoc" cost = 1 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use Havoc { template = CardDefinition args = { rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:havoc" cost = 1 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use HavocEffect1 { template = AutoplayTopEffect args = { definition = "base-spire:havoc" exhaust = true } }
