@@ -2,27 +2,34 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 template AfterShuffleBlockRelic {
-  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 0, max = 999) } }
+  parameters = {
+    definition = { type = String(length = 64) }
+    amount = { type = Int(min = 0, max = 999) }
+  }
   body = {
     procedure WhenShuffled {
-      parameters = { owner = Ref(Player) }
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
       body = {
-        forEach = {
-          query = collection(Relics) item = relic
-          body = {
-            if = {
-              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
-              then = { call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(amount) } } }
-            }
+        call = {
+          procedure = GainUnpoweredBlock args = {
+            owner = owner amount = arg(amount)
           }
         }
       }
     }
-    subscription OnShuffle { event = AfterShuffle reaction = WhenShuffled }
+    subscription OnShuffle {
+      event = AfterShuffle reaction = WhenShuffled instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
     action Obtain {
       role = player
       requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }

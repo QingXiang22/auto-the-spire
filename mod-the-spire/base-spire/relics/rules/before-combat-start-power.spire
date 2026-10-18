@@ -1,8 +1,8 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-
 # Relic that applies a player power at combat start. BronzeScales.cs grants ThornsPower 3 from
 # AfterRoomEntered(CombatRoom); the development combat start is the equivalent time point here.
+
 template BeforeCombatStartPowerRelic {
   parameters = {
     definition = { type = String(length = 64) }
@@ -12,24 +12,28 @@ template BeforeCombatStartPowerRelic {
   }
   body = {
     procedure WhenCombatStarts {
-      parameters = { owner = Ref(Player) }
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
       body = {
-        forEach = {
-          query = collection(Relics) item = relic
-          body = {
-            if = {
-              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
-              then = { call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) kind = arg(kind) stacks = arg(stacks) } } }
-            }
+        call = {
+          procedure = ApplyPlayerPower args = {
+            owner = owner definition = arg(power) kind = arg(kind) stacks = arg(stacks)
           }
         }
       }
     }
-    subscription OnCombatStart { event = BeforeCombatStart reaction = WhenCombatStarts }
+    subscription OnCombatStart {
+      event = BeforeCombatStart reaction = WhenCombatStarts instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
     action Obtain {
       role = player
       requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }

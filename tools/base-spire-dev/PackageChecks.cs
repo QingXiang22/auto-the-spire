@@ -137,6 +137,7 @@ internal static partial class PackageChecks
         Merge(RunRelicBatch6Checks(package, Case), witnesses);
         Merge(RunRelicContentChecks(package, Case), witnesses);
         Merge(RunRelicModifierChecks(package, Case), witnesses);
+        RunEffectListenerChecks(package, Case);
         var potions = RunPotionChecks(package, Case);
         var rooms = RunRestSiteChecks(package, Case);
         Merge(RunPermanentDeckChecks(package, Case), rooms);

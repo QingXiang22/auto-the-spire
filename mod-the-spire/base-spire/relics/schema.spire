@@ -10,14 +10,14 @@ entity Relic {
     IsMelted = { type = Bool default = false }
     Counter = { type = Int(min = 0, max = 999999) default = 0 visibility = Hidden }
     UsedThisCombat = { type = Bool default = false visibility = Hidden }
-    FirstTurnDrawBonus = { type = Int(min = 0, max = 10) default = 0 visibility = Hidden }
-    RestHealBonus = { type = Int(min = 0, max = 999) default = 0 visibility = Hidden }
-    StrikeDamageBonus = { type = Int(min = 0, max = 999) default = 0 visibility = Hidden }
-    RetainEnergy = { type = Bool default = false visibility = Hidden }
-    AttackPlayedThisTurn = { type = Bool default = false visibility = Hidden }
-    AttackPlayedLastTurn = { type = Bool default = false visibility = Hidden }
   }
 }
 collection Relics { element = Relic ordered = true }
-event RelicObtained { payload = { owner = Ref(Player) relic = Ref(Relic) } }
-event RelicRemoved { payload = { owner = Ref(Player) relic = Ref(Relic) } }
+
+event RelicObtained {
+  payload = { owner = Ref(Player) relic = Ref(Relic) }
+}
+
+event RelicRemoved {
+  payload = { owner = Ref(Player) relic = Ref(Relic) }
+}

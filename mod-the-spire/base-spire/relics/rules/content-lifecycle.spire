@@ -2,111 +2,278 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 template PickupResourceRelic {
-  parameters = { definition = { type = String(length = 64) } gold = { type = Int(min = 0, max = 99999) default = 0 } healPercent = { type = Int(min = 0, max = 100) default = 0 } }
+  parameters = {
+    definition = { type = String(length = 64) }
+    gold = { type = Int(min = 0, max = 99999) default = 0 }
+    healPercent = { type = Int(min = 0, max = 100) default = 0 }
+  }
   body = {
     procedure WhenObtained {
       parameters = { owner = Ref(Player) relic = Ref(Relic) }
-      body = { if = { condition = equal(field(relic, Relic.DefinitionId), arg(definition)) then = {
-        call = { procedure = GainGold args = { owner = owner amount = arg(gold) } }
-        call = { procedure = Heal args = { owner = owner amount = divide(multiply(field(owner, Player.MaxHp), arg(healPercent)), 100) } }
-      } } }
+      body = {
+        if = {
+          condition = equal(field(relic, Relic.DefinitionId), arg(definition)) then = {
+            call = {
+              procedure = GainGold args = {
+                owner = owner amount = arg(gold)
+              }
+            }
+            call = {
+              procedure = Heal args = {
+                owner = owner amount = divide(multiply(field(owner, Player.MaxHp), arg(healPercent)), 100)
+              }
+            }
+          }
+        }
+      }
     }
-    subscription Obtained { event = RelicObtained reaction = WhenObtained }
-    action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    subscription Obtained {
+      event = RelicObtained reaction = WhenObtained
     }
-  }
-}
-template HandAndRestModifierRelic {
-  parameters = { definition = { type = String(length = 64) } firstTurnDraw = { type = Int(min = 0, max = 10) default = 0 } restHeal = { type = Int(min = 0, max = 999) default = 0 } }
-  body = {
-    procedure WhenObtained { parameters = { owner = Ref(Player) relic = Ref(Relic) } body = {
-      if = { condition = equal(field(relic, Relic.DefinitionId), arg(definition)) then = {
-        set = { target = relic field = Relic.FirstTurnDrawBonus value = arg(firstTurnDraw) }
-        set = { target = relic field = Relic.RestHealBonus value = arg(restHeal) }
-      } }
-    } }
-    subscription Obtained { event = RelicObtained reaction = WhenObtained }
-    action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }
 
+template HandAndRestModifierRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    firstTurnDraw = { type = Int(min = 0, max = 10) default = 0 }
+    restHeal = { type = Int(min = 0, max = 999) default = 0 }
+  }
+  body = {
+    procedure Draw {
+      pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Relic) }
+      result = Int body = {
+        if = {
+          condition = equal(field(owner, Player.TurnNumber), 1) then = {
+            return = { value = add(value, arg(firstTurnDraw)) }
+          }
+        }
+        return = { value = value }
+      }
+    }
+    subscription Draw {
+      event = ModifyTurnDraw reaction = Draw instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    procedure Rest {
+      pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Relic) }
+      result = Int body = {
+        return = { value = add(value, arg(restHeal)) }
+        return = { value = value }
+      }
+    }
+    subscription Rest {
+      event = ModifyRestHeal reaction = Rest instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition))) body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
+    }
+  }
+}
 # Actual play completions, not hits or distinct card instances. Each relic owns its counter.
+
 template CardCountRelic {
   parameters = {
-    definition = { type = String(length = 64) } kind = { type = String(length = 16) }
-    every = { type = Int(min = 1, max = 999) } perTurn = { type = Bool }
-    energy = { type = Int(min = 0, max = 999) default = 0 } block = { type = Int(min = 0, max = 999) default = 0 }
-    damage = { type = Int(min = 0, max = 999) default = 0 } power = { type = String(length = 64) default = "none" }
-    powerKind = { type = String(length = 32) default = "none" } stacks = { type = Int(min = 0, max = 999) default = 0 }
+    definition = { type = String(length = 64) }
+    kind = { type = String(length = 16) }
+    every = { type = Int(min = 1, max = 999) }
+    perTurn = { type = Bool }
+    energy = { type = Int(min = 0, max = 999) default = 0 }
+    block = { type = Int(min = 0, max = 999) default = 0 }
+    damage = { type = Int(min = 0, max = 999) default = 0 }
+    power = { type = String(length = 64) default = "none" }
+    powerKind = { type = String(length = 32) default = "none" }
+    stacks = { type = Int(min = 0, max = 999) default = 0 }
   }
   body = {
-    procedure Reset { parameters = { owner = Ref(Player) } body = {
-      if = { condition = arg(perTurn) then = {
-        forEach = { query = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), equal(field(r, Relic.DefinitionId), arg(definition)))) item = r
-          body = { set = { target = r field = Relic.Counter value = 0 } }
+    procedure Reset {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      body = {
+        if = {
+          condition = arg(perTurn) then = {
+            set = { target = listener field = Relic.Counter value = 0 }
+          }
         }
-      } }
-    } }
-    subscription CombatReset { event = BeforeCombatStart reaction = Reset }
-    subscription TurnReset { event = BeforePlayerTurnStart reaction = Reset }
-    procedure AfterPlay { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
-      if = { condition = and(field(owner, Player.CombatActive), and(equal(field(card, Card.Kind), arg(kind)), greater(field(owner, Player.Hp), 0))) then = {
-        forEach = { query = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) item = r body = {
-          set = { target = r field = Relic.Counter value = modulo(add(field(r, Relic.Counter), 1), arg(every)) }
-          if = { condition = equal(field(r, Relic.Counter), 0) then = {
-            if = { condition = greater(arg(energy), 0) then = { call = { procedure = GainEnergy args = { owner = owner amount = arg(energy) } } } }
-            if = { condition = greater(arg(block), 0) then = { call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(block) } } } }
-            if = { condition = greater(arg(stacks), 0) then = { call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) kind = arg(powerKind) stacks = arg(stacks) } } } }
-            if = { condition = greater(arg(damage), 0) then = {
-              forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = { call = { procedure = DamageEnemy args = { target = e amount = arg(damage) } } } }
-            } }
-          } }
-        } }
-      } }
-    } }
-    subscription Played { event = AfterCardPlayed reaction = AfterPlay }
-    action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+      }
+    }
+    subscription CombatReset {
+      event = BeforeCombatStart reaction = Reset instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    subscription TurnReset {
+      event = BeforePlayerTurnStart reaction = Reset instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    procedure AfterPlay {
+      parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Relic) }
+      body = {
+        if = {
+          condition = and(field(owner, Player.CombatActive), and(equal(field(card, Card.Kind), arg(kind)), greater(field(owner, Player.Hp), 0))) then = {
+            set = { target = listener field = Relic.Counter value = modulo(add(field(listener, Relic.Counter), 1), arg(every)) }
+            if = {
+              condition = equal(field(listener, Relic.Counter), 0) then = {
+                if = {
+                  condition = greater(arg(energy), 0) then = {
+                    call = {
+                      procedure = GainEnergy args = {
+                        owner = owner amount = arg(energy)
+                      }
+                    }
+                  }
+                }
+                if = {
+                  condition = greater(arg(block), 0) then = {
+                    call = {
+                      procedure = GainUnpoweredBlock args = {
+                        owner = owner amount = arg(block)
+                      }
+                    }
+                  }
+                }
+                if = {
+                  condition = greater(arg(stacks), 0) then = {
+                    call = {
+                      procedure = ApplyPlayerPower args = {
+                        owner = owner definition = arg(power) kind = arg(powerKind) stacks = arg(stacks)
+                      }
+                    }
+                  }
+                }
+                if = {
+                  condition = greater(arg(damage), 0) then = {
+                    forEach = {
+                      query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
+                        call = {
+                          procedure = DamageEnemy args = {
+                            target = e amount = arg(damage)
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription Played {
+      event = AfterCardPlayed reaction = AfterPlay instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }
+
 template TurnEndDamageRelic {
-  parameters = { definition = { type = String(length = 64) } turn = { type = Int(min = 1, max = 999) } damage = { type = Int(min = 0, max = 999) } }
+  parameters = {
+    definition = { type = String(length = 64) }
+    turn = { type = Int(min = 1, max = 999) }
+    damage = { type = Int(min = 0, max = 999) }
+  }
   body = {
-    procedure BeforeTurnEnd { parameters = { owner = Ref(Player) } body = {
-      if = { condition = and(field(owner, Player.CombatActive), and(equal(field(owner, Player.TurnNumber), arg(turn)), greater(field(owner, Player.Hp), 0))) then = {
-        forEach = { query = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) item = r body = {
-          forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = { call = { procedure = DamageEnemy args = { target = e amount = arg(damage) } } } }
-        } }
-      } }
-    } }
-    subscription TurnEnd { event = BeforePlayerTurnEnd reaction = BeforeTurnEnd }
-    action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    procedure BeforeTurnEnd {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      body = {
+        if = {
+          condition = and(field(owner, Player.CombatActive), and(equal(field(owner, Player.TurnNumber), arg(turn)), greater(field(owner, Player.Hp), 0))) then = {
+            forEach = {
+              query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
+                call = {
+                  procedure = DamageEnemy args = {
+                    target = e amount = arg(damage)
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription TurnEnd {
+      event = BeforePlayerTurnEnd reaction = BeforeTurnEnd instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }
+
 template FirstHpLossDrawRelic {
-  parameters = { definition = { type = String(length = 64) } cards = { type = Int(min = 0, max = 10) } }
+  parameters = {
+    definition = { type = String(length = 64) }
+    cards = { type = Int(min = 0, max = 10) }
+  }
   body = {
-    procedure Reset { parameters = { owner = Ref(Player) } body = {
-      forEach = { query = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), equal(field(r, Relic.DefinitionId), arg(definition)))) item = r body = { set = { target = r field = Relic.UsedThisCombat value = false } } }
-    } }
-    subscription CombatStart { event = BeforeCombatStart reaction = Reset }
-    procedure AfterHpLoss { parameters = { owner = Ref(Player) } body = {
-      if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
-        forEach = { query = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), and(not(field(r, Relic.UsedThisCombat)), equal(field(r, Relic.DefinitionId), arg(definition)))))) item = r body = {
-          set = { target = r field = Relic.UsedThisCombat value = true }
-          call = { procedure = DrawCards args = { owner = owner count = arg(cards) } }
-        } }
-      } }
-    } }
-    subscription HpLost { event = PlayerHpLost reaction = AfterHpLoss }
-    action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    procedure Reset {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      body = {
+        set = { target = listener field = Relic.UsedThisCombat value = false }
+      }
+    }
+    subscription CombatStart {
+      event = BeforeCombatStart reaction = Reset instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    procedure AfterHpLoss {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      body = {
+        if = {
+          condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
+            if = {
+              condition = and(equal(field(listener, Relic.Holder), owner), and(not(field(listener, Relic.IsMelted)), and(not(field(listener, Relic.UsedThisCombat)), equal(field(listener, Relic.DefinitionId), arg(definition))))) then = {
+                set = { target = listener field = Relic.UsedThisCombat value = true }
+                call = {
+                  procedure = DrawCards args = {
+                    owner = owner count = arg(cards)
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription HpLost {
+      event = PlayerHpLost reaction = AfterHpLoss instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }

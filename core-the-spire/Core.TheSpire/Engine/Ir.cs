@@ -321,6 +321,15 @@ public sealed class CallPureExpr(int procedureRef, IReadOnlyList<Expr> arguments
     public override string ToString() => $"call@{ProcedureRef}({string.Join(", ", Arguments)})";
 }
 
+/// <summary>Read-only ordered reduction through pure event listeners; the first payload is the accumulator.</summary>
+public sealed class FoldEventExpr(int eventRef, IReadOnlyList<Expr> arguments) : Expr
+{
+    public int EventRef { get; } = eventRef;
+    public IReadOnlyList<Expr> Arguments { get; } = Array.AsReadOnly(arguments.ToArray());
+    public override string Primitive => "expr.foldEvent";
+    public override IReadOnlyList<IrNode> Children => Arguments;
+}
+
 public enum AggregateOp
 {
     Sum = 0,
@@ -915,6 +924,7 @@ public static class PrimitiveSignatures
             new("expr.first", readPure),
             new("expr.none", [EngineEffect.PureExpression]),
             new("expr.call", [EngineEffect.PureExpression, EngineEffect.ReadsState, EngineEffect.CallsProcedure]),
+            new("expr.foldEvent", [EngineEffect.PureExpression, EngineEffect.ReadsState, EngineEffect.CallsProcedure]),
             new("expr.aggregate", readPure),
             new("expr.concat", [EngineEffect.PureExpression]),
             new("block", []),

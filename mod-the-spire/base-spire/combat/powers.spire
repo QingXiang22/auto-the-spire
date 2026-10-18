@@ -1,10 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-
-# Development power lifecycle. Vanilla PowerCmd.Apply merges stacks into an existing power of the same
-# definition on the same creature; a new instance is created only when none exists. Single-stack roles,
-# temporary powers and the required Ironclad reactions are handled here and in ironclad-powers.spire.
-# Kind is the modifier role the damage/block rules query by, so no rule branches on a power ID.
+# Shared acquisition only publishes lifecycle hooks; power listeners own merge policies and reactions.
 
 procedure ApplyPlayerPower {
   parameters = { owner = Ref(Player) definition = String(length = 64) kind = String(length = 32) stacks = Int(min = -999, max = 999) }
@@ -23,12 +19,9 @@ procedure ApplyPlayerPower {
         }
       }
       else = {
-        if = { condition = not(or(equal(kind, "corruption"), equal(kind, "autoplay-drawn-strikes"))) then = { set = { target = existing field = Power.Stacks value = add(field(existing, Power.Stacks), stacks) } } }
-      }
-    }
-    if = { condition = or(equal(kind, "turn-self-damage-block"), equal(kind, "hp-loss-area-damage")) then = { set = { target = existing field = Power.SelfDamage value = add(field(existing, Power.SelfDamage), 1) } } }
-    if = { condition = equal(kind, "third-attack-copy") then = { set = { target = existing field = Power.Counter value = pureCall(AttacksPlayedThisTurn, owner) } } }
-    if = { condition = or(or(equal(kind, "no-draw"), equal(kind, "no-energy-gain")), or(equal(kind, "attack-block"), equal(kind, "repeat-next-attack"))) then = { set = { target = existing field = Power.ExpiresBeforeEnemy value = true } } }
+        set = { target = existing field = Power.Stacks value = foldEvent(ModifyPowerStacks, add(field(existing, Power.Stacks), stacks), existing, stacks) } } }
+    emit = {
+      event = PlayerPowerApplied payload = { owner = owner power = existing amount = stacks } }
 
   }
 }
@@ -50,51 +43,11 @@ procedure ApplyEnemyPower {
       }
       else = { set = { target = existing field = Power.Stacks value = add(field(existing, Power.Stacks), stacks) } }
     }
-    if = { condition = and(equal(kind, "damage-taken-multiplier"), greater(stacks, 0)) then = {
-      call = { procedure = DrawCards args = { owner = first(type(Player)) count = pureCall(PlayerPowerAmount, first(type(Player)), "vulnerable-draw") } }
-    } }
-
-  }
-}
-
-# Turn-end duration tick. Vanilla ticks debuffs at the end of the enemy side turn, which is the enemy phase
-# here. The tick is bound to the debuff roles; a player debuff carries the apply grace (SkipTick) so it does
-# not lose a stack on the same enemy turn that applied it, and a power that reaches zero is removed, which
-# matches PowerCmd.TickDownDuration.
-procedure TickDownDebuffs {
-  parameters = { owner = Ref(Player) }
-  body = {
-    forEach = {
-      query = collection(Powers) item = power
-      body = {
-        if = {
-          condition = or(equal(field(power, Power.Kind), "damage-taken-multiplier"), or(equal(field(power, Power.Kind), "damage-dealt-multiplier"), equal(field(power, Power.Kind), "block-dealt-multiplier")))
-          then = {
-            if = {
-              condition = field(power, Power.SkipTick)
-              then = { set = { target = power field = Power.SkipTick value = false } }
-              else = {
-                set = { target = power field = Power.Stacks value = subtract(field(power, Power.Stacks), 1) }
-                if = {
-                  condition = lessOrEqual(field(power, Power.Stacks), 0)
-                  then = {
-                    removeFromCollection = { collection = Powers item = power }
-                    destroy = { target = power }
+    emit = {
+      event = EnemyPowerApplied payload = { target = target power = existing amount = stacks }
                   }
                 }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 }
-procedure WhenTurnEnded {
-  parameters = { owner = Ref(Player) }
-  body = { call = { procedure = TickDownDebuffs args = { owner = owner } } }
-}
-subscription OnEnemyTurnEnded { event = AfterEnemyTurnEnded reaction = WhenTurnEnded }
 
 # Applies a player power whose lifetime is the current player turn (source FlameBarrierPower is removed at the
 # end of the turn). Stack merging behaves like ApplyPlayerPower but both paths mark the instance.
@@ -121,19 +74,6 @@ procedure ApplyPlayerPowerUntilTurnEnd {
     }
   }
 }
-# Empties every power that was marked to expire with the player turn.
-procedure ExpireTurnEndPowers {
-  body = {
-    forEach = {
-      query = where(collection(Powers), power, field(power, Power.ExpiresAtTurnEnd)) item = power
-      body = {
-        removeFromCollection = { collection = Powers item = power }
-        destroy = { target = power }
-      }
-    }
-  }
-}
-
 # Combat teardown. Source Player.AfterCombatEnd calls Creature.RemoveAllPowersInternalExcept(), so no power
 # survives into the next combat; the development combat end clears the whole power collection.
 procedure ClearCombatPowers {

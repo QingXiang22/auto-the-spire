@@ -18,22 +18,11 @@ procedure GainUnpoweredBlock {
 # applied to the additive total with integer floor.
 procedure GainBlock {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
-  locals = { dexterity = Int frail = Int total = Int }
+  locals = { total = Int }
   body = {
     let = {
-      into = dexterity
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "block-additive"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
-    }
-    let = {
-      into = frail
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "block-dealt-multiplier"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
-    }
-    let = { into = total value = maximum(0, add(amount, dexterity)) }
-    if = {
-      condition = greater(frail, 0)
-      then = { let = { into = total value = divide(multiply(total, 3), 4) } }
-    }
-    if = { condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)), not(equal(r, field(owner, Player.CurrentPlay))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), pureCall(PlayerPowerAmount, owner, "early-block-double")) then = { let = { into = total value = multiply(total, 2) } } }
+      into = total value = maximum(0, foldEvent(ModifyBlockAdditive, amount, owner)) }
+    let = { into = total value = foldEvent(ModifyBlockMultiplier, total, owner) }
     if = { condition = greater(total, 0) then = {
       set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), total)) }
       if = { condition = not(isNone(field(owner, Player.CurrentPlay))) then = { set = { target = field(owner, Player.CurrentPlay) field = CardPlayRecord.PoweredBlocks value = add(field(field(owner, Player.CurrentPlay), CardPlayRecord.PoweredBlocks), 1) } } }

@@ -46,7 +46,7 @@ public sealed record AnchorResolution(string Name) : Resolution;
 /// </summary>
 public sealed class RuleSetBuilder
 {
-    public const string EngineVersion = "engine/ir@0.5";
+    public const string EngineVersion = "engine/ir@0.6";
 
     private readonly List<EnginePackage> _packages = [];
     private readonly Dictionary<int, string> _backendDescriptors = [];
@@ -548,7 +548,7 @@ public sealed class RuleSetBuilder
 
                     tables.Subscriptions.Add(new SubscriptionDefinition(eventType, reaction, subscription.Priority,
                         subscription.Recheck, scopeIndex, PackageIndex(package),
-                        tables.RefBases[package.PackageId], order++));
+                        tables.RefBases[package.PackageId], order++, subscription.Instances, subscription.InstanceOrder, subscription.EvaluationLocalCount));
                 }
             }
 
@@ -933,6 +933,9 @@ public sealed class RuleSetBuilder
                     .Append(" scopePayload=").Append(subscription.ScopePayloadIndex)
                     .Append(" recheck=")
                     .Append(subscription.Recheck is null ? "-" : IrDumper.Dump(subscription.Recheck))
+                    .Append(" instances=").Append(subscription.Instances is null ? "-" : IrDumper.Dump(subscription.Instances))
+                    .Append(" instanceOrder=").Append(subscription.InstanceOrder is null ? "-" : IrDumper.Dump(subscription.InstanceOrder))
+                    .Append(" evaluationLocals=").Append(subscription.EvaluationLocalCount?.ToString() ?? "reaction")
                     .Append('\n');
 
             text.Append("sessionStart=")
@@ -1061,6 +1064,11 @@ public static class IrDumper
             case CallPureExpr call:
                 text.Append("@").Append(call.ProcedureRef).Append('(');
                 WriteList(call.Arguments, text);
+                text.Append(')');
+                return;
+            case FoldEventExpr fold:
+                text.Append('@').Append(fold.EventRef).Append('(');
+                WriteList(fold.Arguments, text);
                 text.Append(')');
                 return;
             case StringConcatExpr concat:
@@ -1348,7 +1356,12 @@ public static class ContentHasher
             text.Append('\n');
         }
 
-        foreach (var subscription in builder.Subscriptions) text.Append("sub:").Append(subscription).Append('\n');
+        foreach (var subscription in builder.Subscriptions)
+            text.Append("sub:").Append(subscription)
+                .Append(" recheck=").Append(subscription.Recheck is null ? "-" : IrDumper.Dump(subscription.Recheck))
+                .Append(" instances=").Append(subscription.Instances is null ? "-" : IrDumper.Dump(subscription.Instances))
+                .Append(" instanceOrder=").Append(subscription.InstanceOrder is null ? "-" : IrDumper.Dump(subscription.InstanceOrder))
+                .Append(" evaluationLocals=").Append(subscription.EvaluationLocalCount?.ToString() ?? "reaction").Append('\n');
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text.ToString())))
             .ToLowerInvariant()[..16];
     }

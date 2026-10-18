@@ -3,7 +3,7 @@
 同包文件组合、严格纯文本 manifest 与静态源目录见[包格式参考](package-reference.md)。
 
 
-文档类型：参考（Reference）。core/0.3 在 [core/0.2 规则库](../0.2/authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.1](../0.1/language-reference.md)。活动引擎身份为 `engine/ir@0.5`，Core.TheSpire 包版本为 `0.5.0`。旧冻结版本文件保留为历史合同，不表示活动产物仍为旧身份。
+文档类型：参考（Reference）。core/0.3 在 [core/0.2 规则库](../0.2/authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.1](../0.1/language-reference.md)。活动引擎身份为 `engine/ir@0.6`，Core.TheSpire 包版本为 `0.6.0`。旧冻结版本文件保留为历史合同，不表示活动产物仍为旧身份。
 
 ## 绑定入口
 
@@ -21,6 +21,19 @@ LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3
 `call = { procedure = Grant args = { owner = owner amount = 2 } }` 按参数名绑定；pureCall 同样支持具名参数。缺参、未知参数及重复名拒绝，不以对象枚举顺序猜位置。参数仍有明确类型，Ref(Player) 与 Ref(Power) 不可互换。
 
 宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[生命周期文本库](../../../../tools/base-migration-baseline/BaseSpire/Authoring/Content/lifecycle-rules.spire)与[base 作者契约](../../0.0.2/authoring-reference.md)。
+
+## 实例订阅与只读修正
+
+本节随engine/ir@0.6交付，文本仍为core/0.3。通知使用emit，计算修正使用foldEvent，共用订阅及同一Session执行栈。
+
+| 写法 | 类型与语义 |
+| --- | --- |
+| subscription的instances | 可选Query；reaction接收完整event payload，末尾增加与查询元素匹配的Ref参数。查询只能读payload，不能读取尚未绑定的实例末参；执行前再次查询，销毁或移出资格后跳过 |
+| subscription的instance_order | 可选Int表达式，须同时声明instances；可读取实例末参，例如collectionIndex(Items,listener)。入口冻结排序键，按priority、instance_order、声明顺序执行；同键保持查询顺序 |
+| subscription的recheck | 可选Bool纯表达式，执行前求值，可读取payload及已绑定实例。查询、排序和recheck使用订阅包独立临时变量帧，reaction在声明它的包执行 |
+| foldEvent(Event,initial,context...) | 参数位置与payload一致，首项为具体类型的累积值；监听者必须pure、接收完整payload并返回相同类型。每次返回作为下一监听者首参，无有效监听者返回initial |
+
+候选在入口取快照，执行中新增实例不补进。嵌套通知先完成，决策暂停后续接不重放已经完成的效果。修正禁止写状态、消费随机、发布通知和请求决策；递归受调用深度和指令预算限制。普通订阅不声明instances时保留priority／声明顺序。C# SDK使用Subscribe的instances／instanceOrder可选参数和IrScope.FoldEvent，生成同一IR。旧engine/ir@0.5包须重建，旧回放保存原身份。
 
 ## 随机流与 binary32
 

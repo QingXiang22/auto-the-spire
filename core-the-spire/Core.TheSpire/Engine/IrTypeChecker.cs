@@ -221,7 +221,10 @@ internal static class IrTypeChecker
         private void CheckSubscription(SubscriptionDefinition subscription)
         {
             var reaction = subscription.Reaction;
-            if (reaction.Parameters.Count > subscription.EventType.Payload.Count)
+            var payloadCount = subscription.EventType.Payload.Count;
+            if (subscription.Instances is not null && reaction.Parameters.Count != payloadCount + 1)
+                throw Faults.TypeError($"subscription {reaction.QualifiedId}: instance reaction needs payload parameters followed by one instance parameter");
+            if (subscription.Instances is null && reaction.Parameters.Count > payloadCount)
             {
                 throw Faults.TypeError(
                     $"subscription {reaction.QualifiedId}: the reaction declares {reaction.Parameters.Count} " +
@@ -229,7 +232,7 @@ internal static class IrTypeChecker
                     $"{subscription.EventType.Payload.Count} payload values");
             }
 
-            for (var index = 0; index < reaction.Parameters.Count; index++)
+            for (var index = 0; index < Math.Min(reaction.Parameters.Count, payloadCount); index++)
             {
                 Require(TyOf(subscription.EventType.Payload[index]), TyOf(reaction.Parameters[index]),
                     $"subscription {reaction.QualifiedId}",
@@ -248,15 +251,22 @@ internal static class IrTypeChecker
                 }
             }
 
-            if (subscription.Recheck is null) return;
             // The predicate is authored by the subscribing package, while its slots are the reaction parameters.
-            var frame = new Frame(subscription.Reaction with
-            {
-                PackageIndex = subscription.PackageIndex,
-                RefBase = subscription.RefBase,
-            });
+            var frame = new Frame(subscription.EvaluationProcedure());
             var where = $"subscription {subscription.Reaction.QualifiedId}";
-            Require(CheckExpr(frame, subscription.Recheck, where), Ty.Bool, where, "recheck predicate");
+            if (subscription.Instances is not null)
+            {
+                if (ParameterSlots(subscription.Instances).Contains(payloadCount))
+                    throw Faults.TypeError($"{where}: instances query cannot read the instance before it is bound");
+                var element = CheckQuery(frame, subscription.Instances, where);
+                Require(element, TyOf(reaction.Parameters[payloadCount]), where, "listener instance");
+            }
+            if (subscription.InstanceOrder is not null)
+            {
+                if (subscription.Instances is null) throw Faults.TypeError($"{where}: instance_order requires instances");
+                Require(CheckExpr(frame, subscription.InstanceOrder, where), Ty.Int, where, "instance order");
+            }
+            if (subscription.Recheck is not null) Require(CheckExpr(frame, subscription.Recheck, where), Ty.Bool, where, "recheck predicate");
         }
 
         private void CheckComputeAsset(ComputeAssetDefinition asset)
@@ -929,6 +939,24 @@ internal static class IrTypeChecker
                     return procedure.Procedure.ResultType is null ? Ty.Void : TyOf(procedure.Procedure.ResultType);
                 }
 
+                case FoldEventExpr fold:
+                {
+                    var eventType = RequireRef<EventResolution>(frame, fold.EventRef, where, "event").Event;
+                    if (eventType.Payload.Count == 0) throw Faults.TypeError($"{where}: foldEvent requires an accumulator payload");
+                    if (eventType.Payload[0].Kind == FieldTypeKind.Any) throw Faults.TypeError($"{where}: foldEvent requires a concrete accumulator type");
+                    RequireArity(fold.Arguments.Count, eventType.Payload.Count, where, eventType.QualifiedId);
+                    for (var i = 0; i < fold.Arguments.Count; i++)
+                        Require(CheckExpr(frame, fold.Arguments[i], where), TyOf(eventType.Payload[i]), where, $"fold argument {i}");
+                    foreach (var listener in _tables.Subscriptions.Where(s => s.EventType.Id == eventType.Id))
+                    {
+                        if (!listener.Reaction.IsPure) throw Faults.Purity($"{where}: foldEvent listener must be pure: {listener.Reaction.QualifiedId}");
+                        if (listener.Reaction.Parameters.Count < eventType.Payload.Count) throw Faults.TypeError($"{where}: foldEvent listener must accept the complete payload");
+                        if (listener.Reaction.ResultType is null) throw Faults.TypeError($"{where}: foldEvent listener must return the accumulator type");
+                        if (listener.Reaction.ResultType.Kind != eventType.Payload[0].Kind) throw Faults.TypeError($"{where}: foldEvent listener result must have the accumulator type");
+                        Require(TyOf(listener.Reaction.ResultType), TyOf(eventType.Payload[0]), where, "fold listener result");
+                    }
+                    return TyOf(eventType.Payload[0]);
+                }
                 case AggregateExpr aggregate:
                 {
                     var element = CheckQuery(frame, aggregate.Source, where);

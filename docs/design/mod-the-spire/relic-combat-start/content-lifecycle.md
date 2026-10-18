@@ -10,7 +10,9 @@ Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Ku
 
 ## 状态、接口与顺序
 
-所有局内状态在Engine实体。Relic.Counter保持独立实例计数，OncePerCombat的使用标志与能力元数据归Relic字段。提供pure HasActiveRelic(owner,definition)与共用有效实例筛选；修正参与者由模板在实例上配置，不在Host按ID分派。
+现行统一接入见[通知与修正监听](../effect-listeners.md)。通知和修正均声明instances，按实际库存顺序响应；主流程不再调用遗物专属查询。
+
+所有局内状态在Engine实体。Relic.Counter保持独立实例计数，OncePerCombat使用标志仍归Relic，ArtOfWar私有标志归ArtOfWar.State。提供pure HasActiveRelic(owner,definition)与共用有效实例筛选；修正参与者由模板声明纯监听，不在Host按ID分派。
 
 拾取效果在入Relics后发RelicObtained时执行，不能只放开发Obtain动作；模板拾取订阅按本次relic过滤，旧Strawberry迁移到相同接缝，不重复奖励。永久最大生命不会在移除时撤回，治疗和金币不能因移除反向扣除。OldCoin源商店／幕资格保留在来源说明，当前显式开发获得不等于正常池资格已恢复。BlackBlood当前只交付持有效果，不宣称先古之民升级替换BurningBlood已接入。
 
@@ -20,11 +22,11 @@ CentennialPuzzle消费已支持的PlayerHpLost站点，要求存活且战斗活�
 
 ## 伤害与能量修正（DSL-RELIC-CONTENT-02）
 
-StrikeDummy／FakeStrikeDummy对有Strike标签的牌源加成攻击分别加3／1，先与力量相加，再应用虚弱和易伤，最后取整和扣格挡；非Strike及无加成伤害不参与。DamageEnemyPowered改为显式传owner、card、target和amount，所有真实调用方迁移，不以全局CurrentCard猜来源；当前单人范围owner同时是攻击者和牌拥有者，召唤物／跨拥有者攻击另行恢复。动态汇总未熔化库存上的StrikeDamageBonus，不改变牌本身的基础伤害。重复与多段每段均参与，嵌套自动出牌以各自card为准。
+StrikeDummy／FakeStrikeDummy对有Strike标签的牌源加成攻击分别加3／1，先与力量相加，再应用虚弱和易伤，最后取整和扣格挡；非Strike及无加成伤害不参与。DamageEnemyPowered改为显式传owner、card、target和amount，所有真实调用方迁移，不以全局CurrentCard猜来源；当前单人范围owner同时是攻击者和牌拥有者，召唤物／跨拥有者攻击另行恢复。通过ModifyAttackAdditive纯监听贡献加值，不改变牌本身的基础伤害。重复与多段每段均参与，嵌套自动出牌以各自card为准。
 
-IceCream在Relic.RetainEnergy配置保留资格，首回合仍重置为GetMaxEnergy，后续回合将当前余能加GetMaxEnergy，按现有资源域上限999封顶。能量重置与补足不走GainEnergy，不能被no-energy-gain阻止；重置完成发AfterEnergyReset，再打开回合门并发AfterSideTurnStarted。移除／熔化后下一重置即时失效。
+IceCream监听ShouldResetEnergy决定保留资格，首回合仍重置为GetMaxEnergy，后续回合将当前余能加GetMaxEnergy，按现有资源域上限999封顶。能量重置与补足不走GainEnergy，不能被no-energy-gain阻止；重置完成发AfterEnergyReset，再打开回合门并发AfterSideTurnStarted。移除／熔化后下一重置即时失效。
 
-ArtOfWar每实例保存AttackPlayedThisTurn和AttackPlayedLastTurn，AfterCardPlayed只记录本拥有者实际打完的Attack，自动／重复同样记录；在玩家侧末AfterTurnEnded转交上一回合标志，AfterEnergyReset在TurnNumber>1且上回合未攻击时GainEnergy(1)，随后清理两标志。首回合不奖励；重置站点早于起手抽牌／回合开始自动攻击。战斗开始与CombatEnded清理，手动终止后下一战也重新清理。移除销毁状态，熔化不参与触发与奖励。判别须覆盖连续空攻击回合、攻击后下一回合失奖而再下一回合恢复、技能嵌套自动攻击与回合末自动攻击、奖励受no-energy-gain抑制、与IceCream叠加及不同持有者隔离。
+ArtOfWar.State按遗物实例保存ThisTurn和LastTurn，获得时创建、移除时销毁，AfterCardPlayed只记录本拥有者实际打完的Attack，自动／重复同样记录；在玩家侧末AfterTurnEnded转交上一回合标志，AfterEnergyReset在TurnNumber>1且上回合未攻击时GainEnergy(1)，随后清理两标志。首回合不奖励；重置站点早于起手抽牌／回合开始自动攻击。战斗开始与CombatEnded清理，手动终止后下一战也重新清理。移除销毁状态，熔化不参与触发与奖励。判别须覆盖连续空攻击回合、攻击后下一回合失奖而再下一回合恢复、技能嵌套自动攻击与回合末自动攻击、奖励受no-energy-gain抑制、与IceCream叠加及不同持有者隔离。
 
 ## 判别与边界
 

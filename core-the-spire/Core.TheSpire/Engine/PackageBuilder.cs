@@ -52,7 +52,8 @@ public sealed class EnginePackageBuilder
     }
 
     public void Subscribe(EventSymbol eventType, ProcedureSymbol reaction, int priority = 0,
-        Expr? recheck = null, string? scopePayloadField = null)
+        Expr? recheck = null, string? scopePayloadField = null, Query? instances = null, Expr? instanceOrder = null,
+        int? evaluationLocalCount = null)
     {
         EnsureNotBuilt();
         _subscriptions.Add(new SubscriptionSymbol(eventType, reaction)
@@ -60,6 +61,9 @@ public sealed class EnginePackageBuilder
             Priority = priority,
             Recheck = recheck,
             ScopePayloadField = scopePayloadField,
+            Instances = instances,
+            InstanceOrder = instanceOrder,
+            EvaluationLocalCount = evaluationLocalCount,
         });
     }
 
@@ -410,6 +414,9 @@ public abstract class IrScope
         new CallPureExpr(Package.Ref(procedure), arguments);
 
     public Expr Concat(params Expr[] parts) => new StringConcatExpr(parts);
+
+    public Expr FoldEvent(EventSymbol eventType, params Expr[] arguments) =>
+        new FoldEventExpr(Package.Ref(eventType), arguments);
 
     public Expr Aggregate(Query query, AggregateOp op, Func<Expr, Expr>? itemValue = null)
     {

@@ -52,12 +52,14 @@ public sealed partial class Session
         public Value ReturnValue { get; set; } = Value.None;
     }
 
-    private sealed class DispatchActivation(EventDefinition eventType, SubscriptionDefinition[] listeners,
+    private sealed record ListenerActivation(SubscriptionDefinition Definition, Value Instance, long Order);
+
+    private sealed class DispatchActivation(EventDefinition eventType, ListenerActivation[] listeners,
         Value[] payload, ScopeId inheritedScope) : Activation
     {
         public EventDefinition EventType { get; } = eventType;
 
-        public SubscriptionDefinition[] Listeners { get; } = listeners;
+        public ListenerActivation[] Listeners { get; } = listeners;
 
         public Value[] Payload { get; } = payload;
 

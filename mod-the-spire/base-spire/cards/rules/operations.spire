@@ -13,10 +13,7 @@ procedure GetCardEnergyCost {
   pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Int
   body = {
     if = { condition = field(card, Card.IsX) then = { return = { value = field(owner, Player.Energy) } } }
-    if = { condition = and(equal(field(card, Card.Kind), "skill"), greater(pureCall(PlayerPowerAmount, owner, "corruption"), 0)) then = { return = { value = 0 } } }
-    if = { condition = and(and(equal(field(card, Card.Kind), "attack"), greater(pureCall(PlayerPowerAmount, owner, "free-attack"), 0)), or(greaterOrEqual(collectionIndex(Hand, card), 0), greaterOrEqual(collectionIndex(InPlay, card), 0))) then = { return = { value = 0 } } }
-
-    return = { value = field(card, Card.Cost) }
+    return = { value = foldEvent(ModifyCardCost, field(card, Card.Cost), owner, card) }
   }
 }
 procedure RemoveFromCombatPiles {

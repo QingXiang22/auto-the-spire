@@ -321,8 +321,9 @@ template AbsorbAttackDamageEffect {
 call = { procedure = RandomHandCard args = { owner = owner attacksOnly = true } into = chosen }
 if = { condition = not(isNone(chosen)) then = {
   let = { into = damage value = pureCall(CardBaseDamage, owner, chosen, none) }
-  let = { into = damage value = maximum(0, add(damage, pureCall(PlayerPowerAmount, owner, "damage-additive"))) }
-  if = { condition = greater(pureCall(PlayerPowerAmount, owner, "damage-dealt-multiplier"), 0) then = { let = { into = damage value = divide(multiply(damage, 3), 4) } } }
+  let = { into = damage value = multiply(maximum(0, foldEvent(ModifyAttackAdditive, damage, owner, chosen, none)), 10000)
+                }
+                let = { into = damage value = divide(foldEvent(ModifyAttackMultiplier, damage, owner, chosen, none), 10000) }
   set = { target = card field = Card.DamageGrowth value = add(field(card, Card.DamageGrowth), damage) }
   call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } }
 } }

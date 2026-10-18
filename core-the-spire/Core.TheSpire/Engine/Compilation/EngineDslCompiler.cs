@@ -296,12 +296,16 @@ public static partial class EngineDslCompiler
             if (node.Kind == "subscription")
             {
                 var reaction = Symbol<ProcedureSymbol>(p.Required("reaction"));
-                var context = new ProgramContext(this, _procedures.Values.FirstOrDefault(builder => ReferenceEquals(builder.Symbol, reaction))
-                    ?? new ProcedureBuilder(_package, reaction));
+                var evaluation = new ProcedureBuilder(_package, new ProcedureSymbol("$subscription"));
+                foreach (var parameter in reaction.Parameters) evaluation.Param(parameter.Name, parameter.Type);
+                var context = new ProgramContext(this, evaluation);
                 _package.Subscribe(Symbol<EventSymbol>(p.Required("event")), reaction,
                     Integer32(p.Get("priority"), 0),
                     p.Get("recheck") is { } recheck ? context.Expression(recheck) : null,
-                    p.Get("scope_payload") is { } scope ? Text(scope) : null);
+                    p.Get("scope_payload") is { } scope ? Text(scope) : null,
+                    p.Get("instances") is { } instances ? context.Query(instances) : null,
+                    p.Get("instance_order") is { } order ? context.Expression(order) : null,
+                    evaluation.LocalFields.Count);
             }
             else if (node.Kind == "projection")
             {
@@ -336,7 +340,7 @@ public static partial class EngineDslCompiler
             "relation" => ["target", "many", "public"],
             "procedure" => ["parameters", "locals", "pure", "result", "body"],
             "action" => ["parameters", "locals", "role", "requires", "candidates", "choices", "body"],
-            "subscription" => ["event", "reaction", "priority", "recheck", "scope_payload"],
+            "subscription" => ["event", "reaction", "priority", "recheck", "scope_payload", "instances", "instance_order"],
             "projection" => ["role", "types", "collections", "relations", "reveals"],
             "compute" => ["backend", "source_path", "source_hash", "entry", "inputs", "outputs", "limits"],
             _ => [],

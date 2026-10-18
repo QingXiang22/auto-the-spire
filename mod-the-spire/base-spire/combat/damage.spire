@@ -56,23 +56,12 @@ procedure LosePlayerHp {
 # The shared chain retains four decimal places and floors once before block absorption.
 procedure DamageEnemyPowered {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
-  locals = { blocked = Int scaled = Int strength = Int vulnerable = Int before = Int }
+  locals = { blocked = Int scaled = Int before = Int }
   body = {
     let = { into = before value = field(target, Enemy.Hp) }
     let = {
-      into = strength
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-additive"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
-    }
-    let = {
-      into = vulnerable
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
-    }
-    let = { into = scaled value = multiply(maximum(0, add(add(amount, strength), pureCall(RelicStrikeDamageBonus, owner, card))), 10000) }
-    if = { condition = greater(pureCall(PlayerPowerAmount, owner, "damage-dealt-multiplier"), 0) then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } } }
-    if = {
-      condition = greater(vulnerable, 0)
-      then = { let = { into = scaled value = divide(multiply(scaled, add(150, pureCall(PlayerPowerAmount, owner, "vulnerable-bonus"))), 100) } }
-    }
+      into = scaled value = multiply(maximum(0, foldEvent(ModifyAttackAdditive, amount, owner, card, target)), 10000) }
+    let = { into = scaled value = foldEvent(ModifyAttackMultiplier, scaled, owner, card, target) }
     let = { into = scaled value = divide(scaled, 10000) }
     let = { into = blocked value = minimum(field(target, Enemy.Block), scaled) }
     set = { target = target field = Enemy.Block value = subtract(field(target, Enemy.Block), blocked) }

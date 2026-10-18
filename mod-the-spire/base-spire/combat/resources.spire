@@ -3,14 +3,14 @@ dsl_version = "core/0.3"
 
 procedure GetMaxEnergy {
   pure = true parameters = { owner = Ref(Player) } result = Int
-  body = { return = { value = add(field(owner, Player.MaxEnergy), pureCall(PlayerPowerAmount, owner, "max-energy")) } }
+  body = { return = { value = foldEvent(ModifyMaxEnergy, field(owner, Player.MaxEnergy), owner) } }
 }
 
 # CombatManager.ResetPlayerEnergy: resetting/refilling is not PlayerCmd.GainEnergy.
 procedure ResetTurnEnergy {
   parameters = { owner = Ref(Player) }
   body = {
-    if = { condition = and(greater(field(owner, Player.TurnNumber), 1), pureCall(RelicRetainsEnergy, owner)) then = {
+    if = { condition = not(foldEvent(ShouldResetEnergy, true, owner)) then = {
       set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), pureCall(GetMaxEnergy, owner))) }
     } else = { set = { target = owner field = Player.Energy value = minimum(999, pureCall(GetMaxEnergy, owner)) } } }
   }
@@ -36,7 +36,7 @@ procedure GainGold {
 procedure GainEnergy {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
   body = {
-    if = { condition = equal(pureCall(PlayerPowerAmount, owner, "no-energy-gain"), 0) then = { set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), amount)) } } }
+    if = { condition = foldEvent(ShouldGainEnergy, true, owner) then = { set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), amount)) } } }
   }
 }
 

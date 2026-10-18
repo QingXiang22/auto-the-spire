@@ -36,11 +36,9 @@ procedure ResolveCardEffects {
   body = {
     let = { into = previousRecord value = field(owner, Player.CurrentPlay) }
     let = { into = previousCard value = field(owner, Player.CurrentCard) }
-    let = { into = count value = 1 }
-    if = { condition = and(equal(field(card, Card.Kind), "attack"), greater(pureCall(PlayerPowerAmount, owner, "repeat-next-attack"), 0)) then = {
-      let = { into = count value = 2 }
-      call = { procedure = ReducePower args = { owner = owner kind = "repeat-next-attack" } }
-    } }
+    let = { into = count value = foldEvent(ModifyPlayCount, 1, owner, card) }
+    emit = {
+      event = BeforeCardPlaySequence payload = { owner = owner card = card } }
     set = { target = owner field = Player.PlayDepth value = add(field(owner, Player.PlayDepth), 1) }
     repeat = { count = count body = {
       if = { condition = greater(field(owner, Player.Hp), 0) then = {
@@ -78,7 +76,7 @@ procedure ResolvePaidCard {
     set = { target = card field = Card.PaidX value = 0 }
     if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = field(owner, Player.Energy) } } }
     set = { target = owner field = Player.Energy value = subtract(field(owner, Player.Energy), price) }
-    set = { target = card field = Card.ForceExhaust value = and(equal(field(card, Card.Kind), "skill"), greater(pureCall(PlayerPowerAmount, owner, "corruption"), 0)) }
+    set = { target = card field = Card.ForceExhaust value = foldEvent(ShouldExhaustSkill, false, owner, card) }
     removeFromCollection = { collection = Hand item = card }
     addToCollection = { collection = InPlay item = card }
     call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target } }
@@ -95,7 +93,7 @@ procedure AutoPlayCard {
       if = { condition = field(card, Card.Targeted) then = { call = { procedure = RandomLivingEnemy into = target } } }
       set = { target = card field = Card.PaidX value = 0 }
       if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = field(owner, Player.Energy) } } }
-      set = { target = card field = Card.ForceExhaust value = or(forceExhaust, and(equal(field(card, Card.Kind), "skill"), greater(pureCall(PlayerPowerAmount, owner, "corruption"), 0))) }
+      set = { target = card field = Card.ForceExhaust value = or(forceExhaust, foldEvent(ShouldExhaustSkill, false, owner, card)) }
       call = { procedure = RemoveFromCombatPiles args = { card = card } }
       addToCollection = { collection = InPlay item = card }
       call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target } }

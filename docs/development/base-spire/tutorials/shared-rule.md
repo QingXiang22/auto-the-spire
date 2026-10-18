@@ -15,9 +15,9 @@ Copy-Item -LiteralPath 'docs/examples/base-dsl/after-draw-block.spire' -Destinat
 打开该文件，沿下面四处查看：
 
 1. `parameters` 限定内容可配置的 definition 和 amount。
-2. `WhenDrawn` 明确接收 `AfterCardDrawn` 的 owner 和 card，不依赖隐藏的当前上下文。
-3. `forEach collection(Relics)` 只对同一 Holder、未熔化、匹配 definition 的持有实例调用 `GainUnpoweredBlock`。
-4. `subscription OnDraw` 将事件接到过程；`action Obtain` 复用 `ObtainRelic`，不自行创建半成品实例。
+2. `WhenDrawn` 接收 `AfterCardDrawn` 的 owner、card，以及订阅绑定的 listener 遗物实例，不依赖全局当前上下文。
+3. `subscription OnDraw` 的 instances 筛选同一 Holder、未熔化、匹配 definition 的实例，instance_order 按库存顺序派发；执行前会再次检查有效性。
+4. `WhenDrawn` 只响应当前实例并调用 `GainUnpoweredBlock`，不再扫描库存；`action Obtain` 复用 `ObtainRelic`。
 
 `GainUnpoweredBlock`、遗物实例和抽牌事件均来自现有 DSL。这个教学模板的获得动作沿用开发场景的单 Player 守卫，不能当作多人通用获得 API。
 
