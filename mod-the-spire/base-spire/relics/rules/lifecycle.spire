@@ -10,25 +10,32 @@ procedure ObtainRelic {
       type = Relic scope = entityScope(owner) into = instance collection = Relics
       fields = { Owner = field(owner, Player.Owner) Holder = owner DefinitionId = definition }
     }
-    emit = { event = RelicObtained payload = { owner = owner relic = instance } }
+    emit = {
+      event = RelicObtained payload = { owner = owner relic = instance }
+    }
   }
 }
+
 procedure HasActiveRelic {
-  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) } result = Bool
-  body = { return = { value = exists(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), definition))))) } }
+  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) }
+  result = Bool
+  body = {
+    return = {
+      value = exists(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), definition)))))
+    }
+  }
 }
+
 procedure HasOwnedRelic {
-  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) } result = Bool
-  body = { return = { value = exists(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), equal(field(r, Relic.DefinitionId), definition)))) } }
+  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) }
+  result = Bool
+  body = {
+    return = {
+      value = exists(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), equal(field(r, Relic.DefinitionId), definition))))
+    }
+  }
 }
-procedure RelicFirstTurnDrawBonus {
-  pure = true parameters = { owner = Ref(Player) } result = Int
-  body = { return = { value = aggregate(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), not(field(r, Relic.IsMelted)))), Sum, r, field(r, Relic.FirstTurnDrawBonus)) } }
-}
-procedure RelicRestHealBonus {
-  pure = true parameters = { owner = Ref(Player) } result = Int
-  body = { return = { value = aggregate(where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), not(field(r, Relic.IsMelted)))), Sum, r, field(r, Relic.RestHealBonus)) } }
-}
+
 procedure RemoveRelic {
   parameters = { instance = Ref(Relic) }
   body = {
@@ -36,16 +43,27 @@ procedure RemoveRelic {
       condition = greaterOrEqual(collectionIndex(Relics, instance), 0)
       then = {
         removeFromCollection = { collection = Relics item = instance }
-        emit = { event = RelicRemoved payload = { owner = field(instance, Relic.Holder) relic = instance } }
+        emit = {
+          event = RelicRemoved payload = { owner = field(instance, Relic.Holder) relic = instance }
+        }
         destroy = { target = instance }
       }
-      else = { fail = { message = "Relic is not owned" } }
+      else = {
+        fail = { message = "Relic is not owned" }
+      }
     }
   }
 }
+
 action RemoveOwnedRelic {
   role = player
   parameters = { instance = Ref(Relic) }
   candidates = { parameter = instance query = collection(Relics) }
-  body = { call = { procedure = RemoveRelic args = { instance = instance } } }
+  body = {
+    call = {
+      procedure = RemoveRelic args = {
+        instance = instance
+      }
+    }
+  }
 }

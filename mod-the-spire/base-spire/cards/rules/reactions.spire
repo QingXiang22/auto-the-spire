@@ -1,0 +1,63 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure CardAttackDiscounts {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = {
+      condition = equal(field(card, Card.Kind), "attack") then = {
+        forEach = {
+          query = where(type(Card), c, and(and(field(c, Card.DiscountsOnAttack), equal(field(c, Card.Owner), field(owner, Player.Owner))), less(collectionIndex(RunDeck, c), 0))) item = c body = {
+            set = { target = c field = Card.Cost value = maximum(0, subtract(field(c, Card.Cost), 1)) }
+            set = { target = c field = Card.TurnCostDiscount value = add(field(c, Card.TurnCostDiscount), 1) }
+            set = { target = c field = Card.CostResetAtTurnEnd value = true }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription CardAttackDiscounts {
+  event = BeforeCardPlayed reaction = CardAttackDiscounts
+}
+
+procedure CompleteCardDeferredEffects {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  locals = { amount = Int }
+  body = {
+    let = { into = amount value = field(field(owner, Player.CurrentPlay), CardPlayRecord.RuptureGain) }
+    if = {
+      condition = greater(amount, 0) then = {
+        call = {
+          procedure = ApplyPlayerPower args = {
+            owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = amount
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription CompleteCardDeferredEffects {
+  event = AfterCardPlayed reaction = CompleteCardDeferredEffects priority = -100
+}
+
+procedure AutoExhaustedCards {
+  parameters = { owner = Ref(Player) }
+  body = {
+    forEach = {
+      query = where(collection(ExhaustPile), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), field(c, Card.AutoFromExhaustAtTurnEnd))) item = c body = {
+        call = {
+          procedure = AutoPlayCard args = {
+            owner = owner card = c forceExhaust = false
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription AutoExhaustedCards {
+  event = BeforeTurnEndEffects reaction = AutoExhaustedCards priority = 5
+}

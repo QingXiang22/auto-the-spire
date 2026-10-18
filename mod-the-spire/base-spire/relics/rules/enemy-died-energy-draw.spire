@@ -1,9 +1,9 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-
 # Relic reaction to a monster dying: gain energy and draw cards. GremlinHorn.cs grants EnergyVar(1) plus
 # CardsVar(1) from its monster-death hook. The development EnemyDied event carries only the dead enemy, so the
 # owner is the development player.
+
 template EnemyDiedEnergyDrawRelic {
   parameters = {
     definition = { type = String(length = 64) }
@@ -12,29 +12,35 @@ template EnemyDiedEnergyDrawRelic {
   }
   body = {
     procedure WhenEnemyDied {
-      parameters = { target = Ref(Enemy) }
+      parameters = { target = Ref(Enemy) listener = Ref(Relic) }
       locals = { owner = Binding }
       body = {
-        let = { into = owner value = first(type(Player)) }
-        forEach = {
-          query = collection(Relics) item = relic
-          body = {
-            if = {
-              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
-              then = {
-                call = { procedure = GainEnergy args = { owner = owner amount = arg(energy) } }
-                call = { procedure = DrawCards args = { owner = owner count = arg(cards) } }
-              }
-            }
+        let = { into = owner value = field(listener, Relic.Holder) }
+        call = {
+          procedure = GainEnergy args = {
+            owner = owner amount = arg(energy)
+          }
+        }
+        call = {
+          procedure = DrawCards args = {
+            owner = owner count = arg(cards)
           }
         }
       }
     }
-    subscription OnEnemyDied { event = EnemyDied reaction = WhenEnemyDied }
+    subscription OnEnemyDied {
+      event = EnemyDied reaction = WhenEnemyDied instances = where(collection(Relics), candidate, and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition)))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
     action Obtain {
       role = player
       requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
-      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+      body = {
+        call = {
+          procedure = ObtainRelic args = {
+            owner = first(type(Player)) definition = arg(definition)
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,110 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+event ModifyAttackAdditive {
+  payload = { value = Int owner = Ref(Player) card = Binding target = Binding }
+}
+
+event ModifyAttackMultiplier {
+  payload = { value = Int owner = Ref(Player) card = Binding target = Binding }
+}
+
+event ModifyEnemyAttackAdditive {
+  payload = { value = Int owner = Ref(Player) attacker = Ref(Enemy) }
+}
+
+event ModifyEnemyAttackMultiplier {
+  payload = { value = Int owner = Ref(Player) attacker = Ref(Enemy) }
+}
+
+event ModifyIncomingAttackMultiplier {
+  payload = { value = Int owner = Ref(Player) attacker = Ref(Enemy) }
+}
+
+event ModifyBlockAdditive {
+  payload = { value = Int owner = Ref(Player) }
+}
+
+event ModifyBlockMultiplier {
+  payload = { value = Int owner = Ref(Player) }
+}
+
+event ModifyCardCost {
+  payload = { value = Int owner = Ref(Player) card = Ref(Card) }
+}
+
+event ModifyMaxEnergy {
+  payload = { value = Int owner = Ref(Player) }
+}
+
+event ModifyTurnDraw {
+  payload = { value = Int owner = Ref(Player) }
+}
+
+event ModifyRestHeal {
+  payload = { value = Int owner = Ref(Player) }
+}
+
+event ShouldResetEnergy {
+  payload = { value = Bool owner = Ref(Player) }
+}
+
+event ShouldClearBlock {
+  payload = { value = Bool owner = Ref(Player) }
+}
+
+event ShouldGainEnergy {
+  payload = { value = Bool owner = Ref(Player) }
+}
+
+event ShouldDraw {
+  payload = { value = Bool owner = Ref(Player) }
+}
+
+event ShouldExhaustSkill {
+  payload = { value = Bool owner = Ref(Player) card = Ref(Card) }
+}
+
+event ModifyPlayCount {
+  payload = { value = Int owner = Ref(Player) card = Ref(Card) }
+}
+
+event BeforeTurnResources {
+  payload = { owner = Ref(Player) }
+}
+
+event BeforeTurnEndEffects {
+  payload = { owner = Ref(Player) }
+}
+
+event AfterPlayerSideEnd {
+  payload = { owner = Ref(Player) }
+}
+
+event BeforeCardDrawnReactions {
+  payload = { owner = Ref(Player) card = Ref(Card) }
+}
+
+event BeforePlayerAttacked {
+  payload = { owner = Ref(Player) attacker = Ref(Enemy) }
+}
+
+event BeforeCardPlaySequence {
+  payload = { owner = Ref(Player) card = Ref(Card) }
+}
+
+event EnemyPowerApplied {
+  payload = { target = Ref(Enemy) power = Ref(Power) amount = Int }
+}
+
+event ModifyPowerStacks {
+  payload = { value = Int power = Ref(Power) amount = Int }
+}
+
+event PlayerPowerApplied {
+  payload = { owner = Ref(Player) power = Ref(Power) amount = Int }
+}
+
+event AfterPlayerTurnFinished {
+  payload = { owner = Ref(Player) }
+}

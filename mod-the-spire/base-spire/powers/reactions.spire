@@ -1,0 +1,552 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure FeelNoPain {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = GainUnpoweredBlock args = {
+        owner = owner amount = maximum(0, field(listener, Power.Stacks))
+      }
+    }
+  }
+}
+
+subscription FeelNoPain {
+  event = CardExhausted reaction = FeelNoPain instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "block-on-exhaust"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure DarkEmbrace {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = DrawCards args = {
+        owner = owner count = maximum(0, field(listener, Power.Stacks))
+      }
+    }
+  }
+}
+
+subscription DarkEmbrace {
+  event = CardExhausted reaction = DarkEmbrace instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "draw-on-exhaust"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Rupture {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(not(field(owner, Player.EnemyPhase)), greater(field(listener, Power.Stacks), 0)) then = {
+        if = {
+          condition = isNone(field(owner, Player.CurrentPlay)) then = {
+            call = {
+              procedure = ApplyPlayerPower args = {
+                owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = field(listener, Power.Stacks)
+              }
+            }
+          }
+          else = {
+            set = {
+              target = field(owner, Player.CurrentPlay) field = CardPlayRecord.RuptureGain value = add(field(field(owner, Player.CurrentPlay), CardPlayRecord.RuptureGain), field(listener, Power.Stacks))
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Rupture {
+  event = PlayerHpLost reaction = Rupture instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "hp-loss-strength"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Inferno {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(not(field(owner, Player.EnemyPhase)), greater(field(listener, Power.Stacks), 0)) then = {
+        forEach = {
+          query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
+            call = {
+              procedure = DamageEnemy args = {
+                target = e amount = field(listener, Power.Stacks)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Inferno {
+  event = PlayerHpLost reaction = Inferno instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "hp-loss-area-damage"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Juggernaut {
+  parameters = { owner = Ref(Player) amount = Int listener = Ref(Power) }
+  locals = { target = Binding }
+  body = {
+    if = {
+      condition = and(greater(amount, 0), greater(field(listener, Power.Stacks), 0)) then = {
+        call = { procedure = RandomLivingEnemy into = target }
+        if = {
+          condition = not(isNone(target)) then = {
+            call = {
+              procedure = DamageEnemy args = {
+                target = target amount = field(listener, Power.Stacks)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Juggernaut {
+  event = PlayerBlockGained reaction = Juggernaut instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "block-random-damage"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure FreeAttackConsumed {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = equal(field(card, Card.Kind), "attack") then = {
+        call = {
+          procedure = ConsumePower args = {
+            power = listener
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription FreeAttackConsumed {
+  event = BeforeCardPlayed reaction = FreeAttackConsumed instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "free-attack"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure RepeatConsumed {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = equal(field(card, Card.Kind), "attack") then = {
+        call = {
+          procedure = ConsumePower args = {
+            power = listener
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription RepeatConsumed {
+  event = BeforeCardPlaySequence reaction = RepeatConsumed instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "repeat-next-attack"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Rage {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(equal(field(card, Card.Kind), "attack"), greater(field(listener, Power.Stacks), 0)) then = {
+        call = {
+          procedure = GainUnpoweredBlock args = {
+            owner = owner amount = field(listener, Power.Stacks)
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Rage {
+  event = AfterCardPlayed reaction = Rage instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "attack-block"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure SetupStrike {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  locals = { copy = Binding }
+  body = {
+    if = {
+      condition = equal(field(card, Card.Kind), "attack") then = {
+        set = { target = listener field = Power.Counter value = add(field(listener, Power.Counter), 1) }
+        if = {
+          condition = equal(field(listener, Power.Counter), 3) then = {
+            repeat = {
+              count = field(listener, Power.Stacks) body = {
+                call = {
+                  procedure = CloneCombatCard args = {
+                    owner = owner source = card
+                  }
+                  into = copy
+                }
+                call = {
+                  procedure = AddGeneratedToHand args = {
+                    card = copy
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription SetupStrike {
+  event = AfterCardPlayed reaction = SetupStrike instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "third-attack-copy"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Aggression {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  locals = { chosen = Binding }
+  body = {
+    repeat = {
+      count = field(listener, Power.Stacks) body = {
+        if = {
+          condition = exists(where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack"))) then = {
+            samplePick = {
+              stream = "base-spire:run:combat_card_selection" candidates = where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack")) into = chosen
+            }
+            removeFromCollection = { collection = DiscardPile item = chosen }
+            call = {
+              procedure = AddGeneratedToHand args = {
+                card = chosen
+              }
+            }
+            if = {
+              condition = and(field(chosen, Card.CanUpgrade), not(field(chosen, Card.Upgraded))) then = {
+                call = {
+                  procedure = UpgradeCard args = {
+                    card = chosen
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Aggression {
+  event = BeforeTurnResources reaction = Aggression instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "upgrade-discard-attacks"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure DemonForm {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = greater(field(listener, Power.Stacks), 0) then = {
+        call = {
+          procedure = ApplyPlayerPower args = {
+            owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = field(listener, Power.Stacks)
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription DemonForm {
+  event = AfterSideTurnStarted reaction = DemonForm instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "turn-strength"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure PlatingDecay {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = greater(field(owner, Player.TurnNumber), 1) then = {
+        call = {
+          procedure = ConsumePower args = {
+            power = listener
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription PlatingDecay {
+  event = AfterSideTurnStarted reaction = PlatingDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "plating"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure CrimsonMantle {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = LosePlayerHp args = {
+        owner = owner amount = field(listener, Power.SelfDamage)
+      }
+    }
+    call = {
+      procedure = GainUnpoweredBlock args = {
+        owner = owner amount = field(listener, Power.Stacks)
+      }
+    }
+  }
+}
+
+subscription CrimsonMantle {
+  event = AfterPlayerTurnStart reaction = CrimsonMantle instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "turn-self-damage-block"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure InfernoTurn {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = LosePlayerHp args = {
+        owner = owner amount = field(listener, Power.SelfDamage)
+      }
+    }
+  }
+}
+
+subscription InfernoTurn {
+  event = AfterPlayerTurnStart reaction = InfernoTurn instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "hp-loss-area-damage"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure PlatingBlock {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = GainUnpoweredBlock args = {
+        owner = owner amount = maximum(0, field(listener, Power.Stacks))
+      }
+    }
+  }
+}
+
+subscription PlatingBlock {
+  event = BeforeTurnEndEffects reaction = PlatingBlock instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "plating"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Stampede {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  locals = { chosen = Binding }
+  body = {
+    repeat = {
+      count = field(listener, Power.Stacks) body = {
+        if = {
+          condition = and(field(owner, Player.CombatActive), exists(where(collection(Hand), c, equal(field(c, Card.Kind), "attack")))) then = {
+            samplePick = {
+              stream = "base-spire:run:shuffle" candidates = where(collection(Hand), c, equal(field(c, Card.Kind), "attack")) into = chosen
+            }
+            call = {
+              procedure = AutoPlayCard args = {
+                owner = owner card = chosen forceExhaust = false
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Stampede {
+  event = BeforeTurnEndEffects reaction = Stampede instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "end-turn-auto-attack"))) instance_order = collectionIndex(Powers, listener) priority = 10
+}
+
+procedure RemoveStrength {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = ApplyPlayerPower args = {
+        owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = subtract(0, field(listener, Power.Stacks))
+      }
+    }
+    destroy = { target = listener }
+  }
+}
+
+subscription RemoveStrength {
+  event = AfterPlayerSideEnd reaction = RemoveStrength instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "remove-strength"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure SetupReset {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    set = { target = listener field = Power.Counter value = 0 }
+  }
+}
+
+subscription SetupReset {
+  event = AfterPlayerSideEnd reaction = SetupReset instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "third-attack-copy"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure RestoreStrength {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = not(isNone(field(listener, Power.HolderEnemy))) then = {
+        call = {
+          procedure = ApplyEnemyPower args = {
+            target = field(listener, Power.HolderEnemy) definition = "base-spire:strength-power" kind = "damage-additive" stacks = field(listener, Power.Stacks)
+          }
+        }
+        destroy = { target = listener }
+      }
+    }
+  }
+}
+
+subscription RestoreStrength {
+  event = AfterEnemyTurnEnded reaction = RestoreStrength instances = where(collection(Powers), p, equal(field(p, Power.Kind), "restore-strength")) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure ColossusDecay {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = ConsumePower args = {
+        power = listener
+      }
+    }
+  }
+}
+
+subscription ColossusDecay {
+  event = AfterEnemyTurnEnded reaction = ColossusDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "halve-vulnerable-attacks"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Hellraiser {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(field(card, Card.StrikeTag), greater(field(listener, Power.Stacks), 0)) then = {
+        call = {
+          procedure = AutoPlayCard args = {
+            owner = owner card = card forceExhaust = false
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Hellraiser {
+  event = BeforeCardDrawnReactions reaction = Hellraiser instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "autoplay-drawn-strikes"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Thorns {
+  parameters = { owner = Ref(Player) attacker = Ref(Enemy) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = greater(field(listener, Power.Stacks), 0) then = {
+        call = {
+          procedure = DamageEnemy args = {
+            target = attacker amount = field(listener, Power.Stacks)
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Thorns {
+  event = BeforePlayerAttacked reaction = Thorns instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), "after-attacked-damage"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure Vicious {
+  parameters = { target = Ref(Enemy) power = Ref(Power) amount = Int listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(equal(field(power, Power.Kind), "damage-taken-multiplier"), greater(amount, 0)) then = {
+        call = {
+          procedure = DrawCards args = {
+            owner = field(listener, Power.HolderPlayer) count = maximum(0, field(listener, Power.Stacks))
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Vicious {
+  event = EnemyPowerApplied reaction = Vicious instances = where(collection(Powers), p, equal(field(p, Power.Kind), "vulnerable-draw")) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure ConsumePower {
+  parameters = { power = Ref(Power) }
+  body = {
+    set = { target = power field = Power.Stacks value = subtract(field(power, Power.Stacks), 1) }
+    if = {
+      condition = lessOrEqual(field(power, Power.Stacks), 0) then = {
+        destroy = { target = power }
+      }
+    }
+  }
+}
+
+procedure ExpireBeforeEnemy {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    destroy = { target = listener }
+  }
+}
+
+subscription ExpireBeforeEnemy {
+  event = AfterPlayerSideEnd reaction = ExpireBeforeEnemy instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), field(p, Power.ExpiresBeforeEnemy))) instance_order = collectionIndex(Powers, listener) priority = 10
+}
+
+procedure ConfigureAppliedPower {
+  parameters = { owner = Ref(Player) power = Ref(Power) amount = Int listener = Ref(Power) }
+  body = {
+    if = {
+      condition = or(equal(field(listener, Power.Kind), "turn-self-damage-block"), equal(field(listener, Power.Kind), "hp-loss-area-damage")) then = {
+        set = { target = listener field = Power.SelfDamage value = add(field(listener, Power.SelfDamage), 1) }
+      }
+    }
+    if = {
+      condition = equal(field(listener, Power.Kind), "third-attack-copy") then = {
+        set = { target = listener field = Power.Counter value = pureCall(AttacksPlayedThisTurn, owner) }
+      }
+    }
+    if = {
+      condition = or(or(equal(field(listener, Power.Kind), "no-draw"), equal(field(listener, Power.Kind), "no-energy-gain")), or(equal(field(listener, Power.Kind), "attack-block"), equal(field(listener, Power.Kind), "repeat-next-attack"))) then = {
+        set = { target = listener field = Power.ExpiresBeforeEnemy value = true }
+      }
+    }
+  }
+}
+
+subscription ConfigureAppliedPower {
+  event = PlayerPowerApplied reaction = ConfigureAppliedPower instances = where(collection(Powers), p, equal(p, power))
+}
+
+procedure TickDebuff {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = field(listener, Power.SkipTick) then = {
+        set = { target = listener field = Power.SkipTick value = false }
+      }
+      else = {
+        call = {
+          procedure = ConsumePower args = {
+            power = listener
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription TickDebuff {
+  event = AfterEnemyTurnEnded reaction = TickDebuff instances = where(collection(Powers), p, or(equal(field(p, Power.Kind), "damage-taken-multiplier"), or(equal(field(p, Power.Kind), "damage-dealt-multiplier"), equal(field(p, Power.Kind), "block-dealt-multiplier")))) instance_order = collectionIndex(Powers, listener) priority = -10
+}
+
+procedure ExpireTurnPower {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    destroy = { target = listener }
+  }
+}
+
+subscription ExpireTurnPower {
+  event = AfterPlayerTurnFinished reaction = ExpireTurnPower instances = where(collection(Powers), p, field(p, Power.ExpiresAtTurnEnd)) instance_order = collectionIndex(Powers, listener)
+}

@@ -7,7 +7,7 @@
 | 卡牌本身、普通／升级、颜色、状态／诅咒／衍生 | cards/schema、rules 与角色／来源组下单内容文件 | 费用、目标、牌区、共享效果；[卡牌指南](../how-to/cards-and-combat.md) |
 | 卡牌附魔／负面附着／动态关键词 | cards/rules 的实例扩展与独立内容配置 | 复制／升级／变换／跨战写回，不混进永久定义 |
 | 战斗资源、格挡、伤害、Fatal、死亡 | combat/schema、block、damage、turns；跨域最小类型才放 shared | 修改者、来源、余效与结算边界 |
-| Power | powers/schema、rules、shared／角色配置 | 持有者、施加／叠加／衰减／移除；[物品与 Power 指南](../how-to/powers-relics-potions.md) |
+| Power | 当前实体在combat/schema.spire、获得在combat/powers.spire；通知在powers/reactions.spire、修正在powers/modifiers.spire | 持有者、施加／叠加／衰减／移除；与遗物共用实例订阅；[物品与 Power 指南](../how-to/powers-relics-potions.md) |
 | 遗物 | relics/schema、rules、shared／角色配置 | 获得／移除／替换／熔化、计数与生命周期 |
 | 药水 | potions/schema、rules 与单内容配置 | 完整源池、动态容量、使用／自动触发、消费与清理 |
 | 敌人 | enemies/schema、rules、来源幕／shared 配置 | HP、意图、行动状态、死亡、召唤；[敌人指南](../how-to/enemies-and-encounters.md) |

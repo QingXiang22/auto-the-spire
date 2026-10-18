@@ -125,6 +125,20 @@ public sealed partial class Session
 
             case AggregateExpr aggregate:
                 return Aggregate(call, aggregate);
+            case FoldEventExpr fold:
+            {
+                var eventType = Resolve<EventResolution>(call, fold.EventRef).Event;
+                var arguments = fold.Arguments.Select(arg => Eval(call, arg)).ToArray();
+                foreach (var activation in SnapshotListeners(eventType, arguments, call.Scope))
+                {
+                    if (!PrepareListener(activation, arguments, call.Scope, out var bound, out var scope)) continue;
+                    var result = InvokePure(call, activation.Definition.Reaction, bound, scope);
+                    if (result.Kind != arguments[0].Kind)
+                        throw Faults.TypeError($"foldEvent listener '{activation.Definition.Reaction.QualifiedId}' returned {result.Kind} instead of {arguments[0].Kind}");
+                    arguments[0] = result;
+                }
+                return arguments[0];
+            }
 
             case StringConcatExpr concat:
                 return Value.Of(string.Concat(concat.Parts.Select(part => Eval(call, part) switch
@@ -140,10 +154,10 @@ public sealed partial class Session
         }
     }
 
-    private Value InvokePure(CallActivation caller, ProcedureDefinition procedure, Value[] arguments)
+    private Value InvokePure(CallActivation caller, ProcedureDefinition procedure, Value[] arguments, ScopeId? scope = null)
     {
         var depth = _stack.Count;
-        PushCall(procedure, arguments, caller.Scope, -1, null);
+        PushCall(procedure, arguments, scope ?? caller.Scope, -1, null);
         var activation = (CallActivation)_stack[^1];
         DrainTo(depth);
         if (_stack.Count > depth)

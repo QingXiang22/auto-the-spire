@@ -431,6 +431,12 @@ public sealed class SubscriptionSymbol : RuleAuthorObject
     /// <summary>Payload field bound to the reaction's scope. Null means the emitting frame scope is inherited.</summary>
     private string? _scopePayloadField;
     public string? ScopePayloadField { get => _scopePayloadField; set { EnsureMutable(); _scopePayloadField = value; } }
+    private Query? _instances;
+    public Query? Instances { get => _instances; set { EnsureMutable(); _instances = value; } }
+    private Expr? _instanceOrder;
+    public Expr? InstanceOrder { get => _instanceOrder; set { EnsureMutable(); _instanceOrder = value; } }
+    private int? _evaluationLocalCount;
+    public int? EvaluationLocalCount { get => _evaluationLocalCount; set { EnsureMutable(); _evaluationLocalCount = value; } }
 
     public override string ToString() => $"{EventType.Name} -> {Reaction.Name} (priority {Priority})";
 }
@@ -808,7 +814,21 @@ public sealed record SubscriptionDefinition(
     int ScopePayloadIndex,
     int PackageIndex,
     int RefBase,
-    int DeclarationOrder);
+    int DeclarationOrder,
+    Query? Instances = null,
+    Expr? InstanceOrder = null,
+    int? EvaluationLocalCount = null)
+{
+    internal ProcedureDefinition EvaluationProcedure()
+    {
+        var locals = EvaluationLocalCount is { } count
+            ? Enumerable.Range(0, count).Select(i => new FieldDefinition("$subscription" + i,
+                FieldTypeSchema.Binding(), i, -1, -1, -1, -1, true, Value.None,
+                FieldVisibility.Hidden, FieldLifetime.ExecutionOnly)).ToArray()
+            : Reaction.Locals;
+        return Reaction with { PackageIndex = PackageIndex, RefBase = RefBase, Locals = locals, IsPure = true };
+    }
+}
 
 public sealed record ComputeAssetDefinition(
     int Id,

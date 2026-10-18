@@ -16,48 +16,58 @@ public sealed partial class Session
                 $"event '{eventType.QualifiedId}' would exceed the configured event depth {Budget.MaxEventDepth}");
         }
 
-        var listeners = RuleSet.Subscriptions
-            .Where(subscription => subscription.EventType.Id == eventType.Id)
-            .OrderBy(subscription => subscription.Priority)
-            .ThenBy(subscription => subscription.DeclarationOrder)
-            .ToArray();
+        var listeners = SnapshotListeners(eventType, payload, inheritedScope);
         _stack.Add(new DispatchActivation(eventType, listeners, payload, inheritedScope));
         if (Debug is not null)
             Trace(SessionDebugKind.EventEmit, eventType.QualifiedId,
                 $"scope={inheritedScope}; listeners={listeners.Length}; payload=[{string.Join(',', payload)}]");
     }
 
-    private void StartListener(DispatchActivation dispatch, SubscriptionDefinition listener)
+    private ListenerActivation[] SnapshotListeners(EventDefinition eventType, Value[] payload, ScopeId scope)
     {
-        var reaction = listener.Reaction;
-        var scope = dispatch.InheritedScope;
+        var result = new List<ListenerActivation>();
+        foreach (var definition in RuleSet.Subscriptions.Where(s => s.EventType.Id == eventType.Id))
+        {
+            CountInstruction();
+            if (definition.Instances is null) { result.Add(new(definition, Value.None, 0)); continue; }
+            var args = payload.Append(Value.None).ToArray();
+            var context = new CallActivation(definition.EvaluationProcedure(), scope, -1, null, args);
+            foreach (var instance in EvaluateQuery(context, definition.Instances).ToArray())
+            {
+                CountInstruction();
+                context.Slots[payload.Length] = Value.OfRef(instance);
+                var order = definition.InstanceOrder is null ? 0 : Eval(context, definition.InstanceOrder).AsInt();
+                result.Add(new(definition, Value.OfRef(instance), order));
+            }
+        }
+        return result.OrderBy(s => s.Definition.Priority).ThenBy(s => s.Order)
+            .ThenBy(s => s.Definition.DeclarationOrder).ToArray();
+    }
+
+    private bool PrepareListener(ListenerActivation activation, Value[] payload, ScopeId inheritedScope, out Value[] arguments, out ScopeId scope)
+    {
+        var listener = activation.Definition;
+        scope = inheritedScope;
+        arguments = new Value[listener.Reaction.Parameters.Count];
+        for (var i = 0; i < arguments.Length; i++) arguments[i] = i < payload.Length ? payload[i] : activation.Instance;
+        if (listener.Instances is not null && !State.Exists(activation.Instance.AsRef())) return false;
         if (listener.ScopePayloadIndex >= 0)
         {
-            var bound = dispatch.Payload[listener.ScopePayloadIndex];
-            if (bound.Kind != ValueKind.Ref) return;
-            if (!State.Exists(bound.AsRef())) return;
+            var bound = payload[listener.ScopePayloadIndex];
+            if (bound.Kind != ValueKind.Ref || !State.Exists(bound.AsRef())) return false;
             scope = State.ScopeOf(bound.AsRef());
         }
-        else if (!State.ScopeExists(scope))
-        {
-            return;
-        }
+        if (!State.ScopeExists(scope)) return false;
+        var context = new CallActivation(listener.EvaluationProcedure(), scope, -1, null, arguments);
+        if (listener.Instances is not null && !EvaluateQuery(context, listener.Instances).Contains(activation.Instance.AsRef())) return false;
+        return listener.Recheck is null || Eval(context, listener.Recheck).AsBool();
+    }
 
-        var arguments = new Value[reaction.Parameters.Count];
-        for (var index = 0; index < arguments.Length; index++)
-        {
-            arguments[index] = index < dispatch.Payload.Length
-                ? dispatch.Payload[index]
-                : reaction.Parameters[index].DefaultValue;
-        }
-
-        if (listener.Recheck is not null)
-        {
-            // Resolve predicate references in its author package, then run the reaction in its own package.
-            var context = reaction with { PackageIndex = listener.PackageIndex, RefBase = listener.RefBase };
-            var probe = new CallActivation(context, scope, -1, null, arguments);
-            if (!Eval(probe, listener.Recheck).AsBool()) return;
-        }
+    private void StartListener(DispatchActivation dispatch, ListenerActivation activation)
+    {
+        var listener = activation.Definition;
+        var reaction = listener.Reaction;
+        if (!PrepareListener(activation, dispatch.Payload, dispatch.InheritedScope, out var arguments, out var scope)) return;
 
         PushCall(reaction, arguments, scope, -1, null);
         if (Debug is not null)

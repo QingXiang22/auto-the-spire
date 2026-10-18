@@ -100,6 +100,7 @@ public static partial class EngineDslCompiler
                         _compiler.Symbol<CollectionSymbol>(args.Required("collection", 0)), E("item", 1)),
                     "concat" => _scope.Concat(args.Rest(0).Select(Expression).ToArray()),
                     "pureCall" => PureCall(call, args),
+                    "foldEvent" => new FoldEventExpr(_compiler._package.Ref(_compiler.Symbol<EventSymbol>(args.Required("event", 0))), args.Rest(1).Select(Expression).ToArray()),
                     "aggregate" => Aggregate(args),
                     _ => throw Error(call.Location, $"Unknown expression '{call.Name}'."),
                 };

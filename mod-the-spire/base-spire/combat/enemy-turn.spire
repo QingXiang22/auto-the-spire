@@ -7,39 +7,14 @@ dsl_version = "core/0.3"
 # from Powers held by the defending player. Block absorbs first and the player HP floor stays zero.
 procedure DamagePlayerPowered {
   parameters = { attacker = Ref(Enemy) owner = Ref(Player) amount = Int(min = 0, max = 999) }
-  locals = { blocked = Int scaled = Int strength = Int weak = Int vulnerable = Int thorns = Int }
+  locals = { blocked = Int scaled = Int }
   body = {
-    let = {
-      into = strength
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-additive"), equal(field(power, Power.HolderEnemy), attacker))), Sum, power, field(power, Power.Stacks))
+    emit = {
+      event = BeforePlayerAttacked payload = { owner = owner attacker = attacker }
     }
-    let = {
-      into = weak
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-dealt-multiplier"), equal(field(power, Power.HolderEnemy), attacker))), Sum, power, field(power, Power.Stacks))
-    }
-    let = {
-      into = vulnerable
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
-    }
-    let = {
-      into = thorns
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "after-attacked-damage"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
-    }
-    # Source ThornsPower.BeforeDamageReceived: an unpowered retaliation against the attacker before the hit lands.
-    if = {
-      condition = greater(thorns, 0)
-      then = { call = { procedure = DamageEnemy args = { target = attacker amount = thorns } } }
-    }
-    let = { into = scaled value = multiply(maximum(0, add(amount, strength)), 10000) }
-    if = {
-      condition = greater(weak, 0)
-      then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } }
-    }
-    if = {
-      condition = greater(vulnerable, 0)
-      then = { let = { into = scaled value = divide(multiply(scaled, 3), 2) } }
-    }
-    if = { condition = and(greater(pureCall(PlayerPowerAmount, owner, "halve-vulnerable-attacks"), 0), greater(pureCall(EnemyPowerAmount, attacker, "damage-taken-multiplier"), 0)) then = { let = { into = scaled value = divide(scaled, 2) } } }
+    let = { into = scaled value = multiply(maximum(0, foldEvent(ModifyEnemyAttackAdditive, amount, owner, attacker)), 10000) }
+    let = { into = scaled value = foldEvent(ModifyEnemyAttackMultiplier, scaled, owner, attacker) }
+    let = { into = scaled value = foldEvent(ModifyIncomingAttackMultiplier, scaled, owner, attacker) }
     let = { into = scaled value = divide(scaled, 10000) }
     let = { into = blocked value = minimum(field(owner, Player.Block), scaled) }
     set = { target = owner field = Player.Block value = subtract(field(owner, Player.Block), blocked) }
