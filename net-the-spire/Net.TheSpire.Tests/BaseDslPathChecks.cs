@@ -40,6 +40,8 @@ internal static class BaseDslPathChecks
         yield return ("CR real stdio skips card rewards and closes without acquiring a card", () => StdioTrajectory("card-reward-skip"));
         yield return ("RL real stdio pickup relics publish permanent HP and gold gains", () => StdioTrajectory("relic-pickups"));
         yield return ("RL real stdio third attack triggers OrnamentalFan exactly once", () => StdioTrajectory("relic-counter"));
+        yield return ("RM real stdio StrikeDummy and FakeStrikeDummy add damage before block", () => StdioTrajectory("relic-strike"));
+        yield return ("RM real stdio IceCream carries energy and ArtOfWar rewards the previous empty turn", () => StdioTrajectory("relic-energy"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -151,6 +153,26 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "relic-strike" => [
+                    ("StrikeDummy.Obtain", "0", false, "0", "0", false, ""),
+                    ("FakeStrikeDummy.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("Strike.AddToHand", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "2", "1", true, "30")],
+                "relic-energy" => [
+                    ("IceCream.Obtain", "0", false, "0", "0", false, ""),
+                    ("ArtOfWar.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("EndDevelopmentTurn", "0", true, "3", "1", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "7", "2", true, "40"),
+                    ("Strike.AddToHand", "0", true, "7", "2", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "6", "2", true, "34"),
+                    ("EndDevelopmentTurn", "0", true, "6", "2", false, "34"),
+                    ("BeginDevelopmentTurn", "0", true, "9", "3", true, "34")],
                 "relic-pickups" => [
                     ("Pear.Obtain", "0", false, "0", "0", false, ""),
                     ("Mango.Obtain", "0", false, "0", "0", false, ""),

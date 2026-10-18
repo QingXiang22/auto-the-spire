@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/StrikeDummy.cs; SHA256 retained in relics/catalog.json.
+use StrikeDummy { template = CombatModifierRelic args = { definition = "base-spire:strike-dummy" strikeDamage = 3 } }

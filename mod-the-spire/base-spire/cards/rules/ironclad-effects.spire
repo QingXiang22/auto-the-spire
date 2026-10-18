@@ -61,7 +61,7 @@ let = { into = count value = arg(hits) }
 if = { condition = field(card, Card.Upgraded) then = { let = { into = count value = arg(upgradedHits) } } }
 if = { condition = equal(arg(hitScale), "paid-x") then = { let = { into = count value = field(card, Card.PaidX) } } }
 if = { condition = equal(arg(hitScale), "hp-loss") then = { let = { into = count value = add(1, field(owner, Player.HpLossCount)) } } }
-repeat = { count = count body = { call = { procedure = DamageEnemyPowered args = { target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
+repeat = { count = count body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
 
       } } }
     }
@@ -79,7 +79,7 @@ template ComputedAllAttackEffect {
 let = { into = count value = 1 }
 if = { condition = arg(xCost) then = { let = { into = count value = field(card, Card.PaidX) } } }
 if = { condition = greaterOrEqual(count(collection(ExhaustPile)), arg(minExhaust)) then = {
-  repeat = { count = count body = { forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = { call = { procedure = DamageEnemyPowered args = { target = e amount = pureCall(CardBaseDamage, owner, card, e) } } } } } }
+  repeat = { count = count body = { forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = e amount = pureCall(CardBaseDamage, owner, card, e) } } } } } }
 } }
       } } }
     }
@@ -97,7 +97,7 @@ template RandomHitsEffect {
 if = { condition = field(card, Card.Upgraded) then = { let = { into = count value = arg(upgradedHits) } } else = { let = { into = count value = arg(hits) } } }
 repeat = { count = count body = {
   call = { procedure = RandomLivingEnemy into = target }
-  if = { condition = not(isNone(target)) then = { call = { procedure = DamageEnemyPowered args = { target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
+  if = { condition = not(isNone(target)) then = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
 } }
       } } }
     }
@@ -129,7 +129,7 @@ template ExhaustHandAttackEffect {
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = hits value = count(collection(Hand)) }
 forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
-repeat = { count = hits body = { call = { procedure = DamageEnemyPowered args = { target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
+repeat = { count = hits body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
 
       } } }
     }
@@ -163,7 +163,7 @@ template FeedEffect {
       locals = { hp = Int amount = Int }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = hp value = field(target, Enemy.Hp) }
-call = { procedure = DamageEnemyPowered args = { target = target amount = pureCall(CardBaseDamage, owner, card, target) } }
+call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } }
 if = { condition = and(greater(hp, 0), equal(field(target, Enemy.Hp), 0)) then = {
 if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
   call = { procedure = IncreaseMaxHp args = { owner = owner amount = amount } }

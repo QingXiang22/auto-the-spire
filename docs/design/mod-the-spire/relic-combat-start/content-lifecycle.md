@@ -1,6 +1,6 @@
 # 遗物内容接续与生命周期
 
-关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01；当前状态见[主清单](../../../review/tofix/README.md#当前交付)。本契约覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；已有定义、行为见证、独立比较与正常Run分开结算。
+关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02；当前状态见[主清单](../../../review/tofix/README.md#当前交付)。本契约覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；已有定义、行为见证、独立比较与正常Run分开结算。
 
 ## 内容与源依据
 
@@ -18,8 +18,16 @@ Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Ku
 
 CentennialPuzzle消费已支持的PlayerHpLost站点，要求存活且战斗活跃，先写本实例已用再DrawCards；来源为当前未挡伤害／牌源掉血，未知伤害修正与死亡防止未额外承诺。移除／熔化使后续触发和动态手牌／营火修正失效；每次获得新实例从默认计数开始。
 
+## 伤害与能量修正（DSL-RELIC-CONTENT-02）
+
+StrikeDummy／FakeStrikeDummy对有Strike标签的牌源加成攻击分别加3／1，先与力量相加，再应用虚弱和易伤，最后取整和扣格挡；非Strike及无加成伤害不参与。DamageEnemyPowered改为显式传owner、card、target和amount，所有真实调用方迁移，不以全局CurrentCard猜来源；当前单人范围owner同时是攻击者和牌拥有者，召唤物／跨拥有者攻击另行恢复。动态汇总未熔化库存上的StrikeDamageBonus，不改变牌本身的基础伤害。重复与多段每段均参与，嵌套自动出牌以各自card为准。
+
+IceCream在Relic.RetainEnergy配置保留资格，首回合仍重置为GetMaxEnergy，后续回合将当前余能加GetMaxEnergy，按现有资源域上限999封顶。能量重置与补足不走GainEnergy，不能被no-energy-gain阻止；重置完成发AfterEnergyReset，再打开回合门并发AfterSideTurnStarted。移除／熔化后下一重置即时失效。
+
+ArtOfWar每实例保存AttackPlayedThisTurn和AttackPlayedLastTurn，AfterCardPlayed只记录本拥有者实际打完的Attack，自动／重复同样记录；在玩家侧末AfterTurnEnded转交上一回合标志，AfterEnergyReset在TurnNumber>1且上回合未攻击时GainEnergy(1)，随后清理两标志。首回合不奖励；重置站点早于起手抽牌／回合开始自动攻击。战斗开始与CombatEnded清理，手动终止后下一战也重新清理。移除销毁状态，熔化不参与触发与奖励。判别须覆盖连续空攻击回合、攻击后下一回合失奖而再下一回合恢复、技能嵌套自动攻击与回合末自动攻击、奖励受no-energy-gain抑制、与IceCream叠加及不同持有者隔离。
+
 ## 判别与边界
 
-逐件真实获得／触发的数值见证；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证一组新增拾取与一种计数消费者，覆盖门槛要求所有新增definition有实际场景。
+逐件真实获得／触发的数值见证；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证拾取、计数、Strike伤害和跨回合能量消费者，覆盖门槛要求所有新增definition有实际场景。
 
 玩法全部由base DSL执行，不恢复参考玩法。内容组实际加载触及原256个模板实例上限，必要通用维护将总量增至8192；32层深度、递归与4096个展开成员限制保持，内核回归验证300个真实实例。独立原版两侧未执行保持未验证。完整获得修正、随机遗物来源／资格、升级替换、死亡防止、其他遗物与正常Run仍待恢复，不注册空效果补数量。

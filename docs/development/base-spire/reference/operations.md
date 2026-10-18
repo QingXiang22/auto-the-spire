@@ -45,6 +45,9 @@
 | --- | --- | --- |
 | HasOwnedRelic／HasActiveRelic | owner: Ref(Player)、definition: String(64)，pure→Bool | 前者检查库存身份，包含熔化实例；后者还要求未熔化。防止重复拾取使用Owned，动态效果使用Active |
 | RelicFirstTurnDrawBonus／RelicRestHealBonus | owner: Ref(Player)，pure→Int | 汇总本持有者未熔化实例的修正元数据；移除立即失效，查询不写状态 |
+| RelicStrikeDamageBonus／RelicRetainsEnergy | 前者owner: Ref(Player)、card: Ref(Card)，pure→Int；后者owner，pure→Bool | 按当前有效库存和Strike标签查询；牌源显式传入，移除／熔化即时失效 |
+| CombatModifierRelic模板 | definition、strikeDamage: Int(0..999)=0、retainEnergy: Bool=false | RelicObtained配置实例修正；供StrikeDummy／FakeStrikeDummy／IceCream复用 |
+| NoAttackTurnEnergyRelic模板 | definition、energy: Int(0..999) | AfterCardPlayed记录本拥有者攻击，AfterTurnEnded转交；AfterEnergyReset在非首回合且上回合无攻击时GainEnergy，再清理标志；ArtOfWar配置1 |
 | ObtainMaxHpRelic模板 | definition、amount、fullHeal=false | 通过RelicObtained触发IncreaseMaxHp，必要时HealToMaximum；不在动作尾部重复奖励。供Strawberry／Pear／Mango／LeesWaffle复用 |
 | CardCountRelic模板 | definition、kind、every、perTurn，以及energy／block／damage／power／powerKind／stacks | AfterCardPlayed按实际次数推进独立Relic.Counter；perTurn在战斗开场和玩家回合早期重置，否则跨战保留；重复／自动各计一次，多段攻击只计一次 |
 | GainGold | owner: Ref(Player)、amount: Int(0..99999) | 共享已迁移金币获得，沿用99999上限；尚无完整获得金币修正参与者，金币奖励与OldCoin共用 |
@@ -69,7 +72,8 @@
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
 | GainEnergy | owner=Ref(Player)、amount=Int(0..999) | Energy 增加并可超过 MaxEnergy（上限 999），尊重 NoEnergyGain；回合重置使用 GetMaxEnergy |
 | [DamageEnemy](../../../../mod-the-spire/base-spire/combat/damage.spire) | target=Ref(Enemy)、amount=Int(0..999999) | 先扣 `min(Block, amount)` 格挡，剩余从 Hp 扣除且不低于 0；无加成伤害，修正参与者不参与（遗物与 Power 用它） |
-| DamageEnemyPowered | target: Ref(Enemy)、amount: Int(0..999999) | 攻击者 Strength 加性之后应用 Weak，再应用目标 Vulnerable 和攻击者 Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam 等计算伤害也走此链 |
+| DamageEnemyPowered | owner: Ref(Player)、card: Ref(Card)、target: Ref(Enemy)、amount: Int(0..999999) | 以显式拥有者和牌源计算Strength及Strike遗物加成，再应用Weak、目标Vulnerable和攻击者Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam等计算伤害也走此链 |
+| ResetTurnEnergy／AfterEnergyReset | owner: Ref(Player)，过程／事件 | 首回合重置；后续有有效保留能量资格时将最大能量加到余能，上限999，否则重置。该操作绕过禁止获得能量，随后发事件；额外奖励仍调用GainEnergy |
 | DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的未阻挡伤害发 PlayerHpLost 并检查开发失败；不改变 MaxHp |
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗活跃、卡在手牌、能量足够；扣能量、Hand→InPlay、emit CardPlayed、结算后按 Exhausts 进入 ExhaustPile（并发 CardExhausted）或 DiscardPile |
@@ -106,7 +110,7 @@
 | Draw／DiscardHand | 无参数，role=player | Draw 使用 first(type(Player))；DiscardHand 将全局 Hand 移到 DiscardPile；均是开发动作 |
 | [BeginDevelopmentCombat](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | action 与同名过程：inactive 时先置 Block=0、TurnNumber=0、Energy=0、TurnOpen=false、CombatActive=true，再 emit BeforeCombatStart；已活跃时报 "Development combat is already active"。不是正常战斗初始化 |
 | EndDevelopmentCombat | owner=Ref(Player) | action 与同名过程：只在活跃时允许，置 CombatActive=false，不发开始事件也不发胜利；不活跃时报 "Development combat is not active" |
-| BeginDevelopmentTurn | owner=Ref(Player) | action 与同名过程：活跃且回合门关闭时允许；自增 TurnNumber，非首回合按 retain-block 资格清格挡并发 AfterBlockCleared，执行早期 Power 反应，重置能量、打开回合门，再发 AfterSideTurnStarted；AutoDrawPerTurn 大于 0 时先 DrawDevelopmentTurnHand，最后发 AfterPlayerTurnStart 与 Late |
+| BeginDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门关闭时允许；自增TurnNumber并发BeforePlayerTurnStart，非首回合按retain-block资格清格挡并发AfterBlockCleared，执行早期Power反应，ResetTurnEnergy并发AfterEnergyReset，再打开回合门和发AfterSideTurnStarted；AutoDrawPerTurn大于0时DrawDevelopmentTurnHand，最后发AfterPlayerTurnStart与Late |
 | DrawDevelopmentTurnHand | owner=Ref(Player) | 以 AutoDrawPerTurn 为基础，首回合逐张把 Innate 移到顶部，抽取数至少为 Innate 数且至多十张；调用 DrawCards，继承满手／禁止抽牌和真实抽牌事件。不实现附魔底部排序或完整手牌修正 |
 | EndDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门打开时允许；先回合末自动出牌，再BeforePlayerTurnEnd；仍活跃才弃牌、发AfterTurnEnded并处理能力及敌方阶段。末杀后停止后续阶段，不逐张派发弃牌钩子 |
 | [AddDevelopmentTarget](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | owner=Ref(Player) | 过程与公开 action：在 owner 作用域创建一个 Hp／MaxHp 为 40、DefinitionId 为 `base-spire:development-target` 的 Enemy；不是遭遇或原版怪物生成 |

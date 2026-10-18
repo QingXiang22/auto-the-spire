@@ -55,23 +55,23 @@ procedure LosePlayerHp {
 # Powered card attack: additive Strength, attacker Weak, then target Vulnerable plus Cruelty.
 # The shared chain retains four decimal places and floors once before block absorption.
 procedure DamageEnemyPowered {
-  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
   locals = { blocked = Int scaled = Int strength = Int vulnerable = Int before = Int }
   body = {
     let = { into = before value = field(target, Enemy.Hp) }
     let = {
       into = strength
-      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-additive"), equal(field(power, Power.HolderPlayer), first(type(Player))))), Sum, power, field(power, Power.Stacks))
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-additive"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
     }
     let = {
       into = vulnerable
       value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
     }
-    let = { into = scaled value = multiply(maximum(0, add(amount, strength)), 10000) }
-    if = { condition = greater(pureCall(PlayerPowerAmount, first(type(Player)), "damage-dealt-multiplier"), 0) then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } } }
+    let = { into = scaled value = multiply(maximum(0, add(add(amount, strength), pureCall(RelicStrikeDamageBonus, owner, card))), 10000) }
+    if = { condition = greater(pureCall(PlayerPowerAmount, owner, "damage-dealt-multiplier"), 0) then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } } }
     if = {
       condition = greater(vulnerable, 0)
-      then = { let = { into = scaled value = divide(multiply(scaled, add(150, pureCall(PlayerPowerAmount, first(type(Player)), "vulnerable-bonus"))), 100) } }
+      then = { let = { into = scaled value = divide(multiply(scaled, add(150, pureCall(PlayerPowerAmount, owner, "vulnerable-bonus"))), 100) } }
     }
     let = { into = scaled value = divide(scaled, 10000) }
     let = { into = blocked value = minimum(field(target, Enemy.Block), scaled) }
@@ -81,7 +81,7 @@ procedure DamageEnemyPowered {
       condition = and(greater(before, 0), equal(field(target, Enemy.Hp), 0))
       then = {
         emit = { event = EnemyDied payload = { target = target } }
-        call = { procedure = CheckCombatVictory args = { owner = first(type(Player)) } }
+        call = { procedure = CheckCombatVictory args = { owner = owner } }
       }
     }
   }

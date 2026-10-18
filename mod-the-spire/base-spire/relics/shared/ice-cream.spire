@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/IceCream.cs; SHA256 retained in relics/catalog.json.
+use IceCream { template = CombatModifierRelic args = { definition = "base-spire:ice-cream" retainEnergy = true } }
