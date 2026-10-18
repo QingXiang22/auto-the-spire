@@ -34,6 +34,7 @@ internal static class BaseDslPathChecks
         yield return ("IC real stdio mandatory hand choice resumes once after HP loss", () => StdioTrajectory("hand-exhaust"));
         yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
         yield return ("IC real stdio Rupture reacts after the damaging card", () => StdioTrajectory("rupture"));
+        yield return ("IS real stdio initializes the source Ironclad deck and draws five combat copies", () => StdioTrajectory("ironclad-start"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -118,6 +119,11 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "ironclad-start" => [
+                    ("Ironclad.Initialize", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40")],
                 "smith-select" or "smith-cancel" => [
                     ("Strike.Obtain", "0", false, "0", "0", false, ""), ("Strike.Obtain", "0", false, "0", "0", false, ""),
                     ("EnterDevelopmentRestSite", "0", false, "0", "0", false, ""), ("ForgeAtDevelopmentCampfire", "0", false, "0", "0", false, "")],
@@ -257,6 +263,24 @@ internal static class BaseDslPathChecks
                 var card = snapshot.Entities.Single(e => e.ContentId == "base-spire:whirlwind");
                 Check.Equal("3", ((WireString)card.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value, "captured X public");
                 Check.True(((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.IsX", StringComparison.Ordinal)).Value!).Value, "X marker public");
+            }
+            if (mode == "ironclad-start")
+            {
+                Check.Equal("base-spire:ironclad", Public(snapshot, "Player.CharacterId"), "actual character identity");
+                Check.Equal("80", Public(snapshot, "Player.Hp"), "source HP");
+                Check.Equal("99", Public(snapshot, "Player.Gold"), "source gold");
+                var deck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members;
+                var hand = snapshot.LegalActions.Where(a => a.ActionType is "net:action:base-spire:PlayCardFromHand" or "net:action:base-spire:PlayAttackFromHand")
+                    .Select(a => ((WireString)a.Fields.Single().Value!).Value).Distinct().ToArray();
+                Check.Equal(10, deck.Count, "ten permanent cards"); Check.Equal(5, hand.Length, "five automatic opening cards have actual play candidates");
+                Check.False(hand.Any(id => deck.Any(permanent => permanent.EntityRef == id)), "combat copies have separate public handles");
+                var definitions = deck.Select(member => snapshot.Entities.Single(e => e.InstanceId == member.EntityRef).ContentId).ToArray();
+                Check.Equal(5, definitions.Count(id => id == "base-spire:strike-ironclad"), "source strikes");
+                Check.Equal(4, definitions.Count(id => id == "base-spire:defend-ironclad"), "source defends");
+                Check.Equal(1, definitions.Count(id => id == "base-spire:bash"), "source bash");
+                Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:burning-blood"), "real starter relic");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":Ironclad.Initialize", StringComparison.Ordinal)), "initialization cannot repeat");
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Card.PermanentSource", StringComparison.Ordinal), "source references remain hidden");
             }
             if (mode == "rupture") { Check.Equal("78", Public(snapshot, "Player.Hp"), "real HP loss"); Check.Equal("2", Public(snapshot, "Player.PlaySequence"), "real play count"); }
             if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");

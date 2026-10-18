@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source BurningBlood.AfterCombatVictory: six healing for its living owner on victory.
+use BurningBlood { template = CombatEndHealRelic args = { definition = "base-spire:burning-blood" heal = 6 threshold = 100 } }

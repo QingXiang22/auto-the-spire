@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Characters/Ironclad.cs: starting resources, ordered ten-card deck and starter relic.
+use Ironclad { template = IroncladCharacterDefinition args = {
+  definition = "base-spire:ironclad" hp = 80 gold = 99 strikes = 5 defends = 4 relic = "base-spire:burning-blood"
+} }

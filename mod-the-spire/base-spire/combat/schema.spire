@@ -30,6 +30,8 @@ entity Player {
     PendingForge = { type = Bool default = false }
     # Opt-in permanent deck for this development scope. A normal character setup is not migrated.
     UsesRunDeck = { type = Bool default = false }
+    CharacterId = { type = String(length = 64) default = "none" }
+    AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
     PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     PlaySequence = { type = Int default = 0 }
     CurrentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }

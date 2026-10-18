@@ -1,6 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-version = "0.5.0-dsl.27"
+version = "0.5.0-dsl.28"
 includes = [
   "combat/index.spire",
   "cards/index.spire",
@@ -10,6 +10,7 @@ includes = [
   "potions/index.spire",
   "rooms/index.spire",
   "rewards/index.spire",
+  "characters/index.spire",
   "run/setup-dev.spire",
   "public/projection.spire"
 ]

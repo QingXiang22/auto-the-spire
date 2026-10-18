@@ -73,3 +73,24 @@ action DiscardHand {
     }
   }
 }
+
+# Source CombatManager: first-turn Innate cards move to the top in traversal order,
+# then the ordinary draw path runs before AfterPlayerTurnStart. Enchant bottom-order is unsupported.
+procedure DrawDevelopmentTurnHand {
+  parameters = { owner = Ref(Player) }
+  locals = { amount = Int }
+  body = {
+    let = { into = amount value = field(owner, Player.AutoDrawPerTurn) }
+    if = { condition = equal(field(owner, Player.TurnNumber), 1) then = {
+      let = { into = amount value = minimum(10, maximum(amount, count(where(collection(DrawPile), card, field(card, Card.Innate))))) }
+      forEach = {
+        query = where(collection(DrawPile), card, field(card, Card.Innate)) item = innate
+        body = {
+          removeFromCollection = { collection = DrawPile item = innate }
+          addToCollection = { collection = DrawPile item = innate position = Start }
+        }
+      }
+    } }
+    call = { procedure = DrawCards args = { owner = owner count = amount } }
+  }
+}

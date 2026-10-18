@@ -105,7 +105,7 @@ template CombatEndHealRelic {
       parameters = { owner = Ref(Player) victory = Bool }
       body = {
         if = {
-          condition = and(victory, lessOrEqual(multiply(field(owner, Player.Hp), 100), multiply(field(owner, Player.MaxHp), arg(threshold))))
+          condition = and(victory, and(greater(field(owner, Player.Hp), 0), lessOrEqual(multiply(field(owner, Player.Hp), 100), multiply(field(owner, Player.MaxHp), arg(threshold)))))
           then = {
             forEach = {
               query = collection(Relics) item = relic

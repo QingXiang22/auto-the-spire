@@ -431,9 +431,9 @@
       "pools": [
         "IroncladRelicPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/BurningBlood.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "eligibility": "singleplayer-supported",
+      "evidence": "BurningBlood.AfterCombatVictory: heal 6 for living owner; actual development victory and inactive/defeat checks",
+      "definition": "relics/shared/burning-blood.spire"
     },
     {
       "id": "base-spire:burning-sticks",

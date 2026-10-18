@@ -1,0 +1,49 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# This explicit development transition accepts only the untouched mechanism setup.
+procedure CanInitializeCharacter {
+  pure = true
+  parameters = { owner = Ref(Player) }
+  result = Bool
+  body = {
+    if = { condition = or(not(equal(field(owner, Player.CharacterId), "none")), or(field(owner, Player.UsesRunDeck), field(owner, Player.CombatActive))) then = { return = { value = false } } }
+    if = { condition = or(not(equal(field(owner, Player.Room), "none")), or(not(equal(field(owner, Player.Hp), 80)), not(equal(field(owner, Player.MaxHp), 80)))) then = { return = { value = false } } }
+    if = { condition = or(not(equal(field(owner, Player.Gold), 99)), or(not(equal(field(owner, Player.TurnNumber), 0)), not(equal(field(owner, Player.Energy), 0)))) then = { return = { value = false } } }
+    if = { condition = or(not(equal(field(owner, Player.Block), 0)), or(field(owner, Player.DrawBlocked), field(owner, Player.TurnOpen))) then = { return = { value = false } } }
+    if = { condition = or(exists(type(Relic)), or(exists(type(Enemy)), or(exists(type(Power)), exists(type(Potion))))) then = { return = { value = false } } }
+    if = { condition = or(not(equal(count(type(Card)), 3)), not(equal(count(collection(DiscardPile)), 3))) then = { return = { value = false } } }
+    return = { value = not(exists(where(type(Card), card, not(equal(field(card, Card.DefinitionId), "base-spire:development-card"))))) }
+  }
+}
+
+template IroncladCharacterDefinition {
+  parameters = {
+    definition = { type = String(length = 64) } hp = { type = Int(min = 1, max = 999999) }
+    gold = { type = Int(min = 0, max = 99999) } strikes = { type = Int(min = 0, max = 99) }
+    defends = { type = Int(min = 0, max = 99) } relic = { type = String(length = 64) }
+  }
+  body = {
+    procedure Initialize {
+      parameters = { owner = Ref(Player) }
+      body = {
+        if = { condition = not(pureCall(CanInitializeCharacter, owner)) then = { fail = { message = "Character initialization requires the untouched development setup" } } }
+        forEach = { query = type(Card) item = placeholder body = { destroy = { target = placeholder } } }
+        set = { target = owner field = Player.Hp value = arg(hp) }
+        set = { target = owner field = Player.MaxHp value = arg(hp) }
+        set = { target = owner field = Player.Gold value = arg(gold) }
+        set = { target = owner field = Player.CharacterId value = arg(definition) }
+        set = { target = owner field = Player.AutoDrawPerTurn value = 5 }
+        repeat = { count = arg(strikes) body = { call = { procedure = Strike.Obtain args = { owner = owner } } } }
+        repeat = { count = arg(defends) body = { call = { procedure = Defend.Obtain args = { owner = owner } } } }
+        call = { procedure = Bash.Obtain args = { owner = owner } }
+        call = { procedure = ObtainRelic args = { owner = owner definition = arg(relic) } }
+      }
+    }
+    action Initialize {
+      role = player
+      requires = pureCall(CanInitializeCharacter, first(type(Player)))
+      body = { call = { procedure = Initialize args = { owner = first(type(Player)) } } }
+    }
+  }
+}
