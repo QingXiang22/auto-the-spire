@@ -42,6 +42,7 @@ internal static class BaseDslPathChecks
         yield return ("RL real stdio third attack triggers OrnamentalFan exactly once", () => StdioTrajectory("relic-counter"));
         yield return ("RM real stdio StrikeDummy and FakeStrikeDummy add damage before block", () => StdioTrajectory("relic-strike"));
         yield return ("RM real stdio IceCream carries energy and ArtOfWar rewards the previous empty turn", () => StdioTrajectory("relic-energy"));
+        yield return ("CX real stdio ChemicalX increases effect hits at three and zero energy without changing raw captured X", () => StdioTrajectory("chemical-x"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -153,6 +154,15 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "chemical-x" => [
+                    ("ChemicalX.Obtain", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("Whirlwind.AddToHand", "0", true, "3", "1", true, "40"),
+                    ("PlayCardFromHand", "0", true, "0", "1", true, "15"),
+                    ("Whirlwind.AddToHand", "0", true, "0", "1", true, "15"),
+                    ("PlayCardFromHand", "0", true, "0", "1", true, "5")],
                 "relic-strike" => [
                     ("StrikeDummy.Obtain", "0", false, "0", "0", false, ""),
                     ("FakeStrikeDummy.Obtain", "0", false, "0", "0", false, ""),
@@ -307,6 +317,13 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Active, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentCombat", StringComparison.Ordinal)), "end candidate follows real phase");
                 Check.Equal(step.Active && !step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentTurn", StringComparison.Ordinal)), "turn candidate follows the real turn gate");
                 Check.Equal(step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentTurn", StringComparison.Ordinal)), "end turn candidate follows the real turn gate");
+            }
+            if (mode == "chemical-x")
+            {
+                Check.True(snapshot.Entities.Any(e => e.ContentId == "base-spire:chemical-x"), "real ChemicalX is public");
+                var captured = snapshot.Entities.Where(e => e.ContentId == "base-spire:whirlwind")
+                    .Select(e => ((WireString)e.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value).Order().ToArray();
+                Check.True(captured.SequenceEqual(new[] { "0", "3" }), "public captures remain zero and three despite two additional hits each");
             }
             if (mode is "explicit-target" or "hand-exhaust")
             {

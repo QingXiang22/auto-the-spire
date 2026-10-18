@@ -16,6 +16,13 @@ procedure GetCardEnergyCost {
     return = { value = foldEvent(ModifyCardCost, field(card, Card.Cost), owner, card) }
   }
 }
+procedure ResolveEnergyXValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Int
+  body = {
+    if = { condition = not(field(card, Card.IsX)) then = { return = { value = 0 } } }
+    return = { value = foldEvent(ModifyXValue, field(card, Card.PaidX), owner, card) }
+  }
+}
 procedure RemoveFromCombatPiles {
   parameters = { card = Ref(Card) }
   body = {

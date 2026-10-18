@@ -27,6 +27,8 @@
 
 伤害与能量参与者使用CombatModifierRelic订阅ModifyAttackAdditive和ShouldResetEnergy，主流程通过foldEvent征询监听者。DamageEnemyPowered显式传owner和card；Strike加成在虚弱／易伤前参与。ResetTurnEnergy依ShouldResetEnergy结果重置或补最大能量，再发AfterEnergyReset。NoAttackTurnEnergyRelic监听出牌、回合末和能量重置，状态归ArtOfWar.State，获得时创建、移除时清理。完整顺序及签名见[统一监听契约](../../../design/mod-the-spire/effect-listeners.md)。
 
+效果 X 参与者复用 `XValueRelic` 模板，ChemicalX配置amount=2；通过ModifyXValue pure监听返回新值，不改Card.PaidX或Player.Energy。卡牌效果调用ResolveEnergyXValue，支付仍用GetCardEnergyCost。移除／熔化立即失效，重复效果重新查询监听；星星 X 尚未接入。完整边界见[效果X契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+
 主动／回合／战斗／受伤／死亡／抽牌等遗物分别消费相应共享机制。涉及长期最大生命、金币或永久牌组时，调用 Run 的权威操作，避免战斗副本与永久状态重复获利。验证一次获得／一次移除、实际触发、不持有／熔化负例、计数边界、两实例／持有者隔离和跨战重建。
 
 源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[遗物原合同](../../../review/tofix/README.md#env-t09)继续有效。

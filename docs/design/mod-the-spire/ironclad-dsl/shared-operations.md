@@ -27,6 +27,7 @@
 | 入口 | 参数与返回 | 语义与边界 |
 | --- | --- | --- |
 | `GetCardEnergyCost` | `owner, card` → Int，pure | 返回实际应付能量。X 首先取当前 Energy，不受普通免费效果影响；普通费用再处理 Corruption／FreeAttack 与实例费用。Card.Cost 是实例局部费用，不等于含 Power 修正的应付费用 |
+| `ResolveEnergyXValue` | `owner: Ref(Player), card: Ref(Card)` → Int，pure | 效果 X 入口：以 Card.PaidX 为初值经 ModifyXValue 统一监听修正，不写回捕获值或扣费。ChemicalX 每个有效持有实例+2；Whirlwind／Cascade 在每次效果开始取一次值，重复仍用原捕获值，Cascade 升级随后额外+1。前置为能量 X 牌；非 X 查询返回0、不派发修正。星星 X 未接入 |
 | `GetMaxEnergy` | `owner` → Int，pure | Player.MaxEnergy 基值加 Pyre 修正；重置能量与调用方共用此查询，获得 Pyre 不立即加能量 |
 | `PlayCard` | `owner, card` | 手牌中的非选敌牌；验证战斗／回合、持有与能量后付款一次 |
 | `PlayTargetedCard` | `owner, card` | 先验证可支付性，再发布存活敌人必须单选决策；答复后付款。对应公开 action 同名 |

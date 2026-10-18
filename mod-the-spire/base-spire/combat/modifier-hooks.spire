@@ -33,6 +33,10 @@ event ModifyCardCost {
   payload = { value = Int owner = Ref(Player) card = Ref(Card) }
 }
 
+event ModifyXValue {
+  payload = { value = Int owner = Ref(Player) card = Ref(Card) }
+}
+
 event ModifyMaxEnergy {
   payload = { value = Int owner = Ref(Player) }
 }

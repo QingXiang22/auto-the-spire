@@ -59,7 +59,7 @@ template ComputedAttackEffect {
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = count value = arg(hits) }
 if = { condition = field(card, Card.Upgraded) then = { let = { into = count value = arg(upgradedHits) } } }
-if = { condition = equal(arg(hitScale), "paid-x") then = { let = { into = count value = field(card, Card.PaidX) } } }
+if = { condition = equal(arg(hitScale), "paid-x") then = { let = { into = count value = pureCall(ResolveEnergyXValue, owner, card) } } }
 if = { condition = equal(arg(hitScale), "hp-loss") then = { let = { into = count value = add(1, field(owner, Player.HpLossCount)) } } }
 repeat = { count = count body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
 
@@ -77,7 +77,7 @@ template ComputedAllAttackEffect {
       locals = { count = Int }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = count value = 1 }
-if = { condition = arg(xCost) then = { let = { into = count value = field(card, Card.PaidX) } } }
+if = { condition = arg(xCost) then = { let = { into = count value = pureCall(ResolveEnergyXValue, owner, card) } } }
 if = { condition = greaterOrEqual(count(collection(ExhaustPile)), arg(minExhaust)) then = {
   repeat = { count = count body = { forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = e amount = pureCall(CardBaseDamage, owner, card, e) } } } } } }
 } }
@@ -362,7 +362,7 @@ template AutoplayTopEffect {
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = count value = 1 }
 if = { condition = arg(xCost) then = {
-  let = { into = count value = field(card, Card.PaidX) }
+  let = { into = count value = pureCall(ResolveEnergyXValue, owner, card) }
   if = { condition = field(card, Card.Upgraded) then = { let = { into = count value = add(count, 1) } } }
 } }
 repeat = { count = count body = {

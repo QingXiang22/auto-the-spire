@@ -551,9 +551,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "ChemicalX.ModifyXValue; CardModel.ResolveEnergyXValue and CardEnergyCost.GetAmountToSpend: owner effect X +2, capture/payment unchanged; shop rarity and SharedRelicPool retained; DSL behavior witnesses, independent parity and normal acquisition unverified",
+      "definition": "relics/shared/chemical-x.spire"
     },
     {
       "id": "base-spire:choices-paradox",

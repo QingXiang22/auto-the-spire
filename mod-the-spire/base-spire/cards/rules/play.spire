@@ -74,7 +74,7 @@ procedure ResolvePaidCard {
     if = { condition = not(isNone(target)) then = { if = { condition = lessOrEqual(field(target, Enemy.Hp), 0) then = { fail = { message = "Target is no longer alive" } } } } }
     let = { into = price value = pureCall(GetCardEnergyCost, owner, card) }
     set = { target = card field = Card.PaidX value = 0 }
-    if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = field(owner, Player.Energy) } } }
+    if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = price } } }
     set = { target = owner field = Player.Energy value = subtract(field(owner, Player.Energy), price) }
     set = { target = card field = Card.ForceExhaust value = foldEvent(ShouldExhaustSkill, false, owner, card) }
     removeFromCollection = { collection = Hand item = card }

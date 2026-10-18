@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.6.0-dsl.33",
+  "static_build_id": "base-spire-dsl-0.6.0-dsl.34",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -46,7 +46,8 @@
         "base-spire:strike-dummy",
         "base-spire:fake-strike-dummy",
         "base-spire:ice-cream",
-        "base-spire:art-of-war"
+        "base-spire:art-of-war",
+        "base-spire:chemical-x"
       ]
     },
     "base-spire:Enemy": {

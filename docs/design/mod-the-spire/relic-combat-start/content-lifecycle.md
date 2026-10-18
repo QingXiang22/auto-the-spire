@@ -1,6 +1,6 @@
 # 遗物内容接续与生命周期
 
-关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02；当前状态见[主清单](../../../review/tofix/README.md#当前交付)。本契约覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；已有定义、行为见证、独立比较与正常Run分开结算。
+关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02／03；当前状态见[主清单](../../../review/tofix/README.md#当前交付)。本契约覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；已有定义、行为见证、独立比较与正常Run分开结算。
 
 ## 内容与源依据
 
@@ -27,6 +27,16 @@ StrikeDummy／FakeStrikeDummy对有Strike标签的牌源加成攻击分别加3�
 IceCream监听ShouldResetEnergy决定保留资格，首回合仍重置为GetMaxEnergy，后续回合将当前余能加GetMaxEnergy，按现有资源域上限999封顶。能量重置与补足不走GainEnergy，不能被no-energy-gain阻止；重置完成发AfterEnergyReset，再打开回合门并发AfterSideTurnStarted。移除／熔化后下一重置即时失效。
 
 ArtOfWar.State按遗物实例保存ThisTurn和LastTurn，获得时创建、移除时销毁，AfterCardPlayed只记录本拥有者实际打完的Attack，自动／重复同样记录；在玩家侧末AfterTurnEnded转交上一回合标志，AfterEnergyReset在TurnNumber>1且上回合未攻击时GainEnergy(1)，随后清理两标志。首回合不奖励；重置站点早于起手抽牌／回合开始自动攻击。战斗开始与CombatEnded清理，手动终止后下一战也重新清理。移除销毁状态，熔化不参与触发与奖励。判别须覆盖连续空攻击回合、攻击后下一回合失奖而再下一回合恢复、技能嵌套自动攻击与回合末自动攻击、奖励受no-energy-gain抑制、与IceCream叠加及不同持有者隔离。
+
+## 效果 X 修正（DSL-RELIC-CONTENT-03）
+
+源依据为 ChemicalX.ModifyXValue、CardModel.ResolveEnergyXValue／SpendEnergy、CardEnergyCost.GetAmountToSpend 与 CardCmd.AutoPlay。ChemicalX 对本持有者的效果 X 加2，不修改实际支付、捕获值或能量。当前仅恢复已实现的能量 X 牌，星星 X 仍待对应角色机制。
+
+`Card.PaidX` 保留支付前捕获的能量 X：手动打出为本次实际应付的全部剩余能量；自动打出为开始自动出牌时的当前能量且不扣费。普通免费标志、Corruption／FreeAttack 不令手动 X 牌免费。新增 pure `ResolveEnergyXValue(owner,card)`，对 X 牌以 PaidX 为初值调用 `foldEvent(ModifyXValue, value, owner, card)`。它不写回 PaidX、不消费随机、不缓存修正结果。已有 X 效果在各次真实效果开始时读取一次结果，再运行该次效果；重复出牌复用原捕获 X，重新征询当前有效监听，不把上次加值累积到下一次。该入口前置为能量 X 牌；非 X 查询返回0、不发布修正，这一点与源内部错误调用抛异常不同，当前 pure DSL 不允许终止会话的 fail；生产非 X 效果不调用此入口。
+
+`XValueRelic` 模板以有效持有实例监听 ModifyXValue，按库存顺序返回 value+amount；具体 ChemicalX 只配置 amount=2。过滤 Holder／IsMelted 并校验牌拥有者；移除／熔化即时失效，不在出牌主流程判断遗物 ID。Whirlwind 每次效果取修正 X 作为全体攻击段数；Cascade 取修正 X 后，升级额外+1，再依次自动打出牌堆顶部。嵌套自动打出使用子牌自己的捕获值和拥有者，不借父牌上下文。
+
+验收需区分0／正能量、普通／升级、与无遗物基线及非 X 牌的差别；每次重复只支付一次且不重复叠加修正；Havoc／Cascade 的嵌套自动 X 捕获正确；移除／熔化／不同持有者及同定义两实例隔离；X 查询多次调用不改变状态、版本或随机游标；在首次效果后的移除使后续重复使用新监听集合。覆盖报告必须包含实际 ChemicalX 获得和触发，公开真实stdio执行3能量Whirlwind产生5段攻击，保留PaidX=3且能量降为0。
 
 ## 判别与边界
 
