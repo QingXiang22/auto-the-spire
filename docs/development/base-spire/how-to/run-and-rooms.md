@@ -20,6 +20,8 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 ## 实现各类房间
 
+开发包的营火已可消费永久牌组：先在房间外通过 `Strike.Obtain` 等已迁移定义入口建立 `RunDeck`，再 `EnterDevelopmentRestSite`。`ForgeAtDevelopmentCampfire` 会发布可取消的单张选择；公开 `net.answer_decision` 中带实例字段的是选牌，空字段候选是取消。取消后仍可休息或重新锻造；成功后用 `LeaveDevelopmentRoom` 离场，升级进入后续战斗副本。没有永久可升级牌时不提供锻造，不能用手牌代替；同次访问不能靠重复进入重置选项。旧原稿 `ForgeCardInHand` 已移除。营火遗物修正、多个升级目标和正常地图入口仍未恢复；见[契约](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
+
 | 房型／内容 | 先定义的局部行为 | 必须区分的结果 |
 | --- | --- | --- |
 | 战斗房 | 从永久牌组构建战斗副本，实例映射、源随机与战斗上下文 | 真实胜负后收尾、长期状态提交一次、奖励进入，最后一击余效不丢 |

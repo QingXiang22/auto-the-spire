@@ -71,6 +71,10 @@ procedure PlayAttackCard {
 procedure UpgradeCard {
   parameters = { card = Ref(Card) }
   body = {
+    if = {
+      condition = or(not(field(card, Card.CanUpgrade)), field(card, Card.Upgraded))
+      then = { fail = { message = "The card cannot be upgraded" } }
+    }
     set = { target = card field = Card.Upgraded value = true }
     emit = { event = CardUpgraded payload = { card = card } }
   }
@@ -93,7 +97,7 @@ action PlayAttackFromHand {
 action UpgradeCardInHand {
   role = player
   parameters = { card = Ref(Card) }
-  candidates = { parameter = card query = where(collection(Hand), candidate, not(field(candidate, Card.Upgraded))) }
+  candidates = { parameter = card query = where(collection(Hand), candidate, and(field(candidate, Card.CanUpgrade), not(field(candidate, Card.Upgraded)))) }
   body = { call = { procedure = UpgradeCard args = { card = card } } }
 }
 

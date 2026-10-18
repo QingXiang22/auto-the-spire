@@ -1,64 +1,73 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development rest site (campfire). HealRestSiteOption.cs heals floor(MaxHp * 0.3) and SmithRestSiteOption
-# upgrades one card; the room offers a single option per visit. This scope exposes the forge as two steps
-# (choose the option, then the card) because the DSL has no card-choice decision here. Entering a room replaces
-# the previous one and leaving resets the kind so a stale room cannot be used later.
+event AfterRestSiteSmith { payload = { owner = Ref(Player) } }
+
+procedure CanUseUnusedRestSite {
+  pure = true
+  parameters = { owner = Ref(Player) }
+  result = Bool
+  body = {
+    return = {
+      value = and(equal(field(owner, Player.Room), "rest-site"), and(not(field(owner, Player.CombatActive)), and(greater(field(owner, Player.Hp), 0), and(not(field(owner, Player.RoomUsed)), not(field(owner, Player.PendingForge))))))
+    }
+  }
+}
+
 procedure EnterDevelopmentRestSite {
   parameters = { owner = Ref(Player) }
   body = {
     if = {
-      condition = equal(field(owner, Player.Room), "rewards")
-      then = { fail = { message = "Close development rewards before entering a rest site" } }
+      condition = not(and(equal(field(owner, Player.Room), "none"), and(not(field(owner, Player.CombatActive)), greater(field(owner, Player.Hp), 0))))
+      then = { fail = { message = "A rest site requires a living player outside any room and combat" } }
     }
     set = { target = owner field = Player.Room value = "rest-site" }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.PendingForge value = false }
   }
 }
-procedure RestAtDevelopmentCampfire {
+procedure RequireUnusedRestSite {
   parameters = { owner = Ref(Player) }
   body = {
     if = {
-      condition = not(equal(field(owner, Player.Room), "rest-site"))
-      then = { fail = { message = "The player is not at a rest site" } }
+      condition = not(pureCall(CanUseUnusedRestSite, owner))
+      then = { fail = { message = "A living player must be at an unused rest site with no choice pending" } }
     }
-    if = {
-      condition = field(owner, Player.RoomUsed)
-      then = { fail = { message = "The rest site option was already used" } }
-    }
+  }
+}
+procedure RestAtDevelopmentCampfire {
+  parameters = { owner = Ref(Player) }
+  body = {
+    call = { procedure = RequireUnusedRestSite args = { owner = owner } }
     call = { procedure = Heal args = { owner = owner amount = divide(multiply(field(owner, Player.MaxHp), 30), 100) } }
     set = { target = owner field = Player.RoomUsed value = true }
   }
 }
+# SmithRestSiteOption chooses from Owner.Deck, allows cancellation and only spends the room option on
+# success. The engine freezes the candidate list and suspends all other actions until the answer arrives.
 procedure ForgeAtDevelopmentCampfire {
   parameters = { owner = Ref(Player) }
+  locals = { selected = List(Ref(Card), length = 1) }
   body = {
+    call = { procedure = RequireUnusedRestSite args = { owner = owner } }
     if = {
-      condition = not(equal(field(owner, Player.Room), "rest-site"))
-      then = { fail = { message = "The player is not at a rest site" } }
+      condition = not(pureCall(HasUpgradablePermanentCards, owner))
+      then = { fail = { message = "There are no upgradable permanent cards" } }
     }
-    if = {
-      condition = field(owner, Player.RoomUsed)
-      then = { fail = { message = "The rest site option was already used" } }
-    }
-    set = { target = owner field = Player.RoomUsed value = true }
     set = { target = owner field = Player.PendingForge value = true }
-  }
-}
-procedure ForgeCardInHand {
-  parameters = { owner = Ref(Player) card = Ref(Card) }
-  body = {
-    if = {
-      condition = not(field(owner, Player.PendingForge))
-      then = { fail = { message = "No campfire forge is pending" } }
+    decide = {
+      participant = field(owner, Player.Owner) kind = EntityRefList prompt = "Choose a permanent card to upgrade, or cancel"
+      into = selected min = 0 max = 1
+      candidates = where(collection(RunDeck), candidate, and(equal(field(candidate, Card.Owner), field(owner, Player.Owner)), and(field(candidate, Card.CanUpgrade), not(field(candidate, Card.Upgraded)))))
     }
-    if = {
-      condition = less(collectionIndex(Hand, card), 0)
-      then = { fail = { message = "Card is not in hand" } }
+    forEach = {
+      query = refList(selected) item = chosen
+      body = {
+        call = { procedure = UpgradeCard args = { card = chosen } }
+        set = { target = owner field = Player.RoomUsed value = true }
+        emit = { event = AfterRestSiteSmith payload = { owner = owner } }
+      }
     }
-    call = { procedure = UpgradeCard args = { card = card } }
     set = { target = owner field = Player.PendingForge value = false }
   }
 }
@@ -66,8 +75,8 @@ procedure LeaveDevelopmentRoom {
   parameters = { owner = Ref(Player) }
   body = {
     if = {
-      condition = equal(field(owner, Player.Room), "rewards")
-      then = { fail = { message = "Use CloseDevelopmentRewards to leave rewards" } }
+      condition = not(and(equal(field(owner, Player.Room), "rest-site"), and(field(owner, Player.RoomUsed), and(not(field(owner, Player.PendingForge)), not(field(owner, Player.CombatActive))))))
+      then = { fail = { message = "Finish the rest site option before leaving; rewards use CloseDevelopmentRewards" } }
     }
     set = { target = owner field = Player.Room value = "none" }
     set = { target = owner field = Player.RoomUsed value = false }
@@ -77,28 +86,21 @@ procedure LeaveDevelopmentRoom {
 
 action EnterDevelopmentRestSite {
   role = player
-  requires = not(equal(field(first(type(Player)), Player.Room), "rewards"))
+  requires = and(equal(field(first(type(Player)), Player.Room), "none"), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0)))
   body = { call = { procedure = EnterDevelopmentRestSite args = { owner = first(type(Player)) } } }
 }
 action RestAtDevelopmentCampfire {
   role = player
-  requires = and(equal(field(first(type(Player)), Player.Room), "rest-site"), not(field(first(type(Player)), Player.RoomUsed)))
+  requires = pureCall(CanUseUnusedRestSite, first(type(Player)))
   body = { call = { procedure = RestAtDevelopmentCampfire args = { owner = first(type(Player)) } } }
 }
 action ForgeAtDevelopmentCampfire {
   role = player
-  requires = and(equal(field(first(type(Player)), Player.Room), "rest-site"), not(field(first(type(Player)), Player.RoomUsed)))
+  requires = and(pureCall(CanUseUnusedRestSite, first(type(Player))), pureCall(HasUpgradablePermanentCards, first(type(Player))))
   body = { call = { procedure = ForgeAtDevelopmentCampfire args = { owner = first(type(Player)) } } }
-}
-action ForgeCardInHand {
-  role = player
-  parameters = { card = Ref(Card) }
-  candidates = { parameter = card query = where(collection(Hand), candidate, not(field(candidate, Card.Upgraded))) }
-  requires = field(first(type(Player)), Player.PendingForge)
-  body = { call = { procedure = ForgeCardInHand args = { owner = first(type(Player)) card = card } } }
 }
 action LeaveDevelopmentRoom {
   role = player
-  requires = not(equal(field(first(type(Player)), Player.Room), "rewards"))
+  requires = and(equal(field(first(type(Player)), Player.Room), "rest-site"), and(field(first(type(Player)), Player.RoomUsed), and(not(field(first(type(Player)), Player.PendingForge)), not(field(first(type(Player)), Player.CombatActive)))))
   body = { call = { procedure = LeaveDevelopmentRoom args = { owner = first(type(Player)) } } }
 }

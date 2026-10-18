@@ -85,7 +85,8 @@ internal static partial class PackageChecks
             Submit(s, "ClaimDevelopmentGoldReward");
             foreach (var action in transitions) True(!Legal(s, action), "even claimed rewards must be explicitly closed");
             Submit(s, "CloseDevelopmentRewards");
-            foreach (var action in transitions) True(Legal(s, action), "closing restores " + action);
+            True(Legal(s, "BeginDevelopmentCombat") && Legal(s, "EnterDevelopmentRestSite"), "closing restores room entry");
+            True(!Legal(s, "LeaveDevelopmentRoom"), "there is no room to leave after rewards close");
 
             using var copy = new Copy(package.Root);
             foreach (var procedure in transitions.Append("ClaimDevelopmentGoldReward").Append("CloseDevelopmentRewards"))

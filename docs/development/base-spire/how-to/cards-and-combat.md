@@ -1,6 +1,6 @@
 # 开发卡牌与共享战斗机制
 
-文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包目前有开发 Card（身份／费用／升级标记）、Hand／DrawPile／DiscardPile／InPlay 牌区、无加成伤害与格挡吸收、开发态战斗与回合，以及两个内容模板迁移的 Strike／Defend；原版目标选择、卡牌获得途径、关键词与死亡仍未迁移，以下正常战斗步骤其余部分属于恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
+文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包已有 30 张实际定义的牌、开发态出牌／牌区、伤害与 Power 修正、永久牌组和战斗副本；原版目标选择、随机卡池与获得修正、附着、正常初态和完整战斗顺序仍需恢复。以下按任务选择已支持操作或恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
 
 先读[准确操作](../reference/operations.md)确认边界，再到 cards/catalog 定位具体源类。需求与判断意图参考[卡牌原语契约](../../../design/mod-the-spire/card-primitives/spec.md)及[主清单的共享机制](../../../review/tofix/README.md#env-t06)，这些旧契约中的接口名不自动成为新 DSL 接口。
 
@@ -22,6 +22,10 @@
 验收普通／升级实际差异及关键词时点，覆盖手动与自动路径的适用差别；同一机制不逐牌重跑整套战斗。自动出牌当前尚未迁移，不能从 DrawOne 推导它已可用。
 
 ## 处理牌区、复制和附着
+
+已迁移定义的 `CardDefinition` 会生成 `<名称>.Obtain` 开发动作与同名过程，例如 `Strike.Obtain`；它调用 `ObtainPermanentCard`，把独立实例放入公开的 `RunDeck` 并发 `CardObtained`。当前只允许存活玩家在房间外、战斗外获得；不生成随机奖励，也不代表原版获得修正已恢复。
+
+一旦建立永久牌组，后续 `BeginDevelopmentCombat` 调用 `BuildCombatDeck`：清理旧非永久牌，按永久顺序复制到 DrawPile，保留普通／升级及费用等已有字段，隐藏的 `PermanentSource` 指向具体来源实例。不会把战斗升级反写到 RunDeck；临时生成、消耗和 Power 牌不会混入下一场。初始洗牌和自动抽牌尚未迁移，仍用公开 `Draw` 显式抽牌。营火消费者见[房间指南](run-and-rooms.md)，准确边界见[永久牌组与锻造契约](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
 
 先分别定义移动、获得、生成、复制、变换、升级和移除的完整行为。移动必须维护原集合、目标容量、身份及事件；复制要规定永久 ID、成长、费用修改、附着、临时标记的保留／清除。不能把 `create Card` 当作任意复制操作。
 

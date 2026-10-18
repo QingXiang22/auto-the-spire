@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.5.0-dsl.25",
+  "static_build_id": "base-spire-dsl-0.5.0-dsl.26",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -150,7 +150,11 @@
     "base-spire:RemovedFromCombat": {
       "use": "not_published",
       "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Vanilla returns a resolved CardType.Power card to the master deck; this scope keeps those instances here, with no public pile contract. Public counts and entities remain declaration-derived."
+      "reason": "Resolved Power combat copies remain here until the next rebuild; permanent instances live separately in RunDeck. Public counts and entities remain declaration-derived."
+    },
+    "base-spire:RunDeck": {
+      "use": "group",
+      "owner_kind_type_id": "base-spire:Player"
     }
   },
   "terminal_outcomes": {},

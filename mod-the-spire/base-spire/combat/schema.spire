@@ -28,6 +28,8 @@ entity Player {
     RoomUsed = { type = Bool default = false }
     # Set while a campfire forge is waiting for the card choice.
     PendingForge = { type = Bool default = false }
+    # Opt-in permanent deck for this development scope. A normal character setup is not migrated.
+    UsesRunDeck = { type = Bool default = false }
     # Run currency. Ironclad StartingGold is 99 in sts2/src/Core/Models/Characters/Ironclad.cs.
     Gold = { type = Int(min = 0, max = 99999) default = 99 }
     # The development reward screen stores its roll until explicitly claimed or closed.

@@ -7,14 +7,14 @@
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
 | [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志是源战斗历史的开发替身，在回合开始时复位 |
-| [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；卡面没有原版稀有度字段 |
+| [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；卡面没有原版稀有度字段 |
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；Kind: String(32)=`none`；HolderPlayer／HolderEnemy: 可选 Ref；Stacks: Int(-999..999)=0 | 开发能力实例：两个持有者引用恰好设置一个；Kind 是规则查询用的修正角色，因此修正链不按能力 ID 分支；没有时长衰减、移除、能力类型或触发反应 |
 | Powers | 有序 Power 集合 | 按持有者与 DefinitionId 合并层数；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
 | [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64) | 开发药水实例，只承载身份；原版的稀有度、使用窗口（战斗内／任意时刻）与来源未迁移 |
 | Potions | 有序 Potion 集合，容量 3 | 三个共享槽位；`UsePotion`／`UsePotionOnTarget` 使用后在监听之后移除并销毁 |
 | PotionUsed／PotionUsedOnTarget | owner: Ref(Player)、potion: Ref(Potion)（有目标时再加 target: Ref(Enemy)） | 药水仍在库存时发出，之后才消费；有目标版本解析第一个 `Hp > 0` 的开发目标 |
-| Hand／DrawPile／DiscardPile／InPlay／ExhaustPile／RemovedFromCombat | 有序 Card 集合；Hand 容量 10 | 当前是全局开发牌堆，尚无按持有者分堆；DrawPile 隐藏身份及顺序；InPlay 只在出牌结算期间持有该卡；ExhaustPile 只接收带 Exhausts 的结算牌；RemovedFromCombat 只接收带 LeavesPlay 的结算牌（原版把它们交回主牌组，本 scope 没有主牌组） |
+| Hand／DrawPile／DiscardPile／InPlay／ExhaustPile／RemovedFromCombat | 有序 Card 集合；Hand 容量 10 | 当前是全局开发牌堆，尚无按持有者分堆；DrawPile 隐藏身份及顺序；InPlay 只在出牌结算期间持有该卡；ExhaustPile 只接收带 Exhausts 的结算牌；RemovedFromCombat 只接收带 LeavesPlay 的结算牌；这些都是临时实例，永久牌独立保存在 RunDeck |
 | [Relic](../../../../mod-the-spire/base-spire/relics/schema.spire) | Owner、Holder、DefinitionId、IsMelted=false、Counter=0 | Holder 是隐藏 Ref(Player)，Counter 隐藏；DefinitionId 长度上限 64；Counter 为 0..999999 |
 | Relics | 有序 Relic 集合 | 监听器遍历现有库存并过滤 Holder、definition 和熔化状态 |
 | RelicObtained／RelicRemoved | owner: Ref(Player)、relic: Ref(Relic) | 获得时已入库存；移除时已出库存，事件执行后才销毁实例 |
@@ -51,13 +51,14 @@
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗活跃、卡在手牌、能量足够；扣能量、Hand→InPlay、emit CardPlayed、结算后按 Exhausts 进入 ExhaustPile（并发 CardExhausted）或 DiscardPile |
 | PlayAttackCard | owner、card | 同上，但先发 CardPlayed 再发 CardPlayedOnTarget，并把敌人解析为第一个 `Hp > 0` 的开发目标；无目标不是合法候选 |
-| UpgradeCard | card=Ref(Card) | 置 `Upgraded=true` 并发 CardUpgraded；定义层变化（当前只有费用）由 CardDefinition 模板应用 |
+| UpgradeCard | card=Ref(Card) | 只允许 CanUpgrade=true 且未升级的实例；置 `Upgraded=true` 并发 CardUpgraded，定义层费用变化由 CardDefinition 应用；只改当前实例 |
 | [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(0..9) | 逐张调用 DrawOne，保留重洗、手牌上限、禁止抽牌与 AfterCardDrawn 的既有顺序；不是一次抽多张的新算法 |
 | PlayCardFromHand／PlayAttackFromHand／UpgradeCardInHand | 参数 card=Ref(Card)，候选来自 Hand | 公开 action：分别打出无目标牌、打出有目标牌与升级手牌；PlayCardFromHand 只提供 `Targeted=false` 的候选，PlayAttackFromHand 只提供 `Targeted=true` 的候选 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) 结算收尾 | — | 效果结算后按 `Exhausts`→ExhaustPile、`LeavesPlay`→RemovedFromCombat、否则 DiscardPile 分流；只有 Exhausts 分支发 CardExhausted |
 | [EnterDevelopmentRestSite](../../../../mod-the-spire/base-spire/rooms/rest-site.spire) | owner=Ref(Player) | 公开 action：把房间置为 `rest-site` 并清掉已使用标记；不是地图节点入口 |
 | RestAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：只在营火且未使用时允许，回复 `floor(MaxHp × 0.3)` 后把选项标记为已用；过程在非营火或重复使用时失败 |
-| LeaveDevelopmentRoom | owner=Ref(Player) | 公开 action：把房间与已使用标记复位为 `none`／false；奖励界面必须使用 CloseDevelopmentRewards |
+| ForgeAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：未用过的营火、存活且非战斗，有本玩家可升级永久牌时发出 Engine 的 0..1 实例决策；选择升级该永久实例并用掉选项，取消不消耗；成功后发 AfterRestSiteSmith |
+| LeaveDevelopmentRoom | owner=Ref(Player) | 公开 action 与同名过程：只有成功用过营火选项、没有选择待决且非战斗时可离开，房间复位为 `none`；奖励界面必须使用 CloseDevelopmentRewards |
 | [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 存活玩家胜利时用命名流 `base-spire:development-reward` 从 `[10, 21)` 抽一次，写入 GoldRewardAmount 并置 GoldRewardPending=true、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
 | ClaimDevelopmentGoldReward | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 且条目 pending 时把保存金额加进 Gold（开发上限 99999），清空条目；领取不关闭界面，不重抽，不能重复领取 |
 | CloseDevelopmentRewards | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 时清空未领条目、金额与房间状态；允许不领取直接关闭，不给金币也不抽随机；关闭前禁止开始新战斗、进入营火或 LeaveDevelopmentRoom |
@@ -94,6 +95,22 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 ```
 
 这里的 owner 必须是明确传入／绑定的 Ref(Player)。`participant(1)` 是 Participant，不能代替实体引用。普通内容不应绕过生命周期直接更新库存或引用字段。
+
+## 永久牌组与战斗副本
+
+[永久牌组规则](../../../../mod-the-spire/base-spire/cards/rules/permanent-deck.spire)仅支持单玩家开发范围，不是正常角色初态或完整获得链。
+
+| 声明／入口 | 参数 | 已实现语义 |
+| --- | --- | --- |
+| RunDeck | 有序 Card 集合 | 永久实例，公开为 group；与全部战斗牌区分离 |
+| Player.UsesRunDeck | Bool=false | 第一次显式获得永久牌后为 true，后续不再使用默认开发占位牌 |
+| ObtainPermanentCard | owner: Ref(Player)、definition: String(64)、cost: Int(0..9)、targeted／exhausts／leavesPlay: Bool | 只允许存活玩家在房间与战斗外获得；以给定已迁移定义创建永久实例，CanUpgrade=true，置 UsesRunDeck 后发 CardObtained；没有随机池或获得修正 |
+| CardDefinition 生成的 Obtain | owner: Ref(Player)；公开 action 无参数 | 以本定义配置调用共享获得过程，例如 Strike.Obtain；每次调用是独立实例 |
+| BuildCombatDeck | owner: Ref(Player) | UsesRunDeck=true 时删除本玩家所有旧非永久牌，从 RunDeck 复制已支持字段到 DrawPile；PermanentSource 隐藏引用具体原实例；顺序不变，不自动洗牌／抽牌，也不反写永久牌 |
+| HasUpgradablePermanentCards | owner: Ref(Player)，纯过程→Bool | 检查本玩家 RunDeck 中 CanUpgrade=true 且 Upgraded=false 的实例 |
+| CanUseUnusedRestSite | owner: Ref(Player)，纯过程→Bool | 当前是营火、存活、非战斗、尚未用过且无 PendingForge；动作与过程复用同一资格判断 |
+
+`BeginDevelopmentCombat` 与 `EnterDevelopmentRestSite` 仅在 Room=none、玩家存活且非战斗时开放。锻造的取消／选牌统一使用 `net:action:net.answer_decision`；不再暴露 ForgeCardInHand。准确寿命和未支持边界见[契约](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
 
 ## 模板与内容配置
 
