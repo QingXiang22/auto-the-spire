@@ -14,6 +14,7 @@ template CardDefinition {
     generatable = { type = Bool default = false }
     kind = { type = String(length = 16) default = "skill" }
     rarity = { type = String(length = 16) default = "none" }
+    sourceEntry = { type = String(length = 64) default = "DEVELOPMENT_CARD" }
     strikeTag = { type = Bool default = false }
     isX = { type = Bool default = false }
     baseDamage = { type = Int(min = 0, max = 999) default = 0 }
@@ -49,6 +50,7 @@ template CardDefinition {
           set = { target = card field = Card.AutoFromExhaustAtTurnEnd value = arg(autoFromExhaustAtTurnEnd) }
           set = { target = card field = Card.Kind value = arg(kind) }
           set = { target = card field = Card.Rarity value = arg(rarity) }
+          set = { target = card field = Card.SourceEntry value = arg(sourceEntry) }
           set = { target = card field = Card.StrikeTag value = arg(strikeTag) }
           set = { target = card field = Card.IsX value = arg(isX) }
           set = { target = card field = Card.Targeted value = arg(targeted) }

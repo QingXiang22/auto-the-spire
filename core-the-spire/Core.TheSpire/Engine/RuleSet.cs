@@ -46,7 +46,7 @@ public sealed record AnchorResolution(string Name) : Resolution;
 /// </summary>
 public sealed class RuleSetBuilder
 {
-    public const string EngineVersion = "engine/ir@0.4";
+    public const string EngineVersion = "engine/ir@0.5";
 
     private readonly List<EnginePackage> _packages = [];
     private readonly Dictionary<int, string> _backendDescriptors = [];
@@ -995,6 +995,17 @@ public static class IrDumper
             case ConstExpr constant:
                 text.Append('(').Append(constant.Value).Append(')');
                 return;
+            case RandomValueExpr randomValue:
+                text.Append('(').Append(randomValue.Op).Append(' ');
+                WriteList(randomValue.Arguments, text);
+                text.Append(')');
+                return;
+            case SeedStreamInst seedStream:
+                Write(seedStream.Stream, text); text.Append(' '); Write(seedStream.Seed, text);
+                return;
+            case SampleFloat32Inst sampleFloat:
+                text.Append('[').Append(sampleFloat.ResultSlot).Append("] "); Write(sampleFloat.Stream, text);
+                return;
             case LocalExpr local:
                 text.Append('[').Append(local.Slot).Append(']');
                 return;
@@ -1108,6 +1119,7 @@ public static class IrDumper
                 text.Append(')');
                 return;
             case SortQuery sort:
+                if (!sort.Stable) text.Append(" unstable ");
                 text.Append('(').Append(sort.ItemSlot).Append(' ').Append(sort.Descending ? "desc " : "asc ");
                 Write(sort.Source, text);
                 text.Append(' ');

@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Stomp.cs; SHA-256 retained in cards/catalog.json.
-use Stomp { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stomp" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 12 upgradedBaseDamage = 15 discountsOnAttack = true } }
+use Stomp { template = CardDefinition args = { sourceEntry = "STOMP" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stomp" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 12 upgradedBaseDamage = 15 discountsOnAttack = true } }
 use StompEffect1 { template = ComputedAllAttackEffect args = { definition = "base-spire:stomp" } }

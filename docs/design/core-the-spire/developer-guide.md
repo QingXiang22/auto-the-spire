@@ -47,7 +47,7 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-活动包版本为 `0.4.0`，运行语义身份为 `engine/ir@0.4`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 冻结基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前冻结状态见 [CORE-AUTHOR-04](../../review/tofix/README.md#core-author-04)。
+活动包版本为 `0.5.0`，运行语义身份为 `engine/ir@0.5`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 冻结基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前冻结状态见 [CORE-AUTHOR-04](../../review/tofix/README.md#core-author-04)。
 
 当前入口及能力边界：
 

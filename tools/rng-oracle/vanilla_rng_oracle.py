@@ -210,18 +210,20 @@ def deterministic_hash_code(text: str) -> int:
     C# 的 `int` 运算在 unchecked 下按 32 位回绕；调用方最后把它转成 `uint`，
     所以这里全程按 2**32 取模即可，结果就是那个 uint 值。
     """
+    units = text.encode("utf-16-le", errors="surrogatepass")
+    text = [int.from_bytes(units[i:i + 2], "little") for i in range(0, len(units), 2)]
     num = 352654597
     num2 = num
     index = 0
     length = len(text)
     while index < length:
         num = (((num << 5) & MASK32) + num) & MASK32
-        num ^= ord(text[index])
+        num ^= text[index]
         num &= MASK32
         if index == length - 1:
             break
         num2 = (((num2 << 5) & MASK32) + num2) & MASK32
-        num2 ^= ord(text[index + 1])
+        num2 ^= text[index + 1]
         num2 &= MASK32
         index += 2
     return (num + num2 * 1566083941) & MASK32

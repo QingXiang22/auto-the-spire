@@ -19,6 +19,7 @@ internal sealed class TextRuleSource : ISessionSource
     private readonly string _projectionId;
     private readonly string _participantRole;
     private readonly string _defaultGameSeed;
+    private readonly DslPackage? _package;
 
     public TextRuleSource(
         RuleSet rules,
@@ -26,7 +27,7 @@ internal sealed class TextRuleSource : ISessionSource
         string scenarioProfile,
         string projectionId,
         string participantRole,
-        string defaultGameSeed)
+        string defaultGameSeed, DslPackage? package = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(profile);
@@ -41,10 +42,10 @@ internal sealed class TextRuleSource : ISessionSource
         _projectionId = projectionId;
         _participantRole = participantRole;
         _defaultGameSeed = defaultGameSeed;
+        _package = package;
 
-        // 会话真的用引擎内置 xoshiro 随机与默认绘制 profile；describe 必须报告实际使用的那一个。
-        // 内置 profile 类型在 core 里是 internal，提供方只给版本化的 id，具体实现由 RandomService 组装。
-        RngProfileId = RandomService.DefaultDrawProfileId;
+        // Report the profile selected by the package; ordinary text-rule scenarios keep the default.
+        RngProfileId = package is { RandomProfile: not "engine-default" } ? RandomService.VanillaDrawProfileId : RandomService.DefaultDrawProfileId;
     }
 
     public RuleSet Rules => _rules;
@@ -64,12 +65,12 @@ internal sealed class TextRuleSource : ISessionSource
         }
 
         // 「已配置、尚未 Start」：建会话阶段只种随机流，不执行开局程序、不消费任何随机数。
-        var session = new Session(
+        var session = _package?.CreateSession(SessionSeed(requested), [_participantRole], requested) ?? new Session(
             _rules,
             SessionSeed(requested),
             [_participantRole],
             randomAlgorithmId: RandomService.DefaultAlgorithmId,
-            randomDrawProfileId: RandomService.DefaultDrawProfileId);
+            randomDrawProfileId: RandomService.DefaultDrawProfileId, gameSeed: requested);
 
         return new ProvidedSession(
             session,

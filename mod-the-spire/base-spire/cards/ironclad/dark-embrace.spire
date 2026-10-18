@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/DarkEmbrace.cs; SHA-256 retained in cards/catalog.json.
-use DarkEmbrace { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:dark-embrace" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use DarkEmbrace { template = CardDefinition args = { sourceEntry = "DARK_EMBRACE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:dark-embrace" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use DarkEmbraceEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:dark-embrace" power = "base-spire:dark-embrace-power" kind = "draw-on-exhaust" stacks = 1 upgradedStacks = 1 } }

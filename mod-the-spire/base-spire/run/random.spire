@@ -1,0 +1,29 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure SourceRunSeed { pure = true result = Int body = { return = { value = hash32(gameSeed()) } } }
+procedure SourceStreamSeed {
+  pure = true parameters = { root = Int name = String(length = 64) } result = Int
+  body = { return = { value = modulo(add(root, hash32(name)), 4294967296) } }
+}
+procedure SourceContentSeed {
+  pure = true parameters = { slot = Int entry = String(length = 128) mixin = Int } result = Int
+  body = { return = { value = modulo(add(add(add(pureCall(SourceRunSeed), slot), hash32(entry)), mixin), 4294967296) } }
+}
+procedure SetupSourceRandom { body = {
+  seedStream = { stream = "base-spire:run:up_front" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "up_front") }
+  seedStream = { stream = "base-spire:run:shuffle" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "shuffle") }
+  seedStream = { stream = "base-spire:run:unknown_map_point" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "unknown_map_point") }
+  seedStream = { stream = "base-spire:run:combat_card_generation" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_card_generation") }
+  seedStream = { stream = "base-spire:run:combat_potion_generation" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_potion_generation") }
+  seedStream = { stream = "base-spire:run:combat_card_selection" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_card_selection") }
+  seedStream = { stream = "base-spire:run:combat_energy_costs" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_energy_costs") }
+  seedStream = { stream = "base-spire:run:combat_targets" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_targets") }
+  seedStream = { stream = "base-spire:run:monster_ai" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "monster_ai") }
+  seedStream = { stream = "base-spire:run:niche" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "niche") }
+  seedStream = { stream = "base-spire:run:combat_orbs" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_orbs") }
+  seedStream = { stream = "base-spire:run:treasure_room_relics" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "treasure_room_relics") }
+  seedStream = { stream = "base-spire:player:rewards" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "rewards") }
+  seedStream = { stream = "base-spire:player:shops" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "shops") }
+  seedStream = { stream = "base-spire:player:transformations" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "transformations") }
+} }

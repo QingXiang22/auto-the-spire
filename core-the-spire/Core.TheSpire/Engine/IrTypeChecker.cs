@@ -500,13 +500,19 @@ internal static class IrTypeChecker
                 }
 
                 case SampleIntInst sampleInt:
-                {
                     RequireStream(CheckExpr(frame, sampleInt.Stream, where), where);
                     Require(CheckExpr(frame, sampleInt.Min, where), Ty.Int, where, "sampling lower bound");
                     Require(CheckExpr(frame, sampleInt.Max, where), Ty.Int, where, "sampling upper bound");
                     Bind(frame, sampleInt.ResultSlot, Ty.Int, where);
                     break;
-                }
+                case SeedStreamInst seedStream:
+                    RequireStream(CheckExpr(frame, seedStream.Stream, where), where);
+                    Require(CheckExpr(frame, seedStream.Seed, where), Ty.Int, where, "stream seed");
+                    break;
+                case SampleFloat32Inst sampleFloat:
+                    RequireStream(CheckExpr(frame, sampleFloat.Stream, where), where);
+                    Bind(frame, sampleFloat.ResultSlot, Ty.Int, where);
+                    break;
 
                 case SamplePickInst samplePick:
                 {
@@ -769,6 +775,22 @@ internal static class IrTypeChecker
 
                 case FrameScopeExpr:
                     return Ty.Scope;
+                case RandomValueExpr randomValue:
+                {
+                    var count = randomValue.Op == RandomValueOp.GameSeed ? 0 : randomValue.Op is RandomValueOp.Hash32 or RandomValueOp.Float32 ? 1 : 2;
+                    if (randomValue.Arguments.Count != count) throw Faults.TypeError($"{where}: invalid random value argument count");
+                    foreach (var argument in randomValue.Arguments)
+                    {
+                        var type = CheckExpr(frame, argument, where);
+                        if (randomValue.Op == RandomValueOp.Float32)
+                        {
+                            if (type.Kind is not (FieldTypeKind.Int or FieldTypeKind.Fixed)) throw Faults.TypeError($"{where}: float32 requires a numeric value");
+                        }
+                        else Require(type, randomValue.Op == RandomValueOp.Hash32 ? Ty.String : Ty.Int, where, "random value operand");
+                    }
+                    return randomValue.Op == RandomValueOp.GameSeed ? Ty.String :
+                        randomValue.Op is RandomValueOp.Float32Less or RandomValueOp.Float32LessOrEqual ? Ty.Bool : Ty.Int;
+                }
 
                 case EntityScopeExpr entityScope:
                 {

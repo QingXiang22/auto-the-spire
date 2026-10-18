@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # OnUpgrade raises Repeat by 1 so the upgraded card hits five times.
 use Conflagration {
   template = CardDefinition
-  args = { rarity = "rare" inIroncladPool = true generatable = true baseDamage = 2 upgradedBaseDamage = 2 kind = "attack" strikeTag = false definition = "base-spire:conflagration" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+  args = { sourceEntry = "CONFLAGRATION" rarity = "rare" inIroncladPool = true generatable = true baseDamage = 2 upgradedBaseDamage = 2 kind = "attack" strikeTag = false definition = "base-spire:conflagration" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use ConflagrationDamage {
   template = AttackAllEnemiesEffect

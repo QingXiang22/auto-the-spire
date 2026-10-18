@@ -1,6 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-version = "0.5.0-dsl.29"
+version = "0.5.0-dsl.30"
 includes = [
   "combat/index.spire",
   "cards/index.spire",
@@ -11,7 +11,8 @@ includes = [
   "rooms/index.spire",
   "rewards/index.spire",
   "characters/index.spire",
+  "run/random.spire",
   "run/setup-dev.spire",
   "public/projection.spire"
 ]
-start = [SetupDevelopmentDraw]
+start = [SetupSourceRandom, SetupDevelopmentDraw]

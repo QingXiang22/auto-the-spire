@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Vicious.cs; SHA-256 retained in cards/catalog.json.
-use Vicious { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:vicious" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
+use Vicious { template = CardDefinition args = { sourceEntry = "VICIOUS" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:vicious" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use ViciousEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:vicious" power = "base-spire:vicious-power" kind = "vulnerable-draw" stacks = 1 upgradedStacks = 2 } }

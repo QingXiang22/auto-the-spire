@@ -49,7 +49,7 @@ internal static partial class PackageChecks
             var s = Start(copy.Load()); Submit(s, "Ironclad.Initialize"); Submit(s, "TheAbacus.Obtain");
             var deck = Members(s, "RunDeck").ToArray(); Begin(s);
             Equal(5, Hand(s).Count, "automatic opening five"); Equal(5, Members(s, "DrawPile").Count, "remaining five");
-            Equal(0L, Block(s), "initial shuffle never triggers AfterShuffle"); True(s.Random.DrawCount("base-spire:development-shuffle") > 0, "real random stream consumed");
+            Equal(0L, Block(s), "initial shuffle never triggers AfterShuffle"); True(s.Random.DrawCount("base-spire:run:shuffle") > 0, "real random stream consumed");
             True(Members(s, "RunDeck").SequenceEqual(deck), "permanent order unchanged");
             True(Hand(s).Concat(Members(s, "DrawPile")).All(c => deck.Contains(PermanentSource(s, c)) && !deck.Contains(c)), "separate combat copies with exact sources");
         });
@@ -69,9 +69,9 @@ internal static partial class PackageChecks
         {
             var blocked = Character(); Submit(blocked, "BeginDevelopmentCombat");
             Set(blocked, Player(blocked), "Player", "DrawBlocked", Value.Of(true));
-            var before = blocked.Random.DrawCount("base-spire:development-shuffle"); Submit(blocked, "BeginDevelopmentTurn");
+            var before = blocked.Random.DrawCount("base-spire:run:shuffle"); Submit(blocked, "BeginDevelopmentTurn");
             Equal(0, Hand(blocked).Count, "blocked automatic draw"); Equal(10, Members(blocked, "DrawPile").Count, "deck unchanged");
-            Equal(before, blocked.Random.DrawCount("base-spire:development-shuffle"), "no unnecessary reshuffle");
+            Equal(before, blocked.Random.DrawCount("base-spire:run:shuffle"), "no unnecessary reshuffle");
             var full = Character(); Submit(full, "BeginDevelopmentCombat"); for (var i = 0; i < 10; i++) Submit(full, "Draw");
             Submit(full, "BeginDevelopmentTurn"); Equal(10, Hand(full).Count, "full hand remains ten");
             var turns = Character(); Begin(turns); Submit(turns, "EndDevelopmentTurn"); Submit(turns, "BeginDevelopmentTurn");

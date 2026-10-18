@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Feed.cs; SHA-256 retained in cards/catalog.json.
-use Feed { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = false definition = "base-spire:feed" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 10 upgradedBaseDamage = 12 } }
+use Feed { template = CardDefinition args = { sourceEntry = "FEED" rarity = "rare" inIroncladPool = true generatable = false definition = "base-spire:feed" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 10 upgradedBaseDamage = 12 } }
 use FeedEffect1 { template = FeedEffect args = { definition = "base-spire:feed" } }

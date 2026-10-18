@@ -116,6 +116,7 @@ procedure CloneCombatCard {
       Owner = field(owner, Player.Owner) DefinitionId = field(source, Card.DefinitionId) Label = field(source, Card.Label)
       Kind = field(source, Card.Kind) StrikeTag = field(source, Card.StrikeTag) IsX = field(source, Card.IsX)
       Rarity = field(source, Card.Rarity)
+      SourceEntry = field(source, Card.SourceEntry)
       Cost = field(source, Card.Cost) BaseCost = field(source, Card.BaseCost) CostResetAtTurnEnd = field(source, Card.CostResetAtTurnEnd)
       FreeUntilPlayed = field(source, Card.FreeUntilPlayed) TurnCostDiscount = field(source, Card.TurnCostDiscount)
       BaseDamage = field(source, Card.BaseDamage) DamageGrowth = field(source, Card.DamageGrowth)
@@ -164,7 +165,7 @@ procedure RandomHandCard {
   body = {
     let = { into = picked value = none }
     if = { condition = exists(where(collection(Hand), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), or(not(attacksOnly), equal(field(c, Card.Kind), "attack"))))) then = {
-      samplePick = { stream = "base-spire:combat-card-selection" candidates = where(collection(Hand), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), or(not(attacksOnly), equal(field(c, Card.Kind), "attack")))) into = picked }
+      samplePick = { stream = "base-spire:run:combat_card_selection" candidates = where(collection(Hand), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), or(not(attacksOnly), equal(field(c, Card.Kind), "attack")))) into = picked }
     } }
     return = { value = picked }
   }
@@ -174,7 +175,7 @@ procedure RandomLivingEnemy {
   body = {
     let = { into = target value = none }
     if = { condition = exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))) then = {
-      samplePick = { stream = "base-spire:combat-targets" candidates = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) into = target }
+      samplePick = { stream = "base-spire:run:combat_targets" candidates = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) into = target }
     } }
     return = { value = target }
   }

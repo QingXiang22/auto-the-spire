@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # this turn; OnUpgrade adds 3 block.
 use EvilEye {
   template = CardDefinition
-  args = { rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:evil-eye" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+  args = { sourceEntry = "EVIL_EYE" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:evil-eye" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use EvilEyeBlock {
   template = FlaggedBlockMultiplierEffect

@@ -84,7 +84,7 @@ procedure BeforeTurnPowerReactions {
   body = {
     repeat = { count = pureCall(PlayerPowerAmount, owner, "upgrade-discard-attacks") body = {
       if = { condition = exists(where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack"))) then = {
-        samplePick = { stream = "base-spire:combat-card-selection" candidates = where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack")) into = chosen }
+        samplePick = { stream = "base-spire:run:combat_card_selection" candidates = where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack")) into = chosen }
         removeFromCollection = { collection = DiscardPile item = chosen }
         call = { procedure = AddGeneratedToHand args = { card = chosen } }
         if = { condition = and(field(chosen, Card.CanUpgrade), not(field(chosen, Card.Upgraded))) then = { call = { procedure = UpgradeCard args = { card = chosen } } } }
@@ -122,7 +122,7 @@ procedure BeforeTurnEndPowerReactions {
     } }
     repeat = { count = pureCall(PlayerPowerAmount, owner, "end-turn-auto-attack") body = {
       if = { condition = and(field(owner, Player.CombatActive), exists(where(collection(Hand), c, equal(field(c, Card.Kind), "attack")))) then = {
-        samplePick = { stream = "base-spire:development-shuffle" candidates = where(collection(Hand), c, equal(field(c, Card.Kind), "attack")) into = chosen }
+        samplePick = { stream = "base-spire:run:shuffle" candidates = where(collection(Hand), c, equal(field(c, Card.Kind), "attack")) into = chosen }
         call = { procedure = AutoPlayCard args = { owner = owner card = chosen forceExhaust = false } }
       } }
     } }

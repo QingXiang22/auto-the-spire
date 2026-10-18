@@ -124,6 +124,17 @@ public sealed partial class Session
                 return Outcome.Continue;
             }
 
+            case SeedStreamInst seedStream:
+            {
+                var seed = Eval(call, seedStream.Seed).AsInt();
+                if (seed < 0) throw Faults.Range("stream seed must be nonnegative");
+                Random.SeedStream(RequireStream(Eval(call, seedStream.Stream)), (ulong)seed);
+                return Outcome.Continue;
+            }
+            case SampleFloat32Inst sampleFloat:
+                call.Slots[sampleFloat.ResultSlot] = Value.Of(Binary32.Bits((float)Random.DrawDouble(RequireStream(Eval(call, sampleFloat.Stream)))));
+                return Outcome.Continue;
+
             case SampleIntInst sampleInt:
             {
                 var stream = RequireStream(Eval(call, sampleInt.Stream));

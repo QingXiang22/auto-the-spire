@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/FiendFire.cs; SHA-256 retained in cards/catalog.json.
-use FiendFire { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:fiend-fire" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 7 upgradedBaseDamage = 10 } }
+use FiendFire { template = CardDefinition args = { sourceEntry = "FIEND_FIRE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:fiend-fire" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 7 upgradedBaseDamage = 10 } }
 use FiendFireEffect1 { template = ExhaustHandAttackEffect args = { definition = "base-spire:fiend-fire" } }

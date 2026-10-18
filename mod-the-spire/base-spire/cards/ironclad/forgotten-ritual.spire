@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/ForgottenRitual.cs; SHA-256 retained in cards/catalog.json.
-use ForgottenRitual { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:forgotten-ritual" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
+use ForgottenRitual { template = CardDefinition args = { sourceEntry = "FORGOTTEN_RITUAL" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:forgotten-ritual" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
 use ForgottenRitualEffect1 { template = ExhaustHistoryEnergyEffect args = { definition = "base-spire:forgotten-ritual" } }

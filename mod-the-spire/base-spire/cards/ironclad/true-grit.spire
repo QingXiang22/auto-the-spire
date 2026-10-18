@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/TrueGrit.cs; SHA-256 retained in cards/catalog.json.
-use TrueGrit { template = CardDefinition args = { rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:true-grit" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use TrueGrit { template = CardDefinition args = { sourceEntry = "TRUE_GRIT" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:true-grit" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use TrueGritEffect1 { template = BlockEffect args = { definition = "base-spire:true-grit" block = 7 upgradedBlock = 9 } }
 use TrueGritEffect2 { template = SelectExhaustEffect args = { definition = "base-spire:true-grit" randomNormal = true } }

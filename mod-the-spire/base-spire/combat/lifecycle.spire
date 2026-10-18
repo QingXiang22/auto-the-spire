@@ -91,7 +91,7 @@ procedure BeginDevelopmentCombat {
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.CombatActive value = true }
     if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
-      shuffle = { collection = DrawPile stream = "base-spire:development-shuffle" }
+      shuffle = { collection = DrawPile stream = "base-spire:run:shuffle" }
     } }
     emit = { event = BeforeCombatStart payload = { owner = owner } }
   }

@@ -58,6 +58,8 @@ public static partial class EngineDslCompiler
                     case "clearRelation": instruction = _scope.ClearRelation(
                         _compiler.Symbol<RelationSymbol>(p.Required("relation")), E("owner")); break;
                     case "sampleInt": instruction = _scope.SampleInt(E("stream"), E("min"), E("max"), Into()); break;
+                    case "seedStream": instruction = new SeedStreamInst(E("stream"), E("seed")); break;
+                    case "sampleFloat32": instruction = new SampleFloat32Inst(E("stream"), Into()); break;
                     case "samplePick": instruction = new SamplePickInst(E("stream"), Query(p.Required("candidates")), Into()); break;
                     case "emit":
                     {
@@ -142,6 +144,7 @@ public static partial class EngineDslCompiler
                 "addRelation" or "removeRelation" => ["relation", "owner", "target"],
                 "clearRelation" => ["relation", "owner"],
                 "sampleInt" => ["stream", "min", "max", "into"], "samplePick" => ["stream", "candidates", "into"],
+                "seedStream" => ["stream", "seed"], "sampleFloat32" => ["stream", "into"],
                 "emit" => ["event", "payload"],
                 "decide" => ["participant", "kind", "prompt", "into", "candidates", "min", "max"],
                 "call" => ["procedure", "args", "into"], "if" => ["condition", "then", "else"],

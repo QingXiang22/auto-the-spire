@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # target; OnUpgrade adds 5 damage. Order matters: the HP loss happens before the attack.
 use Hemokinesis {
   template = CardDefinition
-  args = { rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 15 upgradedBaseDamage = 20 kind = "attack" strikeTag = false definition = "base-spire:hemokinesis" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { sourceEntry = "HEMOKINESIS" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 15 upgradedBaseDamage = 20 kind = "attack" strikeTag = false definition = "base-spire:hemokinesis" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use HemokinesisLoseHp {
   template = LoseHpEffect

@@ -1,7 +1,14 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development layout only. Vanilla pre-sort and stream derivation remain unsupported.
+# Source StableShuffle sorts by ModelId.Entry and upgrade level before Fisher-Yates.
+procedure SourceCardSortKey {
+  pure = true parameters = { card = Ref(Card) } result = String(length = 128)
+  body = {
+    if = { condition = field(card, Card.Upgraded) then = { return = { value = concat(field(card, Card.SourceEntry), ":1") } } }
+    return = { value = concat(field(card, Card.SourceEntry), ":0") }
+  }
+}
 procedure ReshuffleDiscard {
   parameters = { owner = Ref(Player) }
   body = {
@@ -9,13 +16,13 @@ procedure ReshuffleDiscard {
       condition = and(not(exists(collection(DrawPile))), exists(collection(DiscardPile)))
       then = {
         forEach = {
-          query = collection(DiscardPile) item = card
+          query = sort(collection(DiscardPile), c, pureCall(SourceCardSortKey, c), false, false) item = card
           body = {
             removeFromCollection = { collection = DiscardPile item = card }
             addToCollection = { collection = DrawPile item = card }
           }
         }
-        shuffle = { collection = DrawPile stream = "base-spire:development-shuffle" }
+        shuffle = { collection = DrawPile stream = "base-spire:run:shuffle" }
         emit = { event = AfterShuffle payload = { owner = owner } }
       }
     }
