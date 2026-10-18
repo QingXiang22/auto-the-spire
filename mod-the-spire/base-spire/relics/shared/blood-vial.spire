@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BloodVial.cs CanonicalVars and AfterPlayerTurnStartLate: heal two on the owner's first turn.
+use BloodVial {
+  template = TurnStartHealRelic
+  args = { definition = "base-spire:blood-vial" amount = 2 turn = 1 }
+}

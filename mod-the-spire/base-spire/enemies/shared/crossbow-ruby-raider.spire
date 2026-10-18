@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: CrossbowRubyRaider.cs; Ascension 0 initial HP 18..21 (development spawn uses the minimum) and RELOAD gains 3 block then FIRE deals 14, alternating from RELOAD.
+use CrossbowRubyRaider {
+  template = BlockThenAttackEnemy
+  args = { definition = "base-spire:crossbow-ruby-raider" hp = 18 block = 3 damage = 14 }
+}

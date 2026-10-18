@@ -6,10 +6,35 @@ entity Card {
   fields = {
     Owner = { type = Participant default = participant(1) }
     Label = { type = String(length = 64) default = "development-card" }
+    # Development card identity. Vanilla cost, rarity, type and target metadata are not migrated yet.
+    DefinitionId = { type = String(length = 64) default = "base-spire:development-card" }
+    Cost = { type = Int(min = 0, max = 9) default = 0 }
+    Upgraded = { type = Bool default = false }
+    # Development stand-in for vanilla TargetType: targeted cards need an enemy and are played by PlayAttackFromHand.
+    Targeted = { type = Bool default = false }
+    # Vanilla CardKeyword.Exhaust: the card goes to the exhaust pile instead of the discard pile after resolving.
+    Exhausts = { type = Bool default = false }
+    # Vanilla CardType.Power: the card leaves play entirely after resolving (see RemovedFromCombat).
+    LeavesPlay = { type = Bool default = false }
   }
 }
 collection Hand { element = Card capacity = 10 ordered = true }
 collection DrawPile { element = Card ordered = true identity_visible = false order_visible = false }
 collection DiscardPile { element = Card ordered = true }
+# Cards being resolved. Vanilla uses an in-play limbo pile; ethereal, retain and card-play history are not migrated.
+collection InPlay { element = Card ordered = true }
+# Vanilla exhaust pile. Only cards that resolve with CardKeyword.Exhaust reach it; no other exhaust source is migrated.
+collection ExhaustPile { element = Card ordered = true }
+# Vanilla removes a resolved CardType.Power card from combat and returns it to the master deck; this scope has
+# no master deck, so the dev scope keeps those instances here instead of leaving them unattached.
+collection RemovedFromCombat { element = Card ordered = true }
 event AfterShuffle { payload = { owner = Ref(Player) } }
 event AfterCardDrawn { payload = { owner = Ref(Player) card = Ref(Card) } }
+# CardPlayed is for effects that need no chosen target (vanilla TargetType.Self and similar).
+event CardPlayed { payload = { owner = Ref(Player) card = Ref(Card) } }
+# CardPlayedOnTarget carries the resolved enemy for single-target attack cards.
+event CardPlayedOnTarget { payload = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) } }
+# Emitted after an instance is marked upgraded, so a card definition can apply definition-level upgrades.
+event CardUpgraded { payload = { card = Ref(Card) } }
+# Emitted when a resolving card with CardKeyword.Exhaust reaches the exhaust pile.
+event CardExhausted { payload = { owner = Ref(Player) card = Ref(Card) } }

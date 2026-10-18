@@ -1,0 +1,105 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Card play boundary. Energy is spent, the card leaves the hand into InPlay, its effect listeners run with
+# the card still in play, and only then does the card reach the discard pile (or the exhaust pile for
+# CardKeyword.Exhaust cards). Vanilla target selection (a public decision over enemies), X costs, cost
+# modification, ethereal, retain, other exhaust sources and play limits are not migrated; single-target
+# attacks resolve the first hittable development target.
+procedure BeginCardPlay {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = {
+      condition = not(field(owner, Player.CombatActive))
+      then = { fail = { message = "Development combat is not active" } }
+    }
+    if = {
+      condition = less(collectionIndex(Hand, card), 0)
+      then = { fail = { message = "Card is not in hand" } }
+    }
+    if = {
+      condition = less(field(owner, Player.Energy), field(card, Card.Cost))
+      then = { fail = { message = "Not enough energy to play the card" } }
+    }
+    set = { target = owner field = Player.Energy value = subtract(field(owner, Player.Energy), field(card, Card.Cost)) }
+    removeFromCollection = { collection = Hand item = card }
+    addToCollection = { collection = InPlay item = card }
+  }
+}
+procedure FinishCardPlay {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    removeFromCollection = { collection = InPlay item = card }
+    if = {
+      condition = field(card, Card.Exhausts)
+      then = {
+        addToCollection = { collection = ExhaustPile item = card }
+        emit = { event = CardExhausted payload = { owner = owner card = card } }
+      }
+      else = {
+        if = {
+          condition = field(card, Card.LeavesPlay)
+          then = { addToCollection = { collection = RemovedFromCombat item = card } }
+          else = { addToCollection = { collection = DiscardPile item = card } }
+        }
+      }
+    }
+  }
+}
+procedure PlayCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    call = { procedure = BeginCardPlay args = { owner = owner card = card } }
+    emit = { event = CardPlayed payload = { owner = owner card = card } }
+    call = { procedure = FinishCardPlay args = { owner = owner card = card } }
+  }
+}
+procedure PlayAttackCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    call = { procedure = BeginCardPlay args = { owner = owner card = card } }
+    emit = { event = CardPlayed payload = { owner = owner card = card } }
+    emit = {
+      event = CardPlayedOnTarget
+      payload = { owner = owner card = card target = first(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))) }
+    }
+    call = { procedure = FinishCardPlay args = { owner = owner card = card } }
+  }
+}
+# Value upgrade: the instance records that it is upgraded, then CardUpgraded lets the definition apply its
+# definition-level upgrade (currently only cost). Rarity, keywords and upgrade events beyond this are not migrated.
+procedure UpgradeCard {
+  parameters = { card = Ref(Card) }
+  body = {
+    set = { target = card field = Card.Upgraded value = true }
+    emit = { event = CardUpgraded payload = { card = card } }
+  }
+}
+
+action PlayCardFromHand {
+  role = player
+  parameters = { card = Ref(Card) }
+  candidates = { parameter = card query = where(collection(Hand), candidate, not(field(candidate, Card.Targeted))) }
+  requires = and(field(first(type(Player)), Player.CombatActive), greaterOrEqual(field(first(type(Player)), Player.Energy), field(card, Card.Cost)))
+  body = { call = { procedure = PlayCard args = { owner = first(type(Player)) card = card } } }
+}
+action PlayAttackFromHand {
+  role = player
+  parameters = { card = Ref(Card) }
+  candidates = { parameter = card query = where(collection(Hand), candidate, field(candidate, Card.Targeted)) }
+  requires = and(field(first(type(Player)), Player.CombatActive), and(greaterOrEqual(field(first(type(Player)), Player.Energy), field(card, Card.Cost)), exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)))))
+  body = { call = { procedure = PlayAttackCard args = { owner = first(type(Player)) card = card } } }
+}
+action UpgradeCardInHand {
+  role = player
+  parameters = { card = Ref(Card) }
+  candidates = { parameter = card query = where(collection(Hand), candidate, not(field(candidate, Card.Upgraded))) }
+  body = { call = { procedure = UpgradeCard args = { card = card } } }
+}
+
+# Development stand-in for the source's CardExhaustedEntry history: EvilEye reads it to double its block.
+procedure WhenCardExhausted {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = { set = { target = owner field = Player.ExhaustedCardThisTurn value = true } }
+}
+subscription OnCardExhausted { event = CardExhausted reaction = WhenCardExhausted }

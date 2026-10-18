@@ -36,6 +36,8 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 ## 生成并结算奖励
 
+开发包已恢复 Monster 金币的最小领取链：胜利后 `Player.Room="rewards"`、`GoldRewardPending=true`，`GoldRewardAmount` 保存 10..20 的金额，金币暂不增加。公开候选 `ClaimDevelopmentGoldReward` 领取保存金额；`CloseDevelopmentRewards` 关闭界面，未领取时即跳过。领取后仍需关闭，才能开始下一开发战斗或进入营火。金额仅在生成时抽一次，失败不给奖励；准确参数和边界见[操作参考](../reference/operations.md)与[奖励契约](../../../design/mod-the-spire/combat-rewards/spec.md)。这不是正常 Run 奖励，也没有卡牌／药水／遗物条目或原版随机布局。
+
 rewards 拥有奖励容器和待领取状态；卡牌／遗物／药水的完整获得操作仍归对应领域。明确生成候选、随机权重／升级／稀有度、显示、领取／跳过、满容量处理、未选实例清理和最终关闭顺序。
 
 卡牌选择、升级／变换、药水满栏以及遗物替换可以暂停，但续接不能重新抽样、重复支付或提前关闭访问。战斗／事件／商店调用同一获得操作，不各自创建永久对象。

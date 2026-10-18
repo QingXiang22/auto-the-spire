@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BlockPotion.cs; Common combat-only potion, BlockVar(12, Unpowered) on the player.
+use BlockPotion {
+  template = PotionDefinition
+  args = { definition = "base-spire:block-potion" }
+}
+use BlockPotionEffect {
+  template = PotionBlockEffect
+  args = { definition = "base-spire:block-potion" block = 12 }
+}

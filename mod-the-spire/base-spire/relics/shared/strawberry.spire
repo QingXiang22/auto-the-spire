@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Strawberry.cs; Common relic, MaxHpVar(7) raised on pickup and the same amount healed.
+use Strawberry {
+  template = ObtainMaxHpRelic
+  args = { definition = "base-spire:strawberry" amount = 7 }
+}

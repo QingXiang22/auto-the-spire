@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BronzeScales.cs: Common relic, PowerVar<ThornsPower>(3) applied to the owner when a combat starts.
+use BronzeScales {
+  template = BeforeCombatStartPowerRelic
+  args = { definition = "base-spire:bronze-scales" power = "base-spire:thorns-power" kind = "after-attacked-damage" stacks = 3 }
+}

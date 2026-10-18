@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Thunderclap.cs: cost 1, Attack, AllEnemies, DamageVar(4, Move) to every enemy then Vulnerable 1
+# to every enemy; OnUpgrade adds 3 damage. The damage effect is declared first so the debuff lands after it.
+use Thunderclap {
+  template = CardDefinition
+  args = { definition = "base-spire:thunderclap" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+}
+use ThunderclapDamage {
+  template = AttackAllEnemiesEffect
+  args = { definition = "base-spire:thunderclap" damage = 4 upgradedDamage = 7 hits = 1 upgradedHits = 1 }
+}
+use ThunderclapVulnerable {
+  template = ApplyAllEnemiesPowerEffect
+  args = { definition = "base-spire:thunderclap" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 upgradedStacks = 1 }
+}

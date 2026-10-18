@@ -1,0 +1,13 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Spite.cs: cost 0, DamageVar(5, Move) with RepeatVar(2); it hits once normally and Repeat times when
+# the owner lost HP this turn. OnUpgrade raises Repeat by 1 (three hits when triggered).
+use Spite {
+  template = CardDefinition
+  args = { definition = "base-spire:spite" cost = 0 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
+}
+use SpiteDamage {
+  template = FlaggedHitsAttackEffect
+  args = { definition = "base-spire:spite" damage = 5 upgradedDamage = 5 hits = 1 flaggedHits = 2 upgradedFlaggedHits = 3 flag = "lost-hp" }
+}

@@ -1,6 +1,6 @@
 # 开发卡牌与共享战斗机制
 
-文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包目前只有开发 Card、牌堆和无加成格挡，以下正常战斗步骤属于恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
+文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包目前有开发 Card（身份／费用／升级标记）、Hand／DrawPile／DiscardPile／InPlay 牌区、无加成伤害与格挡吸收、开发态战斗与回合，以及两个内容模板迁移的 Strike／Defend；原版目标选择、卡牌获得途径、关键词与死亡仍未迁移，以下正常战斗步骤其余部分属于恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
 
 先读[准确操作](../reference/operations.md)确认边界，再到 cards/catalog 定位具体源类。需求与判断意图参考[卡牌原语契约](../../../design/mod-the-spire/card-primitives/spec.md)及[主清单的共享机制](../../../review/tofix/README.md#env-t06)，这些旧契约中的接口名不自动成为新 DSL 接口。
 

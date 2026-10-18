@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: MeatOnTheBone.cs; Rare relic, HealVar(12) when the combat ends and HP is at or below HpThreshold 50 percent of max HP.
+use MeatOnTheBone {
+  template = CombatEndHealRelic
+  args = { definition = "base-spire:meat-on-the-bone" heal = 12 threshold = 50 }
+}

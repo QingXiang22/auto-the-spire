@@ -1,5 +1,45 @@
 # review历史记录与证据索引
 
+2026-10-18：[纯 DSL 接手复核与奖励领取](2026-10-18/base-dsl-takeover-2026-10-18.md)记录接手基线、各领域真实定义数量、金币领取／跳过／关闭、144 项包行为与 18 项定向公开检查；原主清单 25 批证据全文归档于该记录。正常 Run、原版对拍与营火锻造仍待完成，当前状态只看主清单。
+
+2026-10-18：[战斗金币奖励](2026-10-18/reward-gold-2026-10-18.md)记录 `Player.Gold`（初始 99）、胜利后按 Monster 区间 10..20 抽取并结算、失败不给与同 seed 可重复，以及包行为 141 项／net 362 项的实际结果与偏差。当前状态仍只看主清单。
+2026-10-18：[营火房（休息）](2026-10-18/room-rest-2026-10-18.md)记录 `Room`／`RoomUsed` 状态、`floor(MaxHp × 0.3)` 治疗与一次到访一次的语义、战斗开始／结束的房间维护，以及包行为 139 项／net 362 项的实际结果与未验证范围。当前状态仍只看主清单。
+2026-10-18：[回合末能力失效（Flame Barrier 生命周期）](2026-10-18/power-duration-02-2026-10-18.md)记录 `ExpiresAtTurnEnd`／`ExpireTurnEndPowers` 在敌方阶段之后清空的顺序，关闭此前登记的反击寿命偏差（包行为 136 项／net 362 项）。当前状态仍只看主清单。
+2026-10-18：[药水域与六瓶药水](2026-10-18/potion-2026-10-18.md)记录三格药水库存、使用流程与六个药水效果模板、六瓶源药水，以及 `[N-02-ACTION-PARAM]` 与投影 `Owner` 字段两次真实失败和复跑结果（包行为 135 项／net 362 项）。当前状态仍只看主清单。
+2026-10-18：[回合末／计数／拾取／战斗结束回复遗物](2026-10-18/relic-batch-06-2026-10-18.md)记录 Orichalcum／Pendulum／Strawberry／MeatOnTheBone 四个模板与源依据、阈值与计数行为，以及 solution／包行为 128 项／覆盖门槛 17 件／net 362 项的实际结果与未验证范围。当前状态仍只看主清单。
+2026-10-18：[战斗开始能力／敌人减益与击杀触发遗物](2026-10-18/relic-batch-05-2026-10-18.md)记录 `BeforeCombatStartPowerRelic`／`BeforeCombatStartEnemyPowerRelic`／`EnemyDiedEnergyDrawRelic`、四件遗物的源依据、战斗结束清空能力的真实缺陷修复，以及 solution／包行为 121 项／覆盖门槛 13 件／net 362 项的实际结果。当前状态仍只看主清单。
+2026-10-18：[反击（Thorns）、Bronze Scales 与 Flame Barrier](2026-10-18/thorns-2026-10-18.md)记录 `after-attacked-damage` 角色在敌方攻击前以无加成伤害反击、`BeforeCombatStartPowerRelic` 模板与两件内容的源依据，以及 solution／包行为 115 项／覆盖门槛 9 件／net 362 项的实际结果和已知偏差。当前状态仍只看主清单。
+2026-10-18：[随机三槽 Ruby Raider 编队](2026-10-18/encounter-02-2026-10-18.md)记录候选池＋`samplePick` 不放回抽取、三个互不相同且各自源 HP 的编队、与源随机流的偏差，以及一次 `[N-02-UNDECLARED-COLLECTION]` net 失败与复跑结果。当前状态仍只看主清单。
+2026-10-18：[三只 Ruby Raider 的轮转模板](2026-10-18/enemy-batch-04-2026-10-18.md)记录 Axe／Crossbow／Tracker 三个轮转模板与源 HP／伤害，以及 solution／包行为 108 项／net 362 项的实际结果与未验证范围。当前状态仍只看主清单。
+2026-10-18：[遭遇编队模板与首个源遭遇](2026-10-18/encounter-2026-10-18.md)记录 `SpawnDevelopmentEnemy`／`SingleEnemyEncounter` 与 `base-spire:fuzzy-wurm-crawler-weak` 的源依据（Monster 房、Weak、单怪），以及 solution／包行为 105 项与 net 复跑的实际结果和未验证范围。当前状态仍只看主清单。
+2026-10-18：[敌人格挡、Frail 与三只新敌人](2026-10-18/enemy-batch-03-2026-10-18.md)记录 `GainEnemyBlock`、Frail 的 ×0.75 与首次减层豁免、三个敌人模板与 BowlbugEgg／BruteRubyRaider／Stabbot 的源依据，以及 solution／包行为 103 项／net 362 项的实际结果与未验证范围。当前状态仍只看主清单。
+2026-10-18：[多段全员／易伤联动模板与四张新牌](2026-10-18/card-batch-04-2026-10-18.md)记录 `upgradedHits`、`VulnerableHitsAttackEffect`、`AmplifyVulnerableEffect` 与 Breakthrough／Conflagration／Dismantle／MoltenFist 的源依据，以及 solution／包行为 97 项／net 362 项的实际结果与未验证范围。当前状态仍只看主清单。
+2026-10-18：[单招敌人模板与两只新敌人](2026-10-18/enemy-batch-02-2026-10-18.md)记录共用的 `SingleAttackEnemy` 模板与 Twig Slime S／Assassin Ruby Raider 的源 HP 与伤害、同一敌方阶段的行动顺序，以及 solution／包行为 90 项与 net 复跑的实际结果和未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[敌方阶段与 FuzzyWurmCrawler](2026-10-18/enemy-turn-2026-10-18.md)记录敌方阶段顺序、`DamagePlayerPowered` 的 Strength／Weak／Vulnerable 修正、debuff 减层回到敌方回合末、第一个原版敌人的源 HP 与轮转，以及 solution／包行为 86 项／net 362 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[回合内历史标志与五张新牌](2026-10-18/card-batch-03-2026-10-18.md)记录 `LostHpThisTurn`／`ExhaustedCardThisTurn` 两个回合内标志、`FlaggedHitsAttackEffect`／`FlaggedBlockMultiplierEffect` 与 Spite／EvilEye／Break／Howl From Beyond／Hemokinesis 的源依据，以及 solution／包行为 82 项／覆盖门槛 8 件／net 361 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[战斗结束与敌人死亡](2026-10-18/combat-end-2026-10-18.md)记录 `EnemyDied`／`CombatEnded`、`CombatOutcome` 与只有在敌人死亡后才评估胜利的顺序，以及 solution／包行为 75 项／覆盖门槛 8 件／net 360 项的实际结果与未验证范围（含一次版本号不同步导致的 net 失败与复跑）。当前状态仍只看主清单。
+
+2026-10-18：[全员攻击模板与四张新牌](2026-10-18/card-batch-02-2026-10-18.md)记录 `AttackAllEnemiesEffect` 与 Taunt／Tremble／Thunderclap／Blood Wall 的源依据、全体伤害先于全体 debuff 的顺序，以及 solution／包行为 72 项／覆盖门槛 8 件／net 359 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[回合末减层与 Power 牌离场](2026-10-18/power-duration-2026-10-18.md)记录 `AfterTurnEnded` 时点、`TickDownDebuffs`、`Card.LeavesPlay`／`RemovedFromCombat` 分流与 Inflame 内容，以及 solution／包行为 67 项／覆盖门槛 8 件／net 358 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[能力与伤害修正参与者](2026-10-18/power-modifiers-2026-10-18.md)记录 `Power`／`Kind` 设计、Strength／Vulnerable／Dexterity 在伤害与格挡链中的源顺序、三张新卡（Bash／Uppercut／Shockwave），以及 solution／包行为 64 项／覆盖门槛 8 件／net 357 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[消耗堆、失去生命与四张 Ironclad 牌](2026-10-18/card-exhaust-2026-10-18.md)记录 `Card.Exhausts`／`ExhaustPile`／`CardExhausted` 分流、`LosePlayerHp` 绕过格挡、EnergyEffect／LoseHpEffect 与 Impervious／Offering／Bloodletting／Bludgeon 的源依据，以及 solution／包行为 56 项／覆盖门槛 8 件／net 356 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[可组合卡牌效果与八张 Ironclad 普通牌](2026-10-18/card-effects-2026-10-18.md)记录 CardDefinition＋效果模板的组合方式、`CardUpgraded`／`DrawCards`／`Targeted`、六张新卡的源依据，以及 solution／包行为 50 项／覆盖门槛 8 件／net 355 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[卡牌出牌核心与 Strike／Defend](2026-10-18/card-play-2026-10-18.md)记录费用扣除、Hand→InPlay→DiscardPile 顺序、`CardPlayed`／`CardPlayedOnTarget` 事件、值升级与两张起始牌的源依据，以及 solution／包行为 41 项／覆盖门槛 8 件／net 354 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[伤害与格挡吸收](2026-10-18/combat-damage-2026-10-18.md)记录 `DamageEnemy`／`DamagePlayer` 的格挡优先与 0 下限、开发伤害目标、`AfterPlayerTurnStart` 时点与 MercuryHourglass 源依据，以及 solution／包行为 34 项／覆盖门槛 8 件／net 353 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[开发态回合生命周期与生命／能量资源](2026-10-18/combat-turn-resources-2026-10-18.md)记录四个回合触发模板与 Lantern／BloodVial／HornCleat／HappyFlower 的源依据、第一回合不清格挡的顺序核对，以及 solution／包行为 28 项／覆盖门槛 7 件／net 352 项的实际结果与未验证范围。当前状态仍只看主清单。
+
+2026-10-18：[战斗开始格挡遗物 Anchor／FakeAnchor 的 DSL 交付](2026-10-18/relic-combat-start-2026-10-18.md)记录开发态战斗周期与 `BeforeCombatStartBlockRelic` 模板、两个遗物的源 SHA256 核对、Codex 用户级 skill 安装入口的实际使用，以及 solution／包行为 18 项／覆盖门槛／net 351 项的实际结果与未验证范围。当前状态仍只看主清单。
+
 2026-10-18：[base 人类手册与 agent skill](2026-10-18/base-development-manual-skill-2026-10-18.md)记录全领域文档、两篇逐步复现教程、任务路由与有界定位的实际验证。未迁移玩法与原验收范围不变，当前状态见主清单。
 
 

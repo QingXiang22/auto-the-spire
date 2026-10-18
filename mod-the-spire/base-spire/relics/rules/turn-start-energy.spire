@@ -1,0 +1,34 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Lantern.cs: AfterSideTurnStart on the owner's first turn, gain one energy.
+template TurnStartEnergyRelic {
+  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 0, max = 999) } turn = { type = Int(min = 1, max = 999) } }
+  body = {
+    procedure WhenTurnStarted {
+      parameters = { owner = Ref(Player) }
+      body = {
+        if = {
+          condition = equal(field(owner, Player.TurnNumber), arg(turn))
+          then = {
+            forEach = {
+              query = collection(Relics) item = relic
+              body = {
+                if = {
+                  condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+                  then = { call = { procedure = GainEnergy args = { owner = owner amount = arg(amount) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnTurnStart { event = AfterSideTurnStarted reaction = WhenTurnStarted }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

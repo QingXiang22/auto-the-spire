@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: DefendIronclad.cs CanonicalVars and OnUpgrade: cost 1, 5 block, +3 when upgraded.
+use Defend {
+  template = CardDefinition
+  args = { definition = "base-spire:defend-ironclad" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+}
+use DefendBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:defend-ironclad" block = 5 upgradedBlock = 8 }
+}

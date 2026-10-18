@@ -1,0 +1,131 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Orichalcum.cs: at the end of the owner's turn, if the owner still has no block, gain unpowered block.
+# The source splits this into a very early check and a later gain so other end-of-turn block does not suppress
+# it; the development end-of-turn time point checks the block once, which matches the observable result for a
+# single player.
+template TurnEndNoBlockRelic {
+  parameters = { definition = { type = String(length = 64) } block = { type = Int(min = 0, max = 999) } }
+  body = {
+    procedure WhenTurnEnded {
+      parameters = { owner = Ref(Player) }
+      body = {
+        if = {
+          condition = equal(field(owner, Player.Block), 0)
+          then = {
+            forEach = {
+              query = collection(Relics) item = relic
+              body = {
+                if = {
+                  condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+                  then = { call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(block) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnTurnEnded { event = AfterTurnEnded reaction = WhenTurnEnded }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}
+
+# Pendulum.cs: every `turns` owner turn starts, draw `cards`. The instance counter is not reset by the
+# development lifecycle, matching the saved TurnsSeen property in the source.
+template EveryTurnsDrawRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    turns = { type = Int(min = 1, max = 999) }
+    cards = { type = Int(min = 0, max = 9) }
+  }
+  body = {
+    procedure WhenTurnStarted {
+      parameters = { owner = Ref(Player) }
+      body = {
+        forEach = {
+          query = collection(Relics) item = relic
+          body = {
+            if = {
+              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+              then = {
+                set = { target = relic field = Relic.Counter value = modulo(add(field(relic, Relic.Counter), 1), arg(turns)) }
+                if = {
+                  condition = equal(field(relic, Relic.Counter), 0)
+                  then = { call = { procedure = DrawCards args = { owner = owner count = arg(cards) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnTurnStart { event = AfterSideTurnStarted reaction = WhenTurnStarted }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}
+
+# Strawberry.cs: GainMaxHp adds the amount to max HP and then heals the same amount, so obtaining the relic
+# raises both MaxHp and Hp by its value.
+template ObtainMaxHpRelic {
+  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 1, max = 999) } }
+  body = {
+    action Obtain {
+      role = player
+      locals = { owner = Binding }
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = {
+        let = { into = owner value = first(type(Player)) }
+        call = { procedure = ObtainRelic args = { owner = owner definition = arg(definition) } }
+        set = { target = owner field = Player.MaxHp value = add(field(owner, Player.MaxHp), arg(amount)) }
+        call = { procedure = Heal args = { owner = owner amount = arg(amount) } }
+      }
+    }
+  }
+}
+
+# MeatOnTheBone.cs: when the combat finishes in victory and the owner's HP is at or below the threshold
+# percentage of max HP, heal. A defeat does not heal.
+template CombatEndHealRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    heal = { type = Int(min = 0, max = 999) }
+    threshold = { type = Int(min = 1, max = 100) }
+  }
+  body = {
+    procedure WhenCombatEnded {
+      parameters = { owner = Ref(Player) victory = Bool }
+      body = {
+        if = {
+          condition = and(victory, lessOrEqual(multiply(field(owner, Player.Hp), 100), multiply(field(owner, Player.MaxHp), arg(threshold))))
+          then = {
+            forEach = {
+              query = collection(Relics) item = relic
+              body = {
+                if = {
+                  condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+                  then = { call = { procedure = Heal args = { owner = owner amount = arg(heal) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnCombatEnded { event = CombatEnded reaction = WhenCombatEnded }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

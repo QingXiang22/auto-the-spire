@@ -1,0 +1,13 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Dismantle.cs: cost 1, DamageVar(8, Move) hitting once, or twice when the target already holds
+# Vulnerable; OnUpgrade adds 2 damage.
+use Dismantle {
+  template = CardDefinition
+  args = { definition = "base-spire:dismantle" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use DismantleDamage {
+  template = VulnerableHitsAttackEffect
+  args = { definition = "base-spire:dismantle" damage = 8 upgradedDamage = 10 hits = 1 vulnerableHits = 2 }
+}

@@ -1,0 +1,55 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# FuzzyWurmCrawler.cs (Ascension 0): MinInitialHp 55, MaxInitialHp 57. The move state machine is
+# FIRST_ACID_GOOP -> INHALE -> ACID_GOOP -> FIRST_ACID_GOOP, with AcidGoopDamage 4 and Inhale applying
+# StrengthPower 7 to itself. Both goop states deal the same damage, so MoveIndex 0 and 2 are the two goop
+# slots and 1 is Inhale. The source rolls initial HP inside 55..57; this development spawn uses the minimum.
+template FuzzyWurmCrawlerEnemy {
+  parameters = { definition = { type = String(length = 64) } hp = { type = Int(min = 1, max = 9999) } }
+  body = {
+    procedure WhenEnemyTurn {
+      parameters = { owner = Ref(Player) target = Ref(Enemy) }
+      body = {
+        if = {
+          condition = equal(field(target, Enemy.DefinitionId), arg(definition))
+          then = {
+            if = {
+              condition = equal(field(target, Enemy.MoveIndex), 1)
+              then = {
+                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" kind = "damage-additive" stacks = 7 } }
+                set = { target = target field = Enemy.MoveIndex value = 2 }
+                set = { target = target field = Enemy.Intent value = "attack" }
+              }
+              else = {
+                call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 4 } }
+                if = {
+                  condition = equal(field(target, Enemy.MoveIndex), 0)
+                  then = {
+                    set = { target = target field = Enemy.MoveIndex value = 1 }
+                    set = { target = target field = Enemy.Intent value = "buff" }
+                  }
+                  else = {
+                    set = { target = target field = Enemy.MoveIndex value = 0 }
+                    set = { target = target field = Enemy.Intent value = "attack" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
+    action Spawn {
+      role = player
+      locals = { target = Binding }
+      body = {
+        create = {
+          type = Enemy scope = frameScope() into = target
+          fields = { DefinitionId = arg(definition) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
+        }
+      }
+    }
+  }
+}

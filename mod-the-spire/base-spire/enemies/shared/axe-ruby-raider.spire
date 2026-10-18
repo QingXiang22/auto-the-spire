@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: AxeRubyRaider.cs; Ascension 0 initial HP 20..22 (development spawn uses the minimum) and SWING_1 and SWING_2 both deal 5 damage and gain 5 block, BIG_SWING deals 12, chained SWING_1 -> SWING_2 -> BIG_SWING.
+use AxeRubyRaider {
+  template = AttackDefendRotationEnemy
+  args = { definition = "base-spire:axe-ruby-raider" hp = 20 damage = 5 block = 5 bigDamage = 12 }
+}

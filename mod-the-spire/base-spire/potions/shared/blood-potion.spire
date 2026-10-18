@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BloodPotion.cs; Common any-time potion, heals HealPercent 20 of max HP.
+use BloodPotion {
+  template = PotionDefinition
+  args = { definition = "base-spire:blood-potion" }
+}
+use BloodPotionEffect {
+  template = PotionHealPercentEffect
+  args = { definition = "base-spire:blood-potion" percent = 20 }
+}

@@ -279,9 +279,9 @@
       "source_path": "sts2/src/Core/Models/Encounters/FuzzyWurmCrawlerWeak.cs",
       "source_sha256": "306bae08ec4ffc05936242ab7749bfe24e8facf79cbdbe4e3d4bc84d9a25bd0e",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Encounters/FuzzyWurmCrawlerWeak.cs; Monster room, IsWeak, exactly one FuzzyWurmCrawler, reviewed in DSL-ENCOUNTER-01.",
+      "definition": "encounters/shared/fuzzy-wurm-crawler-weak.spire"
     },
     {
       "id": "base-spire:globe-head-normal",
@@ -549,9 +549,9 @@
       "source_path": "sts2/src/Core/Models/Encounters/RubyRaidersNormal.cs",
       "source_sha256": "ce3789a28fb2c5f2e6645473ef806f6bcce236b47fb476f3c092db1b262a5f19",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Encounters/RubyRaidersNormal.cs; Monster room, three slots choosing randomly from the five raider types with the distinct-ruby-raiders unique choice group, reviewed in DSL-ENCOUNTER-02.",
+      "definition": "encounters/shared/ruby-raiders-normal.spire"
     },
     {
       "id": "base-spire:scrolls-of-biting-normal",

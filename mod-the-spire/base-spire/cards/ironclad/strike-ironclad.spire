@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: StrikeIronclad.cs CanonicalVars and OnUpgrade: cost 1, 6 damage, +3 when upgraded.
+use Strike {
+  template = CardDefinition
+  args = { definition = "base-spire:strike-ironclad" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use StrikeDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:strike-ironclad" damage = 6 upgradedDamage = 9 hits = 1 }
+}

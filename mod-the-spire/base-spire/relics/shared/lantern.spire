@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Lantern.cs CanonicalVars and AfterSideTurnStart: one energy on the owner's first turn.
+use Lantern {
+  template = TurnStartEnergyRelic
+  args = { definition = "base-spire:lantern" amount = 1 turn = 1 }
+}

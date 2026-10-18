@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Bloodletting.cs: cost 0, HpLossVar(3) as Unblockable | Unpowered damage, EnergyVar(2),
+# no keyword; OnUpgrade adds 1 energy.
+use Bloodletting {
+  template = CardDefinition
+  args = { definition = "base-spire:bloodletting" cost = 0 upgradedCost = 0 targeted = false exhausts = false leavesPlay = false }
+}
+use BloodlettingLoseHp {
+  template = LoseHpEffect
+  args = { definition = "base-spire:bloodletting" hp = 3 upgradedHp = 3 }
+}
+use BloodlettingEnergy {
+  template = EnergyEffect
+  args = { definition = "base-spire:bloodletting" energy = 2 upgradedEnergy = 3 }
+}

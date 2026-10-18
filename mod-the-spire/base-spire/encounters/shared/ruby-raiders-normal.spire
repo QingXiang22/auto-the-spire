@@ -1,0 +1,9 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: RubyRaidersNormal.cs; Monster room, three distinct raiders drawn from the five raider types through
+# the distinct-ruby-raiders unique choice group.
+use RubyRaidersNormal {
+  template = RubyRaidersFormation
+  args = { definition = "base-spire:ruby-raiders-normal" }
+}

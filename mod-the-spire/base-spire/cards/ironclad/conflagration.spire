@@ -1,0 +1,13 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Conflagration.cs: cost 1, DamageVar(2, Move) with RepeatVar(4) hits on all enemies;
+# OnUpgrade raises Repeat by 1 so the upgraded card hits five times.
+use Conflagration {
+  template = CardDefinition
+  args = { definition = "base-spire:conflagration" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+}
+use ConflagrationDamage {
+  template = AttackAllEnemiesEffect
+  args = { definition = "base-spire:conflagration" damage = 2 upgradedDamage = 2 hits = 4 upgradedHits = 5 }
+}

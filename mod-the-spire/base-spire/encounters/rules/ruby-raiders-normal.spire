@@ -1,0 +1,57 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# RubyRaiders source encounter: three slots, each choosing randomly from the five raider types with the
+# uniqueChoiceGroup "distinct-ruby-raiders", so the three raiders are distinct. The source draws from the run
+# RNG; this development scope draws from the named engine-default stream below, so the exact source sequence is
+# NOT reproduced. Candidate order follows the source pool order and each pick removes its entry, which keeps
+# the selection without replacement.
+procedure BuildRubyRaiderPool {
+  locals = { entry = Binding }
+  body = {
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:axe-ruby-raider" Hp = 20 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:assassin-ruby-raider" Hp = 18 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:brute-ruby-raider" Hp = 30 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:crossbow-ruby-raider" Hp = 18 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:tracker-ruby-raider" Hp = 21 } }
+  }
+}
+procedure PickRaiderFromPool {
+  locals = { picked = Binding }
+  body = {
+    samplePick = {
+      stream = "base-spire:development-encounter"
+      candidates = collection(EnemyPool)
+      into = picked
+    }
+    removeFromCollection = { collection = EnemyPool item = picked }
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = field(picked, EnemyPoolEntry.DefinitionId) hp = field(picked, EnemyPoolEntry.Hp) } }
+    destroy = { target = picked }
+  }
+}
+procedure ClearRaiderPool {
+  body = {
+    forEach = {
+      query = collection(EnemyPool) item = entry
+      body = {
+        removeFromCollection = { collection = EnemyPool item = entry }
+        destroy = { target = entry }
+      }
+    }
+  }
+}
+template RubyRaidersFormation {
+  parameters = { definition = { type = String(length = 64) } }
+  body = {
+    action Spawn {
+      role = player
+      body = {
+        call = { procedure = BuildRubyRaiderPool }
+        call = { procedure = PickRaiderFromPool }
+        call = { procedure = PickRaiderFromPool }
+        call = { procedure = PickRaiderFromPool }
+        call = { procedure = ClearRaiderPool }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BowlbugEgg.cs; Ascension 0 initial HP 21..22 (development spawn uses the minimum) and BITE_MOVE 7 damage plus 7 block, one-move loop.
+use BowlbugEgg {
+  template = AttackDefendEnemy
+  args = { definition = "base-spire:bowlbug-egg" hp = 21 damage = 7 block = 7 }
+}

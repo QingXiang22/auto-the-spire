@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Impervious.cs: cost 2, BlockVar(30, Move), CardKeyword.Exhaust, OnUpgrade adds 10 block.
+use Impervious {
+  template = CardDefinition
+  args = { definition = "base-spire:impervious" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
+}
+use ImperviousBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:impervious" block = 30 upgradedBlock = 40 }
+}

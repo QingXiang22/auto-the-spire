@@ -1,0 +1,34 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# MercuryHourglass.cs: AfterPlayerTurnStart on the owner, unpowered damage to every hittable enemy.
+template TurnStartDamageAllEnemiesRelic {
+  parameters = { definition = { type = String(length = 64) } amount = { type = Int(min = 0, max = 999) } }
+  body = {
+    procedure WhenPlayerTurnStarts {
+      parameters = { owner = Ref(Player) }
+      body = {
+        forEach = {
+          query = collection(Relics) item = relic
+          body = {
+            if = {
+              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+              then = {
+                forEach = {
+                  query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
+                  body = { call = { procedure = DamageEnemy args = { target = enemy amount = arg(amount) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnPlayerTurnStart { event = AfterPlayerTurnStart reaction = WhenPlayerTurnStarts }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

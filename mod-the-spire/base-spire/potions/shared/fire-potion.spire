@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: FirePotion.cs; Common combat-only potion, DamageVar(20, Unpowered) against one enemy.
+use FirePotion {
+  template = PotionDefinition
+  args = { definition = "base-spire:fire-potion" }
+}
+use FirePotionEffect {
+  template = PotionDamageEffect
+  args = { definition = "base-spire:fire-potion" damage = 20 }
+}

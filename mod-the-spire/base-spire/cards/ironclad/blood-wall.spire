@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BloodWall.cs: cost 2, Skill, Self, HpLossVar(2) as unblockable unpowered damage then BlockVar(16, Move);
+# OnUpgrade adds 4 block.
+use BloodWall {
+  template = CardDefinition
+  args = { definition = "base-spire:blood-wall" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
+}
+use BloodWallLoseHp {
+  template = LoseHpEffect
+  args = { definition = "base-spire:blood-wall" hp = 2 upgradedHp = 2 }
+}
+use BloodWallBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:blood-wall" block = 16 upgradedBlock = 20 }
+}

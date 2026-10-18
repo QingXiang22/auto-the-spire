@@ -1,0 +1,39 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# BowlbugEgg.cs (Ascension 0): MinInitialHp 21; its only move BITE_MOVE deals 7 damage and then gains 7 block,
+# looping forever. The development spawn uses the minimum initial HP.
+template AttackDefendEnemy {
+  parameters = {
+    definition = { type = String(length = 64) }
+    hp = { type = Int(min = 1, max = 9999) }
+    damage = { type = Int(min = 0, max = 999) }
+    block = { type = Int(min = 0, max = 999) }
+  }
+  body = {
+    procedure WhenEnemyTurn {
+      parameters = { owner = Ref(Player) target = Ref(Enemy) }
+      body = {
+        if = {
+          condition = equal(field(target, Enemy.DefinitionId), arg(definition))
+          then = {
+            call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = arg(damage) } }
+            call = { procedure = GainEnemyBlock args = { target = target amount = arg(block) } }
+            set = { target = target field = Enemy.Intent value = "attack" }
+          }
+        }
+      }
+    }
+    subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
+    action Spawn {
+      role = player
+      locals = { target = Binding }
+      body = {
+        create = {
+          type = Enemy scope = frameScope() into = target
+          fields = { DefinitionId = arg(definition) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
+        }
+      }
+    }
+  }
+}

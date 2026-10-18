@@ -1,0 +1,78 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Enemy attack (source DamageCmd.Attack(...).FromMonster, a powered attack). Modifier participants run in the
+# source order: the attacker's additive Strength and x0.75 Weak, then the defender's x1.5 Vulnerable, all with
+# integer floor. Enemy Strength/Weak are read from Powers held by the attacking enemy; the player's Vulnerable
+# from Powers held by the defending player. Block absorbs first and the player HP floor stays zero.
+procedure DamagePlayerPowered {
+  parameters = { attacker = Ref(Enemy) owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  locals = { blocked = Int scaled = Int strength = Int weak = Int vulnerable = Int thorns = Int }
+  body = {
+    let = {
+      into = strength
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-additive"), equal(field(power, Power.HolderEnemy), attacker))), Sum, power, field(power, Power.Stacks))
+    }
+    let = {
+      into = weak
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-dealt-multiplier"), equal(field(power, Power.HolderEnemy), attacker))), Sum, power, field(power, Power.Stacks))
+    }
+    let = {
+      into = vulnerable
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
+    }
+    let = {
+      into = thorns
+      value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "after-attacked-damage"), equal(field(power, Power.HolderPlayer), owner))), Sum, power, field(power, Power.Stacks))
+    }
+    # Source ThornsPower.BeforeDamageReceived: an unpowered retaliation against the attacker before the hit lands.
+    if = {
+      condition = greater(thorns, 0)
+      then = { call = { procedure = DamageEnemy args = { target = attacker amount = thorns } } }
+    }
+    let = { into = scaled value = maximum(0, add(amount, strength)) }
+    if = {
+      condition = greater(weak, 0)
+      then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } }
+    }
+    if = {
+      condition = greater(vulnerable, 0)
+      then = { let = { into = scaled value = divide(multiply(scaled, 3), 2) } }
+    }
+    let = { into = blocked value = minimum(field(owner, Player.Block), scaled) }
+    set = { target = owner field = Player.Block value = subtract(field(owner, Player.Block), blocked) }
+    set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), subtract(scaled, blocked))) }
+    if = {
+      condition = greater(subtract(scaled, blocked), 0)
+      then = { set = { target = owner field = Player.LostHpThisTurn value = true } }
+    }
+    call = { procedure = CheckCombatDefeat args = { owner = owner } }
+  }
+}
+
+# Shared enemy phase. Each hittable enemy is offered one turn through EnemyTurnStarted, so the enemy content
+# template owns its own move rotation; the phase then closes with AfterEnemyTurnEnded.
+procedure RunEnemyTurn {
+  parameters = { owner = Ref(Player) }
+  body = {
+    forEach = {
+      query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
+      body = {
+        # Source Creature.AfterTurnStart clears block for the side starting its turn; the player-side turn-one
+        # exception does not apply to enemies, so every enemy turn starts with zero block.
+        set = { target = enemy field = Enemy.Block value = 0 }
+        emit = { event = EnemyTurnStarted payload = { owner = owner target = enemy } }
+      }
+    }
+    emit = { event = AfterEnemyTurnEnded payload = { owner = owner } }
+  }
+}
+
+# Enemy block (CreatureCmd.GainBlock on a monster). The source applies monster block modifiers; none of those
+# participants are migrated, so this is the plain additive amount with the same 999 cap as the player chain.
+procedure GainEnemyBlock {
+  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999) }
+  body = {
+    set = { target = target field = Enemy.Block value = minimum(999, add(field(target, Enemy.Block), amount)) }
+  }
+}

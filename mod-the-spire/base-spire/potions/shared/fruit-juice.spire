@@ -1,0 +1,12 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: FruitJuice.cs; Rare any-time potion, MaxHpVar(5) through GainMaxHp.
+use FruitJuice {
+  template = PotionDefinition
+  args = { definition = "base-spire:fruit-juice" }
+}
+use FruitJuiceEffect {
+  template = PotionMaxHpEffect
+  args = { definition = "base-spire:fruit-juice" amount = 5 }
+}

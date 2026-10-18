@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: BruteRubyRaider.cs; Ascension 0 initial HP 30..33 (development spawn uses the minimum) and BEAT_MOVE 7 damage then ROAR_MOVE StrengthPower 3, alternating.
+use BruteRubyRaider {
+  template = AttackBuffEnemy
+  args = { definition = "base-spire:brute-ruby-raider" hp = 30 damage = 7 strength = 3 }
+}

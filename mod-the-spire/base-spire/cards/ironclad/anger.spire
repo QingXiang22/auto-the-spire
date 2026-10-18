@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Anger.cs: cost 0, DamageVar(6, Move), OnUpgrade adds 2, and OnPlay adds a clone to the discard pile.
+use Anger {
+  template = CardDefinition
+  args = { definition = "base-spire:anger" cost = 0 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
+}
+use AngerDamage {
+  template = AttackEffect
+  args = { definition = "base-spire:anger" damage = 6 upgradedDamage = 8 hits = 1 }
+}
+use AngerCopy {
+  template = AddCopyEffect
+  args = { definition = "base-spire:anger" }
+}

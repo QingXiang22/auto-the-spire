@@ -12,3 +12,19 @@ procedure SetupDevelopmentDraw {
     }
   }
 }
+
+# Development damage target, not a vanilla monster: no intent, AI, death, removal or encounter contract.
+procedure AddDevelopmentTarget {
+  parameters = { owner = Ref(Player) }
+  locals = { target = Binding }
+  body = {
+    create = {
+      type = Enemy scope = entityScope(owner) into = target
+      fields = { Owner = field(owner, Player.Owner) DefinitionId = "base-spire:development-target" Hp = 40 MaxHp = 40 }
+    }
+  }
+}
+action AddDevelopmentTarget {
+  role = player
+  body = { call = { procedure = AddDevelopmentTarget args = { owner = first(type(Player)) } } }
+}

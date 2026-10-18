@@ -1,0 +1,13 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Tremble.cs: cost 1, Skill, AnyEnemy, CardKeyword.Exhaust, VulnerablePower 3 on the target;
+# OnUpgrade adds 1 Vulnerable.
+use Tremble {
+  template = CardDefinition
+  args = { definition = "base-spire:tremble" cost = 1 upgradedCost = 1 targeted = true exhausts = true leavesPlay = false }
+}
+use TrembleVulnerable {
+  template = ApplyEnemyPowerEffect
+  args = { definition = "base-spire:tremble" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 upgradedStacks = 4 }
+}

@@ -1,0 +1,40 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Relic that debuffs every hittable enemy when a combat starts. BagOfMarbles.cs applies VulnerablePower 1 to
+# the combat's hittable enemies from its room-entry hook; the development combat start is the equivalent point.
+template BeforeCombatStartEnemyPowerRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    power = { type = String(length = 64) }
+    kind = { type = String(length = 32) }
+    stacks = { type = Int(min = 1, max = 999) }
+  }
+  body = {
+    procedure WhenCombatStarts {
+      parameters = { owner = Ref(Player) }
+      body = {
+        forEach = {
+          query = collection(Relics) item = relic
+          body = {
+            if = {
+              condition = and(equal(field(relic, Relic.Holder), owner), and(not(field(relic, Relic.IsMelted)), equal(field(relic, Relic.DefinitionId), arg(definition))))
+              then = {
+                forEach = {
+                  query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
+                  body = { call = { procedure = ApplyEnemyPower args = { target = enemy definition = arg(power) kind = arg(kind) stacks = arg(stacks) } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    subscription OnCombatStart { event = BeforeCombatStart reaction = WhenCombatStarts }
+    action Obtain {
+      role = player
+      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

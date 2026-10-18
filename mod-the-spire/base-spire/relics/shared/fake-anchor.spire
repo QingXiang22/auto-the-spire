@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: FakeAnchor.cs CanonicalVars and BeforeCombatStart: 4 unpowered block.
+use FakeAnchor {
+  template = BeforeCombatStartBlockRelic
+  args = { definition = "base-spire:fake-anchor" amount = 4 }
+}

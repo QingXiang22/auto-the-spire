@@ -46,6 +46,17 @@ action Draw {
   role = player
   body = { call = { procedure = DrawOne args = { owner = first(type(Player)) } } }
 }
+# Shared "draw N cards" operation used by card effects. Each card goes through DrawOne, so reshuffle,
+# the hand limit, draw blocking and AfterCardDrawn keep their existing order.
+procedure DrawCards {
+  parameters = { owner = Ref(Player) count = Int(min = 0, max = 9) }
+  body = {
+    repeat = {
+      count = count
+      body = { call = { procedure = DrawOne args = { owner = owner } } }
+    }
+  }
+}
 action DiscardHand {
   role = player
   body = {

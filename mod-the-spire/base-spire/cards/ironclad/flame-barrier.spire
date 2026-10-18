@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: FlameBarrier.cs: cost 2, BlockVar(12, Move) then FlameBarrierPower 4 (unpowered damage back);
+# OnUpgrade adds 4 block and 2 damage back.
+use FlameBarrier {
+  template = CardDefinition
+  args = { definition = "base-spire:flame-barrier" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
+}
+use FlameBarrierBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:flame-barrier" block = 12 upgradedBlock = 16 }
+}
+use FlameBarrierThorns {
+  template = ApplySelfPowerUntilTurnEndEffect
+  args = { definition = "base-spire:flame-barrier" power = "base-spire:thorns-power" kind = "after-attacked-damage" stacks = 4 upgradedStacks = 6 }
+}

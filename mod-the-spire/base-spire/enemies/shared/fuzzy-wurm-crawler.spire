@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: FuzzyWurmCrawler.cs; development spawn uses the minimum initial HP (55 at Ascension 0).
+use FuzzyWurmCrawler {
+  template = FuzzyWurmCrawlerEnemy
+  args = { definition = "base-spire:fuzzy-wurm-crawler" hp = 55 }
+}

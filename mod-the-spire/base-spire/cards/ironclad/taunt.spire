@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Taunt.cs: cost 1, Skill, AnyEnemy, BlockVar(7, Move) then VulnerablePower 1 on the target;
+# OnUpgrade adds 1 block and 1 Vulnerable. A targeted skill, so its block resolves before the debuff.
+use Taunt {
+  template = CardDefinition
+  args = { definition = "base-spire:taunt" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+}
+use TauntBlock {
+  template = BlockEffect
+  args = { definition = "base-spire:taunt" block = 7 upgradedBlock = 8 }
+}
+use TauntVulnerable {
+  template = ApplyEnemyPowerEffect
+  args = { definition = "base-spire:taunt" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 upgradedStacks = 2 }
+}
