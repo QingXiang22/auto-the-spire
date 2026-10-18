@@ -74,13 +74,13 @@ internal static partial class PackageChecks
             Submit(s, "PlayAttackFromHand", Hand(s).Single(card => CardUpgraded(s, card)));
             Equal(0L, EnemyHp(s), "upgraded Break deals 30 x 1.5 against the vulnerable target, flooring at zero"); Equal(12L, PowerStacks(s, "base-spire:vulnerable-power"), "vulnerable stacks add up");
         });
-        Own("base-spire:howl-from-beyond", "CP54 Howl From Beyond: cost 3 for 16 damage to all enemies, 21 upgraded, and it exhausts", () =>
+        Own("base-spire:howl-from-beyond", "CP54 Howl From Beyond: cost 3 for 16 damage to all enemies, 21 upgraded; the exhaust hover tip is not a keyword", () =>
         {
             var s = Start(package); Submit(s, "HowlFromBeyond.AddToHand"); Submit(s, "AddDevelopmentTarget"); Submit(s, "AddDevelopmentTarget");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             Submit(s, "PlayCardFromHand", Hand(s).Single());
             foreach (var target in Targets(s)) Equal(24L, s.State.GetField(target, EnemyField(s, "Hp")).AsInt(), "every target took 16");
-            Equal(1, Members(s, "ExhaustPile").Count, "the card exhausted"); Equal(0L, Energy(s), "three energy spent");
+            Equal(0, Members(s, "ExhaustPile").Count, "no innate exhaust keyword"); Equal(0L, Energy(s), "three energy spent");
             Submit(s, "HowlFromBeyond.AddToHand"); Submit(s, "UpgradeCardInHand", Hand(s).Single());
             Set(s, Player(s), "Player", "Energy", Value.Of(3L));
             Submit(s, "PlayCardFromHand", Hand(s).Single(card => CardUpgraded(s, card)));

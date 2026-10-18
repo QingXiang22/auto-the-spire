@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: StrikeIronclad.cs CanonicalVars and OnUpgrade: cost 1, 6 damage, +3 when upgraded.
 use Strike {
   template = CardDefinition
-  args = { definition = "base-spire:strike-ironclad" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = false baseDamage = 6 upgradedBaseDamage = 9 kind = "attack" strikeTag = true definition = "base-spire:strike-ironclad" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use StrikeDamage {
   template = AttackEffect

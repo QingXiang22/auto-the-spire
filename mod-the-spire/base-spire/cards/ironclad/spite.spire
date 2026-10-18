@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # the owner lost HP this turn. OnUpgrade raises Repeat by 1 (three hits when triggered).
 use Spite {
   template = CardDefinition
-  args = { definition = "base-spire:spite" cost = 0 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 5 upgradedBaseDamage = 5 kind = "attack" strikeTag = false definition = "base-spire:spite" cost = 0 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
 }
 use SpiteDamage {
   template = FlaggedHitsAttackEffect

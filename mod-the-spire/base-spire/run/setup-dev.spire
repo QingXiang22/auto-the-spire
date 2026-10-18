@@ -5,6 +5,7 @@ dsl_version = "core/0.3"
 procedure SetupDevelopmentDraw {
   locals = { owner = Binding card = Binding }
   body = {
+    call = { procedure = RegisterCardLibrary }
     create = { type = Player scope = frameScope() into = owner }
     repeat = {
       count = 3

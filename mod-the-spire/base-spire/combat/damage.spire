@@ -2,10 +2,10 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # sts2 Creature.DamageBlockInternal + LoseHpInternal: block absorbs min(Block, amount) first, the rest is
-# lost from HP with a floor of 0. Unblockable, damage modifiers and hp-loss hooks are not migrated; death is
+# lost from HP with a floor of 0. Powered modifiers use the separate DamageEnemyPowered operation; death is
 # observed as HP reaching zero from above and reported through EnemyDied.
 procedure DamageEnemy {
-  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999) }
+  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
   locals = { blocked = Int before = Int }
   body = {
     let = { into = before value = field(target, Enemy.Hp) }
@@ -23,7 +23,7 @@ procedure DamageEnemy {
 }
 
 procedure DamagePlayer {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
   locals = { blocked = Int }
   body = {
     let = { into = blocked value = minimum(field(owner, Player.Block), amount) }
@@ -31,33 +31,31 @@ procedure DamagePlayer {
     set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), subtract(amount, blocked))) }
     if = {
       condition = greater(subtract(amount, blocked), 0)
-      then = { set = { target = owner field = Player.LostHpThisTurn value = true } }
+      then = { call = { procedure = RecordPlayerHpLoss args = { owner = owner } } }
     }
     call = { procedure = CheckCombatDefeat args = { owner = owner } }
   }
 }
 
 # HP loss that ignores block, matching the source's Unblockable | Unpowered damage used by Offering and
-# Bloodletting ("lose HP"). It does not apply damage modifiers or trigger damage reactions; reaching zero HP
+# Bloodletting ("lose HP"). It bypasses block/modifiers but emits positive HP-loss reactions; reaching zero HP
 # reports the combat defeat through the shared end check.
 procedure LosePlayerHp {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
   body = {
     set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), amount)) }
     if = {
       condition = greater(amount, 0)
-      then = { set = { target = owner field = Player.LostHpThisTurn value = true } }
+      then = { call = { procedure = RecordPlayerHpLoss args = { owner = owner } } }
     }
     call = { procedure = CheckCombatDefeat args = { owner = owner } }
   }
 }
 
-# Powered card attack (source ValueProp.Move). Modifier participants run in the source order: additive
-# Strength from the attacker first, then the multiplicative Vulnerable on the target, both rounded down by
-# integer division. The attacker is always the development player because enemy turns are not migrated;
-# Weak on the attacker (x0.75) is stored but has no observable effect until enemies attack.
+# Powered card attack: additive Strength, attacker Weak, then target Vulnerable plus Cruelty.
+# The shared chain retains four decimal places and floors once before block absorption.
 procedure DamageEnemyPowered {
-  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999) }
+  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
   locals = { blocked = Int scaled = Int strength = Int vulnerable = Int before = Int }
   body = {
     let = { into = before value = field(target, Enemy.Hp) }
@@ -69,11 +67,13 @@ procedure DamageEnemyPowered {
       into = vulnerable
       value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
     }
-    let = { into = scaled value = maximum(0, add(amount, strength)) }
+    let = { into = scaled value = multiply(maximum(0, add(amount, strength)), 10000) }
+    if = { condition = greater(pureCall(PlayerPowerAmount, first(type(Player)), "damage-dealt-multiplier"), 0) then = { let = { into = scaled value = divide(multiply(scaled, 3), 4) } } }
     if = {
       condition = greater(vulnerable, 0)
-      then = { let = { into = scaled value = divide(multiply(scaled, 3), 2) } }
+      then = { let = { into = scaled value = divide(multiply(scaled, add(150, pureCall(PlayerPowerAmount, first(type(Player)), "vulnerable-bonus"))), 100) } }
     }
+    let = { into = scaled value = divide(scaled, 10000) }
     let = { into = blocked value = minimum(field(target, Enemy.Block), scaled) }
     set = { target = target field = Enemy.Block value = subtract(field(target, Enemy.Block), blocked) }
     set = { target = target field = Enemy.Hp value = maximum(0, subtract(field(target, Enemy.Hp), subtract(scaled, blocked))) }
@@ -84,5 +84,15 @@ procedure DamageEnemyPowered {
         call = { procedure = CheckCombatVictory args = { owner = first(type(Player)) } }
       }
     }
+  }
+}
+
+event PlayerHpLost { payload = { owner = Ref(Player) } }
+procedure RecordPlayerHpLoss {
+  parameters = { owner = Ref(Player) }
+  body = {
+    set = { target = owner field = Player.LostHpThisTurn value = true }
+    set = { target = owner field = Player.HpLossCount value = add(field(owner, Player.HpLossCount), 1) }
+    emit = { event = PlayerHpLost payload = { owner = owner } }
   }
 }

@@ -6,12 +6,28 @@ entity Card {
   fields = {
     Owner = { type = Participant default = participant(1) }
     Label = { type = String(length = 64) default = "development-card" }
-    # Development card identity. Vanilla cost, rarity, type and target metadata are not migrated yet.
+    # Runtime definition identity; source rarity and complete pool identity remain in the static catalog.
     DefinitionId = { type = String(length = 64) default = "base-spire:development-card" }
     Cost = { type = Int(min = 0, max = 9) default = 0 }
     Upgraded = { type = Bool default = false }
     # Only migrated definitions implement a single source upgrade; development placeholders do not.
     CanUpgrade = { type = Bool default = false }
+    Kind = { type = String(length = 16) default = "skill" }
+    StrikeTag = { type = Bool default = false }
+    IsX = { type = Bool default = false }
+    PaidX = { type = Int(min = 0, max = 999) default = 0 }
+    BaseCost = { type = Int(min = 0, max = 9) default = 0 }
+    DamageScale = { type = String(length = 32) default = "none" }
+    DamageFactor = { type = Int default = 0 }
+    DiscountsOnAttack = { type = Bool default = false }
+    AutoFromExhaustAtTurnEnd = { type = Bool default = false }
+    ForceExhaust = { type = Bool default = false visibility = Hidden }
+    DamageGrowth = { type = Int(min = 0, max = 999999) default = 0 }
+    BaseDamage = { type = Int(min = 0, max = 999) default = 0 }
+    Innate = { type = Bool default = false }
+    FreeUntilPlayed = { type = Bool default = false }
+    TurnCostDiscount = { type = Int default = 0 }
+    CostResetAtTurnEnd = { type = Bool default = false }
     PermanentSource = { type = Ref(Card) optional = true visibility = Hidden }
     # Development stand-in for vanilla TargetType: targeted cards need an enemy and are played by PlayAttackFromHand.
     Targeted = { type = Bool default = false }
@@ -23,12 +39,28 @@ entity Card {
 }
 collection RunDeck { element = Card ordered = true }
 event CardObtained { payload = { owner = Ref(Player) card = Ref(Card) } }
+event AfterCardPlayed { payload = { owner = Ref(Player) card = Ref(Card) } }
+event BeforeCardPlayed { payload = { owner = Ref(Player) card = Ref(Card) } }
+entity CardPlayRecord {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    Card = { type = Ref(Card) visibility = Hidden }
+    Kind = { type = String(length = 16) }
+    Turn = { type = Int }
+    Sequence = { type = Int }
+    Finished = { type = Bool default = false }
+    PoweredBlocks = { type = Int default = 0 }
+    RuptureGain = { type = Int default = 0 visibility = Hidden }
+  }
+}
+collection CardPlays { element = CardPlayRecord ordered = true }
 collection Hand { element = Card capacity = 10 ordered = true }
 collection DrawPile { element = Card ordered = true identity_visible = false order_visible = false }
 collection DiscardPile { element = Card ordered = true }
-# Cards being resolved. Vanilla uses an in-play limbo pile; ethereal, retain and card-play history are not migrated.
+# Cards being resolved, including every repetition; separate CardPlayRecord entities preserve play history.
 collection InPlay { element = Card ordered = true }
-# Vanilla exhaust pile. Only cards that resolve with CardKeyword.Exhaust reach it; no other exhaust source is migrated.
+# Exhausted combat cards, moved here before CardExhausted listeners run.
 collection ExhaustPile { element = Card ordered = true }
 # Resolved Power instances remain here until the next combat rebuild. RunDeck keeps permanent instances
 # separately; putting a combat copy here must never move or overwrite its permanent source.
@@ -43,3 +75,15 @@ event CardPlayedOnTarget { payload = { owner = Ref(Player) card = Ref(Card) targ
 event CardUpgraded { payload = { card = Ref(Card) } }
 # Emitted when a resolving card with CardKeyword.Exhaust reaches the exhaust pile.
 event CardExhausted { payload = { owner = Ref(Player) card = Ref(Card) } }
+
+event CardCreated { payload = { card = Ref(Card) } }
+event CardEnteredCombat { payload = { owner = Ref(Player) card = Ref(Card) clone = Bool } }
+entity CardBlueprint {
+  fields = {
+    DefinitionId = { type = String(length = 64) }
+    Kind = { type = String(length = 16) }
+    InIroncladPool = { type = Bool default = false }
+    Generatable = { type = Bool default = false }
+  }
+}
+collection CardLibrary { element = CardBlueprint ordered = true }

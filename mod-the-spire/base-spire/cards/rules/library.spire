@@ -1,0 +1,19 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Definition templates register all executable content in declaration order. Source-pool membership and
+# generation eligibility are explicit metadata; unsupported catalog rows never become empty runtime cards.
+event RegisterCardDefinitions { }
+procedure RegisterCardLibrary { body = { emit = { event = RegisterCardDefinitions } } }
+procedure GenerateCombatCard {
+  parameters = { owner = Ref(Player) attacksOnly = Bool }
+  locals = { chosen = Binding card = Binding } result = Binding
+  body = {
+    let = { into = card value = none }
+    if = { condition = exists(where(collection(CardLibrary), b, and(field(b, CardBlueprint.Generatable), or(not(attacksOnly), equal(field(b, CardBlueprint.Kind), "attack"))))) then = {
+      samplePick = { stream = "base-spire:combat-card-generation" candidates = where(collection(CardLibrary), b, and(field(b, CardBlueprint.Generatable), or(not(attacksOnly), equal(field(b, CardBlueprint.Kind), "attack")))) into = chosen }
+      call = { procedure = CreateCombatCard args = { owner = owner definition = field(chosen, CardBlueprint.DefinitionId) } into = card }
+    } }
+    return = { value = card }
+  }
+}

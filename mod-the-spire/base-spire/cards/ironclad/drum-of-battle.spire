@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/DrumOfBattle.cs; SHA-256 retained in cards/catalog.json.
+use DrumOfBattle { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:drum-of-battle" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use DrumOfBattleEffect1 { template = DrawEffect args = { definition = "base-spire:drum-of-battle" cards = 2 upgradedCards = 2 } }
+use DrumOfBattleEffect2 { template = ExhaustEnergyReaction args = { definition = "base-spire:drum-of-battle" energy = 2 upgradedEnergy = 3 } }

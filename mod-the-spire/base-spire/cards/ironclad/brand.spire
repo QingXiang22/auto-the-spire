@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Brand.cs; SHA-256 retained in cards/catalog.json.
+use Brand { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:brand" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use BrandEffect1 { template = LoseHpEffect args = { definition = "base-spire:brand" hp = 1 upgradedHp = 1 } }
+use BrandEffect2 { template = SelectExhaustEffect args = { definition = "base-spire:brand" } }
+use BrandEffect3 { template = ApplySelfPowerEffect args = { definition = "base-spire:brand" power = "base-spire:strength-power" kind = "damage-additive" stacks = 1 upgradedStacks = 2 } }

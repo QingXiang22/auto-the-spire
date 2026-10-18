@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # the target's current Vulnerable stacks (doubling it); OnUpgrade adds 4 damage.
 use MoltenFist {
   template = CardDefinition
-  args = { definition = "base-spire:molten-fist" cost = 1 upgradedCost = 1 targeted = true exhausts = true leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 10 upgradedBaseDamage = 14 kind = "attack" strikeTag = false definition = "base-spire:molten-fist" cost = 1 upgradedCost = 1 targeted = true exhausts = true leavesPlay = false }
 }
 use MoltenFistDamage {
   template = AttackEffect

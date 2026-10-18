@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # enemies; OnUpgrade adds 4 damage. The HP loss is declared first so it happens before the attack.
 use Breakthrough {
   template = CardDefinition
-  args = { definition = "base-spire:breakthrough" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 9 upgradedBaseDamage = 13 kind = "attack" strikeTag = false definition = "base-spire:breakthrough" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use BreakthroughLoseHp {
   template = LoseHpEffect

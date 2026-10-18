@@ -1,6 +1,11 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
+procedure GetMaxEnergy {
+  pure = true parameters = { owner = Ref(Player) } result = Int
+  body = { return = { value = add(field(owner, Player.MaxEnergy), pureCall(PlayerPowerAmount, owner, "max-energy")) } }
+}
+
 # CreatureCmd.Heal: heal and clamp to MaxHp. Revive, healing modifiers and death are not migrated.
 procedure Heal {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
@@ -13,6 +18,14 @@ procedure Heal {
 procedure GainEnergy {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
   body = {
-    set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), amount)) }
+    if = { condition = equal(pureCall(PlayerPowerAmount, owner, "no-energy-gain"), 0) then = { set = { target = owner field = Player.Energy value = minimum(999, add(field(owner, Player.Energy), amount)) } } }
+  }
+}
+
+procedure IncreaseMaxHp {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+  body = {
+    set = { target = owner field = Player.MaxHp value = add(field(owner, Player.MaxHp), amount) }
+    call = { procedure = Heal args = { owner = owner amount = amount } }
   }
 }

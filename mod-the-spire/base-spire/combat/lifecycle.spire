@@ -30,10 +30,10 @@ procedure CheckCombatVictory {
   parameters = { owner = Ref(Player) }
   body = {
     if = {
-      condition = and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))
+      condition = and(greater(field(owner, Player.Hp), 0), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
       then = {
         if = {
-          condition = not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))))
+          condition = and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)))))
           then = {
             set = { target = owner field = Player.CombatOutcome value = "victory" }
             set = { target = owner field = Player.TurnOpen value = false }
@@ -78,6 +78,8 @@ procedure BeginDevelopmentCombat {
       condition = not(and(equal(field(owner, Player.Room), "none"), greater(field(owner, Player.Hp), 0)))
       then = { fail = { message = "Development combat requires a living player outside any room" } }
     }
+    call = { procedure = ClearCombatPowers }
+    set = { target = owner field = Player.EnemyPhase value = false }
     call = { procedure = BuildCombatDeck args = { owner = owner } }
     set = { target = owner field = Player.PendingForge value = false }
     set = { target = owner field = Player.Block value = 0 }
@@ -124,13 +126,14 @@ procedure BeginDevelopmentTurn {
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
     if = {
-      condition = greater(field(owner, Player.TurnNumber), 1)
+      condition = and(greater(field(owner, Player.TurnNumber), 1), equal(pureCall(PlayerPowerAmount, owner, "retain-block"), 0))
       then = {
         set = { target = owner field = Player.Block value = 0 }
         emit = { event = AfterBlockCleared payload = { owner = owner } }
       }
     }
-    set = { target = owner field = Player.Energy value = field(owner, Player.MaxEnergy) }
+    call = { procedure = BeforeTurnPowerReactions args = { owner = owner } }
+    set = { target = owner field = Player.Energy value = pureCall(GetMaxEnergy, owner) }
     set = { target = owner field = Player.TurnOpen value = true }
     emit = { event = AfterSideTurnStarted payload = { owner = owner } }
     emit = { event = AfterPlayerTurnStart payload = { owner = owner } }
@@ -151,6 +154,7 @@ procedure EndDevelopmentTurn {
       condition = not(field(owner, Player.TurnOpen))
       then = { fail = { message = "Development turn is not open" } }
     }
+    call = { procedure = BeforeTurnEndPowerReactions args = { owner = owner } }
     forEach = {
       query = collection(Hand) item = card
       body = {
@@ -159,8 +163,10 @@ procedure EndDevelopmentTurn {
       }
     }
     emit = { event = AfterTurnEnded payload = { owner = owner } }
+    call = { procedure = SideEndPowerReactions args = { owner = owner } }
     call = { procedure = RunEnemyTurn args = { owner = owner } }
     call = { procedure = ExpireTurnEndPowers }
+    call = { procedure = ResetCardTurnCosts }
     set = { target = owner field = Player.TurnOpen value = false }
   }
 }

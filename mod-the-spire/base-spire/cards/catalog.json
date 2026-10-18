@@ -107,9 +107,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/aggression.spire"
     },
     {
       "id": "base-spire:alchemize",
@@ -155,8 +155,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Anger.cs; Common Ironclad attack in IroncladCardPool, cost 0 / DamageVar(6, Move) / TargetType.AnyEnemy plus a clone into the discard pile, reviewed in DSL-CARD-EFFECTS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/anger.spire"
     },
     {
@@ -215,9 +215,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/armaments.spire"
     },
     {
       "id": "base-spire:arsenal",
@@ -251,9 +251,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/ashen-strike.spire"
     },
     {
       "id": "base-spire:assassinate",
@@ -371,9 +371,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/barricade.spire"
     },
     {
       "id": "base-spire:bash",
@@ -383,8 +383,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Bash.cs; Basic Ironclad attack in IroncladCardPool, cost 2 / DamageVar(8, Move) then VulnerablePower 2 / +2 damage and +1 Vulnerable on upgrade, reviewed in DSL-POWER-MODIFIERS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/bash.spire"
     },
     {
@@ -395,9 +395,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/battle-trance.spire"
     },
     {
       "id": "base-spire:beacon-of-hope",
@@ -563,8 +563,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Bloodletting.cs; Common Ironclad skill in IroncladCardPool, cost 0 / HpLossVar(3) as unblockable unpowered damage / EnergyVar(2) with +1 energy on upgrade, reviewed in DSL-CARD-EXHAUST-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/bloodletting.spire"
     },
     {
@@ -575,8 +575,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/blood-wall.cs; Common Ironclad skill in IroncladCardPool, cost 2 / HpLossVar(2) as unblockable unpowered damage then BlockVar(16, Move) / +4 block on upgrade, reviewed in DSL-CARD-BATCH-02.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/blood-wall.spire"
     },
     {
@@ -587,8 +587,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Bludgeon.cs; Uncommon Ironclad attack in IroncladCardPool, cost 3 / DamageVar(32, Move) / +10 on upgrade, reviewed in DSL-CARD-EXHAUST-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/bludgeon.spire"
     },
     {
@@ -623,8 +623,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/BodySlam.cs; Common Ironclad attack in IroncladCardPool, cost 1 lowered by 1 on upgrade / CalculatedDamageVar multiplier from the owner's block, reviewed in DSL-CARD-EFFECTS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/body-slam.spire"
     },
     {
@@ -719,9 +719,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/brand.spire"
     },
     {
       "id": "base-spire:break",
@@ -731,8 +731,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/break.cs; Ancient Ironclad attack in IroncladCardPool, cost 1 / DamageVar(20, Move) then VulnerablePower 5 / +10 damage and +2 Vulnerable on upgrade, reviewed in DSL-CARD-BATCH-03.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/break.spire"
     },
     {
@@ -743,8 +743,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Breakthrough.cs; Common Ironclad attack in IroncladCardPool, cost 1 / HpLossVar(1) as unblockable unpowered damage then DamageVar(9, Move) to all enemies / +4 damage on upgrade, reviewed in DSL-CARD-BATCH-04.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/breakthrough.spire"
     },
     {
@@ -815,9 +815,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/bully.spire"
     },
     {
       "id": "base-spire:bulwark",
@@ -863,9 +863,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/burning-pact.spire"
     },
     {
       "id": "base-spire:burst",
@@ -1007,9 +1007,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/cascade.spire"
     },
     {
       "id": "base-spire:catastrophe",
@@ -1103,9 +1103,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/cinder.spire"
     },
     {
       "id": "base-spire:clash",
@@ -1211,9 +1211,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/colossus.spire"
     },
     {
       "id": "base-spire:comet",
@@ -1259,8 +1259,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Conflagration.cs; Rare Ironclad attack in IroncladCardPool, cost 1 / DamageVar(2, Move) with RepeatVar(4) hits to all enemies / Repeat +1 on upgrade, reviewed in DSL-CARD-BATCH-04.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/conflagration.spire"
     },
     {
@@ -1355,9 +1355,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/corruption.spire"
     },
     {
       "id": "base-spire:cosmic-indifference",
@@ -1427,9 +1427,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/crimson-mantle.spire"
     },
     {
       "id": "base-spire:cruelty",
@@ -1439,9 +1439,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/cruelty.spire"
     },
     {
       "id": "base-spire:crush-under",
@@ -1511,9 +1511,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/dark-embrace.spire"
     },
     {
       "id": "base-spire:darkness",
@@ -1691,8 +1691,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/DefendIronclad.cs; Basic Ironclad skill in IroncladCardPool, cost 1 / BlockVar(5, Move) / TargetType.Self, reviewed in DSL-CARD-PLAY-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/defend-ironclad.spire"
     },
     {
@@ -1811,9 +1811,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/demon-form.spire"
     },
     {
       "id": "base-spire:demonic-shield",
@@ -1823,8 +1823,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
+      "eligibility": "excluded-multiplayer-only",
+      "evidence": "source override MultiplayerConstraint => CardMultiplayerConstraint.MultiplayerOnly; frozen SHA retained",
       "definition": null
     },
     {
@@ -1907,8 +1907,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Dismantle.cs; Uncommon Ironclad attack in IroncladCardPool, cost 1 / DamageVar(8, Move) hitting once, or twice when the target holds Vulnerable / +2 damage on upgrade, reviewed in DSL-CARD-BATCH-04.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/dismantle.spire"
     },
     {
@@ -1943,9 +1943,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/dominate.spire"
     },
     {
       "id": "base-spire:double-energy",
@@ -2015,9 +2015,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/drum-of-battle.spire"
     },
     {
       "id": "base-spire:dualcast",
@@ -2243,8 +2243,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/evil-eye.cs; Uncommon Ironclad skill in IroncladCardPool, cost 1 / BlockVar(8, Move) gained once, or twice when a card was exhausted this turn / +3 block on upgrade, reviewed in DSL-CARD-BATCH-03.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/evil-eye.spire"
     },
     {
@@ -2255,9 +2255,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/expect-a-fight.spire"
     },
     {
       "id": "base-spire:expertise",
@@ -2351,9 +2351,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/feed.spire"
     },
     {
       "id": "base-spire:feeding-frenzy",
@@ -2375,9 +2375,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/feel-no-pain.spire"
     },
     {
       "id": "base-spire:feral",
@@ -2411,9 +2411,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/fiend-fire.spire"
     },
     {
       "id": "base-spire:fight-me",
@@ -2423,9 +2423,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/fight-me.spire"
     },
     {
       "id": "base-spire:fight-through",
@@ -2495,8 +2495,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/FlameBarrier.cs; Uncommon Ironclad skill in IroncladCardPool, cost 2 / BlockVar(12, Move) then FlameBarrierPower 4 / +4 block and +2 damage back on upgrade, reviewed in DSL-THORNS-01",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/flame-barrier.spire"
     },
     {
@@ -2627,9 +2627,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/forgotten-ritual.spire"
     },
     {
       "id": "base-spire:frantic-escape",
@@ -2771,9 +2771,9 @@
       "pools": [
         "TokenCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/tokens/giant-rock.spire"
     },
     {
       "id": "base-spire:glacier",
@@ -3047,9 +3047,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/havoc.spire"
     },
     {
       "id": "base-spire:haze",
@@ -3071,9 +3071,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/headbutt.spire"
     },
     {
       "id": "base-spire:heavenly-drill",
@@ -3143,9 +3143,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/hellraiser.spire"
     },
     {
       "id": "base-spire:hemokinesis",
@@ -3155,8 +3155,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/hemokinesis.cs; Uncommon Ironclad attack in IroncladCardPool, cost 1 / HpLossVar(2) as unblockable unpowered damage then DamageVar(15, Move) / +5 damage on upgrade, reviewed in DSL-CARD-BATCH-03.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/hemokinesis.spire"
     },
     {
@@ -3239,8 +3239,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/howl-from-beyond.cs; Uncommon Ironclad attack in IroncladCardPool, cost 3 / DamageVar(16, Move) to all enemies / CardKeyword.Exhaust / +5 damage on upgrade; the auto-play-on-exhaust rider is not migrated, reviewed in DSL-CARD-BATCH-03.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/howl-from-beyond.spire"
     },
     {
@@ -3323,8 +3323,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Impervious.cs; Rare Ironclad skill in IroncladCardPool, cost 2 / BlockVar(30, Move) / CardKeyword.Exhaust / +10 block on upgrade, reviewed in DSL-CARD-EXHAUST-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/impervious.spire"
     },
     {
@@ -3347,9 +3347,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/infernal-blade.spire"
     },
     {
       "id": "base-spire:inferno",
@@ -3359,9 +3359,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/inferno.spire"
     },
     {
       "id": "base-spire:infinite-blades",
@@ -3383,8 +3383,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Inflame.cs; Uncommon Ironclad power in IroncladCardPool, cost 1 / CardType.Power / StrengthPower 2 on the owner / +1 Strength on upgrade, reviewed in DSL-POWER-DURATION-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/inflame.spire"
     },
     {
@@ -3431,8 +3431,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/IronWave.cs; Common Ironclad attack in IroncladCardPool, cost 1 / BlockVar(5, Move) then DamageVar(5, Move) / +2 to both on upgrade, reviewed in DSL-CARD-EFFECTS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/iron-wave.spire"
     },
     {
@@ -3479,9 +3479,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/juggernaut.spire"
     },
     {
       "id": "base-spire:juggling",
@@ -3491,9 +3491,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/juggling.spire"
     },
     {
       "id": "base-spire:kingly-kick",
@@ -3767,9 +3767,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/mangle.spire"
     },
     {
       "id": "base-spire:manifest-authority",
@@ -4007,8 +4007,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/MoltenFist.cs; Common Ironclad attack in IroncladCardPool, cost 1 / CardKeyword.Exhaust / DamageVar(10, Move) then Vulnerable equal to the target's current stacks / +4 damage on upgrade, reviewed in DSL-CARD-BATCH-04.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/molten-fist.spire"
     },
     {
@@ -4199,9 +4199,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/not-yet.spire"
     },
     {
       "id": "base-spire:noxious-fumes",
@@ -4247,8 +4247,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Offering.cs; Rare Ironclad skill in IroncladCardPool, cost 0 / HpLossVar(6) as unblockable unpowered damage / EnergyVar(2) / CardsVar(3) / CardKeyword.Exhaust with +2 cards on upgrade, reviewed in DSL-CARD-EXHAUST-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/offering.spire"
     },
     {
@@ -4271,9 +4271,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/one-two-punch.spire"
     },
     {
       "id": "base-spire:orbit",
@@ -4331,9 +4331,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/pacts-end.spire"
     },
     {
       "id": "base-spire:pagestorm",
@@ -4451,9 +4451,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/perfected-strike.spire"
     },
     {
       "id": "base-spire:phantom-blades",
@@ -4499,9 +4499,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/pillage.spire"
     },
     {
       "id": "base-spire:pillar-of-creation",
@@ -4559,8 +4559,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/PommelStrike.cs; Common Ironclad attack in IroncladCardPool, cost 1 / DamageVar(9, Move) plus CardsVar(1) / upgrade adds 1 damage and 1 card, reviewed in DSL-CARD-EFFECTS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/pommel-strike.spire"
     },
     {
@@ -4643,9 +4643,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/primal-force.spire"
     },
     {
       "id": "base-spire:production",
@@ -4763,9 +4763,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/pyre.spire"
     },
     {
       "id": "base-spire:quadcast",
@@ -4811,9 +4811,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/rage.spire"
     },
     {
       "id": "base-spire:rainbow",
@@ -4847,9 +4847,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/rampage.spire"
     },
     {
       "id": "base-spire:rattle",
@@ -5135,9 +5135,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/rupture.spire"
     },
     {
       "id": "base-spire:sacrifice",
@@ -5255,9 +5255,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/second-wind.spire"
     },
     {
       "id": "base-spire:secret-technique",
@@ -5339,9 +5339,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/setup-strike.spire"
     },
     {
       "id": "base-spire:seven-stars",
@@ -5495,8 +5495,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/ShrugItOff.cs; Common Ironclad skill in IroncladCardPool, cost 1 / BlockVar(8, Move) plus CardsVar(1) / upgrade adds 3 block only, reviewed in DSL-CARD-EFFECTS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/shrug-it-off.spire"
     },
     {
@@ -5771,8 +5771,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/spite.cs; Uncommon Ironclad attack in IroncladCardPool, cost 0 / DamageVar(5, Move) hitting once, or RepeatVar(2) times when the owner lost HP this turn / Repeat +1 on upgrade, reviewed in DSL-CARD-BATCH-03.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/spite.spire"
     },
     {
@@ -5879,9 +5879,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/stampede.spire"
     },
     {
       "id": "base-spire:stardust",
@@ -5903,9 +5903,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/stoke.spire"
     },
     {
       "id": "base-spire:stomp",
@@ -5915,9 +5915,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/stomp.spire"
     },
     {
       "id": "base-spire:stone-armor",
@@ -5927,9 +5927,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/stone-armor.spire"
     },
     {
       "id": "base-spire:storm",
@@ -5999,8 +5999,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/StrikeIronclad.cs; Basic Ironclad attack in IroncladCardPool, cost 1 / DamageVar(6, Move) / TargetType.AnyEnemy, reviewed in DSL-CARD-PLAY-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/strike-ironclad.spire"
     },
     {
@@ -6167,9 +6167,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/sword-boomerang.spire"
     },
     {
       "id": "base-spire:sword-sage",
@@ -6239,8 +6239,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
+      "eligibility": "excluded-multiplayer-only",
+      "evidence": "source override MultiplayerConstraint => CardMultiplayerConstraint.MultiplayerOnly; frozen SHA retained",
       "definition": null
     },
     {
@@ -6251,8 +6251,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/taunt.cs; Uncommon Ironclad skill in IroncladCardPool, cost 1 / BlockVar(7, Move) then VulnerablePower 1 on the target / +1 block and +1 Vulnerable on upgrade, reviewed in DSL-CARD-BATCH-02.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/taunt.spire"
     },
     {
@@ -6263,9 +6263,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/tear-asunder.spire"
     },
     {
       "id": "base-spire:tempest",
@@ -6395,9 +6395,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/thrash.spire"
     },
     {
       "id": "base-spire:thrumming-hatchet",
@@ -6431,8 +6431,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/thunderclap.cs; Common Ironclad attack in IroncladCardPool, cost 1 / DamageVar(4, Move) and VulnerablePower 1 to all enemies / +3 damage on upgrade, reviewed in DSL-CARD-BATCH-02.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/thunderclap.spire"
     },
     {
@@ -6527,8 +6527,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/tremble.cs; Common Ironclad skill in IroncladCardPool, cost 1 / CardKeyword.Exhaust / VulnerablePower 3 on the target / +1 Vulnerable on upgrade, reviewed in DSL-CARD-BATCH-02.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/tremble.spire"
     },
     {
@@ -6539,9 +6539,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/true-grit.spire"
     },
     {
       "id": "base-spire:turbo",
@@ -6563,8 +6563,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/TwinStrike.cs; Common Ironclad attack in IroncladCardPool, cost 1 / DamageVar(5, Move) with WithHitCount(2) / +2 per hit on upgrade, reviewed in DSL-CARD-EFFECTS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/twin-strike.spire"
     },
     {
@@ -6635,9 +6635,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/unmovable.spire"
     },
     {
       "id": "base-spire:unrelenting",
@@ -6647,9 +6647,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/unrelenting.spire"
     },
     {
       "id": "base-spire:untouchable",
@@ -6683,8 +6683,8 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Cards/Uppercut.cs; Uncommon Ironclad attack in IroncladCardPool, cost 2 / DamageVar(13, Move) then Power 1 applied as WeakPower and VulnerablePower / both debuffs 2 on upgrade, reviewed in DSL-POWER-MODIFIERS-01.",
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
       "definition": "cards/ironclad/uppercut.spire"
     },
     {
@@ -6731,9 +6731,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/vicious.spire"
     },
     {
       "id": "base-spire:void",
@@ -6815,9 +6815,9 @@
       "pools": [
         "IroncladCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "definition": "cards/ironclad/whirlwind.spire"
     },
     {
       "id": "base-spire:whistle",

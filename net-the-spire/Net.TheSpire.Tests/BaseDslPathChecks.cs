@@ -30,6 +30,10 @@ internal static class BaseDslPathChecks
         yield return ("PD10 real stdio smith cancellation preserves the room option and permanent deck", () => StdioTrajectory("smith-cancel"));
         yield return ("CP56 real stdio the HP-loss flag drives the extra Spite hit", () => StdioTrajectory("spite"));
         yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
+        yield return ("IC real stdio explicit target selects the second enemy", () => StdioTrajectory("explicit-target"));
+        yield return ("IC real stdio mandatory hand choice resumes once after HP loss", () => StdioTrajectory("hand-exhaust"));
+        yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
+        yield return ("IC real stdio Rupture reacts after the damaging card", () => StdioTrajectory("rupture"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -117,6 +121,24 @@ internal static class BaseDslPathChecks
                 "smith-select" or "smith-cancel" => [
                     ("Strike.Obtain", "0", false, "0", "0", false, ""), ("Strike.Obtain", "0", false, "0", "0", false, ""),
                     ("EnterDevelopmentRestSite", "0", false, "0", "0", false, ""), ("ForgeAtDevelopmentCampfire", "0", false, "0", "0", false, "")],
+                "explicit-target" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, ""), ("AddDevelopmentTarget", "0", false, "0", "0", false, ""),
+                    ("Strike.AddToHand", "0", false, "0", "0", false, ""), ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""), ("PlayTargetedCard", "0", true, "3", "1", true, "")],
+                "hand-exhaust" => [
+                    ("Brand.AddToHand", "0", false, "0", "0", false, ""), ("Strike.AddToHand", "0", false, "0", "0", false, ""),
+                    ("Defend.AddToHand", "0", false, "0", "0", false, ""), ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"), ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayCardFromHand", "0", true, "3", "1", true, "40")],
+                "whirlwind" => [
+                    ("Whirlwind.AddToHand", "0", false, "0", "0", false, ""), ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"), ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayCardFromHand", "0", true, "0", "1", true, "25")],
+                "rupture" => [
+                    ("Rupture.AddToHand", "0", false, "0", "0", false, ""), ("Hemokinesis.AddToHand", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"), ("PlayCardFromHand", "0", true, "2", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "1", "1", true, "25")],
                 "start" => [
                     ("Anchor.Obtain", "0", false, "0", "0", false, ""), ("FakeAnchor.Obtain", "0", false, "0", "0", false, ""),
                     ("BeginDevelopmentCombat", "14", true, "0", "0", false, ""), ("EndDevelopmentCombat", "14", false, "0", "0", false, ""),
@@ -184,7 +206,10 @@ internal static class BaseDslPathChecks
             var stepNumber = 0;
             foreach (var step in sequence)
             {
-                var candidate = snapshot.LegalActions.Single(a => a.ActionType.EndsWith(":" + step.Action, StringComparison.Ordinal));
+                var candidates = snapshot.LegalActions.Where(a => a.ActionType.EndsWith(":" + step.Action, StringComparison.Ordinal)).ToArray();
+                var candidate = mode == "hand-exhaust" && step.Action == "PlayCardFromHand"
+                    ? candidates.Single(a => a.Fields.Any(f => f.Value is WireString value && value.Value == snapshot.Entities.Single(e => e.ContentId == "base-spire:brand").InstanceId))
+                    : candidates.Single();
                 var suffix = (++stepNumber).ToString(System.Globalization.CultureInfo.InvariantCulture);
                 Send(Request("pipe-step-" + suffix, Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
                 snapshot = Snapshot(Send(Request("pipe-observe-" + suffix, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
@@ -196,11 +221,44 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Active, ((WireBool)active.Value!).Value, "public lifecycle state");
                 var open = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.TurnOpen", StringComparison.Ordinal));
                 Check.Equal(step.TurnOpen, ((WireBool)open.Value!).Value, "public turn gate");
+                if (snapshot.LegalActions.All(a => a.ActionType == "net:action:net.answer_decision")) continue;
                 Check.Equal(!step.Active && Public(snapshot, "Player.Room") == "none", snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentCombat", StringComparison.Ordinal)), "begin candidate follows real phase and room closure");
                 Check.Equal(step.Active, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentCombat", StringComparison.Ordinal)), "end candidate follows real phase");
                 Check.Equal(step.Active && !step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentTurn", StringComparison.Ordinal)), "turn candidate follows the real turn gate");
                 Check.Equal(step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentTurn", StringComparison.Ordinal)), "end turn candidate follows the real turn gate");
             }
+            if (mode is "explicit-target" or "hand-exhaust")
+            {
+                Check.Equal(2, snapshot.LegalActions.Count, "two mandatory choices with no cancellation");
+                Check.True(snapshot.LegalActions.All(a => a.ActionType == "net:action:net.answer_decision"), "generic native decision candidates");
+                if (mode == "hand-exhaust") Check.Equal("79", Public(snapshot, "Player.Hp"), "HP loss before selection");
+                var choice = snapshot.LegalActions.Last();
+                var chosenId = ((WireString)choice.Fields.Single().Value!).Value;
+                Send(Request("ic-answer", Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(choice.CandidateId))));
+                snapshot = Snapshot(Send(Request("ic-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                Check.Equal(mode == "explicit-target" ? "2" : "3", Public(snapshot, "Player.Energy"), "exactly one payment");
+                if (mode == "explicit-target")
+                {
+                    foreach (var enemy in snapshot.Entities.Where(e => e.KindId == "net:kind:base-spire:Enemy"))
+                    {
+                        var hp = ((WireString)enemy.Fields.Single(f => f.FieldId.EndsWith(":Enemy.Hp", StringComparison.Ordinal)).Value!).Value;
+                        Check.Equal(enemy.InstanceId == chosenId ? "34" : "40", hp, "only chosen enemy damaged");
+                    }
+                }
+                else
+                {
+                    Check.Equal("79", Public(snapshot, "Player.Hp"), "resume never repeats HP loss");
+                    Check.Equal("1", Public(snapshot, "Power.Stacks"), "strength after selected exhaust");
+                    Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand"), "other card remains playable");
+                }
+            }
+            if (mode == "whirlwind")
+            {
+                var card = snapshot.Entities.Single(e => e.ContentId == "base-spire:whirlwind");
+                Check.Equal("3", ((WireString)card.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value, "captured X public");
+                Check.True(((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.IsX", StringComparison.Ordinal)).Value!).Value, "X marker public");
+            }
+            if (mode == "rupture") { Check.Equal("78", Public(snapshot, "Player.Hp"), "real HP loss"); Check.Equal("2", Public(snapshot, "Player.PlaySequence"), "real play count"); }
             if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");
             if (mode is "kill" or "reward-claim" or "reward-skip") Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "the public combat outcome follows the last kill");
             if (mode is "smith-select" or "smith-cancel")

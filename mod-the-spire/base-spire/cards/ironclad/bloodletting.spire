@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # no keyword; OnUpgrade adds 1 energy.
 use Bloodletting {
   template = CardDefinition
-  args = { definition = "base-spire:bloodletting" cost = 0 upgradedCost = 0 targeted = false exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:bloodletting" cost = 0 upgradedCost = 0 targeted = false exhausts = false leavesPlay = false }
 }
 use BloodlettingLoseHp {
   template = LoseHpEffect

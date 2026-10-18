@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # 2 damage and 1 Vulnerable. The damage effect is declared first so the power lands after the hit.
 use Bash {
   template = CardDefinition
-  args = { definition = "base-spire:bash" cost = 2 upgradedCost = 2 targeted = true exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = false baseDamage = 8 upgradedBaseDamage = 10 kind = "attack" strikeTag = false definition = "base-spire:bash" cost = 2 upgradedCost = 2 targeted = true exhausts = false leavesPlay = false }
 }
 use BashDamage {
   template = AttackEffect

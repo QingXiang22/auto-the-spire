@@ -73,8 +73,7 @@ template PotionMaxHpEffect {
         if = {
           condition = equal(field(potion, Potion.DefinitionId), arg(definition))
           then = {
-            set = { target = owner field = Player.MaxHp value = add(field(owner, Player.MaxHp), arg(amount)) }
-            call = { procedure = Heal args = { owner = owner amount = arg(amount) } }
+            call = { procedure = IncreaseMaxHp args = { owner = owner amount = arg(amount) } }
           }
         }
       }

@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: PommelStrike.cs: cost 1, DamageVar(9, Move) plus CardsVar(1); OnUpgrade adds 1 damage and 1 card.
 use PommelStrike {
   template = CardDefinition
-  args = { definition = "base-spire:pommel-strike" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 9 upgradedBaseDamage = 10 kind = "attack" strikeTag = true definition = "base-spire:pommel-strike" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use PommelStrikeDamage {
   template = AttackEffect

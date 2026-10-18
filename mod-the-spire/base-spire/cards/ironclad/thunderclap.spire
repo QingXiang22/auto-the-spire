@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # to every enemy; OnUpgrade adds 3 damage. The damage effect is declared first so the debuff lands after it.
 use Thunderclap {
   template = CardDefinition
-  args = { definition = "base-spire:thunderclap" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+  args = { inIroncladPool = true generatable = true baseDamage = 4 upgradedBaseDamage = 7 kind = "attack" strikeTag = false definition = "base-spire:thunderclap" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use ThunderclapDamage {
   template = AttackAllEnemiesEffect

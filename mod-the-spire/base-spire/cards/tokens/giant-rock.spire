@@ -1,0 +1,6 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/GiantRock.cs; SHA-256 retained in cards/catalog.json.
+use GiantRock { template = CardDefinition args = { definition = "base-spire:giant-rock" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 16 upgradedBaseDamage = 20 } }
+use GiantRockEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:giant-rock" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
