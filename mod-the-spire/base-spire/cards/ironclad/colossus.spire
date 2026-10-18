@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Colossus.cs; SHA-256 retained in cards/catalog.json.
-use Colossus { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:colossus" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use Colossus { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:colossus" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use ColossusEffect1 { template = BlockEffect args = { definition = "base-spire:colossus" block = 5 upgradedBlock = 8 } }
 use ColossusEffect2 { template = ApplySelfPowerEffect args = { definition = "base-spire:colossus" power = "base-spire:colossus-power" kind = "halve-vulnerable-attacks" stacks = 1 upgradedStacks = 1 } }

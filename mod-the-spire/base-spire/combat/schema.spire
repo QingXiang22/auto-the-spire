@@ -44,6 +44,8 @@ entity Player {
     # The development reward screen stores its roll until explicitly claimed or closed.
     GoldRewardPending = { type = Bool default = false }
     GoldRewardAmount = { type = Int(min = 0, max = 99999) default = 0 }
+    CardRewardPending = { type = Bool default = false }
+    CardRarityOffset = { type = Int(min = -5, max = 40) default = -5 visibility = Hidden }
   }
 }
 

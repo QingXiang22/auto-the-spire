@@ -89,13 +89,21 @@ procedure AttacksPlayedThisTurn {
   body = { return = { value = count(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Owner), field(owner, Player.Owner)), and(equal(field(r, CardPlayRecord.Kind), "attack"), equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)))))) } }
 }
 
-procedure CreateCombatCard {
+procedure CreateCardInstance {
   parameters = { owner = Ref(Player) definition = String(length = 64) }
   locals = { card = Binding } result = Binding
   body = {
     if = { condition = not(exists(where(collection(CardLibrary), b, equal(field(b, CardBlueprint.DefinitionId), definition)))) then = { fail = { message = "unsupported_capability: card definition is not executable in this package" } } }
     create = { type = Card scope = entityScope(owner) into = card fields = { Owner = field(owner, Player.Owner) DefinitionId = definition Label = definition } }
     emit = { event = CardCreated payload = { card = card } }
+    return = { value = card }
+  }
+}
+procedure CreateCombatCard {
+  parameters = { owner = Ref(Player) definition = String(length = 64) }
+  locals = { card = Binding } result = Binding
+  body = {
+    call = { procedure = CreateCardInstance args = { owner = owner definition = definition } into = card }
     emit = { event = CardEnteredCombat payload = { owner = owner card = card clone = false } }
     return = { value = card }
   }
@@ -107,6 +115,7 @@ procedure CloneCombatCard {
     create = { type = Card scope = entityScope(owner) into = copy fields = {
       Owner = field(owner, Player.Owner) DefinitionId = field(source, Card.DefinitionId) Label = field(source, Card.Label)
       Kind = field(source, Card.Kind) StrikeTag = field(source, Card.StrikeTag) IsX = field(source, Card.IsX)
+      Rarity = field(source, Card.Rarity)
       Cost = field(source, Card.Cost) BaseCost = field(source, Card.BaseCost) CostResetAtTurnEnd = field(source, Card.CostResetAtTurnEnd)
       FreeUntilPlayed = field(source, Card.FreeUntilPlayed) TurnCostDiscount = field(source, Card.TurnCostDiscount)
       BaseDamage = field(source, Card.BaseDamage) DamageGrowth = field(source, Card.DamageGrowth)

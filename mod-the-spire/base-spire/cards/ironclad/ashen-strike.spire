@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/AshenStrike.cs; SHA-256 retained in cards/catalog.json.
-use AshenStrike { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:ashen-strike" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 damageScale = "exhaust-count" damageFactor = 3 upgradedDamageFactor = 4 } }
+use AshenStrike { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:ashen-strike" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 damageScale = "exhaust-count" damageFactor = 3 upgradedDamageFactor = 4 } }
 use AshenStrikeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:ashen-strike" hits = 1 upgradedHits = 1 hitScale = "fixed" } }

@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/TearAsunder.cs; SHA-256 retained in cards/catalog.json.
-use TearAsunder { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:tear-asunder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 5 upgradedBaseDamage = 7 } }
+use TearAsunder { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:tear-asunder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 5 upgradedBaseDamage = 7 } }
 use TearAsunderEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:tear-asunder" hits = 1 upgradedHits = 1 hitScale = "hp-loss" } }

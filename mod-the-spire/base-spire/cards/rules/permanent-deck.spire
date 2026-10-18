@@ -13,6 +13,17 @@ procedure HasUpgradablePermanentCards {
     }
   }
 }
+procedure ObtainCardReward {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.Room), "rewards"), and(field(owner, Player.CardRewardPending), and(not(field(owner, Player.CombatActive)), greater(field(owner, Player.Hp), 0))))) then = { fail = { message = "Permanent reward acquisition requires a living player with pending rewards" } } }
+    if = { condition = or(less(collectionIndex(CardRewardOptions, card), 0), not(equal(field(card, Card.Owner), field(owner, Player.Owner)))) then = { fail = { message = "The selected instance is not an owned card reward" } } }
+    removeFromCollection = { collection = CardRewardOptions item = card }
+    addToCollection = { collection = RunDeck item = card }
+    set = { target = owner field = Player.UsesRunDeck value = true }
+    emit = { event = CardObtained payload = { owner = owner card = card } }
+  }
+}
 procedure ObtainPermanentCard {
   parameters = {
     owner = Ref(Player) definition = String(length = 64) cost = Int(min = 0, max = 9)
@@ -62,6 +73,7 @@ procedure BuildCombatDeck {
               type = Card scope = entityScope(owner) into = copy collection = DrawPile
               fields = {
                 Kind = field(permanent, Card.Kind) StrikeTag = field(permanent, Card.StrikeTag)
+                Rarity = field(permanent, Card.Rarity)
                 IsX = field(permanent, Card.IsX) BaseCost = field(permanent, Card.BaseCost)
                 BaseDamage = field(permanent, Card.BaseDamage) DamageScale = field(permanent, Card.DamageScale) DamageFactor = field(permanent, Card.DamageFactor) DiscountsOnAttack = field(permanent, Card.DiscountsOnAttack) AutoFromExhaustAtTurnEnd = field(permanent, Card.AutoFromExhaustAtTurnEnd) Innate = field(permanent, Card.Innate)
                 Owner = field(owner, Player.Owner) DefinitionId = field(permanent, Card.DefinitionId)

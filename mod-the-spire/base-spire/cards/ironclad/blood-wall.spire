@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # OnUpgrade adds 4 block.
 use BloodWall {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:blood-wall" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
+  args = { rarity = "common" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:blood-wall" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
 }
 use BloodWallLoseHp {
   template = LoseHpEffect

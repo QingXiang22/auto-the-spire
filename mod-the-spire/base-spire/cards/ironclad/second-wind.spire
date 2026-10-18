@@ -2,5 +2,5 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/SecondWind.cs; SHA-256 retained in cards/catalog.json.
-use SecondWind { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:second-wind" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
+use SecondWind { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:second-wind" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use SecondWindEffect1 { template = ExhaustNonAttackBlockEffect args = { definition = "base-spire:second-wind" } }

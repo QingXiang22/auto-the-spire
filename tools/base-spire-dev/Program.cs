@@ -13,10 +13,12 @@ try
     var manifest = "mod-the-spire/base-spire/package.json";
     string? scope = null, report = null;
     var ironcladOnly = false;
+    var cardRewardsOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
+        else if (args[index] == "--card-rewards-only") cardRewardsOnly = true;
         else if (args[index] == "--scope") scope = Input();
         else if (args[index] == "--report") report = Input();
         else if (index == 1 && !args[index].StartsWith("--", StringComparison.Ordinal)) manifest = args[index];
@@ -27,6 +29,8 @@ try
     var metadata = TextRuleProviderSpec.Load(package.PublicMetadataPath);
     if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
     if (ironcladOnly && (command != "check" || report is not null)) throw new ArgumentException("--ironclad-only requires check without --report; run the full check to produce coverage evidence.");
+    if (cardRewardsOnly && (command != "check" || report is not null || ironcladOnly)) throw new ArgumentException("--card-rewards-only requires check without --report or --ironclad-only.");
+    if (command == "check" && cardRewardsOnly) return PackageChecks.RunCardRewardsOnly(package);
     if (command == "check") return ironcladOnly ? PackageChecks.RunIroncladOnly(package) : PackageChecks.Run(manifest, report);
     if (command == "validate")
     {

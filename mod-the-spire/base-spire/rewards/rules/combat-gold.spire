@@ -27,7 +27,11 @@ procedure WhenCombatEnded {
   body = {
     if = {
       condition = and(victory, greater(field(owner, Player.Hp), 0))
-      then = { call = { procedure = OfferCombatGold args = { owner = owner } } }
+      then = {
+        if = { condition = equal(field(owner, Player.CharacterId), "base-spire:ironclad") then = { call = { procedure = ValidateCombatCardReward args = { owner = owner } } } }
+        call = { procedure = OfferCombatGold args = { owner = owner } }
+        if = { condition = equal(field(owner, Player.CharacterId), "base-spire:ironclad") then = { call = { procedure = OfferCombatCards args = { owner = owner } } } }
+      }
     }
   }
 }
@@ -52,6 +56,7 @@ procedure CloseDevelopmentRewards {
       condition = not(equal(field(owner, Player.Room), "rewards"))
       then = { fail = { message = "No development rewards are open" } }
     }
+    call = { procedure = ClearCombatCardReward args = { owner = owner } }
     set = { target = owner field = Player.GoldRewardPending value = false }
     set = { target = owner field = Player.GoldRewardAmount value = 0 }
     set = { target = owner field = Player.Room value = "none" }

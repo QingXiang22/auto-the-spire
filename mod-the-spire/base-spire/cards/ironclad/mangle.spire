@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Mangle.cs; SHA-256 retained in cards/catalog.json.
-use Mangle { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:mangle" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 15 upgradedBaseDamage = 20 } }
+use Mangle { template = CardDefinition args = { rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:mangle" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 15 upgradedBaseDamage = 20 } }
 use MangleEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:mangle" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use MangleEffect2 { template = TemporaryStrengthEffect args = { definition = "base-spire:mangle" stacks = 10 upgradedStacks = 15 enemy = true } }

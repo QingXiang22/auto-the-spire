@@ -35,6 +35,8 @@ internal static class BaseDslPathChecks
         yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
         yield return ("IC real stdio Rupture reacts after the damaging card", () => StdioTrajectory("rupture"));
         yield return ("IS real stdio initializes the source Ironclad deck and draws five combat copies", () => StdioTrajectory("ironclad-start"));
+        yield return ("CR real stdio starter cards defeat an enemy and acquire one of three permanent rewards", () => StdioTrajectory("card-reward-claim"));
+        yield return ("CR real stdio skips card rewards and closes without acquiring a card", () => StdioTrajectory("card-reward-skip"));
         yield return ("DB-A05 CLI rejects retired scenarios and scopes with exit 3 before reading requests", RetiredPaths);
         yield return ("DB-A09 unknown nested public metadata fails explicitly", UnknownMetadata);
     }
@@ -119,6 +121,11 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "card-reward-claim" or "card-reward-skip" => [
+                    ("Ironclad.Initialize", "0", false, "0", "0", false, ""),
+                    ("TwigSlimeS.Spawn", "0", false, "0", "0", false, "7"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "7"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "7")],
                 "ironclad-start" => [
                     ("Ironclad.Initialize", "0", false, "0", "0", false, ""),
                     ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
@@ -281,6 +288,51 @@ internal static class BaseDslPathChecks
                 Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:burning-blood"), "real starter relic");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":Ironclad.Initialize", StringComparison.Ordinal)), "initialization cannot repeat");
                 Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Card.PermanentSource", StringComparison.Ordinal), "source references remain hidden");
+            }
+            if (mode is "card-reward-claim" or "card-reward-skip")
+            {
+                void StepCardReward(LegalActionDto candidate)
+                {
+                    var id = "card-reward-" + ++stepNumber;
+                    Send(Request(id, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
+                    snapshot = Snapshot(Send(Request(id + "-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                }
+                void Named(string name) => StepCardReward(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + name));
+                var moves = 0;
+                while (PublicBool(snapshot, "Player.CombatActive"))
+                {
+                    Check.True(++moves <= 20, "starter combat completes within twenty public moves");
+                    var attack = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand");
+                    if (attack is not null) StepCardReward(attack);
+                    else { Named("EndDevelopmentTurn"); if (PublicBool(snapshot, "Player.CombatActive")) Named("BeginDevelopmentTurn"); }
+                }
+                Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "real starter-card victory without HP injection");
+                Check.Equal("rewards", Public(snapshot, "Player.Room"), "reward room opens");
+                var offered = snapshot.Groups.Single(g => g.TypeId.EndsWith(":CardRewardOptions", StringComparison.Ordinal)).Members.Select(m => m.EntityRef).ToArray();
+                Check.Equal(3, offered.Length, "three public reward options");
+                Check.Equal(3, offered.Select(id => snapshot.Entities.Single(e => e.InstanceId == id).ContentId).Distinct().Count(), "three distinct definitions");
+                Check.Equal(10, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "unclaimed cards are not permanent");
+                Check.Equal(3, snapshot.LegalActions.Count(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"), "one claim per actual option");
+                foreach (var id in offered)
+                    Check.True(snapshot.Entities.Single(e => e.InstanceId == id).Fields.Any(f => f.FieldId.EndsWith(":Card.Rarity", StringComparison.Ordinal)), "reward rarity is public");
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("CardRarityOffset", StringComparison.Ordinal), "future rarity odds remain hidden");
+                var claim = mode == "card-reward-claim";
+                var chosen = offered[1];
+                if (claim)
+                    StepCardReward(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward" && a.Fields.Any(f => f.Value is WireString v && v.Value == chosen)));
+                else Named("SkipDevelopmentCardReward");
+                Check.False(PublicBool(snapshot, "Player.CardRewardPending"), "card reward spent");
+                Check.True(PublicBool(snapshot, "Player.GoldRewardPending"), "gold reward remains independent");
+                var deck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members;
+                Check.Equal(claim ? 11 : 10, deck.Count, "only a selected card joins the permanent deck");
+                if (claim) Check.True(deck.Any(m => m.EntityRef == chosen), "selected public handle becomes permanent");
+                Check.True(offered.Where(id => !claim || id != chosen).All(id => snapshot.Entities.All(e => e.InstanceId != id)), "unselected reward instances destroyed");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"), "no repeated claim candidates");
+                Named("CloseDevelopmentRewards"); Check.Equal("none", Public(snapshot, "Player.Room"), "explicit reward close");
+                Named("TwigSlimeS.Spawn"); Named("BeginDevelopmentCombat"); Named("BeginDevelopmentTurn");
+                Check.Equal(claim ? 11 : 10, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "permanent deck survives next combat");
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Card.PermanentSource", StringComparison.Ordinal), "combat source references stay hidden");
             }
             if (mode == "rupture") { Check.Equal("78", Public(snapshot, "Player.Hp"), "real HP loss"); Check.Equal("2", Public(snapshot, "Player.PlaySequence"), "real play count"); }
             if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");

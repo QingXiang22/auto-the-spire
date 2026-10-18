@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Cinder.cs; SHA-256 retained in cards/catalog.json.
-use Cinder { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:cinder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 18 upgradedBaseDamage = 24 } }
+use Cinder { template = CardDefinition args = { rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:cinder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 18 upgradedBaseDamage = 24 } }
 use CinderEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:cinder" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use CinderEffect2 { template = RandomExhaustAfterAttackEffect args = { definition = "base-spire:cinder" } }

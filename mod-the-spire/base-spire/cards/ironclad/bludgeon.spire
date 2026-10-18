@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: Bludgeon.cs: cost 3, DamageVar(32, Move), TargetType.AnyEnemy, OnUpgrade adds 10 damage.
 use Bludgeon {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = true baseDamage = 32 upgradedBaseDamage = 42 kind = "attack" strikeTag = false definition = "base-spire:bludgeon" cost = 3 upgradedCost = 3 targeted = true exhausts = false leavesPlay = false }
+  args = { rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 32 upgradedBaseDamage = 42 kind = "attack" strikeTag = false definition = "base-spire:bludgeon" cost = 3 upgradedCost = 3 targeted = true exhausts = false leavesPlay = false }
 }
 use BludgeonDamage {
   template = AttackEffect

@@ -79,6 +79,7 @@ internal static partial class PackageChecks
                 var s = Combat(); var c = IcAdd(s, row.GetProperty("name").GetString()!);
                 Equal(row.GetProperty("cost").GetInt64(), CardCost(s, c), "source base cost");
                 Equal(row.GetProperty("kind").GetString(), s.State.GetField(c, CardField(s, "Kind")).AsString(), "source type");
+                Equal(row.GetProperty("rarity").GetString(), s.State.GetField(c, CardField(s, "Rarity")).AsString(), "source rarity");
                 foreach (var (sourceName, field) in new[] { ("targeted", "Targeted"), ("strike_tag", "StrikeTag"), ("is_x", "IsX"), ("exhausts", "Exhausts") })
                     Equal(row.GetProperty(sourceName).GetBoolean(), s.State.GetField(c, CardField(s, field)).AsBool(), row.GetProperty("name").GetString() + ": " + field);
                 Submit(s, "UpgradeCardInHand", c);

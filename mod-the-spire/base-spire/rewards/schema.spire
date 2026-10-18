@@ -1,0 +1,5 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+collection CardRewardOptions { element = Card ordered = true }
+collection CardRewardPool { element = CardBlueprint ordered = true }

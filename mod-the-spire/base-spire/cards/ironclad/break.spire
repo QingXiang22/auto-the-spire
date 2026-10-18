@@ -5,7 +5,7 @@ dsl_version = "core/0.3"
 # 10 damage and 2 Vulnerable.
 use Break {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = false baseDamage = 20 upgradedBaseDamage = 30 kind = "attack" strikeTag = false definition = "base-spire:break" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
+  args = { rarity = "ancient" inIroncladPool = true generatable = false baseDamage = 20 upgradedBaseDamage = 30 kind = "attack" strikeTag = false definition = "base-spire:break" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use BreakDamage {
   template = AttackEffect

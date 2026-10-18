@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: ShrugItOff.cs: cost 1, BlockVar(8, Move) plus CardsVar(1); OnUpgrade adds 3 block only.
 use ShrugItOff {
   template = CardDefinition
-  args = { inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:shrug-it-off" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
+  args = { rarity = "common" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:shrug-it-off" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use ShrugItOffBlock {
   template = BlockEffect

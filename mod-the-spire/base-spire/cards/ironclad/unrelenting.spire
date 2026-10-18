@@ -2,6 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Unrelenting.cs; SHA-256 retained in cards/catalog.json.
-use Unrelenting { template = CardDefinition args = { inIroncladPool = true generatable = true definition = "base-spire:unrelenting" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 14 upgradedBaseDamage = 20 } }
+use Unrelenting { template = CardDefinition args = { rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:unrelenting" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 14 upgradedBaseDamage = 20 } }
 use UnrelentingEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:unrelenting" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use UnrelentingEffect2 { template = TargetedSelfPowerEffect args = { definition = "base-spire:unrelenting" power = "base-spire:free-attack-power" kind = "free-attack" stacks = 1 upgradedStacks = 1 } }
