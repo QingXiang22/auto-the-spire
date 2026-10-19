@@ -14,6 +14,18 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 遗物内容接续组可用 `check --relic-content-only` 定向验证拾取资源、动态抽牌／营火治疗、出牌计数和首次受损抽牌。该命令不生成覆盖报告；形成逐件证据时仍运行完整 `check --report`，再由 `tools/ci/check_relic_coverage.py` 核对实际定义与见证。源目录保持297项，不能把局部通过写成全遗物完成。
 
+调试单个遗物机制时，可按检查名称筛选：先运行一次`dotnet build tools/base-spire-dev`，随后用`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`只执行攻击修正组。`--filter`按不区分大小写的名称前缀匹配，不能与其他定向参数或`--report`混用；空白筛选、零匹配返回2。每项输出实际耗时，末尾列执行数、跳过数和检查总耗时；总耗时不包含入口加载，进程总耗时应另计。完整覆盖报告由批次最终CI生成，本地已有相同包摘要的报告时复用，不因补文档重跑。
+
+简单拾取资源的数值差异复用逐件表驱动；同组统一验证本次实例／持有者隔离、直接获得、拾取前失效、移除不撤回、重新获得与跨战不重放。真实stdio还执行五件资源拾取及逐件移除，公开最大生命／生命／金币保持永久结果。商店价格、Ancient来源和资源修正者仍按各领域合同恢复，不把显式开发获得当作正常来源。
+
+遗物定向入口也执行CombatTurnRelicChecks：指定回合能量、每3／5次跨战计数和Sai每回合无加成格挡；复用已有回合门、移除／熔化与持有者隔离判别，补NoEnergyGain、资源上限、不同实例进度及Anchor／HornCleat组合。公开stdio的turn-start-resources轨迹实际获得五件遗物，执行第1至4回合，再跨战验证花朵第5次与Cocoa叠加；不注入资源结果。
+
+AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog／PaperKrane：升级资格、显式攻击者或牌拥有者、有无状态与正确敌人、力量／虚弱／易伤／Cruelty／格挡顺序、移除／熔化、自动／重复和只读预览。公开cannon-phrog轨迹从永久升级到实际Bash易伤与升级Strike伤害；paper-krane轨迹实际施加Shockwave，再观察敌人的攻击／增益／攻击三回合，未注入伤害结果。
+
+同一遗物定向入口还执行ChemicalX的捕获／支付与效果X分离、零能量、普通／升级、嵌套自动与重复出牌、实例／持有者隔离、移除／熔化、纯查询和选牌暂停续接判别。原版星星X、正常商店获得与独立对拍仍未验证；契约见[效果X修正](../../docs/design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+
+拾取随机升级组也使用`check --relic-content-only`，验证Whetstone／WarPaint／SandCastle的类型／张数、完整Niche洗牌、固定源选中实例／事件顺序／游标、重复获得、嵌套调用、无临时状态残留及两战副本。向量只来自独立源码神谕，生成方式见[rng-oracle](../rng-oracle/README.md)；公开stdio逐件观察永久升级和实际攻击／格挡，不构成正常Run。
+
 `base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/design/mod-the-spire/ironclad-dsl/shared-operations.md)。显式 Ironclad 基础初态、原版随机算法／流布局和自动起手已接入；包含 Neow 的正常开局、完整随机前置消费和正常 Run 不属于此 scope；不使用旧 C# 运行回退。当前数量与交付证据从[主清单](../../docs/review/tofix/README.md#当前交付)定位。
 
 分阶段学习与实际公开结果见[base 开发教程](../../docs/development/base-spire/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为见证。

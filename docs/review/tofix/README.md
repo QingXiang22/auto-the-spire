@@ -4,7 +4,7 @@
 
 2026-10-17按用户要求重新规划，并依据当前workflow-b审阅修订；用户随后指令继续推进，Codex `/root`按当前交付接续Sown＋SapphireSeed，暂停项保持。**部分交付、待验证、整体已验收分别记录**；计划修订不代表新增玩法验收。
 
-[领域任务](#当前任务) · [当前交付](#当前交付) · [归属与依赖](#归属与依赖) · [推进顺序](#推进顺序) · [每批集成](#每批集成与重排条件) · [原任务合同](#任务详情) · [完整环境范围](#完整环境的验收范围)
+[领域任务](#当前任务) · [当前交付](#当前交付) · [遗物分组](#遗物分组任务) · [归属与依赖](#归属与依赖) · [推进顺序](#推进顺序) · [每批集成](#每批集成与重排条件) · [原任务合同](#任务详情) · [完整环境范围](#完整环境的验收范围)
 
 ## 当前目标
 
@@ -59,39 +59,20 @@
 
 ## 当前交付
 
-2026-10-18，Codex /root 完成 **CORE-AUTHOR-05／DSL-EFFECT-LISTENERS-01：遗物与Power统一监听**，P1／待验证。基于a48ef1f／PR #20（四组CI全通过），分支codex/effect-listener-unification-20261018。通知emit与只读修正foldEvent共用实例订阅，按实际持有顺序快照并在执行前重查资格；主流程移除遗物专属查询和Power效果直接调用，ArtOfWar私有状态独立。必要通用core维护迁移至0.6.0／engine/ir@0.6，base为0.6.0-dsl.33，旧0.5产物须重建。33项遗物与组合、118项内核、351项包行为、32项公开路径及solution构建通过；38件遗物／297项来源、铁甲85/85及完整未实现范围保留。契约见[统一监听](../../design/mod-the-spire/effect-listeners.md)，接口、证据和未验证见[交付记录](../records/2026-10-18/effect-listener-unification-2026-10-18.md)。本批编码窗口结束，下一成果为本批PR审阅与CI，再沿监听接口继续遗物内容；独立原版比较、正常Run和其他暂停项不关闭。
+2026-10-19，Codex `/root` 按用户要求审阅纯 DSL 完成度并重构执行工作流；归属 CORE-AUTHOR-05／CI-01 的负责人维护，不认领新的玩法生产包。基线 `978a0b6`，修改仅限检查工具与工作流／审阅文档。本地已交付检查筛选／计时、去重CI触发及单一当前入口，待本次PR／CI审阅；完成证据和未验证项见[本次审阅](../records/2026-10-19/base-completion-workflow-review-2026-10-19.md)。
 
-2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-02：伤害与能量修正遗物**，P1／待验证。基于 `778fc7b`／PR #19（四组CI全通过），分支 `codex/relic-content-wave2-20261018`，base `0.5.0-dsl.32`。已恢复StrikeDummy、FakeStrikeDummy、IceCream、ArtOfWar：Strike加成先于乘法，显式owner/card伤害入口，独立能量重置事件及实例上一回合攻击记录。29项遗物定向、347项包行为、32项公开路径及覆盖门槛通过；源297件保留，38件实际见证、258件未实现、1件源废弃排除。修改仅含base共享接缝／内容、tools与net检查和文档，未改core／参考。准确语义见[遗物生命周期](../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)，来源、身份和证据见[交付记录](../records/2026-10-18/relic-content-wave2-2026-10-18.md)。本批编码窗口结束；下一成果可接ChemicalX支付X／效果X分离或拾取永久升级机制。全遗物、独立原版对拍、正常来源与Run仍未关闭。
+同日已完成内容解耦及sts2-sim对照审阅：Codex `/root`核对锁定参考与原版Power职责，并执行五项耦合探针及内容自有模块可行性原型。已确认Power调用方kind、重复卡牌数值、公共私有状态和重复名单问题；现有DSL可承载模块自有状态／监听，但catalog的use-only限制拒绝完整模块。候选调整为“简单内容配模板、复杂内容用完整DSL模块＋共享领域命令”，具体设计与验收见[修订提案](../../design/mod-the-spire/engine-dsl-migration/plan.md#2026-10-19内容模型修订提案)，来源／命令／未验证见上述同一记录。提案未实施、正式作者约束未改；下一生产切片需据此重排，不能认定内容隔离已验收。
 
-2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RELIC-CONTENT-01：全遗物接续首组** 的本地交付，待验证；用户最新顺序为base-spire内容补全优先。基于 `fdf310a`／RNG PR #18（四组CI全通过），分支 `codex/relic-content-wave1-20261018`，base `0.5.0-dsl.31`。本组补Pear、Mango、LeesWaffle、FakeLeesWaffle、OldCoin、BlackBlood、CaptainsWheel、BagOfPreparation、RegalPillow、Nunchaku、Kunai、Shuriken、OrnamentalFan、LetterOpener、StoneCalendar、CentennialPuzzle共16件；拾取经RelicObtained，首回合／营火动态修正、实例出牌计数、首次受损抽牌及末杀收尾已接入。20项遗物定向、338项包行为、111项内核、30项公开路径与覆盖门槛通过；源297件保留，34件实际见证、262件未实现、1件源废弃排除。必要通用维护仅将模板实例容量256增至8192，32层／递归／4096成员保护保持。契约见[遗物生命周期](../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)，实际来源、命令和接手入口见[交付记录](../records/2026-10-18/relic-content-wave1-2026-10-18.md)。本组编码窗口结束；下一成果继续遗物伤害／费用修正或拾取永久升级机制，按源补真实消费者。全遗物、独立原版对拍、正常来源与Run未关闭，其他暂停项保持。
+| 当前事项 | 已有成果与下一动作 |
+| --- | --- |
+| 最近生产批：DSL-RELIC-CONTENT-07／RELIC-G05首子包，P1／待验证 | base `0.6.0-dsl.38`；MiniatureCannon／PaperPhrog／PaperKrane已实现，共55件遗物有本地见证。准确语义、来源及本地检查见[批次证据](../records/2026-10-18/relic-stateless-attack-modifiers-2026-10-18.md)。PR #23基线`978a0b6`的四组CI已核实成功；本次工具／流程修改仍需新提交的CI结果 |
+| 下一玩法包：RELIC-G05后续，P1／待认领 | 先核对PenNib计数／当前牌身份，明确多段、重复与嵌套；Akabeko／Vigor及MysticLighter／附魔按依赖另分。本次不进入玩法编码 |
+| 全遗物与正常环境，未验收 | 来源297件、1件Deprecated排除；241件尚未实现。每件适用性／完整效果／正常来源及独立证据继续收口，不注册空效果。正常Run、G05整体及父项均保持开放 |
 
-2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-RNG-RESTORE-01：原版随机机制恢复** 的本地交付，待验证；基于 `faceab9`／卡牌奖励PR #17，分支 `codex/vanilla-rng-restore-20261018`。base `0.5.0-dsl.30` 已选择vanilla-uniform@1，纯DSL恢复UTF-16字符串seed→12条run／3条player流及内容种子公式、源初始／排序重洗、卡牌随机选择和共享Rewards游标，精确binary32替代24-bit开发网格。通用core补随机DSL／包会话工厂、未消费种子快照及原版布尔映射修正；运行身份迁移为engine/ir@0.5／core0.5.0，旧0.4包须重建。10组独立源向量、110项内核、318项包行为、374项公开接口、85/85铁甲卡牌和18件遗物见证门槛通过，迁移合同与769份文档检查通过。准确职责见[随机契约](../../design/mod-the-spire/run-domain/randomness.md)，来源、命令、版本迁移和未验证见[交付记录](../records/2026-10-18/vanilla-rng-restore-2026-10-18.md)。本批编码窗口结束；下一机制包恢复药水掉落及真实奖励前置消费，或地图／楼层上下文，不补抽伪造对齐。完整Run／Neow／地图、遭遇内容流和整局参考对拍仍未验收，父项及暂停项不关闭。
+Ironclad已有85张单人牌本地见证、两项多人源排除；旧C#的90件遗物及正常路线属于切换前成果，不能加到当前55件中。其他已交批次、接口和来源从[记录索引](../records/README.md)按需读取；不在本节逐批追加版本、测试总数与下一步。全遗物优先、其他角色／召唤复活／训练的暂停保持。
 
-2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-CARD-REWARD-01：铁甲战士首幕普通战斗卡牌奖励** 的本地交付，待验证。基于 `fc34ec8`／PR #16（core／base／net／migration CI 均通过）；包 `0.5.0-dsl.29` 已接完整80张奖励源池、稀有度偏移、三张去重、同实例永久领取、跳过／关闭清理和下一场副本，Feed／NotYet 不误用战斗生成排除。308项包行为、27项公开路径（含真实起始牌击杀后领取／跳过）、85/85铁甲卡牌及18件遗物见证门槛通过。修改 rewards、cards 的稀有度／创建与永久获得接缝、必要 Player／公开元数据、包外检查与文档，未改 Engine／Host／参考玩法。准确边界见[奖励契约](../../design/mod-the-spire/combat-rewards/spec.md#铁甲战士首幕普通战斗卡牌奖励)，实际来源、失败修复与接手步骤见[交付记录](../records/2026-10-18/ironclad-card-rewards-2026-10-18.md)。本批编码窗口结束；下一成果按源随机初始化／地图访问恢复独立机制包，再接Neow及正常Run。仅首幕A0、全部解锁、无奖励修改者，保留24-bit开发抽样与源NextFloat差异；正常Run、原版对拍和父项不关闭，其他角色／召唤复活／训练暂停保持。
-
-2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-IRONCLAD-START-01：铁甲战士初态与开发战斗起手** 的本地交付，待验证。基于 `9541ebe`／全卡 PR #15；包 `0.5.0-dsl.28` 已有显式 `Ironclad.Initialize`，建立真实 5 Strike／4 Defend／1 Bash、80 HP／99 金币与 BurningBlood，开战重建独立副本并用开发流洗牌、回合自动抽五张及首回合 Innate 优先；初始洗牌不误发 AfterShuffle。299 项包行为、25 项公开路径（含真实 stdio 起手）、85/85 铁甲牌及18件遗物见证门槛通过。修改 characters、必要 combat/cards/relics 接缝、包外行为与公开检查及文档，未改 Engine／Host 玩法。契约与实际证据见[角色初态](../../design/mod-the-spire/character-combat/ironclad-start.md)及[交付记录](../records/2026-10-18/ironclad-character-start-2026-10-18.md)。本批编码窗口结束；下一成果另立机制包恢复正常卡牌奖励来源或源随机初始化，再接地图／Neow。仍用开发 scope／engine-default，原版 RNG、正常 Run、独立比较与父项不关闭，其他角色、召唤／复活和训练暂停保持。
-
-2026-10-18，Codex `/root` 按用户“先铁甲战士全套卡牌及需要的公共接口”完成 **CORE-AUTHOR-05／DSL-IRONCLAD-ALL-01** 本地交付，待验证；基于 `62f070c`／未合并 PR #14。包 `0.5.0-dsl.27` 已补齐源池 87 项中的 85 张单人牌，保留 DemonicShield／Tank 两项多人排除，并实现所需 GiantRock；全卡目录 578 项不缩减，合计 87 个可执行卡定义。新增共享选目标／选牌／完整耗尽、X 费／临时费用、计算伤害、复制／生成／变换、逐次历史、自动／重复出牌及所需 Power 反应，纠正旧 HowlFromBeyond／BodySlam 源行为。291 项包行为、139 项铁甲定向、24 项公开路径及 85/85 卡牌见证门槛通过；完整 CI 见本分支 PR 检查，原版独立比较未执行。精确入口、边界见[操作参考](../../design/mod-the-spire/ironclad-dsl/shared-operations.md)，来源、命令、失败修复和接手步骤见[交付记录](../records/2026-10-18/ironclad-full-cards-2026-10-18.md)。本批编码窗口结束；后续复用本包和永久牌组恢复真实 Ironclad 起始牌组／起始遗物、初始排序与抽牌或正常卡牌奖励来源，另立完整机制包。此指令只恢复铁甲战士批量补卡；其他角色、敌人召唤／复活及训练暂停保持，正常 Run、原版 RNG、全 Power 目录和父项不关闭。
-
-2026-10-18，Codex `/root` 完成 **CORE-AUTHOR-05／DSL-DECK-SMITH-01：永久牌组、战斗副本与营火锻造** 的本地交付，待验证；基于未合并的 PR #12／#13。包 `0.5.0-dsl.26` 已有独立 RunDeck、30 个定义的具名获得入口、战斗副本重建、原生可取消的营火永久选牌和升级，取消不消耗选项、临时升级不反写；补齐房间进入／离场与死亡守卫。152 项包行为、20 项公开路径（含真实 stdio 选牌／取消及 9／6 伤害）、当前包遗物见证门槛与 759 份文档检查通过；广覆盖见本分支 CI，不据此关闭原版对拍或正常 Run。修改纯 DSL base、必要元数据、包外检查与文档，未改 Engine／Host 玩法。下一成果从本永久牌组继续恢复真实 Ironclad 起始牌组／起始遗物或卡牌奖励来源；不得用缩减源池随机发牌冒充正式奖励。资格、状态寿命和未支持范围见[契约](../../design/mod-the-spire/permanent-deck-smith/spec.md)，实际命令、失败修复与接手步骤见[交付记录](../records/2026-10-18/permanent-deck-smith-2026-10-18.md)。
-
-2026-10-18，Codex `/root` 按用户指令接手 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01：战斗金币奖励领取与关闭**，待验证；用户确认 DSH 已停止。`0.5.0-dsl.25` 已实现胜利生成待领金额、领取一次、关闭可跳过、关闭前拒绝跨房；144 项包行为、18 项定向公开检查（含真实 stdio 领取／跳过）、加载和遗物见证检查通过。当前 DSL 定义为卡牌 30、遗物 17、敌人 9、遭遇 2、药水 6；正常单人 scope、源随机与正常 Run 尚未恢复；[草稿 PR #12](https://github.com/QingXiang22/auto-the-spire/pull/12) 已创建，实现提交 `2caf090` 的 core／base／net／migration 四组 [CI](https://github.com/QingXiang22/auto-the-spire/actions/runs/39096365923) 全通过，原版独立对拍仍未取得。修改 base 的 rewards／Player 字段／必要入口守卫、包外检查与文档；不改 Engine／Host 玩法或暂停项。该批编码窗口结束；遗留营火锻造已由本页当前首项接续，旧原稿不再作为待交付入口。完整进度核对、实际命令、未验证与历史证据见[本次记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md)，接口见[奖励契约](../../design/mod-the-spire/combat-rewards/spec.md)。
-
-此前 25 批接续的原文与直接证据已并入[接手复核记录](../records/2026-10-18/base-dsl-takeover-2026-10-18.md#接手时逐批证据原文)，保留各批范围、失败与未验证项；不作为另一份当前排期。
-
-2026-10-18用户确认架构纠偏：**CORE-AUTHOR-05：Engine DSL主体与Spire子集迁移**，Codex `/root`，首批 T00～T06 已通过 [PR #9](https://github.com/QingXiang22/auto-the-spire/pull/9) 合入 main/807d17d，core／base／net／migration 四组 CI 已通过；本轮按用户要求编写人类手册与派生 skill，文档进度只维护[本次文档整理](#本次文档整理)。用户要求 base 严格只用 DSL／必要 JSON，直接切换并接受未迁移玩法暂时报未支持；按 [spec](../../design/mod-the-spire/engine-dsl-migration/spec.md)、[plan](../../design/mod-the-spire/engine-dsl-migration/plan.md)、[tasks](../../design/mod-the-spire/engine-dsl-migration/tasks.md)实施。默认 Host 和工具已改为通用 DSL 包加载；该批仅支持遗物抽牌开发 scope，TheAbacus 有实际 DSL 行为见证，原 297 件源范围保留。solution 构建、Engine 105 项、包行为 11 项、Net 350 项及迁移边界通过，原 regression 仍明确退出 3、零执行，不能当作独立比较通过。实际身份、目录、检查与回退范围见[首批交付](../records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，设计前工作区事实见[纠偏记录](../records/2026-10-18/base-dsl-migration-checkpoint-2026-10-18.md)。后续按机制依赖恢复资源／伤害／回合和相关内容；完整游戏迁移、正常 Run 与原 ENV/W 验收均未完成。不恢复 C# 玩法，不派并行 agent。
-
-2026-10-18原 **BASE-LAYOUT-01** 的目录与未提交修改审阅纳入CORE-AUTHOR-05，不再单独推进C#领域目录方案。原29份DSL正文与目录移动证据保留；TheAbacus的C#补全只作迁移行为依据。后续目录以CORE-AUTHOR-05的plan为准，纯DSL交付不能用文件移动或局部构建代替。
-
-2026-10-17用户指令继续实现全部遗物并核查CI：**ENV-T09-PR02-CONTENT**，原DSH认领；2026-10-18用户已令Codex `/root`接管并转向CORE-AUTHOR-05，旧C#内容扩张暂缓。目标为297件源遗物逐件完成适用性／行为／验证去向，单人适用效果和必要共享机制进入正式内容及生产生命周期；多人专用／废弃按源码裁定，不以空效果注册。修改base遗物内容／共享资源与生命周期／定向检查、tools统计／CI接线及文档，不修改独立参考玩法；每组实现后按相关用例验证，最后核对全量覆盖。当前组先接获得资源、战斗结束、精英计数替换及战斗进入消费者，接着按完整依赖清单连续推进；同时补无需本地原版源码的逐件CI覆盖报告及遗漏失败门槛。上一批FOUNDATION的接口与证据直接复用。2026-10-17～18续批把可执行遗物从4件扩到90件（球类、卡牌打出触发、消耗与无加成群体伤害、回合开始与战斗进入、手牌数量条件、共享抽牌、受击触发、格挡数量条件、回合末弃牌监听、敌人死亡触发、带牌来源过滤的伤害加性修正等批次），CI覆盖门槛保持通过（90/90可执行；源分母297、未实现206，`--require-complete`仍不成立）；各批的源依据、命令、场景与已知差异见[records索引](../records/README.md)对应记录。逐件资格与完整效果继续缺，不关闭PR02；完整回归留给Actions，当前297件不因原CI的runtime组通过而视为已覆盖。
-
-2026-10-17用户确认先做遗物统计与公共接口：**ENV-T09-PR02-FOUNDATION**，Codex `/root`，待验证（本批实现与本地定向检查完成，完整CI与独立／公开证据未取得）。本批只读对账297件源遗物、300条池成员、4件base声明，扩展RunRelics的实例计数、有效性查询、Obtain／Remove／Replace／Melt及编译期生命周期接缝，迁移现有四件遗物调用方；27项相关定向检查通过。修改base领域／装配／检查、tools/source-manifest和文档，未改core／参考／net协议，未批量添加遗物效果。依据、实际命令／身份和统计见[本批记录](../records/2026-10-17/relic-foundation-2026-10-17.md)，接口见[整局公共操作](../../design/mod-the-spire/run-domain/spec.md#遗物实例与生命周期)。下一成果为同提交CI及后续真实遗物消费者；逐件单人资格、完整效果和正常路径仍缺，不关闭PR02。下段奇巧牌族已结束编码窗口，保留待CI证据。
-
-2026-10-17接续开发：**ENV-T12-SILENT-SLY：静默猎手单人奇巧牌族**，Codex `/root`认领，待验证（整组实现及本地轻量检查完成，等待CI）；基线main/f1cd726，分支codex/silent-sly-family-20261017。本批新增Abrasive、FlickFlack、Reflex、Ricochet、Tactician、Untouchable、HandTrick、MasterPlanner，连同已交付Haze验证全部单人原生奇巧及授予奇巧的消费者；Sneaky为多人内容，不纳入单人行为。修改边界为base内容、效果前端、卡实例复制／清理、选牌及Power触发、受影响公开映射和定向测试／文档；不改core或参考玩法。目标为普通／升级、手动与弃牌自动打出、临时／战斗内奇巧寿命、受击前荆棘及实例隔离全部可验证。52项奇巧、68项中毒、14项选牌、24项编排、10项公开语义、26项net快照及3项源码检查通过；命令及边界见[交付记录](../records/2026-10-17/silent-sly-family-2026-10-17.md)。下一成果为同提交GitHub Actions四组完整回归通过；不在中途运行耗时全套。上一批中毒牌族已在PR #6及#4合入main，Actions四组全绿（39026606947），完整Silent开局／整局合同继续开放。
-
-上一批 **ENV-T12-SILENT-POISON** 已完成12张中毒牌及受控行为，PR #6及#4已合入main，Actions四组完整回归通过（39026606947）。交付与验证边界见[中毒牌族记录](../records/2026-10-17/silent-poison-family-2026-10-17.md)，不据此关闭Silent正式开局／多幕或原版逐卡对拍合同。
-
-以下表格保留上一批Sown＋SapphireSeed的承诺与证据缺口；本批奇巧牌族的状态与范围维护在上段。其余类别保持粗粒度。
+<details>
+<summary>切换前 Sown＋SapphireSeed 的未关闭验收合同（历史证据，不是当前派单）</summary>
 
 | 项目 | 本批约定 |
 | --- | --- |
@@ -120,6 +101,35 @@
 参考的SapphireSeed.Plant自动选首张，不能当作玩家任选实例的正确性依据；已实测其Sown通用MutableClone重置状态，但CreateClone经CloneForCombat恢复状态，后者可实际比较。可比部分使用独立原生执行，非首张选择按只读sts2源场景核验并具名保留差异，不改参考、不自动代选。对应比较保持blocked_compare，不计整批完整通过。
 
 验证已扩展`event-modules --event SapphireSeed`，包含Eat、首张Plant比较及非首张差异；Slice的`--sown-only`验证实例与两战寿命，`sown-combat`核对实际出牌。检查范围和运行命令见本批记录；受控访问不替代正常路线，正常探索失败不替换原固定验收case。
+
+</details>
+
+## 遗物分组任务
+
+本表维护全遗物主线的机制分组及排期；名字为候选示例，完整来源仍以catalog为准。每组按真实源方法进一步拆完整子包，只有参数不同才直接共享模板；已交付的其他内容不重做。设计、风险与G01实施步骤见[开发计划](../../design/mod-the-spire/relic-combat-start/development-plan.md)。共用主责Codex `/root`，未认领组不占生产窗口，其他角色及召唤／复活暂停保持。
+
+| 组／机制 | 候选与合批边界 | 优先级／状态 | 依赖及下一可验成果 |
+| --- | --- | --- | --- |
+| RELIC-G01 拾取随机永久升级 | Whetstone、WarPaint、SandCastle；类型／张数参数化 | P1／待验证 | CONTENT-04已交付；固定源向量、两战及公开证据见当前交付，待PR／CI审阅；正常来源未验收 |
+| RELIC-G02 永久选牌修改 | Pomander、YummyCookie、EmptyCage、PreciseScissors；升级与移除分别子包 | P2／待认领 | 原生永久多选、取消和完整移除；暂停续接不重放拾取 |
+| RELIC-G03 卡牌创建修正 | MoltenEgg、ToxicEgg、FrozenEgg；附魔参与者另接依赖 | P2／待认领 | 奖励展示／商店创建／入组前修正与NoHookUpgrades三处完整消费者 |
+| RELIC-G04 回合资源与开场效果 | Candelabra、Chandelier、VeryHotCocoa、FakeHappyFlower、Sai；按事件和资源子包 | P1／待验证 | CONTENT-06已交付五件；77项定向／385项包行为／38项公开路径及52件见证，待PR／CI审阅；正常来源未验收 |
+| RELIC-G05 攻击与格挡修正 | Akabeko、PenNib、MiniatureCannon、MysticLighter、PaperPhrog、PaperKrane | P1／待认领（后续子包） | CONTENT-07三件已交付，待验证；下一PenNib计数／当前牌，Akabeko／Vigor与MysticLighter／附魔按依赖分包；整组未关闭 |
+| RELIC-G06 出牌／牌区反应 | GamePiece、JossPaper、CharonsAshes、ToughBandages、Tingsha、UnceasingTop | P1／待认领 | 缺失弃牌／手空通知先补契约；计数、嵌套抽牌及末杀余效 |
+| RELIC-G07 抽牌、留牌与行动限制 | Pocketwatch、Fiddle、RunicPyramid、RingingTriangle、VelvetChoker、SneckoEye | P2／待认领 | 手牌清理／可出牌守卫／随机费用；纯查询与跨回合历史一致 |
+| RELIC-G08 受损、阈值与死亡 | RedSkull、SelfFormingClay、DemonTongue、TungstenRod、TheBoot、LizardTail、FragrantMushroom | P2／待认领 | 最终失血与防止死亡顺序；伤害修正和死亡防止分别子包 |
+| RELIC-G09 药水库存与触发 | PotionBelt、AlchemicalCoffer、PhialHolster、Sozu、ReptileTrinket | P2／待认领 | 动态容量、获得／拒绝／满栏／使用，掉落消费由G10提供 |
+| RELIC-G10 奖励生成与资格 | WhiteBeastStatue、BlackStar、PrayerWheel、WhiteStar、Orrery、AmethystAubergine | P2／待认领 | 真实奖励前置消费、容器及完整池；卡牌／药水／遗物奖励分子包 |
+| RELIC-G11 房间与长期资源 | VenerableTeaSet、FakeVenerableTeaSet、EternalFeather、MealTicket、Pantograph、MawBank | P2／待认领 | 房间类型／历史、离场与下战重置；不拿开发战斗当真实房间 |
+| RELIC-G12 商店参与者 | MembershipCard、TheCourier、WongoCustomerAppreciationBadge、FakeMerchantsRug | P2／待认领 | 价格／补货与真实商店库存；静态资格也须源依据 |
+| RELIC-G13 营火参与者 | Girya、Shovel、MeatCleaver、MiniatureTent、StoneHumidifier、DreamCatcher | P2／待认领 | 选项修改、费用、一次到访、取消及产生奖励；不重做已有休息 |
+| RELIC-G14 永久生成／复制／变换 | Astrolabe、PandorasBox、NewLeaf、DollysMirror及生成牌拾取者 | P2／待认领 | 完整获得／移除／复制／变换、源池与随机流；先交共享操作再接内容 |
+| RELIC-G15 附魔与关键词 | GnarledHammer、Kifuda、PunchDagger、RoyalStamp、FresnelLens、WingCharm | P3／待认领 | 源附着身份／替换／升级／复制及资格；不把注册名当行为 |
+| RELIC-G16 地图、古代人与跨域长期效果 | GoldenCompass、JuzuBracelet、WingedBoots、FurCoat、LordsParasol | P3／待认领 | 正常地图／房间／Ancient上下文；按跨域真实消费者收口 |
+| RELIC-G17 遗物替换／熔化 | SwordOfStone、TouchOfOrobas、ToyBox及升级遗物 | P2／待认领 | 完整Replace／Melt、旧状态清理、新拾取和实例身份；不能只改字段 |
+| RELIC-G18 其他角色与特殊规则 | CrackedCore、GoldPlatedCables、BigHat、MiniRegent、Byrdpip、PaelsLegion等 | P3／暂缓 | 各自角色资源／召唤依原授权恢复，不将通用物品分支一并暂停 |
+| RELIC-G19 拾取基础资源 | FakeMango、LoomingFruit、NutritiousOyster、SignetRing、GoldenPearl | P1／待验证 | CONTENT-05已交付；逐件数值、拾取失效／持有者隔离及公开证据见当前交付，待PR／CI审阅；正常来源未验收 |
+| RELIC-G20 源特例复核与归组 | 尚未确定主要机制、只有属性覆写或有多个跨域阶段的剩余条目 | P2／待认领 | 从完整catalog核对遗漏；记录源方法／属性与组依赖，无法归类不表示排除或自动暂停 |
 
 ## 归属与依赖
 
@@ -151,20 +161,22 @@ T09-PR05原为组合合同，拆分的是上述两个职责，保留同一原ID�
 
 ## 推进顺序
 
-1. **Sown＋SapphireSeed首批交付**：仅按[当前交付](#当前交付)实施与验收，批末立即集成；结果决定下一批附魔的最小范围，不承诺首批覆盖三个事件。
-2. **滚动完成第一幕事件和物品／奖励能力组**：Slither／SelfHelpBook等后续附魔、遗物、药水、自定义奖励和事件战斗各选一批，明确消费者后接续；公开多选作为使用它的那一批前置依赖。每批都回归和公开验证，不等本步骤全部结束。
-3. **集中补第一幕怪物、精英与Boss**：复用状态机，每个完整行为批次结束都集成；开发开局Boss奖励关闭是可记录的中间检查。召唤／复活继续暂缓，不能绕开受影响路线宣称全域完成。
-4. **接通Neow后验收正常开局首幕，再进入后续Ancient／多幕与终局**：Neow归先古之民、进入起点归推进，必须先于“正常开局首幕”验收；后续Ancient在各自幕连续游玩前实现。地图／商店／营火／宝箱复用已交基础，不为分类重做。
-5. **其余角色与完整环境候选**：Ironclad完成后，按原恢复条件重新安排批量补卡／其他角色；五角色、进阶、完整覆盖、120对与AI门槛不变。
+1. **按用户2026-10-18顺序继续全遗物**：从[遗物分组](#遗物分组任务)选就绪机制，复用最新统一监听；先核对同机制的完整源行为，再成组配置和执行见证。G05下一候选PenNib，不能按旧Sown接手建议重开附魔或其他角色。
+2. **按依赖补完整消费者**：只有参数差异的内容合批；新增共享机制时将契约、真实消费者与必要边界一起交付。房间／奖励／地图依赖具体归组，不以开发获得证明正常来源；受阻条目退出本批，其他就绪内容继续。
+3. **恢复独立比较与正常Run集成**：原严格适配器当前零执行，独立恢复包应接同一DSL会话与只读参考，先恢复一个原case，再扩组。地图／房间／奖励往返、Neow、首幕Boss与后续Ancient／跨幕逐步恢复；每批收尾核对该层是否有新增证据，若连续批次只增长定义就由负责人重排。该规则不自动解除全遗物优先或暂停项。
+4. **其余角色与完整环境候选**：按原恢复条件安排五角色、进阶、全覆盖和120对矩阵；开发开局首幕仍只是中间检查，Neow先于正常首幕验收。
 
-上述2～5是粗粒度路线，不是整类串行完工的承诺。按用户最新要求，一批以预先选定的完整内容组为单位，例如某幕普通怪物组、精英组或一组附魔及其消费者；先集中实现整组，再统一行为验证。组内不按每张牌／每只怪／每个文件建立测试与交付循环，必要共享能力和接线纳入同组。
+分类不要求整类全部完成后才暴露集成缺口；下一包以实际就绪依赖为准。历史任务合同保留验收范围，历史“接手先做”不驱动当前派单。
 
 ## 每批集成与重排条件
 
+- **批次边界**：按同一触发／状态寿命／消费者合批，一个批次可以包含多个参数配置；不为每3～5件机械结束编码窗口。同一交付分支持续提交，完成一个可审阅机制批后再形成PR；CI等待期间可推进独立就绪工作，合并前仍核对必需结果。
+- **配置与机制分流**：仅复用既有模板时，补内容／注册／元数据及逐件数值见证；不重复撰写共享机制规格、接口参考或公开协议测试。新增状态、通知、随机顺序、生命周期或公开字段时，才补对应契约／操作文档和判别。一个批次一份简短证据记录；工具README只在使用方法改变时更新。
+- **反馈必须有边界**：调试遗物组使用`check --relic-content-only --filter "AM "`这类已确认的名称筛选，记录实际执行数／跳过数和耗时；零匹配必须失败。局部检查不得生成完整覆盖报告。最终包的逐件报告和覆盖门槛由CI统一执行；CI已有同一包摘要结果时直接引用，不能重复在本地跑完整check取同一证据。
 - **默认节奏**：整组实现完成后，统一跑受影响模块的单元／局部行为测试，以及少量与本组直接相关、预先固定种子的对拍。组内按需要做受影响项目的编译／解析／加载检查，不默认启动行为套件；仅遇到阻挡继续实现的具体缺陷时运行最小复现。
 - **检查选择**：先列明本组要跑的测试组、固定case／seed和预期结果，复用已有入口；不会只因测试工程叫Slice就运行其全部867项，也不默认捆绑全部Engine、net或十组历史suite。没有触及net、core或跨幕时，不附带对应全量检查。必要构建只覆盖受影响项目，避免同时构建和执行同一输出目录。
 - **重跑限制**：通过后不重复跑同一状态。失败修复后只复跑失败用例和修复直接影响的检查；若确有跨模块疑点，说明具体风险后扩大受影响范围。补文档、追加一条局部测试、汇总证据或迁移经核对的身份常量，不据此重跑整套行为测试。
-- **CI与阶段验收**：完整 Engine、Slice runtime、net 和严格 regression 由 GitHub Actions 在 push／PR 后执行，本地不默认复跑；入口及实际覆盖见[CI说明](../../../tools/ci/README.md)。长程公开回放、全 seed／120对矩阵、性能套件仍留对应里程碑／发布验收，尚未自动接入 CI。组内若存在当前轻量检查无法判断的共享层故障，仅补足定位它的检查；不能用局部通过宣称最终环境已验收。用户2026-10-17的这一分工替代根约定中“完整包本地串行跑全套”的旧执行安排，原验收范围保留。
+- **CI与阶段验收**：当前 Actions 执行core／base／net／migration；原严格 regression 尚未迁移，不能把migration通过写成独立对拍通过。完整回归在 push／PR 后执行，本地不默认复跑；入口及实际覆盖见[CI说明](../../../tools/ci/README.md)。长程公开回放、全 seed／120对矩阵、性能套件仍留对应里程碑／发布验收，尚未自动接入 CI。组内若存在当前轻量检查无法判断的共享层故障，仅补足定位它的检查；不能用局部通过宣称最终环境已验收。用户2026-10-17的这一分工替代根约定中“完整包本地串行跑全套”的旧执行安排，原验收范围保留。
 - **种子与公开证据**：固定种子只运行一次预定计划，保留真实失败和参考缺口；不为了碰到某事件或找一条通路而循环搜索新seed。公开／正常路线证据可在相应集成里程碑补齐，未取得的范围单列待验证，不占用本组时间反复刷路线，也不驱动跨领域跳转。
 - **本批回归**：代码和本地轻量检查完成后可交付待验证的内容组，继续下一组；合并前核对 CI。CI 发现新回归后，按失败日志定向复现、修复并重新提交，只复跑相关本地检查，不重启全套；无法修复则保留待验证及具体首差，不跳过失败或标成已验收。
 - **外部缺口**：运行到已有怪物缺失、暂缓召唤或无关未实现内容，记到唯一归属和证据；本批自己的验收已足够时可继续安排下一批，不自动转去补该领域。若它使本批承诺的公开／行为证据无法取得，保留对应层待验证，重新缩小或调整下一交付，不能伪造通过。
@@ -887,7 +899,7 @@ W-01～08 保留全项目范围。它们说明最终要交付什么；当前执�
 
 ## 维护这份清单
 
-1. 领域总览只维护该类已有基础和长期缺口；最近一批的状态、主责、范围、验收和失败处理唯一维护在“当前交付”，跨域只标依赖。旧ID详情保留完整合同及历史证据，认领结束时标明记录，不与当前批重复登记。优先顺序写“推进顺序”，每批执行“每批集成与重排条件”。
+1. “当前交付”只保留最近生产批与正在进行的负责人维护，替换已结束批次，不向其累加流水账。领域总览只维护该类已有基础和长期缺口；最近一批的状态、主责、范围、验收和失败处理唯一维护在“当前交付”，跨域只标依赖。旧ID详情保留完整合同及历史证据，认领结束时标明记录，不与当前批重复登记。优先顺序写“推进顺序”，每批执行“每批集成与重排条件”。
 2. 开始实现前核对 git 状态、[角色入口](../../design/agent-goals.md)、认领、依赖和已有交付。新任务登记实际会话、目录、当前机制和下一项可验证结果，不恢复旧会话或重做已交付能力。
 3. 长日志和逐批过程放 records 或本地证据目录，本页只保留当前行动和必要证据链接。历史记录中的“下一步”不覆盖本表。
 4. 按“每批集成与重排条件”分配验证：本地只做受影响的轻量检查，广覆盖回归交给 CI；正常整局、最终矩阵和性能按阶段执行，不能以局部检查替代。纯文档只运行文档与差异检查。
@@ -897,12 +909,4 @@ W-01～08 保留全项目范围。它们说明最终要交付什么；当前执�
 
 ## 本次文档整理
 
-2026-10-18，Codex /root 已完成统一监听的skill与编写指南补充，待PR审阅。项目skill增加统一监听约束与路由，新指南给出通知／pure修正、实例顺序、Power对照、状态归属和旧行为迁移方法；机制迁移、战斗、物品指南、导航及架构解释同步更新。仓库与用户级skill入口校验通过，779份文档检查0问题，指南两段代码在隔离副本实际得到通知2／4／6／6和共同伤害修正11。未修改生产玩法，证据见[统一监听记录补充](../records/2026-10-18/effect-listener-unification-2026-10-18.md#skill与编写指南补充)，无待续编码工作。
-
-2026-10-18，Codex `/root` 按用户指令完成 CORE-AUTHOR-05 的人类开发手册与 agent skill，本地已验证，待 PR 审阅。基线 main/807d17d；[人类手册](../../development/base-spire/README.md)覆盖全部游戏开发领域，含两篇从隔离初态逐步走通的教程；[项目 skill](../../../.agents/skills/base-spire-development/SKILL.md)复用同一文档并提供有界来源定位。实际得到 6→8、逐抽 2／4／6／6、无遗物 0 和组合 10／12／14；定位助手 9 项演练、skill 元信息／引用及 720 份文档检查通过。未修改生产玩法，未运行远程 DSH 或独立 agent 评审；尚缺领域只给恢复方法，不计可玩支持。范围与验收见[交付约定](../../design/mod-the-spire/base-development-docs.md)，结果与未验证项见[记录](../records/2026-10-18/base-development-manual-skill-2026-10-18.md)。后续恢复玩法时同步维护准确操作和对应领域指南，原完整范围不变。
-
-2026-10-17按当前workflow-b审阅修订计划：保留领域分类，新增唯一当前交付，首批收窄为Sown＋SapphireSeed；明确每批即时集成、Neow先于正常首幕验收、PR主要归属及历史认领。当前稿待用户review，未开工；五项审阅发现的处理与验证附在[规划记录](../records/2026-10-17/domain-task-plan-2026-10-17.md)。
-
-2026-10-17，Codex `/root` 按用户要求将执行入口改为12类游戏实现和4类配套工程，补归属规则、依赖及推进顺序；本次仅修改主清单、导航和管理说明。重排前21项任务表保存在[规划记录](../records/2026-10-17/domain-task-plan-2026-10-17.md)，本页稳定合同、机制子任务、覆盖审计和ENV/W全文保留。没有新生产认领或玩法验收结论，文档与结构验证见该记录。
-
-2026-10-15，Codex `/root` 按用户要求完成清单重构，修改范围为本页、导航与管理说明、历史快照和必要链接。已核对保留 21 项主任务、22 项机制子任务、覆盖审计项及全部 ENV/W 范围，原完成条件未删减；历史正文除相对链接外保持一致，14 份文档的旧章节链接已更新。总览表唯一维护任务状态和优先级，逐批会话及验证过程保存在历史快照。文档检查扫描 494 份、0 问题，差异与折叠结构检查通过。本次维护完成，没有新增生产认领、派单或游戏验收结论，未运行构建、规则套件或远端状态查询。
+2026-10-19，Codex `/root` 已完成本地完成度审阅及工作流维护，待PR／CI审阅；实际结果见[本次记录](../records/2026-10-19/base-completion-workflow-review-2026-10-19.md)。旧入口整理、开发手册及统一监听指南的结果从[历史索引](../records/README.md)查阅，不在当前入口重复维护状态。原ENV／W与机制验收合同均保留。

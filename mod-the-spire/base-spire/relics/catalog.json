@@ -480,8 +480,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Candelabra.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Candelabra.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/candelabra.spire"
     },
     {
       "id": "base-spire:captains-wheel",
@@ -528,8 +528,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Chandelier.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Chandelier.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/chandelier.spire"
     },
     {
       "id": "base-spire:charons-ashes",
@@ -551,9 +551,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "ChemicalX.ModifyXValue; CardModel.ResolveEnergyXValue and CardEnergyCost.GetAmountToSpend: owner effect X +2, capture/payment unchanged; shop rarity and SharedRelicPool retained; DSL behavior witnesses, independent parity and normal acquisition unverified",
+      "definition": "relics/shared/chemical-x.spire"
     },
     {
       "id": "base-spire:choices-paradox",
@@ -948,8 +948,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local hooks in sts2/src/Core/Models/Relics/FakeHappyFlower.cs; full gameplay effects declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/FakeHappyFlower.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/fake-happy-flower.spire"
     },
     {
       "id": "base-spire:fake-lees-waffle",
@@ -972,8 +972,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/FakeMango.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "FakeMango.AfterObtained: max HP +3 then heal 3; Event rarity, MerchantCost=50 retained as source only; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/fake-mango.spire"
     },
     {
       "id": "base-spire:fake-merchants-rug",
@@ -1272,8 +1272,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/GoldenPearl.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "GoldenPearl.AfterObtained: gain 150 gold; Ancient rarity; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/golden-pearl.spire"
     },
     {
       "id": "base-spire:gold-plated-cables",
@@ -1669,8 +1669,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/LoomingFruit.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "LoomingFruit.AfterObtained: max HP +31 then heal 31; Ancient rarity; save UniqueId changes icon only; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/looming-fruit.spire"
     },
     {
       "id": "base-spire:lords-parasol",
@@ -1849,8 +1849,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local damage-additive hook in sts2/src/Core/Models/Relics/MiniatureCannon.cs; +3 for upgraded card damage declared and exercised by RelicContentChecks.",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/MiniatureCannon.cs; complete gameplay and actual Power consumers reviewed; attack modifier checks exercise the source predicate; normal source and independent reference unverified",
+      "definition": "relics/shared/miniature-cannon.spire"
     },
     {
       "id": "base-spire:miniature-tent",
@@ -2017,8 +2017,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/NutritiousOyster.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "NutritiousOyster.AfterObtained: max HP +11 then heal 11; Ancient rarity; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/nutritious-oyster.spire"
     },
     {
       "id": "base-spire:nutritious-soup",
@@ -2256,9 +2256,9 @@
       "pools": [
         "SilentRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Relics/PaperKrane.cs; complete gameplay and actual Power consumers reviewed; attack modifier checks exercise the source predicate; normal source and independent reference unverified",
+      "definition": "relics/shared/paper-krane.spire"
     },
     {
       "id": "base-spire:paper-phrog",
@@ -2268,9 +2268,9 @@
       "pools": [
         "IroncladRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "sts2/src/Core/Models/Relics/PaperPhrog.cs; complete gameplay and actual Power consumers reviewed; attack modifier checks exercise the source predicate; normal source and independent reference unverified",
+      "definition": "relics/shared/paper-phrog.spire"
     },
     {
       "id": "base-spire:parrying-shield",
@@ -2750,8 +2750,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/Sai.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/Sai.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/sai.spire"
     },
     {
       "id": "base-spire:sand-castle",
@@ -2761,9 +2761,9 @@
       "pools": [
         "EventRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "SandCastle.AfterObtained: full StableShuffle on RunState.Rng.Niche then Take, original permanent instances upgraded; source pool and rarity retained; DSL witnesses required, independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/sand-castle.spire"
     },
     {
       "id": "base-spire:screaming-flagon",
@@ -2870,8 +2870,8 @@
         "EventRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/SignetRing.cs; actual gameplay body and source pool reviewed for this definition",
-      "definition": null
+      "evidence": "SignetRing.AfterObtained: gain 999 gold; Ancient rarity; actual DSL pickup witnesses; independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/signet-ring.spire"
     },
     {
       "id": "base-spire:silken-tress",
@@ -3411,8 +3411,8 @@
         "SharedRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "sts2/src/Core/Models/Relics/VeryHotCocoa.cs; full gameplay body and source pool reviewed",
-      "definition": null
+      "evidence": "sts2/src/Core/Models/Relics/VeryHotCocoa.cs; complete owner-local gameplay reviewed; actual turn behavior exercised by CombatTurnRelicChecks; normal source and independent reference unverified",
+      "definition": "relics/shared/very-hot-cocoa.spire"
     },
     {
       "id": "base-spire:vexing-puzzlebox",
@@ -3458,9 +3458,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "WarPaint.AfterObtained: full StableShuffle on RunState.Rng.Niche then Take, original permanent instances upgraded; source pool and rarity retained; DSL witnesses required, independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/war-paint.spire"
     },
     {
       "id": "base-spire:whetstone",
@@ -3470,9 +3470,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "Whetstone.AfterObtained: full StableShuffle on RunState.Rng.Niche then Take, original permanent instances upgraded; source pool and rarity retained; DSL witnesses required, independent full Run and normal acquisition unverified",
+      "definition": "relics/shared/whetstone.spire"
     },
     {
       "id": "base-spire:whispering-earring",

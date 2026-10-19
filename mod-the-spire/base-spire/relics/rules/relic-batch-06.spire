@@ -95,22 +95,18 @@ template ObtainMaxHpRelic {
   }
   body = {
     procedure WhenObtained {
-      parameters = { owner = Ref(Player) relic = Ref(Relic) }
+      parameters = { owner = Ref(Player) relic = Ref(Relic) listener = Ref(Relic) }
       body = {
+        call = {
+          procedure = IncreaseMaxHp args = {
+            owner = owner amount = arg(amount)
+          }
+        }
         if = {
-          condition = equal(field(relic, Relic.DefinitionId), arg(definition)) then = {
+          condition = arg(fullHeal) then = {
             call = {
-              procedure = IncreaseMaxHp args = {
-                owner = owner amount = arg(amount)
-              }
-            }
-            if = {
-              condition = arg(fullHeal) then = {
-                call = {
-                  procedure = HealToMaximum args = {
-                    owner = owner
-                  }
-                }
+              procedure = HealToMaximum args = {
+                owner = owner
               }
             }
           }
@@ -119,11 +115,14 @@ template ObtainMaxHpRelic {
     }
     subscription OnObtained {
       event = RelicObtained reaction = WhenObtained
+      instances = where(collection(Relics), r, and(equal(r, relic), and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))))
+      instance_order = collectionIndex(Relics, listener)
+      priority = 100
     }
     action Obtain {
       role = player
       locals = { owner = Binding }
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
       body = {
         let = { into = owner value = first(type(Player)) }
         call = {

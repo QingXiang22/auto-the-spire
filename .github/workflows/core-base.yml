@@ -2,6 +2,7 @@ name: Core, pure DSL base, net and migration contract
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 

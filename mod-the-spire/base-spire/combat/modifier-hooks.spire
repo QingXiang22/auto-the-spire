@@ -9,6 +9,16 @@ event ModifyAttackMultiplier {
   payload = { value = Int owner = Ref(Player) card = Binding target = Binding }
 }
 
+# Percentage points, consulted only by an active target Vulnerable in the powered attack chain.
+event ModifyVulnerableMultiplier {
+  payload = { value = Int owner = Ref(Player) card = Binding target = Binding }
+}
+
+# Percentage points, consulted only by the attacking enemy's active Weak; owner is the defender.
+event ModifyEnemyWeakMultiplier {
+  payload = { value = Int owner = Ref(Player) attacker = Ref(Enemy) }
+}
+
 event ModifyEnemyAttackAdditive {
   payload = { value = Int owner = Ref(Player) attacker = Ref(Enemy) }
 }
@@ -30,6 +40,10 @@ event ModifyBlockMultiplier {
 }
 
 event ModifyCardCost {
+  payload = { value = Int owner = Ref(Player) card = Ref(Card) }
+}
+
+event ModifyXValue {
   payload = { value = Int owner = Ref(Player) card = Ref(Card) }
 }
 

@@ -1,0 +1,4 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use WarPaint { template = PickupRandomUpgradeRelic args = { definition = "base-spire:war-paint" kind = "skill" amount = 2 } }

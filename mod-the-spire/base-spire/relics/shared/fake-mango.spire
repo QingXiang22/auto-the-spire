@@ -1,0 +1,4 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use FakeMango { template = ObtainMaxHpRelic args = { definition = "base-spire:fake-mango" amount = 3 } }

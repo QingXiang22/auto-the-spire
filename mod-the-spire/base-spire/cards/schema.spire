@@ -17,6 +17,7 @@ entity Card {
     SourceEntry = { type = String(length = 64) default = "DEVELOPMENT_CARD" }
     StrikeTag = { type = Bool default = false }
     IsX = { type = Bool default = false }
+    # Captured energy X; effect bonuses are queried separately through ResolveEnergyXValue.
     PaidX = { type = Int(min = 0, max = 999) default = 0 }
     BaseCost = { type = Int(min = 0, max = 9) default = 0 }
     DamageScale = { type = String(length = 32) default = "none" }

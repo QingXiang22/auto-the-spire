@@ -24,6 +24,8 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-spir
 
 第三条只适用于该工具当前承诺的 base 机制。新增正式内容的行为见证必须实际执行，不能将旧报告、教学报告或仅定义存在的数量算作覆盖。最终集成与 Actions 的各组入口见[CI 指南](../../../../tools/ci/README.md)。
 
+遗物调试先构建受影响工具，再运行`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`。筛选按检查名称的不区分大小写前缀匹配；`AM `为攻击修正组，其他组先从实际检查名称确认。输出逐项耗时、执行数与跳过数；零匹配失败，不能用该命令生成整包报告。完整check和覆盖门槛在批次最终CI执行，参考[批次节奏](../../../review/tofix/README.md#每批集成与重排条件)。
+
 文档检查使用以下命令：
 
 ```powershell

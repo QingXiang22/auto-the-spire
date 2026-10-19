@@ -2,12 +2,27 @@ using CoreTheSpire.Engine;
 
 internal static partial class PackageChecks
 {
-    public static int RunRelicContentOnly(DslPackage package)
+    public static int RunRelicContentOnly(DslPackage package, string? filter = null)
     {
-        var count = 0; RunRelicContentChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunRelicModifierChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunEffectListenerChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        Console.WriteLine($"All {count} focused relic-content checks passed; full check is required for coverage evidence."); return 0;
+        var count = 0; var skipped = 0;
+        var total = System.Diagnostics.Stopwatch.StartNew();
+        void Check(string name, Action body)
+        {
+            if (filter is not null && !name.StartsWith(filter, StringComparison.OrdinalIgnoreCase)) { skipped++; return; }
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            try { body(); }
+            catch { Console.Error.WriteLine($"FAIL {name} ({timer.Elapsed.TotalSeconds:F3}s)"); throw; }
+            count++; Console.WriteLine($"ok   {name} ({timer.Elapsed.TotalSeconds:F3}s)");
+        }
+        RunRelicContentChecks(package, Check);
+        RunCombatTurnChecks(package, Check);
+        RunRelicModifierChecks(package, Check);
+        RunAttackModifierRelicChecks(package, Check);
+        RunXValueRelicChecks(package, Check);
+        RunPickupUpgradeChecks(package, Check);
+        RunEffectListenerChecks(package, Check);
+        if (count == 0) throw new ArgumentException("No relic-content checks match --filter: " + filter);
+        Console.WriteLine($"All {count} selected relic-content checks passed; skipped={skipped}; elapsed={total.Elapsed.TotalSeconds:F3}s. Full check is required for coverage evidence."); return 0;
     }
     private static Dictionary<string, string[]> RunRelicContentChecks(DslPackage package, Action<string, Action> check)
     {
@@ -23,7 +38,8 @@ internal static partial class PackageChecks
         void Plays(Session s, string card, int count) { for (var i = 0; i < count; i++) IcPlay(s, IcAdd(s, card)); }
         InstanceId Relic(Session s, string id) => Members(s, "Relics").Single(r => s.State.GetField(r, s.RuleSet.TypeByQualifiedId("base-spire:Relic").FieldIndex("DefinitionId")).AsString() == id);
 
-        foreach (var row in new[] { ("Pear", "base-spire:pear", 10L), ("Mango", "base-spire:mango", 14L), ("LeesWaffle", "base-spire:lees-waffle", 7L) })
+        foreach (var row in new[] { ("Pear", "base-spire:pear", 10L), ("Mango", "base-spire:mango", 14L), ("LeesWaffle", "base-spire:lees-waffle", 7L),
+            ("FakeMango", "base-spire:fake-mango", 3L), ("LoomingFruit", "base-spire:looming-fruit", 31L), ("NutritiousOyster", "base-spire:nutritious-oyster", 11L) })
             Own(row.Item2, "RL pickup " + row.Item1 + ": source max HP and healing, without repeating on combat entry", () =>
             {
                 var s = Start(package); Set(s, Player(s), "Player", "Hp", Value.Of(20L)); Submit(s, row.Item1 + ".Obtain");
@@ -31,16 +47,73 @@ internal static partial class PackageChecks
                 True(!Legal(s, row.Item1 + ".Obtain"), "duplicate pickup unavailable");
                 Submit(s, "RemoveOwnedRelic", Members(s, "Relics").Single()); Equal(80L + row.Item3, Field(s, "MaxHp"), "permanent max HP not revoked");
                 Submit(s, "BeginDevelopmentCombat"); Equal(80L + row.Item3, Field(s, "MaxHp"), "combat does not replay pickup");
+                Equal(row.Item1 == "LeesWaffle" ? 87L : 20L + row.Item3, Hp(s), "removal and combat do not revoke or repeat pickup healing");
+                Equal(0L, s.Random.TotalDraws, "pickup resources consume no random");
             });
         Own("base-spire:fake-lees-waffle", "RL FakeLeesWaffle: ten percent max HP truncates and caps without raising max HP", () =>
         {
             var s = Start(package); Set(s, Player(s), "Player", "MaxHp", Value.Of(89L)); Set(s, Player(s), "Player", "Hp", Value.Of(20L));
             Submit(s, "FakeLeesWaffle.Obtain"); Equal(28L, Hp(s), "ten percent floors"); Equal(89L, Field(s, "MaxHp"), "no max HP increase");
         });
-        Own("base-spire:old-coin", "RL OldCoin: 300 gold is obtained once and remains after removal", () =>
+        foreach (var row in new[] { ("OldCoin", "base-spire:old-coin", 300L), ("SignetRing", "base-spire:signet-ring", 999L), ("GoldenPearl", "base-spire:golden-pearl", 150L) })
+            Own(row.Item2, "RL pickup " + row.Item1 + ": source gold once, retained after removal and combat", () =>
+            {
+                var s = Start(package); Submit(s, row.Item1 + ".Obtain"); Equal(99L + row.Item3, Field(s, "Gold"), "source gold pickup");
+                True(!Legal(s, row.Item1 + ".Obtain"), "duplicate pickup unavailable");
+                Submit(s, "RemoveOwnedRelic", Members(s, "Relics").Single()); Equal(99L + row.Item3, Field(s, "Gold"), "no refund reversal");
+                Submit(s, "BeginDevelopmentCombat"); Submit(s, "EndDevelopmentCombat");
+                Equal(99L + row.Item3, Field(s, "Gold"), "combat does not replay gold pickup"); Equal(80L, Hp(s), "gold-only pickup never changes HP");
+                Equal(0L, s.Random.TotalDraws, "gold pickups and manual end consume no random");
+            });
+        var simplePickups = new[] { (Name: "FakeMango", Id: "base-spire:fake-mango", Hp: 3L, Gold: 0L),
+            (Name: "LoomingFruit", Id: "base-spire:looming-fruit", Hp: 31L, Gold: 0L), (Name: "NutritiousOyster", Id: "base-spire:nutritious-oyster", Hp: 11L, Gold: 0L),
+            (Name: "SignetRing", Id: "base-spire:signet-ring", Hp: 0L, Gold: 999L), (Name: "GoldenPearl", Id: "base-spire:golden-pearl", Hp: 0L, Gold: 150L) };
+        check("RL simple pickups: early removal or melting cancels the snapshotted max-HP and gold reward", () =>
         {
-            var s = Start(package); Submit(s, "OldCoin.Obtain"); Equal(399L, Field(s, "Gold"), "source 300 gold");
-            Submit(s, "RemoveOwnedRelic", Members(s, "Relics").Single()); Equal(399L, Field(s, "Gold"), "no refund reversal");
+            foreach (var melt in new[] { false, true })
+            {
+                using var copy = new Copy(package.Root); copy.Include("cancel-resource-pickup.spire", """
+                    procedure CancelPickup { parameters = { owner = Ref(Player) relic = Ref(Relic) } body = {
+                      MUTATION
+                    } }
+                    subscription CancelPickup { event = RelicObtained reaction = CancelPickup priority = 99 }
+                    """.Replace("MUTATION", melt ? "set = { target = relic field = Relic.IsMelted value = true }" : "call = { procedure = RemoveRelic args = { instance = relic } }"));
+                var variant = copy.Load();
+                foreach (var row in simplePickups)
+                {
+                    var s = Start(variant); Set(s, Player(s), "Player", "Hp", Value.Of(20L)); Submit(s, row.Name + ".Obtain");
+                    Equal(80L, Field(s, "MaxHp"), "invalidated pickup cannot raise max HP"); Equal(20L, Hp(s), "invalidated pickup cannot heal"); Equal(99L, Field(s, "Gold"), "invalidated pickup cannot gain gold");
+                    Equal(melt ? 1 : 0, Members(s, "Relics").Count, "ownership follows the actual early mutation");
+                    Equal(!melt, Legal(s, row.Name + ".Obtain"), "melted ownership still blocks duplicate development acquisition");
+                    Equal(0L, s.Random.TotalDraws, "invalidated pickup consumes no random");
+                }
+            }
+        });
+        check("RL simple pickups: direct acquisitions reward only the actual new instance and holder; other holders do not block development acquisition", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("resource-pickup-owners.spire", string.Join("\n", simplePickups.Select(row => $$"""
+                action Other{{row.Name}} { role = player locals = { other = Binding } body = {
+                  create = { type = Player scope = frameScope() into = other fields = { Owner = participant(2) } }
+                  call = { procedure = ObtainRelic args = { owner = other definition = "{{row.Id}}" } }
+                } }
+                action Direct{{row.Name}} { role = player body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = "{{row.Id}}" } } } }
+                """)));
+            var variant = copy.Load();
+            foreach (var row in simplePickups)
+            {
+                var s = variant.CreateSession(20261018, ["player", "player"]); s.Start(); Healthy(s); Submit(s, "Other" + row.Name);
+                var other = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Player").Id).Last();
+                Equal(80L, Field(s, "MaxHp"), "other holder cannot affect first player"); Equal(99L, Field(s, "Gold"), "other holder's gold isolated");
+                True(Legal(s, row.Name + ".Obtain"), "other holder's matching definition cannot block own action");
+                Submit(s, row.Name + ".Obtain"); Submit(s, "Direct" + row.Name);
+                Equal(80L + 2 * row.Hp, Field(s, "MaxHp"), "only the two new own instances reward"); Equal(80L + 2 * row.Hp, Hp(s), "each max HP pickup heals only its amount");
+                Equal(99L + 2 * row.Gold, Field(s, "Gold"), "old matching relic cannot replay its pickup");
+                Equal(80L + row.Hp, IntField(s, other, "Player", "MaxHp"), "other max HP unchanged after own pickups"); Equal(99L + row.Gold, IntField(s, other, "Player", "Gold"), "other gold unchanged after own pickups");
+                foreach (var relic in Members(s, "Relics").Where(r => s.State.GetField(r, s.RuleSet.TypeByQualifiedId("base-spire:Relic").FieldIndex("Holder")).AsRef() == Player(s)).ToArray()) Submit(s, "RemoveOwnedRelic", relic);
+                Submit(s, row.Name + ".Obtain"); Equal(80L + 3 * row.Hp, Field(s, "MaxHp"), "new acquisition after removal rewards once"); Equal(99L + 3 * row.Gold, Field(s, "Gold"), "permanent gold retained and granted once again");
+                Equal(0L, s.Random.TotalDraws, "no cosmetic or gameplay random consumption");
+            }
         });
         check("RL acquisition lifecycle: direct shared ObtainRelic runs pickup once for Strawberry and Pear", () =>
         {

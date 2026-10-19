@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: Chandelier.cs CanonicalVars and AfterSideTurnStart.
+use Chandelier {
+  template = TurnStartEnergyRelic
+  args = { definition = "base-spire:chandelier" amount = 3 turn = 3 }
+}

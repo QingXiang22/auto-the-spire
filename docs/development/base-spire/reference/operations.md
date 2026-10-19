@@ -4,6 +4,10 @@
 
 ## 状态与事件
 
+拾取时随机升级永久牌使用[`UpgradeRandomPermanentCards(owner,kind,amount)`](../../../../mod-the-spire/base-spire/cards/rules/random-permanent-upgrade.spire)：owner为Ref(Player)，kind只接受attack／skill／all，amount为Int(1..999)。操作拥有资格筛选、SourceCardSortKey、完整Niche洗牌、原实例UpgradeCard及临时状态清理；不改RunDeck顺序，不触发战斗洗牌事件。调用方法和边界见[遗物指南](../how-to/powers-relics-potions.md)。
+
+能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`Card.PaidX` 保存原捕获值，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+
 角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
 
 | 声明 | 字段／载荷 | 约束与归属 |
@@ -22,8 +26,9 @@
 | RelicObtained／RelicRemoved | owner: Ref(Player)、relic: Ref(Relic) | 获得时已入库存；移除时已出库存，事件执行后才销毁实例 |
 | [BeforeCombatStart](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | 只在 Idle→Active 的开发态开始操作中发出；监听器观察到 CombatActive=true 且本场初始 Block 已清 0，之后获得的格挡保留 |
 | AfterBlockCleared | owner: Ref(Player) | 回合号大于 1 的开始时，先清空格挡再发出；与源 `Creature.AfterTurnStart`→`Hook.AfterBlockCleared` 的顺序一致，第一回合不发 |
-| [AfterSideTurnStarted](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | 能量按 GetMaxEnergy 重置之后发出；原版把这段拆成 AfterEnergyReset 与 AfterSideTurnStart，本包只发一个开发时点 |
-| AfterPlayerTurnStart | owner: Ref(Player) | 紧随 AfterSideTurnStarted 发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
+| AfterEnergyReset | owner: Ref(Player) | ResetTurnEnergy重置／补足能量后发出，早于打开回合门和AfterSideTurnStarted；ArtOfWar在此奖励 |
+| [AfterSideTurnStarted](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | AfterEnergyReset完成并打开回合门后发出，早于起手抽牌；TurnStartEnergyRelic、EveryTurnsEnergyRelic与Sai在此奖励 |
+| AfterPlayerTurnStart | owner: Ref(Player) | AfterSideTurnStarted和起手抽牌后发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
 | AfterPlayerTurnStartLate | owner: Ref(Player) | 紧随 AfterPlayerTurnStart 发出，对应原版 AfterPlayerTurnStartLate；三个玩家回合开始时点都在同一执行栈内按声明顺序完成 |
 | AfterTurnEnded | owner: Ref(Player) | 回合末自动打出后弃掉手牌，再发出；临时玩家侧 Power 随后清理，debuff 的减层在敌方阶段结束时发生 |
 | EnemyDied | target: Ref(Enemy) | 敌人生命从正数到 0 时发出一次；原版的移除生物与死亡钩子未迁移 |
@@ -50,6 +55,9 @@
 | NoAttackTurnEnergyRelic模板 | definition、energy: Int(0..999) | ArtOfWar.State按遗物实例保存私有标志，获得时创建、移除时清理；AfterCardPlayed记录本拥有者攻击，AfterTurnEnded转交；AfterEnergyReset在非首回合且上回合无攻击时GainEnergy，再清理标志；ArtOfWar配置1 |
 | ObtainMaxHpRelic模板 | definition、amount、fullHeal=false | 通过RelicObtained触发IncreaseMaxHp，必要时HealToMaximum；不在动作尾部重复奖励。供Strawberry／Pear／Mango／LeesWaffle复用 |
 | CardCountRelic模板 | definition、kind、every、perTurn，以及energy／block／damage／power／powerKind／stacks | AfterCardPlayed按实际次数推进独立Relic.Counter；perTurn在战斗开场和玩家回合早期重置，否则跨战保留；重复／自动各计一次，多段攻击只计一次 |
+| TurnStartEnergyRelic模板 | definition: String(64)、amount: Int(0..999)、turn: Int(1..999)、throughTurn: Bool=false | AfterSideTurnStarted调用GainEnergy；默认TurnNumber==turn，throughTurn=true时<=turn；NoEnergyGain抑制奖励 |
+| EveryTurnsEnergyRelic模板 | definition: String(64)、amount: Int(0..999)、turns: Int(1..999) | 每次本持有者回合开始将本实例Counter加1模turns；归零GainEnergy，计数跨战保留且不受NoEnergyGain抑制 |
+| TurnStartBlockRelic模板 | definition: String(64)、amount: Int(0..999) | AfterSideTurnStarted每回合调用GainUnpoweredBlock，包含首回合；不使用敏捷／脆弱修正 |
 | GainGold | owner: Ref(Player)、amount: Int(0..99999) | 共享已迁移金币获得，沿用99999上限；尚无完整获得金币修正参与者，金币奖励与OldCoin共用 |
 | HealToMaximum | owner: Ref(Player) | 计算MaxHp-Hp并调用Heal；支持最大生命至999999，不替代复活或完整治疗修正 |
 | BeforePlayerTurnStart／BeforePlayerTurnEnd | owner: Ref(Player)，事件 | 前者在回合号增加后、抽牌／自动出牌前；后者在回合末自动出牌后、普通弃牌前。StoneCalendar致胜后不再执行敌方行动 |
@@ -72,7 +80,11 @@
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
 | GainEnergy | owner=Ref(Player)、amount=Int(0..999) | Energy 增加并可超过 MaxEnergy（上限 999），尊重 NoEnergyGain；回合重置使用 GetMaxEnergy |
 | [DamageEnemy](../../../../mod-the-spire/base-spire/combat/damage.spire) | target=Ref(Enemy)、amount=Int(0..999999) | 先扣 `min(Block, amount)` 格挡，剩余从 Hp 扣除且不低于 0；无加成伤害，修正参与者不参与（遗物与 Power 用它） |
-| DamageEnemyPowered | owner: Ref(Player)、card: Ref(Card)、target: Ref(Enemy)、amount: Int(0..999999) | 以显式拥有者和牌源计算Strength及Strike遗物加成，再应用Weak、目标Vulnerable和攻击者Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam等计算伤害也走此链 |
+| DamageEnemyPowered | owner: Ref(Player)、card: Ref(Card)、target: Ref(Enemy)、amount: Int(0..999999) | 以显式攻击者和牌源计算Strength、Strike及升级牌遗物加成，再应用Weak、目标Vulnerable和攻击者Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam等计算伤害也走此链 |
+| ModifyVulnerableMultiplier | value: Int、owner: Ref(Player)、card: Binding、target: Binding；pure修正事件 | 正层目标Vulnerable在玩家加成攻击链以150百分数点征询；PaperPhrog加25，之后叠加Cruelty，再乘伤害；无目标状态不征询 |
+| ModifyEnemyWeakMultiplier | value: Int、owner: Ref(Player)、attacker: Ref(Enemy)；pure修正事件 | 正层攻击者Weak在敌方加成攻击链以75百分数点征询；owner为防守玩家，PaperKrane减15；无攻击者状态不征询 |
+| UpgradedAttackDamageRelic模板 | definition: String(64)、amount: Int(0..999) | ModifyAttackAdditive对非空且已升级牌源贡献加值；Holder是攻击者或牌拥有者即可，二者不要求同时满足；MiniatureCannon配置3 |
+| StatusMultiplierRelic模板 | definition: String(64)、vulnerableBonus: Int(0..100)=0、weakReduction: Int(0..75)=0 | 有效持有实例订阅两个状态倍率站点；PaperPhrog配置25、PaperKrane配置15，虚弱倍率最低0；不改变状态层数／时长 |
 | ResetTurnEnergy／AfterEnergyReset | owner: Ref(Player)，过程／事件 | 首回合重置；后续有有效保留能量资格时将最大能量加到余能，上限999，否则重置。该操作绕过禁止获得能量，随后发事件；额外奖励仍调用GainEnergy |
 | DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的未阻挡伤害发 PlayerHpLost 并检查开发失败；不改变 MaxHp |
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |

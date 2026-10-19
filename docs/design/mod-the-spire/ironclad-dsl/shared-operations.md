@@ -18,6 +18,7 @@
 | `SelectHandCard` | `owner, upgradeOnly` → Binding | 空域返回 none，单张自动选，多张发布必须单选的原生决策。升级模式仅选 CanUpgrade 且未升级牌；当前 InPlay 不属于手牌 |
 | `SelectDiscardCard` | `owner` → Binding | 同样按 0／1／多张处理，仅选该玩家弃牌。Headbutt 消费结果并移到抽牌堆顶部 |
 | `UpgradeCard` | `card` | 验证实际可升级性，先标记升级，再发 CardUpgraded；不会把战斗副本反写到永久源 |
+| `UpgradeRandomPermanentCards` | `owner: Ref(Player), kind: String(16), amount: Int(1..999)` | kind为attack／skill／all；仅筛选本拥有者RunDeck中可升级且未升级的实例，按源排序后完整Fisher-Yates(Niche)，再按洗后顺序升级前amount张。永久顺序不变、不发AfterShuffle；每调用独立临时状态并在返回前清理。拾取模板与边界见[契约](../relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01) |
 | `GenerateCombatCard` | `owner, attacksOnly` → Binding | 从完整已解锁单人源池按 CardFactory 的生成资格抽样。85 张源身份全部保留；78 张可随机生成。Feed／NotYet、Basic／Ancient 按源排除；GiantRock／Shockwave 不混入铁甲池 |
 
 `RemoveFromCombatPiles` 是上述完整操作的内部移动接缝，不代表获得、复制或耗尽。永久获得与战斗重建继续使用[永久牌组契约](../permanent-deck-smith/spec.md)；直接 `create Card` 不替代这些操作。
@@ -27,6 +28,7 @@
 | 入口 | 参数与返回 | 语义与边界 |
 | --- | --- | --- |
 | `GetCardEnergyCost` | `owner, card` → Int，pure | 返回实际应付能量。X 首先取当前 Energy，不受普通免费效果影响；普通费用再处理 Corruption／FreeAttack 与实例费用。Card.Cost 是实例局部费用，不等于含 Power 修正的应付费用 |
+| `ResolveEnergyXValue` | `owner: Ref(Player), card: Ref(Card)` → Int，pure | 效果 X 入口：以 Card.PaidX 为初值经 ModifyXValue 统一监听修正，不写回捕获值或扣费。ChemicalX 每个有效持有实例+2；Whirlwind／Cascade 在每次效果开始取一次值，重复仍用原捕获值，Cascade 升级随后额外+1。前置为能量 X 牌；非 X 查询返回0、不派发修正。星星 X 未接入 |
 | `GetMaxEnergy` | `owner` → Int，pure | Player.MaxEnergy 基值加 Pyre 修正；重置能量与调用方共用此查询，获得 Pyre 不立即加能量 |
 | `PlayCard` | `owner, card` | 手牌中的非选敌牌；验证战斗／回合、持有与能量后付款一次 |
 | `PlayTargetedCard` | `owner, card` | 先验证可支付性，再发布存活敌人必须单选决策；答复后付款。对应公开 action 同名 |

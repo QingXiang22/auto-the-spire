@@ -1,0 +1,26 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+template PickupRandomUpgradeRelic {
+  parameters = {
+    definition = { type = String(length = 64) }
+    kind = { type = String(length = 16) }
+    amount = { type = Int(min = 1, max = 999) }
+  }
+  body = {
+    procedure Obtained {
+      parameters = { owner = Ref(Player) relic = Ref(Relic) listener = Ref(Relic) }
+      body = { call = { procedure = UpgradeRandomPermanentCards args = { owner = owner kind = arg(kind) amount = arg(amount) } } }
+    }
+    subscription Obtained {
+      event = RelicObtained reaction = Obtained
+      instances = where(collection(Relics), r, and(equal(r, relic), and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))))
+      instance_order = collectionIndex(Relics, listener)
+      priority = 100
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = arg(definition) } } }
+    }
+  }
+}

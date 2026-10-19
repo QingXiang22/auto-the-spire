@@ -1,5 +1,17 @@
 # review历史记录与证据索引
 
+2026-10-19：[base完成度与工作流审阅](2026-10-19/base-completion-workflow-review-2026-10-19.md)记录当前内容／正常Run／独立证据缺口、检查筛选与耗时、CI重复触发及批次流程改动；同日追加五项隔离实验、sts2-sim职责对照及完整DSL内容模块原型，提出内容模型修订；正式模型尚未切换。未新增玩法验收。
+
+2026-10-18：[三件无状态攻击修正遗物](2026-10-18/relic-stateless-attack-modifiers-2026-10-18.md)记录MiniatureCannon／PaperPhrog／PaperKrane、升级牌加法和状态倍率pure征询、87项遗物定向／395项包行为／40项公开路径及55件实际见证；G05其他子包、正常来源／Run与独立原版双侧仍未验收。
+
+2026-10-18：[五件回合开始资源遗物](2026-10-18/relic-turn-start-resources-2026-10-18.md)记录Candelabra／Chandelier／VeryHotCocoa／FakeHappyFlower／Sai、回能与跨战计数／无加成格挡模板、77项遗物定向／385项包行为／38项公开路径及52件实际见证；正常来源、Run与独立原版双侧仍未验收。
+
+2026-10-18：[五件简单拾取资源遗物](2026-10-18/relic-simple-pickups-2026-10-18.md)记录FakeMango／LoomingFruit／NutritiousOyster／SignetRing／GoldenPearl、两模板有效实例订阅与持有者守卫、60项遗物定向／378项包行为／37项公开路径及47件实际见证；正常来源、Run与独立原版双侧仍未验收。
+
+2026-10-18：[遗物分组与拾取随机永久升级](2026-10-18/relic-groups-and-pickup-upgrades-2026-10-18.md)记录20组任务规划、257件未迁移源入口／hash核对、Whetstone／WarPaint／SandCastle共享操作与独立源向量、53项遗物定向／371项包行为／36项公开路径及42件遗物见证；正常来源、Run与独立整局仍未验收。
+
+2026-10-18：[Chemical X与效果X修正](2026-10-18/relic-chemical-x-2026-10-18.md)记录支付／原始捕获与效果X分离、统一pure监听、Whirlwind／Cascade及嵌套／重复／选牌续接，43项遗物定向、361项包行为、33项公开路径和39件遗物见证；正常Run、星星X与独立原版比较仍未验收。
+
 2026-10-18：[遗物与Power统一监听](2026-10-18/effect-listener-unification-2026-10-18.md)记录实例通知、pure修正、真实顺序与失效、跨包及暂停续接、0.6运行身份，以及351项包行为／118项内核／32项公开路径验证。未增加内容数量，正常Run与独立比较仍开放。
 
 2026-10-18：[遗物伤害与能量修正](2026-10-18/relic-content-wave2-2026-10-18.md)记录StrikeDummy、FakeStrikeDummy、IceCream、ArtOfWar四件消费者，显式牌源伤害、独立能量重置事件，以及29项定向／347项包行为／32项公开路径检查；38件实际见证，来源297件保留，完整遗物与独立对拍未关闭。

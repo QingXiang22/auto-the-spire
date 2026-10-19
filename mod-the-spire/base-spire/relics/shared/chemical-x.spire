@@ -1,0 +1,4 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use ChemicalX { template = XValueRelic args = { definition = "base-spire:chemical-x" amount = 2 } }

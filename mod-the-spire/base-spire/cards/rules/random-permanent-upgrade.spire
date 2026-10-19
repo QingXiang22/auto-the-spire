@@ -1,0 +1,51 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Per-call selection state: never reorder the permanent deck or share scratch state across hooks.
+entity PermanentUpgradeSelection { fields = { Holder = { type = Ref(Player) visibility = Hidden } } }
+entity PermanentUpgradeCandidate {
+  fields = {
+    Selection = { type = Ref(PermanentUpgradeSelection) visibility = Hidden }
+    Card = { type = Ref(Card) visibility = Hidden }
+    Index = { type = Int visibility = Hidden }
+  }
+}
+
+procedure UpgradeRandomPermanentCards {
+  parameters = { owner = Ref(Player) kind = String(length = 16) amount = Int(min = 1, max = 999) }
+  locals = { selection = Binding candidate = Binding left = Binding right = Binding card = Binding size = Int index = Int picked = Int }
+  body = {
+    if = { condition = not(or(equal(kind, "all"), or(equal(kind, "attack"), equal(kind, "skill")))) then = {
+      fail = { message = "Random permanent upgrade requires attack, skill or all" }
+    } }
+    create = { type = PermanentUpgradeSelection scope = entityScope(owner) into = selection fields = { Holder = owner } }
+    let = { into = size value = 0 }
+    forEach = {
+      query = sort(where(collection(RunDeck), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), and(and(field(c, Card.CanUpgrade), not(field(c, Card.Upgraded))), or(equal(kind, "all"), equal(field(c, Card.Kind), kind))))), c, pureCall(SourceCardSortKey, c), false, false)
+      item = permanent body = {
+        create = { type = PermanentUpgradeCandidate scope = entityScope(owner) into = candidate fields = { Selection = selection Card = permanent Index = size } }
+        let = { into = size value = add(size, 1) }
+      }
+    }
+    let = { into = index value = size }
+    repeat = { count = maximum(0, subtract(size, 1)) body = {
+      let = { into = index value = subtract(index, 1) }
+      sampleInt = { stream = "base-spire:run:niche" min = 0 max = add(index, 1) into = picked }
+      let = { into = left value = first(where(type(PermanentUpgradeCandidate), c, and(equal(field(c, PermanentUpgradeCandidate.Selection), selection), equal(field(c, PermanentUpgradeCandidate.Index), index)))) }
+      let = { into = right value = first(where(type(PermanentUpgradeCandidate), c, and(equal(field(c, PermanentUpgradeCandidate.Selection), selection), equal(field(c, PermanentUpgradeCandidate.Index), picked)))) }
+      set = { target = left field = PermanentUpgradeCandidate.Index value = picked }
+      set = { target = right field = PermanentUpgradeCandidate.Index value = index }
+    } }
+    let = { into = index value = 0 }
+    forEach = {
+      query = sort(where(type(PermanentUpgradeCandidate), c, equal(field(c, PermanentUpgradeCandidate.Selection), selection)), c, field(c, PermanentUpgradeCandidate.Index))
+      item = choice body = {
+        let = { into = card value = field(choice, PermanentUpgradeCandidate.Card) }
+        destroy = { target = choice }
+        if = { condition = less(index, amount) then = { call = { procedure = UpgradeCard args = { card = card } } } }
+        let = { into = index value = add(index, 1) }
+      }
+    }
+    destroy = { target = selection }
+  }
+}
