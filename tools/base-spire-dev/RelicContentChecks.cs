@@ -2,16 +2,27 @@ using CoreTheSpire.Engine;
 
 internal static partial class PackageChecks
 {
-    public static int RunRelicContentOnly(DslPackage package)
+    public static int RunRelicContentOnly(DslPackage package, string? filter = null)
     {
-        var count = 0; RunRelicContentChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunCombatTurnChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunRelicModifierChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunAttackModifierRelicChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunXValueRelicChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunPickupUpgradeChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        RunEffectListenerChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
-        Console.WriteLine($"All {count} focused relic-content checks passed; full check is required for coverage evidence."); return 0;
+        var count = 0; var skipped = 0;
+        var total = System.Diagnostics.Stopwatch.StartNew();
+        void Check(string name, Action body)
+        {
+            if (filter is not null && !name.StartsWith(filter, StringComparison.OrdinalIgnoreCase)) { skipped++; return; }
+            var timer = System.Diagnostics.Stopwatch.StartNew();
+            try { body(); }
+            catch { Console.Error.WriteLine($"FAIL {name} ({timer.Elapsed.TotalSeconds:F3}s)"); throw; }
+            count++; Console.WriteLine($"ok   {name} ({timer.Elapsed.TotalSeconds:F3}s)");
+        }
+        RunRelicContentChecks(package, Check);
+        RunCombatTurnChecks(package, Check);
+        RunRelicModifierChecks(package, Check);
+        RunAttackModifierRelicChecks(package, Check);
+        RunXValueRelicChecks(package, Check);
+        RunPickupUpgradeChecks(package, Check);
+        RunEffectListenerChecks(package, Check);
+        if (count == 0) throw new ArgumentException("No relic-content checks match --filter: " + filter);
+        Console.WriteLine($"All {count} selected relic-content checks passed; skipped={skipped}; elapsed={total.Elapsed.TotalSeconds:F3}s. Full check is required for coverage evidence."); return 0;
     }
     private static Dictionary<string, string[]> RunRelicContentChecks(DslPackage package, Action<string, Action> check)
     {

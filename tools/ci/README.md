@@ -2,6 +2,8 @@
 
 本页给出 [GitHub Actions](../../.github/workflows/core-base.yml) 的检查入口。需要根 `global.json` 指定的 .NET SDK、Python 3.12 和 Git，在仓库根目录执行。默认 Release，可用 `--configuration Debug`。
 
+功能分支由PR的创建／更新触发四组检查，main在push后验证，另保留手动触发；同一功能分支提交不再同时运行push和PR两套矩阵。尚未创建PR时，分支push不会自动运行本工作流。
+
 ```powershell
 python tools/ci/check.py core
 python tools/ci/check.py base

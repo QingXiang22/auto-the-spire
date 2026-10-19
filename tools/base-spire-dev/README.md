@@ -14,6 +14,8 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 遗物内容接续组可用 `check --relic-content-only` 定向验证拾取资源、动态抽牌／营火治疗、出牌计数和首次受损抽牌。该命令不生成覆盖报告；形成逐件证据时仍运行完整 `check --report`，再由 `tools/ci/check_relic_coverage.py` 核对实际定义与见证。源目录保持297项，不能把局部通过写成全遗物完成。
 
+调试单个遗物机制时，可按检查名称筛选：先运行一次`dotnet build tools/base-spire-dev`，随后用`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`只执行攻击修正组。`--filter`按不区分大小写的名称前缀匹配，不能与其他定向参数或`--report`混用；空白筛选、零匹配返回2。每项输出实际耗时，末尾列执行数、跳过数和检查总耗时；总耗时不包含入口加载，进程总耗时应另计。完整覆盖报告由批次最终CI生成，本地已有相同包摘要的报告时复用，不因补文档重跑。
+
 简单拾取资源的数值差异复用逐件表驱动；同组统一验证本次实例／持有者隔离、直接获得、拾取前失效、移除不撤回、重新获得与跨战不重放。真实stdio还执行五件资源拾取及逐件移除，公开最大生命／生命／金币保持永久结果。商店价格、Ancient来源和资源修正者仍按各领域合同恢复，不把显式开发获得当作正常来源。
 
 遗物定向入口也执行CombatTurnRelicChecks：指定回合能量、每3／5次跨战计数和Sai每回合无加成格挡；复用已有回合门、移除／熔化与持有者隔离判别，补NoEnergyGain、资源上限、不同实例进度及Anchor／HornCleat组合。公开stdio的turn-start-resources轨迹实际获得五件遗物，执行第1至4回合，再跨战验证花朵第5次与Cocoa叠加；不注入资源结果。
