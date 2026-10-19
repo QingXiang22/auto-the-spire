@@ -1,6 +1,6 @@
 # review历史记录与证据索引
 
-2026-10-19：[base完成度与工作流审阅](2026-10-19/base-completion-workflow-review-2026-10-19.md)记录当前内容／正常Run／独立证据缺口、检查筛选与耗时、CI重复触发及批次流程改动；未新增玩法验收。
+2026-10-19：[base完成度与工作流审阅](2026-10-19/base-completion-workflow-review-2026-10-19.md)记录当前内容／正常Run／独立证据缺口、检查筛选与耗时、CI重复触发及批次流程改动；同日追加五项隔离实验、Power／卡牌边界及私有状态耦合发现。未新增玩法验收。
 
 2026-10-18：[三件无状态攻击修正遗物](2026-10-18/relic-stateless-attack-modifiers-2026-10-18.md)记录MiniatureCannon／PaperPhrog／PaperKrane、升级牌加法和状态倍率pure征询、87项遗物定向／395项包行为／40项公开路径及55件实际见证；G05其他子包、正常来源／Run与独立原版双侧仍未验收。
 

@@ -63,3 +63,56 @@
 这些是同环境下不同检查范围的反馈成本，不能解释成引擎执行提速。新筛选仍会经过部分共享夹具准备，计时输出区分单项与检查段；入口加载／构建另计。包规则、内容与源池未改变，修改后只复验受影响的CLI路径，不为文档和触发配置重跑全部395项。
 
 文档检查扫描787份Markdown、0问题；git diff --check通过。PyYAML实际解析CI配置，核对main的push、PR及手动入口和原四组矩阵均保留；逐字比较确认原任务详情、机制子任务与全部ENV／W合同未改。当前提交对应Actions须独立核对，旧PR的四组通过不覆盖本次工具／CI修改。正常Run、整局对拍、全遗物、五角色／进阶／120对矩阵及性能均未新增验收结论。未派出子agent或远程DSH。
+
+
+## 内容解耦专项审阅
+
+用户同日追问：单个遗物、卡牌、Power的修改或新增，是否仍需要大量改动base-spire。审阅基线`f4d18c5`，继续由Codex `/root`负责；本节为架构发现和候选重构验收，未修改生产规则、加载器或核心。上一轮检查筛选及CI去重解决了反馈成本，本节补充内容边界本身的问题。
+
+### 直接回答与修改面
+
+| 操作 | 当前实际修改面 | 判断 |
+| --- | --- | --- |
+| 修改已有遗物模板参数 | 通常一个内容叶；改变承诺数值时同步对应数值判别 | 配置路径已能局部修改，不应要求改共享战斗规则 |
+| 新增已有模板覆盖的遗物 | 内容叶、显式index、原catalog的definition、公开content_ids四处；版本变更属于发布处理 | 无需修改Engine／Host／共享战斗算法，但登记和验证仍需手工联动 |
+| 修改普通攻击牌数值 | 同一个文件中CardDefinition和AttackEffect分别保存普通／升级伤害；还需检查计算伤害／升级消费者 | 文件少，但数值存在多个事实来源，容易改漏 |
+| 新增已有组合覆盖的卡牌 | 内容叶、index、源catalog、公开元数据及真实见证 | 可复用已有DSL；没有必要修改C#游戏分派，但登记和证据入口仍未完全解耦 |
+| 修改／新增Power行为或寿命 | 调用方提供kind；共享Power实体、reactions／modifiers中的家族分支共同决定行为 | 缺少独立Power定义边界；这是本次最优先的结构问题 |
+| 为单个内容增加私有状态 | 部分遗物已有独立State；卡牌／Power仍有专属字段进入公共schema及复制／结束流程 | 局部解耦方法已存在，但没有一致应用 |
+
+### 五个隔离实验
+
+实际命令：`dotnet run --no-build --project .artifacts/decoupling-review-20261019/probe/Probe.csproj -- .artifacts/decoupling-review-20261019 mod-the-spire/base-spire`，退出0，五项探针断言均通过。探针项目只引用现有Engine，加载各自完整包副本并提交真实合法动作；不注入伤害或Power结果。源码、包副本、`observations.log`和逐文件字节差异`change-surface.json`保存在`.artifacts/decoupling-review-20261019/`，不进入正式来源分母或支持数。
+
+| 隔离改动 | 实际结果 |
+| --- | --- |
+| 仅把TheAbacus内容叶amount从6改为8 | 重洗后8格挡；生产目录、模板、战斗和Host均未改 |
+| 新增教学CouplingProbe，复用AfterShuffleBlockRelic；仅新增叶并改index／公开元数据 | 获得后重洗实际7格挡；未改任何共享玩法。教学ID未加入原catalog，正式迁移还需登记原源行 |
+| 仅把Strike的CardDefinition.baseDamage从6改为12，保持AttackEffect不变 | 实例BaseDamage为12，实际出牌仍造成6伤害 |
+| 仅把Inflame传入的kind从damage-additive改为attack-block，Power ID仍是strength-power | 实际Strength ID实例变为attack-block；Strike伤害6，额外获得2格挡 |
+| 仅把Inflame的Power ID改为从未定义的tutorial:undefined-power，保留kind=damage-additive | 包能加载，施加成功，Strike实际造成8伤害；未注册Power也能凭调用方选择行为 |
+
+教学变体故意改变原版规则，用于验证变化边界，不是原版行为通过证据。Power实验经过Engine包加载与Session执行，没有宣称未知ID的公开Host投影也通过。
+
+### 结构发现
+
+1. **P1：Power调用方拥有过多语义。** [ApplyPlayerPower](../../../../mod-the-spire/base-spire/combat/powers.spire)接收definition和kind，并把调用方的kind直接写入实例；[Inflame](../../../../mod-the-spire/base-spire/cards/ironclad/inflame.spire)和[Bash](../../../../mod-the-spire/base-spire/cards/ironclad/bash.spire)等调用方同时声明Power身份和行为角色。力量ID在10个DSL文件出现16次，易伤ID在10个文件出现10次；这是静态调用位置，不是运行次数。它们不是统一Power定义的引用。未定义ID能生效的实验进一步表明，Power来源目录与可执行定义尚未形成约束。
+2. **P1：Power初始化／合并／寿命仍汇聚在公共分支。** [reactions](../../../../mod-the-spire/base-spire/powers/reactions.spire)的ConfigureAppliedPower按kind设置SelfDamage、Counter和ExpiresBeforeEnemy；TickDebuff枚举三类kind。[modifiers](../../../../mod-the-spire/base-spire/powers/modifiers.spire)的SinglePowerStacks枚举corruption和autoplay-drawn-strikes。新Power若多一种策略，仍需进入这些中心文件；把ID分支改成kind字符串并没有形成完整对象边界。
+3. **P1：内容私有状态穿过共享卡牌生命周期。** [CardPlayRecord.RuptureGain](../../../../mod-the-spire/base-spire/cards/schema.spire)由Power反应写入，再由[cards/rules/reactions](../../../../mod-the-spire/base-spire/cards/rules/reactions.spire)在AfterCardPlayed消费；Rupture的规则被拆进Power、公共记录和卡牌收尾三处。DiscountsOnAttack／AutoFromExhaustAtTurnEnd又进入CardDefinition、[复制](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)和[永久牌→战斗副本](../../../../mod-the-spire/base-spire/cards/rules/permanent-deck.spire)的手工字段列表。类似新私有字段会继续扩大公共修改面。通用费用、HP等共享状态本身没有被本次判为问题。
+4. **P2：卡牌数值与计算能力仍有重复或集中分派。** [Strike](../../../../mod-the-spire/base-spire/cards/ironclad/strike-ironclad.spire)的baseDamage／upgradedBaseDamage和damage／upgradedDamage重复；前者参与CardBaseDamage等消费者，后者用于AttackEffect实际结算，实验已证实可分离。CardBaseDamage还按DamageScale枚举耗尽／Strike／易伤层数／格挡；新增计算方式仍须改公共操作，作者没有独立数值提供方边界。
+5. **P2：注册和检查重复维护可执行名单。** 内容需手动同步index、catalog及public/metadata；[PackageChecks](../../../../tools/base-spire-dev/PackageChecks.cs)的DB-A05/A10还硬编码当前55件已迁移遗物的完整字符串名单。增加一个合法定义会额外要求修改这段C#。297项原来源分母及独立源依据应继续冻结，而“当前已实现名单”可以由实际声明与执行见证做结构比对，无需再手抄一份；行为期望仍需独立来源，不能从被测DSL现算答案。
+
+近期提交也不能全部归为无效耦合：ChemicalX确实新增了支付X／效果X的共享契约，Paper两件确实需要易伤／虚弱倍率征询，首次接入真实消费者有必要。问题在于这些能力建立后，同类后续内容是否仍扩散修改，以及私有规则是否继续进入公共schema和中心分支。遗物已有[ArtOfWar附属State](../../../../mod-the-spire/base-spire/relics/rules/combat-modifiers.spire)及实例监听可作局部参考，当前不需要先推翻Engine才能开始改善。
+
+### 候选重构顺序与验收
+
+以下为本次审阅建议，尚未变成生产实现或新语言承诺；原纯DSL、显式装配、单一Engine状态和来源分母继续有效。
+
+1. **先建立Power定义边界。** 每个Power或真正共用的模板拥有身份、叠加、寿命、初始化、移除和私有状态。卡牌／遗物只提交目标、Power ID、层数及必要来源，不传行为kind／清理策略；未知定义明确失败。先迁一个简单Power和一个含私有状态的Power，保持原调用时序，再扩展。
+2. **合并卡牌数值事实与数值提供方。** 同一个伤害变量的普通／升级值只定义一次，实际结算、预览和引用它的效果走同一读取入口；独立效果可以有不同变量，不能把多效果牌强行压成一份BaseDamage。新增一种计算伤害应能在其模块声明提供方，避免继续增加CardBaseDamage字符串分支。
+3. **将专属状态归回所属内容能力。** 以Rupture为首例，把延迟收益关联当前play的状态放在其规则模块；共享出牌流程仅发布恰当生命周期。复制／入战／离场通过明确的能力生命周期处理，保留实例隔离、永久来源及临时状态区别，不给每个新能力再扩公共Card字段和手工复制列表。
+4. **收敛登记和见证接线。** 保留显式且可审阅的装配，允许构建工具确定性生成派生名单并检查漂移；不通过运行时目录扫描隐式加载，不改JSON承载玩法的边界。删除当前已支持名单的重复手工登记，表驱动记录每件真实见证，完整源分母与行为判别不降级。
+
+验收应使用实际变化场景：改一件已支持内容数值只改一个权威值；新增同模板内容只改自己的定义、显式装配／来源和见证；新增私有Power／遗物反应不修改公共战斗流程或其他内容模块；新增能力的私有状态不扩共享实体及复制代码。真正新增跨领域生命周期站点仍可修改对应领域契约和发布点，但下一件复用者不得重复修改该站点。
+
+本次五项探针验证的是修改边界，未完成上述重构，也未执行新的原版独立对拍或正常Run。当前玩法候选仍在主清单，后续生产切片应依据这些发现重排，不能把本节建议或上轮CI通过记为内容隔离已验收。
