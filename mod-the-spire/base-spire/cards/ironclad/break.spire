@@ -9,9 +9,9 @@ use Break {
 }
 use BreakDamage {
   template = AttackEffect
-  args = { definition = "base-spire:break" damage = 20 upgradedDamage = 30 hits = 1 }
+  args = { definition = "base-spire:break" hits = 1 }
 }
 use BreakVulnerable {
   template = ApplyEnemyPowerEffect
-  args = { definition = "base-spire:break" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 5 upgradedStacks = 7 }
+  args = { definition = "base-spire:break" power = "base-spire:vulnerable-power" stacks = 5 upgradedStacks = 7 }
 }

@@ -176,14 +176,14 @@ Host复用已有`text-rules`与声明派生公开目录，不新增逐游戏ID�
 
 ## 内容子集与证据编码
 
-source-catalog中非空definition指向的内容文件，只允许core/0.3头部与一个或多个`use`声明；模板参数类型、未知参数和表达式由既有DSL模板绑定器检查。实体、过程、动作和订阅只能放在共享规则文件，不能混进内容配置；包加载器按声明种类检查，不增加游戏效果分支或第二套解析器。低层规则与内容配置同属Engine DSL，Spire内容配置是其严格子集。
+本段记录迁移初版限制，已由下方2026-10-19内容模型修订替代：当时source-catalog中非空definition指向的内容文件，只允许core/0.3头部与一个或多个`use`声明；模板参数类型、未知参数和表达式由既有DSL模板绑定器检查。实体、过程、动作和订阅只能放在共享规则文件，不能混进内容配置；包加载器按声明种类检查，不增加游戏效果分支或第二套解析器。低层规则与内容配置同属Engine DSL，Spire内容配置是其严格子集。
 
 冻结检查清单的SHA256使用UTF-8、LF规范化后的源文本，避免Git检出换行改变迁移证据。它证明保留了哪些原检查和suite定义，不证明这些检查已经执行。
 
 
 ## 2026-10-19内容模型修订提案
 
-状态：供架构review，尚未改变正式加载器、作者限制、scope或生产规则。用户要求参考sts2-sim等实现重新考虑降低内容编写／修改负担；本节是对此的设计响应，关联CORE-AUTHOR-05。此前“内容只能use、完整逻辑必须放共享rules”的安排是本项目工程取舍，纯DSL目标本身不要求这项限制。
+状态：2026-10-19用户授权按此方案实施；本包边界和认领见主清单。迁移当前已支持内容后再用一次真实新增检验成本，scope及原完整范围不变。用户要求参考sts2-sim等实现重新考虑降低内容编写／修改负担；本节是对此的设计响应，关联CORE-AUTHOR-05。此前“内容只能use、完整逻辑必须放共享rules”的安排是本项目工程取舍，纯DSL目标本身不要求这项限制。
 
 当前约束仍按上一节执行；本提案若实施，需同步规格、通用包校验、作者指南与skill，不能先让作者使用尚未支持的写法。来源、原型和未验证项见[审阅记录的参考对照](../../../review/records/2026-10-19/base-completion-workflow-review-2026-10-19.md#sts2-sim对照与方案修订)。
 
@@ -213,7 +213,7 @@ source-catalog中非空definition指向的内容文件，只允许core/0.3头部
 
 目标仍是一个具体内容一个主文件。简单内容可以只有use；复杂内容主文件可包含普通DSL声明，并通过模板作用域隔离内部符号。其独有监听、局内状态和变量与主定义一起维护；只有真实共用的机制进入rules。无需创造`power`新执行器、C#游戏对象或JSON效果语言。
 
-需调整catalog的定义角色校验，使正式内容模块能承载完整DSL，保留根入口拥有start／imports／版本、同包命名空间、显式includes、重复符号／未引用文件拒绝和源身份核验。加载格式／校验策略及身份按实际兼容影响迁移。本提案没有授权作者绕过现有use-only校验。
+需调整catalog的定义角色校验，使正式内容模块能承载完整DSL，保留根入口拥有start／imports／版本、同包命名空间、显式includes、重复符号／未引用文件拒绝和源身份核验。加载格式／校验策略及身份按实际兼容影响迁移。用户已授权本次迁移，正式加载器随Core.TheSpire 0.6.1接受完整内容模块；旧use-only限制不再适用。
 
 共享库仍应减少绑定样板，而不是要求每个作者重复编写长实例筛选和清理代码。当前模板仅接受受限字面量，尚不能把任意过程／实体类型作为参数注入；不能将`hook = callback`写成已支持接口。先用现有过程与模板减少重复，对确需的通用符号绑定能力给出最小复现，再按core维护边界处理，不给Engine加入Power专用语法。
 
@@ -238,4 +238,12 @@ source-catalog中非空definition指向的内容文件，只允许core/0.3头部
 | 注册未知Power或引用缺失定义 | 明确失败且不创建Power或施加效果；不凭调用方的kind获得行为 |
 | 新增真正缺失的共享阶段 | 允许修改对应领域契约与发布点并做一个真实消费者；后续复用者不再修改该发布点 |
 
-现有独立来源分母、行为见证、正常Run／独立比较／公开协议各层验收继续保留。模型可编译或教学原型通过，不表示现有55件遗物、铁甲卡牌及原版Power已完成新模型迁移。
+现有独立来源分母、行为见证、正常Run／独立比较／公开协议各层验收继续保留。模型可编译或教学原型通过不能代替实际迁移与行为验证；本轮正式迁移与真实新增证据见[交付记录](../../../review/records/2026-10-19/content-model-migration-2026-10-19.md)。
+
+### 本轮实现的准确接口
+
+PowerDefinition模板登记definition、allowNegative、debuff、singleStack。ApplyPlayerPower(owner,definition,stacks)、ApplyEnemyPower(target,definition,stacks)和ApplyPlayerPowerUntilTurnEnd(owner,definition,stacks)委托同一ApplyPower；后者内部接受player／enemy两个Binding，要求恰好一个持有者。新实例发PowerCreated，应用后发PowerApplied，再保留原玩家／敌方应用通知；改量到零或不允许的负值走RemovePower，先出集合、发PowerRemoved、再销毁。不存在的Power初始零量或不允许的负量不创建实例。
+
+Power模块自订衰减和到期通知，可调用TickPowerDuration、ModifyPowerAmount与RemovePower。私有状态在PowerCreated建立，以实际Power引用关联，在PowerRemoved清理；ClearCombatPowers复用该移除路径。公共临时应用标志ExpiresAtTurnEnd保留FlameBarrier与永久Thorns的寿命区别。
+
+上文applier／cardSource、完整InstanceType／StackType和任意复制协议仍是后续设计边界；本轮不声称已实现。SingleStack保留当前两种开发Power行为，不能由此外推原版Single策略。Rupture只迁移待结算归属及实际play关联，完整伤害来源仍待领域上下文扩充。新增内容发现的AfterBlockCleared错误按源修正为每次开始阶段发布，包括首回合与保留格挡。

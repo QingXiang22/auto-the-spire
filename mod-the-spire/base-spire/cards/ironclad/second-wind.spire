@@ -2,5 +2,23 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/SecondWind.cs; SHA-256 retained in cards/catalog.json.
+template ExhaustNonAttackBlockEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { amount = Int }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 7 } } else = { let = { into = amount value = 5 } } }
+forEach = { query = where(collection(Hand), c, not(equal(field(c, Card.Kind), "attack"))) item = c body = {
+  call = { procedure = ExhaustCombatCard args = { owner = owner card = c } }
+  call = { procedure = GainBlock args = { owner = owner amount = amount } }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use SecondWind { template = CardDefinition args = { sourceEntry = "SECOND_WIND" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:second-wind" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use SecondWindEffect1 { template = ExhaustNonAttackBlockEffect args = { definition = "base-spire:second-wind" } }

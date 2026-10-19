@@ -2,5 +2,24 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Feed.cs; SHA-256 retained in cards/catalog.json.
+template FeedEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      locals = { hp = Int amount = Int }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+let = { into = hp value = field(target, Enemy.Hp) }
+call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } }
+if = { condition = and(greater(hp, 0), equal(field(target, Enemy.Hp), 0)) then = {
+if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
+  call = { procedure = IncreaseMaxHp args = { owner = owner amount = amount } }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+  }
+}
+
 use Feed { template = CardDefinition args = { sourceEntry = "FEED" rarity = "rare" inIroncladPool = true generatable = false definition = "base-spire:feed" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 10 upgradedBaseDamage = 12 } }
 use FeedEffect1 { template = FeedEffect args = { definition = "base-spire:feed" } }

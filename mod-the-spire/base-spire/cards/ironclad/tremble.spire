@@ -9,5 +9,5 @@ use Tremble {
 }
 use TrembleVulnerable {
   template = ApplyEnemyPowerEffect
-  args = { definition = "base-spire:tremble" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 upgradedStacks = 4 }
+  args = { definition = "base-spire:tremble" power = "base-spire:vulnerable-power" stacks = 3 upgradedStacks = 4 }
 }

@@ -2,5 +2,25 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/InfernalBlade.cs; SHA-256 retained in cards/catalog.json.
+template GenerateAttackEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { generated = Binding }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = true } into = generated }
+if = { condition = not(isNone(generated)) then = {
+  set = { target = generated field = Card.Cost value = 0 }
+  set = { target = generated field = Card.CostResetAtTurnEnd value = true }
+  set = { target = generated field = Card.FreeUntilPlayed value = true }
+  call = { procedure = AddGeneratedToHand args = { card = generated } }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use InfernalBlade { template = CardDefinition args = { sourceEntry = "INFERNAL_BLADE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:infernal-blade" cost = 1 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
 use InfernalBladeEffect1 { template = GenerateAttackEffect args = { definition = "base-spire:infernal-blade" } }

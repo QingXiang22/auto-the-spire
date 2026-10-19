@@ -9,13 +9,13 @@ use Uppercut {
 }
 use UppercutDamage {
   template = AttackEffect
-  args = { definition = "base-spire:uppercut" damage = 13 upgradedDamage = 13 hits = 1 }
+  args = { definition = "base-spire:uppercut" hits = 1 }
 }
 use UppercutWeak {
   template = ApplyEnemyPowerEffect
-  args = { definition = "base-spire:uppercut" power = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 upgradedStacks = 2 }
+  args = { definition = "base-spire:uppercut" power = "base-spire:weak-power" stacks = 1 upgradedStacks = 2 }
 }
 use UppercutVulnerable {
   template = ApplyEnemyPowerEffect
-  args = { definition = "base-spire:uppercut" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 upgradedStacks = 2 }
+  args = { definition = "base-spire:uppercut" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 2 }
 }

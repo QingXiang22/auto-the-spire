@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# SelfFormingClayPower.cs: resolves after block is cleared, then removes itself.
+template SelfFormingClayPowerModule {
+  body = {
+    use Definition { template = PowerDefinition args = { definition = "base-spire:self-forming-clay" } }
+    procedure Cleared {
+      parameters = { owner = Ref(Player) listener = Ref(Power) }
+      body = {
+        call = { procedure = GainUnpoweredBlock args = { owner = owner amount = maximum(0, field(listener, Power.Stacks)) } }
+        if = { condition = greaterOrEqual(collectionIndex(Powers, listener), 0) then = {
+          call = { procedure = RemovePower args = { power = listener } }
+        } }
+      }
+    }
+    subscription Cleared {
+      event = AfterBlockCleared reaction = Cleared
+      instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:self-forming-clay")))
+      instance_order = collectionIndex(Powers, listener)
+    }
+  }
+}
+use SelfFormingClayPower { template = SelfFormingClayPowerModule }

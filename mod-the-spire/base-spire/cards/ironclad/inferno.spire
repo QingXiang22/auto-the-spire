@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Inferno.cs; SHA-256 retained in cards/catalog.json.
 use Inferno { template = CardDefinition args = { sourceEntry = "INFERNO" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:inferno" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use InfernoEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:inferno" power = "base-spire:inferno-power" kind = "hp-loss-area-damage" stacks = 6 upgradedStacks = 9 } }
+use InfernoEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:inferno" power = "base-spire:inferno-power" stacks = 6 upgradedStacks = 9 } }

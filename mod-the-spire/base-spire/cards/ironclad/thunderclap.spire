@@ -9,9 +9,9 @@ use Thunderclap {
 }
 use ThunderclapDamage {
   template = AttackAllEnemiesEffect
-  args = { definition = "base-spire:thunderclap" damage = 4 upgradedDamage = 7 hits = 1 upgradedHits = 1 }
+  args = { definition = "base-spire:thunderclap" hits = 1 upgradedHits = 1 }
 }
 use ThunderclapVulnerable {
   template = ApplyAllEnemiesPowerEffect
-  args = { definition = "base-spire:thunderclap" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 upgradedStacks = 1 }
+  args = { definition = "base-spire:thunderclap" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 1 }
 }

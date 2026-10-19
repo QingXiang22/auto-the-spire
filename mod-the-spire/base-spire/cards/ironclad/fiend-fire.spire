@@ -2,5 +2,22 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/FiendFire.cs; SHA-256 retained in cards/catalog.json.
+template ExhaustHandAttackEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      locals = { hits = Int }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+let = { into = hits value = count(collection(Hand)) }
+forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
+repeat = { count = hits body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
+
+      } } }
+    }
+    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+  }
+}
+
 use FiendFire { template = CardDefinition args = { sourceEntry = "FIEND_FIRE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:fiend-fire" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 7 upgradedBaseDamage = 10 } }
 use FiendFireEffect1 { template = ExhaustHandAttackEffect args = { definition = "base-spire:fiend-fire" } }

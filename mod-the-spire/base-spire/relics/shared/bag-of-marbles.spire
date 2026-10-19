@@ -4,5 +4,5 @@ dsl_version = "core/0.3"
 # Source: BagOfMarbles.cs; Common relic, PowerVar<VulnerablePower>(1) applied to all hittable enemies when a combat begins.
 use BagOfMarbles {
   template = BeforeCombatStartEnemyPowerRelic
-  args = { definition = "base-spire:bag-of-marbles" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 }
+  args = { definition = "base-spire:bag-of-marbles" power = "base-spire:vulnerable-power" stacks = 1 }
 }

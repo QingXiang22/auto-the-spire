@@ -40,7 +40,7 @@ git diff --check
 | 未引用 DSL 文件 | 领域 index 与根 includes | 显式包含；不改成目录自动扫描 |
 | namespace／片段包属性冲突 | 错误指向的片段头部 | 同包同 namespace／core/0.3；start／version／imports 归根入口 |
 | 未知模板参数／超范围 | 内容 use 与模板 parameters | 按准确参数修正；不扩大边界掩盖源数值错误 |
-| procedure 被内容子集拒绝 | catalog definition 指向的文件 | 共享过程放 rules，内容文件只保留 use |
+| 内容模块被拒绝 | catalog definition 指向的文件 | 至少包含一个 DSL 声明；只保留 dsl_version 头部，start／imports／includes／version 等包属性放根入口或索引 |
 | unknown field／可执行 JSON | manifest、catalog 或 metadata 的实际 schema | 删除未知字段或迁移行为到 DSL，不让 Host 解释 effects 字符串 |
 | unsupported_capability | manifest 支持范围、CLI 场景 | 接受退出 3 并实现缺失范围；不回退旧工厂 |
 | legal candidate 不存在 | 当前公开 snapshot、action_type、guard | 检查完整 `net:action:...` ID 和真实状态；不构造候选绕过守卫 |

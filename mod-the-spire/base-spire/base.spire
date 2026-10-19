@@ -1,6 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-version = "0.6.0-dsl.38"
+version = "0.6.1-dsl.39"
 includes = [
   "combat/index.spire",
   "cards/index.spire",
@@ -15,4 +15,4 @@ includes = [
   "run/setup-dev.spire",
   "public/projection.spire"
 ]
-start = [SetupSourceRandom, SetupDevelopmentDraw]
+start = [SetupSourceRandom, SetupPowerDefinitions, SetupDevelopmentDraw]

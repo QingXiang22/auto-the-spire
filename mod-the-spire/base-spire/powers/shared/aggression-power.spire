@@ -1,0 +1,45 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template AggressionPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:aggression-power" } }
+
+procedure Aggression {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  locals = { chosen = Binding }
+  body = {
+    repeat = {
+      count = field(listener, Power.Stacks) body = {
+        if = {
+          condition = exists(where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack"))) then = {
+            samplePick = {
+              stream = "base-spire:run:combat_card_selection" candidates = where(collection(DiscardPile), c, equal(field(c, Card.Kind), "attack")) into = chosen
+            }
+            removeFromCollection = { collection = DiscardPile item = chosen }
+            call = {
+              procedure = AddGeneratedToHand args = {
+                card = chosen
+              }
+            }
+            if = {
+              condition = and(field(chosen, Card.CanUpgrade), not(field(chosen, Card.Upgraded))) then = {
+                call = {
+                  procedure = UpgradeCard args = {
+                    card = chosen
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Aggression {
+  event = BeforeTurnResources reaction = Aggression instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:aggression-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use AggressionPower { template = AggressionPowerModule }

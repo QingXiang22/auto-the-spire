@@ -3,6 +3,44 @@ dsl_version = "core/0.3"
 
 # Source: EvilEye.cs: cost 1, BlockVar(8, Move), gains its block once, or twice when a card was exhausted
 # this turn; OnUpgrade adds 3 block.
+template FlaggedBlockMultiplierEffect {
+  parameters = {
+    definition = { type = String(length = 64) }
+    block = { type = Int(min = 0, max = 999) }
+    upgradedBlock = { type = Int(min = 0, max = 999) }
+    flag = { type = String(length = 32) }
+  }
+  body = {
+    procedure WhenPlayed {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { amount = Int flagged = Bool }
+      body = {
+        if = {
+          condition = equal(field(card, Card.DefinitionId), arg(definition))
+          then = {
+            if = {
+              condition = field(card, Card.Upgraded)
+              then = { let = { into = amount value = arg(upgradedBlock) } }
+              else = { let = { into = amount value = arg(block) } }
+            }
+            if = {
+              condition = equal(arg(flag), "lost-hp")
+              then = { let = { into = flagged value = field(owner, Player.LostHpThisTurn) } }
+              else = { let = { into = flagged value = field(owner, Player.ExhaustedCardThisTurn) } }
+            }
+            if = {
+              condition = flagged
+              then = { call = { procedure = GainBlock args = { owner = owner amount = multiply(amount, 2) } } }
+              else = { call = { procedure = GainBlock args = { owner = owner amount = amount } } }
+            }
+          }
+        }
+      }
+    }
+    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+  }
+}
+
 use EvilEye {
   template = CardDefinition
   args = { sourceEntry = "EVIL_EYE" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:evil-eye" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }

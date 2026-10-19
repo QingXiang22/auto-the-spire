@@ -2,6 +2,25 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Armaments.cs; SHA-256 retained in cards/catalog.json.
+template UpgradeHandEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { chosen = Binding }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+if = { condition = field(card, Card.Upgraded) then = {
+  forEach = { query = where(collection(Hand), c, and(field(c, Card.CanUpgrade), not(field(c, Card.Upgraded)))) item = c body = { call = { procedure = UpgradeCard args = { card = c } } } }
+} else = {
+  call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = true } into = chosen }
+  if = { condition = not(isNone(chosen)) then = { call = { procedure = UpgradeCard args = { card = chosen } } } }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use Armaments { template = CardDefinition args = { sourceEntry = "ARMAMENTS" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:armaments" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use ArmamentsEffect1 { template = BlockEffect args = { definition = "base-spire:armaments" block = 5 upgradedBlock = 5 } }
 use ArmamentsEffect2 { template = UpgradeHandEffect args = { definition = "base-spire:armaments" } }

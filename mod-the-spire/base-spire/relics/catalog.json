@@ -2821,9 +2821,9 @@
       "pools": [
         "IroncladRelicPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "Source owner-local damage-received hook in sts2/src/Core/Models/Relics/SelfFormingClay.cs; stacking next-turn block power declared and exercised by RelicContentChecks.",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Source-owned content model development trial; docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "relics/shared/self-forming-clay.spire"
     },
     {
       "id": "base-spire:sere-talon",

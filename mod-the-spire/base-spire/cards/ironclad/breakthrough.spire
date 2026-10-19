@@ -13,5 +13,5 @@ use BreakthroughLoseHp {
 }
 use BreakthroughDamage {
   template = AttackAllEnemiesEffect
-  args = { definition = "base-spire:breakthrough" damage = 9 upgradedDamage = 13 hits = 1 upgradedHits = 1 }
+  args = { definition = "base-spire:breakthrough" hits = 1 upgradedHits = 1 }
 }

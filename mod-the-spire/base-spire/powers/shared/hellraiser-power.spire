@@ -1,0 +1,27 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template HellraiserPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:hellraiser-power" singleStack = true } }
+
+procedure Hellraiser {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(field(card, Card.StrikeTag), greater(field(listener, Power.Stacks), 0)) then = {
+        call = {
+          procedure = AutoPlayCard args = {
+            owner = owner card = card forceExhaust = false
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Hellraiser {
+  event = BeforeCardDrawnReactions reaction = Hellraiser instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:hellraiser-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use HellraiserPower { template = HellraiserPowerModule }

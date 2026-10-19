@@ -1,0 +1,54 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template InfernoPowerModule { body = {
+  entity State { fields = { Power = { type = Ref(Power) visibility = Hidden } Value = { type = Int default = 0 visibility = Hidden } } }
+  procedure Created { parameters = { power = Ref(Power) listener = Ref(Power) } locals = { state = Binding } body = { create = { type = State scope = entityScope(power) into = state fields = { Power = power } } } }
+  subscription Created { event = PowerCreated reaction = Created instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) }
+  procedure Removed { parameters = { power = Ref(Power) } body = { forEach = { query = where(type(State), s, equal(field(s, State.Power), power)) item = state body = { destroy = { target = state } } } } }
+  subscription Removed { event = PowerRemoved reaction = Removed }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:inferno-power" } }
+
+procedure Inferno {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = and(not(field(owner, Player.EnemyPhase)), greater(field(listener, Power.Stacks), 0)) then = {
+        forEach = {
+          query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
+            call = {
+              procedure = DamageEnemy args = {
+                target = e amount = field(listener, Power.Stacks)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Inferno {
+  event = PlayerHpLost reaction = Inferno instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure InfernoTurn {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = LosePlayerHp args = {
+        owner = owner amount = field(first(where(type(State), s, equal(field(s, State.Power), listener))), State.Value)
+      }
+    }
+  }
+}
+
+subscription InfernoTurn {
+  event = AfterPlayerTurnStart reaction = InfernoTurn instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+procedure Applied { parameters = { power = Ref(Power) amount = Int created = Bool listener = Ref(Power) } body = { set = { target = first(where(type(State), s, equal(field(s, State.Power), power))) field = State.Value value = add(field(first(where(type(State), s, equal(field(s, State.Power), power))), State.Value), 1) } } }
+subscription Applied { event = PowerApplied reaction = Applied instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) }
+
+} }
+use InfernoPower { template = InfernoPowerModule }

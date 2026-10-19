@@ -2,6 +2,27 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Pillage.cs; SHA-256 retained in cards/catalog.json.
+template DrawUntilNonAttackEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      locals = { drawing = Bool drawn = Binding }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+let = { into = drawing value = true }
+repeat = { count = 10 body = { if = { condition = drawing then = {
+  call = { procedure = DrawOne args = { owner = owner } }
+  let = { into = drawn value = field(owner, Player.LastDrawn) }
+  if = { condition = isNone(drawn) then = { let = { into = drawing value = false } } else = {
+    if = { condition = not(equal(field(drawn, Card.Kind), "attack")) then = { let = { into = drawing value = false } } }
+  } }
+} } } }
+      } } }
+    }
+    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+  }
+}
+
 use Pillage { template = CardDefinition args = { sourceEntry = "PILLAGE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:pillage" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 9 } }
 use PillageEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:pillage" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use PillageEffect2 { template = DrawUntilNonAttackEffect args = { definition = "base-spire:pillage" } }

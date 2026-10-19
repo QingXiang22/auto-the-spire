@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template UnmovablePowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:unmovable-power" } }
+
+procedure Unmovable {
+  pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }
+  result = Int body = {
+    if = {
+      condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)), not(equal(r, field(owner, Player.CurrentPlay))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), field(listener, Power.Stacks)) then = {
+        return = { value = multiply(value, 2) }
+      }
+    }
+    return = { value = value }
+  }
+}
+
+subscription Unmovable {
+  event = ModifyBlockMultiplier reaction = Unmovable instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:unmovable-power"))) instance_order = collectionIndex(Powers, listener) priority = 10
+}
+} }
+use UnmovablePower { template = UnmovablePowerModule }

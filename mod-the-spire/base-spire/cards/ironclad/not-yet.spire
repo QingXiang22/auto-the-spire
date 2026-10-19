@@ -2,5 +2,20 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/NotYet.cs; SHA-256 retained in cards/catalog.json.
+template HealEffect {
+  parameters = { definition = { type = String(length = 64) } heal = { type = Int } upgradedHeal = { type = Int } }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { amount = Int }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedHeal) } } else = { let = { into = amount value = arg(heal) } } }
+call = { procedure = Heal args = { owner = owner amount = amount } }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use NotYet { template = CardDefinition args = { sourceEntry = "NOT_YET" rarity = "rare" inIroncladPool = true generatable = false definition = "base-spire:not-yet" cost = 2 upgradedCost = 2 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
 use NotYetEffect1 { template = HealEffect args = { definition = "base-spire:not-yet" heal = 10 upgradedHeal = 13 } }

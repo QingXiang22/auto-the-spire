@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template DarkEmbracePowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:dark-embrace-power" } }
+
+procedure DarkEmbrace {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = DrawCards args = {
+        owner = owner count = maximum(0, field(listener, Power.Stacks))
+      }
+    }
+  }
+}
+
+subscription DarkEmbrace {
+  event = CardExhausted reaction = DarkEmbrace instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use DarkEmbracePower { template = DarkEmbracePowerModule }

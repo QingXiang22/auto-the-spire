@@ -21,6 +21,7 @@ internal static partial class PackageChecks
         RunXValueRelicChecks(package, Check);
         RunPickupUpgradeChecks(package, Check);
         RunEffectListenerChecks(package, Check);
+        RunSelfFormingClayChecks(package, Check);
         if (count == 0) throw new ArgumentException("No relic-content checks match --filter: " + filter);
         Console.WriteLine($"All {count} selected relic-content checks passed; skipped={skipped}; elapsed={total.Elapsed.TotalSeconds:F3}s. Full check is required for coverage evidence."); return 0;
     }
@@ -162,7 +163,7 @@ internal static partial class PackageChecks
                 Equal(mode == "cap" ? 80L : mode == "normal" ? 59L : 44L, Hp(s), mode + " rest result"); True(!Legal(s, "RestAtDevelopmentCampfire"), "one successful visit option");
             }
         });
-        foreach (var row in new[] { ("Kunai", "base-spire:kunai", "block-additive"), ("Shuriken", "base-spire:shuriken", "damage-additive"), ("OrnamentalFan", "base-spire:ornamental-fan", "block") })
+        foreach (var row in new[] { ("Kunai", "base-spire:kunai", "base-spire:dexterity-power"), ("Shuriken", "base-spire:shuriken", "base-spire:strength-power"), ("OrnamentalFan", "base-spire:ornamental-fan", "block") })
             Own(row.Item2, "RL " + row.Item1 + ": every three completed attacks, multi-hit once, six twice and early turn reset", () =>
             {
                 var s = Combat(row.Item1); Plays(s, "TwinStrike", 1); Equal(1L, Counter(s), "two hits are one play"); Plays(s, "StrikeIronclad", 1);
@@ -211,16 +212,16 @@ internal static partial class PackageChecks
             {
                 var s = Combat("Shuriken"); Plays(s, "StrikeIronclad", 2); var r = Members(s, "Relics").Single();
                 if (melted) Set(s, r, "Relic", "IsMelted", Value.Of(true)); else Submit(s, "RemoveOwnedRelic", r);
-                Plays(s, "StrikeIronclad", 1); Equal(0L, IcPower(s, "damage-additive"), "inactive third-play trigger");
+                Plays(s, "StrikeIronclad", 1); Equal(0L, IcPower(s, "base-spire:strength-power"), "inactive third-play trigger");
             }
             var repeat = Combat("Kunai"); Plays(repeat, "StrikeIronclad", 1); Plays(repeat, "OneTwoPunch", 1); Plays(repeat, "StrikeIronclad", 1);
-            Equal(1L, IcPower(repeat, "block-additive"), "repeat contributes two real completed plays");
+            Equal(1L, IcPower(repeat, "base-spire:dexterity-power"), "repeat contributes two real completed plays");
         });
         check("RL automatic attacks and final kills complete relic callbacks before victory", () =>
         {
             var s = Combat("Shuriken"); Plays(s, "StrikeIronclad", 2);
             var top = IcAdd(s, "StrikeIronclad"); IcMove(s, top, "Hand", "DrawPile");
-            IcPlay(s, IcAdd(s, "Havoc")); Equal(1L, IcPower(s, "damage-additive"), "automatic child attack counts");
+            IcPlay(s, IcAdd(s, "Havoc")); Equal(1L, IcPower(s, "base-spire:strength-power"), "automatic child attack counts");
             var lethal = Combat("OrnamentalFan"); Plays(lethal, "StrikeIronclad", 2); Set(lethal, FirstTarget(lethal), "Enemy", "Hp", Value.Of(1L));
             Plays(lethal, "StrikeIronclad", 1); Equal("victory", Outcome(lethal), "third attack really killed"); Equal(4L, Block(lethal), "post-play block completed before victory");
         });
@@ -241,7 +242,7 @@ internal static partial class PackageChecks
             Equal(0L, IntField(s, rs[0], "Relic", "Counter"), "original instance reached three");
             Equal(0L, IntField(s, rs[1], "Relic", "Counter"), "other holder did not advance");
             Equal(1L, IntField(s, rs[2], "Relic", "Counter"), "new same-definition instance starts independently");
-            Equal(1L, IcPower(s, "damage-additive"), "only original holder instance activated");
+            Equal(1L, IcPower(s, "base-spire:strength-power"), "only original holder instance activated");
             var melted = Start(package); Submit(melted, "OldCoin.Obtain"); Set(melted, Members(melted, "Relics").Single(), "Relic", "IsMelted", Value.Of(true));
             True(!Legal(melted, "OldCoin.Obtain"), "melting cannot reopen pickup to duplicate gold");
         });

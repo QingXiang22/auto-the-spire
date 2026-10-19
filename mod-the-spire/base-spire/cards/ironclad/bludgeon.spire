@@ -8,5 +8,5 @@ use Bludgeon {
 }
 use BludgeonDamage {
   template = AttackEffect
-  args = { definition = "base-spire:bludgeon" damage = 32 upgradedDamage = 42 hits = 1 }
+  args = { definition = "base-spire:bludgeon" hits = 1 }
 }

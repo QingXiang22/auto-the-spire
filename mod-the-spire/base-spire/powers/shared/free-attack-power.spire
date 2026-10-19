@@ -1,0 +1,43 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template FreeAttackPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:free-attack-power" } }
+
+procedure FreeAttackCost {
+  pure = true parameters = { value = Int owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  result = Int body = {
+    if = {
+      condition = and(greater(field(listener, Power.Stacks), 0), and(equal(field(card, Card.Kind), "attack"), or(greaterOrEqual(collectionIndex(Hand, card), 0), greaterOrEqual(collectionIndex(InPlay, card), 0)))) then = {
+        return = { value = 0 }
+      }
+    }
+    return = { value = value }
+  }
+}
+
+subscription FreeAttackCost {
+  event = ModifyCardCost reaction = FreeAttackCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:free-attack-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure FreeAttackConsumed {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = equal(field(card, Card.Kind), "attack") then = {
+        call = {
+          procedure = ConsumePower args = {
+            power = listener
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription FreeAttackConsumed {
+  event = BeforeCardPlayed reaction = FreeAttackConsumed instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:free-attack-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use FreeAttackPower { template = FreeAttackPowerModule }

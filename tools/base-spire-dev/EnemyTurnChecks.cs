@@ -42,7 +42,7 @@ internal static partial class PackageChecks
             Equal(69L, Hp(s), "the strength-boosted goop hit for 11");
             using var copy = new Copy(package.Root);
             copy.Include("enemy-weaken.spire", """
-                action WeakenTarget { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 } } } }
+                action WeakenTarget { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:weak-power" stacks = 1 } } } }
                 """);
             var weak = Start(copy.Load()); Submit(weak, "FuzzyWurmCrawler.Spawn");
             Submit(weak, "BeginDevelopmentCombat"); Submit(weak, "WeakenTarget"); Submit(weak, "BeginDevelopmentTurn"); Submit(weak, "EndDevelopmentTurn");

@@ -49,9 +49,9 @@
       "source_path": "sts2/src/Core/Models/Powers/AggressionPower.cs",
       "source_sha256": "fb1e98f4f2eb27c090ddf7401c0ba66d895fd892994980f357a29f28a6ecc47d",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/aggression-power.spire"
     },
     {
       "id": "base-spire:anticipate-power",
@@ -129,9 +129,9 @@
       "source_path": "sts2/src/Core/Models/Powers/BarricadePower.cs",
       "source_sha256": "6dbe0c789b106b530314e05e9bf78fed2033bfcbfcd4dc01a041a105d6647138",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/barricade-power.spire"
     },
     {
       "id": "base-spire:battleworn-dummy-time-limit-power",
@@ -299,9 +299,9 @@
       "source_path": "sts2/src/Core/Models/Powers/ColossusPower.cs",
       "source_sha256": "5124825b7e280ec51ff427abf3b2c7dc55f2441b2e8d9f53469ab058136788e9",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/colossus-power.spire"
     },
     {
       "id": "base-spire:confused-power",
@@ -379,9 +379,9 @@
       "source_path": "sts2/src/Core/Models/Powers/CorruptionPower.cs",
       "source_sha256": "c727aff77fb6162d21824db13fd438335db40afb5e1c6512383ef27178f04450",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/corruption-power.spire"
     },
     {
       "id": "base-spire:countdown-power",
@@ -429,9 +429,9 @@
       "source_path": "sts2/src/Core/Models/Powers/CrimsonMantlePower.cs",
       "source_sha256": "a9319ea9b6f56cb6cdb259e6bca72844c5ce12abd73d2916550e3bbb9001c2a7",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/crimson-mantle-power.spire"
     },
     {
       "id": "base-spire:cruelty-power",
@@ -439,9 +439,9 @@
       "source_path": "sts2/src/Core/Models/Powers/CrueltyPower.cs",
       "source_sha256": "c36e414226a11ef82fe64b4900eff2c53ce28193d88d908516111fdcad95e0ba",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/cruelty-power.spire"
     },
     {
       "id": "base-spire:crush-under-power",
@@ -499,9 +499,9 @@
       "source_path": "sts2/src/Core/Models/Powers/DarkEmbracePower.cs",
       "source_sha256": "78eeedaa2a4620ca5e0d2c21a9f6c311e63d664e62c0ede844a90c813149a688",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/dark-embrace-power.spire"
     },
     {
       "id": "base-spire:dark-shackles-power",
@@ -549,9 +549,9 @@
       "source_path": "sts2/src/Core/Models/Powers/DemonFormPower.cs",
       "source_sha256": "8c5b4dbd0d3cbec51cc7ba947ee9cce833f11153928144bc201601cf150b67a8",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/demon-form-power.spire"
     },
     {
       "id": "base-spire:devour-life-power",
@@ -569,9 +569,9 @@
       "source_path": "sts2/src/Core/Models/Powers/DexterityPower.cs",
       "source_sha256": "f6b561122838f50bda6bb7c3e9e42a54d738ad2f7b8ca6009963896107bac1e9",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/dexterity-power.spire"
     },
     {
       "id": "base-spire:diamond-diadem-power",
@@ -759,9 +759,9 @@
       "source_path": "sts2/src/Core/Models/Powers/FeelNoPainPower.cs",
       "source_sha256": "8cfece87071e6a71e832918c48f77da8fc06ff7490a05b4182cc2fb89e77c049",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/feel-no-pain-power.spire"
     },
     {
       "id": "base-spire:feral-power",
@@ -859,9 +859,9 @@
       "source_path": "sts2/src/Core/Models/Powers/FrailPower.cs",
       "source_sha256": "3334f1dda0a5cff6a1373c71456313fdfd23f200c96512336df29ae8e4246dbe",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/frail-power.spire"
     },
     {
       "id": "base-spire:free-attack-power",
@@ -869,9 +869,9 @@
       "source_path": "sts2/src/Core/Models/Powers/FreeAttackPower.cs",
       "source_sha256": "ab02fe2ab264c5ee912b5c80f92c76155a9c3193305db32d0387c9201135b2d2",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/free-attack-power.spire"
     },
     {
       "id": "base-spire:free-power-power",
@@ -1069,9 +1069,9 @@
       "source_path": "sts2/src/Core/Models/Powers/HellraiserPower.cs",
       "source_sha256": "ac2a3ccd714f886dc9744cf340ba09597e961e20c35ef7499b97604fb82cbfef",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/hellraiser-power.spire"
     },
     {
       "id": "base-spire:hex-power",
@@ -1139,9 +1139,9 @@
       "source_path": "sts2/src/Core/Models/Powers/InfernoPower.cs",
       "source_sha256": "37f6cc144213a345db6ddb7e2b4e91c70ea67ac0c52a6ef529b3f1fac28b61e2",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/inferno-power.spire"
     },
     {
       "id": "base-spire:infested-power",
@@ -1199,9 +1199,9 @@
       "source_path": "sts2/src/Core/Models/Powers/JuggernautPower.cs",
       "source_sha256": "0b1b726e0ef4b220d56194110286b4cda5bab270ae48615298804f5e717acae2",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/juggernaut-power.spire"
     },
     {
       "id": "base-spire:juggling-power",
@@ -1209,9 +1209,9 @@
       "source_path": "sts2/src/Core/Models/Powers/JugglingPower.cs",
       "source_sha256": "ce01a890dc764c8540e9ab5c8cafa9eb32fc3cf640170b7cbf379143c5d86fd0",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/juggling-power.spire"
     },
     {
       "id": "base-spire:knockdown-power",
@@ -1289,9 +1289,9 @@
       "source_path": "sts2/src/Core/Models/Powers/ManglePower.cs",
       "source_sha256": "b85f6318f75b5e630a69d6a83a17dd4640e1ea2d140e81f9ac87ac53fb6aa47c",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/mangle-power.spire"
     },
     {
       "id": "base-spire:master-planner-power",
@@ -1419,9 +1419,9 @@
       "source_path": "sts2/src/Core/Models/Powers/NoDrawPower.cs",
       "source_sha256": "6e53b8ff5cd97e40d9377cd5b3ba8fdcc2366b03b485a6a63f32cb148ba07a19",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/no-draw-power.spire"
     },
     {
       "id": "base-spire:no-energy-gain",
@@ -1429,9 +1429,9 @@
       "source_path": "sts2/src/Core/Models/Powers/NoEnergyGainPower.cs",
       "source_sha256": "951b1f4d7d5565f52c99adf2fe8501aa5e1871849ffff2ada894723cbe7a5d5a",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/no-energy-gain-power.spire"
     },
     {
       "id": "base-spire:nostalgia-power",
@@ -1469,9 +1469,9 @@
       "source_path": "sts2/src/Core/Models/Powers/OneTwoPunchPower.cs",
       "source_sha256": "177ce685cca074e13c4a8dc743e93d6c86a1dd78726db30b801a343937a06ccc",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/one-two-punch-power.spire"
     },
     {
       "id": "base-spire:orbit-power",
@@ -1599,9 +1599,9 @@
       "source_path": "sts2/src/Core/Models/Powers/PlatingPower.cs",
       "source_sha256": "f8e6f35b5df38ec5d79234ccc25a8e6e51f65ef01db10043be23c5bee64c377a",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/plating-power.spire"
     },
     {
       "id": "base-spire:plow-power",
@@ -1659,9 +1659,9 @@
       "source_path": "sts2/src/Core/Models/Powers/PyrePower.cs",
       "source_sha256": "29db6bf96fd85e9d0a689c10d67ac5448dc84abd00691cc09033c3449d8c794f",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/pyre-power.spire"
     },
     {
       "id": "base-spire:radiance-power",
@@ -1679,9 +1679,9 @@
       "source_path": "sts2/src/Core/Models/Powers/RagePower.cs",
       "source_sha256": "19f1631dca760fb5a22f079e921a2cc88cb9cdba3481254dc427b94fa0793e9f",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/rage-power.spire"
     },
     {
       "id": "base-spire:rampart-power",
@@ -1819,9 +1819,9 @@
       "source_path": "sts2/src/Core/Models/Powers/RupturePower.cs",
       "source_sha256": "c2a59a15cc8628370abec825ccaf9ed52b4c7a6da0327347da198840822b3001",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/rupture-power.spire"
     },
     {
       "id": "base-spire:sandpit-power",
@@ -1849,9 +1849,9 @@
       "source_path": "sts2/src/Core/Models/Powers/SelfFormingClayPower.cs",
       "source_sha256": "f56401efa59b39c48e6226b6d0e664783582d4a8a4ec0f795e9476a2be97f816",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Source-owned content model development trial; docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/self-forming-clay.spire"
     },
     {
       "id": "base-spire:sentry-mode-power",
@@ -1879,9 +1879,9 @@
       "source_path": "sts2/src/Core/Models/Powers/SetupStrikePower.cs",
       "source_sha256": "ee02d3b1f0071ffaf13680dc63af6d0a101f9ac96764a2cc665324b0c5bc44b5",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/setup-strike-power.spire"
     },
     {
       "id": "base-spire:shackling-potion-power",
@@ -2119,9 +2119,9 @@
       "source_path": "sts2/src/Core/Models/Powers/StampedePower.cs",
       "source_sha256": "7add49127fff1914f86b2c8a2143ab8422fe41ad36d39102af3bf0d5f2763b51",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/stampede-power.spire"
     },
     {
       "id": "base-spire:star-next-turn-power",
@@ -2189,9 +2189,9 @@
       "source_path": "sts2/src/Core/Models/Powers/StrengthPower.cs",
       "source_sha256": "267b986f0d1fc9666919f8ef2e3f714114f40355506a74c5bcc3977c283ffe49",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/strength-power.spire"
     },
     {
       "id": "base-spire:subroutine-power",
@@ -2419,9 +2419,9 @@
       "source_path": "sts2/src/Core/Models/Powers/ThornsPower.cs",
       "source_sha256": "96167a3d1513ad6da621861e3f64fc2d8ddc7cad618b54131c0955297c22912c",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/thorns-power.spire"
     },
     {
       "id": "base-spire:thunder-power",
@@ -2489,9 +2489,9 @@
       "source_path": "sts2/src/Core/Models/Powers/UnmovablePower.cs",
       "source_sha256": "1289b35e643369d24cfa0cb27b0dac9815379ffa134f257dd3975c06ac3d3c75",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/unmovable-power.spire"
     },
     {
       "id": "base-spire:veilpiercer-power",
@@ -2509,9 +2509,9 @@
       "source_path": "sts2/src/Core/Models/Powers/ViciousPower.cs",
       "source_sha256": "cd7e95ace8000dba8ce4b1c72f38c54de4b4f64136ee2cb59db35617d3041129",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/vicious-power.spire"
     },
     {
       "id": "base-spire:vigor-power",
@@ -2549,9 +2549,9 @@
       "source_path": "sts2/src/Core/Models/Powers/VulnerablePower.cs",
       "source_sha256": "8fd6a82db0c6dd460a2f1d118628c4ab2600dc97f93a31c672e84ee4a3147126",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/vulnerable-power.spire"
     },
     {
       "id": "base-spire:waste-away-power",
@@ -2569,9 +2569,9 @@
       "source_path": "sts2/src/Core/Models/Powers/WeakPower.cs",
       "source_sha256": "b33ac1a44ff5edb75d6e5776627259b2bac2b4e6ab1905cab3d60b0cfa32a426",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "development-supported",
+      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "definition": "powers/shared/weak-power.spire"
     },
     {
       "id": "base-spire:well-laid-plans-power",

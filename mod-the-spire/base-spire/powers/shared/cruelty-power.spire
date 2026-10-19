@@ -1,0 +1,10 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template CrueltyPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:cruelty-power" } }
+
+
+} }
+use CrueltyPower { template = CrueltyPowerModule }

@@ -9,5 +9,5 @@ use HowlFromBeyond {
 }
 use HowlFromBeyondDamage {
   template = AttackAllEnemiesEffect
-  args = { definition = "base-spire:howl-from-beyond" damage = 16 upgradedDamage = 21 hits = 1 upgradedHits = 1 }
+  args = { definition = "base-spire:howl-from-beyond" hits = 1 upgradedHits = 1 }
 }

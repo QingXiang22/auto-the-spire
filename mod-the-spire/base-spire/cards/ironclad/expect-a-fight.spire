@@ -2,5 +2,20 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/ExpectAFight.cs; SHA-256 retained in cards/catalog.json.
+template HandAttackEnergyEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+call = { procedure = GainEnergy args = { owner = owner amount = count(where(collection(Hand), c, equal(field(c, Card.Kind), "attack"))) } }
+call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:no-energy-gain" stacks = 1 } }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use ExpectAFight { template = CardDefinition args = { sourceEntry = "EXPECT_AFIGHT" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:expect-a-fight" cost = 2 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use ExpectAFightEffect1 { template = HandAttackEnergyEffect args = { definition = "base-spire:expect-a-fight" } }

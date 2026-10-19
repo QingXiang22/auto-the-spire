@@ -8,8 +8,6 @@ dsl_version = "core/0.3"
 template AttackEffect {
   parameters = {
     definition = { type = String(length = 64) }
-    damage = { type = Int(min = 0, max = 999) }
-    upgradedDamage = { type = Int(min = 0, max = 999) }
     hits = { type = Int(min = 1, max = 9) }
   }
   body = {
@@ -20,11 +18,7 @@ template AttackEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedDamage) } }
-              else = { let = { into = amount value = arg(damage) } }
-            }
+            let = { into = amount value = pureCall(CardBaseDamage, owner, card, target) }
             repeat = {
               count = arg(hits)
               body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
@@ -92,41 +86,8 @@ template DrawEffect {
 }
 # BodySlam.cs: CalculatedDamageVar(ValueProp.Move).WithMultiplier(card => card.Owner.Creature.Block),
 # so the damage equals the player's block when the card resolves.
-template DamageEqualBlockEffect {
-  parameters = { definition = { type = String(length = 64) } }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = field(owner, Player.Block) } } }
-        }
-      }
-    }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
-  }
-}
 # Anger.cs: after the attack, a clone of the played card is added to the discard pile. The clone keeps the
 # upgraded state and is a combat-only card; permanent deck copies are not migrated.
-template AddCopyEffect {  parameters = { definition = { type = String(length = 64) } }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { copy = Binding }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            call = { procedure = CloneCombatCard args = { owner = owner source = card } into = copy }
-            addToCollection = { collection = DiscardPile item = copy }
-          }
-        }
-      }
-    }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
-  }
-}
 # Shared "gain energy" card effect (Bloodletting.cs, Offering.cs). GainEnergy does not clamp to MaxEnergy.
 template EnergyEffect {
   parameters = {
@@ -161,8 +122,6 @@ template EnergyEffect {
 template AttackAllEnemiesEffect {
   parameters = {
     definition = { type = String(length = 64) }
-    damage = { type = Int(min = 0, max = 999) }
-    upgradedDamage = { type = Int(min = 0, max = 999) }
     hits = { type = Int(min = 1, max = 9) }
     upgradedHits = { type = Int(min = 1, max = 9) }
   }
@@ -174,11 +133,7 @@ template AttackAllEnemiesEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedDamage) } }
-              else = { let = { into = amount value = arg(damage) } }
-            }
+
             if = {
               condition = field(card, Card.Upgraded)
               then = { let = { into = count value = arg(upgradedHits) } }
@@ -189,7 +144,7 @@ template AttackAllEnemiesEffect {
               body = {
                 repeat = {
                   count = count
-                  body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = enemy amount = amount } } }
+                  body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = enemy amount = pureCall(CardBaseDamage, owner, card, enemy) } } }
                 }
               }
             }
@@ -207,7 +162,6 @@ template ApplyEnemyPowerEffect {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
-    kind = { type = String(length = 32) }
     stacks = { type = Int(min = 1, max = 999) }
     upgradedStacks = { type = Int(min = 1, max = 999) }
   }
@@ -224,7 +178,7 @@ template ApplyEnemyPowerEffect {
               then = { let = { into = amount value = arg(upgradedStacks) } }
               else = { let = { into = amount value = arg(stacks) } }
             }
-            call = { procedure = ApplyEnemyPower args = { target = target definition = arg(power) kind = arg(kind) stacks = amount } }
+            call = { procedure = ApplyEnemyPower args = { target = target definition = arg(power) stacks = amount } }
           }
         }
       }
@@ -238,7 +192,6 @@ template ApplyAllEnemiesPowerEffect {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
-    kind = { type = String(length = 32) }
     stacks = { type = Int(min = 1, max = 999) }
     upgradedStacks = { type = Int(min = 1, max = 999) }
   }
@@ -257,7 +210,7 @@ template ApplyAllEnemiesPowerEffect {
             }
             forEach = {
               query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
-              body = { call = { procedure = ApplyEnemyPower args = { target = enemy definition = arg(power) kind = arg(kind) stacks = amount } } }
+              body = { call = { procedure = ApplyEnemyPower args = { target = enemy definition = arg(power) stacks = amount } } }
             }
           }
         }
@@ -272,7 +225,6 @@ template ApplySelfPowerEffect {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
-    kind = { type = String(length = 32) }
     stacks = { type = Int(min = 1, max = 999) }
     upgradedStacks = { type = Int(min = 1, max = 999) }
   }
@@ -289,7 +241,7 @@ template ApplySelfPowerEffect {
               then = { let = { into = amount value = arg(upgradedStacks) } }
               else = { let = { into = amount value = arg(stacks) } }
             }
-            call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) kind = arg(kind) stacks = amount } }
+            call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) stacks = amount } }
           }
         }
       }
@@ -327,196 +279,12 @@ template LoseHpEffect {
 
 # Flagged single-target attack (Spite.cs): the hit count depends on a per-turn history flag. Flag values are
 # "lost-hp" (LostHpThisTurn) and "exhausted-card" (ExhaustedCardThisTurn); both reset at turn start.
-template FlaggedHitsAttackEffect {
-  parameters = {
-    definition = { type = String(length = 64) }
-    damage = { type = Int(min = 0, max = 999) }
-    upgradedDamage = { type = Int(min = 0, max = 999) }
-    hits = { type = Int(min = 1, max = 9) }
-    flaggedHits = { type = Int(min = 1, max = 9) }
-    upgradedFlaggedHits = { type = Int(min = 1, max = 9) }
-    flag = { type = String(length = 32) }
-  }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int count = Int flagged = Bool }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedDamage) } }
-              else = { let = { into = amount value = arg(damage) } }
-            }
-            if = {
-              condition = equal(arg(flag), "lost-hp")
-              then = { let = { into = flagged value = field(owner, Player.LostHpThisTurn) } }
-              else = { let = { into = flagged value = field(owner, Player.ExhaustedCardThisTurn) } }
-            }
-            if = {
-              condition = flagged
-              then = {
-                if = {
-                  condition = field(card, Card.Upgraded)
-                  then = { let = { into = count value = arg(upgradedFlaggedHits) } }
-                  else = { let = { into = count value = arg(flaggedHits) } }
-                }
-              }
-              else = { let = { into = count value = arg(hits) } }
-            }
-            repeat = {
-              count = count
-              body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
-            }
-          }
-        }
-      }
-    }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
-  }
-}
 # Flagged block (EvilEye.cs): gains its block once, or twice when the flag is set.
-template FlaggedBlockMultiplierEffect {
-  parameters = {
-    definition = { type = String(length = 64) }
-    block = { type = Int(min = 0, max = 999) }
-    upgradedBlock = { type = Int(min = 0, max = 999) }
-    flag = { type = String(length = 32) }
-  }
-  body = {
-    procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int flagged = Bool }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedBlock) } }
-              else = { let = { into = amount value = arg(block) } }
-            }
-            if = {
-              condition = equal(arg(flag), "lost-hp")
-              then = { let = { into = flagged value = field(owner, Player.LostHpThisTurn) } }
-              else = { let = { into = flagged value = field(owner, Player.ExhaustedCardThisTurn) } }
-            }
-            if = {
-              condition = flagged
-              then = { call = { procedure = GainBlock args = { owner = owner amount = multiply(amount, 2) } } }
-              else = { call = { procedure = GainBlock args = { owner = owner amount = amount } } }
-            }
-          }
-        }
-      }
-    }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
-  }
-}
 
 # Single-target attack whose hit count depends on the target already being Vulnerable (Dismantle.cs):
 # one hit normally, vulnerableHits when the target holds a damage-taken-multiplier power.
-template VulnerableHitsAttackEffect {
-  parameters = {
-    definition = { type = String(length = 64) }
-    damage = { type = Int(min = 0, max = 999) }
-    upgradedDamage = { type = Int(min = 0, max = 999) }
-    hits = { type = Int(min = 1, max = 9) }
-    vulnerableHits = { type = Int(min = 1, max = 9) }
-  }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int count = Int vulnerable = Int }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedDamage) } }
-              else = { let = { into = amount value = arg(damage) } }
-            }
-            let = {
-              into = vulnerable
-              value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
-            }
-            if = {
-              condition = greater(vulnerable, 0)
-              then = { let = { into = count value = arg(vulnerableHits) } }
-              else = { let = { into = count value = arg(hits) } }
-            }
-            repeat = {
-              count = count
-              body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
-            }
-          }
-        }
-      }
-    }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
-  }
-}
 # Applies the target's current Vulnerable stacks again (MoltenFist.cs), doubling them. It runs after the
 # card's own damage because the content file declares the attack effect first.
-template AmplifyVulnerableEffect {
-  parameters = { definition = { type = String(length = 64) } }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { vulnerable = Int }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            let = {
-              into = vulnerable
-              value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.Kind), "damage-taken-multiplier"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
-            }
-            if = {
-              condition = greater(vulnerable, 0)
-              then = {
-                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = vulnerable } }
-              }
-            }
-          }
-        }
-      }
-    }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
-  }
-}
 
 # Self buff whose lifetime is the current turn (FlameBarrier.cs FlameBarrierPower). It expires after the
 # enemy phase so the retaliation still applies during the enemies' attacks.
-template ApplySelfPowerUntilTurnEndEffect {
-  parameters = {
-    definition = { type = String(length = 64) }
-    power = { type = String(length = 64) }
-    kind = { type = String(length = 32) }
-    stacks = { type = Int(min = 1, max = 999) }
-    upgradedStacks = { type = Int(min = 1, max = 999) }
-  }
-  body = {
-    procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedStacks) } }
-              else = { let = { into = amount value = arg(stacks) } }
-            }
-            call = { procedure = ApplyPlayerPowerUntilTurnEnd args = { owner = owner definition = arg(power) kind = arg(kind) stacks = amount } }
-          }
-        }
-      }
-    }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
-  }
-}

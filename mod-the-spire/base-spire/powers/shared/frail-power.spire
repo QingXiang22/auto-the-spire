@@ -1,0 +1,27 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template FrailPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:frail-power" debuff = true } }
+
+procedure Frail {
+  pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }
+  result = Int body = {
+    if = {
+      condition = greater(field(listener, Power.Stacks), 0) then = {
+        return = { value = divide(multiply(value, 3), 4) }
+      }
+    }
+    return = { value = value }
+  }
+}
+
+subscription Frail {
+  event = ModifyBlockMultiplier reaction = Frail instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:frail-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+procedure Duration { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = TickPowerDuration args = { power = listener } } } }
+subscription Duration { event = AfterEnemyTurnEnded reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:frail-power")) instance_order = collectionIndex(Powers, listener) priority = -10 }
+
+} }
+use FrailPower { template = FrailPowerModule }

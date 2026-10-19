@@ -14,8 +14,8 @@ internal static partial class PackageChecks
             list.Add(name);
         }
         const string probes = """
-            action GrantStrength { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" kind = "damage-additive" stacks = 3 } } } }
-            action GrantDexterity { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dexterity-power" kind = "block-additive" stacks = 2 } } } }
+            action GrantStrength { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" stacks = 3 } } } }
+            action GrantDexterity { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dexterity-power" stacks = 2 } } } }
             """;
 
         Case("CP26: vulnerable multiplies later powered damage and its stacks stay until something removes them", () =>

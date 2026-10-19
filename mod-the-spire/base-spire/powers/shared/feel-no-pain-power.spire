@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template FeelNoPainPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:feel-no-pain-power" } }
+
+procedure FeelNoPain {
+  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = GainUnpoweredBlock args = {
+        owner = owner amount = maximum(0, field(listener, Power.Stacks))
+      }
+    }
+  }
+}
+
+subscription FeelNoPain {
+  event = CardExhausted reaction = FeelNoPain instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:feel-no-pain-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use FeelNoPainPower { template = FeelNoPainPowerModule }

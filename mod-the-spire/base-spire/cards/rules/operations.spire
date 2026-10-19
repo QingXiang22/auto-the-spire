@@ -2,12 +2,12 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 procedure PlayerPowerAmount {
-  pure = true parameters = { owner = Ref(Player) kind = String(length = 32) } result = Int
-  body = { return = { value = aggregate(where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.Kind), kind))), Sum, p, field(p, Power.Stacks)) } }
+  pure = true parameters = { owner = Ref(Player) definition = String(length = 64) } result = Int
+  body = { return = { value = aggregate(where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), definition))), Sum, p, field(p, Power.Stacks)) } }
 }
 procedure EnemyPowerAmount {
-  pure = true parameters = { target = Ref(Enemy) kind = String(length = 32) } result = Int
-  body = { return = { value = aggregate(where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), target), equal(field(p, Power.Kind), kind))), Sum, p, field(p, Power.Stacks)) } }
+  pure = true parameters = { target = Ref(Enemy) definition = String(length = 64) } result = Int
+  body = { return = { value = aggregate(where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), target), equal(field(p, Power.DefinitionId), definition))), Sum, p, field(p, Power.Stacks)) } }
 }
 procedure GetCardEnergyCost {
   pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Int
@@ -148,19 +148,18 @@ procedure CardBaseDamage {
     if = { condition = equal(field(card, Card.DamageScale), "strike-count") then = {
       let = { into = units value = count(where(type(Card), c, and(and(field(c, Card.StrikeTag), equal(field(c, Card.Owner), field(owner, Player.Owner))), and(less(collectionIndex(RunDeck, c), 0), less(collectionIndex(RemovedFromCombat, c), 0))))) }
     } }
-    if = { condition = and(equal(field(card, Card.DamageScale), "vulnerable-count"), not(isNone(target))) then = { let = { into = units value = pureCall(EnemyPowerAmount, target, "damage-taken-multiplier") } } }
+    if = { condition = and(equal(field(card, Card.DamageScale), "vulnerable-count"), not(isNone(target))) then = { let = { into = units value = pureCall(EnemyPowerAmount, target, "base-spire:vulnerable-power") } } }
     if = { condition = equal(field(card, Card.DamageScale), "block") then = { return = { value = field(owner, Player.Block) } } }
     return = { value = add(amount, multiply(units, field(card, Card.DamageFactor))) }
   }
 }
 procedure ReducePower {
-  parameters = { owner = Ref(Player) kind = String(length = 32) }
+  parameters = { owner = Ref(Player) definition = String(length = 64) }
   locals = { p = Binding }
   body = {
-    let = { into = p value = first(where(collection(Powers), q, and(equal(field(q, Power.HolderPlayer), owner), equal(field(q, Power.Kind), kind)))) }
+    let = { into = p value = first(where(collection(Powers), q, and(equal(field(q, Power.HolderPlayer), owner), equal(field(q, Power.DefinitionId), definition)))) }
     if = { condition = not(isNone(p)) then = {
-      set = { target = p field = Power.Stacks value = subtract(field(p, Power.Stacks), 1) }
-      if = { condition = lessOrEqual(field(p, Power.Stacks), 0) then = { destroy = { target = p } } }
+      call = { procedure = ConsumePower args = { power = p } }
     } }
   }
 }

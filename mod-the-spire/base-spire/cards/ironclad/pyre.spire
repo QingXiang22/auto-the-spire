@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Pyre.cs; SHA-256 retained in cards/catalog.json.
 use Pyre { template = CardDefinition args = { sourceEntry = "PYRE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:pyre" cost = 2 upgradedCost = 2 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use PyreEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:pyre" power = "base-spire:pyre-power" kind = "max-energy" stacks = 1 upgradedStacks = 2 } }
+use PyreEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:pyre" power = "base-spire:pyre-power" stacks = 1 upgradedStacks = 2 } }

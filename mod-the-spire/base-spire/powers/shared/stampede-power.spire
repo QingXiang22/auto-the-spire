@@ -1,0 +1,35 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template StampedePowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:stampede-power" } }
+
+procedure Stampede {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  locals = { chosen = Binding }
+  body = {
+    repeat = {
+      count = field(listener, Power.Stacks) body = {
+        if = {
+          condition = and(field(owner, Player.CombatActive), exists(where(collection(Hand), c, equal(field(c, Card.Kind), "attack")))) then = {
+            samplePick = {
+              stream = "base-spire:run:shuffle" candidates = where(collection(Hand), c, equal(field(c, Card.Kind), "attack")) into = chosen
+            }
+            call = {
+              procedure = AutoPlayCard args = {
+                owner = owner card = chosen forceExhaust = false
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription Stampede {
+  event = BeforeTurnEndEffects reaction = Stampede instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:stampede-power"))) instance_order = collectionIndex(Powers, listener) priority = 10
+}
+} }
+use StampedePower { template = StampedePowerModule }

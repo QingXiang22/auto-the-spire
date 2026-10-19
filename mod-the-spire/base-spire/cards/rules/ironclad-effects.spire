@@ -16,39 +16,7 @@ if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustComb
   }
 }
 
-template RandomExhaustAfterAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { chosen = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = true then = { call = { procedure = RandomHandCard args = { owner = owner attacksOnly = false } into = chosen } } else = { call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = false } into = chosen } } }
-if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } } } }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
 
-template UpgradeHandEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { chosen = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = {
-  forEach = { query = where(collection(Hand), c, and(field(c, Card.CanUpgrade), not(field(c, Card.Upgraded)))) item = c body = { call = { procedure = UpgradeCard args = { card = c } } } }
-} else = {
-  call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = true } into = chosen }
-  if = { condition = not(isNone(chosen)) then = { call = { procedure = UpgradeCard args = { card = chosen } } } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
 template ComputedAttackEffect {
   parameters = { definition = { type = String(length = 64) } hits = { type = Int default = 1 } upgradedHits = { type = Int default = 1 } hitScale = { type = String(length = 16) default = "fixed" } }
@@ -87,116 +55,21 @@ if = { condition = greaterOrEqual(count(collection(ExhaustPile)), arg(minExhaust
   }
 }
 
-template RandomHitsEffect {
-  parameters = { definition = { type = String(length = 64) } hits = { type = Int } upgradedHits = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { count = Int target = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = count value = arg(upgradedHits) } } else = { let = { into = count value = arg(hits) } } }
-repeat = { count = count body = {
-  call = { procedure = RandomLivingEnemy into = target }
-  if = { condition = not(isNone(target)) then = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
-template GrowDamageEffect {
-  parameters = { definition = { type = String(length = 64) } growth = { type = Int } upgradedGrowth = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedGrowth) } } else = { let = { into = amount value = arg(growth) } } }
-set = { target = card field = Card.DamageGrowth value = add(field(card, Card.DamageGrowth), amount) }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
 
-template ExhaustHandAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { hits = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = hits value = count(collection(Hand)) }
-forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
-repeat = { count = hits body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
 
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
 
-template ExhaustNonAttackBlockEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 7 } } else = { let = { into = amount value = 5 } } }
-forEach = { query = where(collection(Hand), c, not(equal(field(c, Card.Kind), "attack"))) item = c body = {
-  call = { procedure = ExhaustCombatCard args = { owner = owner card = c } }
-  call = { procedure = GainBlock args = { owner = owner amount = amount } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
-template FeedEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { hp = Int amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = hp value = field(target, Enemy.Hp) }
-call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } }
-if = { condition = and(greater(hp, 0), equal(field(target, Enemy.Hp), 0)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
-  call = { procedure = IncreaseMaxHp args = { owner = owner amount = amount } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
-
-template DominateStrengthEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = pureCall(EnemyPowerAmount, target, "damage-taken-multiplier") } }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
 
 template TargetedSelfPowerEffect {
-  parameters = { definition = { type = String(length = 64) } power = { type = String(length = 64) } kind = { type = String(length = 32) } stacks = { type = Int } upgradedStacks = { type = Int } }
+  parameters = { definition = { type = String(length = 64) } power = { type = String(length = 64) } stacks = { type = Int } upgradedStacks = { type = Int } }
   body = {
     procedure Apply {
       parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { amount = Int }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedStacks) } } else = { let = { into = amount value = arg(stacks) } } }
-call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) kind = arg(kind) stacks = amount } }
+call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) stacks = amount } }
 
       } } }
     }
@@ -213,11 +86,11 @@ template TemporaryStrengthEffect {
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedStacks) } } else = { let = { into = amount value = arg(stacks) } } }
 if = { condition = arg(enemy) then = {
-  call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" kind = "damage-additive" stacks = subtract(0, amount) } }
-  call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:mangle-power" kind = "restore-strength" stacks = amount } }
+  call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = subtract(0, amount) } }
+  call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:mangle-power" stacks = amount } }
 } else = {
-  call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = amount } }
-  call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:setup-strike-power" kind = "remove-strength" stacks = amount } }
+  call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:strength-power" stacks = amount } }
+  call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:setup-strike-power" stacks = amount } }
 } }
       } } }
     }
@@ -225,133 +98,12 @@ if = { condition = arg(enemy) then = {
   }
 }
 
-template HandAttackEnergyEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
 
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = GainEnergy args = { owner = owner amount = count(where(collection(Hand), c, equal(field(c, Card.Kind), "attack"))) } }
-call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:no-energy-gain-power" kind = "no-energy-gain" stacks = 1 } }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
-template ExhaustHistoryEnergyEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(owner, Player.ExhaustedCardThisTurn) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
-call = { procedure = GainEnergy args = { owner = owner amount = amount } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
-template HealEffect {
-  parameters = { definition = { type = String(length = 64) } heal = { type = Int } upgradedHeal = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedHeal) } } else = { let = { into = amount value = arg(heal) } } }
-call = { procedure = Heal args = { owner = owner amount = amount } }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
-template ReturnDiscardToTopEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { chosen = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = SelectDiscardCard args = { owner = owner } into = chosen }
-if = { condition = not(isNone(chosen)) then = {
-  removeFromCollection = { collection = DiscardPile item = chosen }
-  addToCollection = { collection = DrawPile item = chosen position = Start }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
 
-template DrawUntilNonAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { drawing = Bool drawn = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = drawing value = true }
-repeat = { count = 10 body = { if = { condition = drawing then = {
-  call = { procedure = DrawOne args = { owner = owner } }
-  let = { into = drawn value = field(owner, Player.LastDrawn) }
-  if = { condition = isNone(drawn) then = { let = { into = drawing value = false } } else = {
-    if = { condition = not(equal(field(drawn, Card.Kind), "attack")) then = { let = { into = drawing value = false } } }
-  } }
-} } } }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
 
-template AbsorbAttackDamageEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { chosen = Binding damage = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = RandomHandCard args = { owner = owner attacksOnly = true } into = chosen }
-if = { condition = not(isNone(chosen)) then = {
-  let = { into = damage value = pureCall(CardBaseDamage, owner, chosen, none) }
-  let = { into = damage value = multiply(maximum(0, foldEvent(ModifyAttackAdditive, damage, owner, chosen, none)), 10000)
-                }
-                let = { into = damage value = divide(foldEvent(ModifyAttackMultiplier, damage, owner, chosen, none), 10000) }
-  set = { target = card field = Card.DamageGrowth value = add(field(card, Card.DamageGrowth), damage) }
-  call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
-  }
-}
-
-template TransformHandAttacksEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { replacement = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-forEach = { query = where(collection(Hand), c, equal(field(c, Card.Kind), "attack")) item = c body = {
-  call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:giant-rock" } into = replacement }
-  if = { condition = field(card, Card.Upgraded) then = { call = { procedure = UpgradeCard args = { card = replacement } } } }
-  removeFromCollection = { collection = Hand item = c }
-  addToCollection = { collection = RemovedFromCombat item = c }
-  call = { procedure = AddGeneratedToHand args = { card = replacement } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
 
 template AutoplayTopEffect {
   parameters = { definition = { type = String(length = 64) } xCost = { type = Bool default = false } exhaust = { type = Bool default = false } }
@@ -375,62 +127,5 @@ repeat = { count = count body = {
       } } }
     }
     subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
-
-template GenerateAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { generated = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = true } into = generated }
-if = { condition = not(isNone(generated)) then = {
-  set = { target = generated field = Card.Cost value = 0 }
-  set = { target = generated field = Card.CostResetAtTurnEnd value = true }
-  set = { target = generated field = Card.FreeUntilPlayed value = true }
-  call = { procedure = AddGeneratedToHand args = { card = generated } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
-
-template ReplaceHandWithGeneratedEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { count = Int generated = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = count value = count(collection(Hand)) }
-forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
-repeat = { count = count body = {
-  call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = false } into = generated }
-  if = { condition = not(isNone(generated)) then = {
-    if = { condition = field(card, Card.Upgraded) then = { call = { procedure = UpgradeCard args = { card = generated } } } }
-    call = { procedure = AddGeneratedToHand args = { card = generated } }
-  } }
-} }
-      } } }
-    }
-    subscription Apply { event = CardPlayed reaction = Apply }
-  }
-}
-
-template ExhaustEnergyReaction {
-  parameters = { definition = { type = String(length = 64) } energy = { type = Int } upgradedEnergy = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedEnergy) } } else = { let = { into = amount value = arg(energy) } } }
-call = { procedure = GainEnergy args = { owner = owner amount = amount } }
-      } } }
-    }
-    subscription Apply { event = CardExhausted reaction = Apply }
   }
 }

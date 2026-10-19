@@ -18,7 +18,7 @@ template AttackDebuffEnemy {
           condition = equal(field(target, Enemy.DefinitionId), arg(definition))
           then = {
             call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = arg(damage) } }
-            call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" kind = "block-dealt-multiplier" stacks = arg(frail) } }
+            call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" stacks = arg(frail) } }
             set = { target = target field = Enemy.Intent value = "attack" }
           }
         }

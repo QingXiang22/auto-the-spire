@@ -12,5 +12,5 @@ use IronWaveBlock {
 }
 use IronWaveDamage {
   template = AttackEffect
-  args = { definition = "base-spire:iron-wave" damage = 5 upgradedDamage = 7 hits = 1 }
+  args = { definition = "base-spire:iron-wave" hits = 1 }
 }

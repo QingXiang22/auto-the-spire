@@ -12,7 +12,7 @@
 
 核对模板覆盖的输入、owner、目标、状态寿命、顺序和异常边界。对 TheAbacus 类配置，AfterShuffleBlockRelic 只覆盖重洗后无加成格挡，不能拿它描述普通卡牌格挡、受击触发或永久获得资源。
 
-在来源组新增一个 core/0.3 `.spire`，只写同一 namespace 与 `use`，按模板提供有界字面量。不得在 catalog definition 文件写 procedure／action／subscription。如果复用模板必须加 C# 按 ID 分支，先重新审查共享语义。
+在来源组新增一个 core/0.3 `.spire`，使用同一 namespace。已有模板足够时只写 `use` 和有界字面量；独有效果可在本文件的模板作用域内声明 procedure／subscription／私有 entity，再展开一次。获得、伤害、抽牌、施加／移除 Power 等操作复用领域入口。如果复用模板必须加 C# 按 ID 分支，先重新审查共享语义。
 
 可运行新增例子见[共享规则教程](../tutorials/shared-rule.md)。正式原版内容的定义参数应取自匹配版本源，不能直接保留教程数值。
 

@@ -27,9 +27,9 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root); copy.Include("modifier-order.spire", """
                 action SetModifiers { role = player body = {
-                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" kind = "damage-additive" stacks = 1 } }
-                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 } }
-                  call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 1 } }
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" stacks = 1 } }
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" stacks = 1 } }
+                  call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:vulnerable-power" stacks = 1 } }
                 } }
                 action Unpowered { role = player body = { call = { procedure = DamageEnemy args = { target = first(type(Enemy)) amount = 6 } } } }
                 """);
@@ -78,7 +78,7 @@ internal static partial class PackageChecks
         {
             var both = Combat("IceCream", "ArtOfWar"); IcNextTurn(both); Equal(7L, Energy(both), "three carried plus three maximum plus one award");
             using var copy = new Copy(package.Root); copy.Include("no-energy.spire", """
-                action BlockEnergy { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe" kind = "no-energy-gain" stacks = 1 } } } }
+                action BlockEnergy { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:no-energy-gain" stacks = 1 } } } }
                 """);
             var blocked = Start(copy.Load()); Submit(blocked, "IceCream.Obtain"); Submit(blocked, "ArtOfWar.Obtain"); Submit(blocked, "AddDevelopmentTarget");
             Submit(blocked, "BeginDevelopmentCombat"); Submit(blocked, "BeginDevelopmentTurn"); Submit(blocked, "EndDevelopmentTurn");
