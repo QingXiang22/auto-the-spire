@@ -2,5 +2,27 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Stoke.cs; SHA-256 retained in cards/catalog.json.
+template ReplaceHandWithGeneratedEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { count = Int generated = Binding }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+let = { into = count value = count(collection(Hand)) }
+forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
+repeat = { count = count body = {
+  call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = false } into = generated }
+  if = { condition = not(isNone(generated)) then = {
+    if = { condition = field(card, Card.Upgraded) then = { call = { procedure = UpgradeCard args = { card = generated } } } }
+    call = { procedure = AddGeneratedToHand args = { card = generated } }
+  } }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use Stoke { template = CardDefinition args = { sourceEntry = "STOKE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:stoke" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use StokeEffect1 { template = ReplaceHandWithGeneratedEffect args = { definition = "base-spire:stoke" } }

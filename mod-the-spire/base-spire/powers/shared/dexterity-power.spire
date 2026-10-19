@@ -1,0 +1,20 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template DexterityPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:dexterity-power" allowNegative = true } }
+
+procedure Dexterity {
+  pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }
+  result = Int body = {
+    return = { value = add(value, field(listener, Power.Stacks)) }
+    return = { value = value }
+  }
+}
+
+subscription Dexterity {
+  event = ModifyBlockAdditive reaction = Dexterity instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dexterity-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use DexterityPower { template = DexterityPowerModule }

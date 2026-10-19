@@ -1,0 +1,72 @@
+{
+  "baseline_head": "a4ac0d5",
+  "scope": "base-spire-dsl-relic-draw-dev-v1",
+  "version": "0.6.1-dsl.39",
+  "initial_trial_changed_files": [
+    "cards/rules/ironclad-effects.spire",
+    "combat/lifecycle.spire",
+    "combat/schema.spire",
+    "powers/catalog.json",
+    "powers/index.spire",
+    "powers/schema.spire",
+    "powers/shared/self-forming-clay.spire",
+    "public/metadata.json",
+    "relics/catalog.json",
+    "relics/index.spire",
+    "relics/shared/self-forming-clay.spire"
+  ],
+  "corrected_migration_package_digest": "a10d7d3154c4025a421c56be149c50bc467c1c66df0dd4c7fedeb31fb27c98d4",
+  "reapplied_package_digest": "e313cdcb91801a3f6894ccdda0ed3301599b39f3aa245f770b7313cfbd033711",
+  "reapplied_files": [
+    "powers/catalog.json",
+    "powers/index.spire",
+    "powers/shared/self-forming-clay.spire",
+    "public/metadata.json",
+    "relics/catalog.json",
+    "relics/index.spire",
+    "relics/shared/self-forming-clay.spire"
+  ],
+  "new_gameplay_modules": [
+    "powers/shared/self-forming-clay.spire",
+    "relics/shared/self-forming-clay.spire"
+  ],
+  "shared_rule_changes_after_correction": [],
+  "numeric_edit": {
+    "file": "relics/shared/self-forming-clay.spire",
+    "from": 3,
+    "to": 4,
+    "actual_power_stacks": 4,
+    "actual_next_turn_block": 4
+  },
+  "moved_unique_card_behaviors": {
+    "DamageEqualBlockEffect": "cards/ironclad/body-slam.spire",
+    "AddCopyEffect": "cards/ironclad/anger.spire",
+    "FlaggedHitsAttackEffect": "cards/ironclad/spite.spire",
+    "FlaggedBlockMultiplierEffect": "cards/ironclad/evil-eye.spire",
+    "VulnerableHitsAttackEffect": "cards/ironclad/dismantle.spire",
+    "AmplifyVulnerableEffect": "cards/ironclad/molten-fist.spire",
+    "ApplySelfPowerUntilTurnEndEffect": "cards/ironclad/flame-barrier.spire",
+    "RandomExhaustAfterAttackEffect": "cards/ironclad/cinder.spire",
+    "UpgradeHandEffect": "cards/ironclad/armaments.spire",
+    "RandomHitsEffect": "cards/ironclad/sword-boomerang.spire",
+    "GrowDamageEffect": "cards/ironclad/rampage.spire",
+    "ExhaustHandAttackEffect": "cards/ironclad/fiend-fire.spire",
+    "ExhaustNonAttackBlockEffect": "cards/ironclad/second-wind.spire",
+    "FeedEffect": "cards/ironclad/feed.spire",
+    "DominateStrengthEffect": "cards/ironclad/dominate.spire",
+    "HandAttackEnergyEffect": "cards/ironclad/expect-a-fight.spire",
+    "ExhaustHistoryEnergyEffect": "cards/ironclad/forgotten-ritual.spire",
+    "HealEffect": "cards/ironclad/not-yet.spire",
+    "ReturnDiscardToTopEffect": "cards/ironclad/headbutt.spire",
+    "DrawUntilNonAttackEffect": "cards/ironclad/pillage.spire",
+    "AbsorbAttackDamageEffect": "cards/ironclad/thrash.spire",
+    "TransformHandAttacksEffect": "cards/ironclad/primal-force.spire",
+    "GenerateAttackEffect": "cards/ironclad/infernal-blade.spire",
+    "ReplaceHandWithGeneratedEffect": "cards/ironclad/stoke.spire",
+    "ExhaustEnergyReaction": "cards/ironclad/drum-of-battle.spire"
+  },
+  "source_hashes": {
+    "powers": "f56401efa59b39c48e6226b6d0e664783582d4a8a4ec0f795e9476a2be97f816",
+    "relics": "c67dff243bb62af45f53fa2bb9a94d1bb30066a34ad0d730a44a04c44dd73ad7"
+  }
+}

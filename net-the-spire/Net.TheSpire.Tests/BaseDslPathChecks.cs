@@ -35,6 +35,7 @@ internal static class BaseDslPathChecks
         yield return ("IC real stdio mandatory hand choice resumes once after HP loss", () => StdioTrajectory("hand-exhaust"));
         yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
         yield return ("IC real stdio Rupture reacts after the damaging card", () => StdioTrajectory("rupture"));
+        yield return ("MODEL real stdio SelfFormingClay publishes a deferred Power, then block and removal", () => StdioTrajectory("self-forming-clay"));
         yield return ("IS real stdio initializes the source Ironclad deck and draws five combat copies", () => StdioTrajectory("ironclad-start"));
         yield return ("CR real stdio starter cards defeat an enemy and acquire one of three permanent rewards", () => StdioTrajectory("card-reward-claim"));
         yield return ("CR real stdio skips card rewards and closes without acquiring a card", () => StdioTrajectory("card-reward-skip"));
@@ -160,6 +161,15 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "self-forming-clay" => [
+                    ("SelfFormingClay.Obtain", "0", false, "0", "0", false, ""),
+                    ("Hemokinesis.AddToHand", "0", false, "0", "0", false, ""),
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayAttackFromHand", "0", true, "2", "1", true, "25"),
+                    ("EndDevelopmentTurn", "0", true, "2", "1", false, "25"),
+                    ("BeginDevelopmentTurn", "3", true, "3", "2", true, "25")],
                 "cannon-phrog" => [
                     ("MiniatureCannon.Obtain", "0", false, "0", "0", false, ""),
                     ("PaperPhrog.Obtain", "0", false, "0", "0", false, ""),
@@ -375,6 +385,14 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
                 Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");
                 if (step.Target.Length > 0) Check.Equal(step.Target, Public(snapshot, "Enemy.Hp"), "public development target HP follows the real damage result");
+                if (mode == "self-forming-clay")
+                {
+                    var powers = snapshot.Entities.Where(e => e.Fields.Any(f => f.FieldId.EndsWith(":Power.Stacks", StringComparison.Ordinal))).ToArray();
+                    var pending = step.Action is "PlayAttackFromHand" or "EndDevelopmentTurn";
+                    Check.Equal(pending ? 1 : 0, powers.Length, "deferred Power appears and is removed through public output");
+                    if (pending) { Check.Equal("base-spire:self-forming-clay", powers.Single().ContentId, "public Power content identity"); Check.Equal("3", Public(snapshot, "Power.Stacks"), "public pending block"); }
+                    Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Power.Definition\"", StringComparison.Ordinal), "blueprint reference stays hidden");
+                }
                 if (mode == "paper-krane" && step.Action == "EndDevelopmentTurn") Check.Equal(step.Turn == "3" ? "72" : "78", Public(snapshot, "Player.Hp"), "actual weak attacks use .60, including Strength before the third-turn attack");
                 var active = snapshot.Entities.SelectMany(e => e.Fields).Single(f => f.FieldId.EndsWith(":Player.CombatActive", StringComparison.Ordinal));
                 Check.Equal(step.Active, ((WireBool)active.Value!).Value, "public lifecycle state");

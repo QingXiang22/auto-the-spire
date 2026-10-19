@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Stampede.cs; SHA-256 retained in cards/catalog.json.
 use Stampede { template = CardDefinition args = { sourceEntry = "STAMPEDE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stampede" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use StampedeEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:stampede" power = "base-spire:stampede-power" kind = "end-turn-auto-attack" stacks = 1 upgradedStacks = 1 } }
+use StampedeEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:stampede" power = "base-spire:stampede-power" stacks = 1 upgradedStacks = 1 } }

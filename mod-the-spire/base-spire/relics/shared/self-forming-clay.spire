@@ -1,0 +1,26 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# SelfFormingClay.cs: each positive unblocked damage result during combat adds three deferred block.
+template SelfFormingClayModule {
+  body = {
+    procedure Damaged {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      body = {
+        if = { condition = field(owner, Player.CombatActive) then = {
+          call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:self-forming-clay" stacks = 3 } }
+        } }
+      }
+    }
+    subscription Damaged {
+      event = PlayerHpLost reaction = Damaged
+      instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:self-forming-clay"))))
+      instance_order = collectionIndex(Relics, listener)
+    }
+    action Obtain {
+      role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), "base-spire:self-forming-clay"))
+      body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = "base-spire:self-forming-clay" } } }
+    }
+  }
+}
+use SelfFormingClay { template = SelfFormingClayModule }

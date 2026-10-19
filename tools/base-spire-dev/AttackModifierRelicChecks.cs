@@ -8,29 +8,29 @@ internal static partial class PackageChecks
         void Own(string id, string name, Action body) { check(name, body); witnesses[id] = witnesses.GetValueOrDefault(id, []).Append(name).ToArray(); }
         using var copy = new Copy(package.Root);
         copy.Include("attack-modifier-probes.spire", """
-            action TargetVulnerable { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 } } } }
-            action AttackerWeak { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 3 } } } }
+            action TargetVulnerable { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:vulnerable-power" stacks = 3 } } } }
+            action AttackerWeak { role = player body = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:weak-power" stacks = 3 } } } }
             action IncomingAttack { role = player body = { call = { procedure = DamagePlayerPowered args = { attacker = first(type(Enemy)) owner = first(type(Player)) amount = 13 } } } }
             action OutgoingModifiers { role = player body = {
-              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" kind = "damage-additive" stacks = 1 } }
-              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 } }
-              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:cruelty-power" kind = "vulnerable-bonus" stacks = 20 } }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" stacks = 1 } }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" stacks = 1 } }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:cruelty-power" stacks = 20 } }
             } }
             action IncomingModifiers { role = player body = {
-              call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:strength-power" kind = "damage-additive" stacks = 1 } }
-              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 } }
+              call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:strength-power" stacks = 1 } }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:vulnerable-power" stacks = 3 } }
             } }
             action PlayerStatuses { role = player body = {
-              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 3 } }
-              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 } }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" stacks = 3 } }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:vulnerable-power" stacks = 3 } }
             } }
             action UnpoweredBoth { role = player body = {
               call = { procedure = DamageEnemy args = { target = first(type(Enemy)) amount = 6 } }
               call = { procedure = DamagePlayer args = { owner = first(type(Player)) amount = 13 } }
             } }
             action OtherTargetStatuses { role = player body = {
-              call = { procedure = ApplyEnemyPower args = { target = first(skip(type(Enemy), 1)) definition = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 } }
-              call = { procedure = ApplyEnemyPower args = { target = first(skip(type(Enemy), 1)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 3 } }
+              call = { procedure = ApplyEnemyPower args = { target = first(skip(type(Enemy), 1)) definition = "base-spire:vulnerable-power" stacks = 3 } }
+              call = { procedure = ApplyEnemyPower args = { target = first(skip(type(Enemy), 1)) definition = "base-spire:weak-power" stacks = 3 } }
             } }
             action OtherHolder { role = player locals = { other = Binding card = Binding } body = {
               create = { type = Player scope = frameScope() into = other fields = { Owner = participant(2) } }
@@ -67,7 +67,7 @@ internal static partial class PackageChecks
             var s = Combat("PaperPhrog"); IcPlay(s, IcAdd(s, "StrikeIronclad")); Equal(994L, EnemyHp(s), "no target Vulnerable means no bonus");
             Submit(s, "TargetVulnerable"); IcPlay(s, IcAdd(s, "StrikeIronclad")); Equal(984L, EnemyHp(s), "floor(6*1.75)=10");
             IcPlay(s, IcAdd(s, "StrikeIronclad", true)); Equal(969L, EnemyHp(s), "floor(9*1.75)=15");
-            Equal(3L, IcPower(s, "damage-taken-multiplier"), "damage query never consumes target duration");
+            Equal(3L, IcPower(s, "base-spire:vulnerable-power"), "damage query never consumes target duration");
         });
         Own("base-spire:paper-krane", "AM PaperKrane: only the attacking enemy's Weak changes .75 to .60; strength, Vulnerable, final floor then block", () =>
         {

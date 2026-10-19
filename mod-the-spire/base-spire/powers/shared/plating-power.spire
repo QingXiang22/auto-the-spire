@@ -1,0 +1,42 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template PlatingPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:plating-power" } }
+
+procedure PlatingDecay {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    if = {
+      condition = greater(field(owner, Player.TurnNumber), 1) then = {
+        call = {
+          procedure = ConsumePower args = {
+            power = listener
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription PlatingDecay {
+  event = AfterSideTurnStarted reaction = PlatingDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+
+procedure PlatingBlock {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = GainUnpoweredBlock args = {
+        owner = owner amount = maximum(0, field(listener, Power.Stacks))
+      }
+    }
+  }
+}
+
+subscription PlatingBlock {
+  event = BeforeTurnEndEffects reaction = PlatingBlock instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use PlatingPower { template = PlatingPowerModule }

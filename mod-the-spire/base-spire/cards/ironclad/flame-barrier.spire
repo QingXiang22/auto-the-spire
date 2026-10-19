@@ -3,6 +3,35 @@ dsl_version = "core/0.3"
 
 # Source: FlameBarrier.cs: cost 2, BlockVar(12, Move) then FlameBarrierPower 4 (unpowered damage back);
 # OnUpgrade adds 4 block and 2 damage back.
+template ApplySelfPowerUntilTurnEndEffect {
+  parameters = {
+    definition = { type = String(length = 64) }
+    power = { type = String(length = 64) }
+    stacks = { type = Int(min = 1, max = 999) }
+    upgradedStacks = { type = Int(min = 1, max = 999) }
+  }
+  body = {
+    procedure WhenPlayed {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { amount = Int }
+      body = {
+        if = {
+          condition = equal(field(card, Card.DefinitionId), arg(definition))
+          then = {
+            if = {
+              condition = field(card, Card.Upgraded)
+              then = { let = { into = amount value = arg(upgradedStacks) } }
+              else = { let = { into = amount value = arg(stacks) } }
+            }
+            call = { procedure = ApplyPlayerPowerUntilTurnEnd args = { owner = owner definition = arg(power) stacks = amount } }
+          }
+        }
+      }
+    }
+    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+  }
+}
+
 use FlameBarrier {
   template = CardDefinition
   args = { sourceEntry = "FLAME_BARRIER" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:flame-barrier" cost = 2 upgradedCost = 2 targeted = false exhausts = false leavesPlay = false }
@@ -13,5 +42,5 @@ use FlameBarrierBlock {
 }
 use FlameBarrierThorns {
   template = ApplySelfPowerUntilTurnEndEffect
-  args = { definition = "base-spire:flame-barrier" power = "base-spire:thorns-power" kind = "after-attacked-damage" stacks = 4 upgradedStacks = 6 }
+  args = { definition = "base-spire:flame-barrier" power = "base-spire:thorns-power" stacks = 4 upgradedStacks = 6 }
 }

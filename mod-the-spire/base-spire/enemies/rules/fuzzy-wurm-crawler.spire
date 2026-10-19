@@ -17,7 +17,7 @@ template FuzzyWurmCrawlerEnemy {
             if = {
               condition = equal(field(target, Enemy.MoveIndex), 1)
               then = {
-                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" kind = "damage-additive" stacks = 7 } }
+                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 7 } }
                 set = { target = target field = Enemy.MoveIndex value = 2 }
                 set = { target = target field = Enemy.Intent value = "attack" }
               }

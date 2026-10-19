@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/DemonForm.cs; SHA-256 retained in cards/catalog.json.
 use DemonForm { template = CardDefinition args = { sourceEntry = "DEMON_FORM" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:demon-form" cost = 3 upgradedCost = 3 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use DemonFormEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:demon-form" power = "base-spire:demon-form-power" kind = "turn-strength" stacks = 2 upgradedStacks = 3 } }
+use DemonFormEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:demon-form" power = "base-spire:demon-form" stacks = 2 upgradedStacks = 3 } }

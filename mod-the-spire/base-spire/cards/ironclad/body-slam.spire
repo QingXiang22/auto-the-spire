@@ -2,6 +2,22 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: BodySlam.cs: cost 1 and OnUpgrade lowers the cost by 1; damage equals the player's block.
+template DamageEqualBlockEffect {
+  parameters = { definition = { type = String(length = 64) } }
+  body = {
+    procedure WhenPlayedOnTarget {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      body = {
+        if = {
+          condition = equal(field(card, Card.DefinitionId), arg(definition))
+          then = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = field(owner, Player.Block) } } }
+        }
+      }
+    }
+    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
+  }
+}
+
 use BodySlam {
   template = CardDefinition
   args = { sourceEntry = "BODY_SLAM" rarity = "common" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 damageScale = "block" kind = "attack" strikeTag = false definition = "base-spire:body-slam" cost = 1 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }

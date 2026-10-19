@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Unmovable.cs; SHA-256 retained in cards/catalog.json.
 use Unmovable { template = CardDefinition args = { sourceEntry = "UNMOVABLE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:unmovable" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use UnmovableEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:unmovable" power = "base-spire:unmovable-power" kind = "early-block-double" stacks = 1 upgradedStacks = 1 } }
+use UnmovableEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:unmovable" power = "base-spire:unmovable-power" stacks = 1 upgradedStacks = 1 } }

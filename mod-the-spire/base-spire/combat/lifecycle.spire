@@ -116,7 +116,8 @@ procedure EndDevelopmentCombat {
 
 # Source order: turn number increments, block is cleared except on turn 1 (Creature.AfterTurnStart
 # returns early for the player's first turn), AfterBlockCleared runs, energy is reset to MaxEnergy,
-# then the side/player turn-start hooks run.
+# then the side/player turn-start hooks run. CombatManager dispatches AfterBlockCleared even when the
+# first-turn exception or a retention listener prevents clearing the block value.
 procedure BeginDevelopmentTurn {
   parameters = { owner = Ref(Player) }
   body = {
@@ -136,9 +137,9 @@ procedure BeginDevelopmentTurn {
       condition = and(greater(field(owner, Player.TurnNumber), 1), foldEvent(ShouldClearBlock, true, owner))
       then = {
         set = { target = owner field = Player.Block value = 0 }
-        emit = { event = AfterBlockCleared payload = { owner = owner } }
       }
     }
+    emit = { event = AfterBlockCleared payload = { owner = owner } }
     emit = {
       event = BeforeTurnResources payload = { owner = owner } }
     call = { procedure = ResetTurnEnergy args = { owner = owner } }

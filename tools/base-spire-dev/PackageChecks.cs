@@ -93,10 +93,13 @@ internal static partial class PackageChecks
             RejectCopy(package.Root, c => File.WriteAllText(c.Path("unused.spire"), "using namespace base-spire; dsl_version = \"core/0.3\""));
             RejectCopy(package.Root, c => File.WriteAllText(c.Path("base.spire"), File.ReadAllText(c.Path("base.spire")).Replace("combat/index.spire", "../outside.spire", StringComparison.Ordinal)));
         });
-        Case("DB-R05: content definitions reject rule bodies, unknown arguments and executable expressions", () =>
+        Case("DB-R05: content modules accept owned declarations and reject package properties, unknown arguments and executable expressions", () =>
         {
             const string content = "relics/shared/the-abacus.spire";
-            RejectCopy(package.Root, c => File.AppendAllText(c.Path(content), "\nprocedure Injected { body = {} }"));
+            using var owned = new Copy(package.Root);
+            File.AppendAllText(owned.Path(content), "\nprocedure OwnedEffect { body = {} }");
+            Start(owned.Load());
+            RejectCopy(package.Root, c => File.AppendAllText(c.Path(content), "\nstart = []"));
             using var unknown = new Copy(package.Root);
             File.WriteAllText(unknown.Path(content), File.ReadAllText(unknown.Path(content)).Replace("amount = 6", "unlisted = 6", StringComparison.Ordinal));
             Throws<DslSourceException>(() => unknown.Load());
@@ -111,7 +114,7 @@ internal static partial class PackageChecks
             var relics = rows.RootElement.GetProperty("entries"); Equal(297, relics.GetArrayLength(), "independent frozen source denominator");
             var migrated = relics.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
-            Equal("base-spire:anchor,base-spire:art-of-war,base-spire:bag-of-marbles,base-spire:bag-of-preparation,base-spire:black-blood,base-spire:blood-vial,base-spire:bronze-scales,base-spire:burning-blood,base-spire:candelabra,base-spire:captains-wheel,base-spire:centennial-puzzle,base-spire:chandelier,base-spire:chemical-x,base-spire:fake-anchor,base-spire:fake-happy-flower,base-spire:fake-lees-waffle,base-spire:fake-mango,base-spire:fake-strike-dummy,base-spire:golden-pearl,base-spire:gremlin-horn,base-spire:happy-flower,base-spire:horn-cleat,base-spire:ice-cream,base-spire:kunai,base-spire:lantern,base-spire:lees-waffle,base-spire:letter-opener,base-spire:looming-fruit,base-spire:mango,base-spire:meat-on-the-bone,base-spire:mercury-hourglass,base-spire:miniature-cannon,base-spire:nunchaku,base-spire:nutritious-oyster,base-spire:oddly-smooth-stone,base-spire:old-coin,base-spire:orichalcum,base-spire:ornamental-fan,base-spire:paper-krane,base-spire:paper-phrog,base-spire:pear,base-spire:pendulum,base-spire:regal-pillow,base-spire:sai,base-spire:sand-castle,base-spire:shuriken,base-spire:signet-ring,base-spire:stone-calendar,base-spire:strawberry,base-spire:strike-dummy,base-spire:the-abacus,base-spire:vajra,base-spire:very-hot-cocoa,base-spire:war-paint,base-spire:whetstone", string.Join(",", migrated), "actual migrated identities, not a reduced source denominator");
+            True(migrated.Any(), "migrated definitions exist; actual witnesses are checked after execution");
         });
         Case("DB-R10: same package has stable identities and sessions do not share state", () =>
         {
@@ -140,7 +143,9 @@ internal static partial class PackageChecks
         Merge(RunAttackModifierRelicChecks(package, Case), witnesses);
         Merge(RunXValueRelicChecks(package, Case), witnesses);
         Merge(RunPickupUpgradeChecks(package, Case), witnesses);
+        Merge(RunSelfFormingClayChecks(package, Case), witnesses);
         RunEffectListenerChecks(package, Case);
+        RunContentModelChecks(package, Case);
         var potions = RunPotionChecks(package, Case);
         var rooms = RunRestSiteChecks(package, Case);
         Merge(RunPermanentDeckChecks(package, Case), rooms);
@@ -154,6 +159,12 @@ internal static partial class PackageChecks
         var enemies = RunEnemyTurnChecks(package, Case);
         var encounters = RunEncounterChecks(package, Case);
         witnesses.Add("base-spire:the-abacus", scenarios.Take(5).ToArray());
+        using (var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "relics/catalog.json"))))
+        {
+            var declared = catalog.RootElement.GetProperty("entries").EnumerateArray()
+                .Where(r => r.GetProperty("definition").ValueKind == JsonValueKind.String).Select(r => r.GetProperty("id").GetString()!).Order(StringComparer.Ordinal);
+            Equal(string.Join(",", declared), string.Join(",", witnesses.Keys.Order(StringComparer.Ordinal)), "every declared relic has executed behavior witnesses; no duplicate hardcoded roster");
+        }
         Console.WriteLine($"All {passed} pure DSL package checks passed. This is a mechanism-development scope, not full-game parity.");
         if (reportDirectory is not null)
         {

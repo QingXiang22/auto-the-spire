@@ -9,5 +9,5 @@ use Conflagration {
 }
 use ConflagrationDamage {
   template = AttackAllEnemiesEffect
-  args = { definition = "base-spire:conflagration" damage = 2 upgradedDamage = 2 hits = 4 upgradedHits = 5 }
+  args = { definition = "base-spire:conflagration" hits = 4 upgradedHits = 5 }
 }

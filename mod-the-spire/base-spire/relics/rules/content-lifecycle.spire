@@ -146,7 +146,7 @@ template CardCountRelic {
                   condition = greater(arg(stacks), 0) then = {
                     call = {
                       procedure = ApplyPlayerPower args = {
-                        owner = owner definition = arg(power) kind = arg(powerKind) stacks = arg(stacks)
+                        owner = owner definition = arg(power) stacks = arg(stacks)
                       }
                     }
                   }

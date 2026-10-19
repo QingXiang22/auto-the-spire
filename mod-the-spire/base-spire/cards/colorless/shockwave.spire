@@ -9,9 +9,9 @@ use Shockwave {
 }
 use ShockwaveWeak {
   template = ApplyAllEnemiesPowerEffect
-  args = { definition = "base-spire:shockwave" power = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 3 upgradedStacks = 5 }
+  args = { definition = "base-spire:shockwave" power = "base-spire:weak-power" stacks = 3 upgradedStacks = 5 }
 }
 use ShockwaveVulnerable {
   template = ApplyAllEnemiesPowerEffect
-  args = { definition = "base-spire:shockwave" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 3 upgradedStacks = 5 }
+  args = { definition = "base-spire:shockwave" power = "base-spire:vulnerable-power" stacks = 3 upgradedStacks = 5 }
 }

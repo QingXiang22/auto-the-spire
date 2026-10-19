@@ -16,10 +16,12 @@ try
     var cardRewardsOnly = false;
     var rngOnly = false;
     var relicContentOnly = false;
+    var contentModelOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
+        else if (args[index] == "--content-model-only") contentModelOnly = true;
         else if (args[index] == "--relic-content-only") relicContentOnly = true;
         else if (args[index] == "--rng-only") rngOnly = true;
         else if (args[index] == "--card-rewards-only") cardRewardsOnly = true;
@@ -35,6 +37,12 @@ try
     var package = DslPackage.Load(manifest, scope);
     var metadata = TextRuleProviderSpec.Load(package.PublicMetadataPath);
     if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
+    if (contentModelOnly)
+    {
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly)
+            throw new ArgumentException("--content-model-only requires check without other focused flags or report.");
+        return PackageChecks.RunContentModelOnly(package);
+    }
     if (ironcladOnly && (command != "check" || report is not null)) throw new ArgumentException("--ironclad-only requires check without --report; run the full check to produce coverage evidence.");
     if (cardRewardsOnly && (command != "check" || report is not null || ironcladOnly)) throw new ArgumentException("--card-rewards-only requires check without --report or --ironclad-only.");
     if (command == "check" && cardRewardsOnly) return PackageChecks.RunCardRewardsOnly(package);

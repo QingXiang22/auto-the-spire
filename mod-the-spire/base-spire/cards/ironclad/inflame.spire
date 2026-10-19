@@ -9,5 +9,5 @@ use Inflame {
 }
 use InflameStrength {
   template = ApplySelfPowerEffect
-  args = { definition = "base-spire:inflame" power = "base-spire:strength-power" kind = "damage-additive" stacks = 2 upgradedStacks = 3 }
+  args = { definition = "base-spire:inflame" power = "base-spire:strength-power" stacks = 2 upgradedStacks = 3 }
 }

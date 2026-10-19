@@ -2,6 +2,21 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Cinder.cs; SHA-256 retained in cards/catalog.json.
+template RandomExhaustAfterAttackEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      locals = { chosen = Binding }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+if = { condition = true then = { call = { procedure = RandomHandCard args = { owner = owner attacksOnly = false } into = chosen } } else = { call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = false } into = chosen } } }
+if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } } } }
+      } } }
+    }
+    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+  }
+}
+
 use Cinder { template = CardDefinition args = { sourceEntry = "CINDER" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:cinder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 18 upgradedBaseDamage = 24 } }
 use CinderEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:cinder" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use CinderEffect2 { template = RandomExhaustAfterAttackEffect args = { definition = "base-spire:cinder" } }

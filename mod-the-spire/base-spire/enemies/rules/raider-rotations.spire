@@ -121,7 +121,7 @@ template DebuffThenMultiAttackEnemy {
             if = {
               condition = equal(field(target, Enemy.MoveIndex), 0)
               then = {
-                call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" kind = "block-dealt-multiplier" stacks = arg(frail) } }
+                call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" stacks = arg(frail) } }
                 set = { target = target field = Enemy.MoveIndex value = 1 }
                 set = { target = target field = Enemy.Intent value = "attack" }
               }

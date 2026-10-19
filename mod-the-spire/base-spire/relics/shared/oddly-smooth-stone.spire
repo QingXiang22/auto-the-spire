@@ -4,5 +4,5 @@ dsl_version = "core/0.3"
 # Source: OddlySmoothStone.cs; Common relic, PowerVar<DexterityPower>(1) applied to the owner when a combat/room begins.
 use OddlySmoothStone {
   template = BeforeCombatStartPowerRelic
-  args = { definition = "base-spire:oddly-smooth-stone" power = "base-spire:dexterity-power" kind = "block-additive" stacks = 1 }
+  args = { definition = "base-spire:oddly-smooth-stone" power = "base-spire:dexterity-power" stacks = 1 }
 }

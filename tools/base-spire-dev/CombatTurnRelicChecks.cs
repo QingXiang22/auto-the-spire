@@ -207,8 +207,8 @@ internal static partial class PackageChecks
             using var copy = new Copy(package.Root);
             copy.Include("sai-powers.spire", """
                 action BlockModifiers { role = player body = {
-                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe-dexterity" kind = "block-additive" stacks = 20 } }
-                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe-frail" kind = "block-dealt-multiplier" stacks = 20 } }
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dexterity-power" stacks = 20 } }
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:frail-power" stacks = 20 } }
                 } }
                 action PoweredBlockProbe { role = player body = { call = { procedure = GainBlock args = { owner = first(type(Player)) amount = 5 } } } }
                 """);
@@ -224,7 +224,7 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root);
             copy.Include("turn-energy-restriction.spire", """
-                action BlockTurnEnergy { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:probe" kind = "no-energy-gain" stacks = 1 } } } }
+                action BlockTurnEnergy { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:no-energy-gain" stacks = 1 } } } }
                 """);
             var variant = copy.Load();
             foreach (var row in timedEnergy.Select(r => (r.Name, r.Turn)).Append((Name: "FakeHappyFlower", Turn: 5)))

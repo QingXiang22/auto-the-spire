@@ -1,0 +1,14 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Built once by SetupPowerDefinitions; shared Power commands only read these definitions.
+entity PowerBlueprint { fields = {
+ DefinitionId = { type = String(length = 64) visibility = Hidden }
+ AllowNegative = { type = Bool default = false visibility = Hidden }
+ Debuff = { type = Bool default = false visibility = Hidden }
+ SingleStack = { type = Bool default = false visibility = Hidden }
+} }
+collection PowerLibrary { element = PowerBlueprint ordered = true }
+event RegisterPowerDefinitions { }
+event PowerCreated { payload = { power = Ref(Power) } }
+event PowerApplied { payload = { power = Ref(Power) amount = Int created = Bool } }
+event PowerRemoved { payload = { power = Ref(Power) } }

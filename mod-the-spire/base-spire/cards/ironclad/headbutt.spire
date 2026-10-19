@@ -2,6 +2,24 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Headbutt.cs; SHA-256 retained in cards/catalog.json.
+template ReturnDiscardToTopEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      locals = { chosen = Binding }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+call = { procedure = SelectDiscardCard args = { owner = owner } into = chosen }
+if = { condition = not(isNone(chosen)) then = {
+  removeFromCollection = { collection = DiscardPile item = chosen }
+  addToCollection = { collection = DrawPile item = chosen position = Start }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+  }
+}
+
 use Headbutt { template = CardDefinition args = { sourceEntry = "HEADBUTT" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:headbutt" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 12 } }
 use HeadbuttEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:headbutt" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use HeadbuttEffect2 { template = ReturnDiscardToTopEffect args = { definition = "base-spire:headbutt" } }

@@ -1,0 +1,83 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure RemovePower {
+ parameters = { power = Ref(Power) }
+ body = {
+  if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = {
+   removeFromCollection = { collection = Powers item = power }
+   emit = { event = PowerRemoved payload = { power = power } }
+   destroy = { target = power }
+  } }
+ }
+}
+procedure ModifyPowerAmount {
+ parameters = { power = Ref(Power) delta = Int }
+ body = {
+  set = { target = power field = Power.Stacks value = add(field(power, Power.Stacks), delta) }
+  if = { condition = or(equal(field(power, Power.Stacks), 0), and(not(field(field(power, Power.Definition), PowerBlueprint.AllowNegative)), less(field(power, Power.Stacks), 0))) then = {
+   call = { procedure = RemovePower args = { power = power } }
+  } }
+ }
+}
+procedure ApplyPower {
+ parameters = { player = Binding enemy = Binding definition = String(length = 64) stacks = Int(min = -999, max = 999) untilTurnEnd = Bool }
+ locals = { entry = Binding power = Binding created = Bool delta = Int } result = Binding
+ body = {
+  let = { into = entry value = first(where(collection(PowerLibrary), d, equal(field(d, PowerBlueprint.DefinitionId), definition))) }
+  if = { condition = isNone(entry) then = { fail = { message = "Unknown Power definition" } } }
+  if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Power requires exactly one holder" } } }
+  let = { into = power value = first(where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), definition), or(and(not(isNone(player)), equal(field(p, Power.HolderPlayer), player)), and(not(isNone(enemy)), equal(field(p, Power.HolderEnemy), enemy)))))) }
+  let = { into = created value = isNone(power) }
+  if = { condition = created then = {
+   if = { condition = or(equal(stacks, 0), and(not(field(entry, PowerBlueprint.AllowNegative)), less(stacks, 0))) then = { return = { value = none } } }
+   create = { type = Power scope = frameScope() into = power collection = Powers fields = {
+    DefinitionId = definition Definition = entry HolderPlayer = player HolderEnemy = enemy Stacks = stacks
+    ExpiresAtTurnEnd = untilTurnEnd
+   } }
+   if = { condition = not(isNone(player)) then = {
+    set = { target = power field = Power.Owner value = field(player, Player.Owner) }
+    set = { target = power field = Power.SkipTick value = field(entry, PowerBlueprint.Debuff) }
+   } }
+   emit = { event = PowerCreated payload = { power = power } }
+  } else = {
+   let = { into = delta value = stacks }
+   if = { condition = field(entry, PowerBlueprint.SingleStack) then = { let = { into = delta value = 0 } } }
+   let = { into = delta value = subtract(foldEvent(ModifyPowerStacks, add(field(power, Power.Stacks), delta), power, delta), field(power, Power.Stacks)) }
+   call = { procedure = ModifyPowerAmount args = { power = power delta = delta } }
+   if = { condition = untilTurnEnd then = { if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = { set = { target = power field = Power.ExpiresAtTurnEnd value = true } } } } }
+  } }
+  if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = {
+   emit = { event = PowerApplied payload = { power = power amount = stacks created = created } }
+   if = { condition = not(isNone(player)) then = { emit = { event = PlayerPowerApplied payload = { owner = player power = power amount = stacks } } } else = { emit = { event = EnemyPowerApplied payload = { target = enemy power = power amount = stacks } } } }
+   return = { value = power }
+  } }
+  return = { value = none }
+ }
+}
+procedure ApplyPlayerPower {
+ parameters = { owner = Ref(Player) definition = String(length = 64) stacks = Int(min = -999, max = 999) }
+ locals = { power = Binding } body = {
+  call = { procedure = ApplyPower args = { player = owner enemy = none definition = definition stacks = stacks untilTurnEnd = false } into = power }
+ }
+}
+procedure ApplyEnemyPower {
+ parameters = { target = Ref(Enemy) definition = String(length = 64) stacks = Int(min = -999, max = 999) }
+ locals = { power = Binding } body = {
+  call = { procedure = ApplyPower args = { player = none enemy = target definition = definition stacks = stacks untilTurnEnd = false } into = power }
+ }
+}
+procedure ApplyPlayerPowerUntilTurnEnd {
+ parameters = { owner = Ref(Player) definition = String(length = 64) stacks = Int(min = -999, max = 999) }
+ locals = { power = Binding } body = {
+  call = { procedure = ApplyPower args = { player = owner enemy = none definition = definition stacks = stacks untilTurnEnd = true } into = power }
+ }
+}
+procedure ConsumePower { parameters = { power = Ref(Power) } body = { call = { procedure = ModifyPowerAmount args = { power = power delta = -1 } } } }
+procedure TickPowerDuration {
+ parameters = { power = Ref(Power) }
+ body = { if = { condition = field(power, Power.SkipTick) then = { set = { target = power field = Power.SkipTick value = false } } else = { call = { procedure = ConsumePower args = { power = power } } } } }
+}
+procedure ExpireTurnPower { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = RemovePower args = { power = listener } } } }
+subscription ExpireTurnPower { event = AfterPlayerTurnFinished reaction = ExpireTurnPower instances = where(collection(Powers), p, field(p, Power.ExpiresAtTurnEnd)) instance_order = collectionIndex(Powers, listener) }
+procedure ClearCombatPowers { body = { forEach = { query = collection(Powers) item = power body = { call = { procedure = RemovePower args = { power = power } } } } } }

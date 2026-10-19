@@ -6,8 +6,8 @@
 
 遗物与Power使用相同的通知／修正订阅模型。新增或迁移监听先沿[编写通知与修正监听](write-effect-listeners.md)选择入口、绑定实例并安排顺序；本页继续说明物品和能力各自的生命周期。
 
-1. 在combat/schema.spire的Power实体中明确持有者、施加来源、层数、持续时间、累计／替换规则、零层和负值含义，以及战斗／回合寿命。名称相同不代表同一实例，必须约定同类型多来源的聚合方式。
-2. 在powers/reactions.spire与powers/modifiers.spire实现施加、修改、衰减、移除和事件订阅；内容配置声明参数及参与的触发／修正模板。首次施加是否跳过当回合衰减按源判断，不能统一猜成所有负面状态都一样。
+1. 在powers/shared新增内容模块，用PowerDefinition声明definition、allowNegative、debuff、singleStack。通用Power实例只保留持有者、定义引用、层数与共有寿命事实；特有状态放模块内部实体，以实际Power引用关联。
+2. 在同一文件注册通知／修正／到期监听；PowerCreated时建立私有状态，PowerRemoved时清理。施加调用ApplyPlayerPower／ApplyEnemyPower(owner或target、definition、stacks)，移除调用RemovePower，降层调用ModifyPowerAmount。未知定义在产生实例前失败；两持有者不合并。debuff标志只服务已迁移Weak／Vulnerable／Frail的首次跳过衰减，其他寿命由模块监听决定。
 3. 用 combat 的统一修正阶段处理力量、敏捷、易伤等数值参与者，顺序和精度取自源契约；不要把 Power 数值缓存成另一个 C# 事实。
 4. 验证施加与初始持有差异、叠加／降层／到零、无限持续、两持有者隔离、移除后停止订阅，以及暂停续接不重复施加。
 
@@ -17,13 +17,13 @@
 
 复用当前 [ObtainRelic／RemoveRelic](../reference/operations.md) 时，遵守入库后发获得事件、出库后发移除事件、随后销毁的顺序。获得过程本身不去重，模板 action 的守卫才限制当前开发范围的重复 definition。需要正常库存资格、唯一性或奖励获得时先补对应契约。
 
-新触发先列 owner／source／target、调用时点、是否需要有效实例、每个实例的计数与清理、允许取消／暂停的位置。共享规则过滤 Holder 和 IsMelted，内容文件只配置模板；学习路径见[共享触发教程](../tutorials/shared-rule.md)。
+新触发先列 owner／source／target、调用时点、是否需要有效实例、每个实例的计数与清理、允许取消／暂停的位置。监听过滤 Holder 和 IsMelted；独有行为留在内容文件，复用模板才放共享规则；学习路径见[共享触发教程](../tutorials/shared-rule.md)。
 
 拾取资源放在RelicObtained订阅中，使显式开发获得、角色初始化和未来奖励消费者都经过同一生命周期；不要仅写在Obtain动作尾部。ObtainMaxHpRelic供Strawberry／Pear／Mango／LeesWaffle及FakeMango／LoomingFruit／NutritiousOyster复用；PickupResourceRelic供OldCoin／SignetRing／GoldenPearl的金币和百分比治疗复用。两模板通过instances绑定本次有效relic，按库存顺序执行并复核资格，早期移除／熔化会取消尚未执行的拾取效果。移除不撤回已经获得的最大生命或金币；同定义新实例只获得自己的奖励，其他持有者不阻止本玩家开发获得。
 
 出牌计数模板CardCountRelic按真实AfterCardPlayed逐次计数，自动／重复打出分别计算，多段攻击只计一次。perTurn决定回合开始早期重置或跨战保留，实例计数不能从全局出牌数反推。首回合抽牌和营火治疗修正通过ModifyTurnDraw／ModifyRestHeal纯监听贡献；移除／熔化后停止参与。共享参数、完整消费者和边界见[遗物生命周期契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
 
-回合开始资源监听AfterSideTurnStarted：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。不要把Sai放在AfterBlockCleared，因为第一回合不发该事件；其正确时点在能量重置后、起手抽牌前。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
+回合开始资源监听AfterSideTurnStarted：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置后、起手抽牌前，因此监听AfterSideTurnStarted；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
 
 替换与熔化尚无正式 DSL 操作。实现时明确：旧获得效果如何撤回，新获得效果何时生效，是否保留同一实例／计数，熔化时保留哪些库存事实与触发，跨战如何重建。不能仅写 DefinitionId 或 IsMelted 就宣称完整生命周期。
 

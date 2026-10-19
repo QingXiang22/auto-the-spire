@@ -25,7 +25,7 @@ template AttackBuffEnemy {
                 set = { target = target field = Enemy.Intent value = "buff" }
               }
               else = {
-                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" kind = "damage-additive" stacks = arg(strength) } }
+                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = arg(strength) } }
                 set = { target = target field = Enemy.MoveIndex value = 0 }
                 set = { target = target field = Enemy.Intent value = "attack" }
               }

@@ -8,7 +8,7 @@ use PommelStrike {
 }
 use PommelStrikeDamage {
   template = AttackEffect
-  args = { definition = "base-spire:pommel-strike" damage = 9 upgradedDamage = 10 hits = 1 }
+  args = { definition = "base-spire:pommel-strike" hits = 1 }
 }
 use PommelStrikeDraw {
   template = DrawEffect

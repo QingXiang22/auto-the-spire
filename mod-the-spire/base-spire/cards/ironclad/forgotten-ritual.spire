@@ -2,5 +2,22 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/ForgottenRitual.cs; SHA-256 retained in cards/catalog.json.
+template ExhaustHistoryEnergyEffect {
+  parameters = { definition = { type = String(length = 64) }  }
+  body = {
+    procedure Apply {
+      parameters = { owner = Ref(Player) card = Ref(Card) }
+      locals = { amount = Int }
+      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+if = { condition = field(owner, Player.ExhaustedCardThisTurn) then = {
+if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
+call = { procedure = GainEnergy args = { owner = owner amount = amount } }
+} }
+      } } }
+    }
+    subscription Apply { event = CardPlayed reaction = Apply }
+  }
+}
+
 use ForgottenRitual { template = CardDefinition args = { sourceEntry = "FORGOTTEN_RITUAL" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:forgotten-ritual" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
 use ForgottenRitualEffect1 { template = ExhaustHistoryEnergyEffect args = { definition = "base-spire:forgotten-ritual" } }

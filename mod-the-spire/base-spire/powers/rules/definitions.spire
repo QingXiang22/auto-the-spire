@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+procedure SetupPowerDefinitions { body = {
+ if = { condition = exists(collection(PowerLibrary)) then = { fail = { message = "Power definitions already initialized" } } }
+ emit = { event = RegisterPowerDefinitions }
+} }
+template PowerDefinition {
+ parameters = { definition = { type = String(length = 64) } allowNegative = { type = Bool default = false } debuff = { type = Bool default = false } singleStack = { type = Bool default = false } }
+ body = {
+  procedure Register { locals = { entry = Binding } body = {
+   if = { condition = exists(where(collection(PowerLibrary), d, equal(field(d, PowerBlueprint.DefinitionId), arg(definition)))) then = { fail = { message = "Duplicate Power definition" } } }
+   create = { type = PowerBlueprint scope = frameScope() into = entry collection = PowerLibrary fields = { DefinitionId = arg(definition) AllowNegative = arg(allowNegative) Debuff = arg(debuff) SingleStack = arg(singleStack) } }
+  } }
+  subscription Register { event = RegisterPowerDefinitions reaction = Register }
+ }
+}

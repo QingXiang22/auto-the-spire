@@ -13,5 +13,5 @@ use HemokinesisLoseHp {
 }
 use HemokinesisDamage {
   template = AttackEffect
-  args = { definition = "base-spire:hemokinesis" damage = 15 upgradedDamage = 20 hits = 1 }
+  args = { definition = "base-spire:hemokinesis" hits = 1 }
 }

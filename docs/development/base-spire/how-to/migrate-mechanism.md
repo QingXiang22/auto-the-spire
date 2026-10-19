@@ -16,7 +16,7 @@
 
 ## 3. 建状态、过程与事件
 
-schema 放实体字段／集合／事件，rules 放过程、模板与订阅，内容来源组只放受限 use。显式传 owner、card、source、target 等上下文，不能依赖全局“当前对象”。
+共享 schema 放领域实体／集合／事件，rules 放共用操作；独有过程、监听与私有状态放所属内容模块。显式传 owner、card、source、target 等上下文，不能依赖全局“当前对象”。
 
 涉及遗物或Power时，按[监听编写指南](write-effect-listeners.md)先区分通知与修正：主流程emit领域通知或用foldEvent征询纯修正，具体能力用instances绑定有效实例。订阅声明实例顺序，reaction只处理末尾listener；不恢复主流程中的专用字段汇总、Power效果直接调用或各模板重复扫描库存。时机、阶段优先级和候选快照语义以[统一契约](../../../design/mod-the-spire/effect-listeners.md)为准。
 

@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.6.0-dsl.38",
+  "static_build_id": "base-spire-dsl-0.6.1-dsl.39",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -63,7 +63,8 @@
         "base-spire:sai",
         "base-spire:miniature-cannon",
         "base-spire:paper-phrog",
-        "base-spire:paper-krane"
+        "base-spire:paper-krane",
+        "base-spire:self-forming-clay"
       ]
     },
     "base-spire:Enemy": {
@@ -195,13 +196,13 @@
         "base-spire:frail-power",
         "base-spire:thorns-power",
         "base-spire:aggression-power",
-        "base-spire:barricade-power",
+        "base-spire:barricade",
         "base-spire:no-draw-power",
         "base-spire:corruption-power",
         "base-spire:crimson-mantle-power",
         "base-spire:cruelty-power",
         "base-spire:dark-embrace-power",
-        "base-spire:demon-form-power",
+        "base-spire:demon-form",
         "base-spire:feel-no-pain-power",
         "base-spire:hellraiser-power",
         "base-spire:inferno-power",
@@ -215,15 +216,21 @@
         "base-spire:plating-power",
         "base-spire:unmovable-power",
         "base-spire:vicious-power",
-        "base-spire:no-energy-gain-power",
+        "base-spire:no-energy-gain",
         "base-spire:mangle-power",
         "base-spire:setup-strike-power",
         "base-spire:free-attack-power",
-        "base-spire:colossus-power"
+        "base-spire:colossus-power",
+        "base-spire:self-forming-clay"
       ]
     }
   },
   "collections": {
+    "base-spire:PowerLibrary": {
+      "use": "not_published",
+      "rule_id": "DB-DEVELOPMENT-POWER-DEFINITIONS",
+      "reason": "Hidden static Power definitions; runtime Power identity and stacks are published from instances."
+    },
     "base-spire:Relics": {
       "use": "group",
       "owner_kind_type_id": "base-spire:Player"

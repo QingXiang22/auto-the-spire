@@ -22,27 +22,6 @@ subscription CardAttackDiscounts {
   event = BeforeCardPlayed reaction = CardAttackDiscounts
 }
 
-procedure CompleteCardDeferredEffects {
-  parameters = { owner = Ref(Player) card = Ref(Card) }
-  locals = { amount = Int }
-  body = {
-    let = { into = amount value = field(field(owner, Player.CurrentPlay), CardPlayRecord.RuptureGain) }
-    if = {
-      condition = greater(amount, 0) then = {
-        call = {
-          procedure = ApplyPlayerPower args = {
-            owner = owner definition = "base-spire:strength-power" kind = "damage-additive" stacks = amount
-          }
-        }
-      }
-    }
-  }
-}
-
-subscription CompleteCardDeferredEffects {
-  event = AfterCardPlayed reaction = CompleteCardDeferredEffects priority = -100
-}
-
 procedure AutoExhaustedCards {
   parameters = { owner = Ref(Player) }
   body = {

@@ -39,7 +39,7 @@ internal static partial class PackageChecks
         check("IC zero domains: BurningPact still draws, Brand gains strength, zero X does zero damage", () =>
         {
             var s = Combat(); var pact = IcAdd(s, "BurningPact"); IcMove(s, IcAdd(s, "Anger"), "Hand", "DrawPile"); IcPlay(s, pact); Equal(1, Hand(s).Count, "draw occurs with no card to exhaust");
-            IcMove(s, Hand(s).Single(), "Hand", "DrawPile"); IcPlay(s, IcAdd(s, "Brand")); Equal(1L, IcPower(s, "damage-additive"), "strength even when hand empty");
+            IcMove(s, Hand(s).Single(), "Hand", "DrawPile"); IcPlay(s, IcAdd(s, "Brand")); Equal(1L, IcPower(s, "base-spire:strength-power"), "strength even when hand empty");
             var whirlwind = IcAdd(s, "Whirlwind"); Set(s, Player(s), "Player", "Energy", Value.Of(0L)); IcPlay(s, whirlwind); Equal(1000L, EnemyHp(s), "zero X no hits, even with strength");
         });
         check("IC requirement boundaries: PactsEnd below three, ForgottenRitual before own exhaust, Feed without kill", () =>
@@ -68,7 +68,7 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root);
             copy.Include("weak-probe.spire", """
-                action Weaken { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" kind = "damage-dealt-multiplier" stacks = 1 } } } }
+                action Weaken { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" stacks = 1 } } } }
                 """);
             var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             Set(s, Player(s), "Player", "Energy", Value.Of(10L)); IcPlay(s, IcAdd(s, "Tremble")); Submit(s, "Weaken");
@@ -86,7 +86,7 @@ internal static partial class PackageChecks
         check("IC nested context: child autoplay finishes before parent and deferred Rupture stays with the right play", () =>
         {
             var s = Combat(); IcPlay(s, IcAdd(s, "Rupture")); var havoc = IcAdd(s, "Havoc"); var hemo = IcAdd(s, "Hemokinesis"); IcMove(s, hemo, "Hand", "DrawPile");
-            IcPlay(s, havoc); Equal(985L, EnemyHp(s), "child hit before its deferred Strength"); Equal(1L, IcPower(s, "damage-additive"), "child callback applied exactly once");
+            IcPlay(s, havoc); Equal(985L, EnemyHp(s), "child hit before its deferred Strength"); Equal(1L, IcPower(s, "base-spire:strength-power"), "child callback applied exactly once");
             Equal(3, Members(s, "CardPlays").Count, "history includes nested play"); Equal(0L, IntField(s, Player(s), "Player", "PlayDepth"), "context stack fully restored");
             True(s.State.GetField(Player(s), s.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex("CurrentPlay")).Kind == ValueKind.None, "parent binding restored to none");
         });
@@ -154,7 +154,7 @@ internal static partial class PackageChecks
             var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             IcPlay(s, IcAdd(s, "Tremble")); IcPlay(s, IcAdd(s, "Colossus")); Set(s, Player(s), "Player", "Block", Value.Of(0L)); Submit(s, "Incoming"); Equal(75L, Hp(s), "vulnerable attacker's eleven halved to five");
             Set(s, Player(s), "Player", "Energy", Value.Of(5L)); IcPlay(s, IcAdd(s, "Rupture")); IcPlay(s, IcAdd(s, "Inferno")); Set(s, Player(s), "Player", "EnemyPhase", Value.Of(true));
-            Submit(s, "Incoming"); Equal(0L, IcPower(s, "damage-additive"), "enemy-side damage does not trigger Rupture"); Equal(40L, EnemyHp(s), "enemy-side damage does not trigger Inferno"); Equal(2L, IntField(s, Player(s), "Player", "HpLossCount"), "both positive damage events counted");
+            Submit(s, "Incoming"); Equal(0L, IcPower(s, "base-spire:strength-power"), "enemy-side damage does not trigger Rupture"); Equal(40L, EnemyHp(s), "enemy-side damage does not trigger Inferno"); Equal(2L, IntField(s, Player(s), "Player", "HpLossCount"), "both positive damage events counted");
         });
         check("IC lethal self damage: Inferno cannot change a dead player's defeat into victory", () =>
         {
@@ -175,7 +175,7 @@ internal static partial class PackageChecks
         check("IC merged power instances: self-damage applications accumulate and single-stack powers stay single", () =>
         {
             var s = Combat(); IcPlay(s, IcAdd(s, "CrimsonMantle")); IcPlay(s, IcAdd(s, "CrimsonMantle", true));
-            IcPlay(s, IcAdd(s, "Corruption")); IcPlay(s, IcAdd(s, "Corruption")); Equal(1L, IcPower(s, "corruption"), "single source stack");
+            IcPlay(s, IcAdd(s, "Corruption")); IcPlay(s, IcAdd(s, "Corruption")); Equal(1L, IcPower(s, "base-spire:corruption-power"), "single source stack");
             IcNextTurn(s); Equal(78L, Hp(s), "two applications cause two self damage"); Equal(18L, Block(s), "normal and upgraded amounts merged");
         });
     }

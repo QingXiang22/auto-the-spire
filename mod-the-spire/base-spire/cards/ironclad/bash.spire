@@ -9,9 +9,9 @@ use Bash {
 }
 use BashDamage {
   template = AttackEffect
-  args = { definition = "base-spire:bash" damage = 8 upgradedDamage = 10 hits = 1 }
+  args = { definition = "base-spire:bash" hits = 1 }
 }
 use BashVulnerable {
   template = ApplyEnemyPowerEffect
-  args = { definition = "base-spire:bash" power = "base-spire:vulnerable-power" kind = "damage-taken-multiplier" stacks = 2 upgradedStacks = 3 }
+  args = { definition = "base-spire:bash" power = "base-spire:vulnerable-power" stacks = 2 upgradedStacks = 3 }
 }

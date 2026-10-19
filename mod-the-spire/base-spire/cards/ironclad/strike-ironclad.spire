@@ -8,5 +8,5 @@ use Strike {
 }
 use StrikeDamage {
   template = AttackEffect
-  args = { definition = "base-spire:strike-ironclad" damage = 6 upgradedDamage = 9 hits = 1 }
+  args = { definition = "base-spire:strike-ironclad" hits = 1 }
 }

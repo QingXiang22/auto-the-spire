@@ -2,4 +2,4 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Relics/Kunai.cs; SHA256 retained in relics/catalog.json.
-use Kunai { template = CardCountRelic args = { definition = "base-spire:kunai" kind = "attack" every = 3 perTurn = true power = "base-spire:dexterity-power" powerKind = "block-additive" stacks = 1 } }
+use Kunai { template = CardCountRelic args = { definition = "base-spire:kunai" kind = "attack" every = 3 perTurn = true power = "base-spire:dexterity-power" stacks = 1 } }

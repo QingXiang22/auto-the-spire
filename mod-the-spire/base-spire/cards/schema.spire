@@ -54,7 +54,6 @@ entity CardPlayRecord {
     Sequence = { type = Int }
     Finished = { type = Bool default = false }
     PoweredBlocks = { type = Int default = 0 }
-    RuptureGain = { type = Int default = 0 visibility = Hidden }
   }
 }
 collection CardPlays { element = CardPlayRecord ordered = true }

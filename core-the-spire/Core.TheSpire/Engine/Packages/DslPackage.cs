@@ -146,8 +146,8 @@ public sealed class DslPackage
                 if (!referenced.Contains(contentPath)) throw new FormatException("A migrated definition must reference a loaded DSL file.");
                 var content = EngineDslParser.Parse(File.ReadAllText(contentPath), contentPath);
                 if (!content.Members.OfType<DslDeclarationNode>().Any()
-                    || content.Members.Any(member => member is not DslPropertyNode { Name: "dsl_version" } and not DslDeclarationNode { Kind: "use" }))
-                    throw new FormatException($"{contentPath}: catalog definitions allow only DSL template uses; put shared declarations in rule files.");
+                    || content.Members.Any(member => member is not DslPropertyNode { Name: "dsl_version" } and not DslDeclarationNode))
+                    throw new FormatException($"{contentPath}: catalog definitions require a DSL content module; package properties belong in the entry file.");
             }
         }
     }

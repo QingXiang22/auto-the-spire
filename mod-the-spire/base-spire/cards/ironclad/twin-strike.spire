@@ -8,5 +8,5 @@ use TwinStrike {
 }
 use TwinStrikeDamage {
   template = AttackEffect
-  args = { definition = "base-spire:twin-strike" damage = 5 upgradedDamage = 7 hits = 2 }
+  args = { definition = "base-spire:twin-strike" hits = 2 }
 }

@@ -1,0 +1,39 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
+template ColossusPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:colossus-power" } }
+
+procedure Colossus {
+  pure = true parameters = { value = Int owner = Ref(Player) attacker = Ref(Enemy) listener = Ref(Power) }
+  result = Int body = {
+    if = {
+      condition = and(greater(field(listener, Power.Stacks), 0), greater(pureCall(EnemyPowerAmount, attacker, "base-spire:vulnerable-power"), 0)) then = {
+        return = { value = divide(value, 2) }
+      }
+    }
+    return = { value = value }
+  }
+}
+
+subscription Colossus {
+  event = ModifyIncomingAttackMultiplier reaction = Colossus instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:colossus-power"))) instance_order = collectionIndex(Powers, listener) priority = 10
+}
+
+procedure ColossusDecay {
+  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  body = {
+    call = {
+      procedure = ConsumePower args = {
+        power = listener
+      }
+    }
+  }
+}
+
+subscription ColossusDecay {
+  event = AfterEnemyTurnEnded reaction = ColossusDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:colossus-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+}
+} }
+use ColossusPower { template = ColossusPowerModule }

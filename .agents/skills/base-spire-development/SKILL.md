@@ -13,7 +13,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 
 读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[主清单](../../../docs/review/tofix/README.md)维护状态，[迁移规格](../../../docs/design/mod-the-spire/engine-dsl-migration/spec.md)定义纯包边界。
 
-- base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，共享过程放领域 rules，具体 catalog definition 只用模板 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
+- base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，真正共用的操作放领域 rules；catalog definition 可承载完整内容模块，独有规则／私有状态留在所属文件，以模板作用域隔离。简单内容仍可只用 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
 - 遗物与Power统一按[监听编写指南](../../../docs/development/base-spire/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。
 - scope 从实际 package.json 读取。静态源条目、DSL 定义、行为见证、独立比较与正常 Run 分别结算；definition=null 不计支持。
 - 旧 C#／旧作者语法只在 `tools/base-migration-baseline/` 取证，不恢复生产依赖。原源池、资格与严格用例分母保持；未迁移显式失败，不删池、补答案或注册空效果。

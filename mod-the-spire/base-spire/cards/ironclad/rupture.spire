@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Rupture.cs; SHA-256 retained in cards/catalog.json.
 use Rupture { template = CardDefinition args = { sourceEntry = "RUPTURE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:rupture" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use RuptureEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:rupture" power = "base-spire:rupture-power" kind = "hp-loss-strength" stacks = 1 upgradedStacks = 2 } }
+use RuptureEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:rupture" power = "base-spire:rupture-power" stacks = 1 upgradedStacks = 2 } }

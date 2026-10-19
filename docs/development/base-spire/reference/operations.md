@@ -25,7 +25,7 @@
 | Relics | 有序 Relic 集合 | 监听器遍历现有库存并过滤 Holder、definition 和熔化状态 |
 | RelicObtained／RelicRemoved | owner: Ref(Player)、relic: Ref(Relic) | 获得时已入库存；移除时已出库存，事件执行后才销毁实例 |
 | [BeforeCombatStart](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | 只在 Idle→Active 的开发态开始操作中发出；监听器观察到 CombatActive=true 且本场初始 Block 已清 0，之后获得的格挡保留 |
-| AfterBlockCleared | owner: Ref(Player) | 回合号大于 1 的开始时，先清空格挡再发出；与源 `Creature.AfterTurnStart`→`Hook.AfterBlockCleared` 的顺序一致，第一回合不发 |
+| AfterBlockCleared | owner: Ref(Player) | 每次玩家回合开始，先尝试按首回合／保留资格处理格挡，再无条件发出；源CombatManager在Creature.AfterTurnStart后派发，包括首回合及保留格挡时 |
 | AfterEnergyReset | owner: Ref(Player) | ResetTurnEnergy重置／补足能量后发出，早于打开回合门和AfterSideTurnStarted；ArtOfWar在此奖励 |
 | [AfterSideTurnStarted](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner: Ref(Player) | AfterEnergyReset完成并打开回合门后发出，早于起手抽牌；TurnStartEnergyRelic、EveryTurnsEnergyRelic与Sai在此奖励 |
 | AfterPlayerTurnStart | owner: Ref(Player) | AfterSideTurnStarted和起手抽牌后发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
@@ -44,7 +44,7 @@
 
 ## 过程与公开动作
 
-遗物与Power统一使用[通知与修正监听](../../../design/mod-the-spire/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。反应位于powers/reactions.spire，修正位于powers/modifiers.spire。
+遗物与Power统一使用[通知与修正监听](../../../design/mod-the-spire/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。具体监听与私有状态位于powers/shared对应模块；通用定义与生命周期位于powers/rules。
 
 遗物共享生命周期提供以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
 
@@ -75,8 +75,8 @@
 | --- | --- | --- |
 | [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999) | 累加并截到 999，不应用卡牌／Power 的加性或乘性修正；不是通用获得格挡流程 |
 | GainBlock | owner=Ref(Player)、amount=Int(0..999) | 卡牌格挡链：先累加 `block-additive`（Dexterity），再在持有 `block-dealt-multiplier`（Frail）时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
-| [ApplyPlayerPower](../../../../mod-the-spire/base-spire/combat/powers.spire) | owner=Ref(Player)、definition=String(64)、kind=String(32)、stacks=Int(-999..999) | 同持有者同 DefinitionId 时累加层数，否则创建实例；处理已迁移角色的 Single 叠加、应用计数和临时寿命；其余角色不自动获得行为 |
-| ApplyEnemyPower | target=Ref(Enemy)、definition、kind、stacks | 对敌人执行同一合并语义 |
+| [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
+| ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义 |
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
 | GainEnergy | owner=Ref(Player)、amount=Int(0..999) | Energy 增加并可超过 MaxEnergy（上限 999），尊重 NoEnergyGain；回合重置使用 GetMaxEnergy |
 | [DamageEnemy](../../../../mod-the-spire/base-spire/combat/damage.spire) | target=Ref(Enemy)、amount=Int(0..999999) | 先扣 `min(Block, amount)` 格挡，剩余从 Hp 扣除且不低于 0；无加成伤害，修正参与者不参与（遗物与 Power 用它） |
@@ -122,7 +122,7 @@
 | Draw／DiscardHand | 无参数，role=player | Draw 使用 first(type(Player))；DiscardHand 将全局 Hand 移到 DiscardPile；均是开发动作 |
 | [BeginDevelopmentCombat](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | action 与同名过程：inactive 时先置 Block=0、TurnNumber=0、Energy=0、TurnOpen=false、CombatActive=true，再 emit BeforeCombatStart；已活跃时报 "Development combat is already active"。不是正常战斗初始化 |
 | EndDevelopmentCombat | owner=Ref(Player) | action 与同名过程：只在活跃时允许，置 CombatActive=false，不发开始事件也不发胜利；不活跃时报 "Development combat is not active" |
-| BeginDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门关闭时允许；自增TurnNumber并发BeforePlayerTurnStart，非首回合按retain-block资格清格挡并发AfterBlockCleared，发BeforeTurnResources，ResetTurnEnergy并发AfterEnergyReset，再打开回合门和发AfterSideTurnStarted；AutoDrawPerTurn大于0时DrawDevelopmentTurnHand，最后发AfterPlayerTurnStart与Late |
+| BeginDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门关闭时允许；自增TurnNumber并发BeforePlayerTurnStart，非首回合按保留资格清格挡，随后每回合均发AfterBlockCleared，发BeforeTurnResources，ResetTurnEnergy并发AfterEnergyReset，再打开回合门和发AfterSideTurnStarted；AutoDrawPerTurn大于0时DrawDevelopmentTurnHand，最后发AfterPlayerTurnStart与Late |
 | DrawDevelopmentTurnHand | owner=Ref(Player) | 以 AutoDrawPerTurn 为基础，首回合逐张把 Innate 移到顶部，抽取数至少为 Innate 数且至多十张；调用 DrawCards，继承满手／禁止抽牌和真实抽牌事件。不实现附魔底部排序或完整手牌修正 |
 | EndDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门打开时允许；先回合末自动出牌，再BeforePlayerTurnEnd；仍活跃才弃牌、发AfterTurnEnded并处理能力及敌方阶段。末杀后停止后续阶段，不逐张派发弃牌钩子 |
 | [AddDevelopmentTarget](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | owner=Ref(Player) | 过程与公开 action：在 owner 作用域创建一个 Hp／MaxHp 为 40、DefinitionId 为 `base-spire:development-target` 的 Enemy；不是遭遇或原版怪物生成 |
@@ -203,7 +203,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 模板获得动作通过 definition 检查重复，并使用 first(type(Player))。多 Player、同定义多实例、按拥有者牌堆、替换、熔化操作与跨战重建尚未在该模板契约交付；不能将开发动作当作这些功能的实现。模板的 `Obtain` 只在遗物库存层去重，不表示原版来源资格（战斗奖励、事件、商店或角色初始遗物）已实现。
 
-[source-catalog 的 definition](../../../dsl/core/0.3/package-reference.md) 指向的内容文件只能包含头部与 `use`。共享过程／模板放规则文件。示例新增 AfterDrawBlockRelic 位于 docs/examples，仅用于[第二篇教程](../tutorials/shared-rule.md)，不是正式包现有公共操作。
+[source-catalog 的 definition](../../../dsl/core/0.3/package-reference.md) 指向完整 DSL 内容模块；独有规则／状态留在该文件，共用过程／模板放领域规则库。示例新增 AfterDrawBlockRelic 位于 docs/examples，仅用于[第二篇教程](../tutorials/shared-rule.md)，不是正式包现有公共操作。
 
 ## 公开投影
 

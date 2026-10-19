@@ -7,7 +7,6 @@ template BeforeCombatStartEnemyPowerRelic {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
-    kind = { type = String(length = 32) }
     stacks = { type = Int(min = 1, max = 999) }
   }
   body = {
@@ -19,7 +18,7 @@ template BeforeCombatStartEnemyPowerRelic {
           body = {
             call = {
               procedure = ApplyEnemyPower args = {
-                target = enemy definition = arg(power) kind = arg(kind) stacks = arg(stacks)
+                target = enemy definition = arg(power) stacks = arg(stacks)
               }
             }
           }

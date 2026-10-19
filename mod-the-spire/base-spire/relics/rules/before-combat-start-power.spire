@@ -7,7 +7,6 @@ template BeforeCombatStartPowerRelic {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
-    kind = { type = String(length = 32) }
     stacks = { type = Int(min = 1, max = 999) }
   }
   body = {
@@ -16,7 +15,7 @@ template BeforeCombatStartPowerRelic {
       body = {
         call = {
           procedure = ApplyPlayerPower args = {
-            owner = owner definition = arg(power) kind = arg(kind) stacks = arg(stacks)
+            owner = owner definition = arg(power) stacks = arg(stacks)
           }
         }
       }

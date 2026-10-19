@@ -3,4 +3,4 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/StoneArmor.cs; SHA-256 retained in cards/catalog.json.
 use StoneArmor { template = CardDefinition args = { sourceEntry = "STONE_ARMOR" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stone-armor" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use StoneArmorEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:stone-armor" power = "base-spire:plating-power" kind = "plating" stacks = 4 upgradedStacks = 6 } }
+use StoneArmorEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:stone-armor" power = "base-spire:plating-power" stacks = 4 upgradedStacks = 6 } }
