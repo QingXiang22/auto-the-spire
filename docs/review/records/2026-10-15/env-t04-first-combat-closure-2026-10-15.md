@@ -1,8 +1,11 @@
 # ENV-T04 正常首战奖励闭环 — 2026-10-15
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 > 同日两场战斗接续：此前专项中的“怪物独立AI流”结论已撤回并修正为共享MonsterAi。首战两例仍在纠正后的生产状态通过；第二场新增证据与规则摘要以最新接续报告为准。本报告保留交付时点。
 
-两条原seed已在同一语义动作计划下完成地图选点、真实首战、奖励领取或跳过、永久状态提交并返回可旅行地图，独立参考逐边界一致。参考sts2-sim全程只读。当前排期及完整完成条件见[主清单ENV-T04](README.md#env-t04)，本次不关闭多房间、公开完整轨迹或完整环境父项。
+两条原seed已在同一语义动作计划下完成地图选点、真实首战、奖励领取或跳过、永久状态提交并返回可旅行地图，独立参考逐边界一致。参考sts2-sim全程只读。当前排期及完整完成条件见[主清单ENV-T04](../../tofix/README.md#env-t04)，本次不关闭多房间、公开完整轨迹或完整环境父项。
 
 ## 接手后先做
 
@@ -25,11 +28,11 @@
 
 | 检查 | 结果与证据 |
 | --- | --- |
-| `test --suite normal-reward-prefix --output .audit/env-t04-combat-continuation/delivery-normal` | rc0，2/2双侧passed，9项自检通过，含3项共同动作拒绝；[机器报告](../../../.audit/env-t04-combat-continuation/delivery-normal/regression.json) |
-| `test --suite regression --output .audit/env-t04-combat-continuation/common-regression` | rc0，17执行，16双侧passed、1工厂自检，22项比较器自检通过；[机器报告](../../../.audit/env-t04-combat-continuation/common-regression/regression.json) |
-| v109-rng及奖励池审计 | 6个seed、2例怪物独立流及完整单人奖励池通过；[报告](../../../.audit/env-t04-combat-continuation/final-rng/v109-rng.json)，该专项工具构建早于共同动作接线，生产行为与最终状态相同 |
-| Slice runtime | rc0，841项；[日志](../../../.audit/env-t04-combat-continuation/slice.log) |
-| net | rc0，418项；[日志](../../../.audit/env-t04-combat-continuation/net.log) |
+| `test --suite normal-reward-prefix --output .audit/env-t04-combat-continuation/delivery-normal` | rc0，2/2双侧passed，9项自检通过，含3项共同动作拒绝；[机器报告](../../../../.audit/env-t04-combat-continuation/delivery-normal/regression.json) |
+| `test --suite regression --output .audit/env-t04-combat-continuation/common-regression` | rc0，17执行，16双侧passed、1工厂自检，22项比较器自检通过；[机器报告](../../../../.audit/env-t04-combat-continuation/common-regression/regression.json) |
+| v109-rng及奖励池审计 | 6个seed、2例怪物独立流及完整单人奖励池通过；[报告](../../../../.audit/env-t04-combat-continuation/final-rng/v109-rng.json)，该专项工具构建早于共同动作接线，生产行为与最终状态相同 |
+| Slice runtime | rc0，841项；[日志](../../../../.audit/env-t04-combat-continuation/slice.log) |
+| net | rc0，418项；[日志](../../../../.audit/env-t04-combat-continuation/net.log) |
 | 无参考构建 | `dotnet build tools/differential/Differential.csproj --artifacts-path .artifacts/env-t04-no-reference -p:ReferenceSimAvailable=false` rc0 |
 
 领取路线12个稳定边界，双方最终68HP、119金币、11张长期牌；跳过路线17个边界，双方最终76HP、117金币、10张长期牌。两例都回到travel-ready，保留真实合法后继；领取例没有掉落药水，跳过例掉落AttackPotion并真实跳过，因此不证明药水领取/满容量处理已双侧验收。

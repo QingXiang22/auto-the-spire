@@ -1,5 +1,8 @@
 # ENV-T03 商店公开契约收口（真实帧 × net 0.2）交接 — 2026-10-12
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 本包用 Codex 当前共同 Host 与负责人已录的两局**正常商店轨迹**，把商店的公开契约收口到「可复算、可核对、
 可继续」：真实 request/response/snapshot 帧通过 net 0.2 wire schema 与适用 L2/L3/L4 不变量，商店十四格
 库存/不可买原因/买卡永久副本与金币一次扣除/删牌暂停后按已公开实例删对牌/相位 7→2 全部有逐帧证据；
@@ -11,10 +14,10 @@ Source Eternals/未实现遗物效果仍属 base 范围，且发现一处**本�
 - dispatch_id（= 派发记录 `task_id`）: `ENV-T03-shop-public-contract-20261012`
 - session_id: `session-6cbdba33-19fc-4a1d-a19d-bb6575710b01`
 - request_id: `f2d4e51d-32ba-459c-9b7d-9e0f515e8e78`
-- dispatch_record: [.audit/dsh-shop-public-contract-20261012/task-record.json](../../../.audit/dsh-shop-public-contract-20261012/task-record.json)（`status: accepted`）
+- dispatch_record: [.audit/dsh-shop-public-contract-20261012/task-record.json](../../../../.audit/dsh-shop-public-contract-20261012/task-record.json)（`status: accepted`）
 - delivery_status: `ready_for_review`（公开契约证据与消费者缺口修复已交；完整整局与 Host 侧声明项未收口）
 - updated_at: `2026-10-12T07:58:36+08:00`
-- 主清单对应项：[T03](README.md#env-t03)（本包不修改主清单；状态与认领由 Codex 独自修改）
+- 主清单对应项：[T03](../../tofix/README.md#env-t03)（本包不修改主清单；状态与认领由 Codex 独自修改）
 
 ## 接手后先做什么
 
@@ -35,20 +38,20 @@ Source Eternals/未实现遗物效果仍属 base 范围，且发现一处**本�
    在 `Entity`/`Relation`/`LegalAction`/`TerminalResult` 上用的是机制短名而不是目录声明 ID——
    是修 Host 投影，还是修订 0.1/0.2 的 I-71/I-84 口径，需要负责人裁决；本包**无 C#/Host/schema 写权限**。
 4. 完整 T03 与整局验收仍开放：两局真实轨迹都在 `Unknown` 节点停 rc 4 / `run_complete=false`。
-   父项关闭、优先级与候选验收由负责人按[主清单 T03](README.md#env-t03)判断。
+   父项关闭、优先级与候选验收由负责人按[主清单 T03](../../tofix/README.md#env-t03)判断。
 
 ## 已交付与接口变化
 
 ### 1. 只读契约校验 helper（本包 `.audit`，一次性）
 
-[verify_shop_contract.py](../../../.audit/dsh-shop-public-contract-20261012/verify_shop_contract.py)：把已录帧按
+[verify_shop_contract.py](../../../../.audit/dsh-shop-public-contract-20261012/verify_shop_contract.py)：把已录帧按
 L1（0.2 `wire.schema.json`）→ L2（`check_catalog`）→ L3（`check_snapshot`）→ L4（`check_control`）逐层过一遍，
 再叠加商店公开接口的一致性检查。它**只读**复用 `tools/contract-check/wire_layers.py`，按 0.2 显式覆盖两处旧 0.1 规则
 （0.1 的 `I-81` start 结果形状、`I-76` 的规范 uint64 十进制 seed）——覆盖点在运行时打印，避免用旧限制判 0.2：
 
 | 0.1 规则 | 0.2 行为 | 依据 |
 | --- | --- | --- |
-| `I-81`：`start` 成功结果恰为 `{session_id, snapshot}` | 恰为 `{session_id, seed, snapshot}` | [protocol.md §7 表](../../design/net-the-spire/protocol.md#7-env正式环境的02扩展)、0.2 schema `StartResult` |
+| `I-81`：`start` 成功结果恰为 `{session_id, snapshot}` | 恰为 `{session_id, seed, snapshot}` | [protocol.md §7 表](../../../design/net-the-spire/protocol.md#7-env正式环境的02扩展)、0.2 schema `StartResult` |
 | `I-76`：`start.payload.seed` 必须是规范 uint64 十进制字符串 | 非空**游戏 seed 字符串**（`GameSeedString`），由 base 标准化 | 同上；0.2 schema `GameSeedString` |
 | 其余 L1/L2/L3/L4（`I-44`/`I-50`/`I-11`/`I-13`/`I-48`/`I-83`/`I-84`/`I-86`/`I-87`/`I-05`/`I-20`/`I-22`/`I-74`/`I-79`/`I-89`/`I-39`/`I-34`/`I-35`/`I-28` 等） | **原样适用**（0.2 只改 §7 列出的四项差异） | protocol.md §7「0.2 沿用第 1～6 节的结构和生命周期」 |
 
@@ -77,7 +80,7 @@ L1（0.2 `wire.schema.json`）→ L2（`check_catalog`）→ L3（`check_snapsho
 
 两处都在既有消费者里，未新增商店实现、未改 C#/Host/schema/base/tools/AI：
 
-* [test_shop_public.py](../../../net-the-spire/client/test_shop_public.py) `replay` 组此前按**当前默认**策略复算，
+* [test_shop_public.py](../../../../net-the-spire/client/test_shop_public.py) `replay` 组此前按**当前默认**策略复算，
   且断言「整局没有任何商店事件」，因此**任何带商店的记录都无法复算**。现在：
   - 新增 `replay_policy_options(summary)`：按**记录里的策略**重建固定规则（`step_frontier` /
     `step_unsupported_room` / `use_potions` / `relic_policy` / `potion_policy` / `shop_room_entry` /
@@ -86,7 +89,7 @@ L1（0.2 `wire.schema.json`）→ L2（`check_catalog`）→ L3（`check_snapsho
   - 新增 `check_replayed_shop(recorder, checker, summary)`：记录里没有商店就保持原来的「没有商店事件」断言；
     有商店则核对进入/退出成对、事件顺序、进店公开货架 14 格且 `Slot` 0..13、不可买条目的源身份与原因、
     「买到一件或如实记 `shop_buy_unavailable`」「删一张或如实记 `shop_remove_unavailable`」。
-* [run_game.py](../../../net-the-spire/client/run_game.py)：新增 `--probe-rejected-candidate` 与
+* [run_game.py](../../../../net-the-spire/client/run_game.py)：新增 `--probe-rejected-candidate` 与
   `probe_consumed_candidate(...)`。第一次**真实买卡成功后**立即用刚消费掉的旧 `candidate_id` 配**当前**
   `observation_id` 重发一次 `step`，再用一次 `observe`（公开读、不推进）核对 Run 公开字段与 `legal_actions`
   逐字段不变、当前快照仍提供 `LeaveShop`；宿主接受或状态推进立即按故障停止（`fault_consumed_candidate_accepted`
@@ -99,9 +102,9 @@ L1（0.2 `wire.schema.json`）→ L2（`check_catalog`）→ L3（`check_snapsho
 
 ### 3. 文档
 
-[run_game.md](../../../net-the-spire/client/run_game.md)（新参数行、输出字段、2026-10-12 证据小节）、
-[client README](../../../net-the-spire/client/README.md)（`replay` 现在支持商店记录 + 现场反例）、
-[公开运行教程 §6](../../design/net-the-spire/how-to-run-public-game.md)（反例的实际用法与预期字段）。
+[run_game.md](../../../../net-the-spire/client/run_game.md)（新参数行、输出字段、2026-10-12 证据小节）、
+[client README](../../../../net-the-spire/client/README.md)（`replay` 现在支持商店记录 + 现场反例）、
+[公开运行教程 §6](../../../design/net-the-spire/how-to-run-public-game.md)（反例的实际用法与预期字段）。
 
 未改：`net_client.py`、任何 C#/Host/协议/schema/`docs/contracts/net/**`、`mod-the-spire/**`、`tools/**`、
 `ai-the-spire/**`、主清单。没有构建 base/solution，没有覆盖固定闭包或并发构建 solution，没有
@@ -119,13 +122,13 @@ profile `base-spire-singleplayer-dev-map-v1`；scope `dev-map`；seed `ENV-T03-S
 
 | 检查 | 工作目录与实际命令 | 返回码/结果 | 证据与证明范围 |
 | --- | --- | --- | --- |
-| 帧级契约校验（3 局：两份负责人轨迹 + 本包反例局） | `python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.py --verbose --run-dir .audit/owner-project-review-20261012/shop-buy-remove --run-dir .audit/owner-project-review-20261012/shop-remove --run-dir .audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe` | rc **1**；131 request + 131 response 帧、121 快照全部 L1 通过；L2 逐局目录（三局合计 1416 条声明）的引用均有效；`0.2 wire 门槛=0`、`商店公开闭合=0`、`Host 结构声明=126`；拒绝步 1 条已核 | [verify-shop-contract.log](../../../.audit/dsh-shop-public-contract-20261012/verify-shop-contract.log)、[verify-final.json](../../../.audit/dsh-shop-public-contract-20261012/verify-final.json) |
-| 商店机制检查（离线，四组 672 项） | `python -X utf8 -u net-the-spire/client/test_shop_public.py` | rc **0**，`passed=672 failed=0` | [test-shop-public.log](../../../.audit/dsh-shop-public-contract-20261012/test-shop-public.log)。与 wave-2 的 672 项同数，未减少断言 |
-| 带商店记录整段复算（两局） | `python … test_shop_public.py --only replay --run-dir .audit/owner-project-review-20261012/shop-buy-remove`（45 步）／`…/shop-remove`（46 步） | 各 rc **0**，45/45 与 46/46 步**逐字一致**，0 个旧规则变体步骤 | [test-shop-public-replay.log](../../../.audit/dsh-shop-public-contract-20261012/test-shop-public-replay.log) |
+| 帧级契约校验（3 局：两份负责人轨迹 + 本包反例局） | `python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.py --verbose --run-dir .audit/owner-project-review-20261012/shop-buy-remove --run-dir .audit/owner-project-review-20261012/shop-remove --run-dir .audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe` | rc **1**；131 request + 131 response 帧、121 快照全部 L1 通过；L2 逐局目录（三局合计 1416 条声明）的引用均有效；`0.2 wire 门槛=0`、`商店公开闭合=0`、`Host 结构声明=126`；拒绝步 1 条已核 | [verify-shop-contract.log](../../../../.audit/dsh-shop-public-contract-20261012/verify-shop-contract.log)、[verify-final.json](../../../../.audit/dsh-shop-public-contract-20261012/verify-final.json) |
+| 商店机制检查（离线，四组 672 项） | `python -X utf8 -u net-the-spire/client/test_shop_public.py` | rc **0**，`passed=672 failed=0` | [test-shop-public.log](../../../../.audit/dsh-shop-public-contract-20261012/test-shop-public.log)。与 wave-2 的 672 项同数，未减少断言 |
+| 带商店记录整段复算（两局） | `python … test_shop_public.py --only replay --run-dir .audit/owner-project-review-20261012/shop-buy-remove`（45 步）／`…/shop-remove`（46 步） | 各 rc **0**，45/45 与 46/46 步**逐字一致**，0 个旧规则变体步骤 | [test-shop-public-replay.log](../../../../.audit/dsh-shop-public-contract-20261012/test-shop-public-replay.log) |
 | 非商店记录回归（最小回代） | `python … --only replay --run-dir .audit/dsh-public-run-driver-2026-10-11/runs/seed-K` | rc **0**，315/315 逐字一致（与改动前相同） | 同上日志。**未**重跑 17 条历史轨迹或其它 seed 矩阵 |
-| 现场反例（唯一一次真实负对照） | `python -X utf8 -u net-the-spire/client/run_game.py --host-dll <固定 Host> --scope dev-map --seed ENV-T03-SEED-L --output .audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe --max-actions 26 --use-potions --shop-room auto --shop-policy buy --shop-buy-kind card --probe-rejected-candidate` | rc **3**（`step_limit`，不是故障）：第 21 步买下 `base-spire:havoc`（金币 111→63），反例被拒 `illegal_candidate`/`not_started`/`correct_input`，`advanced=false`、`leave_available=true`，第 22 步 `LeaveShop` 成功、`MapPhase 7→2` | [rejected-candidate-probe.json](../../../.audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe/rejected-candidate-probe.json)、[runs/shop-buy-probe](../../../.audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe/)（含完整 `frames.ndjson`） |
+| 现场反例（唯一一次真实负对照） | `python -X utf8 -u net-the-spire/client/run_game.py --host-dll <固定 Host> --scope dev-map --seed ENV-T03-SEED-L --output .audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe --max-actions 26 --use-potions --shop-room auto --shop-policy buy --shop-buy-kind card --probe-rejected-candidate` | rc **3**（`step_limit`，不是故障）：第 21 步买下 `base-spire:havoc`（金币 111→63），反例被拒 `illegal_candidate`/`not_started`/`correct_input`，`advanced=false`、`leave_available=true`，第 22 步 `LeaveShop` 成功、`MapPhase 7→2` | [rejected-candidate-probe.json](../../../../.audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe/rejected-candidate-probe.json)、[runs/shop-buy-probe](../../../../.audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe)（含完整 `frames.ndjson`） |
 | Python 语法 | `python -m py_compile net-the-spire/client/run_game.py net-the-spire/client/test_shop_public.py` | rc **0** | — |
-| 文档检查 | `python -X utf8 tools/doc-check/check_docs.py` | rc **4**，扫描 427 份 Markdown，**4 项既有失败**（`dsh-power-fixture-handoff-2026-10-11.md` 与被它引用的 `dsh-startup-alignment-handoff-2026-10-11-f68b943d.md` 的行锚点），本包新增/改动文档 0 问题 | [doc-check.log](../../../.audit/dsh-shop-public-contract-20261012/doc-check.log) |
+| 文档检查 | `python -X utf8 tools/doc-check/check_docs.py` | rc **4**，扫描 427 份 Markdown，**4 项既有失败**（`dsh-power-fixture-handoff-2026-10-11.md` 与被它引用的 `dsh-startup-alignment-handoff-2026-10-11-f68b943d.md` 的行锚点），本包新增/改动文档 0 问题 | [doc-check.log](../../../../.audit/dsh-shop-public-contract-20261012/doc-check.log) |
 | 空白/冲突标记 | `git diff --check` | rc **0**（仅覆盖已跟踪文件；本包改动都在未跟踪路径） | — |
 
 **未运行**：`dotnet build AutoTheSpire.sln`、Engine/Slice/net C# 套件、`tools/differential` 严格 17 条、
@@ -149,13 +152,13 @@ python -X utf8 -u .audit/dsh-shop-public-contract-20261012/verify_shop_contract.
 #             未声明的 declaration_id: 'base-spire:Player'
 ```
 
-源定位（只读复核，未改）：[ControlHost.cs:169](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L169)（`Entity` = `_profile.Kinds.Keys`）、
-[:170](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L170)（`Relation` = `_profile.Relations.Keys`）、
-[:182](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L182)（`LegalAction` = `_profile.Actions.Keys`）、
-[:183](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L183)（`TerminalResult` = `_profile.Terminals.Keys`）；
-对照 [:171–174](../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L171-L174)（`Pile`/`Sequence` 用 `PileTypeId`/`SequenceTypeId`）。
-net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../../../tools/base-migration-baseline/net-tests/FormalPathChecks.cs#L552)）与
-`Pile` 逐项（[ControlChecks.cs:240](../../../tools/base-migration-baseline/net-tests/ControlChecks.cs#L240)），
+源定位（只读复核，未改）：[ControlHost.cs:169](../../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L169)（`Entity` = `_profile.Kinds.Keys`）、
+[:170](../../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L170)（`Relation` = `_profile.Relations.Keys`）、
+[:182](../../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L182)（`LegalAction` = `_profile.Actions.Keys`）、
+[:183](../../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L183)（`TerminalResult` = `_profile.Terminals.Keys`）；
+对照 [:171–174](../../../../net-the-spire/Net.TheSpire/Control/ControlHost.cs#L171-L174)（`Pile`/`Sequence` 用 `PileTypeId`/`SequenceTypeId`）。
+net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../../../../tools/base-migration-baseline/net-tests/FormalPathChecks.cs#L552)）与
+`Pile` 逐项（[ControlChecks.cs:240](../../../../tools/base-migration-baseline/net-tests/ControlChecks.cs#L240)），
 所以 `Entity`/`Relation`/`LegalAction`/`TerminalResult` 的短名从未被检查。这是 2026-10-07「公开语义透传」
 迁移引入的，不是商店引入的，**不影响**本包商店结论（商店动作/字段/序列在这四处都能逐项对应）。
 裁决要么让 Host 发完整声明 ID，要么由负责人修订 `I-71`/`I-84` 在 0.2 下的口径——本包两条路都不做。
@@ -182,7 +185,7 @@ net 侧现有断言只覆盖 `Sequence` 计数（[FormalPathChecks.cs:552](../..
 
 ## 维护位置
 
-* 任务状态/认领/依赖/下一成果：[主清单 T03](README.md#env-t03)（Codex 独自修改；本包未改）。
+* 任务状态/认领/依赖/下一成果：[主清单 T03](../../tofix/README.md#env-t03)（Codex 独自修改；本包未改）。
 * 使用方法与 CLI：`net-the-spire/client/run_game.md`、`net-the-spire/client/README.md`、
   `docs/design/net-the-spire/how-to-run-public-game.md` §6。
 * 契约与不变量口径：`docs/design/net-the-spire/protocol.md` §7（0.2 差异）、

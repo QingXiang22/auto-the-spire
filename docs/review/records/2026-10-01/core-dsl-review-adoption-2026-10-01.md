@@ -20,7 +20,7 @@
 | [encoder 原评审](ai-encoder-design-review-2026-10-01.md)及[已有处置](ai-encoder-review-disposition-2026-10-01.md) | 保持 B 类契约细化与已作修正；来源风险归提供方，不恢复 known_top 或 AI 历史器，不以 fixtures 当真实来源证据 |
 | [encoder 架构交接](../../archived/ai-encoder-architecture-2026-10-01.md)及[AI/net 规划交接](../../archived/ai-net-planning-2026-10-01.md) | 保留原时点记录；新增统一规范资产前置，明确来源/覆盖交付与阶段时序，不扩大 E0 到学习/真实控制 |
 | [AI/net 新评审](ai-net-design-review-2026-10-01.md) | 大多数契约缺口有效；不采纳配对必须跨策略随机对齐、自动放宽固定 Gym 身份或让 core 内置牌区的推论 |
-| [sts2-sim 保真差异](sts2-sim-补全与保真差异-2026-10-01.md) | 采纳版本化来源、无版本归档风险、待排查与确诊分开；参考模拟器不成为原版权威，不自动移植其修复 |
+| [sts2-sim 保真差异](../../deprecated/sts2-sim-补全与保真差异-2026-10-01.md) | 采纳版本化来源、无版本归档风险、待排查与确诊分开；参考模拟器不成为原版权威，不自动移植其修复 |
 
 ## 3. core、DSL 与 Lua 的采纳
 

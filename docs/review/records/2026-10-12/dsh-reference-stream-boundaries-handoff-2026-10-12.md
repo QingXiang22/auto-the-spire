@@ -1,10 +1,13 @@
 # ENV-T04 参考侧逐边界随机流交接 — 2026-10-12
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 - task_id: ENV-T04-reference-stream-boundaries-20261012
 - dispatch_id: ENV-T04-reference-stream-boundaries-20261012（= 派发记录 `task_id`）
 - session_id: session-df65ab58-df64-4989-b62c-fa24eaf92df6
 - request_id: 604289cf-8214-49f6-bd58-6c6121bd498c
-- dispatch_record: [派发记录](../../../.audit/dsh-reference-stream-boundaries-20261012/task-record.json)（[派单原文](../../../.audit/dsh-reference-stream-boundaries-20261012/task.txt)、[dispatch-meta](../../../.audit/dsh-reference-stream-boundaries-20261012/dispatch-meta.json)）
+- dispatch_record: [派发记录](../../../../.audit/dsh-reference-stream-boundaries-20261012/task-record.json)（[派单原文](../../../../.audit/dsh-reference-stream-boundaries-20261012/task.txt)、[dispatch-meta](../../../../.audit/dsh-reference-stream-boundaries-20261012/dispatch-meta.json)）
 - delivery_status: ready_for_review
 - updated_at: 2026-10-12T08:18:00+08:00
 
@@ -15,14 +18,14 @@
 本包**不改**该 case 的 `unsupported_rng_profile` 声明、不改 17 分母/seed/预期终点/维度含义、不关闭父项 ENV-T04，
 也没有动 base/core/net/reference 生产。ready_for_review **不是验收**。
 
-当前认领、状态与依赖只维护在[主清单 ENV-T04](../../review/tofix/README.md#env-t04)；验收者为 Codex 负责人。
+当前认领、状态与依赖只维护在[主清单 ENV-T04](../../tofix/README.md#env-t04)；验收者为 Codex 负责人。
 
 ## 接手后先做什么
 
-1. 先读[主清单 ENV-T04](../../review/tofix/README.md#env-t04) 与共享 `git status --short`，不要重做已交的商店/语义重放/客户端包，
+1. 先读[主清单 ENV-T04](../../tofix/README.md#env-t04) 与共享 `git status --short`，不要重做已交的商店/语义重放/客户端包，
    也不要恢复旧会话。
-2. 想直接看结论：读[完整 17 产物](../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/regression.json)与
-   [参考记录 `random-reshuffle-unsupported`](../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/records/reference/random-reshuffle-unsupported.json)
+2. 想直接看结论：读[完整 17 产物](../../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/regression.json)与
+   [参考记录 `random-reshuffle-unsupported`](../../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/records/reference/random-reshuffle-unsupported.json)
    的 `boundaries[*].streams` 与 `reference_streams`。想复放：用下面的构建/运行命令（固定闭包，只读）。
 3. 等 A 的 base 排序包落地后，由 Codex 在新的**共同闭包**上重放本包命令：预期 `random-reshuffle-unsupported`
    的 `pile.draw.initial-slots` / `pile.draw.order` 首个差异消失；届时再裁定是否把该 case 升级到现有源兼容 Profile
@@ -34,13 +37,13 @@
 
 | 文件 | 变化 |
 | --- | --- |
-| [ReferenceRandomProbe.cs](../../../tools/base-migration-baseline/differential/ReferenceRandomProbe.cs) | 重写为**逐边界**流观察器：安装时保存并最终恢复既有 `RngDiagnostics.DrawObserver`；`Attach` 登记参考自己的 run/player 具名流并把基线对齐到当前计数器；`AtBoundary` 返回与 base 同形状的 `StreamSnapshot`（增量视图）；`Cumulative` 供初始化/Restore 前后/`script_random` 用（全量视图）；`Restore` 内部在重新装种子后**重挂基线**（`MockRng` 换对象）并留下 `restore-before/after` 真实读数 |
-| [ReferenceBackend.cs](../../../tools/base-migration-baseline/differential/ReferenceBackend.cs) | `RunControlled`/`Build`/`Add` 串起 probe；`BoundaryRecord.Streams` 不再传空表；新增 `CaseRecord.ReferenceStreams` 证据；`Restore("Shuffle", …)` 经 probe 包装（对齐行为本身未变） |
-| [Records.cs](../../../tools/base-migration-baseline/differential/Records.cs) | 新增 `ReferenceStreamSnapshot` / `ReferenceStreamEvidence` / `ReferenceStreamBoundary` 与 `CaseRecord.ReferenceStreams`；新增 `Records.ObservedStreamPrefix` 与 `Records.IsNamedStream`（**具名流 vs 动态槽位**的唯一判据） |
-| [RngSourceCompat.cs](../../../tools/base-migration-baseline/differential/RngSourceCompat.cs) | 修 `EngineStreamName`：`CombatTargets`/`CombatCardSelection`/`CombatCardGeneration` 改为直接引用 base `SliceManifest` 常量（原自写键与 base 实际键不同）；新增 `DiagnosticStreamName`/`PlayerStreamNames`；登记 `UnverifiedKeyNames`（其余 6 条合成的 run 键待核对） |
-| [Comparator.cs](../../../tools/base-migration-baseline/differential/Comparator.cs) | `vanilla-compatible@1` 下只比**具名流**（动态槽位没有稳定跨后端键，条目集合不同不是规则差异） |
-| [TestCommand.cs](../../../tools/base-migration-baseline/differential/TestCommand.cs) | `streams` 维度门槛收紧为"某个边界存在 `Draws > 0` 的具名流"；新增流证据自洽结算（声明消费却无具名流边界读数，或脚本期间**实际增长**的具名流在逐边界覆盖不到 → `missing_dimension`），不补 0、不放宽 |
-| [README.md](../../../tools/base-migration-baseline/differential/README.md) | 新增[参考侧逐边界随机流（2026-10-12）](../../../tools/base-migration-baseline/differential/README.md#参考侧逐边界随机流2026-10-12)，写明两类身份、单位、逐边界增量语义、Restore 换对象与门槛 |
+| [ReferenceRandomProbe.cs](../../../../tools/base-migration-baseline/differential/ReferenceRandomProbe.cs) | 重写为**逐边界**流观察器：安装时保存并最终恢复既有 `RngDiagnostics.DrawObserver`；`Attach` 登记参考自己的 run/player 具名流并把基线对齐到当前计数器；`AtBoundary` 返回与 base 同形状的 `StreamSnapshot`（增量视图）；`Cumulative` 供初始化/Restore 前后/`script_random` 用（全量视图）；`Restore` 内部在重新装种子后**重挂基线**（`MockRng` 换对象）并留下 `restore-before/after` 真实读数 |
+| [ReferenceBackend.cs](../../../../tools/base-migration-baseline/differential/ReferenceBackend.cs) | `RunControlled`/`Build`/`Add` 串起 probe；`BoundaryRecord.Streams` 不再传空表；新增 `CaseRecord.ReferenceStreams` 证据；`Restore("Shuffle", …)` 经 probe 包装（对齐行为本身未变） |
+| [Records.cs](../../../../tools/base-migration-baseline/differential/Records.cs) | 新增 `ReferenceStreamSnapshot` / `ReferenceStreamEvidence` / `ReferenceStreamBoundary` 与 `CaseRecord.ReferenceStreams`；新增 `Records.ObservedStreamPrefix` 与 `Records.IsNamedStream`（**具名流 vs 动态槽位**的唯一判据） |
+| [RngSourceCompat.cs](../../../../tools/base-migration-baseline/differential/RngSourceCompat.cs) | 修 `EngineStreamName`：`CombatTargets`/`CombatCardSelection`/`CombatCardGeneration` 改为直接引用 base `SliceManifest` 常量（原自写键与 base 实际键不同）；新增 `DiagnosticStreamName`/`PlayerStreamNames`；登记 `UnverifiedKeyNames`（其余 6 条合成的 run 键待核对） |
+| [Comparator.cs](../../../../tools/base-migration-baseline/differential/Comparator.cs) | `vanilla-compatible@1` 下只比**具名流**（动态槽位没有稳定跨后端键，条目集合不同不是规则差异） |
+| [TestCommand.cs](../../../../tools/base-migration-baseline/differential/TestCommand.cs) | `streams` 维度门槛收紧为"某个边界存在 `Draws > 0` 的具名流"；新增流证据自洽结算（声明消费却无具名流边界读数，或脚本期间**实际增长**的具名流在逐边界覆盖不到 → `missing_dimension`），不补 0、不放宽 |
+| [README.md](../../../../tools/base-migration-baseline/differential/README.md) | 新增[参考侧逐边界随机流（2026-10-12）](../../../../tools/base-migration-baseline/differential/README.md#参考侧逐边界随机流2026-10-12)，写明两类身份、单位、逐边界增量语义、Restore 换对象与门槛 |
 
 ### 接口/语义变化（供消费方核对）
 
@@ -66,12 +69,12 @@
 ## 构建与身份
 
 - 固定输入闭包（**只读**，14 个文件逐个 SHA 见
-  [fixed-closure-sha256.txt](../../../.audit/dsh-reference-stream-boundaries-20261012/fixed-closure-sha256.txt)）：
+  [fixed-closure-sha256.txt](../../../../.audit/dsh-reference-stream-boundaries-20261012/fixed-closure-sha256.txt)）：
   `.artifacts/parallel/owner-project-review-20261012/bin/Differential/debug`
   - `Core.TheSpire.dll` `sha256:3271cb3dd64c9837a7a311b11bc05b84c483f0b2b62f6db2c6019a1369c34c5c`
   - `BaseSpire.dll` `sha256:27452612b5fe123995568aadeb3752ea03993e724f460f0c6b3c6caa0899f24d`
   - `Sts2Sim.Core.dll` `sha256:5e99c502c689ccb228e5d92a2dac257d898daf6419c61109618edc32851d30a7`
-- 本包临时工程：[DifferentialVerify.csproj](../../../.audit/dsh-reference-stream-boundaries-20261012/verify/DifferentialVerify.csproj)
+- 本包临时工程：[DifferentialVerify.csproj](../../../../.audit/dsh-reference-stream-boundaries-20261012/verify/DifferentialVerify.csproj)
   （编译当前 `tools/differential/*.cs`，Reference 指向固定闭包，保留 `REFERENCE_SIM`；输出到
   `.artifacts/parallel/dsh-reference-stream-boundaries-20261012`）。**没有**改任何生产 csproj、没有并发构建 solution、没有写回闭包。
 - 本包构建产物：`.artifacts/parallel/dsh-reference-stream-boundaries-20261012/bin/Debug/net9.0/Differential.dll`
@@ -94,9 +97,9 @@ dotnet build .audit/dsh-reference-stream-boundaries-20261012/verify/Differential
 | 2 | `dotnet $dll test --suite regression --output .audit/dsh-reference-stream-boundaries-20261012/full-regression` | **1** | expected 17 / executed 17 | `passed 15` / `self_checked 1`（factory-wiring）/ `unsupported_rng_profile 1`；自检 22 项 0 失败；reference 执行 16 |
 | 3 | `dotnet $dll test --suite regression --only random-reshuffle-unsupported --records .audit/dsh-reference-stream-boundaries-20261012/negative-missing-streams/records --output .audit/dsh-reference-stream-boundaries-20261012/negative-missing-streams` | **1** | 选中 1 / 执行 1 | 负例：`missing_dimensions=[streams(reference)]`（清空逐边界流读数后仍真报缺维度） |
 
-产物：[targeted-reshuffle](../../../.audit/dsh-reference-stream-boundaries-20261012/targeted-reshuffle/regression.json)、
-[full-regression](../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/regression.json)、
-[negative-missing-streams](../../../.audit/dsh-reference-stream-boundaries-20261012/negative-missing-streams/regression.json)
+产物：[targeted-reshuffle](../../../../.audit/dsh-reference-stream-boundaries-20261012/targeted-reshuffle/regression.json)、
+[full-regression](../../../../.audit/dsh-reference-stream-boundaries-20261012/full-regression/regression.json)、
+[negative-missing-streams](../../../../.audit/dsh-reference-stream-boundaries-20261012/negative-missing-streams/regression.json)
 与对应 `*.log`（原样重定向输出）。
 
 ## 逐边界流证据与剩余差异

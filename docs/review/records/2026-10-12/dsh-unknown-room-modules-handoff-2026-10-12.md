@@ -1,12 +1,15 @@
 # ENV-T09 真实问号房与独立事件模块交接 — 2026-10-12
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 - task_id: `ENV-T09-unknown-room-modules-20261012`
 - session_id: `session-b4f2d691-688b-494a-83d2-ed06ad4b5ad9`
 - request_id: `e749b313-a4a9-4889-bae6-da6baac1e40d`
-- url: `https://124.221.182.144`（[派发记录](../../../.audit/dsh-unknown-room-modules-20261012/task-record.json)、[短工作包](../../../.audit/dsh-unknown-room-modules-20261012/task.txt)）
+- url: `https://124.221.182.144`（[派发记录](../../../../.audit/dsh-unknown-room-modules-20261012/task-record.json)、[短工作包](../../../../.audit/dsh-unknown-room-modules-20261012/task.txt)）
 - delivery_status: `ready_for_review`（本包交付的行为与证据已在正常公开流程上实地跑通；**不等于验收**：本包不关闭父项 ENV-T09、不启动下一包、不写主清单）
 
-> 主清单由 Codex 独自修改：本包**没有**修改 [主清单](README.md)。对应条目
+> 主清单由 Codex 独自修改：本包**没有**修改 [主清单](../../tofix/README.md)。对应条目
 > `ENV-T09 / ENV-T09-unknown-room-modules-20261012` 需由负责人按本交接更新认领/证据行。
 
 ## 1. 本包交付的用途与接手第一步
@@ -18,8 +21,8 @@
 
 1. 看第 3 节的"实际命令 / rc / 执行数"，用第 3 节的命令复跑一次固定 seed 轨迹；`rc 3 + step_limit`
    表示"跑到步数上限"，第 46/47 步就是本包交付的行为。
-2. 需要改事件内容时读[问号事件接入指南](../../design/mod-the-spire/how-to-add-a-room.md#横向扩展问号事件)，
-   接口速查见[编译接口参考](../../design/mod-the-spire/room-compile-reference.md#横向注册地图入口与事件)。
+2. 需要改事件内容时读[问号事件接入指南](../../../design/mod-the-spire/how-to-add-a-room.md#横向扩展问号事件)，
+   接口速查见[编译接口参考](../../../design/mod-the-spire/room-compile-reference.md#横向注册地图入口与事件)。
 3. 需要复核局部检查时跑 `--unknown-room-only`（第 3 节 4 号命令）。
 
 ## 2. 已交付能力（按机制，不是按文件）
@@ -95,7 +98,7 @@
 | --- | --- | --- | --- | --- |
 | 1 | `dotnet build mod-the-spire/base-spire/BaseSpire/BaseSpire.csproj -p:ArtifactsPath=<A>/build` | 0 | 0 error / 4 warning（既有） | 本节 |
 | 2 | `dotnet build net-the-spire/Net.TheSpire.Host/Net.TheSpire.Host.csproj -p:ArtifactsPath=<A>/build` | 0 | 0 error（**net 源码未改**，只按本包 Base 编译固定组合层） | Host SHA256 见 §5 |
-| 3 | `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -p:ArtifactsPath=<A>/build -- --report <A>/report` | 0 | **785 passed / 0 failed**（本包前基线 775；+10 为本包新增），行为报告 53 条 | [slice-full.log](../../../.artifacts/parallel/dsh-unknown-room-modules-20261012/slice-full.log)、`<A>/report/slice-behavior-report.json` |
+| 3 | `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -p:ArtifactsPath=<A>/build -- --report <A>/report` | 0 | **785 passed / 0 failed**（本包前基线 775；+10 为本包新增），行为报告 53 条 | [slice-full.log](../../../../.artifacts/parallel/dsh-unknown-room-modules-20261012/slice-full.log)、`<A>/report/slice-behavior-report.json` |
 | 4 | `dotnet run --project …/BaseSpire.Slice.Tests -- --unknown-room-only` | 0 | **10 项局部检查全过** | `<A>/unknown-room-checks.log` |
 | 5 | `dotnet run --project docs/examples/base-events -p:ArtifactsPath=<A>/build` | 0 | 两个独立模块例子原样通过（选项隔离/永久写回/关闭/重复 ID 拒绝/未注册显式失败） | `<A>/base-events-example.log` |
 | 6 | `python -X utf8 -u <A>/verify_source_vectors.py` | 0 | 独立来源复算（Python 重写 hash/xoshiro/float32 赔率） | `<A>/source-vectors-seed-L.txt` |

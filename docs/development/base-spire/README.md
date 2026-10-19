@@ -39,6 +39,7 @@
 | 查所有领域的落点与前置依赖 | [领域目录参考](reference/domains.md) |
 | 查includes、manifest、静态JSON和内容模块边界 | [包格式参考](../../dsl/core/0.3/package-reference.md) |
 | 理解源目录、内容自有规则与共享操作的关系 | [开发模型](explanation/development-model.md) |
+| 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容与行为重构目标](../../design/mod-the-spire/content-behavior-refactor-goals.md)，目标设计不等于现有接口 |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 
 本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[文档与 skill 约定](../../design/mod-the-spire/base-development-docs.md)。

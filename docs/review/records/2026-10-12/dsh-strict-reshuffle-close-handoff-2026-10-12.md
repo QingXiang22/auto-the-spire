@@ -1,5 +1,8 @@
 # ENV-T04 当前共同闭包重洗严格结算交接 — 2026-10-12
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 本包把 `random-reshuffle-unsupported` 在**原 ID/seed/动作/终点/维度不变**的前提下原地升级为现有
 `vanilla-compatible@1`，并在负责人**固定共同闭包**上完成一次完整原 17 严格执行：**16 双侧 `passed` + 1
 `self_checked`、strict rc0、比较器自检 0 失败**。仍未完成：**正常 Run / 奖励 / 四幕双侧没有执行**，
@@ -9,23 +12,23 @@
 - dispatch_id: `ENV-T04-strict-reshuffle-close-20261012`（= 派发记录 `task_id`）
 - session_id: `session-0eef0705-b034-4a87-8bfb-70880010f1a7`
 - request_id: `a25173be-5d7c-4c64-91ab-906fa90fbd56`
-- dispatch_record: [派发记录](../../../.audit/dsh-strict-reshuffle-close-20261012/task-record.json)（[派单原文](../../../.audit/dsh-strict-reshuffle-close-20261012/task.txt)）
+- dispatch_record: [派发记录](../../../../.audit/dsh-strict-reshuffle-close-20261012/task-record.json)（[派单原文](../../../../.audit/dsh-strict-reshuffle-close-20261012/task.txt)）
 - delivery_status: `ready_for_review`（**不是验收**）
 - updated_at: 2026-10-12T10:05:00+08:00
 
-归属与接手入口：归属[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（主清单由负责人独自修改，本会话只写本交接与自有
+归属与接手入口：归属[主清单 ENV-T04](../../tofix/README.md#env-t04)（主清单由负责人独自修改，本会话只写本交接与自有
 证据）。本包可写目录只有 `tools/differential/`（本 case 的 Profile 声明、必要结算文案、README）与
-[.audit/dsh-strict-reshuffle-close-20261012](../../../.audit/dsh-strict-reshuffle-close-20261012/)；输出在
+[.audit/dsh-strict-reshuffle-close-20261012](../../../../.audit/dsh-strict-reshuffle-close-20261012)；输出在
 `.artifacts/parallel/dsh-strict-reshuffle-close-20261012`。没有改 core / base / net / `reference` / AI，
 没有构建任何生产项目，**比较器没有改**（没有发现实际漏洞）。
 
 ## 接手后先做什么
 
-1. 先核对[主清单 ENV-T04](../../review/tofix/README.md#env-t04) 与共享 `git status --short`。本包**已交付**：
+1. 先核对[主清单 ENV-T04](../../tofix/README.md#env-t04) 与共享 `git status --short`。本包**已交付**：
    该 case 的 Profile 原地升级、一次完整 17 严格 rc0、两个完整 suite 反例、一条 base 记录 note 文案修正、
    README 的对应章节。**不要**重做已交的排序（ENV-T06）与参考侧逐边界流包
-   （[参考流交接](../../review/tofix/dsh-reference-stream-boundaries-handoff-2026-10-12.md)），也不重做商店前缀录制。
-2. 想直接看结论：读[完整 17 产物](../../../.artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression/regression.json)
+   （[参考流交接](dsh-reference-stream-boundaries-handoff-2026-10-12.md)），也不重做商店前缀录制。
+2. 想直接看结论：读[完整 17 产物](../../../../.artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression/regression.json)
    与其中 `random-reshuffle-unsupported` 一行（`verdict=passed`、4 边界、`missing_dimensions=[]`），
    再看[两个反例](#两个完整-suite-反例)的 `regression.json`。
 3. 想复放：用本包临时工程构建后跑「执行记录」表里的三条命令（前置条件＝
@@ -41,11 +44,11 @@
 
 | 文件 | 变化 | 是否影响判定 |
 | --- | --- | --- |
-| [suites/regression.json](../../../tools/base-migration-baseline/differential/suites/regression.json) | `random-reshuffle-unsupported` 的 `rng_profile`：`unsupported_rng_profile` → `vanilla-compatible@1`；`title`/`provenance`（source 改为真实源定位）/`reference_source` 与 suite 级 `note` 如实改写。ID、`game_seed`、`setup`、3 个 `end_turn`、`expected_terminal`、`contents`/`variants`、四个必需维度（`actions`/`facts`/`pile-order`/`streams`）**全部未动**，分母仍 17 | **是**（这是升级本体） |
-| [BaseBackend.cs](../../../tools/base-migration-baseline/differential/BaseBackend.cs) | 「start 之后消费了新随机数」这条 base 记录 **note 文案**按 Profile 分流：原版兼容 → 「两侧具名流逐边界参与比较」；其余 → 保留「按 `unsupported_rng_profile` 处理，不计通过」。升级前该 note 对本 case 是**错的**（记录会写"不计通过"而严格判定是 `passed`） | **否**（note 不参与比较；实测只有该 case 的 base 记录多/少这一行） |
-| [README.md](../../../tools/base-migration-baseline/differential/README.md) | 新增「重洗严格升级（2026-10-12）」章节（口径核实表、两次完整 17、两个反例）；修正 3 处升级后失效的表述（第 9/25 行与「重洗比较（2026-10-11）」开头），并在参考流包实测处加「已被下一节取代」指针 | 否（文档） |
-| [.audit/…/verify/DifferentialVerify.csproj](../../../.audit/dsh-strict-reshuffle-close-20261012/verify/DifferentialVerify.csproj) | 本包临时验证工程：只编译当前 `tools/differential/*.cs`，依赖全部指向固定闭包 DLL，保留 `REFERENCE_SIM`；输出到本包 `.artifacts`；**不**经 ProjectReference 重编 base，**不**写任何生产 csproj/DLL | 否（工具构建方式） |
-| [.audit/…/verify-reshuffle-stream-identity.py](../../../.audit/dsh-strict-reshuffle-close-20261012/verify-reshuffle-stream-identity.py)、[build-negatives.py](../../../.audit/dsh-strict-reshuffle-close-20261012/build-negatives.py)、[fixed-closure-sha256.txt](../../../.audit/dsh-strict-reshuffle-close-20261012/fixed-closure-sha256.txt) 及各 `*.log` | 本包证据（独立核实脚本、反例构造、日志、固定 DLL SHA） | 否（证据） |
+| [suites/regression.json](../../../../tools/base-migration-baseline/differential/suites/regression.json) | `random-reshuffle-unsupported` 的 `rng_profile`：`unsupported_rng_profile` → `vanilla-compatible@1`；`title`/`provenance`（source 改为真实源定位）/`reference_source` 与 suite 级 `note` 如实改写。ID、`game_seed`、`setup`、3 个 `end_turn`、`expected_terminal`、`contents`/`variants`、四个必需维度（`actions`/`facts`/`pile-order`/`streams`）**全部未动**，分母仍 17 | **是**（这是升级本体） |
+| [BaseBackend.cs](../../../../tools/base-migration-baseline/differential/BaseBackend.cs) | 「start 之后消费了新随机数」这条 base 记录 **note 文案**按 Profile 分流：原版兼容 → 「两侧具名流逐边界参与比较」；其余 → 保留「按 `unsupported_rng_profile` 处理，不计通过」。升级前该 note 对本 case 是**错的**（记录会写"不计通过"而严格判定是 `passed`） | **否**（note 不参与比较；实测只有该 case 的 base 记录多/少这一行） |
+| [README.md](../../../../tools/base-migration-baseline/differential/README.md) | 新增「重洗严格升级（2026-10-12）」章节（口径核实表、两次完整 17、两个反例）；修正 3 处升级后失效的表述（第 9/25 行与「重洗比较（2026-10-11）」开头），并在参考流包实测处加「已被下一节取代」指针 | 否（文档） |
+| [.audit/…/verify/DifferentialVerify.csproj](../../../../.audit/dsh-strict-reshuffle-close-20261012/verify/DifferentialVerify.csproj) | 本包临时验证工程：只编译当前 `tools/differential/*.cs`，依赖全部指向固定闭包 DLL，保留 `REFERENCE_SIM`；输出到本包 `.artifacts`；**不**经 ProjectReference 重编 base，**不**写任何生产 csproj/DLL | 否（工具构建方式） |
+| [.audit/…/verify-reshuffle-stream-identity.py](../../../../.audit/dsh-strict-reshuffle-close-20261012/verify-reshuffle-stream-identity.py)、[build-negatives.py](../../../../.audit/dsh-strict-reshuffle-close-20261012/build-negatives.py)、[fixed-closure-sha256.txt](../../../../.audit/dsh-strict-reshuffle-close-20261012/fixed-closure-sha256.txt) 及各 `*.log` | 本包证据（独立核实脚本、反例构造、日志、固定 DLL SHA） | 否（证据） |
 
 `fixtures/negative/suite-init-*.json` 里那三份 `note` 仍是旧文案的副本、`fixtures/fixtures-v1.json` 仍写
 `unsupported_rng_profile`（探索性 suite 的历史记录），都**未动**：它们不属于本 case 的 Profile 结算，
@@ -54,7 +57,7 @@
 ## 源条件核实（映射 / Restore / 单位，不按同 seed 猜流）
 
 升级的前置是派单要求的「确认完整源条件」。下表每条都同时给**只读源定位**与**实际边界读数**，并由
-[verify-reshuffle-stream-identity.py](../../../.audit/dsh-strict-reshuffle-close-20261012/verify-reshuffle-stream-identity.py)
+[verify-reshuffle-stream-identity.py](../../../../.audit/dsh-strict-reshuffle-close-20261012/verify-reshuffle-stream-identity.py)
 （rc0，含 28 条断言）与**另一份既有独立实现** `tools/rng-oracle` 交叉复算，不是"同 seed 就当成同一条流"。
 
 | 口径 | 只读源依据 | 实际边界核实 |
@@ -68,7 +71,7 @@
 
 ## 构建与身份
 
-- 固定闭包（**只读输入**，全部 DLL SHA 见 [fixed-closure-sha256.txt](../../../.audit/dsh-strict-reshuffle-close-20261012/fixed-closure-sha256.txt)）：
+- 固定闭包（**只读输入**，全部 DLL SHA 见 [fixed-closure-sha256.txt](../../../../.audit/dsh-strict-reshuffle-close-20261012/fixed-closure-sha256.txt)）：
   `.artifacts/parallel/owner-horizontal-extension-20261012/bin/Differential/debug`（Engine99 / Slice775）
   - `Core.TheSpire.dll` `afee26472d062074b681ef4c59b61f88994aa72a252f4e0a0c81e3baf9d223a2`
   - `BaseSpire.dll` `fdb4d02b7a33cbf985ba9270a35957ebad81d516a2c991bd46623cd86570615c`
@@ -77,7 +80,7 @@
   - `Antlr4.Runtime.Standard.dll` `0440e3d2c5906326e04df87d6a5272192b7d29099901ba4215ca9e0f5dca7591`、
     `System.IO.Hashing.dll` `fbe8c2fcb4adc01da5c3c8ed0d727903b8fda1e6b84da3c447c9794615f30664`
 - 本包临时工程（rc0，**0 错误 / 1 警告**，警告是 `MSB3539`（`BaseIntermediateOutputPath` 设置时机），非行为问题，
-  日志 [verify-build.log](../../../.audit/dsh-strict-reshuffle-close-20261012/verify-build.log)）：
+  日志 [verify-build.log](../../../../.audit/dsh-strict-reshuffle-close-20261012/verify-build.log)）：
   `dotnet build .audit/dsh-strict-reshuffle-close-20261012/verify/DifferentialVerify.csproj`
   → `.artifacts/parallel/dsh-strict-reshuffle-close-20261012/verify/bin/Debug/net9.0/Differential.dll`
   `a935b69dcaa4f75dfc4797dfe7d959b89c06ba35f01f054d4e87238e68a71bd9`；同目录下拷入的
@@ -103,16 +106,16 @@
 | 1 | `dotnet $fixed test --suite regression --output .artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression-fixed-dll` | **0** | expected 17 / selected 17 / executed 17 | `passed 16 / self_checked 1 / 不计通过 0`，自检 22 项 0 失败，`complete=true`；`random-reshuffle-unsupported` = `passed`（4 边界、`divergences=[]`、`missing_dimensions=[]`）。**只改 suite 声明、用固定 DLL** 就能到 rc0 |
 | 2 | `dotnet build .audit/dsh-strict-reshuffle-close-20261012/verify/DifferentialVerify.csproj` | **0** | — | 0 错误 / 1 警告（MSB3539） |
 | 3 | `dotnet $this test --suite regression --output .artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression` | **0** | expected 17 / executed 17 | 与 #1 同判定同计数（`run_id=…+20261012T015439Z`）；与 #1 的记录差异**只有** `random-reshuffle-unsupported` 的 base 记录多/少一条 note 文案（对比见下方），其余 16 base + 16 reference 逐字节相同 |
-| 4 | 两个反例（构造见 [build-negatives.py](../../../.audit/dsh-strict-reshuffle-close-20261012/build-negatives.py)，rc0） | **0** | — | 生成 `negative-pile-order` / `negative-missing-streams` 两套外部参考记录 |
+| 4 | 两个反例（构造见 [build-negatives.py](../../../../.audit/dsh-strict-reshuffle-close-20261012/build-negatives.py)，rc0） | **0** | — | 生成 `negative-pile-order` / `negative-missing-streams` 两套外部参考记录 |
 | 5 | `dotnet $this test --suite regression --records .audit/dsh-strict-reshuffle-close-20261012/negative-pile-order/records --output .artifacts/parallel/dsh-strict-reshuffle-close-20261012/negative-pile-order` | **1** | expected 17 / executed 17 | 见下节 N1 |
 | 6 | `dotnet $this test --suite regression --records .audit/dsh-strict-reshuffle-close-20261012/negative-missing-streams/records --output .artifacts/parallel/dsh-strict-reshuffle-close-20261012/negative-missing-streams` | **1** | expected 17 / executed 17 | 见下节 N2 |
 | 7 | `python .audit/dsh-strict-reshuffle-close-20261012/verify-reshuffle-stream-identity.py` | **0** | 28 条断言全 OK | 映射/Restore/单位/实际边界全部通过（含 `tools/rng-oracle` 交叉复算） |
-| 8 | `python tools/doc-check/check_docs.py` | **4** | 442 篇 | 4 个问题**全部**是既有文件（`dsh-power-fixture-handoff-2026-10-11.md` 2 个、`dsh-startup-alignment-handoff-2026-10-11-f68b943d.md` 2 个）；本包改动/新增文件（含本交接）0 个（[日志](../../../.audit/dsh-strict-reshuffle-close-20261012/doc-check.txt)） |
+| 8 | `python tools/doc-check/check_docs.py` | **4** | 442 篇 | 4 个问题**全部**是既有文件（`dsh-power-fixture-handoff-2026-10-11.md` 2 个、`dsh-startup-alignment-handoff-2026-10-11-f68b943d.md` 2 个）；本包改动/新增文件（含本交接）0 个（[日志](../../../../.audit/dsh-strict-reshuffle-close-20261012/doc-check.txt)） |
 | 9 | `git diff --check` | **0** | — | 只有既有共享文件的 LF/CRLF 提示；本包改动的 3 个 `tools/differential` 文件未跟踪，该命令不覆盖它们 |
 
-产物：[升级前复算](../../../.audit/dsh-strict-reshuffle-close-20261012/baseline-recompute/regression.json)、
-[完整 17（固定 DLL）](../../../.artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression-fixed-dll/regression.json)、
-[完整 17（本包构建）](../../../.artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression/regression.json)、
+产物：[升级前复算](../../../../.audit/dsh-strict-reshuffle-close-20261012/baseline-recompute/regression.json)、
+[完整 17（固定 DLL）](../../../../.artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression-fixed-dll/regression.json)、
+[完整 17（本包构建）](../../../../.artifacts/parallel/dsh-strict-reshuffle-close-20261012/full-regression/regression.json)、
 两个反例的 `regression.json`，以及各自同目录的 `records/{base,reference}/*.json` 与 `*.log`。
 
 base 记录的**唯一**差异（`notes` 数组，对比 #1 与 #3）：
@@ -159,9 +162,9 @@ base 记录的**唯一**差异（`notes` 数组，对比 #1 与 #3）：
 
 ## 维护位置与自查
 
-- 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../review/tofix/README.md#env-t04)（本轮由负责人独自修改）；
-  工具用法与口径写 [tools/differential/README.md](../../../tools/base-migration-baseline/differential/README.md)（新增「重洗严格升级（2026-10-12）」）；
-  长日志与原始证据在 [.audit/dsh-strict-reshuffle-close-20261012](../../../.audit/dsh-strict-reshuffle-close-20261012/)，
+- 任务状态/认领/下一成果只回写[主清单 ENV-T04](../../tofix/README.md#env-t04)（本轮由负责人独自修改）；
+  工具用法与口径写 [tools/differential/README.md](../../../../tools/base-migration-baseline/differential/README.md)（新增「重洗严格升级（2026-10-12）」）；
+  长日志与原始证据在 [.audit/dsh-strict-reshuffle-close-20261012](../../../../.audit/dsh-strict-reshuffle-close-20261012)，
   运行产物在 `.artifacts/parallel/dsh-strict-reshuffle-close-20261012`。
 - 接手自查（作者视角，**不是**独立读者验证）：目标与有效状态＝主清单 ENV-T04 行；可复用成果＝固定闭包复算 +
   本包临时工程 + suite 的原地升级；第一步＝「接手后先做什么」第 1/3 条；完成条件＝派单原文「一次完整原 17、

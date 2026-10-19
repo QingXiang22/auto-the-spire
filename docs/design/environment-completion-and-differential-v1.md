@@ -31,7 +31,7 @@ v1.2补充[实现约束与交付证据](environment-implementation-constraints.m
 
 本节原条目记录规划初始时点，不覆盖后来的实现。2026-10-04[负责人复核](../review/records/2026-10-04/environment-owner-review.md)已核实原版随机Profile及种子布局、68张正式卡和25个Power定义，但正式运行接入及完整Run仍未完成。现有compare会在7个受控passed、5个unsupported时返回0，不能作为严格测试入口；v1.1要求补齐下面的失败契约，而不是再新建一套比较框架。
 
-- 本次读取本机游戏`release_info.json`：`v0.111.0 / commit 41cef1ea / main_assembly_hash 222455745`，与参考README声明一致；[历史来源审计](../review/records/2026-10-01/sts2-sim-补全与保真差异-2026-10-01.md)也记录该来源。执行时须同时冻结恢复源码和参考目录的实际文件摘要，不能只记版本字符串。
+- 本次读取本机游戏`release_info.json`：`v0.111.0 / commit 41cef1ea / main_assembly_hash 222455745`，与参考README声明一致；[历史来源审计](../review/deprecated/sts2-sim-补全与保真差异-2026-10-01.md)也记录该来源。执行时须同时冻结恢复源码和参考目录的实际文件摘要，不能只记版本字符串。
 - `sts2/src/Core/Models/ModelDb.cs`的AllCharacters为Ironclad、Silent、Regent、Necrobinder、Defect五个角色。Deprived等额外类型是否进入分母取决于单人正常可达来源，不把所有C#类都算内容，也不无依据删掉可达内容。
 - 当前Engine的RandomService只接受`xoshiro256ss/splitmix64@1`及`rejection-uniform@1`，流种子使用自身派生规则，明确不声称原版同种子一致。完整同种子对拍必须先补兼容能力。
 - 参考具有RunDriver/IRunDecisionSource、RunEngine、RunRecorder和RngDiagnostics；顺序RNG与重键模式分开。其PlayerSnapshot只有手牌内容ID和各牌区大小，不能充分区分相同卡牌实例、牌区顺序及实例变量，不能直接作为严格对拍全量快照。

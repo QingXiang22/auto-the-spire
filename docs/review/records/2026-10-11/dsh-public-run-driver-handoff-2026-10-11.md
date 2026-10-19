@@ -1,46 +1,49 @@
 # ENV-T03 公开整局运行器交接 — 2026-10-11
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 - task_id: `ENV-T03-public-run-driver-parallel-20261011`
-- dispatch_record: [.audit/dsh-public-run-driver-2026-10-11/task-record.json](../../../.audit/dsh-public-run-driver-2026-10-11/task-record.json)
+- dispatch_record: [.audit/dsh-public-run-driver-2026-10-11/task-record.json](../../../../.audit/dsh-public-run-driver-2026-10-11/task-record.json)
 - session_id: `session-7bab7f9a-2ad2-4389-a743-510f7bb77ca4`
 - request_id: `163fc1be-3b7c-4832-8f73-82b3914da8d2`
 - delivery_status: `待验证；本包执行结果与证据见下方及证据索引，主清单由 Codex 单写`
 - updated_at: `2026-10-11T00:00:00+08:00`
 
-接手第一步：读[证据索引](../../../.audit/dsh-public-run-driver-2026-10-11/evidence.md)（含全部运行清单、字节数、
+接手第一步：读[证据索引](../../../../.audit/dsh-public-run-driver-2026-10-11/evidence.md)（含全部运行清单、字节数、
 四类验证映射），再到 `runs/<RUN>/summary.json` 核对 `status / exit_code / run_complete /
 terminal_result / identity / seed_accepted / rooms / policy`，需要原始字节时读同目录 `frames.ndjson`
 （双向原始 NDJSON 帧）与 `steps.ndjson`（语义操作 + 实时公开状态视图）。审阅通过后由 Codex 更新
-[主清单 T03](README.md#env-t03)。执行者交付后停止，不续派、不提交。
+[主清单 T03](../../tofix/README.md#env-t03)。执行者交付后停止，不续派、不提交。
 
 ## 交付内容
 
-新增 [公开整局运行器](../../../net-the-spire/client/run_game.py)（唯一新增生产文件）与其
-[使用说明](../../../net-the-spire/client/run_game.md)。运行器只用
-[NetClient](../../../net-the-spire/client/net_client.py) 的公开面（`describe` / `get_catalog` /
+新增 [公开整局运行器](../../../../net-the-spire/client/run_game.py)（唯一新增生产文件）与其
+[使用说明](../../../../net-the-spire/client/run_game.md)。运行器只用
+[NetClient](../../../../net-the-spire/client/net_client.py) 的公开面（`describe` / `get_catalog` /
 `start` / `step` / `close`），从**实时快照的公开 `legal_actions`** 现场挑候选，用当前
 `observation_id` 作 `expected_observation_id`；不写死 `candidate_id`、不写死 seed 脚本、不维护逐张牌
 白名单、不读隐藏牌堆/随机数/Engine 内部状态、不做 AI 评估、不做多 seed 搜索。
 
-**未修改**：`net_client.py`、`test_potion_host.py`、[client README](../../../net-the-spire/client/README.md)、
+**未修改**：`net_client.py`、`test_potion_host.py`、[client README](../../../../net-the-spire/client/README.md)、
 Host/C#、协议与 schema、base/core/tools/参考、AI、主清单与阶段。没有跨模块接口缺口需要 Codex 先补。
 
 CLI：`--host-dll --scope --seed --output --max-actions`（另有 `--scenario --profile --timeout
 --frame-limit --relic-policy --potion-policy --use-potions --step-frontier --step-unsupported-room
 --stall-limit --probe-stale-observation`）。换 DLL / 换 seed 只改命令行；决策顺序固定且可读
 （终局 → pending 选择 → 幕完成边界 → 地图 → 奖励 → 宝箱 → 营火 → 切片推进 → 战斗 → 未支持边界），
-明细见[使用说明](../../../net-the-spire/client/run_game.md)。
+明细见[使用说明](../../../../net-the-spire/client/run_game.md)。
 
 ## Host 与身份
 
-只读不可变 Host：[.artifacts/parallel/dsh-core-author-04/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll](../../../.artifacts/parallel/dsh-core-author-04/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll)，
+只读不可变 Host：[.artifacts/parallel/dsh-core-author-04/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll](../../../../.artifacts/parallel/dsh-core-author-04/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll)，
 SHA256 `805C123D9941454E0B15E704CD48EB107A2E2A26DCC4555DDE8617513D0C1F6D`（每份 summary 的
 `host.dll_sha256` 逐次一致，未构建或写入该目录）。没有用当前 A 源码构建任何东西，也没有编译
 base/net 的 C#（只用 `python -m py_compile` 检查运行器语法）。
 
 dev-map 实测身份（每份 summary 的 `identity`）：`net:backend:simulation-0.2-350911d86bad900d` /
 `net:catalog:b400d7f332f590cc` / `net:ruleset:bf54a1e5d279a86b` / protocol `0.2`，profile
-`base-spire-singleplayer-dev-map-v1`；与 [act1_smoke 回放数据](../../../tools/base-spire-dev/fixtures/act1-basic-10.json)
+`base-spire-singleplayer-dev-map-v1`；与 [act1_smoke 回放数据](../../../../tools/base-spire-dev/fixtures/act1-basic-10.json)
 的 expected_identity 一致，但**运行器不固化该身份**——每局按 `describe` 实测并要求与自身观测一致。
 `dev-map` 的 `limit` 为 entities 256 / legal_actions 256 / sequences 10 / frame_bytes 262144。
 
@@ -76,7 +79,7 @@ CurrentRoom/EncounterId`、长期牌堆、遗物、药水带）与 `seed_request
    （同一 seed 的步数截止分类）。不是零步入口检查。
 2. **另一固定 seed 实际开局/步骤**：11 个不同 seed 的实跑（K/E/G/J/F/D/M/L/I/B 等），其中 seed-K 推进到 Boss 房。
 3. **更换合法候选必须用当前观察**：每一步都断言候选出现在**当前**快照的 `legal_actions`，并用当前
-   `observation_id` 发送（[run_game.py:705-724](../../../net-the-spire/client/run_game.py)）。负对照
+   `observation_id` 发送（[run_game.py:705-724](../../../../net-the-spire/client/run_game.py)）。负对照
    `runs/smoke-6/stale-observation-probe.json`：用过期 obs `1426` + 旧候选重发，宿主回
    `error.code=stale_observation`、`execution_state=not_started`、`retry_mode=query_request`、
    `message="expected_observation_id=1426 已过期（当前 1689）：必须重新 observe"`。
@@ -104,7 +107,7 @@ CurrentRoom/EncounterId`、长期牌堆、遗物、药水带）与 `seed_request
 
 ## 文档与仓库检查
 
-新增两份文档（本交接 + [运行器使用说明](../../../net-the-spire/client/run_game.md)）与
-[证据索引](../../../.audit/dsh-public-run-driver-2026-10-11/evidence.md)；纯文档改动按根约定跑
+新增两份文档（本交接 + [运行器使用说明](../../../../net-the-spire/client/run_game.md)）与
+[证据索引](../../../../.audit/dsh-public-run-driver-2026-10-11/evidence.md)；纯文档改动按根约定跑
 `python -X utf8 tools/doc-check/check_docs.py` 与 `git diff --check`，结果见
-[验证记录](../../../.audit/dsh-public-run-driver-2026-10-11/validation.json)。
+[验证记录](../../../../.audit/dsh-public-run-driver-2026-10-11/validation.json)。

@@ -1,5 +1,7 @@
 # 项目文档总入口
 
+2026-10-19 架构评估从[base 内容与行为重构目标](design/mod-the-spire/content-behavior-refactor-goals.md)进入，覆盖卡牌正文、出牌、攻击／伤害、费用、牌区、复制／附着、Power 和 Run。该文档描述后续目标，本轮没有启动生产重构。当前结构见[base 组织说明](design/mod-the-spire/base-architecture.md)，历史证据按[review 阅读入口](review/README.md)查找，过时对比不再作为接手前置。
+
 2026-10-18当前架构工作从[纯DSL base规格](design/mod-the-spire/engine-dsl-migration/spec.md)、[目录与迁移设计](design/mod-the-spire/engine-dsl-migration/plan.md)和[实施任务](design/mod-the-spire/engine-dsl-migration/tasks.md)进入。用户已确认直接切换并接受未迁移玩法暂时报未支持；默认 Host 与开发工具已切换到纯 DSL 遗物抽牌开发包；正常 Run 与其他未迁移玩法明确未支持。实际范围和检查见[首批交付记录](review/records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，状态仍见主清单。
 
 审阅剩余工作时，打开[领域总览](review/tofix/README.md#当前任务)了解各类范围；review最近一批请直接看[当前交付](review/tofix/README.md#当前交付)、[推进顺序](review/tofix/README.md#推进顺序)和[每批集成](review/tofix/README.md#每批集成与重排条件)。[归属与依赖](review/tofix/README.md#归属与依赖)指定主要归属，原ENV编号保留为合同与证据索引。当前状态与排期只在主清单维护。

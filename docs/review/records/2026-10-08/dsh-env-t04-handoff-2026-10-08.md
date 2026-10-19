@@ -134,4 +134,4 @@ Release 成本测量、公开 Host 轨迹（C 线）、任何训练。未运行�
 - 方法与契约：`docs/design/post-core-agent-assignments.md` §4、`docs/design/environment-implementation-constraints.md` §9/§12、[工具 README](../../../../tools/base-migration-baseline/differential/README.md)（本包已更新）。
 - 本次证据：`artifacts/environment/tests/{regression,negative}/`、`.audit/dsh-env-t04-resume-2026-10-08/`（派单记录、`regression-run.log`、`failure-contract/`、`supporting-checks.log`）。
 - 前序证据：`.audit/dsh-env-t04-implementation-2026-10-07/`（旧会话技能安装与派单记录）、
-  [2026-10-08 只读核验](../../tofix/env-t04-verification-2026-10-08.md)（指出当时入口尚未交付）。
+  [2026-10-08 只读核验](env-t04-verification-2026-10-08.md)（指出当时入口尚未交付）。

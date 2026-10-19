@@ -1,9 +1,12 @@
 # ENV-T04 严格 regression 交付核验 — 2026-10-08
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 本次只读核验让接手者不必重复构建或追问上一段会话，就能确认 ENV-T04 的严格 regression 入口**尚未交付**：合同要求的两个入口都不存在，`test` 子命令未实现，唯一可运行的二进制早于派单时间。T01/T02 所需的 B 双侧证据因此仍未解除依赖。
 
 归属：ENV-T04「严格regression接唯一工厂和独立参考」。本报告是一次维护核验，不认领 B 的生产包。
-接手入口：主清单 ENV-T04 条目；[B 完整交付合同 §4](../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../tools/base-migration-baseline/differential/README.md)。
+接手入口：主清单 ENV-T04 条目；[B 完整交付合同 §4](../../../design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)；[工具 README](../../../../tools/base-migration-baseline/differential/README.md)。
 交付范围：只读。本会话未修改 `tools/differential/**`、A/B/C 生产代码、core 或主清单任务行。
 本报告记录 2026-10-08 的核验结果；当前排期、状态与认领以主清单为准。
 
@@ -11,7 +14,7 @@
 
 1. 先确认本包**已交付部分**，避免重做：`BaseBackend.cs` 已有正式工厂与受控会话路径，`Comparator`/`FixtureSuite`/`ReferenceBackend`/`RngCrossCheck` 已在树内；技能安装已完成且哈希一致（见下表）。
 2. 一个可执行的下一步：由负责人确认 B 会话 `session-d15c22bb-09fa-4f1c-9b2e-141b54ba243b` 是否仍在推进。若仍在推进，本包无需他人介入；若已停止，见「差异、阻塞与未验证」的重派建议。
-3. 本核验不改变 [ENV-T04 完成条件](../../review/tofix/README.md#env-t04)：七个既有 case 实际双侧执行、五个 unsupported 原 ID 保留、六类反例返回非零、源/reference 派生与随机 trace 可核对。上述合同一条都还没有执行证据。
+3. 本核验不改变 [ENV-T04 完成条件](../../tofix/README.md#env-t04)：七个既有 case 实际双侧执行、五个 unsupported 原 ID 保留、六类反例返回非零、源/reference 派生与随机 trace 可核对。上述合同一条都还没有执行证据。
 
 ## 现状核对（已交付 / 未交付）
 

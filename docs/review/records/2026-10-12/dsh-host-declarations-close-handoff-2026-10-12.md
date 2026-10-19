@@ -1,16 +1,19 @@
 # Host 声明闭合与切片后端依赖交接 — 2026-10-12
 
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
 本包把公开运行构造的两处缺口一起收口：`describe` 的结构声明改用**同一 `get_catalog` 已发布的公开 ID**（I-71/I-84），旧切片/作者场景的宿主构造补上**规则包声明的计算后端**注入缝。修好后 net 检查在原 416 项全通过的基础上新增 2 项一致性检查（418/418），并在新构建的真实 Host 上录得 0.2 契约 **0 违规**的购买/离店与删牌轨迹。完整整局仍未通关，两条轨迹都在 Unknown 节点按 `unsupported_map_room` 停止。
 
 归属：`ENV-T03` / `ENV-T03-host-declarations-close-20261012`（负责人 2026-10-12 裁决：修 Host 实现，沿用 I71/I84，不放宽 schema/契约）。
-派发记录：`session-162ee024-d56e-4165-acf9-9f2350d6409d` / 请求 `f7ea0456-d926-4504-9758-b1e0b5001813`，见[本包 task-record](../../../.audit/dsh-host-declarations-close-20261012/task-record.json)与[短工作包](../../../.audit/dsh-host-declarations-close-20261012/task.txt)。
-接手入口：[主清单 ENV-T03 项](../tofix/README.md#env-t03)当前认领与完成条件；契约规则见 [net 0.1 不变量 I-71/I-84](../../contracts/net/0.1/invariants.md)（0.2 沿用），实现接口说明见 [net 设计 §7 新增小节](../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
+派发记录：`session-162ee024-d56e-4165-acf9-9f2350d6409d` / 请求 `f7ea0456-d926-4504-9758-b1e0b5001813`，见[本包 task-record](../../../../.audit/dsh-host-declarations-close-20261012/task-record.json)与[短工作包](../../../../.audit/dsh-host-declarations-close-20261012/task.txt)。
+接手入口：[主清单 ENV-T03 项](../../tofix/README.md#env-t03)当前认领与完成条件；契约规则见 [net 0.1 不变量 I-71/I-84](../../../contracts/net/0.1/invariants.md)（0.2 沿用），实现接口说明见 [net 设计 §7 新增小节](../../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
 交付范围：`net-the-spire/Net.TheSpire/Control`、`net-the-spire/Net.TheSpire.Tests`、`net-the-spire/Net.TheSpire.Host` 旧切片装配、`docs/design/net-the-spire/design.md`、本包 audit 与 `.artifacts/parallel/dsh-host-declarations-close-20261012`。
 本报告记录 2026-10-12 的交付；当前排期、状态与认领只以主清单为准。
 
 ## 接手后先做什么
 
-1. 先看[主清单 ENV-T03 项](../tofix/README.md#env-t03)：本包已交付的是「声明一致性 + 旧切片后端注入 + 一条真实商店帧」；**不要**重做 SourceStableShuffle 源预排序、Engine/Slice 套件、17 条对拍或五角色矩阵。
+1. 先看[主清单 ENV-T03 项](../../tofix/README.md#env-t03)：本包已交付的是「声明一致性 + 旧切片后端注入 + 一条真实商店帧」；**不要**重做 SourceStableShuffle 源预排序、Engine/Slice 套件、17 条对拍或五角色矩阵。
 2. 复核算力最小的一步（新共同闭包）：
 
    ```powershell
@@ -58,7 +61,7 @@
 
 ## 验证与证据
 
-固定输入（与[负责人闭包 SHA 记录](../../../.audit/owner-horizontal-extension-closure-sha256-20261012.json)一致，已核对本包构建输出逐字相同）：
+固定输入（与[负责人闭包 SHA 记录](../../../../.audit/owner-horizontal-extension-closure-sha256-20261012.json)一致，已核对本包构建输出逐字相同）：
 
 | 资产 | SHA-256 |
 | --- | --- |
@@ -75,14 +78,14 @@
 
 | 检查 | 工作目录与实际命令 | 返回码 / 结果 | 证据与证明范围 |
 | --- | --- | --- | --- |
-| 隔离闭包构建（固定 Core/Base DLL + 当前 net 源码，4 个临时工程） | 仓库根 `dotnet build .artifacts/parallel/dsh-host-declarations-close-20261012/build/Net.TheSpire.Tests/Net.TheSpire.Tests.csproj` | rc 0；0 警告 0 错误 | 临时工程定义在 [build/](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/build/)；只引用固定 DLL，**未构建** solution/core/base/生产 net 工程（生产 net `bin`/`obj` mtime 仍是 2026-10-02/04） |
-| net 基线复跑（未改源码） | 同上 dll 直接 `dotnet <dll>` | rc 1；**413 passed / 3 failed / 416 executed** | [net-baseline.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/net-baseline.log)；3 条与负责人日志同项同首错：V-03/V-09/V-10 均 `Unsupported: compute asset 'base-spire:SourceStableShuffleOrder' needs a compute backend but none is installed` |
-| net 修复后复跑 | 同上 | rc 0；**418 passed / 0 failed / 418 executed** | [net-after-closure-checks.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/net-after-closure-checks.log)；原 416 项全过，新增 2 项 `G-06` 与 `I-71/I-84 0.1 切片…反例可区分` 另列，未替换原项 |
-| 真实新 Host 帧（0.2 / dev-map / seed `ENV-T03-SEED-L`） | `python -X utf8 -u net-the-spire/client/run_game.py --host-dll <本包 Host.dll> --scope dev-map --seed ENV-T03-SEED-L --output ... --max-actions 90 --use-potions` | rc 4（`unsupported_map_room`，如实边界） | 购买/离店轨迹 [runs/shop-buy-remove](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/runs/shop-buy-remove/)（111→63，`removal_unavailable` 75>63，MapPhase 7→2，45 步）；删牌轨迹 [runs/shop-remove](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/runs/shop-remove/)（111→36，`shop_remove_request`/`answer`，MapPhase 7→2，46 步）。两者都在 Unknown 停止，`run_complete=false`、`whole_run_outcome=null`，**未声称通关** |
-| 0.2 契约校验（复用旧包 0.2 方法，只改固定 Host 与轨迹路径两处） | `python -X utf8 -u .audit/dsh-host-declarations-close-20261012/verify_host_declarations.py` | rc 0；**全部通过：0 违规** | [verify-host-declarations.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/verify-host-declarations.log)、[verify-host-declarations.json](../../../.audit/dsh-host-declarations-close-20261012/verify-host-declarations.json)；执行数 `l1_request_frames=99, l1_response_frames=99, l1_snapshots=93, l2_catalog_declarations=944, l3_snapshots=93, l4_seed_echo_checked=2, shop_steps=91, shop_visit_snapshots=7`。方法差异仅两处固定路径（`git diff --no-index` 见 [verify-method-diff.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/verify-method-diff.log)） |
-| 声明 ID 修复前后对比 | `python -X utf8 .audit/dsh-host-declarations-close-20261012/dump_supported_structures.py <新帧> <旧冻结帧>` | rc 0 | [supported-structures-before-after.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/supported-structures-before-after.log)：旧帧 `Entity 15 引擎键 + Relation 4 + LegalAction 21 + TerminalResult 2 = 42/局`（两局 84，与负责人裁决一致）；新帧 `15 公开 kind + 2 已发布关系 + 22 动作(含 answer_decision) + 2 reason` |
-| 旧切片宿主 stdio 冒烟 | `python -X utf8 .audit/dsh-host-declarations-close-20261012/legacy_slice_stdio_smoke.py` | rc 0 | [legacy-slice-stdio-smoke.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/legacy-slice-stdio-smoke.log)：`legacy-slice` 0.1 形状 describe/start/observe/step 全成功（12 步） |
-| 固定输入与新旧帧对比 | `python -X utf8 .audit/dsh-host-declarations-close-20261012/compare_new_vs_frozen.py` | rc 0 | [compare-new-vs-frozen.log](../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/compare-new-vs-frozen.log)：固定 DLL SHA 与本包输出逐字相同；两局金币总账与商店事件与旧冻结帧一致 |
+| 隔离闭包构建（固定 Core/Base DLL + 当前 net 源码，4 个临时工程） | 仓库根 `dotnet build .artifacts/parallel/dsh-host-declarations-close-20261012/build/Net.TheSpire.Tests/Net.TheSpire.Tests.csproj` | rc 0；0 警告 0 错误 | 临时工程定义在 [build/](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/build)；只引用固定 DLL，**未构建** solution/core/base/生产 net 工程（生产 net `bin`/`obj` mtime 仍是 2026-10-02/04） |
+| net 基线复跑（未改源码） | 同上 dll 直接 `dotnet <dll>` | rc 1；**413 passed / 3 failed / 416 executed** | [net-baseline.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/net-baseline.log)；3 条与负责人日志同项同首错：V-03/V-09/V-10 均 `Unsupported: compute asset 'base-spire:SourceStableShuffleOrder' needs a compute backend but none is installed` |
+| net 修复后复跑 | 同上 | rc 0；**418 passed / 0 failed / 418 executed** | [net-after-closure-checks.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/net-after-closure-checks.log)；原 416 项全过，新增 2 项 `G-06` 与 `I-71/I-84 0.1 切片…反例可区分` 另列，未替换原项 |
+| 真实新 Host 帧（0.2 / dev-map / seed `ENV-T03-SEED-L`） | `python -X utf8 -u net-the-spire/client/run_game.py --host-dll <本包 Host.dll> --scope dev-map --seed ENV-T03-SEED-L --output ... --max-actions 90 --use-potions` | rc 4（`unsupported_map_room`，如实边界） | 购买/离店轨迹 [runs/shop-buy-remove](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/runs/shop-buy-remove)（111→63，`removal_unavailable` 75>63，MapPhase 7→2，45 步）；删牌轨迹 [runs/shop-remove](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/runs/shop-remove)（111→36，`shop_remove_request`/`answer`，MapPhase 7→2，46 步）。两者都在 Unknown 停止，`run_complete=false`、`whole_run_outcome=null`，**未声称通关** |
+| 0.2 契约校验（复用旧包 0.2 方法，只改固定 Host 与轨迹路径两处） | `python -X utf8 -u .audit/dsh-host-declarations-close-20261012/verify_host_declarations.py` | rc 0；**全部通过：0 违规** | [verify-host-declarations.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/verify-host-declarations.log)、[verify-host-declarations.json](../../../../.audit/dsh-host-declarations-close-20261012/verify-host-declarations.json)；执行数 `l1_request_frames=99, l1_response_frames=99, l1_snapshots=93, l2_catalog_declarations=944, l3_snapshots=93, l4_seed_echo_checked=2, shop_steps=91, shop_visit_snapshots=7`。方法差异仅两处固定路径（`git diff --no-index` 见 [verify-method-diff.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/verify-method-diff.log)） |
+| 声明 ID 修复前后对比 | `python -X utf8 .audit/dsh-host-declarations-close-20261012/dump_supported_structures.py <新帧> <旧冻结帧>` | rc 0 | [supported-structures-before-after.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/supported-structures-before-after.log)：旧帧 `Entity 15 引擎键 + Relation 4 + LegalAction 21 + TerminalResult 2 = 42/局`（两局 84，与负责人裁决一致）；新帧 `15 公开 kind + 2 已发布关系 + 22 动作(含 answer_decision) + 2 reason` |
+| 旧切片宿主 stdio 冒烟 | `python -X utf8 .audit/dsh-host-declarations-close-20261012/legacy_slice_stdio_smoke.py` | rc 0 | [legacy-slice-stdio-smoke.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/legacy-slice-stdio-smoke.log)：`legacy-slice` 0.1 形状 describe/start/observe/step 全成功（12 步） |
+| 固定输入与新旧帧对比 | `python -X utf8 .audit/dsh-host-declarations-close-20261012/compare_new_vs_frozen.py` | rc 0 | [compare-new-vs-frozen.log](../../../../.artifacts/parallel/dsh-host-declarations-close-20261012/logs/compare-new-vs-frozen.log)：固定 DLL SHA 与本包输出逐字相同；两局金币总账与商店事件与旧冻结帧一致 |
 | 文档检查 | 仓库根 `python tools/doc-check/check_docs.py`、`git diff --check` | doc-check 5→4 problem(s)；`git diff --check` rc 0 | 本包链接补好后仅剩 4 条**与本包无关**的既存锚点问题（`dsh-power-fixture-handoff-2026-10-11.md` 的 `tools/differential/README.md#L7`、`environment-implementation-constraints.md#L181`，及 `dsh-startup-alignment-handoff-2026-10-11-f68b943d.md` 引用它们的两处）。`net-the-spire/` 未被 git 跟踪，`git diff --check` 不覆盖其中文件；已单独核对这些文件无行尾空白、均有结尾换行 |
 
 **本次未运行**（按任务无需重复，也不要当作通过）：`dotnet build AutoTheSpire.sln`；Engine/Slice 套件；17 条对拍；五角色矩阵；生产 net 工程的常规构建；0.1 旧客户端的完整公开全程。
@@ -104,7 +107,7 @@
 
 ## 维护位置
 
-- 任务状态/认领/完成条件：主清单 [`ENV-T03`](../tofix/README.md#env-t03)（**Codex 独自修改**，本包未改主清单）。
-- 规则与实现方法：`docs/contracts/net/0.1/invariants.md`（I-71/I-84，未改）、[net 设计 §7 新增小节](../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
+- 任务状态/认领/完成条件：主清单 [`ENV-T03`](../../tofix/README.md#env-t03)（**Codex 独自修改**，本包未改主清单）。
+- 规则与实现方法：`docs/contracts/net/0.1/invariants.md`（I-71/I-84，未改）、[net 设计 §7 新增小节](../../../design/net-the-spire/design.md#env-t03公开声明闭合与旧切片后端装配2026-10-12)。
 - 本包证据：`.audit/dsh-host-declarations-close-20261012/`（脚本 + 校验结果）与 `.artifacts/parallel/dsh-host-declarations-close-20261012/{build,runs,logs}/`；长日志只放这两处，不复制进主清单。
 - 修改的生产文件：`net-the-spire/Net.TheSpire/Control/{ControlHost,ControlSession}.cs`、`net-the-spire/Net.TheSpire.Host/Program.cs`、`net-the-spire/Net.TheSpire.Tests/{AcceptanceChecks,ControlChecks,MeasurementChecks,FormalPathChecks,Program}.cs`、新增 `net-the-spire/Net.TheSpire.Tests/DeclarationClosure.cs`；未触碰 base/core/tools/schema/协议语义/公共主清单。

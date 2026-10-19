@@ -1,6 +1,9 @@
 # ENV-T05 Ironclad 卡牌完整批次 — 综合交接
 
-> 负责人2026-10-10复核：原会话已被用户中断并停止；本报告保留执行者当时的 in_progress 和记录。负责人直接执行六条局部检查通过，但发现 withCount 词法范围、掉血计数跨战斗重置、PrimalForce替代实例三处反例，尚未验收两族。新增标准入口 `--card-completion-only`；实际证据与后继边界见[复核记录](../records/2026-10-10/dsh-context-and-sim-control-review-2026-10-10.md)，当前状态只看[主清单](README.md#env-t05)。
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
+> 负责人2026-10-10复核：原会话已被用户中断并停止；本报告保留执行者当时的 in_progress 和记录。负责人直接执行六条局部检查通过，但发现 withCount 词法范围、掉血计数跨战斗重置、PrimalForce替代实例三处反例，尚未验收两族。新增标准入口 `--card-completion-only`；实际证据与后继边界见[复核记录](../2026-10-10/dsh-context-and-sim-control-review-2026-10-10.md)，当前状态只看[主清单](../../tofix/README.md#env-t05)。
 
 
 ```yaml

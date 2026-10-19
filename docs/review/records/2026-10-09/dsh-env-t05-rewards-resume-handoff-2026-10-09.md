@@ -9,11 +9,14 @@ updated_at: 2026-10-09T13:10:00+08:00
 
 # ENV-T05 真实奖励闭环（接续）— 交接（in_progress）
 
-关联：主清单 [ENV-T05](README.md#env-t05)（父项，**由负责人维护，本包未编辑**）；
-设计 [环境完成与对拍范围](../../design/environment-completion-and-differential-v1.md)、
-[实现约束](../../design/environment-implementation-constraints.md)；
-原 A 设计（本包复用并修正）[`.audit/dsh-env-t05-real-rewards-2026-10-09/reward-design-2026-10-09.md`](../../../.audit/dsh-env-t05-real-rewards-2026-10-09/reward-design-2026-10-09.md)；
-本包证据 [`.audit/dsh-env-t05-rewards-resume-2026-10-09/`](../../../.audit/dsh-env-t05-rewards-resume-2026-10-09/task-record.json)（`task.txt`、`task-record.json`）；
+> 2026-10-19 整理：切换前历史证据：旧 C# 路径和会话已经退出当前生产；保留当时交付与未验收范围，不按本文继续派单。 当前任务见[主清单](../../tofix/README.md)，后续架构见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。
+
+
+关联：主清单 [ENV-T05](../../tofix/README.md#env-t05)（父项，**由负责人维护，本包未编辑**）；
+设计 [环境完成与对拍范围](../../../design/environment-completion-and-differential-v1.md)、
+[实现约束](../../../design/environment-implementation-constraints.md)；
+原 A 设计（本包复用并修正）[`.audit/dsh-env-t05-real-rewards-2026-10-09/reward-design-2026-10-09.md`](../../../../.audit/dsh-env-t05-real-rewards-2026-10-09/reward-design-2026-10-09.md)；
+本包证据 [`.audit/dsh-env-t05-rewards-resume-2026-10-09/`](../../../../.audit/dsh-env-t05-rewards-resume-2026-10-09/task-record.json)（`task.txt`、`task-record.json`）；
 前置 B `.audit/dsh-env-t04-map-resume-2026-10-09/task-record.json`（`delivery_status=ready_for_review`、实测 `running=false`；其 `handoff_path` 已由负责人移入 `docs/review/records/2026-10-09/`）。
 
 **状态**：本交接在工作开始时即建立（派单要求固定 YAML 头），当前为 `in_progress`；收尾时改为

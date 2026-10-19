@@ -59,6 +59,8 @@
 
 ## 当前交付
 
+**本轮负责人维护**：2026-10-19，用户要求清理过时 review，并重新读取当前实现，形成覆盖攻击、其他卡牌行为等领域的重构目标。Codex `/root` 仅修改 docs 与迁移引用，分支 `codex/behavior-refactor-goals-20261019`；目标与判别统一维护在[内容与行为重构目标](../../design/mod-the-spire/content-behavior-refactor-goals.md)，review 从[阅读入口](../README.md)进入。本地文档交付与检查已完成，QingXiang22Bot 发布身份未确认，未推送／创建 PR；未认领生产重构。验证、搬移映射与未执行范围见[本轮记录](../records/2026-10-19/behavior-refactor-review-2026-10-19.md)。下一玩法包及所有暂停项不因目标编制自动重排。
+
 2026-10-19用户授权合并后，[PR #23](https://github.com/QingXiang22/auto-the-spire/pull/23)与[PR #24](https://github.com/QingXiang22/auto-the-spire/pull/24)已按依赖顺序合并，合并后main为`9078674`。**CORE-AUTHOR-05／DSL-CONTENT-MODEL-01及配套开发手册同步已完成本轮交付**。Codex `/root` 单写，文档分支`codex/content-model-manual-20261019`；新增单个内容修改／独有模块操作指南和Power参考，修正旧参数／寿命及skill路由，未新增玩法或修改ENV/W范围。两篇原教程逐阶段复跑、5项模型／7项CLAY判别与文档检查通过；合并与手册证据追加在[本轮记录](../records/2026-10-19/content-model-migration-2026-10-19.md#合并与手册同步同日)。父项与正常环境验收不因此关闭。
 
 已迁移32个既用Power、25个卡牌独有效果，移除调用方kind与公共专属状态，统一普通攻击数值来源；新增SelfFormingClay及其Power后为33个Power定义。首轮开发暴露并修正AfterBlockCleared原有时序错误；修正基线后重新接入只需2个玩法模块与5个登记文件，数值实验只改1个玩法文件并实际生效。完整修改面、首次失败、身份和局限见[交付证据](../records/2026-10-19/content-model-migration-2026-10-19.md)。原完整环境及独立比较验收保持开放。
@@ -215,13 +217,13 @@ T09-PR05原为组合合同，拆分的是上述两个职责，保留同一原ID�
 
 **本地接续**：Codex `/root` 已完成AttackPotion窄包集成与第一幕源资格接入，原seed正常持药第二场、使用/取消双侧及公开重放通过；事件身份独立核对均为AromaOfChaos。见[2026-10-16交付](../records/2026-10-16/potion-offer-and-event-eligibility-2026-10-16.md)。10月15日遗漏UsePotion的临时通过仍撤回，不与本轮真实通过混用。AromaOfChaos两分支已通过[正常双侧与公开重放](../records/2026-10-16/aroma-of-chaos-2026-10-16.md)。正常满容量及真实精英奖励已[双侧/公开通过](../records/2026-10-16/normal-potion-capacity-2026-10-16.md)；继续其他适用使用及后续房间，参考只读，不覆盖幕转换主责文件。
 
-**2026-10-15 纠正**：本轮参考及工具代码修改已全部撤销，参考仓库恢复干净。此前“初始化已修复”的结论撤回，不作为验收证据；sts2-sim 保持只读。详见[撤销说明](env-t04-rng-bootstrap-2026-10-15.md)。
+**2026-10-15 纠正**：本轮参考及工具代码修改已全部撤销，参考仓库恢复干净。此前“初始化已修复”的结论撤回，不作为验收证据；sts2-sim 保持只读。详见[撤销说明](../deprecated/env-t04-rng-bootstrap-2026-10-15.md)。
 
-**接手先做**：复用v0.109随机布局、显式内容元数据及共同动作计划。两例首战、两场连续正常战斗与实际药水领取已双侧通过；MonsterAi保持run级共享流，独立怪物流旧判断已撤回。复用原seed容量两例的已通过证据，继续后续房间；完整UsePotion候选与AttackPotion独立执行已通过，继续保留比较维度。随机迁移历史见[原交付](env-t04-v109-random-2026-10-15.md)，旧远端会话状态不由本地结果推断。
+**接手先做**：复用v0.109随机布局、显式内容元数据及共同动作计划。两例首战、两场连续正常战斗与实际药水领取已双侧通过；MonsterAi保持run级共享流，独立怪物流旧判断已撤回。复用原seed容量两例的已通过证据，继续后续房间；完整UsePotion候选与AttackPotion独立执行已通过，继续保留比较维度。随机迁移历史见[原交付](../records/2026-10-15/env-t04-v109-random-2026-10-15.md)，旧远端会话状态不由本地结果推断。
 
-**实现与验证入口**：[严格对拍工具](../../../tools/base-migration-baseline/differential/README.md)、[正常初始化审计交接](dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。
+**实现与验证入口**：[严格对拍工具](../../../tools/base-migration-baseline/differential/README.md)、[正常初始化审计交接](../records/2026-10-13/dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。
 
-**执行登记**：`session-e524322c-614d-4142-b393-2ab4a0c80829`；[派发记录](../../../.audit/dsh-normal-initialization-audit-20261013/task-record.json)、[已交审计与提案](dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。该子包原登记“进行中”，交接已有待复核材料；本次不推断远端会话已停止，也不把提案当作参考修改授权。
+**执行登记**：`session-e524322c-614d-4142-b393-2ab4a0c80829`；[派发记录](../../../.audit/dsh-normal-initialization-audit-20261013/task-record.json)、[已交审计与提案](../records/2026-10-13/dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)。该子包原登记“进行中”，交接已有待复核材料；本次不推断远端会话已停止，也不把提案当作参考修改授权。
 
 **完整完成条件**：既有7个case实际双侧执行，5个unsupported原ID保留；缺case/零执行/缺参考/unsupported/首个差异/缺维度非零；源/reference派生与随机trace可核对。
 
@@ -876,7 +878,7 @@ W-01～08 保留全项目范围。它们说明最终要交付什么；当前执�
 | v0.109正常战斗与药水领取 | [2026-10-15 连续战斗与药水领取](../records/2026-10-15/env-t04-potion-continuation-2026-10-15.md)：首战两例、两场连续战斗、真实药水领取双侧通过，公开首战24提交跨会话重放通过；容量与完整后续流程开放 |
 | CI、干净检出和仓库整理 | [2026-10-15 CI](../records/2026-10-15/core-base-ci-2026-10-15.md)、[目录整理](../records/2026-10-15/repository-hygiene-2026-10-15.md)；等待分支审阅，不代表环境父项完成 |
 | 最近共同构建、正常奖励失败与公开流程边界 | [2026-10-13 共同复核](../records/2026-10-13/project-continuation-review-2026-10-13.md)：原严格 17 为 16 两侧通过加 1 接口自检；正常奖励 2 例初始地图不同；公开 105 次成功、第 106 次尝试在 PhrogParasite 停止 |
-| 正常初始化缺口和接口提案 | [B 审计交接](dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)；已有材料待负责人复核，未取得正常比较通过结论 |
+| 正常初始化缺口和接口提案 | [B 审计交接](../records/2026-10-13/dsh-normal-initialization-audit-handoff-2026-10-13-e524322c.md)；已有材料待负责人复核，未取得正常比较通过结论 |
 | 公共机制、卡牌与各日期的局部验证 | [记录索引](../records/README.md)、[整理前完整快照](../records/2026-10-15/task-list-before-reader-refactor.md)；不同日期和构建的结果不能合并成一次完整验收 |
 
 旧的事件策略、Byrdonis、排序和参考流缺口已有后续交付，不能从早期日志重新派单。新角色原语、完整四幕、五角色、最终 120 对、真实客户端与 Release 性能仍须各自的验收证据。
@@ -909,4 +911,4 @@ W-01～08 保留全项目范围。它们说明最终要交付什么；当前执�
 
 ## 本次文档整理
 
-2026-10-19，Codex `/root` 已完成本地完成度审阅及工作流维护，待PR／CI审阅；实际结果见[本次记录](../records/2026-10-19/base-completion-workflow-review-2026-10-19.md)。旧入口整理、开发手册及统一监听指南的结果从[历史索引](../records/README.md)查阅，不在当前入口重复维护状态。原ENV／W与机制验收合同均保留。
+文档维护的当前范围与认领只见[当前交付](#当前交付)。有效交付按[主题索引](../records/README.md)查证，被替代／撤销材料按[失效说明](../deprecated/README.md)追溯；不再把旧交接放在 tofix 当接手入口。原 ENV／W 与机制验收合同均保留，搬移历史材料不关闭任务。

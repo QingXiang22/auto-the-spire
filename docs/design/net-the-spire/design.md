@@ -146,7 +146,7 @@ core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义
 
 旧切片/作者场景的宿主组装：`ControlHost`/`ControlSession`带一个**可选**`IComputeBackend`参数，由组合层注入规则包声明资产所需的后端（`Net.TheSpire.Host`的`legacy-slice`分支与测试场景传`BaseSpireComputeBackend.Instance`）。通用控制层不认识任何游戏ID或玩法，只把实例转交引擎；不传时保持旧行为（执行该资产时报`Unsupported`，链接期只检查声明）。正式路径不走这个接口：后端由`ISessionSource`/base工厂在建会话时装好，控制入口只唤醒它一次。
 
-实机证据与前后对比见[本包交接](../../review/tofix/dsh-host-declarations-close-handoff-2026-10-12.md)。
+实机证据与前后对比见[本包交接](../../review/records/2026-10-12/dsh-host-declarations-close-handoff-2026-10-12.md)。
 
 ## 8. BMingSY本体适配器参考
 
