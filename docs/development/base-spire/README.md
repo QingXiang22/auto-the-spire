@@ -2,7 +2,7 @@
 
 文档类型：参考（Reference）；按读者任务导航。
 
-这份手册面向维护原版内容与共享玩法的开发者。先通过两篇教程学会使用 DSL 模板和编写共享规则，再按领域指南开发。你不需要先通读旧组包器、Host 或全部恢复源码。
+这份手册面向维护原版内容与共享玩法的开发者。初次学习可先完成两篇教程；修改已有内容直接进入修改指南，新增独有效果进入内容模块指南。你不需要先通读旧组包器、Host 或全部恢复源码。
 
 适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有显式角色初态、永久牌组／战斗副本、开发战斗与卡牌选择、随机机制、奖励和营火等可复用操作；遗物与Power通过实例通知和只读修正监听参与流程。准确接口与限制查[操作参考](reference/operations.md)，实际定义及已执行见证查包目录和行为报告；任务认领、剩余内容及验证状态只看[主清单](../../review/tofix/README.md#当前交付)。开发scope不代表含Neow的正常开局、地图和完整Run已经恢复，各领域指南也不构成全内容可玩证明。
 
@@ -11,7 +11,7 @@
 需要仓库 `global.json` 指定的 .NET SDK 9.0.306、Python 3.12 和 PowerShell。教程在仓库根目录操作，在 `.audit/` 创建隔离副本，正式包保持原规则。
 
 1. [配置第一个遗物](tutorials/first-relic.md)：加载真实包，把练习数值从 6 改为 8，通过公开 Host 观察实际结果。
-2. [编写共享触发规则](tutorials/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，以受限内容配置调用它，观察逐抽 2／4／6 和空堆不触发。
+2. [编写共享触发规则](tutorials/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，用具体use配置调用它，观察逐抽 2／4／6 和空堆不触发。
 
 通用 DSL 尚不熟悉时，先完成[第一份规则](../../dsl/core/first-rule.md)。旧 `base/0.0.2` 卡牌与 C# 房间教程保留迁移依据，不能作为本手册的可执行步骤。
 
@@ -19,6 +19,8 @@
 
 | 你要开发什么 | 阅读入口 |
 | --- | --- |
+| 修改单个卡牌数值、Power公式／私有状态或遗物收益 | [修改单个内容](how-to/edit-content.md) |
+| 新增拥有独有效果的遗物／Power或卡牌模块 | [新增内容模块](how-to/add-content-module.md) |
 | 已有机制下新增内容、登记源身份与公开目录 | [扩展内容](how-to/extend-content.md) |
 | 卡牌、费用、目标、普通／升级、关键词、附着、伤害、回合 | [卡牌与战斗](how-to/cards-and-combat.md) |
 | Power 生命周期、遗物实例与触发、药水容量与使用 | [Power、遗物与药水](how-to/powers-relics-potions.md) |
@@ -33,9 +35,10 @@
 | 需要 | 入口 |
 | --- | --- |
 | 查当前可用 DSL 状态、参数、事件顺序和局限 | [共享操作参考](reference/operations.md) |
+| 查Power定义标志、施加／合并／移除与私有状态事件 | [Power生命周期参考](reference/powers.md) |
 | 查所有领域的落点与前置依赖 | [领域目录参考](reference/domains.md) |
-| 查 includes、manifest、静态 JSON 和内容子集限制 | [包格式参考](../../dsl/core/0.3/package-reference.md) |
-| 理解源目录、可执行内容、完整 DSL 与受限配置的关系 | [开发模型](explanation/development-model.md) |
+| 查includes、manifest、静态JSON和内容模块边界 | [包格式参考](../../dsl/core/0.3/package-reference.md) |
+| 理解源目录、内容自有规则与共享操作的关系 | [开发模型](explanation/development-model.md) |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 
 本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[文档与 skill 约定](../../design/mod-the-spire/base-development-docs.md)。

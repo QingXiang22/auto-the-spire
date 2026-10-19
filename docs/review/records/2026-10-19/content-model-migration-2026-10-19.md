@@ -68,3 +68,13 @@ scope=`base-spire-dsl-relic-draw-dev-v1`，默认行为seed=`20261018`；公开�
 本次没有补齐完整Creature模型、所有Power实例／叠加策略、施加来源／伤害结果上下文、Vigor攻击命令边界、附着私有状态复制协议或CardBaseDamage现有DamageScale分派。SingleStack标志保留当前Corruption／Hellraiser开发行为，不等同于完整原版PowerStackType。Rupture移除了公共专属槽并保留已有开发语义，但仍沿用当前EnemyPhase／CurrentPlay上下文，不能宣称任意来源已校准。自然胜负时其他Power仍沿用现有开发清理边界，显式结束／下战开始会清理。
 
 正常Run、完整来源、独立适配器与原17项regression均未恢复；independent_verified保持false。原ENV/W完整验收与父项保持开放。
+
+## 合并与手册同步（同日）
+
+用户后续明确授权合并。核实QingXiang22Bot认证、两个准确head的四组CI和无未解决审阅要求后，先以merge方式合并#23（`3b562cf`），再将#24改以main为目标。#23合并树与#24原依赖树一致，#24合并候选树与已验证head `3d03740`一致，随后合并为`9078674`；没有强推或绕过检查。
+
+手册同步基于该main，新添[修改单个内容](../../../development/base-spire/how-to/edit-content.md)、[新增独有内容模块](../../../development/base-spire/how-to/add-content-module.md)和[Power定义／生命周期参考](../../../development/base-spire/reference/powers.md)。同步导航、卡牌／物品指南、共享操作与skill路由，修正旧kind／重复伤害参数、已迁移衰减及自然胜负清理边界；CardCountRelic遗留但未使用的powerKind参数明确标注，不引导作者继续传入。本轮未修改生产DSL、Engine、Host或检查实现。
+
+新指南的validate、5项content-model及7项CLAY命令实际通过。两篇既有教程从新隔离副本逐阶段复跑：TheAbacus原6、修改8、1000越界返回2；新增共享模板后得到2／4／6／6，无遗物为0／0／0／0，组合为10／12／14。真实Host固定seed为BASE-DSL-LESSON-00，报告仍为independent_verified=false；正式包摘要保持`e313cdcb91801a3f6894ccdda0ed3301599b39f3aa245f770b7313cfbd033711`。
+
+项目skill校验及两个精确来源查询通过，文档检查与diff检查通过。Diataxis自查将两篇新增页面保持为目标导向的操作指南，参数／事件表放参考页，职责解释放explanation；未声称独立读者验收。本地演练和日志在`.audit/base-spire-manual-sync-20261019/`与`.artifacts/content-model-migration-20261019/manual-*`，均不提交。纯文档同步未在本地重跑407项全包或完整Engine／net组，广覆盖由PR CI负责。

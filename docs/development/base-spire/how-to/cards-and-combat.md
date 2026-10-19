@@ -4,6 +4,10 @@
 
 先读[准确操作](../reference/operations.md)确认边界，再到 cards/catalog 定位具体源类。需求与判断意图参考[卡牌原语契约](../../../design/mod-the-spire/card-primitives/spec.md)及[主清单的共享机制](../../../review/tofix/README.md#env-t06)，这些旧契约中的接口名不自动成为新 DSL 接口。
 
+## 修改已有卡牌
+
+先按[单个内容修改指南](edit-content.md)定位卡牌文件。普通AttackEffect／AttackAllEnemiesEffect的伤害只在CardDefinition中配置baseDamage／upgradedBaseDamage，效果读取CardBaseDamage；不要恢复damage／upgradedDamage双份配置。卡牌kind仍表示attack／skill／power，与已经移除的Power调用方kind不同。独有效果留在卡牌文件，只有复用行为进入cards/rules。以下恢复步骤用于缺共享机制的工作，不要求每改一张牌就重写出牌流程。
+
 ## 恢复费用、目标与出牌
 
 1. 在 cards/schema 明确卡定义与卡实例、普通／升级状态、Owner、费用来源、目标域、各牌区和作用域。永久牌组卡与战斗副本使用可追踪映射，不能共用一份可变定义。

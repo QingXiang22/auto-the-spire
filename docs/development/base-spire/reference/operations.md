@@ -2,6 +2,8 @@
 
 文档类型：参考（Reference）。适用于 core/0.3 与纯 DSL base 的开发态战斗包。只列实际存在的声明；这里没有列出的游戏操作不能按名字猜测可调用。文件路径相对 `mod-the-spire/base-spire/`，精确实现通过各行链接定位。铁甲战士新增费用／选择／历史／生成／复制／自动出牌与 Power 反应的完整签名见[专项操作参考](../../../design/mod-the-spire/ironclad-dsl/shared-operations.md)。
 
+Power定义、施加命令、通知顺序及私有清理的准确签名见[Power参考](powers.md)。卡牌普通攻击的基础值位于CardDefinition；下方效果模板表不再接受重复伤害值或Power行为kind。
+
 ## 状态与事件
 
 拾取时随机升级永久牌使用[`UpgradeRandomPermanentCards(owner,kind,amount)`](../../../../mod-the-spire/base-spire/cards/rules/random-permanent-upgrade.spire)：owner为Ref(Player)，kind只接受attack／skill／all，amount为Int(1..999)。操作拥有资格筛选、SourceCardSortKey、完整Niche洗牌、原实例UpgradeCard及临时状态清理；不改RunDeck顺序，不触发战斗洗牌事件。调用方法和边界见[遗物指南](../how-to/powers-relics-potions.md)。
@@ -15,7 +17,7 @@
 | [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
 | [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；Rarity 字段保存源稀有度，奖励资格与战斗生成资格分别维护 |
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
-| [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；Kind: String(32)=`none`；HolderPlayer／HolderEnemy: 可选 Ref；Stacks: Int(-999..999)=0 | 开发能力实例：两个持有者引用恰好设置一个；Kind 是规则查询用的修正角色，因此修正链不按能力 ID 分支；所需 Ironclad 角色具有时长、移除和反应；其他 Power 仍未迁移 |
+| [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
 | Powers | 有序 Power 集合 | 按持有者与 DefinitionId 合并层数；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
 | [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64) | 开发药水实例，只承载身份；原版的稀有度、使用窗口（战斗内／任意时刻）与来源未迁移 |
 | Potions | 有序 Potion 集合，容量 3 | 三个共享槽位；`UsePotion`／`UsePotionOnTarget` 使用后在监听之后移除并销毁 |
@@ -54,7 +56,7 @@
 | CombatModifierRelic模板 | definition、strikeDamage: Int(0..999)=0、retainEnergy: Bool=false | 监听ModifyAttackAdditive和ShouldResetEnergy返回修正值，不配置公共Relic效果字段；供StrikeDummy／FakeStrikeDummy／IceCream复用 |
 | NoAttackTurnEnergyRelic模板 | definition、energy: Int(0..999) | ArtOfWar.State按遗物实例保存私有标志，获得时创建、移除时清理；AfterCardPlayed记录本拥有者攻击，AfterTurnEnded转交；AfterEnergyReset在非首回合且上回合无攻击时GainEnergy，再清理标志；ArtOfWar配置1 |
 | ObtainMaxHpRelic模板 | definition、amount、fullHeal=false | 通过RelicObtained触发IncreaseMaxHp，必要时HealToMaximum；不在动作尾部重复奖励。供Strawberry／Pear／Mango／LeesWaffle复用 |
-| CardCountRelic模板 | definition、kind、every、perTurn，以及energy／block／damage／power／powerKind／stacks | AfterCardPlayed按实际次数推进独立Relic.Counter；perTurn在战斗开场和玩家回合早期重置，否则跨战保留；重复／自动各计一次，多段攻击只计一次 |
+| CardCountRelic模板 | definition、kind、every、perTurn，以及energy／block／damage／power／stacks | kind筛选Card.Kind；AfterCardPlayed按实际次数推进独立Relic.Counter。perTurn决定重置或跨战保留，重复／自动各计一次、多段只计一次。源码仍声明未使用的powerKind默认参数，新配置不传它，行为只按power定义查找 |
 | TurnStartEnergyRelic模板 | definition: String(64)、amount: Int(0..999)、turn: Int(1..999)、throughTurn: Bool=false | AfterSideTurnStarted调用GainEnergy；默认TurnNumber==turn，throughTurn=true时<=turn；NoEnergyGain抑制奖励 |
 | EveryTurnsEnergyRelic模板 | definition: String(64)、amount: Int(0..999)、turns: Int(1..999) | 每次本持有者回合开始将本实例Counter加1模turns；归零GainEnergy，计数跨战保留且不受NoEnergyGain抑制 |
 | TurnStartBlockRelic模板 | definition: String(64)、amount: Int(0..999) | AfterSideTurnStarted每回合调用GainUnpoweredBlock，包含首回合；不使用敏捷／脆弱修正 |
@@ -74,7 +76,7 @@
 | 声明 | 准确参数 | 行为与边界 |
 | --- | --- | --- |
 | [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999) | 累加并截到 999，不应用卡牌／Power 的加性或乘性修正；不是通用获得格挡流程 |
-| GainBlock | owner=Ref(Player)、amount=Int(0..999) | 卡牌格挡链：先累加 `block-additive`（Dexterity），再在持有 `block-dealt-multiplier`（Frail）时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
+| GainBlock | owner=Ref(Player)、amount=Int(0..999) | 卡牌格挡链：先由Dexterity贡献加性修正，再在持有正层Frail时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
 | [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
 | ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义 |
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
@@ -172,41 +174,48 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 | 效果模板 | 参数 | 订阅与行为 | 当前内容 |
 | --- | --- | --- | --- |
-| AttackEffect | damage、upgradedDamage、hits | CardPlayedOnTarget，按 `Upgraded` 取值并重复 hits 次调用 DamageEnemyPowered | Strike（6／9）、TwinStrike（5／7×2）、PommelStrike（9／10）、IronWave（5／7）、Anger（6／8）、Bludgeon（32／42） |
-| AttackAllEnemiesEffect | damage、upgradedDamage、hits、upgradedHits | CardPlayed，对每个 `Hp > 0` 的开发目标按 hits（升级取 upgradedHits）逐段调用 DamageEnemyPowered（逐目标扣格挡） | Thunderclap（4／7，1 段）、HowlFromBeyond（16／21，1 段）、Breakthrough（9／13，1 段）、Conflagration（2／2，4／5 段） |
+| AttackEffect | definition: String(64)、hits: Int(1..9) | CardPlayedOnTarget，读取CardBaseDamage并重复hits次调用DamageEnemyPowered | Strike（6／9）、TwinStrike（5／7×2）、PommelStrike（9／10）、IronWave（5／7）、Anger（6／8）、Bludgeon（32／42） |
+| AttackAllEnemiesEffect | definition: String(64)、hits／upgradedHits: Int(1..9) | CardPlayed，按普通／升级段数对每个存活目标逐段读取CardBaseDamage并调用DamageEnemyPowered | Thunderclap（4／7，1 段）、HowlFromBeyond（16／21，1 段）、Breakthrough（9／13，1 段）、Conflagration（2／2，4／5 段） |
 | BlockEffect | block、upgradedBlock | CardPlayed，按 `Upgraded` 取值后 GainBlock | Defend（5／8）、ShrugItOff（8／11）、IronWave（5／7）、Impervious（30／40）、Taunt（7／8）、BloodWall（16／20） |
 | DrawEffect | cards、upgradedCards | CardPlayed，按 `Upgraded` 取值后 DrawCards | PommelStrike（1／2）、ShrugItOff（1／1）、Offering（3／5） |
 | EnergyEffect | energy、upgradedEnergy | CardPlayed，按 `Upgraded` 取值后 GainEnergy | Bloodletting（2／3）、Offering（2／2） |
 | LoseHpEffect | hp、upgradedHp | CardPlayed，按 `Upgraded` 取值后 LosePlayerHp | Bloodletting（3／3）、Offering（6／6）、BloodWall（2／2） |
-| DamageEqualBlockEffect | 无 | CardPlayedOnTarget，伤害等于玩家当前 Block | BodySlam |
-| AddCopyEffect | 无 | CardPlayedOnTarget，把打出牌的克隆（含升级与 Exhausts 状态）放进弃牌堆 | Anger |
-| ApplyEnemyPowerEffect | power、kind、stacks、upgradedStacks | CardPlayedOnTarget，按 `Upgraded` 取值后 ApplyEnemyPower 到解析出的目标 | Bash（Vulnerable 2／3）、Uppercut（Weak 与 Vulnerable 各 1／2）、Taunt（Vulnerable 1／2）、Tremble（Vulnerable 3／4） |
-| ApplyAllEnemiesPowerEffect | power、kind、stacks、upgradedStacks | CardPlayed，对每个 `Hp > 0` 的开发目标调用 ApplyEnemyPower | Shockwave（Weak 与 Vulnerable 各 3／5）、Thunderclap（Vulnerable 1／1） |
-| ApplySelfPowerEffect | power、kind、stacks、upgradedStacks | CardPlayed，按 `Upgraded` 取值后 ApplyPlayerPower | Inflame（Strength 2／3） |
-| ApplySelfPowerUntilTurnEndEffect | power、kind、stacks、upgradedStacks | 同上但调用 ApplyPlayerPowerUntilTurnEnd：实例在敌方阶段结束后被移除 | FlameBarrier（Thorns 4／6） |
-| FlaggedHitsAttackEffect | damage、upgradedDamage、hits、flaggedHits、upgradedFlaggedHits、flag | CardPlayedOnTarget，按 `Upgraded` 取伤害，再按 flag（`lost-hp`／`exhausted-card`）决定打 hits 还是 flaggedHits 段 | Spite（5，1／2／3 段） |
-| FlaggedBlockMultiplierEffect | block、upgradedBlock、flag | CardPlayed，按 `Upgraded` 取值，flag 为真时 GainBlock 两次 | EvilEye（8／11，翻倍为 16／22） |
-| VulnerableHitsAttackEffect | damage、upgradedDamage、hits、vulnerableHits | CardPlayedOnTarget，目标已有 `damage-taken-multiplier` 时打 vulnerableHits 段 | Dismantle（8／10，1／2 段） |
-| AmplifyVulnerableEffect | 无 | CardPlayedOnTarget，把目标当前易伤层数再加一次（翻倍） | MoltenFist |
+| ApplyEnemyPowerEffect | power、stacks、upgradedStacks | CardPlayedOnTarget，按 `Upgraded` 取值后 ApplyEnemyPower 到解析出的目标 | Bash（Vulnerable 2／3）、Uppercut（Weak 与 Vulnerable 各 1／2）、Taunt（Vulnerable 1／2）、Tremble（Vulnerable 3／4） |
+| ApplyAllEnemiesPowerEffect | power、stacks、upgradedStacks | CardPlayed，对每个 `Hp > 0` 的开发目标调用 ApplyEnemyPower | Shockwave（Weak 与 Vulnerable 各 3／5）、Thunderclap（Vulnerable 1／1） |
+| ApplySelfPowerEffect | power、stacks、upgradedStacks | CardPlayed，按 `Upgraded` 取值后 ApplyPlayerPower | Inflame（Strength 2／3） |
 
-同一张牌内多个效果的先后顺序是“先 CardPlayed 的无目标效果，再 CardPlayedOnTarget 的有目标效果”，同一事件内按内容文件的 `use` 声明顺序执行；因此声明了攻击效果再加 debuff 的卡（Bash、Uppercut）与源 OnPlay 的“先伤害后施加”一致。Weak、Vulnerable 的回合末衰减没有迁移。
+以下模板仅由一个内容拥有，已移到所属卡牌文件；它们不是effects.spire中的共享操作。需要类似能力时先确认语义，再决定是否抽成共用模板。
+
+| 独有效果 | 所属模块 |
+| --- | --- |
+| DamageEqualBlockEffect | [BodySlam](../../../../mod-the-spire/base-spire/cards/ironclad/body-slam.spire) |
+| AddCopyEffect | [Anger](../../../../mod-the-spire/base-spire/cards/ironclad/anger.spire) |
+| ApplySelfPowerUntilTurnEndEffect | [FlameBarrier](../../../../mod-the-spire/base-spire/cards/ironclad/flame-barrier.spire) |
+| FlaggedHitsAttackEffect | [Spite](../../../../mod-the-spire/base-spire/cards/ironclad/spite.spire) |
+| FlaggedBlockMultiplierEffect | [EvilEye](../../../../mod-the-spire/base-spire/cards/ironclad/evil-eye.spire) |
+| VulnerableHitsAttackEffect | [Dismantle](../../../../mod-the-spire/base-spire/cards/ironclad/dismantle.spire) |
+| AmplifyVulnerableEffect | [MoltenFist](../../../../mod-the-spire/base-spire/cards/ironclad/molten-fist.spire) |
+
+同一张牌内多个效果的先后顺序是“先 CardPlayed 的无目标效果，再 CardPlayedOnTarget 的有目标效果”，同一事件内按内容文件的 `use` 声明顺序执行；因此声明了攻击效果再加 debuff 的卡（Bash、Uppercut）与源 OnPlay 的“先伤害后施加”一致。Weak、Vulnerable与Frail在所属Power模块监听AfterEnemyTurnEnded并调用TickPowerDuration，玩家新实例的首次跳过由debuff标志控制；详见[Power参考](powers.md)。
 
 源条件为“`TurnNumber <= 1`”的两个遗物在这里写成 `turn = 1`：开发战斗从 0 回合开始，第一次开始时回合号一定是 1，两者等价。原版 `AfterSideTurnStart`、`AfterPlayerTurnStart` 与 `AfterPlayerTurnStartLate` 的区别保留成三个开发时点，所需能量／伤害修正、开发胜负与回合结束钩子已恢复；完整正常 Run 顺序和其余参与者不属于本范围。
 
-战斗开始模板 `BeforeCombatStartPowerRelic` 的参数为 definition、power、kind、stacks，在 BeforeCombatStart 时对持有者调用 ApplyPlayerPower；`use BronzeScales` 授予 Thorns 3（kind `after-attacked-damage`），`use Vajra` 授予 Strength 1，`use OddlySmoothStone` 授予 Dexterity 1。
+战斗开始模板 `BeforeCombatStartPowerRelic` 的参数为definition、power、stacks，在 BeforeCombatStart 时对持有者调用 ApplyPlayerPower；`use BronzeScales` 授予 Thorns 3，`use Vajra` 授予 Strength 1，`use OddlySmoothStone` 授予 Dexterity 1。
 
 `BeforeCombatStartEnemyPowerRelic` 参数相同但作用于每个 `Hp > 0` 的敌人（`use BagOfMarbles` 施加 Vulnerable 1）。`EnemyDiedEnergyDrawRelic` 的参数为 definition、energy、cards，订阅 EnemyDied 后对持有者给能量并抽牌（`use GremlinHorn` 为 1／1）。
 
-回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（CombatEnded 且胜利、Hp 不超过 MaxHp 的阈值百分比时回复，`use MeatOnTheBone` 为 12／50）。战斗结束时 `ClearCombatPowers` 清空整个能力集合（对应源 AfterCombatEnd 的 RemoveAllPowers）；`ExpireTurnEndPowers` 在敌方阶段结束后移除带 `ExpiresAtTurnEnd` 的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
+回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（CombatEnded 且胜利、Hp 不超过 MaxHp 的阈值百分比时回复，`use MeatOnTheBone` 为 12／50）。显式EndDevelopmentCombat和下次BeginDevelopmentCombat通过ClearCombatPowers调用各实例的RemovePower；自然胜负仅发布CombatEnded，其他Power沿用现有开发清理边界。ExpireTurnPower订阅AfterPlayerTurnFinished，移除带ExpiresAtTurnEnd的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
 
 药水：`PotionDefinition` 生成 `Obtain`（直接放进三格库存），效果模板按 DefinitionId 订阅 `PotionUsed`／`PotionUsedOnTarget`：`PotionBlockEffect`（无加成格挡，BlockPotion 12）、`PotionEnergyEffect`（EnergyPotion 2）、`PotionDrawEffect`（SwiftPotion 3）、`PotionMaxHpEffect`（FruitJuice 5，提高上限并回复同量）、`PotionHealPercentEffect`（BloodPotion 20% 上限）与 `PotionDamageEffect`（FirePotion 20 点无加成伤害）。
 
-模板获得动作通过 definition 检查重复，并使用 first(type(Player))。多 Player、同定义多实例、按拥有者牌堆、替换、熔化操作与跨战重建尚未在该模板契约交付；不能将开发动作当作这些功能的实现。模板的 `Obtain` 只在遗物库存层去重，不表示原版来源资格（战斗奖励、事件、商店或角色初始遗物）已实现。
+模板开发获得动作通过definition检查重复，默认使用first(type(Player))；不能将它当作完整多人获得、替换或熔化操作。监听按实际持有者／实例过滤，跨战状态按所属模板契约处理。Obtain的库存去重不代表该遗物的全部原版来源资格（奖励、事件、商店或角色初态）已经实现。
 
 [source-catalog 的 definition](../../../dsl/core/0.3/package-reference.md) 指向完整 DSL 内容模块；独有规则／状态留在该文件，共用过程／模板放领域规则库。示例新增 AfterDrawBlockRelic 位于 docs/examples，仅用于[第二篇教程](../tutorials/shared-rule.md)，不是正式包现有公共操作。
 
 ## 公开投影
 
-[PlayerView](../../../../mod-the-spire/base-spire/public/projection.spire) 由 DSL 声明 Player／Card／Relic／Enemy／Power；[公开元数据](../../../../mod-the-spire/base-spire/public/metadata.json) 解释 DefinitionId 内容列表与集合用途。Holder／Counter 与 Power 的持有者引用不公开；开发牌堆、InPlay、ExhaustPile、RemovedFromCombat 与 Powers 分别是 `DB-DEVELOPMENT-PILES`／`DB-DEVELOPMENT-POWERS` 的 not_published，没有原版牌序、出牌历史或能力生命周期契约；卡牌内容 ID 目前是 `base-spire:development-card` 加二十九张正式牌（strike-ironclad、defend-ironclad、twin-strike、pommel-strike、shrug-it-off、iron-wave、anger、body-slam、impervious、offering、bloodletting、bludgeon、bash、uppercut、inflame、taunt、tremble、thunderclap、blood-wall、spite、evil-eye、break、howl-from-beyond、hemokinesis、breakthrough、conflagration、dismantle、molten-fist、shockwave；其中 shockwave 属于无色卡组），能力内容 ID 是 strength／vulnerable／weak／dexterity／frail-power，开发敌人内容 ID 有 `base-spire:development-target`、`base-spire:fuzzy-wurm-crawler`（专属轮转模板）、`base-spire:twig-slime-s` 与 `base-spire:assassin-ruby-raider`（共用 `enemies/rules/single-attack-enemy.spire` 的单招循环模板）、`base-spire:bowlbug-egg`、`base-spire:brute-ruby-raider` 与 `base-spire:stabbot`。
+[PlayerView](../../../../mod-the-spire/base-spire/public/projection.spire)声明公开实体类型；[公开元数据](../../../../mod-the-spire/base-spire/public/metadata.json)维护各类型的DefinitionId列表与集合用途。准确内容列表直接读取该文件，不在本页复制支持名单。Power.Definition、PowerBlueprint字段及所属模块私有字段保持Hidden；Power实例的身份和层数继续公开。
+
+开发牌堆、InPlay、ExhaustPile、RemovedFromCombat、Powers和定义集合按metadata各自声明发布或具名不发布。集合不发布不等于可忽略实体上的公开事实；新增集合必须明确用途。当前声明不构成完整原版牌序、能力生命周期或正常Run契约。
 
 公开 action_type 为 `net:action:base-spire:TheAbacus.Obtain`，格挡字段为 `net:field:base-spire:Player.Block`；生命、能量与回合见 `net:field:base-spire:Player.Hp`／`Player.Energy`／`Player.TurnNumber`／`Player.TurnOpen`／`Player.CombatActive`，目标生命见 `net:field:base-spire:Enemy.Hp`，能力层数见 `net:field:base-spire:Power.Stacks`，战斗结果见 `net:field:base-spire:Player.CombatOutcome`，回合内标志见 `net:field:base-spire:Player.LostHpThisTurn`／`Player.ExhaustedCardThisTurn`，公开动作见 `net:action:base-spire:BeginDevelopmentCombat`／`EndDevelopmentCombat`／`BeginDevelopmentTurn`／`EndDevelopmentTurn`／`AddDevelopmentTarget`／`PlayCardFromHand`／`PlayAttackFromHand`／`UpgradeCardInHand`。协议用真实候选 ID 提交动作；元数据不改变状态、触发顺序或合法动作守卫。

@@ -47,7 +47,7 @@ CardPlays／CardLibrary 和内部引用不作为完整公开历史或牌区发�
 
 `GainBlock` 处理 Dexterity／Frail／Unmovable，`GainUnpoweredBlock` 绕过这些修正；正的格挡事件供 Juggernaut 消费。`DamageEnemyPowered`／`DamagePlayerPowered` 保留修正精度到最终取整，前者接 Strength／Weak／Vulnerable／Cruelty，后者接敌方修正和 Colossus。HpLossCount 是事件次数，不是失血总量。
 
-`ApplyPlayerPower`／`ApplyEnemyPower` 维护同身份、同持有者的叠加。`powers/reactions.spire与powers/modifiers.spire` 消费机制角色，覆盖耗尽抽牌／格挡、受损 Strength／群伤、每回合 Strength／自伤／格挡、第三次攻击复制、下一攻击重复、抽到 Strike 自动打出、回合末自动打出、临时 Strength 恢复和费用／格挡／伤害修正。Rupture 的牌源自伤 Strength 延后到该次出牌结束；敌方阶段不触发 Rupture／Inferno。Power 通用目录仍保留 260 项来源，不能把这些角色处理器视为全 Power 目录已迁移。
+`ApplyPlayerPower`／`ApplyEnemyPower` 维护同身份、同持有者的叠加。`powers/shared`所属模块按定义身份消费通知／修正，准确生命周期见[Power参考](../../../development/base-spire/reference/powers.md)；不再由调用方kind选择行为。已有消费者覆盖耗尽抽牌／格挡、受损 Strength／群伤、每回合 Strength／自伤／格挡、第三次攻击复制、下一攻击重复、抽到 Strike 自动打出、回合末自动打出、临时 Strength 恢复和费用／格挡／伤害修正。Rupture 的牌源自伤 Strength 延后到该次出牌结束；敌方阶段不触发 Rupture／Inferno。Power 通用目录仍保留 260 项来源，不能把这些角色处理器视为全 Power 目录已迁移。
 
 随机选择使用 `vanilla-uniform@1` 与源布局：`base-spire:run:combat_card_selection`、`base-spire:run:combat_targets`、`base-spire:run:combat_card_generation`；初始洗牌、弃牌重洗与 Stampede 共用 `base-spire:run:shuffle`。空资格不抽样，连续命中重建存活候选。初始洗牌直接 Fisher-Yates，重洗先按源条目与升级排序；精确布局和整局前置消费边界见[随机契约](../run-domain/randomness.md)。
 
