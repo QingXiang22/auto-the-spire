@@ -1,10 +1,10 @@
 # 开发 Power、遗物与药水
 
-文档类型：操作指南（How-to）。先从对应 catalog 查源身份，再区分“已有模板配置”和“缺共享生命周期”。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[主清单](../../../review/tofix/README.md#当前交付)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
+文档类型：操作指南（How-to）。先从对应catalog查源身份，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[主清单](../../../review/tofix/README.md#当前交付)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
 
 ## 实现 Power 生命周期
 
-遗物与Power使用相同的通知／修正订阅模型。新增或迁移监听先沿[编写通知与修正监听](write-effect-listeners.md)选择入口、绑定实例并安排顺序；本页继续说明物品和能力各自的生命周期。
+遗物与Power使用相同的通知／修正订阅模型。新增或迁移监听先沿[编写通知与修正监听](write-effect-listeners.md)选择入口、绑定实例并安排顺序；本页继续说明物品和能力各自的生命周期。定义标志、施加／合并／移除签名与通知顺序统一查[Power参考](../reference/powers.md)。
 
 1. 在powers/shared新增内容模块，用PowerDefinition声明definition、allowNegative、debuff、singleStack。通用Power实例只保留持有者、定义引用、层数与共有寿命事实；特有状态放模块内部实体，以实际Power引用关联。
 2. 在同一文件注册通知／修正／到期监听；PowerCreated时建立私有状态，PowerRemoved时清理。施加调用ApplyPlayerPower／ApplyEnemyPower(owner或target、definition、stacks)，移除调用RemovePower，降层调用ModifyPowerAmount。未知定义在产生实例前失败；两持有者不合并。debuff标志只服务已迁移Weak／Vulnerable／Frail的首次跳过衰减，其他寿命由模块监听决定。

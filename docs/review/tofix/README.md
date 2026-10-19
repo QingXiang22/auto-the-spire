@@ -59,17 +59,17 @@
 
 ## 当前交付
 
-2026-10-19用户授权的内容模型迁移与真实开发验证已完成本地交付。**CORE-AUTHOR-05／DSL-CONTENT-MODEL-01，P1／待CI与审阅**；Codex `/root` 单写，基线`a4ac0d5`，分支`codex/content-model-migration-20261019`，依赖尚未合并的PR #23。变更包括base现有Power／卡牌／遗物与必要领域生命周期、通用包定义校验、对应tools／net检查及文档；独立参考／源池／正常Run范围未改，未派新agent。
+2026-10-19用户授权合并后，[PR #23](https://github.com/QingXiang22/auto-the-spire/pull/23)与[PR #24](https://github.com/QingXiang22/auto-the-spire/pull/24)已按依赖顺序合并，合并后main为`9078674`。**CORE-AUTHOR-05／DSL-CONTENT-MODEL-01及配套开发手册同步已完成本轮交付**。Codex `/root` 单写，文档分支`codex/content-model-manual-20261019`；新增单个内容修改／独有模块操作指南和Power参考，修正旧参数／寿命及skill路由，未新增玩法或修改ENV/W范围。两篇原教程逐阶段复跑、5项模型／7项CLAY判别与文档检查通过；合并与手册证据追加在[本轮记录](../records/2026-10-19/content-model-migration-2026-10-19.md#合并与手册同步同日)。父项与正常环境验收不因此关闭。
 
 已迁移32个既用Power、25个卡牌独有效果，移除调用方kind与公共专属状态，统一普通攻击数值来源；新增SelfFormingClay及其Power后为33个Power定义。首轮开发暴露并修正AfterBlockCleared原有时序错误；修正基线后重新接入只需2个玩法模块与5个登记文件，数值实验只改1个玩法文件并实际生效。完整修改面、首次失败、身份和局限见[交付证据](../records/2026-10-19/content-model-migration-2026-10-19.md)。原完整环境及独立比较验收保持开放。
 
 | 当前事项 | 已有成果与下一动作 |
 | --- | --- |
-| 最近生产批：DSL-CONTENT-MODEL-01，P1／待CI与审阅 | base `0.6.1-dsl.39`、Core.TheSpire `0.6.1`；本地407项包行为／118项Engine／41项公开路径通过。56件遗物、87张卡牌有实际见证；33个Power为已登记定义数，不代表全量独立验收。待核实新PR准确head的四组CI |
+| 最近生产批：DSL-CONTENT-MODEL-01，已合并 | base `0.6.1-dsl.39`、Core.TheSpire `0.6.1`；本地407项包行为／118项Engine／41项公开路径通过。56件遗物、87张卡牌有实际见证；33个Power为已登记定义数，不代表全量独立验收。PR #23的`a4ac0d5`与PR #24的`3d03740`各四组CI均成功；#24改目标后合并候选树与已验树一致 |
 | 下一玩法包：RELIC-G05后续，P1／待认领 | 先核对PenNib计数／当前牌身份，明确多段、重复与嵌套；Akabeko／Vigor及MysticLighter／附魔按依赖另分。本次不进入玩法编码 |
 | 全遗物与正常环境，未验收 | 来源297件、1件Deprecated排除；240件尚未实现。每件适用性／完整效果／正常来源及独立证据继续收口，不注册空效果。正常Run、G05整体及父项均保持开放 |
 
-Ironclad已有85张单人牌本地见证、两项多人源排除；旧C#的90件遗物及正常路线属于切换前成果，不能加到当前55件中。其他已交批次、接口和来源从[记录索引](../records/README.md)按需读取；不在本节逐批追加版本、测试总数与下一步。全遗物优先、其他角色／召唤复活／训练的暂停保持。
+Ironclad已有85张单人牌本地见证、两项多人源排除；旧C#的90件遗物及正常路线属于切换前成果，不能加到当前56件中。其他已交批次、接口和来源从[记录索引](../records/README.md)按需读取；不在本节逐批追加版本、测试总数与下一步。全遗物优先、其他角色／召唤复活／训练的暂停保持。
 
 <details>
 <summary>切换前 Sown＋SapphireSeed 的未关闭验收合同（历史证据，不是当前派单）</summary>
