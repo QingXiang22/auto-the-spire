@@ -116,3 +116,41 @@
 验收应使用实际变化场景：改一件已支持内容数值只改一个权威值；新增同模板内容只改自己的定义、显式装配／来源和见证；新增私有Power／遗物反应不修改公共战斗流程或其他内容模块；新增能力的私有状态不扩共享实体及复制代码。真正新增跨领域生命周期站点仍可修改对应领域契约和发布点，但下一件复用者不得重复修改该站点。
 
 本次五项探针验证的是修改边界，未完成上述重构，也未执行新的原版独立对拍或正常Run。当前玩法候选仍在主清单，后续生产切片应依据这些发现重排，不能把本节建议或上轮CI通过记为内容隔离已验收。
+
+
+## sts2-sim对照与方案修订
+
+用户要求参考sts2-sim等实现重新考虑base-spire的内容编写负担。本轮审阅基线`a906476`，使用本地锁定参考`2089659bd07920088b93226136c72b6b6ee590ad`／tree `8eb770da4e87677c54799801488b71a8ccba687b`；已核对与[锁定清单](../../../../reference/baselines/sts2-sim.json)一致且工作树干净。阅读14份针对性参考文件并记录字节SHA256于`.artifacts/power-model-design-20261019/source-identity.json`，另核对原版PowerModel／PowerCmd及Strength、Weak、Rupture、Corruption、CrimsonMantle与两张调用卡。未更新或修改独立参考，未执行参考完整测试。
+
+### 可借鉴的职责
+
+| 参考代码 | 实际结构 | 对base的调整含义 |
+| --- | --- | --- |
+| [PowerModel](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/PowerModel.cs) | 统一Amount／Owner／Applier、InstanceType／StackType／AllowNegative及施加／移除回调 | 定义、实例和生命周期分开；调用方无需复制这些策略 |
+| [PowerCmd](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Commands/PowerCmd.cs) | 从ModelDb找规范定义；按实例匹配新建或ModifyAmount，统一处理修正、回调、duration tick和移除 | base应提供稳定领域命令，以定义ID和来源调用，不由调用方传kind |
+| [Strength](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Powers/StrengthPower.cs)／[Weak](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Powers/WeakPower.cs) | 各自声明修正、资格和衰减站点 | 具体Power文件负责自身行为，中心reactions不再枚举其角色字符串 |
+| [Rupture](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Powers/RupturePower.cs)／[Vigor](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Powers/VigorPower.cs) | 待结算收益字典、攻击命令／开始层数保存在内容内部；复杂引用参与克隆／状态描述 | 私有状态回归内容模块，并明确实际play／card／attack身份，不能污染公共Card或另放隐藏C#状态 |
+| [Inflame](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Cards/Inflame.cs)／[Strike](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Cards/StrikeIronclad.cs) | 卡牌只施加已定义Power；Strike的实际攻击、读取接口和升级使用同一个_damage | 卡牌减少对Power实现的了解，变量形成单一事实来源 |
+| [ArtOfWar](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Relics/ArtOfWar.cs)／[Whetstone](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/Relics/Whetstone.cs) | 遗物自己的生命周期与状态，调用稳定资源／牌组操作 | 简单内容可配模板，独特内容直接拥有自己的DSL规则，不必扩万能模板 |
+| [ContentRegistry](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Content/ContentRegistry.cs)／[ModelDb](https://github.com/iRyougi/sts2-sim/blob/2089659bd07920088b93226136c72b6b6ee590ad/src/Sts2Sim.Core/Models/ModelDb.cs) | 实际注册表由具体模型类型派生并检查ID冲突；ModelDb注释里的显式列表描述与ContentRegistry实现有时点差异 | 借鉴单一执行定义源和派生登记，不照搬反射或恢复C#内容模型 |
+
+这是职责与修改面的对照，不声明参考每项行为均与原版一致。参考的Weak仍直接查询PaperKrane／Debilitate，PowerCmd的Doom历史也有具体类型特例，不适合原样搬入我们的公共命令；base已有实例通知与pure修正继续保留。StackType.Single不应凭名字当成“重新施加绝不加层”，实际PowerCmd新建／已有路径及完整源行为仍需核对。
+
+### 本轮改变的设计判断
+
+先前建议集中在补Power定义、移私有状态和减少登记。本轮进一步建议调整内容作者边界：简单参数配置继续用模板；复杂内容允许一个完整DSL主模块拥有变量、状态和监听，并调用共享领域命令。当前强制use-only会把每个新特例推入额外规则模板；仅继续增加模板不能充分降低维护负担。正式候选方案、接口边界、兼容影响与验收场景唯一维护在[目录与迁移设计的修订提案](../../../design/mod-the-spire/engine-dsl-migration/plan.md#2026-10-19内容模型修订提案)。该提案尚未改变正式作者约束。
+
+### 现有DSL的可行性原型
+
+在`.artifacts/power-model-design-20261019/`建立独立包副本、两个内容模块及共享原型命令。C#仅作检查驱动，具体定义、层数规则、监听、私有状态和清理均在DSL。共享Apply只接owner／definition／amount，按已登记定义查找，不按具体Power ID分派；测试动作仅为刺激入口。Strength模块按自身ID参与伤害修正，教学Charge模块自行记录每两次攻击给予格挡。
+
+| 实际命令／阶段 | 实际结果与边界 |
+| --- | --- |
+| `dotnet run --project .artifacts/power-model-design-20261019/probe/Probe.csproj -- .artifacts/power-model-design-20261019/base-spire`，源catalog尚未指向原型模块 | 退出0。Strength施加2层后Strike打8，降5层保留-3并实际打3；Charge连续攻击得到0／4格挡，移除后私有State数量0；未知定义在创建Power前失败。日志`probe.log` |
+| 将副本Strength源行definition指向完整模块后，加参数`catalog-guard`执行探针 | 退出0。完整EngineDslCompiler接受同一模块，DslPackage按现有“catalog definitions allow only DSL template uses”拒绝。日志`catalog-guard.log` |
+
+复现时先将`catalog-before-guard.json`复制到副本`powers/catalog.json`运行行为阶段；再用`catalog-after-guard.json`运行guard阶段。两个保存文件均在证据根目录，不能放入正式包产生未声明数据文件。
+
+原型证明当前DSL能承载内容自有规则和状态，并定位catalog约束；它不代表生产迁移完成。定义索引用局内隐藏实体近似，尚未验证只读定义保证；施加／移除流程仅覆盖原型所需路径，未覆盖敌方、来源修正、阻止施加、所有InstanceType、零层全部边界、暂停续接、复制／状态描述、完整duration、公开元数据或原版独立比较。没有将原型加入正式Power支持分母。
+
+本轮只修改候选设计和审阅文档，生产Engine／base／Host／参考保持。本次文档检查扫描788份Markdown、0问题，git diff --check通过；既有设计原文和原任务／ENV／W合同保留校验通过。完整玩法回归不因本次文档修订重跑。
