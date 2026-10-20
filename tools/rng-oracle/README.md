@@ -18,6 +18,15 @@ python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanil
 
 ## 两层向量
 
+共享敌人招式图的固定来源数据按只读源码独立生成：
+
+```powershell
+python -X utf8 tools/rng-oracle/enemy_move_vectors.py --output tools/base-spire-dev/fixtures/enemy-move-vectors.json
+dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only
+```
+
+生成器只使用本目录独立RNG重写，核对TwigSlimeM的真实AddBranch重载和RandomBranchState／Rng运算，并记录来源SHA256。数据保留初始状态、源候选顺序、有效权重位型、原始double、缩放结果及前后游标；CI消费固定JSON，不需要本地游戏源码。范围是A0受控选招，缺少正常出生HP、遭遇前置消费及完整模拟器双侧，不宣称正常Run或ENV-T01全部通过。
+
 拾取随机升级的固定向量独立生成：
 
 ```powershell

@@ -20,6 +20,7 @@ public sealed partial class Session
                     RandomValueOp.Hash32 => Value.Of(Binary32.Hash32(Arg(0).AsString())),
                     RandomValueOp.Float32 => Value.Of(Binary32.Bits(Arg(0).Kind == ValueKind.Fixed ? (float)Arg(0).AsDecimal() : (float)Arg(0).AsInt())),
                     RandomValueOp.Float32Add => Value.Of(Binary32.Bits(Float(0) + Float(1))),
+                    RandomValueOp.Float32Subtract => Value.Of(Binary32.Bits(Float(0) - Float(1))),
                     RandomValueOp.Float32Minimum => Value.Of(Binary32.Bits(MathF.Min(Float(0), Float(1)))),
                     RandomValueOp.Float32Less => Value.Of(Float(0) < Float(1)),
                     RandomValueOp.Float32LessOrEqual => Value.Of(Float(0) <= Float(1)),
@@ -174,6 +175,17 @@ public sealed partial class Session
         var items = EvaluateQuery(call, aggregate.Source);
         if (aggregate.Op == AggregateOp.Count) return Value.Of((long)items.Count);
         if (items.Count == 0) return Value.Of(0L);
+        if (aggregate.Op == AggregateOp.SumFloat32)
+        {
+            // Enumerable.Sum(float) accumulates in double and rounds once on return.
+            double total = 0;
+            foreach (var item in items)
+            {
+                call.Slots[aggregate.ItemSlot] = Value.OfRef(item);
+                total += Binary32.Read(Eval(call, aggregate.ItemValue!).AsInt());
+            }
+            return Value.Of(Binary32.Bits((float)total));
+        }
         Value? accumulator = null;
         foreach (var item in items)
         {

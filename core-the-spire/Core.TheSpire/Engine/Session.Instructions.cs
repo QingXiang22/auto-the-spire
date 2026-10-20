@@ -134,8 +134,17 @@ public sealed partial class Session
                 return Outcome.Continue;
             }
             case SampleFloat32Inst sampleFloat:
-                call.Slots[sampleFloat.ResultSlot] = Value.Of(Binary32.Bits((float)Random.DrawDouble(RequireStream(Eval(call, sampleFloat.Stream)))));
+            {
+                var min = sampleFloat.Minimum is null ? 0f : Binary32.Read(Eval(call, sampleFloat.Minimum).AsInt());
+                var max = sampleFloat.Maximum is null ? 1f : Binary32.Read(Eval(call, sampleFloat.Maximum).AsInt());
+                if (min > max) throw Faults.Range("binary32 sampling minimum exceeds maximum");
+                var width = max - min;
+                if (!float.IsFinite(width)) throw Faults.Range("binary32 sampling width must be finite");
+                // Source NextFloat scales the double first, then rounds once; equal bounds still consume.
+                var raw = Random.DrawDouble(RequireStream(Eval(call, sampleFloat.Stream)));
+                call.Slots[sampleFloat.ResultSlot] = Value.Of(Binary32.Bits((float)(raw * (double)width + (double)min)));
                 return Outcome.Continue;
+            }
 
             case SampleIntInst sampleInt:
             {

@@ -12,6 +12,7 @@ procedure SpawnDevelopmentEnemy {
       type = Enemy scope = frameScope() into = target
       fields = { DefinitionId = definition Hp = hp MaxHp = hp MoveIndex = 0 Intent = "attack" }
     }
+    call = { procedure = ResetEnemyMoves args = { target = target } }
   }
 }
 # definition is the encounter identity (it names the generated symbols); enemyDefinition and hp describe the

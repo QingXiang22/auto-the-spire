@@ -64,6 +64,8 @@ entity Enemy {
     Block = { type = Int(min = 0, max = 999) default = 0 }
     # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
     MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
+    # Saved source node for migrated move graphs; observations never roll another move.
+    MoveId = { type = String(length = 64) default = "none" }
     # Public development intent name ("none", "attack", "buff", ...); no intent damage value is published.
     Intent = { type = String(length = 32) default = "none" }
   }

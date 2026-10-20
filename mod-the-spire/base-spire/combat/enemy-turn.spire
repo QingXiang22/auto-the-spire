@@ -30,6 +30,12 @@ procedure RunEnemyTurn {
       }
     }
     emit = { event = AfterEnemyTurnEnded payload = { owner = owner } }
+    # Source prepares all surviving enemies for the next player side, after the completed enemy phase.
+    if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
+      forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = enemy body = {
+        call = { procedure = SelectNextEnemyMove args = { target = enemy } }
+      } }
+    } }
     set = { target = owner field = Player.EnemyPhase value = false }
   }
 }

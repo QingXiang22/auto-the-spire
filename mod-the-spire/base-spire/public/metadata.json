@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.40",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.41",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -74,6 +74,7 @@
       "content_ids": [
         "base-spire:development-target",
         "base-spire:fuzzy-wurm-crawler",
+        "base-spire:twig-slime-m",
         "base-spire:twig-slime-s",
         "base-spire:assassin-ruby-raider",
         "base-spire:bowlbug-egg",
@@ -156,6 +157,7 @@
         "base-spire:setup-strike",
         "base-spire:shockwave",
         "base-spire:shrug-it-off",
+        "base-spire:slimed",
         "base-spire:spite",
         "base-spire:stampede",
         "base-spire:stoke",

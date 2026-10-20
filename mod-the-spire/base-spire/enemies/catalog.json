@@ -1139,9 +1139,9 @@
       "source_path": "sts2/src/Core/Models/Monsters/TwigSlimeM.cs",
       "source_sha256": "c2f054fa762d13e72544ac9b4318295e7c5a9f05db5ae7c33e4950540b020e30",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "TwigSlimeM.cs A0: HP 26..28 (development minimum), initial STICKY_SHOT_MOVE adds one executable Slimed to discard; POKEY_POUNCE_MOVE attacks for 11; source-order equal weights, attack maxRepeats=2, status CannotRepeat; shared move graph.",
+      "definition": "enemies/shared/twig-slime-m.spire"
     },
     {
       "id": "base-spire:twig-slime-s",

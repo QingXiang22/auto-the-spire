@@ -33,6 +33,8 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 `base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/design/mod-the-spire/ironclad-dsl/shared-operations.md)。显式 Ironclad 基础初态、原版随机算法／流布局和自动起手已接入；包含 Neow 的正常开局、完整随机前置消费和正常 Run 不属于此 scope；不使用旧 C# 运行回退。当前数量与交付验证记录从[路线图](../../docs/roadmap.md#近期队列)定位。
 
+敌人招式图可定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`，包含FuzzyWurmCrawler固定轮转、TwigSlimeM首招及随机限制、Slimed实际出牌和共享图失败检查。该选项不能与其他定向参数或报告输出组合；完整报告仍使用普通check。正常遭遇和完整独立比较不由该定向检查验收。
+
 分阶段学习与实际公开结果见[base 开发教程](../../docs/development/base-spire/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为执行结果。
 
 金币奖励在胜利后先显示待领金额；通过 `ClaimDevelopmentGoldReward` 领取，再用 `CloseDevelopmentRewards` 关闭，也可直接关闭跳过。未关闭时不能开始下一战或进入营火。详见[奖励约定](../../docs/design/mod-the-spire/combat-rewards/spec.md)。公开路径的定向检查使用 `dotnet run --project net-the-spire/Net.TheSpire.Tests -- --base-dsl-only`；默认不带参数的 net 入口仍运行完整迁移检查组。

@@ -1,0 +1,1015 @@
+{
+  "schema": "base-spire/source-enemy-moves@1",
+  "source_sha256": {
+    "sts2/src/Core/Models/Monsters/TwigSlimeM.cs": "c2f054fa762d13e72544ac9b4318295e7c5a9f05db5ae7c33e4950540b020e30",
+    "sts2/src/Core/Models/Monsters/FuzzyWurmCrawler.cs": "1b985c2625c86375a377bb8f124e339cba9af66ce4c6b7d0d5f4548662ce8bb8",
+    "sts2/src/Core/Models/Cards/Slimed.cs": "024372f85032a09464fa15bc5b2113f79e4b89a6f4f415182007901ebd4d37a8",
+    "sts2/src/Core/Models/MonsterModel.cs": "e67b2cae2d32f8990cd710e75bb16bb6fc6a18ac4a0c461dbae45696e132477a",
+    "sts2/src/Core/MonsterMoves/MonsterMoveStateMachine/MonsterMoveStateMachine.cs": "fd78b416582ab8ad089a03d7f8fbee7427aafe9374f5a8f844ed551e80be9dd3",
+    "sts2/src/Core/MonsterMoves/MonsterMoveStateMachine/RandomBranchState.cs": "a21f4174e001da5a0d34c23d07f52da61735618462e407ea1181ebd89469e9bb",
+    "sts2/src/Core/MonsterMoves/MonsterMoveStateMachine/MoveState.cs": "eb97c7cfbab265e45af201283c4daedb66686f8a5ed197de22fc78ef93c26838",
+    "sts2/src/Core/Random/Rng.cs": "99a404a807dae7b3c786821b3c287e6518b573f58265f98feaa63132748b7f40",
+    "sts2/src/Core/Random/MegaRandom.cs": "a4544672d4909c878266e1b6e5597bca8771585c4106f3119044cc8a1ad0984b",
+    "sts2/src/Core/Runs/RunRngSet.cs": "059f7ab16345cb1147d68c540ed1a24f66f4b14e370b6c1f019cde6fbac80784",
+    "sts2/src/Core/Helpers/StringHelper.cs": "fe7c73c12cd9d09225efcf9a24c6d0f7e719bc97cba9e95b6dcc26179f72efbb"
+  },
+  "scope": "Controlled A0 move selection only; no HP roll, normal encounter, complete combat or simulator comparison.",
+  "vectors": [
+    {
+      "seed": "20261018",
+      "monster_ai_seed": 2194125519,
+      "initial": "STICKY_SHOT_MOVE",
+      "rolls": [
+        {
+          "before": 0,
+          "after": 1,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.73498437525771,
+          "roll_bits": 1060906992,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 1,
+          "after": 2,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.02023852366380363,
+          "roll_bits": 1025887043,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 2,
+          "after": 3,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.31922750183973425,
+          "roll_bits": 1050898890,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 3,
+          "after": 4,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.9556492267959351,
+          "roll_bits": 1064609133,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 4,
+          "after": 5,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.9765647653037631,
+          "roll_bits": 1073348646,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 5,
+          "after": 6,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.5708382426645059,
+          "roll_bits": 1058153076,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 6,
+          "after": 7,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.011136406112475128,
+          "roll_bits": 1018590585,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 7,
+          "after": 8,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.38897789233646674,
+          "roll_bits": 1053239324,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 8,
+          "after": 9,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.7371072420225327,
+          "roll_bits": 1060942607,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 9,
+          "after": 10,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.5517441056327271,
+          "roll_bits": 1066221338,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 10,
+          "after": 11,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.15764710246622748,
+          "roll_bits": 1042378302,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 11,
+          "after": 12,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.8259225202332455,
+          "roll_bits": 1070821289,
+          "selected": "STICKY_SHOT_MOVE"
+        }
+      ]
+    },
+    {
+      "seed": "777",
+      "monster_ai_seed": 4280208914,
+      "initial": "STICKY_SHOT_MOVE",
+      "rolls": [
+        {
+          "before": 0,
+          "after": 1,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.2435810200906252,
+          "roll_bits": 1048145230,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 1,
+          "after": 2,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.833022737419085,
+          "roll_bits": 1070940410,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 2,
+          "after": 3,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.597729614840472,
+          "roll_bits": 1058604239,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 3,
+          "after": 4,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.3778191845264973,
+          "roll_bits": 1061253508,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 4,
+          "after": 5,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.09753513553945459,
+          "roll_bits": 1036501120,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 5,
+          "after": 6,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.3655513502606972,
+          "roll_bits": 1052453260,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 6,
+          "after": 7,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.4276848383248406,
+          "roll_bits": 1062926722,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 7,
+          "after": 8,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.7732162287735749,
+          "roll_bits": 1061548416,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 8,
+          "after": 9,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.20563821115835057,
+          "roll_bits": 1045598931,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 9,
+          "after": 10,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.7191735490683419,
+          "roll_bits": 1069030338,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 10,
+          "after": 11,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.23731235553062247,
+          "roll_bits": 1047724547,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 11,
+          "after": 12,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.926481870715833,
+          "roll_bits": 1072508394,
+          "selected": "STICKY_SHOT_MOVE"
+        }
+      ]
+    },
+    {
+      "seed": "ENV-IRONCLAD-001",
+      "monster_ai_seed": 2672686401,
+      "initial": "STICKY_SHOT_MOVE",
+      "rolls": [
+        {
+          "before": 0,
+          "after": 1,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.3972294220704602,
+          "roll_bits": 1053516200,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 1,
+          "after": 2,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.4068638518955029,
+          "roll_bits": 1062228085,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 2,
+          "after": 3,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.46497014190831343,
+          "roll_bits": 1055789201,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 3,
+          "after": 4,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.6385664335231575,
+          "roll_bits": 1059289367,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 4,
+          "after": 5,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.9205362833092404,
+          "roll_bits": 1072408644,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 5,
+          "after": 6,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.3314822673014489,
+          "roll_bits": 1051310091,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 6,
+          "after": 7,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.9515163744459879,
+          "roll_bits": 1072928404,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 7,
+          "after": 8,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.798443919744989,
+          "roll_bits": 1061971666,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 8,
+          "after": 9,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.05279821064297463,
+          "roll_bits": 1037583088,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 9,
+          "after": 10,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.6955523035313541,
+          "roll_bits": 1060245431,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 10,
+          "after": 11,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.2442784620246785,
+          "roll_bits": 1048192034,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 11,
+          "after": 12,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.36948530751660336,
+          "roll_bits": 1060973870,
+          "selected": "POKEY_POUNCE_MOVE"
+        }
+      ]
+    },
+    {
+      "seed": "A😀B",
+      "monster_ai_seed": 1389002233,
+      "initial": "STICKY_SHOT_MOVE",
+      "rolls": [
+        {
+          "before": 0,
+          "after": 1,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.35169556763646104,
+          "roll_bits": 1051988337,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 1,
+          "after": 2,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.19991809597608345,
+          "roll_bits": 1053603668,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 2,
+          "after": 3,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.6732116417461571,
+          "roll_bits": 1059870617,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 3,
+          "after": 4,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.5542190075411917,
+          "roll_bits": 1057874252,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 4,
+          "after": 5,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.24792264708640566,
+          "roll_bits": 1056825199,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 5,
+          "after": 6,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            0,
+            1065353216
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.12184805838050394,
+          "roll_bits": 1039764346,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 6,
+          "after": 7,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.2139889193611726,
+          "roll_bits": 1046159337,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 7,
+          "after": 8,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.5614273259740129,
+          "roll_bits": 1066383796,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 8,
+          "after": 9,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.6039801122801709,
+          "roll_bits": 1058709105,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 9,
+          "after": 10,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.501308915429034,
+          "roll_bits": 1065375176,
+          "selected": "STICKY_SHOT_MOVE"
+        },
+        {
+          "before": 10,
+          "after": 11,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            0
+          ],
+          "total_bits": 1065353216,
+          "raw_double": 0.792327066371082,
+          "roll_bits": 1061869042,
+          "selected": "POKEY_POUNCE_MOVE"
+        },
+        {
+          "before": 11,
+          "after": 12,
+          "candidates": [
+            "POKEY_POUNCE_MOVE",
+            "STICKY_SHOT_MOVE"
+          ],
+          "weight_bits": [
+            1065353216,
+            1065353216
+          ],
+          "total_bits": 1073741824,
+          "raw_double": 0.6858287009772859,
+          "roll_bits": 1068470904,
+          "selected": "STICKY_SHOT_MOVE"
+        }
+      ]
+    }
+  ],
+  "fractional_probe": {
+    "seed": "20261018",
+    "monster_ai_seed": 2194125519,
+    "initial": "STICKY_SHOT_MOVE",
+    "rolls": [
+      {
+        "before": 0,
+        "after": 1,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          0
+        ],
+        "total_bits": 1050253722,
+        "raw_double": 0.73498437525771,
+        "roll_bits": 1046595975,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 1,
+        "after": 2,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          1063675494
+        ],
+        "total_bits": 1067030938,
+        "raw_double": 0.02023852366380363,
+        "roll_bits": 1019671530,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 2,
+        "after": 3,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          0,
+          1063675494
+        ],
+        "total_bits": 1063675494,
+        "raw_double": 0.31922750183973425,
+        "roll_bits": 1049827739,
+        "selected": "STICKY_SHOT_MOVE"
+      },
+      {
+        "before": 3,
+        "after": 4,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          0
+        ],
+        "total_bits": 1050253722,
+        "raw_double": 0.9556492267959351,
+        "roll_bits": 1049807272,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 4,
+        "after": 5,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          1063675494
+        ],
+        "total_bits": 1067030938,
+        "raw_double": 0.9765647653037631,
+        "roll_bits": 1066795031,
+        "selected": "STICKY_SHOT_MOVE"
+      },
+      {
+        "before": 5,
+        "after": 6,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          0
+        ],
+        "total_bits": 1050253722,
+        "raw_double": 0.5708382426645059,
+        "roll_bits": 1043291276,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 6,
+        "after": 7,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          1063675494
+        ],
+        "total_bits": 1067030938,
+        "raw_double": 0.011136406112475128,
+        "roll_bits": 1012593503,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 7,
+        "after": 8,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          0,
+          1063675494
+        ],
+        "total_bits": 1063675494,
+        "raw_double": 0.38897789233646674,
+        "roll_bits": 1051934131,
+        "selected": "STICKY_SHOT_MOVE"
+      },
+      {
+        "before": 8,
+        "after": 9,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          0
+        ],
+        "total_bits": 1050253722,
+        "raw_double": 0.7371072420225327,
+        "roll_bits": 1046638713,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 9,
+        "after": 10,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          1063675494
+        ],
+        "total_bits": 1067030938,
+        "raw_double": 0.5517441056327271,
+        "roll_bits": 1059684076,
+        "selected": "STICKY_SHOT_MOVE"
+      },
+      {
+        "before": 10,
+        "after": 11,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          0
+        ],
+        "total_bits": 1050253722,
+        "raw_double": 0.15764710246622748,
+        "roll_bits": 1027716990,
+        "selected": "POKEY_POUNCE_MOVE"
+      },
+      {
+        "before": 11,
+        "after": 12,
+        "candidates": [
+          "POKEY_POUNCE_MOVE",
+          "STICKY_SHOT_MOVE"
+        ],
+        "weight_bits": [
+          1050253722,
+          1063675494
+        ],
+        "total_bits": 1067030938,
+        "raw_double": 0.8259225202332455,
+        "roll_bits": 1065204017,
+        "selected": "STICKY_SHOT_MOVE"
+      }
+    ],
+    "scope": "Synthetic fractional weights for the source RandomBranchState algorithm; not TwigSlimeM gameplay."
+  }
+}

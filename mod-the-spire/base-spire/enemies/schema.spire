@@ -1,0 +1,42 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Definition tables are built and validated once at package startup. All evolving facts belong to a monster.
+entity EnemyMoveGraph { fields = {
+  DefinitionId = { type = String(length = 64) visibility = Hidden }
+  Initial = { type = String(length = 64) visibility = Hidden }
+} }
+entity EnemyMoveNode { fields = {
+  Graph = { type = Ref(EnemyMoveGraph) visibility = Hidden }
+  Id = { type = String(length = 64) visibility = Hidden }
+  Kind = { type = String(length = 16) visibility = Hidden }
+  Next = { type = String(length = 64) default = "" visibility = Hidden }
+  Intent = { type = String(length = 32) default = "none" visibility = Hidden }
+  Index = { type = Int default = 0 visibility = Hidden }
+} }
+entity EnemyMoveBranch { fields = {
+  Node = { type = Ref(EnemyMoveNode) visibility = Hidden }
+  Target = { type = Ref(EnemyMoveNode) visibility = Hidden }
+  Weight = { type = Int visibility = Hidden }
+  MaxRepeats = { type = Int(min = 0) default = 0 visibility = Hidden }
+  Cooldown = { type = Int(min = 0) default = 0 visibility = Hidden }
+  Once = { type = Bool default = false visibility = Hidden }
+} }
+entity EnemyMoveState { fields = {
+  Enemy = { type = Ref(Enemy) visibility = Hidden }
+  Graph = { type = Ref(EnemyMoveGraph) visibility = Hidden }
+  Current = { type = Ref(EnemyMoveNode) optional = true visibility = Hidden }
+  Ready = { type = Bool default = false visibility = Hidden }
+  FirstPerformed = { type = Bool default = false visibility = Hidden }
+  Sequence = { type = Int default = 0 visibility = Hidden }
+  Consecutive = { type = Int default = 0 visibility = Hidden }
+} }
+entity EnemyMoveHistory { fields = {
+  State = { type = Ref(EnemyMoveState) visibility = Hidden }
+  Node = { type = Ref(EnemyMoveNode) visibility = Hidden }
+  Sequence = { type = Int visibility = Hidden }
+} }
+event RegisterEnemyMoveGraphs { }
+event RegisterEnemyMoveNodes { }
+event RegisterEnemyMoveBranches { }
+dispatch ExecuteEnemyMove { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } }

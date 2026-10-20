@@ -1,8 +1,21 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: FuzzyWurmCrawler.cs; development spawn uses the minimum initial HP (55 at Ascension 0).
-use FuzzyWurmCrawler {
-  template = FuzzyWurmCrawlerEnemy
-  args = { definition = "base-spire:fuzzy-wurm-crawler" hp = 55 }
-}
+# Source FuzzyWurmCrawler.cs: preserve list order FIRST_ACID_GOOP, ACID_GOOP, INHALE.
+template FuzzyWurmCrawlerContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:fuzzy-wurm-crawler" initial = "FIRST_ACID_GOOP" } }
+  use FirstGoop { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fuzzy-wurm-crawler" id = "FIRST_ACID_GOOP" next = "INHALE" intent = "attack" index = 0 } }
+  use Goop { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fuzzy-wurm-crawler" id = "ACID_GOOP" next = "FIRST_ACID_GOOP" intent = "attack" index = 2 } }
+  use Inhale { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fuzzy-wurm-crawler" id = "INHALE" next = "ACID_GOOP" intent = "buff" index = 1 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "INHALE") then = {
+        call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 7 } }
+      } else = { call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 4 } } } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:fuzzy-wurm-crawler" procedure = Execute }
+  action Spawn { role = player body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = 55 } } } }
+} }
+use FuzzyWurmCrawler { template = FuzzyWurmCrawlerContent }

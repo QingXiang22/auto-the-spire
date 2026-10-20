@@ -336,6 +336,7 @@ public enum AggregateOp
     Minimum = 1,
     Maximum = 2,
     Count = 3,
+    SumFloat32 = 4,
 }
 
 /// <summary>Reduces a query to one value. The item slot binds each candidate while the value expression is evaluated.</summary>
