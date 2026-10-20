@@ -437,10 +437,52 @@ def check_repeat_matches_after_other_bundles() -> Outcome:
 # -- 入口 ------------------------------------------------------------------------------------------------------
 
 
+def check_runner_game_seed() -> Outcome:
+    """A numeric experiment seed crosses the protocol boundary as game text."""
+    from ai_the_spire.runner import EpisodeRunner
+
+    snapshot = ts.snapshot("scenario", "snapshot-terminal")
+    catalog = ts.catalog("scenario")
+    snapshot["ruleset_id"] = catalog["ruleset_id"] = "net:ruleset:seed-boundary"
+    identity = {key: snapshot[key] for key in (
+        "protocol_version", "ruleset_id", "catalog_id", "backend_profile_id"
+    )}
+
+    class Client:
+        accepted_seed = None
+
+        def describe(self):
+            return {"ok": True, "result": {"identity": identity, "capabilities": {
+                "scenario_profiles": [{"id": "seed-boundary"}]
+            }}}
+
+        def get_catalog(self, catalog_id):
+            return {"ok": True, "result": catalog}
+
+        def start(self, expected_identity, scenario_profile, *, seed):
+            if not isinstance(seed, str) or not seed:
+                return {"ok": False, "error": {"code": "invalid_input"}}
+            self.accepted_seed = seed
+            return {"ok": True, "result": {
+                "session_id": snapshot["session_id"], "seed": seed, "snapshot": snapshot
+            }}
+
+        def observe(self, session_id):
+            return {"ok": True, "result": {"session_status": "terminal", "snapshot": snapshot}}
+
+    client = Client()
+    result = EpisodeRunner(client, seed=20261001).run()
+    return _outcome("acceptance/runner-game-seed", (
+        client.accepted_seed == "20261001" and result.ending == "terminal"
+        and result.identities.seed == client.accepted_seed
+    ), "runner must send the same game-seed text recorded in episode metadata")
+
+
 def run_all(only: Optional[str] = None) -> list:
     if only is not None and only not in SUITE_NAMES:
         return []
     cases = (
+        ("acceptance/runner-game-seed", check_runner_game_seed),
         ("acceptance/section9-1-registration-order", check_registration_order),
         ("acceptance/section9-2-version-mix", check_version_mix),
         ("acceptance/section9-3-two-mods-charge", check_two_mods_charge),
