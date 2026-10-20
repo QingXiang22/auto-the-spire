@@ -1,0 +1,18 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Slimed.cs: 1 energy, status rarity/type, no upgrades, draw one then exhaust.
+use Slimed { template = CardDefinition args = { definition = "base-spire:slimed" sourceEntry = "SLIMED" kind = "status" rarity = "status" cost = 1 upgradedCost = 1 targeted = false exhausts = true leavesPlay = false } }
+template SlimedContent { body = {
+  procedure Created { parameters = { card = Ref(Card) } body = {
+    if = { condition = equal(field(card, Card.DefinitionId), "base-spire:slimed") then = { set = { target = card field = Card.CanUpgrade value = false } } }
+  } }
+  subscription OnCreated { event = CardCreated reaction = Created }
+  procedure Execute { parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) } body = {
+    call = { procedure = DrawCards args = { owner = owner count = 1 } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteCardBody key = "base-spire:slimed" procedure = Execute }
+  procedure Damage { pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int body = { return = { value = 0 } } }
+  dispatchCase Damage { dispatch = ReadCardDamage key = "base-spire:slimed" procedure = Damage }
+} }
+use SlimedBehavior { template = SlimedContent }

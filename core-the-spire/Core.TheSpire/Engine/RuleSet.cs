@@ -1011,6 +1011,8 @@ public static class IrDumper
                 return;
             case SampleFloat32Inst sampleFloat:
                 text.Append('[').Append(sampleFloat.ResultSlot).Append("] "); Write(sampleFloat.Stream, text);
+                if (sampleFloat.Minimum is not null) { text.Append(" min="); Write(sampleFloat.Minimum, text); }
+                if (sampleFloat.Maximum is not null) { text.Append(" max="); Write(sampleFloat.Maximum, text); }
                 return;
             case LocalExpr local:
                 text.Append('[').Append(local.Slot).Append(']');

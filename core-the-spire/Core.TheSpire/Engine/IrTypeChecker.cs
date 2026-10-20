@@ -523,6 +523,8 @@ internal static class IrTypeChecker
                     break;
                 case SampleFloat32Inst sampleFloat:
                     RequireStream(CheckExpr(frame, sampleFloat.Stream, where), where);
+                    if (sampleFloat.Minimum is not null) Require(CheckExpr(frame, sampleFloat.Minimum, where), Ty.Int, where, "binary32 minimum");
+                    if (sampleFloat.Maximum is not null) Require(CheckExpr(frame, sampleFloat.Maximum, where), Ty.Int, where, "binary32 maximum");
                     Bind(frame, sampleFloat.ResultSlot, Ty.Int, where);
                     break;
 
@@ -977,6 +979,11 @@ internal static class IrTypeChecker
                     using (frame.Bind(aggregate.ItemSlot, element))
                     {
                         var value = CheckExpr(frame, aggregate.ItemValue, where);
+                        if (aggregate.Op == AggregateOp.SumFloat32)
+                        {
+                            Require(value, Ty.Int, where, "binary32 aggregate operand");
+                            return Ty.Int;
+                        }
                         if (value.Kind is not (FieldTypeKind.Int or FieldTypeKind.Fixed))
                         {
                             throw Faults.TypeError(

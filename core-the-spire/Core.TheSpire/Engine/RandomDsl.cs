@@ -1,6 +1,6 @@
 namespace CoreTheSpire.Engine;
 
-public enum RandomValueOp { GameSeed, Hash32, Float32, Float32Add, Float32Minimum, Float32Less, Float32LessOrEqual }
+public enum RandomValueOp { GameSeed, Hash32, Float32, Float32Add, Float32Minimum, Float32Less, Float32LessOrEqual, Float32Subtract }
 
 public sealed class RandomValueExpr(RandomValueOp op, params Expr[] arguments) : Expr
 {
@@ -19,12 +19,14 @@ public sealed class SeedStreamInst(Expr stream, Expr seed) : Inst
 }
 
 /// <summary>IEEE754 binary32 encoded as unsigned bits in an Int slot; never decimal-quantized.</summary>
-public sealed class SampleFloat32Inst(Expr stream, int resultSlot) : Inst
+public sealed class SampleFloat32Inst(Expr stream, int resultSlot, Expr? minimum = null, Expr? maximum = null) : Inst
 {
     public Expr Stream { get; } = stream;
     public int ResultSlot { get; } = resultSlot;
     public override string Primitive => "inst.sampleFloat32";
-    public override IReadOnlyList<IrNode> Children => [Stream];
+    public Expr? Minimum { get; } = minimum;
+    public Expr? Maximum { get; } = maximum;
+    public override IReadOnlyList<IrNode> Children => [Stream, .. new[] { Minimum, Maximum }.OfType<Expr>()];
 }
 
 public static class Binary32

@@ -6,6 +6,76 @@ internal static class RandomDslChecks
 {
     public static void Run()
     {
+        Check.Run("RNG DSL float sum matches source LINQ double accumulation before one float rounding", () =>
+        {
+            var rules = new RuleSetBuilder().Add(EngineDslCompiler.Compile("""
+                using namespace float-sum; dsl_version = "core/0.3"
+                entity Item { fields = { Bits = { type = Int } } }
+                procedure Setup { locals = { item = Binding } body = {
+                  if = { condition = not(equal(aggregate(type(Item), SumFloat32, i, field(i, Item.Bits)), float32(0))) then = { fail = { message = "empty sum" } } }
+                  create = { type = Item scope = frameScope() into = item fields = { Bits = float32(16777216) } }
+                  repeat = { count = 2 body = { create = { type = Item scope = frameScope() into = item fields = { Bits = float32(1) } } } }
+                  if = { condition = not(equal(aggregate(type(Item), SumFloat32, i, field(i, Item.Bits)), float32(16777218))) then = { fail = { message = "sum rounded at every add" } } }
+                } } start = [Setup]
+                """)).Build();
+            var s = new Session(rules, 1, ["player"]); s.Start();
+            Check.Equal(SessionStatus.Running, s.Status, "source sum retains both small weights");
+            Check.Equal(0L, s.Random.TotalDraws, "pure sum never samples");
+            Check.True(16777218f == new[] { 16777216f, 1f, 1f }.Sum(), "independent BCL Sum(float) result");
+        });
+        Check.Run("RNG DSL ranged binary32 scales the double before rounding and includes bounds in identity", () =>
+        {
+            const string source = """
+                using namespace ranged; dsl_version = "core/0.3"
+                entity Probe { fields = { Result = { type = Int } } }
+                procedure Setup { locals = { probe = Binding } body = {
+                  seedStream = { stream = "source" seed = 12345 }
+                  create = { type = Probe scope = frameScope() into = probe }
+                } }
+                action Draw { role = player locals = { roll = Int } body = {
+                  sampleFloat32 = { stream = "source" min = float32(-0.3) max = float32(3.7) into = roll }
+                  set = { target = first(type(Probe)) field = Probe.Result value = roll }
+                } }
+                start = [Setup]
+                """;
+            RuleSet Rules(string text) => new RuleSetBuilder().Add(EngineDslCompiler.Compile(text)).Build();
+            var rules = Rules(source);
+            var s = new Session(rules, 1, ["player"], randomAlgorithmId: RandomService.VanillaAlgorithmId,
+                randomDrawProfileId: RandomService.VanillaDrawProfileId);
+            s.Start();
+            // Independent Python source oracle, seed 12345; indices 4,7,8 detect premature float rounding.
+            long[] expected = [1076573955, 1046574956, 1080256996, 3185206742, 1073076871, 3196304185,
+                1051566008, 1063393938, 1067398887, 1079372477, 1077212094, 1072473345];
+            var probe = s.State.AllInstances(rules.TypeByQualifiedId("ranged:Probe").Id).Single();
+            foreach (var bits in expected)
+            {
+                s.Submit(s.LegalActions(s.Participant(0)).Single().Definition, s.Participant(0), []);
+                Check.Equal(bits, s.State.GetField(probe, 0).AsInt(), "source ranged float bits");
+            }
+            Check.Equal(12L, s.Random.DrawCount("source"), "one raw word for each float");
+            Check.True(rules.Identity != Rules(source.Replace("float32(3.7)", "float32(3.8)")).Identity, "range affects rules identity");
+            Check.True(rules.Identity != Rules(source.Replace("float32(-0.3)", "float32(-0.4)")).Identity, "minimum affects rules identity");
+        });
+        Check.Run("RNG DSL ranged binary32 validates before sampling and equal bounds still consume", () =>
+        {
+            foreach (var (min, max, valid) in new[] { ("float32(2)", "float32(2)", true),
+                ("float32(2)", "float32(1)", false), ("2143289344", "float32(1)", false),
+                ("4286578687", "2139095039", false), ("-1", "float32(1)", false) })
+            {
+                var rules = new RuleSetBuilder().Add(EngineDslCompiler.Compile($$"""
+                    using namespace bounds; dsl_version = "core/0.3"
+                    procedure Setup { locals = { v = Int } body = {
+                      sampleFloat32 = { stream = "s" min = {{min}} max = {{max}} into = v }
+                      if = { condition = not(equal(v, float32(2))) then = { fail = { message = "equal bounds" } } }
+                      if = { condition = not(equal(float32Subtract(float32(0.5), float32(0.25)), float32(0.25))) then = { fail = { message = "subtract" } } }
+                    } } start = [Setup]
+                    """)).Build();
+                var s = new Session(rules, 1, ["player"]);
+                if (valid) s.Start();
+                else Check.Fault(EngineFaultCode.ValueOutOfRange, s.Start, "invalid range before RNG");
+                Check.Equal(valid ? 1L : 0L, s.Random.TotalDraws, "invalid input never samples");
+            }
+        });
         Check.Run("RNG DSL typed seed/float operations execute without decimal quantization", () =>
         {
             var rules = new RuleSetBuilder().Add(EngineDslCompiler.Compile("""
@@ -48,7 +118,7 @@ internal static class RandomDslChecks
         {
             foreach (var body in new[] { "seedStream = { stream = \"x\" seed = 1 }", "sampleFloat32 = { stream = \"x\" into = v }" })
                 Check.Throws<EngineFaultException>(() => new RuleSetBuilder().Add(EngineDslCompiler.Compile("using namespace bad; dsl_version = \"core/0.3\" procedure P { pure = true locals = { v = Int } body = { " + body + " } }")).Build(), "pure random instruction rejected");
-            foreach (var expression in new[] { "hash32(1)", "float32Add(1, true)", "float32(true)" })
+            foreach (var expression in new[] { "hash32(1)", "float32Add(1, true)", "float32Subtract(1, true)", "float32(true)" })
                 Check.Throws<EngineFaultException>(() => new RuleSetBuilder().Add(EngineDslCompiler.Compile("using namespace bad; dsl_version = \"core/0.3\" procedure P { locals = { v = Int } body = { let = { into = v value = " + expression + " } } }")).Build(), "wrong operand type rejected");
         });
         Check.Run("RNG DSL invalid seed and empty sampling range fail before consuming random words", () =>

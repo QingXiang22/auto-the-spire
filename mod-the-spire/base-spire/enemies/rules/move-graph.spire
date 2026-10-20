@@ -1,0 +1,165 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure FindEnemyMoveNode {
+  pure = true parameters = { graph = Ref(EnemyMoveGraph) id = String(length = 64) } result = Binding
+  body = { return = { value = first(where(type(EnemyMoveNode), n, and(equal(field(n, EnemyMoveNode.Graph), graph), equal(field(n, EnemyMoveNode.Id), id)))) } }
+}
+template EnemyMoveGraphDefinition {
+  parameters = { definition = { type = String(length = 64) } initial = { type = String(length = 64) } }
+  body = {
+    procedure Register { locals = { graph = Binding } body = {
+      if = { condition = or(equal(arg(definition), ""), equal(arg(initial), "")) then = { fail = { message = "Enemy move graph: empty definition or initial node" } } }
+      if = { condition = exists(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), arg(definition)))) then = { fail = { message = "Enemy move graph: duplicate definition" } } }
+      create = { type = EnemyMoveGraph scope = frameScope() into = graph fields = { DefinitionId = arg(definition) Initial = arg(initial) } }
+    } }
+    subscription OnRegister { event = RegisterEnemyMoveGraphs reaction = Register }
+  }
+}
+template EnemyMoveNodeDefinition {
+  parameters = {
+    definition = { type = String(length = 64) } id = { type = String(length = 64) }
+    kind = { type = String(length = 16) default = "move" } next = { type = String(length = 64) default = "" }
+    intent = { type = String(length = 32) default = "none" } index = { type = Int default = 0 }
+  }
+  body = {
+    procedure Register { locals = { graph = Binding node = Binding } body = {
+      if = { condition = or(equal(arg(id), ""), or(less(arg(index), 0), greater(arg(index), 9))) then = { fail = { message = "Enemy move graph: invalid node id or index" } } }
+      let = { into = graph value = first(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), arg(definition)))) }
+      if = { condition = isNone(graph) then = { fail = { message = "Enemy move graph: node has unknown graph" } } }
+      if = { condition = not(isNone(pureCall(FindEnemyMoveNode, graph, arg(id)))) then = { fail = { message = "Enemy move graph: duplicate node" } } }
+      create = { type = EnemyMoveNode scope = frameScope() into = node fields = { Graph = graph Id = arg(id) Kind = arg(kind) Next = arg(next) Intent = arg(intent) Index = arg(index) } }
+    } }
+    subscription OnRegister { event = RegisterEnemyMoveNodes reaction = Register }
+  }
+}
+template EnemyMoveBranchDefinition {
+  parameters = {
+    definition = { type = String(length = 64) } node = { type = String(length = 64) } target = { type = String(length = 64) }
+    weight = { type = Fixed(scale = 6) default = 1.0 }
+    maxRepeats = { type = Int(min = 0) default = 0 } cooldown = { type = Int(min = 0) default = 0 } once = { type = Bool default = false }
+  }
+  body = {
+    procedure Register { locals = { graph = Binding node = Binding target = Binding branch = Binding } body = {
+      let = { into = graph value = first(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), arg(definition)))) }
+      if = { condition = isNone(graph) then = { fail = { message = "Enemy move graph: branch has unknown graph" } } }
+      let = { into = node value = pureCall(FindEnemyMoveNode, graph, arg(node)) }
+      let = { into = target value = pureCall(FindEnemyMoveNode, graph, arg(target)) }
+      if = { condition = or(isNone(node), isNone(target)) then = { fail = { message = "Enemy move graph: branch has unknown node" } } }
+      if = { condition = or(not(equal(field(node, EnemyMoveNode.Kind), "random")), less(arg(weight), 0.0)) then = { fail = { message = "Enemy move graph: invalid branch kind or weight" } } }
+      if = { condition = exists(where(type(EnemyMoveBranch), b, and(equal(field(b, EnemyMoveBranch.Node), node), equal(field(b, EnemyMoveBranch.Target), target)))) then = { fail = { message = "Enemy move graph: duplicate branch" } } }
+      create = { type = EnemyMoveBranch scope = frameScope() into = branch fields = { Node = node Target = target Weight = float32(arg(weight)) MaxRepeats = arg(maxRepeats) Cooldown = arg(cooldown) Once = arg(once) } }
+    } }
+    subscription OnRegister { event = RegisterEnemyMoveBranches reaction = Register }
+  }
+}
+procedure SetupEnemyMoveGraphs { body = {
+  emit = { event = RegisterEnemyMoveGraphs }
+  emit = { event = RegisterEnemyMoveNodes }
+  emit = { event = RegisterEnemyMoveBranches }
+  forEach = { query = type(EnemyMoveGraph) item = graph body = {
+    if = { condition = not(pureCall(ExecuteEnemyMove.Contains, field(graph, EnemyMoveGraph.DefinitionId))) then = { fail = { message = "Enemy move graph: no action implementation" } } }
+    if = { condition = isNone(pureCall(FindEnemyMoveNode, graph, field(graph, EnemyMoveGraph.Initial))) then = { fail = { message = "Enemy move graph: unknown initial node" } } }
+  } }
+  forEach = { query = type(EnemyMoveNode) item = node body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Kind), "move") then = {
+      if = { condition = isNone(pureCall(FindEnemyMoveNode, field(node, EnemyMoveNode.Graph), field(node, EnemyMoveNode.Next))) then = { fail = { message = "Enemy move graph: missing or unknown successor" } } }
+    } else = {
+      if = { condition = not(equal(field(node, EnemyMoveNode.Kind), "random")) then = { fail = { message = "Enemy move graph: unknown node kind" } } }
+      if = { condition = not(exists(where(type(EnemyMoveBranch), b, equal(field(b, EnemyMoveBranch.Node), node)))) then = { fail = { message = "Enemy move graph: random node has no branches" } } }
+    } }
+  } }
+} }
+
+procedure EnemyBranchWeight {
+  pure = true parameters = { state = Ref(EnemyMoveState) branch = Ref(EnemyMoveBranch) } result = Int
+  body = {
+    if = { condition = and(greater(field(branch, EnemyMoveBranch.MaxRepeats), 0), and(equal(field(state, EnemyMoveState.Current), field(branch, EnemyMoveBranch.Target)), greaterOrEqual(field(state, EnemyMoveState.Consecutive), field(branch, EnemyMoveBranch.MaxRepeats)))) then = { return = { value = float32(0) } } }
+    if = { condition = exists(where(type(EnemyMoveHistory), h, and(equal(field(h, EnemyMoveHistory.State), state), and(equal(field(h, EnemyMoveHistory.Node), field(branch, EnemyMoveBranch.Target)), or(field(branch, EnemyMoveBranch.Once), greater(field(h, EnemyMoveHistory.Sequence), subtract(field(state, EnemyMoveState.Sequence), field(branch, EnemyMoveBranch.Cooldown)))))))) then = { return = { value = float32(0) } } }
+    return = { value = field(branch, EnemyMoveBranch.Weight) }
+  }
+}
+procedure ResolveEnemyMoveNode {
+  parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding
+  locals = { total = Int roll = Int picked = Binding }
+  body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Kind), "move") then = { return = { value = node } } }
+    let = { into = total value = aggregate(where(type(EnemyMoveBranch), b, equal(field(b, EnemyMoveBranch.Node), node)), SumFloat32, branch, pureCall(EnemyBranchWeight, state, branch)) }
+    if = { condition = float32LessOrEqual(total, float32(0)) then = { fail = { message = "Enemy move graph: no legal branch" } } }
+    # Source NextFloat(total) consumes even with one eligible branch. Keep zero-weight entries in source order.
+    sampleFloat32 = { stream = "base-spire:run:monster_ai" max = total into = roll }
+    forEach = { query = where(type(EnemyMoveBranch), b, equal(field(b, EnemyMoveBranch.Node), node)) item = branch body = {
+      let = { into = roll value = float32Subtract(roll, pureCall(EnemyBranchWeight, state, branch)) }
+      if = { condition = float32LessOrEqual(roll, float32(0)) then = {
+        call = { procedure = ResolveEnemyMoveNode args = { state = state node = field(branch, EnemyMoveBranch.Target) } into = picked }
+        return = { value = picked }
+      } }
+    } }
+    fail = { message = "Enemy move graph: no weighted branch selected" }
+  }
+}
+procedure SaveEnemyMove {
+  parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) }
+  locals = { history = Binding target = Binding }
+  body = {
+    let = { into = target value = field(state, EnemyMoveState.Enemy) }
+    if = { condition = equal(field(state, EnemyMoveState.Current), node) then = {
+      set = { target = state field = EnemyMoveState.Consecutive value = add(field(state, EnemyMoveState.Consecutive), 1) }
+    } else = { set = { target = state field = EnemyMoveState.Consecutive value = 1 } } }
+    set = { target = state field = EnemyMoveState.Current value = node }
+    set = { target = state field = EnemyMoveState.Ready value = true }
+    set = { target = state field = EnemyMoveState.Sequence value = add(field(state, EnemyMoveState.Sequence), 1) }
+    create = { type = EnemyMoveHistory scope = entityScope(target) into = history fields = { State = state Node = node Sequence = field(state, EnemyMoveState.Sequence) } }
+    set = { target = target field = Enemy.MoveId value = field(node, EnemyMoveNode.Id) }
+    set = { target = target field = Enemy.MoveIndex value = field(node, EnemyMoveNode.Index) }
+    set = { target = target field = Enemy.Intent value = field(node, EnemyMoveNode.Intent) }
+  }
+}
+procedure ResetEnemyMoves {
+  parameters = { target = Ref(Enemy) } locals = { graph = Binding state = Binding node = Binding }
+  body = {
+    forEach = { query = where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target)) item = old body = {
+      forEach = { query = where(type(EnemyMoveHistory), h, equal(field(h, EnemyMoveHistory.State), old)) item = h body = { destroy = { target = h } } }
+      destroy = { target = old }
+    } }
+    let = { into = graph value = first(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), field(target, Enemy.DefinitionId)))) }
+    if = { condition = not(isNone(graph)) then = {
+      set = { target = target field = Enemy.MoveId value = "none" }
+      if = { condition = greater(field(target, Enemy.Hp), 0) then = {
+        create = { type = EnemyMoveState scope = entityScope(target) into = state fields = { Enemy = target Graph = graph } }
+        call = { procedure = ResolveEnemyMoveNode args = { state = state node = pureCall(FindEnemyMoveNode, graph, field(graph, EnemyMoveGraph.Initial)) } into = node }
+        call = { procedure = SaveEnemyMove args = { state = state node = node } }
+      } }
+    } }
+  }
+}
+procedure ResetCombatEnemyMoves {
+  parameters = { owner = Ref(Player) }
+  body = { forEach = { query = type(Enemy) item = enemy body = { call = { procedure = ResetEnemyMoves args = { target = enemy } } } } }
+}
+subscription OnResetCombatEnemyMoves { event = BeforeCombatStart reaction = ResetCombatEnemyMoves }
+procedure PerformEnemyMove {
+  parameters = { owner = Ref(Player) target = Ref(Enemy) } locals = { state = Binding node = Binding }
+  body = {
+    let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
+    if = { condition = isNone(state) then = { return = {} } }
+    if = { condition = or(not(field(state, EnemyMoveState.Ready)), isNone(field(state, EnemyMoveState.Current))) then = { fail = { message = "Enemy move graph: no saved move" } } }
+    if = { condition = or(lessOrEqual(field(target, Enemy.Hp), 0), lessOrEqual(field(owner, Player.Hp), 0)) then = { return = {} } }
+    let = { into = node value = field(state, EnemyMoveState.Current) }
+    call = { procedure = ExecuteEnemyMove args = { key = field(target, Enemy.DefinitionId) owner = owner target = target node = node } }
+    set = { target = state field = EnemyMoveState.FirstPerformed value = true }
+    set = { target = state field = EnemyMoveState.Ready value = false }
+  }
+}
+subscription OnPerformEnemyMove { event = EnemyTurnStarted reaction = PerformEnemyMove }
+procedure SelectNextEnemyMove {
+  parameters = { target = Ref(Enemy) } locals = { state = Binding node = Binding }
+  body = {
+    let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
+    if = { condition = isNone(state) then = { return = {} } }
+    if = { condition = or(field(state, EnemyMoveState.Ready), lessOrEqual(field(target, Enemy.Hp), 0)) then = { return = {} } }
+    let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Current), EnemyMoveNode.Next)) }
+    call = { procedure = ResolveEnemyMoveNode args = { state = state node = node } into = node }
+    call = { procedure = SaveEnemyMove args = { state = state node = node } }
+  }
+}

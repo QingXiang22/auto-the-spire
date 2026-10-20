@@ -6,9 +6,11 @@
 
 从 `sts2/src/Core/Models/Monsters/FuzzyWurmCrawler.cs` 核对：Ascension 0 的初始 HP 55..57；招式为 `FIRST_ACID_GOOP`（4 点攻击）→ `INHALE`（对自身施加强度 7）→ `ACID_GOOP`（4 点攻击）→ 回到 `FIRST_ACID_GOOP`，三个状态的后继关系确定，没有随机分支。两个 goop 状态伤害与意图相同，因此用 `MoveIndex` 0／1／2 表示这三个招位。
 
-本包新增：敌方阶段（玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后 `AfterEnemyTurnEnded`）、敌方攻击链 `DamagePlayerPowered`、敌方公开意图名与招位字段，以及第一个原版敌人内容。debuff 减层从玩家回合末移到敌方阶段结束时，回到源的时点。
+`TwigSlimeM.cs` 的 A0 初始 HP 为26..28，攻击 `POKEY_POUNCE_MOVE` 造成11点伤害，状态招 `STICKY_SHOT_MOVE` 向每个目标的弃牌堆加入一张Slimed，首招固定为状态招。源码 `AddBranch(moveState, 2)` 选择最多连续两次的重载，默认权重1；状态招使用CannotRepeat，同样权重1，冷却均为0。两个分支保持攻击、状态的源顺序。Slimed花1能量，抽1张后耗尽，不能升级。
 
-不迁移：其余 120 个敌人、遭遇编队与队列、意图伤害数值（只公开意图名）、原版 AI 的随机分支与开场条件、初始 HP 随机区间（开发生成用最小值）、死亡钩子与生物移除、奖励与 Run 结算。
+敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
+
+当前图消费者是FuzzyWurmCrawler和TwigSlimeM，其他既有敌人仍使用原模板。开发生成使用源最小HP；正常出生随机、完整遭遇队列、意图伤害数值、条件节点、动态权重函数、强制迁移、死亡移除及正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
 
 ## 行为要求与设计
 
@@ -16,13 +18,13 @@
 | --- | --- | --- |
 | EN01 | 玩家回合结束后依次弃手牌、发 AfterTurnEnded、跑敌方阶段（每个可命中敌人一次）、发 AfterEnemyTurnEnded，最后关闭回合门 | 敌人已死亡时跳过；结束后仍可开下一回合 |
 | EN02 | 敌方攻击按源顺序结算：攻击者 Strength 加性、攻击者 Weak ×0.75、防守方 Vulnerable ×1.5，整数向下取整，再格挡→生命 | 7 强度的 goop 打 11；1 层 Weak 的 4 点打 3；有 10 格挡时只掉 4 点格挡里的 4 并与剩余格挡共存 |
-| EN03 | 敌人内容模板按 DefinitionId 订阅 EnemyTurnStarted 并维护自己的 MoveIndex／Intent | 三个招位按源顺序轮转，Intent 随下一招更新 |
+| EN03 | 共享图执行保存的招式，内容按DefinitionId提供动作正文；未迁移敌人继续用原模板 | 三个招位按源顺序轮转，MoveId／MoveIndex／Intent一致 |
 | EN04 | debuff 减层发生在敌方阶段结束后 | Bash 施加 2 层 Vulnerable，结束玩家回合后变 1 层 |
-| EN05 | 内容文件仅 use 模板参数；敌人目录 121 来源条目总数不变，只新增一个 definition | catalog 只改 FuzzyWurmCrawler 一行，其余保持 unreviewed |
+| EN05 | 独有图和正文保留在敌人内容文件，共用选招放领域规则；敌人目录121项来源总数不变 | 新增实际消费者不改变原遭遇池、未支持项或来源SHA256 |
 
 ## 共享招式图目标要求
 
-上文固定轮转仍属于开发支持范围；以下 MOVE-01～05 用于 ENV-T01 的正式敌人迁移，不声明已经实现。招式图与执行规则在 base DSL 中表达，core 继续提供通用查询、过程、事件与随机；简单固定轮转复用共享节点，不为每种敌人建立独立调度器。
+以下 MOVE-01～05 是ENV-T01的完整迁移要求，当前实现范围见下节。招式图与执行规则在base DSL中表达，core提供通用查询、过程、事件与随机；固定轮转复用共享节点。
 
 | 要求 | 状态与行为 | 判别 |
 | --- | --- | --- |
@@ -34,9 +36,24 @@
 
 首批迁移复用 FuzzyWurmCrawler 或 Raider 的固定轮转，并选择一个经源码核对的随机限制消费者；强制迁移使用 Whistle 所需行动控制或另一项明确源消费者。各消费者分别核对公开意图、动作轨迹、历史、随机调用和同定义实例隔离。共享图完成不等于全部敌人／遭遇、完整出生 HP 或正常 Run 已恢复。
 
-## 固定轮转验证
+## 共享图的当前操作与失败方式
 
-1. 先加敌方阶段与 `DamagePlayerPowered`，确认无敌人时回合流程不变。
-2. 再加敌人字段、内容模板与目录／公开元数据。
-3. 在包外补轮转、修正、减层时点与目录条目总数检查，并通过真实 stdio 验证公开 HP 与意图。
-4. 最后运行 solution 构建、包行为／覆盖、受影响 net 与文档检查。
+定义位于[敌人schema](../../../../mod-the-spire/base-spire/enemies/schema.spire)，注册、校验、选招和历史位于[共享规则](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire)。启动时先登记图、再按源顺序登记节点和分支，最后检查初始节点、后继、重复定义／节点／分支及动作分派。定义表仅在启动时构造，逐实例状态由Engine保存；不存在C#敌人调度器。
+
+`EnemyMoveState`保存敌人、所属图、当前已选节点、Ready、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。初始招式即入历史，第一次固定首招不抽样。`ResetEnemyMoves`供生成入口调用，`BeforeCombatStart`重新初始化每个敌人的历史，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`使用同一初始化操作。
+
+随机节点根据实例历史计算有效权重：MaxRepeats=0为无限制，正值限制连续次数；Cooldown检查最近指定数量的已选招式；Once排除曾选过的目标。权重以源binary32位型保存，总权重按LINQ Sum(float)的顺序用double累加，最后转binary32。当前静态权重参数为Fixed六位小数，转换成binary32后执行；动态权重函数仍未支持。TwigSlimeM的两个真实分支权重均为1，整数参数2不会变成权重。
+
+取样使用 `base-spire:run:monster_ai` 的一次原始double，在double上按总权重缩放后转binary32；随后按源顺序逐项binary32相减，第一次小于等于0即选中。只有一个有效分支仍抽一次，零权重分支保留原顺序；总权重不大于0具名失败，不补抽。分支到分支的迁移使用既有调用／指令预算，循环耗尽预算后故障，不截断成默认招式。步骤故障遵循core的指令原子性，不承诺整个动作回滚。
+
+公开投影只新增已选招式ID；图定义、分支、历史和首招标志均隐藏。测试通过逐次随机诊断读取原始操作／结果／游标，并用独立源向量核对候选顺序及有效权重。该检查只覆盖受控开发战斗；这两个敌人的完整模拟器双侧适配尚未接入，继续关联[独立比较子任务#31](https://github.com/QingXiang22/auto-the-spire/issues/31)，不据此将严格测试集改为通过。
+
+## 验证
+
+```powershell
+dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only
+```
+
+定向检查包括两个真实消费者、Slimed执行、同定义双实例／双会话、跨战重置、查询只读、暂停续接及过期答案、非法图、无合法分支和迁移循环预算。固定源向量的生成入口见[随机神谕](../../../../tools/rng-oracle/README.md)。完整包检查另核对原来源条目、全部已声明卡牌及既有敌人行为。
+
+公共CI检查core、base、net、migration及docs；正常Run和完整参考模拟器行为仍按各自工单验收。

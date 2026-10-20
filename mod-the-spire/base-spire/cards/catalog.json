@@ -5579,9 +5579,9 @@
       "pools": [
         "StatusCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "Slimed.cs: status, cost 1, draw one and exhaust; MaxUpgradeLevel=0. Combat creation for TwigSlimeM; no normal reward pool change.",
+      "definition": "cards/status/slimed.spire"
     },
     {
       "id": "base-spire:sloth",
