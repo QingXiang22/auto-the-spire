@@ -1,6 +1,6 @@
 # 逐效果语义实施设计
 
-依据[规格](spec.md)，由 Codex 单人串行实施。任务排期/认领只看[ENV-T06](../../../review/tofix/README.md#env-t06)；此目录记录一个机制包的设计与执行清单。
+依据[规格](spec.md)，由 Codex 单人串行实施。任务排期/认领只看[行为要求](../../environment-completion-and-differential-v1.md#env-t06)；此目录记录一个机制包的设计与执行清单。
 
 ## 技术上下文与约束检查
 
@@ -31,11 +31,11 @@ C#/.NET 9，base 领域前端经 EnginePackageBuilder 生成冻结 engine/ir@0.3
 
 动态数值在每条效果处编译为当前状态表达式。X 的数值来源明确为 `PaidX`，读取外层付款捕获的局部值，能量改变后保持不变；正式效果不依赖显示 Amount 槽。所选目标和随机目标使用不同绑定，重复块内的随机效果每次执行各抽一次。进入战斗的 hook 根据复制后实例的升级标记选择变体。
 
-公共组装由`Composition/CombatPackageComposer`安排，维护时按[编译模块参考](../package-compilation-reference.md)进入目标领域；新增共享字段按[开发步骤](../../../../tools/base-migration-baseline/docs/base-development-guide.md#新增共享状态字段)接通初值、生命周期与消费者。
+公共组装由`Composition/CombatPackageComposer`安排，维护时按[编译模块参考](../package-compilation-reference.md)进入目标领域；新增共享字段按[现行 DSL 开发手册](../../../development/base-spire/README.md)接通初值、生命周期与消费者。
 
 ## 最小开发反馈
 
-从外部文件验证卡牌组合，使用[卡牌modding指南](../modding-guide.md)中的 `tools/base-spire-dev`；修改DSL后无需重编译内容程序集。按职责定位文件和完成最终门槛见[base开发指南](../base-development-guide.md)。提取表达式与开发工具的设计约束见[维护成本改良](maintainability.md)。
+从外部文件验证卡牌组合，使用[卡牌modding指南](../modding-guide.md)中的 `tools/base-spire-dev`；修改DSL后无需重编译内容程序集。按职责定位文件和完成最终门槛见[当前开发资料](../../../development/base-spire/README.md)。提取表达式与开发工具的设计约束见[维护成本改良](maintainability.md)。
 
 仓库根目录运行 `dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --effects-only`，只执行本包的语义反例、对照与边界检查。`--combat-only` 执行全部 Slice 检查中除地图检查外的项目，输出明确限定范围；默认仍执行完整门槛，不自动跳过失败。
 

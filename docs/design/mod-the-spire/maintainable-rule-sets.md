@@ -1,6 +1,6 @@
 # 编写可维护的规则集
 
-文档类型：操作指南（How-to）。面向规则库作者：把一项机制写成可复用、可验证的规则，并让后续内容作者只需理解其输入和结果。首次接触Engine请先做[规则教程](../../dsl/core/first-rule.md)；base内容作者直接使用[base开发指南](base-development-guide.md)。
+文档类型：操作指南（How-to）。面向规则库作者：把一项机制写成可复用、可验证的规则，并让后续内容作者只需理解其输入和结果。首次接触Engine请先做[规则教程](../../dsl/core/first-rule.md)；base内容作者直接使用[当前开发资料](../../development/base-spire/README.md)。
 
 ## 先确定一次修改属于谁
 

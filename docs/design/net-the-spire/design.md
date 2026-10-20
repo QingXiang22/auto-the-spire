@@ -1,8 +1,8 @@
 # net-the-spire 架构设计
 
-2026-10-20阅读边界：下文早期手写Profile／base工厂和迁移建议保留设计过程。当前模拟Host加载纯DSL manifest，声明派生Profile已接通；实例单选／取消与Bool透传见[当前协议](protocol.md)。正常Run、有序多选和独立比较仍按[主清单](../../review/tofix/README.md#当前交付)接续，不从旧“待实现”重新派已交付功能。
+2026-10-20阅读边界：下文早期手写Profile／base工厂和迁移建议保留设计过程。当前模拟Host加载纯DSL manifest，声明派生Profile已接通；实例单选／取消与Bool透传见[当前协议](protocol.md)。正常Run、有序多选和独立比较仍按[路线图](../../roadmap.md#近期队列)接续，不从旧“待实现”重新派已交付功能。
 
-本体适配器主要参考[本地BMingSY/sts2-ai-mcp](../../../reference/sts2-ai-mcp/README.md)，范围与职责见[第8节](#8-bmingsy本体适配器参考)。本体适配不作为模拟主线的前置依赖。
+本体适配器主要参考`reference/sts2-ai-mcp/README.md`，范围与职责见[第8节](#8-bmingsy本体适配器参考)。本体适配不作为模拟主线的前置依赖。
 
 > 2026-10-04实施提示：已有stdio/账本/目录及持久公开句柄修复直接复用，下文2026-10-03公开ID“缺口”是历史时点，不重新派做缓存。当前按[ENV实现约束](../environment-implementation-constraints.md)接base统一配置Session和正式公开Profile，新增[协议0.2](protocol.md#7-env正式环境的02扩展)字符串seed启动。Net.TheSpire保持只依赖core/contracts，base组合留Host，不新增STS控制规则。
 
@@ -86,7 +86,7 @@ flowchart LR
 
 完整快照取代增量事件：增加传输量，但首阶段无需历史同步、断点补包或 AI 知识维护。完整候选取代命令生成：候选规模增大时有成本，但保证动作语义由游戏后端拥有。先支持本机单控制者：简化执行所有权，不承诺远程服务特性。
 
-验收优先检查隐藏顺序不影响公开输入、当前已知位置正确、重发只推进一次及过期动作不推进。再检查模拟固定种子重放与 C#/Python wire 一致；完整原版和真实后端另有差分证据。详见[共同验收](../ai-net-verification.md)。未解决核心依赖可报告到 `docs/review/tofix`，不以改 AI 编码器绕开。
+验收优先检查隐藏顺序不影响公开输入、当前已知位置正确、重发只推进一次及过期动作不推进。再检查模拟固定种子重放与 C#/Python wire 一致；完整原版和真实后端另有差分证据。详见[共同验收](../ai-net-verification.md)。未解决核心依赖在当前任务或 PR 中说明，不以改 AI 编码器绕开。
 
 ## 7. 2026-10-07公开语义透传的源码核对与接续
 
@@ -148,11 +148,11 @@ core保持通用C#声明与IR，不引用net DTO。base/mod只声明游戏语义
 
 旧切片/作者场景的宿主组装：`ControlHost`/`ControlSession`带一个**可选**`IComputeBackend`参数，由组合层注入规则包声明资产所需的后端（`Net.TheSpire.Host`的`legacy-slice`分支与测试场景传`BaseSpireComputeBackend.Instance`）。通用控制层不认识任何游戏ID或玩法，只把实例转交引擎；不传时保持旧行为（执行该资产时报`Unsupported`，链接期只检查声明）。正式路径不走这个接口：后端由`ISessionSource`/base工厂在建会话时装好，控制入口只唤醒它一次。
 
-实机证据与前后对比见[本包交接](../../review/records/2026-10-12/dsh-host-declarations-close-handoff-2026-10-12.md)。
+
 
 ## 8. BMingSY本体适配器参考
 
-2026-10-11：用户将主要参考项目放入 `reference/sts2-ai-mcp/`，本地HEAD为 `5d1d36b24337d7dd27fe125682e4c51fb9f76aa0`。参考[项目README](../../../reference/sts2-ai-mcp/README.md)、[决策窗口设计](../../../reference/sts2-ai-mcp/docs/ai-mcp-v2-design.md)和[API草案](../../../reference/sts2-ai-mcp/docs/ai-mcp-v2-api.md)。源码和真实游戏版本仍需按具体适配包核对；主清单维护排期，本节只定义实现方法。
+2026-10-11：用户将主要参考项目放入 `reference/sts2-ai-mcp/`，本地HEAD为 `5d1d36b24337d7dd27fe125682e4c51fb9f76aa0`。参考`reference/sts2-ai-mcp/README.md`、`reference/sts2-ai-mcp/docs/ai-mcp-v2-design.md`和`reference/sts2-ai-mcp/docs/ai-mcp-v2-api.md`。源码和真实游戏版本仍需按具体适配包核对；主清单维护排期，本节只定义实现方法。
 
 本项目自行实现本体适配器。BMingSY用于定位游戏入口与研究结算行为；公共协议、实体与动作语义以本项目契约为准，模拟和本体使用同一Python消费接口。参考仓库保持只读，不进入core/base生产依赖，不把FastMCP工具格式或LLM摘要变成第二套AI状态模型。
 

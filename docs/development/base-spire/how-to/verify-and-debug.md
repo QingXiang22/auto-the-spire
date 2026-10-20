@@ -28,7 +28,7 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-spir
 
 第三条只适用于该工具当前承诺的 base 机制。新增正式内容的行为见证必须实际执行，不能将旧报告、教学报告或仅定义存在的数量算作覆盖。最终集成与 Actions 的各组入口见[CI 指南](../../../../tools/ci/README.md)。
 
-遗物调试先构建受影响工具，再运行`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`。筛选按检查名称的不区分大小写前缀匹配；`AM `为攻击修正组，其他组先从实际检查名称确认。输出逐项耗时、执行数与跳过数；零匹配失败，不能用该命令生成整包报告。完整check和覆盖门槛在批次最终CI执行，参考[批次节奏](../../../review/tofix/README.md#每批集成与重排条件)。
+遗物调试先构建受影响工具，再运行`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`。筛选按检查名称的不区分大小写前缀匹配；`AM `为攻击修正组，其他组先从实际检查名称确认。输出逐项耗时、执行数与跳过数；零匹配失败，不能用该命令生成整包报告。完整check和覆盖门槛在批次最终CI执行，参考[路线图](../../../roadmap.md)。
 
 文档检查使用以下命令：
 
@@ -58,4 +58,4 @@ git diff --check
 
 记录实际命令／退出码、代码版本、包摘要与规则身份、scope、seed、源定位与行为前后值。区分静态源存在、实际 DSL 定义、已运行行为、独立比较和正常 Run。长日志留 artifacts，主清单只维护当前事项及证据链接。
 
-原 differential regression 当前仍逐项未支持并返回 3，完整源遗物覆盖也未满足。migration 检查验证保留与失败语义，不是原版对拍成功。相关历史判断意图见[冻结清单](../../../review/records/2026-10-18/base-dsl-check-disposition.json)。
+原 differential regression 当前仍逐项未支持并返回 3，完整源遗物覆盖也未满足。migration 检查验证保留与失败语义，不是原版对拍成功。相关历史判断意图见[CI 迁移夹具](../../../../tools/ci/fixtures/legacy-dsl-checks.json)。

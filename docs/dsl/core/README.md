@@ -31,4 +31,4 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 - 可导入的DSL规则库：[score-race.spire](../../examples/core-choice-counter/rules/score-race.spire)。
 - 原版卡牌内容使用相同core/0.3 DSL，具体领域操作查[base开发手册](../../development/base-spire/README.md)。base/0.0.1和base/0.0.2为退出生产的旧前端，不用于当前包。
 
-四种文档的写作与验证要求见[文档协作约定](../../AGENTS.md#按-diátaxis-编写面向使用者的文档)。
+四种文档的写作与验证要求见[开发与文档约定](../../../CONTRIBUTING.md)。

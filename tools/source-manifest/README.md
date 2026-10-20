@@ -12,10 +12,9 @@
 ## 用法
 
 ```powershell
-cd F:/Scylier-Project/active/auto-the-spire
 python tools/source-manifest/extract_source_manifest.py `
-    --out .audit/dsh-env-t04-source-init-manifest-2026-10-08/source-initialization-manifest.json `
-    --markdown .audit/dsh-env-t04-source-init-manifest-2026-10-08/source-initialization-manifest.md
+    --out .artifacts/source-inputs/source-initialization-manifest.json `
+    --markdown .artifacts/source-inputs/source-initialization-manifest.md
 ```
 
 可选参数：`--source-root`（默认 `sts2`）、`--reference-root`（默认 `reference/sts2-sim`）、
@@ -39,14 +38,6 @@ python tools/source-manifest/extract_source_manifest.py `
 `source_vs_reference` 对 9 类清单给出 `identical` / `differs` / `unsupported_parse_gap`，
 `differs` 展开两侧计数、仅源/仅参考项、顺序差异，`encounter_tags` 还展开逐 ID 的 tag 差异。
 
-已知实质差异（截至 2026-10-08，均登记在交接的 §10 候选章节）：
-
-1. 参考 `ActDefinition.EffectiveEventPool` 直接取集合，源按 epoch 逐段 `RemoveAll`（全解锁下集合等价）。
-2. 参考未移植 `ActModel.ApplyDiscoveryOrderModifications`（源该路径不消费随机数）。
-3. `ValidateRoomsAfterLoad` 双 BOSS 排除口径（本局未走到）。
-4. `EncounterTag`：参考枚举新增 `Jaxfruit`；`SLITHERING_STRANGLER_NORMAL`、`SNAPPING_JAXFRUIT_NORMAL`
-   两个 ID 的 tag 集合与源不同 ⇒ 遇袋谓词拒绝行为可能不同。
-
 ## 边界
 
 - 本工具属工具层，参考只读；不得把参考数值当作源的期望值写死进生产玩法，也不得用工具补偿生产实现。
@@ -57,15 +48,12 @@ python tools/source-manifest/extract_source_manifest.py `
 
 `extract_relic_manifest.py`只读本地`sts2/`，逐源文件提取直接遗物类、各池声明顺序、稀有度、覆写方法／属性的行号、SavedProperty及命令引用导航。`IsAllowed*`覆写单列，单人可达性仍标待源码与路径审查；不由类名或池归属推断资格。不属于RelicModel的目录辅助类单列；任何池或base定义找不到对应遗物类、池声明长度不符或已知语法无法读取时非零退出。
 
-可选`--base-catalog`读取同构建的正式遗物声明输出，分别统计base声明和CanObtain；未给时为null而不是0。输出不宣称实际注册、逐件行为、独立对拍或公开验证。JSON保留逐文件SHA256和生成器／base输入摘要，生成报告留`.audit`。
-
-在仓库根目录执行（需要匹配global.json的.NET SDK、Python及本地源码）：
+在仓库根目录使用 Python 与匹配版本的本地原版源码执行：
 
 ```powershell
-New-Item -ItemType Directory -Force .audit/relic-inventory | Out-Null
-dotnet build mod-the-spire/base-spire/BaseSpire.Slice.Tests
-dotnet run --no-build --project mod-the-spire/base-spire/BaseSpire.Slice.Tests -- --relic-catalog | Set-Content -Encoding utf8 .audit/relic-inventory/base-catalog.json
-python -X utf8 tools/source-manifest/extract_relic_manifest.py --base-catalog .audit/relic-inventory/base-catalog.json --out .audit/relic-inventory/relics.json --markdown .audit/relic-inventory/relics.md
+python -X utf8 tools/source-manifest/extract_relic_manifest.py --out .artifacts/source-inputs/relics.json --markdown .artifacts/source-inputs/relics.md
 ```
 
-`--source-root`可选择不同本地源目录，默认仓库`sts2`；`--out`与`--markdown`必填。rc0仅表示静态提取与身份对账成功。编译后的`--relic-lifecycle-only`提供独立于本地原版源码的受控生命周期检查，加`--counters-only`只检查同定义不同实例计数隔离；完整回归仍由CI执行。
+`--source-root`选择本地源码，默认 `sts2`；`--out`与`--markdown`必填。退出码 0 仅表示静态提取成功，不表示玩法或独立比较通过。生成数据供本次开发查询，任务结束后删除；正式规则和范围在领域规格中维护。
+
+`--base-catalog`仅兼容旧 formal-relic-declarations 输出，不接受当前 source-catalog；当前内容行为使用 `tools/base-spire-dev` 和 CI 检查。

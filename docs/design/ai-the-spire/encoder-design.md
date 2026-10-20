@@ -31,7 +31,7 @@ flowchart LR
 
 观察提供方负责可见性边界及当前已知变量的更新，`net` 暴露一致的当前观察；数组层负责类型、索引与补齐；可学习编码器负责表示学习；评分器负责候选概率。编码器不能查询内核、回放事件或读取先前快照来补全当前观察，也不能执行规则来获得未选动作的结果。
 
-依赖范围：正确产生当前已知位置、过滤隐藏排列、把后端动作适配为外部候选，属于观察/动作提供方。它们是实际联调及训练前的依赖，不阻塞使用公开输入 fixtures 开发编码器契约。编码器检查当前输入的结构一致性，不验证一局游戏是否按规则产生了这些事实。对相关评审的逐项判断见 [评审处置](../../review/records/2026-10-01/ai-encoder-review-disposition-2026-10-01.md)。
+依赖范围：正确产生当前已知位置、过滤隐藏排列、把后端动作适配为外部候选，属于观察/动作提供方。它们是实际联调及训练前的依赖，不阻塞使用公开输入 fixtures 开发编码器契约。编码器检查当前输入的结构一致性，不验证一局游戏是否按规则产生了这些事实。
 
 ## 2. GymManifest：固定训练环境的字典
 
@@ -39,7 +39,7 @@ Manifest 包含 `tensor_layout_version`、`gym_id`、`dictionary_version`、`env
 
 提供方的 PublicCatalog 是公开语义声明的权威；AI 读取它，分配类别索引并附加 offset/scale，不创造动作语义或更改可见性。测试用目录需明确标为 fixture，不从 core 反射生成。net 快照携带 environment_identity，不携带 AI dictionary_version；编码时校验环境身份，再将 AI 本地字典身份放入 TensorizedObservation.metadata。
 
-Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-artifacts.md)，不在 encoding 内另定义镜像 DTO。pile_types 通过唯一 kind_id 保留牌堆语义，互斥作用域是已声明的 entity_ref 字段；terminal_reasons 仅校验结果事实，不把终局 reason 变成决策输入。新增目录声明同步修改 Manifest 与 fixtures；按[开工清单](../implementation-kickoff.md)，首阶段 A-01 依赖 C-01 的 P-01 资产/Python 检查部分，不等待 N-01 的 C# 复核或游戏后端。
+Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-artifacts.md)，不在 encoding 内另定义镜像 DTO。pile_types 通过唯一 kind_id 保留牌堆语义，互斥作用域是已声明的 entity_ref 字段；terminal_reasons 仅校验结果事实，不把终局 reason 变成决策输入。新增目录声明同步修改 Manifest 与 fixtures；按[相关规格](../spec.md)，首阶段 A-01 依赖 C-01 的 P-01 资产/Python 检查部分，不等待 N-01 的 C# 复核或游戏后端。
 
 - 名称使用命名空间，如 `base:headbutt`、`modA:charge`。实体种类与卡牌等内容类型分开注册。
 - 索引 0 保留给补齐。首次构建各字典时按完整名称确定性排序，显式保存映射；恢复训练时读取原映射，不按新注册顺序重建。

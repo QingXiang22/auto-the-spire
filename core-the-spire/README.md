@@ -40,7 +40,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 当前源码的包版本为 `0.4.0`，运行语义身份为 `engine/ir@0.4`，文本编译器支持 `core/0.1`、`core/0.2` 与 `core/0.3`。版本依据分别为 [项目配置](Core.TheSpire/Core.TheSpire.csproj)、[RuleSetBuilder.EngineVersion](Core.TheSpire/Engine/RuleSet.cs) 和 [EngineDslCompiler](Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。新同包绑定与具名调用见 [core/0.3 参考](../docs/dsl/core/0.3/authoring-reference.md)。
 
-`engine/ir@0.3` 是 2026-10-05 的历史冻结基线；[冻结契约](../docs/contracts/core-engine-baseline.md)、[Git 冻结交接](../docs/contracts/core-git-checkpoint.md)及[冻结报告](../docs/review/archived/core-contract-freeze-2026-10-05.md)保留当时的范围与证据。活动升级的验收及冻结状态查 [CORE-AUTHOR-04](../docs/review/tofix/README.md#core-author-04)，不从源码版本号推断已完成发布或验收。其他设计问题按需查[模块 spec](../docs/design/core-the-spire/spec.md)和[架构决定](../docs/design/core-the-spire/core-architecture-decisions.md)。
+`engine/ir@0.3` 是 2026-10-05 的历史冻结基线；[冻结契约](../docs/contracts/core-engine-baseline.md)、[相关规格](../docs/contracts/core-engine-baseline.md)及保留当时的范围与证据。活动升级的验收及冻结状态查 [行为要求](../docs/design/environment-completion-and-differential-v1.md#core-author-04)，不从源码版本号推断已完成发布或验收。其他设计问题按需查[模块 spec](../docs/design/core-the-spire/spec.md)和[架构决定](../docs/design/core-the-spire/core-architecture-decisions.md)。
 
 内核维护者只检查 core 时，从仓库根目录执行：
 

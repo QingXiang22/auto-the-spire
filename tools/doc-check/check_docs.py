@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 import unicodedata
 from pathlib import Path
@@ -27,9 +28,16 @@ REQ_DEF_RE = re.compile(r"^\|\s*(AI-\d+|NET-\d+)\s*\|", re.M)
 REQ_USE_RE = re.compile(r"\b(AI-\d+|NET-\d+)\b")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$")
 
-SKIP_DIRS = {".git", "bin", "obj", "node_modules",
-             # third-party / vendored trees outside the project documentation corpus
-             "reference", "tools", "sts2", "archive", "fmod-gdextension", ".agents", ".specify"}
+SKIP_DIRS = {".git", "bin", "obj", "node_modules", ".audit", ".artifacts", "artifacts"}
+
+
+def project_files(root: Path) -> set[Path]:
+    """Include committed and proposed files; ignored local files cannot satisfy links."""
+    result = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
+        check=True, capture_output=True,
+    )
+    return {root / name.decode("utf-8") for name in result.stdout.split(b"\0") if name}
 
 
 def slugify(text: str) -> str:
@@ -70,14 +78,19 @@ def headings(text: str) -> set[str]:
     return result
 
 
-def iter_docs(root: Path):
-    for path in sorted(root.rglob("*.md")):
+def iter_docs(root: Path, files: set[Path]):
+    for path in sorted(files):
+        if path.suffix != ".md" or not path.is_file() or path.name in {"AGENTS.md", "AGENTS.override.md"}:
+            continue
         if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        # Retired implementation snapshots are checked by the migration contract.
+        if "base-migration-baseline" in path.parts:
             continue
         yield path
 
 
-def check_file(path: Path, root: Path, failures: list[str]) -> None:
+def check_file(path: Path, root: Path, files: set[Path], failures: list[str]) -> None:
     rel = path.relative_to(root).as_posix()
     text = path.read_text(encoding="utf-8")
     lines = text.splitlines()
@@ -117,7 +130,13 @@ def check_file(path: Path, root: Path, failures: list[str]) -> None:
 
     # 1/2: links
     anchor_cache: dict[Path, set[str]] = {}
+    in_fence = False
     for i, line in enumerate(lines, start=1):
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
         for _, target in LINK_RE.findall(line):
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
@@ -128,6 +147,12 @@ def check_file(path: Path, root: Path, failures: list[str]) -> None:
                 dest = (path.parent / file_part).resolve()
             if not dest.exists():
                 failures.append(f"{rel}:{i}: missing link target '{target}'")
+                continue
+            if not dest.is_relative_to(root):
+                failures.append(f"{rel}:{i}: link escapes the repository '{target}'")
+                continue
+            if dest not in files and not (dest.is_dir() and any(p.is_relative_to(dest) for p in files)):
+                failures.append(f"{rel}:{i}: link target is not versioned '{target}'")
                 continue
             if anchor and dest.suffix == ".md":
                 cached = anchor_cache.get(dest)
@@ -173,9 +198,14 @@ def check_traceability(root: Path, failures: list[str]) -> None:
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     failures: list[str] = []
-    docs = list(iter_docs(root))
+    try:
+        files = {p.resolve() for p in project_files(root) if p.is_file()}
+    except subprocess.CalledProcessError:
+        print("FAIL: documentation checks require a Git checkout")
+        return 1
+    docs = list(iter_docs(root, files))
     for path in docs:
-        check_file(path, root, failures)
+        check_file(path, root, files, failures)
     check_traceability(root, failures)
     print(f"scanned {len(docs)} Markdown files")
     for failure in failures:

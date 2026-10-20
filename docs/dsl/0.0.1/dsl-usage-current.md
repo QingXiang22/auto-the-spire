@@ -335,7 +335,7 @@ package training-mod {
 }
 ```
 
-正式 `SpirePotionSource` 使用具名块效果，并复用卡牌逐效果程序。元数据接受 `usage = combatOnly | anyTime | automatic`，使用效果当前只绑定战斗药水；非战斗/自动效果必须声明非空 `unsupportedUse = "原因"`，不能写空 `use`。ID 使用所属包命名空间；`source` 必填，完整池顺序与玩法支持分开处理。栏位/领取/丢弃及编译边界见[药水契约](../../design/mod-the-spire/potion-inventory/spec.md)和[开发指南](../../../tools/base-migration-baseline/docs/base-development-guide.md#补充药水时只读本机制)。冻结 `.author` 场景的旧步骤语法继续兼容。
+正式 `SpirePotionSource` 使用具名块效果，并复用卡牌逐效果程序。元数据接受 `usage = combatOnly | anyTime | automatic`，使用效果当前只绑定战斗药水；非战斗/自动效果必须声明非空 `unsupportedUse = "原因"`，不能写空 `use`。ID 使用所属包命名空间；`source` 必填，完整池顺序与玩法支持分开处理。栏位/领取/丢弃及编译边界见[药水契约](../../design/mod-the-spire/potion-inventory/spec.md)和[现行 DSL 开发手册](../../development/base-spire/README.md)。冻结 `.author` 场景的旧步骤语法继续兼容。
 
 ## 8. 编译与错误定位
 
@@ -367,4 +367,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Tests
 - [`content-dsl.md`](./content-dsl.md)：当前 DSL 的操作语义、回合阶段、牌实例、Power 事件与运行时细节。
 - [`combat-dsl-design.md`](./combat-dsl-design.md)：战斗 DSL 的设计边界、效果代数和编译模型。
 - [`ironclad-dsl-coverage.md`](../../design/mod-the-spire/ironclad-dsl-coverage.md)：Ironclad 卡牌覆盖与未完成项。
-- [`base-spire` 内容源](../../../tools/base-migration-baseline/BaseSpire/README.md)：当前可运行内容示例。
+- [现行 DSL 开发手册](../../development/base-spire/README.md)：当前可运行内容示例。

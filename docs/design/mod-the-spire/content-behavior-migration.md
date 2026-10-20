@@ -1,6 +1,6 @@
 # 内容与行为迁移实施契约
 
-关联 [G01～G10 目标与验收](content-behavior-refactor-goals.md)，任务 BEHAVIOR-01。2026-10-19 用户明确要求开始迁移，Codex `/root` 负责。当前范围、切片及状态只维护在[主清单](../../review/tofix/README.md#当前交付)；本文定义接口与验证，不复制任务状态。
+关联 [G01～G10 目标与验收](content-behavior-refactor-goals.md)，任务 BEHAVIOR-01。2026-10-19 用户明确要求开始迁移，Codex `/root` 负责。当前范围、切片及状态只维护在[路线图](../../roadmap.md#近期队列)；本文定义接口与验证，不复制任务状态。
 
 ## 出牌正文与上下文
 
@@ -48,4 +48,4 @@ Host 的派生 0.2 应答目录增加可选 Boolean Flag，Bool 暂停发布 fal
 
 首包复用现有 Ironclad／内容模型与公开检查，补足能区分下列错误的判别：重复／缺正文、未知键、模板词法绑定、错误签名、pure 拒绝、正文顺序、付款次数、嵌套执行身份及原生选择暂停。局部调试按失败定向运行；集成时固定最终包执行受影响 Engine、base 与公开组，不反复跑未变化状态。
 
-core 文本分派进入编译身份 dispatch/1；依附身份投影、pure 显式失败与 none 相等比较使执行语义迁至 engine/ir@0.7、Core.TheSpire 0.7.0。base 同批迁至 0.7.0-dsl.40，公开构建身份同步。旧规则产物不能冒用新身份。原正常 scope、源分母、独立比较与 ENV／W 完整条件不变，未执行独立对拍不记通过。来源边界及本批证据见[实施记录](../../review/records/2026-10-19/content-behavior-migration-2026-10-19.md)。
+core 文本分派进入编译身份 dispatch/1；依附身份投影、pure 显式失败与 none 相等比较使执行语义迁至 engine/ir@0.7、Core.TheSpire 0.7.0。base 同批迁至 0.7.0-dsl.40，公开构建身份同步。旧规则产物不能冒用新身份。原正常 scope、源分母、独立比较与 ENV／W 完整条件不变，未执行独立对拍不记通过。

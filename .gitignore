@@ -6,13 +6,17 @@ docs/architecture/c4/workspace.json
 **/bin/
 **/obj/
 
+# Root agent instructions are private to this workspace.
+/AGENTS.md
+/AGENTS.override.md
+
 # Locally restored game project and external checkout copies
 /sts2/
 /fmod-gdextension/
 /tools/fmod-gdextension/
 /archive/
 
-# Local evidence and isolated builds; referenced history is bundled separately.
+# Disposable local outputs. Do not link run-specific files from maintained docs.
 /.audit/
 /.artifacts/
 /artifacts/

@@ -2,7 +2,7 @@
 
 文档类型：操作指南（How-to）。纯 DSL 包中的敌人和遭遇目前只有静态源目录／快照，没有正常可执行战斗。以下步骤用于恢复源行为，不能直接运行旧 `enemies*.spire` 或 C# 敌人编译器。
 
-从 enemies/catalog 的 source_path 读目标敌人，从 encounters/catalog 与 source 快照确认编队。旧[敌人／遭遇合同](../../../review/tofix/README.md#env-t08)保留完整范围，具体动作机制依赖[战斗指南](cards-and-combat.md)。
+从 enemies/catalog 的 source_path 读目标敌人，从 encounters/catalog 与 source 快照确认编队。旧[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t08)保留完整范围，具体动作机制依赖[战斗指南](cards-and-combat.md)。
 
 ## 建立敌人状态与意图
 

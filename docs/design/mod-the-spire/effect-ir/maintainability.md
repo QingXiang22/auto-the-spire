@@ -1,6 +1,6 @@
 # 降低规则修改的阅读与验证成本
 
-文档类型：实施设计（Explanation）。本设计扩展[逐效果职责边界](plan.md)，任务状态只在[ENV-T06](../../../review/tofix/README.md#env-t06)。
+文档类型：实施设计（Explanation）。本设计扩展[逐效果职责边界](plan.md)，任务状态只在[行为要求](../../environment-completion-and-differential-v1.md#env-t06)。
 
 ## 判断成本是否降低
 
@@ -19,7 +19,7 @@
 
 ## 实施与验收
 
-`CardEffectStateBindings` 只持有声明符号，`CardEffectExpressions` 只生成IR表达式。动态读数在每个效果的位置构造；不提前读取Session、不缓存状态值、不改变随机或局部槽分配。`CardCompilation`提供符号和效果能力绑定，付款与目标上下文由共享出牌模块拥有。已绑定字段支持的新查询修改前端/领域模型/表达式编译及测试用例；新状态按[共享字段步骤](../../../../tools/base-migration-baseline/docs/base-development-guide.md#新增共享状态字段)修改声明、分组、寿命和消费者，新依赖组才调整根组装。
+`CardEffectStateBindings` 只持有声明符号，`CardEffectExpressions` 只生成IR表达式。动态读数在每个效果的位置构造；不提前读取Session、不缓存状态值、不改变随机或局部槽分配。`CardCompilation`提供符号和效果能力绑定，付款与目标上下文由共享出牌模块拥有。已绑定字段支持的新查询修改前端/领域模型/表达式编译及测试用例；新状态按[现行 DSL 开发手册](../../../development/base-spire/README.md)修改声明、分组、寿命和消费者，新依赖组才调整根组装。
 
 `tools/base-spire-dev` 接受独立卡牌文件，链接实际加载的base能力，将新增定义与base卡牌定义合并；ID冲突明确失败。测试牌组只含输入卡，不接真实地图/奖励工厂。声明、解析、降级和运行实例分别报告；未支持、引用缺失、非卡声明及执行故障返回非零。`upgraded`经升级起始牌组创建完整升级实例，采用升级费用、变量初值和适用hook；这是受控出牌验证，不代表营火等永久升级流程已验证。准确工具契约见[作者工具参考](../../../../tools/base-spire-dev/README.md)。
 

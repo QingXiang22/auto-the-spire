@@ -108,7 +108,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/aggression.spire"
     },
     {
@@ -156,7 +156,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/anger.spire"
     },
     {
@@ -216,7 +216,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/armaments.spire"
     },
     {
@@ -252,7 +252,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/ashen-strike.spire"
     },
     {
@@ -372,7 +372,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/barricade.spire"
     },
     {
@@ -384,7 +384,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/bash.spire"
     },
     {
@@ -396,7 +396,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/battle-trance.spire"
     },
     {
@@ -564,7 +564,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/bloodletting.spire"
     },
     {
@@ -576,7 +576,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/blood-wall.spire"
     },
     {
@@ -588,7 +588,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/bludgeon.spire"
     },
     {
@@ -624,7 +624,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/body-slam.spire"
     },
     {
@@ -720,7 +720,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/brand.spire"
     },
     {
@@ -732,7 +732,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/break.spire"
     },
     {
@@ -744,7 +744,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/breakthrough.spire"
     },
     {
@@ -816,7 +816,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/bully.spire"
     },
     {
@@ -864,7 +864,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/burning-pact.spire"
     },
     {
@@ -1008,7 +1008,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/cascade.spire"
     },
     {
@@ -1104,7 +1104,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/cinder.spire"
     },
     {
@@ -1212,7 +1212,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/colossus.spire"
     },
     {
@@ -1260,7 +1260,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/conflagration.spire"
     },
     {
@@ -1356,7 +1356,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/corruption.spire"
     },
     {
@@ -1428,7 +1428,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/crimson-mantle.spire"
     },
     {
@@ -1440,7 +1440,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/cruelty.spire"
     },
     {
@@ -1512,7 +1512,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/dark-embrace.spire"
     },
     {
@@ -1692,7 +1692,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/defend-ironclad.spire"
     },
     {
@@ -1812,7 +1812,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/demon-form.spire"
     },
     {
@@ -1908,7 +1908,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/dismantle.spire"
     },
     {
@@ -1944,7 +1944,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/dominate.spire"
     },
     {
@@ -2016,7 +2016,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/drum-of-battle.spire"
     },
     {
@@ -2244,7 +2244,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/evil-eye.spire"
     },
     {
@@ -2256,7 +2256,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/expect-a-fight.spire"
     },
     {
@@ -2352,7 +2352,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/feed.spire"
     },
     {
@@ -2376,7 +2376,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/feel-no-pain.spire"
     },
     {
@@ -2412,7 +2412,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/fiend-fire.spire"
     },
     {
@@ -2424,7 +2424,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/fight-me.spire"
     },
     {
@@ -2496,7 +2496,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/flame-barrier.spire"
     },
     {
@@ -2628,7 +2628,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/forgotten-ritual.spire"
     },
     {
@@ -2772,7 +2772,7 @@
         "TokenCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/tokens/giant-rock.spire"
     },
     {
@@ -3048,7 +3048,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/havoc.spire"
     },
     {
@@ -3072,7 +3072,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/headbutt.spire"
     },
     {
@@ -3144,7 +3144,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/hellraiser.spire"
     },
     {
@@ -3156,7 +3156,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/hemokinesis.spire"
     },
     {
@@ -3240,7 +3240,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/howl-from-beyond.spire"
     },
     {
@@ -3324,7 +3324,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/impervious.spire"
     },
     {
@@ -3348,7 +3348,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/infernal-blade.spire"
     },
     {
@@ -3360,7 +3360,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/inferno.spire"
     },
     {
@@ -3384,7 +3384,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/inflame.spire"
     },
     {
@@ -3432,7 +3432,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/iron-wave.spire"
     },
     {
@@ -3480,7 +3480,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/juggernaut.spire"
     },
     {
@@ -3492,7 +3492,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/juggling.spire"
     },
     {
@@ -3768,7 +3768,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/mangle.spire"
     },
     {
@@ -4008,7 +4008,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/molten-fist.spire"
     },
     {
@@ -4200,7 +4200,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/not-yet.spire"
     },
     {
@@ -4248,7 +4248,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/offering.spire"
     },
     {
@@ -4272,7 +4272,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/one-two-punch.spire"
     },
     {
@@ -4332,7 +4332,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/pacts-end.spire"
     },
     {
@@ -4452,7 +4452,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/perfected-strike.spire"
     },
     {
@@ -4500,7 +4500,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/pillage.spire"
     },
     {
@@ -4560,7 +4560,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/pommel-strike.spire"
     },
     {
@@ -4644,7 +4644,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/primal-force.spire"
     },
     {
@@ -4764,7 +4764,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/pyre.spire"
     },
     {
@@ -4812,7 +4812,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/rage.spire"
     },
     {
@@ -4848,7 +4848,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/rampage.spire"
     },
     {
@@ -5136,7 +5136,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/rupture.spire"
     },
     {
@@ -5256,7 +5256,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/second-wind.spire"
     },
     {
@@ -5340,7 +5340,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/setup-strike.spire"
     },
     {
@@ -5496,7 +5496,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/shrug-it-off.spire"
     },
     {
@@ -5772,7 +5772,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/spite.spire"
     },
     {
@@ -5880,7 +5880,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/stampede.spire"
     },
     {
@@ -5904,7 +5904,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/stoke.spire"
     },
     {
@@ -5916,7 +5916,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/stomp.spire"
     },
     {
@@ -5928,7 +5928,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/stone-armor.spire"
     },
     {
@@ -6000,7 +6000,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/strike-ironclad.spire"
     },
     {
@@ -6168,7 +6168,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/sword-boomerang.spire"
     },
     {
@@ -6252,7 +6252,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/taunt.spire"
     },
     {
@@ -6264,7 +6264,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/tear-asunder.spire"
     },
     {
@@ -6396,7 +6396,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/thrash.spire"
     },
     {
@@ -6432,7 +6432,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/thunderclap.spire"
     },
     {
@@ -6528,7 +6528,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/tremble.spire"
     },
     {
@@ -6540,7 +6540,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/true-grit.spire"
     },
     {
@@ -6564,7 +6564,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/twin-strike.spire"
     },
     {
@@ -6636,7 +6636,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/unmovable.spire"
     },
     {
@@ -6648,7 +6648,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/unrelenting.spire"
     },
     {
@@ -6684,7 +6684,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/uppercut.spire"
     },
     {
@@ -6732,7 +6732,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/vicious.spire"
     },
     {
@@ -6816,7 +6816,7 @@
         "IroncladCardPool"
       ],
       "eligibility": "reviewed-singleplayer-development",
-      "evidence": "docs/review/records/2026-10-18/ironclad-full-cards-2026-10-18.md",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Aggression.cs; source SHA256 is recorded in this entry.",
       "definition": "cards/ironclad/whirlwind.spire"
     },
     {

@@ -1,6 +1,6 @@
 # ai-the-spire（A-01 ~ A-05 交付物）
 
-本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[唯一清单](../docs/review/tofix/README.md)为准。
+本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[路线图](../docs/roadmap.md)为准。
 
 * 编码/模型层不实现规则、不导入 `core-the-spire` / `mod-the-spire` / 活动 client；`delivery` 生产编排通过已有net客户端交互，只读公开快照。
 * 协议结构与判定逻辑来自共享资产 `docs/contracts/net/0.1/`（schema/不变量）
@@ -9,9 +9,9 @@
 
 ## D1 可运行战斗学习版本（用户入口）
 
-任务包见 [docs/design/battle-learning-delivery-v1.md](../docs/design/battle-learning-delivery-v1.md)；
-阶段交接见 [D1/D1.1/D2交付历史](../docs/review/records/2026-10-04/battle-learning-delivery-2026-10-03.md)。
-这些入口已验收；当前先按[ENV完整环境任务](../docs/design/environment-completion-and-differential-v1.md)完成core/base及源规则对拍，AI仅做必要契约兼容和回归。未启动D3/D4学习实验退出当前/暂缓，不能将设计命令当作可用功能；状态见[唯一清单](../docs/review/tofix/README.md)。
+任务包见 [相关规格](../docs/design/ai-the-spire/training-design.md)；
+
+这些入口已验收；当前先按[ENV完整环境任务](../docs/design/environment-completion-and-differential-v1.md)完成core/base及源规则对拍，AI仅做必要契约兼容和回归。未启动D3/D4学习实验退出当前/暂缓，不能将设计命令当作可用功能；状态见[路线图](../docs/roadmap.md)。
 在**仓库根目录**执行（输出路径相对调用者工作目录解析；配置与 Host 相对仓库位置解析）：
 
 ```powershell
@@ -256,7 +256,7 @@ ai-the-spire/
 ## 覆盖范围（28 组，共 **604** 项）
 
 另有 J-01/M1 的端到端入口 `tests/j01_episode.py`（**219** 项，需要活动宿主；含 `author`、`model`、`reward`、`evaluation`、`scenarios` 五组，
-见 [阶段交接批次 27–35](../docs/review/records/2026-10-03/stage-handoff-2026-10-03.md)）。
+见 ）。
 
 | 组 | 项数 | 内容 | 任务 |
 | --- | --- | --- | --- |
@@ -289,8 +289,8 @@ ai-the-spire/
 | `scenario-splits` | 6 | 划分覆盖全部簇、train≥2 簇且三个 split 非空、空划分/未知 split 被拒、划分摘要即身份、簇键绑定 profile+variant、无跨 split 同簇 | W-03 |
 | `scenario-cost` | 4 | 成本报告聚合（限额/计数/墙钟/字节/停止原因）、显式声明「轮转非吞吐」与「随机数据非新策略近期 PPO 数据」、簇事实验证失败在报告里可见 | W-03 |
 
-§9 场景与检查的对应见 [A-05 报告](../docs/review/records/2026-10-01/a-05-2026-10-01.md)；张量化逐项规格见
-[A-04 报告](../docs/review/records/2026-10-01/a-04-2026-10-01.md) 与 [监督台账](../docs/review/records/2026-10-01/supervision-ledger-2026-10-01.md) §2.3。
+张量化逐项规格见
+ 与  §2.3。
 
 D1 交付另有 **192 项** 端到端验收（`tests/d1_delivery.py`，需要宿主），
 覆盖任务包 §7 的 VISIBLE/UPDATE/SOURCE/ENDING/LOAD/COMPARE/RESUME/BOUNDED 八个场景；

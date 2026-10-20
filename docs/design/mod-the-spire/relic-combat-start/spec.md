@@ -1,6 +1,6 @@
 # 战斗开始格挡遗物的 DSL 迁移
 
-关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[主清单](../../../review/tofix/README.md#当前交付)维护。
+关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[路线图](../../../roadmap.md#近期队列)维护。
 
 ## 已核实来源与范围
 
@@ -31,3 +31,30 @@ Player 的 combat 字段放 combat/schema，开始／结束过程与 BeforeComba
 4. 通过真实 stdio 验证公开轨迹，更新准确操作与领域手册及安装方式，记录来源／版本／命令／结果和 skill 实际阅读边界。
 
 最终运行 solution 构建、包行为／覆盖、受影响 net 与迁移边界、文档／skill 校验；本次不改 Engine 语义，通用 Engine 全套由 Actions 验证。不运行独立参考或完整游戏矩阵，不将开发探针当作正常流程证据。若 DSL 表达不足，回到此契约并给最小复现，不用 C# 回调绕过。
+
+## 遗物机制索引
+
+按匹配版本的完整来源确定消费者。分组用于查找共享机制，当前排期见 [路线图](../../../roadmap.md)；实现数由 CI 生成。
+
+| 分组 | 消费者示例 |
+| --- | --- |
+| RELIC-G01 拾取随机永久升级 | Whetstone、WarPaint、SandCastle；类型／张数参数化 |
+| RELIC-G02 永久选牌修改 | Pomander、YummyCookie、EmptyCage、PreciseScissors；升级与移除分别子包 |
+| RELIC-G03 卡牌创建修正 | MoltenEgg、ToxicEgg、FrozenEgg；附魔参与者另接依赖 |
+| RELIC-G04 回合资源与开场效果 | Candelabra、Chandelier、VeryHotCocoa、FakeHappyFlower、Sai；按事件和资源子包 |
+| RELIC-G05 攻击与格挡修正 | Akabeko、PenNib、MiniatureCannon、MysticLighter、PaperPhrog、PaperKrane |
+| RELIC-G06 出牌／牌区反应 | GamePiece、JossPaper、CharonsAshes、ToughBandages、Tingsha、UnceasingTop |
+| RELIC-G07 抽牌、留牌与行动限制 | Pocketwatch、Fiddle、RunicPyramid、RingingTriangle、VelvetChoker、SneckoEye |
+| RELIC-G08 受损、阈值与死亡 | RedSkull、SelfFormingClay、DemonTongue、TungstenRod、TheBoot、LizardTail、FragrantMushroom |
+| RELIC-G09 药水库存与触发 | PotionBelt、AlchemicalCoffer、PhialHolster、Sozu、ReptileTrinket |
+| RELIC-G10 奖励生成与资格 | WhiteBeastStatue、BlackStar、PrayerWheel、WhiteStar、Orrery、AmethystAubergine |
+| RELIC-G11 房间与长期资源 | VenerableTeaSet、FakeVenerableTeaSet、EternalFeather、MealTicket、Pantograph、MawBank |
+| RELIC-G12 商店参与者 | MembershipCard、TheCourier、WongoCustomerAppreciationBadge、FakeMerchantsRug |
+| RELIC-G13 营火参与者 | Girya、Shovel、MeatCleaver、MiniatureTent、StoneHumidifier、DreamCatcher |
+| RELIC-G14 永久生成／复制／变换 | Astrolabe、PandorasBox、NewLeaf、DollysMirror及生成牌拾取者 |
+| RELIC-G15 附魔与关键词 | GnarledHammer、Kifuda、PunchDagger、RoyalStamp、FresnelLens、WingCharm |
+| RELIC-G16 地图、古代人与跨域长期效果 | GoldenCompass、JuzuBracelet、WingedBoots、FurCoat、LordsParasol |
+| RELIC-G17 遗物替换／熔化 | SwordOfStone、TouchOfOrobas、ToyBox及升级遗物 |
+| RELIC-G18 其他角色与特殊规则 | CrackedCore、GoldPlatedCables、BigHat、MiniRegent、Byrdpip、PaelsLegion等 |
+| RELIC-G19 拾取基础资源 | FakeMango、LoomingFruit、NutritiousOyster、SignetRing、GoldenPearl |
+| RELIC-G20 源特例复核与归组 | 尚未确定主要机制、只有属性覆写或有多个跨域阶段的剩余条目 |

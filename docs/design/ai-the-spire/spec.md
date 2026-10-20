@@ -1,6 +1,6 @@
 # ai-the-spire specification
 
-本规范定义 AI 的公开输入、编码、概率输出、训练和部署要求。下文设计表与阶段说明保留各自日期的决策背景；实际交付、新实验排期和验收以[当前清单](../../review/tofix/README.md)为准。
+本规范定义 AI 的公开输入、编码、概率输出、训练和部署要求。下文设计表与阶段说明保留各自日期的决策背景；实际交付、新实验排期和验收以[路线图](../../roadmap.md)为准。
 
 > 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
 
@@ -20,7 +20,7 @@
 
 技术设计入口为 [design-v0.md](design-v0.md)。外部输入以 [net 协议](../net-the-spire/protocol.md)为准，张量契约见 [encoder-design.md](encoder-design.md)，概率输出见 [policy-contract.md](policy-contract.md)，训练与数据见 [training-design.md](training-design.md)。[共同验收](../ai-net-verification.md)与[运行约束](../ai-net-operations.md)分别负责交付和部署；[literature.md](literature.md)保存研究依据，不作为已验证效果。
 
-2026-10-03实现提示：上表及首阶段描述保留设计时点，不代表当前源码为空；编码器、小模型、NumPy学习器及有界Gym推理已交付，真实学习编排/效果与部署尚未验收。当前范围及证据见[全项目复核](../../review/records/2026-10-03/project-completion-review-2026-10-03.md)与[review清单](../../review/tofix/README.md)；实现进展不自动批准全部设计提案。
+2026-10-03实现提示：上表及首阶段描述保留设计时点，不代表当前源码为空；编码器、小模型、NumPy学习器及有界Gym推理已交付，真实学习编排/效果与部署尚未验收。当前范围及证据见与[路线图](../../roadmap.md)；实现进展不自动批准全部设计提案。
 
 ## 1. 用户需求与约束
 

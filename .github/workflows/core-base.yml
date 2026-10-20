@@ -1,4 +1,4 @@
-name: Core, pure DSL base, net and migration contract
+name: Core, pure DSL base, net, migration and docs
 
 on:
   push:
@@ -26,12 +26,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [core, base, net, migration]
+        suite: [core, base, net, migration, docs]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        if: matrix.suite != 'docs'
         with:
           global-json-file: global.json
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6

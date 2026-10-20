@@ -31,7 +31,7 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 拾取随机升级组也使用`check --relic-content-only`，验证Whetstone／WarPaint／SandCastle的类型／张数、完整Niche洗牌、固定源选中实例／事件顺序／游标、重复获得、嵌套调用、无临时状态残留及两战副本。向量只来自独立源码神谕，生成方式见[rng-oracle](../rng-oracle/README.md)；公开stdio逐件观察永久升级和实际攻击／格挡，不构成正常Run。
 
-`base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/design/mod-the-spire/ironclad-dsl/shared-operations.md)。显式 Ironclad 基础初态、原版随机算法／流布局和自动起手已接入；包含 Neow 的正常开局、完整随机前置消费和正常 Run 不属于此 scope；不使用旧 C# 运行回退。当前数量与交付证据从[主清单](../../docs/review/tofix/README.md#当前交付)定位。
+`base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/design/mod-the-spire/ironclad-dsl/shared-operations.md)。显式 Ironclad 基础初态、原版随机算法／流布局和自动起手已接入；包含 Neow 的正常开局、完整随机前置消费和正常 Run 不属于此 scope；不使用旧 C# 运行回退。当前数量与交付证据从[路线图](../../docs/roadmap.md#近期队列)定位。
 
 分阶段学习与实际公开结果见[base 开发教程](../../docs/development/base-spire/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为见证。
 

@@ -61,7 +61,7 @@ dotnet net-the-spire/Net.TheSpire.Host/bin/Debug/net9.0/Net.TheSpire.Host.dll `
 | `dotnet build net-the-spire/Net.TheSpire.Tests/Net.TheSpire.Tests.csproj` | 0 警告 0 错误 | 依赖链 Core.TheSpire → Contracts → Net.TheSpire → BaseSpire → Host → Tests |
 
 证据日志（真实宿主进程的 ready 横幅 + 每帧请求/响应/规范字节）：
-`.audit/dsh-env-t03-declaration-extension-2026-10-08/artifacts/declaration-extension-evidence.ndjson`。
+声明扩展与当前纯 DSL 公开行为由 `python tools/ci/check.py net` 检查，结果在 PR CI 查看。
 
 ## 4. 边界（本场景不作声称）
 

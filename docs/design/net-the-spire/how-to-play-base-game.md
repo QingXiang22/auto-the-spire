@@ -1,6 +1,6 @@
 # 手动试玩 base-spire
 
-文档类型：操作指南（How-to）。本页用于亲自选择地图、出牌和处理房间。开发者调用方法见[公开接口教程](how-to-run-public-game.md)，当前进度见[主清单](../../review/tofix/README.md#env-t03)。
+文档类型：操作指南（How-to）。本页用于亲自选择地图、出牌和处理房间。开发者调用方法见[公开接口教程](how-to-run-public-game.md)，当前进度见[行为要求](../environment-completion-and-differential-v1.md#env-t03)。
 
 ## 启动终端菜单
 

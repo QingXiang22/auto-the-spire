@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=["core", "base", "net", "differential", "migration"])
+    parser.add_argument("suite", choices=["core", "base", "net", "differential", "migration", "docs"])
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
@@ -43,6 +43,9 @@ def main() -> int:
     elif args.suite == "migration":
         commands = [build("tools/differential/Differential.csproj"),
                     [sys.executable, "-X", "utf8", "tools/ci/check_dsl_migration.py", "--configuration", config, "--output", str(output)]]
+    elif args.suite == "docs":
+        commands = [[sys.executable, "-X", "utf8", "tools/doc-check/check_docs.py"],
+                    ["git", "diff", "--check"]]
     else:
         project = "tools/differential/Differential.csproj"
         commands = [build(project), run(project) + ["--", "test", "--suite", "regression", "--output", str(output / "regression")]]
