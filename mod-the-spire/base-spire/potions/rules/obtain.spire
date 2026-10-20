@@ -1,0 +1,46 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure CreatePotionInstance {
+  parameters = { owner = Ref(Player) definition = String(length = 64) } result = Binding
+  locals = { blueprint = Binding potion = Binding }
+  body = {
+    let = { into = blueprint value = first(where(collection(PotionLibrary), b, equal(field(b, PotionBlueprint.DefinitionId), definition))) }
+    if = { condition = isNone(blueprint) then = { fail = { message = "unsupported_capability: unknown potion definition" } } }
+    create = { type = Potion scope = frameScope() into = potion fields = {
+      Owner = field(owner, Player.Owner) DefinitionId = definition EffectSupported = field(blueprint, PotionBlueprint.EffectSupported)
+      Usage = field(blueprint, PotionBlueprint.Usage) Target = field(blueprint, PotionBlueprint.Target)
+    } }
+    return = { value = potion }
+  }
+}
+procedure ObtainPotion {
+  parameters = { owner = Ref(Player) potion = Ref(Potion) }
+  locals = { slot = Int }
+  body = {
+    if = { condition = or(not(equal(field(potion, Potion.Owner), field(owner, Player.Owner))), greaterOrEqual(collectionIndex(Potions, potion), 0)) then = { fail = { message = "Invalid potion acquisition" } } }
+    if = { condition = greaterOrEqual(count(collection(Potions)), 3) then = { fail = { message = "Potion inventory is full" } } }
+    let = { into = slot value = 0 }
+    repeat = { count = 3 body = {
+      if = { condition = exists(where(collection(Potions), p, equal(field(p, Potion.Slot), slot))) then = { let = { into = slot value = add(slot, 1) } } }
+    } }
+    set = { target = potion field = Potion.Slot value = slot }
+    addToCollection = { collection = Potions item = potion }
+    emit = { event = PotionObtained payload = { owner = owner potion = potion } }
+  }
+}
+procedure DiscardPotion {
+  parameters = { owner = Ref(Player) potion = Ref(Potion) }
+  body = {
+    if = { condition = or(less(collectionIndex(Potions, potion), 0), not(equal(field(potion, Potion.Owner), field(owner, Player.Owner)))) then = { fail = { message = "Potion is not owned" } } }
+    removeFromCollection = { collection = Potions item = potion }
+    set = { target = potion field = Potion.Slot value = -1 }
+    emit = { event = PotionDiscarded payload = { owner = owner potion = potion } }
+    destroy = { target = potion }
+  }
+}
+action DiscardPotion {
+  role = player parameters = { potion = Ref(Potion) }
+  candidates = { parameter = potion query = collection(Potions) }
+  body = { call = { procedure = DiscardPotion args = { owner = first(type(Player)) potion = potion } } }
+}

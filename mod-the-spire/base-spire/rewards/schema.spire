@@ -3,3 +3,27 @@ dsl_version = "core/0.3"
 
 collection CardRewardOptions { element = Card ordered = true }
 collection CardRewardPool { element = CardBlueprint ordered = true }
+
+entity CombatRewardSet {
+  owner = Owner
+  fields = {
+    Owner = { type = Participant default = participant(1) }
+    Player = { type = Ref(Player) visibility = Hidden }
+    VisitId = { type = Int(min = 1) }
+    Source = { type = String(length = 16) }
+    CharacterId = { type = String(length = 64) }
+    ActIndex = { type = Int(min = 0) }
+    Ascension = { type = Int(min = 0) }
+    PoolEligibility = { type = String(length = 32) default = "all-unlocked-ironclad" }
+    CardCount = { type = Int default = 3 }
+    RarityPolicy = { type = String(length = 32) default = "regular-encounter" }
+    UpgradePolicy = { type = String(length = 32) default = "act-one" }
+    ModifiersPolicy = { type = String(length = 32) default = "none" }
+    RandomStream = { type = String(length = 64) default = "base-spire:player:rewards" }
+    Generated = { type = Bool default = false }
+    Closed = { type = Bool default = false }
+    PotionPending = { type = Bool default = false }
+    Potion = { type = Ref(Potion) optional = true }
+  }
+}
+collection PotionRewardOptions { element = Potion ordered = true }

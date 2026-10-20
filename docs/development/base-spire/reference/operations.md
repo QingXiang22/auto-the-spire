@@ -21,8 +21,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
 | Powers | 有序 Power 集合 | 按定义的shared／per-applier／independent策略匹配实例；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
-| [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64) | 开发药水实例，只承载标识；原版的稀有度、使用窗口（战斗内／任意时刻）与来源未迁移 |
-| Potions | 有序 Potion 集合，容量 3 | 三个共享槽位；`UsePotion`／`UsePotionOnTarget` 使用后在监听之后移除并销毁 |
+| [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64)、EffectSupported: Bool、Usage／Target: String(16)、Slot: Int(-1..2) | 真实药水实例，Slot=-1表示未入库存；来源池元数据与效果支持分别维护 |
+| Potions | 有序 Potion 集合，容量 3 | 三个共享槽位；ObtainPotion使用首个空槽，DiscardPotion可腾空；使用要求已有支持的效果、正确窗口和目标，在监听之后移除并销毁 |
 | PotionUsed／PotionUsedOnTarget | owner: Ref(Player)、potion: Ref(Potion)（有目标时再加 target: Ref(Enemy)） | 药水仍在库存时发出，之后才消费；有目标版本解析第一个 `Hp > 0` 的开发目标 |
 | Hand／DrawPile／DiscardPile／InPlay／ExhaustPile／RemovedFromCombat | 有序 Card 集合；Hand 容量 10 | 当前是全局开发牌堆，尚无按持有者分堆；DrawPile 隐藏标识及顺序；InPlay 只在出牌结算期间持有该卡；ExhaustPile 接收完整耗尽操作和强制耗尽结果；RemovedFromCombat 接收离场 Power 或被战斗变换移除的旧牌；这些都是临时实例，永久牌独立保存在 RunDeck |
 | [Relic](../../../../mod-the-spire/base-spire/relics/schema.spire) | Owner、Holder、DefinitionId、IsMelted=false、Counter=0 | Holder 是隐藏 Ref(Player)，Counter 隐藏；DefinitionId 长度上限 64；Counter 为 0..999999 |
@@ -73,7 +73,10 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | OfferCombatCards | owner: Ref(Player) | 由战斗胜利编排调用，生成三张不重复奖励；依次稀有度抽样及偏移更新、缺稀有度回退、候选抽取、升级抽样。不是公开发牌动作 |
 | ClaimDevelopmentCardReward | owner: Ref(Player)、card: Ref(Card) | 公开 action 固定本玩家的 CardRewardOptions 候选；过程调用 ObtainCardReward，将同一实例入永久牌组并销毁未选项。保留金币与 rewards 房间 |
 | SkipDevelopmentCardReward | owner: Ref(Player) | 要求 rewards 且有待领卡；销毁所有候选，不抽随机、不增加永久牌，金币保持 |
-| CloseDevelopmentRewards | owner: Ref(Player) | 同时清理所有未领卡牌及金币，再离开奖励房；关闭前不得跨房 |
+| CloseDevelopmentRewards | owner: Ref(Player) | 同时清理所有未领卡牌、药水及金币，关闭访问容器后离开奖励房；关闭前不得跨房 |
+| OfferNormalCombatRewards | owner、visitId、source、actIndex、ascension | 仅全部解锁无修正Ironclad首幕A0 Monster；访问唯一，创建CombatRewardSet，按药水判定→金币→适用药水→卡牌生成 |
+| ClaimDevelopmentPotionReward／SkipDevelopmentPotionReward | owner: Ref(Player) | 领取复用ObtainPotion；满栏保留同一待领实例；跳过仅销毁待领药水，不抽随机 |
+| ObtainPotion／DiscardPotion | owner: Ref(Player)、potion: Ref(Potion) | 首个空槽获得后发布PotionObtained；丢弃先移出库存再发布PotionDiscarded，最后销毁 |
 
 | 声明 | 准确参数 | 行为与边界 |
 | --- | --- | --- |
@@ -102,7 +105,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | RestAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：只在营火且未使用时允许，回复 `floor(MaxHp × 0.3)` 后把选项标记为已用；过程在非营火或重复使用时失败 |
 | ForgeAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：未用过的营火、存活且非战斗，有本玩家可升级永久牌时发出 Engine 的 0..1 实例决策；选择升级该永久实例并用掉选项，取消不消耗；成功后发 AfterRestSiteSmith |
 | LeaveDevelopmentRoom | owner=Ref(Player) | 公开 action 与同名过程：只有成功用过营火选项、没有选择待决且非战斗时可离开，房间复位为 `none`；奖励界面必须使用 CloseDevelopmentRewards |
-| [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 存活玩家胜利时用命名流 `base-spire:player:rewards` 从 `[10, 21)` 抽一次，写入 GoldRewardAmount 并置 GoldRewardPending=true、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
+| [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 存活玩家胜利时，Ironclad调用完整普通奖励操作；未选角色的金币探针仅从命名流 `base-spire:player:rewards` 的 `[10, 21)` 抽金额；写入待领状态、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
 | ClaimDevelopmentGoldReward | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 且条目 pending 时把保存金额加进 Gold（开发上限 99999），清空条目；领取不关闭界面，不重抽，不能重复领取 |
 | CloseDevelopmentRewards | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 时清空未领条目、金额与房间状态；允许不领取直接关闭，不给金币也不抽随机；关闭前禁止开始新战斗、进入营火或 LeaveDevelopmentRoom |
 | [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 只在敌人死亡后调用：若已无 `Hp > 0` 的敌人且战斗仍活跃，写 victory、关闭回合门与活跃标记并发 CombatEnded |
@@ -211,7 +214,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（CombatEnded 且胜利、Hp 不超过 MaxHp 的阈值百分比时回复，`use MeatOnTheBone` 为 12／50）。显式EndDevelopmentCombat和下次BeginDevelopmentCombat通过ClearCombatPowers调用各实例的RemovePower；自然胜负仅发布CombatEnded，其他Power沿用现有开发清理边界。ExpireTurnPower订阅AfterPlayerTurnFinished，移除带ExpiresAtTurnEnd的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
 
-药水：`PotionDefinition` 生成 `Obtain`（直接放进三格库存），效果模板按 DefinitionId 订阅 `PotionUsed`／`PotionUsedOnTarget`：`PotionBlockEffect`（无加成格挡，BlockPotion 12）、`PotionEnergyEffect`（EnergyPotion 2）、`PotionDrawEffect`（SwiftPotion 3）、`PotionMaxHpEffect`（FruitJuice 5，提高上限并回复同量）、`PotionHealPercentEffect`（BloodPotion 20% 上限）与 `PotionDamageEffect`（FirePotion 20 点无加成伤害）。
+药水：`PotionDefinition` 生成 `Obtain`（创建实例后调用共享ObtainPotion放进三格库存），效果模板按 DefinitionId 订阅 `PotionUsed`／`PotionUsedOnTarget`：`PotionBlockEffect`（无加成格挡，BlockPotion 12）、`PotionEnergyEffect`（EnergyPotion 2）、`PotionDrawEffect`（SwiftPotion 3）、`PotionMaxHpEffect`（FruitJuice 5，提高上限并回复同量）、`PotionHealPercentEffect`（BloodPotion 20% 上限）与 `PotionDamageEffect`（FirePotion 20 点无加成伤害）。
 
 模板开发获得动作通过definition检查重复，默认使用first(type(Player))；不能将它当作完整多人获得、替换或熔化操作。监听按实际持有者／实例过滤，跨战状态按所属模板约定处理。Obtain的库存去重不代表该遗物的全部原版来源资格（奖励、事件、商店或角色初态）已经实现。
 

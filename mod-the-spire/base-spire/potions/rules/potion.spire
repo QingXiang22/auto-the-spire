@@ -1,9 +1,8 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development potion use: the potion must be in the inventory, the effect listeners run while it is still
-# there, and it is then removed and destroyed. Vanilla additionally checks potion usage windows (combat only /
-# any time) and targets; those checks are not migrated, except that a targeted potion needs a hittable enemy.
+# Effect listeners run while the owned potion remains in inventory, before consumption.
+# Unsupported effects are rejected; supported effects respect source usage window and target kind.
 procedure UsePotionCommon {
   parameters = { owner = Ref(Player) potion = Ref(Potion) }
   body = {
@@ -11,6 +10,9 @@ procedure UsePotionCommon {
       condition = less(collectionIndex(Potions, potion), 0)
       then = { fail = { message = "Potion is not in the inventory" } }
     }
+    if = { condition = not(equal(field(potion, Potion.Owner), field(owner, Player.Owner))) then = { fail = { message = "Potion belongs to another player" } } }
+    if = { condition = not(field(potion, Potion.EffectSupported)) then = { fail = { message = "unsupported_capability: potion effect is not implemented" } } }
+    if = { condition = and(equal(field(potion, Potion.Usage), "combat"), not(field(owner, Player.CombatActive))) then = { fail = { message = "Potion requires combat" } } }
   }
 }
 procedure ConsumePotion {
@@ -24,6 +26,7 @@ procedure UsePotion {
   parameters = { owner = Ref(Player) potion = Ref(Potion) }
   body = {
     call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
+    if = { condition = equal(field(potion, Potion.Target), "enemy") then = { fail = { message = "Potion requires a target" } } }
     emit = { event = PotionUsed payload = { owner = owner potion = potion } }
     call = { procedure = ConsumePotion args = { potion = potion } }
   }
@@ -32,6 +35,7 @@ procedure UsePotionOnTarget {
   parameters = { owner = Ref(Player) potion = Ref(Potion) }
   body = {
     call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
+    if = { condition = not(equal(field(potion, Potion.Target), "enemy")) then = { fail = { message = "Potion does not target an enemy" } } }
     emit = {
       event = PotionUsedOnTarget
       payload = { owner = owner potion = potion target = first(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))) }
@@ -43,13 +47,13 @@ procedure UsePotionOnTarget {
 action UsePotion {
   role = player
   parameters = { potion = Ref(Potion) }
-  candidates = { parameter = potion query = collection(Potions) }
+  candidates = { parameter = potion query = where(collection(Potions), p, and(field(p, Potion.EffectSupported), and(not(equal(field(p, Potion.Target), "enemy")), or(equal(field(p, Potion.Usage), "anytime"), field(first(type(Player)), Player.CombatActive))))) }
   body = { call = { procedure = UsePotion args = { owner = first(type(Player)) potion = potion } } }
 }
 action UsePotionOnTarget {
   role = player
   parameters = { potion = Ref(Potion) }
-  candidates = { parameter = potion query = collection(Potions) }
-  requires = exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)))
+  candidates = { parameter = potion query = where(collection(Potions), p, and(field(p, Potion.EffectSupported), equal(field(p, Potion.Target), "enemy"))) }
+  requires = and(field(first(type(Player)), Player.CombatActive), exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))))
   body = { call = { procedure = UsePotionOnTarget args = { owner = first(type(Player)) potion = potion } } }
 }

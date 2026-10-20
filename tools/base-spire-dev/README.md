@@ -9,7 +9,7 @@ dotnet run --project tools/base-spire-dev -- sync-content
 dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/behavior
 ```
 
-`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则标识、scope 和源／DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为执行结果，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。内容模型定向验证可用 `check --content-model-only`；铁甲战士定向调试可用 `check --ironclad-only`，卡牌奖励可用 `check --card-rewards-only`，原版随机源向量可用 `check --rng-only`，它不生成整包覆盖报告；最终仍运行完整 `check --report`。
+`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则标识、scope 和源／DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为执行结果，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。内容模型定向验证可用 `check --content-model-only`；铁甲战士定向调试可用 `check --ironclad-only`，卡牌及普通完整奖励（含药水、有序源向量与暂停续接）可用 `check --card-rewards-only`，原版随机源向量可用 `check --rng-only`，它不生成整包覆盖报告；最终仍运行完整 `check --report`。
 
 `sync-content`从实际CardLibrary／PowerLibrary及显式启动实例确定性派生这两类公开ID，只写public/metadata.json相应content_ids；公开可见性政策、来源catalog和池顺序继续显式维护。validate／check同时核对可执行ID、来源文件映射及公开列表，缺登记、错误映射和重复分别失败。该审计针对当前base的定义库形状，不是通用包的内容推断器。
 

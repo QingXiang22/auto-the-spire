@@ -10,6 +10,7 @@ internal static partial class PackageChecks
     {
         var count = 0;
         RunCardRewardChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
+        RunNormalRewardChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         Console.WriteLine($"All {count} focused card-reward checks passed; full check is required for package evidence.");
         return 0;
     }

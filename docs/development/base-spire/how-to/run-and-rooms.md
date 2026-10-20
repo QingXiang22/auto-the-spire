@@ -44,15 +44,17 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 ## 生成并结算奖励
 
-开发包已恢复 Monster 金币的最小领取链：胜利后 `Player.Room="rewards"`、`GoldRewardPending=true`，`GoldRewardAmount` 保存 10..20 的金额，金币暂不增加。公开候选 `ClaimDevelopmentGoldReward` 领取保存金额；`CloseDevelopmentRewards` 关闭界面，未领取时即跳过。领取后仍需关闭，才能开始下一开发战斗或进入营火。金额仅在生成时抽一次，失败不给奖励；准确参数和边界见[操作参考](../reference/operations.md)与[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。此金币路径已使用原版流布局，但尚非正常 Run；显式角色的卡牌奖励扩展见下文，药水／遗物条目未恢复。
+开发包已恢复 Monster 金币的最小领取链：胜利后 `Player.Room="rewards"`、`GoldRewardPending=true`，`GoldRewardAmount` 保存 10..20 的金额，金币暂不增加。公开候选 `ClaimDevelopmentGoldReward` 领取保存金额；`CloseDevelopmentRewards` 关闭界面，未领取时即跳过。领取后仍需关闭，才能开始下一开发战斗或进入营火。金额仅在生成时抽一次，失败不给奖励；准确参数和边界见[操作参考](../reference/operations.md)与[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。此金币路径已使用原版流布局，但尚非正常 Run；显式角色的卡牌与药水奖励扩展见下文，遗物奖励未恢复。
 
 显式初始化 Ironclad 后，首幕开发战斗胜利还会提供三张不同的卡牌奖励。公开 CardRewardOptions 和 ClaimDevelopmentCardReward 候选指向真实待领实例；提交所选候选后，该同一实例进入 RunDeck，其他候选销毁，金币奖励仍可独立领取。SkipDevelopmentCardReward 仅跳过卡牌；CloseDevelopmentRewards 同时丢弃未领取的卡牌和金币，之后才能进入下一战。候选生成一次，观察、领取和跳过不重抽；所选牌在下一战重建为独立副本。
 
-奖励使用完整单人 Ironclad 源池中的 80 张 Common／Uncommon／Rare 牌，包含 Feed／NotYet，区别于战斗生成池。基础稀有度、逐项偏移与去重已恢复；仍限首幕 A0、全部解锁、无奖励修正参与者。金币、稀有度、选牌和升级已共用原版玩家 Rewards 流及精确 binary32 抽样；药水掉落判定尚缺，因此完整战斗奖励前置消费仍未对齐。Elite／Boss、后幕升级率、替代奖励与正常 Run 未恢复。准确参数见[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。
+奖励使用完整单人 Ironclad 源池中的 80 张 Common／Uncommon／Rare 牌，包含 Feed／NotYet，区别于战斗生成池。基础稀有度、逐项偏移与去重已恢复；仍限首幕 A0、全部解锁、无奖励修正参与者。金币、稀有度、选牌和升级已共用原版玩家 Rewards 流及精确 binary32 抽样；普通来源已按药水掉落判定→金币→适用药水→卡牌的源顺序生成，48项药水候选保留完整源顺序。Elite／Boss、后幕升级率、替代奖励与正常 Run 未恢复。准确参数见[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。
+
+显式 Ironclad 胜利会建立带访问号的 CombatRewardSet，并公开固定 PotionRewardOptions。ClaimDevelopmentPotionReward 领取同一实例；满三栏时保留原候选，可用 DiscardPotion 腾出槽位后再次领取。SkipDevelopmentPotionReward 只跳过药水；关闭奖励清理全部未选实例。48项均可获得，EffectSupported=false 的药水尚不可使用；已有六种效果按窗口和目标提供使用动作。正常访问调用 OfferNormalCombatRewards 并传唯一 visitId，开发自动访问号不能充当正常地图路径。
 
 rewards 拥有奖励容器和待领取状态；卡牌／遗物／药水的完整获得操作仍归对应领域。继续扩展时明确生成候选、随机权重／升级／稀有度、显示、领取／跳过、满容量处理、未选实例清理和最终关闭顺序。
 
-卡牌选择、升级／变换、药水满栏以及遗物替换可以暂停，但续接不能重新抽样、重复支付或提前关闭访问。战斗／事件／商店调用同一获得操作，不各自创建永久对象。
+卡牌选择、升级／变换及获得通知可以暂停，续接不能重新抽样、重复支付或提前关闭访问。普通药水满栏领取按源返回未成功，保留同一候选；不额外创建替换或取消选择。战斗／事件／商店调用同一获得操作，不各自创建永久对象。
 
 ## 保存永久状态并推进到终局
 

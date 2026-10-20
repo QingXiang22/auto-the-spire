@@ -1,16 +1,31 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development potion instance. Vanilla potions live in three shared slots, are consumed on use, and carry their
-# rarity and usage window; only identity and the three-slot inventory are migrated here.
+# Persistent potion identity and inventory slot; source reward metadata does not imply effect support.
 entity Potion {
   owner = Owner
   fields = {
     Owner = { type = Participant default = participant(1) }
     DefinitionId = { type = String(length = 64) }
+    EffectSupported = { type = Bool default = false }
+    Usage = { type = String(length = 16) }
+    Target = { type = String(length = 16) }
+    Slot = { type = Int(min = -1, max = 2) default = -1 }
   }
 }
 collection Potions { element = Potion capacity = 3 ordered = true }
 # Emitted while the potion is still in the inventory, before it is consumed.
 event PotionUsed { payload = { owner = Ref(Player) potion = Ref(Potion) } }
 event PotionUsedOnTarget { payload = { owner = Ref(Player) potion = Ref(Potion) target = Ref(Enemy) } }
+event PotionObtained { payload = { owner = Ref(Player) potion = Ref(Potion) } }
+event PotionDiscarded { payload = { owner = Ref(Player) potion = Ref(Potion) } }
+entity PotionBlueprint {
+  fields = {
+    DefinitionId = { type = String(length = 64) }
+    Rarity = { type = String(length = 16) }
+    EffectSupported = { type = Bool }
+    Usage = { type = String(length = 16) }
+    Target = { type = String(length = 16) }
+  }
+}
+collection PotionLibrary { element = PotionBlueprint ordered = true }

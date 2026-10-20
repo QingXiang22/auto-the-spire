@@ -3,8 +3,8 @@ dsl_version = "core/0.3"
 
 # Monster-room gold reward. EncounterModel.MinGoldReward / MaxGoldReward are 10..20 for RoomType.Monster at
 # Ascension 0, and the source rolls inside that inclusive range. sampleInt is half-open, so the upper bound is
-# 21. The roll uses the named development stream, not the source run RNG, so the exact sequence is not
-# reproduced. Elite and boss ranges, gold proportion for escapes and other reward kinds are not migrated.
+# 21. The roll shares the original player's Rewards stream with potion and card rewards.
+# Elite and boss ranges and gold proportion for escapes are not migrated.
 # Source GoldReward.Populate stores the amount; OnSelect grants gold only when the player claims it.
 procedure OfferCombatGold {
   parameters = { owner = Ref(Player) }
@@ -28,9 +28,10 @@ procedure WhenCombatEnded {
     if = {
       condition = and(victory, greater(field(owner, Player.Hp), 0))
       then = {
-        if = { condition = equal(field(owner, Player.CharacterId), "base-spire:ironclad") then = { call = { procedure = ValidateCombatCardReward args = { owner = owner } } } }
-        call = { procedure = OfferCombatGold args = { owner = owner } }
-        if = { condition = equal(field(owner, Player.CharacterId), "base-spire:ironclad") then = { call = { procedure = OfferCombatCards args = { owner = owner } } } }
+        if = { condition = equal(field(owner, Player.CharacterId), "base-spire:ironclad") then = {
+          call = { procedure = OfferNormalCombatRewards args = { owner = owner visitId = add(field(owner, Player.DevelopmentRewardVisit), 1) source = "monster" actIndex = 0 ascension = 0 } }
+          set = { target = owner field = Player.DevelopmentRewardVisit value = add(field(owner, Player.DevelopmentRewardVisit), 1) }
+        } else = { call = { procedure = OfferCombatGold args = { owner = owner } } } }
       }
     }
   }
@@ -57,6 +58,11 @@ procedure CloseDevelopmentRewards {
       then = { fail = { message = "No development rewards are open" } }
     }
     call = { procedure = ClearCombatCardReward args = { owner = owner } }
+    call = { procedure = ClearCombatPotionReward args = { owner = owner } }
+    if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = {
+      set = { target = field(owner, Player.CurrentRewardSet) field = CombatRewardSet.Closed value = true }
+      set = { target = owner field = Player.CurrentRewardSet value = none }
+    } }
     set = { target = owner field = Player.GoldRewardPending value = false }
     set = { target = owner field = Player.GoldRewardAmount value = 0 }
     set = { target = owner field = Player.Room value = "none" }

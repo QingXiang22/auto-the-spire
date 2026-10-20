@@ -48,6 +48,9 @@ entity Player {
     GoldRewardPending = { type = Bool default = false }
     GoldRewardAmount = { type = Int(min = 0, max = 99999) default = 0 }
     CardRewardPending = { type = Bool default = false }
+    CurrentRewardSet = { type = Ref(CombatRewardSet) optional = true }
+    DevelopmentRewardVisit = { type = Int(min = 0) default = 0 visibility = Hidden }
+    PotionRewardOdds = { type = Int(min = 0, max = 4294967295) default = 1053609165 visibility = Hidden }
     CardRarityOffset = { type = Int(min = 0, max = 4294967295) default = 3175926989 visibility = Hidden }
   }
 }
