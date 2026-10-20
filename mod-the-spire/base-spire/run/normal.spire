@@ -78,6 +78,7 @@ procedure BuildNormalActOneMap {
   parameters = { owner = Ref(Player) run = Ref(Run) }
   locals = { start = Binding first = Binding rest = Binding boss = Binding layout = Int }
   body = {
+    seedStream = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
     sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = 4294967296 into = layout }
     create = { type = MapNode scope = entityScope(run) into = start collection = MapNodes fields = { Run = run Index = 0 Col = 3 Row = 0 Type = enum(MapPointType, Ancient) Visited = true } }
     create = { type = MapNode scope = entityScope(run) into = first collection = MapNodes fields = { Run = run Index = 1 Col = 3 Row = 1 Type = enum(MapPointType, Monster) Selectable = true } }
