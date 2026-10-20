@@ -1,30 +1,12 @@
-# ai-the-spire specification
+# AI 规格
 
-本规范定义 AI 的公开输入、编码、概率输出、训练和部署要求。下文设计表与阶段说明保留各自日期的决策背景；实际交付、新实验排期和验收以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
+本规范定义 AI 的公开输入、编码、概率输出、训练和部署要求。算法、资源和收益配置按具体工单确认；新实验须满足[总任务](https://github.com/QingXiang22/auto-the-spire/issues/28)的恢复条件。
 
-> 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则差异测试](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标约定不因旧开发场景验收而缩小。
-
-本文件是 `ai-the-spire` 模块的 specification，遵循项目整体 [specification](../spec.md)。
-
-## 文档状态
-
-| 项目 | 内容 |
-| --- | --- |
-| 状态与版本 | IN_REVIEW；v0.2，2026-10-01，尚未批准为实现基线 |
-| 决策负责人 | 项目维护者（用户） |
-| 读者 | 架构评审者、编码器实现者、后续训练与部署实现者 |
-| 本次范围与变化 | 从编码器范围扩展到训练、评估、部署端到端流程；补齐模型、版本及接口责任 |
-| 决策摘要 | 用户确认的观察/NoSL/概率输出约束保持；具体网络、算法、资源与收益配置为待评审方案 |
-| 实现状态 | 设计目标；本次没有实现或验证 AI 编码器、训练器、部署模型 |
-| 下一步 | 用户按[实施计划](../ai-net-implementation-plan.md)评审阶段边界，再交给实现者编码 |
-
-技术设计入口为 [design-v0.md](design-v0.md)。外部输入以 [net 协议](../net-the-spire/protocol.md)为准，张量约定见 [encoder-design.md](encoder-design.md)，概率输出见 [policy-contract.md](policy-contract.md)，训练与数据见 [training-design.md](training-design.md)。[共同验收](../ai-net-verification.md)与[运行约束](../ai-net-operations.md)分别负责交付和部署；[literature.md](literature.md)保存研究依据，不作为已验证效果。
-
-2026-10-03实现提示：上表及首阶段描述保留设计时点，不代表当前源码为空；编码器、小模型、NumPy学习器及有界Gym推理已交付，真实学习编排/效果与部署尚未验收。当前范围及验证记录见与[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；实现进展不自动批准全部设计提案。
+技术设计见[架构](architecture.md)，输入见[net 协议](../net-the-spire/protocol.md)，编码、输出与训练分别见[编码约定](encoder-design.md)、[策略约定](policy-contract.md)和[训练设计](training-design.md)。实际实现范围以模块代码与对应检查为准，文档不保存逐次交付状态。
 
 ## 1. 用户需求与约束
 
-以下来源于 2026-10-01 的本轮讨论，不代表具体实现方案已经批准：
+以下是产品约束，具体算法与实现方案另行确认：
 
 1. AI 只经 `net-the-spire` 取得当前可观测信息及合法动作，不读取完整游戏状态、隐藏牌序、随机数状态或规则执行命令。观察包括玩家此前获知且当前仍有效的信息。
 2. NoSL 指实际游玩时不通过存读档回退、撤销或重试选择。轨迹经验重放不属于游玩回退；训练时模拟状态分叉是否允许另行决定，首阶段不依赖它。
@@ -82,7 +64,7 @@
 | AI-09 | 部署测量完整模型与全链路的 CPU 延迟、内存和参数；预算未确定不得声称达标；量化/蒸馏/导出变更以新模型重评 | V-13、V-16 |
 | AI-10 | 游戏终止、正常采样截断与故障中断分别记录；无效概率、超限或未知动作结果停止执行 | V-06、V-07、V-14 |
 
-场景列同步自[共同验收第4节](../ai-net-verification.md#4-需求与交付追踪)，该表是唯一维护源。本轮已吸收 review，仍是 IN_REVIEW，没有实现/训练验证记录。
+场景列同步自[共同验收第4节](../ai-net-verification.md#4-需求与交付追踪)，该表是唯一维护源。这些是验收要求，实际执行结果见对应 PR 和 CI。
 
 ## 6. 适用范围和不确定性
 

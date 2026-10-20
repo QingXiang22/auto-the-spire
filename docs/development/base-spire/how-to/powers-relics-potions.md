@@ -35,7 +35,7 @@
 
 主动／回合／战斗／受伤／死亡／抽牌等遗物分别消费相应共享机制。涉及长期最大生命、金币或永久牌组时，调用 Run 的权威操作，避免战斗副本与永久状态重复获利。验证一次获得／一次移除、实际触发、不持有／熔化负例、计数边界、两实例／持有者隔离和跨战重建。
 
-同类遗物先沿[分组计划](../../../design/mod-the-spire/relic-combat-start/development-plan.md)核对触发、状态寿命、随机与完整消费者，再认领主清单中一个完整子包。Whetstone／WarPaint／SandCastle复用PickupRandomUpgradeRelic的definition、kind、amount配置，通过RelicObtained实例订阅调用UpgradeRandomPermanentCards。不要把候选临时移出RunDeck，也不要为只取两张而仅消费两次随机；完整源顺序及隔离要求见[随机永久升级约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01)。选牌升级和Egg的创建修正分别沿其他机制包接续。
+同类遗物先沿[分组计划](../../../design/mod-the-spire/relic-combat-start/spec.md)核对触发、状态寿命、随机与完整消费者，再认领主清单中一个完整子包。Whetstone／WarPaint／SandCastle复用PickupRandomUpgradeRelic的definition、kind、amount配置，通过RelicObtained实例订阅调用UpgradeRandomPermanentCards。不要把候选临时移出RunDeck，也不要为只取两张而仅消费两次随机；完整源顺序及隔离要求见[随机永久升级约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01)。选牌升级和Egg的创建修正分别沿其他机制包接续。
 
 源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t09)继续有效。
 

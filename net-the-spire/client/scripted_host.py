@@ -59,7 +59,7 @@ def main(argv: list[str]) -> int:
             profile = script.get("identity", {})
             result = {
                 "identity": {
-                    "protocol_version": "0.1",
+                    "protocol_version": "0.2",
                     "ruleset_id": profile.get("ruleset_id", "scripted:ruleset"),
                     "catalog_id": profile.get("catalog_id", "scripted:catalog"),
                     "backend_profile_id": profile.get("backend_profile_id", "scripted:backend"),

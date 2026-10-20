@@ -1,6 +1,6 @@
-# 整局公共操作约定
+# 整局操作行为要求
 
-归属ENV-T09资源/遗物和ENV-T06永久牌组，排期只查[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。这些编译期领域操作生成Engine IR，所有可变状态仍在Engine；规则包构建一次提供相同资源能力给各来源，不在内容叶建立默认空hook的副本。
+归属 ENV-T09 资源／遗物与 ENV-T06 永久牌组。下列操作名称用于说明源行为和待恢复范围，旧编译接口不作为当前可调用 API；当前签名见[操作参考](../../../development/base-spire/reference/operations.md)和[行为参考](../../../development/base-spire/reference/card-behavior.md)。未实现要求不代表现有开发 scope 已支持。所有可变状态与暂停仍由同一 Engine Session 管理。
 
 | 操作 | 前置条件与顺序 | 范围及依据 |
 | --- | --- | --- |
@@ -32,15 +32,15 @@ ENV-T09-PR02首批公共接口复用`RunRelics`，不声明全部遗物效果已
 | Melt | 仅持有、蜡质且未熔毁的实例；标记熔毁，执行AfterRemoved一次，保留实例、位置及Counter。再次熔毁或熔毁普通遗物具名失败 |
 | SetCounter / AddCounter | 只操作有效持有实例，数值由Engine整数域检查；同定义不同实例不串值。计数本身不定义何时触发 |
 
-AfterObtained／AfterRemoved是构建期注入的`(scope, run, relic) → Inst[]`，与资源／牌组命令一致；它们不是另一套运行时调度器，也不表示完整模型hook排序已支持。现有胜利回血按持有顺序逐有效实例执行，仍沿共享战斗结算幂等边界。启动实例使用同一字段配方；现有起始遗物没有获得效果，未来有获得效果的开局消费者必须显式接通，不能以创建字段代替Obtain。
+AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL 参数见当前生命周期参考。现有胜利回血按持有顺序逐有效实例执行，仍沿共享战斗结算幂等边界。启动实例使用同一字段配方；现有起始遗物没有获得效果，未来有获得效果的开局消费者必须显式接通，不能以创建字段代替Obtain。
 
 本批判别：OldCoin获得hook看到已入组及已移除两侧袋；替换中间实例后邻居不变、移除先于获得；熔毁BurningBlood仍可观察但不再回血；普通／重复熔毁失败；Pear移除不扣回已增加上限；计数读写和多次组合调用捕获正确实例。检查为受控正式内容，不代替正常可达、独立双侧和完整公开Run。SwordOfStone、ChosenCheese、PotionBelt等真实内容消费者留后续批次。
 
 ## 遗物正式内容与覆盖验收条件
 
-过渡实现的 `after-shuffle` 在弃牌堆重洗、源排序与实际随机洗牌完成后派发，早于下一张牌的抽取或自动打出。普通抽牌与自动出牌复用同一个Reshuffle；抽牌堆非空或弃牌堆为空时不派发，初始洗牌不走此监听。当前TheAbacus每次获得6点无加成格挡，移除后停止监听。主动合并非空抽牌堆的完整Shuffle命令不在此接缝范围。这是后续DSL迁移的行为基线，不表示C#规则路径已符合目标架构。
+过渡实现的 `after-shuffle` 在弃牌堆重洗、源排序与实际随机洗牌完成后派发，早于下一张牌的抽取或自动打出。普通抽牌与自动出牌复用同一个Reshuffle；抽牌堆非空或弃牌堆为空时不派发，初始洗牌不走此监听。当前TheAbacus每次获得6点无加成格挡，移除后停止监听。主动合并非空抽牌堆的完整Shuffle命令不在此接缝范围。具体监听由 DSL 表达，不能恢复旧 C# 规则路径。
 
-遗物效果的唯一正式来源为`Relics/Content/relics.json`，读取器拒绝未知字段、重复ID、缺失来源、空效果且无明确源无玩法依据、未实现触发点／效果组合。`relic-source-catalog.json`保存完整297件源标识、300条池成员、源摘要与资格裁定；它不是可执行效果库，未实现成员不进入已支持目录，两者摘要都进入实际ContentDigest。原C#四件声明迁入JSON，不保留第二份效果表。
+遗物效果由所属 DSL 内容模块定义；来源目录保留完整297件及源池顺序，可执行定义与来源总数分开。未知字段、重复定义、缺失来源和未实现组合明确拒绝，不保留第二份 C#／JSON 效果解释器。
 
 获得型效果复用RunResources的GainMaxHp／GainGold／HealLivingPlayer／HealToFull／HealMaxHpPercent；百分比治疗按原版最终整数生命截断。获得药水容量调用同一PotionInventoryRules.GainSlots：MaxPotionCount为玩家Engine持久字段、初值3，支持域0..999；SlotIndex为稳定槽号，领取扫描首个空槽，满栏不入组，容量获得不移动已有瓶。Belt的静态容量只是Engine上界，不能替代动态资格。
 
@@ -54,7 +54,7 @@ AfterObtained／AfterRemoved是构建期注入的`(scope, run, relic) → Inst[]
 
 遗物的生成球／增加球槽复用CombatOrbs.Emit，与卡牌使用同一队列、槽位上限、满槽激发、随机目标与战斗重置。FocusPower声明为既有Focus角色，不另写遗物伤害；Lightning专属值修正在Focus处理后按遗物持有顺序执行（源CombatState.IterateHookListeners先能力后遗物）。数据磁盘、破损核心、注能核心、共生病毒与符文电容器的检查须实际观察球被动／激发伤害或存值、首回合限制及下一战重建，不能只检查Power或球实例存在。
 
-CI的runtime入口实际运行RelicContentChecks，只有具体行为断言通过后登记相应遗物与场景；RelicCoverageChecks要求每件可执行定义至少有实际通过的行为测试结果，输出297行`relic-coverage.json`。CI校验器独立对照两份正式JSON，拒绝缺报告、遗漏／重复源标识、资格漂移、可执行但无用例、空场景或伪造完成汇总。尚未实现逐行保留unimplemented；`--require-complete`额外要求无剩余项。行为检查不自动等于独立参考比较或完整公开路径，两列保持未知，直到取得真实验证记录。
+每件可执行遗物须有实际行为检查，覆盖报告从执行结果生成。遗漏／重复源标识、资格漂移、空场景及无用例的可执行定义均失败；来源、行为、独立比较和正常公开路径分别报告，规则见[遗物生命周期](../relic-combat-start/content-lifecycle.md)。
 
 ## 永久牌组选择与变换
 
@@ -71,7 +71,6 @@ CI的runtime入口实际运行RelicContentChecks，只有具体行为断言通�
 正常差异测试在各侧分别保留永久实例的首次出现编号，删除后不复用。每个战斗牌区逐实例记录永久来源：base读取LongTermSource，独立参考读取DeckVersion；生成的临时牌标为temporary，诊断来源不发布到net或策略输入。同定义不同来源必须保持可区分，不按当前卡名重匹配。
 
 事件后第三场的严格用例要求：当前永久牌每实例恰有一个战斗副本；实际打出事件升级或变换得到的实例；战斗结束后事件前已存在的永久实例和形态保持，奖励新增牌另计。策略只在事件后优先公开Power牌，其余沿原可见候选规则，不能用隐藏来源选择动作。此验证记录不替代Feed上限跨房、最后击杀余效和全部永久写回矩阵验收。
-
 
 ## 有序永久牌组的随机选择
 

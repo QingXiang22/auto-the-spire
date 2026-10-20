@@ -1,5 +1,5 @@
 {
-  "protocol_version": "0.1",
+  "protocol_version": "0.2",
   "coverage_id": "fixture:variables-coverage-v1",
   "mechanisms": [
     {

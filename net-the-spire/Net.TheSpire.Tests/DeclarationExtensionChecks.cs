@@ -395,7 +395,7 @@ internal static class DeclarationExtensionChecks
         var rejected = fixture.Host.Dispatch(Req(
             "e08-bad",
             Operation.Start,
-            ("expected_identity", new IdentityDto(NetProtocol.V01, fixture.Host.Profile.RulesetId,
+            ("expected_identity", new IdentityDto("0.1", fixture.Host.Profile.RulesetId,
                 fixture.Host.Profile.CatalogId, fixture.Host.Profile.BackendProfileId).ToWire()),
             ("scenario_profile", WireValue.Str(fixture.Host.SupportedScenarioProfile)),
             ("seed", WireValue.Str(BaselineSeed))));

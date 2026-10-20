@@ -72,12 +72,12 @@ public enum ResultKind
 /// <summary>请求 <c>{request_id, operation, payload}</c>，并按操作校验 payload 形状。</summary>
 public sealed record RequestDto(string RequestId, Operation Operation, WireObject Payload)
 {
-    /// <summary>0.1 默认分支：<c>start.seed</c> 是规范 uint64 十进制字符串。</summary>
-    public static RequestDto FromWire(WireValue value) => FromWire(value, NetProtocol.V01);
+    /// <summary>当前协议入口；start.seed 为非空游戏字符串。</summary>
+    public static RequestDto FromWire(WireValue value) => FromWire(value, NetProtocol.V02);
 
     /// <summary>
-    /// 按协议版本校验请求载荷。两个版本只有 <c>start.seed</c> 的形状不同（protocol.md §7）：
-    /// 0.1 保持规范无符号十进制字符串；0.2 是**非空游戏字符串**，由 base 决定校验/标准化，net 不解析成整数。
+    /// 按当前协议校验请求载荷（protocol.md §7）：
+    /// seed 是非空游戏字符串，由规则提供方决定校验／标准化，net 不解析成整数。
     /// </summary>
     public static RequestDto FromWire(WireValue value, string protocolVersion)
     {
@@ -152,21 +152,13 @@ public sealed record RequestDto(string RequestId, Operation Operation, WireObjec
         ("payload", Payload));
 
     /// <summary>
-    /// <c>start.seed</c> 的版本分支：0.1 是规范 uint64 十进制字符串；0.2 是**非空游戏字符串**
+    /// <c>start.seed</c> 是非空游戏字符串
     /// （不 trim、不改大小写、不数值强转；具体接受值由 base 决定）。未知版本由调用方先拒绝。
     /// </summary>
     public static string GameSeed(WireValue value, string protocolVersion)
     {
-        if (NetProtocol.UsesGameSeedString(protocolVersion))
-        {
-            if (value is not WireString text)
-                throw new WireFaultException("I-76", "start.seed: 0.2 要求游戏 seed 是字符串");
-            if (text.Value.Length == 0)
-                throw new WireFaultException("I-76", "start.seed: 0.2 要求游戏 seed 非空");
-            return text.Value;
-        }
-
-        return WireDecimal.Seed(value);
+        NetProtocol.RequireKnown(protocolVersion, "start.seed protocol_version");
+        return WireDecimal.Seed(value, "start.seed");
     }
 
     public string PayloadFingerprint() => WireIdentity.RequestPayloadFingerprint(Operation.Wire(), Payload);
@@ -275,7 +267,6 @@ public sealed record ResponseDto(string RequestId, bool Ok, WireValue? Result, E
         var keys = obj.Keys.ToHashSet(StringComparer.Ordinal);
         if (keys.SetEquals(["identity", "capabilities"])) return ResultKind.Describe;
         if (keys.Contains("declarations")) return ResultKind.Catalog;
-        if (keys.SetEquals(["session_id", "snapshot"])) return ResultKind.Start;
         // 0.2：start 成功结果多一个实际 seed（protocol.md §7）。结构判别仍按精确键集合，不做任意兜底。
         if (keys.SetEquals(["session_id", "seed", "snapshot"])) return ResultKind.Start;
         if (keys.Contains("session_status") && obj.Get("session_status") is WireString status)

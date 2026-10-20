@@ -271,21 +271,17 @@ class NetClient:
         return self.request("get_catalog", {"catalog_id": catalog_id}, timeout=timeout)
 
     def start(self, expected_identity: dict, scenario_profile: str, *,
-              seed: Optional[object] = None, request_id: Optional[str] = None,
+              seed: Optional[str] = None, request_id: Optional[str] = None,
               timeout: Optional[float] = None) -> dict:
         """`start`。
 
-        `seed` 的**版本差异**（`protocol.md` §7）：0.1 是可选**规范 uint64 十进制字符串**（传 `int` 由本方法
-        转成十进制文本）；0.2 是可选**非空游戏 seed 字符串**，原样发送——客户端**不** trim、不转大小写、
-        不做数值转换，标准化由规则提供方按源执行；字符串 `"0"` 在 0.2 是游戏字符串，不是数值零。
-        0.2 的成功结果恰为 `{session_id, seed, snapshot}`，其中 `seed` 是**本次实际接受**的值。
-
-        `scenario_profile` 也要用所选后端**实际支持**的 id：0.1 是旧切片/作者场景 id，0.2 是正式构建的
-        dev/Ironclad/完整范围 id（旧切片 id 不能冒充正式构建）。两者都由 `describe` 的结果给出。
+        seed 是可选的非空游戏字符串，原样发送，不 trim、不改大小写或数值转换。
+        成功结果包含 session_id、seed 和 snapshot；seed 是本次实际接受值。
+        scenario_profile 使用 describe 发布的受支持配置。
         """
         payload: dict = {"expected_identity": expected_identity, "scenario_profile": scenario_profile}
         if seed is not None:
-            payload["seed"] = seed if isinstance(seed, str) else str(seed)
+            payload["seed"] = seed
         return self.request("start", payload, request_id=request_id, timeout=timeout)
 
     def observe(self, session_id: str, *, timeout: Optional[float] = None) -> dict:

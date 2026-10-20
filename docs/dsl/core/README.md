@@ -8,9 +8,9 @@ core DSL 在 `.spire` 文件中描述状态和规则。宿主加载文件并驱�
 | 第一次从程序运行规则 | 教程 | [写一个C#宿主](../../design/core-the-spire/first-host.md) |
 | 用已有规则库修改目标和增量 | 操作指南 | [配置计分小游戏](how-to-configure-game.md) |
 | 给自己的宿主接上参数化动作 | 操作指南 | [提交动作参数](../../design/core-the-spire/how-to-submit-parameters.md) |
-| 查实体、程序、动作、查询、选择的写法 | 参考 | [core/0.1 基础语言参考](0.1/language-reference.md) |
+| 查实体、程序、动作、查询、选择的写法 | 参考 | [core/0.3 基础语言参考](0.3/language-reference.md) |
 | 查同包宿主绑定、扩展加载与具名调用 | 参考 | [core/0.3 作者参考](0.3/authoring-reference.md) |
-| 查导入、模板参数、实例名称和组合约束 | 参考 | [core/0.2 规则库指南](0.2/authoring-guide.md) |
+| 查导入、模板参数、实例名称和组合约束 | 参考 | [core/0.3 规则库指南](0.3/authoring-guide.md) |
 | 查宿主API字段、参数和错误 | 参考 | [宿主交互API参考](../../design/core-the-spire/session-api-reference.md) |
 | 理解规则作者、规则库作者和宿主的关系 | 解释 | [规则、会话与宿主](../../design/core-the-spire/rules-and-host.md) |
 

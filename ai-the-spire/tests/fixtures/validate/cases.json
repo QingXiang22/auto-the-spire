@@ -323,7 +323,6 @@
       "snapshot": {"$base": "combat.snapshot", "$set": {"entities.0.fields.2.value": ""}},
       "errors": [
         ["value_type_mismatch", "snapshot.entities[card-01].fields[fixture:owner].value"],
-        ["unsupported_structure", "snapshot.entities[0].fields[2].value"],
         ["dangling_reference", "snapshot.entities[card-01].fields[fixture:owner].value"]
       ]
     },

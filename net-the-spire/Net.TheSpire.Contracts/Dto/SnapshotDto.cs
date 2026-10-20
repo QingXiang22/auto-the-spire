@@ -32,7 +32,6 @@ public sealed record FieldDto(string FieldId, string State, WireValue? Value)
             case WireBool:
                 return;
             // 字符串值同时承载 number/category/entity_ref 的规范字符串与 0.2 的 string 值类型。
-            // 0.1 的“非空”由 0.1 机器 schema（Field.value 的 NonEmptyString 分支）保持强制；
             // 0.2 的 string 值类型按“原样文本”编码，空串是合法的公开文本（不代表缺失，缺失用 state 表达）。
             case WireString:
                 return;
@@ -287,7 +286,7 @@ public sealed record PublicSnapshotDto(
     IReadOnlyList<GroupDto> Groups,
     IReadOnlyList<LegalActionDto> LegalActions)
 {
-    public static PublicSnapshotDto FromWire(WireValue value) => FromWire(value, NetProtocol.V01);
+    public static PublicSnapshotDto FromWire(WireValue value) => FromWire(value, NetProtocol.V02);
 
     public static PublicSnapshotDto FromWire(WireValue value, string protocolVersion)
     {

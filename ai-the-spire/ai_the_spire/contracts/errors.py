@@ -1,7 +1,7 @@
 """AI 侧契约错误面。
 
 刻意**不**发明新的错误码：校验结论以共享参考实现 ``wire_layers.Finding`` 的
-``rule_id``（``I-xx``，见 ``docs/contracts/net/0.1/invariants.md``）为准，原样携带
+``rule_id``（``I-xx``，见 ``docs/contracts/net/0.2/invariants.md``）为准，原样携带
 层（L0–L4）、输入路径与消息。AI 侧面向编码的阶段错误码
 （encoder-design §5.2：``unknown_type``/``value_type_mismatch``/…）属于 A-03 的
 校验实现，本批不映射、不复制，避免出现投影错误码与共享规则不一致的第二套词汇。

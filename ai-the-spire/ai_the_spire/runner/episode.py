@@ -306,7 +306,10 @@ class EpisodeRunner:
         if catalog is None:  # pragma: no cover - prepare() 已赋值
             raise EpisodeError("目录尚未就绪")
 
-        started = self._client.start(self._identity, self.scenario_profile, seed=self._seed)
+        # net protocol 0.2 accepts a non-empty game-seed string. Keep the runner's
+        # numeric seed for reproducible local bookkeeping, and serialize it at the
+        # protocol boundary instead of relying on client-side coercion.
+        started = self._client.start(self._identity, self.scenario_profile, seed=str(self._seed))
         if not started.get("ok"):
             raise EpisodeError(f"start 失败：{started.get('error')}")
         self._session_id = started["result"]["session_id"]

@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""wire v0.1 分层语义校验（L2 目录内部 / L3 快照对目录 / L4 控制与账本）。
+"""wire v0.2 分层语义校验（L2 目录内部 / L3 快照对目录 / L4 控制与账本）。
 
 L0（解析）在 wire_json，L1（结构）在 jsonschema_min，本模块负责 schema 无法表达的
 引用闭合、适用域、数量、唯一性、状态组合与排序。
 
-规则 ID 与 `docs/contracts/net/0.1/invariants.json` 一一对应；出处见该文件与
-`docs/contracts/net/0.1/invariants.md`。
+规则 ID 与 `docs/contracts/net/0.2/invariants.json` 一一对应；出处见该文件与
+`docs/contracts/net/0.2/invariants.md`。
 """
 
 from __future__ import annotations
 
-import re
 from typing import Any, NamedTuple
 
 from wire_canonical import (
     SAFE_INTEGER_MAX,
-    SEED_MAX,
     action_semantic_key,
     card_position_sort_key,
     entity_sort_key,
@@ -52,7 +50,6 @@ SNAPSHOT_KEYS = frozenset(
 RESERVED_PILE_RELATION = "net:pile_member"
 RESERVED_PILE_FIELDS = ("net:pile_total_count", "net:pile_members_complete")
 
-_SEED_RE = re.compile(r"^0$|^[1-9][0-9]*$")
 
 _PAYLOAD_ALLOWED = {
     "describe": frozenset(),
@@ -393,6 +390,9 @@ def _validate_field_value(
             out.append(
                 _f("I-22", "L3", f"{path}.value", f"category 值 {value!r} 不在目录声明 {decl.get('category_ids')!r}")
             )
+    elif value_type == "string":
+        if not isinstance(value, str):
+            out.append(_f("I-22", "L3", f"{path}.value", "string 字段必须是 JSON 字符串"))
     elif value_type == "entity_ref":
         if not isinstance(value, str):
             out.append(_f("I-22", "L3", f"{path}.value", f"entity_ref 字段必须是 instance_id 字符串，得到 {value!r}"))
@@ -847,16 +847,9 @@ def check_request(request: dict) -> list[Finding]:
 
 
 def _check_seed(seed: Any, path: str) -> list[Finding]:
-    out: list[Finding] = []
-    if not isinstance(seed, str):
-        out.append(_f("I-76", "L4", path, "seed 必须是规范无符号 64 位十进制字符串，不接受 JSON number"))
-        return out
-    if not _SEED_RE.match(seed):
-        out.append(_f("I-76", "L4", path, f"seed 非规范形式（仅允许 0 或无前导零正整数）: {seed!r}"))
-        return out
-    if int(seed) > SEED_MAX:
-        out.append(_f("I-76", "L4", path, f"seed 超出 0..{SEED_MAX}: {seed!r}"))
-    return out
+    if not isinstance(seed, str) or not seed:
+        return [_f("I-76", "L4", path, "seed 必须是非空游戏字符串")]
+    return []
 
 
 def _result_matches(operation: str, result: Any) -> bool:
@@ -868,7 +861,7 @@ def _result_matches(operation: str, result: Any) -> bool:
     if operation == "get_catalog":
         return keys == frozenset({"protocol_version", "ruleset_id", "catalog_id", "declarations"})
     if operation == "start":
-        return keys == frozenset({"session_id", "snapshot"})
+        return keys == frozenset({"session_id", "seed", "snapshot"})
     if operation == "attach":
         if keys not in (frozenset({"session_id", "session_status"}), frozenset({"session_id", "session_status", "snapshot"})):
             return False

@@ -1,7 +1,7 @@
 # 作者入口：选择采用哪个规则模板，再填写本游戏的参数。
 # 可修改 target（目标分数）和 increments（每次可选的加分值）。
 using namespace tutorial;
-dsl_version = "core/0.2"
+dsl_version = "core/0.3"
 imports = ["rules/score-race.spire"]
 
 # Game 是这次实例化的名字；状态、动作和观察会拥有 Game 前缀，避免互相混用。

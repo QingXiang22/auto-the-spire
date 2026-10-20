@@ -1,7 +1,7 @@
 {
   "_provenance": {
     "输入": "对 fixtures/<bundle>/*.json 手写文档的声明式改动（$set/$del/$append/$move）",
-    "期望": "手写独立的共享规则 ID 期望（docs/contracts/net/0.1/invariants.md）；不调用被测实现生成",
+    "期望": "手写独立的共享规则 ID 期望（docs/contracts/net/0.2/invariants.md）；不调用被测实现生成",
     "改动方式": "复用共享参考实现 check_contracts.resolve_document 的叠加语义，避免第二套 diff 实现"
   },
   "_notes": [

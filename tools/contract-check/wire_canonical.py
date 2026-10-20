@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""net-the-spire wire v0.1 —— 规范化（canonical bytes）、decimal 规范形式与摘要参考算法。
+"""net-the-spire wire v0.2 —— 规范化（canonical bytes）、decimal 规范形式与摘要参考算法。
 
-仅使用 Python 3 标准库。规范描述见 ``docs/contracts/net/0.1/canonical.md``。
+仅使用 Python 3 标准库。规范描述见 ``docs/design/net-the-spire/contract-artifacts.md``。
 
 规则出处（docs/design/net-the-spire/contract-artifacts.md）：
   * §2 第 19 行 decimal 规范形式与结构整数范围；
@@ -28,7 +28,6 @@ CANONICAL_VERSION = "net-wire-canon-v1"
 SAFE_INTEGER_MAX = 9007199254740991
 
 #: seed 上界 2^64-1（protocol.md §4 第 185 行）。
-SEED_MAX = 18446744073709551615
 
 #: 源精确 decimal 的接受语法（编码器输入，允许符号/前导零/指数）。
 _DEC_SOURCE_RE = re.compile(

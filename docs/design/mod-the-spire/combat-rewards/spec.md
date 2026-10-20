@@ -1,6 +1,6 @@
 # 开发态战斗奖励
 
-关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定金币奖励的生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../engine-dsl-migration/spec.md)。
+关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定金币奖励的生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../base-architecture.md)。
 
 ## 来源与边界
 

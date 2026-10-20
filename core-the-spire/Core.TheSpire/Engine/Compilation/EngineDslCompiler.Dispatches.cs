@@ -25,7 +25,6 @@ public static partial class EngineDslCompiler
             var tables = declarations.Where(d => d.Kind == "dispatch").ToArray();
             var cases = declarations.Where(d => d.Kind == "dispatchCase").ToArray();
             if (tables.Length == 0 && cases.Length == 0) return source;
-            if (!_modern) throw Error(source.Location, "dispatch requires core/0.3.");
             _package.CompilerIdentity += "|dispatch/1";
             var groups = new Dictionary<string, List<DslDeclarationNode>>(StringComparer.Ordinal);
             foreach (var table in tables)

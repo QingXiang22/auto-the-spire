@@ -1,6 +1,6 @@
 # 永久牌组、战斗副本与营火锻造
 
-关联 **CORE-AUTHOR-05／DSL-DECK-SMITH-01**。按[纯 DSL 规格](../engine-dsl-migration/spec.md)扩展卡牌实例与一个真实消费者；认领和状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
+关联 **CORE-AUTHOR-05／DSL-DECK-SMITH-01**。按[纯 DSL 规格](../base-architecture.md)扩展卡牌实例与一个真实消费者；认领和状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 ## 来源与支持边界
 

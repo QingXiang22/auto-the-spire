@@ -1,4 +1,4 @@
-"""候选 scorer 与内部状态价值 V（`policy-contract.md` §1、`design-v0.md` §"模型方案" 第 5–6 步）。
+"""候选 scorer 与内部状态价值 V（`policy-contract.md` §1、`architecture.md` §"模型方案" 第 5–6 步）。
 
 * 候选向量 = 动作类型 embedding + 该候选**具名字段**的聚合（数值/布尔/类别/**被引用实体行**）；
 * logit 由共享小层与**全局向量**的交互给出：``u_i = tanh(h_i + h_global @ W_g)``、``logit_i = u_i · v``；

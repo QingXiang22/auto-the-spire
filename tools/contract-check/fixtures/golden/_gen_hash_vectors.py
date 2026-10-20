@@ -21,7 +21,7 @@ TEXTS = {
     "identity-catalog-id": (
         '{"canonical_version":"net-wire-canon-v1","declarations":{"action_types":[],"content_types":[],'
         '"entity_kinds":[{"id":"demo:player","semantic_version":"1"}],"fields":[],"group_types":[],"pile_types":[],'
-        '"relation_types":[],"sequence_types":[],"terminal_reasons":[]},"protocol_version":"0.1"}'
+        '"relation_types":[],"sequence_types":[],"terminal_reasons":[]},"protocol_version":"0.2"}'
     ),
     "identity-request-describe": '{"canonical_version":"net-wire-canon-v1","operation":"describe","payload":{}}',
     "identity-ruleset": (

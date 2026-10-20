@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 namespace NetTheSpire.Contracts;
 
 /// <summary>
-/// JSON Schema 2020-12 最小子集校验器，覆盖 <c>docs/contracts/net/0.1/wire.schema.json</c>
+/// JSON Schema 2020-12 最小子集校验器，覆盖 <c>docs/contracts/net/0.2/wire.schema.json</c>
 /// 与 <c>coverage.schema.json</c> 实际使用的关键字。与 Python 参考实现
 /// <c>tools/contract-check/jsonschema_min.py</c> 逐分支对应：C# 端不另造协议形状，
 /// 而是直接读同一份 schema 文件。

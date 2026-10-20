@@ -5,7 +5,7 @@
 
 ## 文件
 
-- `baseline.spire` —— 基线规则包（core/0.2）：`scope Board` / `entity Marker{Value}` /
+- `baseline.spire` —— 基线规则包（core/0.3）：`scope Board` / `entity Marker{Value}` /
   `collection Slots` / `procedure Setup` / `terminal ReachedLimit` / `action Add{delta∈[1,2]}` /
   `projection PlayerView`。
 - `extended.spire` —— 扩展规则包：相对 `baseline.spire` **只**新增

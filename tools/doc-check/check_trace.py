@@ -3,7 +3,7 @@
 
 Table A: AI  spec section 5  (需求 ID | 可验证要求 | 场景)
 Table B: net spec section 2  (需求 ID | 触发与可观察要求 | 对应验收)
-Table C: ai-net-verification section 4 (需求 | 设计落点 | 场景 | 首个任务/范围)
+Table C: ai-net-verification section 4 (需求 | 设计落点 | 场景)
 
 Reports every disagreement between the scenario sets of A/B and C.
 Read-only; this is a review aid, not part of the build.

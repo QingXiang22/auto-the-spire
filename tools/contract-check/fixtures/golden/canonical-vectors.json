@@ -114,7 +114,7 @@
       "id": "catalog-id",
       "kind": "catalog",
       "input": {
-        "protocol_version": "0.1",
+        "protocol_version": "0.2",
         "ruleset_id": "demo:rules-v1",
         "catalog_id": "demo:catalog-v1",
         "declarations": {
@@ -129,7 +129,7 @@
           "terminal_reasons": []
         }
       },
-      "expect": "sha256:219ca8fbee443515b8c58646b1c7f0d203cc6a1f4c12620b088ae78c5918fe26"
+      "expect": "sha256:c401d024a6d6cbad6fcdfdb70a3a8d028d26b7acdc8267fb5b0ea731de788c89"
     },
     {
       "id": "request-fingerprint-describe",
@@ -175,7 +175,7 @@
       "id": "catalog-id-reproducible",
       "kind": "catalog",
       "input": {
-        "protocol_version": "0.1",
+        "protocol_version": "0.2",
         "ruleset_id": "demo:rules-v1",
         "catalog_id": "demo:catalog-v2",
         "declarations": {

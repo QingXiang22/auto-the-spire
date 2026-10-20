@@ -1,6 +1,6 @@
-# 战斗开始格挡遗物的 DSL 迁移
+# 遗物机制与行为要求
 
-关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。
+本文保存遗物机制分组与行为要求；具体接口见[生命周期参考](content-lifecycle.md)，开发与认领见[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)。分组不是支持名单，也不代表固定执行顺序。
 
 ## 已核实来源与范围
 
@@ -58,3 +58,13 @@ Player 的 combat 字段放 combat/schema，开始／结束过程与 BeforeComba
 | RELIC-G18 其他角色与特殊规则 | CrackedCore、GoldPlatedCables、BigHat、MiniRegent、Byrdpip、PaelsLegion等 |
 | RELIC-G19 拾取基础资源 | FakeMango、LoomingFruit、NutritiousOyster、SignetRing、GoldenPearl |
 | RELIC-G20 源特例复核与归组 | 尚未确定主要机制、只有属性覆写或有多个跨域阶段的剩余条目 |
+
+## 机制分组原则
+
+一个遗物选主要归属，其他效果记依赖。判断能否同批开发时，依次比较：
+
+1. **触发和顺序**：拾取、开战、资源重置、抽牌前、出牌前后、房间进入和奖励生成分别处理。只因都调用Upgrade就放在同批，会漏掉奖励展示或回合重置。
+2. **被修改的对象**：永久牌、战斗副本、奖励候选、库存实例不能混作同一生命周期。获得或复制的完整操作由原领域拥有。
+3. **状态与寿命**：无状态修正、每回合／每战／整局计数、一次消耗及移除清理分别约定；能力私有状态不堆进公共Relic。
+4. **随机与决策**：完整StableShuffle后Take与逐次samplePick并不等价；原生选牌及取消不伪装为随机选择。需要玩家决策的内容另保留暂停续接验收。
+5. **可运行的依赖**：同组只有参数差异时共享模板；触发顺序或外部能力不同则拆成子包。后排只保留方向，接手时再细化，不预先建立所有未来模板。

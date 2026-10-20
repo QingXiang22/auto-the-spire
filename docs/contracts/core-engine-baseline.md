@@ -1,26 +1,8 @@
-# core 引擎版本基线
+# 核心接口与兼容要求
 
-本文定义 2026-10-05 固定的通用内核范围、执行行为和迁移要求。维护 core 时，先按下表确认语言与运行版本，再核对涉及的约定；下游任务状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
-
-| 项目 | 基线 |
-| --- | --- |
-| 日期 / 范围 | 2026-10-05；当前通用规则内核及已发布作者语言 |
-| 状态 | 固定的版本基线；通用接口与回归的历史结果按对应 Git 提交核对 |
-| 运行语义 / IR 兼容版本 | engine/ir@0.3 |
-| 支持的文本版本 | core/0.1 基础语言、core/0.2 imports/template/use |
-| 编译标识 | core-dsl/0.1、core-dsl/0.2；C# SDK 保留 csharp-sdk/0.2，均随运行版本绑定规则标识 |
-| 活动实现 | Core.TheSpire/Engine；不引用 Legacy |
-| 定位 | 不依赖具体游戏内容的通用底层框架；游戏开发者在自己的 DSL 规则包中定义玩法 |
-
-用户授权确定通用接口约定后建立 core 版本基线，开发重心转向 mod/base、net 与环境工具。本文定义兼容性约定范围、行为与迁移；不承诺支持所有卡牌游戏、不声明完整原版内容或训练环境已经验收。Git 提交范围、独立检出验证与下游验收约束见 [相关规格](core-engine-baseline.md)；完整工作区的实施与状态只看 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
+本文规定当前通用内核的职责和行为。工程版本见 [Core.TheSpire.csproj](../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)，文本版本与语义见[作者参考](../dsl/core/README.md)。修改语言、执行或投影语义时同步更新标识、消费者与相关检查；历史版本及其检查结果查 Git／PR／CI。
 
 ## 1. 固定的结构与接口职责
-
-2026-10-19 用户要求实施内容与行为迁移，BEHAVIOR-01据此补充通用封闭键分派、pure显式失败、依附实例标识投影及none相等比较，活动标识迁移为engine/ir@0.7、Core.TheSpire 0.7.0；原固定表保留历史时点。准确语法见[当前作者参考](../dsl/core/0.3/authoring-reference.md#封闭键分派)，游戏状态与分派内容仍属于base DSL，旧规则及回放不能冒用新标识。
-
-2026-10-18用户明确要求已有遗物与Power统一为通知／修正监听，DSL-EFFECT-LISTENERS-01据此增加通用实例订阅和pure foldEvent，活动运行标识迁移为engine/ir@0.6、Core.TheSpire 0.6.0。旧0.5产物须重建，准确接口见[实例订阅与只读修正](../dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)。游戏规则仍由base声明，不新增第二套调度器。
-
-2026-10-18用户授权的DSL-RNG-RESTORE-01已将活动运行标识迁移为engine/ir@0.5、Core.TheSpire 0.5.0；上表保留固定时点。新增随机DSL接口、显式种子快照及vanilla布尔映射修正见[当前作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。旧0.4包及回放需要重建／分标识保存，不能冒名续接；其他固定职责继续适用。
 
 作者 DSL 和 EnginePackageBuilder 共用类型化 IR、RuleSetBuilder 链接器及唯一 Session 调度器。通用能力包括类型/字段/枚举、实例、集合/关系/作用域、查询、动作及其有限候选、过程、事件/订阅、暂停续接、终局、随机、数值、观察与窄调试。
 
@@ -52,10 +34,12 @@
 
 集合按每个 Session 中的集合定义 ID 保存一份成员表，不因创建 Scope 自动复制。多持有者通过字段、关系与查询筛选建模；Scope 管生命周期。关系按 owner 实例保存连接。类型/集合查询采用现有确定顺序，Sort 显式定义排序，ForEach 使用入口快照。
 
-core/0.2 模板在编译时展开；名称前缀与库词法绑定隔离各实例声明。模板参数支持 Int/Bool/String/Fixed/List(Int) 字面量，body 支持核心声明与嵌套 use；不支持类型/字段/行为引用注入和游戏扩展声明模板化。独立模板实例仍在同一 Session，共享参与者与整局终局；组件的共享状态和游戏组合由包明确声明。
+模板在编译时展开；名称前缀与库词法绑定隔离各实例声明。参数和声明支持范围查对应语言参考，不能把旧语言的限制用于判断所有文本版本。独立模板实例仍在同一 Session，共享参与者与整局终局；组件的共享状态和游戏组合由包明确声明。
 
 公开观察必须通过声明的 projection 和权限生成。隐藏实例的揭示不自动解除字段权限；已知标识/位置由包维护为当前知识事实。Observe 与 LegalActions 不消费随机数或写游戏状态；预算/求值错误仍可显式报故障。内部 State/RNG/debug 不是公开 AI 输入。
 
 ## 4. 确定性、数值与标识
 
-RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法/映射。SampleInt 的范围为 。
+RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法与映射。整数区间、浮点转换、随机流布局和快照恢复按[随机作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)执行，禁止用不同随机实现冒用旧标识。
+
+规则、编译器、执行语义、包内容及随机配置共同决定兼容性。行为改变后重建包与相关回放，旧包或旧输入不自动续接新版本。数值精度、乘法次序和取整位置属于规则语义，不通过重录预期值掩盖变化。公开协议不提供 rollback／load／fork；开发者调试能力不产生外部回退权限。

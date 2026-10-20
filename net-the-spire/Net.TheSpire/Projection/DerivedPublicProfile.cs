@@ -26,7 +26,7 @@ namespace NetTheSpire.Projection;
 /// </summary>
 public static class DerivedPublicProfile
 {
-    /// <summary>公开 ID 的词法前缀（与 0.1 Profile 保持同一风格，便于人工核对）。</summary>
+    /// <summary>公开 ID 的词法前缀。</summary>
     public const string KindPrefix = "net:kind:";
 
     public const string FieldPrefix = "net:field:";
@@ -58,7 +58,7 @@ public static class DerivedPublicProfile
     /// <param name="projectionId">所选公开投影（例如 base 工厂的 <c>base-spire:PlayerView</c>）。</param>
     /// <param name="participantRole">该投影声明的参与者角色（与投影自带角色必须一致）。</param>
     /// <param name="metadata">规则提供方随构建给出的不可变补充元数据（只补四类游戏含义）。</param>
-    /// <param name="protocolVersion">协议版本（0.2 正式出口；0.1 保留给旧切片/作者场景）。</param>
+    /// <param name="protocolVersion">当前协议版本，仅接受 0.2。</param>
     public static PublicSnapshotProfile Build(
         RuleSet rules,
         string projectionId,
@@ -228,7 +228,7 @@ public static class DerivedPublicProfile
         {
             return Disposition<PublishedField>.Skip("N-02-VALUE-KIND",
                 "协议值类型只有 number/boolean/category/entity_ref" +
-                (NetProtocol.UsesGameSeedString(protocolVersion) ? "/string" : "") +
+                "/string" +
                 "（protocol.md §2 第 70–75 行、§7）：参与者绑定不是公开游戏事实，也不自造值类型");
         }
 
@@ -236,13 +236,6 @@ public static class DerivedPublicProfile
         {
             return Disposition<PublishedField>.Skip("N-02-VALUE-KIND",
                 $"协议没有 {field.Kind} 值类型：不丢字段也不自造结构，需按 §7 版本化扩展后另行发布");
-        }
-
-        if (field.Kind == FieldTypeKind.String && !NetProtocol.UsesGameSeedString(protocolVersion))
-        {
-            return Disposition<PublishedField>.Skip("N-02-VALUE-KIND",
-                $"协议 {protocolVersion} 没有 string 值类型（protocol.md §7 在 0.2 新增）：" +
-                "公开 String 不冒充有限类别，旧版本不发布该字段");
         }
 
         // 引用字段按 optional 发布：投影会在目标实例不可识别时**省略**该引用（ProjectionObserver），
@@ -470,7 +463,7 @@ public static class DerivedPublicProfile
                     case FieldTypeKind.Bool:
                         parameters[slot] = new PublicActionField(fieldId, PublicValueKind.Boolean, Required: true);
                         break;
-                    case FieldTypeKind.String when NetProtocol.UsesGameSeedString(protocolVersion):
+                    case FieldTypeKind.String:
                         parameters[slot] = new PublicActionField(fieldId, PublicValueKind.String, Required: true);
                         break;
                     case FieldTypeKind.Enum:
@@ -524,7 +517,7 @@ public static class DerivedPublicProfile
             {
                 // 决策域不是单一类型：候选可以是卡牌、敌人或其它实体，因此按**公开种类全集**声明上界
                 // （protocol.md §2 第 100 行允许，但不得为此截断真实候选）。
-                [0] = new PublicActionField(AnswerInstanceFieldId, PublicValueKind.EntityRef, Required: protocolVersion == NetProtocol.V01,
+                [0] = new PublicActionField(AnswerInstanceFieldId, PublicValueKind.EntityRef, Required: false,
                     TargetKindIds: included.Select(id => KindPrefix + id).OrderBy(id => id, StringComparer.Ordinal)
                         .ToList()),
             };

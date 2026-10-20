@@ -39,12 +39,12 @@ result: tutorial:ReachedTarget
 
 ```text
 using namespace tutorial;
-dsl_version = "core/0.1"
+dsl_version = "core/0.3"
 version = "1.0.0"
 start = [Setup]
 ```
 
-`tutorial` 是这份规则的名字前缀，例如后面的计分器叫 `tutorial:Counter`。`dsl_version` 指定文件使用的语言；这里从基础声明写起，所以用 `core/0.1`。它仍由当前引擎运行。`version` 是你自己的规则包版本。`start = [Setup]` 告诉引擎：开局时执行我们稍后定义的 `Setup`。
+`tutorial` 是这份规则的名字前缀，例如后面的计分器叫 `tutorial:Counter`。`dsl_version` 指定文件使用的语言；这里从基础声明写起，所以用 `core/0.3`。它仍由当前引擎运行。`version` 是你自己的规则包版本。`start = [Setup]` 告诉引擎：开局时执行我们稍后定义的 `Setup`。
 
 加上计分器的定义：
 
@@ -189,9 +189,9 @@ condition = greaterOrEqual(field(counter, Counter.Score), 5)
 
 你已经写过状态、初始化、合法动作、状态修改、终局和观察。现在可以根据下一件要做的事继续：
 
-- 想把目标分数变成配置，复用同一套规则：读[导入规则库与配置参数](README.md#1-先运行再修改配置)，运行 `game.spire`，再看 [core/0.2 规则库指南](0.2/authoring-guide.md)。
+- 想把目标分数变成配置，复用同一套规则：读[导入规则库与配置参数](README.md#1-先运行再修改配置)，运行 `game.spire`，再看 [core/0.3 规则库指南](0.3/authoring-guide.md)。
 - 想接自己的界面或 AI：读[第一次写宿主](../../design/core-the-spire/first-host.md)，用 C# 加载这份文件并驱动它。
 - 想在动作中让玩家选加一还是加二：宿主教程的后半部分会运行 [counter.spire](../../examples/core-choice-counter/counter.spire)，观察动作的暂停与续接。
-- 写规则时遇到某个声明或表达式：查 [core/0.1 语言参考](0.1/language-reference.md)。它供查阅，第一次做这篇教程不需要从头读完。
+- 写规则时遇到某个声明或表达式：查 [core/0.3 语言参考](0.3/language-reference.md)。它供查阅，第一次做这篇教程不需要从头读完。
 
-这个小游戏使用的是通用 core DSL。原版卡牌内容使用 base 的[内容 DSL 作者约定](../0.0.1/dsl-usage.md)，其卡牌声明和伤害等语义由游戏内容包提供。
+这个小游戏使用的是通用 core DSL。原版卡牌内容使用 base 的[内容 DSL 作者约定](../../development/base-spire/README.md)，其卡牌声明和伤害等语义由游戏内容包提供。

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "net-the-spire 公开协议 v0.2 wire schema",
-  "description": "由 docs/contracts/net/0.1/wire.schema.json 派生（见 net-the-spire/tools/emit_wire_schema_0_2.py），只应用 docs/design/net-the-spire/protocol.md §7 列出的 0.2 差异：协议版本常量、start.seed 为非空游戏字符串、start 成功结果多一个实际 seed、以及新增 string 值类型。结构其余部分与 0.1 逐字节相同。",
-  "$comment": "ENV-T03：0.2 只对正式单人构建开放，0.1 保留旧切片/作者场景；两版本常量各自精确相等，不自动降级。",
+  "description": "当前公开协议 0.2 的唯一结构定义；与 C#、Python 和共享校验用例同步维护。",
+  "$comment": "发行前仅维护当前协议；旧版本输入明确拒绝。",
   "oneOf": [
     {
       "$ref": "#/$defs/Request"
@@ -219,7 +219,7 @@
       "properties": {
         "protocol_version": {
           "const": "0.2",
-          "description": "net 协议版本；0.2 与目录/快照必须一致地写 \"0.2\"，与 0.1 精确区分（protocol.md §7）。"
+          "description": "net 协议版本；0.2 与目录/快照必须一致地写 \"0.2\"，旧版本明确拒绝（protocol.md §7）。"
         },
         "ruleset_id": {
           "$ref": "#/$defs/NonEmptyString"
@@ -820,7 +820,7 @@
       "properties": {
         "protocol_version": {
           "const": "0.2",
-          "description": "net 协议版本；0.2 与目录/快照必须一致地写 \"0.2\"，与 0.1 精确区分（protocol.md §7）。"
+          "description": "net 协议版本；0.2 与目录/快照必须一致地写 \"0.2\"，旧版本明确拒绝（protocol.md §7）。"
         },
         "ruleset_id": {
           "$ref": "#/$defs/NonEmptyString"
@@ -1238,7 +1238,7 @@
       "properties": {
         "protocol_version": {
           "const": "0.2",
-          "description": "net 协议版本；0.2 与目录/快照必须一致地写 \"0.2\"，与 0.1 精确区分（protocol.md §7）。"
+          "description": "net 协议版本；0.2 与目录/快照必须一致地写 \"0.2\"，旧版本明确拒绝（protocol.md §7）。"
         },
         "ruleset_id": {
           "$ref": "#/$defs/NonEmptyString"
@@ -1955,11 +1955,6 @@
       ],
       "additionalProperties": false
     },
-    "SessionSeed": {
-      "type": "string",
-      "pattern": "^(0|[1-9][0-9]{0,19})$",
-      "description": "Canonical unsigned 64-bit decimal string. Cross-structure validation must also reject values above 18446744073709551615."
-    },
     "AttachResult": {
       "type": "object",
       "properties": {
@@ -2031,7 +2026,7 @@
     "GameSeedString": {
       "type": "string",
       "minLength": 1,
-      "description": "0.2 的每局游戏 seed 字符串（protocol.md §7）：非空；net 不 trim、不改大小写、不数值强转，具体校验/标准化由规则提供方执行。旧的规范 uint64 十进制编码（SessionSeed）只在 0.1 保留。"
+      "description": "非空游戏字符串；net 不 trim、不改大小写、不做数值强转。"
     }
   }
 }

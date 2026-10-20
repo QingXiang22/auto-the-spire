@@ -1,4 +1,4 @@
-"""net v0.1 公开协议的纯协议类型（dataclass 视图 + wire 往返）。
+"""net v0.2 公开协议的纯协议类型（dataclass 视图 + wire 往返）。
 
 * 键名、枚举与分支全部来自共享 schema；本模块不含任何 AI 侧索引/变换/补齐概念。
 * ``from_wire`` 假定文档已通过 L0/L1（严格解析 + schema 结构）；结构错误由

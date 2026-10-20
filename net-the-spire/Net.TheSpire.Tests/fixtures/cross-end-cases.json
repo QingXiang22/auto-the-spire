@@ -326,7 +326,7 @@
    "file": "01-structural.json",
    "id": "neg-identity-version",
    "l1_findings": [
-    "identity.protocol_version: 期望常量 '0.1'"
+    "identity.protocol_version: 期望常量 '0.2'"
    ],
    "layers": [
     "L1"
@@ -916,9 +916,9 @@
    "rule_ids": []
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-overflow",
+   "id": "pos-seed-overflow",
    "l1_findings": [],
    "layers": [
     "L1",
@@ -927,14 +927,12 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-overflow-20-nines",
+   "id": "pos-seed-overflow-20-nines",
    "l1_findings": [],
    "layers": [
     "L1",
@@ -943,9 +941,7 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
    "expect": "accept",
@@ -978,12 +974,10 @@
    "rule_ids": []
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-leading-zero",
-   "l1_findings": [
-    "request.payload: 不匹配任何 anyOf 分支"
-   ],
+   "id": "pos-seed-leading-zero",
+   "l1_findings": [],
    "layers": [
     "L1",
     "L4"
@@ -991,10 +985,7 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-66",
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
    "expect": "reject",
@@ -1016,12 +1007,10 @@
    ]
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-plus-sign",
-   "l1_findings": [
-    "request.payload: 不匹配任何 anyOf 分支"
-   ],
+   "id": "pos-seed-plus-sign",
+   "l1_findings": [],
    "layers": [
     "L1",
     "L4"
@@ -1029,18 +1018,13 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-66",
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-exponent",
-   "l1_findings": [
-    "request.payload: 不匹配任何 anyOf 分支"
-   ],
+   "id": "pos-seed-exponent",
+   "l1_findings": [],
    "layers": [
     "L1",
     "L4"
@@ -1048,18 +1032,13 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-66",
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-negative",
-   "l1_findings": [
-    "request.payload: 不匹配任何 anyOf 分支"
-   ],
+   "id": "pos-seed-negative",
+   "l1_findings": [],
    "layers": [
     "L1",
     "L4"
@@ -1067,18 +1046,13 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-66",
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
-   "expect": "reject",
+   "expect": "accept",
    "file": "02-decimal-type-seed.json",
-   "id": "neg-seed-whitespace",
-   "l1_findings": [
-    "request.payload: 不匹配任何 anyOf 分支"
-   ],
+   "id": "pos-seed-whitespace",
+   "l1_findings": [],
    "layers": [
     "L1",
     "L4"
@@ -1086,10 +1060,7 @@
    "roles": [
     "request"
    ],
-   "rule_ids": [
-    "I-66",
-    "I-76"
-   ]
+   "rule_ids": []
   },
   {
    "expect": "reject",
@@ -1107,6 +1078,58 @@
    "rule_ids": [
     "I-11"
    ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-empty",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "reject",
+   "file": "02-decimal-type-seed.json",
+   "id": "neg-seed-null",
+   "l1_findings": [
+    "request.payload: 不匹配任何 anyOf 分支"
+   ],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": [
+    "I-66",
+    "I-76"
+   ]
+  },
+  {
+   "expect": "accept",
+   "file": "02-decimal-type-seed.json",
+   "id": "pos-seed-game-text",
+   "l1_findings": [],
+   "layers": [
+    "L1",
+    "L4"
+   ],
+   "roles": [
+    "request"
+   ],
+   "rule_ids": []
   },
   {
    "expect": "accept",

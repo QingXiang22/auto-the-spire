@@ -12,7 +12,7 @@ public class WireFaultException : Exception
 }
 
 /// <summary>
-/// wire v0.1 的 L0 解析层（唯一规范出处：protocol.md §6 第 217 行、§2 第 73 行、
+/// wire v0.2 的 L0 解析层（唯一规范出处：protocol.md §6 第 217 行、§2 第 73 行、
 /// contract-artifacts §1 第 11 行）。与 tools/contract-check/wire_json.py 逐条对应：
 /// 拒绝重复键、NaN/Infinity、浮点字面量、BOM、非 UTF-8 与孤立代理项。
 /// </summary>

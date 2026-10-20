@@ -3,7 +3,7 @@
 本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[路线图](../docs/roadmap.md)为准。
 
 * 编码/模型层不实现规则、不导入 `core-the-spire` / `mod-the-spire` / 活动 client；`delivery` 生产编排通过已有net客户端交互，只读公开快照。
-* 协议结构与判定逻辑来自共享资产 `docs/contracts/net/0.1/`（schema/不变量）
+* 协议结构与判定逻辑来自共享资产 `docs/contracts/net/0.2/`（schema/不变量）
   与 `tools/contract-check/`（参考实现）。`contracts/shared.py` 集中读取共享约定；运行编排负责解析生产 Host/客户端位置。
 * 数值变换、误差容差与容量是**显式 `EncodingConfig`**，随 Manifest 一起持久化（A-02/A-04）。
 
@@ -72,7 +72,7 @@ python ai-the-spire/tests/d2_diagnose.py
 **仍未判定/可定位的线索**：32 局全部失败且未折扣回报完全相同，实测**局长度与折扣回报
 相关系数 0.986**；该相关性尚不能证明折扣是唯一瓶颈，"表示遗漏"本轮**未测**。
 原诊断建议γ=1只属于待验证假设。负责人离线重算发现，在这32局失败轨迹中γ=1的G仍完全由当前玩家HP决定；
-当前已固定的下一实验是[D3敌方HP进度奖励对照](../docs/design/battle-progress-learning-experiment-v1.md)，不是自动执行原γ建议。
+当前已固定的下一实验是[D3敌方HP进度奖励对照](../docs/design/ai-the-spire/training-design.md)，不是自动执行原γ建议。
 
 ## 快速开始
 

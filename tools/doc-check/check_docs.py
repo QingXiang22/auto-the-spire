@@ -181,7 +181,6 @@ def check_traceability(root: Path, failures: list[str]) -> None:
 
     matrix_paths = [
         root / "docs/design/ai-net-verification.md",
-        root / "docs/design/ai-net-implementation-plan.md",
     ]
     used = set()
     for path in matrix_paths:

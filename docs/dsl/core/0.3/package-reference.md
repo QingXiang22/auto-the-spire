@@ -1,6 +1,6 @@
 # core/0.3 文本包与文件组合参考
 
-文档类型：参考（Reference）。本文定义 `DslPackage.Load(manifestPath, scope)` 的文件边界和数据格式，以及 `EngineDslCompiler.LoadFiles` 的同包组合。类型／具名调用与模板语义继续见[作者参考](authoring-reference.md)；base 的领域归属由[目录设计](../../../design/mod-the-spire/engine-dsl-migration/plan.md)定义。
+文档类型：参考（Reference）。本文定义 `DslPackage.Load(manifestPath, scope)` 的文件边界和数据格式，以及 `EngineDslCompiler.LoadFiles` 的同包组合。类型／具名调用与模板语义继续见[作者参考](authoring-reference.md)；base 的领域归属由[目录设计](../../../design/mod-the-spire/base-architecture.md)定义。
 
 ## 同包 includes 与跨包 imports
 

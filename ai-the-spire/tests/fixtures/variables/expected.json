@@ -2,7 +2,7 @@
   "_provenance": {
     "期望来源": "手写读解 fixtures/variables 的 wire 文档（当前观察），不调用被测实现生成",
     "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
-    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+    "共享规则词汇": "docs/contracts/net/0.2/invariants.md（I-xx）"
   },
   "_notes": [
     "扩展变量样例：三个 mod 各自声明同名 charge，命名空间、所有者实体与值类型全部不同，必须可区分。",
@@ -13,7 +13,7 @@
     "单候选决策点（fixture:end_turn）；终止/softmax 不在本批。"
   ],
   "catalog": {
-    "protocol_version": "0.1",
+    "protocol_version": "0.2",
     "ruleset_id": "fixture:rules-v1",
     "catalog_id": "fixture:variables-catalog-v1",
     "declaration_counts": {
@@ -27,7 +27,7 @@
       "action_types": 1,
       "terminal_reasons": 1
     },
-    "catalog_digest": "sha256:708b0d38b3a094a8be9095a1a0bd67178919eecc5b8b849f01016f63e4c7f102",
+    "catalog_digest": "sha256:b34f48dcc3184b12cf3beb3b6cbe4938d0f385878c8ab4b96125a9d1ef646759",
     "conditional_fields": {
       "modD:secret_charge": ["fixture:check-charge-visible"]
     },
@@ -103,7 +103,7 @@
           "modC:charge": ["category", null]
         }
       },
-      "snapshot_digest": "sha256:e621922bb995d1c161e58580a33fcd4f2fc372e4a7f3b8dd698da3dc27b2cc91"
+      "snapshot_digest": "sha256:5f70a5231f1514ec0af226fe42b62113792a54f8fdaeda2649dfbf15965b4676"
     }
   }
 }

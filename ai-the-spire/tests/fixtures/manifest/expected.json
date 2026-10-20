@@ -277,12 +277,12 @@
   "legacy": {
     "catalog": "legacy/catalog.json",
     "manifest": "legacy/manifest-v1.json",
-    "dictionary_version": "ai-dict-v1:sha256:7f701953bccca152677db3f7221862acd5158e086d01148ec5635461023598f4",
-    "source_catalog_digest": "sha256:7f701953bccca152677db3f7221862acd5158e086d01148ec5635461023598f4",
+    "dictionary_version": "ai-dict-v1:sha256:3e4c67e24fa7719b44702648473e9055679ad8ba0454644e17d74429f6e3fdb8",
+    "source_catalog_digest": "sha256:3e4c67e24fa7719b44702648473e9055679ad8ba0454644e17d74429f6e3fdb8",
     "encoding_config_digest": "sha256:9d6f4e2d6ffd8b6827aa8ce9d9b8524c99900d57b901ef47333214f53e553fa5",
-    "manifest_digest": "sha256:865969dd06364b838841cf19bd5b2fb68bfd0da5352f3ea684107fe2245c6f9b",
+    "manifest_digest": "sha256:55ff137f50552b5413004488cc3483a01b4a75bbc29bd9131dde59f0104f198f",
     "environment_identity": {
-      "protocol_version": "0.1",
+      "protocol_version": "0.2",
       "ruleset_id": "fixture:legacy-rules-v0",
       "catalog_id": "fixture:legacy-catalog-v0",
       "backend_profile_id": "fixture:legacy-backend-v0"

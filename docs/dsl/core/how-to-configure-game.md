@@ -12,7 +12,7 @@
 
 ```text
 using namespace tutorial;
-dsl_version = "core/0.2"
+dsl_version = "core/0.3"
 imports = ["rules/score-race.spire"]
 
 use Game {
@@ -26,7 +26,7 @@ use Game {
 
 `imports` 路径相对于配置文件。复制入口文件时一并复制 `rules/`，或修改导入路径指向实际库文件。`target` 同时用于合法动作和终局条件，不需要修改库里的多个规则块。
 
-参数范围由模板声明决定。本库的目标允许1～10000，增量为1～100的整数列表，最多16项。库和实例化规则的能力约束查 [core/0.2 规则库指南](0.2/authoring-guide.md)。
+参数范围由模板声明决定。本库的目标允许1～10000，增量为1～100的整数列表，最多16项。库和实例化规则的能力约束查 [core/0.3 规则库指南](0.3/authoring-guide.md)。
 
 ## 2. 加载并核对配置结果
 
@@ -45,5 +45,5 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj 
 ## 相关文档
 
 - 规则库和宿主分别负责什么：[规则与宿主的关系](../../design/core-the-spire/rules-and-host.md)。
-- 导入、模板、嵌套实例和名称绑定：[规则库指南](0.2/authoring-guide.md)。
-- 想写库里的状态、动作、查询或选择：查[基础语言参考](0.1/language-reference.md)。
+- 导入、模板、嵌套实例和名称绑定：[规则库指南](0.3/authoring-guide.md)。
+- 想写库里的状态、动作、查询或选择：查[基础语言参考](0.3/language-reference.md)。

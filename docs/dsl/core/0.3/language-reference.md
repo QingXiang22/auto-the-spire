@@ -1,10 +1,8 @@
-# core/0.1 语言参考
+# core/0.3 语言参考
 
-本页供规则作者查询 core/0.1 的基础语义。使用 imports/template/use 时，查 [core/0.2 规则库与配置](../0.2/authoring-guide.md)；底层原语继续以本页为准。
+本页供规则作者查询 core/0.3 的基础语义。使用 imports/template/use 时，查 [core/0.3 规则库与配置](authoring-guide.md)；底层原语继续以本页为准。
 
-2026-10-04 补充：默认作者入口采用 core/0.2。
-
-状态：2026-10-04 已实现的首版通用配置语言。权威语法是 [CoreSpire.g4](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/CoreSpire.g4)，语义入口是 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。执行语义复用 Engine；目标设计稿中的语法不自动属于本版。先读 [作者入门](../README.md) 与完整 [counter.spire](../../../examples/core-choice-counter/counter.spire)。
+当前编译器只接受 `dsl_version = "core/0.3"`。权威语法是 [CoreSpire.g4](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/CoreSpire.g4)，语义入口是 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。执行语义复用 Engine；先读[作者入门](../README.md)与完整 [counter.spire](../../../examples/core-choice-counter/counter.spire)。
 
 ## 1. 基本形式与版本
 
@@ -12,14 +10,14 @@
 
 ```text
 using namespace mygame;
-dsl_version = "core/0.1"
+dsl_version = "core/0.3"
 version = "1.0.0"
 start = [Setup]
 ```
 
 ```text
 package mygame {
-    dsl_version = "core/0.1"
+    dsl_version = "core/0.3"
     version = "1.0.0"
     start = [Setup]
 }
@@ -165,9 +163,9 @@ Count 可省略 item/value；需要值表达式的聚合须提供绑定。固定
 
 fields/payload/inputs 都是 `{ 名字 = 表达式 }`。compute outputs 是 `{ 输出名字 = 已声明局部量 }`，call args 是表达式列表。position 默认为 End，可用 Start/AtIndex；AtIndex 需要 index，create 的有序插入使用现有构造指令能力，不支持额外 index 属性。
 
-决策 kind 来自 DecisionResponseKind：EntityRef、EntityRefList、Int、Bool、Enum、Participant、Confirm。候选在请求时固定为该次请求的列表，过期请求不可回答。min/max 按种类解释；engine/ir@0.3 的 Enum 决策结果必须为具体非空 Enum 槽，默认范围 0..成员数-1，显式 min/max 只能缩小该闭区间。非法回答保留请求，非法声明范围在发布请求前故障。`Repeat` 有限次迭代并受命令预算约束；`ForEach` 使用入口查询快照。终局立即停止，不自动结清尚未运行的监听器。
+决策 kind 来自 DecisionResponseKind：EntityRef、EntityRefList、Int、Bool、Enum、Participant、Confirm。候选在请求时固定为该次请求的列表，过期请求不可回答。min/max 按种类解释；Enum 决策结果必须为具体非空 Enum 槽，默认范围 0..成员数-1，显式 min/max 只能缩小该闭区间。非法回答保留请求，非法声明范围在发布请求前故障。`Repeat` 有限次迭代并受命令预算约束；`ForEach` 使用入口查询快照。终局立即停止，不自动结清尚未运行的监听器。
 
-engine/ir@0.3 按包链接顺序与包内 start 登记顺序初始化，暂停后先完成当前入口再继续剩余入口；亦可登记一个 Setup 并顺序 call。旧 0.2 的 LIFO 安排须按 [版本基线](../../../contracts/core-engine-baseline.md) 迁移。详细暂停、预算及指令级故障语义见 [开发者指南](../../../design/core-the-spire/developer-guide.md)。
+初始化按包链接顺序与包内 start 登记顺序初始化，暂停后先完成当前入口再继续剩余入口；亦可登记一个 Setup 并顺序 call。执行要求见[核心约定](../../../contracts/core-engine-baseline.md)。详细暂停、预算及指令级故障语义见 [开发者指南](../../../design/core-the-spire/developer-guide.md)。
 
 ## 6. 加载、扩展和错误
 
@@ -177,7 +175,7 @@ engine/ir@0.3 按包链接顺序与包内 start 登记顺序初始化，暂停�
 
 语法、未知属性、重复名字、未定义引用等报 `DslSourceException`，包含源文件和从 1 开始的行列。最终 IR 类型/纯性检查仍报 `EngineFaultException`，Fault.Context 带最近源码位置。运行调试轨迹也使用这些位置；C# SDK 创建的 IR 未提供来源时位置可为空。
 
-当前运行标识包括 `engine/ir@0.3`、包内容和 CompilerIdentity（文本入口 `core-dsl/0.1` 及所用扩展版本）。Debug 和文件路径不参与语义标识。升级随机/编译语义时不能复用旧训练资产标识；0.2 已变更 SamplePick 顺序，0.3 统一启动顺序与枚举决策域；语言版本保持 core/0.1。
+运行标识包含活动 Engine 版本、包内容和 CompilerIdentity（文本入口 `core-dsl/0.3` 及所用扩展版本）。Debug 和文件路径不参与语义标识。版本依据及行为要求见[核心约定](../../../contracts/core-engine-baseline.md)；语义变化后重建消费者，不复用旧回放或模型标识。
 
 ## 7. 生成工具和未交付范围
 
