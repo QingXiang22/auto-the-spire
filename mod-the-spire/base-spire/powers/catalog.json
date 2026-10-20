@@ -2519,9 +2519,9 @@
       "source_path": "sts2/src/Core/Models/Powers/VigorPower.cs",
       "source_sha256": "9b10573ada4e2e70ecb78ccaa761869480b974ee0b9ad4d09cdb1b240ca58ca2",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "Development combat attack lifecycle; normal acquisition and independent comparison remain unverified.",
+      "definition": "powers/shared/vigor-power.spire"
     },
     {
       "id": "base-spire:vital-spark-power",

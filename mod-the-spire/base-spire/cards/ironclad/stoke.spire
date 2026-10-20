@@ -6,7 +6,7 @@ template ReplaceHandWithGeneratedEffect {
   parameters = { definition = { type = String(length = 64) }  }
   body = {
     procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { count = Int generated = Binding }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = count value = count(collection(Hand)) }
@@ -20,9 +20,26 @@ repeat = { count = count body = {
 } }
       } } }
     }
-    subscription Apply { event = CardPlayed reaction = Apply }
+
   }
 }
 
 use Stoke { template = CardDefinition args = { sourceEntry = "STOKE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:stoke" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use StokeEffect1 { template = ReplaceHandWithGeneratedEffect args = { definition = "base-spire:stoke" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure StokeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = StokeEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase StokeBody { dispatch = ExecuteCardBody key = "base-spire:stoke" procedure = StokeBody }
+
+procedure StokeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase StokeDamageValue { dispatch = ReadCardDamage key = "base-spire:stoke" procedure = StokeDamageValue }

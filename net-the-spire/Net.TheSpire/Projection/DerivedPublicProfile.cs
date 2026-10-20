@@ -49,6 +49,7 @@ public static class DerivedPublicProfile
     public const string AnswerActionTypeId = "net:action:net.answer_decision";
 
     public const string AnswerInstanceFieldId = "net:field:net.answer_decision.Instance";
+    public const string AnswerFlagFieldId = "net:field:net.answer_decision.Flag";
 
     /// <summary>
     /// 从规则集与所选投影派生正式公开 Profile。
@@ -517,17 +518,20 @@ public static class DerivedPublicProfile
         return actions;
     }
 
-    private static PublicActionRule BuildAnswerAction(HashSet<string> included, string protocolVersion) =>
-        new(AnswerActionTypeId,
-            new Dictionary<int, PublicActionField>
+    private static PublicActionRule BuildAnswerAction(HashSet<string> included, string protocolVersion)
+    {
+        var parameters = new Dictionary<int, PublicActionField>
             {
                 // 决策域不是单一类型：候选可以是卡牌、敌人或其它实体，因此按**公开种类全集**声明上界
                 // （protocol.md §2 第 100 行允许，但不得为此截断真实候选）。
                 [0] = new PublicActionField(AnswerInstanceFieldId, PublicValueKind.EntityRef, Required: protocolVersion == NetProtocol.V01,
                     TargetKindIds: included.Select(id => KindPrefix + id).OrderBy(id => id, StringComparer.Ordinal)
                         .ToList()),
-            },
-            NetDeclared: true);
+            };
+        if (protocolVersion == NetProtocol.V02)
+            parameters[1] = new PublicActionField(AnswerFlagFieldId, PublicValueKind.Boolean, Required: false);
+        return new PublicActionRule(AnswerActionTypeId, parameters, NetDeclared: true);
+    }
 
     // -- terminals / known positions ---------------------------------------------------------------------------
 

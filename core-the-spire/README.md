@@ -36,7 +36,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 ## 范围与维护
 
-活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版卡牌作者阅读 base 的[base/0.0.2 作者参考](../docs/dsl/0.0.2/authoring-reference.md)。旧 STS 后端已从当前树删除，仅保留Git历史，见 [archive/legacy-sts](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，活动工程不引用归档。
+活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版内容作者使用[base开发手册](../docs/development/base-spire/README.md)及[core/0.3作者参考](../docs/dsl/core/0.3/authoring-reference.md)，不使用旧base/0.0.2前端。旧 STS 后端已从当前树删除，仅保留Git历史，见 [archive/legacy-sts](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，活动工程不引用归档。
 
 当前源码的包版本为 `0.4.0`，运行语义身份为 `engine/ir@0.4`，文本编译器支持 `core/0.1`、`core/0.2` 与 `core/0.3`。版本依据分别为 [项目配置](Core.TheSpire/Core.TheSpire.csproj)、[RuleSetBuilder.EngineVersion](Core.TheSpire/Engine/RuleSet.cs) 和 [EngineDslCompiler](Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。新同包绑定与具名调用见 [core/0.3 参考](../docs/dsl/core/0.3/authoring-reference.md)。
 

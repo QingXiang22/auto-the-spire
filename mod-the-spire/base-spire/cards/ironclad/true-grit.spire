@@ -5,3 +5,21 @@ dsl_version = "core/0.3"
 use TrueGrit { template = CardDefinition args = { sourceEntry = "TRUE_GRIT" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:true-grit" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use TrueGritEffect1 { template = BlockEffect args = { definition = "base-spire:true-grit" block = 7 upgradedBlock = 9 } }
 use TrueGritEffect2 { template = SelectExhaustEffect args = { definition = "base-spire:true-grit" randomNormal = true } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure TrueGritBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = TrueGritEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = TrueGritEffect2.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase TrueGritBody { dispatch = ExecuteCardBody key = "base-spire:true-grit" procedure = TrueGritBody }
+
+procedure TrueGritDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase TrueGritDamageValue { dispatch = ReadCardDamage key = "base-spire:true-grit" procedure = TrueGritDamageValue }

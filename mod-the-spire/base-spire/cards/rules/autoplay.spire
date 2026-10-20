@@ -1,0 +1,40 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity AutoPlayBatch { fields = { Owner = { type = Ref(Player) visibility = Hidden } Play = { type = Ref(CardPlayRecord) optional = true visibility = Hidden } } }
+entity AutoPlayEntry { fields = { Batch = { type = Ref(AutoPlayBatch) visibility = Hidden } Card = { type = Ref(Card) visibility = Hidden } } }
+
+# Source CardPileCmd.AutoPlayFromDrawPile first collects/moves all selected cards, then executes them.
+# Entries belong to a particular batch so nested autoplays cannot consume the parent's remaining cards.
+procedure AutoPlayFromDrawPile {
+  parameters = { owner = Ref(Player) play = Binding count = Int forceExhaust = Bool }
+  locals = { batch = Binding next = Binding entry = Binding resultPile = String(length = 16) }
+  body = {
+    create = { type = AutoPlayBatch scope = entityScope(owner) into = batch fields = { Owner = owner Play = play } }
+    repeat = { count = maximum(0, count) body = {
+      call = { procedure = ReshuffleDiscard args = { owner = owner } }
+      let = { into = next value = first(collection(DrawPile)) }
+      if = { condition = not(isNone(next)) then = {
+        if = { condition = not(pureCall(ExecuteCardBody.Contains, field(next, Card.DefinitionId))) then = { fail = { message = "Unsupported card in autoplay batch" } } }
+        removeFromCollection = { collection = DrawPile item = next }
+        addToCollection = { collection = InPlay item = next }
+        create = { type = AutoPlayEntry scope = entityScope(batch) into = entry fields = { Batch = batch Card = next } }
+      } }
+    } }
+    forEach = { query = where(type(AutoPlayEntry), e, equal(field(e, AutoPlayEntry.Batch), batch)) item = item body = {
+      let = { into = next value = field(item, AutoPlayEntry.Card) }
+      if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))) then = {
+        call = { procedure = ResolveAutoCard args = { owner = owner card = next forceExhaust = forceExhaust prepared = true } }
+      } else = {
+        if = { condition = greater(field(owner, Player.Hp), 0) then = {
+          let = { into = resultPile value = "discard" }
+          if = { condition = field(next, Card.LeavesPlay) then = { let = { into = resultPile value = "removed" } } }
+          if = { condition = or(forceExhaust, pureCall(CardHasKeyword, next, "exhaust")) then = { let = { into = resultPile value = "exhaust" } } }
+          call = { procedure = FinishCardPlay args = { owner = owner card = next resultPile = resultPile } }
+        } }
+      } }
+      destroy = { target = item }
+    } }
+    destroy = { target = batch }
+  }
+}

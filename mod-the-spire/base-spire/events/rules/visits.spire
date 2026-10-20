@@ -1,0 +1,57 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# This is an explicit development visit, not the normal map/event-pool entry path.
+entity EventVisit { owner = Owner fields = {
+  Owner = { type = Participant }
+  DefinitionId = { type = String(length = 64) }
+  Page = { type = String(length = 32) default = "initial" }
+  Status = { type = String(length = 16) default = "active" }
+  Sequence = { type = Int default = 0 visibility = Hidden }
+  ReturnRoom = { type = String(length = 16) default = "none" visibility = Hidden }
+} }
+dispatch ExecuteEventVisit { parameters = { owner = Ref(Player) visit = Ref(EventVisit) } }
+event EventVisitEntered { payload = { owner = Ref(Player) visit = Ref(EventVisit) } }
+event EventVisitFinished { payload = { owner = Ref(Player) visit = Ref(EventVisit) } }
+event EventVisitClosed { payload = { owner = Ref(Player) visit = Ref(EventVisit) } }
+procedure EventVisitStream { pure = true parameters = { visit = Ref(EventVisit) } result = String(length = 128) body = {
+  return = { value = concat(field(visit, EventVisit.DefinitionId), ":visit:", field(visit, EventVisit.Sequence)) }
+} }
+procedure CanEnterDevelopmentEvent {
+  pure = true parameters = { owner = Ref(Player) } result = Bool
+  body = {
+    if = { condition = or(not(equal(field(owner, Player.Room), "none")), or(field(owner, Player.CombatActive), lessOrEqual(field(owner, Player.Hp), 0))) then = { return = { value = false } } }
+    return = { value = not(exists(where(type(EventVisit), v, and(equal(field(v, EventVisit.Owner), field(owner, Player.Owner)), not(equal(field(v, EventVisit.Status), "closed")))))) }
+  }
+}
+procedure EnterDevelopmentEvent {
+  parameters = { owner = Ref(Player) definition = String(length = 64) } locals = { visit = Binding sequence = Int }
+  body = {
+    if = { condition = not(and(pureCall(CanEnterDevelopmentEvent, owner), pureCall(ExecuteEventVisit.Contains, definition))) then = { fail = { message = "Cannot enter an unknown event or overlap an existing visit" } } }
+    let = { into = sequence value = add(aggregate(where(type(EventVisit), v, equal(field(v, EventVisit.Owner), field(owner, Player.Owner))), Maximum, v, field(v, EventVisit.Sequence)), 1) }
+    forEach = { query = where(type(EventVisit), v, equal(field(v, EventVisit.Owner), field(owner, Player.Owner))) item = previous body = { destroy = { target = previous } } }
+    create = { type = EventVisit scope = entityScope(owner) into = visit fields = { Owner = field(owner, Player.Owner) DefinitionId = definition ReturnRoom = field(owner, Player.Room) Sequence = sequence } }
+    set = { target = owner field = Player.Room value = "event" }
+    emit = { event = EventVisitEntered payload = { owner = owner visit = visit } }
+    call = { procedure = ExecuteEventVisit args = { key = definition owner = owner visit = visit } }
+  }
+}
+procedure FinishEventVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) page = String(length = 32) }
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.Owner), field(visit, EventVisit.Owner)), and(equal(field(visit, EventVisit.Status), "active"), equal(field(owner, Player.Room), "event")))) then = { fail = { message = "Only the active owned visit may finish" } } }
+    set = { target = visit field = EventVisit.Page value = page }
+    set = { target = visit field = EventVisit.Status value = "finished" }
+    emit = { event = EventVisitFinished payload = { owner = owner visit = visit } }
+  }
+}
+action CloseDevelopmentEvent {
+  role = player parameters = { visit = Ref(EventVisit) }
+  candidates = { parameter = visit query = where(type(EventVisit), v, and(equal(field(v, EventVisit.Owner), field(first(type(Player)), Player.Owner)), equal(field(v, EventVisit.Status), "finished"))) }
+  requires = and(equal(field(first(type(Player)), Player.Room), "event"), not(field(first(type(Player)), Player.CombatActive)))
+  body = {
+    set = { target = visit field = EventVisit.Status value = "closed" }
+    set = { target = first(type(Player)) field = Player.Room value = field(visit, EventVisit.ReturnRoom) }
+    emit = { event = EventVisitClosed payload = { owner = first(type(Player)) visit = visit } }
+  }
+}

@@ -250,6 +250,7 @@ public sealed partial class Session
 
         var ordering = left.Kind switch
         {
+            ValueKind.None => 0,
             ValueKind.Bool => left.AsBool().CompareTo(right.AsBool()),
             ValueKind.Int => left.AsInt().CompareTo(right.AsInt()),
             ValueKind.Fixed => left.AsDecimal().CompareTo(right.AsDecimal()),

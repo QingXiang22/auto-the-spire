@@ -181,7 +181,7 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 
 **新对话接续认领（用户2026-10-11重新派单）**：已验收（工具侧游标对齐与归因窄包；base排序缺口未修、严格重洗仍非零）；`ENV-T04-reshuffle-followup-20261011` / `session-c4edccc4-e229-48f6-a79b-bfc8ad71c64c` / DSH全新reshuffle会话，实际session及accepted以[派发记录](../../../../.audit/dsh-reshuffle-followup-20261011/task-record.json)为准。仅tools/differential适配/诊断和本包证据，复用拆分后固定DLL闭包与已交T08初始化；已交原17项15双侧/1单侧/1重洗未过、受控游标对齐及源StableShuffle预排序缺口归因；未修base或开放Profile，仍需参考streams维度，不重做开局/地图/Power。A商店不影响固定输入，参考只读，首个差异不假定同因。[完整边界与验收](../../../../.audit/dsh-reshuffle-followup-20261011/task.txt)。
 
-**本轮接续认领（2026-10-11）**：待验证（本工具证据包待Codex复核；仅正常开局比较阻塞于ENV-T08/base真实初始化）；`ENV-T04-startup-alignment-20261011` / `session-f68b943d-7ca1-4a97-b2d2-979be7bcc654`，仅tools/differential及本包证据/方法文档。已定位UpFront第1次同前状态但用途不同：base遭遇`[0,4)→2`，reference共享袋`[0,30)→21`；reference首普通遭遇在第261次。正常初始Shuffle九样本/前状态/牌组输入一致；不补抽/换seed，跨base机制建议交[固定交接](../../tofix/dsh-startup-alignment-handoff-2026-10-11-f68b943d.md)。最终原17/17，14双侧passed/1单侧/2未过、rc1，自检0失败；重洗仍不可判定，地图两seed保留。[完整证据](../../../../.audit/dsh-startup-alignment-2026-10-11/regression/regression.json)、[派发记录](../../../../.audit/dsh-startup-alignment-2026-10-11/task-record.json)。下一成果由负责人复核并协调真实初始化包；不关闭父项/完整环境身份。
+**本轮接续认领（2026-10-11）**：待验证（本工具证据包待Codex复核；仅正常开局比较阻塞于ENV-T08/base真实初始化）；`ENV-T04-startup-alignment-20261011` / `session-f68b943d-7ca1-4a97-b2d2-979be7bcc654`，仅tools/differential及本包证据/方法文档。已定位UpFront第1次同前状态但用途不同：base遭遇`[0,4)→2`，reference共享袋`[0,30)→21`；reference首普通遭遇在第261次。正常初始Shuffle九样本/前状态/牌组输入一致；不补抽/换seed，跨base机制建议交[固定交接](../2026-10-11/dsh-startup-alignment-handoff-2026-10-11-f68b943d.md)。最终原17/17，14双侧passed/1单侧/2未过、rc1，自检0失败；重洗仍不可判定，地图两seed保留。[完整证据](../../../../.audit/dsh-startup-alignment-2026-10-11/regression/regression.json)、[派发记录](../../../../.audit/dsh-startup-alignment-2026-10-11/task-record.json)。下一成果由负责人复核并协调真实初始化包；不关闭父项/完整环境身份。
 
 **前包交付与剩余范围**：Power初值包`session-a89e1013-7e22-47b7-8ae2-af638525f30a`已停止，原Ticks/SkipNextTick实际对照与完整17项日志已交；其回归与CORE-AUTHOR-04最终回归两失败的语义输入/完整差异签名一致，Power相关双侧通过。原生产认领释放；源码/作者运行时负责人复核及初始随机差异比对见[本轮记录](../2026-10-11/core-author-04-owner-review-2026-10-11.md)。未因此关闭完整T04或独立重洗范围；[前包记录](../../../../.audit/dsh-power-fixture-2026-10-11/task-record.json)保留。
 
@@ -199,7 +199,7 @@ P0仅用于必须立即中断当前工作的事故；目前未登记P0。当前P
 
 **修改边界与当前包**：已交付tools/differential地图双侧入口、17项suite和负例。B本包生产已停止，A的前置门解除；不重做地图port/manifest。后续奖励能力由A交付后，B再接真实奖励/永久写回比较，参考无模型的部分诚实记录，不扩兼容Profile。
 
-**安装前置与本包成果**：原包已安装并加载 `auto-the-spire-handoff`、`nbj-write-clearly`、`documentation-diataxis`，复用[安装记录](../../../../.audit/dsh-env-t04-implementation-2026-10-07/skill-installation.json)。[2026-10-08 核验](../../tofix/env-t04-verification-2026-10-08.md)指出当时严格入口尚未交付；本包按[接续派单](../../../../.audit/dsh-env-t04-resume-2026-10-08/task.txt)交付 `test --suite regression`、`suites/regression.json`（15 必测）与薄 `test-env.ps1`，并实际执行：双侧 `passed` 8（原 7 个 case + `last-kill-before-terminal`）、`self_checked` 1（工厂接入）、不计通过 6（5 个 unsupported 原 ID + `rng-initial-shuffle`），比较器自检 6/6，严格 suite 诚实红态 rc=1；12 项失败反例全部返回非零。按[自动复核约定](../../../design/deepseek-harness-operations.md#半小时复核交接与接续)由 Codex 核验。
+**安装前置与本包成果**：原包已安装并加载 `auto-the-spire-handoff`、`nbj-write-clearly`、`documentation-diataxis`，复用[安装记录](../../../../.audit/dsh-env-t04-implementation-2026-10-07/skill-installation.json)。[2026-10-08 核验](../2026-10-08/env-t04-verification-2026-10-08.md)指出当时严格入口尚未交付；本包按[接续派单](../../../../.audit/dsh-env-t04-resume-2026-10-08/task.txt)交付 `test --suite regression`、`suites/regression.json`（15 必测）与薄 `test-env.ps1`，并实际执行：双侧 `passed` 8（原 7 个 case + `last-kill-before-terminal`）、`self_checked` 1（工厂接入）、不计通过 6（5 个 unsupported 原 ID + `rng-initial-shuffle`），比较器自检 6/6，严格 suite 诚实红态 rc=1；12 项失败反例全部返回非零。按[自动复核约定](../../../design/deepseek-harness-operations.md#半小时复核交接与接续)由 Codex 核验。
 
 **接手先做**：读[本轮复核](../2026-10-09/dsh-supervisor-review-2026-10-09.md#当前内容复核与进度汇报)与地图独立对拍交接；原B编译门已解除。复用严格17入口、Comparator与两侧记录及A已交奖励/药水能力；比较正常领取/长期写回，不再等已交生产或停止的旧会话。
 
@@ -335,7 +335,7 @@ $env:W06_DUMP_POWER='Illusion'; dotnet run --project mod-the-spire/base-spire/Ba
 
 **接续依据**：旧接续会话`session-ba05f344-3e5a-4a40-b9b7-1267200c0c60`已核对停止seq769，缺固定交接，仅有未验收部分补丁，不恢复该会话；[旧派发记录](../../../../.audit/dsh-real-run-init-continue-2026-10-11/task-record.json)保留。更早会话`session-4d004f6e-48df-4db2-bfbf-60ecdf4c6328`服务503重试耗尽seq271；[原派发](../../../../.audit/dsh-real-run-init-2026-10-11/task-record.json)保留。两次停止均不计完成。
 
-**先行包与排期**：T08.1 / P1，认领见上；负责人本轮根据T04正常开局受阻路径将此依赖提前，其他整幕范围保持P2。下一项可验证的结果是正式工厂从新Run开始，按源实际执行共享/玩家遗物袋、事件及必要遭遇预生成，再进入首场战斗；长期对象与后续可用池必须成立，不能用补抽、换seed或工具替换池推进随机游标。先核对[T04开局诊断交接](../../tofix/dsh-startup-alignment-handoff-2026-10-11-f68b943d.md)及原源，诊断自报尚待负责人复核，不据此认定两个失败同因。
+**先行包与排期**：T08.1 / P1，认领见上；负责人本轮根据T04正常开局受阻路径将此依赖提前，其他整幕范围保持P2。下一项可验证的结果是正式工厂从新Run开始，按源实际执行共享/玩家遗物袋、事件及必要遭遇预生成，再进入首场战斗；长期对象与后续可用池必须成立，不能用补抽、换seed或工具替换池推进随机游标。先核对[T04开局诊断交接](../2026-10-11/dsh-startup-alignment-handoff-2026-10-11-f68b943d.md)及原源，诊断自报尚待负责人复核，不据此认定两个失败同因。
 
 **负责人本轮门槛复核（2026-10-11）**：普通/精英队列分离及消费者已核对，负责人当前源码独立构建与队列7项通过，旧15/30首个差异已消除。执行者完整Slice759、严格17项15双侧/1单侧/1重洗未过及正常公开三场战斗后Fogmog边界保留；本轮未重复全套或完整Run。新隐藏库存导致身份变化有Schema依据，不撤销修复以保旧常量；精英战斗/战利品、事件、商店与跨幕仍不关闭。net跨会话绑定首个差异已独立复现，按T03接续。[问题复核与base扩展教程](../2026-10-11/base-developer-review-2026-10-11.md)。
 
@@ -371,7 +371,7 @@ $env:W06_DUMP_POWER='Illusion'; dotnet run --project mod-the-spire/base-spire/Ba
 
 **公共操作实施认领（用户2026-10-12派单）**：已验收（本轮公共操作重构与现有支持范围回归，完整房间/遗物一致性未关闭）；Codex `/root` / `ENV-T09-shared-operations-20261012`。商店/宝箱/奖励/营火/事件接同一RunResources，LoseGold/GainMaxHp与RunRelics.Obtain集中语义，抽取、价格和来源关闭保留。3项新增整局判别及原正式房间/药水检查在完整Slice794中通过；共同Engine99/net418、严格17及正常seed L48步前缀成立。金币/生命/遗物全参与者、叠加/替换/移除和新来源原版双侧仍开放；[交付与下一接手方法](../2026-10-12/shared-operations-and-card-primitives-2026-10-12.md)。本包无未完生产，无派发，M01/T09不关闭；后继仍按必要事件/持有内容与跨幕接续。
 
-**sim架构对照维护（2026-10-12）**：已完成（源码组织审阅，非运行验收）；Codex `/root` 对照本地sts2-sim的Run/房间/注册/命令与base已验收接口及A开发中模块，给出普通事件扩展路径、共享命令/生命周期缺口与建议顺序。当前A/B/C派单范围不变，未测开发耗时、未重跑规则或验收A半成品。[源码定位与架构建议](../2026-10-12/sts2-sim-flow-extension-comparison-2026-10-12.md)；建议沿本项/T10后续实际流程收敛，认领实施另按主清单。
+**sim架构对照维护（2026-10-12）**：已完成（源码组织审阅，非运行验收）；Codex `/root` 对照本地sts2-sim的Run/房间/注册/命令与base已验收接口及A开发中模块，给出普通事件扩展路径、共享命令/生命周期缺口与建议顺序。当前A/B/C派单范围不变，未测开发耗时、未重跑规则或验收A半成品。[源码定位与架构建议](../../deprecated/sts2-sim-flow-extension-comparison-2026-10-12.md)；建议沿本项/T10后续实际流程收敛，认领实施另按主清单。
 
 **横向扩展接口认领（2026-10-12）**：已验收（编译接口与受控例子）；Codex `/root` 按用户本轮要求核对卡牌/怪物自动资源注册，交 `Slice/Rooms` 地图入口与事件模块注册、`MapRoomWiring` 通用分派及两个独立文件事件例子/对应指南。当前共同Engine99/Slice775、例子选择隔离/永久写回/关闭与反例通过，房间拆分身份不变；未实现真实问号概率/事件池，不抵原版房间验收。[交付与未验证](../2026-10-12/horizontal-content-extension-2026-10-12.md)。
 

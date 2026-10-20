@@ -5,3 +5,21 @@ dsl_version = "core/0.3"
 use Colossus { template = CardDefinition args = { sourceEntry = "COLOSSUS" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:colossus" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use ColossusEffect1 { template = BlockEffect args = { definition = "base-spire:colossus" block = 5 upgradedBlock = 8 } }
 use ColossusEffect2 { template = ApplySelfPowerEffect args = { definition = "base-spire:colossus" power = "base-spire:colossus-power" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure ColossusBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = ColossusEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = ColossusEffect2.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase ColossusBody { dispatch = ExecuteCardBody key = "base-spire:colossus" procedure = ColossusBody }
+
+procedure ColossusDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase ColossusDamageValue { dispatch = ReadCardDamage key = "base-spire:colossus" procedure = ColossusDamageValue }

@@ -5,11 +5,11 @@
 
 2026-10-18用户确认：Engine为主体，几乎所有游戏逻辑由完整DSL实现，Spire是该DSL面向内容作者的受限子集。base以DSL规则库与内容配置定义游戏；C#构建IR不等于完成DSL迁移。当前偏差、C#保留边界与迁移验收见[Engine DSL迁移设计](mod-the-spire/engine-dsl-migration.md)。本决定优先于此前将大量C#领域规则作为最终实现的组织说明；既有玩法验收范围继续保留。
 
-本规范定义项目目标、模块边界和规则契约。接手时，先从[当前清单](../review/tofix/README.md)确认任务，再查涉及的章节。第 2～9 节保留旧 STS 兼容实现的行为描述；核对活动 Engine 时，使用下文链接的 ENV 任务包和实现约束。
+本规范定义项目目标、模块边界和规则契约。接手时，先从[当前清单](../review/tofix/README.md)确认任务，再查涉及的章节。第2～9节的旧解析器、C#接口、内容数量与运行状态保留为历史语义依据；完整产品目标仍有效，但这些描述不代表当前DSL能力。当前架构查[base组织说明](mod-the-spire/base-architecture.md)，接口查[行为操作参考](../development/base-spire/reference/card-behavior.md)，版本与实测范围查清单链接的基线记录。
 
 > 源码依据：仓库中的 [`sts2/`](../../sts2/README-for-browsing.md) 是从本机游戏数据恢复的浏览工程，并非开发者发布的原始源码。以下“源码观察”只描述当前这份恢复工程；`core-the-spire` 是独立实现，不直接复制其 Godot 运行时结构。
 
-> **目标澄清（2026-10-01）：** 用户明确要求 core 是可描述多类桌游的通用引擎；卡牌、怪物、地图、伤害和回合等游戏语义由游戏包定义，STS 是首个优先实现。复杂算法允许通过指定 Lua 脚本计算输入到输出。新目标与具体设计提案见 [通用桌游引擎设计稿](core-the-spire/generic-tabletop-engine-design.md)；[core spec](core-the-spire/spec.md) 与 [mod spec](mod-the-spire/spec.md) 已标明目标边界。本文件其余 STS 规则与实现描述继续作为当前实现/游戏包行为依据，不能据此将它们固定为通用引擎内置概念。新增 IR 和 Lua 接口尚未实现。
+> **目标澄清（2026-10-01）：** 用户明确要求 core 是可描述多类桌游的通用引擎；卡牌、怪物、地图、伤害和回合等游戏语义由游戏包定义，STS 是首个优先实现。复杂算法允许通过指定 Lua 脚本计算输入到输出。新目标与具体设计提案见 [通用桌游引擎设计稿](core-the-spire/generic-tabletop-engine-design.md)；[core spec](core-the-spire/spec.md) 与 [mod spec](mod-the-spire/spec.md) 已标明目标边界。本文件其余STS规则与实现描述保留历史行为依据及游戏包验收意图，不能据此将它们固定为通用引擎内置概念。通用IR已存在；Lua后端及未承诺的扩展仍按各自范围处理。
 
 > 2026-10-04执行约束：当前按[ENV v1.2](environment-completion-and-differential-v1.md)及[实现约束](environment-implementation-constraints.md)推进。本文第2～9节的GameState/RunState/IRuleHook及“地图/奖励已建立”等为STS兼容实现的历史范围，不证明新Engine迁移；需要逐项核对当前正式入口和两侧case。通用引擎稿中已完成的G/H能力不重新开工，Lua/完整恢复/其他游戏产品不因旧阶段表进入本次任务。正式seed采用[协议0.2](net-the-spire/protocol.md#7-env正式环境的02扩展)，0.1已验收语义保留。
 

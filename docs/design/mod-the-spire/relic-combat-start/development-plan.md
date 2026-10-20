@@ -16,7 +16,9 @@
 4. **随机与决策**：完整StableShuffle后Take与逐次samplePick并不等价；原生选牌及取消不伪装为随机选择。需要玩家决策的内容另保留暂停续接验收。
 5. **可运行的依赖**：同组只有参数差异时共享模板；触发顺序或外部能力不同则拆成子包。后排只保留方向，接手时再细化，不预先建立所有未来模板。
 
-## 已选切片：G01拾取随机升级
+## G01拾取随机升级的实施依据（已交付，不是下一包）
+
+以下保留G01的设计、步骤和验收依据；本轮不按其旧“待做”重新认领。当前包已交付三件消费者，下一遗物组及实际修改边界唯一见[当前交付](../../../review/tofix/README.md#当前交付)。
 
 Whetstone的AfterObtained从永久牌组筛选可升级Attack、StableShuffle(Niche)后Take(2)；WarPaint对应Skill；SandCastle为全部可升级牌Take(6)。三者完整方法已核对，可共用一个领域操作与一个拾取监听模板。FragrantMushroom先伤害后升级，YummyCookie／Pomander是玩家选牌，NeowsTalisman按Basic和标签取末张，均不归此切片。
 

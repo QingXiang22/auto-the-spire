@@ -41,8 +41,7 @@ procedure DrawOne {
         if = {
           condition = not(isNone(drawn))
           then = {
-            removeFromCollection = { collection = DrawPile item = drawn }
-            addToCollection = { collection = Hand item = drawn }
+            call = { procedure = MoveCombatCard args = { owner = owner card = drawn to = "hand" reason = "draw" } }
             set = { target = owner field = Player.LastDrawn value = drawn }
             emit = {
               event = BeforeCardDrawnReactions payload = { owner = owner card = drawn } }
@@ -75,8 +74,7 @@ action DiscardHand {
     forEach = {
       query = collection(Hand) item = card
       body = {
-        removeFromCollection = { collection = Hand item = card }
-        addToCollection = { collection = DiscardPile item = card }
+        call = { procedure = DiscardCombatCard args = { owner = first(type(Player)) card = card } }
       }
     }
   }
@@ -90,9 +88,9 @@ procedure DrawDevelopmentTurnHand {
   body = {
     let = { into = amount value = foldEvent(ModifyTurnDraw, field(owner, Player.AutoDrawPerTurn), owner) }
     if = { condition = equal(field(owner, Player.TurnNumber), 1) then = {
-        let = { into = amount value = minimum(10, maximum(amount, count(where(collection(DrawPile), card, field(card, Card.Innate))))) }
+        let = { into = amount value = minimum(10, maximum(amount, count(where(collection(DrawPile), card, pureCall(CardHasKeyword, card, "innate"))))) }
       forEach = {
-        query = where(collection(DrawPile), card, field(card, Card.Innate)) item = innate
+        query = where(collection(DrawPile), card, pureCall(CardHasKeyword, card, "innate")) item = innate
         body = {
           removeFromCollection = { collection = DrawPile item = innate }
           addToCollection = { collection = DrawPile item = innate position = Start }

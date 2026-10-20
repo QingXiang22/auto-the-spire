@@ -14,3 +14,21 @@ use PommelStrikeDraw {
   template = DrawEffect
   args = { definition = "base-spire:pommel-strike" cards = 1 upgradedCards = 2 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure PommelStrikeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = PommelStrikeDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = PommelStrikeDraw.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase PommelStrikeBody { dispatch = ExecuteCardBody key = "base-spire:pommel-strike" procedure = PommelStrikeBody }
+
+procedure PommelStrikeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase PommelStrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:pommel-strike" procedure = PommelStrikeDamageValue }

@@ -6,7 +6,7 @@ template DrawUntilNonAttackEffect {
   parameters = { definition = { type = String(length = 64) }  }
   body = {
     procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { drawing = Bool drawn = Binding }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = drawing value = true }
@@ -19,10 +19,28 @@ repeat = { count = 10 body = { if = { condition = drawing then = {
 } } } }
       } } }
     }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+
   }
 }
 
 use Pillage { template = CardDefinition args = { sourceEntry = "PILLAGE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:pillage" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 9 } }
 use PillageEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:pillage" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use PillageEffect2 { template = DrawUntilNonAttackEffect args = { definition = "base-spire:pillage" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure PillageBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = PillageEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = PillageEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase PillageBody { dispatch = ExecuteCardBody key = "base-spire:pillage" procedure = PillageBody }
+
+procedure PillageDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase PillageDamageValue { dispatch = ReadCardDamage key = "base-spire:pillage" procedure = PillageDamageValue }

@@ -1,5 +1,7 @@
 # base-spire完成度与工作流审阅 — 2026-10-19
 
+> 历史审阅：本文保留不同基线上的发现、实验与建议，不作为当前缺陷或重构入口。内容模块／Power／普通攻击数值已有[正式迁移](content-model-migration-2026-10-19.md)；当前代码重新评估后的攻击、卡牌行为及其他目标统一见[内容与行为重构目标](../../../design/mod-the-spire/content-behavior-refactor-goals.md)。只需查具体历史实验时再读下文。
+
 本次回答“纯DSL base还缺什么、开发为什么慢、先改哪里”。负责人Codex `/root`，归属CORE-AUTHOR-05／CI-01。基线`978a0b6`、PR #23、base `0.6.0-dsl.38`；Windows／PowerShell、.NET SDK 9.0.306、Python 3.12。当前任务仍只维护[主清单](../../tofix/README.md#当前交付)。本次修改检查工具、CI触发和工作流文档，不扩张玩法或解除暂停项。
 
 结论：铁甲战士卡牌的本地机制覆盖已较完整，全游戏环境仍处于内容与流程恢复阶段。主要缺口是遗物长尾、其他内容、正常来源／Run，以及纯DSL独立适配器。不能用一个整体百分比合并这些不同层级。
@@ -98,7 +100,7 @@
 
 1. **P1：Power调用方拥有过多语义。** [ApplyPlayerPower](https://github.com/QingXiang22/auto-the-spire/blob/a4ac0d5/mod-the-spire/base-spire/combat/powers.spire)接收definition和kind，并把调用方的kind直接写入实例；[Inflame](../../../../mod-the-spire/base-spire/cards/ironclad/inflame.spire)和[Bash](../../../../mod-the-spire/base-spire/cards/ironclad/bash.spire)等调用方同时声明Power身份和行为角色。力量ID在10个DSL文件出现16次，易伤ID在10个文件出现10次；这是静态调用位置，不是运行次数。它们不是统一Power定义的引用。未定义ID能生效的实验进一步表明，Power来源目录与可执行定义尚未形成约束。
 2. **P1：Power初始化／合并／寿命仍汇聚在公共分支。** [reactions](https://github.com/QingXiang22/auto-the-spire/blob/a4ac0d5/mod-the-spire/base-spire/powers/reactions.spire)的ConfigureAppliedPower按kind设置SelfDamage、Counter和ExpiresBeforeEnemy；TickDebuff枚举三类kind。[modifiers](https://github.com/QingXiang22/auto-the-spire/blob/a4ac0d5/mod-the-spire/base-spire/powers/modifiers.spire)的SinglePowerStacks枚举corruption和autoplay-drawn-strikes。新Power若多一种策略，仍需进入这些中心文件；把ID分支改成kind字符串并没有形成完整对象边界。
-3. **P1：内容私有状态穿过共享卡牌生命周期。** [CardPlayRecord.RuptureGain](../../../../mod-the-spire/base-spire/cards/schema.spire)由Power反应写入，再由[cards/rules/reactions](../../../../mod-the-spire/base-spire/cards/rules/reactions.spire)在AfterCardPlayed消费；Rupture的规则被拆进Power、公共记录和卡牌收尾三处。DiscountsOnAttack／AutoFromExhaustAtTurnEnd又进入CardDefinition、[复制](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)和[永久牌→战斗副本](../../../../mod-the-spire/base-spire/cards/rules/permanent-deck.spire)的手工字段列表。类似新私有字段会继续扩大公共修改面。通用费用、HP等共享状态本身没有被本次判为问题。
+3. **P1：内容私有状态穿过共享卡牌生命周期。** [CardPlayRecord.RuptureGain](../../../../mod-the-spire/base-spire/cards/schema.spire)由Power反应写入，再由[cards/rules/reactions](https://github.com/QingXiang22/auto-the-spire/blob/54bf08a/mod-the-spire/base-spire/cards/rules/reactions.spire)在AfterCardPlayed消费；Rupture的规则被拆进Power、公共记录和卡牌收尾三处。DiscountsOnAttack／AutoFromExhaustAtTurnEnd又进入CardDefinition、[复制](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)和[永久牌→战斗副本](../../../../mod-the-spire/base-spire/cards/rules/permanent-deck.spire)的手工字段列表。类似新私有字段会继续扩大公共修改面。通用费用、HP等共享状态本身没有被本次判为问题。
 4. **P2：卡牌数值与计算能力仍有重复或集中分派。** [Strike](../../../../mod-the-spire/base-spire/cards/ironclad/strike-ironclad.spire)的baseDamage／upgradedBaseDamage和damage／upgradedDamage重复；前者参与CardBaseDamage等消费者，后者用于AttackEffect实际结算，实验已证实可分离。CardBaseDamage还按DamageScale枚举耗尽／Strike／易伤层数／格挡；新增计算方式仍须改公共操作，作者没有独立数值提供方边界。
 5. **P2：注册和检查重复维护可执行名单。** 内容需手动同步index、catalog及public/metadata；[PackageChecks](../../../../tools/base-spire-dev/PackageChecks.cs)的DB-A05/A10还硬编码当前55件已迁移遗物的完整字符串名单。增加一个合法定义会额外要求修改这段C#。297项原来源分母及独立源依据应继续冻结，而“当前已实现名单”可以由实际声明与执行见证做结构比对，无需再手抄一份；行为期望仍需独立来源，不能从被测DSL现算答案。
 

@@ -1,5 +1,7 @@
 # core-the-spire specification
 
+2026-10-20基线校准：活动工程为Core.TheSpire 0.7.0／engine/ir@0.7，文本语言core/0.3；类型化dispatch及投影身份锚点已接入，准确语义见[作者参考](../../dsl/core/0.3/authoring-reference.md)和[活动核心契约](../../contracts/core-engine-baseline.md)。下文2026-10-04／05的冻结与实现描述是历史时点，不要求下游退回engine/ir@0.3；具体新维护仍需已登记范围与最小复现。
+
 2026-10-18架构纠偏：Engine及其完整DSL是主体；Spire为完整DSL的受限内容子集，base玩法由DSL库定义。不得通过把游戏规则移入Engine或保留C#专属效果实现来满足这一目标。能力缺口先用通用文本程序复现；目标及验收见[迁移设计](../mod-the-spire/engine-dsl-migration.md)。本决定不表示完整文本覆盖已实现。
 
 2026-10-05 冻结基线为 engine/ir@0.3，保留 core/0.1 与 core/0.2 语言。启动顺序和枚举域已收口，兼容边界、集合/生命周期与维护规则见 [冻结契约](../../contracts/core-engine-baseline.md)及 [关闭报告](../../review/archived/core-contract-freeze-2026-10-05.md)，优先于下文历史限制。

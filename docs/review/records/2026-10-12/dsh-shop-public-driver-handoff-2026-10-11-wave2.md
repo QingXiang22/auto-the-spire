@@ -152,5 +152,5 @@ backend `net:backend:simulation-0.2-350911d86bad900d` / protocol `0.2` / profile
 * 方法与用法：`run_game.md`、`client/README.md`、教程第 6 节。
 * 本包证据与长日志：`.audit/dsh-shop-public-driver-20261011/`（`validation.md` 是索引，
   `runs/` 是原始帧，`tools/` 是只读探针脚本）。
-* 历史：wave-1 交接 [dsh-public-run-driver-handoff-2026-10-11.md](../../tofix/dsh-public-run-driver-handoff-2026-10-11.md)
+* 历史：wave-1 交接 [dsh-public-run-driver-handoff-2026-10-11.md](../2026-10-11/dsh-public-run-driver-handoff-2026-10-11.md)
   与 `.audit/dsh-public-run-driver-2026-10-11/`（旧 Host `805C123D…` 的记录，本包按 §3 复算，未改写）。

@@ -15,3 +15,21 @@ use TauntVulnerable {
   template = ApplyEnemyPowerEffect
   args = { definition = "base-spire:taunt" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 2 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure TauntBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = TauntBlock.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = TauntVulnerable.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase TauntBody { dispatch = ExecuteCardBody key = "base-spire:taunt" procedure = TauntBody }
+
+procedure TauntDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase TauntDamageValue { dispatch = ReadCardDamage key = "base-spire:taunt" procedure = TauntDamageValue }

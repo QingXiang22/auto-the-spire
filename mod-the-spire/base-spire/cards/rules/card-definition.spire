@@ -5,11 +5,6 @@ dsl_version = "core/0.3"
 # Content leaves configure this template and compose effect templates; they contain no procedures.
 template CardDefinition {
   parameters = {
-    damageScale = { type = String(length = 32) default = "none" }
-    damageFactor = { type = Int default = 0 }
-    upgradedDamageFactor = { type = Int default = 0 }
-    discountsOnAttack = { type = Bool default = false }
-    autoFromExhaustAtTurnEnd = { type = Bool default = false }
     inIroncladPool = { type = Bool default = false }
     generatable = { type = Bool default = false }
     kind = { type = String(length = 16) default = "skill" }
@@ -31,6 +26,7 @@ template CardDefinition {
     procedure Register {
       locals = { entry = Binding }
       body = {
+        if = { condition = exists(where(collection(CardLibrary), d, equal(field(d, CardBlueprint.DefinitionId), arg(definition)))) then = { fail = { message = "Duplicate card definition" } } }
         create = { type = CardBlueprint scope = frameScope() into = entry collection = CardLibrary fields = {
           DefinitionId = arg(definition) Kind = arg(kind) Rarity = arg(rarity) InIroncladPool = arg(inIroncladPool) Generatable = arg(generatable)
         } }
@@ -44,10 +40,8 @@ template CardDefinition {
           set = { target = card field = Card.Cost value = arg(cost) }
           set = { target = card field = Card.BaseCost value = arg(cost) }
           set = { target = card field = Card.BaseDamage value = arg(baseDamage) }
-          set = { target = card field = Card.DamageScale value = arg(damageScale) }
-          set = { target = card field = Card.DamageFactor value = arg(damageFactor) }
-          set = { target = card field = Card.DiscountsOnAttack value = arg(discountsOnAttack) }
-          set = { target = card field = Card.AutoFromExhaustAtTurnEnd value = arg(autoFromExhaustAtTurnEnd) }
+
+
           set = { target = card field = Card.Kind value = arg(kind) }
           set = { target = card field = Card.Rarity value = arg(rarity) }
           set = { target = card field = Card.SourceEntry value = arg(sourceEntry) }
@@ -67,12 +61,10 @@ template CardDefinition {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = { condition = not(field(card, Card.CostResetAtTurnEnd)) then = {
-              set = { target = card field = Card.Cost value = arg(upgradedCost) }
-            } }
             set = { target = card field = Card.BaseCost value = arg(upgradedCost) }
+            call = { procedure = RefreshCardCost args = { card = card } }
             set = { target = card field = Card.BaseDamage value = arg(upgradedBaseDamage) }
-            set = { target = card field = Card.DamageFactor value = arg(upgradedDamageFactor) }
+
             set = { target = card field = Card.Innate value = arg(upgradedInnate) }
           }
         }

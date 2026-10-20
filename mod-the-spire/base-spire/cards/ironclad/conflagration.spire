@@ -11,3 +11,20 @@ use ConflagrationDamage {
   template = AttackAllEnemiesEffect
   args = { definition = "base-spire:conflagration" hits = 4 upgradedHits = 5 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure ConflagrationBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = ConflagrationDamage.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase ConflagrationBody { dispatch = ExecuteCardBody key = "base-spire:conflagration" procedure = ConflagrationBody }
+
+procedure ConflagrationDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase ConflagrationDamageValue { dispatch = ReadCardDamage key = "base-spire:conflagration" procedure = ConflagrationDamageValue }

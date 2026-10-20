@@ -16,11 +16,25 @@ procedure ResetTurnEnergy {
   }
 }
 
-# CreatureCmd.Heal: heal and clamp to MaxHp. Revive, healing modifiers and death are not migrated.
+event PlayerHealed { payload = { owner = Ref(Player) requested = Int actual = Int source = String(length = 64) } }
+event ModifyGoldGained { payload = { value = Int owner = Ref(Player) source = String(length = 64) } }
+event AfterModifyingGoldGained { payload = { owner = Ref(Player) amount = Int source = String(length = 64) } }
+event GoldGained { payload = { owner = Ref(Player) requested = Int actual = Int source = String(length = 64) } }
+event GoldLost { payload = { owner = Ref(Player) requested = Int actual = Int reason = String(length = 16) source = String(length = 64) } }
+
+# No revive is implied by healing in this single-player development scope.
 procedure Heal {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
+  body = { call = { procedure = HealWithSource args = { owner = owner amount = amount source = "unspecified" } } }
+}
+procedure HealWithSource {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) source = String(length = 64) }
+  locals = { before = Int }
   body = {
+    if = { condition = lessOrEqual(field(owner, Player.Hp), 0) then = { fail = { message = "Revive is unsupported; healing requires a living player" } } }
+    let = { into = before value = field(owner, Player.Hp) }
     set = { target = owner field = Player.Hp value = minimum(field(owner, Player.MaxHp), add(field(owner, Player.Hp), amount)) }
+    emit = { event = PlayerHealed payload = { owner = owner requested = amount actual = subtract(field(owner, Player.Hp), before) source = source } }
   }
 }
 procedure HealToMaximum {
@@ -29,7 +43,37 @@ procedure HealToMaximum {
 }
 procedure GainGold {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 99999) }
-  body = { set = { target = owner field = Player.Gold value = minimum(99999, add(field(owner, Player.Gold), amount)) } }
+  body = { call = { procedure = GainGoldWithSource args = { owner = owner amount = amount source = "unspecified" } } }
+}
+procedure GainGoldWithSource {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 99999) source = String(length = 64) }
+  locals = { value = Int before = Int }
+  body = {
+    let = { into = value value = foldEvent(ModifyGoldGained, amount, owner, source) }
+    emit = { event = AfterModifyingGoldGained payload = { owner = owner amount = value source = source } }
+    if = { condition = greater(value, 0) then = {
+      let = { into = before value = field(owner, Player.Gold) }
+      set = { target = owner field = Player.Gold value = minimum(99999, add(before, value)) }
+      emit = { event = GoldGained payload = { owner = owner requested = amount actual = subtract(field(owner, Player.Gold), before) source = source } }
+    } }
+  }
+}
+procedure LoseGold {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 99999) reason = String(length = 16) source = String(length = 64) }
+  locals = { actual = Int }
+  body = {
+    if = { condition = not(or(equal(reason, "spent"), or(equal(reason, "lost"), equal(reason, "stolen")))) then = { fail = { message = "Unknown gold loss reason" } } }
+    let = { into = actual value = minimum(amount, field(owner, Player.Gold)) }
+    set = { target = owner field = Player.Gold value = subtract(field(owner, Player.Gold), actual) }
+    emit = { event = GoldLost payload = { owner = owner requested = amount actual = actual reason = reason source = source } }
+  }
+}
+procedure SpendGold {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 99999) source = String(length = 64) }
+  body = {
+    if = { condition = greater(amount, field(owner, Player.Gold)) then = { fail = { message = "Not enough gold for purchase" } } }
+    call = { procedure = LoseGold args = { owner = owner amount = amount reason = "spent" source = source } }
+  }
 }
 
 # PlayerCmd.GainEnergy: add energy without clamping to MaxEnergy.

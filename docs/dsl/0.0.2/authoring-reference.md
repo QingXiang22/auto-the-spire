@@ -1,5 +1,7 @@
 # base/0.0.2 作者语言参考
 
+> 历史参考：本页描述已退出生产的C#卡牌前端。当前包使用core/0.3，编写内容请从[base开发手册](../../development/base-spire/README.md)和[当前作者参考](../core/0.3/authoring-reference.md)进入；下列旧运行步骤不能用于当前工具。
+
 文档类型：参考（Reference）。本页定义活动卡牌前端的共享变体与数值语法；原有领域效果见[0.0.1 原语目录](../0.0.1/primitives.md)。运行入口见[卡牌开发工具](../../../tools/base-spire-dev/README.md)。
 
 ## 版本与兼容输入

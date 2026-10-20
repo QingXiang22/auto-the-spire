@@ -13,6 +13,10 @@ entity PermanentUpgradeCandidate {
 
 procedure UpgradeRandomPermanentCards {
   parameters = { owner = Ref(Player) kind = String(length = 16) amount = Int(min = 1, max = 999) }
+  body = { call = { procedure = UpgradeRandomPermanentCardsFromStream args = { owner = owner kind = kind amount = amount stream = "base-spire:run:niche" } } }
+}
+procedure UpgradeRandomPermanentCardsFromStream {
+  parameters = { owner = Ref(Player) kind = String(length = 16) amount = Int(min = 1, max = 999) stream = String(length = 128) }
   locals = { selection = Binding candidate = Binding left = Binding right = Binding card = Binding size = Int index = Int picked = Int }
   body = {
     if = { condition = not(or(equal(kind, "all"), or(equal(kind, "attack"), equal(kind, "skill")))) then = {
@@ -30,7 +34,7 @@ procedure UpgradeRandomPermanentCards {
     let = { into = index value = size }
     repeat = { count = maximum(0, subtract(size, 1)) body = {
       let = { into = index value = subtract(index, 1) }
-      sampleInt = { stream = "base-spire:run:niche" min = 0 max = add(index, 1) into = picked }
+      sampleInt = { stream = stream min = 0 max = add(index, 1) into = picked }
       let = { into = left value = first(where(type(PermanentUpgradeCandidate), c, and(equal(field(c, PermanentUpgradeCandidate.Selection), selection), equal(field(c, PermanentUpgradeCandidate.Index), index)))) }
       let = { into = right value = first(where(type(PermanentUpgradeCandidate), c, and(equal(field(c, PermanentUpgradeCandidate.Selection), selection), equal(field(c, PermanentUpgradeCandidate.Index), picked)))) }
       set = { target = left field = PermanentUpgradeCandidate.Index value = picked }

@@ -7,7 +7,7 @@ template AmplifyVulnerableEffect {
   parameters = { definition = { type = String(length = 64) } }
   body = {
     procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { vulnerable = Int }
       body = {
         if = {
@@ -20,14 +20,14 @@ template AmplifyVulnerableEffect {
             if = {
               condition = greater(vulnerable, 0)
               then = {
-                call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:vulnerable-power" stacks = vulnerable } }
+                call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = "base-spire:vulnerable-power" stacks = vulnerable } }
               }
             }
           }
         }
       }
     }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
+
   }
 }
 
@@ -43,3 +43,21 @@ use MoltenFistAmplify {
   template = AmplifyVulnerableEffect
   args = { definition = "base-spire:molten-fist" }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure MoltenFistBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = MoltenFistDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = MoltenFistAmplify.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase MoltenFistBody { dispatch = ExecuteCardBody key = "base-spire:molten-fist" procedure = MoltenFistBody }
+
+procedure MoltenFistDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase MoltenFistDamageValue { dispatch = ReadCardDamage key = "base-spire:molten-fist" procedure = MoltenFistDamageValue }

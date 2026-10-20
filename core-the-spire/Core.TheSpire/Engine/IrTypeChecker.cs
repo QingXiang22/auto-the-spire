@@ -310,6 +310,8 @@ internal static class IrTypeChecker
                 if (typeId != type.Type.Id)
                     throw Faults.Schema($"{where}: projection entry key {typeId} does not match type id {type.Type.Id}");
                 if (!type.Include) continue;
+                if (type.IdentityFromFieldIndex >= 0 && type.Type.Fields[type.IdentityFromFieldIndex].Kind != FieldTypeKind.Ref)
+                    throw Faults.TypeError($"{where}: identity_from must name a Ref field of '{type.Type.QualifiedId}'");
                 if (type.OwnerFieldIndex >= 0)
                 {
                     var owner = type.Type.Fields[type.OwnerFieldIndex];
@@ -644,6 +646,9 @@ internal static class IrTypeChecker
 
         private static void RequirePure(Frame frame, Inst inst, string where)
         {
+            // Explicit validation failure has no state/RNG effects, just like a failing pure expression.
+            // It must remain distinct from SetTerminal, which publishes a game result.
+            if (inst is FailInst) return;
             var signature = inst.Signature;
             foreach (var effect in SideEffects)
             {

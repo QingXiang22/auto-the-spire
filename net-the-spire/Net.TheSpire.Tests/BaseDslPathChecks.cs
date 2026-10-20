@@ -29,6 +29,7 @@ internal static class BaseDslPathChecks
         yield return ("RW07 real stdio skips the visible gold reward without crediting gold", () => StdioTrajectory("reward-skip"));
         yield return ("PD09 real stdio smith upgrades a permanent card and its combat copy deals upgraded damage", () => StdioTrajectory("smith-select"));
         yield return ("PD10 real stdio smith cancellation preserves the room option and permanent deck", () => StdioTrajectory("smith-cancel"));
+        yield return ("BEHAVIOR real stdio event choices publish Sown without leaking hidden combat copies", () => StdioTrajectory("sown-event"));
         yield return ("CP56 real stdio the HP-loss flag drives the extra Spite hit", () => StdioTrajectory("spite"));
         yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
         yield return ("IC real stdio explicit target selects the second enemy", () => StdioTrajectory("explicit-target"));
@@ -161,6 +162,10 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "sown-event" => [
+                    ("Strike.Obtain", "0", false, "0", "0", false, ""),
+                    ("Defend.Obtain", "0", false, "0", "0", false, ""),
+                    ("EnterDevelopmentSapphireSeed", "0", false, "0", "0", false, "")],
                 "self-forming-clay" => [
                     ("SelfFormingClay.Obtain", "0", false, "0", "0", false, ""),
                     ("Hemokinesis.AddToHand", "0", false, "0", "0", false, ""),
@@ -546,6 +551,29 @@ internal static class BaseDslPathChecks
             if (mode == "rupture") { Check.Equal("78", Public(snapshot, "Player.Hp"), "real HP loss"); Check.Equal("2", Public(snapshot, "Player.PlaySequence"), "real play count"); }
             if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");
             if (mode is "kill" or "reward-claim" or "reward-skip") Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "the public combat outcome follows the last kill");
+            if (mode == "sown-event")
+            {
+                void StepVisit(LegalActionDto candidate)
+                {
+                    var id = "visit-step-" + ++stepNumber;
+                    Send(Request(id, Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
+                    snapshot = Snapshot(Send(Request(id + "-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                }
+                void Named(string name) => StepVisit(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + name));
+                StepVisit(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool { Value: false })));
+                var permanent = snapshot.Entities.Single(e => e.ContentId == "base-spire:strike-ironclad").InstanceId;
+                StepVisit(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireString text && text.Value == permanent)));
+                Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:sown"), "one real permanent attachment after choice");
+                Named("CloseDevelopmentEvent"); Named("AddDevelopmentTarget"); Named("BeginDevelopmentCombat");
+                Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:sown"), "hidden combat-copy attachment cannot reveal draw-pile identity");
+                Named("Draw"); Check.Equal(2, snapshot.Entities.Count(e => e.ContentId == "base-spire:sown"), "drawing authorizes its combat attachment");
+                Named("BeginDevelopmentTurn"); Named("PlayAttackFromHand");
+                Check.Equal("3", Public(snapshot, "Player.Energy"), "one paid, one gained from the explicit enchantment phase");
+                Check.Equal("34", Public(snapshot, "Enemy.Hp"), "actual card body executes once after the event");
+                var statuses = snapshot.Entities.Where(e => e.ContentId == "base-spire:sown")
+                    .Select(e => ((WireString)e.Fields.Single(f => f.FieldId.EndsWith(":CardAttachment.Status", StringComparison.Ordinal)).Value!).Value).Order().ToArray();
+                Check.Equal("disabled,normal", string.Join(',', statuses), "combat spent state and permanent unspent state remain independent");
+            }
             if (mode is "smith-select" or "smith-cancel")
             {
                 var cancel = mode == "smith-cancel";

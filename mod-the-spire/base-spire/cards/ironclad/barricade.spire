@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Barricade.cs; SHA-256 retained in cards/catalog.json.
 use Barricade { template = CardDefinition args = { sourceEntry = "BARRICADE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:barricade" cost = 3 upgradedCost = 2 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use BarricadeEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:barricade" power = "base-spire:barricade" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BarricadeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BarricadeEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BarricadeBody { dispatch = ExecuteCardBody key = "base-spire:barricade" procedure = BarricadeBody }
+
+procedure BarricadeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BarricadeDamageValue { dispatch = ReadCardDamage key = "base-spire:barricade" procedure = BarricadeDamageValue }

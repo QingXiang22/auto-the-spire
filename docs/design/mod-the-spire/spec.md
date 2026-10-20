@@ -2,7 +2,7 @@
 
 2026-10-18用户确认的目标：base是使用Engine完整DSL的规则库与Spire内容包；Spire是该DSL的受限子集。具体效果、生命周期和整局流程不长期依赖C#游戏规则生成器。旧 C# 领域模块已退出生产，只在 tools 迁移对照保存。当前包仅支持遗物抽牌开发 scope；正常 Run 与未迁移内容明确未支持。目录拆分不构成完整玩法验收。目标、现状及迁移次序见[Engine DSL迁移设计](engine-dsl-migration.md)。
 
-完整环境恢复的细则见[ENV实现约束](../environment-implementation-constraints.md)：正式SinglePlayer工厂、单一内容源、权威状态/生命周期、完整房间与两侧case。禁止把旧Legacy/作者原型成果直接计入正式Engine或另造一套C#状态机。
+完整环境恢复的细则见[ENV实现约束](../environment-implementation-constraints.md)：同一manifest／Session、DSL单一内容源、权威状态／生命周期、完整房间与两侧case。旧SinglePlayer／ContentSource及本页后文C#编译模块属于历史实现依据，不是活动落点；当前结构查[base组织说明](base-architecture.md)，准确操作查[开发手册](../../development/base-spire/README.md)。禁止把旧Legacy／作者原型成果计入当前Engine或另造C#状态机。
 
 > 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
 

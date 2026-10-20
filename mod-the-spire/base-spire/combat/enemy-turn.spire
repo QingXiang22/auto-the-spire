@@ -6,25 +6,12 @@ dsl_version = "core/0.3"
 # one final integer floor after Colossus. Enemy Strength/Weak are read from Powers held by the attacking enemy; the player's Vulnerable
 # from Powers held by the defending player. Block absorbs first and the player HP floor stays zero.
 procedure DamagePlayerPowered {
-  parameters = { attacker = Ref(Enemy) owner = Ref(Player) amount = Int(min = 0, max = 999) }
-  locals = { blocked = Int scaled = Int }
-  body = {
-    emit = {
-      event = BeforePlayerAttacked payload = { owner = owner attacker = attacker }
-    }
-    let = { into = scaled value = multiply(maximum(0, foldEvent(ModifyEnemyAttackAdditive, amount, owner, attacker)), 10000) }
-    let = { into = scaled value = foldEvent(ModifyEnemyAttackMultiplier, scaled, owner, attacker) }
-    let = { into = scaled value = foldEvent(ModifyIncomingAttackMultiplier, scaled, owner, attacker) }
-    let = { into = scaled value = divide(scaled, 10000) }
-    let = { into = blocked value = minimum(field(owner, Player.Block), scaled) }
-    set = { target = owner field = Player.Block value = subtract(field(owner, Player.Block), blocked) }
-    set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), subtract(scaled, blocked))) }
-    if = {
-      condition = greater(subtract(scaled, blocked), 0)
-      then = { call = { procedure = RecordPlayerHpLoss args = { owner = owner } } }
-    }
-    call = { procedure = CheckCombatDefeat args = { owner = owner } }
-  }
+ parameters = { attacker = Ref(Enemy) owner = Ref(Player) amount = Int(min = 0, max = 999) }
+ locals = { attack = Binding }
+ body = {
+  create = { type = Attack scope = entityScope(owner) into = attack collection = Attacks fields = { Enemy = attacker Defender = owner Amount = amount Hits = 1 Mode = "single" } }
+  call = { procedure = ExecuteAttack args = { attack = attack } }
+ }
 }
 
 # Shared enemy phase. Each hittable enemy is offered one turn through EnemyTurnStarted, so the enemy content

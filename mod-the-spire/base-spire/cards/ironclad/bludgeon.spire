@@ -10,3 +10,20 @@ use BludgeonDamage {
   template = AttackEffect
   args = { definition = "base-spire:bludgeon" hits = 1 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BludgeonBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BludgeonDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase BludgeonBody { dispatch = ExecuteCardBody key = "base-spire:bludgeon" procedure = BludgeonBody }
+
+procedure BludgeonDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BludgeonDamageValue { dispatch = ReadCardDamage key = "base-spire:bludgeon" procedure = BludgeonDamageValue }

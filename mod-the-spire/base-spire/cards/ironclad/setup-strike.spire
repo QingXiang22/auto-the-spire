@@ -5,3 +5,21 @@ dsl_version = "core/0.3"
 use SetupStrike { template = CardDefinition args = { sourceEntry = "SETUP_STRIKE" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:setup-strike" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 7 upgradedBaseDamage = 9 } }
 use SetupStrikeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:setup-strike" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use SetupStrikeEffect2 { template = TemporaryStrengthEffect args = { definition = "base-spire:setup-strike" stacks = 2 upgradedStacks = 3 enemy = false } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure SetupStrikeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = SetupStrikeEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = SetupStrikeEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase SetupStrikeBody { dispatch = ExecuteCardBody key = "base-spire:setup-strike" procedure = SetupStrikeBody }
+
+procedure SetupStrikeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase SetupStrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:setup-strike" procedure = SetupStrikeDamageValue }

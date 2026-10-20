@@ -14,3 +14,21 @@ use ShrugItOffDraw {
   template = DrawEffect
   args = { definition = "base-spire:shrug-it-off" cards = 1 upgradedCards = 1 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure ShrugItOffBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = ShrugItOffBlock.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = ShrugItOffDraw.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase ShrugItOffBody { dispatch = ExecuteCardBody key = "base-spire:shrug-it-off" procedure = ShrugItOffBody }
+
+procedure ShrugItOffDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase ShrugItOffDamageValue { dispatch = ReadCardDamage key = "base-spire:shrug-it-off" procedure = ShrugItOffDamageValue }

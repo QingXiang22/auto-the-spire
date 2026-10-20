@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Rage.cs; SHA-256 retained in cards/catalog.json.
 use Rage { template = CardDefinition args = { sourceEntry = "RAGE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:rage" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use RageEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:rage" power = "base-spire:rage-power" stacks = 3 upgradedStacks = 5 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure RageBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = RageEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase RageBody { dispatch = ExecuteCardBody key = "base-spire:rage" procedure = RageBody }
+
+procedure RageDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase RageDamageValue { dispatch = ReadCardDamage key = "base-spire:rage" procedure = RageDamageValue }

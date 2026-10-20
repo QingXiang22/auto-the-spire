@@ -1,5 +1,7 @@
 # ENV 实现约束与交付证据
 
+2026-10-20落点校准：本文完整验收要求继续有效。当前生产base为纯DSL／静态JSON，活动core基线以[核心契约](../contracts/core-engine-baseline.md)修订为准。旧C#工厂、ContentSource和旧suite运行证据只作迁移依据；正常Run尚未恢复，不能按历史“已交付”安排续跑。当前能力与排期见[主清单](../review/tofix/README.md#当前交付)。
+
 2026-10-15 用户决定：采用 v0.109 随机规则，`reference/sts2-sim` 保持只读。正式工厂默认 `RandomLayoutId=sts2-v0.109-xxhash64@1`，原始字符串按 UTF-8 XxHash64 派生根及具名流，ulong 加法回绕；`old` 前缀仅对根 seed 使用旧 hash32。历史 hash32 配置由 `RunConfiguration.FrozenIronclad` 显式选择。该决定替代本文旧正常初始化包的参考重播种方案；历史受控机制 case 的既有授权范围保留。游戏内容源基线仍单独标识，本次不声称完整内容已升级至 v0.109。
 
 | 项目 | 约定 |
@@ -13,7 +15,7 @@
 
 旧 G/H/B 阶段及 Legacy 成果只提供复用线索。执行者需要在活动 Engine 路径核对实际行为，不能把这些旧成果计作新路径的完成证明，也不能将本文件转为新一轮纯设计任务。
 
-2026-10-05 接续按 [agent分工](post-core-agent-assignments.md)：A拥有base正式工厂/规则，B拥有严格对拍并统筹串行构建，C拥有net公开契约；当前core消费engine/ir@0.3冻结基线。本文出现“补通用能力”仅指负责人核对最小复现后决定的维护，不授权执行者改core或另建调度器。D/客户端取证、E/指定mod后排独立派单，不是当前原版编码前置。
+接续按[模块分工](post-core-agent-assignments.md)：A拥有base的DSL玩法／初始化，B拥有独立对拍并协调构建，C拥有net公开契约；各线加载同一manifest与规则身份。本文出现“补通用能力”指负责人核对最小复现后安排维护，不授权另建调度器。D/客户端取证、E/指定mod后排独立派单，不是当前原版编码前置。
 
 ## 1. 决策边界与执行范围
 
@@ -28,9 +30,9 @@
 | 落点 | 必须拥有 | 禁止拥有 |
 | --- | --- | --- |
 | `core-the-spire/Core.TheSpire/Engine/` | 通用类型/实例/集合/关系/作用域、IR/类型检查、唯一调度器、选择续接、通用随机/数值配置、纯投影及窄诊断 | Card/Power/Monster/Act/Boss枚举、STS卡名分支、回合/伤害/奖励/地图的内置规则 |
-| `mod-the-spire/base-spire/BaseSpire/SinglePlayer/`（新正式入口落点） | 原版配置/Schema/规则库、正式规则包构建、开局、地图/房间/战斗/长期状态、完整Run | 再写一个调度器；用普通C#可变对象作为独立权威游戏状态；调用Legacy或参考后端执行 |
-| `BaseSpire/{Cards,Powers,Relics,Potions,Enemies}/Content/` | 正式内容与定义/池的单一来源；现有`.spire`/有来源的JSON/注册数据按实际作者接口迁移 | 正式效果长期再抄一份到`.author`或测试字符串；忽略未知字段/不支持原语后继续加载 |
-| `BaseSpire/`各领域的前端／规则／编译模块 | 可复用前端/IR构造和旧受控场景；按需抽取共享正确实现 | 用旧切片的固定敌人/诊断牌组或测试开关代替正式整局 |
+| `mod-the-spire/base-spire/`的根入口及领域`rules/` | DSL配置／Schema／规则库、初始化、地图／房间／战斗／长期状态及完整Run；未恢复能力明确未支持 | 新调度器、C#玩法生成器、独立权威可变对象或Legacy／参考运行回退 |
+| `cards/`、`powers/`、`relics/`、`potions/`、`enemies/`等领域目录 | 正式DSL定义、静态catalog及源池，内容和共享机制各维护一份 | 规则藏入JSON、测试字符串或宿主回调；忽略未知字段／未支持原语后加载 |
+| `tools/base-spire-dev/`与`tools/base-migration-baseline/` | 前者加载／审计／检查当前包，后者保留旧C#源与验收意图；均不提供生产玩法 | 开发检查脚手架或旧切片代替正式规则／整局，恢复旧生产依赖 |
 | `net-the-spire/Net.TheSpire/` | 内核公开输出的通用协议编码、目录派生、候选句柄、控制和账本 | 第二套字段/动作/可见性规则；STS伤害/选牌/奖励规则、重演历史、绕过候选直接写状态；新增对base/参考的项目依赖 |
 | `net-the-spire/Net.TheSpire.Host/` | 组合base正式入口与net、配置/stdio传输 | 另一份开局或状态机；每次start丢失正式RNG配置；stdout混入日志 |
 | `tools/differential/` | 双侧适配、语义动作、诊断抽取、严格测试、首个差异/来源/证据 | 生产规则后端；把base结果复制成reference；通过修改游戏状态续跑整局 |

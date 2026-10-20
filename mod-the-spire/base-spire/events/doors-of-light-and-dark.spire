@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure DoorsOfLightAndDarkVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { light = Bool card = Binding }
+  body = {
+    # EventModel.Initialize seed for player slot zero; this event owns its stream, not run:niche.
+    seedStream = { stream = pureCall(EventVisitStream, visit) seed = pureCall(SourceContentSeed, 0, "DOORS_OF_LIGHT_AND_DARK", 0) }
+    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Doors of Light and Dark: light (true) or dark (false)" into = light }
+    if = { condition = light then = {
+      call = { procedure = UpgradeRandomPermanentCardsFromStream args = { owner = owner kind = "all" amount = 2 stream = pureCall(EventVisitStream, visit) } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "light" } }
+    } else = {
+      call = { procedure = SelectPermanentCard args = { owner = owner purpose = "remove" enchantment = "" cancelable = false } into = card }
+      if = { condition = not(isNone(card)) then = { call = { procedure = RemovePermanentCard args = { owner = owner card = card } } } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "dark" } }
+    } }
+  }
+}
+dispatchCase DoorsOfLightAndDarkVisit { dispatch = ExecuteEventVisit key = "base-spire:doors-of-light-and-dark" procedure = DoorsOfLightAndDarkVisit }
+action EnterDevelopmentDoorsOfLightAndDark { role = player requires = pureCall(CanEnterDevelopmentEvent, first(type(Player))) body = {
+  call = { procedure = EnterDevelopmentEvent args = { owner = first(type(Player)) definition = "base-spire:doors-of-light-and-dark" } }
+} }

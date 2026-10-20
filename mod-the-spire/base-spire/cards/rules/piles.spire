@@ -1,0 +1,96 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+event CardMoved { payload = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } }
+event CardDiscarded { payload = { owner = Ref(Player) card = Ref(Card) } }
+event BeforeHandFlush { payload = { owner = Ref(Player) } }
+event AfterHandFlush { payload = { owner = Ref(Player) } }
+event ModifyCardKeyword { payload = { value = Bool card = Ref(Card) keyword = String(length = 16) } }
+event ShouldFlushHand { payload = { value = Bool owner = Ref(Player) } }
+event ShouldTriggerEthereal { payload = { value = Bool owner = Ref(Player) card = Ref(Card) } }
+event ShouldPlayCard { payload = { value = Bool owner = Ref(Player) card = Ref(Card) auto = Bool } }
+
+entity HandFlushBatch { fields = { Owner = { type = Ref(Player) visibility = Hidden } } }
+entity HandFlushEntry { fields = { Batch = { type = Ref(HandFlushBatch) visibility = Hidden } Card = { type = Ref(Card) visibility = Hidden } } }
+
+procedure CardPlayAllowed {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) auto = Bool } result = Bool
+  body = { return = { value = and(equal(field(card, Card.Owner), field(owner, Player.Owner)), and(pureCall(ExecuteCardBody.Contains, field(card, Card.DefinitionId)), and(not(pureCall(CardHasKeyword, card, "unplayable")), foldEvent(ShouldPlayCard, true, owner, card, auto)))) } }
+}
+
+procedure CardHasKeyword {
+  pure = true parameters = { card = Ref(Card) keyword = String(length = 16) } result = Bool
+  locals = { value = Bool }
+  body = {
+    let = { into = value value = false }
+    if = { condition = equal(keyword, "innate") then = { let = { into = value value = field(card, Card.Innate) } } }
+    if = { condition = equal(keyword, "exhaust") then = { let = { into = value value = field(card, Card.Exhausts) } } }
+    return = { value = foldEvent(ModifyCardKeyword, value, card, keyword) }
+  }
+}
+procedure CombatCardPile {
+  pure = true parameters = { card = Ref(Card) } result = String(length = 16)
+  body = {
+    if = { condition = greaterOrEqual(collectionIndex(Hand, card), 0) then = { return = { value = "hand" } } }
+    if = { condition = greaterOrEqual(collectionIndex(DrawPile, card), 0) then = { return = { value = "draw" } } }
+    if = { condition = greaterOrEqual(collectionIndex(DiscardPile, card), 0) then = { return = { value = "discard" } } }
+    if = { condition = greaterOrEqual(collectionIndex(InPlay, card), 0) then = { return = { value = "play" } } }
+    if = { condition = greaterOrEqual(collectionIndex(ExhaustPile, card), 0) then = { return = { value = "exhaust" } } }
+    if = { condition = greaterOrEqual(collectionIndex(RemovedFromCombat, card), 0) then = { return = { value = "removed" } } }
+    return = { value = "none" }
+  }
+}
+# Exhaust has its own command; ordinary movement never fires CardExhausted or CardDiscarded.
+procedure MoveCombatCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) to = String(length = 16) reason = String(length = 32) }
+  locals = { from = String(length = 16) destination = String(length = 16) }
+  body = {
+    if = { condition = or(not(equal(field(card, Card.Owner), field(owner, Player.Owner))), greaterOrEqual(collectionIndex(RunDeck, card), 0)) then = { fail = { message = "Combat movement requires an owned combat instance" } } }
+    if = { condition = not(or(equal(to, "hand"), or(equal(to, "draw-top"), or(equal(to, "draw"), or(equal(to, "discard"), or(equal(to, "play"), equal(to, "removed"))))))) then = { fail = { message = "Unknown combat destination; exhaust requires ExhaustCombatCard" } } }
+    let = { into = from value = pureCall(CombatCardPile, card) }
+    let = { into = destination value = to }
+    if = { condition = and(equal(to, "hand"), and(less(collectionIndex(Hand, card), 0), greaterOrEqual(count(collection(Hand)), 10))) then = { let = { into = destination value = "discard" } } }
+    call = { procedure = RemoveFromCombatPiles args = { card = card } }
+    if = { condition = equal(destination, "hand") then = { addToCollection = { collection = Hand item = card } } }
+    if = { condition = equal(destination, "draw-top") then = { addToCollection = { collection = DrawPile item = card position = Start } } }
+    if = { condition = equal(destination, "draw") then = { addToCollection = { collection = DrawPile item = card } } }
+    if = { condition = equal(destination, "discard") then = { addToCollection = { collection = DiscardPile item = card } } }
+    if = { condition = equal(destination, "play") then = { addToCollection = { collection = InPlay item = card } } }
+    if = { condition = equal(destination, "removed") then = { addToCollection = { collection = RemovedFromCombat item = card } } }
+    emit = { event = CardMoved payload = { owner = owner card = card from = from to = pureCall(CombatCardPile, card) reason = reason } }
+  }
+}
+procedure DiscardCombatCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = { condition = less(collectionIndex(Hand, card), 0) then = { fail = { message = "Active discard requires a hand card" } } }
+    call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "discard" } }
+    emit = { event = CardDiscarded payload = { owner = owner card = card } }
+  }
+}
+# Each forEach freezes its query. Ethereal reactions can draw cards; those new cards are not exhausted.
+# Flush commits its whole selected batch before any movement callbacks, like CardPileCmd.Add(batch).
+procedure FinishTurnHand {
+  parameters = { owner = Ref(Player) } locals = { flush = Bool batch = Binding entry = Binding }
+  body = {
+    forEach = { query = where(collection(Hand), c, and(pureCall(CardHasKeyword, c, "ethereal"), foldEvent(ShouldTriggerEthereal, true, owner, c))) item = card body = {
+      if = { condition = and(field(owner, Player.CombatActive), greaterOrEqual(collectionIndex(Hand, card), 0)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = card } } } }
+    } }
+    if = { condition = field(owner, Player.CombatActive) then = {
+      emit = { event = BeforeHandFlush payload = { owner = owner } }
+      let = { into = flush value = foldEvent(ShouldFlushHand, true, owner) }
+      create = { type = HandFlushBatch scope = entityScope(owner) into = batch fields = { Owner = owner } }
+      forEach = { query = where(collection(Hand), c, and(flush, not(pureCall(CardHasKeyword, c, "retain")))) item = card body = {
+        removeFromCollection = { collection = Hand item = card }
+        addToCollection = { collection = DiscardPile item = card }
+        create = { type = HandFlushEntry scope = entityScope(batch) into = entry fields = { Batch = batch Card = card } }
+      } }
+      forEach = { query = where(type(HandFlushEntry), e, equal(field(e, HandFlushEntry.Batch), batch)) item = moved body = {
+        emit = { event = CardMoved payload = { owner = owner card = field(moved, HandFlushEntry.Card) from = "hand" to = "discard" reason = "flush" } }
+        destroy = { target = moved }
+      } }
+      destroy = { target = batch }
+      emit = { event = AfterHandFlush payload = { owner = owner } }
+    } }
+  }
+}

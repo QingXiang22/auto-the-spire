@@ -4,11 +4,13 @@
 
 Power定义、施加命令、通知顺序及私有清理的准确签名见[Power参考](powers.md)。卡牌普通攻击的基础值位于CardDefinition；下方效果模板表不再接受重复伤害值或Power行为kind。
 
+有序正文、显式执行、攻击结果、费用、牌区、附魔及事件的新增接口见[行为操作参考](card-behavior.md)。
+
 ## 状态与事件
 
 拾取时随机升级永久牌使用[`UpgradeRandomPermanentCards(owner,kind,amount)`](../../../../mod-the-spire/base-spire/cards/rules/random-permanent-upgrade.spire)：owner为Ref(Player)，kind只接受attack／skill／all，amount为Int(1..999)。操作拥有资格筛选、SourceCardSortKey、完整Niche洗牌、原实例UpgradeCard及临时状态清理；不改RunDeck顺序，不触发战斗洗牌事件。调用方法和边界见[遗物指南](../how-to/powers-relics-potions.md)。
 
-能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`Card.PaidX` 保存原捕获值，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`CardPlayRecord.RawX` 保存每次执行关联的序列捕获值，`Card.PaidX`保留兼容读取，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
 
@@ -18,7 +20,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；Rarity 字段保存源稀有度，奖励资格与战斗生成资格分别维护 |
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
-| Powers | 有序 Power 集合 | 按持有者与 DefinitionId 合并层数；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
+| Powers | 有序 Power 集合 | 按定义的shared／per-applier／independent策略匹配实例；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
 | [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64) | 开发药水实例，只承载身份；原版的稀有度、使用窗口（战斗内／任意时刻）与来源未迁移 |
 | Potions | 有序 Potion 集合，容量 3 | 三个共享槽位；`UsePotion`／`UsePotionOnTarget` 使用后在监听之后移除并销毁 |
 | PotionUsed／PotionUsedOnTarget | owner: Ref(Player)、potion: Ref(Potion)（有目标时再加 target: Ref(Enemy)） | 药水仍在库存时发出，之后才消费；有目标版本解析第一个 `Hp > 0` 的开发目标 |
@@ -39,8 +41,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | AfterEnemyTurnEnded | owner: Ref(Player) | 敌方阶段结束时发出；共享规则在这里做 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
 | AfterShuffle | owner: Ref(Player) | 仅在实际转移并完成 shuffle 后发出 |
 | AfterCardDrawn | owner: Ref(Player)、card: Ref(Card) | 成功移到 Hand 后发出；未抽到牌不发 |
-| [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 在卡仍位于 InPlay、效果结算之前发出；订阅者按 `Card.DefinitionId` 过滤，自目标与无目标效果用它 |
-| CardPlayedOnTarget | owner、card、target: Ref(Enemy) | 单体攻击牌用它携带解析出的敌人；PlayAttackCard 先发 CardPlayed 再发它，与源“先格挡后伤害”的顺序一致；兼容入口选首个存活敌人，PlayTargetedCard 使用原生决策显式选择 |
+| [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 旧声明保留，当前正文管线不发布；新增主效果绑定ExecuteCardBody，外部反应使用Before／After通知 |
+| CardPlayedOnTarget | owner、card、target: Ref(Enemy) | 旧声明保留，当前正文管线不发布；目标通过ExecuteCardBody的target传入；兼容入口选首个存活敌人，PlayTargetedCard使用原生决策 |
 | CardUpgraded | card: Ref(Card) | 实例标记为升级后发出；卡片定义用它应用定义层费用、伤害参数和 Innate 升级 |
 | CardExhausted | owner: Ref(Player)、card: Ref(Card) | 任何受支持的完整耗尽操作把牌移入 ExhaustPile 后发出；订阅时可确认卡已在消耗堆 |
 
@@ -90,8 +92,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | ResetTurnEnergy／AfterEnergyReset | owner: Ref(Player)，过程／事件 | 首回合重置；后续有有效保留能量资格时将最大能量加到余能，上限999，否则重置。该操作绕过禁止获得能量，随后发事件；额外奖励仍调用GainEnergy |
 | DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的未阻挡伤害发 PlayerHpLost 并检查开发失败；不改变 MaxHp |
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |
-| [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗活跃、卡在手牌、能量足够；扣能量、Hand→InPlay、emit CardPlayed、结算后按 Exhausts 进入 ExhaustPile（并发 CardExhausted）或 DiscardPile |
-| PlayAttackCard | owner、card | 同上，但先发 CardPlayed 再发 CardPlayedOnTarget，并把敌人解析为第一个 `Hp > 0` 的开发目标；无目标不是合法候选 |
+| [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗／回合、手牌、共享资格与能量；付款、进入InPlay、执行唯一正文；全部重复完成后提交捕获的结果区 |
+| PlayAttackCard | owner、card | 同上，但把敌人解析为第一个 `Hp > 0` 的开发目标后调用唯一正文；无目标不是合法候选 |
 | UpgradeCard | card=Ref(Card) | 只允许 CanUpgrade=true 且未升级的实例；置 `Upgraded=true` 并发 CardUpgraded，定义层费用变化由 CardDefinition 应用；只改当前实例 |
 | [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(0..9) | 逐张调用 DrawOne，保留重洗、手牌上限、禁止抽牌与 AfterCardDrawn 的既有顺序；不是一次抽多张的新算法 |
 | PlayCardFromHand／PlayAttackFromHand／UpgradeCardInHand | 参数 card=Ref(Card)，候选来自 Hand | 公开 action：分别打出无目标牌、打出有目标牌与升级手牌；PlayCardFromHand 只提供 `Targeted=false` 的候选，PlayAttackFromHand 只提供 `Targeted=true` 的候选 |
@@ -170,19 +172,19 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | [EveryTurnsEnergyRelic](../../../../mod-the-spire/base-spire/relics/rules/every-turns-energy.spire) | amount、turns: Int(1..999) | AfterSideTurnStarted：实例 Counter 加一并取模 turns，为 0 时 GainEnergy；Counter 跨战斗保留 | HappyFlower（每 3 回合 1 能量） |
 | [TurnStartDamageAllEnemiesRelic](../../../../mod-the-spire/base-spire/relics/rules/turn-start-damage-all-enemies.spire) | amount: Int(0..999) | AfterPlayerTurnStart：对每个 `Hp > 0` 的 Enemy 调用 DamageEnemy；没有目标时无事发生也不消耗随机 | MercuryHourglass（3 点无加成伤害） |
 
-卡牌内容由**一次** [CardDefinition](../../../../mod-the-spire/base-spire/cards/rules/card-definition.spire)（definition、cost、upgradedCost、targeted、exhausts）加若干[效果模板](../../../../mod-the-spire/base-spire/cards/rules/effects.spire)组成；效果只按 `Card.DefinitionId` 过滤，因此一张牌可以组合多个效果。CardDefinition 生成 `AddToHand`（开发授予，直接放进手牌）与升级订阅：
+卡牌内容绑定唯一ExecuteCardBody及ReadCardDamage；正文显式顺序调用效果模板的过程。卡牌内容由**一次** [CardDefinition](../../../../mod-the-spire/base-spire/cards/rules/card-definition.spire)（definition、cost、upgradedCost、targeted、exhausts）加若干[效果模板](../../../../mod-the-spire/base-spire/cards/rules/effects.spire)组成；效果过程保留定义过滤，主效果不再订阅广播。CardDefinition 生成 `AddToHand`（开发授予，直接放进手牌）与升级订阅：
 
-| 效果模板 | 参数 | 订阅与行为 | 当前内容 |
+| 效果模板 | 参数 | 正文显式调用后的行为 | 当前内容 |
 | --- | --- | --- | --- |
-| AttackEffect | definition: String(64)、hits: Int(1..9) | CardPlayedOnTarget，读取CardBaseDamage并重复hits次调用DamageEnemyPowered | Strike（6／9）、TwinStrike（5／7×2）、PommelStrike（9／10）、IronWave（5／7）、Anger（6／8）、Bludgeon（32／42） |
-| AttackAllEnemiesEffect | definition: String(64)、hits／upgradedHits: Int(1..9) | CardPlayed，按普通／升级段数对每个存活目标逐段读取CardBaseDamage并调用DamageEnemyPowered | Thunderclap（4／7，1 段）、HowlFromBeyond（16／21，1 段）、Breakthrough（9／13，1 段）、Conflagration（2／2，4／5 段） |
-| BlockEffect | block、upgradedBlock | CardPlayed，按 `Upgraded` 取值后 GainBlock | Defend（5／8）、ShrugItOff（8／11）、IronWave（5／7）、Impervious（30／40）、Taunt（7／8）、BloodWall（16／20） |
-| DrawEffect | cards、upgradedCards | CardPlayed，按 `Upgraded` 取值后 DrawCards | PommelStrike（1／2）、ShrugItOff（1／1）、Offering（3／5） |
-| EnergyEffect | energy、upgradedEnergy | CardPlayed，按 `Upgraded` 取值后 GainEnergy | Bloodletting（2／3）、Offering（2／2） |
-| LoseHpEffect | hp、upgradedHp | CardPlayed，按 `Upgraded` 取值后 LosePlayerHp | Bloodletting（3／3）、Offering（6／6）、BloodWall（2／2） |
-| ApplyEnemyPowerEffect | power、stacks、upgradedStacks | CardPlayedOnTarget，按 `Upgraded` 取值后 ApplyEnemyPower 到解析出的目标 | Bash（Vulnerable 2／3）、Uppercut（Weak 与 Vulnerable 各 1／2）、Taunt（Vulnerable 1／2）、Tremble（Vulnerable 3／4） |
-| ApplyAllEnemiesPowerEffect | power、stacks、upgradedStacks | CardPlayed，对每个 `Hp > 0` 的开发目标调用 ApplyEnemyPower | Shockwave（Weak 与 Vulnerable 各 3／5）、Thunderclap（Vulnerable 1／1） |
-| ApplySelfPowerEffect | power、stacks、upgradedStacks | CardPlayed，按 `Upgraded` 取值后 ApplyPlayerPower | Inflame（Strength 2／3） |
+| AttackEffect | definition: String(64)、hits: Int(1..9) | 读取CardBaseDamage并创建一个hits段的CardAttack | Strike（6／9）、TwinStrike（5／7×2）、PommelStrike（9／10）、IronWave（5／7）、Anger（6／8）、Bludgeon（32／42） |
+| AttackAllEnemiesEffect | definition: String(64)、hits／upgradedHits: Int(1..9) | 创建一个all目标策略的CardAttack，按击次再按目标结算 | Thunderclap（4／7，1 段）、HowlFromBeyond（16／21，1 段）、Breakthrough（9／13，1 段）、Conflagration（2／2，4／5 段） |
+| BlockEffect | block、upgradedBlock | 按 `Upgraded` 取值后 GainBlock | Defend（5／8）、ShrugItOff（8／11）、IronWave（5／7）、Impervious（30／40）、Taunt（7／8）、BloodWall（16／20） |
+| DrawEffect | cards、upgradedCards | 按 `Upgraded` 取值后 DrawCards | PommelStrike（1／2）、ShrugItOff（1／1）、Offering（3／5） |
+| EnergyEffect | energy、upgradedEnergy | 按 `Upgraded` 取值后 GainEnergy | Bloodletting（2／3）、Offering（2／2） |
+| LoseHpEffect | hp、upgradedHp | 按 `Upgraded` 取值后 LosePlayerHpFromCard并显式传play | Bloodletting（3／3）、Offering（6／6）、BloodWall（2／2） |
+| ApplyEnemyPowerEffect | power、stacks、upgradedStacks | 按 `Upgraded` 取值后 ApplyEnemyPowerFromCard到解析出的目标 | Bash（Vulnerable 2／3）、Uppercut（Weak 与 Vulnerable 各 1／2）、Taunt（Vulnerable 1／2）、Tremble（Vulnerable 3／4） |
+| ApplyAllEnemiesPowerEffect | power、stacks、upgradedStacks | 对每个 `Hp > 0` 的开发目标调用ApplyEnemyPowerFromCard | Shockwave（Weak 与 Vulnerable 各 3／5）、Thunderclap（Vulnerable 1／1） |
+| ApplySelfPowerEffect | power、stacks、upgradedStacks | 按 `Upgraded` 取值后ApplyPlayerPowerFromCard | Inflame（Strength 2／3） |
 
 以下模板仅由一个内容拥有，已移到所属卡牌文件；它们不是effects.spire中的共享操作。需要类似能力时先确认语义，再决定是否抽成共用模板。
 
@@ -196,7 +198,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | VulnerableHitsAttackEffect | [Dismantle](../../../../mod-the-spire/base-spire/cards/ironclad/dismantle.spire) |
 | AmplifyVulnerableEffect | [MoltenFist](../../../../mod-the-spire/base-spire/cards/ironclad/molten-fist.spire) |
 
-同一张牌内多个效果的先后顺序是“先 CardPlayed 的无目标效果，再 CardPlayedOnTarget 的有目标效果”，同一事件内按内容文件的 `use` 声明顺序执行；因此声明了攻击效果再加 debuff 的卡（Bash、Uppercut）与源 OnPlay 的“先伤害后施加”一致。Weak、Vulnerable与Frail在所属Power模块监听AfterEnemyTurnEnded并调用TickPowerDuration，玩家新实例的首次跳过由debuff标志控制；详见[Power参考](powers.md)。
+同一张牌内的效果顺序由所属ExecuteCardBody处理过程的call顺序决定，与模板use或事件订阅顺序无关。Bash、Uppercut的正文显式先伤害后施加。Weak、Vulnerable与Frail在所属Power模块监听AfterEnemyTurnEnded并调用TickPowerDuration，玩家新实例的首次跳过由debuff标志控制；详见[Power参考](powers.md)。
 
 源条件为“`TurnNumber <= 1`”的两个遗物在这里写成 `turn = 1`：开发战斗从 0 回合开始，第一次开始时回合号一定是 1，两者等价。原版 `AfterSideTurnStart`、`AfterPlayerTurnStart` 与 `AfterPlayerTurnStartLate` 的区别保留成三个开发时点，所需能量／伤害修正、开发胜负与回合结束钩子已恢复；完整正常 Run 顺序和其余参与者不属于本范围。
 

@@ -19,3 +19,22 @@ use OfferingDraw {
   template = DrawEffect
   args = { definition = "base-spire:offering" cards = 3 upgradedCards = 5 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure OfferingBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = OfferingLoseHp.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = OfferingEnergy.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = OfferingDraw.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase OfferingBody { dispatch = ExecuteCardBody key = "base-spire:offering" procedure = OfferingBody }
+
+procedure OfferingDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase OfferingDamageValue { dispatch = ReadCardDamage key = "base-spire:offering" procedure = OfferingDamageValue }

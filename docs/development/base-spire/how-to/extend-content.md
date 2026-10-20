@@ -14,6 +14,8 @@
 
 在来源组新增一个 core/0.3 `.spire`，使用同一 namespace。已有模板足够时只写 `use` 和有界字面量；独有效果可在本文件的模板作用域内声明 procedure／subscription／私有 entity，再展开一次。获得、伤害、抽牌、施加／移除 Power 等操作复用领域入口。如果复用模板必须加 C# 按 ID 分支，先重新审查共享语义。
 
+卡牌还必须在所属文件绑定ExecuteCardBody和ReadCardDamage：正文显式顺序调用效果模板生成的过程，纯提供者声明基础／动态伤害；不能只增加CardDefinition后等待广播。签名见[行为操作参考](../reference/card-behavior.md)。
+
 独有效果的文件与登记步骤见[新增内容模块](add-content-module.md)，已有内容改动见[修改单个内容](edit-content.md)。可运行的共享模板例子见[共享规则教程](../tutorials/shared-rule.md)。正式原版内容的定义参数应取自匹配版本源，不能直接保留教程数值。
 
 ## 3. 显式注册与保留源范围
@@ -23,6 +25,8 @@
 将对应源行 definition 从 null 更新为包内相对 `.spire` 路径，保留 source_path、hash、完整源池与资格依据。新的数据文件必须在 manifest catalogs 中声明。不得将未迁移内容从源池删除，也不得用空效果声明凑覆盖。
 
 需要对外显示的内容 ID 加到 public 元数据对应列表；公开类型／字段／动作由 DSL 声明与投影派生。变更后核对目录和合法候选，不向 net 新增逐项游戏规则注册。
+
+Card／Power的content_ids可运行`dotnet run --project tools/base-spire-dev -- sync-content`从实际定义库及显式启动实例生成。它不替你更新来源行或公开政策；validate／check会具名检查可执行目录、来源映射及公开列表漂移。
 
 ## 4. 验证与交付
 

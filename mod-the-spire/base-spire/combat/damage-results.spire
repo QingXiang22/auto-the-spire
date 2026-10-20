@@ -1,0 +1,140 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity DamageBatch { fields = { DealerPlayer = { type = Ref(Player) visibility = Hidden } } }
+entity DamageResult {
+  fields = {
+    Batch = { type = Ref(DamageBatch) optional = true visibility = Hidden }
+    Attack = { type = Ref(Attack) optional = true visibility = Hidden }
+    Card = { type = Ref(Card) optional = true visibility = Hidden }
+    Play = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
+    DealerPlayer = { type = Ref(Player) optional = true visibility = Hidden }
+    DealerEnemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+    Player = { type = Ref(Player) optional = true visibility = Hidden }
+    Enemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+    Hit = { type = Int default = 0 }
+    Requested = { type = Int }
+    Final = { type = Int default = 0 }
+    Blocked = { type = Int default = 0 }
+    Unblocked = { type = Int default = 0 }
+    Overkill = { type = Int default = 0 }
+    Powered = { type = Bool default = false }
+    Unblockable = { type = Bool default = false }
+    BlockBroken = { type = Bool default = false }
+    FullyBlocked = { type = Bool default = false }
+    Killed = { type = Bool default = false }
+    Published = { type = Bool default = false }
+    DeathNotified = { type = Bool default = false }
+  }
+}
+collection DamageResults { element = DamageResult ordered = true }
+event DamageResolved { payload = { result = Ref(DamageResult) } }
+event PlayerDamaged { payload = { owner = Ref(Player) result = Ref(DamageResult) } }
+
+procedure ResolveEnemyDamage {
+  parameters = { owner = Binding target = Ref(Enemy) card = Binding play = Binding attack = Binding amount = Int powered = Bool }
+  locals = { result = Binding before = Int blocked = Int scaled = Int hit = Int }
+  result = Binding
+  body = {
+    let = { into = before value = field(target, Enemy.Hp) }
+    if = { condition = lessOrEqual(before, 0) then = { return = { value = none } } }
+    let = { into = hit value = 0 }
+    if = { condition = not(isNone(attack)) then = { let = { into = hit value = field(attack, Attack.Hit) } } }
+    create = { type = DamageResult scope = entityScope(target) into = result collection = DamageResults fields = {
+      Attack = attack Card = card Play = play DealerPlayer = owner Enemy = target Hit = hit Requested = amount Powered = powered
+    } }
+    let = { into = scaled value = maximum(0, amount) }
+    if = { condition = powered then = {
+      let = { into = scaled value = pureCall(CalculatePoweredCardDamage, owner, card, target, attack, play, scaled, false) }
+    } }
+    let = { into = blocked value = minimum(field(target, Enemy.Block), scaled) }
+    set = { target = result field = DamageResult.Final value = scaled }
+    set = { target = result field = DamageResult.Blocked value = blocked }
+    set = { target = result field = DamageResult.Unblocked value = minimum(before, subtract(scaled, blocked)) }
+    set = { target = result field = DamageResult.Overkill value = maximum(0, subtract(subtract(scaled, blocked), before)) }
+    set = { target = result field = DamageResult.FullyBlocked value = and(greater(field(target, Enemy.Block), 0), equal(subtract(scaled, blocked), 0)) }
+    set = { target = result field = DamageResult.BlockBroken value = and(greater(blocked, 0), equal(blocked, field(target, Enemy.Block))) }
+    set = { target = target field = Enemy.Block value = subtract(field(target, Enemy.Block), blocked) }
+    set = { target = target field = Enemy.Hp value = maximum(0, subtract(before, subtract(scaled, blocked))) }
+    set = { target = result field = DamageResult.Killed value = equal(field(target, Enemy.Hp), 0) }
+    return = { value = result }
+  }
+}
+procedure ResolvePlayerDamage {
+  parameters = { owner = Ref(Player) attacker = Binding card = Binding play = Binding attack = Binding amount = Int powered = Bool unblockable = Bool }
+  locals = { result = Binding before = Int blocked = Int scaled = Int hit = Int }
+  result = Binding
+  body = {
+    let = { into = before value = field(owner, Player.Hp) }
+    if = { condition = lessOrEqual(before, 0) then = { return = { value = none } } }
+    let = { into = hit value = 0 }
+    if = { condition = not(isNone(attack)) then = { let = { into = hit value = field(attack, Attack.Hit) } } }
+    create = { type = DamageResult scope = entityScope(owner) into = result collection = DamageResults fields = {
+      Attack = attack Card = card Play = play DealerEnemy = attacker Player = owner Hit = hit Requested = amount Powered = powered Unblockable = unblockable
+    } }
+    let = { into = scaled value = maximum(0, amount) }
+    if = { condition = and(powered, not(isNone(attacker))) then = { let = { into = scaled value = maximum(0, foldEvent(ModifyEnemyAttackAdditive, scaled, owner, attacker)) } } }
+    let = { into = scaled value = multiply(maximum(0, scaled), 10000) }
+    if = { condition = and(powered, not(isNone(attacker))) then = {
+      let = { into = scaled value = foldEvent(ModifyEnemyAttackMultiplier, scaled, owner, attacker) }
+      let = { into = scaled value = foldEvent(ModifyIncomingAttackMultiplier, scaled, owner, attacker) }
+    } }
+    let = { into = scaled value = maximum(0, divide(scaled, 10000)) }
+    if = { condition = and(powered, not(isNone(attacker))) then = { emit = { event = BeforePlayerAttacked payload = { owner = owner attacker = attacker } } } }
+    let = { into = before value = field(owner, Player.Hp) }
+    let = { into = blocked value = 0 }
+    if = { condition = not(unblockable) then = { let = { into = blocked value = minimum(field(owner, Player.Block), scaled) } } }
+    set = { target = result field = DamageResult.Final value = scaled }
+    set = { target = result field = DamageResult.Blocked value = blocked }
+    set = { target = result field = DamageResult.Unblocked value = minimum(before, subtract(scaled, blocked)) }
+    set = { target = result field = DamageResult.Overkill value = maximum(0, subtract(subtract(scaled, blocked), before)) }
+    set = { target = result field = DamageResult.FullyBlocked value = and(not(unblockable), and(greater(field(owner, Player.Block), 0), equal(subtract(scaled, blocked), 0))) }
+    set = { target = result field = DamageResult.BlockBroken value = and(greater(blocked, 0), equal(blocked, field(owner, Player.Block))) }
+    set = { target = owner field = Player.Block value = subtract(field(owner, Player.Block), blocked) }
+    set = { target = owner field = Player.Hp value = maximum(0, subtract(before, subtract(scaled, blocked))) }
+    set = { target = result field = DamageResult.Killed value = equal(field(owner, Player.Hp), 0) }
+    return = { value = result }
+  }
+}
+procedure PublishDamageResult {
+  parameters = { result = Binding }
+  body = {
+    if = { condition = not(isNone(result)) then = {
+      if = { condition = not(field(result, DamageResult.Published)) then = {
+        set = { target = result field = DamageResult.Published value = true }
+        if = { condition = not(isNone(field(result, DamageResult.Player))) then = {
+          if = { condition = greater(field(result, DamageResult.Unblocked), 0) then = {
+            call = { procedure = RecordPlayerHpLoss args = { owner = field(result, DamageResult.Player) } }
+          } }
+          if = { condition = greater(field(field(result, DamageResult.Player), Player.Hp), 0) then = {
+            emit = { event = PlayerDamaged payload = { owner = field(result, DamageResult.Player) result = result } }
+          } }
+        } }
+        emit = { event = DamageResolved payload = { result = result } }
+        if = { condition = not(isNone(field(result, DamageResult.Player))) then = { call = { procedure = CheckCombatDefeat args = { owner = field(result, DamageResult.Player) } } } }
+      } }
+    } }
+  }
+}
+procedure PublishDamageDeath {
+  parameters = { result = Binding }
+  body = {
+    if = { condition = not(isNone(result)) then = {
+      if = { condition = and(field(result, DamageResult.Killed), and(not(field(result, DamageResult.DeathNotified)), not(isNone(field(result, DamageResult.Enemy))))) then = {
+        set = { target = result field = DamageResult.DeathNotified value = true }
+        emit = { event = EnemyDied payload = { target = field(result, DamageResult.Enemy) } }
+      } }
+    } }
+  }
+}
+procedure PublishDamageBatch {
+  parameters = { attack = Ref(Attack) hit = Int }
+  body = {
+    forEach = { query = where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), equal(field(r, DamageResult.Hit), hit))) item = result body = {
+      call = { procedure = PublishDamageResult args = { result = result } }
+    } }
+    forEach = { query = where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), equal(field(r, DamageResult.Hit), hit))) item = result body = {
+      call = { procedure = PublishDamageDeath args = { result = result } }
+    } }
+  }
+}

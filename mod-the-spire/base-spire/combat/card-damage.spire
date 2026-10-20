@@ -1,0 +1,22 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Explicit value context is shared by execution and preview; queries never construct runtime entities.
+event ModifyCardDamageAdditive { payload = { amount = Int owner = Ref(Player) card = Binding target = Binding attack = Binding play = Binding preview = Bool } }
+event ModifyCardDamageMultiplier { payload = { amount = Int owner = Ref(Player) card = Binding target = Binding attack = Binding play = Binding preview = Bool } }
+procedure CalculatePoweredCardDamage {
+  pure = true
+  parameters = { owner = Ref(Player) card = Binding target = Binding attack = Binding play = Binding amount = Int preview = Bool }
+  locals = { value = Int } result = Int
+  body = {
+    let = { into = value value = maximum(0, foldEvent(ModifyAttackAdditive, amount, owner, card, target)) }
+    let = { into = value value = multiply(maximum(0, foldEvent(ModifyCardDamageAdditive, value, owner, card, target, attack, play, preview)), 10000) }
+    let = { into = value value = foldEvent(ModifyAttackMultiplier, value, owner, card, target) }
+    let = { into = value value = foldEvent(ModifyCardDamageMultiplier, value, owner, card, target, attack, play, preview) }
+    return = { value = maximum(0, divide(value, 10000)) }
+  }
+}
+procedure PreviewPoweredCardDamage {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = { return = { value = pureCall(CalculatePoweredCardDamage, owner, card, target, none, none, pureCall(CardBaseDamage, owner, card, target), true) } }
+}

@@ -44,7 +44,7 @@ procedure ClaimDevelopmentGoldReward {
       condition = not(and(equal(field(owner, Player.Room), "rewards"), field(owner, Player.GoldRewardPending)))
       then = { fail = { message = "No development gold reward is pending" } }
     }
-    call = { procedure = GainGold args = { owner = owner amount = field(owner, Player.GoldRewardAmount) } }
+    call = { procedure = GainGoldWithSource args = { owner = owner amount = field(owner, Player.GoldRewardAmount) source = "base-spire:combat-gold-reward" } }
     set = { target = owner field = Player.GoldRewardPending value = false }
     set = { target = owner field = Player.GoldRewardAmount value = 0 }
   }

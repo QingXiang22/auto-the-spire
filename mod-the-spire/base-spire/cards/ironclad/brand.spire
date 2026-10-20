@@ -6,3 +6,22 @@ use Brand { template = CardDefinition args = { sourceEntry = "BRAND" rarity = "r
 use BrandEffect1 { template = LoseHpEffect args = { definition = "base-spire:brand" hp = 1 upgradedHp = 1 } }
 use BrandEffect2 { template = SelectExhaustEffect args = { definition = "base-spire:brand" } }
 use BrandEffect3 { template = ApplySelfPowerEffect args = { definition = "base-spire:brand" power = "base-spire:strength-power" stacks = 1 upgradedStacks = 2 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BrandBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BrandEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = BrandEffect2.Apply args = { play = play  owner = owner card = card } }
+    call = { procedure = BrandEffect3.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BrandBody { dispatch = ExecuteCardBody key = "base-spire:brand" procedure = BrandBody }
+
+procedure BrandDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BrandDamageValue { dispatch = ReadCardDamage key = "base-spire:brand" procedure = BrandDamageValue }

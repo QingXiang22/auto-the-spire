@@ -100,7 +100,7 @@ dotnet .artifacts/parallel/dsh-shop-flow/bin/ShopFlowChecks/release/ShopFlowChec
    `MerchantRoom.Exit` 的地图点历史写入、飞升删牌价变体（100 + 50n）。
 5. **没有**跑正式 `--scope dev-map` 公开整局、**没有**双侧/公开协议对拍：`MapRoomWiring` 目前把
    `Shop` 房型判为未实现并具名 `Fail`，公共运行器会在该节点停成 `unsupported_map_room`
-   （见 [T03 交接](../../tofix/dsh-public-run-driver-handoff-2026-10-11.md) 的实测记录）。本包的验证是自带最小宿主的
+   （见 [T03 交接](dsh-public-run-driver-handoff-2026-10-11.md) 的实测记录）。本包的验证是自带最小宿主的
    真实 Engine 会话，**不构成**官方 Run 或整局通过的声明。
 
 ## 正式整合清单（Codex 收口，按顺序）

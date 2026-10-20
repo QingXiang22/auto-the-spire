@@ -2,5 +2,50 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Stomp.cs; SHA-256 retained in cards/catalog.json.
-use Stomp { template = CardDefinition args = { sourceEntry = "STOMP" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stomp" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 12 upgradedBaseDamage = 15 discountsOnAttack = true } }
+use Stomp { template = CardDefinition args = { sourceEntry = "STOMP" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stomp" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 12 upgradedBaseDamage = 15 } }
 use StompEffect1 { template = ComputedAllAttackEffect args = { definition = "base-spire:stomp" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure StompBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = StompEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase StompBody { dispatch = ExecuteCardBody key = "base-spire:stomp" procedure = StompBody }
+
+procedure StompDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase StompDamageValue { dispatch = ReadCardDamage key = "base-spire:stomp" procedure = StompDamageValue }
+
+procedure StompAttackDiscounts {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = {
+      condition = equal(field(card, Card.Kind), "attack") then = {
+        forEach = {
+          query = where(type(Card), c, and(and(equal(field(c, Card.DefinitionId), "base-spire:stomp"), equal(field(c, Card.Owner), field(owner, Player.Owner))), less(collectionIndex(RunDeck, c), 0))) item = c body = {
+            call = { procedure = AddCardCostModifier args = { card = c source = "base-spire:stomp" operation = "add" amount = -1 lifetime = "turn" } }
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription StompAttackDiscounts {
+  event = BeforeCardPlayed reaction = StompAttackDiscounts
+}
+
+
+procedure StompEntered {
+  parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool }
+  body = { if = { condition = and(equal(field(card, Card.DefinitionId), "base-spire:stomp"), not(clone)) then = {
+    call = { procedure = AddCardCostModifier args = { card = card source = "base-spire:stomp" operation = "add" amount = subtract(0, count(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)), and(equal(field(r, CardPlayRecord.Kind), "attack"), field(r, CardPlayRecord.Finished)))))) lifetime = "turn" } }
+  } } }
+}
+subscription StompEntered { event = CardEnteredCombat reaction = StompEntered }

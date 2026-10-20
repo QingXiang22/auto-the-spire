@@ -1,0 +1,38 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+event PermanentCardRemoved { payload = { owner = Ref(Player) card = Ref(Card) } }
+procedure PermanentCardEligible {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) purpose = String(length = 16) enchantment = String(length = 64) } result = Bool
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.Owner), field(card, Card.Owner)), greaterOrEqual(collectionIndex(RunDeck, card), 0))) then = { return = { value = false } } }
+    if = { condition = equal(purpose, "upgrade") then = { return = { value = and(field(card, Card.CanUpgrade), not(field(card, Card.Upgraded))) } } }
+    if = { condition = equal(purpose, "remove") then = { return = { value = not(pureCall(CardHasKeyword, card, "eternal")) } } }
+    if = { condition = equal(purpose, "enchant") then = { return = { value = pureCall(CanApplyCardEnchantment, enchantment, owner, card) } } }
+    fail = { message = "Unknown permanent-card selection purpose" }
+  }
+}
+procedure SelectPermanentCard {
+  parameters = { owner = Ref(Player) purpose = String(length = 16) enchantment = String(length = 64) cancelable = Bool }
+  locals = { selected = List(Ref(Card), length = 1) } result = Binding
+  body = {
+    if = { condition = not(exists(where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, purpose, enchantment)))) then = { return = { value = none } } }
+    if = { condition = and(not(cancelable), equal(count(where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, purpose, enchantment))), 1)) then = { return = { value = first(where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, purpose, enchantment))) } } }
+    if = { condition = cancelable then = {
+      decide = { participant = field(owner, Player.Owner) kind = EntityRefList prompt = "Choose a permanent card, or cancel" into = selected min = 0 max = 1 candidates = where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, purpose, enchantment)) }
+    } else = {
+      decide = { participant = field(owner, Player.Owner) kind = EntityRefList prompt = "Choose a permanent card" into = selected min = 1 max = 1 candidates = where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, purpose, enchantment)) }
+    } }
+    return = { value = first(refList(selected)) }
+  }
+}
+procedure RemovePermanentCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  body = {
+    if = { condition = or(field(owner, Player.CombatActive), not(pureCall(PermanentCardEligible, owner, card, "remove", ""))) then = { fail = { message = "Permanent removal requires an owned removable deck card outside combat" } } }
+    removeFromCollection = { collection = RunDeck item = card }
+    emit = { event = PermanentCardRemoved payload = { owner = owner card = card } }
+    forEach = { query = where(type(Card), c, equal(field(c, Card.PermanentSource), card)) item = copy body = { set = { target = copy field = Card.PermanentSource value = none } } }
+    call = { procedure = DestroyCombatCard args = { card = card } }
+  }
+}

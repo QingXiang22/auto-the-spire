@@ -16,6 +16,8 @@
 
 ## 1. 固定的结构与接口职责
 
+2026-10-19 用户要求实施内容与行为迁移，BEHAVIOR-01据此补充通用封闭键分派、pure显式失败、依附实例身份投影及none相等比较，活动身份迁移为engine/ir@0.7、Core.TheSpire 0.7.0；原冻结表保留历史时点。准确语法见[当前作者参考](../dsl/core/0.3/authoring-reference.md#封闭键分派)，游戏状态与分派内容仍属于base DSL，旧规则及回放不能冒用新身份。
+
 2026-10-18用户明确要求已有遗物与Power统一为通知／修正监听，DSL-EFFECT-LISTENERS-01据此增加通用实例订阅和pure foldEvent，活动运行身份迁移为engine/ir@0.6、Core.TheSpire 0.6.0。旧0.5产物须重建，准确接口见[实例订阅与只读修正](../dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)。游戏规则仍由base声明，不新增第二套调度器。
 
 2026-10-18用户授权的DSL-RNG-RESTORE-01已将活动运行身份迁移为engine/ir@0.5、Core.TheSpire 0.5.0；上表保留冻结时点。新增随机DSL接口、显式种子快照及vanilla布尔映射修正见[当前作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。旧0.4包及回放需要重建／分身份保存，不能冒名续接；其他冻结职责继续适用。

@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Havoc.cs; SHA-256 retained in cards/catalog.json.
 use Havoc { template = CardDefinition args = { sourceEntry = "HAVOC" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:havoc" cost = 1 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use HavocEffect1 { template = AutoplayTopEffect args = { definition = "base-spire:havoc" exhaust = true } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure HavocBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = HavocEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase HavocBody { dispatch = ExecuteCardBody key = "base-spire:havoc" procedure = HavocBody }
+
+procedure HavocDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase HavocDamageValue { dispatch = ReadCardDamage key = "base-spire:havoc" procedure = HavocDamageValue }

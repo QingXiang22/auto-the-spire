@@ -40,7 +40,7 @@ Power在自己的模块内展开PowerDefinition，随后订阅所需通知或pur
 3. 修改／重置时按实际Power引用查询，不能只按DefinitionId查询所有同类实例。
 4. PowerRemoved通知中清理附属实体。此时Power已离开Powers，清理监听应使用通知载荷与type查询，不能要求它仍在Powers中。
 
-不要把专属计数放进公共Power／Player／CardPlayRecord，也不要使用Engine状态之外的C#字典。复制或战斗副本需要保留哪些私有状态，应另有明确契约；私有entity本身不自动定义复制语义。
+不要把专属计数放进公共Power／Player／CardPlayRecord，也不要使用Engine状态之外的C#字典。复制或战斗副本需要保留哪些私有状态，应另有明确契约；私有entity本身不自动定义复制语义；通过CardCloned／CardCombatCopied／CardRemoving等已支持通知接入，见[行为操作参考](../reference/card-behavior.md)。
 
 ## 4. 完成显式登记
 

@@ -15,15 +15,7 @@ procedure Inferno {
   body = {
     if = {
       condition = and(not(field(owner, Player.EnemyPhase)), greater(field(listener, Power.Stacks), 0)) then = {
-        forEach = {
-          query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
-            call = {
-              procedure = DamageEnemy args = {
-                target = e amount = field(listener, Power.Stacks)
-              }
-            }
-          }
-        }
+        call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = field(listener, Power.Stacks) } }
       }
     }
   }

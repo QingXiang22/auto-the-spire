@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.6.1-dsl.39",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.40",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -64,7 +64,9 @@
         "base-spire:miniature-cannon",
         "base-spire:paper-phrog",
         "base-spire:paper-krane",
-        "base-spire:self-forming-clay"
+        "base-spire:self-forming-clay",
+        "base-spire:akabeko",
+        "base-spire:pen-nib"
       ]
     },
     "base-spire:Enemy": {
@@ -85,7 +87,6 @@
     "base-spire:Card": {
       "field_name": "DefinitionId",
       "content_ids": [
-        "base-spire:development-card",
         "base-spire:aggression",
         "base-spire:anger",
         "base-spire:armaments",
@@ -93,8 +94,8 @@
         "base-spire:barricade",
         "base-spire:bash",
         "base-spire:battle-trance",
-        "base-spire:bloodletting",
         "base-spire:blood-wall",
+        "base-spire:bloodletting",
         "base-spire:bludgeon",
         "base-spire:body-slam",
         "base-spire:brand",
@@ -112,6 +113,7 @@
         "base-spire:dark-embrace",
         "base-spire:defend-ironclad",
         "base-spire:demon-form",
+        "base-spire:development-card",
         "base-spire:dismantle",
         "base-spire:dominate",
         "base-spire:drum-of-battle",
@@ -189,39 +191,53 @@
     "base-spire:Power": {
       "field_name": "DefinitionId",
       "content_ids": [
-        "base-spire:strength-power",
-        "base-spire:vulnerable-power",
-        "base-spire:weak-power",
-        "base-spire:dexterity-power",
-        "base-spire:frail-power",
-        "base-spire:thorns-power",
         "base-spire:aggression-power",
         "base-spire:barricade",
-        "base-spire:no-draw-power",
+        "base-spire:colossus-power",
         "base-spire:corruption-power",
         "base-spire:crimson-mantle-power",
         "base-spire:cruelty-power",
         "base-spire:dark-embrace-power",
         "base-spire:demon-form",
+        "base-spire:dexterity-power",
         "base-spire:feel-no-pain-power",
+        "base-spire:frail-power",
+        "base-spire:free-attack-power",
         "base-spire:hellraiser-power",
         "base-spire:inferno-power",
         "base-spire:juggernaut-power",
         "base-spire:juggling-power",
+        "base-spire:mangle-power",
+        "base-spire:no-draw-power",
+        "base-spire:no-energy-gain",
         "base-spire:one-two-punch-power",
+        "base-spire:plating-power",
         "base-spire:pyre-power",
         "base-spire:rage-power",
         "base-spire:rupture-power",
+        "base-spire:self-forming-clay",
+        "base-spire:setup-strike-power",
         "base-spire:stampede-power",
-        "base-spire:plating-power",
+        "base-spire:strength-power",
+        "base-spire:thorns-power",
         "base-spire:unmovable-power",
         "base-spire:vicious-power",
-        "base-spire:no-energy-gain",
-        "base-spire:mangle-power",
-        "base-spire:setup-strike-power",
-        "base-spire:free-attack-power",
-        "base-spire:colossus-power",
-        "base-spire:self-forming-clay"
+        "base-spire:vigor-power",
+        "base-spire:vulnerable-power",
+        "base-spire:weak-power"
+      ]
+    },
+    "base-spire:CardAttachment": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:sown"
+      ]
+    },
+    "base-spire:EventVisit": {
+      "field_name": "DefinitionId",
+      "content_ids": [
+        "base-spire:sapphire-seed",
+        "base-spire:doors-of-light-and-dark"
       ]
     }
   },
@@ -302,6 +318,21 @@
       "use": "not_published",
       "rule_id": "DB-REWARD-POOL",
       "reason": "Temporary reward generation eligibility is internal and cleared before the stable public boundary."
+    },
+    "base-spire:Attacks": {
+      "use": "not_published",
+      "rule_id": "DB-COMBAT-EXECUTION-CONTEXT",
+      "reason": "Internal attack and damage attribution records; public gameplay state comes from the existing projection."
+    },
+    "base-spire:DamageResults": {
+      "use": "not_published",
+      "rule_id": "DB-COMBAT-EXECUTION-CONTEXT",
+      "reason": "Internal attack and damage attribution records; public gameplay state comes from the existing projection."
+    },
+    "base-spire:CardCostModifiers": {
+      "use": "not_published",
+      "rule_id": "DB-CARD-COST-LIFETIME",
+      "reason": "Card-owned cost changes; only the resolved current cost is public."
     }
   },
   "terminal_outcomes": {},

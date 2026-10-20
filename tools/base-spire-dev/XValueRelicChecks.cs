@@ -142,8 +142,13 @@ internal static partial class PackageChecks
         });
         Own("CX manual X still spends all energy with free-card, FreeAttack and Corruption modifiers", () =>
         {
-            var s = Combat(); IcPlay(s, IcAdd(s, "Unrelenting")); var x = IcAdd(s, "Whirlwind");
-            Set(s, x, "Card", "FreeUntilPlayed", Value.Of(true)); Set(s, Player(s), "Player", "Energy", Value.Of(2L)); IcPlay(s, x);
+            using var copy = new Copy(package.Root); copy.Include("free-x.spire", """
+                action Free { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = {
+                  call = { procedure = AddCardCostModifier args = { card = card source = "probe:free" operation = "set" amount = 0 lifetime = "play" } }
+                } }
+                """);
+            var s = Combat(copy.Load()); IcPlay(s, IcAdd(s, "Unrelenting")); var x = IcAdd(s, "Whirlwind");
+            Submit(s, "Free", x); Set(s, Player(s), "Player", "Energy", Value.Of(2L)); IcPlay(s, x);
             Equal(966L, EnemyHp(s), "Unrelenting fourteen then four X hits"); Equal(0L, Energy(s), "free ordinary attacks do not waive X payment");
             var skill = Combat(); IcPlay(skill, IcAdd(skill, "Corruption")); var cascade = IcAdd(skill, "Cascade");
             for (var i = 0; i < 5; i++) Top(skill, "DefendIronclad");

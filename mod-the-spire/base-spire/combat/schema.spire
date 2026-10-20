@@ -32,8 +32,11 @@ entity Player {
     UsesRunDeck = { type = Bool default = false }
     CharacterId = { type = String(length = 64) default = "none" }
     AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
+    AttackDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    DamageDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     PlaySequence = { type = Int default = 0 }
+    CardActionNumber = { type = Int default = 0 visibility = Hidden }
     CurrentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
     CurrentCard = { type = Ref(Card) optional = true visibility = Hidden }
     LastDrawn = { type = Ref(Card) optional = true visibility = Hidden }
@@ -78,6 +81,10 @@ entity Power {
     HolderPlayer = { type = Ref(Player) optional = true }
     HolderEnemy = { type = Ref(Enemy) optional = true }
     Stacks = { type = Int(min = -999, max = 999) default = 0 }
+    ApplierPlayer = { type = Ref(Player) optional = true visibility = Hidden }
+    ApplierEnemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+    SourceCard = { type = Ref(Card) optional = true visibility = Hidden }
+    SourcePlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
     # Source PowerCmd.Apply grace: a debuff applied to the player skips its first duration tick.
     SkipTick = { type = Bool default = false }
     # Powers whose lifetime is the current player turn (FlameBarrierPower) are removed at its end.

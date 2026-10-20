@@ -15,3 +15,21 @@ use BloodlettingEnergy {
   template = EnergyEffect
   args = { definition = "base-spire:bloodletting" energy = 2 upgradedEnergy = 3 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BloodlettingBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BloodlettingLoseHp.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = BloodlettingEnergy.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BloodlettingBody { dispatch = ExecuteCardBody key = "base-spire:bloodletting" procedure = BloodlettingBody }
+
+procedure BloodlettingDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BloodlettingDamageValue { dispatch = ReadCardDamage key = "base-spire:bloodletting" procedure = BloodlettingDamageValue }

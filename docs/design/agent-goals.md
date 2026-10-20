@@ -1,6 +1,6 @@
-# 当前 agent goal：core 冻结后的下游分工
+# 角色接单与交付提示
 
-本页提供可复制的角色接手提示。先按[主清单领域总览](../review/tofix/README.md#当前任务)定位工作，按[归属与依赖](../review/tofix/README.md#归属与依赖)及[推进顺序](../review/tofix/README.md#推进顺序)接续；原ENV编号保留为认领、完成条件与证据索引，旧P值不单独驱动派单。本页不另指定当前首包。范围与完整验收见[管理约定](post-core-agent-assignments.md)、[ENV范围](environment-completion-and-differential-v1.md)及[实现约束](environment-implementation-constraints.md)。导航更新于2026-10-17。
+本页提供可复制的角色接手提示。先按[主清单领域总览](../review/tofix/README.md#当前任务)定位工作，按[归属与依赖](../review/tofix/README.md#归属与依赖)及[推进顺序](../review/tofix/README.md#推进顺序)接续；原ENV编号保留为认领、完成条件与证据索引，旧P值不单独驱动派单。本页不另指定当前首包。范围与完整验收见[管理约定](post-core-agent-assignments.md)、[ENV范围](environment-completion-and-differential-v1.md)及[实现约束](environment-implementation-constraints.md)。导航校准于2026-10-20；旧ENV详情只保留合同和历史证据，当前可执行入口以主清单及本页为准。
 
 ## 1. 派给集成执行者的一段goal
 
@@ -22,19 +22,19 @@
 
 按[base开发指南](mod-the-spire/base-development-guide.md)选择本包修改入口和局部反馈；组合已有效果先从内容和案例入手，扩展机制再进入领域前端/程序/编译器。公开或完整环境门槛仍按下列合同执行。
 
-- **边界**：只写 `mod-the-spire/base-spire/`、必要 mod 文档及 solution 登记；遵守 mod AGENTS 和[冻结契约](../contracts/core-engine-baseline.md)。不改 B/C 生产文件。
-- **先读**：[主清单 A 队列](../review/tofix/README.md#当前任务)、[base 工作包](mod-the-spire/base-spire-implementation-plan.md#3-当前可直接派给-a-的接续包2026-10-06)、[A 完整合同](post-core-agent-assignments.md#3-abase-010203正式规则包与完整原版)。
-- **第一步**：核对本包现有工厂、前端/IR 和已交付检查，按任务详情的“接手先做”实施；复用状态机/队列/编队/出生能力/R1～R3，避免重做或复制另一份 RunState。
+- **边界**：写`mod-the-spire/base-spire/`的DSL／静态JSON、`tools/base-spire-dev/`的包外行为检查及必要base文档／solution登记；开发工具不提供生产玩法。遵守mod AGENTS和[核心契约](../contracts/core-engine-baseline.md)，不改B独立适配器或C生产文件。
+- **先读**：[主清单 A 队列](../review/tofix/README.md#当前任务)、[base 工作包](mod-the-spire/base-spire-implementation-plan.md#3-工作包方法与依赖)、[A 完整合同](post-core-agent-assignments.md#3-abase-010203正式规则包与完整原版)。
+- **第一步**：核对本包现有DSL、Engine链接与已交付检查，先读取package.json、涉及的领域index／rules和现有行为检查，再按当前交付实施。旧SinglePlayer／Slice／ContentSource不在生产；不能假定旧地图／队列已迁移，也不能另造RunState。
 - **交付判断**：按原完成条件给真实可达能力、普通/升级/适用分支、源依据、实际命令和同构建证据。文本规则库要实际链接执行；正常 Run 不注入状态，尚未完整实现的范围保持 dev。B/C 随包接入，不等全量内容完成。
-- **维护**：只回写本任务详情和综合交接；源时序/写回方法更新相应工作包/spec，随改随修 UTF-8 注释债。P2 按真实路径依赖接入，不无限清长尾而推迟 Run。
+- **维护**：只回写主清单当前交付和综合交接；源时序/写回方法更新相应工作包/spec，随改随修 UTF-8 注释债。P2 按真实路径依赖接入，不无限清长尾而推迟 Run。
 
 ## 4. B：严格对拍与结算 agent
 
 让每次规则交付都有实际独立双侧执行和可复现的首个差异，而非只有绿色本地检查。
 
 - **边界**：只写 `tools/differential/`、必要 rng-oracle、suite/参考适配及证据；统筹串行集成构建，不改 A/C、core、参考玩法或 AI。
-- **先读**：[主清单 B 队列](../review/tofix/README.md#当前任务)、[B 完整合同](post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)、[工具 README](../../tools/base-migration-baseline/differential/README.md)和涉及的实现约束。
-- **第一步**：定位既有 Comparator/FixtureSuite/两侧适配，核对本包与公开 Host 的构建/配置/seed，再接 A 已有工厂；参考独立执行，不能复制 base 结果。
+- **先读**：[主清单 B 队列](../review/tofix/README.md#当前任务)、[B 完整合同](post-core-agent-assignments.md#4-bdiff-0102日常严格对拍)、[活动工具 README](../../tools/differential/README.md)和涉及的实现约束。
+- **第一步**：先确认活动适配器仍返回unsupported；按主清单选一个已有DSL消费者对应的原case，恢复同包Session与独立参考分别执行。旧Comparator／FixtureSuite只作迁移依据，不能复制base结果或重启旧C#工厂冒充当前验证。
 - **交付判断**：保留必测/unsupported 原 ID 与完整比较维度；缺 case、零执行、缺参考、异常、超时或首个差异都不记通过。源随机差异按原始 seed 和独立依据裁决，不补抽、换 seed 或改参考效果。
 - **维护**：本包状态更新主清单；case、源分母、首个差异和 manifest 在工具资产/证据中维护。阶段与候选按合同绑定同一 run_id，覆盖不扫描历史字符串计算，早死或旧 compare 返回 0 不抵完整验收。
 
@@ -46,7 +46,7 @@
 
 - **边界**：只写 `net-the-spire/`、`docs/contracts/net/0.2/`及 net 文档；不重算玩法，不改 A/B、core 或训练。
 - **先读**：[主清单 C 队列](../review/tofix/README.md#当前任务)、[C 完整合同](post-core-agent-assignments.md#5-cnet-0102完整公开出口)、[协议第 7 节](net-the-spire/protocol.md#7-env正式环境的02扩展)及[声明派生实施边界](net-the-spire/design.md#7-2026-10-07公开语义透传的源码核对与接续)。
-- **第一步**：核对当前认领及已交付接入，接 A 已配置但未 Start 的独立 Session，仅启动一次；不重新建立默认随机 Session。声明派生先使用现有公开结构，不增加逐项游戏注册。
+- **第一步**：核对主清单认领、Engine实际选择形状及现有Bool／实例单选／取消接入；从同一manifest创建Session并只启动一次。只有真实引擎契约就绪才扩公开应答，不按旧工厂API派单，不新增逐项游戏注册。
 - **交付判断**：C#/Python/schema、身份和载荷证据同批更新，保留旧 0.1 数字 seed。每局实际字符串 seed、重发幂等、同 Host 多 seed 与完整候选按合同验证；未支持形状明确处理，不截断或静默改义。未知/RNG/debug 不进入公开输入，已知牌实例及绝对位置按投影提供。
 - **维护**：本包状态与证据更新主清单；协议/schema/codec 变化更新契约及必要迁移。阶段验收交 Python 同正式 Host 的全程轨迹，与 B 同构建/配置/seed 互证，局部检查不抵完整胜负。
 

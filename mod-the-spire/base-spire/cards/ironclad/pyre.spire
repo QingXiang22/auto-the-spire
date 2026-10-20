@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Pyre.cs; SHA-256 retained in cards/catalog.json.
 use Pyre { template = CardDefinition args = { sourceEntry = "PYRE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:pyre" cost = 2 upgradedCost = 2 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use PyreEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:pyre" power = "base-spire:pyre-power" stacks = 1 upgradedStacks = 2 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure PyreBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = PyreEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase PyreBody { dispatch = ExecuteCardBody key = "base-spire:pyre" procedure = PyreBody }
+
+procedure PyreDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase PyreDamageValue { dispatch = ReadCardDamage key = "base-spire:pyre" procedure = PyreDamageValue }

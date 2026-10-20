@@ -15,3 +15,21 @@ use BloodWallBlock {
   template = BlockEffect
   args = { definition = "base-spire:blood-wall" block = 16 upgradedBlock = 20 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BloodWallBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BloodWallLoseHp.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = BloodWallBlock.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BloodWallBody { dispatch = ExecuteCardBody key = "base-spire:blood-wall" procedure = BloodWallBody }
+
+procedure BloodWallDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BloodWallDamageValue { dispatch = ReadCardDamage key = "base-spire:blood-wall" procedure = BloodWallDamageValue }

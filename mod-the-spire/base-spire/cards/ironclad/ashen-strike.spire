@@ -2,5 +2,26 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/AshenStrike.cs; SHA-256 retained in cards/catalog.json.
-use AshenStrike { template = CardDefinition args = { sourceEntry = "ASHEN_STRIKE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:ashen-strike" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 damageScale = "exhaust-count" damageFactor = 3 upgradedDamageFactor = 4 } }
+use AshenStrike { template = CardDefinition args = { sourceEntry = "ASHEN_STRIKE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:ashen-strike" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 } }
 use AshenStrikeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:ashen-strike" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure AshenStrikeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = AshenStrikeEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase AshenStrikeBody { dispatch = ExecuteCardBody key = "base-spire:ashen-strike" procedure = AshenStrikeBody }
+
+procedure AshenStrikeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  locals = { factor = Int units = Int }
+  body = {
+    let = { into = factor value = 3 }
+    if = { condition = field(card, Card.Upgraded) then = { let = { into = factor value = 4 } } }
+    let = { into = units value = count(collection(ExhaustPile)) }
+    return = { value = add(add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)), multiply(units, factor)) }
+  }
+}
+dispatchCase AshenStrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:ashen-strike" procedure = AshenStrikeDamageValue }

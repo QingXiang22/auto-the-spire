@@ -14,7 +14,7 @@
 
 ## 接手后先做什么
 
-1. 先核对[主清单 ENV-T04](../../tofix/README.md#env-t04)与 `git status --short`。本包**已交付**：原 17 项在固定闭包上的 baseline 与最终结算、受控重洗游标对齐（已独立双侧验证）、重洗首差的源裁定与精确 base 缺口；**不要重做** T08 真实新 Run 初始化、普通/精英队列分离、地图两 seed、Power 初值/受控初始化、正常开局逐次消费诊断（[旧诊断交接](../../tofix/dsh-startup-alignment-handoff-2026-10-11-f68b943d.md)只用于第一次不一致用途，本包未重开）。
+1. 先核对[主清单 ENV-T04](../../tofix/README.md#env-t04)与 `git status --short`。本包**已交付**：原 17 项在固定闭包上的 baseline 与最终结算、受控重洗游标对齐（已独立双侧验证）、重洗首差的源裁定与精确 base 缺口；**不要重做** T08 真实新 Run 初始化、普通/精英队列分离、地图两 seed、Power 初值/受控初始化、正常开局逐次消费诊断（[旧诊断交接](dsh-startup-alignment-handoff-2026-10-11-f68b943d.md)只用于第一次不一致用途，本包未重开）。
 2. 负责人按 base 主责派一个机制包，实现下面「base 缺口」并复算。执行者第一步：在本包验证工程上跑定向 case，确认首差位置，再按源语义改 base，最后跑完整 17 一次。命令见「验证与证据」，定向命令为
    `dotnet .artifacts/parallel/dsh-reshuffle-followup-20261011/bin/Debug/net9.0/Differential.dll test --suite regression --only random-reshuffle-unsupported --output <本包新的 .audit 目录>`；
    前置条件＝base 已加预排序；预期结果＝`boundary[3]` 两侧牌序不再有该首差（仍按 Profile 声明判 `unsupported_rng_profile`，rc 仍非零）。
@@ -45,7 +45,7 @@
 | 最终完整 17（一次） | `dotnet $verify/Differential.dll test --suite regression --output $audit/final` | **rc1**；17/17 执行，15 passed／1 self_checked／1 unsupported_rng_profile，自检 22 项 0 失败，complete=true；run_id `regression@env-t04-regression@1+20261011T142431Z` | [报告](../../../../.audit/dsh-reshuffle-followup-20261011/final/regression.json)、[日志](../../../../.audit/dsh-reshuffle-followup-20261011/final-regression.txt)。必需 unsupported 保持非零 |
 | 独立随机模型复算 | `python $audit/verify-reshuffle-model.py` | rc0；用只读源语义独立重写 `hash32`/xoshiro256**/descending Fisher–Yates，逐值复现两侧实际输出与**引擎指纹** | [模型输出](../../../../.audit/dsh-reshuffle-followup-20261011/reshuffle-model-output.txt)、[脚本](../../../../.audit/dsh-reshuffle-followup-20261011/verify-reshuffle-model.py) |
 | 改动影响面 | `python $audit/bounded-change-check.py`、`record-field-diff.py`、`case-verdict-check.py` | rc0；suite sha256 不变；仅 reshuffle 的 `divergences` 值变，其余 16 case 各字段不变；记录层面其余差异仅 `notes[2]` 与 `profile_code_sha256` | [bounded-change](../../../../.audit/dsh-reshuffle-followup-20261011/bounded-change-check.txt)、[field-diff](../../../../.audit/dsh-reshuffle-followup-20261011/record-field-diff.txt)、[verdict-check](../../../../.audit/dsh-reshuffle-followup-20261011/case-verdict-check.txt)。比对输入为 `$audit/baseline` 与 `$audit/aligned`；`aligned` 是同一最终构建在补 README 之前跑的完整 17 项，判定与 `final` 相同 |
-| 文档检查 | `python tools/doc-check/check_docs.py` | rc=29；扫描 422 篇，29 个问题**全部**是既有文件（`dsh-candidate-binding-20261011` 的 .artifacts 25 个、[Power 交接](../../tofix/dsh-power-fixture-handoff-2026-10-11.md) 2 个、[开局诊断交接](../../tofix/dsh-startup-alignment-handoff-2026-10-11-f68b943d.md) 2 个），本包新增/修改文件 0 个（含本交接与 README 新锚点） | [日志](../../../../.audit/dsh-reshuffle-followup-20261011/doc-check.txt)。不把全仓文档检查写成通过 |
+| 文档检查 | `python tools/doc-check/check_docs.py` | rc=29；扫描 422 篇，29 个问题**全部**是既有文件（`dsh-candidate-binding-20261011` 的 .artifacts 25 个、[Power 交接](dsh-power-fixture-handoff-2026-10-11.md) 2 个、[开局诊断交接](dsh-startup-alignment-handoff-2026-10-11-f68b943d.md) 2 个），本包新增/修改文件 0 个（含本交接与 README 新锚点） | [日志](../../../../.audit/dsh-reshuffle-followup-20261011/doc-check.txt)。不把全仓文档检查写成通过 |
 | 空白检查 | `git diff --check` | rc0；只有既有共享文件的 LF/CRLF 提示 | [日志](../../../../.audit/dsh-reshuffle-followup-20261011/diff-check.txt)。注意本包多数文件未跟踪，该命令不覆盖它们 |
 
 **未运行的门槛**：`dotnet build AutoTheSpire.sln`、Engine、Slice、net、训练与归档套件均未跑——本包没有改玩法、公共编排、DSL 或 net；工具侧只跑了上面的验证工程与严格 suite。正式公开复放与共同构建门槛由负责人串行收口。

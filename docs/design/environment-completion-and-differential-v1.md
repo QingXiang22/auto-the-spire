@@ -11,7 +11,7 @@
 
 ## 1. 对用户决策的评估
 
-**v1.3 优先约束：** core 已独立冻结为 engine/ir@0.3，提交 `92ccd34` / 标签 `core-engine-ir-0.3`。下游默认使用该基线，不把“先补完 core”作为原版环境前置，也不自行更改其语义/API。
+**2026-10-20实施基线修订：** `92ccd34`／`engine/ir@0.3`是v1.3时的历史冻结锚点；活动版本按[核心契约](../contracts/core-engine-baseline.md)及实际工程修订。base现为纯DSL包，旧SinglePlayer／ContentSource工厂不再是生产落点。下文五角色、来源、时间保护、严格suite及120对等验收合同保留；历史实现描述不能证明当前能力。派单与实际就绪状态只见[主清单](../review/tofix/README.md#当前交付)，不把先补完通用core作为所有内容前置，也不自行改变接口语义。
 
 发现通用缺口时，执行者附最小复现交负责人；游戏玩法在 base DSL 包中完成。可分配的目录、接口、交付与提示词见 [agent 分工](post-core-agent-assignments.md)及 [agent goals](agent-goals.md)，进度只更新唯一清单。
 
@@ -31,7 +31,7 @@ v1.2补充[实现约束与交付证据](environment-implementation-constraints.m
 
 本节原条目记录规划初始时点，不覆盖后来的实现。2026-10-04[负责人复核](../review/records/2026-10-04/environment-owner-review.md)已核实原版随机Profile及种子布局、68张正式卡和25个Power定义，但正式运行接入及完整Run仍未完成。现有compare会在7个受控passed、5个unsupported时返回0，不能作为严格测试入口；v1.1要求补齐下面的失败契约，而不是再新建一套比较框架。
 
-- 本次读取本机游戏`release_info.json`：`v0.111.0 / commit 41cef1ea / main_assembly_hash 222455745`，与参考README声明一致；[历史来源审计](../review/records/2026-10-01/sts2-sim-补全与保真差异-2026-10-01.md)也记录该来源。执行时须同时冻结恢复源码和参考目录的实际文件摘要，不能只记版本字符串。
+- 本次读取本机游戏`release_info.json`：`v0.111.0 / commit 41cef1ea / main_assembly_hash 222455745`，与参考README声明一致；[历史来源审计](../review/deprecated/sts2-sim-补全与保真差异-2026-10-01.md)也记录该来源。执行时须同时冻结恢复源码和参考目录的实际文件摘要，不能只记版本字符串。
 - `sts2/src/Core/Models/ModelDb.cs`的AllCharacters为Ironclad、Silent、Regent、Necrobinder、Defect五个角色。Deprived等额外类型是否进入分母取决于单人正常可达来源，不把所有C#类都算内容，也不无依据删掉可达内容。
 - 当前Engine的RandomService只接受`xoshiro256ss/splitmix64@1`及`rejection-uniform@1`，流种子使用自身派生规则，明确不声称原版同种子一致。完整同种子对拍必须先补兼容能力。
 - 参考具有RunDriver/IRunDecisionSource、RunEngine、RunRecorder和RngDiagnostics；顺序RNG与重键模式分开。其PlayerSnapshot只有手牌内容ID和各牌区大小，不能充分区分相同卡牌实例、牌区顺序及实例变量，不能直接作为严格对拍全量快照。

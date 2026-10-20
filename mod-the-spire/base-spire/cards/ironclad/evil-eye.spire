@@ -12,7 +12,7 @@ template FlaggedBlockMultiplierEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int flagged = Bool }
       body = {
         if = {
@@ -37,7 +37,7 @@ template FlaggedBlockMultiplierEffect {
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 
@@ -49,3 +49,20 @@ use EvilEyeBlock {
   template = FlaggedBlockMultiplierEffect
   args = { definition = "base-spire:evil-eye" block = 8 upgradedBlock = 11 flag = "exhausted-card" }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure EvilEyeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = EvilEyeBlock.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase EvilEyeBody { dispatch = ExecuteCardBody key = "base-spire:evil-eye" procedure = EvilEyeBody }
+
+procedure EvilEyeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase EvilEyeDamageValue { dispatch = ReadCardDamage key = "base-spire:evil-eye" procedure = EvilEyeDamageValue }

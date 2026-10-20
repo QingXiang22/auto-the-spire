@@ -22,6 +22,7 @@ internal static partial class PackageChecks
         RunPickupUpgradeChecks(package, Check);
         RunEffectListenerChecks(package, Check);
         RunSelfFormingClayChecks(package, Check);
+        RunAttackBehaviorChecks(package, Check);
         if (count == 0) throw new ArgumentException("No relic-content checks match --filter: " + filter);
         Console.WriteLine($"All {count} selected relic-content checks passed; skipped={skipped}; elapsed={total.Elapsed.TotalSeconds:F3}s. Full check is required for coverage evidence."); return 0;
     }

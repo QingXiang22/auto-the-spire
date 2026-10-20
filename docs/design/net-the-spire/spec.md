@@ -2,7 +2,7 @@
 
 本规范定义 net 向消费端提供的公开观察、合法候选、会话控制和结果。查询字段与错误时，使用[公开协议](protocol.md)；实现进度和接续任务以[当前清单](../../review/tofix/README.md)为准。
 
-当前实施细则见[ENV实现约束](../environment-implementation-constraints.md)：正式会话由base工厂配置后接管，net不重建默认Session；固定Host角色/进阶及每start游戏字符串seed采用[协议0.2扩展](protocol.md#7-env正式环境的02扩展)。0.1历史字段和旧场景兼容保留，新版本待实现和双端验收。
+当前Host通过Engine通用加载同一base manifest并创建Session，不调用旧C#工厂；net发布规则声明的事实与候选，不重算玩法。每局字符串seed沿[协议0.2扩展](protocol.md#7-env正式环境的02扩展)传入；实例单选／取消及Bool应答已有接入，有序多选和其他未支持形状仍须按真实Engine契约扩展。旧0.1通用wire兼容保留，旧base场景明确未支持；正常Run公开全程不因开发路径通过而成立。实现约束见[ENV约定](../environment-implementation-constraints.md)。
 
 > 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
 

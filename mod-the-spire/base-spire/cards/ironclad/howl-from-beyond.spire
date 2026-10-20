@@ -5,9 +5,45 @@ dsl_version = "core/0.3"
 # if it is in ExhaustPile at the end-of-turn auto-post-play phase, it plays itself for free.
 use HowlFromBeyond {
   template = CardDefinition
-  args = { sourceEntry = "HOWL_FROM_BEYOND" rarity = "uncommon" inIroncladPool = true generatable = true autoFromExhaustAtTurnEnd = true baseDamage = 16 upgradedBaseDamage = 21 kind = "attack" strikeTag = false definition = "base-spire:howl-from-beyond" cost = 3 upgradedCost = 3 targeted = false exhausts = false leavesPlay = false }
+  args = { sourceEntry = "HOWL_FROM_BEYOND" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 16 upgradedBaseDamage = 21 kind = "attack" strikeTag = false definition = "base-spire:howl-from-beyond" cost = 3 upgradedCost = 3 targeted = false exhausts = false leavesPlay = false }
 }
 use HowlFromBeyondDamage {
   template = AttackAllEnemiesEffect
   args = { definition = "base-spire:howl-from-beyond" hits = 1 upgradedHits = 1 }
+}
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure HowlFromBeyondBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = HowlFromBeyondDamage.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase HowlFromBeyondBody { dispatch = ExecuteCardBody key = "base-spire:howl-from-beyond" procedure = HowlFromBeyondBody }
+
+procedure HowlFromBeyondDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase HowlFromBeyondDamageValue { dispatch = ReadCardDamage key = "base-spire:howl-from-beyond" procedure = HowlFromBeyondDamageValue }
+
+procedure HowlFromBeyondAutoExhausted {
+  parameters = { owner = Ref(Player) }
+  body = {
+    forEach = {
+      query = where(collection(ExhaustPile), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), equal(field(c, Card.DefinitionId), "base-spire:howl-from-beyond"))) item = c body = {
+        call = {
+          procedure = AutoPlayCard args = {
+            owner = owner card = c forceExhaust = false
+          }
+        }
+      }
+    }
+  }
+}
+
+subscription HowlFromBeyondAutoExhausted {
+  event = BeforeTurnEndEffects reaction = HowlFromBeyondAutoExhausted priority = 5
 }

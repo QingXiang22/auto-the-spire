@@ -4,7 +4,14 @@ dsl_version = "core/0.3"
 # Definition templates register all executable content in declaration order. Source-pool membership and
 # generation eligibility are explicit metadata; unsupported catalog rows never become empty runtime cards.
 event RegisterCardDefinitions { }
-procedure RegisterCardLibrary { body = { emit = { event = RegisterCardDefinitions } } }
+procedure RegisterCardLibrary { body = {
+  emit = { event = RegisterCardDefinitions }
+  forEach = { query = collection(CardLibrary) item = definition body = {
+    if = { condition = not(and(pureCall(ExecuteCardBody.Contains, field(definition, CardBlueprint.DefinitionId)), pureCall(ReadCardDamage.Contains, field(definition, CardBlueprint.DefinitionId)))) then = {
+      fail = { message = "Card definition requires a unique body and value provider" }
+    } }
+  } }
+} }
 procedure GenerateCombatCard {
   parameters = { owner = Ref(Player) attacksOnly = Bool }
   locals = { chosen = Binding card = Binding } result = Binding

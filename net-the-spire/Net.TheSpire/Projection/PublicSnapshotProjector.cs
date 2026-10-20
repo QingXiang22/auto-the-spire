@@ -34,7 +34,8 @@ public sealed record CandidateBinding(
     IReadOnlyList<Value> Arguments,
     long? DecisionRequestId = null,
     InstanceId? DecisionInstance = null,
-    bool EmptyDecision = false);
+    bool EmptyDecision = false,
+    bool? DecisionFlag = null);
 
 /// <summary>一条**显式**不发布的公开事实：带规则号与理由，用来证明没有静默丢弃。</summary>
 public sealed record SkippedPublicFact(string EngineQualifiedId, string RuleId, string Reason);
@@ -871,9 +872,24 @@ public sealed class PublicSnapshotProjector
     private (List<LegalActionDto>, List<CandidateBinding>) BuildDecisionAnswers(DecisionRequest pending,
         IReadOnlyDictionary<InstanceId, string> ids)
     {
+        if (pending.Kind == DecisionResponseKind.Bool)
+        {
+            var boolRule = _profile.AnswerAction;
+            var flagField = boolRule.Parameters.Values.SingleOrDefault(p => p.FieldId == DerivedPublicProfile.AnswerFlagFieldId && p.Kind == PublicValueKind.Boolean);
+            if (flagField is null || flagField.Required)
+                throw new PublicMappingException("N-02-BOOL-ANSWER-PROFILE", "Bool decisions require the optional Flag field in the 0.2 derived profile.");
+            var boolEntries = new List<(LegalActionDto Action, CandidateBinding Binding)>();
+            foreach (var flag in new[] { false, true })
+            {
+                var field = EncodeField(flagField, Value.Of(flag), -1, ids, "answer.flag", $"snapshot.legal_actions?fields[{flagField.FieldId}]");
+                var entry = BuildEntry(boolRule.ActionTypeId, [field], null, [], _candidateNamespace);
+                boolEntries.Add((entry.Action, entry.Binding with { DecisionRequestId = pending.RequestId, DecisionFlag = flag }));
+            }
+            return Finish(boolEntries);
+        }
         if (pending.Kind is not (DecisionResponseKind.EntityRef or DecisionResponseKind.EntityRefList))
             throw new PublicMappingException("TODO-N02-DECISION-KIND",
-                $"暂停的应答种类是 {pending.Kind}，协议快照的候选只能表达实体引用应答（protocol.md:98 的具名 entity_ref）；" +
+                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool及单实体引用应答；" +
                 "需要协议/协调者裁定该形状，映射层不发明第二个应答结构");
         if (pending.Maximum != 1 || pending.Minimum is < 0 or > 1
             || pending.Kind == DecisionResponseKind.EntityRef && pending.Minimum != 1)

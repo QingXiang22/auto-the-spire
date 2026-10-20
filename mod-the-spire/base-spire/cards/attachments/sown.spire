@@ -1,0 +1,22 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Sown.OnPlay runs after the card body and gains energy once per attached combat instance.
+template SownModule { body = {
+  procedure Allowed { pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Bool body = {
+    return = { value = pureCall(CanEnchantCard, owner, card) }
+  } }
+  dispatchCase Allowed { dispatch = CanApplyCardEnchantment key = "base-spire:sown" procedure = Allowed }
+  procedure Apply { parameters = { owner = Ref(Player) card = Ref(Card) amount = Int(min = 1, max = 999) } locals = { attachment = Binding } body = {
+    if = { condition = not(pureCall(CanEnchantCard, owner, card)) then = { fail = { message = "Sown requires an eligible unenchantmented card" } } }
+    create = { type = CardAttachment scope = entityScope(card) into = attachment fields = { Owner = field(card, Card.Owner) Card = card DefinitionId = "base-spire:sown" Kind = "enchantment" Amount = amount } }
+    emit = { event = CardAttachmentCreated payload = { attachment = attachment } }
+  } }
+  dispatchCase Apply { dispatch = ApplyCardEnchantment key = "base-spire:sown" procedure = Apply }
+  procedure Played { parameters = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) listener = Ref(CardAttachment) } body = {
+    call = { procedure = GainEnergy args = { owner = owner amount = field(listener, CardAttachment.Amount) } }
+    set = { target = listener field = CardAttachment.Status value = "disabled" }
+  } }
+  subscription Played { event = ExecuteCardEnchantment reaction = Played instances = where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Card), card), and(equal(field(a, CardAttachment.DefinitionId), "base-spire:sown"), equal(field(a, CardAttachment.Status), "normal")))) }
+} }
+use Sown { template = SownModule }

@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Hellraiser.cs; SHA-256 retained in cards/catalog.json.
 use Hellraiser { template = CardDefinition args = { sourceEntry = "HELLRAISER" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:hellraiser" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use HellraiserEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:hellraiser" power = "base-spire:hellraiser-power" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure HellraiserBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = HellraiserEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase HellraiserBody { dispatch = ExecuteCardBody key = "base-spire:hellraiser" procedure = HellraiserBody }
+
+procedure HellraiserDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase HellraiserDamageValue { dispatch = ReadCardDamage key = "base-spire:hellraiser" procedure = HellraiserDamageValue }

@@ -15,3 +15,21 @@ use BreakthroughDamage {
   template = AttackAllEnemiesEffect
   args = { definition = "base-spire:breakthrough" hits = 1 upgradedHits = 1 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BreakthroughBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BreakthroughLoseHp.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = BreakthroughDamage.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BreakthroughBody { dispatch = ExecuteCardBody key = "base-spire:breakthrough" procedure = BreakthroughBody }
+
+procedure BreakthroughDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BreakthroughDamageValue { dispatch = ReadCardDamage key = "base-spire:breakthrough" procedure = BreakthroughDamageValue }

@@ -257,7 +257,11 @@ public sealed class ControlSession
         entry!.State = LedgerState.Settling;
         try
         {
-            if (binding.DecisionRequestId is { } emptyRequest && binding.EmptyDecision)
+            if (binding.DecisionRequestId is { } flagRequest && binding.DecisionFlag is { } flag)
+            {
+                _session.Answer(new DecisionAnswer(flagRequest, Flag: flag));
+            }
+            else if (binding.DecisionRequestId is { } emptyRequest && binding.EmptyDecision)
             {
                 _session.Answer(new DecisionAnswer(emptyRequest, Instances: []));
             }

@@ -46,7 +46,7 @@ public sealed record AnchorResolution(string Name) : Resolution;
 /// </summary>
 public sealed class RuleSetBuilder
 {
-    public const string EngineVersion = "engine/ir@0.6";
+    public const string EngineVersion = "engine/ir@0.7";
 
     private readonly List<EnginePackage> _packages = [];
     private readonly Dictionary<int, string> _backendDescriptors = [];
@@ -489,8 +489,11 @@ public sealed class RuleSetBuilder
                                 $"projection '{symbol.QualifiedId}' names owner field '{ownerField}' which " +
                                 $"'{definition.QualifiedId}' does not declare");
                         }
+                        var identityIndex = -1;
+                        if (type.IdentityFrom is not null && !definition.TryFieldIndex(type.IdentityFrom, out identityIndex))
+                            throw Faults.Unresolved($"projection '{symbol.QualifiedId}' names unknown identity anchor field '{type.IdentityFrom}'");
                         projections[typeId] = new TypeProjection(definition, type.Include, ownerIndex,
-                            type.IncludeHiddenFields);
+                            type.IncludeHiddenFields, identityIndex);
                     }
 
                     var reveals = new List<RevealProjection>();
@@ -918,7 +921,7 @@ public sealed class RuleSetBuilder
                     .Append(" relations=").Append(projection.IncludeRelations).Append(" types=");
                 foreach (var (typeId, type) in projection.Types.OrderBy(pair => pair.Key))
                     text.Append(typeId).Append(':').Append(type.Include).Append(':').Append(type.OwnerFieldIndex)
-                        .Append(':').Append(type.IncludeHiddenFields).Append(';');
+                        .Append(':').Append(type.IncludeHiddenFields).Append(':').Append(type.IdentityFromFieldIndex).Append(';');
                 text.Append(" reveals=");
                 foreach (var reveal in projection.Reveals)
                     text.Append(reveal.AuthorityTypeId).Append(':').Append(reveal.ViewerFieldIndex)

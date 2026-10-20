@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/FeelNoPain.cs; SHA-256 retained in cards/catalog.json.
 use FeelNoPain { template = CardDefinition args = { sourceEntry = "FEEL_NO_PAIN" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:feel-no-pain" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use FeelNoPainEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:feel-no-pain" power = "base-spire:feel-no-pain-power" stacks = 3 upgradedStacks = 4 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure FeelNoPainBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = FeelNoPainEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase FeelNoPainBody { dispatch = ExecuteCardBody key = "base-spire:feel-no-pain" procedure = FeelNoPainBody }
+
+procedure FeelNoPainDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase FeelNoPainDamageValue { dispatch = ReadCardDamage key = "base-spire:feel-no-pain" procedure = FeelNoPainDamageValue }
