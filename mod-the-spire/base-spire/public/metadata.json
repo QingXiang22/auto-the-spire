@@ -176,7 +176,8 @@
         "base-spire:unrelenting",
         "base-spire:uppercut",
         "base-spire:vicious",
-        "base-spire:whirlwind"
+        "base-spire:whirlwind",
+        "base-spire:whistle"
       ]
     },
     "base-spire:Potion": {

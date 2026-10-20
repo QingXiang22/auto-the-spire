@@ -1,0 +1,40 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Cards/Whistle.cs; 3 cost, 33 damage (44 upgraded),
+# then CreatureCmd.Stun, and CardKeyword.Exhaust.
+use Whistle {
+  template = CardDefinition
+  args = { sourceEntry = "WHISTLE" rarity = "ancient" baseDamage = 33 upgradedBaseDamage = 44 kind = "attack" strikeTag = false generatable = false definition = "base-spire:whistle" cost = 3 upgradedCost = 3 targeted = true exhausts = true leavesPlay = false }
+}
+use WhistleDamage { template = AttackEffect args = { definition = "base-spire:whistle" hits = 1 } }
+
+template WhistleStunEffect {
+  parameters = { definition = { type = String(length = 64) } }
+  body = {
+    procedure WhenPlayedOnTarget {
+      parameters = { play = Binding owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      body = {
+        if = { condition = and(equal(field(card, Card.DefinitionId), arg(definition)), greater(field(target, Enemy.Hp), 0)) then = {
+          call = { procedure = StunEnemy args = { target = target } }
+        } }
+      }
+    }
+  }
+}
+use WhistleStun { template = WhistleStunEffect args = { definition = "base-spire:whistle" } }
+
+procedure WhistleBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = WhistleDamage.WhenPlayedOnTarget args = { play = play owner = owner card = card target = target } }
+    call = { procedure = WhistleStun.WhenPlayedOnTarget args = { play = play owner = owner card = card target = target } }
+  }
+}
+dispatchCase WhistleBody { dispatch = ExecuteCardBody key = "base-spire:whistle" procedure = WhistleBody }
+
+procedure WhistleDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = { return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) } }
+}
+dispatchCase WhistleDamageValue { dispatch = ReadCardDamage key = "base-spire:whistle" procedure = WhistleDamageValue }

@@ -143,9 +143,16 @@ procedure PerformEnemyMove {
   body = {
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     if = { condition = isNone(state) then = { return = {} } }
+    if = { condition = field(state, EnemyMoveState.Stunned) then = {
+      # CreatureCmd.Stun performs a real no-op move once. Keep the pending graph
+      # node untouched until SelectNextEnemyMove restores the source follow-up.
+      set = { target = state field = EnemyMoveState.Ready value = false }
+      return = {}
+    } }
     if = { condition = or(not(field(state, EnemyMoveState.Ready)), isNone(field(state, EnemyMoveState.Current))) then = { fail = { message = "Enemy move graph: no saved move" } } }
     if = { condition = or(lessOrEqual(field(target, Enemy.Hp), 0), lessOrEqual(field(owner, Player.Hp), 0)) then = { return = {} } }
     let = { into = node value = field(state, EnemyMoveState.Current) }
+    set = { target = state field = EnemyMoveState.LastPerformed value = node }
     call = { procedure = ExecuteEnemyMove args = { key = field(target, Enemy.DefinitionId) owner = owner target = target node = node } }
     set = { target = state field = EnemyMoveState.FirstPerformed value = true }
     set = { target = state field = EnemyMoveState.Ready value = false }
@@ -157,9 +164,42 @@ procedure SelectNextEnemyMove {
   body = {
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     if = { condition = isNone(state) then = { return = {} } }
+    if = { condition = field(state, EnemyMoveState.Stunned) then = {
+      if = { condition = isNone(field(state, EnemyMoveState.StunResume)) then = { fail = { message = "Enemy move graph: stunned state has no resume node" } } }
+      set = { target = state field = EnemyMoveState.Current value = field(state, EnemyMoveState.StunResume) }
+      let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.StunResume), EnemyMoveNode.Next)) }
+      call = { procedure = ResolveEnemyMoveNode args = { state = state node = node } into = node }
+      call = { procedure = SaveEnemyMove args = { state = state node = node } }
+      set = { target = state field = EnemyMoveState.Stunned value = false }
+      set = { target = state field = EnemyMoveState.StunResume value = none }
+      return = {}
+    } }
     if = { condition = or(field(state, EnemyMoveState.Ready), lessOrEqual(field(target, Enemy.Hp), 0)) then = { return = {} } }
     let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Current), EnemyMoveNode.Next)) }
     call = { procedure = ResolveEnemyMoveNode args = { state = state node = node } into = node }
     call = { procedure = SaveEnemyMove args = { state = state node = node } }
+  }
+}
+
+# Source CreatureCmd.Stun: replace the pending move with a one-turn no-op and
+# follow the last performed move's successor. A graph-less legacy enemy remains
+# outside this migrated action-control scope and is left unchanged.
+procedure StunEnemy {
+  parameters = { target = Ref(Enemy) }
+  locals = { state = Binding resume = Binding }
+  body = {
+    if = { condition = lessOrEqual(field(target, Enemy.Hp), 0) then = { return = {} } }
+    let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
+    if = { condition = isNone(state) then = { return = {} } }
+    if = { condition = field(state, EnemyMoveState.Stunned) then = { return = {} } }
+    let = { into = resume value = field(state, EnemyMoveState.Current) }
+    if = { condition = and(field(state, EnemyMoveState.FirstPerformed), not(isNone(field(state, EnemyMoveState.LastPerformed)))) then = {
+      let = { into = resume value = field(state, EnemyMoveState.LastPerformed) }
+    } }
+    if = { condition = isNone(resume) then = { fail = { message = "Enemy move graph: cannot stun without a saved move" } } }
+    set = { target = state field = EnemyMoveState.StunResume value = resume }
+    set = { target = state field = EnemyMoveState.Stunned value = true }
+    set = { target = target field = Enemy.MoveId value = "STUNNED" }
+    set = { target = target field = Enemy.Intent value = "stun" }
   }
 }

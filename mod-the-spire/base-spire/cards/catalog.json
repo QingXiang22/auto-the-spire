@@ -6827,9 +6827,9 @@
       "pools": [
         "EventCardPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "reviewed-singleplayer-development",
+      "evidence": "Source: sts2/src/Core/Models/Cards/Whistle.cs; damage-then-stun behavior and graph action-control witnesses are executed in EnemyMoveGraphChecks.",
+      "definition": "cards/colorless/whistle.spire"
     },
     {
       "id": "base-spire:white-noise",
