@@ -13,7 +13,7 @@
 不读 Engine 内部状态。所有输入都来自宿主公开的 `describe` / `get_catalog` / `start` / `step`
 与实时快照字段。
 
-商店（`MapPhase=7`）同样只消费公开契约：`ShopOffers` 序列上的五个公开动作
+商店（`MapPhase=7`）同样只消费公开约定：`ShopOffers` 序列上的五个公开动作
 （`BuyShopCard` / `BuyShopRelic` / `BuyShopPotion` / `RemoveShopCard` / `LeaveShop`）与每个候选
 自带的 `Offer` 实体公开字段。买不买得起、能不能删、有没有容量都由 Engine 的**候选域与守卫**决定，
 客户端不重判规则、只按公开 `Price`/`Slot` 做确定性挑选；商品字段缺失时记录可复查原因并停下，
@@ -103,7 +103,7 @@ python -X utf8 -u net-the-spire/client/run_game.py `
    `SkipRewardPotion` → `SkipRewardCard`。
 8. **宝箱**：`OpenTreasureChest` → `--relic-policy=skip` 时 `SkipTreasureRelic`，`take` 时试 `TakeTreasureRelic`。
 9. **营火**：`Hp < MaxHp` → `RestAtCampfire`；满血且有 `Upgraded=false` 的长期牌 → `SmithAtCampfire`。
-10. **开发切片推进**：`UpgradeLongTermCard`（选公开顺序第一张未升级长期牌）/ `EnterNextRoom`。
+10. **开发开发场景推进**：`UpgradeLongTermCard`（选公开顺序第一张未升级长期牌）/ `EnterNextRoom`。
 11. **战斗**：`--use-potions` 且公开 `Hp*2 <= MaxHp` 时先用公开 `UseSupported=true` 的药水；否则
     打 `PlayCard`——只挑公开 `Unplayable=false` 且 `Cost+CostModifier <= Player.Energy` 的牌，
     排序 `(Kind 排名 Attack<Skill<Power, 公开 Card.Amount 从大到小, 有效费用, 字段是否全 known, 公开顺序)`；
@@ -124,7 +124,7 @@ python -X utf8 -u net-the-spire/client/run_game.py `
   `legal_actions` 摘要）。
 * **`summary.json`** —— 最终结论，关键字段：
   - `status` / `exit_code` / `run_complete` / `whole_run_outcome` / `stop{reason,detail}`；
-  - `identity` 与 `identity_history`（`describe` 与时序上的身份，含会话建立点）；
+  - `identity` 与 `identity_history`（`describe` 与时序上的标识，含会话建立点）；
   - `seed_requested` / `seed_accepted` / `scope` / `scenario_profile` / `session_id`；
   - `step_count` / `observation_ids` / `candidate_ids`（本局实际用过的观察与候选）；
   - `initial_long_term_state` 与 `rooms[]`（按 `room_key` 变化记录的**各房间长期状态**：
@@ -149,7 +149,7 @@ python -X utf8 -u net-the-spire/client/run_game.py `
 | 退出码 | 含义 |
 | --- | --- |
 | `0` | 拿到**整局**终局：`victory` / `death` / `terminal_other` |
-| `1` | 驱动器自身问题（参数、身份校验、协议信封） |
+| `1` | 驱动器自身问题（参数、标识校验、协议信封） |
 | `3` | **未到整局结论**：`act_completed_dev_boundary`（幕完成）或 `step_limit`（步数上限） |
 | `4` | 故障 / 未支持边界：`unsupported_action` / `unsupported_map_room` / `no_legal_actions` / `host_rejected` / `stalled` / `uncertain` |
 

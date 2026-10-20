@@ -1,6 +1,6 @@
 # 战斗结束与敌人死亡
 
-关联 CORE-AUTHOR-05／**DSL-COMBAT-END-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在伤害与修正之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在主清单维护。
+关联 CORE-AUTHOR-05／**DSL-COMBAT-END-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在伤害与修正之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 
@@ -13,7 +13,7 @@
 
 ## 行为要求与设计
 
-| ID | 契约 | 判别 |
+| ID | 约定 | 判别 |
 | --- | --- | --- |
 | CB01 | 敌人生命从正数到 0 时发一次 EnemyDied；0 生命敌人再受击不重复发 | 连续两次击杀事件只出现一次，重复伤害不改变结果 |
 | CB02 | 胜利只在敌人死亡后、且场上没有 `Hp > 0` 的敌人时判定 | 只打死一个而另一个存活时战斗继续 |

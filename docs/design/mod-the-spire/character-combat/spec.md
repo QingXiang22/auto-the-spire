@@ -1,4 +1,4 @@
-# 角色战斗公共能力契约
+# 角色战斗公共能力约定
 
 本页定义共享机制及当前明确边界；排期和认领只维护[行为要求](../../environment-completion-and-differential-v1.md#env-t06)。所有局内资源与实例仍归Engine，领域对象只生成IR。当前不是完整五角色能力声明。
 
@@ -6,7 +6,7 @@
 
 敌方回合开始先对本侧存活成员执行格挡清理，再解析Poison及行动；持有声明preventsBlockClear的能力时保留格挡，与玩家沿用同一谓词。不能让上一回合的格挡无条件跨敌方回合累积。
 
-玩家已确认死亡的路径在提交Defeat前清除其Power实例，并提交最终HP/MaxHp；中毒致死同样走此收尾，不把“死后不再递减Poison”误写成“保留死者Poison”。当前清理针对已支持的普通死亡；死亡阻止、保留能力参与者及敌人复活仍依各自机制契约，不能据此声称全部死亡hook已实现。
+玩家已确认死亡的路径在提交Defeat前清除其Power实例，并提交最终HP/MaxHp；中毒致死同样走此收尾，不把“死后不再递减Poison”误写成“保留死者Poison”。当前清理针对已支持的普通死亡；死亡阻止、保留能力参与者及敌人复活仍依各自机制约定，不能据此声称全部死亡hook已实现。
 
 ## 星星
 
@@ -15,7 +15,7 @@
 
 Player.Stars为战斗级非负整数状态，初始化与换战斗清零，不随回合重置。CombatStars.Change捕获输入一次，战斗结算后不操作；Gain先ShouldGain、写状态再AfterGained，Lose封底0，Set增加走Gain、减少直接设定。作者入口、范围及暂未支持参与者见[语言参考](../../../dsl/0.0.2/authoring-reference.md#星星资源与锻造)。默认不执行操作的扩展接口仅适用当前内容，不能代替全部源hook。
 
-手动出牌同时校验能量和星星，先支付能量再支付星星；固定星星费用按实际升级形态选取。星星X快照独立于PaidX，支付后效果读取PaidStarX；零星星X可打出。自动出牌不扣资源。费用修正、AfterStarsSpent完整参与者、ChemicalX、重复出牌资源继承和公开费用元数据仍需后续接续，不把受控原语检查当源独立对拍。
+手动出牌同时校验能量和星星，先支付能量再支付星星；固定星星费用按实际升级形态选取。星星X快照独立于PaidX，支付后效果读取PaidStarX；零星星X可打出。自动出牌不扣资源。费用修正、AfterStarsSpent完整参与者、ChemicalX、重复出牌资源继承和公开费用元数据仍需后续接续，不把受控原语检查当源独立参考比较。
 
 ## 锻造
 
@@ -51,9 +51,9 @@ Plasma在玩家回合开始能量重置及AfterTurnStart之后触发；其他球
 
 CorrosiveWave每张实际抽到的牌向各存活敌人施毒，并在拥有者回合结束时移除。NoxiousFumes在下次玩家回合完成抽牌后施毒，此后每回合重复。Envenom逐次检查powered攻击的未格挡伤害，给仍存活目标施毒；全挡、unpowered伤害和死亡目标不触发。伤害先确认死亡再派发存活目标反应，避免连锁Outbreak重复提交死亡事件。BouncingFlask每次反弹独立消费一次CombatTargets，前次触发杀死的目标不参加后次抽取。Mirage实时汇总存活敌人的Poison，再走正常Dexterity／Frail格挡修正。
 
-Haze的永久Sly沿共享手动弃牌流程：先移动整个已选批次并执行弃牌hook，再按顺序免费自动打出奇巧牌。待处理条目为Engine的隐藏SlyDiscardEntry，不构成新的牌区；普通回合末清手不触发。临时授予奇巧、其他角色完整参与者与独立原版对拍仍按各自合同，不由本族受控检查推断。
+Haze的永久Sly沿共享手动弃牌流程：先移动整个已选批次并执行弃牌hook，再按顺序免费自动打出奇巧牌。待处理条目为Engine的隐藏SlyDiscardEntry，不构成新的牌区；普通回合末清手不触发。临时授予奇巧、其他角色完整参与者与独立原版差异测试仍按各自合同，不由本族受控检查推断。
 
-定向入口`--poison-only`覆盖实际加载、三种升级路径、生命周期及组合边界；`--suite source`从本地原版池及直接Power引用独立核对分母。广覆盖回归在整组本地轻量检查后由GitHub Actions执行。
+定向入口`--poison-only`覆盖实际加载、三种升级路径、生命周期及组合边界；`--suite source`从本地原版池及直接Power引用独立核对完整来源范围。广覆盖回归在整组本地轻量检查后由GitHub Actions执行。
 
 ## 静默猎手奇巧牌族
 
@@ -69,7 +69,7 @@ Abrasive先给1敏捷再给4／6荆棘。ThornsPower在敌人powered攻击计算
 
 ## Osty 基础生命周期
 
-依据OstyCmd.Summon与CreatureCmd.GainMaxHp：summonOsty(amount)零值无操作，首次创建归属玩家的独立宠物；存活时同时增加MaxHP/HP，死亡保留身份，复活以本次amount重设MaxHP/HP。healOsty只治疗存活宠物并封顶；loseOstyHp为不经格挡的生命损失，死亡不移除实体；ostyAttack只允许存活宠物攻击当前所选敌人，基础伤害不使用玩家Strength。金额使用共享数值表达式，负值显式拒绝。
+依据OstyCmd.Summon与CreatureCmd.GainMaxHp：summonOsty(amount)零值无操作，首次创建归属玩家的独立宠物；存活时同时增加MaxHP/HP，死亡保留标识，复活以本次amount重设MaxHP/HP。healOsty只治疗存活宠物并封顶；loseOstyHp为不经格挡的生命损失，死亡不移除实体；ostyAttack只允许存活宠物攻击当前所选敌人，基础伤害不使用玩家Strength。金额使用共享数值表达式，负值显式拒绝。
 
 状态归Engine的Osty实体与公开OstyPets集合，不加入Monsters队列。换战斗销毁宠物；零金额不发召唤事件，复活事件先于召唤事件。事件接口不等于完整AfterSummon/AfterOstyRevived参与者。基础DieForYou路由已接：玩家格挡先吸收，powered且剩余伤害为正时由存活Osty承担整次未挡伤害，致死不穿透玩家，后续伤害在Osty死亡后恢复命中玩家；宠物掉血不增加玩家掉血计数/反应。非powered及直接玩家HP损失不转移。尚未支持宠物Power/Focus/Doom/Poison、宠物攻击完整修正、伤害/死亡防止、正式Necrobinder开局和召唤修正；这些必须作为未完成范围报告。
 
@@ -83,6 +83,6 @@ Engine 保存能力层数、生命及隐藏批次实例。阵营回合结束前�
 
 ## 其余角色能力边界
 
-角色资源、支付、球队列和公开投影变化必须更新构建身份；兼容性由同提交的公开契约检查确认。
+角色资源、支付、球队列和公开投影变化必须更新构建标识；兼容性由同提交的公开约定检查确认。
 
 Osty须覆盖召唤/增上限/死亡复活/代受伤/目标归属；Doom批量致死与源hook、Poison/Sly手动弃牌行为须按实际生命周期验证。它们及上文明确未支持的参与者是本包继续实施的真实缺口，不表示已加载或行为已支持。

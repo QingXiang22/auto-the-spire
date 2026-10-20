@@ -1,6 +1,6 @@
 # 战斗开始格挡遗物的 DSL 迁移
 
-关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[路线图](../../../roadmap.md#近期队列)维护。
+关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。
 
 ## 已核实来源与范围
 
@@ -10,15 +10,15 @@
 
 ## 行为要求与设计
 
-| ID | 契约 | 判别 |
+| ID | 约定 | 判别 |
 | --- | --- | --- |
 | RC01 | Player 增加 CombatActive=false；只有 Idle→Active 的开始操作允许发 BeforeCombatStart(owner) | 活跃期重复开始不发布合法候选；过程直接调用同样拒绝，不能重发事件 |
 | RC02 | 开始先验证 inactive，再将 Block 置 0、CombatActive 置 true，然后 emit BeforeCombatStart | 监听器观察到已活跃且本场初始格挡为 0；不得在 emit 之后清掉监听获得的格挡 |
 | RC03 | 结束只在 active 时允许，置 CombatActive=false，不发新开始事件；下一次开始重新置本场 Block=0 | 结束后再开始分别获得 10／4，不能累加成 20／8；重复结束拒绝 |
 | RC04 | 共享 DSL 模板 BeforeCombatStartBlockRelic 按库存顺序过滤 Holder、IsMelted 和 DefinitionId，调用现有无加成格挡 | Anchor=10，FakeAnchor=4，二者同时=14；无遗物／已移除／熔化／别的 Holder 不触发 |
-| RC05 | 内容文件仅 use 模板参数，原源资格、ID、hash、池和 297 分母不改变 | catalog 只新增两个非空 definition，公开目录新增两个真实 ID；不增加 C# 效果分支 |
+| RC05 | 内容文件仅 use 模板参数，原源资格、ID、hash、池和 297 项来源条目总数不改变 | catalog 只新增两个非空 definition，公开目录新增两个真实 ID；不增加 C# 效果分支 |
 | RC06 | 旧 TheAbacus 洗牌链与新开始链独立组合 | 两类遗物持有时开始获得 10，再实际重洗获得 6，最终 16；普通获得／结束不错误触发 |
-| RC07 | 默认 Host 读同一包，从合法动作执行开始／结束，观察同一 Player.Block／CombatActive | 真 stdio 获得两遗物→开始 14→结束→再次开始 14；身份随新包变化 |
+| RC07 | 默认 Host 读同一包，从合法动作执行开始／结束，观察同一 Player.Block／CombatActive | 真 stdio 获得两遗物→开始 14→结束→再次开始 14；标识随新包变化 |
 | RC08 | Codex 用户 skill 安装指向当前仓库技能，实际从安装入口读取和定位后执行本任务 | 安装目标原先不存在；校验真实目标、脚本与文档路径，查询 Anchor／FakeAnchor 来源及 hash；不假装独立 agent／DSH 验证 |
 
 Player 的 combat 字段放 combat/schema，开始／结束过程与 BeforeCombatStart 放 combat/lifecycle；模板放 relics/rules，具体配置各放 relics/shared 单文件。开发动作显式命名 BeginDevelopmentCombat／EndDevelopmentCombat，不能命名成正常 Run 开始或伪造战斗胜利。
@@ -27,14 +27,14 @@ Player 的 combat 字段放 combat/schema，开始／结束过程与 BeforeComba
 
 1. 安装并验证用户级目录链接；若安装位置冲突则保留现有内容，不覆盖。先解析 SKILL.md 的真实路径阅读对应手册，再用安装目录脚本定位源。
 2. 实现 DSL 生命周期、模板与两份内容配置，登记索引／源目录／公开元数据和新包版本，始终只在 base 中保存 .spire／静态 .json。
-3. 在包外追加有判别力的生命周期／隔离／组合检查，按真实执行场景分别生成三个原版遗物的见证，不复用 TheAbacus 场景冒充新遗物。原检查继续执行，源分母和原对拍失败语义不变。
+3. 在包外追加有判别力的生命周期／隔离／组合检查，按真实执行场景分别生成三个原版遗物的执行结果，不复用 TheAbacus 场景冒充新遗物。原检查继续执行，来源条目总数和原差异测试失败语义不变。
 4. 通过真实 stdio 验证公开轨迹，更新准确操作与领域手册及安装方式，记录来源／版本／命令／结果和 skill 实际阅读边界。
 
-最终运行 solution 构建、包行为／覆盖、受影响 net 与迁移边界、文档／skill 校验；本次不改 Engine 语义，通用 Engine 全套由 Actions 验证。不运行独立参考或完整游戏矩阵，不将开发探针当作正常流程证据。若 DSL 表达不足，回到此契约并给最小复现，不用 C# 回调绕过。
+最终运行 solution 构建、包行为／覆盖、受影响 net 与迁移边界、文档／skill 校验；本次不改 Engine 语义，通用 Engine 全套由 Actions 验证。不运行独立参考或完整游戏矩阵，不将开发探针当作正常流程验证记录。若 DSL 表达不足，回到此约定并给最小复现，不用 C# 回调绕过。
 
 ## 遗物机制索引
 
-按匹配版本的完整来源确定消费者。分组用于查找共享机制，当前排期见 [路线图](../../../roadmap.md)；实现数由 CI 生成。
+按匹配版本的完整来源确定消费者。分组用于查找共享机制，当前排期见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；实现数由 CI 生成。
 
 | 分组 | 消费者示例 |
 | --- | --- |

@@ -12,7 +12,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`CardPlayRecord.RawX` 保存每次执行关联的序列捕获值，`Card.PaidX`保留兼容读取，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
-角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态契约](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
+角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态约定](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
 
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
@@ -21,10 +21,10 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
 | Powers | 有序 Power 集合 | 按定义的shared／per-applier／independent策略匹配实例；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
-| [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64) | 开发药水实例，只承载身份；原版的稀有度、使用窗口（战斗内／任意时刻）与来源未迁移 |
+| [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64) | 开发药水实例，只承载标识；原版的稀有度、使用窗口（战斗内／任意时刻）与来源未迁移 |
 | Potions | 有序 Potion 集合，容量 3 | 三个共享槽位；`UsePotion`／`UsePotionOnTarget` 使用后在监听之后移除并销毁 |
 | PotionUsed／PotionUsedOnTarget | owner: Ref(Player)、potion: Ref(Potion)（有目标时再加 target: Ref(Enemy)） | 药水仍在库存时发出，之后才消费；有目标版本解析第一个 `Hp > 0` 的开发目标 |
-| Hand／DrawPile／DiscardPile／InPlay／ExhaustPile／RemovedFromCombat | 有序 Card 集合；Hand 容量 10 | 当前是全局开发牌堆，尚无按持有者分堆；DrawPile 隐藏身份及顺序；InPlay 只在出牌结算期间持有该卡；ExhaustPile 接收完整耗尽操作和强制耗尽结果；RemovedFromCombat 接收离场 Power 或被战斗变换移除的旧牌；这些都是临时实例，永久牌独立保存在 RunDeck |
+| Hand／DrawPile／DiscardPile／InPlay／ExhaustPile／RemovedFromCombat | 有序 Card 集合；Hand 容量 10 | 当前是全局开发牌堆，尚无按持有者分堆；DrawPile 隐藏标识及顺序；InPlay 只在出牌结算期间持有该卡；ExhaustPile 接收完整耗尽操作和强制耗尽结果；RemovedFromCombat 接收离场 Power 或被战斗变换移除的旧牌；这些都是临时实例，永久牌独立保存在 RunDeck |
 | [Relic](../../../../mod-the-spire/base-spire/relics/schema.spire) | Owner、Holder、DefinitionId、IsMelted=false、Counter=0 | Holder 是隐藏 Ref(Player)，Counter 隐藏；DefinitionId 长度上限 64；Counter 为 0..999999 |
 | Relics | 有序 Relic 集合 | 监听器遍历现有库存并过滤 Holder、definition 和熔化状态 |
 | RelicObtained／RelicRemoved | owner: Ref(Player)、relic: Ref(Relic) | 获得时已入库存；移除时已出库存，事件执行后才销毁实例 |
@@ -50,11 +50,11 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 遗物与Power统一使用[通知与修正监听](../../../design/mod-the-spire/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。具体监听与私有状态位于powers/shared对应模块；通用定义与生命周期位于powers/rules。
 
-遗物共享生命周期提供以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
+遗物共享生命周期提供以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
 
 | 遗物入口 | 参数 | 行为与边界 |
 | --- | --- | --- |
-| HasOwnedRelic／HasActiveRelic | owner: Ref(Player)、definition: String(64)，pure→Bool | 前者检查库存身份，包含熔化实例；后者还要求未熔化。防止重复拾取使用Owned，动态效果使用Active |
+| HasOwnedRelic／HasActiveRelic | owner: Ref(Player)、definition: String(64)，pure→Bool | 前者检查库存标识，包含熔化实例；后者还要求未熔化。防止重复拾取使用Owned，动态效果使用Active |
 | CombatModifierRelic模板 | definition、strikeDamage: Int(0..999)=0、retainEnergy: Bool=false | 监听ModifyAttackAdditive和ShouldResetEnergy返回修正值，不配置公共Relic效果字段；供StrikeDummy／FakeStrikeDummy／IceCream复用 |
 | NoAttackTurnEnergyRelic模板 | definition、energy: Int(0..999) | ArtOfWar.State按遗物实例保存私有标志，获得时创建、移除时清理；AfterCardPlayed记录本拥有者攻击，AfterTurnEnded转交；AfterEnergyReset在非首回合且上回合无攻击时GainEnergy，再清理标志；ArtOfWar配置1 |
 | ObtainMaxHpRelic模板 | definition、amount、fullHeal=false | 通过RelicObtained触发IncreaseMaxHp，必要时HealToMaximum；不在动作尾部重复奖励。供Strawberry／Pear／Mango／LeesWaffle复用 |
@@ -66,12 +66,12 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | HealToMaximum | owner: Ref(Player) | 计算MaxHp-Hp并调用Heal；支持最大生命至999999，不替代复活或完整治疗修正 |
 | BeforePlayerTurnStart／BeforePlayerTurnEnd | owner: Ref(Player)，事件 | 前者在回合号增加后、抽牌／自动出牌前；后者在回合末自动出牌后、普通弃牌前。StoneCalendar致胜后不再执行敌方行动 |
 
-卡牌奖励保存在公开 CardRewardOptions；Player.CardRewardPending 表示该条目尚可选择，CardRarityOffset 是隐藏的跨奖励偏移。Card.Rarity 与 CardBlueprint.Rarity 为 String(16)，由源内容配置。下列入口限首幕 A0、全部解锁 Ironclad 开发配置；算法及未支持范围见[奖励契约](../../../design/mod-the-spire/combat-rewards/spec.md)。
+卡牌奖励保存在公开 CardRewardOptions；Player.CardRewardPending 表示该条目尚可选择，CardRarityOffset 是隐藏的跨奖励偏移。Card.Rarity 与 CardBlueprint.Rarity 为 String(16)，由源内容配置。下列入口限首幕 A0、全部解锁 Ironclad 开发配置；算法及未支持范围见[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。
 
 | 奖励入口 | 参数 | 行为 |
 | --- | --- | --- |
 | OfferCombatCards | owner: Ref(Player) | 由战斗胜利编排调用，生成三张不重复奖励；依次稀有度抽样及偏移更新、缺稀有度回退、候选抽取、升级抽样。不是公开发牌动作 |
-| ClaimDevelopmentCardReward | owner: Ref(Player)、card: Ref(Card) | 公开 action 冻结本玩家的 CardRewardOptions 候选；过程调用 ObtainCardReward，将同一实例入永久牌组并销毁未选项。保留金币与 rewards 房间 |
+| ClaimDevelopmentCardReward | owner: Ref(Player)、card: Ref(Card) | 公开 action 固定本玩家的 CardRewardOptions 候选；过程调用 ObtainCardReward，将同一实例入永久牌组并销毁未选项。保留金币与 rewards 房间 |
 | SkipDevelopmentCardReward | owner: Ref(Player) | 要求 rewards 且有待领卡；销毁所有候选，不抽随机、不增加永久牌，金币保持 |
 | CloseDevelopmentRewards | owner: Ref(Player) | 同时清理所有未领卡牌及金币，再离开奖励房；关闭前不得跨房 |
 
@@ -117,7 +117,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | BlockThenAttackEnemy | definition、hp、block、damage | 先格挡再攻击，交替 | CrossbowRubyRaider（18 HP，3 格挡／14 伤害） |
 | DebuffThenMultiAttackEnemy | definition、hp、frail、damage、hits | 先施加 Frail，之后每回合多段攻击 | TrackerRubyRaider（21 HP，Frail 2 后 1 伤害 ×8） |
 
-遭遇内容用模板生成 `Spawn` 动作：`SingleEnemyEncounter`（definition 是遭遇身份，enemyDefinition／hp 描述唯一怪物）调用共享过程 `SpawnDevelopmentEnemy`；`RubyRaidersFormation` 先建 `EnemyPool` 的五个候选（Axe 20／Assassin 18／Brute 30／Crossbow 18／Tracker 21），再用 `samplePick(stream = base-spire:development-encounter)` 抽三次并逐个移除（不重复），最后清空池。当前遭遇：`base-spire:fuzzy-wurm-crawler-weak`（Monster 房、Weak、单怪）与 `base-spire:ruby-raiders-normal`（Monster 房、三个互不相同的 Ruby Raider，源随机流未迁移）。
+遭遇内容用模板生成 `Spawn` 动作：`SingleEnemyEncounter`（definition 是遭遇标识，enemyDefinition／hp 描述唯一怪物）调用共享过程 `SpawnDevelopmentEnemy`；`RubyRaidersFormation` 先建 `EnemyPool` 的五个候选（Axe 20／Assassin 18／Brute 30／Crossbow 18／Tracker 21），再用 `samplePick(stream = base-spire:development-encounter)` 抽三次并逐个移除（不重复），最后清空池。当前遭遇：`base-spire:fuzzy-wurm-crawler-weak`（Monster 房、Weak、单怪）与 `base-spire:ruby-raiders-normal`（Monster 房、三个互不相同的 Ruby Raider，源随机流未迁移）。
 | [ObtainRelic](../../../../mod-the-spire/base-spire/relics/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64) | 在 owner 作用域创建、写 Owner／Holder／DefinitionId、加入 Relics 后发获得事件；过程本身不去重 |
 | RemoveRelic | instance=Ref(Relic) | 必须在 Relics；先移出，再发移除事件，再销毁；不持有时报错 |
 | RemoveOwnedRelic | instance=Ref(Relic)，公开候选来自 Relics | action，调用 RemoveRelic；参数必须来自实际候选，不能伪造实例字符串 |
@@ -154,7 +154,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | HasUpgradablePermanentCards | owner: Ref(Player)，纯过程→Bool | 检查本玩家 RunDeck 中 CanUpgrade=true 且 Upgraded=false 的实例 |
 | CanUseUnusedRestSite | owner: Ref(Player)，纯过程→Bool | 当前是营火、存活、非战斗、尚未用过且无 PendingForge；动作与过程复用同一资格判断 |
 
-`BeginDevelopmentCombat` 与 `EnterDevelopmentRestSite` 仅在 Room=none、玩家存活且非战斗时开放。锻造的取消／选牌统一使用 `net:action:net.answer_decision`；不再暴露 ForgeCardInHand。准确寿命和未支持边界见[契约](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
+`BeginDevelopmentCombat` 与 `EnterDevelopmentRestSite` 仅在 Room=none、玩家存活且非战斗时开放。锻造的取消／选牌统一使用 `net:action:net.answer_decision`；不再暴露 ForgeCardInHand。准确寿命和未支持边界见[约定](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
 
 ## 模板与内容配置
 
@@ -210,14 +210,14 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 药水：`PotionDefinition` 生成 `Obtain`（直接放进三格库存），效果模板按 DefinitionId 订阅 `PotionUsed`／`PotionUsedOnTarget`：`PotionBlockEffect`（无加成格挡，BlockPotion 12）、`PotionEnergyEffect`（EnergyPotion 2）、`PotionDrawEffect`（SwiftPotion 3）、`PotionMaxHpEffect`（FruitJuice 5，提高上限并回复同量）、`PotionHealPercentEffect`（BloodPotion 20% 上限）与 `PotionDamageEffect`（FirePotion 20 点无加成伤害）。
 
-模板开发获得动作通过definition检查重复，默认使用first(type(Player))；不能将它当作完整多人获得、替换或熔化操作。监听按实际持有者／实例过滤，跨战状态按所属模板契约处理。Obtain的库存去重不代表该遗物的全部原版来源资格（奖励、事件、商店或角色初态）已经实现。
+模板开发获得动作通过definition检查重复，默认使用first(type(Player))；不能将它当作完整多人获得、替换或熔化操作。监听按实际持有者／实例过滤，跨战状态按所属模板约定处理。Obtain的库存去重不代表该遗物的全部原版来源资格（奖励、事件、商店或角色初态）已经实现。
 
 [source-catalog 的 definition](../../../dsl/core/0.3/package-reference.md) 指向完整 DSL 内容模块；独有规则／状态留在该文件，共用过程／模板放领域规则库。示例新增 AfterDrawBlockRelic 位于 docs/examples，仅用于[第二篇教程](../tutorials/shared-rule.md)，不是正式包现有公共操作。
 
 ## 公开投影
 
-[PlayerView](../../../../mod-the-spire/base-spire/public/projection.spire)声明公开实体类型；[公开元数据](../../../../mod-the-spire/base-spire/public/metadata.json)维护各类型的DefinitionId列表与集合用途。准确内容列表直接读取该文件，不在本页复制支持名单。Power.Definition、PowerBlueprint字段及所属模块私有字段保持Hidden；Power实例的身份和层数继续公开。
+[PlayerView](../../../../mod-the-spire/base-spire/public/projection.spire)声明公开实体类型；[公开元数据](../../../../mod-the-spire/base-spire/public/metadata.json)维护各类型的DefinitionId列表与集合用途。准确内容列表直接读取该文件，不在本页复制支持名单。Power.Definition、PowerBlueprint字段及所属模块私有字段保持Hidden；Power实例的标识和层数继续公开。
 
-开发牌堆、InPlay、ExhaustPile、RemovedFromCombat、Powers和定义集合按metadata各自声明发布或具名不发布。集合不发布不等于可忽略实体上的公开事实；新增集合必须明确用途。当前声明不构成完整原版牌序、能力生命周期或正常Run契约。
+开发牌堆、InPlay、ExhaustPile、RemovedFromCombat、Powers和定义集合按metadata各自声明发布或具名不发布。集合不发布不等于可忽略实体上的公开事实；新增集合必须明确用途。当前声明不构成完整原版牌序、能力生命周期或正常Run约定。
 
 公开 action_type 为 `net:action:base-spire:TheAbacus.Obtain`，格挡字段为 `net:field:base-spire:Player.Block`；生命、能量与回合见 `net:field:base-spire:Player.Hp`／`Player.Energy`／`Player.TurnNumber`／`Player.TurnOpen`／`Player.CombatActive`，目标生命见 `net:field:base-spire:Enemy.Hp`，能力层数见 `net:field:base-spire:Power.Stacks`，战斗结果见 `net:field:base-spire:Player.CombatOutcome`，回合内标志见 `net:field:base-spire:Player.LostHpThisTurn`／`Player.ExhaustedCardThisTurn`，公开动作见 `net:action:base-spire:BeginDevelopmentCombat`／`EndDevelopmentCombat`／`BeginDevelopmentTurn`／`EndDevelopmentTurn`／`AddDevelopmentTarget`／`PlayCardFromHand`／`PlayAttackFromHand`／`UpgradeCardInHand`。协议用真实候选 ID 提交动作；元数据不改变状态、触发顺序或合法动作守卫。

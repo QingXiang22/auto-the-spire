@@ -1,6 +1,6 @@
 # 为遗物与Power编写通知和修正监听
 
-文档类型：操作指南（How-to）。适用于新增或迁移遗物、Power的触发和计算修正。以当前纯DSL包为前提，使用core/0.3文本和支持实例订阅的引擎；先核对[包manifest](../../../../mod-the-spire/base-spire/package.json)。本页给出编写方法，顺序与寿命以[领域契约](../../../design/mod-the-spire/effect-listeners.md)为准，参数和错误语义查[通用作者参考](../../../dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)。
+文档类型：操作指南（How-to）。适用于新增或迁移遗物、Power的触发和计算修正。以当前纯DSL包为前提，使用core/0.3文本和支持实例订阅的引擎；先核对[包manifest](../../../../mod-the-spire/base-spire/package.json)。本页给出编写方法，顺序与寿命以[领域约定](../../../design/mod-the-spire/effect-listeners.md)为准，参数和错误语义查[通用作者参考](../../../dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)。
 
 ## 1. 选择通知或修正入口
 
@@ -15,7 +15,7 @@
 
 ## 2. 将订阅绑定到有效实例
 
-订阅的instances查询负责筛选持有者、能力身份和有效状态。reaction接收完整事件载荷，末尾增加listener实例参数；过程只处理当前实例，不再自行扫描整个库存。
+订阅的instances查询负责筛选持有者、能力标识和有效状态。reaction接收完整事件载荷，末尾增加listener实例参数；过程只处理当前实例，不再自行扫描整个库存。
 
 以下是[抽牌教学模板](../../../examples/base-dsl/after-draw-block.spire)中的摘录，位于AfterDrawBlockRelic的body内；definition和amount是该模板声明的参数，不是独立文件中的全局变量：
 
@@ -35,7 +35,7 @@ subscription OnDraw {
 }
 ```
 
-instances只能读取事件载荷和查询自身的绑定，不能用尚未绑定的listener筛选自己。instance_order在实例绑定后求值，可以读取listener。引擎在通知开始时冻结候选和排序键，按priority、instance_order、声明顺序执行；执行前再次检查资格，因此移除或熔化能取消后续响应，新获得实例不会补入已经开始的通知。优先级与排序表达游戏约定，不用文件includes顺序代替实际持有顺序。
+instances只能读取事件载荷和查询自身的绑定，不能用尚未绑定的listener筛选自己。instance_order在实例绑定后求值，可以读取listener。引擎在通知开始时固定候选和排序键，按priority、instance_order、声明顺序执行；执行前再次检查资格，因此移除或熔化能取消后续响应，新获得实例不会补入已经开始的通知。优先级与排序表达游戏约定，不用文件includes顺序代替实际持有顺序。
 
 完整的复制、登记、获得与公开运行步骤沿[共享触发教程](../tutorials/shared-rule.md)操作。拾取事件已经携带本次relic，直接过滤该载荷即可；移除事件在出库存后发出，清理订阅不能要求它仍在Relics中。
 
@@ -81,4 +81,4 @@ Power的持有者和层数在combat/schema.spire，定义与施加／合并／�
 - 多次Observe和LegalActions前后，状态hash、版本和随机消费保持一致；修正值由实际有效监听者贡献。
 - 移除后附属状态清理，下一战按源重建；已有内容数值、寿命和胜负余效保留。
 
-命令选择见[验证指南](verify-and-debug.md)。当前遗物定向入口是check --relic-content-only，完整行为报告用check --report；新内容或新机制需实际新增判别，旧命令通过不自动证明任意新效果。教学与受控探针不算独立原版比较或正常Run证据。
+命令选择见[验证指南](verify-and-debug.md)。当前遗物定向入口是check --relic-content-only，完整行为报告用check --report；新内容或新机制需实际新增判别，旧命令通过不自动证明任意新效果。教学与受控探针不算独立原版比较或正常Run验证记录。

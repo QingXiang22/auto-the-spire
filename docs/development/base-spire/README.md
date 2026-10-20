@@ -4,7 +4,7 @@
 
 这份手册面向维护原版内容与共享玩法的开发者。初次学习可先完成两篇教程；修改已有内容直接进入修改指南，新增独有效果进入内容模块指南。你不需要先通读旧组包器、Host 或全部恢复源码。
 
-适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有显式角色初态、永久牌组／战斗副本、开发战斗与卡牌选择、随机机制、奖励和营火等可复用操作；遗物与Power通过实例通知和只读修正监听参与流程。准确接口与限制查[操作参考](reference/operations.md)，实际定义及已执行见证查包目录和行为报告；任务认领、剩余内容及验证状态只看[路线图](../../roadmap.md#近期队列)。开发scope不代表含Neow的正常开局、地图和完整Run已经恢复，各领域指南也不构成全内容可玩证明。
+适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有显式角色初态、永久牌组／战斗副本、开发战斗与卡牌选择、随机机制、奖励和营火等可复用操作；遗物与Power通过实例通知和只读修正监听参与流程。准确接口与限制查[操作参考](reference/operations.md)，实际定义及已执行执行结果查包目录和行为报告；任务认领、剩余内容及验证状态只看[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。开发scope不代表含Neow的正常开局、地图和完整Run已经恢复，各领域指南也不构成全内容可玩证明。
 
 ## 从教程开始
 
@@ -21,7 +21,7 @@
 | --- | --- |
 | 修改单个卡牌数值、Power公式／私有状态或遗物收益 | [修改单个内容](how-to/edit-content.md) |
 | 新增拥有独有效果的遗物／Power或卡牌模块 | [新增内容模块](how-to/add-content-module.md) |
-| 已有机制下新增内容、登记源身份与公开目录 | [扩展内容](how-to/extend-content.md) |
+| 已有机制下新增内容、登记源标识与公开目录 | [扩展内容](how-to/extend-content.md) |
 | 卡牌、费用、目标、普通／升级、关键词、附着、伤害、回合 | [卡牌与战斗](how-to/cards-and-combat.md) |
 | Power 生命周期、遗物实例与触发、药水容量与使用 | [Power、遗物与药水](how-to/powers-relics-potions.md) |
 | 为遗物／Power编写通知、伤害／费用等修正，或迁移旧反应 | [编写通知与修正监听](how-to/write-effect-listeners.md) |

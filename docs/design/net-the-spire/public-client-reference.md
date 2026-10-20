@@ -4,7 +4,7 @@
 
 ## 连接和响应
 
-Host的`--scope dev-map`选择单幕开发配置；`--scope dev-run`选择默认三幕开发计划。两者构建身份不同，不可混用catalog/候选/回放。多幕配置公开CurrentActIndex/ActId/ActCount，客户端在计划内的幕结束后消费当前ContinueToNextAct；缺少多幕事实或已到计划末尾时，保留开发边界，不能推断整局胜利。实际状态与能力见[跨幕契约](../mod-the-spire/act-transitions.md)。
+Host的`--scope dev-map`选择单幕开发配置；`--scope dev-run`选择默认三幕开发计划。两者构建标识不同，不可混用catalog/候选/回放。多幕配置公开CurrentActIndex/ActId/ActCount，客户端在计划内的幕结束后消费当前ContinueToNextAct；缺少多幕事实或已到计划末尾时，保留开发边界，不能推断整局胜利。实际状态与能力见[跨幕约定](../mod-the-spire/act-transitions.md)。
 
 [NetClient](../../../net-the-spire/client/net_client.py)返回响应信封`{request_id, ok, result或error, ...}`。先检查`ok`再读取`result`；`error`按原样保留。
 
@@ -51,7 +51,7 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 | --- | --- |
 | 当前可提交操作、目标或选牌答案 | 当前snapshot的`legal_actions` |
 | 公开字段、集合和引用结构 | `get_catalog`及0.2 schema |
-| 起始身份与实际支持场景 | 本次`describe` |
+| 起始标识与实际支持场景 | 本次`describe` |
 | 长期牌组/药水/遗物集合用途 | [BasePublicSemantics](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BasePublicSemantics.cs)提供，Host转换后发布 |
 | base到net语义转换缺口 | [FormalDevMetadata](../../../tools/base-migration-baseline/net-host/FormalDevMetadata.cs) |
 | 公开动作的真实游戏行为 | 对应base机制模块；客户端不重写玩法 |

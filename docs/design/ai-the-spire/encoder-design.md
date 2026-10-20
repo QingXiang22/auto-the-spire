@@ -2,12 +2,12 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态与版本 | IN_REVIEW；2026-10-01，编码契约草案 v0.4 修订 2 |
+| 状态与版本 | IN_REVIEW；2026-10-01，编码约定草案 v0.4 修订 2 |
 | 决策负责人 | 项目维护者（用户）；本文没有自我批准实现基线 |
 | 读者 | 用户评审；评审后负责首阶段编码的实现者 |
 | 上位文档 | [模块规范](spec.md)、[技术设计主稿](design-v0.md) |
 | 本次变化 | 延续卡牌引用及已知位置；对齐 net v0.1，分离提供方目录与 AI 字典，明确 wire 到数组的映射 |
-| 证据与限制 | 本轮用户讨论及仓库规范；尚无实现、学习曲线或资源基准 |
+| 验证结果与限制 | 本轮用户讨论及仓库规范；尚无实现、学习曲线或资源基准 |
 | 下一步 | 用户评审本草案；确认第 8 节任务后实施确定性输入层 |
 
 ## 1. 架构决策及边界
@@ -16,7 +16,7 @@
 
 编码流程与字典结构可跨 Gym 复用；内容字典和模型权重属于固定 Gym。添加注册项意味着新的字典版本及必要的重新训练，不保证已有模型能理解新增内容。
 
-以下名称都是拟议的数据契约，不是当前 C# 类型或已经实现的 API。[net 公开协议](../net-the-spire/protocol.md)负责 wire 数据及公开声明，本文件只规范 AI 字典、规范化和数组。首阶段允许用该协议的公开 fixtures 实现，真实协议适配必须另行验证。
+以下名称都是拟议的数据约定，不是当前 C# 类型或已经实现的 API。[net 公开协议](../net-the-spire/protocol.md)负责 wire 数据及公开声明，本文件只规范 AI 字典、规范化和数组。首阶段允许用该协议的公开 fixtures 实现，真实协议适配必须另行验证。
 
 ```mermaid
 flowchart LR
@@ -31,13 +31,13 @@ flowchart LR
 
 观察提供方负责可见性边界及当前已知变量的更新，`net` 暴露一致的当前观察；数组层负责类型、索引与补齐；可学习编码器负责表示学习；评分器负责候选概率。编码器不能查询内核、回放事件或读取先前快照来补全当前观察，也不能执行规则来获得未选动作的结果。
 
-依赖范围：正确产生当前已知位置、过滤隐藏排列、把后端动作适配为外部候选，属于观察/动作提供方。它们是实际联调及训练前的依赖，不阻塞使用公开输入 fixtures 开发编码器契约。编码器检查当前输入的结构一致性，不验证一局游戏是否按规则产生了这些事实。
+依赖范围：正确产生当前已知位置、过滤隐藏排列、把后端动作适配为外部候选，属于观察/动作提供方。它们是实际联调及训练前的依赖，不阻塞使用公开输入 fixtures 开发编码器约定。编码器检查当前输入的结构一致性，不验证一局游戏是否按规则产生了这些事实。
 
 ## 2. GymManifest：固定训练环境的字典
 
 Manifest 包含 `tensor_layout_version`、`gym_id`、`dictionary_version`、`environment_identity`（net 的 protocol_version/ruleset_id/catalog_id/backend_profile_id）、`scenario_profile`、编码配置与数值精度策略，以及内容类型、实体类型、字段类型、关系类型、动作类型、序列/组类型和类别值字典。本文早期的 schema_version/ruleset_version 称呼由这些具名版本取代，不保留双重别名。字典保存为可检查的文件，加载顺序不应改变索引。
 
-提供方的 PublicCatalog 是公开语义声明的权威；AI 读取它，分配类别索引并附加 offset/scale，不创造动作语义或更改可见性。测试用目录需明确标为 fixture，不从 core 反射生成。net 快照携带 environment_identity，不携带 AI dictionary_version；编码时校验环境身份，再将 AI 本地字典身份放入 TensorizedObservation.metadata。
+提供方的 PublicCatalog 是公开语义声明的权威；AI 读取它，分配类别索引并附加 offset/scale，不创造动作语义或更改可见性。测试用目录需明确标为 fixture，不从 core 反射生成。net 快照携带 environment_identity，不携带 AI dictionary_version；编码时校验环境标识，再将 AI 本地字典标识放入 TensorizedObservation.metadata。
 
 Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-artifacts.md)，不在 encoding 内另定义镜像 DTO。pile_types 通过唯一 kind_id 保留牌堆语义，互斥作用域是已声明的 entity_ref 字段；terminal_reasons 仅校验结果事实，不把终局 reason 变成决策输入。新增目录声明同步修改 Manifest 与 fixtures；按[相关规格](../spec.md)，首阶段 A-01 依赖 C-01 的 P-01 资产/Python 检查部分，不等待 N-01 的 C# 复核或游戏后端。
 
@@ -55,7 +55,7 @@ Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-art
 
 | 对象 | 必要信息 | 语义 |
 | --- | --- | --- |
-| 快照头 | 会话 ID、观察版本、环境身份、decision/terminal 状态 | 将当前可观测字段、候选及编码绑定到同一个决策点；字典身份仅在 AI 输出中 |
+| 快照头 | 会话 ID、观察版本、环境标识、decision/terminal 状态 | 将当前可观测字段、候选及编码绑定到同一个决策点；字典标识仅在 AI 输出中 |
 | 全局实体 | 实体种类、字段 | 表达回合、资源、场景等无其他所属实体的信息 |
 | Entity | `instance_id`、实体种类、可选内容类型、字段列表 | 卡牌、敌人、Power、药水、场景、选项等通用实体 |
 | Field | 字段类型、知识状态、类型对应的值 | 类型和所属实体不能丢失 |
@@ -116,7 +116,7 @@ Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-art
 
 首阶段即可表达已知顶部、底部和离散位置，因为它们都使用同一位置字段。概率位置分布或其他复杂约束未纳入本阶段；遇到未支持的可观测结构返回明确能力错误，不静默丢弃。是否发生过复杂部分洗牌不需要输入编码器，它只处理最终观察实际声明的结构。
 
-观察提供方有责任确保快照中所有已知变量有效、区域无重复计数、候选与快照一致；编码器校验能够从当前输入发现的类型、引用、数量或位置矛盾。若当前观察缺少玩家已知信息，这是观察契约或提供方的问题，不能要求编码器靠历史缓存修复。环境及真实适配器内部如何产生观察需独立设计，本阶段不新增事件流、事件序号或同步恢复协议。
+观察提供方有责任确保快照中所有已知变量有效、区域无重复计数、候选与快照一致；编码器校验能够从当前输入发现的类型、引用、数量或位置矛盾。若当前观察缺少玩家已知信息，这是观察约定或提供方的问题，不能要求编码器靠历史缓存修复。环境及真实适配器内部如何产生观察需独立设计，本阶段不新增事件流、事件序号或同步恢复协议。
 
 ## 5. TensorizedObservation：确定性编码输出
 
@@ -124,7 +124,7 @@ Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-art
 
 | 输出块 | 内容 |
 | --- | --- |
-| metadata | 会话、快照、Manifest 身份与数值变换版本 |
+| metadata | 会话、快照、Manifest 标识与数值变换版本 |
 | entities | 类型索引、内容索引、content_state、content_mask 及实体 mask |
 | fields | 所属实体行、字段索引、值类型、知识状态、数值/类别/引用通道及有效 mask |
 | relations | 关系索引、来源行、目标行、语义位置及有效 mask |
@@ -173,7 +173,7 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 
 ### 5.2 最小错误结果
 
-错误对象为 `{code, path, related_ids, message}`；path 指向当前输入或 Manifest 的具体位置，related_ids 可为空。失败不返回可供评分的部分编码。代码至少包括：`unknown_type`、`unregistered_field`、`value_type_mismatch`、`dangling_reference`、`duplicate_identity`、`count_mismatch`、`invalid_position`、`version_mismatch`、`capacity_exceeded`、`non_finite_value`、`unsupported_structure`、`empty_candidates_non_terminal`。数值转换误差超出已配置精度策略时使用 `numeric_precision_loss`。重复内容类型合法，duplicate_identity 针对重复实体/候选身份、字段归属键或同一牌堆成员实例，不禁止多张同名牌。
+错误对象为 `{code, path, related_ids, message}`；path 指向当前输入或 Manifest 的具体位置，related_ids 可为空。失败不返回可供评分的部分编码。代码至少包括：`unknown_type`、`unregistered_field`、`value_type_mismatch`、`dangling_reference`、`duplicate_identity`、`count_mismatch`、`invalid_position`、`version_mismatch`、`capacity_exceeded`、`non_finite_value`、`unsupported_structure`、`empty_candidates_non_terminal`。数值转换误差超出已配置精度策略时使用 `numeric_precision_loss`。重复内容类型合法，duplicate_identity 针对重复实体/候选标识、字段归属键或同一牌堆成员实例，不禁止多张同名牌。
 
 ## 6. 可学习编码器与评分器的解耦
 
@@ -181,7 +181,7 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 
 编码器不能只返回一个整体向量，否则评分器难以取得具体卡牌、目标和选项的表示。候选特征可以在评分器侧由类型、引用及参数构建；首阶段只负责它们的确定性表示。
 
-接口解耦不保证权重任意兼容。未来模型包应绑定 Manifest、编码器配置/输出维度、数值变换、评分器配置及对应权重；不兼容时拒绝加载。端到端训练允许梯度从评分器流回编码器。独立预训练或冻结编码器需另定学习目标，不把随机初始化向量称为有效表示。
+接口解耦不保证权重任意兼容。未来模型包应绑定 Manifest、编码器配置/输出维度、数值变换、评分器配置及对应权重；不兼容时拒绝加载。端到端训练允许梯度从评分器流回编码器。独立预训练或固定编码器需另定学习目标，不把随机初始化向量称为有效表示。
 
 策略主要返回 candidate_id + probability，绑定输入快照。具体输出与模型包以 [policy-contract.md](policy-contract.md)为准；本文件不定义另一套返回格式。可选收益头可关闭。终止状态空候选不进行 softmax；非终止状态空候选为输入错误。
 
@@ -195,19 +195,19 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 
 任何“轻量”结论需分别报告总参数量（包括字典 embedding）、权重文件大小、CPU 决策延迟、峰值内存和下游效果。首阶段只报告结构化编码与补齐成本，不能代替神经网络推理或训练基准。
 
-候选数 A 同样影响编码、评分与归一化成本。打牌加目标只是其中一种组合，实际候选规模由外部合法列表决定；首阶段记录 A 及 candidate_fields 的数量，不自行枚举或缩减动作。是否采用因子化评分在后续测量后讨论，不要求此阶段改变外部动作契约。
+候选数 A 同样影响编码、评分与归一化成本。打牌加目标只是其中一种组合，实际候选规模由外部合法列表决定；首阶段记录 A 及 candidate_fields 的数量，不自行枚举或缩减动作。是否采用因子化评分在后续测量后讨论，不要求此阶段改变外部动作约定。
 
 ## 8. 首阶段实现任务
 
 以下是供用户评审后交给实现者的任务，不是本次已经执行的工作。建议使用 Python 3 标准库，包位于 `ai-the-spire/ai_the_spire/encoding/`，样例和检查位于 `ai-the-spire/tests/`；语言与布局由用户评审确认。先不安装 PyTorch、Gymnasium 或其他训练依赖。
 
-1. **契约与样例**：P-01 完成后读取/校验同一规范生成的 contracts，实现 Manifest 与编码专用模型；提供战斗、待选牌、场景选项与扩展变量 fixtures，不另定义 wire DTO，不宣称已经接通后端；N-01 完成 C-01 的双端要求。
+1. **约定与样例**：P-01 完成后读取/校验同一规范生成的 contracts，实现 Manifest 与编码专用模型；提供战斗、待选牌、场景选项与扩展变量 fixtures，不另定义 wire DTO，不宣称已经接通后端；N-01 完成 C-01 的双端要求。
 2. **字典与校验**：实现确定性字典构建/保存/加载、版本比对、类型与引用校验、明确错误结果。
 3. **可观测牌区表示**：实现第 4 节的公开成员、卡牌引用及已知位置、计数与可见性校验，只处理当前快照。不硬编码头槌效果，不维护历史，不处理事件，不查询 core。
 4. **数组化与批处理**：实现第 5 节的数组、引用映射、数值变换、补齐及 mask；每条样例可检查编码前后对应关系。
 5. **验收检查与运行说明**：执行第 9 节场景，输出编码规模与耗时；记录覆盖的公开机制和未支持的输入。首阶段不实现收益函数、神经网络、训练、策略评分或真实动作执行。
 
-接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../net-the-spire/protocol.md)同时待评审，以公开样例消费该契约；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../ai-net-implementation-plan.md)，本节仅细化第一批任务。
+接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../net-the-spire/protocol.md)同时待评审，以公开样例消费该约定；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../ai-net-implementation-plan.md)，本节仅细化第一批任务。
 
 建议验证方式为在 `ai-the-spire` 目录执行 `python -m unittest discover -s tests -v`。这是后续实现的建议命令，本次未执行，也不是当前已存在的测试项目。
 
@@ -239,7 +239,7 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 | 实体或候选超出配置上限 | 编码 | 显式超限错误，不截断后继续执行 |
 | 新会话、终止快照及非终止空候选 | 直接编码各自快照 | 无其他会话残留；终止空候选可表示；非终止空候选报错 |
 
-这些场景验证信息与契约，不证明学习效果或原版规则一致性。真实 net 适配需要另测可见性、当前已知变量和牌序的充分性、候选与快照同步；神经网络上线前另测集合重排、候选重排和补齐不改变有效概率。
+这些场景验证信息与约定，不证明学习效果或原版规则一致性。真实 net 适配需要另测可见性、当前已知变量和牌序的充分性、候选与快照同步；神经网络上线前另测集合重排、候选重排和补齐不改变有效概率。
 
 ## 10. 评审决策与后续风险
 
@@ -252,4 +252,4 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 | 奖励向量、目标取舍、时间范围 | 决定策略训练；事实记录不自动提供偏好 | 策略训练前 |
 | 算法与训练分布 | 固定 Gym 下比较样本效率和保留种子效果 | 训练实验前 |
 
-所有待决项由项目维护者负责；首阶段契约批准不等于这些后续问题已经解决。保持实现状态为“结构化编码通过契约检查”，直至有独立证据支持“可学习表示有效”“真实内容可接入”或“部署预算满足”。
+所有待决项由项目维护者负责；首阶段约定批准不等于这些后续问题已经解决。保持实现状态为“结构化编码通过约定检查”，直至有独立验证记录支持“可学习表示有效”“真实内容可接入”或“部署预算满足”。

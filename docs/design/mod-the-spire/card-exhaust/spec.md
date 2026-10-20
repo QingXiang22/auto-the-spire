@@ -1,6 +1,6 @@
 # 消耗堆、失去生命与四张 Ironclad 牌
 
-关联 CORE-AUTHOR-05／**DSL-CARD-EXHAUST-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在可组合效果之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在主清单维护。
+关联 CORE-AUTHOR-05／**DSL-CARD-EXHAUST-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在可组合效果之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 
@@ -19,18 +19,18 @@
 
 ## 行为要求与设计
 
-| ID | 契约 | 判别 |
+| ID | 约定 | 判别 |
 | --- | --- | --- |
 | CX01 | 结算完成后按 `Exhausts` 分流：为真进 ExhaustPile 并发 CardExhausted，为假进 DiscardPile | 消耗牌不在弃牌堆；订阅 CardExhausted 时该卡已在消耗堆 |
-| CX02 | 消耗不影响效果本身，牌的身份、费用与升级状态在消耗堆中保留 | 消耗牌仍按其数值结算，消耗堆实例可读出 DefinitionId 与 Cost |
+| CX02 | 消耗不影响效果本身，牌的标识、费用与升级状态在消耗堆中保留 | 消耗牌仍按其数值结算，消耗堆实例可读出 DefinitionId 与 Cost |
 | CX03 | `LosePlayerHp` 绕过格挡直接扣生命，并保留生命下限 0；不应用伤害修正 | 有 5 格挡时失去 3 生命得到 77 且格挡仍为 5 |
 | CX04 | EnergyEffect 复用 GainEnergy，可以超过 MaxEnergy | 0 费 Bloodletting 在 3 能量基础上得到 5 |
 | CX05 | 克隆同时保留 Exhausts 与升级状态 | Anger 的克隆与本体同关键词状态 |
-| CX06 | 内容文件仅 use 模板参数，源资格、定义与 578 源分母不变 | catalog 只新增四个非空 definition |
+| CX06 | 内容文件仅 use 模板参数，源资格、定义与 578 来源条目总数不变 | catalog 只新增四个非空 definition |
 
 ## 实施与验证顺序
 
 1. 先加牌面 `Exhausts`、ExhaustPile 与 CardExhausted，把分流接在结算之后，确认未消耗牌行为不变。
 2. 再加 LosePlayerHp 与两个效果模板，最后接四张内容与目录、公开元数据。
-3. 在包外补分流、顺序、绕过格挡、能量上限与逐卡数值检查，并各生成见证。
+3. 在包外补分流、顺序、绕过格挡、能量上限与逐卡数值检查，并各生成执行结果。
 4. 通过真实 stdio 验证消耗技能的公开轨迹（格挡与能量），更新共享操作参考与领域资料，最后运行 solution 构建、包行为／覆盖、受影响 net 与文档检查。

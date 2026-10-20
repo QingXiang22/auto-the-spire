@@ -2,7 +2,7 @@
 
 文档类型：教程（Tutorial）。你将创建一个“每实际抽到一张牌，获得 2 格挡”的教学遗物。共享机制用完整 DSL 表达，本例具体遗物使用 `use` 配置。学习目标是分清事件订阅、持有实例过滤、共享操作与内容定义的职责。
 
-前置条件：完成[第一个遗物教程](first-relic.md)，保持同一 PowerShell 会话中的 `$basePackage` 和 `$baseManifest`。副本中的 TheAbacus 数值此时为 8。以下 PracticeBeads 是教学内容，不宣称对应原版遗物，也不加入原版源分母。
+前置条件：完成[第一个遗物教程](first-relic.md)，保持同一 PowerShell 会话中的 `$basePackage` 和 `$baseManifest`。副本中的 TheAbacus 数值此时为 8。以下 PracticeBeads 是教学内容，不宣称对应原版遗物，也不加入原版来源条目总数。
 
 ## 1. 添加共享规则
 
@@ -75,4 +75,4 @@ python -X utf8 docs/examples/base-dsl/run_relic_lesson.py --manifest $baseManife
 
 第二个会话第一次洗牌获得练习 TheAbacus 的 8 点，再由新遗物每张获得 2 点，最终 14。两种机制共用同一状态、抽牌过程和 Engine 执行器。
 
-你已完成共享模板、内容配置、显式组合和公开执行。把这套方法用于正式内容前，还需[迁移完整机制](../how-to/migrate-mechanism.md)规定的源依据、生命周期边界和行为见证；教学成功不构成原版独立对拍。
+你已完成共享模板、内容配置、显式组合和公开执行。把这套方法用于正式内容前，还需[迁移完整机制](../how-to/migrate-mechanism.md)规定的源依据、生命周期边界和行为执行结果；教学成功不构成原版独立参考比较。

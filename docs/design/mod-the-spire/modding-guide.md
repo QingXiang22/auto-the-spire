@@ -13,7 +13,7 @@
 | --- | --- | --- |
 | 为通用core规则库选择参数或组合模板 | `imports` / `use`，见[配置规则库](../../dsl/core/how-to-configure-game.md) | core/0.2；不是base卡牌声明语言 |
 | 在base机制上写新卡 | 独立命名空间 `.spire`，生产 `SpireCardSource` 前端和下方卡牌工具 | 验证已有能力的内容组合；受控战斗 |
-| 编写独立Engine规则包 | `EnginePackageBuilder` 和 `RuleSetBuilder`，见[开发者指南](../core-the-spire/developer-guide.md) | 明确Schema、依赖、扩展/覆盖和投影；冻结契约仍适用 |
+| 编写独立Engine规则包 | `EnginePackageBuilder` 和 `RuleSetBuilder`，见[开发者指南](../core-the-spire/developer-guide.md) | 明确Schema、依赖、扩展/覆盖和投影；核心兼容性约定仍适用 |
 | 安装完整STS mod并走公开整局 | 对应mod集成工作包 | 卡牌工具未实现自动发现、覆盖加载或完整Run安装；范围见主清单ENV-T16 |
 
 本页的base例子将独立命名空间卡牌定义合入base作者模型，仍由base规则包组装执行。它证明内容可组合，不表示已经建立独立插件包管理器。
@@ -34,7 +34,7 @@
    dotnet run --no-build --project tools/base-spire-dev -- check docs/examples/base-card-mod/two-hits.spire
    ```
 
-   结果应为 `declared/parsed/lowered/registered` 各1，ID为 `example-mod:two-hits`。`registered` 表示Engine规则包构建成功且受控牌组已创建对应实例；没有行为或原版对拍含义。
+   结果应为 `declared/parsed/lowered/registered` 各1，ID为 `example-mod:two-hits`。`registered` 表示Engine规则包构建成功且受控牌组已创建对应实例；没有行为或原版差异测试含义。
 
 3. 验证普通和升级出牌：
 
@@ -61,15 +61,15 @@
 
 已有Power可来自另一个卡文件或敌人文件，作者工具与正式运行时共用注册资源。能力牌打出后的默认结果为None，由共享结果模块移出战斗牌区；无需自写清理或用exhaust替代。真实无目标卡写 `target = { selectNone = {} }`，原生无效果可以保留空 `play = {}`，仍付款、计入历史并执行钩子；未知机制仍须报未支持。无目标卡不可读取 `context.target`，显式owner或全体敌人效果仍可使用。
 
-独立Engine包先声明依赖，再按依赖顺序交给 `RuleSetBuilder`。C#入口使用 `Dependencies`、`Overrides`、`Extends` 明确声明意图；链接器校验冲突、覆盖和字段布局。依赖某个符号不等于获得任意修改base内部流程的稳定接口，扩展前需确认对应开放声明及契约。具体语法/API查core参考，不将这些属性套进base卡牌DSL。
+独立Engine包先声明依赖，再按依赖顺序交给 `RuleSetBuilder`。C#入口使用 `Dependencies`、`Overrides`、`Extends` 明确声明意图；链接器校验冲突、覆盖和字段布局。依赖某个符号不等于获得任意修改base内部流程的稳定接口，扩展前需确认对应开放声明及约定。具体语法/API查core参考，不将这些属性套进base卡牌DSL。
 
-卡牌工具只合并新增定义；同ID立即失败。需要覆盖现有内容时，应在独立规则包/正式规则包构建中明示覆盖语义和顺序，并验证所有受影响的内容、身份与消费者。不得靠文件枚举顺序或后写优先偷偷替换。
+卡牌工具只合并新增定义；同ID立即失败。需要覆盖现有内容时，应在独立规则包/正式规则包构建中明示覆盖语义和顺序，并验证所有受影响的内容、标识与消费者。不得靠文件枚举顺序或后写优先偷偷替换。
 
 ## 理解受控验证的边界
 
 工具固定seed `20261001`，使用base现有敌人和过程，牌组只含探针卡；目标默认选第一个敌人，其他决策默认选第一个候选。它适合快速检查逐效果语义，复杂选择应写能区分分支的专用行为案例。
 
-`upgraded` 从长期牌组创建完整升级牌，使用升级费用、变量初值、关键词与进战斗hook。已有实例升级另外走共享命令：变量与基础费用增加定义中的升级差额，保留既有成长和临时费用修饰，已升级实例不重复加差额。工具接受卡牌与Power声明；敌人/遗物等内容域仍拒绝。多文件输入先加载Power再链接卡牌，例如 `check cards.spire powers.spire` 和 `play cards.spire powers.spire mymod:card-name upgraded`。新Power使用已实现的行为可直接注册，不需添加C#内容ID白名单；相同名字在不同命名空间保留各自身份。卡牌通过同命名空间名字或跨包限定ID复用已注册Power。正式base发布继续走 `ContentSource` 和 `SinglePlayer` 共同工厂，卡池资格、完整Run、公开载荷、独立源对拍及性能需要对应门槛。
+`upgraded` 从长期牌组创建完整升级牌，使用升级费用、变量初值、关键词与进战斗hook。已有实例升级另外走共享命令：变量与基础费用增加定义中的升级差额，保留既有成长和临时费用修饰，已升级实例不重复加差额。工具接受卡牌与Power声明；敌人/遗物等内容域仍拒绝。多文件输入先加载Power再链接卡牌，例如 `check cards.spire powers.spire` 和 `play cards.spire powers.spire mymod:card-name upgraded`。新Power使用已实现的行为可直接注册，不需添加C#内容ID白名单；相同名字在不同命名空间保留各自标识。卡牌通过同命名空间名字或跨包限定ID复用已注册Power。正式base发布继续走 `ContentSource` 和 `SinglePlayer` 共同工厂，卡池资格、完整Run、公开载荷、独立源差异测试及性能需要对应验收条件。
 
 扩展新语义时，按[当前开发资料](../../development/base-spire/README.md)做完整机制包。不要把新卡都塞进规则包构建器的逐牌分支。
 

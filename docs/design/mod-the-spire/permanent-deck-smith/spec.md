@@ -1,6 +1,6 @@
 # 永久牌组、战斗副本与营火锻造
 
-关联 **CORE-AUTHOR-05／DSL-DECK-SMITH-01**。按[纯 DSL 规格](../engine-dsl-migration/spec.md)扩展卡牌实例与一个真实消费者；认领和状态只见[路线图](../../../roadmap.md#近期队列)。
+关联 **CORE-AUTHOR-05／DSL-DECK-SMITH-01**。按[纯 DSL 规格](../engine-dsl-migration/spec.md)扩展卡牌实例与一个真实消费者；认领和状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 ## 来源与支持边界
 
@@ -10,7 +10,7 @@
 
 ## 状态与准确操作
 
-| 声明／操作 | 契约 |
+| 声明／操作 | 约定 |
 | --- | --- |
 | `RunDeck` | 有序永久 Card 集合，独立于所有战斗牌区，公开为 group；当前仍限单玩家开发 scope |
 | `Card.CanUpgrade` | 默认 false；实际 CardDefinition 创建的牌为 true；可升级资格还要求 Upgraded=false |
@@ -20,7 +20,7 @@
 | `CardDefinition` 生成的 `Obtain` 过程／动作 | 用该定义的字段调用共享获得过程；同定义多次获得是不同实例；开发动作不是随机奖励或正常角色初始化 |
 | `BuildCombatDeck` | 新战斗开始时，仅对 UsesRunDeck=true：销毁该玩家全部非永久 Card 实例（包括旧战斗生成、消耗和 Power 牌），按永久集合顺序创建新副本到 DrawPile，保留已支持字段和升级；不写回永久牌、不抽 RNG。初始洗牌和自动抽牌未迁移，开发者使用既有 Draw |
 | `UpgradeCard` | 拒绝 CanUpgrade=false 或已升级的实例；已有 CardUpgraded 负责定义层费用变化；战斗副本升级只改副本 |
-| `ForgeAtDevelopmentCampfire` | 存活、非战斗、当前 rest-site、尚未用选项、有本玩家可升级永久牌；置 PendingForge，向 Engine 发布 EntityRefList 决策，min=0、max=1，候选冻结；空回答取消，不消耗选项；选择后升级所选永久实例，置 RoomUsed，再发 AfterRestSiteSmith，最后清 PendingForge |
+| `ForgeAtDevelopmentCampfire` | 存活、非战斗、当前 rest-site、尚未用选项、有本玩家可升级永久牌；置 PendingForge，向 Engine 发布 EntityRefList 决策，min=0、max=1，候选固定；空回答取消，不消耗选项；选择后升级所选永久实例，置 RoomUsed，再发 AfterRestSiteSmith，最后清 PendingForge |
 
 移除原稿 `ForgeCardInHand`：它未交付验证且使用错误牌区。本包的选择由通用 `net.answer_decision` 应答，空字段候选为取消；不增加专用 Host／wire 接口。暂停期间 Engine 只接受合法决策应答，旧候选、错误实例和重复应答不得升级或消耗选项。
 
@@ -32,13 +32,13 @@
 
 战斗副本在下一次开始时清理，避免最后击杀的未完卡牌效果访问已销毁实例。永久牌仅由显式永久操作修改；同定义其他实例、战斗副本和生成牌不得混为一张牌。当前不宣称完整战斗结束的清理和写回顺序已迁移。
 
-## 判别与完成证据
+## 判别与完成验证记录
 
-角色基础初态与自动抽牌由后续[角色初态契约](../character-combat/ironclad-start.md)扩展：BuildCombatDeck 本身仍只复制，显式 Ironclad 初始化的消费者在开战时追加开发流洗牌、回合追加自动抽牌；原版随机与正常 Run 仍未恢复。上文手动探针的未支持边界不排除该显式消费者。
+角色基础初态与自动抽牌由后续[角色初态约定](../character-combat/ironclad-start.md)扩展：BuildCombatDeck 本身仍只复制，显式 Ironclad 初始化的消费者在开战时追加开发流洗牌、回合追加自动抽牌；原版随机与正常 Run 仍未恢复。上文手动探针的未支持边界不排除该显式消费者。
 
-1. 从显式 Obtain 建立两个同定义永久实例；与旧开发牌区分离、身份不合并，非战斗来源守卫拒绝非法获得。
+1. 从显式 Obtain 建立两个同定义永久实例；与旧开发牌区分离、标识不合并，非战斗来源守卫拒绝非法获得。
 2. 空永久牌组或全部升级后不开放锻造；有手牌但没有永久候选也不可用。
 3. 选择第二个同定义永久实例，只升级该实例；取消不升级、不消耗房间选项；同次访问不能反复进入或使用两次成功选项。
 4. 两次真实战斗从同一永久实例创建各自新副本；升级效果和费用生效，临时副本升级不反写，前次临时／消耗／Power 牌不混入下一战。
 5. 错误实例、过期／重复回答、暂停时跨房或出牌被拒绝，合法选择保持；过程守卫覆盖绕开 action 的调用。
-6. 固定 seed 20261018 本地行为检查与真实 stdio 的选牌／取消轨迹通过；公开永久牌组和升级事实来自同一 DSL。原版独立对拍未运行则保留未验证。
+6. 固定 seed 20261018 本地行为检查与真实 stdio 的选牌／取消轨迹通过；公开永久牌组和升级事实来自同一 DSL。原版独立参考比较未运行则保留未验证。

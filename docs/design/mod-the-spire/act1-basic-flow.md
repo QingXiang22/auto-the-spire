@@ -1,8 +1,8 @@
 # 第一幕基本流程规格与实施步骤
 
-任务状态与认领仅见[行为要求](../environment-completion-and-differential-v1.md#env-t05)。用户目标是从正常Ironclad开局打败第一幕Boss。core冻结，复用sim分工与本地原版源码，生产不引用sim程序集。
+任务状态与认领仅见[行为要求](../environment-completion-and-differential-v1.md#env-t05)。用户目标是从正常Ironclad开局打败第一幕Boss。core 版本确定，复用sim分工与本地原版源码，生产不引用sim程序集。
 
-验收：完整85项奖励池严格注册；地图阶段互斥；正常战斗结算/金币/牌/药水与长期写回；营火真实休息或升级；宝箱真实遗物；Boss实际173HP/Slippery/攻击周期战斗；第一幕完成独立于全局Victory。用固定seed、公开合法动作推进，无状态注入/清空敌人/缩池。公开Host可消费同一工厂与完整观察/选择。其他房型若未实现须明示，不伪装为空房。保持原召唤/复活族暂缓，不能宣称整幕全池对拍或四幕完整。
+验收：完整85项奖励池严格注册；地图阶段互斥；正常战斗结算/金币/牌/药水与长期写回；营火真实休息或升级；宝箱真实遗物；Boss实际173HP/Slippery/攻击周期战斗；第一幕完成独立于全局Victory。用固定seed、公开合法动作推进，无状态注入/清空敌人/缩池。公开Host可消费同一工厂与完整观察/选择。其他房型若未实现须明示，不伪装为空房。保持原召唤/复活族暂缓，不能宣称整幕全池差异测试或四幕完整。
 
 方案：共享Power生命周期模块承接剩余Ironclad卡与Boss必需行为；卡牌调用已有出牌/抽牌/牌区命令。Run房间模块承接营火/宝箱、Boss选择/幕完成与地图门控，避免回写战斗调度器逐牌分支。按声明卡池补齐实际生成池，先编译全部声明后链接完整池，不拿已降级子集当池。依据sts2/src/Core/Models/Powers、Commands、Rooms和reference/sts2-sim对应模型。
 
@@ -16,4 +16,4 @@
 
 房间职责：MapRoomWiring只负责选择/进入房型；RestSiteWiring使用长期HP/牌组；TreasureRoomWiring管理Engine内随机袋、offer、金币和实际持有；RewardWiring使用房型参数并关闭奖励。第一幕结束在独立ActCompleted相位。下一幕尚未接入时入口须明示失败，不能生成虚假的终局胜利。
 
-多幕接续通过显式`dev-run`配置实现，状态与时序见[跨幕生命周期契约](act-transitions.md)；单幕`dev-map`继续保留开发边界。跨幕机制验证与正常首幕Boss胜利证据分开，不能用受控幕结束代替通关。
+多幕接续通过显式`dev-run`配置实现，状态与时序见[跨幕生命周期约定](act-transitions.md)；单幕`dev-map`继续保留开发边界。跨幕机制验证与正常首幕Boss胜利验证记录分开，不能用受控幕结束代替通关。

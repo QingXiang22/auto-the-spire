@@ -1,6 +1,6 @@
 # 开发态战斗奖励
 
-关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定金币奖励的生成、领取与关闭；认领和状态见[路线图](../../../roadmap.md#近期队列)。遵守[纯 DSL 边界](../engine-dsl-migration/spec.md)。
+关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定金币奖励的生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../engine-dsl-migration/spec.md)。
 
 ## 来源与边界
 
@@ -23,10 +23,10 @@
 ## 判别与验证
 
 1. 固定 seed 20261018／777／1234／99：胜利后 Gold 仍为 99，金额在 10..20，同 seed 金额及随机游标一致；失败不生成、不抽样。
-2. 领取用保存金额，只到账一次；再提交原动作被拒绝，会话、金币和随机游标不变；金币封顶沿用现有开发契约。
+2. 领取用保存金额，只到账一次；再提交原动作被拒绝，会话、金币和随机游标不变；金币封顶沿用现有开发约定。
 3. 关闭未领奖励不增加 Gold；关闭已领奖励不重复增加。关闭后新战斗能生成另一份奖励，第一份不残留。
 4. 奖励打开时三种跨房动作无候选，直接调用过程也拒绝；关闭后恢复可用。
-5. 通过同一 DSL 公开 Host 执行真实击杀，观察待领奖励、领取／关闭候选和 Gold，并覆盖领取与跳过两条路径。该证据是受控开发态，不能替代正常 Run 或原版独立对拍。
+5. 通过同一 DSL 公开 Host 执行真实击杀，观察待领奖励、领取／关闭候选和 Gold，并覆盖领取与跳过两条路径。该验证记录是受控开发态，不能替代正常 Run 或原版独立参考比较。
 
 ## 铁甲战士首幕普通战斗卡牌奖励
 
@@ -36,20 +36,20 @@
 
 本节扩展上文首批金币的历史支持边界；卡牌已按本节恢复，药水／遗物奖励和其余明确未支持部分保持。
 
-胜利后的同一奖励流程先生成金币，再生成三张卡。源单人 85 项保留源顺序；奖励按 Common／Uncommon／Rare 过滤掉三张 Basic 和两张 Ancient，共 80 项，Feed／NotYet 可以作为奖励，不复用其战斗生成禁用条件。CardBlueprint.Rarity 与 Card.Rarity 来自内容模板，冻结源快照独立核验全部稀有度。未知定义或不足三张候选必须在抽样前失败，不缩池或用空效果代替。
+胜利后的同一奖励流程先生成金币，再生成三张卡。源单人 85 项保留源顺序；奖励按 Common／Uncommon／Rare 过滤掉三张 Basic 和两张 Ancient，共 80 项，Feed／NotYet 可以作为奖励，不复用其战斗生成禁用条件。CardBlueprint.Rarity 与 Card.Rarity 来自内容模板，固定源快照独立核验全部稀有度。未知定义或不足三张候选必须在抽样前失败，不缩池或用空效果代替。
 
 Player.CardRarityOffset 以隐藏 Int 保存 binary32 位型，初值 -0.05f（3175926989），上限0.4f，跨奖励／战斗保留。每张先抽源 NextFloat：小于 binary32(0.03f+offset) 为 Rare，小于 binary32(0.37f+binary32(0.03f+offset)) 为 Uncommon，其余 Common；Rare 后重置 -0.05f，其他结果按 binary32 加0.01f并封顶0.4f。偏移更新先于稀有度回退。当前稀有度无可用牌时按 Common→Uncommon→Rare→Common 回退，不能静默缩小来源表。再在该稀有度的剩余源顺序中随机选一张，同组三张定义互异；最后消费一次升级抽样。首幕基础升级概率为零，保留源 `<=` 的零边界。
 
-金币、稀有度、候选与升级共用 `base-spire:player:rewards`，采用源流布局、有界整数和精确 NextFloat 映射；不再使用24-bit开发网格。独立源向量证明已迁移的金币／卡牌操作序列及游标一致；原 RewardsSet 在生成奖励列表时先进行药水掉落判定，这条流程尚未迁移，不能据当前结果宣称正常战斗整份奖励逐步一致。第一幕以外仍未接入；准确边界见[随机契约](../run-domain/randomness.md)。
+金币、稀有度、候选与升级共用 `base-spire:player:rewards`，采用源流布局、有界整数和精确 NextFloat 映射；不再使用24-bit开发网格。独立源向量证明已迁移的金币／卡牌操作序列及游标一致；原 RewardsSet 在生成奖励列表时先进行药水掉落判定，这条流程尚未迁移，不能据当前结果宣称正常战斗整份奖励逐步一致。第一幕以外仍未接入；准确边界见[随机约定](../run-domain/randomness.md)。
 
-CardRewardOptions 是待领 Card 集合，CardRewardPending 是 Player 标记；候选为未入战斗的真实 Card 实例，不进入 RunDeck、手牌或出牌历史，不发 CardEnteredCombat。先创建定义元数据再判断升级，候选冻结后观察／无效领取均不重抽。CardLibrary／偏移不发布隐藏未来信息。
+CardRewardOptions 是待领 Card 集合，CardRewardPending 是 Player 标记；候选为未入战斗的真实 Card 实例，不进入 RunDeck、手牌或出牌历史，不发 CardEnteredCombat。先创建定义元数据再判断升级，候选固定后观察／无效领取均不重抽。CardLibrary／偏移不发布隐藏未来信息。
 
 ### 领取与关闭
 
-ClaimDevelopmentCardReward(owner, card) 要求存活、非战斗、Room=rewards、pending，且 card 是本玩家真实待领实例。调用卡牌领域的 ObtainCardReward 将该同一实例从候选集合移动至 RunDeck，UsesRunDeck=true，然后发 CardObtained；保持候选升级与身份，永久来源为空。不调用战斗创建／复制来代替获得。清掉 pending 并销毁所有未选实例；金币条目互不消耗，领取后仍需显式关闭房间。
+ClaimDevelopmentCardReward(owner, card) 要求存活、非战斗、Room=rewards、pending，且 card 是本玩家真实待领实例。调用卡牌领域的 ObtainCardReward 将该同一实例从候选集合移动至 RunDeck，UsesRunDeck=true，然后发 CardObtained；保持候选升级与标识，永久来源为空。不调用战斗创建／复制来代替获得。清掉 pending 并销毁所有未选实例；金币条目互不消耗，领取后仍需显式关闭房间。
 
 SkipDevelopmentCardReward 清空 pending 和所有候选，不给永久牌、不改金币或随机游标。CloseDevelopmentRewards 同时丢弃未领金币和卡牌，回到房间外。重复／过期／错误实例被 action 及过程守卫拒绝；关闭前不能跨房。第二次胜利重新生成，不能带入前次候选。下一战仅从 RunDeck 重建已领牌的独立副本。
 
 ### 验证
 
-独立冻结的 87 项源稀有度／两项多人排除／80 项奖励资格及顺序；手工核对的稀有度阈值边界、偏移上限／重置、空稀有度回退；三张去重、同 seed 重放、失败／观察／无效输入不抽样；实际领取同一实例、获得事件顺序、未选销毁、跳过／关闭不获得、金币独立、下一场副本和真实 stdio 三选一。原版双侧未执行就保留未验证。
+独立固定的 87 项源稀有度／两项多人排除／80 项奖励资格及顺序；手工核对的稀有度阈值边界、偏移上限／重置、空稀有度回退；三张去重、同 seed 重放、失败／观察／无效输入不抽样；实际领取同一实例、获得事件顺序、未选销毁、跳过／关闭不获得、金币独立、下一场副本和真实 stdio 三选一。原版双侧未执行就保留未验证。

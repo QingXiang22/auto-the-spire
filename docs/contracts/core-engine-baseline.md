@@ -1,41 +1,41 @@
-# core 引擎冻结基线
+# core 引擎版本基线
 
-本文定义 2026-10-05 冻结的通用内核范围、执行行为和迁移要求。维护 core 时，先按下表确认语言与运行版本，再核对涉及的契约；下游任务状态见[路线图](../roadmap.md)。
+本文定义 2026-10-05 固定的通用内核范围、执行行为和迁移要求。维护 core 时，先按下表确认语言与运行版本，再核对涉及的约定；下游任务状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 | 项目 | 基线 |
 | --- | --- |
 | 日期 / 范围 | 2026-10-05；当前通用规则内核及已发布作者语言 |
-| 状态 | FROZEN；用户授权、通用收口及回归已完成，证据见本批关闭报告 |
+| 状态 | 固定的版本基线；通用接口与回归的历史结果按对应 Git 提交核对 |
 | 运行语义 / IR 兼容版本 | engine/ir@0.3 |
 | 支持的文本版本 | core/0.1 基础语言、core/0.2 imports/template/use |
-| 编译身份 | core-dsl/0.1、core-dsl/0.2；C# SDK 保留 csharp-sdk/0.2，均随运行版本绑定规则身份 |
+| 编译标识 | core-dsl/0.1、core-dsl/0.2；C# SDK 保留 csharp-sdk/0.2，均随运行版本绑定规则标识 |
 | 活动实现 | Core.TheSpire/Engine；不引用 Legacy |
 | 定位 | 不依赖具体游戏内容的通用底层框架；游戏开发者在自己的 DSL 规则包中定义玩法 |
 
-用户授权完成通用契约收口后冻结 core，开发重心转向 mod/base、net 与环境工具。本文定义冻结范围、行为与迁移；不承诺支持所有卡牌游戏、不声明完整原版内容或训练环境已经验收。Git 提交范围、独立检出验证与下游验收约束见 [相关规格](core-engine-baseline.md)；完整工作区的实施与状态只看 [路线图](../roadmap.md)。
+用户授权确定通用接口约定后建立 core 版本基线，开发重心转向 mod/base、net 与环境工具。本文定义兼容性约定范围、行为与迁移；不承诺支持所有卡牌游戏、不声明完整原版内容或训练环境已经验收。Git 提交范围、独立检出验证与下游验收约束见 [相关规格](core-engine-baseline.md)；完整工作区的实施与状态只看 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 ## 1. 固定的结构与接口职责
 
-2026-10-19 用户要求实施内容与行为迁移，BEHAVIOR-01据此补充通用封闭键分派、pure显式失败、依附实例身份投影及none相等比较，活动身份迁移为engine/ir@0.7、Core.TheSpire 0.7.0；原冻结表保留历史时点。准确语法见[当前作者参考](../dsl/core/0.3/authoring-reference.md#封闭键分派)，游戏状态与分派内容仍属于base DSL，旧规则及回放不能冒用新身份。
+2026-10-19 用户要求实施内容与行为迁移，BEHAVIOR-01据此补充通用封闭键分派、pure显式失败、依附实例标识投影及none相等比较，活动标识迁移为engine/ir@0.7、Core.TheSpire 0.7.0；原固定表保留历史时点。准确语法见[当前作者参考](../dsl/core/0.3/authoring-reference.md#封闭键分派)，游戏状态与分派内容仍属于base DSL，旧规则及回放不能冒用新标识。
 
-2026-10-18用户明确要求已有遗物与Power统一为通知／修正监听，DSL-EFFECT-LISTENERS-01据此增加通用实例订阅和pure foldEvent，活动运行身份迁移为engine/ir@0.6、Core.TheSpire 0.6.0。旧0.5产物须重建，准确接口见[实例订阅与只读修正](../dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)。游戏规则仍由base声明，不新增第二套调度器。
+2026-10-18用户明确要求已有遗物与Power统一为通知／修正监听，DSL-EFFECT-LISTENERS-01据此增加通用实例订阅和pure foldEvent，活动运行标识迁移为engine/ir@0.6、Core.TheSpire 0.6.0。旧0.5产物须重建，准确接口见[实例订阅与只读修正](../dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)。游戏规则仍由base声明，不新增第二套调度器。
 
-2026-10-18用户授权的DSL-RNG-RESTORE-01已将活动运行身份迁移为engine/ir@0.5、Core.TheSpire 0.5.0；上表保留冻结时点。新增随机DSL接口、显式种子快照及vanilla布尔映射修正见[当前作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。旧0.4包及回放需要重建／分身份保存，不能冒名续接；其他冻结职责继续适用。
+2026-10-18用户授权的DSL-RNG-RESTORE-01已将活动运行标识迁移为engine/ir@0.5、Core.TheSpire 0.5.0；上表保留固定时点。新增随机DSL接口、显式种子快照及vanilla布尔映射修正见[当前作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。旧0.4包及回放需要重建／分标识保存，不能冒名续接；其他固定职责继续适用。
 
 作者 DSL 和 EnginePackageBuilder 共用类型化 IR、RuleSetBuilder 链接器及唯一 Session 调度器。通用能力包括类型/字段/枚举、实例、集合/关系/作用域、查询、动作及其有限候选、过程、事件/订阅、暂停续接、终局、随机、数值、观察与窄调试。
 
-宿主可使用 EngineDslCompiler.Compile/LoadFiles、EnginePackageBuilder、RuleSetBuilder 及 Session.Start/LegalActions/Submit/Answer/Step/Observe。现有开发者 State/RNG 访问保留；冻结不新增限权 facade，也不新增自动游戏推进器。正式对外身份/协议由 net 处理。
+宿主可使用 EngineDslCompiler.Compile/LoadFiles、EnginePackageBuilder、RuleSetBuilder 及 Session.Start/LegalActions/Submit/Answer/Step/Observe。现有开发者 State/RNG 访问保留；该基线不新增限权 facade，也不新增自动游戏推进器。正式对外标识/协议由 net 处理。
 
 游戏包声明卡牌、角色、资源、回合、伤害、死亡、牌区、胜负和游戏特殊随机策略。core 只执行所声明的程序；例如终局前应执行的游戏余效由游戏包安排，内核不自动补完结算。
 
-## 2. 执行、选择和故障契约
+## 2. 执行、选择和故障约定
 
 | 能力 | 固定行为 |
 | --- | --- |
 | 初始化 | 按 RuleSet 链接包顺序、每包启动登记顺序执行；文本 start 列表和模板展开后的收集顺序即登记顺序。一个入口完成后才进入下一个 |
 | 初始化暂停 | 同一调度栈保留启动游标；合法回答后完成当前入口再执行剩余入口，不重放已完成程序。同级待执行入口不占嵌套调用深度 |
 | 过程与事件 | 过程按声明指令顺序执行；事件监听器按 Priority 升序、再按 DeclarationOrder 执行，监听器完成后继续发出者 |
-| 决策 | 请求冻结本次实体候选/范围并绑定 StateVersion、RequestId；合法回答从暂停后续接；非法/过期回答被拒绝，不消费待请求 |
+| 决策 | 请求固定本次实体候选/范围并绑定 StateVersion、RequestId；合法回答从暂停后续接；非法/过期回答被拒绝，不消费待请求 |
 | 枚举决策 | 结果槽必须声明具体非空 Enum 类型，参数槽和局部槽都可用。默认范围是 0..成员数-1；显式 min/max 为闭区间，必须完全处于成员域内，可缩小合法范围 |
 | 枚举错误 | 不支持 Binding/未定型的枚举结果槽，链接时拒绝；规则给出越界/倒置范围，在发布请求前故障；回答超出请求范围时拒绝并保留请求 |
 | 终局 | terminal 指令立即停止 Session，后续程序、监听器和初始化入口均不再执行；不会自动排空游戏余效 |
@@ -46,7 +46,7 @@
 
 实体引用选择、多选、整数、布尔、参与者、确认等保持基础语言的现有行为。实体多选检查重复/数量/候选，整数检查闭区间，参与者检查本 Session 成员。请求指定的参与者由 Host 分发；DecisionAnswer.Participant 不用于通用调用者认证。
 
-## 3. 状态、组合与可见性契约
+## 3. 状态、组合与可见性约定
 
 实体类型定义不创建实例；SessionState 持有每局实例、字段、作用域、成员与关系。不同 Session 独立，规则定义可共享。必需引用可在同一构造过程暂缺，稳定命令/暂停/终局/观察/哈希边界前须补齐；销毁与生命周期检查不允许留下非法引用。
 
@@ -54,8 +54,8 @@
 
 core/0.2 模板在编译时展开；名称前缀与库词法绑定隔离各实例声明。模板参数支持 Int/Bool/String/Fixed/List(Int) 字面量，body 支持核心声明与嵌套 use；不支持类型/字段/行为引用注入和游戏扩展声明模板化。独立模板实例仍在同一 Session，共享参与者与整局终局；组件的共享状态和游戏组合由包明确声明。
 
-公开观察必须通过声明的 projection 和权限生成。隐藏实例的揭示不自动解除字段权限；已知身份/位置由包维护为当前知识事实。Observe 与 LegalActions 不消费随机数或写游戏状态；预算/求值错误仍可显式报故障。内部 State/RNG/debug 不是公开 AI 输入。
+公开观察必须通过声明的 projection 和权限生成。隐藏实例的揭示不自动解除字段权限；已知标识/位置由包维护为当前知识事实。Observe 与 LegalActions 不消费随机数或写游戏状态；预算/求值错误仍可显式报故障。内部 State/RNG/debug 不是公开 AI 输入。
 
-## 4. 确定性、数值与身份
+## 4. 确定性、数值与标识
 
 RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法/映射。SampleInt 的范围为 。

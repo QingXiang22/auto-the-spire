@@ -6,7 +6,7 @@ Engine 负责类型、状态、事件、随机、编译与唯一 IR 执行。共
 
 ```mermaid
 flowchart LR
-    Manifest[package.json 包身份和支持范围] --> Load[Engine 通用包加载]
+    Manifest[package.json 包标识和支持范围] --> Load[Engine 通用包加载]
     Root[base.spire 与领域 index] --> Load
     Rules[DSL schema / rules / template] --> Load
     Content[具体内容：模板配置或完整 DSL 模块] --> Load
@@ -18,8 +18,8 @@ flowchart LR
 
 `base.spire` 显式包含各领域索引并持有唯一启动顺序。同包片段先合并声明再绑定，保留文件定位；跨包库通过 imports 组合。catalog 的 definition 已允许完整 DSL 内容模块，根入口仍独占 start／imports／包版本等顶层配置。完整模块准入不表示可以绕过显式装配、同包命名空间、纯 JSON 或未引用文件检查。
 
-静态 JSON 保存来源身份、池顺序、包信息和公开说明。`catalog.json` 中 `definition: null` 明确表示尚未迁移；完整源分母不会变成当前可执行目录。包加载拒绝执行型 JSON、未知字段、包外引用和未声明文件。
+静态 JSON 保存来源标识、池顺序、包信息和公开说明。`catalog.json` 中 `definition: null` 明确表示尚未迁移；完整来源条目总数不会变成当前可执行目录。包加载拒绝执行型 JSON、未知字段、包外引用和未声明文件。
 
-当前已有统一出牌、牌区、永久牌／战斗副本、Power 定义生命周期和实例修正等可复用 DSL。准确入口与限制见[当前控制流程](control-flow-modules.md)和[操作参考](../../development/base-spire/reference/operations.md)。卡牌正文与纯基础伤害由所属模块的唯一分派绑定表达，攻击与结果各有独立身份，费用与附魔采用独立状态及复制通知。精确边界见[行为迁移契约](content-behavior-migration.md)。
+当前已有统一出牌、牌区、永久牌／战斗副本、Power 定义生命周期和实例修正等可复用 DSL。准确入口与限制见[当前控制流程](control-flow-modules.md)和[操作参考](../../development/base-spire/reference/operations.md)。卡牌正文与纯基础伤害由所属模块的唯一分派绑定表达，攻击与结果各有独立标识，费用与附魔采用独立状态及复制通知。精确边界见[行为迁移约定](content-behavior-migration.md)。
 
-包 manifest 目前只开放开发 scope；显式 Ironclad 初态与开发战斗不代表包含 Neow、地图、事件往返和跨幕的正常 Run。旧 C# 与检查只在[迁移对照](../../../tools/base-migration-baseline/README.md)保存，生产与默认 Host 不回退。后续恢复与认领按[路线图](../../roadmap.md)执行。
+包 manifest 目前只开放开发 scope；显式 Ironclad 初态与开发战斗不代表包含 Neow、地图、事件往返和跨幕的正常 Run。旧 C# 与检查只在[迁移对照](../../../tools/base-migration-baseline/README.md)保存，生产与默认 Host 不回退。后续恢复与认领按[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)执行。

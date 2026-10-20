@@ -6,7 +6,7 @@
 
 在仓库根目录运行 `python tools/ci/check.py net`。该组构建通用 Host，验证 wire／文本规则与纯 DSL 的真实 stdio 路径。当前正常 Run 尚未恢复；旧药水／商店／地图重放脚本所需场景不计入本组。
 
-[net_client.py](net_client.py)提供 describe、catalog、start、observe、step 和 close；[public_snapshot.py](public_snapshot.py)提供公开快照访问工具。调用者先读取身份与当前候选，再提交 candidate_id；重放不得沿用其他构建或其他状态的候选。
+[net_client.py](net_client.py)提供 describe、catalog、start、observe、step 和 close；[public_snapshot.py](public_snapshot.py)提供公开快照访问工具。调用者先读取标识与当前候选，再提交 candidate_id；重放不得沿用其他构建或其他状态的候选。
 
 ## 整局驱动
 

@@ -1,6 +1,6 @@
-# ai-the-spire 模型与概率输出契约
+# ai-the-spire 模型与概率输出约定
 
-本文供模型与执行器实现者查询概率输出、候选对齐和模型包约束。设计表记录 2026-10-01 时点；实际模型交付与验收以[路线图](../../roadmap.md)为准。
+本文供模型与执行器实现者查询概率输出、候选对齐和模型包约束。设计表记录 2026-10-01 时点；实际模型交付与验收以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
 
 | 项目 | 内容 |
 | --- | --- |
@@ -8,7 +8,7 @@
 | 负责人、读者 | 项目维护者；编码器、评分器、执行器及模型包实现者 |
 | 范围与变化 | 新增内部模型接口、公开概率返回、可选收益头及部署包约束 |
 | 依据与决策 | [AI 规范](spec.md)；不生成单一动作；具体包格式和容差待评审 |
-| 下一步 | 先实现契约 fixtures，再在学习阶段接入可学习模块 |
+| 下一步 | 先实现约定 fixtures，再在学习阶段接入可学习模块 |
 
 ## 1. 调用边界
 
@@ -24,7 +24,7 @@ Scorer 对每个完整候选产生一个 logit；候选编码的字段/引用角
 
 decision 时每个当前候选恰有一项、没有额外项，probability 为有限、非负浮点数，所有有效项总和在配置的 normalization_tolerance 内等于 1。tensor 内 padding=0；外部 choices 不带 padding。容差必须为有限正值且足够小，随推理配置保存，不能自动放宽以掩盖错误；批准的数值阈值由精度实验确定。
 
-softmax 在减去有效项最大 logit 后计算，masked 项不参与最大值和分母。有效 logit 非有限、身份不符、概率失败或超限则整次预测失败，不返回“可用的前半部分”。单候选概率为 1；terminal 的 choices=[]。不要求所有合法项有严格正概率，但训练中若采样策略对其置零，应如实记录该行为支持集。
+softmax 在减去有效项最大 logit 后计算，masked 项不参与最大值及归一化求和。有效 logit 非有限、标识不符、概率失败或超限则整次预测失败，不返回“可用的前半部分”。单候选概率为 1；terminal 的 choices=[]。不要求所有合法项有严格正概率，但训练中若采样策略对其置零，应如实记录该行为支持集。
 
 执行器检查版本和句柄后才决定采样或 argmax。采样温度、混入均匀探索或其他改动形成新的实际行为分布 μ；日志必须记录 μ(a|o)，不能把原始 π(a|o) 当实际行为概率。argmax 的实际行为是确定分布；对齐项相等的处理方式在 ExecutorProfile 中固定，不按不透明 ID 字符串择优。为避免列表顺序成为偏好，建议等概率并列采样并记录执行 RNG；评估时使用固定执行配置及 RNG 种子。
 
@@ -40,7 +40,7 @@ return_schema 必须声明 reward_profile_id、component_ids/单位/尺度、折
 
 ## 4. 模型包
 
-一个 ModelBundle 由 metadata.json、Manifest 与变换配置、模型结构配置、权重和评估摘要组成，内容校验摘要绑定全部文件。它必须声明 net exact identity、训练 scenario_profile、所需字段能力、gym_id/dictionary_version、张量布局、encoder/scorer 接口、网络精度、reward/training/executor profile 身份、可选收益语义和训练来源范围。
+一个 ModelBundle 由 metadata.json、Manifest 与变换配置、模型结构配置、权重和评估摘要组成，内容校验摘要绑定全部文件。它必须声明 net exact identity、训练 scenario_profile、所需字段能力、gym_id/dictionary_version、张量布局、encoder/scorer 接口、网络精度、reward/training/executor profile 标识、可选收益语义和训练来源范围。
 
 加载时先校验文件摘要和兼容性，再创建模型；不自动补字典、不猜维度、不把 unavailable 当训练时已知值。仅从可信本地构建产物加载；默认权重格式不得执行任意对象反序列化代码，具体训练/导出格式在学习阶段选定。部署仅携带推理所需权重，优化器与经验数据保留在训练 checkpoint 中；量化/蒸馏后视为新模型并重新评估。
 
@@ -48,4 +48,4 @@ return_schema 必须声明 reward_profile_id、component_ids/单位/尺度、折
 
 ## 5. 错误与验收
 
-沿用编码器的结构错误，追加 incompatible_model、invalid_logits、invalid_probability、stale_evaluation、unsupported_return_schema。错误包含阶段、输入路径与当前身份，不暴露隐藏数据。输出契约以[共同验收 V-11](../ai-net-verification.md#3-验收场景目录)为主；实例重命名、候选重排、不同 padding 长度、单候选和终止空集合均须覆盖。网络概率比较使用声明的数值容差，引用和候选集合匹配是精确检查。
+沿用编码器的结构错误，追加 incompatible_model、invalid_logits、invalid_probability、stale_evaluation、unsupported_return_schema。错误包含阶段、输入路径与当前标识，不暴露隐藏数据。输出约定以[共同验收 V-11](../ai-net-verification.md#3-验收场景目录)为主；实例重命名、候选重排、不同 padding 长度、单候选和终止空集合均须覆盖。网络概率比较使用声明的数值容差，引用和候选集合匹配是精确检查。

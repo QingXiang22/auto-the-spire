@@ -2,7 +2,7 @@
 
 文档类型：参考（Reference）。
 
-范围：`CoreTheSpire.Engine` 的文件加载、会话驱动和参与者观察接口。运行语义为 engine/ir@0.3，版本与迁移约束见[冻结契约](../../contracts/core-engine-baseline.md)。构建器、扩展、随机 profile 和诊断选项另查[开发者指南](developer-guide.md)。
+范围：`CoreTheSpire.Engine` 的文件加载、会话驱动和参与者观察接口。运行语义为 engine/ir@0.3，版本与迁移约束见[核心兼容性约定](../../contracts/core-engine-baseline.md)。构建器、扩展、随机 profile 和诊断选项另查[开发者指南](developer-guide.md)。
 
 ## 文件加载与会话
 
@@ -13,7 +13,7 @@
 | `new Session(rules, seed, participantRoles, ...)` | 规则集、`ulong`种子、角色列表 → 新会话 | 至少一个非空角色；构造不会执行开局程序 |
 | `Participant(int index)` | 从零开始的下标 → `ParticipantId` | 第一位参与者 ID 为1；DSL 的 `participant(1)` 使用 ID |
 | `Start()` | 无参数；执行规则登记的开局程序 | 宿主负责每局调用一次；可能在开局时请求决策或结束 |
-| `RuleSet.Identity` / `Session.Identity` | 规则身份 / 包含种子指纹、随机配置和角色的会话身份 | 身份不替代具体配置与操作序列的记录 |
+| `RuleSet.Identity` / `Session.Identity` | 规则标识 / 包含种子指纹、随机配置和角色的会话标识 | 标识不替代具体配置与操作序列的记录 |
 
 ## 状态与结果
 
@@ -65,7 +65,7 @@ void Answer(DecisionAnswer answer)
 
 所有回答都须携带当前 `RequestId`。请求 ID 与状态版本过期、回答无效时，在恢复执行前拒绝，保留当前请求。有效回答从暂停位置续接，也可能再次暂停、终局或故障。
 
-`DecisionAnswer.Participant` 是 Participant 类型的回答值，不表示提交回答的调用者。直接 Session API 不鉴别调用者身份；接入层负责将请求交给指定参与者并验证实际回答者。
+`DecisionAnswer.Participant` 是 Participant 类型的回答值，不表示提交回答的调用者。直接 Session API 不鉴别调用者标识；接入层负责将请求交给指定参与者并验证实际回答者。
 
 ## 参与者观察
 

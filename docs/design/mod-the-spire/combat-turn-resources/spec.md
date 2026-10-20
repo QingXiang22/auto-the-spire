@@ -1,6 +1,6 @@
 # 开发态回合生命周期与生命／能量资源
 
-关联 CORE-AUTHOR-05／**DSL-COMBAT-TURN-01**；实施与认领见[路线图](../../../roadmap.md#近期队列)。本包基于前一批战斗开始格挡交付，按[纯 DSL 规格](../engine-dsl-migration/spec.md)、[目录设计](../engine-dsl-migration/plan.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在主清单维护。
+关联 CORE-AUTHOR-05／**DSL-COMBAT-TURN-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本包基于前一批战斗开始格挡交付，按[纯 DSL 规格](../engine-dsl-migration/spec.md)、[目录设计](../engine-dsl-migration/plan.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 
@@ -17,7 +17,7 @@
 
 ## 行为要求与设计
 
-| ID | 契约 | 判别 |
+| ID | 约定 | 判别 |
 | --- | --- | --- |
 | TC01 | Player 增加 Hp／MaxHp／Energy／MaxEnergy／TurnNumber／TurnOpen；开始战斗置 TurnNumber=0、Energy=0、Block=0、TurnOpen=false 后再发 BeforeCombatStart | 新周期从 0 回合 0 能量开始；监听器观察到的仍是已活跃状态；HP 不在开始战斗时重置 |
 | TC02 | BeginDevelopmentTurn 只在活跃战斗允许，先按源顺序自增回合号，再在回合号 >1 时清空格挡并发 AfterBlockCleared（源：`TurnNumber == 1` 跳过清空），随后置 Energy=MaxEnergy，再依次发 AfterTurnStarted 与 AfterPlayerTurnStartLate | 第一回合保留开始战斗获得的格挡；第二回合开始时格挡先被清空、监听器再补格挡；能量在监听器之前重置 |
@@ -26,13 +26,13 @@
 | TC05 | GainEnergy(owner, amount) 增加 Energy，可超过 MaxEnergy；回合开始的重置仍按 MaxEnergy | Lantern 在 3 能量上限上得到 4 |
 | TC06 | 四个模板按持有者、DefinitionId、IsMelted 过滤，只调用本批资源操作；HappyFlower 用实例 Counter，跨战斗保留 | 无遗物／已移除／熔化／别的持有者不触发；两件同时持有各自触发一次 |
 | TC07 | 公开轨迹用同一 Host 从合法动作执行开始战斗与两个回合，观察 Hp／Energy／TurnNumber／Block 与合法候选 | 真实 stdio 上第一回合 4 能量 0 格挡、第二回合 3 能量 14 格挡 |
-| TC08 | 内容文件仅 use 模板参数；源资格、ID、hash、池和 297 分母不变；不新增 C# 效果分支 | catalog 只新增四个非空 definition；公开目录新增四个真实 ID |
+| TC08 | 内容文件仅 use 模板参数；源资格、ID、hash、池和 297 项来源条目总数不变；不新增 C# 效果分支 | catalog 只新增四个非空 definition；公开目录新增四个真实 ID |
 
 字段与资源过程放 `combat`，回合过程与事件放 `combat/lifecycle.spire`，四个模板放 `relics/rules`，具体配置各放 `relics/shared` 单文件。公开动作显式命名 `BeginDevelopmentTurn`／`EndDevelopmentTurn`，不得命名为正常回合或回合结束结算。
 
 ## 实施与验证顺序
 
 1. 先补共享状态与资源过程，再写回合生命周期，最后接模板与内容；每步用最小复现确认现有 Engine 表达足够。
-2. 在包外追加有判别力的回合／资源／隔离／组合检查，并为四个遗物各自生成见证，不复用其它遗物的场景。
+2. 在包外追加有判别力的回合／资源／隔离／组合检查，并为四个遗物各自生成执行结果，不复用其它遗物的场景。
 3. 通过真实 stdio 验证公开轨迹，并更新共享操作参考与领域资料。
-4. 最后运行 solution 构建、包行为／覆盖、受影响 net 与迁移边界、文档检查；不改 Engine 语义，通用 Engine 全套由 Actions 验证。不运行独立参考或完整游戏矩阵，不把开发探针当作正常流程证据。
+4. 最后运行 solution 构建、包行为／覆盖、受影响 net 与迁移边界、文档检查；不改 Engine 语义，通用 Engine 全套由 Actions 验证。不运行独立参考或完整游戏矩阵，不把开发探针当作正常流程验证记录。

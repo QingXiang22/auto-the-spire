@@ -28,7 +28,7 @@
 
 | 对象 | 保存什么 | 生命周期 |
 | --- | --- | --- |
-| `RuleSet` | 链接后的类型、程序、动作、订阅、投影和规则身份 | 一套规则，可供多个 Session 使用 |
+| `RuleSet` | 链接后的类型、程序、动作、订阅、投影和规则标识 | 一套规则，可供多个 Session 使用 |
 | `SessionState` | 实体实例、字段值、作用域、集合成员和关系 | 一局游戏的可变状态 |
 | Session 执行帧 | 程序参数、局部槽位、当前作用域、下一条指令位置 | 一次调用；决策暂停时保留 |
 
@@ -47,7 +47,7 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-活动包版本为 `0.5.0`，运行语义身份为 `engine/ir@0.5`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 冻结基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前冻结状态见 [行为要求](../environment-completion-and-differential-v1.md#core-author-04)。
+活动包版本为 `0.5.0`，运行语义标识为 `engine/ir@0.5`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 版本基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前固定状态见 [行为要求](../environment-completion-and-differential-v1.md#core-author-04)。
 
 当前入口及能力边界：
 
@@ -55,10 +55,10 @@ flowchart TD
 | --- | --- |
 | C# 构建器、IR、链接检查、Session | 可运行；与文本入口共用链接器/执行器 |
 | 通用文本 DSL | 接受 core/0.1、core/0.2、core/0.3；基础声明、imports/template/use、同包绑定与具名调用共用 IR 和 Session |
-| base 的 STS 内容 DSL | 属于游戏前端，生成通用引擎可执行内容；覆盖范围由 base 的证据说明 |
+| base 的 STS 内容 DSL | 属于游戏前端，生成通用引擎可执行内容；覆盖范围由 base 的验证记录说明 |
 | ANTLR、编辑器/LSP 插件 | ANTLR 4.13.1 已接入；具体编辑器插件尚未交付 |
-| 对拍专用调试模式、内核职责拆分 | 同一 Session 按职责拆分；可选有界轨迹已接入 tools |
-| 规则深冻结 | 作者对象及子集合在 Build 后拒绝写入，IR/Value 集合复制并只读发布，链接结果独立 |
+| 差异测试专用调试模式、内核职责拆分 | 同一 Session 按职责拆分；可选有界轨迹已接入 tools |
+| 规则深固定 | 作者对象及子集合在 Build 后拒绝写入，IR/Value 集合复制并只读发布，链接结果独立 |
 | Legacy | 已从当前树删除，仅见[历史代码归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，不属于本指南的执行后端 |
 
 ## 2. 从规则配置文件跑通执行与续接
@@ -84,7 +84,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 | `LoadFiles(paths, extensions, dependencies)` | 扩展感知的文件加载，返回 `RuleSet` | `paths` 为 `IEnumerable<string>`；`extensions` 必填，`dependencies` 可省略 |
 | `BindInto(source, package, sourceName, dependencies, extensions)` | 绑定到已有 `EnginePackageBuilder`，返回 `void` | 文本 namespace 与目标包 `PackageId` 相同；完成所有绑定后再调用一次 `Build()` |
 
-`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器身份进入规则身份；不要用旧产物身份标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../dsl/core/0.2/authoring-guide.md)与[同包绑定参考](../../dsl/core/0.3/authoring-reference.md)。
+`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器标识进入规则标识；不要用旧产物标识标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../dsl/core/0.2/authoring-guide.md)与[同包绑定参考](../../dsl/core/0.3/authoring-reference.md)。
 
 ### 2.2 进阶例子：动作内选择、暂停及事件
 
@@ -210,9 +210,9 @@ body.Body(body.If(body.Less(body.Field(refExpr, health), body.Const(100L)),
 
 `LegalAction.Bindings` 只含参数槽位，已排除局部量。无域参数可能仍为 `Value.None`，Host 必须填好后提交；参数数量等于 `Definition.Program.Parameters.Count`。没有自由参数的绑定可直接提交；默认 Add 例子从 Bindings 中选一个 delta，进阶 Advance 例子无参数，传 `[]`。
 
-面向 AI 的环境应由包/适配层提供明确、有限且可提交的候选，不把未补全的 Binding 当作公开动作。策略输出与公开动作协议由 net/AI 契约约束，不能从开发者内部接口直接推导。
+面向 AI 的环境应由包/适配层提供明确、有限且可提交的候选，不把未补全的 Binding 当作公开动作。策略输出与公开动作协议由 net/AI 约定约束，不能从开发者内部接口直接推导。
 
-### 3.6 链接、身份与规则冻结
+### 3.6 链接、标识与规则固定
 
 ```csharp
 var rules = new RuleSetBuilder()
@@ -223,9 +223,9 @@ var session = new Session(rules, 42, ["player"]);
 
 多包通过 `Dependencies`、`Overrides`、`Extends` 与限定引用表达关系，交给统一链接器处理。不要在 Host 里另外拼一套名称解析/覆盖规则。跨包的实际例子见 [EngineChecks.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/EngineChecks.cs)。
 
-链接阶段解析名称、分配 ID、检查字段形状和程序约束，并计算 `RuleSet.Identity`。`Session.Identity` 还结合种子指纹、随机算法/profile 和角色配置。保存回放/对拍证据时应同时记录这些配置及动作序列；身份字符串不替代输入记录。
+链接阶段解析名称、分配 ID、检查字段形状和程序约束，并计算 `RuleSet.Identity`。`Session.Identity` 还结合种子指纹、随机算法/profile 和角色配置。保存回放/差异测试验证记录时应同时记录这些配置及动作序列；标识字符串不替代输入记录。
 
-`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[冻结基线](../../contracts/core-engine-baseline.md)只读发布。规则产物冻结不限制 SessionState 在游戏中的正常变化。
+`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[版本基线](../../contracts/core-engine-baseline.md)只读发布。规则产物固定不限制 SessionState 在游戏中的正常变化。
 
 ## 4. Host 怎样驱动 Session
 
@@ -268,13 +268,13 @@ session.Answer(new DecisionAnswer(request.RequestId,
     Instances: [chosenInstance]));
 ```
 
-Answer 检查当前请求 ID、状态版本、候选与回答约束。重复/过期回答被拒绝，暂停栈继续保留。当前直接 Session API 不校验“调用者是否为请求指定的回答者”；`DecisionAnswer.Participant` 在 Participant 类决策里表示被选中的参与者，其他种类不会因此鉴别调用者。Host 应将请求交给指定参与者，对外身份校验由适配层处理。Enum 决策的结果槽须声明具体非空 Enum 类型，默认合法范围 0..成员数-1，min/max 可缩小范围；越界回答在续接前拒绝并保留请求。
+Answer 检查当前请求 ID、状态版本、候选与回答约束。重复/过期回答被拒绝，暂停栈继续保留。当前直接 Session API 不校验“调用者是否为请求指定的回答者”；`DecisionAnswer.Participant` 在 Participant 类决策里表示被选中的参与者，其他种类不会因此鉴别调用者。Host 应将请求交给指定参与者，对外标识校验由适配层处理。Enum 决策的结果槽须声明具体非空 Enum 类型，默认合法范围 0..成员数-1，min/max 可缩小范围；越界回答在续接前拒绝并保留请求。
 
 开发者手动修改 State 会改变版本，可能使待回答决策过期；直接消耗 Random 则会改变后续随机结果。两者都是真实操作。
 
 ### 4.3 初始化顺序与续接
 
-engine/ir@0.3 的 `OnSessionStart` 按包链接顺序及包内登记顺序逐个执行，文本 start 列表同样按声明顺序推进。启动游标保留在同一个执行栈；某入口暂停时，回答后先完成它，再执行剩余入口，不重放前序初始化。待执行同级入口不占嵌套调用深度。也可使用单个 Setup 顺序 Call；旧 0.2 的反序安排须迁移，见 [冻结基线](../../contracts/core-engine-baseline.md)。
+engine/ir@0.3 的 `OnSessionStart` 按包链接顺序及包内登记顺序逐个执行，文本 start 列表同样按声明顺序推进。启动游标保留在同一个执行栈；某入口暂停时，回答后先完成它，再执行剩余入口，不重放前序初始化。待执行同级入口不占嵌套调用深度。也可使用单个 Setup 顺序 Call；旧 0.2 的反序安排须迁移，见 [版本基线](../../contracts/core-engine-baseline.md)。
 
 ## 5. 执行栈、事件与暂停续接
 
@@ -294,13 +294,13 @@ Session 只有一套执行栈。调用帧保存参数/局部槽位、作用域�
 
 `Session.State` 是开发者可直接访问的权威状态存储，提供 `CreateInstance`、`CreateScope`、`GetField`、`SetField`、集合/关系操作、`Clone` 与 `StateHash` 等 API。正式玩法通常由规则程序更新它；调试与实验可以直接操作，不引入额外限权 facade。
 
-`Observe(participant, projectionId)` 返回当前参与者视图，不消费随机数、不推进 StateVersion。游戏包必须显式登记类型投影，字段按 Public/OwnerPrivate/Hidden 规则筛选。OwnerPrivate 使用声明的 Owner 字段识别拥有者。集合身份、顺序、数量分别可见；隐藏顺序时返回的稳定 ID 顺序不表示实际顺序。
+`Observe(participant, projectionId)` 返回当前参与者视图，不消费随机数、不推进 StateVersion。游戏包必须显式登记类型投影，字段按 Public/OwnerPrivate/Hidden 规则筛选。OwnerPrivate 使用声明的 Owner 字段识别拥有者。集合标识、顺序、数量分别可见；隐藏顺序时返回的稳定 ID 顺序不表示实际顺序。
 
 已知信息由包维护为**当前状态事实**。例如抽牌堆中已知卡牌及对应位置，应由包声明并更新这些事实，再通过投影发布。引擎不会扫描历史推断玩家知识。`Reveal` 可以授权特定参与者识别原本隐藏成员中的部分实例，授权识别也不会自动解除字段可见性限制。
 
 **隐藏成员得到授权后，`RevealedMembers` 仍不保证表达牌堆位置。** 已知位置须另有权威事实和投影；不能把内部 State 中的完整牌序直接传给玩家。
 
-`State.Clone()` 克隆状态存储，`Random.Capture()` 保存随机服务；它们都不是完整 Session 快照，不包含全部执行帧/待决策恢复信息。`StateHash()` 也不覆盖 RNG 与执行栈。对拍时单独比较状态哈希不能证明随机进度与暂停位置一致。
+`State.Clone()` 克隆状态存储，`Random.Capture()` 保存随机服务；它们都不是完整 Session 快照，不包含全部执行帧/待决策恢复信息。`StateHash()` 也不覆盖 RNG 与执行栈。差异测试时单独比较状态哈希不能证明随机进度与暂停位置一致。
 
 ## 7. 随机、数值与 compute
 
@@ -312,7 +312,7 @@ Session 只有一套执行栈。调用帧保存参数/局部槽位、作用域�
 
 `Random.SeedStream(name, seed)` 必须在该流第一次创建/抽取前调用。游戏种子转换、流布局、候选排序及原版特殊算法策略属于 mod/base。内核无需分成“逻辑随机”和“游戏随机”两套作者 API。
 
-`SamplePick` 按 query 的现有序列抽索引，不再隐式排序。需要按实例 ID 等键排序的规则必须显式 Sort，base 既有受控切片已这样表达。Decide 也使用其查询候选顺序。该语义变更随 `engine/ir@0.2` 标记，不能复用旧版本资产身份。
+`SamplePick` 按 query 的现有序列抽索引，不再隐式排序。需要按实例 ID 等键排序的规则必须显式 Sort，base 既有受控开发场景已这样表达。Decide 也使用其查询候选顺序。该语义变更随 `engine/ir@0.2` 标记，不能复用旧版本资产标识。
 
 随机流诊断与快照入口见 [RandomService.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)。正式动作/观察协议没有因此获得存读档回退能力。
 
@@ -334,7 +334,7 @@ Session 只有一套执行栈。调用帧保存参数/局部槽位、作用域�
 
 默认预算：每条顶层命令最多 100,000 条计数指令，调用深度 64，事件深度 32；每个动作枚举参数组合上限 256。合法动作查询也受预算限制，超限可能使 Session Faulted，不能把只读查询误解为完全不会失败。预算是当前计数语义，不等价于运行时间或内存的绝对上限。
 
-现有诊断包括 Fault、命令预算、待决策/终局、身份、状态版本/哈希和随机流诊断。新增调试模式默认关闭：
+现有诊断包括 Fault、命令预算、待决策/终局、标识、状态版本/哈希和随机流诊断。新增调试模式默认关闭：
 
 ```csharp
 var session = new Session(rules, 42, ["player"],
@@ -347,7 +347,7 @@ var firstFault = session.Debug.FirstFault;
 
 轨迹记录命令、过程、事件/监听器、决策、随机消耗、终局和首故障，可选逐指令记录。记录包含源码位置、状态版本和指令计数；C# 生成 IR 可以没有位置。数量/文本长度有界，溢出增加 DroppedRecords，首故障另行保留。只提供拉取与只读快照，执行期间不调用输出接收器；Host 在命令后自行写文件。因此接收器失败或重入不会污染调度。
 
-tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则身份，也不是给 AI 的额外公开历史。没有独立日志系统。
+tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
 
 ## 9. 维护内核时修改哪里
 
@@ -358,7 +358,7 @@ tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规�
 | [Schema.cs](../../../core-the-spire/Core.TheSpire/Engine/Schema.cs) | 作者声明、字段形状、链接后定义 |
 | [PackageBuilder.cs](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) | 构建器、作者 IR 辅助方法、规则包构建产物 |
 | [Ir.cs](../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) | 表达式、查询、指令、原语签名 |
-| [RuleSet.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs) | 名称链接、ID、引用解析、IR dump 与身份摘要 |
+| [RuleSet.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs) | 名称链接、ID、引用解析、IR dump 与标识摘要 |
 | [RuleSetData.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSetData.cs) | RuleSet 查询接口 |
 | [IrTypeChecker.cs](../../../core-the-spire/Core.TheSpire/Engine/IrTypeChecker.cs) | 类型、纯性、参数域、引用及程序结构检查 |
 | [StateStore.cs](../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs) | 权威状态、成员/引用约束、事务日志、克隆与哈希 |
@@ -369,12 +369,12 @@ tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规�
 | [Session.Events.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Events.cs)、[Session.Resolution.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Resolution.cs) | 事件/决策续接与链接引用访问 |
 | [Session.Debug.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Debug.cs) | 可选有界调试轨迹 |
 | [RandomService.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)、[RandomProfile.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomProfile.cs) | 流管理、可注入版本化随机、消费计数及快照 |
-| [Projection.cs](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | 参与者投影、身份隐藏与授权识别 |
+| [Projection.cs](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | 参与者投影、标识隐藏与授权识别 |
 | [DslSource.cs](../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs) | 公共 AST 与 base 现有解析器 |
 | [Compilation](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs) | core/0.1 ANTLR、语义绑定、游戏扩展及来源定位 |
-| [AuthoringCollections.cs](../../../core-the-spire/Core.TheSpire/Engine/AuthoringCollections.cs) | 作者对象与子集合冻结 |
+| [AuthoringCollections.cs](../../../core-the-spire/Core.TheSpire/Engine/AuthoringCollections.cs) | 作者对象与子集合固定 |
 
-新增通用原语需要一起考虑：IR 节点/签名、构建接口、链接与类型检查、解释执行、内容身份/dump，以及能区分错误行为的检查。游戏专用效果先在包内用现有原语组合；确实存在通用表达缺口时再扩内核。新增文本语法最终仍应生成同一套 IR。
+新增通用原语需要一起考虑：IR 节点/签名、构建接口、链接与类型检查、解释执行、内容标识/dump，以及能区分错误行为的检查。游戏专用效果先在包内用现有原语组合；确实存在通用表达缺口时再扩内核。新增文本语法最终仍应生成同一套 IR。
 
 正式游戏的包组成、种子转换与运行配置由游戏包工厂拥有；net 负责交互适配与公开引用；AI 只消费公开接口。开发者可以直接创建 Session，正式环境则应复用游戏包的统一工厂，避免示例的默认随机配置进入原版运行路径。
 
@@ -392,4 +392,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[路线图](../../roadmap.md)。设计文档里的目标语言示例不自动属于当前可执行语法。
+其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。

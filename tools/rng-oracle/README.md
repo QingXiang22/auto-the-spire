@@ -18,13 +18,13 @@ python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanil
 
 ## 两层向量
 
-拾取随机升级的冻结向量独立生成：
+拾取随机升级的固定向量独立生成：
 
 ```powershell
 python -X utf8 tools/rng-oracle/pickup_upgrade_vectors.py --output tools/base-spire-dev/fixtures/pickup-upgrade-vectors.json
 ```
 
-该神谕只导入本目录的原版RNG重写，读取三件遗物／卡牌／排序／随机源并保存hash，不导入Engine或base DSL。三个预定seed对比连续两次Whetstone、WarPaint、SandCastle的选中实例、升级事件顺序及共用Niche游标；候选范围小于16，等键顺序适用当前.NET小范围插入排序，不将此向量扩张为大型等键牌组或正常Run对拍。
+该神谕只导入本目录的原版RNG重写，读取三件遗物／卡牌／排序／随机源并保存hash，不导入Engine或base DSL。三个预定seed对比连续两次Whetstone、WarPaint、SandCastle的选中实例、升级事件顺序及共用Niche游标；候选范围小于16，等键顺序适用当前.NET小范围插入排序，不将此向量扩张为大型等键牌组或正常Run差异测试。
 
 纯DSL恢复使用新的源消费者向量入口：
 
@@ -33,7 +33,7 @@ python -X utf8 tools/rng-oracle/dsl_rng_vectors.py --output tools/base-spire-dev
 dotnet run --project tools/base-spire-dev -- check --rng-only
 ```
 
-生成需要本地sts2源；CI消费冻结JSON无需源码。向量保存98份源SHA256，独立生成10组UTF-16字符串seed、12条run／3条player流、精确binary32位型、初始／重洗排列与两轮金币／卡牌奖励。奖励向量限定已迁移的操作序列，不包含药水掉落判定、正常Run初始化前置消费或参考模拟器执行，不能据此关闭原严格套件。大型同键牌组的 .NET 排序行为不由十张起始牌向量覆盖。原命令中的旧Slice向量路径为迁移前历史，当前可执行消费者以此入口为准。
+生成需要本地sts2源；CI消费固定JSON无需源码。向量保存98份源SHA256，独立生成10组UTF-16字符串seed、12条run／3条player流、精确binary32位型、初始／重洗排列与两轮金币／卡牌奖励。奖励向量限定已迁移的操作序列，不包含药水掉落判定、正常Run初始化前置消费或参考模拟器执行，不能据此关闭原严格套件。大型同键牌组的 .NET 排序行为不由十张起始牌向量覆盖。原命令中的旧Slice向量路径为迁移前历史，当前可执行消费者以此入口为准。
 
 | 层 | 内容 | 谁检查 |
 | --- | --- | --- |
@@ -53,16 +53,16 @@ dotnet run --project tools/base-spire-dev -- check --rng-only
 
 ## 已登记的参考偏离（重要）
 
-`reference/sts2-sim` 的检出**领先于**我们冻结的 `sts2/` 基线，run/流种子派生已经不是同一版本：
+`reference/sts2-sim` 的检出**领先于**我们固定的 `sts2/` 基线，run/流种子派生已经不是同一版本：
 
-| | 冻结基线 `sts2/`（判据） | 参考检出 |
+| | 版本基线 `sts2/`（判据） | 参考检出 |
 | --- | --- | --- |
 | `RunRngSet.Seed` | `uint`，`(uint)GetDeterministicHashCode`（int 循环） | `ulong`，`GetDeterministicHashCode` 返回 **XxHash64**（旧实现改名 `…Old`） |
 | 流种子 | `Seed + (uint)hash(name)` | `Seed + hash(name)`（ulong）+ `CreateSemanticKeyRequired` 重键模式 |
 
 因此：**不得**用参考的数值"对齐"我们的实现，也不得据此修改 `VanillaRandomLayout`。
 `dotnet run --project tools/differential -- rng` 会把这条差异按**已登记偏离**分类并返回 0；
-未登记的偏离返回 1（否则"参考又变了"会被静默吞掉）。ENV-00 需要把参考冻结到与 `sts2/` 同一版本，
+未登记的偏离返回 1（否则"参考又变了"会被静默吞掉）。ENV-00 需要把参考固定到与 `sts2/` 同一版本，
 或逐处登记此类差异。
 
 ## 三方互证

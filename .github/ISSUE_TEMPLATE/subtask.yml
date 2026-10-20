@@ -1,0 +1,34 @@
+name: 能力子任务
+description: 在总任务下组织一项成果，并按需拆执行工单。
+title: "[子任务] "
+labels: ["type:subtask", "priority:P2"]
+body:
+  - type: markdown
+    attributes:
+      value: "提交后添加原生父任务关系，按实际安排调整优先级。当前状态以 Issue 为准，不另建进度文档。"
+  - type: input
+    id: parent
+    attributes:
+      label: 总任务
+      description: 填写所属总任务的 Issue 链接；提交后在 GitHub 添加父任务关系。
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 目标与范围
+      description: 完成后新增什么能力，边界是什么，关联哪些已有规格？
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完成条件
+      description: 什么可观察结果足以关闭本项？不要只写所有工单已关闭。
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖与拆分安排
+      description: 写明已有依赖、近期准备拆出的可独立交付的改动及后续触发条件；提交后添加原生阻塞关系和 sub-issues。

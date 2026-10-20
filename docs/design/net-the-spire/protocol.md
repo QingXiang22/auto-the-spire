@@ -1,39 +1,39 @@
 # net-the-spire 公开协议：v0.1与ENV v0.2扩展
 
-本文供提供方与消费端查询公开字段、操作、错误和兼容规则。第 1～6 节定义 0.1 语义，第 7 节定义 ENV 的 0.2 扩展。设计表中的状态属于 2026-10-01；已有实现和后续扩展的边界见下文状态澄清，当前验收以[路线图](../../roadmap.md)为准。
+本文供提供方与消费端查询公开字段、操作、错误和兼容规则。第 1～6 节定义 0.1 语义，第 7 节定义 ENV 的 0.2 扩展。设计表中的状态属于 2026-10-01；已有实现和后续扩展的边界见下文状态澄清，当前验收以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态与版本 | IN_REVIEW；v0.1 修订 2，2026-10-01；尚未冻结，无协议实现 |
-| 负责人与读者 | 项目维护者；net 提供方、AI 消费端和契约检查实现者 |
+| 状态与版本 | IN_REVIEW；v0.1 修订 2，2026-10-01；尚未固定，无协议实现 |
+| 负责人与读者 | 项目维护者；net 提供方、AI 消费端和约定检查实现者 |
 | 范围 | 语言无关的数据结构、操作、版本、错误；本机传输见[设计](design.md) |
 | 本次变化与决策 | 新增唯一公开协议定义；完整快照、具名字段和快照内候选句柄为待评审方案 |
-| 依据与下一步 | [net 规范](spec.md)、[AI 规范](../ai-the-spire/spec.md)；实现序列化样例与两端契约检查 |
+| 依据与下一步 | [net 规范](spec.md)、[AI 规范](../ai-the-spire/spec.md)；实现序列化样例与两端约定检查 |
 
 本文中的“必须”是批准此版本后实现者须遵守的规则，不表示已经实现。`demo:` 是示例命名空间。AI 的索引、数值变换和模型版本不属于游戏后端协议。
 
-2026-10-04状态澄清：0.1已存在受控Host/共享契约实现，下文表格中的“无实现”为最初设计时点。第1～6节保留0.1语义；[第7节](#7-env正式环境的02扩展)确定正式ENV的0.2最小扩展，尚待实现，不能在旧0.1中悄悄更改seed编码。
+2026-10-04状态澄清：0.1已存在受控Host/共享约定实现，下文表格中的“无实现”为最初设计时点。第1～6节保留0.1语义；[第7节](#7-env正式环境的02扩展)确定正式ENV的0.2最小扩展，尚待实现，不能在旧0.1中悄悄更改seed编码。
 
-规范资产、decimal/摘要算法、数组排序、能力结构与覆盖审计的唯一细化来源为 [contract-artifacts.md](contract-artifacts.md)。冻结前 C-01 必须交付机器 schema、跨结构不变量、规范化参考实现和双端正反例；当前散文与 JSON 示例不替代这些资产。此修订影响尚未实现的两端 contracts、目录、Manifest 和 fixtures，不能继续按旧草案单独手写两套 DTO。
+规范资产、decimal/摘要算法、数组排序、能力结构与覆盖审计的唯一细化来源为 [contract-artifacts.md](contract-artifacts.md)。固定前 C-01 必须交付机器 schema、跨结构不变量、规范化参考实现和双端正反例；当前散文与 JSON 示例不替代这些资产。此修订影响尚未实现的两端 contracts、目录、Manifest 和 fixtures，不能继续按旧草案单独手写两套 DTO。
 
-## 1. 身份、目录与能力
+## 1. 标识、目录与能力
 
-| 身份 | 所属方与含义 |
+| 标识 | 所属方与含义 |
 | --- | --- |
-| protocol_version | net 协议版本，初稿 `0.1`；本版冻结期要求完全相等 |
+| protocol_version | net 协议版本，初稿 `0.1`；本版版本维护期要求完全相等 |
 | ruleset_id | 提供方规则指纹：内核语义版本、内容包/顺序/配置及影响规则的开局配置；不含每局种子 |
 | catalog_id | 提供方公开目录指纹：所有结构声明及其语义版本 |
-| backend_profile_id | 后端观察/动作语义配置；语义或字段可用性改变须换身份 |
+| backend_profile_id | 后端观察/动作语义配置；语义或字段可用性改变须换标识 |
 | session_id | 一次会话；全部 worker 及进程重启的客户端可见域不复用，含新 worker 实例标识与局内编号；旧请求不能作用于新局 |
 | observation_id | 会话内递增的安全 JSON 整数；稳定快照和动作绑定共用该版本 |
 | candidate_id | 快照内唯一非空字符串，不透明；是**该会话**当前稳定边界的提交引用：不承诺跨快照稳定，也不跨会话通用（同 seed/同观察版本/同动作语义的两局各有自己的句柄）。同一动作的跨会话对齐走[动作语义键](contract-artifacts.md#3-公开数组与动作语义键)，不用 candidate_id |
-| instance_id | 会话内公开实体身份，在可公开跟踪的生命周期内稳定，不回收给其他实体 |
+| instance_id | 会话内公开实体标识，在可公开跟踪的生命周期内稳定，不回收给其他实体 |
 
 `identity = {protocol_version, ruleset_id, catalog_id, backend_profile_id}`。`PublicCatalog = {protocol_version, ruleset_id, catalog_id, declarations}`。declarations 有 entity_kinds/content_types/fields/relation_types/pile_types/sequence_types/group_types/action_types/terminal_reasons 数组，空表为 `[]`。pile_types 是 STS 公开投影结构，不是 core 内置牌区类型。
 
 声明有带命名空间的 id、semantic_version 和简明语义。content_types 指定实体种类；fields 指定 value_type、applies_to（实体种类/动作类型集合）、required、公开条件；number 字段指定 number_format=integer/decimal，category 字段列出类别 ID，entity_ref 指定目标种类。动作声明列出必需与可选字段。关系声明指定来源/目标种类及可选位置的单位、起点、范围；序列/组声明指定 owner、element/member 种类、基数和用途。一个 owner 下不允许重复同名字段；不同实例允许相同 content_id。
 
-目录声明结构和语义，不包含效果代码或隐藏资料。net 不分配模型索引；AI 根据目录建立 GymManifest。指纹使用确定排序、明确规范化方式及内容/声明摘要；实现文档须记录算法，不能用时间戳代替内容身份。
+目录声明结构和语义，不包含效果代码或隐藏资料。net 不分配模型索引；AI 根据目录建立 GymManifest。指纹使用确定排序、明确规范化方式及内容/声明摘要；实现文档须记录算法，不能用时间戳代替内容标识。
 
 声明对象的精确键如下。未列的类型专用键不得混入其他值类型。`description` 供人核对，不作为效果文字特征；首次实现不得为它增加自然语言编码。
 
@@ -65,11 +65,11 @@
 
 `facts` 为 Field 数组，与实体字段使用相同的 `{field_id, state, value?}`，按 field_id 排序且无重复；适用域从 reason_id 对应的 terminal_reason 检查。
 
-reason_id 必须在 terminal_reasons 中声明，outcome 与该声明一致；facts 遵守其 required_fields/optional_fields 及字段 applies_to，必需结果事实为 known，所有引用均有效。新增原因/事实改变 catalog_id；不能临时输出未声明的字符串当作终局契约。
+reason_id 必须在 terminal_reasons 中声明，outcome 与该声明一致；facts 遵守其 required_fields/optional_fields 及字段 applies_to，必需结果事实为 known，所有引用均有效。新增原因/事实改变 catalog_id；不能临时输出未声明的字符串当作终局约定。
 
 Entity 为 `{instance_id, kind_id, content_state, fields, content_id?}`。content_state=known/unknown/unavailable/not_applicable，仅 known 带 content_id。无内容类型的场景/空槽仍是真实实体。
 
-Field 为 `{field_id, state, value?}`；state=known/unknown/unavailable。known 必须有值，其余不带值；required 且适用的字段不能省略；不适用或声明可选的字段可省略。省略只表示没有声明，无法区分“不适用”和“可选未提供”，不能编码成 known 零或显式 not_applicable；完整状态表见契约资产第 4 节。
+Field 为 `{field_id, state, value?}`；state=known/unknown/unavailable。known 必须有值，其余不带值；required 且适用的字段不能省略；不适用或声明可选的字段可省略。省略只表示没有声明，无法区分“不适用”和“可选未提供”，不能编码成 known 零或显式 not_applicable；完整状态表见约定资产第 4 节。
 
 Engine声明optional且当前值为None的实体字段按此规则省略，并在映射诊断中记录N-02-OPTIONAL-ABSENT；恢复实际值后正常发布known。可选entity_ref有值时仍须引用闭合，不能为了表示空而创建占位实体或发布无效句柄。required字段不适用此省略规则。
 
@@ -80,7 +80,7 @@ Engine声明optional且当前值为None的实体字段按此规则省略，并�
 | category | 目录声明的类别 ID 字符串 |
 | entity_ref | 当前快照 instance_id 字符串 |
 
-number 不接受 NaN/Infinity、指数形式、逗号；编码时去掉前导 `+` 和多余零，负零写 `"0"`；wire 解码拒绝非规范字符串，不默默重写。版本、数量、序位等结构整数使用 JSON 整数，范围为 0 到 2^53−1，超出拒绝配置。模型的浮点精度另由[编码契约](../ai-the-spire/encoder-design.md)声明。禁止重复 JSON 键。
+number 不接受 NaN/Infinity、指数形式、逗号；编码时去掉前导 `+` 和多余零，负零写 `"0"`；wire 解码拒绝非规范字符串，不默默重写。版本、数量、序位等结构整数使用 JSON 整数，范围为 0 到 2^53−1，超出拒绝配置。模型的浮点精度另由[编码约定](../ai-the-spire/encoder-design.md)声明。禁止重复 JSON 键。
 
 Relation 为 `{type_id, source_ref, target_ref, position?}`，position 语义由目录声明；同类型/来源/目标/位置完全重复的关系拒绝。
 
@@ -93,7 +93,7 @@ Pile 为 `{pile_ref, total_count, visible_members, members_complete, known_posit
 1. total_count/position 是安全 JSON 整数；每个位置满足 `0 <= position < total_count`，即使成员不完整也用真实总数作边界。
 2. visible_members 唯一、引用均有效、成员 kind 属于 pile_type；其数量不超过 total_count，members_complete=true 时取等。
 3. known_positions 的 card_ref 是 visible_members 的子集；每张牌至多一个位置，每个位置至多一张牌。
-4. 完整成员不意味着顺序完整；位置记录不增加卡牌数。未知身份仅体现在总数，不建立带内部序号的虚构卡牌。
+4. 完整成员不意味着顺序完整；位置记录不增加卡牌数。未知标识仅体现在总数，不建立带内部序号的虚构卡牌。
 
 有互斥组的 pile_type 指定 membership_scope_field_id，它是牌堆实体上 required/known 的 entity_ref 字段。相同 exclusive_group_id 且此字段引用同一作用域实体的牌堆，成员不能重复；战斗牌区与长期牌组使用不同互斥组，可共享卡牌引用。完整内部成员约束由提供方检查，消费者检查公开成员，不从未知成员推断违规。
 
@@ -107,11 +107,11 @@ LegalAction 为 `{candidate_id, action_type, fields}`。fields 沿用字段结�
 
 所有无序数组及 legal_actions 遵守[规范排序与动作语义键](contract-artifacts.md#3-公开数组与动作语义键)；Sequence.elements 仍保留公开真实顺序。candidate_id 不参与排序。排序不能代替公开 ID 来源审计，也不得把数组序号当作游戏位置。
 
-正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。多于一项的选择仍明确拒绝。旧0.1应答目录继续声明Instance为required。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端身份随该声明改变。
+正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。多于一项的选择仍明确拒绝。旧0.1应答目录继续声明Instance为required。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端标识随该声明改变。
 
-2026-10-20，BEHAVIOR-01在派生0.2应答目录增加optional的`net:field:net.answer_decision.Flag`，值类型为boolean。Engine Bool暂停只发布两个同action_type候选，分别包含Flag=false或Flag=true，不含Instance，也不发布空字段取消候选；实体应答仍只含Instance或允许的空取消。step仍提交当前candidate_id，宿主从已发布绑定恢复RequestId与Flag，不接收客户端自拼的应答字段。重复／过期／跨会话候选继续经过同一账本与观察版本检查。目录摘要和后端身份改变，已有boolean字段及optional_fields的C#/Python/schema形状复用；0.1及未声明Flag的历史Profile不开放Bool应答。Int、Enum和多实体选择仍明确报告未支持。
+2026-10-20，BEHAVIOR-01在派生0.2应答目录增加optional的`net:field:net.answer_decision.Flag`，值类型为boolean。Engine Bool暂停只发布两个同action_type候选，分别包含Flag=false或Flag=true，不含Instance，也不发布空字段取消候选；实体应答仍只含Instance或允许的空取消。step仍提交当前candidate_id，宿主从已发布绑定恢复RequestId与Flag，不接收客户端自拼的应答字段。重复／过期／跨会话候选继续经过同一账本与观察版本检查。目录摘要和后端标识改变，已有boolean字段及optional_fields的C#/Python/schema形状复用；0.1及未声明Flag的历史Profile不开放Bool应答。Int、Enum和多实体选择仍明确报告未支持。
 
-引用的目标均在同一快照内。此前公开且当前有效的信息直接表现为字段、关系和位置；没有历史事件流、独立 known_top、模型字典身份、完整隐藏牌序或 RNG。UI 文案与内部诊断置于隔离调试通道，不默认成为训练输入。
+引用的目标均在同一快照内。此前公开且当前有效的信息直接表现为字段、关系和位置；没有历史事件流、独立 known_top、模型字典标识、完整隐藏牌序或 RNG。UI 文案与内部诊断置于隔离调试通道，不默认成为训练输入。
 
 ## 3. 完整快照示例
 
@@ -200,7 +200,7 @@ start 的去重记录为进程级；step/close 为会话级。成功与拒绝响
 
 ## 5. 生命周期与恢复
 
-会话状态为 active/settling/terminal/uncertain/stopped/faulted/closed。active 的快照 status=decision，terminal 有终止快照。step 在会话锁内验证身份/版本/候选，记录 pending 并转 settling，再执行一次。到稳定边界后先更新快照/绑定表，记录完成结果，再应答。并发的新控制请求返回 session_busy；同 request_id 的重发查询原结果，不提交第二次。
+会话状态为 active/settling/terminal/uncertain/stopped/faulted/closed。active 的快照 status=decision，terminal 有终止快照。step 在会话锁内验证标识/版本/候选，记录 pending 并转 settling，再执行一次。到稳定边界后先更新快照/绑定表，记录完成结果，再应答。并发的新控制请求返回 session_busy；同 request_id 的重发查询原结果，不提交第二次。
 
 执行失败若能证明没有游戏效果，返回 execution_state=not_started；否则 unknown 并转 uncertain/faulted，禁止继续决策。observe 读取状态时不返回 settling 中的半成品快照。真实游戏会自行推进时，适配器必须检测并换 observation_id；无法保证观察和执行间原子核对则不能声明 stable_snapshot 支持。
 
@@ -216,7 +216,7 @@ error 为 `{code, message, path?, session_id?, observation_id?, execution_state,
 
 | code | 情况与行为 |
 | --- | --- |
-| version_mismatch / unsupported_capability | 身份、配置、字段能力不符；拒绝，不自动降级 |
+| version_mismatch / unsupported_capability | 标识、配置、字段能力不符；拒绝，不自动降级 |
 | invalid_input / unknown_type / dangling_reference | 修正输入；游戏不推进 |
 | stale_observation / illegal_candidate | 重新 observe；不得把旧候选映射到新索引 |
 | request_conflict / session_busy | ID 换载荷则修正；另有执行则查询原请求 |
@@ -226,13 +226,13 @@ error 为 `{code, message, path?, session_id?, observation_id?, execution_state,
 
 传输断开没有 error 响应；消费端保留 request_id 并按恢复规则处理。重连不得绕过 NoSL。顶层未知属性、未知类型、重复键和缺失必需值拒绝；可选属性仅在协议/目录已声明时省略。
 
-v0.1 采用 exact identity 匹配。新增声明或改变字段语义/可见性/动作规则/字段可用性须变更对应身份；旧目录仍可用于旧 Gym，不热扩模型、不自动迁移权重。后续宽松兼容需另行修订。
+v0.1 采用 exact identity 匹配。新增声明或改变字段语义/可见性/动作规则/字段可用性须变更对应标识；旧目录仍可用于旧 Gym，不热扩模型、不自动迁移权重。后续宽松兼容需另行修订。
 
-首版绑定为本机 UTF-8 NDJSON stdin/stdout，一行一个完整请求/响应，字符串内换行转义；stdout 仅写协议，日志写 stderr。帧字节上限显式配置，超限失败，不解析部分数据。仅本机子进程，无远程监听与网络鉴权承诺；未来远程模式须另定认证和控制所有权。C# 内存调用复用同一数据/语义契约。
+首版绑定为本机 UTF-8 NDJSON stdin/stdout，一行一个完整请求/响应，字符串内换行转义；stdout 仅写协议，日志写 stderr。帧字节上限显式配置，超限失败，不解析部分数据。仅本机子进程，无远程监听与网络鉴权承诺；未来远程模式须另定认证和控制所有权。C# 内存调用复用同一数据/语义约定。
 
 ## 7. ENV正式环境的0.2扩展
 
-本节为已确定的实施契约，尚未实现；完整开局路径与身份约束见[ENV实现约束](../environment-implementation-constraints.md#4-固定配置方式解决字符串seed冲突)。只对正式单人构建及其显式dev/Ironclad范围开放0.2，旧切片/作者场景仍为0.1。
+本节为已确定的实施约定，尚未实现；完整开局路径与标识约束见[ENV实现约束](../environment-implementation-constraints.md#4-固定配置方式解决字符串seed冲突)。只对正式单人构建及其显式dev/Ironclad范围开放0.2，旧开发场景/作者场景仍为0.1。
 
 0.2沿用第1～6节的结构和生命周期，仅有以下版本化差异：
 
@@ -241,11 +241,11 @@ v0.1 采用 exact identity 匹配。新增声明或改变字段语义/可见性/
 | protocol_version | `0.1`，exact identity | `0.2`，exact identity；所有带版本的目录/快照一致 |
 | start.seed | 可选规范uint64十进制字符串 | 可选非空游戏seed字符串；具体来源校验/标准化由base执行，不由net解析为ulong |
 | start成功result | 恰为`{session_id, snapshot}` | 恰为`{session_id, seed, snapshot}`；seed为本次实际接受/生成的游戏字符串 |
-| scenario_profile | 旧场景的实际支持ID | 当前正式构建的dev/Ironclad/完整范围ID，不接受旧切片ID伪装正式构建 |
+| scenario_profile | 旧场景的实际支持ID | 当前正式构建的dev/Ironclad/完整范围ID，不接受旧开发场景ID伪装正式构建 |
 
-Host固定character/ascension及规则配置进入ruleset_id；每局seed不进入ruleset_id/catalog_id/backend_profile_id。start.expected_identity先与describe实际身份完全匹配，再验证场景/seed；任何错误在创建/启动前返回，不消耗游戏RNG。请求重发沿账本返回同一seed/session/snapshot，不重生成seed。
+Host固定character/ascension及规则配置进入ruleset_id；每局seed不进入ruleset_id/catalog_id/backend_profile_id。start.expected_identity先与describe实际标识完全匹配，再验证场景/seed；任何错误在创建/启动前返回，不消耗游戏RNG。请求重发沿账本返回同一seed/session/snapshot，不重生成seed。
 
-start未带seed时，使用Host的显式game-seed默认值，或由base按已声明配置生成新seed；成功响应总是报告实际值。客户端/对拍保存该控制元数据，后续重开同一Host可为每局提供不同seed；不能依赖重启进程换seed。字符串`"0"`在0.2是游戏字符串，不能特殊转换为旧原始ulong种子。既有快照状态/候选/目录数据格式不改变；seed元数据不加入模型特征。
+start未带seed时，使用Host的显式game-seed默认值，或由base按已声明配置生成新seed；成功响应总是报告实际值。客户端/差异测试保存该控制元数据，后续重开同一Host可为每局提供不同seed；不能依赖重启进程换seed。字符串`"0"`在0.2是游戏字符串，不能特殊转换为旧原始ulong种子。既有快照状态/候选/目录数据格式不改变；seed元数据不加入模型特征。
 
 0.2未知键、重复键、空seed、类型错误及非法场景仍严格拒绝；0.1继续拒绝非数字seed。即使请求seed形状在两版本都合法，expected_identity中的版本也必须匹配，不能自动降级或按字符串内容猜版本。describe能力字段形状不扩展；seed_control=true仅在实际创建路径使用指定seed时发布，execution_guarantees.rng_profile_id必须报告实际Profile。
 

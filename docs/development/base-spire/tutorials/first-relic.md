@@ -31,7 +31,7 @@ python -X utf8 docs/examples/base-dsl/run_relic_lesson.py --manifest $baseManife
 
 两条命令退出码应为 0。第二条输出 `block_trace: [6]` 和 `passed: true`：开发抽牌堆原为空、弃牌堆有三张牌，实际重洗后触发 6 点格挡，然后抽出一张。
 
-驱动脚本只通过现有 Python 客户端执行 describe→catalog→start→step→observe，不实现重洗或格挡。报告记录实际规则身份、scope 和固定游戏 seed `BASE-DSL-LESSON-00`，并标记 `independent_verified: false`。
+驱动脚本只通过现有 Python 客户端执行 describe→catalog→start→step→observe，不实现重洗或格挡。报告记录实际规则标识、scope 和固定游戏 seed `BASE-DSL-LESSON-00`，并标记 `independent_verified: false`。
 
 ## 3. 只修改内容参数
 
@@ -53,7 +53,7 @@ dotnet run --no-build --project tools/base-spire-dev -- validate $baseManifest
 python -X utf8 docs/examples/base-dsl/run_relic_lesson.py --manifest $baseManifest --obtain TheAbacus.Obtain --expect-block 8 --report .artifacts/base-spire-docs/lesson-configured.json
 ```
 
-你应看到 `block_trace: [8]`、`passed: true`，规则身份与上一阶段不同。该改变只来自 DSL 数值，没有更改 Host、效果枚举或 C# 规则。
+你应看到 `block_trace: [8]`、`passed: true`，规则标识与上一阶段不同。该改变只来自 DSL 数值，没有更改 Host、效果枚举或 C# 规则。
 
 正式工具的 `check` 固定验证原版 TheAbacus 为 6，不适合作为这个 8 点练习副本的成功标准。这里使用明确的教学预期；正式规则不能跟着练习改成 8 或放宽检查。
 

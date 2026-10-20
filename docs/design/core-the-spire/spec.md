@@ -1,40 +1,40 @@
 # core-the-spire specification
 
-2026-10-20基线校准：活动工程为Core.TheSpire 0.7.0／engine/ir@0.7，文本语言core/0.3；类型化dispatch及投影身份锚点已接入，准确语义见[作者参考](../../dsl/core/0.3/authoring-reference.md)和[活动核心契约](../../contracts/core-engine-baseline.md)。下文2026-10-04／05的冻结与实现描述是历史时点，不要求下游退回engine/ir@0.3；具体新维护仍需已登记范围与最小复现。
+2026-10-20基线校准：活动工程为Core.TheSpire 0.7.0／engine/ir@0.7，文本语言core/0.3；类型化dispatch及投影标识锚点已接入，准确语义见[作者参考](../../dsl/core/0.3/authoring-reference.md)和[活动核心约定](../../contracts/core-engine-baseline.md)。下文2026-10-04／05的固定与实现描述是历史时点，不要求下游退回engine/ir@0.3；具体新维护仍需已登记范围与最小复现。
 
 2026-10-18架构纠偏：Engine及其完整DSL是主体；Spire为完整DSL的受限内容子集，base玩法由DSL库定义。不得通过把游戏规则移入Engine或保留C#专属效果实现来满足这一目标。能力缺口先用通用文本程序复现；目标及验收见[当前开发资料](../mod-the-spire/base-architecture.md)。本决定不表示完整文本覆盖已实现。
 
-2026-10-05 冻结基线为 engine/ir@0.3，保留 core/0.1 与 core/0.2 语言。启动顺序和枚举域已收口，兼容边界、集合/生命周期与维护规则见 [冻结契约](../../contracts/core-engine-baseline.md)及 ，优先于下文历史限制。
+2026-10-05 版本基线为 engine/ir@0.3，保留 core/0.1 与 core/0.2 语言。启动顺序和枚举域已统一，兼容边界、集合/生命周期与维护规则见 [核心兼容性约定](../../contracts/core-engine-baseline.md)，优先于下文历史限制。
 
-2026-10-04 当前实现：活动 core 只使用 Engine；core/0.1 ANTLR 基础编译与 core/0.2 DSL 规则库/参数实例化、深冻结、职责拆分、版本化随机注入及有界对拍调试模式已交付，开发者 Session API 保留。当前[架构决定](core-architecture-decisions.md)、[作者入门](../../dsl/core/README.md)和优先于下文历史状态；完整原版与 IDE 插件仍需独立验收。下文 Legacy 兼容章节保留历史背景。
+2026-10-04 当前实现：活动 core 只使用 Engine；core/0.1 ANTLR 基础编译与 core/0.2 DSL 规则库/参数实例化、深固定、职责拆分、版本化随机注入及有界差异测试调试模式已交付，开发者 Session API 保留。当前[架构决定](core-architecture-decisions.md)、[作者入门](../../dsl/core/README.md)和优先于下文历史状态；完整原版与 IDE 插件仍需独立验收。下文 Legacy 兼容章节保留历史背景。
 
-2026-10-05 边界澄清：core 的验收和冻结以已承诺的通用原语、DSL 组合与确定执行契约为准；具体死亡余效、胜负时机、原版内容/整局和对拍属于游戏包及 ENV，不能作为核心独立冻结前置。详见[架构决定第10节](core-architecture-decisions.md#通用内核与游戏规则分离)。
+2026-10-05 边界澄清：core 的验收和固定以已承诺的通用原语、DSL 组合与确定执行约定为准；具体死亡余效、胜负时机、原版内容/整局和差异测试属于游戏包及 ENV，不能作为核心独立固定前置。详见[架构决定第10节](core-architecture-decisions.md#通用内核与游戏规则分离)。
 
-当前实施细则见[ENV实现约束](../environment-implementation-constraints.md)：目录/依赖、唯一调度器、启动配置、数值/随机和诊断接口均需落实到实际入口。下文历史支持数与迁移前类型不作为当前完成门槛。
+当前实施细则见[ENV实现约束](../environment-implementation-constraints.md)：目录/依赖、唯一调度器、启动配置、数值/随机和诊断接口均需落实到实际入口。下文历史支持数与迁移前类型不作为当前完成验收条件。
 
-> 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
+> 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则差异测试](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标约定不因旧开发场景验收而缩小。
 
 本规范定义 `core-the-spire` 的通用能力与模块边界，遵循[项目整体规范](../spec.md)。
 
-2026-10-01，用户明确目标是能描述多类桌游的通用引擎，STS 是首个游戏包。具体架构、DSL/IR、Lua 计算和迁移提案见 [通用桌游引擎设计稿](generic-tabletop-engine-design.md)。目标边界已确认。下文的目标与兼容实现说明保留设计时点；独立 Engine 和 base-spire 受控内容消费者已有交付，迁移范围尚未全部覆盖，具体范围按对应证据核对。
+2026-10-01，用户明确目标是能描述多类桌游的通用引擎，STS 是首个游戏包。具体架构、DSL/IR、Lua 计算和迁移提案见 [通用桌游引擎设计稿](generic-tabletop-engine-design.md)。目标边界已确认。下文的目标与兼容实现说明保留设计时点；独立 Engine 和 base-spire 受控内容消费者已有交付，迁移范围尚未全部覆盖，具体范围按对应验证记录核对。
 
 2026-10-03实现提示：Engine当前受控检查64项通过；正式0.0.1卡/能力前端位于base-spire游戏侧，复用通用AST并lower为Engine IR，不把STS语法语义放回core。Legacy仍编译/运行兼容范围。新路径部分完成与完整迁移分别看。
 
 ## 目标架构：通用桌游运行时
 
-- core 提供类型化 Schema/实例、集合与关系、作用域、纯查询、动作验证、决策暂停/续接、规则程序调度、类型化事件、随机数、观察与版本契约。
+- core 提供类型化 Schema/实例、集合与关系、作用域、纯查询、动作验证、决策暂停/续接、规则程序调度、类型化事件、随机数、观察与版本约定。
 - 卡牌、怪物、Power、牌区、生命、格挡、能量、地图、房间、回合、伤害与胜负条件由游戏包声明。core 的公共类型和执行分支不包含这些领域语义。
 - 一个会话只有一个调度器推进状态；脚本和 native 扩展不重入 Step/Drain。只读查询和修正上下文不提供玩法状态写接口或 RNG 消费。
 - 复杂计算允许指定 Lua 资产。首版建议通过通用计算后端接口实现显式输入到类型化输出，结果再由规则程序结算；不把 Lua 局部变量注册为持久字段。
 - DSL 局部槽、计算临时空间与玩法状态分开。Lua 是否节省开销通过包含数据传递的实际测量决定。
-- 通用性按模型到规则包/IR的表达能力审查，复用已有非 STS 测试场景作为原语证据；STS2是当前规则集实现与验收重点，不要求再实现另一套游戏来证明通用性。同时决策等超出现有执行契约的能力按独立需求判断。
-- 引擎内部状态恢复契约与外部协议能力分开，保持 AI/net 的首阶段 NoSL 与无公开 rollback/load/fork 约束。
+- 通用性按模型到规则包/IR的表达能力审查，复用已有非 STS 测试场景作为原语验证记录；STS2是当前规则集实现与验收重点，不要求再实现另一套游戏来证明通用性。同时决策等超出现有执行约定的能力按独立需求判断。
+- 引擎内部状态恢复约定与外部协议能力分开，保持 AI/net 的首阶段 NoSL 与无公开 rollback/load/fork 约束。
 - 纯程序能力沿调用图校验；有限循环按迭代帧推进，事件级联和实例/候选创建计入结算预算，超限显式故障。公开投影按公开键排序并接受不泄漏/公开事实覆盖两方向的审计。
-- PRNG 与种子派生算法、包/内容/脚本及配置摘要进入规则集身份。STS 保真以 `sts2/` 版本化来源为准，旧 core/参考模拟器仅作差分对照；不能仅重录 golden 期望来消除失败。
+- PRNG 与种子派生算法、包/内容/脚本及配置摘要进入规则集标识。STS 保真以 `sts2/` 版本化来源为准，旧 core/参考模拟器仅作差分对照；不能仅重录 golden 期望来消除失败。
 
 ## 游戏建模与支持判定
 
-2026-10-07 用户明确：本阶段需要的是 **ability——能够在现有内核上描述游戏规则集**。本节用架构模型说明这项表达能力，三国杀作为轻量适用性案例，实际规则集开发仍聚焦STS2。能力判断依据模型到通用原语的映射，无须实现三国杀；内核执行契约见 [engine/ir@0.3 冻结契约](../../contracts/core-engine-baseline.md)。
+2026-10-07 用户明确：本阶段需要的是 **ability——能够在现有内核上描述游戏规则集**。本节用架构模型说明这项表达能力，三国杀作为轻量适用性案例，实际规则集开发仍聚焦STS2。能力判断依据模型到通用原语的映射，无须实现三国杀；内核执行约定见 [engine/ir@0.3 核心兼容性约定](../../contracts/core-engine-baseline.md)。
 
 ### 描述一个游戏
 
@@ -46,7 +46,7 @@ G=(P,S,I,M,L,T,O,F)
 
 | 要素 | 含义 | 规则包需要说明的内容 |
 | --- | --- | --- |
-| \(P\) | 参与者集合 | 谁可以作决定；参与者身份与其控制的实体分开 |
+| \(P\) | 参与者集合 | 谁可以作决定；参与者标识与其控制的实体分开 |
 | \(S\) | 完整逻辑状态 | 实体属性、集合与关系，以及阶段、待结算事项和影响后续规则的历史事实 |
 | \(I\) | 初始化规则 | 从配置建立初始状态；随机开局可以产生初始状态的概率分布 |
 | \(M(s)\) | 当前需要作选择的参与者 | 无人时自动推进；一人时顺序选择；多人时表示联合选择，不能擅自改成公开的依次选择 |
@@ -63,7 +63,7 @@ G=(P,S,I,M,L,T,O,F)
 
 本阶段判断模型中的状态、选择、结算和信息规则能否由现有内核原语组合表达。映射路径为 **游戏模型 → 游戏包声明与规则程序 → 通用 IR → Session 执行**；模型中的每类规则都应有可说明的落点。只有抽象模型而没有这条映射，仍不足以说明内核具有相应能力；能够说明映射后，不必再交付该游戏的全部内容来证明 ability。
 
-具体游戏的交付另有内容覆盖、实际加载、行为与对拍验收。本项目当前承担这项交付的是STS2；三国杀规则包不成为核心验收条件，也不新增实现任务。这个边界与 [通用核心独立冻结条件](core-architecture-decisions.md#通用内核与游戏规则分离)及 [ENV实现约束](../environment-implementation-constraints.md#1-决策边界与执行范围)一致。
+具体游戏的交付另有内容覆盖、实际加载、行为与差异测试验收。本项目当前承担这项交付的是STS2；三国杀规则包不成为核心验收条件，也不新增实现任务。这个边界与 [通用核心独立固定条件](core-architecture-decisions.md#通用内核与游戏规则分离)及 [ENV实现约束](../environment-implementation-constraints.md#1-决策边界与执行范围)一致。
 
 设 \(c\) 是内核的完整执行配置，\(\alpha(c)=s\) 是它对应的游戏状态。\(c\) 包括持久状态、程序栈与局部槽、事件/循环游标、待决策请求、随机状态和会话状态；不能仅把 `Session.State` 当作它。支持判定以宿主可交互的边界比较，允许多个内部指令实现一次逻辑转移，但分解不得额外公开信息或改变可作出的选择。
 
@@ -79,13 +79,13 @@ G=(P,S,I,M,L,T,O,F)
 
 ### 三国杀如何落入这个模型
 
-三国杀适用这个描述方式：回合外响应也是选择，嵌套结算也是状态转移，身份与手牌的隐藏属于观察规则。本节以身份局的基本结构检查表达能力，只需说明下面三类映射。机制来源为 [规则集 3.0 的结算原则](https://gltjk.com/sanguosha/rules/rule/principle.html)；链接是 [2014 年制作的规则集镜像](https://gltjk.com/sanguosha/rules/)，用于说明结构。
+三国杀适用这个描述方式：回合外响应也是选择，嵌套结算也是状态转移，标识与手牌的隐藏属于观察规则。本节以标识局的基本结构检查表达能力，只需说明下面三类映射。机制来源为 [规则集 3.0 的结算原则](https://gltjk.com/sanguosha/rules/rule/principle.html)；链接是 [2014 年制作的规则集镜像](https://gltjk.com/sanguosha/rules/)，用于说明结构。
 
 | 模型要素 | 三国杀中的基本含义 | 现有内核的表达方式 |
 | --- | --- | --- |
 | \(P,S,I\) | 玩家、武将/牌、区域与阶段，以及开局状态 | 参与者、类型化属性、集合/关系及初始化程序 |
 | \(M,L,T,F\) | 出牌或响应、条件与目标、嵌套结算及胜负 | 查询/条件、指定参与者的决策、规则程序/事件栈、终局指令 |
-| \(O\) | 公开信息、私有手牌/身份与规则授权的已知信息 | 观察投影、属性/集合可见性及观看者授权事实 |
+| \(O\) | 公开信息、私有手牌/标识与规则授权的已知信息 | 观察投影、属性/集合可见性及观看者授权事实 |
 
 例如 A 出牌、B 响应，可以描述为“保存本次结算信息 → 请求 B 选择 → 执行响应规则 → 续接父程序”。需要处理顺序时由规则程序查询、排序和遍历相关对象；这属于程序组合，不要求内核理解三国杀的技能名或专有时机。
 
@@ -100,14 +100,14 @@ G=(P,S,I,M,L,T,O,F)
 | 状态与初始化 \(S,I\) | [Schema.cs](../../../core-the-spire/Core.TheSpire/Engine/Schema.cs)、[StateStore.cs](../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs)、[Session.Execution.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Execution.cs) | 类型化字段、有序集合、关系与依序执行的初始化已有；实体保存属性，程序构造及改变状态 |
 | 参与者与选择 \(P,M,L\) | [Scheduler.cs](../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs)、[Session.Instructions.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Instructions.cs) | 参与者/role、动作条件与候选、指定玩家的决策及回答续接已有；可组合表达顺序行动与回合外响应 |
 | 结算与顺序 \(T\) | [Session.Frames.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Frames.cs)、[Session.Execution.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Execution.cs)、[Session.Queries.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Queries.cs) | 调用/事件栈保存父程序位置；子结算完成后续接，决策期间保存执行帧。查询排序与显式遍历可表达游戏包规定的处理顺序 |
-| 观察 \(O\) | [Projection.cs](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | Public/OwnerPrivate/Hidden、集合身份/数量/顺序可见性及按 viewer 授权的 reveal 已有；已知信息由游戏包维护 |
+| 观察 \(O\) | [Projection.cs](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | Public/OwnerPrivate/Hidden、集合标识/数量/顺序可见性及按 viewer 授权的 reveal 已有；已知信息由游戏包维护 |
 | 随机与终局 \(I,T,F\) | [RandomService.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)、[Session.Instructions.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Instructions.cs) | 版本化随机流与采样已有；程序可以判定并发出终局结果，游戏包定义其规则及发生时机 |
 
-现有契约边界仍保留：普通动作按role校验而非自动注入提交者上下文；决策当前只有一个待请求；静态订阅按固定优先级执行，动态顺序可由程序组织；`Answer` 的调用者认证由宿主承担。这些是组合时使用的接口约定，不因三国杀案例自动扩为内核新需求。暂停期间普通动作查询/提交不一致的实测问题仍登记为主清单的 `CORE-LEGAL-PENDING`，按现有维护排期处理。
+现有约定边界仍保留：普通动作按role校验而非自动注入提交者上下文；决策当前只有一个待请求；静态订阅按固定优先级执行，动态顺序可由程序组织；`Answer` 的调用者认证由宿主承担。这些是组合时使用的接口约定，不因三国杀案例自动扩为内核新需求。暂停期间普通动作查询/提交不一致的实测问题仍登记为主清单的 `CORE-LEGAL-PENDING`，按现有维护排期处理。
 
-同日上轮审阅已运行 `dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests`，已有 **95/95** 检查通过，覆盖成员/关系、插入监听器、决策续接、角色/guard、投影/reveal 与随机等通用行为。另运行 ：两个同 role 参与者得到相同动作；P2 可发起显式向 P1 询问的动作；等待该回答时普通动作列表仍有 1 项，提交以 `IllegalAction` 拒绝；回答后正常续接。命令与输出保存在 。本轮能力边界澄清复用这些证据，仅修订文档。
+同日上轮审阅已运行 `dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests`，已有 **95/95** 检查通过，覆盖成员/关系、插入监听器、决策续接、角色/guard、投影/reveal 与随机等通用行为。另运行 ：两个同 role 参与者得到相同动作；P2 可发起显式向 P1 询问的动作；等待该回答时普通动作列表仍有 1 项，提交以 `IllegalAction` 拒绝；回答后正常续接。命令与输出保存在 。本轮能力边界澄清复用这些验证记录，仅修订文档。
 
-源码核对支持的结论是：**上文三国杀模型的基本规则结构可以映射到现有内核，具备规则集描述能力。** 这一能力满足本次案例分析，不以实现完整三国杀为前置。接下来用同一模型梳理STS2规则包与内容迁移工作流；只有实际暴露的通用表达缺口才回到core审定。完整 Session 恢复等额外能力继续按冻结契约处理。
+源码核对支持的结论是：**上文三国杀模型的基本规则结构可以映射到现有内核，具备规则集描述能力。** 这一能力满足本次案例分析，不以实现完整三国杀为前置。接下来用同一模型梳理STS2规则包与内容迁移工作流；只有实际暴露的通用表达缺口才回到core审定。完整 Session 恢复等额外能力继续按核心兼容性约定处理。
 
 ## 历史兼容实现与目标的区分
 
@@ -123,7 +123,7 @@ G=(P,S,I,M,L,T,O,F)
 
 | 保留项 | 现状 |
 | --- | --- |
-| 玩家集合 | 运行态持有玩家集合，而不是把玩家身份铺成全局字段；当前实现只要求单人战斗（[Runs.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs)） |
+| 玩家集合 | 运行态持有玩家集合，而不是把玩家标识铺成全局字段；当前实现只要求单人战斗（[Runs.cs](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/core-the-spire/Core.TheSpire.Legacy/Legacy/Runs.cs)） |
 | `AnyPlayer` 类来源目标 | 保留在原版目标语义中，单人会话语境下投影为当前玩家（药水 `AnyPlayer` → `self`，见 [content-dsl.md](../../dsl/0.0.1/content-dsl.md)） |
 | `multiplayerOnly` 内容 | 仍然注册，但不进入单人卡池、也不是单人合法动作（Demonic Shield、Tank，见 [ironclad-cards.spire:4](../../../tools/base-migration-baseline/BaseSpire/Cards/Content/ironclad-cards.spire#L4)） |
 | 多人专属机制的数据位 | 保留定义与可观察字段，但不实现其交互行为（例：Tank 的 Guarded 与队伍伤害分摊，见 [ironclad-dsl-coverage.md](../mod-the-spire/ironclad-dsl-coverage.md)） |
@@ -143,10 +143,10 @@ G=(P,S,I,M,L,T,O,F)
 
 ## 2. 不属于当前 STS 包模拟范围
 
-账号进度、解锁、成就、多人游戏、界面、音频与平台服务不属于当前 STS 模拟目标（见 [项目 spec](../spec.md)）。core 的通用状态/动作契约仍允许其他游戏包表达自己的参与者和玩法数据；渲染、音频与平台服务由宿主承担。
+账号进度、解锁、成就、多人游戏、界面、音频与平台服务不属于当前 STS 模拟目标（见 [项目 spec](../spec.md)）。core 的通用状态/动作约定仍允许其他游戏包表达自己的参与者和玩法数据；渲染、音频与平台服务由宿主承担。
 
 ## 3. STS 兼容期待确认
 
 - 多人专属内容长期保留注册（而不是直接删除）是否作为固定约定。
 - 是否需要显式的单人／多人模式开关，还是默认只有单人一种规则集。
-- 观察层是否需要显式声明"无队友字段"，以便以后接多人时不破坏既有观察契约。
+- 观察层是否需要显式声明"无队友字段"，以便以后接多人时不破坏既有观察约定。

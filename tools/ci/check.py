@@ -13,6 +13,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("suite", choices=["core", "base", "net", "differential", "migration", "docs"])
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
@@ -45,6 +47,7 @@ def main() -> int:
                     [sys.executable, "-X", "utf8", "tools/ci/check_dsl_migration.py", "--configuration", config, "--output", str(output)]]
     elif args.suite == "docs":
         commands = [[sys.executable, "-X", "utf8", "tools/doc-check/check_docs.py"],
+                    [sys.executable, "-X", "utf8", "tools/doc-check/check_terms.py"],
                     ["git", "diff", "--check"]]
     else:
         project = "tools/differential/Differential.csproj"

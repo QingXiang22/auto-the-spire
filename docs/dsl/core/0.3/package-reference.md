@@ -17,19 +17,19 @@
 | 字段 | 类型与约束 |
 | --- | --- |
 | format | 固定 `engine-dsl/package@1` |
-| id、version | 非空字符串，必须匹配实际编译的包身份 |
+| id、version | 非空字符串，必须匹配实际编译的包标识 |
 | language | 当前固定 `core/0.3` |
 | entry | `.spire` 入口相对路径 |
 | public_metadata | 静态 `.json`；具体 schema 由 transport 校验 |
 | default_scope | 必须包含在 supported_scopes 中 |
-| supported_scopes | 非空身份字符串列表，不能重复 |
+| supported_scopes | 非空标识字符串列表，不能重复 |
 | unsupported_scopes | scope 到非空原因的对象，不能与支持列表重叠 |
 | catalogs | 静态源目录／数据快照 `.json` 的相对路径列表 |
 | random_profile | `engine-default` 或 `vanilla-uniform@1`；后者选 xoshiro256**／SplitMix64 与 double 截断有界映射，游戏流种子由 DSL 明确设置；其他值未支持 |
 
 包只允许 `.spire` 与 `.json`。所有 JSON 必须由 manifest 角色声明，所有 DSL 必须被入口引用；未知字段、重复 JSON 键、路径逃逸和链接均拒绝。任何层级出现 effects、conditions、hooks、script、code、body、dsl 字段均作为执行型 JSON 拒绝。
 
-包摘要是按规范相对路径排序的全部包文件文本 SHA256：每项为相对路径、换行、文件文本，项间换行；路径分隔符为 `/`，文本 CRLF 规范为 LF。摘要包含静态元数据而不包含每局 seed。规则身份另由 Engine 计算，不与包摘要混用。
+包摘要是按规范相对路径排序的全部包文件文本 SHA256：每项为相对路径、换行、文件文本，项间换行；路径分隔符为 `/`，文本 CRLF 规范为 LF。摘要包含静态元数据而不包含每局 seed。规则标识另由 Engine 计算，不与包摘要混用。
 
 ## 静态源目录
 
@@ -37,9 +37,9 @@
 
 | 字段 | 含义 |
 | --- | --- |
-| id、name | 源身份与名称；同目录 id 唯一 |
+| id、name | 源标识与名称；同目录 id 唯一 |
 | source_path、source_sha256 | 源文件定位与 64 位十六进制 SHA256 |
-| pools | 不重复的池身份字符串列表 |
+| pools | 不重复的池标识字符串列表 |
 | eligibility、evidence | 静态资格说明与依据，不能作为运行条件 |
 | definition | `null` 表示未迁移；非空时必须指向实际加载的 DSL 内容文件 |
 | members | 可选的有序池成员字符串列表，允许原始重复成员 |
@@ -48,7 +48,7 @@
 
 ## 静态数据快照
 
-`engine-dsl/source-data@1` 只允许 `format`、`kind`、`source_path`、`source_sha256`、`data`。前三个身份字段为非空字符串，hash 为 64 位十六进制，data 为静态对象或数组。加载器不解释其中的玩法；它保存原遭遇和幕池等数据，不能用来注册效果。
+`engine-dsl/source-data@1` 只允许 `format`、`kind`、`source_path`、`source_sha256`、`data`。前三个标识字段为非空字符串，hash 为 64 位十六进制，data 为静态对象或数组。加载器不解释其中的玩法；它保存原遭遇和幕池等数据，不能用来注册效果。
 
 ## 加载结果与失败
 

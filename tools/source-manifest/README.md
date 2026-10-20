@@ -2,7 +2,7 @@
 
 遗物内容与公共接口的静态对账使用本页末尾的[遗物清单入口](#遗物内容与接口统计)。建局源／参考比较继续使用下面的原有入口。
 
-`extract_source_manifest.py` 从**冻结源** `sts2/`（基线 `sts2-frozen-2026-10-05`，core 锚点 `92ccd34`）
+`extract_source_manifest.py` 从**固定源** `sts2/`（基线 `sts2-frozen-2026-10-05`，core 锚点 `92ccd34`）
 静态提取建局阶段的输入清单，并与 `reference/sts2-sim/` 逐项对照，供 A 线按真实机制实现前置消费。
 
 - **只读**：不执行游戏、不构建 C#、不写 obj/bin、不改任何生产文件。
@@ -18,7 +18,7 @@ python tools/source-manifest/extract_source_manifest.py `
 ```
 
 可选参数：`--source-root`（默认 `sts2`）、`--reference-root`（默认 `reference/sts2-sim`）、
-`--game-seed`（默认 `ENV-T04-RNG-SHUFFLE-001`，仅做记录与身份绑定，不改变任何提取结果）。
+`--game-seed`（默认 `ENV-T04-RNG-SHUFFLE-001`，仅做记录与标识绑定，不改变任何提取结果）。
 
 退出码 0 = 提取并渲染成功（**不代表某条 `differs` 结论被裁决**）；非 0 = 源路径缺失或工具异常。
 
@@ -31,7 +31,7 @@ python tools/source-manifest/extract_source_manifest.py `
 - **遭遇池**：弱/常规/精英/BOSS 候选、`IsWeak`、`Tags`，以及普通槽总数（`BaseNumberOfRooms`）。
 - **古代人**：本幕 `AllAncients` + `ModelDb.AllSharedAncients`，以及 Act0 的可用候选（Act0 不参与共享先古分配）。
 - **调用顺序与条件**：共享袋 → 每玩家袋 → 共享先古分配 → 各 act 事件洗牌 → 弱/常规袋 → 精英 → BOSS → 古代人。
-- **身份绑定**：源/参考的 git HEAD、逐文件 sha256、遗物池/遭遇目录聚合摘要、未提交改动列表。
+- **标识绑定**：源/参考的 git HEAD、逐文件 sha256、遗物池/遭遇目录聚合摘要、未提交改动列表。
 
 ## 与参考对照
 
@@ -42,7 +42,7 @@ python tools/source-manifest/extract_source_manifest.py `
 
 - 本工具属工具层，参考只读；不得把参考数值当作源的期望值写死进生产玩法，也不得用工具补偿生产实现。
 - 本工具不修改 RNG 算法、不修改比较器、不参与严格 suite 判定。
-- 源/参考版本身份以 JSON `identity` 为准；参考仓库 HEAD 不能替代实际文件摘要（存在共享未提交改动）。
+- 源/参考版本标识以 JSON `identity` 为准；参考仓库 HEAD 不能替代实际文件摘要（存在共享未提交改动）。
 
 ## 遗物内容与接口统计
 
