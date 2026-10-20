@@ -107,7 +107,7 @@ Checkpoint包含策略共享权重、预测头权重、优化器/RNG/游标、�
 
 ## 8. D4-E：正式卡牌源进入真实Host
 
-学习对照结算后，无论是否改善，接通一个用户可玩的正式内容小场景，结束“正式源只在组件检查运行”。在base提供命名构建方案`formal-card-demo@1`，仅选择正式`.spire`中的StrikeIronclad、DefendIronclad、Bash、Headbutt四个声明及其normal/upgraded版本（对用户分别称Strike、Defend、Bash、Headbutt）；ID从现有前端映射取得。复用SpireCardSource/SpirePowerSource→AuthorModel→CombatSlicePackage→Engine，不复制效果或通过Legacy运行。
+学习对照评估完成后，无论是否改善，接通一个用户可玩的正式内容小场景，结束“正式源只在组件检查运行”。在base提供命名构建方案`formal-card-demo@1`，仅选择正式`.spire`中的StrikeIronclad、DefendIronclad、Bash、Headbutt四个声明及其normal/upgraded版本（对用户分别称Strike、Defend、Bash、Headbutt）；ID从现有前端映射取得。复用SpireCardSource/SpirePowerSource→AuthorModel→CombatSlicePackage→Engine，不复制效果或通过Legacy运行。
 
 依赖Power从已支持正式Power源选所需闭包（例如Bash的易伤）；其余敌人、药水、起始/回合程序可以复用当前作者场景，但必须在来源清单逐项标为原型，不能称为全正式原版。缺依赖源/行为依据时只阻塞这份场景，交具体缺口，不能悄悄用旧效果冒充正式源。目标四牌解析/降级若缺能力，只补服务该场景的base前端或通用Engine能力，不扩全部剩余卡牌。
 

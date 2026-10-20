@@ -1,6 +1,6 @@
 # 遗物内容接续与生命周期
 
-关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02／03；当前状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本约定覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；已有定义、行为执行结果、独立比较与正常Run分开结算。
+关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02／03；当前状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本约定覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；分别报告已有定义、行为执行结果、独立比较与正常 Run 的验证结果。
 
 ## 内容与源依据
 
