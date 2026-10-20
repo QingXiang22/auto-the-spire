@@ -1,6 +1,6 @@
 # ai-the-spire 协作约定
 
-本文件适用于 `ai-the-spire/` 及其子目录，补充根 [AGENTS.md](../AGENTS.md)。
+本文件适用于 `ai-the-spire/` 及其子目录，遵循 [开发约定](../CONTRIBUTING.md)。
 
 ## 开发流程
 

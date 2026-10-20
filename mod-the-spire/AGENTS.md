@@ -1,6 +1,6 @@
 # mod-the-spire 协作约定
 
-本文件适用于 `mod-the-spire/` 及其子目录，在根 [AGENTS.md](../AGENTS.md) 之上补充本模块更具体的约定。
+本文件适用于 `mod-the-spire/` 及其子目录，在 [开发约定](../CONTRIBUTING.md) 之上补充本模块更具体的约定。
 
 ## 开发流程
 
