@@ -1,6 +1,6 @@
 # net-the-spire specification
 
-本规范定义 net 向消费端提供的公开观察、合法候选、会话控制和结果。查询字段与错误时，使用[公开协议](protocol.md)；实现进度和接续任务以[路线图](../../roadmap.md)为准。
+本规范定义 net 向消费端提供的公开观察、合法候选、会话控制和结果。查询字段与错误时，使用[公开协议](protocol.md)；实现进度和接续任务以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
 
 当前Host通过Engine通用加载同一base manifest并创建Session，不调用旧C#工厂；net发布规则声明的事实与候选，不重算玩法。每局字符串seed沿[协议0.2扩展](protocol.md#7-env正式环境的02扩展)传入；实例单选／取消及Bool应答已有接入，有序多选和其他未支持形状仍须按真实Engine契约扩展。旧0.1通用wire兼容保留，旧base场景明确未支持；正常Run公开全程不因开发路径通过而成立。实现约束见[ENV约定](../environment-implementation-constraints.md)。
 

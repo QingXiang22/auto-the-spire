@@ -1,6 +1,6 @@
 # 铁甲战士使用的共享 DSL 操作
 
-本页供内容作者查询调用入口，适用于 `base-spire-dsl-relic-draw-dev-v1` 的单人、全部解锁开发配置。范围与验证条件见[契约](spec.md)，当前进度见[路线图](../../../roadmap.md#近期队列)。这些过程由 Engine 执行；Host 只投影状态和提交合法候选。
+本页供内容作者查询调用入口，适用于 `base-spire-dsl-relic-draw-dev-v1` 的单人、全部解锁开发配置。范围与验证条件见[契约](spec.md)，当前进度见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。这些过程由 Engine 执行；Host 只投影状态和提交合法候选。
 
 新增正文分派、费用、攻击、附魔和永久选择的准确签名见[行为操作参考](../../../development/base-spire/reference/card-behavior.md)。
 

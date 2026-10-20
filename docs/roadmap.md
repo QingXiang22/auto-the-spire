@@ -1,22 +1,18 @@
-# 近期工作与产品里程碑
+# 总任务入口与产品里程碑
 
 当前产品目标是五角色完整单人环境及其公开接口。实际版本和可运行范围以 [base manifest](../mod-the-spire/base-spire/package.json)、[核心契约](contracts/core-engine-baseline.md)及当前提交的 CI 为准。开发场景已支持部分卡牌、Power、遗物和房间机制；正常地图／Run、完整奖励来源及独立对拍尚待恢复。
 
-本页维护近期顺序及暂缓事项。完整产品范围见 [项目规格](design/spec.md)，行为验收见 [环境验收规格](design/environment-completion-and-differential-v1.md)。任务完成后移出本页，改动与检查结果通过 PR 查看。
+当前任务统一从 [GitHub 总任务 #28](https://github.com/QingXiang22/auto-the-spire/issues/28)进入，通过原生 sub-issues 连接子任务和执行工单。优先级、负责人、依赖、进度及暂停条件只在 Issue 维护。本页保留稳定入口和产品阶段定义，不同步任务状态。
 
 ## 近期队列
 
-| 顺序／任务 | 状态 | 交付与完成条件 |
-| --- | --- | --- |
-| RELIC-G06：主动弃牌／耗尽反应 | 待认领 | 先接 ToughBandages、CharonsAshes，验证持有者、时序、回合末清手与主动弃牌区别、嵌套反应及最后击杀；Tingsha 和 UnceasingTop 按各自依赖推进 |
-| ENV-T04：首个 DSL 独立比较 | 待认领 | 选择已有真实消费者对应的原 case，执行独立参考与当前 DSL；保留其余 case 的未支持状态及原比较维度 |
-| source catalog 职责收敛 | 待认领 | 将迁移进度、核对说明移出生产包；规则进入正式文档，固定来源数据进入 CI 夹具，支持清单从实际定义生成；保持公开协议 catalog 的运行契约 |
-| 有序永久多选 | 待认领 | 先定义顺序、数量、空域／取消和非法回答原子性，再补通用 Engine／wire，接入真实内容消费者 |
-| 正常 Run 最小纵向切片 | 后续 | 正常初始化→地图→真实遭遇→奖励→返回地图；同配置公开路径和独立比较均可执行 |
+- [总任务及子任务树](https://github.com/QingXiang22/auto-the-spire/issues/28)：从产品目标进入能力子任务，再打开执行工单。
+- [可认领执行工单](https://github.com/QingXiang22/auto-the-spire/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3Awork%22+label%3A%22status%3Aready%22)：按优先级选择，核对依赖后认领。
+- [全部执行工单](https://github.com/QingXiang22/auto-the-spire/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3Awork%22)：查看执行、评审、阻塞及候选项。
 
-遗物优先沿现有共享能力成组推进，新增机制以真实消费者驱动。当前已实现的 PenNib、Akabeko／Vigor、Sown 等复用现有定义与检查，不按旧交接重新实现。合并及功能可用性以所审提交为准。
+派发流程、标签含义和关闭条件见 [开发约定](../CONTRIBUTING.md#任务拆分与派发)。任务名称及旧 evidence 不能证明功能已经实现，认领时核对当前定义、PR 和实际检查范围。
 
-完整 RELIC-G01～G20 分组见 [遗物机制索引](design/mod-the-spire/relic-combat-start/spec.md#遗物机制索引)。
+产品范围见 [项目规格](design/spec.md)，完整行为条件见 [环境验收规格](design/environment-completion-and-differential-v1.md)。[遗物机制索引](design/mod-the-spire/relic-combat-start/spec.md#遗物机制索引)只用于查找共享机制，不代表当前派单顺序。
 
 ## 里程碑
 
@@ -29,10 +25,4 @@
 
 开发开局首幕可作中间检查，正常首幕须包含 Neow。局部机制、内部行为测试和声明数量各自证明对应范围，整体完成仍按环境规格验收。
 
-## 暂缓与触发条件
-
-- 其他角色批量内容、敌人召唤／复活维持暂缓；实际流程受阻时明确依赖，由负责人安排恢复。
-- AI 训练、共享 Transformer 和正式实验暂缓。环境候选验收后另定分布、奖励、预算与晋升条件；保留 PyTorch 技术选择。
-- 真实客户端取证、指定 mod、Lua 后端、IDE/LSP、多人及内部恢复／搜索按明确需求另行安排。
-
-流程及文档维护见 [开发约定](../CONTRIBUTING.md)。普通交付使用 PR 与 CI；本页不记录聊天会话、逐批日志或历史检查数字。
+阶段关闭由总任务关联的实际验收决定。普通交付使用 PR 与 CI；不记录聊天会话、逐批日志或历史检查数字。

@@ -3,7 +3,7 @@
 | 项目 | 决定 |
 | --- | --- |
 | 版本 / 日期 | v1.3；2026-10-05；core已冻结，下游分派已细化；严格对拍入口及完整环境尚未实现/验收 |
-| 当前主线 | **先完整环境与保真验收，再正式AI学习实验**；[路线图](../roadmap.md)、[开发约定](../../CONTRIBUTING.md) |
+| 当前主线 | **先完整环境与保真验收，再正式AI学习实验**；[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)、[开发约定](../../CONTRIBUTING.md) |
 | 主责 | 冻结core由负责人维护；A/base负责规则/DSL/完整内容，B/tools负责严格对拍，C/net负责完整公开出口 |
 | 规则依据 | 本地`sts2/`恢复源码及其版本证据；`reference/sts2-sim`为独立对拍后端，不能替代原版依据 |
 | 退出当前 | 未启动D3和[D4 AI试验](public-transition-learning-v1.md)；已有D1/D1.1/D2只保留工程回归 |
@@ -11,7 +11,7 @@
 
 ## 1. 对用户决策的评估
 
-**2026-10-20实施基线修订：** `92ccd34`／`engine/ir@0.3`是v1.3时的历史冻结锚点；活动版本按[核心契约](../contracts/core-engine-baseline.md)及实际工程修订。base现为纯DSL包，旧SinglePlayer／ContentSource工厂不再是生产落点。下文五角色、来源、时间保护、严格suite及120对等验收合同保留；历史实现描述不能证明当前能力。派单与实际就绪状态只见[路线图](../roadmap.md#近期队列)，不把先补完通用core作为所有内容前置，也不自行改变接口语义。
+**2026-10-20实施基线修订：** `92ccd34`／`engine/ir@0.3`是v1.3时的历史冻结锚点；活动版本按[核心契约](../contracts/core-engine-baseline.md)及实际工程修订。base现为纯DSL包，旧SinglePlayer／ContentSource工厂不再是生产落点。下文五角色、来源、时间保护、严格suite及120对等验收合同保留；历史实现描述不能证明当前能力。派单与实际就绪状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)，不把先补完通用core作为所有内容前置，也不自行改变接口语义。
 
 发现通用缺口时，执行者附最小复现交负责人；游戏玩法在 base DSL 包中完成。可分配的目录、接口、交付与提示词见 [开发约定](../../CONTRIBUTING.md)及 [开发约定](../../CONTRIBUTING.md)，进度只更新唯一清单。
 
@@ -206,7 +206,7 @@ ironclad-run是自动测试suite，固定进阶0的8个seed=`ENV-IRONCLAD-{i:02}
 
 ## 14. 行为验收索引
 
-下列编号定位仍有效的产品和接口要求；实现状态在路线图／PR 维护。通用机制优先用真实消费者验证，暂停项及当前顺序见 [路线图](../roadmap.md)。
+下列编号定位仍有效的产品和接口要求；实现状态在路线图／PR 维护。通用机制优先用真实消费者验证，暂停项及当前顺序见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 ### ENV-T10
 

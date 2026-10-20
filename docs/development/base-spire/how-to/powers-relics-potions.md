@@ -1,6 +1,6 @@
 # 开发 Power、遗物与药水
 
-文档类型：操作指南（How-to）。先从对应catalog查源身份，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[路线图](../../../roadmap.md#近期队列)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
+文档类型：操作指南（How-to）。先从对应catalog查源身份，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
 
 ## 实现 Power 生命周期
 

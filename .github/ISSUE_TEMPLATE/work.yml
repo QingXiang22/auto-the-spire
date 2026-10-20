@@ -1,0 +1,57 @@
+name: 执行工单
+description: 派给一个执行者，通过 PR 和 CI 交付的具体改动。
+title: "[工单] "
+labels: ["type:work", "priority:P2", "status:backlog"]
+body:
+  - type: markdown
+    attributes:
+      value: "提交后添加原生父任务／阻塞关系，调整优先级。目标、范围、执行内容、验收和验证明确且依赖满足后，改为 status:ready。认领时写明执行者、分支和输入提交。"
+  - type: input
+    id: parent
+    attributes:
+      label: 所属子任务
+      description: 填写父 Issue 链接；提交后在 GitHub 添加父任务关系。
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: 目标
+      description: 本工单解决什么问题，交付什么结果？链接必要的现行规格。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 修改边界与输入
+      description: 允许修改的模块／文件、接口边界、输入版本，以及需要协调的共享文件。
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: 执行内容
+      description: 按实际先后写实施步骤；复杂部分链接已有设计，不复制整份规格。
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖与阻塞
+      description: 写明依赖 Issue／PR 和恢复条件；没有依赖时写“无”。提交后添加原生 blocked by 关系。
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收条件
+      description: 可观察的行为、必要边界与完成判据，供评审者据此核对。
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: 验证与交付
+      description: 计划使用的定向检查及 CI 组；实际结果写入关联 PR，不复制运行日志。
+    validations:
+      required: true

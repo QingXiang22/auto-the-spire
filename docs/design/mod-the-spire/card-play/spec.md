@@ -1,6 +1,6 @@
 # 卡牌出牌核心（费用、牌区与起始 Strike／Defend）
 
-关联 CORE-AUTHOR-05／**DSL-CARD-PLAY-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在伤害之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在主清单维护。
+关联 CORE-AUTHOR-05／**DSL-CARD-PLAY-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在伤害之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 

@@ -1,6 +1,6 @@
 # 遗物与Power的通知和修正监听
 
-本契约对应DSL-EFFECT-LISTENERS-01，统一当前纯DSL包中已有遗物与Power行为。当前任务见[路线图](../../roadmap.md#近期队列)。不增加内容支持分母，不宣称正常Run或独立原版比较通过。
+本契约对应DSL-EFFECT-LISTENERS-01，统一当前纯DSL包中已有遗物与Power行为。当前任务见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。不增加内容支持分母，不宣称正常Run或独立原版比较通过。
 
 ## 职责与执行
 

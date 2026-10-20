@@ -1,6 +1,6 @@
 # ENV 实现约束与交付证据
 
-2026-10-20落点校准：本文完整验收要求继续有效。当前生产base为纯DSL／静态JSON，活动core基线以[核心契约](../contracts/core-engine-baseline.md)修订为准。旧C#工厂、ContentSource和旧suite运行证据只作迁移依据；正常Run尚未恢复，不能按历史“已交付”安排续跑。当前能力与排期见[路线图](../roadmap.md#近期队列)。
+2026-10-20落点校准：本文完整验收要求继续有效。当前生产base为纯DSL／静态JSON，活动core基线以[核心契约](../contracts/core-engine-baseline.md)修订为准。旧C#工厂、ContentSource和旧suite运行证据只作迁移依据；正常Run尚未恢复，不能按历史“已交付”安排续跑。当前能力与排期见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 2026-10-15 用户决定：采用 v0.109 随机规则，`reference/sts2-sim` 保持只读。正式工厂默认 `RandomLayoutId=sts2-v0.109-xxhash64@1`，原始字符串按 UTF-8 XxHash64 派生根及具名流，ulong 加法回绕；`old` 前缀仅对根 seed 使用旧 hash32。历史 hash32 配置由 `RunConfiguration.FrozenIronclad` 显式选择。该决定替代本文旧正常初始化包的参考重播种方案；历史受控机制 case 的既有授权范围保留。游戏内容源基线仍单独标识，本次不声称完整内容已升级至 v0.109。
 
@@ -9,7 +9,7 @@
 | 版本 / 日期 | v1.1；2026-10-05；core冻结，开发工厂部分交付；下游接入/完整环境仍未验收 |
 | 适用范围 | 当前ENV-00～06长任务；通用Engine、base正式内容、net公开出口、tools严格对拍；AI只做确需的契约兼容 |
 | 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](net-the-spire/protocol.md) |
-| 状态与派单 | 只在[路线图](../roadmap.md)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |
+| 状态与派单 | 只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |
 
 执行 ENV 任务时，用本文件核对架构约束与交付证据。主验收仍包括完整 Ironclad 中间里程碑、五角色全量环境与严格对拍；约束条目数量不能代替运行成果。
 
@@ -50,7 +50,7 @@
 
 ## 3. 同一个正式构建、同一条会话创建路径
 
-`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../tools/base-migration-baseline/README.md)，当前缺口及验收见[路线图](../roadmap.md#近期队列)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
+`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../tools/base-migration-baseline/README.md)，当前缺口及验收见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
 
 工厂负责构建正式RuleSet，并为给定GameSeed创建**配置完成、尚未Start**的独立Session：选择数值/随机Profile，派生Run/Player/内容流，在任何会消耗随机的开局程序之前布流。Host和BaseBackend调用同一工厂；启动由各控制入口调用一次，禁止工厂和ControlSession各Start一次。范围ID属于不可变构建配置，使用下列显式身份：
 

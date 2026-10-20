@@ -6,7 +6,7 @@
 
 > 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
 
-本规范定义 `mod-the-spire` 的规则包职责、扩展方式与组合边界，遵循[项目整体规范](../spec.md)。接手时，先在[路线图](../../roadmap.md)确认任务，再查相关章节。
+本规范定义 `mod-the-spire` 的规则包职责、扩展方式与组合边界，遵循[项目整体规范](../spec.md)。接手时，先在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)确认任务，再查相关章节。
 
 ## 1. 目标边界（2026-10-01）
 

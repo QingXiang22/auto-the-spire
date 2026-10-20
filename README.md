@@ -2,7 +2,7 @@
 
 auto-the-spire 的目标是为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》环境。当前 base 使用纯 DSL；正常单人开局和完整 Run 暂未恢复，不能用现有开发场景训练完整游戏。
 
-通用 Engine 编译并执行 DSL，`mod-the-spire/base-spire/` 仅保存 `.spire` 和静态 `.json`；net Host 加载同一规则包，发布观察和合法动作。简单内容使用模板，复杂内容在所属 DSL 模块拥有规则和私有状态。开发接手从[文档总入口](docs/README.md)和[路线图](docs/roadmap.md)开始。
+通用 Engine 编译并执行 DSL，`mod-the-spire/base-spire/` 仅保存 `.spire` 和静态 `.json`；net Host 加载同一规则包，发布观察和合法动作。简单内容使用模板，复杂内容在所属 DSL 模块拥有规则和私有状态。开发接手从[文档总入口](docs/README.md)和[任务入口](docs/roadmap.md)开始。
 
 ## 定位内容
 
@@ -21,7 +21,7 @@ dotnet run --project tools/base-spire-dev -- check
 dotnet run --project net-the-spire/Net.TheSpire.Tests
 ```
 
-当前包支持范围以[manifest](mod-the-spire/base-spire/package.json)为准。开发scope已覆盖出牌／攻击与伤害结果、费用／牌区、Power、部分遗物／药水／敌人、永久牌组、营火和开发事件；它的名字沿用首批遗物抽牌范围，不表示目前只有抽牌能力。当前支持、来源分母与剩余工作统一查[路线图](docs/roadmap.md#近期队列)，实际身份和验证见清单链接的交付记录。
+当前包支持范围以[manifest](mod-the-spire/base-spire/package.json)为准。开发scope已覆盖出牌／攻击与伤害结果、费用／牌区、Power、部分遗物／药水／敌人、永久牌组、营火和开发事件；它的名字沿用首批遗物抽牌范围，不表示目前只有抽牌能力。当前支持与来源分母以实际定义、来源夹具及 CI 为准；剩余工作从[任务入口](docs/roadmap.md#近期队列)进入 GitHub Issues，实际交付与验证查看关联 PR。
 
 显式Ironclad初态和原版随机算法／流布局已经接入；包含Neow的正常开局、完整前置随机消费、地图／Run／跨幕与独立比较仍未恢复。未支持scope明确拒绝，生产不回退旧C#规则。
 

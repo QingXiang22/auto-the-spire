@@ -392,4 +392,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[路线图](../../roadmap.md)。设计文档里的目标语言示例不自动属于当前可执行语法。
+其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。

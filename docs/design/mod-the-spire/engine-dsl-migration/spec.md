@@ -1,6 +1,6 @@
 # 纯 DSL base 包规格
 
-关联任务：**CORE-AUTHOR-05**。规格版本：0.1，2026-10-18。本文定义需求与验收；[设计](plan.md)定义目录和接口，[路线图](../../../roadmap.md)连接实现与检查。状态、认领及下一项工作只维护在[路线图](../../../roadmap.md#近期队列)。
+关联任务：**CORE-AUTHOR-05**。规格版本：0.1，2026-10-18。本文定义需求与验收；[设计](plan.md)定义目录和接口，[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)连接实现与检查。状态、认领及下一项工作只维护在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 ## 目标与决定来源
 

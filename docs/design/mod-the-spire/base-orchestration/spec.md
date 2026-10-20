@@ -22,7 +22,7 @@
 
 既有负责人探针复现：嵌套withCount读0而非外层1、块外引用接受；掉血计数换房仍1而非0；PrimalForce保留旧InstanceId。重放同实例触发MembershipConflict。必须用上述反例验证新模块的修复结果，不能改检查去接受旧错误。
 
-方法：[实施计划](plan.md)、[路线图](../../../roadmap.md)、[sim职责映射](../control-flow-modules.md)。
+方法：[实施计划](plan.md)、[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)、[sim职责映射](../control-flow-modules.md)。
 
 ## 作者契约修复范围
 

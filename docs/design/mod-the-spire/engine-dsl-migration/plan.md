@@ -1,6 +1,6 @@
 # 目录与迁移设计
 
-关联[规格](spec.md)。本设计回应DB-R01～R13；实现顺序及验证见[路线图](../../../roadmap.md)。本文定义长期目标目录，尚未迁移的规则文件不建立空占位；设计前工作区事实见，
+关联[规格](spec.md)。本设计回应DB-R01～R13；实现顺序及验证见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本文定义长期目标目录，尚未迁移的规则文件不建立空占位；设计前工作区事实见，
 
 纯包切换和完整内容模块已经交付；本文保留包约束及迁移时的设计推演，不作为最新缺陷清单。当前结构见[base 组织说明](../base-architecture.md)，后续跨领域重构统一读[内容与行为目标](../content-behavior-refactor-goals.md)。
 

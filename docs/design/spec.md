@@ -18,7 +18,7 @@
 
 可运行范围以 [base manifest](../../mod-the-spire/base-spire/package.json)及所审提交为准。当前开发 scope 提供部分战斗和内容机制，正常地图／Run、完整来源和独立比较尚待恢复。声明、加载、行为测试、独立比较和公开可用分别确认；实现数和测试数不能代替完整游戏能力。
 
-当前任务和暂停条件见 [路线图](../roadmap.md)。环境完整行为要求与最终矩阵集中在 [环境验收规格](environment-completion-and-differential-v1.md)，不在交接报告中维护。
+当前任务和暂停条件见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。环境完整行为要求与最终矩阵集中在 [环境验收规格](environment-completion-and-differential-v1.md)，不在交接报告中维护。
 
 ## 全项目要求
 

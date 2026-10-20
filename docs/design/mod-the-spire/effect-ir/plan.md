@@ -1,10 +1,10 @@
 # 逐效果语义实施设计
 
-依据[规格](spec.md)，由 Codex 单人串行实施。任务排期/认领只看[行为要求](../../environment-completion-and-differential-v1.md#env-t06)；此目录记录一个机制包的设计与执行清单。
+依据[规格](spec.md)保留逐效果迁移的设计与接口背景。当前派单、认领和状态只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)关联的工单维护；[行为要求](../../environment-completion-and-differential-v1.md#env-t06)定义验收，不承担派单。
 
 ## 技术上下文与约束检查
 
-C#/.NET 9，base 领域前端经 EnginePackageBuilder 生成冻结 engine/ir@0.3。只改 base 模型、前端、编译接口、规则包构建接入及必要检查/文档；core、源游戏、参考后端不改。继续共享现有工作区，保留奖励包已写入内容。没有 `.specify` 脚本、宪章或扩展钩子，采用本项目 docs/主清单及 AGENTS 作为规格驱动工作流的治理约束；不安装额外工具。
+以下描述纯 DSL 切换前的 C# 领域前端向同一 Engine IR 迁移时的设计依据，不是当前生产目录或新任务的修改清单。当前实现入口见[base 架构](../base-architecture.md)，具体改动边界、基线和独立 worktree 按执行工单确定。
 
 ## 设计决定
 

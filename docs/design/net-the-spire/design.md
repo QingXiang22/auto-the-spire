@@ -1,6 +1,6 @@
 # net-the-spire 架构设计
 
-2026-10-20阅读边界：下文早期手写Profile／base工厂和迁移建议保留设计过程。当前模拟Host加载纯DSL manifest，声明派生Profile已接通；实例单选／取消与Bool透传见[当前协议](protocol.md)。正常Run、有序多选和独立比较仍按[路线图](../../roadmap.md#近期队列)接续，不从旧“待实现”重新派已交付功能。
+2026-10-20阅读边界：下文早期手写Profile／base工厂和迁移建议保留设计过程。当前模拟Host加载纯DSL manifest，声明派生Profile已接通；实例单选／取消与Bool透传见[当前协议](protocol.md)。正常Run、有序多选和独立比较仍按[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)接续，不从旧“待实现”重新派已交付功能。
 
 本体适配器主要参考`reference/sts2-ai-mcp/README.md`，范围与职责见[第8节](#8-bmingsy本体适配器参考)。本体适配不作为模拟主线的前置依赖。
 

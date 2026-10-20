@@ -1,6 +1,6 @@
 # 项目文档
 
-开发流程、文档规则和临时产物管理统一见 [CONTRIBUTING](../CONTRIBUTING.md)。近期任务见 [路线图](roadmap.md)，产品目标见 [项目规格](design/spec.md)。版本与支持范围以包 manifest 和所审提交的 CI 为准。
+开发流程、文档规则和临时产物管理统一见 [CONTRIBUTING](../CONTRIBUTING.md)。近期任务见 [任务入口](roadmap.md)，产品目标见 [项目规格](design/spec.md)。版本与支持范围以包 manifest 和所审提交的 CI 为准。
 
 ## 开始开发
 
@@ -24,6 +24,6 @@
 | 游戏玩法与验收 | [base 规格](design/mod-the-spire/spec.md)、[环境验收](design/environment-completion-and-differential-v1.md)、[实现边界](design/environment-implementation-constraints.md) |
 | 共享领域操作 | [操作参考](development/base-spire/reference/operations.md)、[卡牌行为参考](development/base-spire/reference/card-behavior.md) |
 | 公开协议 | [net 规格](design/net-the-spire/spec.md)、[协议](design/net-the-spire/protocol.md) |
-| AI 后续工程 | [AI 规格](design/ai-the-spire/spec.md)、[策略契约](design/ai-the-spire/policy-contract.md)；实际启动按路线图 |
+| AI 后续工程 | [AI 规格](design/ai-the-spire/spec.md)、[策略契约](design/ai-the-spire/policy-contract.md)；实际启动按总任务中的恢复条件 |
 
 按读者需要维护教程、操作指南、参考和解释。历史改动查 Git／PR，运行结果查 CI；不再维护逐批审阅、交接、日志和任务表快照。

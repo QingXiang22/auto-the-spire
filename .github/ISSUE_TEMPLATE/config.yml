@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 总任务清单
+    url: https://github.com/QingXiang22/auto-the-spire/issues/28
+    about: 先查看已有子任务与工单，避免重复派发。

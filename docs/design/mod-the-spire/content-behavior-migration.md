@@ -1,6 +1,6 @@
 # 内容与行为迁移实施契约
 
-关联 [G01～G10 目标与验收](content-behavior-refactor-goals.md)，任务 BEHAVIOR-01。2026-10-19 用户明确要求开始迁移，Codex `/root` 负责。当前范围、切片及状态只维护在[路线图](../../roadmap.md#近期队列)；本文定义接口与验证，不复制任务状态。
+关联 [G01～G10 目标与验收](content-behavior-refactor-goals.md)，任务 BEHAVIOR-01。2026-10-19 用户明确要求开始迁移，Codex `/root` 负责。当前范围、切片及状态只维护在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；本文定义接口与验证，不复制任务状态。
 
 ## 出牌正文与上下文
 

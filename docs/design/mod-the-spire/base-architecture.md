@@ -22,4 +22,4 @@ flowchart LR
 
 当前已有统一出牌、牌区、永久牌／战斗副本、Power 定义生命周期和实例修正等可复用 DSL。准确入口与限制见[当前控制流程](control-flow-modules.md)和[操作参考](../../development/base-spire/reference/operations.md)。卡牌正文与纯基础伤害由所属模块的唯一分派绑定表达，攻击与结果各有独立身份，费用与附魔采用独立状态及复制通知。精确边界见[行为迁移契约](content-behavior-migration.md)。
 
-包 manifest 目前只开放开发 scope；显式 Ironclad 初态与开发战斗不代表包含 Neow、地图、事件往返和跨幕的正常 Run。旧 C# 与检查只在[迁移对照](../../../tools/base-migration-baseline/README.md)保存，生产与默认 Host 不回退。后续恢复与认领按[路线图](../../roadmap.md)执行。
+包 manifest 目前只开放开发 scope；显式 Ironclad 初态与开发战斗不代表包含 Neow、地图、事件往返和跨幕的正常 Run。旧 C# 与检查只在[迁移对照](../../../tools/base-migration-baseline/README.md)保存，生产与默认 Host 不回退。后续恢复与认领按[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)执行。

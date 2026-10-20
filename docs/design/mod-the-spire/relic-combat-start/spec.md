@@ -1,6 +1,6 @@
 # 战斗开始格挡遗物的 DSL 迁移
 
-关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[路线图](../../../roadmap.md#近期队列)维护。
+关联 CORE-AUTHOR-05／DSL-RELIC-START-01；主责 Codex `/root`。2026-10-18用户要求将已编写 skill 安装到 Codex 并实际迁移部分内容。本包基于 main/b9ce5a3，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)交付；状态只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。
 
 ## 已核实来源与范围
 
@@ -34,7 +34,7 @@ Player 的 combat 字段放 combat/schema，开始／结束过程与 BeforeComba
 
 ## 遗物机制索引
 
-按匹配版本的完整来源确定消费者。分组用于查找共享机制，当前排期见 [路线图](../../../roadmap.md)；实现数由 CI 生成。
+按匹配版本的完整来源确定消费者。分组用于查找共享机制，当前排期见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；实现数由 CI 生成。
 
 | 分组 | 消费者示例 |
 | --- | --- |

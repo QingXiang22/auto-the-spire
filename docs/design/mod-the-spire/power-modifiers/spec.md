@@ -1,6 +1,6 @@
 # 能力与伤害修正参与者
 
-关联 CORE-AUTHOR-05／**DSL-POWER-MODIFIERS-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在消耗之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在主清单维护。
+关联 CORE-AUTHOR-05／**DSL-POWER-MODIFIERS-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在消耗之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 
