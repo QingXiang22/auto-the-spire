@@ -2,7 +2,7 @@
 
 本文记录新版 DSL 约定和已迁移的卡牌语法。解析器和卡牌编译器现已支持新版文件头、花括号块、基础/升级版本及具名效果；Ironclad 卡牌和状态牌源码已采用该格式。敌人、Power、药水和整局配置仍使用旧语法。对照旧实现时请阅读 [旧语法参考](./dsl-usage-current.md)。
 
-本文是 STS 内容作者语言 0.0.1；[通用引擎设计](../../design/core-the-spire/generic-tabletop-engine-design.md)中的 schema/procedure/ComputeAsset 是另一份未实现的目标契约，不是本版已接受语法。领域关键字以后由游戏包兼容前端提供，不作为通用 core 内置规则。
+本文是 STS 内容作者语言 0.0.1；[通用引擎设计](../../design/core-the-spire/generic-tabletop-engine-design.md)中的 schema/procedure/ComputeAsset 是另一份未实现的目标约定，不是本版已接受语法。领域关键字以后由游戏包兼容前端提供，不作为通用 core 内置规则。
 
 | 状态 | 本版边界 |
 | --- | --- |
@@ -27,7 +27,7 @@ using namespace base-spire;
 
 ## 2. 统一使用花括号
 
-卡牌效果应由共享原语组合。普通选牌后的多个操作写在`chooseCard.onSelected`中，数量/资格/实例选择与升级、复制、移动分别表达；短写会展开为相同程序，不为一张卡新增C#执行分支。可运行过的组合片段和适用边界见[现行 DSL 开发手册](../../development/base-spire/README.md)与[原语契约](../../design/mod-the-spire/card-primitives/spec.md)。
+卡牌效果应由共享原语组合。普通选牌后的多个操作写在`chooseCard.onSelected`中，数量/资格/实例选择与升级、复制、移动分别表达；短写会展开为相同程序，不为一张卡新增C#执行分支。可运行过的组合片段和适用边界见[现行 DSL 开发手册](../../development/base-spire/README.md)与[原语约定](../../design/mod-the-spire/card-primitives/spec.md)。
 
 集合、配置、表达式和执行内容统一使用 `{}`，新版 DSL 不使用方括号集合。效果原语使用具名块：
 
@@ -94,7 +94,7 @@ play = {
 
 “攻击后施加易伤”与“施加易伤后攻击”保留各自的结果差异。集合的成员顺序也不能任意打乱，例如固定种子抽取时使用的卡池顺序。配置覆盖与执行结算是两个独立阶段。
 
-这些规则作用于一次内容声明内部的配置项和配置块。不同内容声明的同 ID 冲突及跨 mod 覆盖仍由内容注册/组合契约决定，不从字段覆盖规则推导。
+这些规则作用于一次内容声明内部的配置项和配置块。不同内容声明的同 ID 冲突及跨 mod 覆盖仍由内容注册/组合约定决定，不从字段覆盖规则推导。
 
 ### 编译结果与兼容性
 
@@ -214,7 +214,7 @@ card Bash {
 
 已支持的选择器：
 
-| 选择器 | 含义 | 对应目标契约 |
+| 选择器 | 含义 | 对应目标约定 |
 | --- | --- | --- |
 | `selectSelf = {}` | 自身 | 自身 |
 | `selectNone = {}` | 无目标 | 无目标 |
@@ -223,7 +223,7 @@ card Bash {
 | `selectAll = {}` | 所有敌人 | 全体对手 |
 | `selectRandom = {}` | 随机敌人 | 随机对手 |
 
-多个效果各自的目标用效果内的 `target = context.target` / `context.owner` 指定，与卡牌的目标契约相互独立。
+多个效果各自的目标用效果内的 `target = context.target` / `context.owner` 指定，与卡牌的目标约定相互独立。
 
 通用语法接受与base正式前端支持分开判断。base正式源已支持 `selectNone = {}`：真实空 `play = {}` 可以正常付款和收尾；无目标卡的执行程序（含嵌套分支）不得消费所选目标。能力牌的默认结果为None，由共享出牌收尾移出战斗牌区，不等同于exhaust，也不触发onExhaust。具体作者检查入口见[现行 DSL 开发手册](../../development/base-spire/README.md)。
 

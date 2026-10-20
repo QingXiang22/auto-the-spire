@@ -10,9 +10,9 @@ Git仅维护可复用、具有实际消费者的工程工具。一次性修复�
 | [differential](differential/README.md) | 保留原 suite 与明确的未支持报告；独立 DSL 适配尚未恢复 |
 | [base-spire-dev](base-spire-dev/README.md) | 纯 DSL 包加载、源／支持计数与当前机制行为检查 |
 | [contract-check](contract-check/check_contracts.py) | 协议/编码检查及AI当前导入的共享协议实现与fixtures |
-| [doc-check](doc-check/check_docs.py) | Git 文档链接、格式与需求映射检查 |
+| [doc-check](doc-check/README.md) | Git 文档链接、格式、需求映射与 Vale 术语检查 |
 | [dsl-generate](dsl-generate/generate-core.ps1) | ANTLR解析代码生成，供核心维护复现 |
-| [rng-oracle](rng-oracle/README.md) | 独立随机数向量与对拍依据 |
+| [rng-oracle](rng-oracle/README.md) | 独立随机数向量与差异测试依据 |
 | [source-manifest](source-manifest/README.md) | 本地原版建局与完整遗物清单的只读取证，不进入无源码CI |
 | [collect](collect/collect.py) | AI既有有界采样入口；保留工具不代表恢复训练 |
 

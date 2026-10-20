@@ -1,6 +1,6 @@
 # 总任务入口与产品里程碑
 
-当前产品目标是五角色完整单人环境及其公开接口。实际版本和可运行范围以 [base manifest](../mod-the-spire/base-spire/package.json)、[核心契约](contracts/core-engine-baseline.md)及当前提交的 CI 为准。开发场景已支持部分卡牌、Power、遗物和房间机制；正常地图／Run、完整奖励来源及独立参考比较尚待恢复。
+当前产品目标是五角色完整单人环境及其公开接口。实际版本和可运行范围以 [base manifest](../mod-the-spire/base-spire/package.json)、[核心约定](contracts/core-engine-baseline.md)及当前提交的 CI 为准。开发场景已支持部分卡牌、Power、遗物和房间机制；正常地图／Run、完整奖励来源及独立参考比较尚待恢复。
 
 当前任务统一从 [GitHub 总任务 #28](https://github.com/QingXiang22/auto-the-spire/issues/28)进入，通过原生 sub-issues 连接子任务和执行工单。优先级、负责人、依赖、进度及暂停条件只在 Issue 维护。本页保留稳定入口和产品阶段定义，不同步任务状态。
 

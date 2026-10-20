@@ -23,7 +23,7 @@ python -X utf8 .agents/skills/base-spire-development/scripts/locate.py relics --
 | Weak的持续时间 | [weak-power.spire](../../../../mod-the-spire/base-spire/powers/shared/weak-power.spire)的Duration监听及定义标志 | 应用后的首次跳过与后续TickPowerDuration分别验证；不在公共回合过程新增Weak分支 |
 | SelfFormingClay每次受损的收益 | [遗物模块](../../../../mod-the-spire/base-spire/relics/shared/self-forming-clay.spire)的stacks参数 | 层数由遗物施加；延迟兑现和自移除归[Power模块](../../../../mod-the-spire/base-spire/powers/shared/self-forming-clay.spire) |
 | 单个Power的私有计数 | 所属模块内部entity与创建／重置／移除监听 | 不向公共Power或CardPlayRecord增加该内容专属字段 |
-| 多个内容共用操作的不变量 | 对应领域rules与契约 | 明确所有受影响消费者；只改内容文件不能修复共享语义错误 |
+| 多个内容共用操作的不变量 | 对应领域rules与约定 | 明确所有受影响消费者；只改内容文件不能修复共享语义错误 |
 
 例：[Strike](../../../../mod-the-spire/base-spire/cards/ironclad/strike-ironclad.spire)只在CardDefinition中保存6／9两个基础值，StrikeDamage只配置definition和hits。将普通值改为12时，普通实例与实际基础伤害应同步变成12；升级仍取9。正式原版数值应以匹配版本来源为准，实验值留在隔离副本。
 
@@ -47,10 +47,10 @@ dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-on
 
 正式数值改变后，同步更新对应的显式行为预期；不能原样运行旧数值断言再把失败解释为工具不通用。CLAY组中的数值实验自行创建副本，将3改为4并检查实际层数和格挡；它不会把正式遗物改成4。
 
-新增判别应区分本次可能出错的行为，例如普通／升级、层数归零、移除、两个实例或嵌套出牌。定向组不生成全包覆盖报告；批次收尾再按[验证指南](verify-and-debug.md)生成完整证据。仅修改内容数值时，无需重写项目级设计或逐次运行全部Engine／公开路径检查。
+新增判别应区分本次可能出错的行为，例如普通／升级、层数归零、移除、两个实例或嵌套出牌。定向组不生成全包覆盖报告；批次收尾再按[验证指南](verify-and-debug.md)生成完整验证记录。仅修改内容数值时，无需重写项目级设计或逐次运行全部Engine／公开路径检查。
 
 ## 4. 核对修改范围
 
-保持身份和来源不变时，修改一个公式通常只涉及所属玩法文件及对应判别；不需要重新登记index或公开ID。若必须同时修改多个内容调用方、公共schema和共享生命周期，先确认是在补真实共享能力，还是把该内容的规则放错了位置。
+保持标识和来源不变时，修改一个公式通常只涉及所属玩法文件及对应判别；不需要重新登记index或公开ID。若必须同时修改多个内容调用方、公共schema和共享生命周期，先确认是在补真实共享能力，还是把该内容的规则放错了位置。
 
 PR 说明实际改动和限制；共用接口变化才更新接口参考。任务状态更新路线图或对应 PR。

@@ -8,7 +8,7 @@
 
 | 参数 | 类型／默认 | 行为 |
 | --- | --- | --- |
-| definition | String(64)，必填 | 精确查找身份；同次启动重复登记失败 |
+| definition | String(64)，必填 | 精确查找标识；同次启动重复登记失败 |
 | allowNegative | Bool，false | 是否保留负层数；零层数始终移除 |
 | debuff | Bool，false | 玩家新实例设置SkipTick；TickPowerDuration首次调用只清标志。不是自动注册衰减，也不是完整PowerType枚举 |
 | singleStack | Bool，false | 再施加时本次增量先归0，再经过ModifyPowerStacks；首次创建仍使用stacks。保留当前Corruption／Hellraiser开发行为，不等同于完整原版Single策略 |

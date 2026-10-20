@@ -1,6 +1,6 @@
 # 卡牌行为、攻击与实例操作参考
 
-文档类型：参考（Reference）。适用于 base `0.7.0-dsl.40` 的单玩家开发 scope。来源顺序、状态归属和限制见[迁移契约](../../../design/mod-the-spire/content-behavior-migration.md)；通用语法见[封闭键分派](../../../dsl/core/0.3/authoring-reference.md#封闭键分派)。这些操作不开放正常 Run scope。
+文档类型：参考（Reference）。适用于 base `0.7.0-dsl.40` 的单玩家开发 scope。来源顺序、状态归属和限制见[迁移约定](../../../design/mod-the-spire/content-behavior-migration.md)；通用语法见[封闭键分派](../../../dsl/core/0.3/authoring-reference.md#封闭键分派)。这些操作不开放正常 Run scope。
 
 ## 定义正文与纯值
 
@@ -26,7 +26,7 @@
 | `CardAttack` | 与 CreateCardAttack 同参，无返回；创建并执行一个命令。多段只调用一次，不能用多次调用代替一个多段攻击 |
 | `PreviewPoweredCardDamage` | owner: Ref(Player)、card: Ref(Card)、target: Binding → Int，pure；和执行共用 CalculatePoweredCardDamage，无临时实体或计数消耗 |
 | `DamageEnemyFromPlayer` | owner: Ref(Player)、target: Ref(Enemy)、amount: Int(0..999999)；非攻击直接伤害，明确玩家攻击者，card／play保持none |
-| `DamageAllEnemiesFromPlayer` | owner、amount；创建独立DamageBatch，冻结存活目标、整批提交、结果通知、死亡通知；不发Before／AfterAttack，嵌套回调不能提前结算胜利 |
+| `DamageAllEnemiesFromPlayer` | owner、amount；创建独立DamageBatch，固定存活目标、整批提交、结果通知、死亡通知；不发Before／AfterAttack，嵌套回调不能提前结算胜利 |
 
 DamageResult 保存请求／最终伤害、Blocked、实际 HP 损失 Unblocked、Overkill、BlockBroken、FullyBlocked、Killed，以及 Batch／Attack／hit／card／play／攻击者／受击者引用。直接群伤Batch与Attack分开；DamageDepth、AttackDepth、PlayDepth共同约束外层胜利提交。`DamageResolved(result)` 发布每个结果；`PlayerDamaged(owner,result)` 用于玩家存活后的受伤消费者。直接 `LosePlayerHp` 不自动获取当前卡来源；卡效果使用 `LosePlayerHpFromCard(owner,card,play,amount)`。
 
@@ -44,7 +44,7 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 | `ExhaustCombatCard` | owner、card；移动后依次发 CardMoved、CardExhausted；拒绝永久牌、已耗尽和离场牌 |
 | `CardHasKeyword` | card、keyword: String(16) → Bool，pure；innate／exhaust 的基础事实加 ModifyCardKeyword 修正，retain／ethereal／unplayable／eternal 可由内容提供 |
 | `CardPlayAllowed` | owner、card、auto: Bool → Bool，pure；共享已定义／拥有者／Unplayable／ShouldPlayCard 门禁；手动另验证手牌、回合、能量和目标 |
-| `FinishTurnHand` | owner；冻结 Ethereal 批次，处理消耗，再 BeforeHandFlush、留手筛选、整批移动及 AfterHandFlush。新抽入牌不追加到旧 Ethereal 批次 |
+| `FinishTurnHand` | owner；固定 Ethereal 批次，处理消耗，再 BeforeHandFlush、留手筛选、整批移动及 AfterHandFlush。新抽入牌不追加到旧 Ethereal 批次 |
 | `AutoPlayFromDrawPile` | owner、play: Binding、count: Int、forceExhaust: Bool；先预取并移出整个批次，再逐张共用自动出牌流程；嵌套批次独立 |
 
 上述牌区仍为单玩家全局集合。带独有回合末手牌效果、完整多选／取消策略和所有变换政策未由本表一并承诺。

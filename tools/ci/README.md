@@ -1,6 +1,6 @@
 # core、纯 DSL base、net 与迁移检查
 
-本页给出 [GitHub Actions](../../.github/workflows/core-base.yml) 的检查入口。需要根 `global.json` 指定的 .NET SDK、Python 3.12 和 Git，在仓库根目录执行。默认 Release，可用 `--configuration Debug`。
+本页给出 [GitHub Actions](../../.github/workflows/core-base.yml) 的检查入口。在仓库根目录执行，需要 Python 3.12 和 Git；运行时检查另需根 `global.json` 指定的 .NET SDK，文档组另需 [Vale 3.24.0](../doc-check/README.md)。默认 Release，可用 `--configuration Debug`。
 
 功能分支由PR的创建／更新触发五组检查，main在push后验证，另保留手动触发；同一功能分支提交不再同时运行push和PR两套矩阵。尚未创建PR时，分支push不会自动运行本工作流。
 
@@ -17,8 +17,8 @@ python tools/ci/check.py docs
 | core | 构建并执行通用 Engine 检查，包括同包文件组合 | 不等于原版玩法验收 |
 | base | 通用加载并启动纯 DSL 包、执行当前机制行为、核对 DSL 遗物及卡牌执行结果 | 开发 scope；铁甲战士卡牌检查要求源池 85 张单人铁甲战士完整且有实际执行结果，保留 87 项来源及两项多人排除 |
 | net | 通用 wire／text-rules 检查和纯 DSL 公开路径，包含真实 stdio 子进程 | 原正常 Run 的 snapshot／control／formal 检查尚未迁移 |
-| docs | 检查 Git 文档（含共享 AGENTS.md）的链接、锚点、JSON 示例、需求引用和差异格式 | 干净检出可运行，不读取本地原版源码或历史产物 |
-| migration | 构建依赖隔离、153 个固定版本的源代码组与 11 份原 suite 定义校验、原 regression 逐项报未支持 | 检查迁移契约，不执行独立原版比较 |
+| docs | 检查 Git 文档（含共享 AGENTS.md）的链接、锚点、JSON 示例、需求引用、Vale 项目术语和差异格式 | CI 安装固定版本 Vale 并校验 SHA256；检查不读取本地原版源码或历史产物 |
+| migration | 构建依赖隔离、153 个固定版本的源代码组与 11 份原 suite 定义校验、原 regression 逐项报未支持 | 检查迁移约定，不执行独立原版比较 |
 
 首次非零使当前组失败。原始日志、退出码及 `result.json` 写入 `.artifacts/ci/<组名>/`，Actions 上传各组 artifact，保留 14 天。base 的行为报告标记 `independent_verified: false`；迁移清单中的原检查均标记未执行。固定版本的文本 SHA256 采用 UTF-8 与 LF，跨检出换行保持一致。
 
@@ -39,7 +39,7 @@ python tools/ci/check_relic_coverage.py .artifacts/ci/base/behavior/package-beha
 
 当前这两条命令分别返回 3 和 1。原 regression 的 17 个 case 全部明确未支持，零执行；完整源遗物覆盖仍缺，不能以局部行为测试结果关闭完整验收。Actions 当前矩阵显式采用 `migration`，没有以 `continue-on-error` 吞掉原差异测试失败。
 
-旧 C# Slice、作者探针、Net 游戏专用组与独立适配器保留在[迁移对照](../base-migration-baseline/README.md)。逐组源身份、原场景名和恢复去向见[CI 迁移数据](fixtures/legacy-dsl-checks.json)。本次用户授权直接切换及功能回退，不代表原判断意图消失。
+旧 C# Slice、作者探针、Net 游戏专用组与独立适配器保留在[迁移对照](../base-migration-baseline/README.md)。逐组源标识、原场景名和恢复去向见[CI 迁移数据](fixtures/legacy-dsl-checks.json)。本次用户授权直接切换及功能回退，不代表原判断意图消失。
 
 ## 其他检查
 

@@ -12,17 +12,17 @@
 
 ## 行为要求与设计
 
-| ID | 契约 | 判别 |
+| ID | 约定 | 判别 |
 | --- | --- | --- |
 | EN01 | 玩家回合结束后依次弃手牌、发 AfterTurnEnded、跑敌方阶段（每个可命中敌人一次）、发 AfterEnemyTurnEnded，最后关闭回合门 | 敌人已死亡时跳过；结束后仍可开下一回合 |
 | EN02 | 敌方攻击按源顺序结算：攻击者 Strength 加性、攻击者 Weak ×0.75、防守方 Vulnerable ×1.5，整数向下取整，再格挡→生命 | 7 强度的 goop 打 11；1 层 Weak 的 4 点打 3；有 10 格挡时只掉 4 点格挡里的 4 并与剩余格挡共存 |
 | EN03 | 敌人内容模板按 DefinitionId 订阅 EnemyTurnStarted 并维护自己的 MoveIndex／Intent | 三个招位按源顺序轮转，Intent 随下一招更新 |
 | EN04 | debuff 减层发生在敌方阶段结束后 | Bash 施加 2 层 Vulnerable，结束玩家回合后变 1 层 |
-| EN05 | 内容文件仅 use 模板参数；敌人目录 121 源分母不变，只新增一个 definition | catalog 只改 FuzzyWurmCrawler 一行，其余保持 unreviewed |
+| EN05 | 内容文件仅 use 模板参数；敌人目录 121 来源条目总数不变，只新增一个 definition | catalog 只改 FuzzyWurmCrawler 一行，其余保持 unreviewed |
 
 ## 实施与验证顺序
 
 1. 先加敌方阶段与 `DamagePlayerPowered`，确认无敌人时回合流程不变。
 2. 再加敌人字段、内容模板与目录／公开元数据。
-3. 在包外补轮转、修正、减层时点与目录分母检查，并通过真实 stdio 验证公开 HP 与意图。
+3. 在包外补轮转、修正、减层时点与目录条目总数检查，并通过真实 stdio 验证公开 HP 与意图。
 4. 最后运行 solution 构建、包行为／覆盖、受影响 net 与文档检查。

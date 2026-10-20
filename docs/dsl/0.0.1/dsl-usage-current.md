@@ -66,7 +66,7 @@ package training-mod {
 | `rarity` | 卡牌稀有度；稀有度本身不决定卡牌属于哪个奖励池 |
 | `cost` / `upgradedCost` | 基础费用和升级费用 |
 | `costKind = X` | X 费牌；X 费牌的 `cost` 必须为 0 |
-| `target` | 卡牌动作的目标契约，如 `enemy`、`self`、`allEnemies`、`none` |
+| `target` | 卡牌动作的目标约定，如 `enemy`、`self`、`allEnemies`、`none` |
 | `keywords` | 基础关键字，如 `[exhaust, ethereal]` |
 | `upgradedKeywords` / `removedUpgradedKeywords` | 升级时增删的关键字 |
 | `play` / `upgradedPlay` | 打出时效果；升级字段省略时沿用基础效果 |
@@ -234,7 +234,7 @@ package training-mod {
 
 ### 6.1 生成的状态机与运行时语义（BASE-02 批 1，2026-10-05）
 
-`behavior` 不是"序列 + 循环起点"的简写，而是**状态图**：它按冻结源码的
+`behavior` 不是"序列 + 循环起点"的简写，而是**状态图**：它按固定源码的
 `MonsterMoveStateMachine`（`MonsterMoves/MonsterMoveStateMachine/`）降级，状态、行动日志、冷却窗口与
 已选意图都放在 Engine 状态里，由**同一份 IR** 执行。已在内容里使用并被检查的形态：
 
@@ -260,7 +260,7 @@ package training-mod {
 - `cooldown=c`：该行动出现在日志**最后 c 个行动**里就权重 0（`RandomBranchState.cs:158-165`）。
 - `when=`：`metric(EnemyHp, LessThan, n)` / `metric(Turn, AtLeast, n)` 与 `all`/`any`/`not` 组合。
 
-随机与调用点（运行时契约）：
+随机与调用点（运行时约定）：
 
 - 流是 `monster_ai`（`RunRngType.MonsterAi`）；**每次落到随机分支恰好一次**抽取；行动→行动的固定转移与
   有序条件分支**不抽**。
@@ -271,11 +271,11 @@ package training-mod {
 - 加权选取（ENV-T01）：抽取合并成**一次** `SampleInt(monster_ai, 0, 2^53)`（53 位），再由纯计算资产
   `base-spire:SourceWeightedPick`（后端 `base-spire-source-float32@1`）按原版 `RandomBranchState.cs:115-128`
   做 `Sum` 的 double 累加器 → `NextFloat(max)` 的 double 乘法后一次转 float32 → 按声明顺序逐项 float32
-  减法、`<= 0f` 命中；门槛被挡住的候选按原版置 0 权重。候选权重可以是小数，`enemies.spire` 里两份带分数
+  减法、`<= 0f` 命中；验收条件被挡住的候选按原版置 0 权重。候选权重可以是小数，`enemies.spire` 里两份带分数
   权重的声明按源写成 `weight=0.4`/`0.6`（Fogmog，`Fogmog.cs:46-47`）与 `weight=0.083333336`
   （= `1f/12f`）/`0.75`（Two-Tailed Rat，`TwoTailedRat.cs:125-128`），整套算术与原版逐位一致。
   **注意**：这两只敌人**当前都未进包**（行动里用到 `summonEnemy` 等未实现原语，逐条记在未支持清单与其
-  遭遇排除列表里）；分数权重的运行时验证证据来自受控敌人文本（`SliceEnemyStateMachineChecks`），
+  遭遇排除列表里）；分数权重的运行时验证验证记录来自受控敌人文本（`SliceEnemyStateMachineChecks`），
   内容侧的权重字面量与未加载原因也由同一检查钉住。
 - 已支持：`addCards(<卡名>, count=, pile=hand|draw|discard, position=bottom|top|random, target=player)`
   与 `startingPowers = [power(<能力>, <层数>)]`（检查见 `SliceEnemyAddCardsChecks`）。
@@ -335,7 +335,7 @@ package training-mod {
 }
 ```
 
-正式 `SpirePotionSource` 使用具名块效果，并复用卡牌逐效果程序。元数据接受 `usage = combatOnly | anyTime | automatic`，使用效果当前只绑定战斗药水；非战斗/自动效果必须声明非空 `unsupportedUse = "原因"`，不能写空 `use`。ID 使用所属包命名空间；`source` 必填，完整池顺序与玩法支持分开处理。栏位/领取/丢弃及编译边界见[药水契约](../../design/mod-the-spire/potion-inventory/spec.md)和[现行 DSL 开发手册](../../development/base-spire/README.md)。冻结 `.author` 场景的旧步骤语法继续兼容。
+正式 `SpirePotionSource` 使用具名块效果，并复用卡牌逐效果程序。元数据接受 `usage = combatOnly | anyTime | automatic`，使用效果当前只绑定战斗药水；非战斗/自动效果必须声明非空 `unsupportedUse = "原因"`，不能写空 `use`。ID 使用所属包命名空间；`source` 必填，完整池顺序与玩法支持分开处理。栏位/领取/丢弃及编译边界见[药水约定](../../design/mod-the-spire/potion-inventory/spec.md)和[现行 DSL 开发手册](../../development/base-spire/README.md)。固定 `.author` 场景的旧步骤语法继续兼容。
 
 ## 8. 编译与错误定位
 

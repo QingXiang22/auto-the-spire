@@ -14,18 +14,18 @@
 
 后续包 **DSL-POWER-DURATION-01** 在此规格上补齐时长与 Power 牌离场：新增回合末时点 `AfterTurnEnded`（先弃手牌再派发），共享过程 `TickDownDebuffs` 把 debuff 角色能力减一层并在归零时移除；`Card.LeavesPlay` 对应 CardType.Power，结算后进入 `RemovedFromCombat`；并迁移 Inflame（1 费 Power 牌，+2／3 Strength）。源依据：VulnerablePower／WeakPower 在敌方回合结束时 `TickDownDuration`，Power 类牌由 `CardPileCmd.RemoveFromCombat` 离开战斗。
 
-不迁移：能力时长与回合末衰减（Vulnerable／Weak 在源里于敌方回合结束时减层）、能力移除与清零、能力类型与正负规则以外的语义、施加／移除反应、按能力的伤害来源区分、敌方攻击与 Weak 的实际作用。库存 260 条能力源身份保持 `definition` 为空：本包把修正角色写在应用它的卡牌内容里，Power 目录不新增定义文件。
+不迁移：能力时长与回合末衰减（Vulnerable／Weak 在源里于敌方回合结束时减层）、能力移除与清零、能力类型与正负规则以外的语义、施加／移除反应、按能力的伤害来源区分、敌方攻击与 Weak 的实际作用。库存 260 条能力源标识保持 `definition` 为空：本包把修正角色写在应用它的卡牌内容里，Power 目录不新增定义文件。
 
 ## 行为要求与设计
 
-| ID | 契约 | 判别 |
+| ID | 约定 | 判别 |
 | --- | --- | --- |
 | PW01 | Power 由 DefinitionId 与 Kind 描述，层数可正可负；同持有者同定义再次施加只累加，不新建实例 | 连续两次 Uppercut 后 Weak／Vulnerable 各只有一个实例且层数相加 |
 | PW02 | 卡牌攻击按“加 Strength→乘 Vulnerable→扣格挡→扣生命”结算，向下取整 | 6 点攻击对 2 层 Vulnerable 造成 9；Bash 自身先造成 8 再施加 Vulnerable |
 | PW03 | 修正只作用于卡牌攻击／格挡；遗物与 Power 的无加成数值不受影响 | Strength 3 时 MercuryHourglass 仍打 3；Dexterity 2 时 Anchor 仍给 10 |
 | PW04 | `ApplyAllEnemiesPowerEffect` 对每个 `Hp > 0` 的开发目标各施加一次 | Shockwave 让两个目标都拿到 3 层 |
 | PW05 | 能力层数在公开观察中可见，持有者与集合成员关系不公开 | 真实 stdio 轨迹能看到 `Power.Stacks`；Powers 为 not_published |
-| PW06 | 内容文件仅 use 模板参数，源资格、卡牌分母不变；Power 目录保持源身份不新增定义 | cards catalog 新增三个 definition，powers 仍 260 条 definition 为空 |
+| PW06 | 内容文件仅 use 模板参数，源资格、卡牌来源条目总数不变；Power 目录保持源标识不新增定义 | cards catalog 新增三个 definition，powers 仍 260 条 definition 为空 |
 
 ## 实施与验证顺序
 

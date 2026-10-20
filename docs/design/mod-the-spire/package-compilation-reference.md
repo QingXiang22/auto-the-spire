@@ -42,7 +42,7 @@
 
 HP、Power 实例与层数、动作状态和随机游标全部属于 Engine 状态；本能力不新增可变 C# 状态、不抽随机。固定 Byrdonis SWOOP→PECK→SWOOP 转移不抽 MonsterAi；正式出生仍使用原有 HP 流在普通81..84范围抽取。tough90及deadly攻击声明不表示 Run 已支持 Ascension>0。源依据：`sts2/src/Core/Models/Powers/TerritorialPower.cs` 的 participants.Contains(Owner) 及当前 Amount；`sts2/src/Core/Models/Monsters/Byrdonis.cs` 的出生与动作表。
 
-可区分的错误行为由 [Byrdonis机制检查](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceByrdonisChecks.cs) 验证：应用即加力量、首次回合末跳过、递减层数、固定使用出生层数、敌方末尾重复触发玩家，以及 PECK 力量只加到总伤害一次。预设状态的测试场景不是正常公开 Run 或独立参考对拍证据。
+可区分的错误行为由 [Byrdonis机制检查](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceByrdonisChecks.cs) 验证：应用即加力量、首次回合末跳过、递减层数、固定使用出生层数、敌方末尾重复触发玩家，以及 PECK 力量只加到总伤害一次。预设状态的测试场景不是正常公开 Run 或独立参考差异测试验证记录。
 
 ## 声明与接线顺序
 
@@ -60,4 +60,4 @@ HP、Power 实例与层数、动作状态和随机游标全部属于 Engine 状�
 
 实际修改步骤见[现行 DSL 开发手册](../../development/base-spire/README.md)，新房型接入见[当前开发资料](../../development/base-spire/how-to/run-and-rooms.md)。
 
-构建顺序、IR局部量名称及随机调用顺序变化可能影响规则身份和轨迹。此类修改按根验证门槛检查真实内容加载及行为；接口没变的纯拆分，应保留同配置的规则身份和公开轨迹。
+构建顺序、IR局部量名称及随机调用顺序变化可能影响规则标识和轨迹。此类修改按根验证验收条件检查真实内容加载及行为；接口没变的纯拆分，应保留同配置的规则标识和公开轨迹。

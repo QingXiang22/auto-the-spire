@@ -6,11 +6,11 @@
 
 ## 1. 确认来源和状态寿命
 
-按对应catalog查source_path、source_sha256、eligibility与definition。原版内容复用该行既有ID，不能因为文件名看起来应该带`-power`就另造身份。Relic和Power属于不同目录，SelfFormingClay在两者中的ID均为`base-spire:self-forming-clay`。
+按对应catalog查source_path、source_sha256、eligibility与definition。原版内容复用该行既有ID，不能因为文件名看起来应该带`-power`就另造标识。Relic和Power属于不同目录，SelfFormingClay在两者中的ID均为`base-spire:self-forming-clay`。
 
 把需要的触发、目标、数值、状态和结束条件写清。SelfFormingClay的遗物负责正未阻挡伤害后施加3层Power；Power负责回合开始的AfterBlockCleared阶段获得无加成格挡并移除。该事件包括首回合和保留格挡时，不能用“实际Block变成0”代替发布条件。
 
-若领域事件缺少必要来源或结果，应先补契约与共享发布点。现有PlayerHpLost只有owner，无法据此区分任意伤害来源。不要在内容里猜出缺失上下文。
+若领域事件缺少必要来源或结果，应先补约定与共享发布点。现有PlayerHpLost只有owner，无法据此区分任意伤害来源。不要在内容里猜出缺失上下文。
 
 ## 2. 在所属文件定义行为
 
@@ -40,7 +40,7 @@ Power在自己的模块内展开PowerDefinition，随后订阅所需通知或pur
 3. 修改／重置时按实际Power引用查询，不能只按DefinitionId查询所有同类实例。
 4. PowerRemoved通知中清理附属实体。此时Power已离开Powers，清理监听应使用通知载荷与type查询，不能要求它仍在Powers中。
 
-不要把专属计数放进公共Power／Player／CardPlayRecord，也不要使用Engine状态之外的C#字典。复制或战斗副本需要保留哪些私有状态，应另有明确契约；私有entity本身不自动定义复制语义；通过CardCloned／CardCombatCopied／CardRemoving等已支持通知接入，见[行为操作参考](../reference/card-behavior.md)。
+不要把专属计数放进公共Power／Player／CardPlayRecord，也不要使用Engine状态之外的C#字典。复制或战斗副本需要保留哪些私有状态，应另有明确约定；私有entity本身不自动定义复制语义；通过CardCloned／CardCombatCopied／CardRemoving等已支持通知接入，见[行为操作参考](../reference/card-behavior.md)。
 
 ## 4. 完成显式登记
 
@@ -50,7 +50,7 @@ Power在自己的模块内展开PowerDefinition，随后订阅所需通知或pur
 | --- | --- |
 | relics/shared/所属文件.spire；powers/shared/所属文件.spire | 各自承载定义与独有玩法 |
 | relics/index.spire；powers/index.spire | 各增加一次所属文件路径，不添加运行时目录扫描 |
-| relics/catalog.json；powers/catalog.json | 更新已有源行的definition及资格依据，保留来源hash和完整源分母 |
+| relics/catalog.json；powers/catalog.json | 更新已有源行的definition及资格依据，保留来源hash和完整来源条目总数 |
 | public/metadata.json | 在对应实体类型的content_ids中登记ID；Relic与Power分别登记 |
 
 如果引入新集合，还需在公开元数据中明确其用途；隐藏定义集合PowerLibrary已有not_published登记。模板内部私有entity使用type查询时不需要额外集合。实体／字段／动作通过已有投影和Host派生，无需在net写逐内容效果分支。
@@ -68,6 +68,6 @@ dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-on
 dotnet run --no-build --project tools/base-spire-dev -- check --content-model-only
 ```
 
-其他新内容需要自己的判别；CLAY通过不能替代它的行为证据。新增见证接入包外检查，批次最终使用完整check --report核对实际定义与执行见证。需要公开的新事实还应走真实Host轨迹；纯玩法复用不要求复制整套协议检查。
+其他新内容需要自己的判别；CLAY通过不能替代它的行为测试结果。新增执行结果接入包外检查，批次最终使用完整check --report核对实际定义与执行执行结果。需要公开的新事实还应走真实Host轨迹；纯玩法复用不要求复制整套协议检查。
 
 SelfFormingClay的保留首轮共享时序修正与修正后的7文件接入。修改范围可供后续开发核对，不表示所有新机制都无需修改共享领域操作，也不证明正常Run或独立原版比较完成。

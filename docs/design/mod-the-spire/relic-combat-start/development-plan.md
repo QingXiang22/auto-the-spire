@@ -1,12 +1,12 @@
 # 按共享机制开发遗物
 
-本计划用于把遗物开发拆成可验证的机制包，减少逐件重复实现。关联CORE-AUTHOR-05；当前任务、优先级、认领和下一成果只维护[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本页维护拆分方法、依赖和实施门槛，行为以[生命周期契约](content-lifecycle.md)及各领域契约为准。
+本计划用于把遗物开发拆成可验证的机制包，减少逐件重复实现。关联CORE-AUTHOR-05；当前任务、优先级、认领和下一成果只维护[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本页维护拆分方法、依赖和实施验收条件，行为以[生命周期约定](content-lifecycle.md)及各领域约定为准。
 
-执行节奏以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准：以下步骤描述证据要求，完整报告和广覆盖由批次最终CI统一执行；局部调试使用名称筛选，纯配置不重复更新无变化的接口／工具文档。已取得同一包摘要的结果直接引用，独立比较及正常来源未取得时继续显式待验证。
+执行节奏以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准：以下步骤描述验证记录要求，完整报告和广覆盖由批次最终CI统一执行；局部调试使用名称筛选，纯配置不重复更新无变化的接口／工具文档。已取得同一包摘要的结果直接引用，独立比较及正常来源未取得时继续显式待验证。
 
 ## 分组依据
 
-2026-10-18基于`7ff95ca`／PR #23，对catalog中257个未迁移且未排除的遗物提取源override方法和领域命令；扫描产物在`.artifacts/relic-group-plan/source-hook-inventory.json`。这是源码入口初查，不是257件完整语义复核或支持证明。来源297项、1项Deprecated排除及原ENV/W保留；分组中的名字是候选例子，不构成新的内容分母。
+2026-10-18基于`7ff95ca`／PR #23，对catalog中257个未迁移且未排除的遗物提取源override方法和领域命令；扫描产物在`.artifacts/relic-group-plan/source-hook-inventory.json`。这是源码入口初查，不是257件完整语义复核或支持证明。来源297项、1项Deprecated排除及原ENV/W保留；分组中的名字是候选例子，不构成新的内容范围。
 
 一个遗物选主要归属，其他效果记依赖。判断能否同批开发时，依次比较：
 
@@ -20,43 +20,43 @@
 
 以下保留G01的设计、步骤和验收依据；本轮不按其旧“待做”重新认领。当前包已交付三件消费者，下一遗物组及实际修改边界唯一见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
-Whetstone的AfterObtained从永久牌组筛选可升级Attack、StableShuffle(Niche)后Take(2)；WarPaint对应Skill；SandCastle为全部可升级牌Take(6)。三者完整方法已核对，可共用一个领域操作与一个拾取监听模板。FragrantMushroom先伤害后升级，YummyCookie／Pomander是玩家选牌，NeowsTalisman按Basic和标签取末张，均不归此切片。
+Whetstone的AfterObtained从永久牌组筛选可升级Attack、StableShuffle(Niche)后Take(2)；WarPaint对应Skill；SandCastle为全部可升级牌Take(6)。三者完整方法已核对，可共用一个领域操作与一个拾取监听模板。FragrantMushroom先伤害后升级，YummyCookie／Pomander是玩家选牌，NeowsTalisman按Basic和标签取末张，均不归此开发场景。
 
 | 步骤 | 交付与边界 | 依赖与验证 | 失败处置 |
 | --- | --- | --- | --- |
-| G01.1 | 先补生命周期契约，明确资格、Niche、排序、全量洗牌后截取、原实例升级与清理 | 源三类、ListExtensions和CardModel.CompareTo；复用SourceCardSortKey、UpgradeCard及永久牌组 | 源hash不符先解释；不得换随机流或缩小资格 |
+| G01.1 | 先补生命周期约定，明确资格、Niche、排序、全量洗牌后截取、原实例升级与清理 | 源三类、ListExtensions和CardModel.CompareTo；复用SourceCardSortKey、UpgradeCard及永久牌组 | 源hash不符先解释；不得换随机流或缩小资格 |
 | G01.2 | cards新增UpgradeRandomPermanentCards；relics新增一个参数化拾取模板，三个内容叶只use；包外增加固定源向量 | 引擎已有sampleInt、sort与实体状态足够表达；不改core、Host或参考 | 不用逐次samplePick替代整组Fisher-Yates；临时选择状态按调用隔离 |
-| G01.3 | 按真实RelicObtained获得并执行，维护catalog、公开内容和包身份 | 每件实际见证；同定义两实例、持有者隔离；Upgrade事件顺序、空／单／不足／超额资格、已升级排除、永久顺序不变及两战副本 | 未执行或缺公开证据保持待验证；不注册空效果 |
-| G01.4 | 串行执行受影响检查、整包报告与公开路径；同步手册、记录和PR | 固定seed及独立源向量比较选中实例与Niche计数；现有全铁甲与遗物见证门槛；Actions广覆盖 | 先定位首差再修，不刷seed；正常Run和独立整局未执行就不声称通过 |
+| G01.3 | 按真实RelicObtained获得并执行，维护catalog、公开内容和包标识 | 每件实际执行结果；同定义两实例、持有者隔离；Upgrade事件顺序、空／单／不足／超额资格、已升级排除、永久顺序不变及两战副本 | 未执行或缺公开执行结果保持待验证；不注册空效果 |
+| G01.4 | 串行执行受影响检查、整包报告与公开路径；同步手册、记录和PR | 固定seed及独立源向量比较选中实例与Niche计数；现有全铁甲与遗物执行结果验收条件；Actions广覆盖 | 先定位首差再修，不刷seed；正常Run和独立整局未执行就不声称通过 |
 
-G01实施前基线没有此拾取效果，目标是获得完成后永久实例升级并影响随后战斗；已有牌组顺序、支付、抽牌和X修正继续保留。兼容方式为新包版本，旧会话／回放不沿用新规则身份。
+G01实施前基线没有此拾取效果，目标是获得完成后永久实例升级并影响随后战斗；已有牌组顺序、支付、抽牌和X修正继续保留。兼容方式为新包版本，旧会话／回放不沿用新规则标识。
 
 ## G19：复用简单拾取资源
 
-FakeMango／LoomingFruit／NutritiousOyster完整AfterObtained仅调用GainMaxHp，参数分别为3／31／11；SignetRing／GoldenPearl仅调用GainGold，分别为999／150。组合已有ObtainMaxHpRelic与PickupResourceRelic，不新增资源效果种类。先把这两种模板的拾取通知绑定到本次有效实例，再加入五份参数配置及公开身份；不在主流程按遗物ID分派。源商店价格与图标属性不成为玩法分支，正常来源另按G12／G16接续。
+FakeMango／LoomingFruit／NutritiousOyster完整AfterObtained仅调用GainMaxHp，参数分别为3／31／11；SignetRing／GoldenPearl仅调用GainGold，分别为999／150。组合已有ObtainMaxHpRelic与PickupResourceRelic，不新增资源效果种类。先把这两种模板的拾取通知绑定到本次有效实例，再加入五份参数配置及公开标识；不在主流程按遗物ID分派。源商店价格与图标属性不成为玩法分支，正常来源另按G12／G16接续。
 
-合批验收沿用原拾取表驱动，并保留每个definition的实际数值见证；共用机制覆盖拾取早期移除／熔化、直接获得、其他持有者不拦截本玩家获得、同定义旧实例不重发及跨战不重放。实际公开路径从获得到最大生命／金币可见结果，再移除验证永久结果保留。发现源完整方法多出状态或其他生命周期时，将该条退出本小包并回主清单重排，不以空效果计支持。
+合批验收沿用原拾取表驱动，并保留每个definition的实际数值执行结果；共用机制覆盖拾取早期移除／熔化、直接获得、其他持有者不拦截本玩家获得、同定义旧实例不重发及跨战不重放。实际公开路径从获得到最大生命／金币可见结果，再移除验证永久结果保留。发现源完整方法多出状态或其他生命周期时，将该条退出本小包并回主清单重排，不以空效果计支持。
 
 ## G04：回合开始资源
 
-按同一个AfterSideTurnStarted站点分成三个子包：Candelabra／Chandelier／VeryHotCocoa配置指定回合回能模板，Cocoa保留源<=1条件；FakeHappyFlower配置跨战模5计数；Sai新增每回合无加成格挡模板。复用GainEnergy／GainUnpoweredBlock，不改主流程、core或Host。先明确源条件与计数寿命，再注册五份use配置、公开身份和实际行为见证。
+按同一个AfterSideTurnStarted站点分成三个子包：Candelabra／Chandelier／VeryHotCocoa配置指定回合回能模板，Cocoa保留源<=1条件；FakeHappyFlower配置跨战模5计数；Sai新增每回合无加成格挡模板。复用GainEnergy／GainUnpoweredBlock，不改主流程、core或Host。先明确源条件与计数寿命，再注册五份use配置、公开标识和实际行为执行结果。
 
-复用原回合检查中的移除／熔化及持有者隔离，用表驱动覆盖新增数值，机制判别补NoEnergyGain抑制但计数仍归零、跨战计数与重新获得重置、同定义不同实例、Sai与Anchor／HornCleat以及敏捷／脆弱的组合。公开stdio连续执行实际回合并跨战观察；定向检查后集成一次最终包行为与受影响公开检查，记录来源hash及包身份。新增共享入口的准确参数见[生命周期契约](content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
+复用原回合检查中的移除／熔化及持有者隔离，用表驱动覆盖新增数值，机制判别补NoEnergyGain抑制但计数仍归零、跨战计数与重新获得重置、同定义不同实例、Sai与Anchor／HornCleat以及敏捷／脆弱的组合。公开stdio连续执行实际回合并跨战观察；定向检查后集成一次最终包行为与受影响公开检查，记录来源hash及包标识。新增共享入口的准确参数见[生命周期约定](content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
 
 ## G05首子包：无状态攻击修正
 
 先交付MiniatureCannon／PaperPhrog／PaperKrane。Cannon在已有加法阶段按升级牌和攻击者／牌拥有者资格贡献3；两种纸偶由易伤／虚弱Power征询倍率，分别增加25／减少15个百分点，不能在总伤害阶段固定乘倍数。新增两个pure倍率站点，规则只在有效状态参与时调用；复用统一实例监听和既有定点取整。源完整方法、Power真实消费者及Cruelty都须一起核对，不能只扫描遗物override。
 
-Akabeko 在首回合施加 Vigor，Vigor 按 AttackCommand 而非整张牌消费；PenNib 需要 BeforeCardPlayed 计数与当前翻倍牌身份；MysticLighter 依赖附魔。按不同共享机制拆单，先核对已有定义和实际检查，不据本页重复开发。复用伤害检查夹具，验证加法与倍率阶段、状态资格、失效／持有者隔离、嵌套自动和重复，以及只读预览；完成情况和后续拆分只更新对应 Issue。
+Akabeko 在首回合施加 Vigor，Vigor 按 AttackCommand 而非整张牌消费；PenNib 需要 BeforeCardPlayed 计数与当前翻倍牌标识；MysticLighter 依赖附魔。按不同共享机制拆单，先核对已有定义和实际检查，不据本页重复开发。复用伤害测试辅助代码，验证加法与倍率阶段、状态资格、失效／持有者隔离、嵌套自动和重复，以及只读预览；完成情况和后续拆分只更新对应 Issue。
 
 ## 依赖和验收策略
 
-优先级、依赖和执行顺序在对应 GitHub 子任务及工单维护，本页不固定 G01→G19→G04 等历史派单顺序。同组不表示一次实现全部候选，每单交付一个可运行切片；尚未就绪的组不阻止其他已就绪工作。尚未确定主要机制的剩余条目归 G20 复核，不从完整来源中删去。
+优先级、依赖和执行顺序在对应 GitHub 子任务及工单维护，本页不固定 G01→G19→G04 等历史派单顺序。同组不表示一次实现全部候选，每单交付一个可运行开发场景；尚未就绪的组不阻止其他已就绪工作。尚未确定主要机制的剩余条目归 G20 复核，不从完整来源中删去。
 
 Egg组必须同时说明奖励生成后展示、商店创建、加入永久牌组前修正及NoHookUpgrades；不能只监听CardObtained便算完成。伤害组区分基础加法、乘法、最终失血及防止死亡；房间组需要真实房间上下文；角色、召唤和复活保持既有暂停，当前规划不授权恢复。
 
-每批共用机制判别，参数差异用表驱动；每个正式definition仍要有实际执行见证。独立固定源向量可证明局部随机顺序，不代替双方正常Run；公开stdio证明真实投影和决策，不能代替原版双侧。来源、定义、行为、独立比较和正常可达始终分列。
+每批共用机制判别，参数差异用表驱动；每个正式definition仍要有实际执行执行结果。独立固定源向量可证明局部随机顺序，不代替双方正常Run；公开stdio证明真实投影和决策，不能代替原版双侧。来源、定义、行为、独立比较和正常可达始终分列。
 
-出现以下证据时重排：源方法比预期多出一个效果阶段；需要未支持的Power／附着／资格；随机流或稳定排序不符；共享状态无法按实例或调用隔离；公开候选无法表达决策。只退回受影响子包补契约，继续其他就绪工作。每批最终记录实际接口、版本、命令、结果、未验证和下一动作，状态只更新对应 Issue。
+出现以下验证记录时重排：源方法比预期多出一个效果阶段；需要未支持的Power／附着／资格；随机流或稳定排序不符；共享状态无法按实例或调用隔离；公开候选无法表达决策。只退回受影响子包补约定，继续其他就绪工作。每批最终记录实际接口、版本、命令、结果、未验证和下一动作，状态只更新对应 Issue。
 
 随机升级与选牌升级分别拆单；Egg 的不同创建来源按实际消费者确认；拾取洗牌消费完整候选的 n−1 次随机，即使最终只升级两张。核对完整源方法，不把方法名聚类当成设计完成。

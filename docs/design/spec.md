@@ -6,10 +6,10 @@
 
 | 模块 | 职责 | 规格 |
 | --- | --- | --- |
-| core-the-spire | 通用类型化状态、DSL 编译、唯一执行器、选择续接、随机与观察原语 | [core 规格](core-the-spire/spec.md)、[活动契约](../contracts/core-engine-baseline.md) |
+| core-the-spire | 通用类型化状态、DSL 编译、唯一执行器、选择续接、随机与观察原语 | [core 规格](core-the-spire/spec.md)、[活动约定](../contracts/core-engine-baseline.md) |
 | mod-the-spire/base-spire | 用 DSL 定义原版玩法、内容、生命周期与 Run | [base 规格](mod-the-spire/spec.md)、[当前架构](mod-the-spire/base-architecture.md) |
 | net-the-spire | 加载相同规则包，透传公开观察及合法候选，维护协议与幂等控制 | [net 规格](net-the-spire/spec.md)、[协议](net-the-spire/protocol.md) |
-| ai-the-spire | 消费公开协议，采样、训练及评价；不读取隐藏状态 | [AI 规格](ai-the-spire/spec.md)、[策略契约](ai-the-spire/policy-contract.md) |
+| ai-the-spire | 消费公开协议，采样、训练及评价；不读取隐藏状态 | [AI 规格](ai-the-spire/spec.md)、[策略约定](ai-the-spire/policy-contract.md) |
 | tools | 构建、CI、定向检查、独立参考适配和来源核对 | [工程工具](../../tools/README.md) |
 
 普通规则作者使用 core/0.3 文本包；C# 构建器服务引擎扩展与宿主集成，两者编译为相同 IR。游戏内容和可变游戏状态分别由 base DSL 与 Engine 承接。规则包构建后不可变，Session 状态彼此独立。活动生产工程不回退旧 C# 玩法或另建结算器。
@@ -24,7 +24,7 @@
 
 ### W-01
 
-正式规则包通过同一 Host 完成 describe→catalog→start→出牌／用药→终局及离线重编码。药水定义、目标、容量、可用状态和长期牌组应正确发布。当前有效的损血、耗尽、成长变量等公开事实由提供方输出；AI 不从历史补齐缺失的当前事实。不同 Profile 的适用范围和身份须明确。
+正式规则包通过同一 Host 完成 describe→catalog→start→出牌／用药→终局及离线重编码。药水定义、目标、容量、可用状态和长期牌组应正确发布。当前有效的损血、耗尽、成长变量等公开事实由提供方输出；AI 不从历史补齐缺失的当前事实。不同 Profile 的适用范围和标识须明确。
 
 ### W-02
 
@@ -32,11 +32,11 @@
 
 ### W-03
 
-采样分布包含真实资源、目标和牌区知识差异。每个模型身份的 train／validation／final 划分隔离且非空，绑定场景来源、故障、截断、资源上限及采样成本。环境阶段先建立完整来源、可执行 suite 和 Release 成本；学习分布另行确定。
+采样分布包含真实资源、目标和牌区知识差异。每个模型标识的 train／validation／final 划分隔离且非空，绑定场景来源、故障、截断、资源上限及采样成本。环境阶段先建立完整来源、可执行 suite 和 Release 成本；学习分布另行确定。
 
 ### W-04
 
-学习工程包括模型、自动微分、Adam／PPO、版本化奖励、真实轨迹学习、同 seed 配对评价与区间、模型精确身份、参数量／内存／延迟／吞吐、保存加载及 resume。Trainer 身份刷新与新增路径失效须明确处理。后续框架优先 PyTorch；共享 Transformer 与正式实验当前暂缓，既有 NumPy 工程保留。框架替换本身不证明学习效果。
+学习工程包括模型、自动微分、Adam／PPO、版本化奖励、真实轨迹学习、同 seed 配对评价与区间、模型精确标识、参数量／内存／延迟／吞吐、保存加载及 resume。Trainer 标识刷新与新增路径失效须明确处理。后续框架优先 PyTorch；共享 Transformer 与正式实验当前暂缓，既有 NumPy 工程保留。框架替换本身不证明学习效果。
 
 ### W-05
 

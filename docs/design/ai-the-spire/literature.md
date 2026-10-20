@@ -2,7 +2,7 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态与版本 | REFERENCE；修订 2，2026-10-01；历史研究资料，不能作为实现或设计批准证据 |
+| 状态与版本 | REFERENCE；修订 2，2026-10-01；历史研究资料，不能作为实现或设计批准验证记录 |
 | 负责人及权威边界 | 项目维护者；当前要求以模块 spec/设计主稿为准，论文不证明项目效果 |
 
 检索日期：2026-09-26。本文服务于 [项目规范](../spec.md) 的后续设计讨论，不把论文中的结果直接当作《杀戮尖塔 2》的性能或胜率保证。
@@ -23,7 +23,7 @@
 | --- | --- | --- |
 | [Playing Various Strategies in Dominion with Deep Reinforcement Learning](https://ojs.aaai.org/index.php/AIIDE/article/view/27518)（Gerigk & Engels，2023） | 用多重集合表示牌组构筑游戏，并将 Soft Actor-Critic 适配到可变大小的动作集合。 | **最接近的游戏类比。** 值得研究它怎样编码卡牌与逐步选择动作；Dominion 的规则、目标和可观测性不同，不能外推胜率或训练成本。 |
 | [A Closer Look at Invalid Action Masking in Policy Gradient Algorithms](https://arxiv.org/abs/2006.14171)（Huang & Ontañón，2020） | 从理论与实验角度研究策略梯度中的非法动作屏蔽。 | `net-the-spire` 应明确提供合法动作集合，使模型只在当前决策点的有效动作中选择。屏蔽动作本身并不教会模型游戏规则。 |
-| [Deep Sets](https://papers.neurips.cc/paper_files/paper/2017/hash/f22e4747da1aa27e363d86d40ff442fe-Abstract.html)（Zaheer et al.，2017） | 建模顺序不影响结果的可变大小集合。 | 手牌以外的某些卡牌、遗物、敌人集合可用集合编码；有语义的顺序、实例身份和位置仍须单独表示。是否采用，要和更简单的固定特征基线实测比较。 |
+| [Deep Sets](https://papers.neurips.cc/paper_files/paper/2017/hash/f22e4747da1aa27e363d86d40ff442fe-Abstract.html)（Zaheer et al.，2017） | 建模顺序不影响结果的可变大小集合。 | 手牌以外的某些卡牌、遗物、敌人集合可用集合编码；有语义的顺序、实例标识和位置仍须单独表示。是否采用，要和更简单的固定特征基线实测比较。 |
 | [Deep Recurrent Q-Learning for Partially Observable MDPs](https://arxiv.org/abs/1507.06527)（Hausknecht & Stone，2015） | 研究在部分可观测任务中用循环网络整合过去信息。 | 当前设计要求公开历史的有效影响由当前观察变量和已知序列反映，AI 编码器不额外维护历史。该论文保留为其他部分可观测场景的研究依据，不是当前编码器实现循环记忆的要求。 |
 | [Policy Invariance Under Reward Transformations](https://ai.stanford.edu/~ang/papers/shaping-icml99.pdf)（Ng, Harada & Russell，1999） | 给出在其假设下保持最优策略不变的势函数奖励塑形条件。 | 加密集反馈前先检查它是否改变了通关目标；“伤害加分”“出牌加分”等任意奖励可能诱发错误偏好。理论条件须按我们的整局任务、终局和折扣方式核对。 |
 | [A Generalized Algorithm for Multi-Objective Reinforcement Learning and Policy Adaptation](https://proceedings.neurips.cc/paper_files/paper/2019/file/4a46fbfca3f1465a27b210f4bdfe6ab3-Paper.pdf)（Yang et al.，2019） | 用向量价值函数及偏好条件化学习多目标策略。 | 说明“记录奖励向量”和“训练可随权重切换的策略”是两个不同层级。首版可以先完整记录各结果，不必立刻实现多目标算法；若未来频繁改权重，再研究偏好条件化。 |
@@ -58,4 +58,4 @@
 
 2026-10-01 整体规划补充：本轮核对了 [PPO](https://arxiv.org/abs/1707.06347)、[Deep Sets](https://arxiv.org/abs/1703.06114)及[动作屏蔽](https://arxiv.org/abs/2006.14171)的论文入口。短任务 PPO 与共享集合/稀疏表示是[当前实验提案](training-design.md)，不宣称论文本身证明了本游戏的学习效果或资源成本。
 
-先读 Dominion、动作屏蔽、奖励塑形、多目标策略四篇，确定环境和奖励接口；再读 PPO、Retrace、经验重放，选择初始训练及部署期学习基线；最后读实验设计和统计评估，确定模型晋升门槛。Deep Sets、循环记忆、示范学习和 RUDDER 可以在对应基线暴露问题后深入。
+先读 Dominion、动作屏蔽、奖励塑形、多目标策略四篇，确定环境和奖励接口；再读 PPO、Retrace、经验重放，选择初始训练及部署期学习基线；最后读实验设计和统计评估，确定模型晋升验收条件。Deep Sets、循环记忆、示范学习和 RUDDER 可以在对应基线暴露问题后深入。

@@ -27,11 +27,11 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 | 新增拥有独有效果的内容模块 | [新增内容模块](../../../docs/development/base-spire/how-to/add-content-module.md) | 已有完整消费者及显式登记步骤 |
 | 改已有模板参数／新增同类内容 | [内容扩展](../../../docs/development/base-spire/how-to/extend-content.md) | 对应内容文件与模板；首用时看[配置教程](../../../docs/development/base-spire/tutorials/first-relic.md) |
 | 新共享触发／生命周期 | [机制迁移](../../../docs/development/base-spire/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/development/base-spire/reference/operations.md)；语法实践看[共享规则教程](../../../docs/development/base-spire/tutorials/shared-rule.md) |
-| 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/development/base-spire/how-to/cards-and-combat.md) | 目标源类／共享契约，不通读全部 Cards |
+| 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/development/base-spire/how-to/cards-and-combat.md) | 目标源类／共享约定，不通读全部 Cards |
 | Power、遗物、药水 | [Power 与物品](../../../docs/development/base-spire/how-to/powers-relics-potions.md) | 目标生命周期和一个真实调用方 |
-| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/development/base-spire/how-to/write-effect-listeners.md) | [领域契约](../../../docs/design/mod-the-spire/effect-listeners.md)与[通用签名](../../../docs/dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
-| 敌人、行动、遭遇 | [敌人与遭遇](../../../docs/development/base-spire/how-to/enemies-and-encounters.md) | 对应敌人／遭遇与随机契约 |
-| 角色、房间、地图、奖励、跨幕／终局 | [Run 与房间](../../../docs/development/base-spire/how-to/run-and-rooms.md) | 本次拥有状态的领域契约及必要消费者 |
+| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/development/base-spire/how-to/write-effect-listeners.md) | [领域约定](../../../docs/design/mod-the-spire/effect-listeners.md)与[通用签名](../../../docs/dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
+| 敌人、行动、遭遇 | [敌人与遭遇](../../../docs/development/base-spire/how-to/enemies-and-encounters.md) | 对应敌人／遭遇与随机约定 |
+| 角色、房间、地图、奖励、跨幕／终局 | [Run 与房间](../../../docs/development/base-spire/how-to/run-and-rooms.md) | 本次拥有状态的领域约定及必要消费者 |
 | 加载失败、公开结果或覆盖问题 | [验证与排障](../../../docs/development/base-spire/how-to/verify-and-debug.md) | 报错文件附近；包字段只查[格式参考](../../../docs/dsl/core/0.3/package-reference.md) |
 
 ## 有界定位，按需追到源
@@ -45,15 +45,15 @@ python -X utf8 .agents/skills/base-spire-development/scripts/locate.py powers --
 
 domain 支持 cards／powers／relics／potions／enemies／events／characters／encounters／run／pools。默认返回最多 5 项，最大 20，必须提供精确 `--id` 或非空 `--search`；返回 source_path／hash、资格、DSL definition 与真实支持 scope。run 查 Act 源条目；房间／地图没有 catalog 时按上表直接进指南，不能把找不到条目当作领域不存在。
 
-已有 definition 时，优先读该文件、所用模板和该操作的文档。未迁移时，先读该领域指南和契约，再按返回的 source_path 局部检索所需方法：
+已有 definition 时，优先读该文件、所用模板和该操作的文档。未迁移时，先读该领域指南和约定，再按返回的 source_path 局部检索所需方法：
 
 ```powershell
 rg -n -C 8 'AfterShuffle|Block' sts2/src/Core/Models/Relics/TheAbacus.cs
 ```
 
-上例仅用于确实需要核对 TheAbacus 来源时。它不要求每次配置修改都重读原版源。需要源码时追加 `--verify-source` 比较所选文件的原始字节 SHA256；缺源／不匹配返回 3，不自动更新证据。查询无匹配返回 1、格式／文件错误为 2、成功定位为 0；0 不是玩法已支持。`--package` 可指定练习副本 manifest。
+上例仅用于确实需要核对 TheAbacus 来源时。它不要求每次配置修改都重读原版源。需要源码时追加 `--verify-source` 比较所选文件的原始字节 SHA256；缺源／不匹配返回 3，不自动更新验证记录。查询无匹配返回 1、格式／文件错误为 2、成功定位为 0；0 不是玩法已支持。`--package` 可指定练习副本 manifest。
 
-若接口文档与实现不一致，只读声明或错误位置附近，记录差异并修文档／对应契约；若 hash 不符，先确定版本或换行差异。不要为寻找一个符号全文读取组包器、Host、所有源目录或所有旧测试。池成员和大快照仅在本次确实修改资格／顺序时读取。
+若接口文档与实现不一致，只读声明或错误位置附近，记录差异并修文档／对应约定；若 hash 不符，先确定版本或换行差异。不要为寻找一个符号全文读取组包器、Host、所有源目录或所有旧测试。池成员和大快照仅在本次确实修改资格／顺序时读取。
 
 ## 实施与验证
 
@@ -73,7 +73,7 @@ Codex 可调用 `$base-spire-development`。DSH 未验证自动发现 `.agents/s
 先读取 .agents/skills/base-spire-development/SKILL.md，并按任务只读对应手册。
 任务与认领：GitHub 执行工单链接和编号；本次内容／机制。
 允许修改：本包明确列出的目录或文件；其他文件只读。
-验收：本次明确的状态变化、边界、实际命令和证据位置。
+验收：本次明确的状态变化、边界、实际命令和验证结果位置。
 缺共享能力／源版本不符时记录具体缺口，不回退旧 C# 或缩小源范围。
 ```
 

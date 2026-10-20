@@ -77,7 +77,7 @@
 ## 验证与临时产物
 
 - 本地运行受影响的定向检查；PR CI 执行公共检查。完整游戏、与独立参考实现的比较及性能按对应功能和阶段验证。当前各组的实际范围见 [CI 说明](tools/ci/README.md)。
-- 文档检查在干净检出中运行，只读取 Git 纳管文件和待提交的新文件。运行 `python tools/doc-check/check_docs.py` 与 `git diff --check`。
+- 文档检查在干净检出中运行，只读取 Git 纳管文件和待提交的新文件。安装[指定版本的 Vale](tools/doc-check/README.md)后运行 `python tools/ci/check.py docs`，执行链接／格式、术语及差异格式检查。
 - 结果、日志、探针副本和生成覆盖报告写到 `.artifacts/<任务>/`；临时实验也可使用系统临时目录。任务结束后清理，本地排障材料最长保留 14 天，仍在调查的失败由当前任务说明原因。
 - CI 日志与报告使用 Actions artifact，保留 14 天。需要长期复现的缺陷应转为回归测试及最小复现数据；特殊发布要求的文件作为 release 资产管理。
 - 正式文档可以给出通用输出目录和复现命令，不得链接某次本地运行的 `.audit`、`.artifacts` 或 `artifacts` 文件。CI 结果在 PR 中查看，不将日志复制为文档或 ZIP。
