@@ -10,7 +10,7 @@
 
 敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
-当前图消费者是FuzzyWurmCrawler和TwigSlimeM，其他既有敌人仍使用原模板。开发生成使用源最小HP；正常出生随机、完整遭遇队列、意图伤害数值、条件节点、动态权重函数、强制迁移、死亡移除及正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+当前图消费者是FuzzyWurmCrawler和TwigSlimeM，Whistle 是共享图的强制行动控制消费者，其他既有敌人仍使用原模板。开发生成使用源最小HP；正常出生随机、完整遭遇队列、意图伤害数值、条件节点、动态权重函数、召唤／复活／逃离、死亡移除及正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
 
 ## 行为要求与设计
 
@@ -40,7 +40,9 @@
 
 定义位于[敌人schema](../../../../mod-the-spire/base-spire/enemies/schema.spire)，注册、校验、选招和历史位于[共享规则](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire)。启动时先登记图、再按源顺序登记节点和分支，最后检查初始节点、后继、重复定义／节点／分支及动作分派。定义表仅在启动时构造，逐实例状态由Engine保存；不存在C#敌人调度器。
 
-`EnemyMoveState`保存敌人、所属图、当前已选节点、Ready、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。初始招式即入历史，第一次固定首招不抽样。`ResetEnemyMoves`供生成入口调用，`BeforeCombatStart`重新初始化每个敌人的历史，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`使用同一初始化操作。
+`EnemyMoveState`保存敌人、所属图、当前已选节点、最近执行节点、Ready、Stunned、StunResume、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。初始招式即入历史，第一次固定首招不抽样。`ResetEnemyMoves`供生成入口调用，`BeforeCombatStart`重新初始化每个敌人的历史，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`使用同一初始化操作。
+
+Whistle 先完成卡牌攻击，再由 `StunEnemy` 把目标的下一次敌方行动变为一次无效果的 `STUNNED`，并保存源动作机规定的恢复节点。被击晕实例在敌方阶段消耗这次跳过，阶段结束后从最近一次实际执行招式的后继重新选招；未接入共享图的旧模板敌人保持原有开发范围。公开 `MoveId`／`Intent` 在跳过期间分别为 `STUNNED`／`stun`，恢复后重新指向保存的招式，过程不抽取随机数。
 
 随机节点根据实例历史计算有效权重：MaxRepeats=0为无限制，正值限制连续次数；Cooldown检查最近指定数量的已选招式；Once排除曾选过的目标。权重以源binary32位型保存，总权重按LINQ Sum(float)的顺序用double累加，最后转binary32。当前静态权重参数为Fixed六位小数，转换成binary32后执行；动态权重函数仍未支持。TwigSlimeM的两个真实分支权重均为1，整数参数2不会变成权重。
 
