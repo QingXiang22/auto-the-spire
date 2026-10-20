@@ -1,4 +1,4 @@
-"""Check migration boundaries and explicit unsupported comparison; this is not parity evidence."""
+"""Check migration boundaries, the migrated original case, and strict comparison failures."""
 from __future__ import annotations
 
 import argparse
@@ -63,24 +63,92 @@ def main() -> int:
             active = ROOT / row["active_definition"]
             if source_hash(active) != row["sha256"]:
                 raise ValueError(f"changed original suite denominator: {active}")
-        command = ["dotnet", "run", "--no-build", "--project", str(ROOT / "tools/differential"), "-c", args.configuration,
-                   "--", "test", "--suite", "regression", "--output", str(args.output / "regression")]
-        process = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        (args.output / "differential.log").write_text(process.stdout + process.stderr, encoding="utf-8")
-        if process.returncode != 3:
-            raise ValueError(f"unmigrated original suite must report exit 3, got {process.returncode}")
-        report = json.loads((args.output / "regression/result.json").read_text(encoding="utf-8"))
-        expected = json.loads((ROOT / "tools/differential/suites/regression.json").read_text(encoding="utf-8"))["expected_case_ids"]
-        if (report["expected_case_ids"] != expected or report["executed"] != 0 or report["independent_verified"] is not False
-                or [r["id"] for r in report["cases"]] != expected or any(r["status"] != "unsupported" for r in report["cases"])):
-            raise ValueError("unsupported report lost case identities or claims execution")
+        executable = ROOT / f"tools/differential/bin/{args.configuration}/net9.0/Differential.dll"
+
+        def run(name: str, arguments: list[str], expected_code: int, dll: Path = executable) -> dict | None:
+            folder = args.output / name
+            folder.mkdir(parents=True, exist_ok=True)
+            result = folder / "result.json"
+            result.unlink(missing_ok=True)
+            command = ["dotnet", str(dll), *arguments]
+            if arguments[0] == "test":
+                command += ["--output", str(folder)]
+            process = subprocess.run(command, cwd=ROOT, capture_output=True, text=True,
+                                     encoding="utf-8", errors="replace", timeout=120)
+            (folder / "command.log").write_text(process.stdout + process.stderr, encoding="utf-8")
+            if process.returncode != expected_code:
+                raise ValueError(f"{name}: expected exit {expected_code}, got {process.returncode}; see {folder / 'command.log'}")
+            return json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+
+        for row in record["suites"]:
+            definition = json.loads((ROOT / row["active_definition"]).read_text(encoding="utf-8"))
+            suite = definition["suite"]
+            report = run(suite, ["test", "--suite", suite], 3)
+            expected = definition["expected_case_ids"]
+            if (report["expected_case_ids"] != expected or report["independent_verified"] is not False
+                    or [r["id"] for r in report["cases"]] != expected or report["complete"] is not True):
+                raise ValueError(f"{suite}: original case identities or incomplete-suite failure lost")
+            if suite == "regression":
+                if report["executed"] != 1 or report["passed"] != 1 or report["cases"][0]["status"] != "passed":
+                    raise ValueError("strike-normal must actually execute independently and pass")
+                migrated = report["cases"][0]
+                if (migrated["left"]["backend"] != "dsl:base-spire" or migrated["right"]["backend"] != "reference:sts2-sim"
+                        or migrated["left"]["script_random_count"] != 0 or migrated["right"]["script_random_count"] != 0):
+                    raise ValueError("strike-normal backend or measured RNG changed")
+                remainder = report["cases"][1:]
+            else:
+                if report["executed"] != 0 or report["passed"] != 0:
+                    raise ValueError(f"{suite}: unmigrated suite claims execution")
+                remainder = report["cases"]
+            if any(r["status"] != "unsupported" for r in remainder):
+                raise ValueError(f"{suite}: unsupported original case status changed")
+
+        partial = run("strike-only", ["test", "--suite", "regression", "--case", "strike-normal"], 1)
+        if partial["complete"] or partial["independent_verified"] or partial["cases"][0]["status"] != "passed":
+            raise ValueError("selected case must pass without claiming the entire suite passed")
+        run("comparator-checks", ["self-test"], 0)
+        run("unknown-case", ["test", "--case", "not-registered"], 3)
+        original = json.loads((ROOT / "tools/differential/suites/regression.json").read_text(encoding="utf-8"))
+        for name in ("zero-cases", "missing-dimension", "duplicate-case", "unregistered-case", "reduced-suite", "wrong-terminal"):
+            mutated = json.loads(json.dumps(original))
+            if name == "zero-cases":
+                mutated["expected_case_ids"] = []; mutated["cases"] = []
+            elif name == "missing-dimension":
+                mutated["cases"][0]["required_dimensions"].remove("pile-order")
+            elif name == "duplicate-case":
+                mutated["cases"].append(mutated["cases"][0])
+            elif name == "unregistered-case":
+                mutated["expected_case_ids"].pop()
+            elif name == "reduced-suite":
+                mutated["expected_case_ids"] = ["strike-normal"]; mutated["cases"] = mutated["cases"][:1]
+            else:
+                mutated["cases"][0]["expected_terminal"] = "victory"
+            source = args.output / f"{name}.json"
+            source.write_text(json.dumps(mutated), encoding="utf-8")
+            report = run(name, ["test", "--suite-file", str(source), "--case", "strike-normal"], 3)
+            if report and (report["independent_verified"] or report["passed"]):
+                raise ValueError(f"{name}: invalid input counted as passed")
+
+        # Separate build outputs verify missing-adapter failure without altering the production checkout or default build.
+        isolated = args.output / "without-reference"
+        build = subprocess.run(["dotnet", "build", str(ROOT / "tools/differential/Differential.csproj"), "-c", args.configuration,
+                                "-p:UseReference=false", "--artifacts-path", str(isolated)], cwd=ROOT,
+                               capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+        (args.output / "without-reference-build.log").write_text(build.stdout + build.stderr, encoding="utf-8")
+        if build.returncode:
+            raise ValueError("missing-reference build failed")
+        fallback = isolated / "bin/Differential" / args.configuration.lower() / "Differential.dll"
+        missing = run("missing-reference", ["test", "--case", "strike-normal"], 3, fallback)
+        if missing["executed"] or missing["passed"] or "unsupported_reference_adapter" not in missing["cases"][0]["reason"]:
+            raise ValueError("missing reference adapter was not rejected explicitly")
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
-                  "original_suites": len(record["suites"]), "original_regression_exit": process.returncode,
-                  "original_regression_executed": 0, "independent_verified": False}
+                  "original_suites": len(record["suites"]), "original_regression_exit": 3,
+                  "original_regression_executed": 1, "original_regression_passed": 1,
+                  "strict_failure_checks": True, "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0
-    except (OSError, ValueError, KeyError, ET.ParseError) as error:
+    except (OSError, ValueError, KeyError, ET.ParseError, subprocess.TimeoutExpired) as error:
         print(f"migration contract failure: {error}")
         return 1
 

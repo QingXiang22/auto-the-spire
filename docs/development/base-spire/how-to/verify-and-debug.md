@@ -58,4 +58,4 @@ git diff --check
 
 记录实际命令／退出码、代码版本、包摘要与规则标识、scope、seed、源定位与行为前后值。区分静态源存在、实际 DSL 定义、已运行行为、独立比较和正常 Run。长日志留 artifacts，主清单只维护当前事项及验证记录链接。
 
-原 differential regression 当前仍逐项未支持并返回 3，完整源遗物覆盖也未满足。migration 检查验证保留与失败语义，不是原版差异测试成功。相关历史判断意图见[CI 迁移数据](../../../../tools/ci/fixtures/legacy-dsl-checks.json)。
+原 differential regression 的 strike-normal 已使用生产 DSL 与锁定独立参考执行；其余 16 个用例仍未支持，完整测试集返回 3。migration 检查验证该受控机制比较与严格失败语义，不代表正常 Run 或完整原版验收；完整源遗物覆盖也未满足。运行方式及比较范围见[差异测试入口](../../../../tools/differential/README.md)，原检查去向见[CI 迁移数据](../../../../tools/ci/fixtures/legacy-dsl-checks.json)。
