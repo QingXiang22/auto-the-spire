@@ -1,12 +1,10 @@
 # 项目文档总入口
 
-2026-10-19 架构评估从[base 内容与行为重构目标](design/mod-the-spire/content-behavior-refactor-goals.md)进入，覆盖卡牌正文、出牌、攻击／伤害、费用、牌区、复制／附着、Power 和 Run。该文档描述后续目标，本轮没有启动生产重构。当前结构见[base 组织说明](design/mod-the-spire/base-architecture.md)，历史证据按[review 阅读入口](review/README.md)查找，过时对比不再作为接手前置。
+先从[主清单当前交付](review/tofix/README.md#当前交付)核对实际基线、认领和就绪任务；按[领域分类](review/tofix/README.md#当前任务)查看完整范围。2026-10-20已按当前DSL实现校准入口和派单，依据见[本次校准记录](review/records/2026-10-20/project-baseline-and-task-realignment-2026-10-20.md)。旧C#交付、旧会话和历史“下一步”不作为当前能力或派单。
 
-2026-10-18当前架构工作从[纯DSL base规格](design/mod-the-spire/engine-dsl-migration/spec.md)、[目录与迁移设计](design/mod-the-spire/engine-dsl-migration/plan.md)和[实施任务](design/mod-the-spire/engine-dsl-migration/tasks.md)进入。用户已确认直接切换并接受未迁移玩法暂时报未支持；默认 Host 与开发工具已切换到纯 DSL 遗物抽牌开发包；正常 Run 与其他未迁移玩法明确未支持。实际范围和检查见[首批交付记录](review/records/2026-10-18/base-dsl-native-cutover-2026-10-18.md)，状态仍见主清单。
+理解当前架构读[base组织说明](design/mod-the-spire/base-architecture.md)和[当前控制流程](design/mod-the-spire/control-flow-modules.md)；查接口读[行为操作参考](development/base-spire/reference/card-behavior.md)。[重构目标](design/mod-the-spire/content-behavior-refactor-goals.md)定义完整目标与判别，[迁移契约](design/mod-the-spire/content-behavior-migration.md)说明已实施机制和边界；是否完成、剩余哪些包仍只查主清单。
 
-审阅剩余工作时，打开[领域总览](review/tofix/README.md#当前任务)了解各类范围；review最近一批请直接看[当前交付](review/tofix/README.md#当前交付)、[推进顺序](review/tofix/README.md#推进顺序)和[每批集成](review/tofix/README.md#每批集成与重排条件)。[归属与依赖](review/tofix/README.md#归属与依赖)指定主要归属，原ENV编号保留为合同与证据索引。当前状态与排期只在主清单维护。
-
-导航整理：2026-10-17。任务范围、core冻结和AI实验安排以主清单及相关契约为准。
+[纯DSL规格](design/mod-the-spire/engine-dsl-migration/spec.md)、[目录设计](design/mod-the-spire/engine-dsl-migration/plan.md)保留切换决定与约束，后续恢复的方法从[base实施编排](design/mod-the-spire/base-spire-implementation-plan.md)进入。历史验证按[review阅读入口](review/README.md)查证，无需通读过时对比。
 
 构建与持续集成从[core/base与对拍检查](../tools/ci/README.md)进入；原版源码检查留在本地。
 
@@ -32,7 +30,7 @@
 | 接手角色 | 先读哪里 | 用来确认什么 |
 | --- | --- | --- |
 | 负责人 | [管理约定](design/post-core-agent-assignments.md)、清单链接的最近复核 | 当前决策、证据缺口、跨线边界及验收权限 |
-| A：base 规则与流程 | [A 提示词](design/agent-goals.md#3-abase-spire-编码-agent)、[base 工作包](design/mod-the-spire/base-spire-implementation-plan.md#3-当前可直接派给-a-的接续包2026-10-06) | 本包文件落点、源语义和行为验收 |
+| A：base 规则与流程 | [A 提示词](design/agent-goals.md#3-abase-spire-编码-agent)、[base 工作包](design/mod-the-spire/base-spire-implementation-plan.md) | 本包文件落点、源语义和行为验收 |
 | B：严格对拍 | [B 提示词](design/agent-goals.md#4-b严格对拍与结算-agent)、[B 合同](design/post-core-agent-assignments.md#4-bdiff-0102日常严格对拍) | 双侧独立执行、严格失败和证据结算 |
 | C：公开出口 | [C 提示词](design/agent-goals.md#5-cnet-the-spire-编码-agent)、[C 合同](design/post-core-agent-assignments.md#5-cnet-0102完整公开出口) | 同工厂接入、协议兼容及公开全程 |
 | D/E：客户端或指定 mod | [D 提示词](design/agent-goals.md#6-d真实客户端核对-agent后排)、[E 提示词](design/agent-goals.md#7-e指定-mod-编码-agent后排) | 独立派单的版本、范围与取证条件 |
@@ -59,12 +57,11 @@
 | 需要完成什么 | 指南 |
 | --- | --- |
 | 把机制写成可维护的规则集/规则库 | [编写可维护规则集](design/mod-the-spire/maintainable-rule-sets.md) |
-| 在已有规则上组合卡牌、验证命名空间与引用 | [modding指南](design/mod-the-spire/modding-guide.md) |
+| 修改已有内容、添加定义或独有模块 | [修改内容](development/base-spire/how-to/edit-content.md)、[扩展内容](development/base-spire/how-to/extend-content.md)、[独有模块](development/base-spire/how-to/add-content-module.md) |
 | 接续base任务、定位修改入口并快速验证 | [base开发指南](design/mod-the-spire/base-development-guide.md) |
-| 查询公共规则包构建模块、符号分组及声明/接入顺序 | [编译模块参考](design/mod-the-spire/package-compilation-reference.md) |
-| 实现地图房间、绑定长期资源并关闭访问 | [房间操作指南与可运行例子](design/mod-the-spire/how-to-add-a-room.md)、[编译接口参考](design/mod-the-spire/room-compile-reference.md) |
-| 编写普通事件并复用资源操作/选择生命周期 | [事件领域契约](design/mod-the-spire/event-domain/spec.md)、[事件作者操作步骤](design/mod-the-spire/how-to-add-a-room.md#新增一个具体事件已有能力) |
-| 复用金币、生命、遗物和永久牌组操作；组合卡牌原语 | [整局公共操作契约](design/mod-the-spire/run-domain/spec.md)、[公共能力入口](design/mod-the-spire/room-compile-reference.md#按操作查找已有公共能力)、[卡牌原语组合](design/mod-the-spire/card-primitives/spec.md) |
+| 查询包组合、分派与初始化顺序 | [包格式参考](dsl/core/0.3/package-reference.md)、[core/0.3作者参考](dsl/core/0.3/authoring-reference.md)、[当前控制流程](design/mod-the-spire/control-flow-modules.md) |
+| 实现房间／事件访问、绑定长期资源并关闭访问 | [角色、房间与Run指南](development/base-spire/how-to/run-and-rooms.md)、[行为操作参考](development/base-spire/reference/card-behavior.md)；正常地图／Run仍待迁移 |
+| 复用金币、生命、物品与永久牌组操作 | [共享操作参考](development/base-spire/reference/operations.md)、[卡牌与战斗指南](development/base-spire/how-to/cards-and-combat.md) |
 | 逐张校对五角色原版卡名、普通/升级描述与实现证据 | [五角色卡牌清单（2026-10-12快照）](review/records/2026-10-12/five-character-card-catalog/README.md) |
 | 从公开接口启动游戏、读取快照并提交候选 | [公开运行操作指南与最小客户端](design/net-the-spire/how-to-run-public-game.md)、[客户端接口参考](design/net-the-spire/public-client-reference.md) |
 | 亲自用键盘选择地图、出牌和操作房间 | [手动试玩 base-spire](design/net-the-spire/how-to-play-base-game.md) |
@@ -89,10 +86,10 @@
 | --- | --- |
 | 项目目标与模块边界 | [项目spec](design/spec.md)、[文档协作约定](AGENTS.md) |
 | core宿主API与冻结语义 | 先做[第一次写宿主](design/core-the-spire/first-host.md)；查[开发者指南](design/core-the-spire/developer-guide.md)、[冻结契约](contracts/core-engine-baseline.md)、[Git交接](contracts/core-git-checkpoint.md) |
-| base内容与Run | [mod spec](design/mod-the-spire/spec.md)、[base README](../tools/base-migration-baseline/README.md)、[base实施编排](design/mod-the-spire/base-spire-implementation-plan.md)；历史Ironclad覆盖不是完整分母 |
-| 内容DSL | 新卡牌从 [base/0.0.2 作者参考](dsl/0.0.2/authoring-reference.md)进入；已有领域效果查[0.0.1作者约定](dsl/0.0.1/dsl-usage.md)；旧兼容/实现细节查[content-dsl](dsl/0.0.1/content-dsl.md)、[战斗设计](dsl/0.0.1/combat-dsl-design.md) |
+| base内容与Run | [mod spec](design/mod-the-spire/spec.md)、[base组织说明](design/mod-the-spire/base-architecture.md)、[base实施编排](design/mod-the-spire/base-spire-implementation-plan.md)；历史Ironclad覆盖不是完整分母 |
+| 内容DSL | 当前内容从[base开发手册](development/base-spire/README.md)和[core/0.3作者参考](dsl/core/0.3/authoring-reference.md)进入；base/0.0.1与0.0.2属于旧C#前端，按历史验收需要查阅，不用于编写当前包 |
 | core文本规则库 | 先做[第一次写规则](dsl/core/first-rule.md)；[作者入口与配置入门](dsl/core/README.md)、[0.3同包绑定参考](dsl/core/0.3/authoring-reference.md)、[0.2规则库指南](dsl/core/0.2/authoring-guide.md)、[0.1语言参考](dsl/core/0.1/language-reference.md) |
-| B严格对拍 | [工具README](../tools/base-migration-baseline/differential/README.md)、ENV范围/实现约束；参考默认只读，`sts2/`源码及同版本客户端优先裁决 |
+| B严格对拍 | [活动工具README](../tools/differential/README.md)、ENV范围/实现约束；参考默认只读，`sts2/`源码及同版本客户端优先裁决 |
 | C公开出口 | [net spec](design/net-the-spire/spec.md)、[协议及0.2扩展](design/net-the-spire/protocol.md)、[公开契约资产](design/net-the-spire/contract-artifacts.md) |
 | AI兼容/后续学习 | [AI spec](design/ai-the-spire/spec.md)、[策略契约](design/ai-the-spire/policy-contract.md)、[训练设计](design/ai-the-spire/training-design.md)、[共同验收](design/ai-net-verification.md)；是否启动实验只查主清单 W-07，旧阶段证据按需查看 |
 

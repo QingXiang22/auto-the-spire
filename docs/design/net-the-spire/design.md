@@ -1,5 +1,7 @@
 # net-the-spire 架构设计
 
+2026-10-20阅读边界：下文早期手写Profile／base工厂和迁移建议保留设计过程。当前模拟Host加载纯DSL manifest，声明派生Profile已接通；实例单选／取消与Bool透传见[当前协议](protocol.md)。正常Run、有序多选和独立比较仍按[主清单](../../review/tofix/README.md#当前交付)接续，不从旧“待实现”重新派已交付功能。
+
 本体适配器主要参考[本地BMingSY/sts2-ai-mcp](../../../reference/sts2-ai-mcp/README.md)，范围与职责见[第8节](#8-bmingsy本体适配器参考)。本体适配不作为模拟主线的前置依赖。
 
 > 2026-10-04实施提示：已有stdio/账本/目录及持久公开句柄修复直接复用，下文2026-10-03公开ID“缺口”是历史时点，不重新派做缓存。当前按[ENV实现约束](../environment-implementation-constraints.md)接base统一配置Session和正式公开Profile，新增[协议0.2](protocol.md#7-env正式环境的02扩展)字符串seed启动。Net.TheSpire保持只依赖core/contracts，base组合留Host，不新增STS控制规则。

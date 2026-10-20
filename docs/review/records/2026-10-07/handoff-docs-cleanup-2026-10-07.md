@@ -20,7 +20,7 @@
 | [主清单](../../tofix/README.md) | 19 个任务用短索引定位，认领/依赖/下一步/完成条件留同页详情；8 项 W 的完整范围独立可查 |
 | [角色提示词](../../../design/agent-goals.md) | 给职责、必要阅读、第一步和交付判断；当前首包只查主清单 |
 | [管理约定](../../../design/post-core-agent-assignments.md#04-交接与变更格式) | 明确索引/详情维护方式及接手自查，保留各线完整合同 |
-| [base 工作包](../../../design/mod-the-spire/base-spire-implementation-plan.md#3-当前可直接派给-a-的接续包2026-10-06) | 按任务 ID 直达实现方法，补开始位置；T02 改为验收约束，避免将修复前问题继续写成当前事实 |
+| [base 工作包](../../../design/mod-the-spire/base-spire-implementation-plan.md#3-工作包方法与依赖) | 按任务 ID 直达实现方法，补开始位置；T02 改为验收约束，避免将修复前问题继续写成当前事实 |
 | [ENV 范围规范](../../../design/environment-completion-and-differential-v1.md#9-env-03ironclad完整整局中间可见交付) | 永久写回仍是原验收范围，实现进度指回 T02 |
 | [文档协作约定](../../../AGENTS.md) | 当前事实只维护任务详情；历史证据保留原时点 |
 
