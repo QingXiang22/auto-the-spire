@@ -120,6 +120,7 @@ public sealed partial class Session
         Seed = seed;
         GameSeed = gameSeed ?? seed.ToString(System.Globalization.CultureInfo.InvariantCulture);
         Debug = debug is null ? null : new SessionDebugTrace(debug);
+        Random.Debug = Debug;
 
         for (var i = 0; i < participantRoles.Count; i++)
         {

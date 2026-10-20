@@ -7,18 +7,20 @@ public sealed partial class Session
         var signature = instruction.Signature;
         var consumedRandom = signature.Has(EngineEffect.ConsumesRandom);
         RandomSnapshot? snapshot = consumedRandom ? Random.Capture() : null;
-        var drawsBefore = Random.TotalDraws;
-        if (consumedRandom) BeginRandomTrace();
+        if (consumedRandom) Debug?.BeginRandom(this, instruction.SourceLocation);
         try
         {
             var outcome = State.RunAtomic<Outcome>(() => ExecuteCore(call, instruction));
-            if (consumedRandom) TraceRandom(instruction, drawsBefore);
             return outcome;
         }
         catch (EngineFaultException)
         {
             if (snapshot is not null) Random.Restore(snapshot);
             throw;
+        }
+        finally
+        {
+            if (consumedRandom) Debug?.EndRandom();
         }
     }
 

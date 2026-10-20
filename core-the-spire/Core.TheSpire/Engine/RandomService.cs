@@ -1,4 +1,5 @@
 using System.Text;
+using System.Globalization;
 
 namespace CoreTheSpire.Engine;
 
@@ -50,6 +51,7 @@ public sealed class RandomService
     private readonly Dictionary<string, ulong> _explicitSeeds = new(StringComparer.Ordinal);
 
     private readonly IRandomProfile _profile;
+    internal SessionDebugTrace? Debug { get; set; }
 
     public RandomService(ulong sessionSeed, string algorithmId = DefaultAlgorithmId,
         string drawProfileId = DefaultDrawProfileId, IRandomProfile? profile = null)
@@ -111,7 +113,13 @@ public sealed class RandomService
 
     public IReadOnlyList<string> Streams => _creationOrder.AsReadOnly();
 
-    public ulong DrawUInt64(string stream) => Next(Require(stream));
+    public ulong DrawUInt64(string stream)
+    {
+        var before = DrawCount(stream); var total = TotalDraws;
+        var result = Next(Require(stream));
+        Record(stream, "uint64", "0", "18446744073709551616", result, before, total);
+        return result;
+    }
 
     private ulong Next(RandomStream stream)
     {
@@ -142,7 +150,10 @@ public sealed class RandomService
     public int DrawIndex(string stream, int count)
     {
         if (count <= 0) throw Faults.Range($"random draw needs a positive count but received {count}");
-        return checked((int)DrawBounded(stream, 0, count));
+        var before = DrawCount(stream); var total = TotalDraws;
+        var result = checked((int)DrawBounded(stream, 0, count));
+        Record(stream, "index", "0", count.ToString(CultureInfo.InvariantCulture), result, before, total);
+        return result;
     }
 
     /// <summary>Uniform draw in <c>[minInclusive, maxExclusive)</c> under the active draw profile.</summary>
@@ -154,7 +165,11 @@ public sealed class RandomService
                 $"random range is empty: [{minInclusive}, {maxExclusive})");
         }
 
-        return DrawBounded(stream, minInclusive, maxExclusive);
+        var before = DrawCount(stream); var total = TotalDraws;
+        var result = DrawBounded(stream, minInclusive, maxExclusive);
+        Record(stream, "int", minInclusive.ToString(CultureInfo.InvariantCulture),
+            maxExclusive.ToString(CultureInfo.InvariantCulture), result, before, total);
+        return result;
     }
 
     public int DrawInt(string stream, int minInclusive, int maxExclusive) =>
@@ -164,8 +179,15 @@ public sealed class RandomService
     /// Uniform <c>uint</c> in <c>[minInclusive, maxExclusive)</c>.
     /// The vanilla profile mirrors `Rng.NextUnsignedInt` (`Rng.cs:127-138`): `min + (uint)(NextDouble() * (max - min))`.
     /// </summary>
-    public uint DrawUnsignedInt(string stream, uint minInclusive, uint maxExclusive) =>
-        checked((uint)DrawInt(stream, (long)minInclusive, maxExclusive));
+    public uint DrawUnsignedInt(string stream, uint minInclusive, uint maxExclusive)
+    {
+        if (minInclusive >= maxExclusive) throw Faults.Range($"random range is empty: [{minInclusive}, {maxExclusive})");
+        var before = DrawCount(stream); var total = TotalDraws;
+        var result = checked((uint)DrawBounded(stream, minInclusive, maxExclusive));
+        Record(stream, "uint", minInclusive.ToString(CultureInfo.InvariantCulture),
+            maxExclusive.ToString(CultureInfo.InvariantCulture), result, before, total);
+        return result;
+    }
 
     /// <summary>
     /// Uniform double in <c>[0, 1)</c>. Both profiles use the same 53-bit construction
@@ -175,13 +197,19 @@ public sealed class RandomService
     public double DrawDouble(string stream)
     {
         var target = Require(stream);
-        return _profile.DrawDouble(() => Next(target));
+        var before = target.Draws; var total = TotalDraws;
+        var result = _profile.DrawDouble(() => Next(target));
+        Record(stream, "double", "0", "1", result, before, total);
+        return result;
     }
 
     public bool DrawBool(string stream)
     {
         var target = Require(stream);
-        return _profile.DrawBool(() => Next(target));
+        var before = target.Draws; var total = TotalDraws;
+        var result = _profile.DrawBool(() => Next(target));
+        Record(stream, "bool", "0", "2", result, before, total);
+        return result;
     }
 
     /// <summary>Picks from the caller's ordered candidates. The engine never silently reorders them.</summary>
@@ -189,7 +217,10 @@ public sealed class RandomService
     {
         ArgumentNullException.ThrowIfNull(candidates);
         if (candidates.Count == 0) throw Faults.Range("cannot pick from an empty candidate list");
-        return candidates[DrawIndex(stream, candidates.Count)];
+        var before = DrawCount(stream); var total = TotalDraws;
+        var index = checked((int)DrawBounded(stream, 0, candidates.Count));
+        Record(stream, "pick", "0", candidates.Count.ToString(CultureInfo.InvariantCulture), index, before, total, candidates);
+        return candidates[index];
     }
 
     /// <summary>In-place Fisher-Yates shuffle (descending index), the only shuffle order this engine defines.</summary>
@@ -198,9 +229,26 @@ public sealed class RandomService
         ArgumentNullException.ThrowIfNull(items);
         for (var i = items.Count - 1; i > 0; i--)
         {
-            var j = DrawIndex(stream, i + 1);
+            var before = DrawCount(stream); var total = TotalDraws;
+            var j = checked((int)DrawBounded(stream, 0, i + 1));
+            // The snapshot is taken before the swap and includes the active candidate prefix only.
+            Record(stream, "shuffle", "0", (i + 1).ToString(CultureInfo.InvariantCulture), j, before, total,
+                Debug is not null && items is IList<InstanceId> ids ? new CandidatePrefix(ids, i + 1) : null);
             (items[i], items[j]) = (items[j], items[i]);
         }
+    }
+
+    private void Record<T>(string stream, string operation, string min, string max, T result,
+        long before, long totalBefore, IReadOnlyList<InstanceId>? candidates = null) =>
+        Debug?.RecordRandom(this, stream, operation, min, max,
+            Convert.ToString(result, CultureInfo.InvariantCulture)!, before, totalBefore, candidates);
+
+    private sealed class CandidatePrefix(IList<InstanceId> items, int count) : IReadOnlyList<InstanceId>
+    {
+        public int Count => count;
+        public InstanceId this[int index] => index >= 0 && index < count ? items[index] : throw new ArgumentOutOfRangeException(nameof(index));
+        public IEnumerator<InstanceId> GetEnumerator() => items.Take(count).GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     /// <summary>Deterministic sub-seed derived from a name; used to start independent child sessions.</summary>

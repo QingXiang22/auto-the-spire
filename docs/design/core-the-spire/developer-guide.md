@@ -344,7 +344,11 @@ var dropped = session.Debug.DroppedRecords;
 var firstFault = session.Debug.FirstFault;
 ```
 
-轨迹记录命令、过程、事件/监听器、决策、随机消耗、终局和首故障，可选逐指令记录。记录包含源码位置、状态版本和指令计数；C# 生成 IR 可以没有位置。数量/文本长度有界，溢出增加 DroppedRecords，首故障另行保留。只提供拉取与只读快照，执行期间不调用输出接收器；Host 在命令后自行写文件。因此接收器失败或重入不会污染调度。
+轨迹记录命令、过程、事件/监听器、决策、逐次随机调用、终局和首故障，可选逐指令记录。记录包含源码位置、状态版本和指令计数；C# 生成 IR 可以没有位置。数量/文本长度有界，溢出增加 DroppedRecords，首故障另行保留。只提供拉取与只读快照，执行期间不调用输出接收器；Host 在命令后自行写文件。因此接收器失败或重入不会污染调度。
+
+`RandomCall` 的 `Random` 字段保存操作、上下界、实际结果，以及流和总原始字数的调用前后游标。一次 API 调用可能消费多个原始字；洗牌为每次交换各记一条，候选是交换前的有效前缀，`pick` 保存实际查询顺序。候选实例为只读副本，默认最多 256 项，可通过 `SessionDebugOptions.MaxCandidates` 调整；`CandidateCount` 保留完整数量，截断由 `CandidatesTruncated` 明示。候选截断或记录丢失时，工具不能宣称对应诊断维度一致。
+
+加载文本包时使用 `package.CreateSession(seed, roles, gameSeed, debug: new SessionDebugOptions())`，保持原包的随机配置。诊断沿每会话的拉取式轨迹保存，不使用全局回调。直接调用 `session.Random` 也记录调用；只有在 DSL 指令执行期间才有指令来源与执行上下文。失败指令可能留下已执行抽取的诊断，随机状态仍按指令的原子性规则恢复；故障后的记录不能充当成功边界。
 
 tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
 

@@ -7,7 +7,7 @@ Git仅维护可复用、具有实际消费者的工程工具。一次性修复�
 | 目录 | 维护用途 |
 | --- | --- |
 | [ci](ci/README.md) | 本地与GitHub Actions共用检查入口 |
-| [differential](differential/README.md) | 原 strike-normal 的 DSL／独立参考比较；保留全部原 suite 和其余未支持报告 |
+| [differential](differential/README.md) | 原 Strike／重洗的 DSL／独立参考比较及逐次随机首差；保留原 suite 和未支持报告 |
 | [base-spire-dev](base-spire-dev/README.md) | 纯 DSL 包加载、源／支持计数与当前机制行为检查 |
 | [contract-check](contract-check/check_contracts.py) | 协议/编码检查及AI当前导入的共享协议实现与fixtures |
 | [doc-check](doc-check/README.md) | Git 文档链接、格式、需求映射与 Vale 术语检查 |
