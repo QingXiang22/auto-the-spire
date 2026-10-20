@@ -43,7 +43,8 @@ def main() -> int:
         project = "net-the-spire/Net.TheSpire.Tests"
         commands = [build(project), run(project)]
     elif args.suite == "migration":
-        commands = [build("tools/differential/Differential.csproj"),
+        commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
+                    build("tools/differential/Differential.csproj"),
                     [sys.executable, "-X", "utf8", "tools/ci/check_dsl_migration.py", "--configuration", config, "--output", str(output)]]
     elif args.suite == "docs":
         commands = [[sys.executable, "-X", "utf8", "tools/doc-check/check_docs.py"],
@@ -51,7 +52,8 @@ def main() -> int:
                     ["git", "diff", "--check"]]
     else:
         project = "tools/differential/Differential.csproj"
-        commands = [build(project), run(project) + ["--", "test", "--suite", "regression", "--output", str(output / "regression")]]
+        commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
+                    build(project), run(project) + ["--", "test", "--suite", "regression", "--output", str(output / "regression")]]
     env = dict(os.environ, PYTHONUTF8="1",
                BASE_SPIRE_DEV_DLL=str(ROOT / f"tools/base-spire-dev/bin/{config}/net9.0/BaseSpire.Dev.dll"))
     top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=ROOT, capture_output=True, text=True)

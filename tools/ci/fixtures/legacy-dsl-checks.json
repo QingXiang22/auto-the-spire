@@ -2702,8 +2702,9 @@
         "map-generated-alpha",
         "map-generated-beta"
       ],
-      "current_status": "unsupported",
-      "executed": 0
+      "current_status": "partial",
+      "executed": 1,
+      "migrated_case_ids": ["strike-normal"]
     }
   ],
   "retired_cli_examples": [

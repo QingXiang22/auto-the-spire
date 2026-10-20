@@ -6,6 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <None Update="suites/**/*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <PropertyGroup>
+    <ReferenceProject>$(MSBuildThisFileDirectory)../../reference/sts2-sim/src/Sts2Sim.Core/Sts2Sim.Core.csproj</ReferenceProject>
+    <UseReference Condition="'$(UseReference)' == '' and Exists('$(ReferenceProject)')">true</UseReference>
+    <DefineConstants Condition="'$(UseReference)' == 'true'">$(DefineConstants);REFERENCE_SIM</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(UseReference)' == 'true'">
+    <ProjectReference Include="../../reference/sts2-sim/src/Sts2Sim.Core/Sts2Sim.Core.csproj" />
   </ItemGroup>
 </Project>
