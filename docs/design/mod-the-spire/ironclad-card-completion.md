@@ -1,6 +1,6 @@
 # 当前 Ironclad 卡牌整批补齐规格与实施边界
 
-本工作包供 A 完成当前 base 内容资源中的单人卡牌。规格与职责决策由 Codex 负责人制定，执行者按下列边界连续实施。任务状态、排期、当前机制与认领只在[主清单 ENV-T05](../../review/tofix/README.md#env-t05)维护；本文定义完成条件，不能作为第二份进度表。
+本工作包供 A 完成当前 base 内容资源中的单人卡牌。规格与职责决策由 Codex 负责人制定，执行者按下列边界连续实施。任务状态、排期、当前机制与认领只在[行为要求](../environment-completion-and-differential-v1.md#env-t05)维护；本文定义完成条件，不能作为第二份进度表。
 
 ## 1. 范围与可验结果
 
@@ -19,7 +19,7 @@
 
 ## 2. 负责人确定的职责边界
 
-复用[逐效果表示](effect-ir/spec.md)、[维护原则](maintainable-rule-sets.md)与[base 开发指南](base-development-guide.md)。源码读取、领域表示、IR 生成和动作生命周期分别承担以下职责，不把新卡规则散回规则包构建工厂。
+复用[逐效果表示](effect-ir/spec.md)、[维护原则](maintainable-rule-sets.md)与[当前开发资料](../../development/base-spire/README.md)。源码读取、领域表示、IR 生成和动作生命周期分别承担以下职责，不把新卡规则散回规则包构建工厂。
 
 | 层 | 允许扩展 | 保持的边界 |
 | --- | --- | --- |

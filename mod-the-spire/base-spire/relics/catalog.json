@@ -2822,7 +2822,7 @@
         "IroncladRelicPool"
       ],
       "eligibility": "development-supported",
-      "evidence": "Source-owned content model development trial; docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Relics/SelfFormingClay.cs; source SHA256 is recorded in this entry.",
       "definition": "relics/shared/self-forming-clay.spire"
     },
     {

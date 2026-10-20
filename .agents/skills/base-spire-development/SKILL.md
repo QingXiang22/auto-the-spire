@@ -11,7 +11,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 
 ## 开始与约束
 
-读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[主清单](../../../docs/review/tofix/README.md)维护状态，[迁移规格](../../../docs/design/mod-the-spire/engine-dsl-migration/spec.md)定义纯包边界。
+读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[路线图](../../../docs/roadmap.md)维护状态，[迁移规格](../../../docs/design/mod-the-spire/engine-dsl-migration/spec.md)定义纯包边界。
 
 - base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，真正共用的操作放领域 rules；catalog definition 可承载完整内容模块，独有规则／私有状态留在所属文件，以模板作用域隔离。简单内容仍可只用 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
 - 遗物与Power统一按[监听编写指南](../../../docs/development/base-spire/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。
@@ -63,7 +63,7 @@ rg -n -C 8 'AfterShuffle|Block' sts2/src/Core/Models/Relics/TheAbacus.cs
 
 选择上面验证指南中与修改相符的命令。`validate` 证明加载和启动；当前 `check` 是固定正式行为验证，不能通用证明任意新内容。教学驱动只提供实际公开观测，不产生原版覆盖资格。新增正式内容的行为见证必须实际执行，独立对拍未运行就保持未验证。
 
-交付记录任务、变更、来源／版本、scope／seed、命令与结果、未支持和未验证范围，更新人类手册中受影响的操作／领域页。当前状态仍只回写主清单；不复制当前支持件数到 skill，不为每张牌建另一套任务表。
+交付记录任务、变更、来源／版本、scope／seed、命令与结果、未支持和未验证范围，更新人类手册中受影响的操作／领域页。当前状态仍只回写路线图；不复制当前支持件数到 skill，不为每张牌建另一套任务表。
 
 ## 在 DSH 中使用
 
@@ -71,7 +71,7 @@ Codex 可调用 `$base-spire-development`。DSH 未验证自动发现 `.agents/s
 
 ```text
 先读取 .agents/skills/base-spire-development/SKILL.md，并按任务只读对应手册。
-任务与认领：主清单中的真实任务 ID；本次内容／机制。
+任务与认领：路线图中的真实任务 ID；本次内容／机制。
 允许修改：本包明确列出的目录或文件；其他文件只读。
 验收：本次明确的状态变化、边界、实际命令和证据位置。
 缺共享能力／源版本不符时记录具体缺口，不回退旧 C# 或缩小源范围。

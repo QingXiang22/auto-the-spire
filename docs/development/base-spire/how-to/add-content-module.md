@@ -70,4 +70,4 @@ dotnet run --no-build --project tools/base-spire-dev -- check --content-model-on
 
 其他新内容需要自己的判别；CLAY通过不能替代它的行为证据。新增见证接入包外检查，批次最终使用完整check --report核对实际定义与执行见证。需要公开的新事实还应走真实Host轨迹；纯玩法复用不要求复制整套协议检查。
 
-SelfFormingClay的[实际开发记录](../../../review/records/2026-10-19/content-model-migration-2026-10-19.md)保留首轮共享时序修正与修正后的7文件接入。修改范围可供后续开发核对，不表示所有新机制都无需修改共享领域操作，也不证明正常Run或独立原版比较完成。
+SelfFormingClay的保留首轮共享时序修正与修正后的7文件接入。修改范围可供后续开发核对，不表示所有新机制都无需修改共享领域操作，也不证明正常Run或独立原版比较完成。

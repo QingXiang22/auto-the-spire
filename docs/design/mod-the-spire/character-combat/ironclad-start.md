@@ -1,6 +1,6 @@
 # 纯 DSL 铁甲战士初态与开发战斗起手
 
-关联 CORE-AUTHOR-05／DSL-IRONCLAD-START-01；状态见[主清单](../../../review/tofix/README.md#当前交付)。适用于现有开发 scope，不建立正常 Run 身份。
+关联 CORE-AUTHOR-05／DSL-IRONCLAD-START-01；状态见[路线图](../../../roadmap.md#近期队列)。适用于现有开发 scope，不建立正常 Run 身份。
 
 ## 来源和初态
 

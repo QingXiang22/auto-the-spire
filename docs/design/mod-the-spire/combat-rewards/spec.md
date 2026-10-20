@@ -1,6 +1,6 @@
 # 开发态战斗奖励
 
-关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定金币奖励的生成、领取与关闭；认领和状态见[主清单](../../../review/tofix/README.md#当前交付)。遵守[纯 DSL 边界](../engine-dsl-migration/spec.md)。
+关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定金币奖励的生成、领取与关闭；认领和状态见[路线图](../../../roadmap.md#近期队列)。遵守[纯 DSL 边界](../engine-dsl-migration/spec.md)。
 
 ## 来源与边界
 

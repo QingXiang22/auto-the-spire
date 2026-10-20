@@ -1,11 +1,11 @@
 # 在已有规则集上添加和组合内容
 
-> 2026-10-18：本页保留旧 C# base 的教程／接口依据，所列运行路径已退出生产，当前不能照此执行。纯 DSL 开发请从[开发指南](base-development-guide.md)与[包格式参考](../../dsl/core/0.3/package-reference.md)开始；原功能需按迁移任务恢复。
+> 2026-10-18：本页保留旧 C# base 的教程／接口依据，所列运行路径已退出生产，当前不能照此执行。纯 DSL 开发请从[当前开发资料](../../development/base-spire/README.md)与[包格式参考](../../dsl/core/0.3/package-reference.md)开始；原功能需按迁移任务恢复。
 
 
 文档类型：操作指南（How-to）。本页面向已有规则集的扩展作者，说明如何选择扩展方式、验证一张独立卡，以及处理依赖和冲突。卡牌语法查[base/0.0.2 作者参考](../../dsl/0.0.2/authoring-reference.md)；规则库设计查[可维护规则集指南](maintainable-rule-sets.md)。
 
-首次新增卡牌从[第一张卡教程](first-base-card.md)开始；本页用于完成已有明确目标的内容组合及安装边界查询。
+首次新增卡牌从[当前开发资料](../../development/base-spire/how-to/cards-and-combat.md)开始；本页用于完成已有明确目标的内容组合及安装边界查询。
 
 ## 选择已实现的扩展方式
 
@@ -71,7 +71,7 @@
 
 `upgraded` 从长期牌组创建完整升级牌，使用升级费用、变量初值、关键词与进战斗hook。已有实例升级另外走共享命令：变量与基础费用增加定义中的升级差额，保留既有成长和临时费用修饰，已升级实例不重复加差额。工具接受卡牌与Power声明；敌人/遗物等内容域仍拒绝。多文件输入先加载Power再链接卡牌，例如 `check cards.spire powers.spire` 和 `play cards.spire powers.spire mymod:card-name upgraded`。新Power使用已实现的行为可直接注册，不需添加C#内容ID白名单；相同名字在不同命名空间保留各自身份。卡牌通过同命名空间名字或跨包限定ID复用已注册Power。正式base发布继续走 `ContentSource` 和 `SinglePlayer` 共同工厂，卡池资格、完整Run、公开载荷、独立源对拍及性能需要对应门槛。
 
-扩展新语义时，按[base开发修改入口](base-development-guide.md)做完整机制包。不要把新卡都塞进规则包构建器的逐牌分支。
+扩展新语义时，按[当前开发资料](../../development/base-spire/README.md)做完整机制包。不要把新卡都塞进规则包构建器的逐牌分支。
 
 ## 组合共享牌区与出牌能力
 
@@ -98,4 +98,4 @@ dotnet run --no-build --project tools/base-spire-dev -- play docs/examples/base-
 
 也接受 `pool = { character = IroncladCardPool }`：先严格解析完整85项单人源池，再按类型与生成资格过滤。其他角色池尚未接入，省略pool仍拒绝；不能用“现在已经降级的卡”代替原角色池。生成/自动出牌暂不允许放在hook里。完整声明/注册及本例不证明 InfernalBlade/Stoke 的独立原版一致性。
 
-自动出牌嵌套仍走同一出牌过程，修改伤害、消耗或付款规则时不用在mod再复制一份调度器。新语义的读取范围和验证入口见[base指南](base-development-guide.md)，运行顺序见[流程说明](control-flow-modules.md)。
+自动出牌嵌套仍走同一出牌过程，修改伤害、消耗或付款规则时不用在mod再复制一份调度器。新语义的读取范围和验证入口见[当前开发资料](../../development/base-spire/README.md)，运行顺序见[流程说明](control-flow-modules.md)。

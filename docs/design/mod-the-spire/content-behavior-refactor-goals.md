@@ -1,6 +1,6 @@
 # base 内容与行为重构目标
 
-本文供 base 规则维护者决定下一轮重构范围，并据此拆出可验证的机制包。2026-10-19，Codex `/root` 根据当前 DSL、锁定的 sts2-sim 与原版源码重新梳理。**本文保存目标设计与当时的代码基线观察。用户随后要求实施，当前接口与限制见[实施契约](content-behavior-migration.md)，逐项证据见[迁移记录](../../review/records/2026-10-19/content-behavior-migration-2026-10-19.md)。目标本身不等于全部验收通过。** 排期、认领和暂停项仍只维护在[主清单](../../review/tofix/README.md#当前交付)。
+本文供 base 规则维护者决定下一轮重构范围，并据此拆出可验证的机制包。2026-10-19，Codex `/root` 根据当前 DSL、锁定的 sts2-sim 与原版源码重新梳理。**本文保存目标设计与当时的代码基线观察。用户随后要求实施，当前接口与限制见[实施契约](content-behavior-migration.md)，目标本身不等于全部验收通过。** 排期、认领和暂停项仍只维护在[路线图](../../roadmap.md#近期队列)。
 
 目标是让内容作者能够在所属模块中表达完整行为，通过稳定领域操作复用公共规则。一次出牌、一次攻击、一次命中和一次伤害结果各有明确身份与寿命；费用、选牌、牌区、复制、附着、Power、回合和 Run 按各自职责接入。新增内容不再依赖扩充中心字符串分支、公共专属字段或事件声明顺序来拼接自己的主效果。
 
@@ -160,7 +160,7 @@ Power、遗物、药水和附着均使用统一实例监听；公共命令不根
 
 ## 借鉴范围与取舍
 
-sts2-sim 在这里提供职责分工样本：[CardModel](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/CardModel.cs) 的出牌总控、[AttackCommand](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/Builders/AttackCommand.cs) 的攻击边界、[CreatureCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/CreatureCmd.cs) 的结果批次、[AutoPlayCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/AutoPlayCmd.cs) 的自动路径、[PowerCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/PowerCmd.cs) 的领域生命周期、[CardCmd](../../../reference/sts2-sim/src/Sts2Sim.Core/Commands/CardCmd.cs) 的实例操作、[EventModel](../../../reference/sts2-sim/src/Sts2Sim.Core/Models/EventModel.cs) 的页面状态、[ContentRegistry](../../../reference/sts2-sim/src/Sts2Sim.Core/Content/ContentRegistry.cs) 的单一执行定义来源。
+sts2-sim 在这里提供职责分工样本：`reference/sts2-sim/src/Sts2Sim.Core/Models/CardModel.cs` 的出牌总控、`reference/sts2-sim/src/Sts2Sim.Core/Commands/Builders/AttackCommand.cs` 的攻击边界、`reference/sts2-sim/src/Sts2Sim.Core/Commands/CreatureCmd.cs` 的结果批次、`reference/sts2-sim/src/Sts2Sim.Core/Commands/AutoPlayCmd.cs` 的自动路径、`reference/sts2-sim/src/Sts2Sim.Core/Commands/PowerCmd.cs` 的领域生命周期、`reference/sts2-sim/src/Sts2Sim.Core/Commands/CardCmd.cs` 的实例操作、`reference/sts2-sim/src/Sts2Sim.Core/Models/EventModel.cs` 的页面状态、`reference/sts2-sim/src/Sts2Sim.Core/Content/ContentRegistry.cs` 的单一执行定义来源。
 
 这些职责用 DSL 的类型、过程、局部变量、事件、实例订阅和 decide 表达。过程／类型参数、定义正文绑定或只读定义确实超出现有语言时，先给最小语言复现，按 core 维护边界决定通用支持；不能在方案中把尚不支持的 callback 配置写成可运行语法。当前 [PowerLibrary](../../../mod-the-spire/base-spire/powers/schema.spire) 由初始化构造的隐藏实体实现定义索引，仍需检查未来只读保证，不能因此宣称已有不可变定义设施。
 
@@ -208,7 +208,7 @@ sts2-sim 在这里提供职责分工样本：[CardModel](../../../reference/sts2
 
 ## 验收场景
 
-这些是实施的判别要求，**目标文档阶段没有运行**；已运行范围查[实施证据](../../review/records/2026-10-19/content-behavior-migration-2026-10-19.md)。优先复用能区分该错误的现有用例，缺判别才补；不为每张同数值模板牌复制整套测试。
+这些是实施的判别要求，**目标文档阶段没有运行**；已运行范围查。优先复用能区分该错误的现有用例，缺判别才补；不为每张同数值模板牌复制整套测试。
 
 | ID／目标 | 初态与刺激 | 应观察到的结果与禁止结果 |
 | --- | --- | --- |
@@ -236,4 +236,4 @@ sts2-sim 在这里提供职责分工样本：[CardModel](../../../reference/sts2
 
 目标文档阶段形成跨内容的重构目标，清理 review 的当前入口与过时交接位置，并修正仍将内容限制为 use-only、或将旧 C# 模块当现行架构的入口页。该阶段未修改生产代码；后续用户授权的实现见[迁移契约](content-behavior-migration.md)。
 
-进入新的机制切片前，在主清单登记具体切片、修改边界、直接源码方法、接口／状态顺序与最小判别，解决该切片实际暴露的语言缺口。本文不等待“是否需要全面重构”的泛泛批准，也不把目标设计当成已批准的完整 API。文档检查及清理映射见[本轮维护记录](../../review/records/2026-10-19/behavior-refactor-review-2026-10-19.md)。
+进入新的机制切片前，在主清单登记具体切片、修改边界、直接源码方法、接口／状态顺序与最小判别，解决该切片实际暴露的语言缺口。本文不等待“是否需要全面重构”的泛泛批准，也不把目标设计当成已批准的完整 API。

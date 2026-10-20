@@ -12,7 +12,7 @@ docs/architecture/c4/workspace.json
 /tools/fmod-gdextension/
 /archive/
 
-# Local evidence and isolated builds; referenced history is bundled separately.
+# Disposable local outputs. Do not link run-specific files from maintained docs.
 /.audit/
 /.artifacts/
 /artifacts/

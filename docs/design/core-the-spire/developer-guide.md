@@ -47,7 +47,7 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-活动包版本为 `0.5.0`，运行语义身份为 `engine/ir@0.5`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 冻结基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前冻结状态见 [CORE-AUTHOR-04](../../review/tofix/README.md#core-author-04)。
+活动包版本为 `0.5.0`，运行语义身份为 `engine/ir@0.5`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 冻结基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前冻结状态见 [行为要求](../environment-completion-and-differential-v1.md#core-author-04)。
 
 当前入口及能力边界：
 
@@ -382,7 +382,7 @@ tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规�
 
 本文最小示例于 2026-10-04 实际运行并产生第 2 节输出，验证了初始化、合法动作、选择暂停/续接、事件、公开投影与终局这一条完整链。它不证明完整 STS 内容、所有 IR 组合或原版随机一致性。
 
-本轮实现与最终验证证据见[交付报告](../../review/archived/core-engine-followup-2026-10-04.md)。例子实际执行，修改配置后使用 --no-build 也得到不同结果。检查数量只描述当前受控覆盖，不代表完整原版或所有 IR 组合。
+例子实际执行，修改配置后使用 --no-build 也得到不同结果。检查数量只描述当前受控覆盖，不代表完整原版或所有 IR 组合。
 
 内核修改按以下入口验证；base 规则变化再增加对应 Slice 检查：
 
@@ -392,4 +392,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[唯一任务清单](../../review/tofix/README.md)。设计文档里的目标语言示例不自动属于当前可执行语法。
+其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[路线图](../../roadmap.md)。设计文档里的目标语言示例不自动属于当前可执行语法。

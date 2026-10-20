@@ -1,6 +1,6 @@
 # 开发 Power、遗物与药水
 
-文档类型：操作指南（How-to）。先从对应catalog查源身份，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[主清单](../../../review/tofix/README.md#当前交付)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
+文档类型：操作指南（How-to）。先从对应catalog查源身份，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[路线图](../../../roadmap.md#近期队列)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
 
 ## 实现 Power 生命周期
 
@@ -37,7 +37,7 @@
 
 同类遗物先沿[分组计划](../../../design/mod-the-spire/relic-combat-start/development-plan.md)核对触发、状态寿命、随机与完整消费者，再认领主清单中一个完整子包。Whetstone／WarPaint／SandCastle复用PickupRandomUpgradeRelic的definition、kind、amount配置，通过RelicObtained实例订阅调用UpgradeRandomPermanentCards。不要把候选临时移出RunDeck，也不要为只取两张而仅消费两次随机；完整源顺序及隔离要求见[随机永久升级契约](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01)。选牌升级和Egg的创建修正分别沿其他机制包接续。
 
-源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[遗物原合同](../../../review/tofix/README.md#env-t09)继续有效。
+源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t09)继续有效。
 
 ## 恢复药水容量、获得和使用
 

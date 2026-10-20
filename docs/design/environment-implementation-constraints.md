@@ -1,6 +1,6 @@
 # ENV 实现约束与交付证据
 
-2026-10-20落点校准：本文完整验收要求继续有效。当前生产base为纯DSL／静态JSON，活动core基线以[核心契约](../contracts/core-engine-baseline.md)修订为准。旧C#工厂、ContentSource和旧suite运行证据只作迁移依据；正常Run尚未恢复，不能按历史“已交付”安排续跑。当前能力与排期见[主清单](../review/tofix/README.md#当前交付)。
+2026-10-20落点校准：本文完整验收要求继续有效。当前生产base为纯DSL／静态JSON，活动core基线以[核心契约](../contracts/core-engine-baseline.md)修订为准。旧C#工厂、ContentSource和旧suite运行证据只作迁移依据；正常Run尚未恢复，不能按历史“已交付”安排续跑。当前能力与排期见[路线图](../roadmap.md#近期队列)。
 
 2026-10-15 用户决定：采用 v0.109 随机规则，`reference/sts2-sim` 保持只读。正式工厂默认 `RandomLayoutId=sts2-v0.109-xxhash64@1`，原始字符串按 UTF-8 XxHash64 派生根及具名流，ulong 加法回绕；`old` 前缀仅对根 seed 使用旧 hash32。历史 hash32 配置由 `RunConfiguration.FrozenIronclad` 显式选择。该决定替代本文旧正常初始化包的参考重播种方案；历史受控机制 case 的既有授权范围保留。游戏内容源基线仍单独标识，本次不声称完整内容已升级至 v0.109。
 
@@ -9,13 +9,13 @@
 | 版本 / 日期 | v1.1；2026-10-05；core冻结，开发工厂部分交付；下游接入/完整环境仍未验收 |
 | 适用范围 | 当前ENV-00～06长任务；通用Engine、base正式内容、net公开出口、tools严格对拍；AI只做确需的契约兼容 |
 | 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](net-the-spire/protocol.md) |
-| 状态与派单 | 只在[唯一清单](../review/tofix/README.md)更新；[goal](agent-goals.md)不另定义范围 |
+| 状态与派单 | 只在[路线图](../roadmap.md)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |
 
 执行 ENV 任务时，用本文件核对架构约束与交付证据。主验收仍包括完整 Ironclad 中间里程碑、五角色全量环境与严格对拍；约束条目数量不能代替运行成果。
 
 旧 G/H/B 阶段及 Legacy 成果只提供复用线索。执行者需要在活动 Engine 路径核对实际行为，不能把这些旧成果计作新路径的完成证明，也不能将本文件转为新一轮纯设计任务。
 
-接续按[模块分工](post-core-agent-assignments.md)：A拥有base的DSL玩法／初始化，B拥有独立对拍并协调构建，C拥有net公开契约；各线加载同一manifest与规则身份。本文出现“补通用能力”指负责人核对最小复现后安排维护，不授权另建调度器。D/客户端取证、E/指定mod后排独立派单，不是当前原版编码前置。
+接续按[开发约定](../../CONTRIBUTING.md)：A拥有base的DSL玩法／初始化，B拥有独立对拍并协调构建，C拥有net公开契约；各线加载同一manifest与规则身份。本文出现“补通用能力”指负责人核对最小复现后安排维护，不授权另建调度器。D/客户端取证、E/指定mod后排独立派单，不是当前原版编码前置。
 
 ## 1. 决策边界与执行范围
 
@@ -50,7 +50,7 @@
 
 ## 3. 同一个正式构建、同一条会话创建路径
 
-`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../tools/base-migration-baseline/README.md)，当前缺口及验收见[唯一清单](../review/tofix/README.md#当前任务)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
+`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../tools/base-migration-baseline/README.md)，当前缺口及验收见[路线图](../roadmap.md#近期队列)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
 
 工厂负责构建正式RuleSet，并为给定GameSeed创建**配置完成、尚未Start**的独立Session：选择数值/随机Profile，派生Run/Player/内容流，在任何会消耗随机的开局程序之前布流。Host和BaseBackend调用同一工厂；启动由各控制入口调用一次，禁止工厂和ControlSession各Start一次。范围ID属于不可变构建配置，使用下列显式身份：
 
@@ -161,13 +161,13 @@ raw reference hash/版本、默认顺序与CreateKeyed路径分开；不因某�
 
 ### ENV-T04初始洗牌的派生对齐边界（2026-10-08）
 
-负责人核对当前源码：`sts2/src/Core/Runs/RunRngSet.cs:104-119`按完整游戏seed做hash32，命名流经`Rng(uint,string)`做uint加法回绕；当前参考`RunRngSet(string)`默认`usesSemanticKeys=false`，仍为顺序抽样，只有显式`CreateKeyed`才重键。参考的哈希变为UTF-8/XxHash64，命名流用ulong相加，且`old`前缀对run seed另有旧哈希分支；不能因此推断整个参考的游戏版本升级或把默认路径当重键。源码摘要固定在[本轮输入](../../.audit/dsh-supervisor/review-2026-10-08-1639/rng-source-inputs.json)，参考HEAD为`2cdaea3b6dbc20cfa340662fa73640f20bb6fb00`且存在共享未提交改动，HEAD不能替代实际文件摘要。
+负责人核对当前源码：`sts2/src/Core/Runs/RunRngSet.cs:104-119`按完整游戏seed做hash32，命名流经`Rng(uint,string)`做uint加法回绕；当前参考`RunRngSet(string)`默认`usesSemanticKeys=false`，仍为顺序抽样，只有显式`CreateKeyed`才重键。参考的哈希变为UTF-8/XxHash64，命名流用ulong相加，且`old`前缀对run seed另有旧哈希分支；不能因此推断整个参考的游戏版本升级或把默认路径当重键。源码摘要固定在，参考HEAD为`2cdaea3b6dbc20cfa340662fa73640f20bb6fb00`且存在共享未提交改动，HEAD不能替代实际文件摘要。
 
 本次只授权为`rng-initial-shuffle`建立可比入口：先核对可用匹配冻结参考；若不可得，可在工具层实现显式源版本Profile，仅替换已确认的完整字符串哈希、命名流哈希/32位回绕以及旧前缀解释。参考原生默认构造、MegaRandom/抽样算法、卡牌/敌人/地图/奖励效果均不修改；不得调用base派生函数、为此给输入seed加`old`、补抽或重键。每个实际涉及的流必须有独立源向量和调用顺序证据，原始seed、有效派生、范围及代码摘要进入参考身份。首次洗牌所需的其他初始化能力若仍缺，保持原case blocked并交精确剩余缺口；新规则差异、其他case或扩大允许偏离须另行裁决。Profile获准实施不等于比较或T04已验收。
 
 ### ENV-T04地图两seed的派生对齐边界（2026-10-08）
 
-负责人核对 `sts2/src/Core/Map/StandardActMap.cs:111-114`：首幕地图使用独立 counter-0 的 `new Rng(runState.Rng.Seed, "act_1_map")`，命名流加法仍按 `Rng.cs:52-55` 的 uint 回绕。源与参考输入摘要保存在[地图对拍输入](../../.audit/dsh-supervisor/review-2026-10-08-2153/map-source-inputs.json)。本次允许工具层在新增严格 case `map-generated-alpha` / `map-generated-beta`（原字符串 seed `t05-map-alpha` / `t05-map-beta`）复用上述已确认的完整字符串 hash32、命名流 hash32 和 uint 回绕兼容方法，为参考独立地图服务构造同名流；不是复用 base 的地图重放词表或计算结果。
+负责人核对 `sts2/src/Core/Map/StandardActMap.cs:111-114`：首幕地图使用独立 counter-0 的 `new Rng(runState.Rng.Seed, "act_1_map")`，命名流加法仍按 `Rng.cs:52-55` 的 uint 回绕。源与参考输入摘要保存在。本次允许工具层在新增严格 case `map-generated-alpha` / `map-generated-beta`（原字符串 seed `t05-map-alpha` / `t05-map-beta`）复用上述已确认的完整字符串 hash32、命名流 hash32 和 uint 回绕兼容方法，为参考独立地图服务构造同名流；不是复用 base 的地图重放词表或计算结果。
 
 该授权仅覆盖这两个 case 的种子派生。参考的默认入口、地图算法、NextFloat/NextInt/高斯与洗牌、遍历顺序及内容效果保持原状；逐流源向量、counter-0 状态、真实调用计数/结果、Profile 配置与代码摘要须进入参考身份。参数、节点、边或其他随机路径仍有差异时如实失败，不能扩大 Profile 或全局忽略。原15必测 ID 保留，新 case 不替代初始化/奖励/完整 Run 验收。
 
@@ -227,18 +227,18 @@ A完成后立即进入B/C纵向推进；不能以“严格测试平台仍可继�
 
 机制case允许在明示初始化阶段设边界血量/牌区，但不能抵完整Run证据；正常胜利/死亡case和Host完整轨迹必须不注入状态。普通/升级及有/无条件参数由同一模板覆盖，避免再复制一份卡牌规则。
 
-固定产物放`artifacts/environment/`：`inventory/`源清单，`tests/{regression,ironclad,full}/`本轮结果与失败记录，`candidate/`最终manifest/coverage及胜负公开轨迹，`performance/`Release测量；开发临时输出放`.audit/`。case/suite结果绑定本轮run_id和预期ID列表，旧目录残留不参与统计；不扫描所有历史JSON里的字符串来算通过覆盖。
+本轮临时产物放`.artifacts/environment/`：`inventory/`源清单，`tests/{regression,ironclad,full}/`本轮结果与失败记录，`candidate/`最终manifest/coverage及胜负公开轨迹，`performance/`Release测量；其他开发临时输出也使用`.artifacts/<任务>/`，任务结束后按开发约定清理。case/suite结果绑定本轮run_id和预期ID列表，旧目录残留不参与统计；不扫描所有历史JSON里的字符串来算通过覆盖。
 
 环境manifest包含源/参考文件摘要、实际构建/工具/数值/随机/Profile及配置身份、完整内容表、必测/执行/双侧passed/源裁决/blocked/failed/timeout数、正常胜负与公开轨迹引用、成本和未验证范围。每个数字可追到本轮case和原始结果；模型不得手填“全部通过”。目录/声明数与行为case数分开，单纯旧测试数量增长不关闭阶段。
 
 默认命令`pwsh -File tools/differential/test-env.ps1 -Suite regression`一次构建后按根约定执行已有检查和严格suite；阶段选择ironclad-run/full-singleplayer。任何子进程非零都原样使总命令失败；不能用管道/捕获异常后返回0，参考不存在时严格suite必须失败但不阻止生产项目独立构建。具体机器测试和脚本待执行者实现。
 
-## 13. 时间、报告与停止条件
+## 13. 验证成本与完成条件
 
 开发只跑受影响case和共用机制必要回归，机制族完成跑regression，整局变更/阶段跑ironclad-run，重大共享变更/候选跑full-singleplayer。根AGENTS规定的构建/Engine与适用base/net检查不能省略；归档Legacy只在归档相关变更时单独验证，不是活动默认门槛。无新改动、失败或未解风险不重跑同一全套。不为达到测试数量目标增加重复断言。
 
 保持每case120秒/20000决策/100层，最终矩阵14400活动秒保护；run生成及参考脚本采集也受每case保护。性能测量按任务包分项，不另跑无界benchmark或AI搜索；若保护不足以完成真实源Run，记录实际超限与调整需求，不缩短源规则或伪造终点。
 
-每机制族/阶段一份简短ENV综合交接：新实际能力、改动文件与依赖、实际命令/返回码、case数量和首个差异、来源裁决、剩余阻塞。单次编辑失误的过程叙述无需不断追加主清单；主清单只更新认领/状态/证据，不每张牌建tofix。已验收能力不反复重建；历史混合报告不整体归archived。
+通过 PR 描述新增行为、接口变化及限制，由 CI 报告实际执行与首个差异。正式规格只更新受影响的行为要求，不生成逐批交接或检查报告。
 
 不在三房间/某机制族/Ironclad阶段结束当前全环境goal；完整候选结算后停止自动接续，用户/规划者审查。明确未完成比虚报完成可接受，不能用时间预算到期、测试全绿或报告齐全把goal标complete。

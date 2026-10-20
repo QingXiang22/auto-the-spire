@@ -1,5 +1,7 @@
 # 公开整局运行器 `run_game.py`
 
+当前 `run_game.py` 仍面向旧 formal-dev／dev-map 场景。当前纯 DSL 包尚未恢复正常 Run，本页保留驱动参数和策略参考；可执行的开发场景调用见 [公开接口指南](../../docs/design/net-the-spire/how-to-run-public-game.md)。
+
 编写新策略前可先运行[最小客户端教程](../../docs/design/net-the-spire/how-to-run-public-game.md)。本运行器的实体、字段、集合、牌堆和地图关系访问复用[public_snapshot.py](public_snapshot.py)，调用签名见[客户端参考](../../docs/design/net-the-spire/public-client-reference.md)。
 
 `net-the-spire/client/run_game.py` 用**公开 NDJSON 协议**（`NetClient`）把一整局 Spire 从正常
@@ -22,9 +24,9 @@
 ```powershell
 # 只读的不可变公开 Host（本包验证所用，SHA256 805C123D9941454E0B15E704CD48EB107A2E2A26DCC4555DDE8617513D0C1F6D）
 python -X utf8 -u net-the-spire/client/run_game.py `
-  --host-dll .artifacts/parallel/dsh-core-author-04/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll `
+  --host-dll net-the-spire/Net.TheSpire.Host/bin/Debug/net9.0/Net.TheSpire.Host.dll `
   --scope dev-map --seed ACT1-BASIC-10 `
-  --output .audit/dsh-public-run-driver-2026-10-11/runs/example `
+  --output .artifacts/public-run/example `
   --max-actions 600 --use-potions
 ```
 
@@ -154,125 +156,3 @@ python -X utf8 -u net-the-spire/client/run_game.py `
 `summary.run_complete` 只有在退出码 0 且拿到 `win`/`loss`/`other` 终局时为 `true`。**幕完成、
 步数上限、故障一律不写成整局通过**；第一幕过关（`ActCompleted=true`）永远只是
 `act_completed_dev_boundary`。
-
-## 实跑证据（不可变公开 Host，只读）
-
-### 2026-10-11 wave-1（旧 Host `805C123D…`，本表是当时的原始记录）
-
-命令统一为：
-
-```powershell
-python -X utf8 -u net-the-spire/client/run_game.py `
-  --host-dll .artifacts/parallel/dsh-core-author-04/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll `
-  --scope dev-map --seed <SEED> --output <DIR> --max-actions 700 --use-potions
-```
-
-| 运行 | seed | 结果 | 退出码 | 说明 |
-| --- | --- | --- | --- | --- |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/act1-full-A2` | `ACT1-BASIC-10` | 179 步 `death`（floor 7 `snapping-jaxfruit-normal`，hp 8→0） | 0 | 真实整局终局 |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-B` | `ENV-T03-SEED-B` | 138 步 `death`（floor 6，`Defeat.Turn=5`） | 0 | 真实整局终局 |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-G` | `ENV-T03-SEED-G` | 182 步 `death`（floor 8） | 0 | 真实整局终局 |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-K` | `ENV-T03-SEED-K` | **315 步**推进到 **Boss 房**（`vantom-boss`，floor 17，room 12）后 `death` | 0 | **最深的真实轨迹**：地图选点、战斗、奖励、宝箱、营火全走通；`Defeat.Turn=6` |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-K-repeat` | `ENV-T03-SEED-K` | 与 `seed-K` **逐行相同**（315 个 action / `candidate_id` / `observation_id` 全等） | 0 | 可复现性证据 |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-E` | `ENV-T03-SEED-E` | 240 步，floor 13 hp 70/80，止于只提供 `Unknown` 的地图节点 | 4 | **开发边界**（事件房未接线） |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/smoke-6` | `ACT1-BASIC-10` | 6 步后 `step_limit` | 3 | 步数上限不算通过 |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/act1-full-A` | `ACT1-BASIC-10` | 51 步 `host_rejected`（`backend_fault`：商店房未实现） | 4 | 故障不算通过 |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-J` | `ENV-T03-SEED-J` | 175 步止于只提供 `Elite` 的地图节点 | 4 | 开发边界（精英房未接线） |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-L` | `ENV-T03-SEED-L` | 17 步止于只提供 `Shop` 的地图节点 | 4 | 开发边界（商店房未接线） |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-M` | `ENV-T03-SEED-M` | 46 步止于只提供 `Shop` 的地图节点 | 4 | 开发边界（商店房未接线） |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-F` | `ENV-T03-SEED-F` | 78 步止于只提供 `Unknown` 的地图节点 | 4 | 开发边界（事件房未接线） |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/seed-I` | `ENV-T03-SEED-I` | 14 步止于只提供 `Unknown` 的地图节点 | 4 | 开发边界（事件房未接线） |
-| `.audit/dsh-public-run-driver-2026-10-11/runs/stale-observation-*` | `ACT1-BASIC-10` | 过期观测负对照：宿主回 `stale_observation`（`not_started`） | 4 | 换候选必须用当前观测 |
-
-`ActCompleted`（`MapPhase==6`）分支**未在实跑中到达**：本机固定策略目前要么在幕 1 末段战斗死亡，
-要么先撞上"只提供 `Unknown` 事件房"的开发边界。该分支的行为是代码与协议层结论（`--step-frontier`
-通路），**如实记为未覆盖**。
-
-### 2026-10-11 wave-2（商店支持，Codex 固定 Host `78F2CDF5…`）
-
-商店支持（本文件的 `--shop-*` 选项与第 4 步）在
-[wave-2 证据索引](../../.audit/dsh-shop-public-driver-20261011/validation.md)里带完整证据
-（原始帧在 `.audit/dsh-shop-public-driver-20261011/runs/<RUN>/`）：
-
-* **离线策略检查** `python -X utf8 -u net-the-spire/client/test_shop_public.py`（672 项断言，rc 0）：
-  合成公开快照上的店内规则 + 删牌 decision 区分 + 进店许可判定 + 对 wave-1 记录的**逐快照复算**。
-* **固定 Host 上的正常前缀**（`--host-dll .artifacts/parallel/owner-flow-review-next-20261011/bin/OwnerHost/debug/Net.TheSpire.Host.dll`）：
-  该 Host 的公开目录**没有声明任何商店动作**，因此 `--shop-room auto` 判定"不进店"，`seed-L` 19 步、
-  `seed-M` 46 步仍按原分类停在只提供 `Shop` 的地图节点（`unsupported_map_room`，退出码 4）；
-  `seed-K`/`seed-J`/`seed-E` 分别推进 127/94/105 步（战斗、奖励、旅行相位）后停在**宿主内容缺口**
-  （`missing enemy behavior base-spire:fogmog` / `cubex-construct`），不是商店问题。
-* **进店许可负对照**：`--shop-room enter --shop-policy buy --shop-remove` 实地把 `Shop` 节点推给固定 Host，
-  宿主具名拒绝（`backend_fault`：`房间类型 商店 尚未实现`）→ `fault_host_rejected`、退出码 4、
-  `run_complete=false`。**没有伪造成商店可达或通过。**
-
-真实商店轨迹（进店 → 公开商品选择 → 删牌 decision → 离店 → 回地图）需要宿主真正接线商店的构建，
-本包未拿到，因此记为**公开商店证据依赖 ENV-T09 最终 Host**；`test_shop_public.py --only replay` 已用
-wave-1 的 8 个当前规则记录（含 seed-K 315 步）证明旧分支不回归。
-
-### 2026-10-12（商店公开契约收口；Codex 固定 Host `F8FACE60…`）
-
-固定 Host `.artifacts/parallel/owner-project-review-20261012/bin/Net.TheSpire.Host/debug/Net.TheSpire.Host.dll`
-（SHA256 `F8FACE609121821489719CE8215FE94633CCBB38A4642E9EF2DE3787C1B37F68`）已真正接线商店，
-`--shop-room auto` 判定进店。本轮只消费负责人已录的两局真实轨迹并补一个现场反例，**没有重跑整局矩阵**：
-
-* **两局真实轨迹逐快照复算**：`test_shop_public.py --only replay --run-dir .audit/owner-project-review-20261012/shop-buy-remove`
-  （45 步，rc 0）与 `…/shop-remove`（46 步，rc 0）——复算的 `candidate_id` 与记录**逐字一致**，
-  含 `BuyShopCard`、删牌 decision 的 `net.answer_decision` 与 `LeaveShop`。复算按**记录里的策略**
-  重建固定规则（`shop_room_entry` / `shop_*`），不再假定"记录里没有商店"。
-* **商店公开闭合**：14 格公开货架（`Slot` 0..13）、不可买条目的源身份与非空原因、买卡进公开
-  `LongTermDeck` 的永久副本、金币每笔只扣一次、`RemoveShopCard` 暂停后按已公开实例删对牌、
-  `MapPhase 7 → 2` 与后续合法候选，逐帧核对见
-  [本包契约校验日志](../../.audit/dsh-shop-public-contract-20261012/verify-shop-contract.log)。
-* **现场反例** `--probe-rejected-candidate`（`--shop-policy buy`，`ENV-T03-SEED-L`，26 步，退出码 3）：
-  买下 `base-spire:havoc`（金币 111 → 63）后用刚消费掉的旧 `candidate_id` 配当前 `observation_id` 重发，
-  宿主具名拒绝 `illegal_candidate` / `execution_state=not_started` / `retry_mode=correct_input`；
-  随后 `observe` 的 Run 公开字段与 `legal_actions` **逐字段不变**，当前快照仍提供 `LeaveShop`，
-  紧接着第 22 步 `LeaveShop` 成功、`MapPhase` 回到 2。原始响应见
-  `.audit/dsh-shop-public-contract-20261012/runs/shop-buy-probe/rejected-candidate-probe.json`。
-
-## 明确的未支持边界
-
-* **房型**：客户端可提交 `Unknown`（问号）与 `Elite`（精英）当前候选。问号判型、事件池与精英内容由Host决定；未实现内容仍可具名 `backend_fault` 停止，不算通过。`Ancient` 等其它未消费房型仍是 `unsupported_map_room`，不虚报支持。`Shop` 是否进店仍由 `--shop-room` 决定。`host_fault_attribution` 保存提交候选、观察、地图节点类型及原错误；`backend_fault` 本身不是结构化“内容缺失”码，准确根因以Host具名消息为准。失败后摘要保留最后成功快照，不声称引擎已回滚。
-* **事件**：无逐事件ID映射。`event_events` 记录进入、全部当前候选、稳定排序、显式匹配和关闭后的公开相位/HP/金币。关闭后从下一快照恢复地图/商店/战斗，不沿用旧候选或旧 ActualRoomType 判断事件访问。选项执行资格、效果、页转换、死亡与关闭都交Host。
-* **商店**：客户端只按公开 `Offer` 字段挑候选，不重判买不起/容量/可删；一次访问买一件、删一张。
-  货架字段缺失、删牌 decision 的域不是公开长期牌组、相位 7 但无显式策略且无 `LeaveShop` 都会
-  **具名停止**（`shop_no_decision` / `shop_removal_decision_domain_mismatch` / …），不猜值。
-* **幕转换**：`ContinueToNextAct` 在 `dev-map` 上由宿主显式 `Fail("act transition is not implemented
-  in dev-map scope")`；驱动器默认不推它。
-* **宝箱遗物**：`TakeTreasureRelic` 的可用性取决于遗物接线；默认 `skip`。
-* **药水**：只使用公开声明 `UseSupported=true` 的瓶子；`DiscardPotion` 永远不主动选。
-* 任何未识别的公开 action 名或不可判定字段组合都会停成 `unsupported_action`（退出码 4，且把
-  未知 action / 字段集合写进 `stop.detail`）。
-
-## 2026-10-13 固定Host消费者证据
-
-正式入口（不是包装）使用固定Host SHA256 `A296C2672305B8C96092D8273464B761D98930CFA93454D2A7BC2D6440483B75`：
-
-```powershell
-python -X utf8 -u net-the-spire/client/run_game.py `
-  --host-dll .artifacts/parallel/owner-dsh-wave-20261013/host/Net.TheSpire.Host.dll `
-  --scope dev-map --seed ENV-T03-SEED-L --max-actions 90 --use-potions `
-  --shop-room auto --shop-policy buy --shop-buy-kind card --shop-remove `
-  --event-choice SunkenStatueDiveIntoWater `
-  --output .audit/dsh-public-event-policy-20261013/runs/seed-L
-```
-
-结果：第46步进入问号事件，第47步HP67→60、金币73→179、phase8→2并清当前事件；第48步进入下一商店，第49步购买，第50–52步删牌decision及离店，随后第三场战斗与奖励。72次成功提交后第73次Elite候选被Host具名拒绝：`byrdonis-elite cannot execute: missing enemy behavior base-spire:byrdonis`。实际rc4、`run_complete=false`、`close_ok=true`，**不是整局通过**。修复了商店访问级买/删标记跨店泄漏，因此与旧70步包装轨迹不同。
-
-同seed将 `--event-choice` 改为 `GrabSword`：46次成功后第47次选项提交被Host以 `SwordOfStone` 获得与效果未实现拒绝，rc4；没有选择替代事件或选项。
-
-原始帧/步骤/公开身份与关闭结果分别在[主运行摘要](../../.audit/dsh-public-event-policy-20261013/runs/seed-L/summary.json)、[主运行原始帧](../../.audit/dsh-public-event-policy-20261013/runs/seed-L/frames.ndjson)、[主运行步骤](../../.audit/dsh-public-event-policy-20261013/runs/seed-L/steps.ndjson)与[GrabSword摘要](../../.audit/dsh-public-event-policy-20261013/runs/seed-L-grab-sword/summary.json)。
-
-检查入口：`python -X utf8 net-the-spire/client/test_event_public.py`（合成公开输入的事件/候选隔离判别）及 `python -X utf8 net-the-spire/client/test_shop_public.py --only replay --run-dir .audit/dsh-public-event-policy-20261013/runs/seed-L`（73次提交逐快照候选复算，包含最后被拒绝的提交；不是游戏规则独立对拍）。
-
-## 与既有产物的关系
-
-* `net-the-spire/client/net_client.py` **未修改**：驱动器只 import 它的 `NetClient` /
-  `NetClientError` / `OutcomeUnknown` / `host_command`，并用子类覆写 `_write_frame` / `_read_line`
-  记录原始帧（不改协议行为）。
-* `tools/base-spire-dev/act1_smoke.py` 只作公开协议参考阅读；其 fixture 的固定 `candidate_id`、
-  golden 身份**没有**进入驱动器。
-* `net-the-spire/client/README.md` 的药水验证说明**未修改**，本工具不重复其断言；
-  [test_shop_public.py](test_shop_public.py) 是商店策略与公开候选闭合的独立检查，不启动 Host、不重复药水套件。
-* `public_snapshot.py` **未修改**：商店货架读取按公开 `ShopOffers` 序列 + 公开字段复用它的
-  `sequence` / `public_fields` / `field`，没有为商店新增共享访问器。

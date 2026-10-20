@@ -6,6 +6,6 @@
 dotnet run --project tools/differential -- test --suite regression --output .artifacts/differential/regression
 ```
 
-这条命令应返回非零，不构造独立比较成功。原源与适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[冻结检查清单](../../docs/review/records/2026-10-18/base-dsl-check-disposition.json)。
+这条命令应返回非零，不构造独立比较成功。原源与适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[CI 迁移夹具](../ci/fixtures/legacy-dsl-checks.json)。
 
 [迁移检查](../ci/README.md) 验证该失败语义、原 suite 身份以及生产依赖隔离；它不是原完整对拍门槛。恢复时必须由同一 DSL 包与真正独立的参考分别执行，保留原分母、维度和失败条件，不按现有可玩子集缩小目标。[参考版本](../../reference/README.md)与原 ENV 合同保持有效；参考玩法未修改。

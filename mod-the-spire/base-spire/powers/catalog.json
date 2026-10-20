@@ -50,7 +50,7 @@
       "source_sha256": "fb1e98f4f2eb27c090ddf7401c0ba66d895fd892994980f357a29f28a6ecc47d",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/aggression-power.spire"
     },
     {
@@ -130,7 +130,7 @@
       "source_sha256": "6dbe0c789b106b530314e05e9bf78fed2033bfcbfcd4dc01a041a105d6647138",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/barricade-power.spire"
     },
     {
@@ -300,7 +300,7 @@
       "source_sha256": "5124825b7e280ec51ff427abf3b2c7dc55f2441b2e8d9f53469ab058136788e9",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/colossus-power.spire"
     },
     {
@@ -380,7 +380,7 @@
       "source_sha256": "c727aff77fb6162d21824db13fd438335db40afb5e1c6512383ef27178f04450",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/corruption-power.spire"
     },
     {
@@ -430,7 +430,7 @@
       "source_sha256": "a9319ea9b6f56cb6cdb259e6bca72844c5ce12abd73d2916550e3bbb9001c2a7",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/crimson-mantle-power.spire"
     },
     {
@@ -440,7 +440,7 @@
       "source_sha256": "c36e414226a11ef82fe64b4900eff2c53ce28193d88d908516111fdcad95e0ba",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/cruelty-power.spire"
     },
     {
@@ -500,7 +500,7 @@
       "source_sha256": "78eeedaa2a4620ca5e0d2c21a9f6c311e63d664e62c0ede844a90c813149a688",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/dark-embrace-power.spire"
     },
     {
@@ -550,7 +550,7 @@
       "source_sha256": "8c5b4dbd0d3cbec51cc7ba947ee9cce833f11153928144bc201601cf150b67a8",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/demon-form-power.spire"
     },
     {
@@ -570,7 +570,7 @@
       "source_sha256": "f6b561122838f50bda6bb7c3e9e42a54d738ad2f7b8ca6009963896107bac1e9",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/dexterity-power.spire"
     },
     {
@@ -760,7 +760,7 @@
       "source_sha256": "8cfece87071e6a71e832918c48f77da8fc06ff7490a05b4182cc2fb89e77c049",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/feel-no-pain-power.spire"
     },
     {
@@ -860,7 +860,7 @@
       "source_sha256": "3334f1dda0a5cff6a1373c71456313fdfd23f200c96512336df29ae8e4246dbe",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/frail-power.spire"
     },
     {
@@ -870,7 +870,7 @@
       "source_sha256": "ab02fe2ab264c5ee912b5c80f92c76155a9c3193305db32d0387c9201135b2d2",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/free-attack-power.spire"
     },
     {
@@ -1070,7 +1070,7 @@
       "source_sha256": "ac2a3ccd714f886dc9744cf340ba09597e961e20c35ef7499b97604fb82cbfef",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/hellraiser-power.spire"
     },
     {
@@ -1140,7 +1140,7 @@
       "source_sha256": "37f6cc144213a345db6ddb7e2b4e91c70ea67ac0c52a6ef529b3f1fac28b61e2",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/inferno-power.spire"
     },
     {
@@ -1200,7 +1200,7 @@
       "source_sha256": "0b1b726e0ef4b220d56194110286b4cda5bab270ae48615298804f5e717acae2",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/juggernaut-power.spire"
     },
     {
@@ -1210,7 +1210,7 @@
       "source_sha256": "ce01a890dc764c8540e9ab5c8cafa9eb32fc3cf640170b7cbf379143c5d86fd0",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/juggling-power.spire"
     },
     {
@@ -1290,7 +1290,7 @@
       "source_sha256": "b85f6318f75b5e630a69d6a83a17dd4640e1ea2d140e81f9ac87ac53fb6aa47c",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/mangle-power.spire"
     },
     {
@@ -1420,7 +1420,7 @@
       "source_sha256": "6e53b8ff5cd97e40d9377cd5b3ba8fdcc2366b03b485a6a63f32cb148ba07a19",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/no-draw-power.spire"
     },
     {
@@ -1430,7 +1430,7 @@
       "source_sha256": "951b1f4d7d5565f52c99adf2fe8501aa5e1871849ffff2ada894723cbe7a5d5a",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/no-energy-gain-power.spire"
     },
     {
@@ -1470,7 +1470,7 @@
       "source_sha256": "177ce685cca074e13c4a8dc743e93d6c86a1dd78726db30b801a343937a06ccc",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/one-two-punch-power.spire"
     },
     {
@@ -1600,7 +1600,7 @@
       "source_sha256": "f8e6f35b5df38ec5d79234ccc25a8e6e51f65ef01db10043be23c5bee64c377a",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/plating-power.spire"
     },
     {
@@ -1660,7 +1660,7 @@
       "source_sha256": "29db6bf96fd85e9d0a689c10d67ac5448dc84abd00691cc09033c3449d8c794f",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/pyre-power.spire"
     },
     {
@@ -1680,7 +1680,7 @@
       "source_sha256": "19f1631dca760fb5a22f079e921a2cc88cb9cdba3481254dc427b94fa0793e9f",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/rage-power.spire"
     },
     {
@@ -1820,7 +1820,7 @@
       "source_sha256": "c2a59a15cc8628370abec825ccaf9ed52b4c7a6da0327347da198840822b3001",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/rupture-power.spire"
     },
     {
@@ -1850,7 +1850,7 @@
       "source_sha256": "f56401efa59b39c48e6226b6d0e664783582d4a8a4ec0f795e9476a2be97f816",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Source-owned content model development trial; docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/SelfFormingClayPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/self-forming-clay.spire"
     },
     {
@@ -1880,7 +1880,7 @@
       "source_sha256": "ee02d3b1f0071ffaf13680dc63af6d0a101f9ac96764a2cc665324b0c5bc44b5",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/setup-strike-power.spire"
     },
     {
@@ -2120,7 +2120,7 @@
       "source_sha256": "7add49127fff1914f86b2c8a2143ab8422fe41ad36d39102af3bf0d5f2763b51",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/stampede-power.spire"
     },
     {
@@ -2190,7 +2190,7 @@
       "source_sha256": "267b986f0d1fc9666919f8ef2e3f714114f40355506a74c5bcc3977c283ffe49",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/strength-power.spire"
     },
     {
@@ -2420,7 +2420,7 @@
       "source_sha256": "96167a3d1513ad6da621861e3f64fc2d8ddc7cad618b54131c0955297c22912c",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/thorns-power.spire"
     },
     {
@@ -2490,7 +2490,7 @@
       "source_sha256": "1289b35e643369d24cfa0cb27b0dac9815379ffa134f257dd3975c06ac3d3c75",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/unmovable-power.spire"
     },
     {
@@ -2510,7 +2510,7 @@
       "source_sha256": "cd7e95ace8000dba8ce4b1c72f38c54de4b4f64136ee2cb59db35617d3041129",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/vicious-power.spire"
     },
     {
@@ -2550,7 +2550,7 @@
       "source_sha256": "8fd6a82db0c6dd460a2f1d118628c4ab2600dc97f93a31c672e84ee4a3147126",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/vulnerable-power.spire"
     },
     {
@@ -2570,7 +2570,7 @@
       "source_sha256": "b33ac1a44ff5edb75d6e5776627259b2bac2b4e6ab1905cab3d60b0cfa32a426",
       "pools": [],
       "eligibility": "development-supported",
-      "evidence": "Content-owned development Power module; source identity retained. Behavior and parity limits: docs/review/records/2026-10-19/content-model-migration-2026-10-19.md",
+      "evidence": "Source: sts2/src/Core/Models/Powers/AggressionPower.cs; source SHA256 is recorded in this entry.",
       "definition": "powers/shared/weak-power.spire"
     },
     {

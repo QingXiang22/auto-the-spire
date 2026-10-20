@@ -4,11 +4,11 @@
 
 这份手册面向维护原版内容与共享玩法的开发者。初次学习可先完成两篇教程；修改已有内容直接进入修改指南，新增独有效果进入内容模块指南。你不需要先通读旧组包器、Host 或全部恢复源码。
 
-适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有显式角色初态、永久牌组／战斗副本、开发战斗与卡牌选择、随机机制、奖励和营火等可复用操作；遗物与Power通过实例通知和只读修正监听参与流程。准确接口与限制查[操作参考](reference/operations.md)，实际定义及已执行见证查包目录和行为报告；任务认领、剩余内容及验证状态只看[主清单](../../review/tofix/README.md#当前交付)。开发scope不代表含Neow的正常开局、地图和完整Run已经恢复，各领域指南也不构成全内容可玩证明。
+适用基线为纯 DSL base 包，语言为 core/0.3。包入口是 [package.json](../../../mod-the-spire/base-spire/package.json) 和 [base.spire](../../../mod-the-spire/base-spire/base.spire)。已有显式角色初态、永久牌组／战斗副本、开发战斗与卡牌选择、随机机制、奖励和营火等可复用操作；遗物与Power通过实例通知和只读修正监听参与流程。准确接口与限制查[操作参考](reference/operations.md)，实际定义及已执行见证查包目录和行为报告；任务认领、剩余内容及验证状态只看[路线图](../../roadmap.md#近期队列)。开发scope不代表含Neow的正常开局、地图和完整Run已经恢复，各领域指南也不构成全内容可玩证明。
 
 ## 从教程开始
 
-需要仓库 `global.json` 指定的 .NET SDK 9.0.306、Python 3.12 和 PowerShell。教程在仓库根目录操作，在 `.audit/` 创建隔离副本，正式包保持原规则。
+需要仓库 `global.json` 指定的 .NET SDK 9.0.306、Python 3.12 和 PowerShell。教程在仓库根目录操作，在 `.artifacts/tutorials/` 创建隔离副本，正式包保持原规则。
 
 1. [配置第一个遗物](tutorials/first-relic.md)：加载真实包，把练习数值从 6 改为 8，通过公开 Host 观察实际结果。
 2. [编写共享触发规则](tutorials/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，用具体use配置调用它，观察逐抽 2／4／6 和空堆不触发。
@@ -43,4 +43,4 @@
 | 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容与行为重构目标](../../design/mod-the-spire/content-behavior-refactor-goals.md)，目标设计不等于现有接口 |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 
-本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[文档与 skill 约定](../../design/mod-the-spire/base-development-docs.md)。
+本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[开发约定](../../../CONTRIBUTING.md)。

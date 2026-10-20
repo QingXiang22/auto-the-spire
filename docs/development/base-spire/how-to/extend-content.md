@@ -34,4 +34,4 @@ Card／Power的content_ids可运行`dotnet run --project tools/base-spire-dev --
 
 新增正式遗物时，当前覆盖检查要求 definition 与真实行为报告一一对应；不能把 TheAbacus 的见证批量赋给其他遗物。见证生成由包外检查维护，开发 helper 观察成功不自动成为原版覆盖报告。[验证指南](verify-and-debug.md)说明命令边界。
 
-提交时更新对应领域契约／参考、主清单和综合证据，记录构建、scope、seed、来源与未验证项。原 ENV/W 完整验收独立保留。
+通过 PR 交付；使用方法或接口变化时更新对应规格／参考，检查结果在 CI 查看。完整环境仍按环境规格验收。

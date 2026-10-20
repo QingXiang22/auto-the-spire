@@ -47,7 +47,7 @@ def main() -> int:
     args.output.mkdir(parents=True, exist_ok=True)
     try:
         projects = check_projects()
-        record = json.loads((ROOT / "docs/review/records/2026-10-18/base-dsl-check-disposition.json").read_text(encoding="utf-8"))
+        record = json.loads((ROOT / "tools/ci/fixtures/legacy-dsl-checks.json").read_text(encoding="utf-8"))
         if record.get("hash_encoding") != "utf8-lf":
             raise ValueError("retired-source hashes must declare canonical text encoding")
         actual = set()

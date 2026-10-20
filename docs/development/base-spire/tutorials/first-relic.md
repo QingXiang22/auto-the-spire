@@ -9,7 +9,7 @@
 在 PowerShell 中执行以下命令。若学习目录已存在，保留原成果，换一个目录名并继续使用同一组变量。
 
 ```powershell
-$baseLesson = '.audit/base-spire-authoring-lesson'
+$baseLesson = '.artifacts/tutorials/base-spire-authoring-lesson'
 if (Test-Path -LiteralPath $baseLesson) { throw '学习目录已存在，请保留并选择新的目录名' }
 New-Item -ItemType Directory -Path $baseLesson | Out-Null
 Copy-Item -LiteralPath 'mod-the-spire/base-spire' -Destination $baseLesson -Recurse

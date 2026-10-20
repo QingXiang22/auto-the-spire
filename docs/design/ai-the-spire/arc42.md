@@ -49,7 +49,7 @@ core/mod 拥有规则，net 拥有公开投影及控制，AI 拥有表示/学习
 
 ## 11. 风险与技术债
 
-[提供方依赖](../net-the-spire/design.md#2-当前已知信息的来源)、[评审处置](../../review/records/2026-10-01/ai-encoder-review-disposition-2026-10-01.md)与[待决项](../ai-net-implementation-plan.md#6-待维护者决定的事项)列出当前缺口及阶段阻塞范围。
+[提供方依赖](../net-the-spire/design.md#2-当前已知信息的来源)、与[待决项](../ai-net-implementation-plan.md#6-待维护者决定的事项)列出当前缺口及阶段阻塞范围。
 
 ## 12. 词汇表
 

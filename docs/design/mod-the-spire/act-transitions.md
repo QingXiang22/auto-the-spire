@@ -1,6 +1,6 @@
 # 默认幕计划与跨幕生命周期
 
-文档类型：参考（Reference）。本页定义`dev-run`开发配置的幕状态、开局预生成和切幕行为。当前工程目标和验收状态只查[主清单ENV-T10](../../review/tofix/README.md#env-t10)。
+文档类型：参考（Reference）。本页定义`dev-run`开发配置的幕状态、开局预生成和切幕行为。当前工程目标和验收状态只查[行为要求](../environment-completion-and-differential-v1.md#env-t10)。
 
 ## 配置与源范围
 
@@ -44,7 +44,7 @@
 
 后续幕的第一个合法选点是实际古代人起点，完成它后才应开放普通后继。古代人效果未实现时按实际身份明确失败，不把它跳过为空事件。第一幕沿用既有开发开局，不据此宣称已实现Neow完整流程。
 
-验收据此区分开发开局首幕与包含Neow的正常开局首幕：前者可以验证地图／战斗／Boss奖励组合，后者必须先实现Neow选项、效果及其后续状态延续，再运行首幕全程。本段只明确现有开发范围的证明边界，未新增或改变运行行为；实际排期见[当前计划](../../review/tofix/README.md#推进顺序)。
+验收据此区分开发开局首幕与包含Neow的正常开局首幕：前者可以验证地图／战斗／Boss奖励组合，后者必须先实现Neow选项、效果及其后续状态延续，再运行首幕全程。本段只明确现有开发范围的证明边界，未新增或改变运行行为；实际排期见[路线图](../../roadmap.md#近期队列)。
 
 奖励升级概率读取实际`CurrentActIndex`，不继续固定第一幕的零概率。后续幕事件资格尚未接齐时明确失败，不能套用第一幕资格。第三幕结束后的`ContinueToNextAct`明确停在TheArchitect缺口，保留非全局胜利边界。
 
@@ -55,4 +55,4 @@ dotnet run --project tools/differential -- act-transition --output .audit/act-tr
 python -X utf8 net-the-spire/client/run_game.py --host-dll PATH_TO_HOST_DLL --scope dev-run --seed ENV-T04-RNG-SHUFFLE-001 --output .audit/dev-run --use-potions --step-unsupported-room
 ```
 
-第一条是原生默认三幕预生成、九张地图及受控切幕的独立核对，验证队列、计数、RNG指纹、状态/实例保留、旧对象清理、拒绝和最终边界；受控`ActCompleted`不是正常通关证据。第二条从正常公开开局推进，记录真实死亡或具体内容缺口；返回非零不能算通过。历史结果见[证据索引](../../review/records/README.md)。
+第一条是原生默认三幕预生成、九张地图及受控切幕的独立核对，验证队列、计数、RNG指纹、状态/实例保留、旧对象清理、拒绝和最终边界；受控`ActCompleted`不是正常通关证据。第二条从正常公开开局推进，记录真实死亡或具体内容缺口；返回非零不能算通过。

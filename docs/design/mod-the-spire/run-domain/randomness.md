@@ -1,6 +1,6 @@
 # 纯 DSL 原版随机机制
 
-关联 CORE-AUTHOR-05／DSL-RNG-RESTORE-01；状态见[主清单](../../../review/tofix/README.md#当前交付)。来源为本地冻结 sts2 的 MegaRandom、Rng、RunRngSet、PlayerRngSet、StringHelper、ListExtensions、CardModel.CompareTo 与 CardRarityOdds。
+关联 CORE-AUTHOR-05／DSL-RNG-RESTORE-01；状态见[路线图](../../../roadmap.md#近期队列)。来源为本地冻结 sts2 的 MegaRandom、Rng、RunRngSet、PlayerRngSet、StringHelper、ListExtensions、CardModel.CompareTo 与 CardRarityOdds。
 
 ## 通用能力与内容职责
 

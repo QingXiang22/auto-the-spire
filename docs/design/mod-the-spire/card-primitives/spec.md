@@ -1,6 +1,6 @@
 # 卡牌原语组合契约
 
-归属[ENV-T06](../../../review/tofix/README.md#env-t06)，本次以现有已支持卡牌为范围。普通卡牌的normal/upgraded与hooks组合可复用原语；原语编译到同一Engine IR，不增加按卡ID执行的旁路。诊断.author只在输入端翻译为相同类型化程序。
+归属[行为要求](../../environment-completion-and-differential-v1.md#env-t06)，本次以现有已支持卡牌为范围。普通卡牌的normal/upgraded与hooks组合可复用原语；原语编译到同一Engine IR，不增加按卡ID执行的旁路。诊断.author只在输入端翻译为相同类型化程序。
 
 | 能力 | 契约 |
 | --- | --- |

@@ -1,9 +1,9 @@
 # 公共组包编译模块
 
-> 2026-10-18：本页保留旧 C# base 的教程／接口依据，所列运行路径已退出生产，当前不能照此执行。纯 DSL 开发请从[开发指南](base-development-guide.md)与[包格式参考](../../dsl/core/0.3/package-reference.md)开始；原功能需按迁移任务恢复。
+> 2026-10-18：本页保留旧 C# base 的教程／接口依据，所列运行路径已退出生产，当前不能照此执行。纯 DSL 开发请从[当前开发资料](../../development/base-spire/README.md)与[包格式参考](../../dsl/core/0.3/package-reference.md)开始；原功能需按迁移任务恢复。
 
 
-文档类型：参考（Reference）。适用于修改base的共享规则接入；内容作者使用已有原语时仍从[base开发指南](base-development-guide.md)进入。本页列出实现入口和依赖传递方法，不维护任务状态。
+文档类型：参考（Reference）。适用于修改base的共享规则接入；内容作者使用已有原语时仍从[当前开发资料](../../development/base-spire/README.md)进入。本页列出实现入口和依赖传递方法，不维护任务状态。
 
 ## 公开入口与编译期参数
 
@@ -13,7 +13,7 @@
 
 ## 按职责定位
 
-以下模块位于所属领域的 `Compilation/`，根组装和公共符号在 `Composition/`；完整导航见 [领域目录](../../../tools/base-migration-baseline/BaseSpire/README.md)。每个方法的参数表列出它需要的符号分组和回调；它们不查询全局服务。
+以下模块位于所属领域的 `Compilation/`，根组装和公共符号在 `Composition/`；完整导航见 [现行 DSL 开发手册](../../development/base-spire/README.md)。每个方法的参数表列出它需要的符号分组和回调；它们不查询全局服务。
 
 | 要修改的规则 | 模块与入口 | 主要结果或消费关系 |
 | --- | --- | --- |
@@ -40,7 +40,7 @@
 
 [TurnCompilation](../../../tools/base-migration-baseline/BaseSpire/Combat/Compilation/TurnCompilation.cs) 在 `ResolveOwnerTurnEnd` 的 OwnSide 门控内读取当前 Power.Stacks，调用已有 `ApplyPower(Owner, PowerId, Stacks, false, false)`。玩家侧回合末只处理玩家拥有者，敌方侧回合末处理敌方拥有者；玩家在敌方末尾的非 OwnSide 调用不得重复触发。怪物的施加发生在本侧行动结束后，因此新力量影响后续行动，而非刚完成的攻击。源 Power 不跳过首次触发、不递减、不移除；这不同于 Ritual 的 convert-to-strength 首次跳过语义。共享敌人选择程序把所选行动同时写回 Engine 的 MachineState 和公开 NextMove，以便下一次从实际当前状态求后继；只更新意图会导致固定循环重复初始状态的后继。
 
-HP、Power 实例与层数、动作状态和随机游标全部属于 Engine 状态；本能力不新增可变 C# 状态、不抽随机。固定 Byrdonis SWOOP→PECK→SWOOP 转移不抽 MonsterAi；正式出生仍使用原有 HP 流在普通81..84范围抽取。tough90及deadly攻击声明不表示 Run 已支持 Ascension>0。源依据：[TerritorialPower](../../../sts2/src/Core/Models/Powers/TerritorialPower.cs) 的 participants.Contains(Owner) 及当前 Amount；[Byrdonis](../../../sts2/src/Core/Models/Monsters/Byrdonis.cs) 的出生与动作表。
+HP、Power 实例与层数、动作状态和随机游标全部属于 Engine 状态；本能力不新增可变 C# 状态、不抽随机。固定 Byrdonis SWOOP→PECK→SWOOP 转移不抽 MonsterAi；正式出生仍使用原有 HP 流在普通81..84范围抽取。tough90及deadly攻击声明不表示 Run 已支持 Ascension>0。源依据：`sts2/src/Core/Models/Powers/TerritorialPower.cs` 的 participants.Contains(Owner) 及当前 Amount；`sts2/src/Core/Models/Monsters/Byrdonis.cs` 的出生与动作表。
 
 可区分的错误行为由 [Byrdonis机制检查](../../../tools/base-migration-baseline/BaseSpire.Slice.Tests/Enemies/SliceByrdonisChecks.cs) 验证：应用即加力量、首次回合末跳过、递减层数、固定使用出生层数、敌方末尾重复触发玩家，以及 PECK 力量只加到总伤害一次。预设状态的测试场景不是正常公开 Run 或独立参考对拍证据。
 
@@ -58,6 +58,6 @@ HP、Power 实例与层数、动作状态和随机游标全部属于 Engine 状�
 
 `CombatLifecycle.BeginTurn`负责已有回合事实的重置，`CombatLifecycle.EndBattle`由换房流程调用，清理已有战斗计数和临时牌。新增字段的声明与Bindings成员本身不会自动增加重置指令。玩家初值在`NewRunCompilation.NewRun`，实际换房重建在`BattleRoomCompilation.RoomTransition`；永久状态提交由`SettlementCompilation`拥有。
 
-实际修改步骤见[新增共享状态字段](../../../tools/base-migration-baseline/docs/base-development-guide.md#新增共享状态字段)，新房型接入见[房间操作指南](how-to-add-a-room.md)。
+实际修改步骤见[现行 DSL 开发手册](../../development/base-spire/README.md)，新房型接入见[当前开发资料](../../development/base-spire/how-to/run-and-rooms.md)。
 
 构建顺序、IR局部量名称及随机调用顺序变化可能影响规则身份和轨迹。此类修改按根验证门槛检查真实内容加载及行为；接口没变的纯拆分，应保留同配置的规则身份和公开轨迹。

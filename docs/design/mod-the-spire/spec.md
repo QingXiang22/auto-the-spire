@@ -1,12 +1,12 @@
 # mod-the-spire specification
 
-2026-10-18用户确认的目标：base是使用Engine完整DSL的规则库与Spire内容包；Spire是该DSL的受限子集。具体效果、生命周期和整局流程不长期依赖C#游戏规则生成器。旧 C# 领域模块已退出生产，只在 tools 迁移对照保存。当前包仅支持遗物抽牌开发 scope；正常 Run 与未迁移内容明确未支持。目录拆分不构成完整玩法验收。目标、现状及迁移次序见[Engine DSL迁移设计](engine-dsl-migration.md)。
+2026-10-18用户确认的目标：base是使用Engine完整DSL的规则库与Spire内容包；Spire是该DSL的受限子集。具体效果、生命周期和整局流程不长期依赖C#游戏规则生成器。旧 C# 领域模块已退出生产，只在 tools 迁移对照保存。当前包仅支持遗物抽牌开发 scope；正常 Run 与未迁移内容明确未支持。目录拆分不构成完整玩法验收。目标、现状及迁移次序见[当前开发资料](base-architecture.md)。
 
 完整环境恢复的细则见[ENV实现约束](../environment-implementation-constraints.md)：同一manifest／Session、DSL单一内容源、权威状态／生命周期、完整房间与两侧case。旧SinglePlayer／ContentSource及本页后文C#编译模块属于历史实现依据，不是活动落点；当前结构查[base组织说明](base-architecture.md)，准确操作查[开发手册](../../development/base-spire/README.md)。禁止把旧Legacy／作者原型成果计入当前Engine或另造C#状态机。
 
 > 2026-10-04当前优先级：用户要求先完成[ENV完整单人环境与源规则对拍](../environment-completion-and-differential-v1.md)。core提供当前原版基线所需通用执行能力，base用正式DSL/规则库实现全部单人可达玩法，net提供完整公开出口；新增AI实验待环境候选验收。目标契约不因旧切片验收而缩小。
 
-本规范定义 `mod-the-spire` 的规则包职责、扩展方式与组合边界，遵循[项目整体规范](../spec.md)。接手时，先在[当前清单](../../review/tofix/README.md)确认任务，再查相关章节。
+本规范定义 `mod-the-spire` 的规则包职责、扩展方式与组合边界，遵循[项目整体规范](../spec.md)。接手时，先在[路线图](../../roadmap.md)确认任务，再查相关章节。
 
 ## 1. 目标边界（2026-10-01）
 
@@ -43,7 +43,7 @@ STS mod 可显式依赖 base-spire，扩展其开放的 Schema、内容、事件
 
 游戏包同时声明观察政策与可见信息更新；net 的机制覆盖表引用这些来源与行为证据，AI 不自行重放规则。公共 Schema/动作/事件/随机契约变化同时记录旧/新语义、编译结果、迁移文件和验收，不因旧 DSL 能解析就宣称已迁到通用引擎。
 
-2026-10-03迁移边界：现有`.author`是通用IR作者原型/预设状态的测试场景入口，正式作者约定仍为DSL 0.0.1；两解析器分读不同文件和旧后端继续加载不等于正式作者源已迁移。新机制可复用该原型，但生产路径需将实际0.0.1内容在游戏侧lower到Engine并给出加载/行为证据，避免长期维护两份内容。冻结旧后端用于兼容/对照，切换默认入口须等当前范围全部完成。当前任务见[W-01/W-05/W-06](../implementation-kickoff.md#193-可连续执行的工作包)。
+2026-10-03迁移边界：现有`.author`是通用IR作者原型/预设状态的测试场景入口，正式作者约定仍为DSL 0.0.1；两解析器分读不同文件和旧后端继续加载不等于正式作者源已迁移。新机制可复用该原型，但生产路径需将实际0.0.1内容在游戏侧lower到Engine并给出加载/行为证据，避免长期维护两份内容。冻结旧后端用于兼容/对照，切换默认入口须等当前范围全部完成。当前任务见[相关规格](../spec.md)。
 
 参考：[ironclad-dsl-coverage.md](ironclad-dsl-coverage.md)。
 
