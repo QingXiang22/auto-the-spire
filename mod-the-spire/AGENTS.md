@@ -1,34 +1,23 @@
-# mod-the-spire 协作约定
+# mod-the-spire 开发约定
 
-本文件适用于 `mod-the-spire/` 及其子目录，在 [开发约定](../CONTRIBUTING.md) 之上补充本模块更具体的约定。
+遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/terminology.md)。本文件补充内容开发边界。
 
-## 开发流程
+## 规则归属
 
-遵循 [开发约定](../CONTRIBUTING.md)，近期任务见 [路线图](../docs/roadmap.md)。使用任务分支／独立 worktree，通过 PR 和受影响 CI 交付；使用方法或接口变化时更新正式文档，无需逐批交接、会话登记或本地证据链接。
+- 活动 base 包只包含 `.spire` 和必要静态 `.json`，通过通用 Engine 加载执行。操作入口见[base 开发手册](../docs/development/base-spire/README.md)，组织方式见[base 架构](../docs/design/mod-the-spire/base-architecture.md)。旧 C# 编译与玩法代码只作为迁移参考，不作为当前修改入口或生产回退。
+- 游戏状态由 Engine 保存；规则包定义和构建代码不保存每局可变状态，不另写玩法调度器或隐藏的 RunState。
+- 解析、加载、行为测试、独立参考比较和公开接口运行分别确认。未支持内容明确失败，不能注册空效果或静默省略。
 
-## 实现边界
+## 复用与扩展
 
-当前ENV实施必须遵守[实现约束](../docs/design/environment-implementation-constraints.md)：SinglePlayer统一正式组包/会话工厂，ContentSource为正式内容单一来源；状态在Engine类型化存储，禁止另写调度器或隐藏的C#RunState。声明/加载/行为/对拍/公开出口分开结算；未支持内容不能静默省略、回退.author/Legacy或写空效果。内容包设计与覆盖情况见 [mod-the-spire spec](../docs/design/mod-the-spire/spec.md)。
+- 开工先查[领域操作参考](../docs/development/base-spire/reference/operations.md)，复用完整的获得、升级、移动、伤害和房间操作。新建实例、改字段或领取某类奖励的局部操作，不能替代其余生命周期。
+- 简单内容组合现有模板和操作；独有规则与私有状态保留在所属 DSL 模块。共享状态、时序和事件调用按领域统一维护，避免复制一套规则或汇集所有玩法的万能工具方法。
+- 新共享机制在已有规格写清输入、前置条件、状态归属、事件及随机顺序、公开结果、失败方式和能区分错误行为的测试。组合已有能力的内容引用同一规格，不逐卡建立重复规格或测试。
+- 按[监听编写指南](../docs/development/base-spire/how-to/write-effect-listeners.md)处理通知、修正、持有者、有效实例及销毁；依赖不满足时给出最小源代码案例并协调。
+- 新增内容通过所属领域的定义、索引和来源配置接入。Host、net 和 Engine 保持通用，不添加逐卡、逐怪物或逐事件的游戏效果分支。
+- 内容来源范围、资格、候选顺序与行为定义分别核对。自动加载不代表已进入原版内容池；源池选到未实现内容时明确失败，不能减少候选范围或用空事件代替。
+- 地图保存原始节点类型，实际进入的房间类型单独记录。房间访问生命周期、随机房型选择和具体事件效果分别归属相关领域；公开候选来自同一状态流程。
 
-## 领域与规格驱动开发
+## 验证与交付
 
-新增共享机制先写或补充对应机制规格：领域术语、输入/前置条件、Engine状态归属、执行与hook/随机顺序、公开结果、未支持范围和能区分错误实现的案例。实现和判别引用同一契约；一族机制一份规格，组合已有能力的内容引用它，不逐卡/事件新建规格、任务表或镜像测试。
-
-内容作者使用完整领域操作；普通事件优先继承 `ChoiceEventModule`，只描述选项、可用条件和效果，复用 `Domain/Run/RunResources`。Role、当前事件守卫、phase、关闭与死亡归共享编译器。新增已有能力内容不重复写金币/生命字段、调度、随机算法或收尾；缺共享能力时先给对应主责最小源案例。领域对象仅存编译符号/定义，局内可变状态仍属于Engine。参见[事件领域契约](../docs/design/mod-the-spire/event-domain/spec.md)。
-
-## 优先复用已有领域能力
-
-- 开工先从[当前开发资料](../docs/development/base-spire/reference/operations.md)查本次操作；按需要读取对应方法和契约，不为找一个方法通读全仓库。已有能力覆盖所需语义时必须复用，不在内容叶另写一套字段更新、实例复制、牌堆迁移或hook分派。
-- 判断覆盖的是完整行为及其适用范围。`CardDefinitions.New`只提供新实例字段，`PotionInventoryRules.Acquire`只领取该模块的奖励药水，`CloseVisit`只恢复旅行阶段；不能把它们当作完整的获得卡牌、任意药水获得或房间结算。能力缺少必要语义时向对应机制主责补充契约和实现，再迁移真实调用方；不复制旧实现，也不使用范围不符的方法凑合。
-- 公共方法按领域操作归属，例如获得遗物、获得金币、升级卡牌。封装一起维护的状态、顺序和hook；调用方保留自己的选项资格、价格/奖励计算及访问收尾。不新增汇集所有玩法的`Utils`或含大量房型开关的万能方法。
-- 新共享能力一并登记准确调用入口、前置条件、状态归属、已支持与未支持范围，并用真实调用方验证。必要判别放在共享契约层；组合已有能力的内容不逐项新增重复检查。初始化和战斗永久提交等状态装配可以直接写字段，但不能用“初始化”绕过本应发生的获得/移除行为。
-
-## 内容横向扩展
-
-普通卡牌的效果、normal/upgraded与hooks优先组合已有数值、控制流、选择、实例操作和Power规则。`chooseCard.onSelected`可顺序组合升级、复制和移动；新组合不新增AuthorStep、按卡ID的C#分支或专用执行器。确有共享语义不足的特殊机制，先在[原语契约](../docs/design/mod-the-spire/card-primitives/spec.md)说明源顺序及缺口，再交付独立领域能力；不要为复用而改变随机流、决策或hook顺序。
-
-卡牌按 `ContentSource/*-cards.spire`、怪物按 `ContentSource/enemies*.spire` 自动发现，新增内容可放独立文件；使用已有机制时，不在组包器、net或运行器添加逐卡/逐怪物ID分支。源卡池与遭遇池的资格、顺序和行为定义分开维护，自动加载不等于自动进入原版池。
-
-地图房型通过 `Slice/Rooms/MapRoomEntry` 组合进入处理器；问号节点判定出的实际房型与原地图节点类型分开保存，处理器不改写原节点类型。具体事件分别实现 `IEventRoomModule`，由 `EventRoomCatalog` 显式组合；注册处只列模块，不堆各事件效果、选项或按ID分派的手写switch。问号概率/事件池选择、事件访问生命周期和各事件内容分别归属对应模块。新增已有能力事件只添加独立模块和组合登记；新增共享能力再修改相应机制。源池选到尚未实现的事件必须明确报告，不以缩池、空事件或替代事件绕过。
-
-接口与可运行的两个独立事件例子见[当前开发资料](../docs/development/base-spire/reference/operations.md)和[当前开发资料](../docs/development/base-spire/how-to/run-and-rooms.md)。
+按根约定选择受影响检查，通过工单和 PR 说明实际测试结果、源码依据和未验证范围。正常游戏流程与人工构造的开发场景分别说明；完整环境的完成条件见[环境要求](../docs/design/environment-completion-and-differential-v1.md)。

@@ -31,4 +31,4 @@ body:
     id: dependencies
     attributes:
       label: 依赖与拆分安排
-      description: 写明已有依赖、近期准备拆出的执行切片及后续触发条件；提交后添加原生阻塞关系和 sub-issues。
+      description: 写明已有依赖、近期准备拆出的可独立交付的改动及后续触发条件；提交后添加原生阻塞关系和 sub-issues。

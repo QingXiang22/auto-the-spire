@@ -1,6 +1,6 @@
 # 项目文档
 
-开发流程、文档规则和临时产物管理统一见 [CONTRIBUTING](../CONTRIBUTING.md)。近期任务见 [任务入口](roadmap.md)，产品目标见 [项目规格](design/spec.md)。版本与支持范围以包 manifest 和所审提交的 CI 为准。
+团队约束见 [AGENTS.md](../AGENTS.md)，开发流程、文档规则和临时产物管理见 [CONTRIBUTING](../CONTRIBUTING.md)，用词见[术语与表达规范](terminology.md)。近期任务见 [任务入口](roadmap.md)，产品目标见 [项目规格](design/spec.md)。版本与支持范围以包 manifest 和所审提交的 CI 为准。
 
 ## 开始开发
 
@@ -13,7 +13,7 @@
 | 构建及运行检查 | [CI 与本地检查](../tools/ci/README.md)、[base 开发工具](../tools/base-spire-dev/README.md) |
 | 理解 DSL 组织与生命周期 | [base 架构](design/mod-the-spire/base-architecture.md)、[控制流程](design/mod-the-spire/control-flow-modules.md) |
 | 运行公开 Host 与客户端 | [公开运行指南](design/net-the-spire/how-to-run-public-game.md)、[客户端参考](design/net-the-spire/public-client-reference.md) |
-| 准备独立参考与对拍 | [参考版本](../reference/README.md)、[对拍工具](../tools/differential/README.md) |
+| 准备独立参考与差异测试 | [参考版本](../reference/README.md)、[差异测试工具](../tools/differential/README.md) |
 
 ## 查询规则与接口
 

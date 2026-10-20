@@ -80,7 +80,7 @@ def headings(text: str) -> set[str]:
 
 def iter_docs(root: Path, files: set[Path]):
     for path in sorted(files):
-        if path.suffix != ".md" or not path.is_file() or path.name in {"AGENTS.md", "AGENTS.override.md"}:
+        if path.suffix != ".md" or not path.is_file() or path.name == "AGENTS.override.md":
             continue
         if any(part in SKIP_DIRS for part in path.parts):
             continue

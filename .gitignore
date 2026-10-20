@@ -6,8 +6,7 @@ docs/architecture/c4/workspace.json
 **/bin/
 **/obj/
 
-# Root agent instructions are private to this workspace.
-/AGENTS.md
+# Personal agent overrides remain local; shared AGENTS.md files are versioned.
 /AGENTS.override.md
 
 # Locally restored game project and external checkout copies
