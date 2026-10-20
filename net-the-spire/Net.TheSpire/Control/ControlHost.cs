@@ -15,53 +15,14 @@ namespace NetTheSpire.Control;
 /// </summary>
 public sealed class ControlHost
 {
-    private readonly RuleSet _rules;
     private readonly PublicSnapshotProfile _profile;
-    private readonly ParticipantId _participant;
-    private readonly string _participantRole;
-    private readonly string _projectionId;
-    private readonly ulong _seed;
     private readonly int _ledgerCapacity;
-    private readonly IComputeBackend? _computeBackend;
-    private readonly ISessionSource? _source;
+    private readonly ISessionSource _source;
     private readonly Dictionary<string, ControlSession> _sessions = new(StringComparer.Ordinal);
     private readonly Dictionary<string, (string Fingerprint, ResponseDto Response)> _startLedger =
         new(StringComparer.Ordinal);
     private readonly string _runToken;
     private int _nextSession = 1;
-
-    /// <summary>
-    /// 旧受控切片/作者场景的控制宿主（自己建默认随机会话，协议 0.1）。
-    ///
-    /// <paramref name="computeBackend"/> 是**通用注入接缝**：规则包里若声明了计算资产
-    /// （<c>compute …</c>），宿主必须把该资产要求的后端交给会话。控制层不认识任何游戏 ID 或玩法，
-    /// 后端实例由组合层（Host/检查）提供；不传时保持旧行为（引擎在**执行**该资产时报
-    /// <c>Unsupported</c>，链接期只检查声明）。
-    /// </summary>
-    public ControlHost(
-        RuleSet rules,
-        PublicSnapshotProfile profile,
-        ParticipantId participant,
-        string participantRole,
-        string projectionId,
-        ulong seed,
-        int ledgerCapacity = 4096,
-        string? runToken = null,
-        IComputeBackend? computeBackend = null)
-    {
-        _rules = rules;
-        _profile = profile;
-        _participant = participant;
-        _participantRole = participantRole;
-        _projectionId = projectionId;
-        _seed = seed;
-        _ledgerCapacity = ledgerCapacity;
-        _computeBackend = computeBackend;
-        // 会话句柄**跨进程不复用**（protocol.md:193「ID 不复用」）：宿主重启后，"session-1" 这类字符串不得
-        // 让旧进程发出的句柄指向另一局游戏。会话 ID 属于控制元数据，不进入模型特征或重放语义比较
-        // （通用引擎设计 §8.1），因此用一个每次进程启动都不同的运行令牌把它们隔开。
-        _runToken = string.IsNullOrWhiteSpace(runToken) ? NewRunToken() : runToken!;
-    }
 
     /// <summary>
     /// **正式路径**的控制宿主：规则集、公开 Profile、场景与实际开局全部来自规则提供方
@@ -70,18 +31,13 @@ public sealed class ControlHost
     public ControlHost(ISessionSource source, int ledgerCapacity = 4096, string? runToken = null)
     {
         _source = source ?? throw new ArgumentNullException(nameof(source));
-        _rules = source.Rules;
         _profile = source.Profile;
-        _participant = default;
-        _participantRole = string.Empty;
-        _projectionId = string.Empty;
-        _seed = 0;
         _ledgerCapacity = ledgerCapacity;
         SupportedScenarioProfile = source.ScenarioProfile;
         _runToken = string.IsNullOrWhiteSpace(runToken) ? NewRunToken() : runToken!;
     }
 
-    /// <summary>协议版本：由所选公开 Profile 决定（0.1 旧场景 / 0.2 正式出口）。</summary>
+    /// <summary>当前公开协议版本。</summary>
     public string ProtocolVersion => _profile.ProtocolVersion;
 
     /// <summary>
@@ -93,11 +49,11 @@ public sealed class ControlHost
     /// <summary>
     /// 本后端支持的场景 profile id（`describe` 与 `start` 必须用同一个）。
     ///
-    /// 它是**实例**属性：旧切片/作者场景是 <c>base-spire-combat-slice-v1</c>，正式路径是规则提供方
+    /// 它是实例属性，取规则提供方
     /// （<see cref="ISessionSource.ScenarioProfile"/>）实际实现的范围 id。没有"全局默认 profile"这种退路
     /// ——那会让一个忽略实际 source 的常量冒充正式身份。
     /// </summary>
-    public string SupportedScenarioProfile { get; } = "base-spire-combat-slice-v1";
+    public string SupportedScenarioProfile { get; }
 
     /// <summary>本次运行（≈本次进程）的会话命名空间令牌；测试可显式传入以复现"同一进程"的语义。</summary>
     public string RunToken => _runToken;
@@ -108,13 +64,10 @@ public sealed class ControlHost
     public int SessionCount => _sessions.Count;
 
     /// <summary>
-    /// 检查用：正式路径下所选 <see cref="ISessionSource"/>（旧场景路径为 <c>null</c>）。
+    /// 检查用：所选 <see cref="ISessionSource"/>。
     /// 只用于核对"提供方建的会话确实是已配置未 Start 的那一个"，不得作为生产访问路径。
     /// </summary>
-    public ISessionSource? SourceForTests => _source;
-
-    /// <summary>`describe` 声明的实体限额；也是 group 成员数的派生上界（成员都是实体）。</summary>
-    private const long MaxEntities = 256;
+    public ISessionSource SourceForTests => _source;
 
     /// <summary>测试用：按 id 取会话（检查需要观察 <c>Settling</c> 等内部状态）。</summary>
     public ControlSession GetSessionForTests(string sessionId) =>
@@ -149,8 +102,8 @@ public sealed class ControlHost
         // `groups` 的上界 = 声明的 group_type 数（每个集合每份快照最多一个 group）。
         // `members_per_group`：有界声明的 group 用它自己的 max_count；未声明上限的（例如长期牌组）其成员都是
         // **实体**，因此以 `entities` 限额为上界（派生上界，不是另编一个数字）。
-        var entityLimit = _source?.EntityLimit ?? MaxEntities;
-        var actionLimit = _source?.LegalActionLimit ?? 256;
+        var entityLimit = _source.EntityLimit;
+        var actionLimit = _source.LegalActionLimit;
         var groupTypes = _profile.GroupTypes;
         var membersPerGroup = DerivedMemberLimit(groupTypes.Select(group => group.MaxCount).ToList(), entityLimit);
         // sequences 同理：`sequences` 的上界 = 声明的 sequence_type 数；`elements_per_sequence` 与 group 同源，
@@ -221,7 +174,7 @@ public sealed class ControlHost
                 SeedActionReplay: "public_trace",
                 PublicStateRestore: false,
                 PublicFork: false,
-                RngProfileId: _source?.RngProfileId ?? RandomService.DefaultDrawProfileId));
+                RngProfileId: _source.RngProfileId));
         return Ok(request.RequestId, new DescribeResultDto(identity, capabilities).ToWire());
     }
 
@@ -310,77 +263,47 @@ public sealed class ControlHost
                 "$.scenario_profile", retry: "stop", execution: "not_started");
         }
 
-        if (_source is not null)
+        // RequestDto 已验证非空字符串；原文交给规则提供方，不做数值转换或标准化。
+        string? requestedSeed = null;
+        if (TryMember(request.Payload, "seed", out var seedNode))
         {
-            // 正式路径：seed 的形状校验已按协议版本在 RequestDto.FromWire 完成（0.2 是非空游戏字符串，
-            // 0.1 仍是规范十进制字符串）；这里只取值，不做 trim/大小写/数值强转 —— 标准化由 base 负责。
-            string? requestedSeed = null;
-            if (TryMember(request.Payload, "seed", out var seedNode))
-            {
-                if (seedNode is not WireString seedText)
-                {
-                    return Fail(request, "invalid_input",
-                        NetProtocol.UsesGameSeedString(ProtocolVersion)
-                            ? "payload.seed 必须是游戏 seed 字符串"
-                            : "payload.seed 必须是十进制整数字符串", "$.seed");
-                }
-
-                requestedSeed = seedText.Value;
-            }
-
-            ProvidedSession provided;
-            try
-            {
-                // 会话由规则提供方建：已配置、尚未 Start、随机流已种好但一个随机数都没消费。
-                // 任何拒绝（未知 seed 形状、不支持的配置）都发生在**创建/启动之前**，不消耗游戏 RNG。
-                provided = _source.CreateSession(requestedSeed);
-            }
-            catch (Exception exception) when (exception is ArgumentException or NotSupportedException
-                                                 or InvalidOperationException)
+            if (seedNode is not WireString seedText)
             {
                 return Fail(request, "invalid_input",
-                    $"规则提供方拒绝该 start（未创建会话、未消耗 RNG）：{exception.Message}",
-                    "$.seed", retry: "correct_input", execution: "not_started");
+                    "payload.seed 必须是游戏 seed 字符串", "$.seed");
             }
 
-            var formalSessionId = "session-" + _runToken + "-" +
-                                  _nextSession.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            var formal = new ControlSession(_profile, formalSessionId, provided, _ledgerCapacity);
-            _sessions[formalSessionId] = formal;
-            _nextSession++;
-            var formalResponse = formal.Start(request);
-            // 同 request_id 原样重发必须返回**同一局**（同一 session/seed/snapshot），不重新生成 seed。
-            _startLedger[request.RequestId] = (ControlSession.Fingerprint(request), formalResponse);
-            return formalResponse;
+            requestedSeed = seedText.Value;
         }
 
-        var seed = _seed;
-        if (TryMember(request.Payload, "seed", out var seedNode2))
+        ProvidedSession provided;
+        try
         {
-            // 协议要求 seed 是十进制整数字符串（不是 JSON 整数）；形状错误已由 RequestDto.FromWire 拦下，
-            // 这里只做取值；后端声明 seed_control=true，就必须真的使用它。
-            if (seedNode2 is WireString seedText && ulong.TryParse(seedText.Value, out var parsedSeed))
-            {
-                seed = parsedSeed;
-            }
-            else
-            {
-                return Fail(request, "invalid_input", "payload.seed 必须是十进制整数字符串", "$.seed");
-            }
+            // 会话由规则提供方建：已配置、尚未 Start、随机流已种好但一个随机数都没消费。
+            // 任何拒绝（未知 seed 形状、不支持的配置）都发生在**创建/启动之前**，不消耗游戏 RNG。
+            provided = _source.CreateSession(requestedSeed);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException
+                                             or InvalidOperationException)
+        {
+            return Fail(request, "invalid_input",
+                $"规则提供方拒绝该 start（未创建会话、未消耗 RNG）：{exception.Message}",
+                "$.seed", retry: "correct_input", execution: "not_started");
         }
 
-        var sessionId = "session-" + _runToken + "-" + _nextSession.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        var session = new ControlSession(_rules, _profile, sessionId, _participant, _participantRole,
-            _projectionId, seed, _ledgerCapacity, _computeBackend);
-        _sessions[sessionId] = session;
+        var formalSessionId = "session-" + _runToken + "-" +
+                              _nextSession.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var formal = new ControlSession(_profile, formalSessionId, provided, _ledgerCapacity);
+        _sessions[formalSessionId] = formal;
         _nextSession++;
-        var response = session.Start(request);
-        _startLedger[request.RequestId] = (ControlSession.Fingerprint(request), response);
-        return response;
+        var formalResponse = formal.Start(request);
+        // 同 request_id 原样重发必须返回**同一局**（同一 session/seed/snapshot），不重新生成 seed。
+        _startLedger[request.RequestId] = (ControlSession.Fingerprint(request), formalResponse);
+        return formalResponse;
     }
 
     /// <summary>`expected_identity` 必须与本运行时身份**完全相等**（exact identity，protocol.md:219）。
-    /// 身份里的 protocol_version 也必须匹配：两版本都合法也必须拒绝错版本，不按内容猜版本。</summary>
+    /// 身份里的 protocol_version 也必须匹配：旧版本必须拒绝，不按内容猜版本。</summary>
     private bool TryExpectedIdentity(RequestDto request, out ResponseDto? error)
     {
         error = null;

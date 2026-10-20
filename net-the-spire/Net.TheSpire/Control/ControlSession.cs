@@ -44,33 +44,6 @@ public sealed class ControlSession
     private bool _started;
 
     /// <summary>
-    /// 旧受控切片/作者场景的会话：自己建 <see cref="Session"/>（默认随机 Profile）。
-    /// 正式路径不得走这里（ENV 实现约束第 3 节），见
-    /// <see cref="ControlSession(PublicSnapshotProfile,string,ProvidedSession,int)"/>。
-    ///
-    /// <paramref name="computeBackend"/> 由**组合层**注入：规则包声明的计算资产需要哪个后端属于
-    /// 游戏/包的知识，控制层只把它转交给引擎，不在这里按游戏 ID 分派、不 new 第二份后端。
-    /// </summary>
-    public ControlSession(
-        RuleSet ruleSet,
-        PublicSnapshotProfile profile,
-        string sessionId,
-        ParticipantId participant,
-        string participantRole,
-        string projectionId,
-        ulong seed,
-        int ledgerCapacity = 4096,
-        IComputeBackend? computeBackend = null)
-    {
-        _session = new Session(ruleSet, seed, [participantRole], computeBackend: computeBackend);
-        _projector = new PublicSnapshotProjector(ruleSet, profile, sessionId);
-        _participant = participant;
-        _projectionId = projectionId;
-        _ledgerCapacity = ledgerCapacity;
-        SessionId = sessionId;
-    }
-
-    /// <summary>
     /// 正式路径的会话：接管规则提供方返回的**已配置、尚未 Start** 的会话，只 Start 一次，
     /// 并在 <c>start</c> 成功结果里回报**实际接受的游戏 seed 字符串**（protocol.md §7）。
     /// </summary>
@@ -94,8 +67,8 @@ public sealed class ControlSession
 
     public string SessionId { get; }
 
-    /// <summary>本局实际接受的游戏 seed 字符串；旧 0.1 路径为 null（其 seed 是数值型的会话输入）。</summary>
-    public string? AcceptedSeed { get; }
+    /// <summary>本局实际接受的游戏 seed 字符串。</summary>
+    public string AcceptedSeed { get; }
 
     /// <summary>请求方给出的原始 seed（证据用，未标准化）。</summary>
     public string? RequestedSeed { get; }
@@ -144,15 +117,10 @@ public sealed class ControlSession
         _started = true;
         _session.Start();
         var projected = Snapshot();
-        var result = AcceptedSeed is null
-            ? WireValue.Object(
-                ("session_id", WireValue.Str(SessionId)),
-                ("snapshot", projected.Snapshot is null ? WireValue.Null : projected.Snapshot.ToWire()))
-            // 协议 0.2：start 成功结果恰为 {session_id, seed, snapshot}，seed 是本次**实际接受**的游戏字符串。
-            : WireValue.Object(
-                ("session_id", WireValue.Str(SessionId)),
-                ("seed", WireValue.Str(AcceptedSeed)),
-                ("snapshot", projected.Snapshot is null ? WireValue.Null : projected.Snapshot.ToWire()));
+        var result = WireValue.Object(
+            ("session_id", WireValue.Str(SessionId)),
+            ("seed", WireValue.Str(AcceptedSeed)),
+            ("snapshot", projected.Snapshot is null ? WireValue.Null : projected.Snapshot.ToWire()));
         // 注意：start 的去重记录是**进程级**（protocol.md:187），因此不写入本会话账本；
         // 由 ControlHost 的 start 账本负责"原样重发不启动第二局"。
         return Ok(request.RequestId, result);

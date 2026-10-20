@@ -19,7 +19,7 @@
 
 | 主题 | 文档 |
 | --- | --- |
-| 通用 DSL | [core 作者入口](dsl/core/README.md)、[基础语言参考](dsl/core/0.1/language-reference.md)、[同包绑定与具名调用](dsl/core/0.3/authoring-reference.md)、[文本包格式](dsl/core/0.3/package-reference.md) |
+| 通用 DSL | [core 作者入口](dsl/core/README.md)、[基础语言参考](dsl/core/0.3/language-reference.md)、[同包绑定与具名调用](dsl/core/0.3/authoring-reference.md)、[文本包格式](dsl/core/0.3/package-reference.md) |
 | Engine API 与决定 | [Session API](design/core-the-spire/session-api-reference.md)、[活动约定](contracts/core-engine-baseline.md)、[架构决定](design/core-the-spire/core-architecture-decisions.md) |
 | 游戏玩法与验收 | [base 规格](design/mod-the-spire/spec.md)、[环境验收](design/environment-completion-and-differential-v1.md)、[实现边界](design/environment-implementation-constraints.md) |
 | 共享领域操作 | [操作参考](development/base-spire/reference/operations.md)、[卡牌行为参考](development/base-spire/reference/card-behavior.md) |

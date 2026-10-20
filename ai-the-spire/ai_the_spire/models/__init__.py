@@ -1,6 +1,6 @@
 """W-04 的**共享低成本模型**：结构化 encoder + 候选 scorer + 内部状态价值 V。
 
-职责边界（`docs/design/ai-the-spire/design-v0.md` §"模型方案"、`policy-contract.md` §1、`encoder-design.md` §5）：
+职责边界（`docs/design/ai-the-spire/architecture.md` §"模型方案"、`policy-contract.md` §1、`encoder-design.md` §5）：
 
 * 只消费 **当前公开快照** 的张量化表示（`ai_the_spire.encoding.tensorize` 的输出）——不读历史、不读隐藏状态；
 * 字典规模由 `GymManifest` 决定，结构/维度由**显式 `ModelConfig`** 决定；增加字段/内容 = 新的 Gym 配置，

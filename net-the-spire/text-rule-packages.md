@@ -1,8 +1,8 @@
 # 文本规则包场景（`text-rules`）：通用规则提供方接缝
 
-本文件说明 Host 的第三个场景 `text-rules`：用**同一份通用提供方代码**加载任意文本规则包（core/0.2），
+本文件说明 Host 的第三个场景 `text-rules`：用**同一份通用提供方代码**加载任意文本规则包（core/0.3），
 并由公开声明派生目录、观察、候选与标识。它服务于
-[公开语义透传的实施边界](../docs/design/net-the-spire/design.md#7-2026-10-07公开语义透传的源码核对与接续)
+[公开语义透传的实施边界](../docs/design/net-the-spire/design.md#7-公开声明与适配边界)
 第 4 项：**新增一个公开字段或一条合法 Action 只改规则包**，net 生产源码不加逐项注册行。
 
 ## 1. 组成与责任
@@ -51,17 +51,15 @@ dotnet net-the-spire/Net.TheSpire.Host/bin/Debug/net9.0/Net.TheSpire.Host.dll `
   catalog/ruleset 标识，`scenario_profile` 保持同一范围 id。
 - 只读游标：`RuleSet` 在场景构造时加载一次，`TextRuleSource` 不重算玩法、不另造默认会话。
 
-## 3. 检查与验证记录
+## 3. 检查
 
-| 入口 | 结果 | 覆盖 |
-| --- | --- | --- |
-| `dotnet run --project net-the-spire/Net.TheSpire.Tests` | 410 executed / 410 passed / 0 failed | E-01 目录 delta；E-02 真实轨迹（`start→observe→step→observe`）；E-03 规则变化换标识、seed 不进标识；E-04 已配置未 Start 的独立会话与 seed 回显；E-05 候选闭合（`choices` 值域决定候选、内部 procedure 不出现）；E-06 过期候选/错 expected_identity 推进前拒绝 + 重发幂等 + 换载荷冲突；E-07 未支持结构显式抛错；E-08 每类真实响应帧通过 0.2 wire schema |
-| `python net-the-spire/client/test_declaration_extension.py` | 157 passed / 0 failed | 真实宿主进程 NDJSON：目录 delta、隐藏字段不透出、轨迹与候选、标识、拒绝与幂等；每帧用同一份 `docs/contracts/net/0.2/wire.schema.json` 校验（含按 `$defs` 名字校验目录/快照/结果文档） |
-| `python net-the-spire/client/test_client.py` | 103 passed / 0 failed | 本包修改 `net_client.py` 后的既有 0.1/0.2 客户端套件回归 |
-| `dotnet build net-the-spire/Net.TheSpire.Tests/Net.TheSpire.Tests.csproj` | 0 警告 0 错误 | 依赖链 Core.TheSpire → Contracts → Net.TheSpire → BaseSpire → Host → Tests |
+运行当前公开接口检查：
 
-验证记录日志（真实宿主进程的 ready 横幅 + 每帧请求/响应/规范字节）：
-声明扩展与当前纯 DSL 公开行为由 `python tools/ci/check.py net` 检查，结果在 PR CI 查看。
+```powershell
+python tools/ci/check.py net
+```
+
+覆盖目录派生、实际轨迹、seed 与静态标识分离、已配置未 Start 的独立会话、候选闭合、拒绝与幂等，以及每类真实响应的 0.2 schema 校验。结果见对应提交的 PR CI，不在本页保留运行次数或旧客户端版本的通过记录。
 
 ## 4. 边界（本场景不作声称）
 

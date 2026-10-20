@@ -1,19 +1,17 @@
-# ENV 实现约束与交付验证记录
+# ENV 实现约束
 
-2026-10-20落点校准：本文完整验收要求继续有效。当前生产base为纯DSL／静态JSON，活动core基线以[核心约定](../contracts/core-engine-baseline.md)修订为准。旧C#工厂、ContentSource和旧suite运行结果只作迁移依据；正常Run尚未恢复，不能按历史“已交付”安排续跑。当前能力与排期见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
+本文规定完整环境的模块边界、状态、随机、公开接口和验证要求。当前生产 base 为纯 DSL／静态 JSON，core 行为按[核心约定](../contracts/core-engine-baseline.md)维护。正常 Run 尚未恢复；支持范围以包 manifest 和 CI 为准，任务状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
-2026-10-15 用户决定：采用 v0.109 随机规则，`reference/sts2-sim` 保持只读。正式工厂默认 `RandomLayoutId=sts2-v0.109-xxhash64@1`，原始字符串按 UTF-8 XxHash64 派生根及具名流，ulong 加法回绕；`old` 前缀仅对根 seed 使用旧 hash32。历史 hash32 配置由 `RunConfiguration.FrozenIronclad` 显式选择。该决定替代本文旧正常初始化包的参考重播种方案；历史受控机制 case 的既有授权范围保留。游戏内容源基线仍单独标识，本次不声称完整内容已升级至 v0.109。
+随机版本须显式区分：v0.109 目标采用 UTF-8 XxHash64 派生根及具名流、ulong 加法回绕，`old` 前缀仅对根 seed 使用旧 hash32，`reference/sts2-sim` 保持只读。当前 DSL 的实际实现与边界见[随机约定](mod-the-spire/run-domain/randomness.md)，不能把旧 C# 工厂的 `RandomLayoutId=sts2-v0.109-xxhash64@1` 当作当前包已实现该目标。游戏内容源基线单独标识；受控机制 case 的窄适配范围见第 10 节，不自动扩展到正常 Run。
 
 | 项目 | 约定 |
 | --- | --- |
-| 版本 / 日期 | v1.1；2026-10-05；core 版本确定，开发工厂部分交付；下游接入/完整环境仍未验收 |
+| 当前入口 | [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../development/base-spire/README.md)、[CI 范围](../../tools/ci/README.md) |
 | 适用范围 | 当前ENV-00～06长任务；通用Engine、base正式内容、net公开出口、tools严格差异测试；AI只做确需的约定兼容 |
 | 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](net-the-spire/protocol.md) |
 | 状态与派单 | 只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |
 
-执行 ENV 任务时，用本文件核对架构约束与交付验证记录。主验收仍包括完整 Ironclad 中间里程碑、五角色全量环境与严格差异测试；约束条目数量不能代替运行成果。
-
-旧 G/H/B 阶段及 Legacy 成果只提供复用线索。执行者需要在活动 Engine 路径核对实际行为，不能把这些旧成果计作新路径的完成证明，也不能将本文件转为新一轮纯设计任务。
+执行 ENV 任务时，用本文件核对架构约束与验证安排。主验收包括完整 Ironclad 中间里程碑、五角色全量环境与严格差异测试；约束条目数量不能代替运行成果。
 
 接续按[开发约定](../../CONTRIBUTING.md)：A拥有base的DSL玩法／初始化，B拥有独立参考比较并协调构建，C拥有net公开约定；各线加载同一manifest与规则标识。本文出现“补通用能力”指负责人核对最小复现后安排维护，不授权另建调度器。D/客户端取证、E/指定mod后排独立派单，不是当前原版编码前置。
 
@@ -38,21 +36,21 @@
 | `tools/differential/` | 双侧适配、语义动作、诊断抽取、严格测试、首个差异/来源/验证记录 | 生产规则后端；把base结果复制成reference；通过修改游戏状态续跑整局 |
 | `ai-the-spire/` | 原有能力回归；0.2共享约定确需的兼容 | 从Engine/内部诊断/参考读取状态；为完整环境新增学习模块或偷偷恢复D3/D4 |
 
-`SinglePlayer/`是本次正式规则包构建及流程的新落点，不要求把全部Slice一次性搬走。复用共享模型和程序构造时只抽取必要部分，保持旧场景的显式标识和行为。不能复制3000行开发场景再维护两套规则；也不能为拆分文件重写所有已正确能力。
+正常 Run 在现有 base DSL 领域模块恢复，目录入口见[base 架构](mod-the-spire/base-architecture.md)。复用当前共享操作，开发场景保持明确范围标识；不复制一套并行玩法，也不为拆分文件重写已验证能力。
 
-依赖方向保持：base→core；Net.TheSpire→core/contracts；Host→net/base；tools→core/base/net或测试客户端，并且只有tools/工具测试可引用reference。2026-10-04 Legacy已移入archive，活动工程不引用或链接编译归档；旧归档只可反向复用通用AST。core的最新DSL、随机、拆分及调试约束见[core架构决定](core-the-spire/core-architecture-decisions.md)。
+依赖方向保持：base DSL 由 core 通用加载器编译；Net.TheSpire→core/contracts；Host 组合通用包加载和 net；tools→core/net或测试客户端，只有工具／工具测试可引用 reference。生产规则不引用旧 C# 玩法或迁移源。core 的 DSL、随机、拆分及调试约束见[架构决定](core-the-spire/core-architecture-decisions.md)。
 
 2026-10-07 公开语义来源决定：规则包声明公开结构，core 按规则输出玩家视图与合法选择，net 保持语义透传；真实游戏适配器对齐同一公开约定。
 
 正式目录/动作从 RuleSet 和所选投影派生，内容作者无需在 net 重复登记。对于无法从声明推导的游戏含义，规则提供方补充一次，由 Host 接入。句柄、编码、去重和版本校验继续复用 net。
 
-当前手写 Profile 的实际缺口与 ENV-T03 实施边界统一见[net架构第7节](net-the-spire/design.md#7-2026-10-07公开语义透传的源码核对与接续)。接入不以前置新增 core facade 或改造整个 DSL 为条件。
+当前手写 Profile 的实际缺口与 ENV-T03 实施边界统一见[net架构第7节](net-the-spire/design.md#7-公开声明与适配边界)。接入不以前置新增 core facade 或改造整个 DSL 为条件。
 
 ## 3. 同一个正式构建、同一条会话创建路径
 
-`BaseSpire.SinglePlayer.BaseSpireRuntimeFactory`与不可变`RunConfiguration`已有开发实现，具体签名见[base使用说明](../../tools/base-migration-baseline/README.md)，当前缺口及验收见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。接续已有接口，不从头重写；配置至少明确CharacterId、Ascension、UnlockPolicy（当前固定all）、Mode（当前固定singleplayer）、SourceBaselineId；GameSeed是每会话输入。角色规范ID与CLI名称通过同一base注册表转换，不在Host/tools各写映射。SourceBaselineId只能标识实际支持且验证过的源基线，未知配置必须拒绝。
+Host 和工具加载同一纯 DSL 包，共用通用包会话创建路径，实际入口见[公开运行指南](net-the-spire/how-to-run-public-game.md)。恢复正常 Run 时，配置至少明确 CharacterId、Ascension、UnlockPolicy（固定 all）、Mode（固定 singleplayer）和 SourceBaselineId；GameSeed 是每会话输入。这些是正常 Run 的要求，不代表当前开发 scope 已支持。角色规范 ID 与 CLI 名称使用同一来源映射，Host／tools 不各写一份；SourceBaselineId 只能标识实际支持且验证过的源基线，未知配置必须拒绝。
 
-工厂负责构建正式RuleSet，并为给定GameSeed创建**配置完成、尚未Start**的独立Session：选择数值/随机Profile，派生Run/Player/内容流，在任何会消耗随机的开局程序之前布流。Host和BaseBackend调用同一工厂；启动由各控制入口调用一次，禁止工厂和ControlSession各Start一次。范围ID属于不可变构建配置，使用下列显式标识：
+包加载器构建正式 RuleSet，会话创建路径为给定 GameSeed 创建配置完成、尚未 Start 的独立 Session。数值／随机 Profile 和开局前流初始化由包配置／规则确定；Host 和差异测试的 base 侧共用该路径。控制入口只启动一次，禁止创建路径和 ControlSession 各 Start 一次。正常 Run 恢复后使用下列范围标识；当前可用 scope 仍以 manifest 为准：
 
 | 构建 / scenario_profile | 范围与允许验收 |
 | --- | --- |
@@ -70,7 +68,7 @@ net通过配置后的Session/通用工厂委托接管控制。现有ControlSessi
 
 ## 4. 固定配置方式，解决字符串seed冲突
 
-正式Host命令约定为：
+恢复正常 Run 时须提供固定角色／进阶的启动配置。以下为原定目标命令，当前仅支持纯 DSL 包加载的 Host 不接受这些选项；现行可执行命令见[公开运行指南](net-the-spire/how-to-run-public-game.md)：
 
 ```powershell
 dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-singleplayer-v1 --character Ironclad --ascension 0 --game-seed ENV-IRONCLAD-00
@@ -78,11 +76,11 @@ dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-sin
 
 规则/Profile固定为正式单人构建，character/ascension在该Host生命周期固定；省略时分别为Ironclad/0。`--game-seed`提供start未带seed时的默认游戏字符串；没有默认seed且start省略seed时，由base按源规则产生并在响应中报告实际seed。批量同配置不同seed通过同一Host多次start实现，不能强制每个seed重启Host。字符/进阶不支持时在建局前拒绝；不能退回Ironclad或0。
 
-该模式使用[协议0.2扩展](net-the-spire/protocol.md#7-env正式环境的02扩展)，保持旧0.1数字seed和旧场景的已有兼容行为。0.2的start.seed是原版游戏字符串，Character/Ascension来自Host固定配置；不把任意字符串塞进0.1数字seed，不重新解释旧数字编码。正式模式与`--author-content`/`--test-headbutt`/旧`--seed`混用，以及未知/重复CLI选项，一律在启动前失败，不能静默忽略参数。
+该模式使用[当前协议 0.2](net-the-spire/protocol.md#7-env正式环境的02扩展)。start.seed 是非空游戏字符串；旧协议版本、已移除的作者／测试开关、未知或重复 CLI 选项在启动前拒绝。
 
 字符串seed的有效性、必要标准化及哈希按固定源码处理，原始请求和实际接受seed均留验证记录。不能私自trim/转大写/改前缀/数值强转，或对参考输入加`old`后声称仍为相同游戏seed；需要版本适配的差异按窄源裁决处理。seed不能作为模型内容索引或隐藏信息特征。
 
-协议0.2只扩种子控制语义和start返回实际seed；快照结构、候选/控制生命周期仍复用0.1。按新版本更新共享schema、codec、C#/Python正反例与exact identity；不批量重写AI，不改旧0.1语义或golden。正式0.2与旧0.1显式区分，旧模型/客户端不兼容时拒绝，不自动降级。
+协议资产、C#／Python codec 与消费者只维护当前 0.2。修改时同步正反例、exact identity 和请求重发检查；旧版输入明确拒绝，不保留兼容分支或旧 schema。
 
 声明派生可以先在已有wire表达范围落实；遇到M01新增的公开字段或决策无法表达时，同批修订协议/版本及双端资产，再启用该配置。上述已约定0.2种子扩展不自动包含String/List或多选等新结构，不能据此宣称整个内核已无损对外发布。
 
@@ -90,7 +88,7 @@ dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-sin
 
 正式前端解析失败、未知字段、缺依赖/链接、重复声明、类型不符、运行时未支持原语都在构建时明确失败。清单工具允许报告未支持项，正式生产构建不能仅挑解析成功的卡再宣称完整。限范围开发构建必须单独命名并列unsupported，不获得完整阶段验收。
 
-正式敌人/Power/药水/遗物/遭遇/角色/事件/幕与池按现有作者接口迁移；不先重做全套DSL语言。无现有声明入口的内容可由base版本化注册数据/受控算法定义并生成同一IR和状态，须有来源且纳入标识；不得让具体卡牌绕过IR直接改状态。原版算法可用base纯C#计算实现，结果由通用程序结算；不为此启动Lua工程。
+正式敌人／Power／药水／遗物／遭遇／角色／事件／幕与池通过现有 DSL 和必要静态 JSON 定义，不先重做全套语言。复用领域过程和模板，所有算法仍经同一 IR 与状态执行，不能将玩法藏进 JSON 或按内容 ID 调用 C# 回调。确有通用表达缺口时提供最小复现协调 core；不另建 C# 玩法生成器或 Lua 工程。
 
 源清单的键至少包含类别与规范源ID，内容行为测试结果还包含变体/机制；不同类别同名不得通过裸字符串扫描合并为一个已验证效果。语法名称、内容ID、源类和公开catalog ID的对应关系显式登记，不能靠多个猜测字符串变体让统计命中。
 
@@ -161,13 +159,13 @@ raw reference hash/版本、默认顺序与CreateKeyed路径分开；不因某�
 
 ### ENV-T04初始洗牌的派生对齐边界（2026-10-08）
 
-负责人核对当前源码：`sts2/src/Core/Runs/RunRngSet.cs:104-119`按完整游戏seed做hash32，命名流经`Rng(uint,string)`做uint加法回绕；当前参考`RunRngSet(string)`默认`usesSemanticKeys=false`，仍为顺序抽样，只有显式`CreateKeyed`才重键。参考的哈希变为UTF-8/XxHash64，命名流用ulong相加，且`old`前缀对run seed另有旧哈希分支；不能因此推断整个参考的游戏版本升级或把默认路径当重键。源码摘要固定在，参考HEAD为`2cdaea3b6dbc20cfa340662fa73640f20bb6fb00`且存在共享未提交改动，HEAD不能替代实际文件摘要。
+源 hash32／uint 回绕与参考 UTF-8 XxHash64／ulong 派生必须按各自锁定版本核对，包括 `old` 前缀的解释。顺序抽样与显式重键分别标识，不能从哈希算法差异推断整个游戏版本或把默认路径当重键。版本与文件摘要以[参考锁定清单](../../reference/baselines/sts2-sim.json)及实际输入为准，不继承旧运行目录的 HEAD 或未提交状态。
 
 本次只授权为`rng-initial-shuffle`建立可比入口：先核对可用匹配固定参考；若不可得，可在工具层实现显式源版本Profile，仅替换已确认的完整字符串哈希、命名流哈希/32位回绕以及旧前缀解释。参考原生默认构造、MegaRandom/抽样算法、卡牌/敌人/地图/奖励效果均不修改；不得调用base派生函数、为此给输入seed加`old`、补抽或重键。每个实际涉及的流必须有独立源向量和调用顺序验证记录，原始seed、有效派生、范围及代码摘要进入参考标识。首次洗牌所需的其他初始化能力若仍缺，保持原case blocked并交精确剩余缺口；新规则差异、其他case或扩大允许偏离须另行裁决。Profile获准实施不等于比较或T04已验收。
 
 ### ENV-T04地图两seed的派生对齐边界（2026-10-08）
 
-负责人核对 `sts2/src/Core/Map/StandardActMap.cs:111-114`：首幕地图使用独立 counter-0 的 `new Rng(runState.Rng.Seed, "act_1_map")`，命名流加法仍按 `Rng.cs:52-55` 的 uint 回绕。源与参考输入摘要保存在。本次允许工具层在新增严格 case `map-generated-alpha` / `map-generated-beta`（原字符串 seed `t05-map-alpha` / `t05-map-beta`）复用上述已确认的完整字符串 hash32、命名流 hash32 和 uint 回绕兼容方法，为参考独立地图服务构造同名流；不是复用 base 的地图重放词表或计算结果。
+首幕地图的源约束为独立 counter-0 的 `new Rng(runState.Rng.Seed, "act_1_map")`，见 `sts2/src/Core/Map/StandardActMap.cs:111-114`；命名流按 `Rng.cs:52-55` 的 uint 回绕。工具层仅在严格 case `map-generated-alpha`／`map-generated-beta`（原字符串 seed `t05-map-alpha`／`t05-map-beta`）复用完整字符串 hash32、命名流 hash32 和 uint 回绕兼容方法，为参考独立地图服务构造同名流；不复用 base 地图重放词表或计算结果。每次执行绑定实际源和参考摘要。
 
 该授权仅覆盖这两个 case 的种子派生。参考的默认入口、地图算法、NextFloat/NextInt/高斯与洗牌、遍历顺序及内容效果保持原状；逐流源向量、counter-0 状态、真实调用计数/结果、Profile 配置与代码摘要须进入参考标识。参数、节点、边或其他随机路径仍有差异时如实失败，不能扩大 Profile 或全局忽略。原15必测 ID 保留，新 case 不替代初始化/奖励/完整 Run 验收。
 
@@ -235,10 +233,22 @@ A完成后立即进入B/C纵向推进；不能以“严格测试平台仍可继�
 
 ## 13. 验证成本与完成条件
 
-开发只跑受影响case和共用机制必要回归，机制族完成跑regression，整局变更/阶段跑ironclad-run，重大共享变更/候选跑full-singleplayer。开发约定规定的构建/Engine与适用base/net检查不能省略；归档Legacy只在归档相关变更时单独验证，不是活动默认验收条件。无新改动、失败或未解风险不重跑同一全套。不为达到测试数量目标增加重复断言。
+开发只跑受影响case和共用机制必要回归，机制族完成跑regression，整局变更/阶段跑ironclad-run，重大共享变更/候选跑full-singleplayer。开发约定规定的构建／Engine与适用base/net检查不能省略；当前组别和迁移检查范围见[CI 说明](../../tools/ci/README.md)。无新改动、失败或未解风险不重跑同一全套。不为达到测试数量目标增加重复断言。
 
 保持每case120秒/20000决策/100层，最终矩阵14400活动秒保护；run生成及参考脚本采集也受每case保护。性能测量按任务包分项，不另跑无界benchmark或AI搜索；若保护不足以完成真实源Run，记录实际超限与调整需求，不缩短源规则或伪造终点。
 
 通过 PR 描述新增行为、接口变化及限制，由 CI 报告实际执行与首个差异。正式规格只更新受影响的行为要求，不生成逐批交接或检查报告。
 
-不在三房间/某机制族/Ironclad阶段结束当前全环境goal；完整候选版本验收后停止自动接续，用户/规划者审查。明确未完成比虚报完成可接受，不能用时间预算到期、测试全绿或报告齐全把goal标complete。
+三房间、某机制族或 Ironclad 阶段不能关闭完整环境总任务。完整候选按父任务完成条件审查；时间预算到期、局部测试通过或报告齐全均不能替代完整验收。
+
+## 源算法核对要点
+
+这些算法约束用于当前 DSL 实现；不规定任务顺序。具体来源按锁定的源码版本核对。
+
+| 要点 | 实施约束与源码位置 |
+| --- | --- |
+| 普通遭遇队列长度 | `ActModel.GenerateRooms` 从弱遭遇数开始补到 `GetNumberOfRooms(false)`；Overgrowth为总计15条，其中前3条弱遭遇，不能算3+15=18。精英队列另有15条；队列库存长度也不等于玩家真实访问的房间数。见 `sts2/src/Core/Models/ActModel.cs:261,349,361,373`、`Acts/Overgrowth.cs:45,47` |
+| 相邻遭遇回避 | 谓词同时检查“不共享标签”及“不是上一遭遇”，不能只预计算标签相交表。无合格项时，带谓词抓取先返回空，调用方再无约束抓取；重抽/移除/补袋与消费次数分别核对。见 `ActModel.cs:419-430`、`sts2/src/Core/Helpers/GrabBag.cs:96-124` |
+| 敌人首动随机 | 初始状态已经是Move且未执行过时不转换；初始为随机分支时仍执行源转换。不能把“首动不抽数”写成所有敌人的规则；一次随机分支一抽不等于任意图遍历总共一抽。见 `sts2/src/Core/MonsterMoves/MonsterMoveStateMachine/MonsterMoveStateMachine.cs:54-80` |
+| 出生生命流与开局顺序 | 出生生命按源使用 `Niche` 流，不能改用 `MonsterAi` 或范围下限。遭遇派生、出生、意图与整幕前置消费按源调用点核对，局部独立复算不证明整局流位置一致 |
+| 数值中间值 | 先核对固定NumericProfile及源decimal反例，再实现需要的权重/乘法/修正阶段；不能用默认两位量化或double近似宣称等价。现有Profile无法表达时附最小复现交负责人，不在base绕开RandomService或调度器 |

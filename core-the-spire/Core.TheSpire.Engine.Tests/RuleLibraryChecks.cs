@@ -56,7 +56,7 @@ internal static class RuleLibraryChecks
         {
             var rules = Game("""
                 using namespace tutorial;
-                dsl_version = "core/0.2" dependencies = [counters]
+                dsl_version = "core/0.3" dependencies = [counters]
                 entity Counter { fields = { Score = { type = Int default = 999 } } }
                 procedure BelowTarget {
                     parameters = { score = Int target = Int } pure = true result = Bool
@@ -80,7 +80,7 @@ internal static class RuleLibraryChecks
             var library = Library();
             var pair = EngineDslCompiler.Compile("""
                 using namespace pairs;
-                dsl_version = "core/0.2" dependencies = [counters]
+                dsl_version = "core/0.3" dependencies = [counters]
                 template Pair {
                     parameters = { goal = { type = Int default = 10 } }
                     body = {
@@ -91,7 +91,7 @@ internal static class RuleLibraryChecks
                 """, "pair.spire", [library]);
             var game = EngineDslCompiler.Compile("""
                 using namespace composed;
-                dsl_version = "core/0.2" dependencies = [pairs]
+                dsl_version = "core/0.3" dependencies = [pairs]
                 use Game { template = pairs:Pair args = { goal = 20 } }
                 """, "composed.spire", [library, pair]);
             var session = new Session(new RuleSetBuilder().Add(library).Add(pair).Add(game).Build(), 1, ["player"]);
@@ -136,12 +136,16 @@ internal static class RuleLibraryChecks
             Check.True(binding.Message.Contains("use 'Game' at game.spire"), "expanded diagnostic mentions use site");
             var recursive = """
                 using namespace bad;
-                dsl_version = "core/0.2"
+                dsl_version = "core/0.3"
                 template Loop { body = { use Again { template = Loop } } }
                 use Game { template = Loop }
                 """;
             Check.Throws<DslSourceException>(() => EngineDslCompiler.Compile(recursive), "recursive expansion");
-            Check.Throws<DslSourceException>(() => EngineDslCompiler.Compile(recursive.Replace("core/0.2", "core/0.1")), "version gate");
+            foreach (var retired in new[] { "core/0.1", "core/0.2" })
+            {
+                var error = Check.Throws<DslSourceException>(() => EngineDslCompiler.Compile(LibrarySource.Replace("core/0.3", retired)), "retired language rejected");
+                Check.True(error.Message.Contains("dsl_version must be 'core/0.3'"), "version diagnostic");
+            }
         });
 
         Check.Run("LIBRARY imports resolve relative paths, deduplicate files and reject cycles/missing files", () =>
@@ -156,9 +160,9 @@ internal static class RuleLibraryChecks
                 File.WriteAllText(gamePath, File.ReadAllText(Fixture).Replace("rules/score-race.spire", "library.spire"));
                 var rules = EngineDslCompiler.LoadFiles(gamePath, libraryPath, gamePath);
                 Check.Equal(2, rules.Packages.Count, "same file loaded once");
-                File.WriteAllText(libraryPath, "using namespace counters; dsl_version = \"core/0.2\" imports = [\"game.spire\"]");
+                File.WriteAllText(libraryPath, "using namespace counters; dsl_version = \"core/0.3\" imports = [\"game.spire\"]");
                 Check.Throws<DslSourceException>(() => EngineDslCompiler.LoadFiles(gamePath), "import cycle");
-                File.WriteAllText(gamePath, "using namespace tutorial; dsl_version = \"core/0.2\" imports = [\"missing.spire\"]");
+                File.WriteAllText(gamePath, "using namespace tutorial; dsl_version = \"core/0.3\" imports = [\"missing.spire\"]");
                 var missing = Check.Throws<DslSourceException>(() => EngineDslCompiler.LoadFiles(gamePath), "missing import");
                 Check.Equal(gamePath, missing.Location.Source, "import source locator");
             }

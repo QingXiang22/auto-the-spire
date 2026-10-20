@@ -29,7 +29,7 @@ HERE = Path(__file__).resolve().parent
 NET_ROOT = HERE.parent
 REPO_ROOT = NET_ROOT.parent
 CHECK_DIR = REPO_ROOT / "tools" / "contract-check"
-CONTRACT_DIR = REPO_ROOT / "docs" / "contracts" / "net" / "0.1"
+CONTRACT_DIR = REPO_ROOT / "docs" / "contracts" / "net" / "0.2"
 FIXTURES = CHECK_DIR / "fixtures"
 OUT_DIR = NET_ROOT / "Net.TheSpire.Tests" / "fixtures"
 

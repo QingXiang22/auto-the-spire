@@ -10,7 +10,7 @@ internal static class DebugChecks
         {
             var package = EngineDslCompiler.Compile("""
                 using namespace random;
-                dsl_version = "core/0.1" start = [Setup]
+                dsl_version = "core/0.3" start = [Setup]
                 entity Number { fields = { Value = { type = Int default = 0 } } }
                 procedure Setup { locals = { number = Binding } body = {
                     create = { type = Number scope = frameScope() into = number }
@@ -63,7 +63,7 @@ internal static class DebugChecks
         {
             var package = EngineDslCompiler.Compile("""
                 using namespace broken;
-                dsl_version = "core/0.1" start = [Setup]
+                dsl_version = "core/0.3" start = [Setup]
                 procedure Setup { body = { fail = { message = "failed rule" } } }
                 """, "failure.spire");
             var session = new Session(new RuleSetBuilder().Add(package).Build(), 1, ["player"],

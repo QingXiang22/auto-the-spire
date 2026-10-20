@@ -22,7 +22,7 @@ public sealed class PublicSnapshotProfile
         PublicActionRule answerAction,
         IReadOnlyDictionary<string, PublicTerminalRule> terminals,
         IReadOnlyDictionary<string, PublicKnownPositionRule>? knownPositions = null,
-        string protocolVersion = NetProtocol.V01)
+        string protocolVersion = NetProtocol.V02)
     {
         RulesetId = rulesetId ?? throw new ArgumentNullException(nameof(rulesetId));
         CatalogId = catalogId ?? throw new ArgumentNullException(nameof(catalogId));
@@ -37,56 +37,9 @@ public sealed class PublicSnapshotProfile
         NetProtocol.RequireKnown(protocolVersion, "PublicSnapshotProfile.protocolVersion");
         ProtocolVersion = protocolVersion;
         DeclaredIds = CollectDeclaredIds();
-        RequireProtocolValueKinds();
     }
 
-    /// <summary>
-    /// 值类型必须落在该协议版本允许的集合内（protocol.md §7）：<c>string</c> 只在 0.2 存在。
-    /// 0.1 目录里出现 string 值类型就会让 0.1 消费端读不了——这是**发布前**的显式拒绝，不是运行时才发现。
-    /// </summary>
-    public void RequireProtocolValueKinds()
-    {
-        if (NetProtocol.UsesGameSeedString(ProtocolVersion)) return;
-        var offenders = new List<string>();
-        void Scan(string owner, PublicValueKind kind)
-        {
-            if (kind == PublicValueKind.String) offenders.Add(owner);
-        }
-
-        foreach (var (_, kind) in Kinds)
-        foreach (var (engineName, disposition) in kind.Fields)
-        {
-            if (disposition.Published is { } field) Scan($"{kind.KindId}.{engineName}", field.Kind);
-        }
-
-        foreach (var (_, action) in Actions)
-        foreach (var (slot, parameter) in action.Parameters)
-        {
-            Scan($"{action.ActionTypeId}.slot{slot}", parameter.Kind);
-        }
-
-        foreach (var (slot, parameter) in AnswerAction.Parameters)
-        {
-            Scan($"{AnswerAction.ActionTypeId}.slot{slot}", parameter.Kind);
-        }
-
-        foreach (var (_, terminal) in Terminals)
-        foreach (var (engineName, disposition) in terminal.Fields)
-        {
-            if (disposition.Published is { } field) Scan($"{terminal.ReasonId}.{engineName}", field.Kind);
-        }
-
-        if (offenders.Count > 0)
-        {
-            throw new PublicMappingException("N-02-VALUE-KIND",
-                $"协议 {ProtocolVersion} 没有 string 值类型，但声明里出现: {string.Join(",", offenders)}");
-        }
-    }
-
-    /// <summary>
-    /// 协议版本；每个版本要求完全相等（protocol.md §1 第 19 行）。0.1 保留旧切片/作者场景，
-    /// 0.2（protocol.md §7）用于正式单人构建，多一个 start 实际 seed 与 string 值类型。
-    /// </summary>
+    /// <summary>当前公开协议版本，要求精确相等。</summary>
     public string ProtocolVersion { get; }
 
     public string RulesetId { get; }

@@ -119,7 +119,6 @@ public static partial class EngineDslCompiler
             private Expr[] CallArguments(ProcedureSymbol procedure, DslValueNode? values)
             {
                 if (values is not DslBlockNode) return values is null ? [] : List(values).Select(Expression).ToArray();
-                if (!_compiler._modern) throw Error(values.Location, "Named procedure arguments require core/0.3.");
                 var named = Properties.Items(values).ToDictionary(p => p.Name, StringComparer.Ordinal);
                 foreach (var name in named.Keys)
                     if (!procedure.Parameters.Any(p => p.Name == name))

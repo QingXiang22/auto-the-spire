@@ -2,7 +2,7 @@
   "_provenance": {
     "期望来源": "手写读解 fixtures/card_choice 的 wire 文档（当前观察），不调用被测实现生成",
     "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
-    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+    "共享规则词汇": "docs/contracts/net/0.2/invariants.md（I-xx）"
   },
   "_notes": [
     "选牌样例：头槌式中途选择。弃牌堆是洗牌后的无序公开成员集合，没有位置记录。",
@@ -11,7 +11,7 @@
     "弃牌堆与手牌同属 fixture:battle 互斥组，作用域同为 player-01，成员不重复。"
   ],
   "catalog": {
-    "protocol_version": "0.1",
+    "protocol_version": "0.2",
     "ruleset_id": "fixture:rules-v1",
     "catalog_id": "fixture:choice-catalog-v1",
     "declaration_counts": {
@@ -25,7 +25,7 @@
       "action_types": 1,
       "terminal_reasons": 1
     },
-    "catalog_digest": "sha256:67d4626e33a575876c51ef6d4b616bdf377634103d36cc748e572527c5e3b5e5"
+    "catalog_digest": "sha256:6fad2b62e7e15a9c7af6f5a00d27269af1a685ba6a283ccb1a37eff9d18cda45"
   },
   "snapshots": {
     "snapshot": {
@@ -143,7 +143,7 @@
         "fixture:strike": ["sel-01", "sel-02", "sel-03", "sel-04"]
       },
       "terminal_facts": null,
-      "snapshot_digest": "sha256:ee63d8464338ca3542acd661c09517b40c63758a58f9af5640c8e6d4741ec3db"
+      "snapshot_digest": "sha256:a5eab85b3b8f962fab2942113a6733e114b8fb22d47c09f3a972c5b67963abfe"
     }
   }
 }

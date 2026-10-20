@@ -339,7 +339,7 @@ def check_identity() -> list[Outcome]:
     outcomes.append(_guard("combat/identity-match", match))
 
     for key, value in (
-        ("protocol_version", "0.2"),
+        ("protocol_version", "0.1"),
         ("ruleset_id", "fixture:rules-v2"),
         ("catalog_id", "fixture:choice-catalog-v1"),
         ("backend_profile_id", "fixture:other-backend"),

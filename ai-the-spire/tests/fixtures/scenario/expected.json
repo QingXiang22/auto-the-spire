@@ -2,7 +2,7 @@
   "_provenance": {
     "期望来源": "手写读解 fixtures/scenario 的 wire 文档（当前观察），不调用被测实现生成",
     "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
-    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+    "共享规则词汇": "docs/contracts/net/0.2/invariants.md（I-xx）"
   },
   "_notes": [
     "场景样例：路线节点（已揭示 / 内容未知）、事件选项、药水槽（占用与空槽）与终止快照。",
@@ -12,7 +12,7 @@
     "终止快照：legal_actions 为空、terminal_result 使用目录声明的 fixture:victory 与 hp 事实；编码终止局面但不做 softmax。"
   ],
   "catalog": {
-    "protocol_version": "0.1",
+    "protocol_version": "0.2",
     "ruleset_id": "fixture:rules-v1",
     "catalog_id": "fixture:scenario-catalog-v1",
     "declaration_counts": {
@@ -26,7 +26,7 @@
       "action_types": 2,
       "terminal_reasons": 2
     },
-    "catalog_digest": "sha256:e7225af6b6186c6379c83e99d1c3a673e2da90e2e05c79280d295794767f8b36"
+    "catalog_digest": "sha256:74b0997e47cf14e312fc9bdbfd342c59e8db2e27f893a39ef16a00a7b91f8e58"
   },
   "snapshots": {
     "snapshot": {
@@ -118,7 +118,7 @@
       ],
       "content_id_groups": {},
       "terminal_facts": null,
-      "snapshot_digest": "sha256:0c58b2a1aa4284caebb8cd89f8e47d639d2c1d7082d69e53a8ada97c3dd36d04"
+      "snapshot_digest": "sha256:0b66e217a9dccf9a8262180bac45199d8aa3e983daae5626b899aecb439c6c68"
     },
     "snapshot-terminal": {
       "session_id": "session-scenario-1",
@@ -154,7 +154,7 @@
         "reason_id": "fixture:victory",
         "facts": {"fixture:hp": "31"}
       },
-      "snapshot_digest": "sha256:5fe49b38b93505e071b8be4298cf1db57403411326d012bb12afdc97d1591942"
+      "snapshot_digest": "sha256:48afc546bb9affa892af33c6b0314121562e1a6d970a9759f046b0d07b899778"
     }
   }
 }

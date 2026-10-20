@@ -64,7 +64,7 @@ internal static class AuthoringChecks
         {
             var rules = Link("""
                 using namespace operations;
-                dsl_version = "core/0.1"
+                dsl_version = "core/0.3"
                 start = [Setup]
                 enum Mode { members = [Ready, Done] }
                 entity Item { fields = { Number = { type = Int default = 0 } } }
@@ -106,12 +106,12 @@ internal static class AuthoringChecks
         {
             var library = EngineDslCompiler.Compile("""
                 using namespace library;
-                dsl_version = "core/0.1"
+                dsl_version = "core/0.3"
                 procedure Number { pure = true result = Int body = { return = { value = 7 } } }
                 """, "library.spire");
             var game = EngineDslCompiler.Compile("""
                 using namespace game;
-                dsl_version = "core/0.1" dependencies = [library] start = [Setup]
+                dsl_version = "core/0.3" dependencies = [library] start = [Setup]
                 terminal Done { fields = { Value = Int } }
                 procedure Setup { body = { terminal = { result = Done fields = { Value = pureCall(library:Number) } } } }
                 """, "dependent.spire", [library]);
@@ -124,7 +124,7 @@ internal static class AuthoringChecks
         {
             var library = EngineDslCompiler.Compile("""
                 using namespace listeners;
-                dsl_version = "core/0.1"
+                dsl_version = "core/0.3"
                 entity Unit { fields = { Value = { type = Int default = 0 } } }
                 event Changed { payload = { unit = Ref(Unit) } }
                 procedure Reaction {
@@ -134,7 +134,7 @@ internal static class AuthoringChecks
                 """);
             var game = EngineDslCompiler.Compile("""
                 using namespace consumer;
-                dsl_version = "core/0.1" dependencies = [listeners] start = [Setup]
+                dsl_version = "core/0.3" dependencies = [listeners] start = [Setup]
                 procedure Reaction { parameters = { unrelated = Int } body = {} }
                 subscription Listener {
                     event = listeners:Changed reaction = listeners:Reaction
@@ -159,7 +159,7 @@ internal static class AuthoringChecks
         {
             const string source = """
                 using namespace extensions;
-                dsl_version = "core/0.1" start = [Setup]
+                dsl_version = "core/0.3" start = [Setup]
                 token Piece { value = 7 }
                 token Other { value = 9 }
                 terminal Done { fields = { Value = Int } }

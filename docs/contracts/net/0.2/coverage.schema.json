@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "net-the-spire 机制覆盖表 v0.1（C-01 固定格式）",
+  "title": "net-the-spire 机制覆盖表 v0.2（C-01 固定格式）",
   "description": "固定 contract-artifacts.md §5 第 69 行要求的版本化覆盖表格式，使 protocol.md §1 第 48 行的 visibility_check_ids 有可校验的闭合目标（闭合本轮不变量 U-12）。行为状态为 proposed/implemented/verified/unsupported；没有运行证据不能写 verified（I-85）。unit：每行 = 一个 mechanism_id。",
   "$comment": "键名逐字取自 contract-artifacts.md §5：mechanism_id、source_version/source_locator、public_fact、declaration_ids、update_and_invalidation、verification_ids、evidence_ref、status、unsupported_constraint、decision_counterexample。source_version 与 source_locator 按两个键实现（原文用斜杠并列，C-01 负责固定）。",
   "type": "object",
   "required": ["protocol_version", "coverage_id", "mechanisms"],
   "properties": {
     "protocol_version": {
-      "const": "0.1"
+      "const": "0.2"
     },
     "coverage_id": {
       "$ref": "#/$defs/NonEmptyString"

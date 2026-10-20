@@ -13,7 +13,7 @@ internal static class ContractChecks
         {
             var library = EngineDslCompiler.Compile("""
                 using namespace initial;
-                dsl_version = "core/0.1" start = [Create]
+                dsl_version = "core/0.3" start = [Create]
                 entity Ledger { fields = { Sequence = { type = Int default = 0 } } }
                 procedure Create {
                     locals = { item = Binding }
@@ -22,7 +22,7 @@ internal static class ContractChecks
                 """, "initial.spire");
             var game = EngineDslCompiler.Compile("""
                 using namespace ordered;
-                dsl_version = "core/0.2" dependencies = [initial] start = [First, Second, Third]
+                dsl_version = "core/0.3" dependencies = [initial] start = [First, Second, Third]
                 procedure First {
                     locals = { answer = Bool }
                     body = {
@@ -133,7 +133,7 @@ internal static class ContractChecks
 
     private const string EnumSource = """
         using namespace enumeration;
-        dsl_version = "core/0.2"
+        dsl_version = "core/0.3"
         enum Mode { members = [A, B, C] }
         terminal Chosen { fields = { Selection = Enum(Mode) } }
         action Choose {

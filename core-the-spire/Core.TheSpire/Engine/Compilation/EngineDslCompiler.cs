@@ -41,7 +41,6 @@ public static partial class EngineDslCompiler
         private readonly Dictionary<DslDeclarationNode, TemplateScope> _templateScopes = [];
         private readonly Dictionary<(Type Kind, string Name), DeclarationSymbol> _templateSymbols = [];
         private TemplateScope? _bindingScope;
-        private readonly bool _modern;
 
         public CoreDslBinding(DslPackageNode source, IEnumerable<EnginePackage> dependencies, IEnumerable<IEngineDslExtension> extensions,
             IReadOnlyList<EnginePackage>? imports = null, EnginePackageBuilder? targetPackage = null)
@@ -55,11 +54,8 @@ public static partial class EngineDslCompiler
             var language = Text(properties.Required("dsl_version"));
             if (properties.Get("includes") is { } includeNode)
                 throw Error(includeNode.Location, "Use LoadFiles to resolve same-package includes.");
-            if (language is not "core/0.1" and not "core/0.2" and not LanguageVersion)
-                throw Error(source.Location, $"dsl_version must be 'core/0.1', 'core/0.2' or '{LanguageVersion}'.");
-            _modern = language == LanguageVersion;
-            var authoring = source.Members.Any(member => member is DslDeclarationNode { Kind: "template" or "use" }) || properties.Get("imports") is not null;
-            if (authoring && language == "core/0.1") throw Error(source.Location, "imports/template/use require core/0.2 or later.");
+            if (language != LanguageVersion)
+                throw Error(source.Location, $"dsl_version must be '{LanguageVersion}'; pre-release language versions are not supported.");
             if (properties.Get("imports") is { } importNode && imports is null)
                 throw Error(importNode.Location, "Use LoadFiles to resolve imports; Compile accepts explicit package dependencies only.");
             if (targetPackage is not null && targetPackage.PackageId != source.Name)
@@ -89,7 +85,7 @@ public static partial class EngineDslCompiler
                 foreach (var symbol in dependency.Declarations)
                     _symbols[(symbol.GetType(), symbol.QualifiedId)] = symbol;
             }
-            if (language != "core/0.1") _source = ExpandTemplates(source, dependencyArray);
+            _source = ExpandTemplates(source, dependencyArray);
             _source = ExpandDispatches(_source);
         }
 

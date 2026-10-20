@@ -10,7 +10,7 @@
 - 理解各部分的关系：读[规则与宿主](rules-and-host.md)。
 - 第一次编写规则：从[第一次写规则](../../dsl/core/first-rule.md)开始。
 
-版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.1` 提供基础声明，`core/0.2` 提供 DSL 规则库配置，`core/0.3` 增加同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
+版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
 
 ## 0. 规则作者写文件，宿主调用 SDK
 
@@ -18,7 +18,7 @@
 
 配置式 DSL 不局限于静态数值，它也可以用结构化规则块表达顺序、分支和状态变化，由引擎解释执行。一般游戏规则不应因为有行为就转回手写 C#；确需新通用原语、编译扩展或宿主集成时才涉及底层代码。
 
-文本入口是 `EngineDslCompiler.Compile` / `LoadFiles`，C# 入口是 `EnginePackageBuilder`。两者生成同一种规则表示。基础文本语言见[原语参考](../../dsl/core/0.1/language-reference.md)；[core/0.2 规则库配置](../../dsl/core/0.2/authoring-guide.md)先展开模板，再走相同绑定/链接/执行。[core/0.3](../../dsl/core/0.3/authoring-reference.md)还可通过 `BindInto` 将文本绑定到宿主已有的包构建器；STS 内容语言仍属于 base。
+文本入口是 `EngineDslCompiler.Compile` / `LoadFiles`，C# 入口是 `EnginePackageBuilder`。两者生成同一种规则表示。基础文本语言见[原语参考](../../dsl/core/0.3/language-reference.md)；[core/0.3 规则库配置](../../dsl/core/0.3/authoring-guide.md)先展开模板，再走相同绑定/链接/执行。[core/0.3](../../dsl/core/0.3/authoring-reference.md)还可通过 `BindInto` 将文本绑定到宿主已有的包构建器；STS 内容语言仍属于 base。
 
 ## 1. 先理解引擎在执行什么
 
@@ -47,19 +47,18 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-活动包版本为 `0.5.0`，运行语义标识为 `engine/ir@0.5`；依据是[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。[core 版本基线](../../contracts/core-engine-baseline.md)记录 2026-10-05 的 `engine/ir@0.3` 合同，升级验收与当前固定状态见 [行为要求](../environment-completion-and-differential-v1.md#core-author-04)。
+活动包版本与运行语义标识分别见[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。当前职责和兼容要求见[核心约定](../../contracts/core-engine-baseline.md)，升级验收见[行为要求](../environment-completion-and-differential-v1.md#core-author-04)。
 
 当前入口及能力边界：
 
 | 项目 | 当前状态 |
 | --- | --- |
 | C# 构建器、IR、链接检查、Session | 可运行；与文本入口共用链接器/执行器 |
-| 通用文本 DSL | 接受 core/0.1、core/0.2、core/0.3；基础声明、imports/template/use、同包绑定与具名调用共用 IR 和 Session |
+| 通用文本 DSL | 仅接受 core/0.3；基础声明、imports/template/use、同包绑定与具名调用共用 IR 和 Session |
 | base 的 STS 内容 DSL | 属于游戏前端，生成通用引擎可执行内容；覆盖范围由 base 的验证记录说明 |
 | ANTLR、编辑器/LSP 插件 | ANTLR 4.13.1 已接入；具体编辑器插件尚未交付 |
 | 差异测试专用调试模式、内核职责拆分 | 同一 Session 按职责拆分；可选有界轨迹已接入 tools |
 | 规则深固定 | 作者对象及子集合在 Build 后拒绝写入，IR/Value 集合复制并只读发布，链接结果独立 |
-| Legacy | 已从当前树删除，仅见[历史代码归档](https://github.com/QingXiang22/auto-the-spire/blob/0aca7d1a26f3ad42d5b8657bc794cd0b12f85ba8/archive/legacy-sts/README.md)，不属于本指南的执行后端 |
 
 ## 2. 从规则配置文件跑通执行与续接
 
@@ -84,7 +83,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 | `LoadFiles(paths, extensions, dependencies)` | 扩展感知的文件加载，返回 `RuleSet` | `paths` 为 `IEnumerable<string>`；`extensions` 必填，`dependencies` 可省略 |
 | `BindInto(source, package, sourceName, dependencies, extensions)` | 绑定到已有 `EnginePackageBuilder`，返回 `void` | 文本 namespace 与目标包 `PackageId` 相同；完成所有绑定后再调用一次 `Build()` |
 
-`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器标识进入规则标识；不要用旧产物标识标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../dsl/core/0.2/authoring-guide.md)与[同包绑定参考](../../dsl/core/0.3/authoring-reference.md)。
+`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器标识进入规则标识；不要用旧产物标识标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../dsl/core/0.3/authoring-guide.md)与[同包绑定参考](../../dsl/core/0.3/authoring-reference.md)。
 
 ### 2.2 进阶例子：动作内选择、暂停及事件
 
@@ -371,7 +370,7 @@ tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规�
 | [RandomService.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)、[RandomProfile.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomProfile.cs) | 流管理、可注入版本化随机、消费计数及快照 |
 | [Projection.cs](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | 参与者投影、标识隐藏与授权识别 |
 | [DslSource.cs](../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs) | 公共 AST 与 base 现有解析器 |
-| [Compilation](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs) | core/0.1 ANTLR、语义绑定、游戏扩展及来源定位 |
+| [Compilation](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs) | core/0.3 ANTLR、语义绑定、游戏扩展及来源定位 |
 | [AuthoringCollections.cs](../../../core-the-spire/Core.TheSpire/Engine/AuthoringCollections.cs) | 作者对象与子集合固定 |
 
 新增通用原语需要一起考虑：IR 节点/签名、构建接口、链接与类型检查、解释执行、内容标识/dump，以及能区分错误行为的检查。游戏专用效果先在包内用现有原语组合；确实存在通用表达缺口时再扩内核。新增文本语法最终仍应生成同一套 IR。

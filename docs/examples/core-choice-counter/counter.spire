@@ -14,7 +14,7 @@
 # 内容名称的前缀。例如 Counter 的完整名称会是 tutorial:Counter。
 using namespace tutorial;
 # 配置语言的版本，供编译器判断该怎样理解文件。
-dsl_version = "core/0.1"
+dsl_version = "core/0.3"
 # 这个游戏规则包自己的版本，与上面的语言版本分别维护。
 version = "1.0.0"
 # 开局时执行 Setup。它在下面定义；声明写在后面也能被引用。

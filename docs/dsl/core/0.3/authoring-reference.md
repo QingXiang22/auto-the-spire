@@ -2,8 +2,7 @@
 
 同包文件组合、严格纯文本 manifest 与静态源目录见[包格式参考](package-reference.md)。
 
-
-文档类型：参考（Reference）。core/0.3 在 [core/0.2 规则库](../0.2/authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.1](../0.1/language-reference.md)。活动引擎标识为 `engine/ir@0.7`，Core.TheSpire 包版本为 `0.7.0`。旧基线版本文件保留为历史合同，不表示活动产物仍为旧标识。
+文档类型：参考（Reference）。core/0.3 在 [core/0.3 规则库](authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.3](language-reference.md)。活动引擎标识为 `engine/ir@0.7`，Core.TheSpire 包版本为 `0.7.0`。当前兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)。
 
 ## 绑定入口
 
@@ -14,13 +13,13 @@ var package = builder.Build();
 
 BindInto 将文本声明绑定到已有 EnginePackageBuilder 的宿主类型与符号；namespace 必须与 builder 的 PackageId 相同。builder 单次 Build 固定后不可再绑定。它不生成第二个执行器；过程调用、事件和状态均使用同一 typed IR 和 Session。
 
-LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3` template 实例可使用注册的扩展声明。缺依赖、符号冲突、无效类型或参数仍由编译/链接拒绝。显式 `core/0.1`、`core/0.2` 输入继续接受，前端标识按输入版本记录为 `core-dsl/0.1`、`core-dsl/0.2` 或 `core-dsl/0.3`，并计入模板及扩展标识。依据为 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)；`BindInto` 会把文本前端标识追加到目标构建器标识。
+LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3` template 实例可使用注册的扩展声明。缺依赖、符号冲突、无效类型或参数仍由编译/链接拒绝。编译器仅接受 `core/0.3`，前端标识为 `core-dsl/0.3`，并计入模板及扩展标识。依据为 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)；`BindInto` 会把文本前端标识追加到目标构建器标识。
 
 ## 具名调用
 
 `call = { procedure = Grant args = { owner = owner amount = 2 } }` 按参数名绑定；pureCall 同样支持具名参数。缺参、未知参数及重复名拒绝，不以对象枚举顺序猜位置。参数仍有明确类型，Ref(Player) 与 Ref(Power) 不可互换。
 
-宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[生命周期文本库](../../../../tools/base-migration-baseline/BaseSpire/Authoring/Content/lifecycle-rules.spire)与[base 作者约定](../../0.0.2/authoring-reference.md)。
+宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[出牌规则](../../../../mod-the-spire/base-spire/cards/rules/play.spire)与[base 作者约定](../../../development/base-spire/how-to/cards-and-combat.md)。
 
 ## 实例订阅与只读修正
 

@@ -1,7 +1,7 @@
 # 规则库作者维护这个文件。具体游戏作者只需编辑上一级的 game.spire。
 # 同一份模板可以被不同配置文件、或同一文件里的多个 use 实例复用。
 using namespace counters;
-dsl_version = "core/0.2"
+dsl_version = "core/0.3"
 version = "1.0.0"
 
 # procedure 复用执行过程；pure 表示只计算、不改变状态。

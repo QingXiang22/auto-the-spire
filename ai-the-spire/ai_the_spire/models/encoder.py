@@ -1,6 +1,6 @@
 """共享小 encoder：字典 embedding → 实体/字段聚合 → L 轮稀疏关系传播 → 全局向量。
 
-对应 `design-v0.md` §"模型方案"第 5 步与 `policy-contract.md` §1 的
+对应 `architecture.md` §"模型方案"第 5 步与 `policy-contract.md` §1 的
 ``encoder.forward(T) -> EncodedObservation``（global + entities + masks）。
 
 约束（逐条可核对）：

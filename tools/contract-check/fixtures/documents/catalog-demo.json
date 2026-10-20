@@ -1,5 +1,5 @@
 {
-  "protocol_version": "0.1",
+  "protocol_version": "0.2",
   "ruleset_id": "demo:rules-v1",
   "catalog_id": "demo:catalog-v1",
   "declarations": {

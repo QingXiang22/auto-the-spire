@@ -18,7 +18,6 @@ public static class WireCanonical
     public const long SafeIntegerMax = 9007199254740991L;
 
     /// <summary>seed 上界 2^64-1（protocol.md §4 第 185 行）。</summary>
-    public static readonly System.Numerics.BigInteger SeedMax = System.Numerics.BigInteger.Parse("18446744073709551615");
 
     /// <summary>键按 UTF-8 字节序比较（不是 .NET 默认的序数/文化比较）。</summary>
     public static int CompareByUtf8Bytes(string left, string right)
@@ -255,16 +254,11 @@ public static class WireDecimal
         return number;
     }
 
-    /// <summary>seed：0 或无前导零的正整数，上界 2^64-1；不接受 JSON number、符号、指数或空白。</summary>
+    /// <summary>非空游戏字符串；原样返回，不解析数值或标准化。</summary>
     public static string Seed(WireValue value, string what = "seed")
     {
-        if (value is not WireString text)
-            throw new WireFaultException("I-76", $"{what}: seed 必须是十进制字符串");
-        if (!System.Text.RegularExpressions.Regex.IsMatch(text.Value, @"^(0|[1-9][0-9]{0,19})$"))
-            throw new WireFaultException("I-76", $"{what}: 非规范 seed 字符串 '{text.Value}'");
-        var number = System.Numerics.BigInteger.Parse(text.Value, CultureInfo.InvariantCulture);
-        if (number > WireCanonical.SeedMax)
-            throw new WireFaultException("I-76", $"{what}: seed 超出上界 {WireCanonical.SeedMax}: {text.Value}");
+        if (value is not WireString text || text.Value.Length == 0)
+            throw new WireFaultException("I-76", $"{what}: seed must be a non-empty game string");
         return text.Value;
     }
 

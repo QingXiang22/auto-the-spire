@@ -1,4 +1,4 @@
-# 规则声明扩展例 · extended（core/0.2）
+# 规则声明扩展例 · extended（core/0.3）
 #
 # 用途：baseline.spire 的扩展版本。相对 baseline 只增加下面四处声明，其余逐字相同：
 #   * entity Marker 新增公开字段 Bump（Int 0..1000000，default 0）
@@ -12,7 +12,7 @@
 #
 # 本规则包不声明任何随机绘制：建局与执行都不消耗随机数。
 using namespace declaration;
-dsl_version = "core/0.2";
+dsl_version = "core/0.3";
 version = "1.0.0";
 # 开局入口：与 baseline 逐字相同（本局的初始状态由 Setup 建立）。
 start = [Setup];

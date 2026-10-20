@@ -1,5 +1,5 @@
 {
-  "protocol_version": "0.1",
+  "protocol_version": "0.2",
   "ruleset_id": "fixture:legacy-rules-v0",
   "catalog_id": "fixture:legacy-catalog-v0",
   "declarations": {

@@ -4,13 +4,13 @@
 
 ## 连接和响应
 
-Host的`--scope dev-map`选择单幕开发配置；`--scope dev-run`选择默认三幕开发计划。两者构建标识不同，不可混用catalog/候选/回放。多幕配置公开CurrentActIndex/ActId/ActCount，客户端在计划内的幕结束后消费当前ContinueToNextAct；缺少多幕事实或已到计划末尾时，保留开发边界，不能推断整局胜利。实际状态与能力见[跨幕约定](../mod-the-spire/act-transitions.md)。
+Host通过`--package`加载纯 DSL 包，`--scope`只接受该包 manifest 声明的受支持配置。当前包仅开放开发 scope，正常地图和完整 Run 尚未恢复；调用示例见[公开运行指南](how-to-run-public-game.md)。不可混用不同构建的catalog、候选或回放。
 
 [NetClient](../../../net-the-spire/client/net_client.py)返回响应信封`{request_id, ok, result或error, ...}`。先检查`ok`再读取`result`；`error`按原样保留。
 
 | 方法 | 参数 | 成功的`result` |
 | --- | --- | --- |
-| `NetClient(command, *, frame_limit=None, cwd=None)` | Host进程命令列表；教程使用`dotnet HOST_DLL --scenario formal-dev --scope dev-map` | 创建连接，不启动Run |
+| `NetClient(command, *, frame_limit=None, cwd=None)` | Host进程命令列表，例如`dotnet HOST_DLL --package mod-the-spire/base-spire/package.json` | 创建连接，不启动Run |
 | `describe(*, timeout=None)` | 无游戏参数 | `identity`、`capabilities.scenario_profiles`等运行期能力 |
 | `get_catalog(catalog_id, *, timeout=None)` | 使用`describe.identity.catalog_id` | 所选构建的类型/字段/动作目录 |
 | `start(expected_identity, scenario_profile, *, seed=None, request_id=None, timeout=None)` | 前两项来自本次`describe`；seed为游戏字符串 | `{session_id, seed, snapshot}`，seed是实际接受值 |
@@ -52,8 +52,8 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 | 当前可提交操作、目标或选牌答案 | 当前snapshot的`legal_actions` |
 | 公开字段、集合和引用结构 | `get_catalog`及0.2 schema |
 | 起始标识与实际支持场景 | 本次`describe` |
-| 长期牌组/药水/遗物集合用途 | [BasePublicSemantics](../../../tools/base-migration-baseline/BaseSpire/SinglePlayer/BasePublicSemantics.cs)提供，Host转换后发布 |
-| base到net语义转换缺口 | [FormalDevMetadata](../../../tools/base-migration-baseline/net-host/FormalDevMetadata.cs) |
+| 长期牌组/药水/遗物集合用途 | 包声明的[公开元数据](../../../mod-the-spire/base-spire/public/metadata.json)，通过当前catalog查询 |
+| base到net公开映射 | [投影规则](../../../mod-the-spire/base-spire/public/projection.spire)及[通用派生边界](design.md#7-公开声明与适配边界) |
 | 公开动作的真实游戏行为 | 对应base机制模块；客户端不重写玩法 |
 
 `Run.ActCompleted`和地图阶段属于base玩法；终局结论读取`terminal_result.outcome`。单幕完成、步数截止、故障和执行不确定均不等于整局胜利。

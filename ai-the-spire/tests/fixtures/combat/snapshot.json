@@ -1,5 +1,5 @@
 {
-  "protocol_version": "0.1",
+  "protocol_version": "0.2",
   "ruleset_id": "fixture:rules-v1",
   "catalog_id": "fixture:combat-catalog-v1",
   "backend_profile_id": "fixture:sim-v1",

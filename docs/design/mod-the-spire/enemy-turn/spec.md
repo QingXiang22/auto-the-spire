@@ -1,6 +1,6 @@
 # 敌方阶段与 FuzzyWurmCrawler
 
-关联 CORE-AUTHOR-05／**DSL-ENEMY-TURN-01**；实施与认领见[主清单](../../../review/tofix/README.md#当前交付）。本包接在战斗结束之后，按[纯 DSL 规格](../engine-dsl-migration/spec.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
+关联 CORE-AUTHOR-05／**DSL-ENEMY-TURN-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本包接在战斗结束之后，按[纯 DSL 规格](../base-architecture.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 

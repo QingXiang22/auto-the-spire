@@ -2,7 +2,7 @@
   "_provenance": {
     "期望来源": "手写读解 fixtures/combat 的 wire 文档（当前观察），不调用被测实现生成",
     "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
-    "共享规则词汇": "docs/contracts/net/0.1/invariants.md（I-xx）"
+    "共享规则词汇": "docs/contracts/net/0.2/invariants.md（I-xx）"
   },
   "_notes": [
     "战斗样例：玩家/敌人/Power/三个战斗牌区（抽牌堆/手牌/弃牌堆）与打牌、结束回合候选。",
@@ -11,7 +11,7 @@
     "Power 以实体存在并经 fixture:held_by 关系连接所有者；wire 不重复填写保留派生声明 net:pile_*。"
   ],
   "catalog": {
-    "protocol_version": "0.1",
+    "protocol_version": "0.2",
     "ruleset_id": "fixture:rules-v1",
     "catalog_id": "fixture:combat-catalog-v1",
     "declaration_counts": {
@@ -25,7 +25,7 @@
       "action_types": 2,
       "terminal_reasons": 2
     },
-    "catalog_digest": "sha256:ca41d7b33bea37e2a94d0d85eb5e9bc11e530c2fe68146111a6380018d30de11"
+    "catalog_digest": "sha256:26f9e5af27ceb550c0317941213d0d73c1ca44050a38fc4456b1611fcd9e6f17"
   },
   "snapshots": {
     "snapshot": {
@@ -147,7 +147,7 @@
         "fixture:strike": ["card-01", "card-02", "card-06", "card-08"]
       },
       "terminal_facts": null,
-      "snapshot_digest": "sha256:59957205d7caafb9ca022413ec3a0661d976371a18bc883960b5b352e994d3f3"
+      "snapshot_digest": "sha256:6e9f81a23a5a051d1eed45b4bc758ca5b16c5ba60328401ae27e51bfecb8a271"
     }
   }
 }

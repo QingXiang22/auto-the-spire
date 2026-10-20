@@ -1,6 +1,6 @@
 # 教程：从零写一个计分小游戏。每次加一，达到三分结束。
 using namespace tutorial;
-dsl_version = "core/0.1"
+dsl_version = "core/0.3"
 version = "1.0.0"
 start = [Setup]
 

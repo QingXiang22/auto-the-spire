@@ -154,7 +154,7 @@ public static partial class EngineDslCompiler
             {
                 if (member is DslDeclarationNode declaration)
                 {
-                    if ((!IsCoreKind(declaration.Kind) && !(_modern && _extensions.ContainsKey(declaration.Kind))) || declaration.Kind == "template")
+                    if ((!IsCoreKind(declaration.Kind) && !_extensions.ContainsKey(declaration.Kind)) || declaration.Kind == "template")
                         throw Error(declaration.Location, "Template body contains an unregistered declaration kind.");
                     if (declaration.Name.Contains(':') || declaration.Name.Contains('.')) throw Error(declaration.Location, "Template-owned declarations must use simple names.");
                 }

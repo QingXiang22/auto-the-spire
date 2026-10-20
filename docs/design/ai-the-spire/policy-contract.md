@@ -2,14 +2,6 @@
 
 本文供模型与执行器实现者查询概率输出、候选对齐和模型包约束。设计表记录 2026-10-01 时点；实际模型交付与验收以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
 
-| 项目 | 内容 |
-| --- | --- |
-| 状态与版本 | IN_REVIEW；v0.1，2026-10-01；尚无模型实现 |
-| 负责人、读者 | 项目维护者；编码器、评分器、执行器及模型包实现者 |
-| 范围与变化 | 新增内部模型接口、公开概率返回、可选收益头及部署包约束 |
-| 依据与决策 | [AI 规范](spec.md)；不生成单一动作；具体包格式和容差待评审 |
-| 下一步 | 先实现约定 fixtures，再在学习阶段接入可学习模块 |
-
 ## 1. 调用边界
 
 外部调用为 `predict(snapshot, model_bundle) -> PolicyEvaluation`，只接收[net 当前快照](../net-the-spire/protocol.md)。内部依次调用 validate/tensorize、`encoder.forward(T) -> EncodedObservation`、`scorer.forward(EncodedObservation, CandidateTable) -> logits`、有效候选归一化；不执行环境动作。

@@ -162,13 +162,10 @@ def policy_checks(schema: dict) -> list[tuple[str, bool, str]]:
         ok = ok and all(bool(_validate(sample, defs["DecimalString"], schema)) for sample in samples_reject)
     check("SCHEMA-9", ok, f"DecimalString pattern={pattern!r}")
 
-    # SCHEMA-10/U-06：seed 类型与上界
-    seed = defs.get("SessionSeed", {})
-    ok = seed.get("type") == "string" and bool(seed.get("pattern"))
-    if ok:
-        ok = bool(re.search(seed["pattern"], "0")) and bool(re.search(seed["pattern"], "18446744073709551615"))
-        ok = ok and not re.search(seed["pattern"], "01") and not re.search(seed["pattern"], "+1")
-    check("SCHEMA-10", ok, f"SessionSeed type={seed.get('type')!r}")
+    # SCHEMA-10：游戏 seed 为非空字符串，原样保留。
+    seed = defs.get("GameSeedString", {})
+    ok = seed.get("type") == "string" and seed.get("minLength") == 1 and "pattern" not in seed
+    check("SCHEMA-10", ok, "GameSeed 为非空字符串")
 
     # SCHEMA-11：不得保留接受任意 result 的兜底分支
     result = defs.get("Response", {}).get("properties", {}).get("result", {})
@@ -183,7 +180,7 @@ def policy_checks(schema: dict) -> list[tuple[str, bool, str]]:
         _keys(defs.get("ObserveResult")) == {"session_status", "snapshot"}
         and _keys(defs.get("AttachResult")) == {"session_id", "session_status", "snapshot"}
         and _keys(defs.get("CloseResult")) == {"session_id", "session_status"}
-        and _keys(defs.get("StartResult")) == {"session_id", "snapshot"}
+        and _keys(defs.get("StartResult")) == {"session_id", "seed", "snapshot"}
         and _keys(defs.get("RequestStatusResult")) == {"status", "response"},
         "成功包装键集合",
     )

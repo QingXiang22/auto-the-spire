@@ -1,4 +1,4 @@
-# 规则声明扩展例 · baseline（core/0.2）
+# 规则声明扩展例 · baseline（core/0.3）
 #
 # 用途：与扩展例 extended.spire 配对，验证 net 生产源码不需要为新增的公开字段或
 # 合法 Action 增加任何逐项注册行。两个规则包由同一个通用规则提供方加载
@@ -16,7 +16,7 @@
 #
 # 本规则包不声明任何随机绘制：建局与执行都不消耗随机数。
 using namespace declaration;
-dsl_version = "core/0.2";
+dsl_version = "core/0.3";
 version = "1.0.0";
 # 开局入口：本局的初始状态由 Setup 建立（scope 与 Marker 实例都在这里创建）。
 # 没有 start 就没有实例，任何取 first(type(Marker)) 的动作都会被引擎拒绝。

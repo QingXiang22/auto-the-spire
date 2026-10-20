@@ -13,7 +13,7 @@
 1. [配置第一个遗物](tutorials/first-relic.md)：加载真实包，把练习数值从 6 改为 8，通过公开 Host 观察实际结果。
 2. [编写共享触发规则](tutorials/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，用具体use配置调用它，观察逐抽 2／4／6 和空堆不触发。
 
-通用 DSL 尚不熟悉时，先完成[第一份规则](../../dsl/core/first-rule.md)。旧 `base/0.0.2` 卡牌与 C# 房间教程保留迁移依据，不能作为本手册的可执行步骤。
+通用 DSL 尚不熟悉时，先完成[第一份规则](../../dsl/core/first-rule.md)。本手册的命令和示例均以当前纯 DSL 包为准。
 
 ## 按开发任务查找
 
@@ -40,7 +40,7 @@
 | 查所有领域的落点与前置依赖 | [领域目录参考](reference/domains.md) |
 | 查includes、manifest、静态JSON和内容模块边界 | [包格式参考](../../dsl/core/0.3/package-reference.md) |
 | 理解源目录、内容自有规则与共享操作的关系 | [开发模型](explanation/development-model.md) |
-| 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容与行为重构目标](../../design/mod-the-spire/content-behavior-refactor-goals.md)，目标设计不等于现有接口 |
+| 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容行为约定](../../design/mod-the-spire/content-behavior-migration.md)，目标设计不等于现有接口 |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 
 本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[开发约定](../../../CONTRIBUTING.md)。

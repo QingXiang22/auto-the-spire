@@ -1,10 +1,10 @@
-"""定位并加载唯一共享规范资产（net v0.1）。
+"""定位并加载唯一共享规范资产（net v0.2）。
 
 AI 侧 contracts 必须复用同一份规范（开工清单 §7.2 / encoder-design §2），因此本模块
 是**唯一**允许触碰仓库其他目录的地方：它读取
 
-* ``docs/contracts/net/0.1/wire.schema.json``     —— 结构唯一来源
-* ``docs/contracts/net/0.1/coverage.schema.json``  —— 覆盖表结构
+* ``docs/contracts/net/0.2/wire.schema.json``     —— 结构唯一来源
+* ``docs/contracts/net/0.2/coverage.schema.json``  —— 覆盖表结构
 * ``tools/contract-check/``                        —— 规范化/分层校验参考实现
 
 并把这些资产以只读方式暴露给 contracts 包。除此之外 ai-the-spire 不导入任何
@@ -28,7 +28,7 @@ from typing import Any
 _HERE = Path(__file__).resolve()
 REPO_ROOT = _HERE.parents[3]
 
-CONTRACT_DIR = REPO_ROOT / "docs" / "contracts" / "net" / "0.1"
+CONTRACT_DIR = REPO_ROOT / "docs" / "contracts" / "net" / "0.2"
 WIRE_SCHEMA_PATH = CONTRACT_DIR / "wire.schema.json"
 COVERAGE_SCHEMA_PATH = CONTRACT_DIR / "coverage.schema.json"
 REFERENCE_DIR = REPO_ROOT / "tools" / "contract-check"

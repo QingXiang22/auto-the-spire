@@ -7,10 +7,10 @@ public sealed record IdentityDto(
     string CatalogId,
     string BackendProfileId)
 {
-    /// <summary>0.1 默认分支（旧切片/作者场景）。0.2 走 <see cref="FromWire(WireValue,string)"/>。</summary>
-    public const string ExpectedProtocolVersion = NetProtocol.V01;
+    /// <summary>当前协议默认入口。</summary>
+    public const string ExpectedProtocolVersion = NetProtocol.V02;
 
-    public static IdentityDto FromWire(WireValue value) => FromWire(value, NetProtocol.V01);
+    public static IdentityDto FromWire(WireValue value) => FromWire(value, NetProtocol.V02);
 
     public static IdentityDto FromWire(WireValue value, string protocolVersion)
     {
@@ -123,7 +123,6 @@ public sealed record ContentTypeDeclarationDto(
     /// 未列的类型专用键不得混入其他值类型）。
     ///
     /// 0.2 在第 7 节新增 <c>string</c> 值类型（公开字符串值原样编码，不加类别词表）；
-    /// 0.1 的机器 schema 仍只承认四个旧值类型，因此旧文档不会被放宽。
     /// </summary>
     public sealed record FieldDeclarationDto(
     string Id,
@@ -476,7 +475,7 @@ public sealed record PublicCatalogDto(
     string CatalogId,
     DeclarationsDto Declarations)
 {
-    public static PublicCatalogDto FromWire(WireValue value) => FromWire(value, NetProtocol.V01);
+    public static PublicCatalogDto FromWire(WireValue value) => FromWire(value, NetProtocol.V02);
 
     public static PublicCatalogDto FromWire(WireValue value, string protocolVersion)
     {

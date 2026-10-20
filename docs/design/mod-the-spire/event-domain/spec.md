@@ -1,6 +1,6 @@
-# 事件选项与整局资源领域约定
+# 事件访问与资源行为要求
 
-本规格定义普通事件的领域接口与首批整局资源命令，归属[行为要求](../../environment-completion-and-differential-v1.md#env-t09)，复用当前问号访问与Engine IR。阶段、认领和验收只维护主清单。它是实现和检查的共同依据，不将设计目标写成已交能力。
+本规格保留 ENV-T09 的源事件资格、资源顺序和访问行为要求；不保存旧开发计划或实现状态。未恢复的正常 Run 和源事件须明确失败；当前 DSL 接口见[访问指南](../../../development/base-spire/how-to/run-and-rooms.md)与[行为参考](../../../development/base-spire/reference/card-behavior.md)。下列旧接口名称仅表示概念操作，不承诺同名 API 已存在。
 
 ## 领域边界与语言
 
@@ -27,7 +27,7 @@
 | RUN-DEATH-01 | 本次选择全部效果后Run.Hp为0 | 关闭事件访问，再发布既有Defeat/loss，非战斗Turn=0；终局不提供旅行/选项 | 源CreatureCmd.Damage/死亡路径；致死不以旅行phase2冒充继续游戏 |
 | RUN-AUTH-01 | 使用已有能力新增普通事件 | 事件文件只提供选项/效果，组合处仅列模块；不修改地图分派、Composer或逐事件net表 | 独立真实事件与示例共用编译器；文档按接口直接接手 |
 
-金币hook的编译期接口严格保持源`ModifyGoldGained`、`AfterModifyingGoldGained`、`AfterGoldGained`顺序。当前正式可执行遗物为BurningBlood/Pear/Mango/OldCoin，没有相关金币修正参与者，正式默认链为恒等/空；不据此宣称其余遗物或所有hook已实现。具备相应规则后在能力装配处接入，不让事件按遗物ID分支。
+金币操作保持源 ModifyGoldGained→AfterModifyingGoldGained→正值提交→AfterGoldGained 顺序。参与者未实现时不能宣称完整修正链已支持；叶事件不按遗物 ID 分支。
 
 本包脱战伤害仅覆盖已声明的Unblockable|Unpowered、当前无相应常驻修正参与者的范围；完整ModifyDamage/两阶段HpLost/死亡阻止等参与者随对应能力交付，不能把本命令用作所有战斗伤害或复活。召唤/复活仍按主清单暂缓。后续伤害修正接入时扩展这一命令的真实源阶段，而非在事件中复制伤害算法。
 
@@ -35,7 +35,7 @@
 
 ## 源事件资格（ENV-T09-PR05）
 
-源池标识、资格和可执行效果分别维护。`SourceEventEligibility` 按源 `IsAllowed` 生成 Engine IR，不依赖对应效果模块是否已注册；`IEventEligibility` 仍允许显式模块覆盖。只有源码默认允许的标识才能返回 true；尚未实现的资格必须以源标识明确失败，不能默认放行或跳到下一个事件。完整队列、已访问跳过、计数与随机顺序保持。
+源池标识、资格和可执行效果分别维护。资格按源 `IsAllowed` 用 DSL 表达，不依赖效果模块是否已注册；覆盖规则须显式声明。只有源码默认允许的标识才能返回 true；尚未实现的资格必须以源标识明确失败，不能默认放行或跳到下一个事件。完整队列、已访问跳过、计数与随机顺序保持。
 
 当前表限于 Overgrowth/第一幕单人范围：按幕限制排除 PotionCourier、StoneOfAllTime 等；UnrestSite 使用 Hp×10≤MaxHp×7，WhisperingHollow/TeaMaster 使用源金币阈值，TheFutureOfPotions 使用真实药水栏数量。WoodCarvings要求存在可移除基础永久牌，SlipperyBridge要求实际楼层超过6且有可移除牌；MorphicGrove要求至少100金币和两张可变换永久牌。ByrdonisNest、LuminousChoir 的资格尚未实现，触及时明确失败。多幕配置读取真实幕索引，后续幕资格尚未补齐时明确失败，不能套用第一幕规则。
 
@@ -61,7 +61,6 @@ WoodCarvings 的第一幕资格为存在可移除基础永久牌，与可执行�
 2. 检查覆盖Gold修正/顺序与一次求值、零/负金币、不同行为事件隔离、Continue/Finish、非致死与致死伤害及关闭后再次选择拒绝；复用现有检查，不逐常量堆镜像测试。
 3. 正常seed `ENV-T03-SEED-L`通过真实SunkenStatue选择并继续；保持其106金币/-7生命源值和随机消费，不把受控致死case当正常死亡整局轨迹。
 4. 串行当前共同构建、Engine/Slice/net及严格17，标识变化仅迁移有依据的受影响基线；独立参考比较缺口仍分列。内容已加载、行为已验证、公开可用、独立原版双侧分别汇报。
-
 
 ## SlipperyBridge连续访问
 
