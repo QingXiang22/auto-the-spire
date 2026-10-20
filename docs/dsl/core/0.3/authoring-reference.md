@@ -3,7 +3,7 @@
 同包文件组合、严格纯文本 manifest 与静态源目录见[包格式参考](package-reference.md)。
 
 
-文档类型：参考（Reference）。core/0.3 在 [core/0.2 规则库](../0.2/authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.1](../0.1/language-reference.md)。活动引擎身份为 `engine/ir@0.6`，Core.TheSpire 包版本为 `0.6.0`。旧冻结版本文件保留为历史合同，不表示活动产物仍为旧身份。
+文档类型：参考（Reference）。core/0.3 在 [core/0.2 规则库](../0.2/authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.1](../0.1/language-reference.md)。活动引擎身份为 `engine/ir@0.7`，Core.TheSpire 包版本为 `0.7.0`。旧冻结版本文件保留为历史合同，不表示活动产物仍为旧身份。
 
 ## 绑定入口
 
@@ -34,6 +34,30 @@ LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3
 | foldEvent(Event,initial,context...) | 参数位置与payload一致，首项为具体类型的累积值；监听者必须pure、接收完整payload并返回相同类型。每次返回作为下一监听者首参，无有效监听者返回initial |
 
 候选在入口取快照，执行中新增实例不补进。嵌套通知先完成，决策暂停后续接不重放已经完成的效果。修正禁止写状态、消费随机、发布通知和请求决策；递归受调用深度和指令预算限制。普通订阅不声明instances时保留priority／声明顺序。C# SDK使用Subscribe的instances／instanceOrder可选参数和IrScope.FoldEvent，生成同一IR。旧engine/ir@0.5包须重建，旧回放保存原身份。
+
+## 封闭键分派
+
+`dispatch` 声明一个有类型的过程接口；同包各模块用 `dispatchCase` 绑定静态键。编译器降为普通分支和调用，不保存运行时注册表。示例：
+
+```spire
+dispatch ReadValue { pure = true parameters = { value = Int } result = Int }
+procedure Double { pure = true parameters = { value = Int } result = Int body = {
+  return = { value = multiply(value, 2) }
+} }
+dispatchCase DoubleBinding { dispatch = ReadValue key = "double" procedure = Double }
+# 在过程内：pureCall(ReadValue, "double", 3) 返回 6。
+# 普通调用：call = { procedure = ReadValue args = { key = "double" value = 3 } into = result }
+```
+
+`parameters` 不含保留的 `key`／`__dispatchResult`。case 的 key 是长度 1..128 的静态字符串；重复键、未知表或处理签名不匹配在编译时失败。处理过程的参数名、顺序、类型、返回类型必须一致；pure 表只接受 pure 过程。普通无返回接口省略 result／into。模板内绑定遵守词法作用域；跨包追加 case 尚未开放。
+
+每张表生成 `pureCall(ReadValue.Contains, key) → Bool`。未知键调用明确失败；查询是否存在不会执行正文。pure 过程现在允许显式 fail，仍禁止状态写入、随机、通知、决策及终局。编译身份含 `dispatch/1`，旧规则产物必须重建。
+
+## 依附实例的公开身份
+
+投影类型项可声明 `identity_from = Ref字段名`，例如 `types = { Item = {} Component = { identity_from = Item } }`。字段必须属于该类型且为 Ref；目标已经能被本查看者识别时，依附实例才参与类型／字段投影。目标为空、隐藏、未纳入投影或处于无可见根的引用环时，依附实例保持隐藏。它不提升目标的可见性，也不覆盖字段与集合自身的公开政策；作者不能另用公开集合暴露隐藏依附实例的成员或数量。
+
+观察使用只读有限遍历，不创建临时状态。该政策进入规则身份。可选值的 `none == none` 现在返回 true，避免空引用相等比较导致求值故障；这些语义变更使运行身份迁移至 `engine/ir@0.7`，旧回放保留原身份。
 
 ## 随机流与 binary32
 

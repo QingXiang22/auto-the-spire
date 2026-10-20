@@ -109,6 +109,8 @@ LegalAction 为 `{candidate_id, action_type, fields}`。fields 沿用字段结�
 
 正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。多于一项的选择仍明确拒绝。旧0.1应答目录继续声明Instance为required。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端身份随该声明改变。
 
+2026-10-20，BEHAVIOR-01在派生0.2应答目录增加optional的`net:field:net.answer_decision.Flag`，值类型为boolean。Engine Bool暂停只发布两个同action_type候选，分别包含Flag=false或Flag=true，不含Instance，也不发布空字段取消候选；实体应答仍只含Instance或允许的空取消。step仍提交当前candidate_id，宿主从已发布绑定恢复RequestId与Flag，不接收客户端自拼的应答字段。重复／过期／跨会话候选继续经过同一账本与观察版本检查。目录摘要和后端身份改变，已有boolean字段及optional_fields的C#/Python/schema形状复用；0.1及未声明Flag的历史Profile不开放Bool应答。Int、Enum和多实体选择仍明确报告未支持。
+
 引用的目标均在同一快照内。此前公开且当前有效的信息直接表现为字段、关系和位置；没有历史事件流、独立 known_top、模型字典身份、完整隐藏牌序或 RNG。UI 文案与内部诊断置于隔离调试通道，不默认成为训练输入。
 
 ## 3. 完整快照示例

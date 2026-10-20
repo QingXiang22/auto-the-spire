@@ -5,11 +5,12 @@ procedure SetupPowerDefinitions { body = {
  emit = { event = RegisterPowerDefinitions }
 } }
 template PowerDefinition {
- parameters = { definition = { type = String(length = 64) } allowNegative = { type = Bool default = false } debuff = { type = Bool default = false } singleStack = { type = Bool default = false } }
+ parameters = { instanceMode = { type = String(length = 16) default = "shared" } definition = { type = String(length = 64) } allowNegative = { type = Bool default = false } debuff = { type = Bool default = false } singleStack = { type = Bool default = false } }
  body = {
   procedure Register { locals = { entry = Binding } body = {
+   if = { condition = not(or(equal(arg(instanceMode), "shared"), or(equal(arg(instanceMode), "per-applier"), equal(arg(instanceMode), "independent")))) then = { fail = { message = "Unknown Power instance mode" } } }
    if = { condition = exists(where(collection(PowerLibrary), d, equal(field(d, PowerBlueprint.DefinitionId), arg(definition)))) then = { fail = { message = "Duplicate Power definition" } } }
-   create = { type = PowerBlueprint scope = frameScope() into = entry collection = PowerLibrary fields = { DefinitionId = arg(definition) AllowNegative = arg(allowNegative) Debuff = arg(debuff) SingleStack = arg(singleStack) } }
+   create = { type = PowerBlueprint scope = frameScope() into = entry collection = PowerLibrary fields = { DefinitionId = arg(definition) InstanceMode = arg(instanceMode) AllowNegative = arg(allowNegative) Debuff = arg(debuff) SingleStack = arg(singleStack) } }
   } }
   subscription Register { event = RegisterPowerDefinitions reaction = Register }
  }

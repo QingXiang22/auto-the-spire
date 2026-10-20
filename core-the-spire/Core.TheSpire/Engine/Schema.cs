@@ -457,6 +457,10 @@ public sealed class TypeProjectionSymbol : RuleAuthorObject
     private string? _ownerField;
     public string? OwnerField { get => _ownerField; set { EnsureMutable(); _ownerField = value; } }
 
+    /// <summary>Optional Ref field whose target must itself be identifiable before this component is visible.</summary>
+    private string? _identityFrom;
+    public string? IdentityFrom { get => _identityFrom; set { EnsureMutable(); _identityFrom = value; } }
+
     private bool _includeHiddenFields;
     public bool IncludeHiddenFields { get => _includeHiddenFields; set { EnsureMutable(); _includeHiddenFields = value; } }
 }
@@ -861,7 +865,8 @@ public sealed record TypeProjection(
     EntityTypeDefinition Type,
     bool Include,
     int OwnerFieldIndex,
-    bool IncludeHiddenFields);
+    bool IncludeHiddenFields,
+    int IdentityFromFieldIndex = -1);
 
 /// <summary>Static description of one IR primitive: what it declares and which engine capabilities it uses.</summary>
 public sealed record PrimitiveSignature(string Name, IReadOnlyList<EngineEffect> Effects)

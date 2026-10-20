@@ -15,7 +15,7 @@ procedure Juggernaut {
         if = {
           condition = not(isNone(target)) then = {
             call = {
-              procedure = DamageEnemy args = {
+              procedure = DamageEnemyFromPlayer args = { owner = owner
                 target = target amount = field(listener, Power.Stacks)
               }
             }

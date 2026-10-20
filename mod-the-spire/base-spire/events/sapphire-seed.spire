@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure SapphireSeedVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { eat = Bool card = Binding }
+  body = {
+    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Sapphire Seed: eat (true) or plant (false)" into = eat }
+    if = { condition = eat then = {
+      call = { procedure = HealWithSource args = { owner = owner amount = 9 source = "base-spire:sapphire-seed" } }
+      call = { procedure = SelectPermanentCard args = { owner = owner purpose = "upgrade" enchantment = "" cancelable = false } into = card }
+      if = { condition = not(isNone(card)) then = { call = { procedure = UpgradeCard args = { card = card } } } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "eat" } }
+    } else = {
+      call = { procedure = SelectPermanentCard args = { owner = owner purpose = "enchant" enchantment = "base-spire:sown" cancelable = false } into = card }
+      if = { condition = not(isNone(card)) then = { call = { procedure = EnchantCard args = { owner = owner card = card definition = "base-spire:sown" amount = 1 } } } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "plant" } }
+    } }
+  }
+}
+dispatchCase SapphireSeedVisit { dispatch = ExecuteEventVisit key = "base-spire:sapphire-seed" procedure = SapphireSeedVisit }
+action EnterDevelopmentSapphireSeed { role = player requires = pureCall(CanEnterDevelopmentEvent, first(type(Player))) body = {
+  call = { procedure = EnterDevelopmentEvent args = { owner = first(type(Player)) definition = "base-spire:sapphire-seed" } }
+} }

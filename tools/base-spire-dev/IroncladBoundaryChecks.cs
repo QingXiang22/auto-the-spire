@@ -61,8 +61,10 @@ internal static partial class PackageChecks
             var t = Combat(); IcPlay(t, IcAdd(t, "InfernalBlade")); var c = Hand(t).Single();
             // Move the same generated card through a second play to distinguish until-played from whole-turn free.
             var before = Energy(t); IcPlay(t, c); True(Energy(t) <= before, "free play can still have an explicit card energy effect");
-            True(!t.State.GetField(c, CardField(t, "FreeUntilPlayed")).AsBool(), "until-played marker cleared");
-            Equal(Math.Max(0, IntField(t, c, "Card", "BaseCost") - IntField(t, c, "Card", "TurnCostDiscount")), CardCost(t, c), "remaining local discount restored immediately");
+            var modifiers = t.RuleSet.TypeByQualifiedId("base-spire:CardCostModifier");
+            var remaining = Members(t, "CardCostModifiers").Where(m => t.State.GetField(m, modifiers.FieldIndex("Card")).AsRef() == c).ToArray();
+            True(remaining.All(m => t.State.GetField(m, modifiers.FieldIndex("Lifetime")).AsString() is not ("play" or "turn-or-play")), "until-played modifiers cleared");
+            Equal(Math.Max(0, IntField(t, c, "Card", "BaseCost") + remaining.Sum(m => t.State.GetField(m, modifiers.FieldIndex("Amount")).AsInt())), CardCost(t, c), "remaining local discount restored immediately");
         });
         check("IC powered calculated damage and multipliers round once after the complete chain", () =>
         {

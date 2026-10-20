@@ -6,20 +6,37 @@ template ReturnDiscardToTopEffect {
   parameters = { definition = { type = String(length = 64) }  }
   body = {
     procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { chosen = Binding }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 call = { procedure = SelectDiscardCard args = { owner = owner } into = chosen }
 if = { condition = not(isNone(chosen)) then = {
-  removeFromCollection = { collection = DiscardPile item = chosen }
-  addToCollection = { collection = DrawPile item = chosen position = Start }
+  call = { procedure = MoveCombatCard args = { owner = owner card = chosen to = "draw-top" reason = "return" } }
 } }
       } } }
     }
-    subscription Apply { event = CardPlayedOnTarget reaction = Apply }
+
   }
 }
 
 use Headbutt { template = CardDefinition args = { sourceEntry = "HEADBUTT" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:headbutt" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 12 } }
 use HeadbuttEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:headbutt" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use HeadbuttEffect2 { template = ReturnDiscardToTopEffect args = { definition = "base-spire:headbutt" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure HeadbuttBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = HeadbuttEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = HeadbuttEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase HeadbuttBody { dispatch = ExecuteCardBody key = "base-spire:headbutt" procedure = HeadbuttBody }
+
+procedure HeadbuttDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase HeadbuttDamageValue { dispatch = ReadCardDamage key = "base-spire:headbutt" procedure = HeadbuttDamageValue }

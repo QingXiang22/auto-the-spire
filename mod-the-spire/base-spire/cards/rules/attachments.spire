@@ -1,0 +1,50 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity CardAttachment { owner = Owner fields = {
+  Owner = { type = Participant }
+  Card = { type = Ref(Card) }
+  DefinitionId = { type = String(length = 64) }
+  Kind = { type = String(length = 16) }
+  Amount = { type = Int(min = 1, max = 999) }
+  Status = { type = String(length = 16) default = "normal" }
+} }
+dispatch CanApplyCardEnchantment { pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Bool }
+dispatch ApplyCardEnchantment { parameters = { owner = Ref(Player) card = Ref(Card) amount = Int(min = 1, max = 999) } }
+event CardAttachmentCreated { payload = { attachment = Ref(CardAttachment) } }
+event CardAttachmentCopied { payload = { source = Ref(CardAttachment) attachment = Ref(CardAttachment) } }
+event CardAttachmentRemoved { payload = { attachment = Ref(CardAttachment) } }
+
+procedure CanEnchantCard {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Bool
+  body = {
+    if = { condition = and(greaterOrEqual(collectionIndex(RunDeck, card), 0), pureCall(CardHasKeyword, card, "unplayable")) then = { return = { value = false } } }
+    return = { value = and(equal(field(card, Card.Owner), field(owner, Player.Owner)), and(not(or(equal(field(card, Card.Kind), "status"), or(equal(field(card, Card.Kind), "curse"), equal(field(card, Card.Kind), "quest")))), not(exists(where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Card), card), equal(field(a, CardAttachment.Kind), "enchantment"))))))) }
+  }
+}
+procedure EnchantCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) definition = String(length = 64) amount = Int(min = 1, max = 999) }
+  body = {
+    if = { condition = not(pureCall(CanApplyCardEnchantment, definition, owner, card)) then = { fail = { message = "Card cannot receive this enchantment" } } }
+    call = { procedure = ApplyCardEnchantment args = { key = definition owner = owner card = card amount = amount } }
+  }
+}
+procedure CopyCardAttachments {
+  parameters = { owner = Ref(Player) source = Ref(Card) card = Ref(Card) }
+  locals = { copy = Binding }
+  body = {
+    forEach = { query = where(type(CardAttachment), a, equal(field(a, CardAttachment.Card), source)) item = attachment body = {
+      create = { type = CardAttachment scope = entityScope(card) into = copy fields = { Owner = field(card, Card.Owner) Card = card DefinitionId = field(attachment, CardAttachment.DefinitionId) Kind = field(attachment, CardAttachment.Kind) Amount = field(attachment, CardAttachment.Amount) Status = field(attachment, CardAttachment.Status) } }
+      emit = { event = CardAttachmentCopied payload = { source = attachment attachment = copy } }
+    } }
+  }
+}
+subscription CloneCardAttachments { event = CardCloned reaction = CopyCardAttachments }
+subscription CombatCardAttachments { event = CardCombatCopied reaction = CopyCardAttachments }
+procedure RemoveCardAttachments { parameters = { card = Ref(Card) } body = {
+  forEach = { query = where(type(CardAttachment), a, equal(field(a, CardAttachment.Card), card)) item = attachment body = {
+    emit = { event = CardAttachmentRemoved payload = { attachment = attachment } }
+    destroy = { target = attachment }
+  } }
+} }
+subscription RemoveCardAttachments { event = CardRemoving reaction = RemoveCardAttachments }

@@ -153,15 +153,7 @@ template CardCountRelic {
                 }
                 if = {
                   condition = greater(arg(damage), 0) then = {
-                    forEach = {
-                      query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
-                        call = {
-                          procedure = DamageEnemy args = {
-                            target = e amount = arg(damage)
-                          }
-                        }
-                      }
-                    }
+                    call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = arg(damage) } }
                   }
                 }
               }
@@ -198,15 +190,7 @@ template TurnEndDamageRelic {
       body = {
         if = {
           condition = and(field(owner, Player.CombatActive), and(equal(field(owner, Player.TurnNumber), arg(turn)), greater(field(owner, Player.Hp), 0))) then = {
-            forEach = {
-              query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = e body = {
-                call = {
-                  procedure = DamageEnemy args = {
-                    target = e amount = arg(damage)
-                  }
-                }
-              }
-            }
+            call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = arg(damage) } }
           }
         }
       }

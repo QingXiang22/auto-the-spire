@@ -5,7 +5,7 @@ using NetTheSpire.Host;
 try
 {
     var command = args.FirstOrDefault() ?? "describe";
-    if (command is not ("validate" or "describe" or "check"))
+    if (command is not ("validate" or "describe" or "check" or "sync-content"))
     {
         Console.Error.WriteLine("unsupported_capability: legacy card probes were retired; use validate/describe <package.json> [--scope id].");
         return 3;
@@ -17,10 +17,12 @@ try
     var rngOnly = false;
     var relicContentOnly = false;
     var contentModelOnly = false;
+    var cardBehaviorOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
+        else if (args[index] == "--card-behavior-only") cardBehaviorOnly = true;
         else if (args[index] == "--content-model-only") contentModelOnly = true;
         else if (args[index] == "--relic-content-only") relicContentOnly = true;
         else if (args[index] == "--rng-only") rngOnly = true;
@@ -31,11 +33,26 @@ try
         else if (index == 1 && !args[index].StartsWith("--", StringComparison.Ordinal)) manifest = args[index];
         else throw new ArgumentException("Unknown option: " + args[index]);
     }
-    if (filter is not null && (string.IsNullOrWhiteSpace(filter) || command != "check" || !relicContentOnly || report is not null || ironcladOnly || cardRewardsOnly || rngOnly))
-        throw new ArgumentException("--filter requires a nonempty name and check --relic-content-only without other focused flags or --report.");
+    if (filter is not null && (string.IsNullOrWhiteSpace(filter) || command != "check" || !(relicContentOnly ^ cardBehaviorOnly) || report is not null || ironcladOnly || cardRewardsOnly || rngOnly || contentModelOnly))
+        throw new ArgumentException("--filter requires a nonempty name and check --relic-content-only or --card-behavior-only without other focused flags or --report.");
     if (Path.GetExtension(manifest) != ".json") throw new NotSupportedException("unsupported_capability: the DSL package tool requires a package.json manifest; legacy card probes are retired.");
     var package = DslPackage.Load(manifest, scope);
+    if (command == "sync-content")
+    {
+        if (report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly)
+            throw new ArgumentException("sync-content accepts only the package manifest and optional --scope.");
+        ContentRegistration.Check(package, synchronize: true);
+        Console.WriteLine("Derived Card/Power public IDs from executable definition libraries and explicit startup fixtures; source catalogs and visibility policies unchanged.");
+        return 0;
+    }
+    if (command is "validate" or "check") ContentRegistration.Check(package);
     var metadata = TextRuleProviderSpec.Load(package.PublicMetadataPath);
+    if (cardBehaviorOnly)
+    {
+        if (command != "check" || report is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly)
+            throw new ArgumentException("--card-behavior-only requires check without other focused flags or report.");
+        return PackageChecks.RunCardBehaviorOnly(package, filter);
+    }
     if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
     if (contentModelOnly)
     {

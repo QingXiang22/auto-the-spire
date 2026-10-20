@@ -27,7 +27,7 @@ python -X utf8 .agents/skills/base-spire-development/scripts/locate.py relics --
 
 例：[Strike](../../../../mod-the-spire/base-spire/cards/ironclad/strike-ironclad.spire)只在CardDefinition中保存6／9两个基础值，StrikeDamage只配置definition和hits。将普通值改为12时，普通实例与实际基础伤害应同步变成12；升级仍取9。正式原版数值应以匹配版本来源为准，实验值留在隔离副本。
 
-不是所有变量都已采用这一做法。BlockEffect仍有block／upgradedBlock；Spite等独有效果可能有自己的伤害参数。按实际模板签名修改，不能批量删除所有damage参数。CardBaseDamage现有DamageScale分派和完整附着复制协议也未在本轮迁移中替换。
+BlockEffect仍有block／upgradedBlock；按实际模板签名修改，不批量删除所有数值参数。每张可执行牌现在必须绑定有序正文与纯ReadCardDamage；CardBaseDamage不再分派DamageScale。费用、附魔及复制入口见[行为操作参考](../reference/card-behavior.md)，不要恢复公共专属字段。
 
 ## 3. 运行对应判别
 

@@ -11,3 +11,20 @@ use TrembleVulnerable {
   template = ApplyEnemyPowerEffect
   args = { definition = "base-spire:tremble" power = "base-spire:vulnerable-power" stacks = 3 upgradedStacks = 4 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure TrembleBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = TrembleVulnerable.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase TrembleBody { dispatch = ExecuteCardBody key = "base-spire:tremble" procedure = TrembleBody }
+
+procedure TrembleDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase TrembleDamageValue { dispatch = ReadCardDamage key = "base-spire:tremble" procedure = TrembleDamageValue }

@@ -19,3 +19,22 @@ use UppercutVulnerable {
   template = ApplyEnemyPowerEffect
   args = { definition = "base-spire:uppercut" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 2 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure UppercutBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = UppercutDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = UppercutWeak.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = UppercutVulnerable.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase UppercutBody { dispatch = ExecuteCardBody key = "base-spire:uppercut" procedure = UppercutBody }
+
+procedure UppercutDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase UppercutDamageValue { dispatch = ReadCardDamage key = "base-spire:uppercut" procedure = UppercutDamageValue }

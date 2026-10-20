@@ -1,0 +1,46 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+template PenNibModule { body = {
+  entity State { fields = { Relic = { type = Ref(Relic) visibility = Hidden } Count = { type = Int default = 0 } ActiveCard = { type = Ref(Card) optional = true visibility = Hidden } } }
+  procedure Obtained { parameters = { owner = Ref(Player) relic = Ref(Relic) } locals = { state = Binding } body = {
+    if = { condition = equal(field(relic, Relic.DefinitionId), "base-spire:pen-nib") then = { create = { type = State scope = entityScope(relic) into = state fields = { Relic = relic } } } }
+  } }
+  subscription Obtained { event = RelicObtained reaction = Obtained }
+  procedure Removed { parameters = { owner = Ref(Player) relic = Ref(Relic) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Relic), relic)) item = state body = { destroy = { target = state } } }
+  } }
+  subscription Removed { event = RelicRemoved reaction = Removed }
+  procedure Before { parameters = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) listener = Ref(Relic) } locals = { state = Binding } body = {
+    if = { condition = equal(field(card, Card.Kind), "attack") then = {
+      let = { into = state value = first(where(type(State), s, equal(field(s, State.Relic), listener))) }
+      set = { target = state field = State.Count value = add(field(state, State.Count), 1) }
+      if = { condition = equal(field(state, State.Count), 10) then = {
+        set = { target = state field = State.Count value = 0 }
+        set = { target = state field = State.ActiveCard value = card }
+      } }
+    } }
+  } }
+  subscription Before { event = BeforeCardExecution reaction = Before instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:pen-nib")))) instance_order = collectionIndex(Relics, listener) priority = 100 }
+  procedure Damage { pure = true parameters = { amount = Int owner = Ref(Player) card = Binding target = Binding attack = Binding play = Binding preview = Bool listener = Ref(Relic) } result = Int locals = { state = Binding } body = {
+    let = { into = state value = first(where(type(State), s, equal(field(s, State.Relic), listener))) }
+    if = { condition = and(not(isNone(card)), or(equal(card, field(state, State.ActiveCard)), and(preview, and(isNone(field(state, State.ActiveCard)), equal(field(state, State.Count), 9))))) then = {
+      return = { value = multiply(amount, 2) }
+    } }
+    return = { value = amount }
+  } }
+  subscription Damage { event = ModifyCardDamageMultiplier reaction = Damage instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:pen-nib")))) instance_order = collectionIndex(Relics, listener) priority = 100 }
+  procedure After { parameters = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) listener = Ref(Relic) } locals = { state = Binding } body = {
+    let = { into = state value = first(where(type(State), s, equal(field(s, State.Relic), listener))) }
+    if = { condition = equal(card, field(state, State.ActiveCard)) then = { set = { target = state field = State.ActiveCard value = none } } }
+  } }
+  subscription After { event = AfterCardExecution reaction = After instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:pen-nib")))) instance_order = collectionIndex(Relics, listener) priority = 100 }
+  procedure Ended { parameters = { owner = Ref(Player) victory = Bool } body = {
+    forEach = { query = where(type(State), s, equal(field(field(s, State.Relic), Relic.Holder), owner)) item = state body = { set = { target = state field = State.ActiveCard value = none } } }
+  } }
+  subscription Ended { event = CombatEnded reaction = Ended }
+  action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), "base-spire:pen-nib")) body = {
+    call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = "base-spire:pen-nib" } }
+  } }
+} }
+use PenNib { template = PenNibModule }

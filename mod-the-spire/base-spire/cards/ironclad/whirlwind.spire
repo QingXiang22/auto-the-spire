@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Whirlwind.cs; SHA-256 retained in cards/catalog.json.
 use Whirlwind { template = CardDefinition args = { sourceEntry = "WHIRLWIND" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:whirlwind" cost = 0 upgradedCost = 0 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 5 upgradedBaseDamage = 8 isX = true } }
 use WhirlwindEffect1 { template = ComputedAllAttackEffect args = { definition = "base-spire:whirlwind" xCost = true } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure WhirlwindBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = WhirlwindEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase WhirlwindBody { dispatch = ExecuteCardBody key = "base-spire:whirlwind" procedure = WhirlwindBody }
+
+procedure WhirlwindDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase WhirlwindDamageValue { dispatch = ReadCardDamage key = "base-spire:whirlwind" procedure = WhirlwindDamageValue }

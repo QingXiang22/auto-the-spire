@@ -146,6 +146,10 @@ internal static partial class PackageChecks
         Merge(RunSelfFormingClayChecks(package, Case), witnesses);
         RunEffectListenerChecks(package, Case);
         RunContentModelChecks(package, Case);
+        RunCardBehaviorChecks(package, Case);
+        Merge(RunAttackBehaviorChecks(package, Case), witnesses);
+        RunCardLifecycleChecks(package, Case);
+        var events = RunVisitBehaviorChecks(package, Case);
         var potions = RunPotionChecks(package, Case);
         var rooms = RunRestSiteChecks(package, Case);
         Merge(RunPermanentDeckChecks(package, Case), rooms);
@@ -180,6 +184,7 @@ internal static partial class PackageChecks
                 potions = potions.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
                 rooms = rooms.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
                 rewards = rewards.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
+                events = events.Select(row => new { id = row.Key, passed_scenarios = row.Value }).ToArray(),
             }, new JsonSerializerOptions { WriteIndented = true }));
         }
         return 0;

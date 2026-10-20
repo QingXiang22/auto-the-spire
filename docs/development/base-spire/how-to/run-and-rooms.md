@@ -4,6 +4,8 @@
 
 先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
 
+显式SapphireSeed／DoorsOfLightAndDark开发访问已使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。它们尚未接回正常地图／事件池和子战斗返回，不能据此开放正常Run scope。
+
 ## 定义角色、进阶与正常开局
 
 在开发 scope 的干净初态提交 `Ironclad.Initialize`，可建立 80 HP、99 金币、5 Strike／4 Defend／1 Bash 的永久牌组及 BurningBlood。它拒绝覆盖已获得的牌、物品、房间或战斗进度。接着用真实遭遇的 `Spawn` 或开发目标入口建敌人，再提交 `BeginDevelopmentCombat` 和 `BeginDevelopmentTurn`：新副本先用原版 Shuffle 流洗牌，回合自动抽五张；后续回合也自动抽牌，首回合按 Innate 优先并扩展抽取数量至十张上限。不要再手动补五次 Draw。旧机制探针没有初始化角色时仍手动抽牌。

@@ -15,3 +15,21 @@ use BreakVulnerable {
   template = ApplyEnemyPowerEffect
   args = { definition = "base-spire:break" power = "base-spire:vulnerable-power" stacks = 5 upgradedStacks = 7 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BreakBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BreakDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = BreakVulnerable.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase BreakBody { dispatch = ExecuteCardBody key = "base-spire:break" procedure = BreakBody }
+
+procedure BreakDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BreakDamageValue { dispatch = ReadCardDamage key = "base-spire:break" procedure = BreakDamageValue }

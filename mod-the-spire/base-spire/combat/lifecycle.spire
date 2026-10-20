@@ -32,8 +32,9 @@ event AfterEnemyTurnEnded { payload = { owner = Ref(Player) } }
 procedure CheckCombatVictory {
   parameters = { owner = Ref(Player) }
   body = {
+    if = { condition = greater(field(owner, Player.DamageDepth), 0) then = { return = {} } }
     if = {
-      condition = and(greater(field(owner, Player.Hp), 0), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
+      condition = and(and(greater(field(owner, Player.Hp), 0), equal(field(owner, Player.AttackDepth), 0)), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
       then = {
         if = {
           condition = and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)))))
@@ -82,6 +83,7 @@ procedure BeginDevelopmentCombat {
       then = { fail = { message = "Development combat requires a living player outside any room" } }
     }
     call = { procedure = ClearCombatPowers }
+    call = { procedure = ResetCardCombatCosts }
     set = { target = owner field = Player.EnemyPhase value = false }
     call = { procedure = BuildCombatDeck args = { owner = owner } }
     set = { target = owner field = Player.PendingForge value = false }
@@ -171,13 +173,7 @@ procedure EndDevelopmentTurn {
       event = BeforeTurnEndEffects payload = { owner = owner } }
     if = { condition = field(owner, Player.CombatActive) then = { emit = { event = BeforePlayerTurnEnd payload = { owner = owner } } } }
     if = { condition = field(owner, Player.CombatActive) then = {
-      forEach = {
-        query = collection(Hand) item = card
-        body = {
-          removeFromCollection = { collection = Hand item = card }
-          addToCollection = { collection = DiscardPile item = card }
-        }
-      }
+      call = { procedure = FinishTurnHand args = { owner = owner } }
       emit = { event = AfterTurnEnded payload = { owner = owner } }
         emit = {
           event = AfterPlayerSideEnd payload = { owner = owner } }

@@ -1,0 +1,87 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity Attack {
+  fields = {
+    Player = { type = Ref(Player) optional = true visibility = Hidden }
+    Enemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+    Card = { type = Ref(Card) optional = true visibility = Hidden }
+    Play = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
+    Target = { type = Ref(Enemy) optional = true visibility = Hidden }
+    Defender = { type = Ref(Player) optional = true visibility = Hidden }
+    Mode = { type = String(length = 16) }
+    Amount = { type = Int }
+    Hits = { type = Int }
+    Hit = { type = Int default = 0 }
+    Dynamic = { type = Bool default = false }
+    Powered = { type = Bool default = true }
+    Finished = { type = Bool default = false }
+  }
+}
+collection Attacks { element = Attack ordered = true }
+event BeforeAttack { payload = { attack = Ref(Attack) } }
+event AfterAttack { payload = { attack = Ref(Attack) } }
+event ModifyAttackHits { payload = { count = Int attack = Ref(Attack) } }
+
+procedure CreateCardAttack {
+  parameters = { owner = Ref(Player) card = Ref(Card) play = Binding target = Binding amount = Int hits = Int mode = String(length = 16) dynamic = Bool }
+  locals = { attack = Binding } result = Binding
+  body = {
+    if = { condition = not(or(equal(mode, "single"), or(equal(mode, "all"), equal(mode, "random")))) then = { fail = { message = "Unknown attack target policy" } } }
+    if = { condition = less(hits, 0) then = { fail = { message = "Negative attack hit count" } } }
+    create = { type = Attack scope = entityScope(owner) into = attack collection = Attacks fields = {
+      Player = owner Card = card Play = play Target = target Amount = amount Hits = hits Mode = mode Dynamic = dynamic
+    } }
+    return = { value = attack }
+  }
+}
+procedure ExecuteAttack {
+  parameters = { attack = Ref(Attack) }
+  locals = { owner = Binding target = Binding result = Binding amount = Int hits = Int active = Bool }
+  body = {
+    if = { condition = field(attack, Attack.Finished) then = { fail = { message = "Attack already finished" } } }
+    let = { into = owner value = first(type(Player)) }
+    set = { target = owner field = Player.AttackDepth value = add(field(owner, Player.AttackDepth), 1) }
+    emit = { event = BeforeAttack payload = { attack = attack } }
+    let = { into = hits value = maximum(0, foldEvent(ModifyAttackHits, field(attack, Attack.Hits), attack)) }
+    let = { into = active value = true }
+    repeat = { count = hits body = {
+      if = { condition = and(and(active, greater(field(owner, Player.Hp), 0)), or(isNone(field(attack, Attack.Enemy)), greater(field(field(attack, Attack.Enemy), Enemy.Hp), 0))) then = {
+        if = { condition = not(isNone(field(attack, Attack.Enemy))) then = {
+          call = { procedure = ResolvePlayerDamage args = { owner = field(attack, Attack.Defender) attacker = field(attack, Attack.Enemy) card = none play = none attack = attack amount = field(attack, Attack.Amount) powered = field(attack, Attack.Powered) unblockable = false } into = result }
+        } else = {
+          let = { into = target value = field(attack, Attack.Target) }
+          if = { condition = equal(field(attack, Attack.Mode), "random") then = { call = { procedure = RandomLivingEnemy into = target } } }
+          forEach = { query = where(type(Enemy), e, and(greater(field(e, Enemy.Hp), 0), or(equal(field(attack, Attack.Mode), "all"), equal(e, target)))) item = enemy body = {
+            let = { into = amount value = field(attack, Attack.Amount) }
+            if = { condition = field(attack, Attack.Dynamic) then = { let = { into = amount value = pureCall(CardBaseDamage, field(attack, Attack.Player), field(attack, Attack.Card), enemy) } } }
+            call = { procedure = ResolveEnemyDamage args = { owner = field(attack, Attack.Player) target = enemy card = field(attack, Attack.Card) play = field(attack, Attack.Play) attack = attack amount = amount powered = field(attack, Attack.Powered) } into = result }
+          } }
+        } }
+        if = { condition = exists(where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), equal(field(r, DamageResult.Hit), field(attack, Attack.Hit))))) then = {
+          call = { procedure = PublishDamageBatch args = { attack = attack hit = field(attack, Attack.Hit) } }
+          set = { target = attack field = Attack.Hit value = add(field(attack, Attack.Hit), 1) }
+        } else = { let = { into = active value = false } } }
+      } }
+    } }
+    set = { target = attack field = Attack.Finished value = true }
+    emit = { event = AfterAttack payload = { attack = attack } }
+    set = { target = owner field = Player.AttackDepth value = subtract(field(owner, Player.AttackDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
+  }
+}
+procedure CardAttack {
+  parameters = { owner = Ref(Player) card = Ref(Card) play = Binding target = Binding amount = Int hits = Int mode = String(length = 16) dynamic = Bool }
+  locals = { attack = Binding }
+  body = {
+    call = { procedure = CreateCardAttack args = { owner = owner card = card play = play target = target amount = amount hits = hits mode = mode dynamic = dynamic } into = attack }
+    call = { procedure = ExecuteAttack args = { attack = attack } }
+  }
+}
+procedure ClearDamageHistory {
+  body = {
+    forEach = { query = collection(DamageResults) item = result body = { destroy = { target = result } } }
+    forEach = { query = type(DamageBatch) item = batch body = { destroy = { target = batch } } }
+    forEach = { query = collection(Attacks) item = attack body = { destroy = { target = attack } } }
+  }
+}

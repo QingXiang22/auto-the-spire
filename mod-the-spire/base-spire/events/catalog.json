@@ -159,9 +159,9 @@
       "source_path": "sts2/src/Core/Models/Events/DoorsOfLightAndDark.cs",
       "source_sha256": "dd3d4ffd117c133f5ffb9970517bee466fbf64a62047c05a01cf47891c5bcbb1",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "BEHAVIOR-01: explicit development visit, both options; normal event-pool/Run parity unverified",
+      "definition": "events/doors-of-light-and-dark.spire"
     },
     {
       "id": "base-spire:drowning-beacon",
@@ -389,9 +389,9 @@
       "source_path": "sts2/src/Core/Models/Events/SapphireSeed.cs",
       "source_sha256": "746ef166fc1a60c67da2927152d867a52211a1b9d5556cbd4d5e2f87ded95cf8",
       "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "BEHAVIOR-01: explicit development visit, both options; normal event-pool/Run parity unverified",
+      "definition": "events/sapphire-seed.spire"
     },
     {
       "id": "base-spire:self-help-book",

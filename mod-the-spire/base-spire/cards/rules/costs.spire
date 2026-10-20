@@ -1,0 +1,64 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity CardCostModifier { fields = {
+  Card = { type = Ref(Card) visibility = Hidden }
+  Source = { type = String(length = 64) }
+  Operation = { type = String(length = 16) }
+  Amount = { type = Int }
+  Lifetime = { type = String(length = 16) }
+} }
+collection CardCostModifiers { element = CardCostModifier ordered = true }
+
+procedure LocalCardCost {
+  pure = true parameters = { card = Ref(Card) } result = Int locals = { value = Int }
+  body = {
+    let = { into = value value = field(card, Card.BaseCost) }
+    forEach = { query = where(collection(CardCostModifiers), m, equal(field(m, CardCostModifier.Card), card)) item = modifier body = {
+      if = { condition = equal(field(modifier, CardCostModifier.Operation), "set") then = {
+        let = { into = value value = field(modifier, CardCostModifier.Amount) }
+      } else = { let = { into = value value = add(value, field(modifier, CardCostModifier.Amount)) } } }
+    } }
+    return = { value = minimum(9, maximum(0, value)) }
+  }
+}
+procedure RefreshCardCost { parameters = { card = Ref(Card) } body = {
+  set = { target = card field = Card.Cost value = pureCall(LocalCardCost, card) }
+} }
+procedure AddCardCostModifier {
+  parameters = { card = Ref(Card) source = String(length = 64) operation = String(length = 16) amount = Int lifetime = String(length = 16) }
+  locals = { modifier = Binding }
+  body = {
+    if = { condition = not(or(equal(operation, "set"), equal(operation, "add"))) then = { fail = { message = "Unknown card cost operation" } } }
+    if = { condition = not(or(equal(lifetime, "turn"), or(equal(lifetime, "play"), or(equal(lifetime, "turn-or-play"), equal(lifetime, "combat"))))) then = { fail = { message = "Unknown card cost lifetime" } } }
+    create = { type = CardCostModifier scope = entityScope(card) into = modifier collection = CardCostModifiers fields = { Card = card Source = source Operation = operation Amount = amount Lifetime = lifetime } }
+    call = { procedure = RefreshCardCost args = { card = card } }
+  }
+}
+procedure ExpireCardCostModifiers {
+  parameters = { card = Ref(Card) boundary = String(length = 16) }
+  body = {
+    forEach = { query = where(collection(CardCostModifiers), m, and(equal(field(m, CardCostModifier.Card), card), or(equal(field(m, CardCostModifier.Lifetime), boundary), and(or(equal(boundary, "turn"), equal(boundary, "play")), equal(field(m, CardCostModifier.Lifetime), "turn-or-play"))))) item = modifier body = { destroy = { target = modifier } } }
+    call = { procedure = RefreshCardCost args = { card = card } }
+  }
+}
+procedure ResetCardTurnCosts { body = {
+  forEach = { query = type(Card) item = card body = { call = { procedure = ExpireCardCostModifiers args = { card = card boundary = "turn" } } } }
+} }
+procedure ResetCardCombatCosts { body = {
+  forEach = { query = collection(CardCostModifiers) item = modifier body = { destroy = { target = modifier } } }
+  forEach = { query = type(Card) item = card body = { call = { procedure = RefreshCardCost args = { card = card } } } }
+} }
+procedure CloneCardCosts {
+  parameters = { owner = Ref(Player) source = Ref(Card) card = Ref(Card) }
+  body = {
+    forEach = { query = where(collection(CardCostModifiers), m, equal(field(m, CardCostModifier.Card), source)) item = modifier body = {
+      call = { procedure = AddCardCostModifier args = { card = card source = field(modifier, CardCostModifier.Source) operation = field(modifier, CardCostModifier.Operation) amount = field(modifier, CardCostModifier.Amount) lifetime = field(modifier, CardCostModifier.Lifetime) } }
+    } }
+  }
+}
+subscription CloneCardCosts { event = CardCloned reaction = CloneCardCosts }
+procedure RemoveCardCosts { parameters = { card = Ref(Card) } body = {
+  forEach = { query = where(collection(CardCostModifiers), m, equal(field(m, CardCostModifier.Card), card)) item = modifier body = { destroy = { target = modifier } } }
+} }
+subscription RemoveCardCosts { event = CardRemoving reaction = RemoveCardCosts }

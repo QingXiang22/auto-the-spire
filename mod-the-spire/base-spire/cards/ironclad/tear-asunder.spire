@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/TearAsunder.cs; SHA-256 retained in cards/catalog.json.
 use TearAsunder { template = CardDefinition args = { sourceEntry = "TEAR_ASUNDER" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:tear-asunder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 5 upgradedBaseDamage = 7 } }
 use TearAsunderEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:tear-asunder" hits = 1 upgradedHits = 1 hitScale = "hp-loss" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure TearAsunderBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = TearAsunderEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase TearAsunderBody { dispatch = ExecuteCardBody key = "base-spire:tear-asunder" procedure = TearAsunderBody }
+
+procedure TearAsunderDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase TearAsunderDamageValue { dispatch = ReadCardDamage key = "base-spire:tear-asunder" procedure = TearAsunderDamageValue }

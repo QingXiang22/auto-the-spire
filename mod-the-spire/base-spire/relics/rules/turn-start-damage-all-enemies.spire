@@ -11,16 +11,7 @@ template TurnStartDamageAllEnemiesRelic {
     procedure WhenPlayerTurnStarts {
       parameters = { owner = Ref(Player) listener = Ref(Relic) }
       body = {
-        forEach = {
-          query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
-          body = {
-            call = {
-              procedure = DamageEnemy args = {
-                target = enemy amount = arg(amount)
-              }
-            }
-          }
-        }
+        call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = arg(amount) } }
       }
     }
     subscription OnPlayerTurnStart {

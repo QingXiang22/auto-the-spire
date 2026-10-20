@@ -1,0 +1,16 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Akabeko.AfterSideTurnStart: the owner's first side turn receives eight Vigor.
+template AkabekoModule { body = {
+  procedure Started { parameters = { owner = Ref(Player) listener = Ref(Relic) } body = {
+    if = { condition = lessOrEqual(field(owner, Player.TurnNumber), 1) then = {
+      call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:vigor-power" stacks = 8 } }
+    } }
+  } }
+  subscription Started { event = AfterSideTurnStarted reaction = Started instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:akabeko")))) instance_order = collectionIndex(Relics, listener) priority = 100 }
+  action Obtain { role = player requires = not(pureCall(HasOwnedRelic, first(type(Player)), "base-spire:akabeko")) body = {
+    call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = "base-spire:akabeko" } }
+  } }
+} }
+use Akabeko { template = AkabekoModule }

@@ -15,3 +15,21 @@ use BashVulnerable {
   template = ApplyEnemyPowerEffect
   args = { definition = "base-spire:bash" power = "base-spire:vulnerable-power" stacks = 2 upgradedStacks = 3 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BashBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BashDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = BashVulnerable.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase BashBody { dispatch = ExecuteCardBody key = "base-spire:bash" procedure = BashBody }
+
+procedure BashDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BashDamageValue { dispatch = ReadCardDamage key = "base-spire:bash" procedure = BashDamageValue }

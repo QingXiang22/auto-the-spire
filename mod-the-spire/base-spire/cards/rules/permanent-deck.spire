@@ -63,7 +63,7 @@ procedure BuildCombatDeck {
         forEach = {
           query = where(type(Card), candidate, and(equal(field(candidate, Card.Owner), field(owner, Player.Owner)), less(collectionIndex(RunDeck, candidate), 0)))
           item = previous
-          body = { destroy = { target = previous } }
+          body = { call = { procedure = DestroyCombatCard args = { card = previous } } }
         }
         forEach = {
           query = where(collection(RunDeck), candidate, equal(field(candidate, Card.Owner), field(owner, Player.Owner)))
@@ -76,14 +76,16 @@ procedure BuildCombatDeck {
                 Rarity = field(permanent, Card.Rarity)
                 SourceEntry = field(permanent, Card.SourceEntry)
                 IsX = field(permanent, Card.IsX) BaseCost = field(permanent, Card.BaseCost)
-                BaseDamage = field(permanent, Card.BaseDamage) DamageScale = field(permanent, Card.DamageScale) DamageFactor = field(permanent, Card.DamageFactor) DiscountsOnAttack = field(permanent, Card.DiscountsOnAttack) AutoFromExhaustAtTurnEnd = field(permanent, Card.AutoFromExhaustAtTurnEnd) Innate = field(permanent, Card.Innate)
+                BaseDamage = field(permanent, Card.BaseDamage) Innate = field(permanent, Card.Innate)
                 Owner = field(owner, Player.Owner) DefinitionId = field(permanent, Card.DefinitionId)
-                Label = field(permanent, Card.Label) Cost = field(permanent, Card.Cost)
+                Label = field(permanent, Card.Label) Cost = field(permanent, Card.BaseCost)
                 Upgraded = field(permanent, Card.Upgraded) CanUpgrade = field(permanent, Card.CanUpgrade)
                 Targeted = field(permanent, Card.Targeted) Exhausts = field(permanent, Card.Exhausts)
                 LeavesPlay = field(permanent, Card.LeavesPlay) PermanentSource = permanent
               }
             }
+            emit = { event = CardCombatCopied payload = { owner = owner source = permanent card = copy } }
+            emit = { event = CardEnteredCombat payload = { owner = owner card = copy clone = false } }
           }
         }
       }

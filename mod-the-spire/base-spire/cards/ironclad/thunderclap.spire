@@ -15,3 +15,21 @@ use ThunderclapVulnerable {
   template = ApplyAllEnemiesPowerEffect
   args = { definition = "base-spire:thunderclap" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 1 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure ThunderclapBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = ThunderclapDamage.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = ThunderclapVulnerable.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase ThunderclapBody { dispatch = ExecuteCardBody key = "base-spire:thunderclap" procedure = ThunderclapBody }
+
+procedure ThunderclapDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase ThunderclapDamageValue { dispatch = ReadCardDamage key = "base-spire:thunderclap" procedure = ThunderclapDamageValue }

@@ -32,6 +32,7 @@ internal static class EngineChecks
         RuleLibraryChecks.Run();
         ListenerChecks.Run();
         SourceFragmentChecks.Run();
+        DispatchChecks.Run();
         ContractChecks.Run();
         AuthorRuntimeV04Checks.Run();
         DebugChecks.Run();

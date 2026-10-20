@@ -14,3 +14,21 @@ use IronWaveDamage {
   template = AttackEffect
   args = { definition = "base-spire:iron-wave" hits = 1 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure IronWaveBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = IronWaveBlock.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = IronWaveDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase IronWaveBody { dispatch = ExecuteCardBody key = "base-spire:iron-wave" procedure = IronWaveBody }
+
+procedure IronWaveDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase IronWaveDamageValue { dispatch = ReadCardDamage key = "base-spire:iron-wave" procedure = IronWaveDamageValue }

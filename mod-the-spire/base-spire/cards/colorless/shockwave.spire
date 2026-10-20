@@ -15,3 +15,21 @@ use ShockwaveVulnerable {
   template = ApplyAllEnemiesPowerEffect
   args = { definition = "base-spire:shockwave" power = "base-spire:vulnerable-power" stacks = 3 upgradedStacks = 5 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure ShockwaveBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = ShockwaveWeak.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = ShockwaveVulnerable.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase ShockwaveBody { dispatch = ExecuteCardBody key = "base-spire:shockwave" procedure = ShockwaveBody }
+
+procedure ShockwaveDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase ShockwaveDamageValue { dispatch = ReadCardDamage key = "base-spire:shockwave" procedure = ShockwaveDamageValue }

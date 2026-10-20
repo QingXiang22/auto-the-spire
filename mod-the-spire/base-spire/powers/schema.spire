@@ -5,6 +5,7 @@ entity PowerBlueprint { fields = {
  DefinitionId = { type = String(length = 64) visibility = Hidden }
  AllowNegative = { type = Bool default = false visibility = Hidden }
  Debuff = { type = Bool default = false visibility = Hidden }
+ InstanceMode = { type = String(length = 16) default = "shared" visibility = Hidden }
  SingleStack = { type = Bool default = false visibility = Hidden }
 } }
 collection PowerLibrary { element = PowerBlueprint ordered = true }
@@ -12,3 +13,7 @@ event RegisterPowerDefinitions { }
 event PowerCreated { payload = { power = Ref(Power) } }
 event PowerApplied { payload = { power = Ref(Power) amount = Int created = Bool } }
 event PowerRemoved { payload = { power = Ref(Power) } }
+
+event ShouldApplyPower { payload = { value = Bool player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
+event ModifyPowerGiven { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
+event ModifyPowerReceived { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }

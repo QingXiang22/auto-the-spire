@@ -12,22 +12,19 @@ template AttackEffect {
   }
   body = {
     procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { amount = Int }
       body = {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
             let = { into = amount value = pureCall(CardBaseDamage, owner, card, target) }
-            repeat = {
-              count = arg(hits)
-              body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = amount } } }
-            }
+            call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = amount hits = arg(hits) mode = "single" dynamic = false } }
           }
         }
       }
     }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
+
   }
 }
 template BlockEffect {
@@ -38,7 +35,7 @@ template BlockEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -54,7 +51,7 @@ template BlockEffect {
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 template DrawEffect {
@@ -65,7 +62,7 @@ template DrawEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -81,7 +78,7 @@ template DrawEffect {
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 # BodySlam.cs: CalculatedDamageVar(ValueProp.Move).WithMultiplier(card => card.Owner.Creature.Block),
@@ -97,7 +94,7 @@ template EnergyEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -113,7 +110,7 @@ template EnergyEffect {
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 # AoE attack effect for cards that hit every enemy (Thunderclap.cs, Breakthrough.cs, Conflagration.cs). It
@@ -127,7 +124,7 @@ template AttackAllEnemiesEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int count = Int }
       body = {
         if = {
@@ -139,20 +136,12 @@ template AttackAllEnemiesEffect {
               then = { let = { into = count value = arg(upgradedHits) } }
               else = { let = { into = count value = arg(hits) } }
             }
-            forEach = {
-              query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
-              body = {
-                repeat = {
-                  count = count
-                  body = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = enemy amount = pureCall(CardBaseDamage, owner, card, enemy) } } }
-                }
-              }
-            }
+            call = { procedure = CardAttack args = { owner = owner card = card play = play target = none amount = 0 hits = count mode = "all" dynamic = true } }
           }
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 # Shared debuff effect for single-target cards (Bash.cs, Uppercut.cs). It subscribes to the same event as
@@ -167,7 +156,7 @@ template ApplyEnemyPowerEffect {
   }
   body = {
     procedure WhenPlayedOnTarget {
-      parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { amount = Int }
       body = {
         if = {
@@ -178,12 +167,12 @@ template ApplyEnemyPowerEffect {
               then = { let = { into = amount value = arg(upgradedStacks) } }
               else = { let = { into = amount value = arg(stacks) } }
             }
-            call = { procedure = ApplyEnemyPower args = { target = target definition = arg(power) stacks = amount } }
+            call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = arg(power) stacks = amount } }
           }
         }
       }
     }
-    subscription OnCardPlayedOnTarget { event = CardPlayedOnTarget reaction = WhenPlayedOnTarget }
+
   }
 }
 # Shared debuff effect for cards that hit every enemy (Shockwave.cs). Death and escaped enemies are not
@@ -197,7 +186,7 @@ template ApplyAllEnemiesPowerEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -210,13 +199,13 @@ template ApplyAllEnemiesPowerEffect {
             }
             forEach = {
               query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
-              body = { call = { procedure = ApplyEnemyPower args = { target = enemy definition = arg(power) stacks = amount } } }
+              body = { call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = enemy definition = arg(power) stacks = amount } } }
             }
           }
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 # Shared self-buff effect for cards that power the player up (Flex.cs, Inflame.cs). No migrated card uses it
@@ -230,7 +219,7 @@ template ApplySelfPowerEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -241,12 +230,12 @@ template ApplySelfPowerEffect {
               then = { let = { into = amount value = arg(upgradedStacks) } }
               else = { let = { into = amount value = arg(stacks) } }
             }
-            call = { procedure = ApplyPlayerPower args = { owner = owner definition = arg(power) stacks = amount } }
+            call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = arg(power) stacks = amount } }
           }
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 template LoseHpEffect {
@@ -257,7 +246,7 @@ template LoseHpEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -268,12 +257,12 @@ template LoseHpEffect {
               then = { let = { into = amount value = arg(upgradedHp) } }
               else = { let = { into = amount value = arg(hp) } }
             }
-            call = { procedure = LosePlayerHp args = { owner = owner amount = amount } }
+            call = { procedure = LosePlayerHpFromCard args = { card = card play = play  owner = owner amount = amount } }
           }
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 

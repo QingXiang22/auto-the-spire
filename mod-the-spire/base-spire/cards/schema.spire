@@ -20,17 +20,10 @@ entity Card {
     # Captured energy X; effect bonuses are queried separately through ResolveEnergyXValue.
     PaidX = { type = Int(min = 0, max = 999) default = 0 }
     BaseCost = { type = Int(min = 0, max = 9) default = 0 }
-    DamageScale = { type = String(length = 32) default = "none" }
-    DamageFactor = { type = Int default = 0 }
-    DiscountsOnAttack = { type = Bool default = false }
-    AutoFromExhaustAtTurnEnd = { type = Bool default = false }
     ForceExhaust = { type = Bool default = false visibility = Hidden }
     DamageGrowth = { type = Int(min = 0, max = 999999) default = 0 }
     BaseDamage = { type = Int(min = 0, max = 999) default = 0 }
     Innate = { type = Bool default = false }
-    FreeUntilPlayed = { type = Bool default = false }
-    TurnCostDiscount = { type = Int default = 0 }
-    CostResetAtTurnEnd = { type = Bool default = false }
     PermanentSource = { type = Ref(Card) optional = true visibility = Hidden }
     # Development stand-in for vanilla TargetType: targeted cards need an enemy and are played by PlayAttackFromHand.
     Targeted = { type = Bool default = false }
@@ -52,11 +45,28 @@ entity CardPlayRecord {
     Kind = { type = String(length = 16) }
     Turn = { type = Int }
     Sequence = { type = Int }
+    ActionNumber = { type = Int visibility = Hidden }
+    ParentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
+    Target = { type = Ref(Enemy) optional = true visibility = Hidden }
+    IsAutoPlay = { type = Bool default = false visibility = Hidden }
+    PaidEnergy = { type = Int default = 0 visibility = Hidden }
+    RawX = { type = Int default = 0 visibility = Hidden }
+    ResultPile = { type = String(length = 16) visibility = Hidden }
+    PlayIndex = { type = Int default = 0 visibility = Hidden }
+    PlayCount = { type = Int default = 1 visibility = Hidden }
+    Started = { type = Bool default = false visibility = Hidden }
     Finished = { type = Bool default = false }
     PoweredBlocks = { type = Int default = 0 }
   }
 }
 collection CardPlays { element = CardPlayRecord ordered = true }
+dispatch ExecuteCardBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+}
+event BeforeCardExecution { payload = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) } }
+event AfterCardExecution { payload = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) } }
+event ExecuteCardEnchantment { payload = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) } }
+event ExecuteCardAffliction { payload = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) } }
 collection Hand { element = Card capacity = 10 ordered = true }
 collection DrawPile { element = Card ordered = true identity_visible = false order_visible = false }
 collection DiscardPile { element = Card ordered = true }
@@ -90,3 +100,9 @@ entity CardBlueprint {
   }
 }
 collection CardLibrary { element = CardBlueprint ordered = true }
+
+dispatch ReadCardDamage { pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int }
+
+event CardCloned { payload = { owner = Ref(Player) source = Ref(Card) card = Ref(Card) } }
+event CardCombatCopied { payload = { owner = Ref(Player) source = Ref(Card) card = Ref(Card) } }
+event CardRemoving { payload = { card = Ref(Card) } }

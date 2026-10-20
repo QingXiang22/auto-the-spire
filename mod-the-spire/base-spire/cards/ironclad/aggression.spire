@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Aggression.cs; SHA-256 retained in cards/catalog.json.
 use Aggression { template = CardDefinition args = { sourceEntry = "AGGRESSION" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:aggression" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true upgradedInnate = true } }
 use AggressionEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:aggression" power = "base-spire:aggression-power" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure AggressionBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = AggressionEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase AggressionBody { dispatch = ExecuteCardBody key = "base-spire:aggression" procedure = AggressionBody }
+
+procedure AggressionDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase AggressionDamageValue { dispatch = ReadCardDamage key = "base-spire:aggression" procedure = AggressionDamageValue }

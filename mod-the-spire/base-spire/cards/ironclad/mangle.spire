@@ -5,3 +5,21 @@ dsl_version = "core/0.3"
 use Mangle { template = CardDefinition args = { sourceEntry = "MANGLE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:mangle" cost = 3 upgradedCost = 3 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 15 upgradedBaseDamage = 20 } }
 use MangleEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:mangle" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
 use MangleEffect2 { template = TemporaryStrengthEffect args = { definition = "base-spire:mangle" stacks = 10 upgradedStacks = 15 enemy = true } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure MangleBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = MangleEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = MangleEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase MangleBody { dispatch = ExecuteCardBody key = "base-spire:mangle" procedure = MangleBody }
+
+procedure MangleDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase MangleDamageValue { dispatch = ReadCardDamage key = "base-spire:mangle" procedure = MangleDamageValue }

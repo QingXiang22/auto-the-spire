@@ -12,7 +12,7 @@ template ApplySelfPowerUntilTurnEndEffect {
   }
   body = {
     procedure WhenPlayed {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = {
         if = {
@@ -23,12 +23,12 @@ template ApplySelfPowerUntilTurnEndEffect {
               then = { let = { into = amount value = arg(upgradedStacks) } }
               else = { let = { into = amount value = arg(stacks) } }
             }
-            call = { procedure = ApplyPlayerPowerUntilTurnEnd args = { owner = owner definition = arg(power) stacks = amount } }
+            call = { procedure = ApplyPlayerPowerFromCardUntilTurnEnd args = { card = card play = play  owner = owner definition = arg(power) stacks = amount } }
           }
         }
       }
     }
-    subscription OnCardPlayed { event = CardPlayed reaction = WhenPlayed }
+
   }
 }
 
@@ -44,3 +44,21 @@ use FlameBarrierThorns {
   template = ApplySelfPowerUntilTurnEndEffect
   args = { definition = "base-spire:flame-barrier" power = "base-spire:thorns-power" stacks = 4 upgradedStacks = 6 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure FlameBarrierBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = FlameBarrierBlock.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = FlameBarrierThorns.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase FlameBarrierBody { dispatch = ExecuteCardBody key = "base-spire:flame-barrier" procedure = FlameBarrierBody }
+
+procedure FlameBarrierDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase FlameBarrierDamageValue { dispatch = ReadCardDamage key = "base-spire:flame-barrier" procedure = FlameBarrierDamageValue }

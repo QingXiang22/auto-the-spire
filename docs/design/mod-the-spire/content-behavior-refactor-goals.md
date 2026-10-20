@@ -1,18 +1,18 @@
 # base 内容与行为重构目标
 
-本文供 base 规则维护者决定下一轮重构范围，并据此拆出可验证的机制包。2026-10-19，Codex `/root` 根据当前 DSL、锁定的 sts2-sim 与原版源码重新梳理。**这是目标设计，本次只交付文档，不表示以下能力已经实现，也不授权启动生产重构。** 排期、认领和暂停项仍只维护在[主清单](../../review/tofix/README.md#当前交付)。
+本文供 base 规则维护者决定下一轮重构范围，并据此拆出可验证的机制包。2026-10-19，Codex `/root` 根据当前 DSL、锁定的 sts2-sim 与原版源码重新梳理。**本文保存目标设计与当时的代码基线观察。用户随后要求实施，当前接口与限制见[实施契约](content-behavior-migration.md)，逐项证据见[迁移记录](../../review/records/2026-10-19/content-behavior-migration-2026-10-19.md)。目标本身不等于全部验收通过。** 排期、认领和暂停项仍只维护在[主清单](../../review/tofix/README.md#当前交付)。
 
 目标是让内容作者能够在所属模块中表达完整行为，通过稳定领域操作复用公共规则。一次出牌、一次攻击、一次命中和一次伤害结果各有明确身份与寿命；费用、选牌、牌区、复制、附着、Power、回合和 Run 按各自职责接入。新增内容不再依赖扩充中心字符串分支、公共专属字段或事件声明顺序来拼接自己的主效果。
 
-## 依据与当前起点
+## 依据与设计起点（2026-10-19）
 
 本次读取基线为本仓库 `45c34c5`，base `0.6.1-dsl.39`、语言 `core/0.3`、执行语义 `engine/ir@0.6`。参考为[锁定清单](../../../reference/baselines/sts2-sim.json)中的 `2089659bd07920088b93226136c72b6b6ee590ad`，tree 为 `8eb770da4e87677c54799801488b71a8ccba687b`；已核对本地 HEAD、tree 与干净工作树，未更新参考。原版行为以本地 `sts2/` 对应方法为裁决依据。
 
 当前已经具备完整 DSL 内容模块、定义驱动的 Power 施加与移除、内容私有实体、实例通知与 pure 修正监听、普通攻击数值的单一读取入口。**这些作为保留基础，不重新立项。** 正常 Run 与独立适配器仍未恢复，开发 scope 的行为检查不能证明完整原版一致性。
 
-以下是本次直接读代码得到的现状，旧 review 的建议不作为当前缺陷的证据。
+以下是目标文档形成时直接读代码得到的基线观察；已经实施的部分以迁移契约与证据为准，旧 review 的建议不作为当前缺陷的证据。
 
-| 领域 | 当前实现与具体缺口 | 直接依据 |
+| 领域 | 基线实现与具体缺口 | 直接依据 |
 | --- | --- | --- |
 | 卡牌主效果 | 多个效果订阅 `CardPlayed` 或 `CardPlayedOnTarget`，分别按定义 ID 过滤；无目标效果整体先于目标效果。卡牌正文的顺序同时受事件阶段和订阅声明顺序影响 | [effects](../../../mod-the-spire/base-spire/cards/rules/effects.spire)、[IronWave](../../../mod-the-spire/base-spire/cards/ironclad/iron-wave.spire)、[Offering](../../../mod-the-spire/base-spire/cards/ironclad/offering.spire) |
 | 出牌上下文 | 每次重复已有 `CardPlayRecord`，嵌套前后保存／恢复 `CurrentPlay` 和 `CurrentCard`；通知只传 owner／card，资源和结果区信息散落在 Card 字段及局部变量 | [play](../../../mod-the-spire/base-spire/cards/rules/play.spire)、[Card schema](../../../mod-the-spire/base-spire/cards/schema.spire) |
@@ -20,7 +20,7 @@
 | 伤害 | 玩家、敌人、有加成、无加成路径分别结算；`PlayerHpLost` 仅携带 owner，`EnemyDied` 仅携带 target，不能提供来源和实际结果 | [damage](../../../mod-the-spire/base-spire/combat/damage.spire)、[enemy-turn](../../../mod-the-spire/base-spire/combat/enemy-turn.spire) |
 | 自动打出 | `AutoplayTopEffect` 取一张立即打出，再取下一张；源 `AutoPlayFromDrawPile` 先收集并移入打出区，再执行整个批次 | [ironclad-effects](../../../mod-the-spire/base-spire/cards/rules/ironclad-effects.spire)、`sts2/src/Core/Commands/CardPileCmd.cs::AutoPlayFromDrawPile` |
 | 费用与变量 | X 已区分捕获值和效果修正，但捕获值仍在 Card 上；费用有多个修改／复原字段，`CardBaseDamage` 仍枚举 DamageScale 字符串 | [operations](../../../mod-the-spire/base-spire/cards/rules/operations.spire)、[Card schema](../../../mod-the-spire/base-spire/cards/schema.spire) |
-| 复制与私有状态 | Stomp 和回合末从消耗堆自动打出的开关仍在公共 Card；克隆与永久牌→战斗副本分别手抄字段，缺少附属能力的复制协议 | [operations](../../../mod-the-spire/base-spire/cards/rules/operations.spire)、[permanent-deck](../../../mod-the-spire/base-spire/cards/rules/permanent-deck.spire)、[reactions](../../../mod-the-spire/base-spire/cards/rules/reactions.spire) |
+| 复制与私有状态 | Stomp 和回合末从消耗堆自动打出的开关仍在公共 Card；克隆与永久牌→战斗副本分别手抄字段，缺少附属能力的复制协议 | [operations](../../../mod-the-spire/base-spire/cards/rules/operations.spire)、[permanent-deck](../../../mod-the-spire/base-spire/cards/rules/permanent-deck.spire)、[旧 reactions 快照](https://github.com/QingXiang22/auto-the-spire/blob/54bf08a/mod-the-spire/base-spire/cards/rules/reactions.spire) |
 | Power | 定义边界已建立，但实例按定义＋持有者查找；缺 applier／cardSource 和完整实例策略。Rupture 私有状态已归位，仍通过 EnemyPhase／CurrentPlay 判断来源 | [Power lifecycle](../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire)、[Rupture](../../../mod-the-spire/base-spire/powers/shared/rupture-power.spire) |
 | 资源与访问 | GainGold／Heal 主要是字段修改；房间与奖励状态混在 Player。营火和奖励仅为开发入口，没有正常地图／事件访问生命周期 | [resources](../../../mod-the-spire/base-spire/combat/resources.spire)、[Player schema](../../../mod-the-spire/base-spire/combat/schema.spire)、[rest-site](../../../mod-the-spire/base-spire/rooms/rest-site.spire)、[manifest](../../../mod-the-spire/base-spire/package.json) |
 | 登记 | index、catalog、公开 content_ids 仍手工联动；原来源／池顺序与已执行见证需要分别维护 | [base 入口](../../../mod-the-spire/base-spire/base.spire)、[公开元数据](../../../mod-the-spire/base-spire/public/metadata.json) |
@@ -208,7 +208,7 @@ sts2-sim 在这里提供职责分工样本：[CardModel](../../../reference/sts2
 
 ## 验收场景
 
-这些是后续实施的判别要求，**本次没有运行**。优先复用能区分该错误的现有用例，缺判别才补；不为每张同数值模板牌复制整套测试。
+这些是实施的判别要求，**目标文档阶段没有运行**；已运行范围查[实施证据](../../review/records/2026-10-19/content-behavior-migration-2026-10-19.md)。优先复用能区分该错误的现有用例，缺判别才补；不为每张同数值模板牌复制整套测试。
 
 | ID／目标 | 初态与刺激 | 应观察到的结果与禁止结果 |
 | --- | --- | --- |
@@ -232,8 +232,8 @@ sts2-sim 在这里提供职责分工样本：[CardModel](../../../reference/sts2
 
 每个切片报告实际 DSL 加载与运行、来源／参考身份、固定 scope／seed、选中的回归、首差及公开观测。独立比较未恢复时维持未验证，不用本地自洽替代；原 17 regression 的 ID、输入和失败合同继续保留。
 
-## 本次交付与下一决策
+## 目标文档阶段的交付（2026-10-19）
 
-本次形成跨内容的重构目标，清理 review 的当前入口与过时交接位置，并修正仍将内容限制为 use-only、或将旧 C# 模块当现行架构的入口页。代码、源范围、manifest、参考和生产测试均未改。
+目标文档阶段形成跨内容的重构目标，清理 review 的当前入口与过时交接位置，并修正仍将内容限制为 use-only、或将旧 C# 模块当现行架构的入口页。该阶段未修改生产代码；后续用户授权的实现见[迁移契约](content-behavior-migration.md)。
 
-下一次进入实施前，在主清单登记具体切片、修改边界、直接源码方法、接口／状态顺序与最小判别，解决该切片实际暴露的语言缺口。本文不等待“是否需要全面重构”的泛泛批准，也不把目标设计当成已批准的完整 API。文档检查及清理映射见[本轮维护记录](../../review/records/2026-10-19/behavior-refactor-review-2026-10-19.md)。
+进入新的机制切片前，在主清单登记具体切片、修改边界、直接源码方法、接口／状态顺序与最小判别，解决该切片实际暴露的语言缺口。本文不等待“是否需要全面重构”的泛泛批准，也不把目标设计当成已批准的完整 API。文档检查及清理映射见[本轮维护记录](../../review/records/2026-10-19/behavior-refactor-review-2026-10-19.md)。

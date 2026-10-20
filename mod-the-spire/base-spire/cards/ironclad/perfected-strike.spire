@@ -2,5 +2,26 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/PerfectedStrike.cs; SHA-256 retained in cards/catalog.json.
-use PerfectedStrike { template = CardDefinition args = { sourceEntry = "PERFECTED_STRIKE" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:perfected-strike" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 damageScale = "strike-count" damageFactor = 2 upgradedDamageFactor = 3 } }
+use PerfectedStrike { template = CardDefinition args = { sourceEntry = "PERFECTED_STRIKE" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:perfected-strike" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = true targeted = true exhausts = false leavesPlay = false baseDamage = 6 upgradedBaseDamage = 6 } }
 use PerfectedStrikeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:perfected-strike" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure PerfectedStrikeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = PerfectedStrikeEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase PerfectedStrikeBody { dispatch = ExecuteCardBody key = "base-spire:perfected-strike" procedure = PerfectedStrikeBody }
+
+procedure PerfectedStrikeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  locals = { factor = Int units = Int }
+  body = {
+    let = { into = factor value = 2 }
+    if = { condition = field(card, Card.Upgraded) then = { let = { into = factor value = 3 } } }
+    let = { into = units value = count(where(type(Card), c, and(and(field(c, Card.StrikeTag), equal(field(c, Card.Owner), field(owner, Player.Owner))), and(less(collectionIndex(RunDeck, c), 0), less(collectionIndex(RemovedFromCombat, c), 0))))) }
+    return = { value = add(add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)), multiply(units, factor)) }
+  }
+}
+dispatchCase PerfectedStrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:perfected-strike" procedure = PerfectedStrikeDamageValue }

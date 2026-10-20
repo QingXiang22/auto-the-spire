@@ -2,5 +2,27 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Bully.cs; SHA-256 retained in cards/catalog.json.
-use Bully { template = CardDefinition args = { sourceEntry = "BULLY" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:bully" cost = 0 upgradedCost = 0 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 4 damageScale = "vulnerable-count" damageFactor = 2 upgradedDamageFactor = 3 } }
+use Bully { template = CardDefinition args = { sourceEntry = "BULLY" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:bully" cost = 0 upgradedCost = 0 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 4 } }
 use BullyEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:bully" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BullyBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BullyEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase BullyBody { dispatch = ExecuteCardBody key = "base-spire:bully" procedure = BullyBody }
+
+procedure BullyDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  locals = { factor = Int units = Int }
+  body = {
+    let = { into = factor value = 2 }
+    if = { condition = field(card, Card.Upgraded) then = { let = { into = factor value = 3 } } }
+    let = { into = units value = 0 }
+    if = { condition = not(isNone(target)) then = { let = { into = units value = pureCall(EnemyPowerAmount, target, "base-spire:vulnerable-power") } } }
+    return = { value = add(add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)), multiply(units, factor)) }
+  }
+}
+dispatchCase BullyDamageValue { dispatch = ReadCardDamage key = "base-spire:bully" procedure = BullyDamageValue }

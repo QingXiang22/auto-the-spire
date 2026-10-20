@@ -6,19 +6,33 @@ template RandomHitsEffect {
   parameters = { definition = { type = String(length = 64) } hits = { type = Int } upgradedHits = { type = Int } }
   body = {
     procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
       locals = { count = Int target = Binding }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 if = { condition = field(card, Card.Upgraded) then = { let = { into = count value = arg(upgradedHits) } } else = { let = { into = count value = arg(hits) } } }
-repeat = { count = count body = {
-  call = { procedure = RandomLivingEnemy into = target }
-  if = { condition = not(isNone(target)) then = { call = { procedure = DamageEnemyPowered args = { owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } } } }
-} }
+call = { procedure = CardAttack args = { owner = owner card = card play = play target = none amount = 0 hits = count mode = "random" dynamic = true } }
       } } }
     }
-    subscription Apply { event = CardPlayed reaction = Apply }
+
   }
 }
 
 use SwordBoomerang { template = CardDefinition args = { sourceEntry = "SWORD_BOOMERANG" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:sword-boomerang" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 3 upgradedBaseDamage = 3 } }
 use SwordBoomerangEffect1 { template = RandomHitsEffect args = { definition = "base-spire:sword-boomerang" hits = 3 upgradedHits = 4 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure SwordBoomerangBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = SwordBoomerangEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase SwordBoomerangBody { dispatch = ExecuteCardBody key = "base-spire:sword-boomerang" procedure = SwordBoomerangBody }
+
+procedure SwordBoomerangDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase SwordBoomerangDamageValue { dispatch = ReadCardDamage key = "base-spire:sword-boomerang" procedure = SwordBoomerangDamageValue }

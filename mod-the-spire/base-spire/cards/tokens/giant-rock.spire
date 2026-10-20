@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/GiantRock.cs; SHA-256 retained in cards/catalog.json.
 use GiantRock { template = CardDefinition args = { sourceEntry = "GIANT_ROCK" rarity = "token" definition = "base-spire:giant-rock" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 16 upgradedBaseDamage = 20 } }
 use GiantRockEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:giant-rock" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure GiantRockBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = GiantRockEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase GiantRockBody { dispatch = ExecuteCardBody key = "base-spire:giant-rock" procedure = GiantRockBody }
+
+procedure GiantRockDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase GiantRockDamageValue { dispatch = ReadCardDamage key = "base-spire:giant-rock" procedure = GiantRockDamageValue }

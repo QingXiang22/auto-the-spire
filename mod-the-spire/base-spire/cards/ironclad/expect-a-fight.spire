@@ -6,16 +6,33 @@ template HandAttackEnergyEffect {
   parameters = { definition = { type = String(length = 64) }  }
   body = {
     procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
+      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
 
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 call = { procedure = GainEnergy args = { owner = owner amount = count(where(collection(Hand), c, equal(field(c, Card.Kind), "attack"))) } }
-call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:no-energy-gain" stacks = 1 } }
+call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = "base-spire:no-energy-gain" stacks = 1 } }
       } } }
     }
-    subscription Apply { event = CardPlayed reaction = Apply }
+
   }
 }
 
 use ExpectAFight { template = CardDefinition args = { sourceEntry = "EXPECT_AFIGHT" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:expect-a-fight" cost = 2 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use ExpectAFightEffect1 { template = HandAttackEnergyEffect args = { definition = "base-spire:expect-a-fight" } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure ExpectAFightBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = ExpectAFightEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase ExpectAFightBody { dispatch = ExecuteCardBody key = "base-spire:expect-a-fight" procedure = ExpectAFightBody }
+
+procedure ExpectAFightDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase ExpectAFightDamageValue { dispatch = ReadCardDamage key = "base-spire:expect-a-fight" procedure = ExpectAFightDamageValue }

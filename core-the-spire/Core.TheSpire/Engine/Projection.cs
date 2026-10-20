@@ -76,11 +76,28 @@ public static class ProjectionObserver
         // area's contents and, with them, its internal order. A pack fact that names this viewer authorizes exactly
         // the instances it references and nothing else; a type outside the projection is never identifiable.
         var identifiable = new HashSet<InstanceId>();
+        var anchored = new List<(InstanceId Instance, int Field)>();
         foreach (var (typeId, type) in projection.Types)
         {
             if (!type.Include) continue;
             foreach (var instance in state.AllInstances(typeId))
-                if (!IsIdentityHidden(state, instance, revealed)) identifiable.Add(instance);
+                if (!IsIdentityHidden(state, instance, revealed))
+                {
+                    if (type.IdentityFromFieldIndex < 0) identifiable.Add(instance);
+                    else anchored.Add((instance, type.IdentityFromFieldIndex));
+                }
+        }
+        // A closed cycle or an absent/hidden anchor never creates visibility. No state is changed;
+        // every successful pass removes at least one candidate, bounding dependent-component traversal.
+        for (var progress = true; progress && anchored.Count > 0;)
+        {
+            progress = false;
+            for (var i = anchored.Count - 1; i >= 0; i--)
+            {
+                var candidate = anchored[i]; var anchor = state.GetField(candidate.Instance, candidate.Field);
+                if (anchor.Kind != ValueKind.Ref || !identifiable.Contains(anchor.AsRef())) continue;
+                identifiable.Add(candidate.Instance); anchored.RemoveAt(i); progress = true;
+            }
         }
 
         var instances = new List<ProjectedInstance>();

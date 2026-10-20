@@ -35,6 +35,7 @@
 | 需要 | 入口 |
 | --- | --- |
 | 查当前可用 DSL 状态、参数、事件顺序和局限 | [共享操作参考](reference/operations.md) |
+| 查有序正文、攻击结果、费用、复制、附魔与访问命令 | [行为操作参考](reference/card-behavior.md) |
 | 查Power定义标志、施加／合并／移除与私有状态事件 | [Power生命周期参考](reference/powers.md) |
 | 查所有领域的落点与前置依赖 | [领域目录参考](reference/domains.md) |
 | 查includes、manifest、静态JSON和内容模块边界 | [包格式参考](../../dsl/core/0.3/package-reference.md) |

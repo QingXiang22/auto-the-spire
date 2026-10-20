@@ -39,7 +39,7 @@ procedure RestAtDevelopmentCampfire {
   parameters = { owner = Ref(Player) }
   body = {
     call = { procedure = RequireUnusedRestSite args = { owner = owner } }
-    call = { procedure = Heal args = { owner = owner amount = foldEvent(ModifyRestHeal, divide(multiply(field(owner, Player.MaxHp), 30), 100), owner)
+    call = { procedure = HealWithSource args = { owner = owner source = "base-spire:rest-site" amount = foldEvent(ModifyRestHeal, divide(multiply(field(owner, Player.MaxHp), 30), 100), owner)
       } }
     set = { target = owner field = Player.RoomUsed value = true }
   }
@@ -48,7 +48,7 @@ procedure RestAtDevelopmentCampfire {
 # success. The engine freezes the candidate list and suspends all other actions until the answer arrives.
 procedure ForgeAtDevelopmentCampfire {
   parameters = { owner = Ref(Player) }
-  locals = { selected = List(Ref(Card), length = 1) }
+  locals = { chosen = Binding }
   body = {
     call = { procedure = RequireUnusedRestSite args = { owner = owner } }
     if = {
@@ -56,14 +56,9 @@ procedure ForgeAtDevelopmentCampfire {
       then = { fail = { message = "There are no upgradable permanent cards" } }
     }
     set = { target = owner field = Player.PendingForge value = true }
-    decide = {
-      participant = field(owner, Player.Owner) kind = EntityRefList prompt = "Choose a permanent card to upgrade, or cancel"
-      into = selected min = 0 max = 1
-      candidates = where(collection(RunDeck), candidate, and(equal(field(candidate, Card.Owner), field(owner, Player.Owner)), and(field(candidate, Card.CanUpgrade), not(field(candidate, Card.Upgraded)))))
-    }
-    forEach = {
-      query = refList(selected) item = chosen
-      body = {
+    call = { procedure = SelectPermanentCard args = { owner = owner purpose = "upgrade" enchantment = "" cancelable = true } into = chosen }
+    if = {
+      condition = not(isNone(chosen)) then = {
         call = { procedure = UpgradeCard args = { card = chosen } }
         set = { target = owner field = Player.RoomUsed value = true }
         emit = { event = AfterRestSiteSmith payload = { owner = owner } }

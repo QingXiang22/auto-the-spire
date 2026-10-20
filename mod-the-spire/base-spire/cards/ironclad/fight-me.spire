@@ -6,3 +6,22 @@ use FightMe { template = CardDefinition args = { sourceEntry = "FIGHT_ME" rarity
 use FightMeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:fight-me" hits = 2 upgradedHits = 2 hitScale = "fixed" } }
 use FightMeEffect2 { template = TargetedSelfPowerEffect args = { definition = "base-spire:fight-me" power = "base-spire:strength-power" stacks = 3 upgradedStacks = 4 } }
 use FightMeEffect3 { template = ApplyEnemyPowerEffect args = { definition = "base-spire:fight-me" power = "base-spire:strength-power" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure FightMeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = FightMeEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = FightMeEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = FightMeEffect3.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase FightMeBody { dispatch = ExecuteCardBody key = "base-spire:fight-me" procedure = FightMeBody }
+
+procedure FightMeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase FightMeDamageValue { dispatch = ReadCardDamage key = "base-spire:fight-me" procedure = FightMeDamageValue }

@@ -10,3 +10,20 @@ use TwinStrikeDamage {
   template = AttackEffect
   args = { definition = "base-spire:twin-strike" hits = 2 }
 }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure TwinStrikeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = TwinStrikeDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+  }
+}
+dispatchCase TwinStrikeBody { dispatch = ExecuteCardBody key = "base-spire:twin-strike" procedure = TwinStrikeBody }
+
+procedure TwinStrikeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase TwinStrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:twin-strike" procedure = TwinStrikeDamageValue }

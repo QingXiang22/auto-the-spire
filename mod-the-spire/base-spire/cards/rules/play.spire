@@ -4,39 +4,43 @@ dsl_version = "core/0.3"
 procedure EnsureManualCardPlayable {
   parameters = { owner = Ref(Player) card = Ref(Card) }
   body = {
+    if = { condition = not(pureCall(ExecuteCardBody.Contains, field(card, Card.DefinitionId))) then = { fail = { message = "Unknown card body" } } }
+    if = { condition = not(pureCall(CardPlayAllowed, owner, card, false)) then = { fail = { message = "Card play is blocked by its keyword or a listener" } } }
     if = { condition = not(and(field(owner, Player.CombatActive), field(owner, Player.TurnOpen))) then = { fail = { message = "Development combat turn is not active" } } }
     if = { condition = or(less(collectionIndex(Hand, card), 0), not(equal(field(card, Card.Owner), field(owner, Player.Owner)))) then = { fail = { message = "Card is not in the owner's hand" } } }
     if = { condition = less(field(owner, Player.Energy), pureCall(GetCardEnergyCost, owner, card)) then = { fail = { message = "Not enough energy to play the card" } } }
   }
 }
 procedure FinishCardPlay {
-  parameters = { owner = Ref(Player) card = Ref(Card) }
+  parameters = { owner = Ref(Player) card = Ref(Card) resultPile = String(length = 16) }
   body = {
     if = { condition = greaterOrEqual(collectionIndex(InPlay, card), 0) then = {
-      if = { condition = or(field(card, Card.Exhausts), field(card, Card.ForceExhaust)) then = {
+      if = { condition = equal(resultPile, "exhaust") then = {
         call = { procedure = ExhaustCombatCard args = { owner = owner card = card } }
       } else = {
-        removeFromCollection = { collection = InPlay item = card }
-        if = { condition = field(card, Card.LeavesPlay) then = { addToCollection = { collection = RemovedFromCombat item = card } } else = { addToCollection = { collection = DiscardPile item = card } } }
+        call = { procedure = MoveCombatCard args = { owner = owner card = card to = resultPile reason = "play-result" } }
       } }
     } }
     set = { target = card field = Card.ForceExhaust value = false }
-    if = { condition = field(card, Card.FreeUntilPlayed) then = {
-      set = { target = card field = Card.FreeUntilPlayed value = false }
-      set = { target = card field = Card.Cost value = maximum(0, subtract(field(card, Card.BaseCost), field(card, Card.TurnCostDiscount))) }
-      set = { target = card field = Card.CostResetAtTurnEnd value = greater(field(card, Card.TurnCostDiscount), 0) }
-    } }
+    call = { procedure = ExpireCardCostModifiers args = { card = card boundary = "play" } }
   }
 }
 # Every repetition gets its own source play-start/play-finished record. The card stays InPlay throughout;
 # source CardModel.Play runs AfterCardPlayed before moving to its result pile, only once after all repetitions.
 procedure ResolveCardEffects {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding }
-  locals = { record = Binding previousRecord = Binding previousCard = Binding count = Int }
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding paidEnergy = Int auto = Bool }
+  locals = { record = Binding previousRecord = Binding previousCard = Binding count = Int index = Int number = Int rawX = Int resultPile = String(length = 16) }
   body = {
     let = { into = previousRecord value = field(owner, Player.CurrentPlay) }
     let = { into = previousCard value = field(owner, Player.CurrentCard) }
     let = { into = count value = foldEvent(ModifyPlayCount, 1, owner, card) }
+    let = { into = rawX value = field(card, Card.PaidX) }
+    let = { into = index value = 0 }
+    set = { target = owner field = Player.CardActionNumber value = add(field(owner, Player.CardActionNumber), 1) }
+    let = { into = number value = field(owner, Player.CardActionNumber) }
+    let = { into = resultPile value = "discard" }
+    if = { condition = field(card, Card.LeavesPlay) then = { let = { into = resultPile value = "removed" } } }
+    if = { condition = or(pureCall(CardHasKeyword, card, "exhaust"), field(card, Card.ForceExhaust)) then = { let = { into = resultPile value = "exhaust" } } }
     emit = {
       event = BeforeCardPlaySequence payload = { owner = owner card = card } }
     set = { target = owner field = Player.PlayDepth value = add(field(owner, Player.PlayDepth), 1) }
@@ -46,19 +50,26 @@ procedure ResolveCardEffects {
         create = { type = CardPlayRecord scope = entityScope(owner) into = record collection = CardPlays fields = {
           Owner = field(owner, Player.Owner) Card = card Kind = field(card, Card.Kind)
           Turn = field(owner, Player.TurnNumber) Sequence = field(owner, Player.PlaySequence)
+          ActionNumber = number ParentPlay = previousRecord Target = target IsAutoPlay = auto
+          PaidEnergy = paidEnergy RawX = rawX ResultPile = resultPile PlayIndex = index PlayCount = count
         } }
         set = { target = owner field = Player.CurrentPlay value = record }
         set = { target = owner field = Player.CurrentCard value = card }
         emit = { event = BeforeCardPlayed payload = { owner = owner card = card } }
-        emit = { event = CardPlayed payload = { owner = owner card = card } }
-        if = { condition = and(not(isNone(target)), greater(field(owner, Player.Hp), 0)) then = { emit = { event = CardPlayedOnTarget payload = { owner = owner card = card target = target } } } }
+        emit = { event = BeforeCardExecution payload = { owner = owner card = card play = record } }
+        set = { target = record field = CardPlayRecord.Started value = true }
+        call = { procedure = ExecuteCardBody args = { key = field(card, Card.DefinitionId) owner = owner card = card target = target play = record } }
+        if = { condition = greater(field(owner, Player.Hp), 0) then = { emit = { event = ExecuteCardEnchantment payload = { owner = owner card = card play = record } } } }
+        if = { condition = greater(field(owner, Player.Hp), 0) then = { emit = { event = ExecuteCardAffliction payload = { owner = owner card = card play = record } } } }
         if = { condition = greater(field(owner, Player.Hp), 0) then = {
           set = { target = record field = CardPlayRecord.Finished value = true }
-          emit = { event = AfterCardPlayed payload = { owner = owner card = card } }
+          emit = { event = AfterCardExecution payload = { owner = owner card = card play = record } }
+          if = { condition = greater(field(owner, Player.Hp), 0) then = { emit = { event = AfterCardPlayed payload = { owner = owner card = card } } } }
         } }
       } }
+      let = { into = index value = add(index, 1) }
     } }
-    if = { condition = greater(field(owner, Player.Hp), 0) then = { call = { procedure = FinishCardPlay args = { owner = owner card = card } } } }
+    if = { condition = greater(field(owner, Player.Hp), 0) then = { call = { procedure = FinishCardPlay args = { owner = owner card = card resultPile = resultPile } } } }
     set = { target = owner field = Player.CurrentPlay value = previousRecord }
     set = { target = owner field = Player.CurrentCard value = previousCard }
     set = { target = owner field = Player.PlayDepth value = subtract(field(owner, Player.PlayDepth), 1) }
@@ -77,29 +88,41 @@ procedure ResolvePaidCard {
     if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = price } } }
     set = { target = owner field = Player.Energy value = subtract(field(owner, Player.Energy), price) }
     set = { target = card field = Card.ForceExhaust value = foldEvent(ShouldExhaustSkill, false, owner, card) }
-    removeFromCollection = { collection = Hand item = card }
-    addToCollection = { collection = InPlay item = card }
-    call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target } }
+    call = { procedure = MoveCombatCard args = { owner = owner card = card to = "play" reason = "play" } }
+    call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target paidEnergy = price auto = false } }
   }
 }
-procedure AutoPlayCard {
-  parameters = { owner = Ref(Player) card = Ref(Card) forceExhaust = Bool }
-  locals = { target = Binding }
+procedure ResolveAutoCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) forceExhaust = Bool prepared = Bool }
+  locals = { target = Binding resultPile = String(length = 16) }
   body = {
+    if = { condition = not(pureCall(ExecuteCardBody.Contains, field(card, Card.DefinitionId))) then = { fail = { message = "Unknown card body" } } }
     if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))) then = {
-      if = { condition = or(greaterOrEqual(collectionIndex(RunDeck, card), 0), greaterOrEqual(collectionIndex(InPlay, card), 0)) then = { fail = { message = "Cannot autoplay a permanent or already resolving card" } } }
-      if = { condition = or(not(equal(field(card, Card.Owner), field(owner, Player.Owner))), not(or(greaterOrEqual(collectionIndex(Hand, card), 0), or(greaterOrEqual(collectionIndex(DrawPile, card), 0), or(greaterOrEqual(collectionIndex(DiscardPile, card), 0), greaterOrEqual(collectionIndex(ExhaustPile, card), 0)))))) then = { fail = { message = "Autoplay requires an owned hand, draw, discard or exhausted card" } } }
+      if = { condition = or(greaterOrEqual(collectionIndex(RunDeck, card), 0), and(not(prepared), greaterOrEqual(collectionIndex(InPlay, card), 0))) then = { fail = { message = "Cannot autoplay a permanent or already resolving card" } } }
+      if = { condition = or(not(equal(field(card, Card.Owner), field(owner, Player.Owner))), not(or(greaterOrEqual(collectionIndex(Hand, card), 0), or(greaterOrEqual(collectionIndex(DrawPile, card), 0), or(greaterOrEqual(collectionIndex(DiscardPile, card), 0), or(greaterOrEqual(collectionIndex(ExhaustPile, card), 0), and(prepared, greaterOrEqual(collectionIndex(InPlay, card), 0)))))))) then = { fail = { message = "Autoplay requires an owned hand, draw, discard or exhausted card" } } }
+      if = { condition = not(pureCall(CardPlayAllowed, owner, card, true)) then = {
+        call = { procedure = MoveCombatCard args = { owner = owner card = card to = "play" reason = "auto-rejected" } }
+        let = { into = resultPile value = "discard" }
+        if = { condition = field(card, Card.LeavesPlay) then = { let = { into = resultPile value = "removed" } } }
+        if = { condition = or(forceExhaust, pureCall(CardHasKeyword, card, "exhaust")) then = { let = { into = resultPile value = "exhaust" } } }
+        call = { procedure = FinishCardPlay args = { owner = owner card = card resultPile = resultPile } }
+        return = { }
+      } }
       let = { into = target value = none }
       if = { condition = field(card, Card.Targeted) then = { call = { procedure = RandomLivingEnemy into = target } } }
       set = { target = card field = Card.PaidX value = 0 }
       if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = field(owner, Player.Energy) } } }
       set = { target = card field = Card.ForceExhaust value = or(forceExhaust, foldEvent(ShouldExhaustSkill, false, owner, card)) }
-      call = { procedure = RemoveFromCombatPiles args = { card = card } }
-      addToCollection = { collection = InPlay item = card }
-      call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target } }
+      call = { procedure = MoveCombatCard args = { owner = owner card = card to = "play" reason = "auto-play" } }
+      call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target paidEnergy = 0 auto = true } }
     } }
   }
 }
+procedure AutoPlayCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) forceExhaust = Bool }
+  body = { call = { procedure = ResolveAutoCard args = { owner = owner card = card forceExhaust = forceExhaust prepared = false } } }
+}
+
 procedure PlayCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
   body = {
@@ -134,19 +157,19 @@ procedure UpgradeCard {
 action PlayCardFromHand {
   role = player parameters = { card = Ref(Card) }
   candidates = { parameter = card query = where(collection(Hand), c, not(field(c, Card.Targeted))) }
-  requires = and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)))
+  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card))))
   body = { call = { procedure = PlayCard args = { owner = first(type(Player)) card = card } } }
 }
 action PlayAttackFromHand {
   role = player parameters = { card = Ref(Card) }
   candidates = { parameter = card query = where(collection(Hand), c, field(c, Card.Targeted)) }
-  requires = and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)))))
+  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))))
   body = { call = { procedure = PlayAttackCard args = { owner = first(type(Player)) card = card } } }
 }
 action PlayTargetedCard {
   role = player parameters = { card = Ref(Card) }
   candidates = { parameter = card query = where(collection(Hand), c, field(c, Card.Targeted)) }
-  requires = and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)))))
+  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))))
   body = { call = { procedure = PlayTargetedCard args = { owner = first(type(Player)) card = card } } }
 }
 action UpgradeCardInHand {

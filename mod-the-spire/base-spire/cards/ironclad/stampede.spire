@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Stampede.cs; SHA-256 retained in cards/catalog.json.
 use Stampede { template = CardDefinition args = { sourceEntry = "STAMPEDE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stampede" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
 use StampedeEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:stampede" power = "base-spire:stampede-power" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure StampedeBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = StampedeEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase StampedeBody { dispatch = ExecuteCardBody key = "base-spire:stampede" procedure = StampedeBody }
+
+procedure StampedeDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase StampedeDamageValue { dispatch = ReadCardDamage key = "base-spire:stampede" procedure = StampedeDamageValue }

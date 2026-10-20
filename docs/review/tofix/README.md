@@ -59,6 +59,8 @@
 
 ## 当前交付
 
+**BEHAVIOR-01，P1／部分交付**：2026-10-19用户授权实施[内容与行为重构目标](../../design/mod-the-spire/content-behavior-refactor-goals.md)，2026-10-20完成本包集成。Codex `/root` 单写，分支 `codex/content-behavior-migration-20261019`。已接入现有卡牌有序正文／纯值、执行上下文、攻击／伤害结果、自动批次、费用／牌区／关键词、复制／Sown、Power来源与实例匹配，两个开发事件及Bool公开应答；见[实施契约](../../design/mod-the-spire/content-behavior-migration.md)、[实际验证](../records/2026-10-19/content-behavior-migration-2026-10-19.md)。下一步从G05建立能区分现有四位整数链与原版decimal的案例再校准；仍保留G02完整目标／自动支付策略、G06有序多选及独有回合末正文、G08完整StackType、G09正常来源／子战斗／M01和G10其他目录派生。独立比较与ENV／W未关闭，其他暂停项不变。
+
 **本轮负责人维护**：2026-10-19，用户要求清理过时 review，并重新读取当前实现，形成覆盖攻击、其他卡牌行为等领域的重构目标。Codex `/root` 仅修改 docs 与迁移引用，分支 `codex/behavior-refactor-goals-20261019`；目标与判别统一维护在[内容与行为重构目标](../../design/mod-the-spire/content-behavior-refactor-goals.md)，review 从[阅读入口](../README.md)进入。本地文档交付与检查已完成，QingXiang22Bot 发布身份未确认，未推送／创建 PR；未认领生产重构。验证、搬移映射与未执行范围见[本轮记录](../records/2026-10-19/behavior-refactor-review-2026-10-19.md)。下一玩法包及所有暂停项不因目标编制自动重排。
 
 2026-10-19用户授权合并后，[PR #23](https://github.com/QingXiang22/auto-the-spire/pull/23)与[PR #24](https://github.com/QingXiang22/auto-the-spire/pull/24)已按依赖顺序合并，合并后main为`9078674`。**CORE-AUTHOR-05／DSL-CONTENT-MODEL-01及配套开发手册同步已完成本轮交付**。Codex `/root` 单写，文档分支`codex/content-model-manual-20261019`；新增单个内容修改／独有模块操作指南和Power参考，修正旧参数／寿命及skill路由，未新增玩法或修改ENV/W范围。两篇原教程逐阶段复跑、5项模型／7项CLAY判别与文档检查通过；合并与手册证据追加在[本轮记录](../records/2026-10-19/content-model-migration-2026-10-19.md#合并与手册同步同日)。父项与正常环境验收不因此关闭。

@@ -1,87 +1,81 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# sts2 Creature.DamageBlockInternal + LoseHpInternal: block absorbs min(Block, amount) first, the rest is
-# lost from HP with a floor of 0. Powered modifiers use the separate DamageEnemyPowered operation; death is
-# observed as HP reaching zero from above and reported through EnemyDied.
+# Compatibility operations use the same result pipeline. A missing source stays missing;
+# direct damage never acquires card attribution merely because a card is currently resolving.
 procedure DamageEnemy {
-  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
-  locals = { blocked = Int before = Int }
-  body = {
-    let = { into = before value = field(target, Enemy.Hp) }
-    let = { into = blocked value = minimum(field(target, Enemy.Block), amount) }
-    set = { target = target field = Enemy.Block value = subtract(field(target, Enemy.Block), blocked) }
-    set = { target = target field = Enemy.Hp value = maximum(0, subtract(field(target, Enemy.Hp), subtract(amount, blocked))) }
-    if = {
-      condition = and(greater(before, 0), equal(field(target, Enemy.Hp), 0))
-      then = {
-        emit = { event = EnemyDied payload = { target = target } }
-        call = { procedure = CheckCombatVictory args = { owner = first(type(Player)) } }
-      }
-    }
-  }
+ parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
+ body = { call = { procedure = DamageEnemyWithSource args = { owner = none target = target amount = amount } } }
 }
-
-procedure DamagePlayer {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
-  locals = { blocked = Int }
-  body = {
-    let = { into = blocked value = minimum(field(owner, Player.Block), amount) }
-    set = { target = owner field = Player.Block value = subtract(field(owner, Player.Block), blocked) }
-    set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), subtract(amount, blocked))) }
-    if = {
-      condition = greater(subtract(amount, blocked), 0)
-      then = { call = { procedure = RecordPlayerHpLoss args = { owner = owner } } }
-    }
-    call = { procedure = CheckCombatDefeat args = { owner = owner } }
-  }
+procedure DamageEnemyFromPlayer {
+ parameters = { owner = Ref(Player) target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
+ body = { call = { procedure = DamageEnemyWithSource args = { owner = owner target = target amount = amount } } }
 }
-
-# HP loss that ignores block, matching the source's Unblockable | Unpowered damage used by Offering and
-# Bloodletting ("lose HP"). It bypasses block/modifiers but emits positive HP-loss reactions; reaching zero HP
-# reports the combat defeat through the shared end check.
-procedure LosePlayerHp {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
-  body = {
-    set = { target = owner field = Player.Hp value = maximum(0, subtract(field(owner, Player.Hp), amount)) }
-    if = {
-      condition = greater(amount, 0)
-      then = { call = { procedure = RecordPlayerHpLoss args = { owner = owner } } }
-    }
-    call = { procedure = CheckCombatDefeat args = { owner = owner } }
-  }
+procedure DamageEnemyWithSource {
+ parameters = { owner = Binding target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
+ locals = { result = Binding boundary = Binding }
+ body = {
+  let = { into = boundary value = owner }
+  if = { condition = isNone(boundary) then = { let = { into = boundary value = first(type(Player)) } } }
+  set = { target = boundary field = Player.DamageDepth value = add(field(boundary, Player.DamageDepth), 1) }
+  call = { procedure = ResolveEnemyDamage args = { owner = owner target = target card = none play = none attack = none amount = amount powered = false } into = result }
+  call = { procedure = PublishDamageResult args = { result = result } }
+  call = { procedure = PublishDamageDeath args = { result = result } }
+  set = { target = boundary field = Player.DamageDepth value = subtract(field(boundary, Player.DamageDepth), 1) }
+  call = { procedure = CheckCombatVictory args = { owner = boundary } }
+ }
 }
-
-# Powered card attack: additive Strength, attacker Weak, then target Vulnerable plus Cruelty.
-# The shared chain retains four decimal places and floors once before block absorption.
+procedure DamageAllEnemiesFromPlayer {
+ parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
+ locals = { batch = Binding result = Binding }
+ body = {
+  if = { condition = not(exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)))) then = { return = {} } }
+  create = { type = DamageBatch scope = entityScope(owner) into = batch fields = { DealerPlayer = owner } }
+  set = { target = owner field = Player.DamageDepth value = add(field(owner, Player.DamageDepth), 1) }
+  forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = target body = {
+   call = { procedure = ResolveEnemyDamage args = { owner = owner target = target card = none play = none attack = none amount = amount powered = false } into = result }
+   set = { target = result field = DamageResult.Batch value = batch }
+  } }
+  forEach = { query = where(collection(DamageResults), r, equal(field(r, DamageResult.Batch), batch)) item = published body = { call = { procedure = PublishDamageResult args = { result = published } } } }
+  forEach = { query = where(collection(DamageResults), r, equal(field(r, DamageResult.Batch), batch)) item = dying body = { call = { procedure = PublishDamageDeath args = { result = dying } } } }
+  set = { target = owner field = Player.DamageDepth value = subtract(field(owner, Player.DamageDepth), 1) }
+  call = { procedure = CheckCombatVictory args = { owner = owner } }
+ }
+}
 procedure DamageEnemyPowered {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
-  locals = { blocked = Int scaled = Int before = Int }
-  body = {
-    let = { into = before value = field(target, Enemy.Hp) }
-    let = {
-      into = scaled value = multiply(maximum(0, foldEvent(ModifyAttackAdditive, amount, owner, card, target)), 10000) }
-    let = { into = scaled value = foldEvent(ModifyAttackMultiplier, scaled, owner, card, target) }
-    let = { into = scaled value = divide(scaled, 10000) }
-    let = { into = blocked value = minimum(field(target, Enemy.Block), scaled) }
-    set = { target = target field = Enemy.Block value = subtract(field(target, Enemy.Block), blocked) }
-    set = { target = target field = Enemy.Hp value = maximum(0, subtract(field(target, Enemy.Hp), subtract(scaled, blocked))) }
-    if = {
-      condition = and(greater(before, 0), equal(field(target, Enemy.Hp), 0))
-      then = {
-        emit = { event = EnemyDied payload = { target = target } }
-        call = { procedure = CheckCombatVictory args = { owner = owner } }
-      }
-    }
-  }
+ parameters = { owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) amount = Int(min = 0, max = 999999) }
+ body = { call = { procedure = CardAttack args = { owner = owner card = card play = field(owner, Player.CurrentPlay) target = target amount = amount hits = 1 mode = "single" dynamic = false } } }
 }
-
+procedure DamagePlayer {
+ parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
+ locals = { result = Binding }
+ body = {
+  call = { procedure = ResolvePlayerDamage args = { owner = owner attacker = none card = none play = none attack = none amount = amount powered = false unblockable = false } into = result }
+  call = { procedure = PublishDamageResult args = { result = result } }
+ }
+}
+procedure LosePlayerHpFromCard {
+ parameters = { owner = Ref(Player) card = Ref(Card) play = Binding amount = Int(min = 0, max = 999999) }
+ locals = { result = Binding }
+ body = {
+  call = { procedure = ResolvePlayerDamage args = { owner = owner attacker = none card = card play = play attack = none amount = amount powered = false unblockable = true } into = result }
+  call = { procedure = PublishDamageResult args = { result = result } }
+ }
+}
+procedure LosePlayerHp {
+ parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
+ locals = { result = Binding }
+ body = {
+  call = { procedure = ResolvePlayerDamage args = { owner = owner attacker = none card = none play = none attack = none amount = amount powered = false unblockable = true } into = result }
+  call = { procedure = PublishDamageResult args = { result = result } }
+ }
+}
 event PlayerHpLost { payload = { owner = Ref(Player) } }
 procedure RecordPlayerHpLoss {
-  parameters = { owner = Ref(Player) }
-  body = {
-    set = { target = owner field = Player.LostHpThisTurn value = true }
-    set = { target = owner field = Player.HpLossCount value = add(field(owner, Player.HpLossCount), 1) }
-    emit = { event = PlayerHpLost payload = { owner = owner } }
-  }
+ parameters = { owner = Ref(Player) }
+ body = {
+  set = { target = owner field = Player.LostHpThisTurn value = true }
+  set = { target = owner field = Player.HpLossCount value = add(field(owner, Player.HpLossCount), 1) }
+  emit = { event = PlayerHpLost payload = { owner = owner } }
+ }
 }

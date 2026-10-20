@@ -5,3 +5,21 @@ dsl_version = "core/0.3"
 use BattleTrance { template = CardDefinition args = { sourceEntry = "BATTLE_TRANCE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:battle-trance" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use BattleTranceEffect1 { template = DrawEffect args = { definition = "base-spire:battle-trance" cards = 3 upgradedCards = 4 } }
 use BattleTranceEffect2 { template = ApplySelfPowerEffect args = { definition = "base-spire:battle-trance" power = "base-spire:no-draw-power" stacks = 1 upgradedStacks = 1 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BattleTranceBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BattleTranceEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
+    call = { procedure = BattleTranceEffect2.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BattleTranceBody { dispatch = ExecuteCardBody key = "base-spire:battle-trance" procedure = BattleTranceBody }
+
+procedure BattleTranceDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BattleTranceDamageValue { dispatch = ReadCardDamage key = "base-spire:battle-trance" procedure = BattleTranceDamageValue }

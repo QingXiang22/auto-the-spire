@@ -20,6 +20,11 @@ procedure ResolveEnergyXValue {
   pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Int
   body = {
     if = { condition = not(field(card, Card.IsX)) then = { return = { value = 0 } } }
+    if = { condition = not(isNone(field(owner, Player.CurrentPlay))) then = {
+      if = { condition = equal(field(field(owner, Player.CurrentPlay), CardPlayRecord.Card), card) then = {
+        return = { value = foldEvent(ModifyXValue, field(field(owner, Player.CurrentPlay), CardPlayRecord.RawX), owner, card) }
+      } }
+    } }
     return = { value = foldEvent(ModifyXValue, field(card, Card.PaidX), owner, card) }
   }
 }
@@ -36,14 +41,17 @@ procedure RemoveFromCombatPiles {
 }
 procedure ExhaustCombatCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
+  locals = { from = String(length = 16) }
   body = {
     if = {
       condition = or(greaterOrEqual(collectionIndex(RunDeck, card), 0), or(greaterOrEqual(collectionIndex(ExhaustPile, card), 0), not(equal(field(card, Card.Owner), field(owner, Player.Owner)))))
       then = { fail = { message = "Only an owned non-exhausted combat card may be exhausted" } }
     }
     if = { condition = not(or(or(greaterOrEqual(collectionIndex(Hand, card), 0), greaterOrEqual(collectionIndex(DrawPile, card), 0)), or(greaterOrEqual(collectionIndex(DiscardPile, card), 0), greaterOrEqual(collectionIndex(InPlay, card), 0)))) then = { fail = { message = "Exhaust requires a card in an active combat pile" } } }
+    let = { into = from value = pureCall(CombatCardPile, card) }
     call = { procedure = RemoveFromCombatPiles args = { card = card } }
     addToCollection = { collection = ExhaustPile item = card }
+    emit = { event = CardMoved payload = { owner = owner card = card from = from to = "exhaust" reason = "exhaust" } }
     emit = { event = CardExhausted payload = { owner = owner card = card } }
   }
 }
@@ -67,30 +75,23 @@ procedure SelectDiscardCard {
     return = { value = selected }
   }
 }
-procedure ResetCardTurnCosts {
-  body = {
-    forEach = { query = where(type(Card), c, field(c, Card.CostResetAtTurnEnd)) item = card body = {
-      set = { target = card field = Card.Cost value = field(card, Card.BaseCost) }
-      set = { target = card field = Card.CostResetAtTurnEnd value = false }
-      set = { target = card field = Card.FreeUntilPlayed value = false }
-      set = { target = card field = Card.TurnCostDiscount value = 0 }
-    } }
-  }
-}
+
 procedure ClearCardPlayHistory {
   parameters = { owner = Ref(Player) }
   body = {
+    call = { procedure = ClearDamageHistory }
     set = { target = owner field = Player.CurrentPlay value = none }
     set = { target = owner field = Player.CurrentCard value = none }
     set = { target = owner field = Player.LastDrawn value = none }
     set = { target = owner field = Player.HpLossCount value = 0 }
     set = { target = owner field = Player.PlaySequence value = 0 }
+    forEach = { query = collection(CardPlays) item = record body = { set = { target = record field = CardPlayRecord.ParentPlay value = none } } }
     forEach = { query = collection(CardPlays) item = record body = { destroy = { target = record } } }
   }
 }
 procedure AttacksPlayedThisTurn {
   pure = true parameters = { owner = Ref(Player) } result = Int
-  body = { return = { value = count(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Owner), field(owner, Player.Owner)), and(equal(field(r, CardPlayRecord.Kind), "attack"), equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)))))) } }
+  body = { return = { value = count(where(collection(CardPlays), r, and(field(r, CardPlayRecord.Started), and(equal(field(r, CardPlayRecord.Owner), field(owner, Player.Owner)), and(equal(field(r, CardPlayRecord.Kind), "attack"), equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber))))))) } }
 }
 
 procedure CreateCardInstance {
@@ -121,37 +122,27 @@ procedure CloneCombatCard {
       Kind = field(source, Card.Kind) StrikeTag = field(source, Card.StrikeTag) IsX = field(source, Card.IsX)
       Rarity = field(source, Card.Rarity)
       SourceEntry = field(source, Card.SourceEntry)
-      Cost = field(source, Card.Cost) BaseCost = field(source, Card.BaseCost) CostResetAtTurnEnd = field(source, Card.CostResetAtTurnEnd)
-      FreeUntilPlayed = field(source, Card.FreeUntilPlayed) TurnCostDiscount = field(source, Card.TurnCostDiscount)
+      Cost = field(source, Card.Cost) BaseCost = field(source, Card.BaseCost)
+
       BaseDamage = field(source, Card.BaseDamage) DamageGrowth = field(source, Card.DamageGrowth)
-      DamageScale = field(source, Card.DamageScale) DamageFactor = field(source, Card.DamageFactor)
-      DiscountsOnAttack = field(source, Card.DiscountsOnAttack) Innate = field(source, Card.Innate)
-      AutoFromExhaustAtTurnEnd = field(source, Card.AutoFromExhaustAtTurnEnd)
+
+      Innate = field(source, Card.Innate)
+
       Targeted = field(source, Card.Targeted) Exhausts = field(source, Card.Exhausts) LeavesPlay = field(source, Card.LeavesPlay)
       Upgraded = field(source, Card.Upgraded) CanUpgrade = field(source, Card.CanUpgrade)
     } }
+    emit = { event = CardCloned payload = { owner = owner source = source card = copy } }
     emit = { event = CardEnteredCombat payload = { owner = owner card = copy clone = true } }
     return = { value = copy }
   }
 }
 procedure AddGeneratedToHand {
   parameters = { card = Ref(Card) }
-  body = { if = { condition = less(count(collection(Hand)), 10) then = { addToCollection = { collection = Hand item = card } } else = { addToCollection = { collection = DiscardPile item = card } } } }
+  body = { call = { procedure = MoveCombatCard args = { owner = first(where(type(Player), p, equal(field(p, Player.Owner), field(card, Card.Owner)))) card = card to = "hand" reason = "generate" } } }
 }
 procedure CardBaseDamage {
   pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  locals = { amount = Int units = Int }
-  body = {
-    let = { into = amount value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-    let = { into = units value = 0 }
-    if = { condition = equal(field(card, Card.DamageScale), "exhaust-count") then = { let = { into = units value = count(collection(ExhaustPile)) } } }
-    if = { condition = equal(field(card, Card.DamageScale), "strike-count") then = {
-      let = { into = units value = count(where(type(Card), c, and(and(field(c, Card.StrikeTag), equal(field(c, Card.Owner), field(owner, Player.Owner))), and(less(collectionIndex(RunDeck, c), 0), less(collectionIndex(RemovedFromCombat, c), 0))))) }
-    } }
-    if = { condition = and(equal(field(card, Card.DamageScale), "vulnerable-count"), not(isNone(target))) then = { let = { into = units value = pureCall(EnemyPowerAmount, target, "base-spire:vulnerable-power") } } }
-    if = { condition = equal(field(card, Card.DamageScale), "block") then = { return = { value = field(owner, Player.Block) } } }
-    return = { value = add(amount, multiply(units, field(card, Card.DamageFactor))) }
-  }
+  body = { return = { value = pureCall(ReadCardDamage, field(card, Card.DefinitionId), owner, card, target) } }
 }
 procedure ReducePower {
   parameters = { owner = Ref(Player) definition = String(length = 64) }
@@ -183,12 +174,10 @@ procedure RandomLivingEnemy {
     return = { value = target }
   }
 }
-procedure StompEntered {
-  parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool }
-  body = { if = { condition = and(field(card, Card.DiscountsOnAttack), not(clone)) then = {
-    set = { target = card field = Card.TurnCostDiscount value = count(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)), and(equal(field(r, CardPlayRecord.Kind), "attack"), field(r, CardPlayRecord.Finished))))) }
-    set = { target = card field = Card.Cost value = maximum(0, subtract(field(card, Card.Cost), field(card, Card.TurnCostDiscount))) }
-    set = { target = card field = Card.CostResetAtTurnEnd value = true }
-  } } }
-}
-subscription StompEntered { event = CardEnteredCombat reaction = StompEntered }
+
+procedure DestroyCombatCard { parameters = { card = Ref(Card) } body = {
+  if = { condition = greaterOrEqual(collectionIndex(RunDeck, card), 0) then = { fail = { message = "Cannot destroy a permanent card through combat cleanup" } } }
+  emit = { event = CardRemoving payload = { card = card } }
+  call = { procedure = RemoveFromCombatPiles args = { card = card } }
+  destroy = { target = card }
+} }

@@ -90,6 +90,7 @@ public static partial class EngineDslCompiler
                     _symbols[(symbol.GetType(), symbol.QualifiedId)] = symbol;
             }
             if (language != "core/0.1") _source = ExpandTemplates(source, dependencyArray);
+            _source = ExpandDispatches(_source);
         }
 
         public EnginePackage Compile()
@@ -108,6 +109,7 @@ public static partial class EngineDslCompiler
             ImportGeneratedSymbols();
             foreach (var node in _source.Members.OfType<DslDeclarationNode>())
                 if (!_extensionNodes.Contains(node)) BindInScope(node, () => Define(node));
+            ValidateDispatchSignatures();
             foreach (var node in _source.Members.OfType<DslDeclarationNode>().Where(_extensionNodes.Contains))
                 Located(node.Location, () => _extensions[node.Kind].Bind(node, _package));
             ImportGeneratedSymbols();
@@ -142,7 +144,7 @@ public static partial class EngineDslCompiler
         }
 
         private static bool IsCoreKind(string kind) => kind is "entity" or "enum" or "scope" or "event" or
-            "terminal" or "compute" or "projection" or "procedure" or "action" or "collection" or "relation" or "subscription" or "template" or "use";
+            "terminal" or "compute" or "projection" or "procedure" or "action" or "collection" or "relation" or "subscription" or "template" or "use" or "dispatch" or "dispatchCase";
 
         private void ImportGeneratedSymbols()
         {
@@ -315,10 +317,11 @@ public static partial class EngineDslCompiler
                 projection.IncludeRelations = Boolean(p.Get("relations"), true);
                 foreach (var type in Properties.Items(p.Required("types")))
                 {
-                    var settings = Properties.Of(type.Value, "include", "owner", "hidden");
+                    var settings = Properties.Of(type.Value, "include", "owner", "hidden", "identity_from");
                     var view = projection.Type(Symbol<EntityTypeSymbol>(new DslNameNode(type.Name, type.Location)),
                         Boolean(settings.Get("include"), true));
                     view.OwnerField = settings.Get("owner") is { } owner ? Text(owner) : null;
+                    view.IdentityFrom = settings.Get("identity_from") is { } anchor ? Text(anchor) : null;
                     view.IncludeHiddenFields = Boolean(settings.Get("hidden"), false);
                 }
                 if (p.Get("reveals") is { } reveals)

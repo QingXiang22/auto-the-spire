@@ -11,9 +11,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "Development combat attack lifecycle; normal acquisition and independent comparison remain unverified.",
+      "definition": "relics/shared/akabeko.spire"
     },
     {
       "id": "base-spire:alchemical-coffer",
@@ -2316,9 +2316,9 @@
       "pools": [
         "SharedRelicPool"
       ],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
+      "eligibility": "singleplayer",
+      "evidence": "Development combat attack lifecycle; normal acquisition and independent comparison remain unverified.",
+      "definition": "relics/shared/pen-nib.spire"
     },
     {
       "id": "base-spire:permafrost",

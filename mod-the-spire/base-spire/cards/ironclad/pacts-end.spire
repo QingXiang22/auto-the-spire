@@ -4,3 +4,20 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/PactsEnd.cs; SHA-256 retained in cards/catalog.json.
 use PactsEnd { template = CardDefinition args = { sourceEntry = "PACTS_END" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:pacts-end" cost = 0 upgradedCost = 0 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 17 upgradedBaseDamage = 23 } }
 use PactsEndEffect1 { template = ComputedAllAttackEffect args = { definition = "base-spire:pacts-end" minExhaust = 3 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure PactsEndBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = PactsEndEffect1.Apply args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase PactsEndBody { dispatch = ExecuteCardBody key = "base-spire:pacts-end" procedure = PactsEndBody }
+
+procedure PactsEndDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase PactsEndDamageValue { dispatch = ReadCardDamage key = "base-spire:pacts-end" procedure = PactsEndDamageValue }

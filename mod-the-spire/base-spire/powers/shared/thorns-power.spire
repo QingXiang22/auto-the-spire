@@ -11,7 +11,7 @@ procedure Thorns {
     if = {
       condition = greater(field(listener, Power.Stacks), 0) then = {
         call = {
-          procedure = DamageEnemy args = {
+          procedure = DamageEnemyFromPlayer args = { owner = owner
             target = attacker amount = field(listener, Power.Stacks)
           }
         }

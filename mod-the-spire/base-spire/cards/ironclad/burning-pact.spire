@@ -5,3 +5,21 @@ dsl_version = "core/0.3"
 use BurningPact { template = CardDefinition args = { sourceEntry = "BURNING_PACT" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:burning-pact" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use BurningPactEffect1 { template = SelectExhaustEffect args = { definition = "base-spire:burning-pact" } }
 use BurningPactEffect2 { template = DrawEffect args = { definition = "base-spire:burning-pact" cards = 2 upgradedCards = 3 } }
+
+# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
+procedure BurningPactBody {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  body = {
+    call = { procedure = BurningPactEffect1.Apply args = { play = play  owner = owner card = card } }
+    call = { procedure = BurningPactEffect2.WhenPlayed args = { play = play  owner = owner card = card } }
+  }
+}
+dispatchCase BurningPactBody { dispatch = ExecuteCardBody key = "base-spire:burning-pact" procedure = BurningPactBody }
+
+procedure BurningPactDamageValue {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = {
+    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
+  }
+}
+dispatchCase BurningPactDamageValue { dispatch = ReadCardDamage key = "base-spire:burning-pact" procedure = BurningPactDamageValue }
