@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.41",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.42",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -182,12 +182,54 @@
     "base-spire:Potion": {
       "field_name": "DefinitionId",
       "content_ids": [
-        "base-spire:fire-potion",
+        "base-spire:blood-potion",
+        "base-spire:soldiers-stew",
+        "base-spire:ashwater",
+        "base-spire:attack-potion",
+        "base-spire:beetle-juice",
+        "base-spire:blessing-of-the-forge",
         "base-spire:block-potion",
+        "base-spire:bottled-potential",
+        "base-spire:clarity",
+        "base-spire:colorless-potion",
+        "base-spire:cure-all",
+        "base-spire:dexterity-potion",
+        "base-spire:distilled-chaos",
+        "base-spire:droplet-of-precognition",
+        "base-spire:duplicator",
         "base-spire:energy-potion",
-        "base-spire:swift-potion",
+        "base-spire:entropic-brew",
+        "base-spire:explosive-ampoule",
+        "base-spire:fairy-in-a-bottle",
+        "base-spire:fire-potion",
+        "base-spire:flex-potion",
+        "base-spire:fortifier",
         "base-spire:fruit-juice",
-        "base-spire:blood-potion"
+        "base-spire:fysh-oil",
+        "base-spire:gamblers-brew",
+        "base-spire:gigantification-potion",
+        "base-spire:heart-of-iron",
+        "base-spire:liquid-bronze",
+        "base-spire:liquid-memories",
+        "base-spire:lucky-tonic",
+        "base-spire:mazaleths-gift",
+        "base-spire:orobic-acid",
+        "base-spire:potion-of-binding",
+        "base-spire:powdered-demise",
+        "base-spire:power-potion",
+        "base-spire:radiant-tincture",
+        "base-spire:regen-potion",
+        "base-spire:shackling-potion",
+        "base-spire:ship-in-a-bottle",
+        "base-spire:skill-potion",
+        "base-spire:snecko-oil",
+        "base-spire:speed-potion",
+        "base-spire:stable-serum",
+        "base-spire:strength-potion",
+        "base-spire:swift-potion",
+        "base-spire:touch-of-insanity",
+        "base-spire:vulnerable-potion",
+        "base-spire:weak-potion"
       ]
     },
     "base-spire:Power": {
@@ -284,9 +326,8 @@
       "reason": "A development power may be held by a player or an enemy, which the current group/sequence collection metadata cannot express; power entities and their stacks stay declaration-derived and public."
     },
     "base-spire:Potions": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-POTIONS",
-      "reason": "The three-slot development potion inventory has no vanilla drop, shop or usage-window contract; potion entities remain declaration-derived and public."
+      "use": "group",
+      "owner_kind_type_id": "base-spire:Player"
     },
     "base-spire:EnemyPool": {
       "use": "not_published",
@@ -335,6 +376,15 @@
       "use": "not_published",
       "rule_id": "DB-CARD-COST-LIFETIME",
       "reason": "Card-owned cost changes; only the resolved current cost is public."
+    },
+    "base-spire:PotionLibrary": {
+      "use": "not_published",
+      "rule_id": "DB-REWARD-POOL",
+      "reason": "Static complete source potion candidates; effect support does not filter reward eligibility."
+    },
+    "base-spire:PotionRewardOptions": {
+      "use": "group",
+      "owner_kind_type_id": "base-spire:Player"
     }
   },
   "terminal_outcomes": {},

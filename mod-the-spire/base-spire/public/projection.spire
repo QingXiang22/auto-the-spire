@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 projection PlayerView {
   role = player
-  types = { Player = {} Card = {} CardAttachment = { identity_from = Card } Relic = {} Enemy = {} Power = {} Potion = {} EventVisit = {} }
+  types = { Player = {} Card = {} CardAttachment = { identity_from = Card } Relic = {} Enemy = {} Power = {} Potion = {} CombatRewardSet = {} EventVisit = {} }
   collections = true
   relations = true
 }

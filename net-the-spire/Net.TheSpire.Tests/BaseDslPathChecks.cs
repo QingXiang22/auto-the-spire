@@ -532,6 +532,19 @@ internal static class BaseDslPathChecks
                     Check.True(snapshot.Entities.Single(e => e.InstanceId == id).Fields.Any(f => f.FieldId.EndsWith(":Card.Rarity", StringComparison.Ordinal)), "reward rarity is public");
                 Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("CardRarityOffset", StringComparison.Ordinal), "future rarity odds remain hidden");
                 var claim = mode == "card-reward-claim";
+                var potionOffer = snapshot.Groups.Single(g => g.TypeId.EndsWith(":PotionRewardOptions", StringComparison.Ordinal)).Members.Single().EntityRef;
+                var potionEntity = snapshot.Entities.Single(e => e.InstanceId == potionOffer);
+                Check.Equal("base-spire:blessing-of-the-forge", potionEntity.ContentId, "independent source vector for the public seed includes the complete potion pool");
+                Check.False(((WireBool)potionEntity.Fields.Single(f => f.FieldId.EndsWith(":Potion.EffectSupported", StringComparison.Ordinal)).Value!).Value, "unimplemented effect is explicit");
+                Check.Equal(1, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:CombatRewardSet"), "one public visit container");
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("PotionRewardOdds", StringComparison.Ordinal), "future potion odds remain hidden");
+                Named(claim ? "ClaimDevelopmentPotionReward" : "SkipDevelopmentPotionReward");
+                Check.Equal(0, snapshot.Groups.Single(g => g.TypeId.EndsWith(":PotionRewardOptions", StringComparison.Ordinal)).Members.Count, "potion entry settled independently");
+                Check.True(PublicBool(snapshot, "Player.GoldRewardPending") && PublicBool(snapshot, "Player.CardRewardPending"), "potion selection preserves gold and card offers");
+                if (claim)
+                    Check.True(snapshot.Groups.Single(g => g.TypeId.EndsWith(":Potions", StringComparison.Ordinal)).Members.Any(m => m.EntityRef == potionOffer), "same public potion handle becomes inventory");
+                else Check.False(snapshot.Entities.Any(e => e.InstanceId == potionOffer), "skipped potion instance destroyed");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentPotionReward"), "no repeated potion claim");
                 var chosen = offered[1];
                 if (claim)
                     StepCardReward(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward" && a.Fields.Any(f => f.Value is WireString v && v.Value == chosen)));
@@ -544,6 +557,7 @@ internal static class BaseDslPathChecks
                 Check.True(offered.Where(id => !claim || id != chosen).All(id => snapshot.Entities.All(e => e.InstanceId != id)), "unselected reward instances destroyed");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"), "no repeated claim candidates");
                 Named("CloseDevelopmentRewards"); Check.Equal("none", Public(snapshot, "Player.Room"), "explicit reward close");
+                Check.Equal(claim, snapshot.Entities.Any(e => e.InstanceId == potionOffer), "close preserves only an acquired potion");
                 Named("TwigSlimeS.Spawn"); Named("BeginDevelopmentCombat"); Named("BeginDevelopmentTurn");
                 Check.Equal(claim ? 11 : 10, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "permanent deck survives next combat");
                 Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Card.PermanentSource", StringComparison.Ordinal), "combat source references stay hidden");

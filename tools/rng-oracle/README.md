@@ -18,6 +18,15 @@ python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanil
 
 ## 两层向量
 
+首幕 A0 普通战斗完整奖励的固定来源数据：
+
+```powershell
+python -X utf8 tools/rng-oracle/normal_reward_vectors.py --output tools/base-spire-dev/fixtures/normal-reward-vectors.json
+dotnet run --project tools/base-spire-dev -c Release -- check --card-rewards-only
+```
+
+生成器按只读源码独立计算药水掉落、金币、适用药水稀有度与选取、卡牌稀有度／去重／升级。数据保存48项完整药水顺序、来源SHA256、每次调用参数／结果／前后游标及有序候选；10组seed各连续三次访问。CI读取固定数据，无需游戏源码。药水获得支持与效果支持分开，受控访问向量不表示正常Run可达或完整参考模拟器双侧已通过。
+
 共享敌人招式图的固定来源数据按只读源码独立生成：
 
 ```powershell

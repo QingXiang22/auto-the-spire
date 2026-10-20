@@ -1,8 +1,7 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Potion content definition: identity plus a development Obtain action that puts the potion into the shared
-# three-slot inventory. Vanilla potion drops come from rewards, shops and events, which are not migrated.
+# Existing effect modules keep development Obtain actions; rewards use the same instance acquisition.
 template PotionDefinition {
   parameters = { definition = { type = String(length = 64) } }
   body = {
@@ -10,7 +9,8 @@ template PotionDefinition {
       role = player
       locals = { potion = Binding }
       body = {
-        create = { type = Potion scope = frameScope() into = potion collection = Potions fields = { DefinitionId = arg(definition) } }
+        call = { procedure = CreatePotionInstance args = { owner = first(type(Player)) definition = arg(definition) } into = potion }
+        call = { procedure = ObtainPotion args = { owner = first(type(Player)) potion = potion } }
       }
     }
   }

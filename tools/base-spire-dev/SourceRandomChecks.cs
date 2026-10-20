@@ -28,7 +28,8 @@ internal static partial class PackageChecks
                       sampleFloat32 = { stream = "base-spire:player:rewards" into = value }
                       set = { target = first(type(RngProbe)) field = RngProbe.Content value = value }
                     } }
-                    action OfferProbe { role = player body = { call = { procedure = WhenCombatEnded args = { owner = first(type(Player)) victory = true } } } }
+                    # Preserve the original component vectors; NormalRewardChecks verifies the full reward set separately.
+                    action OfferProbe { role = player body = { call = { procedure = OfferCombatGold args = { owner = first(type(Player)) } } call = { procedure = OfferCombatCards args = { owner = first(type(Player)) } } } }
                     """);
                 var p = copy.Load();
                 Session New() { var s = p.CreateSession(1, ["player"], seed); s.Start(); Healthy(s); return s; }
