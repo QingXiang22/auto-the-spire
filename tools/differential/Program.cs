@@ -43,18 +43,23 @@ try
     var results = new List<CaseResult>();
     foreach (var id in ids.Where(id => selected is null || selected == id))
     {
-        if (suite != "regression" || id != "strike-normal")
+        if (suite != "regression" || id is not ("strike-normal" or "random-reshuffle-unsupported"))
         {
             results.Add(new(id, "unsupported", "The original case has no migrated DSL adapter."));
             continue;
         }
         try
         {
-            var fixture = StrikeFixture.Read(cases.Single(c => c.GetProperty("id").GetString() == id));
+            var fixture = CombatFixture.Read(cases.Single(c => c.GetProperty("id").GetString() == id));
             var referenceIdentity = Repository.VerifyReference(repository);
             var left = DslBackend.Run(repository, fixture);
             var right = ReferenceBackend.Run(fixture);
-            results.Add(Comparison.Compare(fixture, left, right) with { ReferenceIdentity = referenceIdentity, Input = fixture });
+            results.Add(Comparison.Compare(fixture, left, right) with
+            {
+                ReferenceIdentity = new { checkout = referenceIdentity,
+                    adapter_sha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(typeof(CombatFixture).Assembly.Location))) },
+                Input = fixture,
+            });
         }
         catch (Exception error)
         {
@@ -80,7 +85,7 @@ try
         File.WriteAllText(Path.Combine(output, "result.json"), json);
     }
     Console.WriteLine(json);
-    return passed ? complete ? 0 : 1 : results.Any(r => r.Status == "diverged") ? 1 : 3;
+    return passed ? complete ? 0 : 1 : results.Any(r => r.Status is not ("passed" or "diverged")) ? 3 : 1;
 }
 catch (Exception error)
 {

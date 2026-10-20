@@ -74,11 +74,12 @@ public sealed class DslPackage
     public static DslPackage Load(string manifestPath, string? scope = null) => new(manifestPath, scope);
 
     /// <summary>Returns a configured, unstarted session; game-owned DSL defines stream seeds at start.</summary>
-    public Session CreateSession(ulong seed, IReadOnlyList<string> participantRoles, string? gameSeed = null) =>
+    public Session CreateSession(ulong seed, IReadOnlyList<string> participantRoles, string? gameSeed = null,
+        SessionDebugOptions? debug = null) =>
         new(Rules, seed, participantRoles,
             randomAlgorithmId: RandomProfile == "engine-default" ? RandomService.DefaultAlgorithmId : RandomService.VanillaAlgorithmId,
             randomDrawProfileId: RandomProfile == "engine-default" ? RandomService.DefaultDrawProfileId : RandomService.VanillaDrawProfileId,
-            gameSeed: gameSeed);
+            gameSeed: gameSeed, debug: debug);
 
     private string Resolve(string relative)
     {

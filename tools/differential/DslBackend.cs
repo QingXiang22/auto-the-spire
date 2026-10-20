@@ -5,23 +5,35 @@ namespace Differential;
 
 internal static class DslBackend
 {
-    public static BackendRecord Run(string repository, StrikeFixture fixture)
+    public static BackendRecord Run(string repository, CombatFixture fixture)
     {
         var package = DslPackage.Load(Path.Combine(repository, "mod-the-spire/base-spire/package.json"));
-        var session = package.CreateSession((ulong)fixture.Seed, ["player"], fixture.GameSeed);
+        if (fixture.Reshuffle && package.RandomProfile != RandomService.VanillaDrawProfileId)
+            throw new NotSupportedException("Original reshuffle diagnostics require the declared vanilla raw-word profile.");
+        var session = package.CreateSession((ulong)fixture.Seed, ["player"], fixture.GameSeed,
+            fixture.Reshuffle ? new SessionDebugOptions(MaxRecords: 20_000) : null);
         session.Start();
         var player = Instances("Player").Single();
+        var slots = new Dictionary<InstanceId, string>();
 
         // Original controlled-slice deck: five Strikes, four Defends, one Bash. Use current DSL definitions.
         foreach (var card in Instances("Card")) session.State.RunAtomic(() => session.State.DestroyInstance(card));
-        foreach (var name in Enumerable.Repeat("Strike", 5).Concat(Enumerable.Repeat("Defend", 4)).Append("Bash"))
+        var declarations = fixture.Reshuffle ? fixture.InitialCards : Enumerable.Repeat("base-spire:strike-ironclad", 5)
+            .Concat(Enumerable.Repeat("base-spire:defend-ironclad", 4)).Append("base-spire:bash")
+            .Select((name, i) => new OrderedCard("start:" + i.ToString("D2"), name, false)).ToArray();
+        foreach (var card in declarations)
+        {
+            var name = card.Card switch { "base-spire:strike-ironclad" => "Strike", "base-spire:defend-ironclad" => "Defend", "base-spire:bash" => "Bash", _ => throw new FormatException("Unknown initial card.") };
             Submit(name + ".AddToHand");
+            slots.Add(Members("Hand")[^1], card.Slot);
+        }
         foreach (var card in Members("Hand").ToArray()) Move(card, "Hand", "DrawPile");
         session.State.RunAtomic(() =>
         {
             for (var index = 0; index < fixture.EnemyHp.Length; index++)
             {
-                // These two controlled targets do not exercise monster initialization or turns.
+                // Fixture HP targets have no matching DSL monster consumers yet. Their missing
+                // turn effects remain real differences in the original reshuffle comparison.
                 var enemy = session.State.CreateInstance(Type("Enemy").Id, session.State.RootScope);
                 Set(enemy, "Enemy", "DefinitionId", Value.Of(index == 0 ? "base-spire:calcified-cultist" : "base-spire:damp-cultist"));
                 Set(enemy, "Enemy", "Hp", Value.Of((long)fixture.EnemyHp[index]));
@@ -29,17 +41,31 @@ internal static class DslBackend
             }
         });
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn");
-        var strike = Members("DrawPile").First(c => Field(c, "Card", "DefinitionId").AsString() == fixture.Card);
-        Move(strike, "DrawPile", "Hand");
+        var strike = fixture.Reshuffle ? default : Members("DrawPile").First(c => Field(c, "Card", "DefinitionId").AsString() == fixture.Card);
+        if (!fixture.Reshuffle) Move(strike, "DrawPile", "Hand");
         session.State.RunAtomic(() =>
         {
             Set(player, "Player", "Hp", Value.Of((long)fixture.PlayerHp));
             Set(player, "Player", "MaxHp", Value.Of((long)fixture.PlayerHp));
             Set(player, "Player", "Energy", Value.Of((long)fixture.Energy));
+            if (fixture.Reshuffle) Set(player, "Player", "AutoDrawPerTurn", Value.Of(5L));
         });
 
         var beforeRandom = session.Random.TotalDraws;
+        var startCounts = session.Random.Diagnostics().ToDictionary(s => s.Name, s => s.Draws);
         var start = Snapshot("start", []);
+        if (fixture.Reshuffle)
+        {
+            var boundaries = new List<Boundary> { start };
+            for (var step = 0; step < 3; step++)
+            {
+                Submit("EndDevelopmentTurn"); Submit("BeginDevelopmentTurn");
+                boundaries.Add(Snapshot($"step:{step}:end_turn", []));
+            }
+            return new("dsl:base-spire", package.Digest + ":" + package.Rules.Identity,
+                Field(player, "Player", "CombatActive").AsBool() ? "running" : session.Status.ToString(), beforeRandom,
+                session.Random.TotalDraws - beforeRandom, fixture.RequiredDimensions, boundaries.ToArray());
+        }
         Submit("PlayTargetedCard", strike);
         var request = session.PendingDecision ?? throw new InvalidOperationException("Target decision was not published.");
         if (session.Status != SessionStatus.AwaitingDecision) throw new InvalidOperationException("Target choice did not suspend the DSL.");
@@ -52,7 +78,7 @@ internal static class DslBackend
         var end = Snapshot("step:0:play_card", [decision]);
         return new("dsl:base-spire", package.Digest + ":" + package.Rules.Identity,
             session.Status == SessionStatus.Running && Field(player, "Player", "CombatActive").AsBool() ? "running" : session.Status.ToString(),
-            beforeRandom, session.Random.TotalDraws - beforeRandom, StrikeFixture.Dimensions, [start, end]);
+            beforeRandom, session.Random.TotalDraws - beforeRandom, CombatFixture.Dimensions, [start, end]);
 
         EntityTypeDefinition Type(string name) => session.RuleSet.TypeByQualifiedId("base-spire:" + name);
         InstanceId[] Instances(string name) => session.State.AllInstances(Type(name).Id).ToArray();
@@ -96,7 +122,8 @@ internal static class DslBackend
                 Number("pile." + key + ".size", cards.Length);
                 facts.Add("pile." + key + ".sorted", string.Join(",", cards.Order(StringComparer.Ordinal)));
                 // Preserve the original no-random case: draw/discard membership, hand/exhaust order.
-                if (key is "hand" or "exhaust") facts.Add("pile." + key + ".order", string.Join(",", cards));
+                if (fixture.Reshuffle || key is "hand" or "exhaust") facts.Add("pile." + key + ".order", string.Join(",", cards));
+                if (fixture.Reshuffle) facts.Add("pile." + key + ".slots", string.Join(",", Members(collection).Select(c => slots[c])));
             }
             var legal = session.LegalActions(session.Participant(0));
             var play = legal.Where(a => a.Definition.QualifiedId is "base-spire:PlayTargetedCard" or "base-spire:PlayCardFromHand")
@@ -106,7 +133,7 @@ internal static class DslBackend
             var actions = new List<ActionOption>();
             if (playable.Length > 0) actions.Add(new("base-spire:PlayCard", playable, playable.Length));
             if (legal.Any(a => a.Definition.QualifiedId == "base-spire:EndDevelopmentTurn")) actions.Add(new("base-spire:EndTurn", [], 1));
-            return new(kind, actions.ToArray(), decisions, facts);
+            return new(kind, actions.ToArray(), decisions, facts) { Random = fixture.Reshuffle ? RandomSnapshot() : null };
 
             void Powers(InstanceId holder, string field, string prefix)
             {
@@ -119,6 +146,27 @@ internal static class DslBackend
                     Number($"power.{prefix}.{index}.stacks", Field(powers[index], "Power", "Stacks").AsInt());
                 }
             }
+        }
+
+        RandomTrace RandomSnapshot()
+        {
+            var debug = session.Debug!;
+            var records = debug.Capture().Where(r => r.Kind == SessionDebugKind.RandomCall).ToArray();
+            var calls = records.Select(r =>
+            {
+                var draw = r.Random ?? throw new InvalidOperationException("Random trace payload missing.");
+                return new RandomDraw(r.Subject!, draw.Operation, draw.Minimum, draw.Maximum, draw.Result, draw.Before, draw.After,
+                    draw.Candidates?.Select(c => slots[c]).ToArray(), r.Source?.ToString());
+            }).ToArray();
+            var snapshot = session.Random.Capture();
+            var positions = snapshot.ExplicitSeeds.OrderBy(p => p.Key, StringComparer.Ordinal).Select(p =>
+            {
+                var stream = snapshot.Streams.SingleOrDefault(s => s.Name == p.Key);
+                var words = stream?.BackendState ?? new Xoshiro256StarStar(p.Value, false).Capture();
+                return new StreamPosition(p.Key, startCounts.GetValueOrDefault(p.Key), stream?.Draws ?? 0,
+                    string.Join(",", words.Select(w => w.ToString("x16", CultureInfo.InvariantCulture))));
+            }).ToArray();
+            return new(calls, debug.DroppedRecords, records.Any(r => r.Random!.CandidatesTruncated), positions);
         }
     }
 }

@@ -18,14 +18,26 @@ namespace Differential;
 
 internal static class ReferenceBackend
 {
-    public static BackendRecord Run(StrikeFixture fixture)
+    public static BackendRecord Run(CombatFixture fixture)
     {
 #if REFERENCE_SIM
-        using var random = new DrawCounter();
+        using var random = fixture.Reshuffle ? null : new DrawCounter();
         CombatReplayDemo.EnsureModelsRegistered();
-        var run = new RunState(fixture.Seed.ToString(CultureInfo.InvariantCulture), new Overgrowth());
+        var run = new RunState(fixture.Reshuffle ? fixture.GameSeed : fixture.Seed.ToString(CultureInfo.InvariantCulture), new Overgrowth());
+        if (fixture.Reshuffle) ReferenceRandomTrace.ConfigureSourceStreams(run.Rng, fixture.GameSeed);
         var player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run);
         run.AddPlayer(player);
+        var deckSlots = new Dictionary<CardModel, string>();
+        if (fixture.Reshuffle)
+        {
+            var available = player.Deck.Cards.ToList();
+            foreach (var declared in fixture.InitialCards)
+            {
+                var source = available.First(c => Project(c.Id) == declared.Card && c.IsUpgraded == declared.Upgraded);
+                available.Remove(source); deckSlots.Add(source, declared.Slot);
+            }
+            if (available.Count != 0) throw new FormatException("Reference starting deck is not fully declared.");
+        }
         var combat = new CombatState(run);
         combat.AddMonster((MonsterModel)ModelDb.Monster<CalcifiedCultist>().MutableClone(), CombatSide.Enemy);
         combat.AddMonster((MonsterModel)ModelDb.Monster<DampCultist>().MutableClone(), CombatSide.Enemy);
@@ -33,9 +45,29 @@ internal static class ReferenceBackend
         engine.StartCombatAsync().GetAwaiter().GetResult();
         var state = player.PlayerCombatState ?? throw new InvalidOperationException("Reference combat did not start.");
         // Same controlled injection as the original adapter, after the reference's own combat initialization.
-        foreach (var card in state.Hand.Cards.ToArray()) state.DrawPile.AddInternal(card);
-        var strike = state.DrawPile.Cards.First(c => Project(c.Id) == fixture.Card);
-        state.Hand.AddInternal(strike);
+        var slots = new Dictionary<CardModel, string>();
+        CardModel? strike = null;
+        var discardedInitialShuffle = 0;
+        if (fixture.Reshuffle)
+        {
+            var all = new[] { state.Hand, state.DrawPile, state.DiscardPile, state.ExhaustPile }.SelectMany(p => p.Cards).ToArray();
+            foreach (var card in all)
+            {
+                slots.Add(card, deckSlots[card.DeckVersion ?? throw new InvalidOperationException("Missing source deck instance.")]);
+                card.Pile!.RemoveInternal(card);
+            }
+            foreach (var declared in fixture.InitialCards) state.DrawPile.AddInternal(all.Single(c => slots[c] == declared.Slot));
+            // Explicit ordered controlled initialization, allowed by ENV §10 (2026-10-11): discard
+            // reference-only initial-shuffle consumption before the original script starts. Never reset during it.
+            discardedInitialShuffle = run.Rng.Shuffle.Counter;
+            run.Rng.MockRng(Sts2Sim.Core.Entities.Rngs.RunRngType.Shuffle, ReferenceRandomTrace.SourceSeed(fixture.GameSeed, "shuffle"));
+        }
+        else
+        {
+            foreach (var card in state.Hand.Cards.ToArray()) state.DrawPile.AddInternal(card);
+            strike = state.DrawPile.Cards.First(c => Project(c.Id) == fixture.Card);
+            state.Hand.AddInternal(strike);
+        }
         player.Creature.SetMaxHpInternal(fixture.PlayerHp); player.Creature.SetCurrentHpInternal(fixture.PlayerHp);
         state.Energy = fixture.Energy;
         for (var index = 0; index < combat.Enemies.Count; index++)
@@ -43,9 +75,46 @@ internal static class ReferenceBackend
             combat.Enemies[index].SetMaxHpInternal(fixture.EnemyHp[index]);
             combat.Enemies[index].SetCurrentHpInternal(fixture.EnemyHp[index]);
         }
-        var beforeRandom = random.Count;
+        var beforeRandom = random?.Count ?? ReferenceRandomTrace.NamedDrawCount(run.Rng, player);
+        using var trace = fixture.Reshuffle ? new ReferenceRandomTrace(run.Rng, player, slots) : null;
         var start = Snapshot("start", []);
-        var legal = CombatTargetCandidates.ForCard(combat, player, strike.TargetType);
+        if (fixture.Reshuffle)
+        {
+            var boundaries = new List<Boundary> { start };
+            for (var step = 0; step < 3; step++)
+            {
+                engine.EndPlayerTurnAsync().GetAwaiter().GetResult();
+                trace!.VerifyShuffle();
+                boundaries.Add(Snapshot($"step:{step}:end_turn", []));
+            }
+            var identity = typeof(CombatEngine).Assembly.Location;
+            return new("reference:sts2-sim", Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(identity))),
+                combat.IsOverOrEnding() ? "ended" : "running", beforeRandom, ReferenceRandomTrace.NamedDrawCount(run.Rng, player) - beforeRandom,
+                fixture.RequiredDimensions, boundaries.ToArray())
+            {
+                Initialization = new
+                {
+                    kind = "ordered-controlled", profile = "source-compat-sts2-frozen@1", raw_game_seed = fixture.GameSeed,
+                    native_run_seed = run.Rng.Seed, source_run_seed = ReferenceRandomTrace.Hash32(fixture.GameSeed),
+                    run_streams = Enum.GetValues<Sts2Sim.Core.Entities.Rngs.RunRngType>().Select(type => new
+                    {
+                        source = type.ToString(), stream = "base-spire:run:" + Sts2Sim.Core.Helpers.StringHelper.SnakeCase(type.ToString()),
+                        seed = ReferenceRandomTrace.SourceSeed(fixture.GameSeed, Sts2Sim.Core.Helpers.StringHelper.SnakeCase(type.ToString())),
+                    }).ToArray(),
+                    discarded_initial_shuffle_draws = discardedInitialShuffle, shuffle_script_start_cursor = 0,
+                    alignment_scope = "Original ordered controlled reshuffle initialization only; no script reseeding.",
+                    player_streams = "Native reference derivation retained; any difference remains a failure.",
+                    random_measurement = "Named run/player API counters; each supported NextInt consumes one raw word. Per-instance hooks, no global observer for this case.",
+                    source_files = new Dictionary<string, string>
+                    {
+                        ["sts2/src/Core/Helpers/StringHelper.cs"] = "f153e81217ae1b261322acfd00f597d3758e78d065f7cdd184c58be2b7a23718",
+                        ["sts2/src/Core/Random/Rng.cs"] = "495ff2a8884105d5b3e50942c63379d91dedeb80d0e7ff86cf8669ccbc519974",
+                        ["sts2/src/Core/Runs/RunRngSet.cs"] = "ec9ac8ad7c4c361d17e952636b1aa9506ddbe787c5bdf69647bf1d26f19ff507",
+                    },
+                },
+            };
+        }
+        var legal = CombatTargetCandidates.ForCard(combat, player, strike!.TargetType);
         var target = combat.Enemies[int.Parse(fixture.Target.AsSpan("enemy:".Length), CultureInfo.InvariantCulture)];
         if (!legal.Contains(target) || !strike.CanPlay(out _)) throw new InvalidOperationException("Reference rejects the semantic action.");
         var decision = new DecisionSnapshot(legal.Select(c => "enemy:" + combat.Enemies.ToList().IndexOf(c)).ToArray(), 1, 1, fixture.Target);
@@ -53,7 +122,7 @@ internal static class ReferenceBackend
         var end = Snapshot("step:0:play_card", [decision]);
         var assembly = typeof(CombatEngine).Assembly.Location;
         return new("reference:sts2-sim", Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(assembly))),
-            combat.IsOverOrEnding() ? "ended" : "running", beforeRandom, random.Count - beforeRandom, StrikeFixture.Dimensions, [start, end]);
+            combat.IsOverOrEnding() ? "ended" : "running", beforeRandom, random!.Count - beforeRandom, CombatFixture.Dimensions, [start, end]);
 
         Boundary Snapshot(string kind, DecisionSnapshot[] decisions)
         {
@@ -74,7 +143,8 @@ internal static class ReferenceBackend
                 var cards = pile.Cards.Select(c => Project(c.Id) + (c.IsUpgraded ? "+" : "")).ToArray();
                 Number("pile." + key + ".size", cards.Length);
                 facts.Add("pile." + key + ".sorted", string.Join(",", cards.Order(StringComparer.Ordinal)));
-                if (key is "hand" or "exhaust") facts.Add("pile." + key + ".order", string.Join(",", cards));
+                if (fixture.Reshuffle || key is "hand" or "exhaust") facts.Add("pile." + key + ".order", string.Join(",", cards));
+                if (fixture.Reshuffle) facts.Add("pile." + key + ".slots", string.Join(",", pile.Cards.Select(c => slots[c])));
             }
             var actions = new List<ActionOption>();
             if (!combat.IsOverOrEnding())
@@ -84,7 +154,7 @@ internal static class ReferenceBackend
                 if (playable.Length > 0) actions.Add(new("base-spire:PlayCard", playable, playable.Length));
                 actions.Add(new("base-spire:EndTurn", [], 1));
             }
-            return new(kind, actions.ToArray(), decisions, facts);
+            return new(kind, actions.ToArray(), decisions, facts) { Random = trace?.Capture() };
 
             void Powers(Creature holder, string prefix)
             {

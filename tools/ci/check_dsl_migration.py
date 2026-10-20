@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 import re
@@ -89,13 +90,44 @@ def main() -> int:
                     or [r["id"] for r in report["cases"]] != expected or report["complete"] is not True):
                 raise ValueError(f"{suite}: original case identities or incomplete-suite failure lost")
             if suite == "regression":
-                if report["executed"] != 1 or report["passed"] != 1 or report["cases"][0]["status"] != "passed":
+                if report["executed"] != 2 or report["passed"] != 1 or report["cases"][0]["status"] != "passed":
                     raise ValueError("strike-normal must actually execute independently and pass")
                 migrated = report["cases"][0]
                 if (migrated["left"]["backend"] != "dsl:base-spire" or migrated["right"]["backend"] != "reference:sts2-sim"
                         or migrated["left"]["script_random_count"] != 0 or migrated["right"]["script_random_count"] != 0):
                     raise ValueError("strike-normal backend or measured RNG changed")
-                remainder = report["cases"][1:]
+                reshuffle = next(c for c in report["cases"] if c["id"] == "random-reshuffle-unsupported")
+                if reshuffle["status"] != "diverged" or not reshuffle.get("first_difference") or reshuffle["independent_verified"]:
+                    raise ValueError("original random case must retain its real independent first difference")
+                for side in ("left", "right"):
+                    backend = reshuffle[side]
+                    if (backend["script_random_count"] != 9 or len(backend["boundaries"]) != 4
+                            or len(backend["boundaries"][-1]["random"]["calls"]) != 9
+                            or any(b["random"]["dropped"] or b["random"]["truncated"] for b in backend["boundaries"])):
+                        raise ValueError("random case did not extract all real original reshuffle calls")
+                spec = importlib.util.spec_from_file_location("source_rng_oracle", ROOT / "tools/rng-oracle/vanilla_rng_oracle.py")
+                oracle = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(oracle)
+                initialization = reshuffle["right"]["initialization"]
+                raw_seed = initialization["raw_game_seed"]
+                if initialization["source_run_seed"] != oracle.run_seed(raw_seed):
+                    raise ValueError("reference source profile root differs from independent oracle")
+                if {row["source"] for row in initialization["run_streams"]} != set(oracle.RUN_RNG_TYPES):
+                    raise ValueError("reference source profile omitted a run stream")
+                for row in initialization["run_streams"]:
+                    if row["seed"] != oracle.stream_seed(oracle.run_seed(raw_seed), row["source"]):
+                        raise ValueError(f"reference stream derivation differs from independent oracle: {row['source']}")
+                # Verify actual extracted calls against independent source vectors, not only agreeing adapters.
+                for side in ("left", "right"):
+                    source_rng = oracle.Rng(oracle.stream_seed(oracle.run_seed(raw_seed), "Shuffle"))
+                    calls = reshuffle[side]["boundaries"][-1]["random"]["calls"]
+                    for index, call in enumerate(calls):
+                        bound = 10 - index
+                        if (call["operation"] != "shuffle" or call["minimum"] != "0" or call["maximum"] != str(bound)
+                                or call["result"] != str(source_rng.next_int(bound)) or call["before"] != index
+                                or call["after"] != index + 1 or len(call["candidates"]) != bound):
+                            raise ValueError(f"{side}: extracted call differs from independent source vector at {index}")
+                remainder = [c for c in report["cases"] if c["id"] not in ("strike-normal", "random-reshuffle-unsupported")]
             else:
                 if report["executed"] != 0 or report["passed"] != 0:
                     raise ValueError(f"{suite}: unmigrated suite claims execution")
@@ -107,6 +139,9 @@ def main() -> int:
         if partial["complete"] or partial["independent_verified"] or partial["cases"][0]["status"] != "passed":
             raise ValueError("selected case must pass without claiming the entire suite passed")
         run("comparator-checks", ["self-test"], 0)
+        random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
+        if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
+            raise ValueError("original random case must fail explicitly on the real difference")
         run("unknown-case", ["test", "--case", "not-registered"], 3)
         original = json.loads((ROOT / "tools/differential/suites/regression.json").read_text(encoding="utf-8"))
         for name in ("zero-cases", "missing-dimension", "duplicate-case", "unregistered-case", "reduced-suite", "wrong-terminal"):
@@ -143,7 +178,7 @@ def main() -> int:
             raise ValueError("missing reference adapter was not rejected explicitly")
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
-                  "original_regression_executed": 1, "original_regression_passed": 1,
+                  "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
                   "strict_failure_checks": True, "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
