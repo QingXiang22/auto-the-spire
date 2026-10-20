@@ -23,6 +23,12 @@
 
 以下 RUN-01～05 是完整 Run 的目标要求，不改变上文开发操作的实际支持范围。正常入口须包含 Neow、真实地图与前置随机消费；复用角色初态、战斗、奖励及永久实例，不另建 C# RunDriver 或 Host 玩法循环。
 
+### ENV-T05 已交付的首段边界
+
+当前 DSL 已提供 `StartNormalRun` 作为显式正常入口。它复用 Engine Session 中的 `Player` 与空 `Run` 容器，建立 Ironclad 的 80 HP／99 金币／5 Strike／4 Defend／Bash／BurningBlood 初态，创建 `NeowVisit` 并暂停等待一次 Neow 布尔选择。选择提交后只消费一次 `base-spire:run:act_1_map`，物化首幕 Ancient→Monster→RestSite→Boss 的公开节点和 `MapChildren` 边，公开 `ChooseMapPoint` 只提供当前可选后继。
+
+首个 Monster 节点创建稳定递增的 `RunVisit`，记录原地图类型、实际房型、遭遇标识和 Run 阶段，并接入已有 Ruby Raiders normal 遭遇与战斗入口。非法、重复或非当前后继节点由动作候选和过程守卫拒绝；当前交付尚未把奖励关闭、地图返回、跨幕、事件子战斗或终局接入该访问。开发入口保留一个空 `Run` 容器，使公开 sequence 在开发和正常快照中都有唯一所有者。
+
 | 要求 | 输入、状态与执行顺序 | 失败与可观察结果 |
 | --- | --- | --- |
 | RUN-01 阶段与所有者 | Run 保存当前幕、旅行／访问／幕转换／终局阶段；每次访问有稳定标识、原地图节点类型、实际房型、局部阶段与待完成事项。战斗、奖励各由该访问关联；具体阶段名由 DSL 声明 | 合法动作来自同一阶段及真实后继图；未答决策、未完成余效或未关闭奖励时，跨房动作不可用 |

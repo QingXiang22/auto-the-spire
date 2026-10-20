@@ -13,6 +13,7 @@ includes = [
   "rewards/index.spire",
   "characters/index.spire",
   "run/random.spire",
+  "run/normal.spire",
   "run/setup-dev.spire",
   "public/projection.spire"
 ]

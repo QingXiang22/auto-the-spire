@@ -6,6 +6,8 @@
 
 显式SapphireSeed／DoorsOfLightAndDark开发访问已使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。它们尚未接回正常地图／事件池和子战斗返回，不能据此开放正常Run scope。
 
+ENV-T05 的首段正常入口已经接通：提交 `StartNormalRun` 会在同一 Session 建立正常 Ironclad 初态并暂停 Neow 选择；回答后生成首幕公开 Ancient→Monster→RestSite→Boss 节点，随机消费来自 `base-spire:run:act_1_map`，`ChooseMapPoint` 只暴露当前后继。进入首个 Monster 会创建 `RunVisit` 并接入 Ruby Raiders normal 遭遇。该首段流程停在首个实际房间的战斗上下文，奖励关闭、回到地图、事件子战斗、跨幕和终局仍按下文完整恢复计划处理。
+
 ## 定义角色、进阶与正常开局
 
 在开发 scope 的干净初态提交 `Ironclad.Initialize`，可建立 80 HP、99 金币、5 Strike／4 Defend／1 Bash 的永久牌组及 BurningBlood。它拒绝覆盖已获得的牌、物品、房间或战斗进度。接着用真实遭遇的 `Spawn` 或开发目标入口建敌人，再提交 `BeginDevelopmentCombat` 和 `BeginDevelopmentTurn`：新副本先用原版 Shuffle 流洗牌，回合自动抽五张；后续回合也自动抽牌，首回合按 Innate 优先并扩展抽取数量至十张上限。不要再手动补五次 Draw。旧机制探针没有初始化角色时仍手动抽牌。

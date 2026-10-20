@@ -14,6 +14,7 @@ procedure SetupSourceRandom { body = {
   seedStream = { stream = "base-spire:run:up_front" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "up_front") }
   seedStream = { stream = "base-spire:run:shuffle" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "shuffle") }
   seedStream = { stream = "base-spire:run:unknown_map_point" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "unknown_map_point") }
+  seedStream = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
   seedStream = { stream = "base-spire:run:combat_card_generation" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_card_generation") }
   seedStream = { stream = "base-spire:run:combat_potion_generation" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_potion_generation") }
   seedStream = { stream = "base-spire:run:combat_card_selection" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "combat_card_selection") }

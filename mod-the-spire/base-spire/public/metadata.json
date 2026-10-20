@@ -385,6 +385,14 @@
     "base-spire:PotionRewardOptions": {
       "use": "group",
       "owner_kind_type_id": "base-spire:Player"
+    },
+    "base-spire:MapNodes": {
+      "use": "sequence",
+      "owner_kind_type_id": "base-spire:Run"
+    },
+    "base-spire:RunVisits": {
+      "use": "sequence",
+      "owner_kind_type_id": "base-spire:Run"
     }
   },
   "terminal_outcomes": {},

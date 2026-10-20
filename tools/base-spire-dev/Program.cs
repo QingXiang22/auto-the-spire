@@ -19,11 +19,13 @@ try
     var contentModelOnly = false;
     var cardBehaviorOnly = false;
     var enemyMovesOnly = false;
+    var normalRunOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
         else if (args[index] == "--enemy-moves-only") enemyMovesOnly = true;
+        else if (args[index] == "--normal-run-only") normalRunOnly = true;
         else if (args[index] == "--card-behavior-only") cardBehaviorOnly = true;
         else if (args[index] == "--content-model-only") contentModelOnly = true;
         else if (args[index] == "--relic-content-only") relicContentOnly = true;
@@ -55,6 +57,12 @@ try
             throw new ArgumentException("--enemy-moves-only requires check without other focused flags or report.");
         if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
         return PackageChecks.RunEnemyMovesOnly(package);
+    }
+    if (normalRunOnly)
+    {
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly)
+            throw new ArgumentException("--normal-run-only requires check without other focused flags or report.");
+        return PackageChecks.RunNormalRunOnly(package);
     }
     if (cardBehaviorOnly)
     {
