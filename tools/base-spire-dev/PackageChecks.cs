@@ -130,6 +130,7 @@ internal static partial class PackageChecks
         }
         Merge(RunCombatTurnChecks(package, Case), witnesses);
         Merge(RunDamageChecks(package, Case), witnesses);
+        Merge(RunToughBandagesChecks(package, Case), witnesses);
         var cards = RunCardPlayChecks(package, Case);
         Merge(RunPowerChecks(package, Case), cards);
         Merge(RunCardBatchChecks(package, Case), cards);

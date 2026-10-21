@@ -3243,8 +3243,8 @@
         "SilentRelicPool"
       ],
       "eligibility": "singleplayer",
-      "evidence": "Source owner-local discard hook in sts2/src/Core/Models/Relics/ToughBandages.cs; unpowered block per discarded card declared and exercised by RelicContentChecks at the turn-end discard path.",
-      "definition": null
+      "evidence": "Source ToughBandages.AfterCardDiscarded grants three unpowered block on the owner's side; ToughBandagesChecks distinguish active discard, ordinary movement, turn-end flush, instance eligibility and nested notifications.",
+      "definition": "relics/shared/tough-bandages.spire"
     },
     {
       "id": "base-spire:toxic-egg",

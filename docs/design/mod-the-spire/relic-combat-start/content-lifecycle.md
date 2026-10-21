@@ -76,6 +76,14 @@ PaperPhrog由原VulnerablePower查询攻击者持有遗物后，将目标易伤�
 
 判别包含三件实际获得及数值、Cannon未升级／非Strike／多段与重复／自动、两个倍率的有无状态／错误侧／其他敌人、Cruelty叠加与最终取整、实例失效／持有者隔离、重复pure查询和Thrash预览消费者。公开stdio从真实获得、升级牌／施加状态到伤害与敌方阶段，不注入结果。正常来源、独立原版双侧及正常Run仍未验证；Akabeko、PenNib和MysticLighter需要各自完整机制，不归本开发场景。
 
+## 主动弃牌格挡（RELIC-G06）
+
+ToughBandages 在本持有者的卡牌主动弃置、且当前为己方行动阶段时，每张获得 3 点无加成格挡。CardDiscardBlockRelic 监听 CardDiscarded，按 Holder、DefinitionId、IsMelted 和库存顺序绑定有效实例；在 CombatActive 且非 EnemyPhase 时调用 GainUnpoweredBlock，不应用敏捷／脆弱，不消费随机，沿现有格挡上限 999。其他持有者、移除或熔化的实例不参与；同定义有效实例分别响应。开发获得按本持有者去重。
+
+DiscardCombatCard 先把本持有者手牌移入 DiscardPile，完成 CardMoved 通知，再发 CardDiscarded；多张主动弃牌逐张完成移动与监听，嵌套弃牌先完成子事件再继续父事件。普通出牌进入弃牌区、满手溢出及其他普通移动不发 CardDiscarded。源 CombatManager.FlushPlayerHand 直接批量移牌，因此回合末 FinishTurnHand 只发布清手移动通知，不触发 ToughBandages；不能把清手当作主动弃牌。
+
+判别需覆盖主动弃牌数值、非己方阶段、双向持有者隔离、失效与多实例、回合末清手和普通移动、逐张及嵌套通知顺序、无加成与上限，以及公开 Host 的获得→主动弃牌→格挡轨迹。当前开发 DiscardHand 可执行该消费者；其他角色卡牌、正常来源、正常 Run 和独立原版双侧另行验证。
+
 ## 判别与边界
 
 逐件真实获得／触发的数值执行结果；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证拾取、计数、Strike伤害和跨回合能量消费者，覆盖验收条件要求所有新增definition有实际场景。

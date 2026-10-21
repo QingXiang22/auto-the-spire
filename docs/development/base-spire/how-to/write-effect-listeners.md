@@ -39,6 +39,8 @@ instances只能读取事件载荷和查询自身的绑定，不能用尚未绑�
 
 完整的复制、登记、获得与公开运行步骤沿[共享触发教程](../tutorials/shared-rule.md)操作。拾取事件已经携带本次relic，直接过滤该载荷即可；移除事件在出库存后发出，清理订阅不能要求它仍在Relics中。
 
+主动弃牌使用 `CardDiscarded`：`DiscardCombatCard` 先移动牌、完成 `CardMoved`，再发布弃牌通知。ToughBandages 按有效持有实例响应，并复核 CombatActive／EnemyPhase；普通移牌和回合末清手只移动牌，不触发该遗物。
+
 ## 3. 用pure监听返回修正值
 
 修正事件的第一个载荷是累计值。监听者接收它，返回修正后的同类型值；不适用时返回原值。没有有效监听者时，foldEvent返回调用方的初值。以下是[Strength监听](../../../../mod-the-spire/base-spire/powers/shared/strength-power.spire)的等价写法，用于阅读或替换原过程和订阅，不能在同一包重复登记同名声明：
