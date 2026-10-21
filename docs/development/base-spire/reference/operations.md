@@ -87,6 +87,9 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
 | GainEnergy | owner=Ref(Player)、amount=Int(0..999) | Energy 增加并可超过 MaxEnergy（上限 999），尊重 NoEnergyGain；回合重置使用 GetMaxEnergy |
 | [DamageEnemy](../../../../mod-the-spire/base-spire/combat/damage.spire) | target=Ref(Enemy)、amount=Int(0..999999) | 先扣 `min(Block, amount)` 格挡，剩余从 Hp 扣除且不低于 0；无加成伤害，修正参与者不参与（遗物与 Power 用它） |
+| EnemyIsHittable | target: Ref(Enemy)，pure，返回 Bool | Hp<=0 直接返回 false；存活敌人以 true 为初值征询 ShouldAllowHittingEnemy |
+| ShouldAllowHittingEnemy | value: Bool、target: Ref(Enemy)，pure修正事件 | 供命中资格监听返回当前目标是否允许命中；不写状态或消费随机 |
+| DamageAllEnemiesFromPlayer | owner: Ref(Player)、amount: Int(0..999999) | 对当前 EnemyIsHittable 目标执行无加成群伤；整批提交生命／格挡后才逐项通知伤害和死亡。无目标直接返回；其他攻击、选敌和胜利条件仍沿各自现有资格 |
 | DamageEnemyPowered | owner: Ref(Player)、card: Ref(Card)、target: Ref(Enemy)、amount: Int(0..999999) | 以显式攻击者和牌源计算Strength、Strike及升级牌遗物加成，再应用Weak、目标Vulnerable和攻击者Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam等计算伤害也走此链 |
 | ModifyVulnerableMultiplier | value: Int、owner: Ref(Player)、card: Binding、target: Binding；pure修正事件 | 正层目标Vulnerable在玩家加成攻击链以150百分数点征询；PaperPhrog加25，之后叠加Cruelty，再乘伤害；无目标状态不征询 |
 | ModifyEnemyWeakMultiplier | value: Int、owner: Ref(Player)、attacker: Ref(Enemy)；pure修正事件 | 正层攻击者Weak在敌方加成攻击链以75百分数点征询；owner为防守玩家，PaperKrane减15；无攻击者状态不征询 |
@@ -164,9 +167,13 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 ## 模板与内容配置
 
+[CardDiscardBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/card-discard-block.spire) 接受 definition: String(64)、amount: Int(0..999)，生成 `WhenCardDiscarded`、`OnCardDiscarded` 与 `Obtain`。有效持有实例在 CardDiscarded 后、CombatActive 且非 EnemyPhase 时调用 GainUnpoweredBlock；ToughBandages 配置为 3。DiscardCombatCard 先移动本玩家手牌、发布 CardMoved，再发布 CardDiscarded；普通移牌和回合末 FinishTurnHand 清手不发布弃牌通知。
+
 [AfterShuffleBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/after-shuffle-block.spire) 的参数为 definition: String(64)、amount: Int(0..999)。它生成 `WhenShuffled`、`OnShuffle` 与 `Obtain`，按当前持有库存过滤并调用 GainUnpoweredBlock。`use TheAbacus` 生成 `TheAbacus.Obtain` 等名称；TheAbacus 正式参数为 6。
 
 [BeforeCombatStartBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/before-combat-start-block.spire) 的参数同样是 definition: String(64)、amount: Int(0..999)，生成 `WhenCombatStarts`、`OnCombatStart`（订阅 BeforeCombatStart）与 `Obtain`。它按持有者、DefinitionId 和 IsMelted 过滤后调用同一 GainUnpoweredBlock；`use Anchor` 为 10，`use FakeAnchor` 为 4，两者同时持有在同一次开始中共得 14。
+
+[CardExhaustDamageRelic](../../../../mod-the-spire/base-spire/relics/rules/card-exhaust-damage.spire) 接受 definition: String(64)、amount: Int(0..999)，生成 `WhenCardExhausted`、`OnCardExhausted` 与 `Obtain`。它在 CardExhausted 时按持有者、DefinitionId、IsMelted 和库存顺序绑定有效实例，调用 DamageAllEnemiesFromPlayer；CharonsAshes 配置为 3。
 
 回合资源模板共享 `{ definition: String(64) }`，各自再取一个触发回合、计数周期或伤害数值；它们都生成各自的监听过程与 `Obtain`：
 

@@ -1,6 +1,16 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
+# Creature.IsHittable also consults ShouldAllowHitting for living creatures.
+event ShouldAllowHittingEnemy { payload = { value = Bool target = Ref(Enemy) } }
+procedure EnemyIsHittable {
+ pure = true parameters = { target = Ref(Enemy) } result = Bool
+ body = {
+  if = { condition = lessOrEqual(field(target, Enemy.Hp), 0) then = { return = { value = false } } }
+  return = { value = foldEvent(ShouldAllowHittingEnemy, true, target) }
+ }
+}
+
 # Compatibility operations use the same result pipeline. A missing source stays missing;
 # direct damage never acquires card attribution merely because a card is currently resolving.
 procedure DamageEnemy {
@@ -29,10 +39,10 @@ procedure DamageAllEnemiesFromPlayer {
  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999) }
  locals = { batch = Binding result = Binding }
  body = {
-  if = { condition = not(exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)))) then = { return = {} } }
+  if = { condition = not(exists(where(type(Enemy), e, pureCall(EnemyIsHittable, e)))) then = { return = {} } }
   create = { type = DamageBatch scope = entityScope(owner) into = batch fields = { DealerPlayer = owner } }
   set = { target = owner field = Player.DamageDepth value = add(field(owner, Player.DamageDepth), 1) }
-  forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = target body = {
+  forEach = { query = where(type(Enemy), e, pureCall(EnemyIsHittable, e)) item = target body = {
    call = { procedure = ResolveEnemyDamage args = { owner = owner target = target card = none play = none attack = none amount = amount powered = false } into = result }
    set = { target = result field = DamageResult.Batch value = batch }
   } }

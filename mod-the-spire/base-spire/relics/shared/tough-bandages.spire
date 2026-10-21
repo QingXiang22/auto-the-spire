@@ -1,0 +1,8 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: ToughBandages.AfterCardDiscarded; owner's card, owner's side, Unpowered.
+use ToughBandages {
+  template = CardDiscardBlockRelic
+  args = { definition = "base-spire:tough-bandages" amount = 3 }
+}

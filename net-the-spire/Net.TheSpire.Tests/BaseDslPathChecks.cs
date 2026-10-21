@@ -21,6 +21,10 @@ internal static class BaseDslPathChecks
         yield return ("CP08 real stdio card play spends energy and damages the target", () => StdioTrajectory("card"));
         yield return ("CP18 real stdio Iron Wave gains block and then damages the target", () => StdioTrajectory("ironwave"));
         yield return ("CP25 real stdio exhaust skill publishes its block and leaves no card in the discard pile", () => StdioTrajectory("exhaust"));
+        yield return ("RL ToughBandages real stdio active discard gains block and turn-end flush stays silent", () => StdioTrajectory("tough-bandages"));
+
+        yield return ("RL CharonsAshes real stdio exhaust reaction damages the public target", () => StdioTrajectory("charons-ashes"));
+        yield return ("RL CharonsAshes real stdio exhaustion settles block and card movement before victory", () => StdioTrajectory("charons-ashes-kill"));
         yield return ("CP34 real stdio Bash publishes its damage and the vulnerable stacks it applies", () => StdioTrajectory("bash"));
         yield return ("CP38 real stdio power card grants strength and leaves play", () => StdioTrajectory("inflame"));
         yield return ("CP44 real stdio all-enemies attack hits the development target", () => StdioTrajectory("thunderclap"));
@@ -357,6 +361,33 @@ internal static class BaseDslPathChecks
                     ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
                     ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
                     ("PlayCardFromHand", "30", true, "1", "1", true, "")],
+                "tough-bandages" => [
+                    ("ToughBandages.Obtain", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
+                    ("Strike.AddToHand", "0", true, "3", "1", true, ""),
+                    ("Defend.AddToHand", "0", true, "3", "1", true, ""),
+                    ("DiscardHand", "6", true, "3", "1", true, ""),
+                    ("Strike.AddToHand", "6", true, "3", "1", true, ""),
+                    ("EndDevelopmentTurn", "6", true, "3", "1", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, "")],
+
+                "charons-ashes" => [
+                    ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
+                    ("CharonsAshes.Obtain", "0", false, "0", "0", false, "40"),
+                    ("Impervious.AddToHand", "0", false, "0", "0", false, "40"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "40"),
+                    ("PlayCardFromHand", "30", true, "1", "1", true, "37")],
+                "charons-ashes-kill" => [
+                    ("TwigSlimeS.Spawn", "0", false, "0", "0", false, "7"),
+                    ("CharonsAshes.Obtain", "0", false, "0", "0", false, "7"),
+                    ("Strike.AddToHand", "0", false, "0", "0", false, "7"),
+                    ("Impervious.AddToHand", "0", false, "0", "0", false, "7"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "7"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "7"),
+                    ("PlayAttackFromHand", "0", true, "2", "1", true, "1"),
+                    ("PlayCardFromHand", "30", false, "0", "1", false, "0")],
                 "bash" => [
                     ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"), ("Bash.AddToHand", "0", false, "0", "0", false, "40"),
                     ("BeginDevelopmentCombat", "0", true, "0", "0", false, "40"),
@@ -580,7 +611,7 @@ internal static class BaseDslPathChecks
             }
             if (mode == "rupture") { Check.Equal("78", Public(snapshot, "Player.Hp"), "real HP loss"); Check.Equal("2", Public(snapshot, "Player.PlaySequence"), "real play count"); }
             if (mode is "bash" or "inflame" or "thunderclap") Check.Equal(mode == "thunderclap" ? "1" : "2", Public(snapshot, "Power.Stacks"), "the applied power is public on its holder");
-            if (mode is "kill" or "reward-claim" or "reward-skip") Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "the public combat outcome follows the last kill");
+            if (mode is "kill" or "reward-claim" or "reward-skip" or "charons-ashes-kill") Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "the public combat outcome follows the last kill");
             if (mode == "sown-event")
             {
                 void StepVisit(LegalActionDto candidate)
