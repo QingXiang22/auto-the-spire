@@ -1,6 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-version = "0.7.0-dsl.42"
+version = "0.7.0-dsl.43"
 includes = [
   "combat/index.spire",
   "cards/index.spire",

@@ -539,9 +539,9 @@
       "pools": [
         "IroncladRelicPool"
       ],
-      "eligibility": "singleplayer",
-      "evidence": "Source owner-local exhaust hook in sts2/src/Core/Models/Relics/CharonsAshes.cs; unpowered damage to all hittable enemies declared and exercised by RelicContentChecks.",
-      "definition": null
+      "eligibility": "singleplayer-supported",
+      "evidence": "Source owner-local exhaust hook in sts2/src/Core/Models/Relics/CharonsAshes.cs; three unpowered damage to all hittable enemies is exercised by CharonsAshesChecks, including nested and final-kill exhaustion.",
+      "definition": "relics/shared/charons-ashes.spire"
     },
     {
       "id": "base-spire:chemical-x",
