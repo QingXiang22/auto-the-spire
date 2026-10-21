@@ -14,6 +14,7 @@ internal static class ContentRegistration
 
     public static void Check(DslPackage package, bool synchronize = false)
     {
+        SourceCatalog.Check(package);
         var session = package.CreateSession(0, ["player"]); session.Start();
         if (session.Status == SessionStatus.Faulted) throw new InvalidOperationException(session.Fault?.ToString());
         var metadata = JsonNode.Parse(File.ReadAllText(package.PublicMetadataPath))!.AsObject();

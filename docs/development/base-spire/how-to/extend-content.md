@@ -4,7 +4,7 @@
 
 ## 1. 确定来源和修改落点
 
-从领域 `catalog.json` 按稳定 id／源类名定位 source_path 和 hash，检查资格及 definition。首次定位可使用 [skill 定位助手](../../../../.agents/skills/base-spire-development/scripts/locate.py)，它返回有限条目，不执行玩法。已有 definition 时读该文件和所用模板；未迁移时只读对应源类、被调用的共享语义和必要旧检查。
+使用 [skill 定位助手](../../../../.agents/skills/base-spire-development/scripts/locate.py)按稳定 id／源类名查询。它从工具固定数据读取 source_path、hash 和排除依据，再从生产目录读取实际 definition，只返回有限条目，不执行玩法。已有 definition 时读该文件和所用模板；未迁移时只读对应源类、被调用的共享语义和必要旧检查。
 
 新内容复用原稳定 ID、来源组和单文件名称。教程自创内容使用独立教学命名空间，不能添加到原版来源条目总数。拿不到匹配版本的源时记录待核验，不能把猜测写成已审阅资格。
 
@@ -22,11 +22,11 @@
 
 将内容路径加入领域 `index.spire`，共享规则尚未组合时同步包含；只有根入口拥有 start、imports 和 version。不要添加文件扫描或隐藏启动回调。
 
-将对应源行 definition 从 null 更新为包内相对 `.spire` 路径，保留 source_path、hash、完整源池与资格依据。新的数据文件必须在 manifest catalogs 中声明。不得将未迁移内容从源池删除，也不得用空效果声明凑覆盖。
+在领域 `catalog.json` 增加 id 与包内相对 `.spire` definition 路径。目录格式为 `engine-dsl/content-catalog@1`，不保留空定义或来源进度。新增目录文件必须在 manifest catalogs 中声明。完整来源、hash、池成员及排除依据保留在包外工具固定数据中，不得将未迁移内容从源池删除，也不得用空效果声明凑覆盖。
 
 需要对外显示的内容 ID 加到 public 元数据对应列表；公开类型／字段／动作由 DSL 声明与投影派生。变更后核对目录和合法候选，不向 net 新增逐项游戏规则注册。
 
-Card／Power的content_ids可运行`dotnet run --project tools/base-spire-dev -- sync-content`从实际定义库及显式启动实例生成。它不替你更新来源行或公开政策；validate／check会具名检查可执行目录、来源映射及公开列表漂移。
+Card／Power的content_ids可运行`dotnet run --project tools/base-spire-dev -- sync-content`从实际定义库及显式启动实例生成。它不替你登记定义或修改公开政策；validate／check会具名检查可执行目录、来源映射及公开列表漂移。
 
 ## 4. 验证与交付
 
