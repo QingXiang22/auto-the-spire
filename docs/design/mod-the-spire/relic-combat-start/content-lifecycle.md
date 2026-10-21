@@ -4,7 +4,7 @@
 
 ## 内容与源依据
 
-源为sts2的Models/Relics中相应类，原始SHA256与relics/catalog.json逐项核对。Pear最大生命+10、Mango+14；LeesWaffle最大生命+7后回满，FakeLeesWaffle治疗最大生命10%向下取整；OldCoin获得300金币。BlackBlood胜利治疗12；CaptainsWheel第三回合清格挡后得18无加成格挡。BagOfPreparation首回合基础手牌抽取+2，与Innate数量取max而非多发两次抽牌；RegalPillow营火基础治疗+15后封顶。
+源为sts2的Models/Relics中相应类，原始SHA256与tools/base-spire-dev/fixtures/source-catalogs.json的relics域逐项核对。Pear最大生命+10、Mango+14；LeesWaffle最大生命+7后回满，FakeLeesWaffle治疗最大生命10%向下取整；OldCoin获得300金币。BlackBlood胜利治疗12；CaptainsWheel第三回合清格挡后得18无加成格挡。BagOfPreparation首回合基础手牌抽取+2，与Innate数量取max而非多发两次抽牌；RegalPillow营火基础治疗+15后封顶。
 
 Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Kunai／Shuriken每回合每3次攻击打完分别+1敏捷／力量；OrnamentalFan同样计数得4无加成格挡；LetterOpener每回合每3次技能打完对所有存活敌人造成5无加成伤害。重复／自动出牌各计实际次数，多段攻击只计一次，拥有者不同不串计数。每回合计数在开场及玩家回合开始的早期站点重置，不能在AfterPlayerTurnStart才重置而吞掉自动打出。StoneCalendar第7个玩家回合结束前对存活敌人造成52无加成伤害。CentennialPuzzle本场第一次正的未挡伤害后抽3，先标已用再抽，下一战恢复；零伤害／全挡不触发。
 

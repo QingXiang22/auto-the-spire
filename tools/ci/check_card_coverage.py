@@ -5,6 +5,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from source_catalogs import load_sources
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "mod-the-spire/base-spire"
@@ -19,13 +20,15 @@ def validate(report_path: Path, require_ironclad_complete: bool) -> None:
     if report.get("package_digest") != hashlib.sha256(material.encode()).hexdigest():
         raise ValueError("behavior report does not belong to the current package")
     rows = json.loads((BASE / "cards/catalog.json").read_text(encoding="utf-8"))["entries"]
-    if len(rows) != 578 or len({r["id"] for r in rows}) != 578:
-        raise ValueError("full source card denominator must remain 578")
+    source = load_sources()["cards"]["entries"]
+    declared = {r["id"] for r in rows}
+    if len(declared) != len(rows) or not declared <= {r["id"] for r in source if "exclusion" not in r}:
+        raise ValueError("runtime card definitions differ from applicable source identities")
     fixture = json.loads((ROOT / "tools/base-spire-dev/fixtures/ironclad-source-metadata.json").read_text(encoding="utf-8"))["entries"]
     frozen = {r["id"]: r for r in fixture if r["name"] != "GiantRock"}
     if len(frozen) != 87 or sum(r["multiplayer_only"] for r in frozen.values()) != 2:
         raise ValueError("frozen source pool must contain 87 unique rows and two multiplayer exclusions")
-    pool = {r["id"]: r for r in rows if "IroncladCardPool" in r["pools"]}
+    pool = {r["id"]: r for r in source if "IroncladCardPool" in r["pools"]}
     if set(pool) != set(frozen):
         raise ValueError("source pool identities changed or were silently omitted")
     for content_id, expected in frozen.items():
@@ -33,9 +36,8 @@ def validate(report_path: Path, require_ironclad_complete: bool) -> None:
         if actual["source_sha256"] != expected["source_sha256"]:
             raise ValueError(f"frozen source hash changed: {content_id}")
         if expected["multiplayer_only"]:
-            if actual["definition"] is not None or actual["eligibility"] != "excluded-multiplayer-only":
+            if content_id in declared or actual.get("exclusion") != "multiplayer-only":
                 raise ValueError(f"singleplayer exclusion must be explicit: {content_id}")
-    declared = {r["id"] for r in rows if r["definition"] is not None}
     witnesses = {r["id"]: r["passed_scenarios"] for r in report.get("cards", [])}
     if len(witnesses) != len(report.get("cards", [])) or declared != set(witnesses):
         raise ValueError("DSL card definitions and actually checked card witnesses differ")

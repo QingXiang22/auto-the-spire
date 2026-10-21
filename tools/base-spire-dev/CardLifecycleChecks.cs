@@ -4,6 +4,22 @@ internal static partial class PackageChecks
 {
     private static void RunCardLifecycleChecks(DslPackage package, Action<string, Action> check)
     {
+        check("LIFECYCLE runtime catalogs reject source records, null definitions and invalid mappings", () =>
+        {
+            foreach (var format in new[] { "engine-dsl/source-catalog@1", "engine-dsl/source-data@1" })
+                RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["format"] = format));
+            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["source_baseline"] = "old-progress"));
+            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]![0]!["evidence"] = "claimed complete"));
+            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]![0]!["definition"] = null));
+            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]!.AsArray().Add(j["entries"]![0]!.DeepClone())));
+            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]![0]!["definition"] = "public/metadata.json"));
+            using var unknown = new Copy(package.Root);
+            unknown.EditJson("cards/catalog.json", j => j["entries"]![0]!["id"] = "base-spire:not-a-source-card");
+            Throws<FormatException>(() => ContentRegistration.Check(unknown.Load()));
+            using var missing = new Copy(package.Root);
+            missing.EditJson("cards/catalog.json", j => j["entries"]!.AsArray().RemoveAt(0));
+            Throws<FormatException>(() => ContentRegistration.Check(missing.Load()));
+        });
         check("LIFECYCLE registration detects public and source mapping drift and derives only ID lists", () =>
         {
             using var copy = new Copy(package.Root);
@@ -11,7 +27,7 @@ internal static partial class PackageChecks
             copy.EditJson("public/metadata.json", json => json["content"]!["base-spire:Card"]!["content_ids"]!.AsArray().RemoveAt(1));
             Throws<FormatException>(() => ContentRegistration.Check(copy.Load()));
             ContentRegistration.Check(copy.Load(), synchronize: true); ContentRegistration.Check(copy.Load());
-            Equal(source, File.ReadAllText(copy.Path("cards/catalog.json")), "derivation cannot change source denominator or pool order");
+            Equal(source, File.ReadAllText(copy.Path("cards/catalog.json")), "public ID derivation cannot change runtime definitions");
             var once = File.ReadAllText(copy.Path("public/metadata.json")); ContentRegistration.Check(copy.Load(), synchronize: true);
             Equal(once, File.ReadAllText(copy.Path("public/metadata.json")), "derivation is deterministic");
             copy.EditJson("cards/catalog.json", json => json["entries"]!.AsArray().First(r => r!["id"]!.GetValue<string>() == "base-spire:anger")!["definition"] = "cards/ironclad/bash.spire");

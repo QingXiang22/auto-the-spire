@@ -15,7 +15,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 
 - base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，真正共用的操作放领域 rules；catalog definition 可承载完整内容模块，独有规则／私有状态留在所属文件，以模板作用域隔离。简单内容仍可只用 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
 - 遗物与Power统一按[监听编写指南](../../../docs/development/base-spire/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。
-- scope 从实际 package.json 读取。静态来源条目、DSL 定义、行为测试结果、独立比较与正常 Run 分别报告；definition=null 不计支持。
+- scope 从实际 package.json 读取。静态来源条目、DSL 定义、行为测试结果、独立比较与正常 Run 分别报告；来源条目没有已加载 definition 时不计支持。
 - 旧 C#／旧作者语法只在 `tools/base-migration-baseline/` 核对源码，不恢复生产依赖。保留原来源池、资格条件与全部必测用例；未迁移显式失败，不删池、补答案或注册空效果。
 - 新共享机制先补对应 spec 的状态、输入、顺序、寿命、失败和验证，再写 DSL。通用语言缺口用最小文本复现按现有授权处理；本 skill 不授权解除暂停、擅自改变核心兼容性约定或派出远程 agent。
 
@@ -43,7 +43,7 @@ python -X utf8 .agents/skills/base-spire-development/scripts/locate.py relics --
 python -X utf8 .agents/skills/base-spire-development/scripts/locate.py powers --search Strength --limit 3
 ```
 
-domain 支持 cards／powers／relics／potions／enemies／events／characters／encounters／run／pools。默认返回最多 5 项，最大 20，必须提供精确 `--id` 或非空 `--search`；返回 source_path／hash、资格、DSL definition 与真实支持 scope。run 查 Act 源条目；房间／地图没有 catalog 时按上表直接进指南，不能把找不到条目当作领域不存在。
+domain 支持 cards／powers／relics／potions／enemies／events／characters／encounters／run／pools。默认返回最多 5 项，最大 20，必须提供精确 `--id` 或非空 `--search`；从包外工具固定数据读取 source_path／hash、池与 exclusion，从生产目录读取 DSL definition，并返回真实支持 scope。run 查 Act 源条目；房间／地图没有 catalog 时按上表直接进指南，不能把找不到条目当作领域不存在。
 
 已有 definition 时，优先读该文件、所用模板和该操作的文档。未迁移时，先读该领域指南和约定，再按返回的 source_path 局部检索所需方法：
 

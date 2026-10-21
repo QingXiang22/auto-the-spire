@@ -44,10 +44,10 @@ try
         if (report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly)
             throw new ArgumentException("sync-content accepts only the package manifest and optional --scope.");
         ContentRegistration.Check(package, synchronize: true);
-        Console.WriteLine("Derived Card/Power public IDs from executable definition libraries and explicit startup fixtures; source catalogs and visibility policies unchanged.");
+        Console.WriteLine("Derived Card/Power public IDs from executable definition libraries and explicit startup fixtures; frozen sources and visibility policies unchanged.");
         return 0;
     }
-    if (command is "validate" or "check") ContentRegistration.Check(package);
+    if (command is "validate" or "check" or "describe") ContentRegistration.Check(package);
     var metadata = TextRuleProviderSpec.Load(package.PublicMetadataPath);
     if (enemyMovesOnly)
     {
@@ -88,8 +88,7 @@ try
         using var data = JsonDocument.Parse(File.ReadAllText(path));
         var entries = data.RootElement.TryGetProperty("entries", out var rows) ? rows.EnumerateArray().ToArray() : [];
         return new { kind = data.RootElement.GetProperty("kind").GetString(),
-            source_count = entries.Length,
-            migrated_count = entries.Count(row => row.GetProperty("definition").ValueKind == JsonValueKind.String) };
+            definition_count = entries.Length };
     }).ToArray();
     Console.WriteLine(JsonSerializer.Serialize(new { package.Id, package.Version, package.Scope, package.RandomProfile,
         package.Digest, ruleset = package.Rules.Identity, entry = package.EntryPath, catalogs }));

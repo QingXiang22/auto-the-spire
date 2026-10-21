@@ -22,6 +22,6 @@
 | 公开目录与隐藏信息 | public/projection.spire、metadata.json | 同一 RuleSet 派生观察／候选；不承载玩法 |
 | 随机与池顺序 | 对应领域 DSL 的抽样操作，静态源池记录 | seed 派生、独立流、调用顺序、原版布局仍需迁移 |
 
-`cards/catalog.json` 等静态源目录保存 id、name、source_path、source_sha256、pools、eligibility、evidence、definition。`run/catalog.json` 记录 Act 源对象；它不是地图／房间的可执行注册表。`shared/source-pools.json` 保留源池及帮助成员，`encounters/source.json` 和 run 的静态快照不执行算法。
+`cards/catalog.json` 等生产目录只保存已加载内容的 id 与 definition。完整来源在[工具固定数据](../../../../tools/base-spire-dev/fixtures/source-catalogs.json)中按领域保存 id、name、source_path、source_sha256、pools，以及必要的 members 和 exclusion；其中 run 记录 Act 源对象，pools 保留源池及帮助成员。它们不执行玩法，也不记录完成结论。公开协议目录由 DSL 与公开元数据派生。
 
 实际可复用的过程仅以[操作参考](operations.md)列出的定义为准。跨多个领域开发时，先选拥有状态／生命周期的领域为主要归属，再记录调用关系，避免在每个消费者复制机制。
