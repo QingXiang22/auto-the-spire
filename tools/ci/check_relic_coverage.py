@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+from source_catalogs import load_sources
 
 ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "mod-the-spire/base-spire"
@@ -23,16 +24,18 @@ def main() -> int:
         if report.get("package_digest") != hashlib.sha256(material.encode()).hexdigest():
             raise ValueError("behavior report does not belong to the current package")
         rows = json.loads((BASE / "relics/catalog.json").read_text(encoding="utf-8"))["entries"]
-        if len(rows) != 297 or len({r["id"] for r in rows}) != 297:
-            raise ValueError("source relic denominator must remain 297")
-        declared = {r["id"] for r in rows if r["definition"] is not None}
+        source = load_sources()["relics"]["entries"]
+        declared = {r["id"] for r in rows}
+        applicable = {r["id"] for r in source if "exclusion" not in r}
+        if not declared <= applicable or len(declared) != len(rows):
+            raise ValueError("runtime relic definitions differ from applicable source identities")
         witnesses = {r["id"]: r["passed_scenarios"] for r in report.get("content", [])}
         if len(witnesses) != len(report.get("content", [])) or declared != set(witnesses):
             raise ValueError("declared DSL definitions and actually checked content differ")
         passed = set(report.get("scenarios", []))
         if not passed or any(not cases or not set(cases) <= passed for cases in witnesses.values()):
             raise ValueError("missing passed behavior scenario evidence")
-        pending = sum(r["definition"] is None and not r["eligibility"].startswith("excluded-") for r in rows)
+        pending = len(applicable - declared)
         print(f"DSL relic coverage: {len(declared)} behavior-checked; source=297; unimplemented={pending}; independent_verified=false")
         if args.require_complete and pending:
             raise ValueError("full relic gate remains unmet")

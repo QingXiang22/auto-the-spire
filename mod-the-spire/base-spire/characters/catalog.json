@@ -1,87 +1,10 @@
 {
-  "format": "engine-dsl/source-catalog@1",
+  "format": "engine-dsl/content-catalog@1",
   "kind": "character",
-  "source_baseline": "local-sts2-source-2026-10-18",
   "entries": [
     {
-      "id": "base-spire:defect",
-      "name": "Defect",
-      "source_path": "sts2/src/Core/Models/Characters/Defect.cs",
-      "source_sha256": "87edb000e91914650b0fcd6c198537138c3c517c7a4495e1d3341091bdb67038",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
-    },
-    {
-      "id": "base-spire:deprecated-character",
-      "name": "DeprecatedCharacter",
-      "source_path": "sts2/src/Core/Models/Characters/DeprecatedCharacter.cs",
-      "source_sha256": "da130931cdd5bd6d7ed353d09adc5da4ed22a19daf5f0f8239599202a042efb4",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
-    },
-    {
-      "id": "base-spire:deprived",
-      "name": "Deprived",
-      "source_path": "sts2/src/Core/Models/Characters/Deprived.cs",
-      "source_sha256": "adf77fc944f0302681e7cd3994fa54d8b0902b651086466c72a50eca9daf0d9b",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
-    },
-    {
       "id": "base-spire:ironclad",
-      "name": "Ironclad",
-      "source_path": "sts2/src/Core/Models/Characters/Ironclad.cs",
-      "source_sha256": "d38ef18057517516e7d7e133d8d3b660001c995af763b444894e06263ecb454e",
-      "pools": [],
-      "eligibility": "singleplayer-supported",
-      "evidence": "Source starting resources and ordered deck; development initialization and victory-heal checks; no independent parity",
       "definition": "characters/ironclad.spire"
-    },
-    {
-      "id": "base-spire:necrobinder",
-      "name": "Necrobinder",
-      "source_path": "sts2/src/Core/Models/Characters/Necrobinder.cs",
-      "source_sha256": "241198cef7c0d26bf71207d2d4bb708a8990ef2ca4a377cac7e295ba7317505d",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
-    },
-    {
-      "id": "base-spire:random-character",
-      "name": "RandomCharacter",
-      "source_path": "sts2/src/Core/Models/Characters/RandomCharacter.cs",
-      "source_sha256": "4883d5b6a2add092f8b31ee244b162571f56570c3dd02f477615e469e03ca0f5",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
-    },
-    {
-      "id": "base-spire:regent",
-      "name": "Regent",
-      "source_path": "sts2/src/Core/Models/Characters/Regent.cs",
-      "source_sha256": "6258f48dcba70c553e6f9a33aec09d147a9f0812344ae9b034a7205c7fadb8cd",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
-    },
-    {
-      "id": "base-spire:silent",
-      "name": "Silent",
-      "source_path": "sts2/src/Core/Models/Characters/Silent.cs",
-      "source_sha256": "516526729dffeed2ac4344e0c8b9e94ac6f8bfbe3354a7d9215fe96d7d3e5adb",
-      "pools": [],
-      "eligibility": "unreviewed",
-      "evidence": "",
-      "definition": null
     }
   ]
 }

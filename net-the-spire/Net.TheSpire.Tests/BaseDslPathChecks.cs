@@ -101,6 +101,22 @@ internal static class BaseDslPathChecks
         Check.True(describe.Ok, "describe succeeds");
         var catalog = host.Dispatch(Request("db-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
         Check.True(catalog.Ok, "catalog succeeds");
+        var published = PublicCatalogDto.FromWire(catalog.Result!, NetProtocol.V02);
+        using var metadata = System.Text.Json.JsonDocument.Parse(File.ReadAllText(
+            Path.Combine(Path.GetDirectoryName(Manifest)!, "public/metadata.json")));
+        var expectedContent = metadata.RootElement.GetProperty("content").EnumerateObject()
+            .SelectMany(kind => kind.Value.GetProperty("content_ids").EnumerateArray()
+                .Select(id => (Id: id.GetString()!, Kind: "net:kind:" + kind.Name)))
+            .ToArray();
+        Check.Sequence(expectedContent.Select(row => row.Id).Distinct().Order(StringComparer.Ordinal),
+            published.Declarations.ContentTypes.Select(row => row.Id).Order(StringComparer.Ordinal),
+            "public catalog retains all declared content IDs");
+        foreach (var row in published.Declarations.ContentTypes)
+            Check.Sequence(expectedContent.Where(expected => expected.Id == row.Id).Select(expected => expected.Kind).Order(StringComparer.Ordinal),
+                row.KindIds.Order(StringComparer.Ordinal), "content kind membership comes from public policy");
+        var catalogJson = WireCanonical.Text(catalog.Result!);
+        foreach (var privateKey in new[] { "source_path", "source_sha256", "source_baseline", "eligibility", "evidence", "definition" })
+            Check.False(catalogJson.Contains("\"" + privateKey + "\"", StringComparison.Ordinal), "source and implementation fields stay outside public catalog");
         var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
         var started = host.Dispatch(Request("db-start", Operation.Start, ("expected_identity", identity),
             ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str("BASE-DSL-PUBLIC-00"))));
