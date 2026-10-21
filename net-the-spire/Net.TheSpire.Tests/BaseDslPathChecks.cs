@@ -21,6 +21,8 @@ internal static class BaseDslPathChecks
         yield return ("CP08 real stdio card play spends energy and damages the target", () => StdioTrajectory("card"));
         yield return ("CP18 real stdio Iron Wave gains block and then damages the target", () => StdioTrajectory("ironwave"));
         yield return ("CP25 real stdio exhaust skill publishes its block and leaves no card in the discard pile", () => StdioTrajectory("exhaust"));
+        yield return ("RL ToughBandages real stdio active discard gains block and turn-end flush stays silent", () => StdioTrajectory("tough-bandages"));
+
         yield return ("RL CharonsAshes real stdio exhaust reaction damages the public target", () => StdioTrajectory("charons-ashes"));
         yield return ("RL CharonsAshes real stdio exhaustion settles block and card movement before victory", () => StdioTrajectory("charons-ashes-kill"));
         yield return ("CP34 real stdio Bash publishes its damage and the vulnerable stacks it applies", () => StdioTrajectory("bash"));
@@ -359,6 +361,17 @@ internal static class BaseDslPathChecks
                     ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
                     ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
                     ("PlayCardFromHand", "30", true, "1", "1", true, "")],
+                "tough-bandages" => [
+                    ("ToughBandages.Obtain", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
+                    ("Strike.AddToHand", "0", true, "3", "1", true, ""),
+                    ("Defend.AddToHand", "0", true, "3", "1", true, ""),
+                    ("DiscardHand", "6", true, "3", "1", true, ""),
+                    ("Strike.AddToHand", "6", true, "3", "1", true, ""),
+                    ("EndDevelopmentTurn", "6", true, "3", "1", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, "")],
+
                 "charons-ashes" => [
                     ("AddDevelopmentTarget", "0", false, "0", "0", false, "40"),
                     ("CharonsAshes.Obtain", "0", false, "0", "0", false, "40"),

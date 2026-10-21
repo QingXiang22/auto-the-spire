@@ -237,6 +237,10 @@
     {
       "id": "base-spire:charons-ashes",
       "definition": "relics/shared/charons-ashes.spire"
+    },
+    {
+      "id": "base-spire:tough-bandages",
+      "definition": "relics/shared/tough-bandages.spire"
     }
   ]
 }

@@ -15,6 +15,8 @@ internal static partial class PackageChecks
             count++; Console.WriteLine($"ok   {name} ({timer.Elapsed.TotalSeconds:F3}s)");
         }
         RunRelicContentChecks(package, Check);
+        RunToughBandagesChecks(package, Check);
+
         RunCharonsAshesChecks(package, Check);
         RunCombatTurnChecks(package, Check);
         RunRelicModifierChecks(package, Check);
