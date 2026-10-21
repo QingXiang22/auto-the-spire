@@ -76,6 +76,14 @@ PaperPhrog由原VulnerablePower查询攻击者持有遗物后，将目标易伤�
 
 判别包含三件实际获得及数值、Cannon未升级／非Strike／多段与重复／自动、两个倍率的有无状态／错误侧／其他敌人、Cruelty叠加与最终取整、实例失效／持有者隔离、重复pure查询和Thrash预览消费者。公开stdio从真实获得、升级牌／施加状态到伤害与敌方阶段，不注入结果。正常来源、独立原版双侧及正常Run仍未验证；Akabeko、PenNib和MysticLighter需要各自完整机制，不归本开发场景。
 
+## 耗尽群体伤害（RELIC-G06）
+
+CharonsAshes 在本持有者的卡牌移入 ExhaustPile 并发布 CardExhausted 后，对当前可命中的敌人造成 3 点无加成伤害。CardExhaustDamageRelic 按 Holder、DefinitionId 和 IsMelted 筛选实际持有实例，按库存顺序响应；移除、熔化或其他持有者的实例不参与，同定义有效实例分别响应。普通弃牌／离场不触发；每次嵌套耗尽有独立事件，子调用完成后再继续父事件。开发获得按本持有者去重。
+
+共享 pure EnemyIsHittable 先排除 Hp<=0，再以 true 为初值征询 ShouldAllowHittingEnemy(value: Bool,target: Ref(Enemy))，对应源 Creature.IsHittable 的存活与 ShouldAllowHitting 查询。当前消费者为 DamageAllEnemiesFromPlayer；其他攻击、目标选择和胜利条件仍沿各自现有资格，不据此宣称所有战斗资格已恢复。没有可命中敌人时耗尽正常完成，不消费随机。
+
+群伤复用无加成伤害批次：先对全部目标提交格挡／生命，再通知伤害、死亡与余效；不受力量／易伤影响，也不继承正在结算的牌或攻击归属。出牌耗尽在已有 PlayDepth 边界内完成全部监听后才判胜，不能因首个目标死亡而漏掉后续目标或监听。判别须覆盖不可命中／死亡目标、不同持有者、失效实例、嵌套与多实例、整批提交后的通知、末杀余效，以及公开 Host 的耗尽末杀与牌区结果。正常来源、正常 Run 和独立原版双侧仍分别验证。
+
 ## 判别与边界
 
 逐件真实获得／触发的数值执行结果；拾取通过直接ObtainRelic也执行一次；非首次／非法重复／去除后的负例；同定义不同实例／不同持有者隔离；每3次／第10次触发、单回合6次、跨回合重置与跨战保留差别；自动与重复计数、多段只计1；最后击杀后收尾、StoneCalendar群体击杀不提前漏敌人；Bag与Innate／NoDraw／满手，Puzzle在首次伤害后立即抽牌且无递归重触发；RegalPillow封顶与失效。公开真实stdio验证拾取、计数、Strike伤害和跨回合能量消费者，覆盖验收条件要求所有新增definition有实际场景。

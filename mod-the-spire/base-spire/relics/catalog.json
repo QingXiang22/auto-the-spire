@@ -233,6 +233,10 @@
     {
       "id": "base-spire:whetstone",
       "definition": "relics/shared/whetstone.spire"
+    },
+    {
+      "id": "base-spire:charons-ashes",
+      "definition": "relics/shared/charons-ashes.spire"
     }
   ]
 }
