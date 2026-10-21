@@ -57,11 +57,13 @@ internal static partial class PackageChecks
         check("IC roster: 87 source rows, 85 singleplayer implementations and complete generation pool", () =>
         {
             using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "cards/catalog.json")));
-            var source = catalog.RootElement.GetProperty("entries").EnumerateArray().Where(r => r.GetProperty("pools").EnumerateArray().Any(p => p.GetString() == "IroncladCardPool")).ToArray();
+            var source = SourceCatalog.Entries("cards").Where(r => r.GetProperty("pools").EnumerateArray().Any(p => p.GetString() == "IroncladCardPool")).ToArray();
             Equal(87, source.Length, "frozen source pool denominator");
             var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).ToArray();
             Equal(85, expected.Length, "independent singleplayer roster");
-            True(source.Where(r => r.GetProperty("definition").ValueKind == JsonValueKind.String).Select(r => r.GetProperty("id").GetString()).Order().SequenceEqual(expected.Order()), "every applicable card has a definition, both MP exclusions retained");
+            var defined = catalog.RootElement.GetProperty("entries").EnumerateArray().Select(r => r.GetProperty("id").GetString()).ToHashSet();
+            True(source.Where(r => !r.TryGetProperty("exclusion", out _)).Select(r => r.GetProperty("id").GetString()).Order().SequenceEqual(expected.Order()), "both source MP exclusions retained");
+            True(expected.All(defined.Contains), "every applicable card has a loaded definition");
             var s = Start(package);
             var ids = Members(s, "CardLibrary").Where(b => s.State.GetField(b, s.RuleSet.TypeByQualifiedId("base-spire:CardBlueprint").FieldIndex("InIroncladPool")).AsBool()).Select(b => s.State.GetField(b, s.RuleSet.TypeByQualifiedId("base-spire:CardBlueprint").FieldIndex("DefinitionId")).AsString()).ToArray();
             True(ids.SequenceEqual(expected), "generation source candidates retain the entire source pool order");

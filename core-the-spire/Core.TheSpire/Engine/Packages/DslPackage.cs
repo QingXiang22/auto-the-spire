@@ -115,41 +115,22 @@ public sealed class DslPackage
     {
         using var document = Read(path);
         var catalog = document.RootElement;
-        if (Text(catalog, "format") == "engine-dsl/source-data@1")
-        {
-            Keys(catalog, "format", "kind", "source_path", "source_sha256", "data");
-            Text(catalog, "kind"); Text(catalog, "source_path");
-            var sourceHash = Text(catalog, "source_sha256");
-            if (sourceHash.Length != 64 || sourceHash.Any(c => !char.IsAsciiHexDigit(c))
-                || catalog.GetProperty("data").ValueKind is not (JsonValueKind.Object or JsonValueKind.Array))
-                throw new FormatException("Invalid static source snapshot.");
-            return;
-        }
-        Keys(catalog, "format", "kind", "source_baseline", "entries");
-        if (Text(catalog, "format") != "engine-dsl/source-catalog@1") throw new FormatException("Unsupported source catalog.");
-        Text(catalog, "kind"); Text(catalog, "source_baseline");
+        Keys(catalog, "format", "kind", "entries");
+        if (Text(catalog, "format") != "engine-dsl/content-catalog@1") throw new FormatException("Unsupported content catalog.");
+        Text(catalog, "kind");
+        if (catalog.GetProperty("entries").ValueKind != JsonValueKind.Array) throw new FormatException("Catalog entries must be an array.");
         var ids = new HashSet<string>(StringComparer.Ordinal);
         foreach (var row in catalog.GetProperty("entries").EnumerateArray())
         {
-            Keys(row, "id", "name", "source_path", "source_sha256", "pools", "eligibility", "evidence", "definition", "members");
+            Keys(row, "id", "definition");
             if (!ids.Add(Text(row, "id"))) throw new FormatException($"Duplicate catalog ID in {path}.");
-            Text(row, "name"); Text(row, "source_path"); Text(row, "eligibility");
-            var hash = Text(row, "source_sha256");
-            if (hash.Length != 64 || hash.Any(c => !char.IsAsciiHexDigit(c))) throw new FormatException("Source hash must be SHA256.");
-            Strings(row.GetProperty("pools"));
-            if (row.GetProperty("evidence").ValueKind != JsonValueKind.String) throw new FormatException("Evidence must be a static string.");
-            if (row.TryGetProperty("members", out var members)) Strings(members, false);
-            var definition = row.GetProperty("definition");
-            if (definition.ValueKind != JsonValueKind.Null)
-            {
-                if (definition.ValueKind != JsonValueKind.String) throw new FormatException("A migrated definition must reference a loaded DSL file.");
-                var contentPath = Resolve(definition.GetString()!);
-                if (!referenced.Contains(contentPath)) throw new FormatException("A migrated definition must reference a loaded DSL file.");
-                var content = EngineDslParser.Parse(File.ReadAllText(contentPath), contentPath);
-                if (!content.Members.OfType<DslDeclarationNode>().Any()
-                    || content.Members.Any(member => member is not DslPropertyNode { Name: "dsl_version" } and not DslDeclarationNode))
-                    throw new FormatException($"{contentPath}: catalog definitions require a DSL content module; package properties belong in the entry file.");
-            }
+            var contentPath = Resolve(Text(row, "definition"));
+            if (Path.GetExtension(contentPath) != ".spire" || !referenced.Contains(contentPath))
+                throw new FormatException("A content definition must reference a loaded DSL file.");
+            var content = EngineDslParser.Parse(File.ReadAllText(contentPath), contentPath);
+            if (!content.Members.OfType<DslDeclarationNode>().Any()
+                || content.Members.Any(member => member is not DslPropertyNode { Name: "dsl_version" } and not DslDeclarationNode))
+                throw new FormatException($"{contentPath}: catalog definitions require a DSL content module; package properties belong in the entry file.");
         }
     }
 

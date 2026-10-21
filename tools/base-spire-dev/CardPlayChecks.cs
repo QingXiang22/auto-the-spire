@@ -72,7 +72,7 @@ internal static partial class PackageChecks
         Case("CP05: the card catalog keeps its source denominator and only the migrated definitions", () =>
         {
             using var rows = System.Text.Json.JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "cards/catalog.json")));
-            var cards = rows.RootElement.GetProperty("entries"); Equal(578, cards.GetArrayLength(), "independent frozen card source denominator");
+            var cards = rows.RootElement.GetProperty("entries"); Equal(578, SourceCatalog.Entries("cards").Length, "independent frozen card source denominator");
             var migrated = cards.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == System.Text.Json.JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
             var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).Concat(["base-spire:giant-rock", "base-spire:shockwave", "base-spire:slimed"]).Order(StringComparer.Ordinal);

@@ -30,6 +30,8 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 
 它校验当前包摘要、578 项全卡来源、固定版本的铁甲战士卡池及源 SHA、普通／升级元数据对应的行为报告和全部已声明卡牌执行结果；不将局部 Ironclad 检查解释为全卡或原版独立比较通过。固定来源元数据来自主源快照，CI 不需要本地 `sts2/`。
 
+完整来源固定数据位于[包外工具 fixture](../base-spire-dev/fixtures/source-catalogs.json)，共10个领域1516项，保留来源路径、原始字节SHA256、池及成员顺序和源排除依据。base工具嵌入该文件，Python覆盖检查与定位助手读取同一份已纳管数据；生产目录只登记已加载定义。来源条目总数和实际执行结果分别校验，干净检出无需本地原版源码或历史报告。
+
 ## 原完整差异测试与覆盖缺口
 
 ```powershell

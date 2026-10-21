@@ -24,31 +24,25 @@
 | default_scope | 必须包含在 supported_scopes 中 |
 | supported_scopes | 非空标识字符串列表，不能重复 |
 | unsupported_scopes | scope 到非空原因的对象，不能与支持列表重叠 |
-| catalogs | 静态源目录／数据快照 `.json` 的相对路径列表 |
+| catalogs | 已加载内容目录 `.json` 的相对路径列表 |
 | random_profile | `engine-default` 或 `vanilla-uniform@1`；后者选 xoshiro256**／SplitMix64 与 double 截断有界映射，游戏流种子由 DSL 明确设置；其他值未支持 |
 
 包只允许 `.spire` 与 `.json`。所有 JSON 必须由 manifest 角色声明，所有 DSL 必须被入口引用；未知字段、重复 JSON 键、路径逃逸和链接均拒绝。任何层级出现 effects、conditions、hooks、script、code、body、dsl 字段均作为执行型 JSON 拒绝。
 
 包摘要是按规范相对路径排序的全部包文件文本 SHA256：每项为相对路径、换行、文件文本，项间换行；路径分隔符为 `/`，文本 CRLF 规范为 LF。摘要包含静态元数据而不包含每局 seed。规则标识另由 Engine 计算，不与包摘要混用。
 
-## 静态源目录
+## 已加载内容目录
 
-`engine-dsl/source-catalog@1` 只允许 `format`、`kind`、`source_baseline`、`entries`。每行字段为：
+`engine-dsl/content-catalog@1` 只允许 `format`、`kind`、`entries`；kind 为非空内容类别。entries 是数组，每行只允许下列字段：
 
 | 字段 | 含义 |
 | --- | --- |
-| id、name | 源标识与名称；同目录 id 唯一 |
-| source_path、source_sha256 | 源文件定位与 64 位十六进制 SHA256 |
-| pools | 不重复的池标识字符串列表 |
-| eligibility、evidence | 静态资格说明与依据，不能作为运行条件 |
-| definition | `null` 表示未迁移；非空时必须指向实际加载的 DSL 内容文件 |
-| members | 可选的有序池成员字符串列表，允许原始重复成员 |
+| id | 非空内容标识；同目录 id 唯一 |
+| definition | 非空相对路径，必须指向实际加载的 `.spire` 内容模块；不允许 null 或未引用文件 |
 
-从Core.TheSpire 0.6.1起，非空 definition 指向至少含一个声明的完整 DSL 内容模块，可定义实体、过程、订阅、模板和动作；以模板作用域隔离内部名称。模块顶层属性只允许dsl_version；start、imports、includes、version等包属性仍属于入口／索引。简单use文件继续兼容。显式引用、根路径限制、静态JSON、未引用文件和重复符号检查保持。`use` 的参数形状、字面量、范围和未知参数由现有 Engine 模板绑定器检查，无第二种执行语义。
+definition 指向至少含一个声明的完整 DSL 内容模块，可定义实体、过程、订阅、模板和动作；以模板作用域隔离内部名称。模块顶层属性只允许dsl_version；start、imports、includes、version等包属性仍属于入口／索引。简单use文件同样有效。显式引用、根路径限制、静态JSON、未引用文件和重复符号检查保持。`use` 的参数形状、字面量、范围和未知参数由现有 Engine 模板绑定器检查，无第二种执行语义。
 
-## 静态数据快照
-
-`engine-dsl/source-data@1` 只允许 `format`、`kind`、`source_path`、`source_sha256`、`data`。前三个标识字段为非空字符串，hash 为 64 位十六进制，data 为静态对象或数组。加载器不解释其中的玩法；它保存原遭遇和幕池等数据，不能用来注册效果。
+目录只描述当前包的有效定义，不存储来源范围、迁移状态或验证结论。完整来源与哈希保存在包外工具固定数据；来源改动不参与生产包摘要。旧 source-catalog／source-data 格式明确拒绝；调用方应迁移到当前格式，不使用兼容入口。公开协议 catalog 的 schema 和 ID 仍由 transport 维护。
 
 ## 加载结果与失败
 
