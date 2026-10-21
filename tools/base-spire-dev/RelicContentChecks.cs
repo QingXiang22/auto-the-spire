@@ -16,6 +16,8 @@ internal static partial class PackageChecks
         }
         RunRelicContentChecks(package, Check);
         RunToughBandagesChecks(package, Check);
+
+        RunCharonsAshesChecks(package, Check);
         RunCombatTurnChecks(package, Check);
         RunRelicModifierChecks(package, Check);
         RunAttackModifierRelicChecks(package, Check);

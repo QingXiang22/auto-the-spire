@@ -111,7 +111,7 @@ internal static partial class PackageChecks
         {
             Throws<NotSupportedException>(() => DslPackage.Load(manifest, "base-spire-singleplayer-dev-map-v1"));
             using var rows = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "relics/catalog.json")));
-            var relics = rows.RootElement.GetProperty("entries"); Equal(297, relics.GetArrayLength(), "independent frozen source denominator");
+            var relics = rows.RootElement.GetProperty("entries"); Equal(297, SourceCatalog.Entries("relics").Length, "independent frozen source denominator");
             var migrated = relics.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
             True(migrated.Any(), "migrated definitions exist; actual witnesses are checked after execution");
@@ -131,6 +131,8 @@ internal static partial class PackageChecks
         Merge(RunCombatTurnChecks(package, Case), witnesses);
         Merge(RunDamageChecks(package, Case), witnesses);
         Merge(RunToughBandagesChecks(package, Case), witnesses);
+
+        Merge(RunCharonsAshesChecks(package, Case), witnesses);
         var cards = RunCardPlayChecks(package, Case);
         Merge(RunPowerChecks(package, Case), cards);
         Merge(RunCardBatchChecks(package, Case), cards);

@@ -1,7 +1,7 @@
 {
   "format": "engine-dsl/package@1",
   "id": "base-spire",
-  "version": "0.7.0-dsl.44",
+  "version": "0.7.0-dsl.47",
   "language": "core/0.3",
   "entry": "base.spire",
   "public_metadata": "public/metadata.json",
@@ -24,12 +24,7 @@
     "enemies/catalog.json",
     "events/catalog.json",
     "characters/catalog.json",
-    "encounters/catalog.json",
-    "run/catalog.json",
-    "shared/source-pools.json",
-    "encounters/source.json",
-    "run/act-pools.json",
-    "run/act-plan.json"
+    "encounters/catalog.json"
   ],
   "random_profile": "vanilla-uniform@1"
 }

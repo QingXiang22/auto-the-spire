@@ -8,7 +8,7 @@
 
 | 需求 | 主流程 | 监听者 | 实际消费者 |
 | --- | --- | --- | --- |
-| 洗牌后得格挡、出牌后推进计数、受损后抽牌 | 在准确阶段emit事件，然后等待监听完成再继续 | 调用完整资源操作或更新本实例状态，可以产生副作用 | TheAbacus、Shuriken、CentennialPuzzle |
+| 洗牌后得格挡、出牌后推进计数、受损后抽牌、卡牌耗尽后伤害 | 在准确阶段emit事件，然后等待监听完成再继续 | 调用完整资源操作或更新本实例状态，可以产生副作用 | TheAbacus、Shuriken、CentennialPuzzle、CharonsAshes |
 | 修改伤害、费用、抽牌数或能量策略 | 在计算阶段调用foldEvent，传初值与显式上下文 | pure过程返回当前修正值，不改游戏状态 | Strength、StrikeDummy、Corruption、IceCream |
 
 例如AfterEnergyReset通知只能处理重置之后的效果；决定是否重置应监听ShouldResetEnergy。不要先让主流程完成错误操作，再用事后通知补偿。缺少时机时先按[机制迁移](migrate-mechanism.md)约定输入、顺序、失败与验收，再在拥有该流程的领域发布入口；主流程不判断具体遗物ID，也不读取遗物专属配置字段。
@@ -40,6 +40,8 @@ instances只能读取事件载荷和查询自身的绑定，不能用尚未绑�
 完整的复制、登记、获得与公开运行步骤沿[共享触发教程](../tutorials/shared-rule.md)操作。拾取事件已经携带本次relic，直接过滤该载荷即可；移除事件在出库存后发出，清理订阅不能要求它仍在Relics中。
 
 主动弃牌使用 `CardDiscarded`：`DiscardCombatCard` 先移动牌、完成 `CardMoved`，再发布弃牌通知。ToughBandages 按有效持有实例响应，并复核 CombatActive／EnemyPhase；普通移牌和回合末清手只移动牌，不触发该遗物。
+
+`CardExhausted` 在 `ExhaustCombatCard` 把卡牌放入 `ExhaustPile` 后发布。CharonsAshes 订阅时过滤 `Relic.Holder == owner`、未熔化和定义 ID，反应中调用 `DamageAllEnemiesFromPlayer`；因此嵌套耗尽会逐事件结算，且每个有效遗物实例只响应自己的持有者。
 
 ## 3. 用pure监听返回修正值
 

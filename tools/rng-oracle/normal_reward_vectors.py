@@ -25,7 +25,7 @@ def generate():
                  'Odds/PotionRewardOdds.cs', 'Odds/CardRarityOdds.cs', 'Odds/PlayerOddsSet.cs',
                  'Runs/CardCreationOptions.cs', 'Commands/PotionCmd.cs', 'Random/Rng.cs', 'Random/MegaRandom.cs']:
         read(path)
-    catalog = json.loads((ROOT / 'mod-the-spire/base-spire/potions/catalog.json').read_text(encoding='utf-8-sig'))
+    catalog = json.loads((ROOT / 'tools/base-spire-dev/fixtures/source-catalogs.json').read_text(encoding='utf-8-sig'))['domains']['potions']
     ids = {row['name']: row['id'] for row in catalog['entries']}
     names = re.findall(r'ModelDb.Potion<(\w+)>\(\)', read('Timeline/Epochs/Ironclad4Epoch.cs'))
     names += re.findall(r'ModelDb.Potion<(\w+)>\(\)', read('Models/PotionPools/SharedPotionPool.cs'))

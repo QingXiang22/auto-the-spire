@@ -4,7 +4,7 @@
 
 ## 内容与源依据
 
-源为sts2的Models/Relics中相应类，原始SHA256与relics/catalog.json逐项核对。Pear最大生命+10、Mango+14；LeesWaffle最大生命+7后回满，FakeLeesWaffle治疗最大生命10%向下取整；OldCoin获得300金币。BlackBlood胜利治疗12；CaptainsWheel第三回合清格挡后得18无加成格挡。BagOfPreparation首回合基础手牌抽取+2，与Innate数量取max而非多发两次抽牌；RegalPillow营火基础治疗+15后封顶。
+源为sts2的Models/Relics中相应类，原始SHA256与tools/base-spire-dev/fixtures/source-catalogs.json的relics域逐项核对。Pear最大生命+10、Mango+14；LeesWaffle最大生命+7后回满，FakeLeesWaffle治疗最大生命10%向下取整；OldCoin获得300金币。BlackBlood胜利治疗12；CaptainsWheel第三回合清格挡后得18无加成格挡。BagOfPreparation首回合基础手牌抽取+2，与Innate数量取max而非多发两次抽牌；RegalPillow营火基础治疗+15后封顶。
 
 Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Kunai／Shuriken每回合每3次攻击打完分别+1敏捷／力量；OrnamentalFan同样计数得4无加成格挡；LetterOpener每回合每3次技能打完对所有存活敌人造成5无加成伤害。重复／自动出牌各计实际次数，多段攻击只计一次，拥有者不同不串计数。每回合计数在开场及玩家回合开始的早期站点重置，不能在AfterPlayerTurnStart才重置而吞掉自动打出。StoneCalendar第7个玩家回合结束前对存活敌人造成52无加成伤害。CentennialPuzzle本场第一次正的未挡伤害后抽3，先标已用再抽，下一战恢复；零伤害／全挡不触发。
 
@@ -83,6 +83,14 @@ ToughBandages 在本持有者的卡牌主动弃置、且当前为己方行动阶
 DiscardCombatCard 先把本持有者手牌移入 DiscardPile，完成 CardMoved 通知，再发 CardDiscarded；多张主动弃牌逐张完成移动与监听，嵌套弃牌先完成子事件再继续父事件。普通出牌进入弃牌区、满手溢出及其他普通移动不发 CardDiscarded。源 CombatManager.FlushPlayerHand 直接批量移牌，因此回合末 FinishTurnHand 只发布清手移动通知，不触发 ToughBandages；不能把清手当作主动弃牌。
 
 判别需覆盖主动弃牌数值、非己方阶段、双向持有者隔离、失效与多实例、回合末清手和普通移动、逐张及嵌套通知顺序、无加成与上限，以及公开 Host 的获得→主动弃牌→格挡轨迹。当前开发 DiscardHand 可执行该消费者；其他角色卡牌、正常来源、正常 Run 和独立原版双侧另行验证。
+
+## 耗尽群体伤害（RELIC-G06）
+
+CharonsAshes 在本持有者的卡牌移入 ExhaustPile 并发布 CardExhausted 后，对当前可命中的敌人造成 3 点无加成伤害。CardExhaustDamageRelic 按 Holder、DefinitionId 和 IsMelted 筛选实际持有实例，按库存顺序响应；移除、熔化或其他持有者的实例不参与，同定义有效实例分别响应。普通弃牌／离场不触发；每次嵌套耗尽有独立事件，子调用完成后再继续父事件。开发获得按本持有者去重。
+
+共享 pure EnemyIsHittable 先排除 Hp<=0，再以 true 为初值征询 ShouldAllowHittingEnemy(value: Bool,target: Ref(Enemy))，对应源 Creature.IsHittable 的存活与 ShouldAllowHitting 查询。当前消费者为 DamageAllEnemiesFromPlayer；其他攻击、目标选择和胜利条件仍沿各自现有资格，不据此宣称所有战斗资格已恢复。没有可命中敌人时耗尽正常完成，不消费随机。
+
+群伤复用无加成伤害批次：先对全部目标提交格挡／生命，再通知伤害、死亡与余效；不受力量／易伤影响，也不继承正在结算的牌或攻击归属。出牌耗尽在已有 PlayDepth 边界内完成全部监听后才判胜，不能因首个目标死亡而漏掉后续目标或监听。判别须覆盖不可命中／死亡目标、不同持有者、失效实例、嵌套与多实例、整批提交后的通知、末杀余效，以及公开 Host 的耗尽末杀与牌区结果。正常来源、正常 Run 和独立原版双侧仍分别验证。
 
 ## 判别与边界
 

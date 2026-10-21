@@ -1,6 +1,6 @@
 # 开发 Power、遗物与药水
 
-文档类型：操作指南（How-to）。先从对应catalog查源标识，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
+文档类型：操作指南（How-to）。先用定位助手查源标识与实际定义，再选择[修改已有内容](edit-content.md)、[新增独有效果模块](add-content-module.md)或补共享生命周期。纯 DSL 已有遗物持有实例、拾取资源、战斗／回合触发、出牌计数、首次受损抽牌、首回合抽牌及营火治疗修正，也可复用已迁移的伤害、Power与药水操作。准确接口见[操作参考](../reference/operations.md)，实际内容与验证范围见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)；不能将源目录或旧C#覆盖数量视为当前DSL支持。
 
 ## 实现 Power 生命周期
 
@@ -11,7 +11,7 @@
 3. 用 combat 的统一修正阶段处理力量、敏捷、易伤等数值参与者，顺序和精度取自源约定；不要把 Power 数值缓存成另一个 C# 事实。
 4. 验证施加与初始持有差异、叠加／降层／到零、无限持续、两持有者隔离、移除后停止订阅，以及暂停续接不重复施加。
 
-需要源入口时按 `powers/catalog.json` 的 source_path 定位；旧源 `Powers` 目录仅辅助查迁移意图。不要将已记录的 260 个源标识当作 260 种已实现行为。
+需要源入口时用[定位助手](../../../../.agents/skills/base-spire-development/scripts/locate.py)查询 powers 域的 source_path；来源记录位于包外工具固定数据，旧源 `Powers` 目录仅辅助查迁移意图。不要将已记录的 260 个源标识当作 260 种已实现行为。
 
 ## 扩展遗物实例与触发
 
