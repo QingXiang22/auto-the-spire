@@ -2,11 +2,11 @@
 
 文档类型：操作指南（How-to）。适用于已有领域操作能够表达的新卡牌、遗物或Power。简单参数组合继续使用[已有模板配置](extend-content.md)；这里以已实现的SelfFormingClay和它的Power说明独有效果的组织方式，不能在同一包中重复注册这个示例。
 
-前置条件：熟悉core/0.3声明和实例订阅，先确认[当前包scope](../../../../mod-the-spire/base-spire/package.json)以及[操作参考](../reference/operations.md)覆盖所需语义。Core.TheSpire 0.6.1起，catalog definition可指向完整DSL内容模块。
+前置条件：熟悉core/0.3声明和实例订阅，先确认[当前包scope](../../../../mod-the-spire/base-spire/package.json)以及[操作参考](../reference/operations.md)覆盖所需语义。catalog definition指向已加载的完整DSL内容模块。
 
 ## 1. 确认来源和状态寿命
 
-按对应catalog查source_path、source_sha256、eligibility与definition。原版内容复用该行既有ID，不能因为文件名看起来应该带`-power`就另造标识。Relic和Power属于不同目录，SelfFormingClay在两者中的ID均为`base-spire:self-forming-clay`。
+用[定位助手](../../../../.agents/skills/base-spire-development/scripts/locate.py)查询工具固定数据中的source_path、source_sha256与exclusion，以及生产目录中的definition。原版内容复用既有来源ID，不能因为文件名看起来应该带`-power`就另造标识。Relic和Power属于不同目录，SelfFormingClay在两者中的ID均为`base-spire:self-forming-clay`。
 
 把需要的触发、目标、数值、状态和结束条件写清。SelfFormingClay的遗物负责正未阻挡伤害后施加3层Power；Power负责回合开始的AfterBlockCleared阶段获得无加成格挡并移除。该事件包括首回合和保留格挡时，不能用“实际Block变成0”代替发布条件。
 
@@ -50,12 +50,12 @@ Power在自己的模块内展开PowerDefinition，随后订阅所需通知或pur
 | --- | --- |
 | relics/shared/所属文件.spire；powers/shared/所属文件.spire | 各自承载定义与独有玩法 |
 | relics/index.spire；powers/index.spire | 各增加一次所属文件路径，不添加运行时目录扫描 |
-| relics/catalog.json；powers/catalog.json | 更新已有源行的definition及资格依据，保留来源hash和完整来源条目总数 |
+| relics/catalog.json；powers/catalog.json | 增加id与非空definition；来源hash、排除依据及完整来源条目保留在工具固定数据 |
 | public/metadata.json | 在对应实体类型的content_ids中登记ID；Relic与Power分别登记 |
 
 如果引入新集合，还需在公开元数据中明确其用途；隐藏定义集合PowerLibrary已有not_published登记。模板内部私有entity使用type查询时不需要额外集合。实体／字段／动作通过已有投影和Host派生，无需在net写逐内容效果分支。
 
-catalog定义文件不承担start、imports、includes、version等包属性；装配属于入口／索引。JSON只存静态来源与公开信息，不能写效果程序。
+catalog定义文件不承担start、imports、includes、version等包属性；装配属于入口／索引。生产JSON只存定义映射与必要公开信息，不能写效果程序。
 
 ## 5. 验证完整消费者
 

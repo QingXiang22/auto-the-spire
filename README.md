@@ -8,7 +8,7 @@ auto-the-spire 的目标是为 AI 提供可复现、可观察、可控且可扩�
 
 唯一包入口为 [package.json](mod-the-spire/base-spire/package.json) 和 [base.spire](mod-the-spire/base-spire/base.spire)。卡牌、Power、遗物分别放在 `cards/`、`powers/`、`relics/`；共享规则位于对应领域的 `rules/`，具体内容按来源组分文件。例如 [TheAbacus](mod-the-spire/base-spire/relics/shared/the-abacus.spire) 只配置模板与数值，共享重洗规则在 [draw.spire](mod-the-spire/base-spire/cards/rules/draw.spire)。完整目录约定见[迁移设计](docs/design/mod-the-spire/base-architecture.md)。
 
-各领域 `catalog.json` 保存源标识与尚未迁移的去向；`definition: null` 不表示可执行。旧 C# 和检查保留在[迁移对照](tools/base-migration-baseline/README.md)，不进入生产 solution，不提供运行回退。
+各领域 `catalog.json` 只登记已加载的 DSL 定义；完整来源、哈希和池成员保存在[工具固定数据](tools/base-spire-dev/fixtures/source-catalogs.json)，不进入生产包。旧 C# 和检查保留在[迁移对照](tools/base-migration-baseline/README.md)，不进入生产 solution，不提供运行回退。
 
 ## 构建与验证
 

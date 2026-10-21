@@ -26,8 +26,7 @@ internal static partial class PackageChecks
         {
             foreach (var domain in new[] { "enemies", "cards" })
             {
-                using var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, domain, "catalog.json")));
-                foreach (var row in catalog.RootElement.GetProperty("entries").EnumerateArray())
+                foreach (var row in SourceCatalog.Entries(domain))
                     if (vectors.RootElement.GetProperty("source_sha256").TryGetProperty(row.GetProperty("source_path").GetString()!, out var hash))
                         Equal(hash.GetString(), row.GetProperty("source_sha256").GetString(), "source SHA256 is not replaced to match production");
             }

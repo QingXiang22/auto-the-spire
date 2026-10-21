@@ -4,7 +4,7 @@
 
 ## 范围与来源
 
-以 `IroncladCardPool.GenerateAllCards()` 和 `cards/catalog.json` 的完整 87 项源标识为准，单人适用 85 项；DemonicShield／Tank 的源 MultiplayerOnly 保留，不计单人运行支持。原全卡目录 578 项、池成员和顺序不缩减。已有 29 张铁甲战士定义继续核对并复用，其余按依赖补齐。所需生成牌与 Power 也必须有真实行为；未支持的池成员明确失败，不能从生成池删掉它们。
+以 `IroncladCardPool.GenerateAllCards()` 和 `tools/base-spire-dev/fixtures/source-catalogs.json` 中 cards 域的完整 87 项铁甲战士源标识为准，单人适用 85 项；DemonicShield／Tank 的源 MultiplayerOnly 保留，不计单人运行支持。原全卡目录 578 项、池成员和顺序不缩减。已有 29 张铁甲战士定义继续核对并复用，其余按依赖补齐。所需生成牌与 Power 也必须有真实行为；未支持的池成员明确失败，不能从生成池删掉它们。
 
 玩法只在 `.spire`；具体内容文件仅用模板配置。共享过程按卡牌、战斗、能力归属，Host 不解释卡牌 ID／效果字符串。分别报告源 hash、实际定义、普通／升级行为、独立比较和公开可用的验证结果；只声明 Power 名称不算支持。
 
