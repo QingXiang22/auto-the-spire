@@ -11,7 +11,7 @@ procedure SapphireSeedVisit {
       if = { condition = not(isNone(card)) then = { call = { procedure = UpgradeCard args = { card = card } } } }
       call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "eat" } }
     } else = {
-      call = { procedure = SelectPermanentCard args = { owner = owner purpose = "enchant" enchantment = "base-spire:sown" cancelable = false } into = card }
+      let = { into = card value = first(where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, "enchant", "base-spire:sown"))) }
       if = { condition = not(isNone(card)) then = { call = { procedure = EnchantCard args = { owner = owner card = card definition = "base-spire:sown" amount = 1 } } } }
       call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "plant" } }
     } }

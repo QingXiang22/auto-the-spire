@@ -71,6 +71,10 @@ ChooseMapPoint先验证当前Run、节点所有权、未访问及真实后继，
 
 选择器不替代事件内容和访问生命周期。正常入口抽到Event后保存真实选择标识，未接入的事件效果仍明确失败，既有房型抽样及事件游标／历史变化保留。父子访问、事件费用／奖励、其他幕及完整Run分别验收。
 
+正常事件仅在选择到已审计效果后建立RunVisit，沿用稳定访问ID、原始MapType和实际event房型，公开关联同一EventVisit；EventVisit反向关联该访问。目标加入历史和累计楼层递增先于效果，选择资格仍使用进入前楼层。SapphireSeed使用同一暂停／永久牌操作：EAT先回复9再选择升级，PLANT按源自动附魔首张合资格永久牌，空域直接完成。未实现事件不创建空访问，不重新选择。
+
+完成效果将事件和访问标为finished，仍等待显式CloseNormalEvent；关闭只接受当前Run的已完成事件和匹配访问，提交一次并恢复真实未访问后继。未答决策、错误所有者／关联、重复关闭及开发关闭入口不能推进正常Run。开发访问沿原返回房间关闭。事件资源和永久牌直接使用当前实例，不复制状态、不重放治疗或附魔；本范围不包含父子战斗。
+
 ## 遗物实例与生命周期
 
 ENV-T09-PR02首批公共接口复用`RunRelics`，不声明全部遗物效果已实现。依据`RelicCmd.Obtain/Remove/Replace/Melt`、`Player.AddRelicInternal/RemoveRelicInternal/MeltRelicInternal`。定义与编译符号不可变，持有列表、Counter、IsWax与IsMelted均在Engine实例中。Counter是隐藏的首批单计数器接缝（0..999999），不代替原版DisplayAmount、未来多变量、StackCount、FloorAddedToDeck或完整历史。IsWax／IsMelted是公开实例事实；蜡质内容来源、完整状态显示和蜡质特殊效果尚未实现。

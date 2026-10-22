@@ -2,13 +2,15 @@
 
 规则目标为[锁定 sts2-sim](../../../../reference/README.md) 的原生顺序路径。随机派生、开局来源和首幕地图已迁移到该目标；以下入口描述当前 DSL 可执行行为，完整后续双侧比较仍未完成。
 
-首幕正常事件选择由 `PullNextNormalEvent` 使用完整31项源队列，资格读取当前资源、永久牌组与进入目标前的累计楼层。Neow进入推进同一游标一次；第一轮优先未访问且合资格的自然事件，耗尽后允许已访问或临时不合资格者，永久禁止自然出现项仍排除。选择不抽随机数，pure `ModifyNextNormalEvent` 修正后才记录最终标识。后幕及未审计profile明确失败；选择成功不表示事件效果已接入正常访问。当前正常Event在保存选择标识后具名报告未支持，不创建空访问。
+首幕正常事件选择由 `PullNextNormalEvent` 使用完整31项源队列，资格读取当前资源、永久牌组与进入目标前的累计楼层。Neow进入推进同一游标一次；第一轮优先未访问且合资格的自然事件，耗尽后允许已访问或临时不合资格者，永久禁止自然出现项仍排除。选择不抽随机数，pure `ModifyNextNormalEvent` 修正后才记录最终标识。后幕及未审计profile明确失败；当前仅SapphireSeed已接入正常事件效果，其余选中事件仍具名失败且不创建空访问。
 
 文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
 先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
 
-显式SapphireSeed／DoorsOfLightAndDark开发访问已使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。它们尚未接回正常地图／事件池和子战斗返回，不能据此开放正常Run scope。
+SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。SapphireSeed另可由正常事件池自然进入；DoorsOfLightAndDark、子战斗返回与完整正常Run仍未接通。
+
+正常seed `sapphire-normal-79` 选择BoomingConch，沿(0,1)首战自然胜利、跳过奖励后进入(0,2)问号，实际选择SapphireSeed。EAT回复9后选择升级一张永久牌，PLANT自动附魔首张合资格永久牌；空候选直接完成。效果完成后提交 `CloseNormalEvent(visit)`，同一RunVisit与EventVisit只关闭一次，返回真实后继(0,3)。公开的 `RunVisit.Event` 与 `EventVisit.RunVisit` 指向同一访问，不复制永久牌或重放效果。
 
 在同一公开 Host 的新会话中，可提交 `StartNormalRun` 运行全解锁、A0、单人 Ironclad 的正常开局首段：
 

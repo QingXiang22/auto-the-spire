@@ -1,7 +1,7 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# This is an explicit development visit, not the normal map/event-pool entry path.
+# Shared effect state; normal map visits retain their owning RunVisit.
 entity EventVisit { owner = Owner fields = {
   Owner = { type = Participant }
   DefinitionId = { type = String(length = 64) }
@@ -9,6 +9,7 @@ entity EventVisit { owner = Owner fields = {
   Status = { type = String(length = 16) default = "active" }
   Sequence = { type = Int default = 0 visibility = Hidden }
   ReturnRoom = { type = String(length = 16) default = "none" visibility = Hidden }
+  RunVisit = { type = Ref(RunVisit) optional = true }
 } }
 dispatch ExecuteEventVisit { parameters = { owner = Ref(Player) visit = Ref(EventVisit) } }
 event EventVisitEntered { payload = { owner = Ref(Player) visit = Ref(EventVisit) } }
@@ -42,13 +43,61 @@ procedure FinishEventVisit {
     if = { condition = not(and(equal(field(owner, Player.Owner), field(visit, EventVisit.Owner)), and(equal(field(visit, EventVisit.Status), "active"), equal(field(owner, Player.Room), "event")))) then = { fail = { message = "Only the active owned visit may finish" } } }
     set = { target = visit field = EventVisit.Page value = page }
     set = { target = visit field = EventVisit.Status value = "finished" }
+    if = { condition = not(isNone(field(visit, EventVisit.RunVisit))) then = {
+      set = { target = field(visit, EventVisit.RunVisit) field = RunVisit.Phase value = "finished" }
+    } }
     emit = { event = EventVisitFinished payload = { owner = owner visit = visit } }
+  }
+}
+procedure EnterNormalEvent {
+  parameters = { owner = Ref(Player) run = Ref(Run) visit = Ref(RunVisit) definition = String(length = 64) }
+  locals = { eventVisit = Binding }
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.CurrentVisit), visit), pureCall(ExecuteEventVisit.Contains, definition)))) then = { fail = { message = "Normal event requires an owned current visit and audited effect" } } }
+    if = { condition = not(and(equal(field(visit, RunVisit.Run), run), and(equal(field(run, Run.Phase), "map"), and(equal(field(visit, RunVisit.Phase), "entered"), and(isNone(field(visit, RunVisit.Event)), not(field(visit, RunVisit.Committed))))))) then = { fail = { message = "Normal event requires a fresh visit from the same Run" } } }
+    create = { type = EventVisit scope = entityScope(run) into = eventVisit fields = { Owner = field(owner, Player.Owner) DefinitionId = definition ReturnRoom = "map" Sequence = field(visit, RunVisit.StableId) RunVisit = visit } }
+    set = { target = visit field = RunVisit.Event value = eventVisit }
+    set = { target = visit field = RunVisit.RoomType value = "event" }
+    set = { target = visit field = RunVisit.Phase value = "event" }
+    set = { target = run field = Run.Phase value = "event" }
+    set = { target = owner field = Player.Room value = "event" }
+    emit = { event = EventVisitEntered payload = { owner = owner visit = eventVisit } }
+    call = { procedure = ExecuteEventVisit args = { key = definition owner = owner visit = eventVisit } }
+  }
+}
+procedure CanCloseNormalEvent {
+  pure = true parameters = { owner = Ref(Player) eventVisit = Ref(EventVisit) } result = Bool
+  locals = { run = Binding visit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = visit value = field(eventVisit, EventVisit.RunVisit) }
+    if = { condition = or(isNone(run), isNone(visit)) then = { return = { value = false } } }
+    return = { value = and(equal(field(owner, Player.Owner), field(eventVisit, EventVisit.Owner)), and(equal(field(owner, Player.Room), "event"), and(not(field(owner, Player.CombatActive)), and(equal(field(run, Run.Phase), "event"), and(equal(field(run, Run.CurrentVisit), visit), and(equal(field(visit, RunVisit.Run), run), and(equal(field(visit, RunVisit.Event), eventVisit), and(equal(field(eventVisit, EventVisit.Status), "finished"), and(equal(field(visit, RunVisit.Phase), "finished"), not(field(visit, RunVisit.Committed))))))))))) }
+  }
+}
+action CloseNormalEvent {
+  role = player parameters = { visit = Ref(EventVisit) }
+  candidates = { parameter = visit query = where(type(EventVisit), v, pureCall(CanCloseNormalEvent, first(type(Player)), v)) }
+  requires = pureCall(CanCloseNormalEvent, first(type(Player)), visit)
+  locals = { owner = Binding run = Binding normalVisit = Binding }
+  body = {
+    let = { into = owner value = first(type(Player)) }
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = normalVisit value = field(visit, EventVisit.RunVisit) }
+    set = { target = visit field = EventVisit.Status value = "closed" }
+    set = { target = normalVisit field = RunVisit.Committed value = true }
+    set = { target = normalVisit field = RunVisit.Phase value = "closed" }
+    set = { target = normalVisit field = RunVisit.Status value = "closed" }
+    forEach = { query = relation(MapChildren, field(run, Run.CurrentNode)) item = child body = { set = { target = child field = MapNode.Selectable value = not(field(child, MapNode.Visited)) } } }
+    set = { target = run field = Run.Phase value = "map" }
+    set = { target = owner field = Player.Room value = "map" }
+    emit = { event = EventVisitClosed payload = { owner = owner visit = visit } }
   }
 }
 action CloseDevelopmentEvent {
   role = player parameters = { visit = Ref(EventVisit) }
   candidates = { parameter = visit query = where(type(EventVisit), v, and(equal(field(v, EventVisit.Owner), field(first(type(Player)), Player.Owner)), equal(field(v, EventVisit.Status), "finished"))) }
-  requires = and(equal(field(first(type(Player)), Player.Room), "event"), not(field(first(type(Player)), Player.CombatActive)))
+  requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), and(equal(field(first(type(Player)), Player.Room), "event"), not(field(first(type(Player)), Player.CombatActive))))
   body = {
     set = { target = visit field = EventVisit.Status value = "closed" }
     set = { target = first(type(Player)) field = Player.Room value = field(visit, EventVisit.ReturnRoom) }

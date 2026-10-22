@@ -22,6 +22,8 @@ internal static class BaseDslPathChecks
             yield return ("ENV-T05 real stdio normal combat rewards and map return: " + path, () => StdioTrajectory("normal-" + path));
         yield return ("UNKNOWN real stdio normal victory, map return and actual Unknown→Monster", () => StdioTrajectory("normal-unknown"));
         yield return ("EVENT real stdio normal victory and source-selected unsupported Event failure", () => StdioTrajectory("normal-event"));
+        foreach (var branch in new[] { "eat", "plant" })
+            yield return ("EVENT real stdio normal SapphireSeed and map return: " + branch, () => StdioTrajectory("normal-sapphire-" + branch));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
         yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
@@ -193,11 +195,11 @@ internal static class BaseDslPathChecks
             Send(Request("pipe-describe", Operation.Describe));
             Send(Request("pipe-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
-            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode == "normal-event" ? "event-normal-11" : mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
+            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-sapphire-", StringComparison.Ordinal) ? "sapphire-normal-79" : mode == "normal-event" ? "event-normal-11" : mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -578,6 +580,7 @@ internal static class BaseDslPathChecks
             {
                 var unknown = mode == "normal-unknown";
                 var eventSelection = mode == "normal-event";
+                var sapphire = mode.StartsWith("normal-sapphire-", StringComparison.Ordinal);
                 var relic = unknown ? "base-spire:golden-pearl" : "base-spire:booming-conch";
                 var initialGold = unknown ? 249 : 99;
                 string EntityValue(EntityDto entity, string suffix) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + suffix, StringComparison.Ordinal)).Value!).Value;
@@ -608,12 +611,12 @@ internal static class BaseDslPathChecks
                 Check.Equal("map", Public(snapshot, "Player.Room"), "confirmed Neow returns to map");
                 using var mapVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/act-one-map-vectors.json")));
                 var sourceMap = mapVectors.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == "777");
-                if (!unknown && !eventSelection) Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
-                StepOpening(eventSelection ? MapAt("2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
+                if (!unknown && !eventSelection && !sapphire) Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
+                StepOpening(sapphire ? MapAt("0", "1") : eventSelection ? MapAt("2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
                 using var combatVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-combat-vectors.json")));
                 var sourceMonsters = combatVectors.RootElement.GetProperty("vectors")[0].GetProperty("monsters");
                 Check.Equal(sourceMonsters.GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy"), "complete actual SlimesWeak formation");
-                foreach (var expected in sourceMonsters.EnumerateArray().Where(_ => !unknown && !eventSelection))
+                foreach (var expected in sourceMonsters.EnumerateArray().Where(_ => !unknown && !eventSelection && !sapphire))
                 {
                     var monster = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Enemy" && e.ContentId == expected.GetProperty("id").GetString());
                     string EnemyValue(string field) => ((WireString)monster.Fields.Single(f => f.FieldId.EndsWith(":Enemy." + field, StringComparison.Ordinal)).Value!).Value;
@@ -672,6 +675,45 @@ internal static class BaseDslPathChecks
                     Check.True(offered.Skip(mode == "normal-claim" ? 1 : 0).All(id => !snapshot.Entities.Any(e => e.InstanceId == id)), "unselected actual instances are removed");
                     Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "legal source successors are published");
                     Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"), "the visit cannot close twice");
+                    if (sapphire)
+                    {
+                        var beforeHp = long.Parse(Public(snapshot, "Player.Hp"), System.Globalization.CultureInfo.InvariantCulture);
+                        StepOpening(MapAt("0", "2"));
+                        var visit = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:RunVisit" && EntityValue(e, "RunVisit.StableId") == "2");
+                        var eventVisit = snapshot.Entities.Single(e => e.ContentId == "base-spire:sapphire-seed");
+                        Check.Equal(eventVisit.InstanceId, EntityValue(visit, "RunVisit.Event"), "public normal visit points to actual event");
+                        Check.Equal(visit.InstanceId, EntityValue(eventVisit, "EventVisit.RunVisit"), "public event points to same normal visit");
+                        Check.Equal("net:cat:base-spire:MapPointType:Unknown", EntityValue(visit, "RunVisit.MapType"), "actual Event preserves Unknown map type");
+                        Check.Equal("event", EntityValue(visit, "RunVisit.RoomType"), "actual room is Event");
+                        var eat = mode.EndsWith("-eat", StringComparison.Ordinal);
+                        StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool value && value.Value == eat)));
+                        if (eat)
+                        {
+                            Check.Equal(10, snapshot.LegalActions.Count, "all source permanent cards are upgrade candidates");
+                            var selected = snapshot.LegalActions.Last();
+                            var selectedId = ((WireString)selected.Fields.Single().Value!).Value;
+                            StepOpening(selected);
+                            var card = snapshot.Entities.Single(e => e.InstanceId == selectedId);
+                            Check.True(((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.Upgraded", StringComparison.Ordinal)).Value!).Value, "chosen permanent instance actually upgrades");
+                        }
+                        else
+                        {
+                            Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:net.answer_decision"), "source PLANT has no extra card decision");
+                            Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:sown"), "one real Sown attachment");
+                        }
+                        Check.Equal((eat ? Math.Min(80, beforeHp + 9) : beforeHp).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Hp"), "real event heals once or preserves HP");
+                        Check.Equal("99", Public(snapshot, "Player.Gold"), "event does not invent gold rewards");
+                        Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:ChooseMapPoint" or "net:action:base-spire:CloseDevelopmentEvent"), "finished normal event waits for its own close");
+                        StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseNormalEvent"));
+                        Check.Equal("map", Public(snapshot, "Player.Room"), "normal event closes into map");
+                        Check.Equal(10, BaseDslPileChecks.Pile(snapshot, "RunDeck").TotalCount, "permanent deck retains all instances");
+                        Check.Equal("closed", EntityValue(snapshot.Entities.Single(e => e.InstanceId == visit.InstanceId), "RunVisit.Status"), "same visit closes once");
+                        Check.Equal(1, snapshot.LegalActions.Count(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "one real source successor");
+                        MapAt("0", "3");
+                        Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseNormalEvent"), "closed event cannot be closed again");
+                        var visible = WireCanonical.Text(snapshot.ToWire());
+                        Check.False(visible.Contains("NormalEventHistory", StringComparison.Ordinal) || visible.Contains("NormalEventIndex", StringComparison.Ordinal) || visible.Contains("UnknownRoomOdds", StringComparison.Ordinal), "hidden queues and odds remain private");
+                    }
                     if (eventSelection)
                     {
                         Check.True(long.Parse(Public(snapshot, "Player.Hp"), System.Globalization.CultureInfo.InvariantCulture) > 0, "real public candidate strategy survives the combat");
@@ -866,7 +908,7 @@ internal static class BaseDslPathChecks
                 void Named(string name) => StepVisit(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + name));
                 StepVisit(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool { Value: false })));
                 var permanent = snapshot.Entities.Single(e => e.ContentId == "base-spire:strike-ironclad").InstanceId;
-                StepVisit(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireString text && text.Value == permanent)));
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:net.answer_decision"), "source PLANT needs no extra card decision");
                 Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:sown"), "one real permanent attachment after choice");
                 Named("CloseDevelopmentEvent"); Named("AddDevelopmentTarget"); Named("BeginDevelopmentCombat");
                 Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:sown"), "hidden combat-copy attachment cannot reveal draw-pile identity");
