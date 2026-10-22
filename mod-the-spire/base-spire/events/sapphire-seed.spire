@@ -18,6 +18,6 @@ procedure SapphireSeedVisit {
   }
 }
 dispatchCase SapphireSeedVisit { dispatch = ExecuteEventVisit key = "base-spire:sapphire-seed" procedure = SapphireSeedVisit }
-action EnterDevelopmentSapphireSeed { role = player requires = pureCall(CanEnterDevelopmentEvent, first(type(Player))) body = {
+action EnterDevelopmentSapphireSeed { role = player requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), pureCall(CanEnterDevelopmentEvent, first(type(Player)))) body = {
   call = { procedure = EnterDevelopmentEvent args = { owner = first(type(Player)) definition = "base-spire:sapphire-seed" } }
 } }

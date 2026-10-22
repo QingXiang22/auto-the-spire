@@ -67,6 +67,11 @@ entity RunVisit {
 }
 collection RunVisits { element = RunVisit ordered = true }
 
+procedure CanUseDevelopmentActions {
+  pure = true parameters = { owner = Ref(Player) } result = Bool
+  body = { return = { value = isNone(field(owner, Player.CurrentRun)) } }
+}
+
 procedure CanStartNormalRun {
   pure = true parameters = { owner = Ref(Player) } result = Bool
   body = {

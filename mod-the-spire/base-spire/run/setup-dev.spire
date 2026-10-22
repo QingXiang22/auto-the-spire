@@ -28,5 +28,6 @@ procedure AddDevelopmentTarget {
 }
 action AddDevelopmentTarget {
   role = player
+  requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
   body = { call = { procedure = AddDevelopmentTarget args = { owner = first(type(Player)) } } }
 }

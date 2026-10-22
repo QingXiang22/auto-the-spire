@@ -27,7 +27,7 @@ template CardExhaustDamageRelic {
     }
     action Obtain {
       role = player
-      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition))))
       body = {
         call = {
           procedure = ObtainRelic args = {

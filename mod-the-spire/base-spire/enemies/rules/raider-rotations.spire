@@ -43,6 +43,7 @@ template AttackDefendRotationEnemy {
     subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
     action Spawn {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       locals = { target = Binding }
       body = {
         create = {
@@ -90,6 +91,7 @@ template BlockThenAttackEnemy {
     subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
     action Spawn {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       locals = { target = Binding }
       body = {
         create = {
@@ -139,6 +141,7 @@ template DebuffThenMultiAttackEnemy {
     subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
     action Spawn {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       locals = { target = Binding }
       body = {
         create = {

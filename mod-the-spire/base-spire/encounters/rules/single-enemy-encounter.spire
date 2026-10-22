@@ -35,6 +35,7 @@ template SingleEnemyEncounter {
   body = {
     action Spawn {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(enemyDefinition) hp = arg(hp) } } }
     }
   }

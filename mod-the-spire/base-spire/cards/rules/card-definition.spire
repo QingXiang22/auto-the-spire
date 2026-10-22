@@ -82,11 +82,12 @@ template CardDefinition {
     }
     action Obtain {
       role = player
-      requires = and(equal(field(first(type(Player)), Player.Room), "none"), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0)))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), and(equal(field(first(type(Player)), Player.Room), "none"), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0))))
       body = { call = { procedure = Obtain args = { owner = first(type(Player)) } } }
     }
     action AddToHand {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       locals = { card = Binding }
       body = {
         call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = arg(definition) } into = card }
