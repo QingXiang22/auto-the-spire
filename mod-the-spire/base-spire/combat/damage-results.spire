@@ -126,6 +126,7 @@ procedure PublishDamageDeath {
           set = { target = owner field = Player.EnemyDiedInCombat value = true }
         } }
         emit = { event = EnemyDied payload = { target = field(result, DamageResult.Enemy) } }
+        call = { procedure = RemoveEnemyPowersOnDeath args = { target = field(result, DamageResult.Enemy) } }
       } }
     } }
   }

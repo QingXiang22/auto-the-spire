@@ -49,7 +49,7 @@ internal static class NormalRunChecks
             using var reference = new NormalReferenceRun("777", diagnostics); reference.Start();
             var result = new List<string>(); Capture();
             foreach (var action in new[] { new NormalAction("neow", ["base-spire:booming-conch"]), new("leave-neow", []), new("map", ["0,1"]),
-                new("play", ["permanent:09:base-spire:bash", "first-legal-target"]), new("play", ["permanent:02:base-spire:strike-ironclad", "first-legal-target"]) })
+                new("play", ["permanent:09:base-spire:bash", "first-legal-target"]), new("play", ["permanent:02:base-spire:strike-ironclad", "first-legal-target"]), new("end-turn", []) })
             { reference.Apply(action); Capture(); }
             return result.ToArray();
             void Capture()

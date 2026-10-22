@@ -90,6 +90,7 @@ internal static partial class PackageChecks
         True(!Legal(defeat, "ChooseMapPoint"), "death opens no successors");
         Console.WriteLine("ok   ENV-T05 normal source enemy death path has no rewards or map return");
         RunNormalSettlementOrderChecks(package);
+        RunDeathPowerChecks(package);
         return 0;
     }
 

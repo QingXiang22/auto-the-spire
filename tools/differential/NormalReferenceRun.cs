@@ -34,6 +34,8 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly EventRoom opening;
     private readonly Dictionary<CardModel, string> permanent = [];
     private readonly Dictionary<CardModel, string> generated = [];
+    private readonly HashSet<int> generatedActions = [];
+    private int actionIndex = -1;
     private readonly List<object> events = [];
     private readonly NormalReferenceRandom random;
     private readonly bool diagnostics;
@@ -65,7 +67,11 @@ internal sealed class NormalReferenceRun : IDisposable
         var slot = permanent.GetValueOrDefault(source);
         if (slot is null)
         {
-            if (!generated.TryGetValue(card, out slot)) generated.Add(card, slot = "generated:" + generated.Count);
+            if (!generated.TryGetValue(card, out slot))
+            {
+                if (!generatedActions.Add(actionIndex)) throw new NotSupportedException("missing_dimension: multiple generated cards in one common action require native creation-origin observation.");
+                generated.Add(card, slot = "generated:action:" + actionIndex);
+            }
         }
         return slot + ":" + Id(card.Id) + (card.IsUpgraded ? "+" : "");
     }
@@ -83,6 +89,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private async Task ApplyAsync(NormalAction action)
     {
         if (!Actions().Any(a => a.Key == action.Key)) throw new InvalidOperationException("Reference rejects common action: " + action.Key);
+        actionIndex++;
         switch (action.Kind)
         {
             case "neow":
