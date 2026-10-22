@@ -350,7 +350,7 @@ var firstFault = session.Debug.FirstFault;
 
 `sampleFloat32` 在同一条 `RandomCallDetails.Float32` 中保存已求值的 `MinimumBits`、`MaximumBits` 和最终 `ResultBits`。三个字段均为 Int 承载的无符号 binary32 位型；原 `double` 操作、`[0,1)` 上下界、原始结果与游标仍保留。直接调用 `Random.DrawDouble` 和其他随机指令没有该附加数据。相等浮点边界仍消费一次，无效边界在取样前失败；附加数据不增加记录数量，容量耗尽时不回写旧记录或已拉取快照。比较 `sampleFloat32` 的实际参数和结果时，缺少该数据必须报告缺维度。
 
-需要在临时实体销毁后读取事件载荷或随机候选字段时，显式设置 `CaptureValues: true`。当前 Core.TheSpire 0.9.2 提供浮点附加诊断、该诊断选项及下列只读记录，执行语义标识保持 `engine/ir@0.9`；原调试调用默认不复制这些值。
+需要在临时实体销毁后读取事件载荷或随机候选字段时，显式设置 `CaptureValues: true`。当前 Core.TheSpire 0.9.3 提供浮点附加诊断、候选的一层引用复制、该诊断选项及下列只读记录，执行语义标识保持 `engine/ir@0.9`；原调试调用默认不复制这些值。
 
 ```csharp
 var options = new SessionDebugOptions(CaptureValues: true,
@@ -369,13 +369,17 @@ foreach (var record in session.Debug!.Capture())
 
 `Snapshot` 在事件发出、监听器开始前复制载荷及直接引用实体；随机候选在实际取样后、交换或后续规则修改前复制。字段包括内部字段，引用字段只复制编号，不递归遍历对象图。记录保存发生时的字段，之后的修改和销毁不影响它；记录不能用于恢复或回写游戏状态。
 
+候选通过字段引用另一个定义实体时，可同时设置 `CaptureCandidateReferences: true`。随机记录先按候选原顺序复制根实体，再复制这些根字段中的一层 `Ref` 或已复制 `RefList` 前缀所指向的实体。共享引用去重，循环不扩张，引用实体中的字段仍只保存编号，不再继续跟随。事件载荷的复制规则保持不变；`CaptureValues` 关闭时该选项不创建快照。
+
+`Snapshot.ReferenceDepth` 为 1 表示本条随机候选请求复制一层字段引用，0 表示仅复制原根实体。它说明所请求的边界；完整性仍须检查 `Complete`，不能据此宣称完整对象图。根与一层引用共用实体、值和文本预算，没有额外容量；缺实体或超限仍明确不完整。需要读取间接定义的消费者必须拒绝深度不足、定义副本缺失或不完整的记录，不能用后续边界上的定义值替代取样时的值。
+
 每条记录的实体数由 `MaxSnapshotEntities` 限制，默认 256。`MaxSnapshotValues` 默认 4096，是载荷值、实体字段值和列表元素共用的复制数量上限；每个标量、列表值及列表元素各占一个。字符串使用 `MaxTextLength` 上限。复制前检查剩余容量；记录容量耗尽后不再创建值快照。
 
 值记录保留 `ValueKind`；标量使用 invariant 文本，实体／参与者／作用域引用和枚举保存数值编号，列表通过只读 `Items` 保存整数或引用编号。`OriginalLength` 保留字符串或列表的原长度，`ValueCount` 和 `FieldCount` 保留原载荷值数和字段数；`Truncated` 明确指出文本、列表、字段、载荷或实体截断。记录的 `Subject`／`Detail` 截断另由 `TextTruncated` 标记。实际不存在的候选实体标记 `Missing`。`Complete` 仅表示本条直接复制完整，不代表递归引用、语义对应或玩法比较完成；缺 `Snapshot`、文本截断、缺实体或 `DroppedRecords > 0` 时，对应比较继续失败。
 
 加载文本包时使用 `package.CreateSession(seed, roles, gameSeed, debug: new SessionDebugOptions())`，保持原包的随机配置。诊断沿每会话的拉取式轨迹保存，不使用全局回调。直接调用 `session.Random` 也记录调用；只有在 DSL 指令执行期间才有指令来源与执行上下文。失败指令可能留下已执行抽取的诊断，随机状态仍按指令的原子性规则恢复；故障后的记录不能充当成功边界。
 
-tools/differential 的 `normal-compare-self-test` 在正常首战中读取已销毁候选和伤害结果的字段，确认敌人 `[0,2)` 与奖励 `[0,1)` 的实际浮点取样范围，逐步核对关闭快照时的状态、随机和完整公开观察，并拒绝缺浮点附加数据、缺快照、截断、丢失及零执行。复制结果只在诊断输出目录保存一次。真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
+tools/differential 的 `normal-compare-self-test` 在正常首战中读取已销毁候选、候选间接定义和伤害结果的字段，确认敌人 `[0,2)` 与奖励 `[0,1)` 的实际浮点取样范围，逐步核对关闭快照时的状态、随机和完整公开观察，并拒绝缺浮点附加数据、缺间接定义或复制深度、缺快照、截断、丢失及零执行。正常比较也检查这些历史记录的完整性。复制结果只在诊断输出目录保存一次。真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
 
 ## 9. 维护内核时修改哪里
 
