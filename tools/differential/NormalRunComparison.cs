@@ -39,7 +39,7 @@ internal static class NormalRunComparison
         "public.ownership", "public.map_members", "public.map_parents", "public.visit_links", "public.relation_types", "public.entity_counts",
         "public.player", "public.player_history", "public.enemies", "public.powers", "public.visits",
         "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
-        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "random.float32_calls", "random.scalar_calls", "random.weighted_candidates", "events.trace", "events.observed_order", "lifecycle.settlement"];
+        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "random.float32_calls", "random.scalar_calls", "random.weighted_candidates", "random.weighted_attempts", "random.opening_queues", "events.trace", "events.observed_order", "lifecycle.settlement"];
     internal static NormalDifference? First(int index, NormalBoundary left, NormalBoundary right)
     {
         if (left.Kind != right.Kind) return new(index, left.Kind, "boundary.kind", left.Kind, right.Kind);

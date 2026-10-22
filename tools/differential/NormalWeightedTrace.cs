@@ -100,29 +100,84 @@ internal sealed class NormalReferenceWeightedBags(ActDefinition[] acts)
 {
     private readonly HashSet<object> seen = [];
     private object? active;
+    private readonly List<NormalOpeningAttempt> attempts = [];
+    private readonly List<object> commits = [];
+    private NativeAttempt? pending;
+    private sealed record NativeAttempt(ActDefinition Act, string Room, object State, object Bag,
+        (EncounterDefinition Item, double Weight)[] Entries, EncounterDefinition[] FullPool, EncounterDefinition? LastPicked,
+        EncounterDefinition? LastMonster, EncounterDefinition? Previous, long Before, NormalWeightedSnapshot Snapshot, int Selected = -1);
     private static readonly FieldInfo Entries = typeof(GrabBag<EncounterDefinition>).GetField("_entries", BindingFlags.Instance | BindingFlags.NonPublic)!;
     private static readonly FieldInfo Total = typeof(GrabBag<EncounterDefinition>).GetField("_totalWeight", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-    internal NormalWeightedSnapshot Capture()
+    internal NormalWeightedSnapshot Capture(long before)
     {
-        var bags = new List<(ActDefinition Act, string Room, object Bag)>();
+        if (pending is not null) throw NormalWeightedTrace.Missing("previous native opening attempt not completed");
+        var bags = new List<(ActDefinition Act, string Room, object Bag, object State)>();
         foreach (var act in acts)
             foreach (var field in new[] { "_weakMonsterEncounterState", "_regularMonsterEncounterState", "_eliteEncounterState" })
             {
                 var state = typeof(ActDefinition).GetField(field, BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(act);
                 if (state is null) continue;
-                bags.Add((act, field == "_eliteEncounterState" ? "Elite" : "Monster", state.GetType().GetProperty("Bag")!.GetValue(state)!));
+                bags.Add((act, field == "_eliteEncounterState" ? "Elite" : "Monster", state.GetType().GetProperty("Bag")!.GetValue(state)!, state));
             }
         var added = bags.Where(b => !seen.Contains(b.Bag)).ToArray();
         if (added.Length > 1 || added.Length == 0 && active is null) throw NormalWeightedTrace.Missing("ambiguous active native bag");
         if (added.Length == 1) { active = added[0].Bag; seen.Add(active); }
         var current = bags.Single(b => ReferenceEquals(b.Bag, active));
-        var entries = ((IEnumerable<(EncounterDefinition Item, double Weight)>)Entries.GetValue(current.Bag)!).Select(e =>
+        var raw = Items(current.Bag);
+        var entries = raw.Select(e =>
             new NormalWeightedEntry(current.Act.Index, current.Room, e.Item.IsWeak,
                 "base-spire:" + e.Item.IdEntry.ToLowerInvariant().Replace('_', '-'), BitConverter.DoubleToInt64Bits(e.Weight),
                 e.Item.Tags.Where(t => t != EncounterTag.None).Select(t => t.ToString()).Order(StringComparer.Ordinal).ToArray())).ToArray();
         if (entries.Length == 0) throw NormalWeightedTrace.Missing("empty active native bag");
-        return new(entries, BitConverter.DoubleToInt64Bits((double)Total.GetValue(current.Bag)!));
+        var snapshot = new NormalWeightedSnapshot(entries, BitConverter.DoubleToInt64Bits((double)Total.GetValue(current.Bag)!));
+        var last = LastPicked(current.State); var lastMonster = LastMonster(current.Act);
+        var previous = current.Room == "Monster" ? lastMonster ?? last : last;
+        var pool = current.Room == "Elite" ? current.Act.EliteEncounterCandidates : current.Act.MonsterEncounterCandidates;
+        var fullPool = pool.Where(e => current.Room == "Elite" || e.IsWeak == raw[0].Item.IsWeak).ToArray();
+        pending = new(current.Act, current.Room, current.State, current.Bag, raw, fullPool, last, lastMonster, previous, before, snapshot);
+        return snapshot;
     }
+    internal void Result(double unit)
+    {
+        var p = pending ?? throw NormalWeightedTrace.Missing("native weighted result without its actual bag");
+        pending = p with { Selected = NormalWeightedTrace.FromUnit("base-spire:run:up_front", p.Before, p.Before + 1, p.Snapshot, unit).Selected };
+    }
+    internal void FinishPending()
+    {
+        if (pending is not { } p) return;
+        if (p.Selected < 0) throw NormalWeightedTrace.Missing("native opening result is unfinished");
+        var after = Items(p.Bag); var selected = p.Entries[p.Selected].Item;
+        var remaining = p.Entries.Where((_, i) => i != p.Selected).ToArray();
+        var unchanged = Same(after, p.Entries);
+        // The next picker may already have refilled an emptied bag before its draw
+        // callback. Read that real pool and require the full refill, not a guessed index.
+        var refilled = p.Entries.Length == 1 && Same(after, p.FullPool.Select(e => (e, 1d)).ToArray());
+        if (unchanged && refilled) throw NormalWeightedTrace.Missing("ambiguous single-entry native refill");
+        var accepted = Same(after, remaining) || refilled;
+        if (!accepted && !unchanged || !ReferenceEquals(LastPicked(p.State), accepted ? selected : p.LastPicked)
+            || !ReferenceEquals(LastMonster(p.Act), accepted && p.Room == "Monster" ? selected : p.LastMonster))
+            throw NormalWeightedTrace.Missing("native opening accept/reject changed unexpected bag or previous state");
+        if (BitConverter.DoubleToInt64Bits(after.Sum(e => e.Weight)) != BitConverter.DoubleToInt64Bits((double)Total.GetValue(p.Bag)!))
+            throw NormalWeightedTrace.Missing("native opening committed total weight");
+        var mask = p.Entries.Select(e => !ReferenceEquals(e.Item, p.Previous)
+            && (p.Previous is null || !e.Item.Tags.Any(t => t != EncounterTag.None && p.Previous.Tags.Contains(t)))).ToArray();
+        attempts.Add(new(p.Before, p.Previous is null ? null : "base-spire:" + p.Previous.IdEntry.ToLowerInvariant().Replace('_', '-'), mask.Any(v => v), mask, accepted));
+        commits.Add(new { before = p.Before, accepted, refilled, after = after.Select(e => new
+            { id = e.Item.IdEntry, weight_bits = BitConverter.DoubleToInt64Bits(e.Weight) }).ToArray(),
+            total_bits = BitConverter.DoubleToInt64Bits((double)Total.GetValue(p.Bag)!),
+            last_picked = LastPicked(p.State)?.IdEntry, last_monster = LastMonster(p.Act)?.IdEntry });
+        pending = null;
+    }
+    internal NormalOpeningAttempt[] Attempts() { FinishPending(); return attempts.ToArray(); }
+    internal object[] Commits() { FinishPending(); return commits.ToArray(); }
+    private static (EncounterDefinition Item, double Weight)[] Items(object bag) =>
+        ((IEnumerable<(EncounterDefinition Item, double Weight)>)Entries.GetValue(bag)!).ToArray();
+    private static EncounterDefinition? LastPicked(object state) => (EncounterDefinition?)state.GetType().GetProperty("LastPicked")!.GetValue(state);
+    private static EncounterDefinition? LastMonster(ActDefinition act) =>
+        (EncounterDefinition?)typeof(ActDefinition).GetField("_lastMonsterEncounter", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(act);
+    private static bool Same((EncounterDefinition Item, double Weight)[] left, (EncounterDefinition Item, double Weight)[] right) =>
+        left.Length == right.Length && left.Zip(right).All(p => ReferenceEquals(p.First.Item, p.Second.Item)
+            && BitConverter.DoubleToInt64Bits(p.First.Weight) == BitConverter.DoubleToInt64Bits(p.Second.Weight));
 }
 #endif
