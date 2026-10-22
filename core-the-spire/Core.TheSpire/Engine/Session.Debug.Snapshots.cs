@@ -6,6 +6,11 @@ namespace CoreTheSpire.Engine;
 public sealed record SessionDebugValueSnapshot(ValueKind Kind, string? Scalar,
     IReadOnlyList<long>? Items, int OriginalLength, bool Truncated);
 public sealed record SessionDebugFieldSnapshot(string Name, SessionDebugValueSnapshot Value);
+public sealed record SessionDebugRelationSnapshot(InstanceId Owner, string Relation,
+    IReadOnlyList<InstanceId> Targets, int TargetCount, bool TextTruncated)
+{
+    public bool Truncated => TextTruncated || Targets.Count != TargetCount;
+}
 public sealed record SessionDebugEntitySnapshot(InstanceId Instance, string? Type,
     IReadOnlyList<SessionDebugFieldSnapshot> Fields, int FieldCount, bool Missing)
 {
@@ -17,15 +22,18 @@ public sealed record SessionDebugSnapshot(IReadOnlyList<SessionDebugValueSnapsho
     IReadOnlyList<SessionDebugEntitySnapshot> Entities, bool EntitiesTruncated)
 {
     public int ReferenceDepth { get; init; }
+    public bool RelationsCaptured { get; init; }
+    public IReadOnlyList<SessionDebugRelationSnapshot> Relations { get; init; } = Array.Empty<SessionDebugRelationSnapshot>();
+    public int RelationCount { get; init; }
     public bool Truncated => Values.Count != ValueCount || Values.Any(v => v.Truncated)
-        || EntitiesTruncated || Entities.Any(e => e.Truncated);
+        || EntitiesTruncated || Entities.Any(e => e.Truncated) || Relations.Count != RelationCount || Relations.Any(r => r.Truncated);
     public bool Complete => !Truncated && !Entities.Any(e => e.Missing);
 }
 
 public sealed partial class SessionDebugTrace
 {
     private SessionDebugSnapshot? CaptureSnapshot(IReadOnlyList<Value> payload, IEnumerable<InstanceId>? candidates = null,
-        bool rootsTruncated = false, bool captureCandidateReferences = false)
+        bool rootsTruncated = false, bool captureCandidateReferences = false, bool captureCandidateRelations = false)
     {
         if (!_options.CaptureValues) return null;
         var remaining = _options.MaxSnapshotValues;
@@ -48,8 +56,32 @@ public sealed partial class SessionDebugTrace
             foreach (var instance in roots.SelectMany(e => e.Fields).SelectMany(f => References(f.Value)))
                 if (!CopyEntity(instance)) break;
         }
+        var relations = new List<SessionDebugRelationSnapshot>(); var relationCount = 0;
+        if (captureCandidateRelations)
+        {
+            // Freeze owners before copying relation targets: neither target relations nor
+            // target field references expand this single outgoing relation boundary.
+            var owners = entities.Where(e => !e.Missing).Select(e => e.Instance).ToArray();
+            foreach (var owner in owners)
+                foreach (var relation in _session.RuleSet.Relations)
+                {
+                    var targets = _session.State.RelationTargets(relation.Id, owner);
+                    if (targets.Count == 0) continue;
+                    relationCount++;
+                    if (remaining == 0) continue;
+                    remaining--; // One group header, followed by its copied target IDs.
+                    var prefix = targets.Take(remaining).ToArray(); remaining -= prefix.Length;
+                    relations.Add(new(owner, Limit(relation.QualifiedId)!, Array.AsReadOnly(prefix), targets.Count,
+                        relation.QualifiedId.Length > _options.MaxTextLength));
+                    foreach (var target in prefix)
+                        if (!CopyEntity(target)) break;
+                }
+        }
         return new(values.AsReadOnly(), payload.Count, entities.AsReadOnly(), truncated)
-        { ReferenceDepth = captureCandidateReferences ? 1 : 0 };
+        {
+            ReferenceDepth = captureCandidateReferences ? 1 : 0, RelationsCaptured = captureCandidateRelations,
+            Relations = relations.AsReadOnly(), RelationCount = relationCount
+        };
 
         bool CopyEntity(InstanceId instance)
         {
