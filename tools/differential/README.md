@@ -81,7 +81,9 @@ dotnet run --project tools/differential -c Release -- normal-compare-self-test
 
 `random.float32_calls` 逐条比较正常路径中的浮点取样：具名流、调用前后游标、已求值的上下界及最终 binary32 位型。DSL 读取真实 `RandomCallDetails.Float32`，参考读取自身 `NextFloat` 参数和实际结果；原始 double 记录保留在诊断中。比较按流名与流内游标规范化，不要求独立流有相同的全局初始化顺序。缺附加数据、截断、丢失、重复或流内错序均失败。固定首战有敌人三次与奖励八次浮点调用；这部分一致不代表离散候选、权重及拒绝过程已经比较，完整 `random.trace` 仍为必需维度。
 
-`random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。固定首战累计比较 628 次数值调用，其中 624 次整数与四次 Gaussian 输入；独立流按流名分组，流内原顺序仍须完整保留。另有 94 次开局加权抽样与三次敌人 HP 偏移尚未规范化，双方在 `unmapped_scalar_calls` 逐条保留。数值结果相同不证明候选、权重或拒绝过程相同，完整 `random.trace` 继续作为必需维度。
+`random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。固定首战累计比较 631 次数值调用，其中 627 次整数与四次 Gaussian 输入；独立流按流名分组，流内原顺序仍须完整保留。另有 94 次开局加权单位区间抽样尚未取得共同数值表示，双方在 `unmapped_scalar_calls` 逐条保留；其离散候选另见下文。数值结果相同不证明全部候选或拒绝过程相同，完整 `random.trace` 继续作为必需维度。
+
+SlimesWeak 的三次 HP 抽样由原生 `NextInt(0, width)` 偏移规范化为 DSL 的完整 HP 区间。参考通过已有的只读 before-setup 诊断，在真实创建完成、任何 Setup 效果之前保存 `SpawnedEnemies` 原创建顺序、同一怪物的初始区间及 MaxHp，并关联同一创建窗口的真实 niche 调用。必须逐项符合区间宽度与 `minimum + offset == initial HP`，且先前创建怪物的实际 HP 均不落在当前区间；存在已用 HP 排除、缺抽样或关联不符时明确失败。该映射仅覆盖已锁定的 SlimesWeak 初始化，不推断其他遭遇或排除候选的语义；原生偏移参数和 `hp_initialization` 副本同时保留，后续 Setup／战斗值不参与重建。
 
 `random.weighted_candidates` 另行比较 94 次开局加权抽样的实际有序候选、幕／房型／弱怪标记、权重、总权重、选中索引及流内游标。DSL 从抽样时保存的候选与一层定义引用取值，均匀离散抽样对应各条目权重 1；不回查已销毁候选或后来的定义状态。参考在真实 RNG 回调中复制同一幕对象上存活的 GrabBag 条目与总权重，将实际单位区间结果按原生累积权重规范化为索引。该诊断限定于锁定来源的同步开局生成：每个新池建立一个新 bag，后续抽样及补池沿用同一对象；缺少或同时发现多个新池时失败。候选比较不代替兼容性标签、谓词与接受／拒绝提交效果验证，这些在 `unmapped_weighted_semantics` 单列，原始数值与完整 `random.trace` 检查要求保留。
 
