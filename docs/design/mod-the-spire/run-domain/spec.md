@@ -23,11 +23,19 @@
 
 以下 RUN-01～05 是完整 Run 的目标要求，不改变上文开发操作的实际支持范围。正常入口须包含 Neow、真实地图与前置随机消费；复用角色初态、战斗、奖励及永久实例，不另建 C# RunDriver 或 Host 玩法循环。
 
-### ENV-T05 已交付的首段边界
+### 正常开局首段
 
-当前 DSL 已提供 `StartNormalRun` 作为显式正常入口。它复用 Engine Session 中的 `Player` 与空 `Run` 容器，建立 Ironclad 的 80 HP／99 金币／5 Strike／4 Defend／Bash／BurningBlood 初态，创建 `NeowVisit` 并暂停等待一次 Neow 布尔选择。选择提交后只消费一次 `base-spire:run:act_1_map`，物化首幕 Ancient→Monster→RestSite→Boss 的公开节点和 `MapChildren` 边，公开 `ChooseMapPoint` 只提供当前可选后继。
+`StartNormalRun` 使用全解锁、A0、单人 Ironclad 配置。它只接受未开始开发操作的初态，复用 Session 中的 Player 与空 Run，建立 80 HP、99 金币、5 Strike／4 Defend／Bash 及 BurningBlood。Run.Profile 公开说明该输入配置；其他角色、进阶和解锁配置尚未接入。
 
-首个 Monster 节点创建稳定递增的 `RunVisit`，记录原地图类型、实际房型、遭遇标识和 Run 阶段，并接入已有 Ruby Raiders normal 遭遇与战斗入口。非法、重复或非当前后继节点由动作候选和过程守卫拒绝；当前交付尚未把奖励关闭、地图返回、跨幕、事件子战斗或终局接入该访问。开发入口保留一个空 `Run` 容器，使公开 sequence 在开发和正常快照中都有唯一所有者。
+开局先按 `RunManager.InitializeNewRun`／`GenerateRooms` 建立两侧遗物袋，分配共享 Ancient，再按 Overgrowth→Hive→Glory 预生成事件、普通／精英遭遇、Boss 和 Ancient 队列。源池成员及顺序完整保留。相邻遭遇使用源标签拒绝抽样，未支持内容仍参与源队列，不改成已实现子集。获得遗物时，先移除两侧袋中相同标识，再执行获得监听。
+
+首幕地图在进入 Neow 前生成。`SourceGaussianInt` 从 `act_1_map` 流按源算法计算营火／问号数量；随后执行七条路径、源预排序与洗牌、房型分配、重复路径裁剪／修复及坐标整理。公开 MapNode.Type 与 MapChildren 保存最终真实地图，临时列表和路径段在发布前清理。路径段在裁剪阶段以每列三位编码，17 个节点占用最多 51 位；坐标在裁剪结束前不改变。
+
+Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，保留源排除关系及随机顺序。选择恰好一个 NeowOption 后，通过共享获得操作执行效果，等待离开确认后回到地图。GoldenPearl、NutritiousOyster、BoomingConch 的效果已接入；其余选项仍公开，选择时明确报告未支持，不以无效果获得代替。
+
+`ChooseMapPoint` 只允许当前节点的未访问后继。首个 Monster 消费实际普通遭遇队列，创建稳定递增的 RunVisit，记录原地图类型、实际房型及遭遇标识。已接通 FuzzyWurmCrawlerWeak：先按 Niche 流抽取真实 HP，再生成敌人、重建和洗牌战斗副本，并自动启动首回合抽五张牌。其他遭遇或房型在修改访问和抽取 HP 之前报告未支持。非法、重复或非后继选点不改状态或 RNG。
+
+包为地图生成声明每条命令四百万条指令上限；超出时保留显式 BudgetExceeded，不截断路径、裁剪步骤或随机消费。正常首战的奖励关闭、返回地图、跨幕、事件子战斗和终局尚未接入该访问。源移植地图比较、开局操作向量、同一公开 Host 流程和完整模拟器逐步比较分别验证，不能据此关闭 M01。
 
 | 要求 | 输入、状态与执行顺序 | 失败与可观察结果 |
 | --- | --- | --- |

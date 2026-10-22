@@ -241,6 +241,10 @@
     {
       "id": "base-spire:tough-bandages",
       "definition": "relics/shared/tough-bandages.spire"
+    },
+    {
+      "id": "base-spire:booming-conch",
+      "definition": "relics/shared/booming-conch.spire"
     }
   ]
 }

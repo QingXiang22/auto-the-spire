@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.47",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.48",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -68,7 +68,8 @@
         "base-spire:self-forming-clay",
         "base-spire:tough-bandages",
         "base-spire:akabeko",
-        "base-spire:pen-nib"
+        "base-spire:pen-nib",
+        "base-spire:booming-conch"
       ]
     },
     "base-spire:Enemy": {

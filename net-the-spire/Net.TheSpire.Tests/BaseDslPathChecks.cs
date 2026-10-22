@@ -15,6 +15,7 @@ internal static class BaseDslPathChecks
         yield return ("DB-A11 pure DSL package describe/catalog/start/step/observe publishes the real effect", Trajectory);
         yield return ("RNG package host uses the source stream layout and isolates repeated seeds", SourceRandomSessions);
         yield return ("DB-A11 real stdio process runs the same package and public trajectory", () => StdioTrajectory("draw"));
+        yield return ("ENV-T05 real stdio normal Neow, source map and first real encounter", () => StdioTrajectory("normal-opening"));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
         yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
@@ -170,7 +171,7 @@ internal static class BaseDslPathChecks
             {
                 process.StandardInput.WriteLine(WireCanonical.Text(request.ToWire())); process.StandardInput.Flush();
                 var line = process.StandardOutput.ReadLineAsync();
-                Check.True(line.Wait(10000), "stdio responds within the check timeout");
+                Check.True(line.Wait(mode == "normal-opening" ? 60000 : 10000), "stdio responds within the check timeout");
                 Check.True(line.Result is not null, "stdio frame exists");
                 var response = ResponseDto.FromWire(WireParser.ParseUtf8Strict(Encoding.UTF8.GetBytes(line.Result!), "stdio-test"));
                 Check.True(response.Ok, "stdio: " + response.Error?.Message); return response;
@@ -178,10 +179,11 @@ internal static class BaseDslPathChecks
             Send(Request("pipe-describe", Operation.Describe));
             Send(Request("pipe-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
-            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str("BASE-DSL-STDIO-00"))));
+            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode == "normal-opening" ? "777" : "BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
+                "normal-opening" => [],
                 "sown-event" => [
                     ("Strike.Obtain", "0", false, "0", "0", false, ""),
                     ("Defend.Obtain", "0", false, "0", "0", false, ""),
@@ -462,6 +464,44 @@ internal static class BaseDslPathChecks
                 var captured = snapshot.Entities.Where(e => e.ContentId == "base-spire:whirlwind")
                     .Select(e => ((WireString)e.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value).Order().ToArray();
                 Check.True(captured.SequenceEqual(new[] { "0", "3" }), "public captures remain zero and three despite two additional hits each");
+            }
+            if (mode == "normal-opening")
+            {
+                void StepOpening(LegalActionDto candidate)
+                {
+                    var request = Request("normal-opening-" + ++stepNumber, Operation.Step,
+                        ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)),
+                        ("candidate_id", WireValue.Str(candidate.CandidateId)));
+                    var first = Send(request); var repeated = Send(request);
+                    Check.Equal(WireCanonical.Text(first.ToWire()), WireCanonical.Text(repeated.ToWire()), "same request repeats the cached result");
+                    snapshot = Snapshot(Send(Request("normal-observe-" + stepNumber, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                }
+                StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:StartNormalRun"));
+                Check.Equal("80", Public(snapshot, "Player.Hp"), "normal Ironclad source HP");
+                Check.Equal("99", Public(snapshot, "Player.Gold"), "normal Ironclad source gold");
+                Check.Equal(3, snapshot.LegalActions.Count, "three real Neow answers");
+                var option = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:NeowOption" && e.Fields.Any(f => f.FieldId.EndsWith(":NeowOption.RelicId", StringComparison.Ordinal) && f.Value is WireString value && value.Value == "base-spire:booming-conch"));
+                StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireString value && value.Value == option.InstanceId)));
+                Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:booming-conch"), "the chosen relic is acquired once");
+                Check.Equal("neow", Public(snapshot, "Player.Room"), "event waits for leave confirmation");
+                StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool value && value.Value)));
+                Check.Equal("map", Public(snapshot, "Player.Room"), "confirmed Neow returns to map");
+                Check.Equal(56, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete source map");
+                StepOpening(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
+                Check.Equal("55", Public(snapshot, "Enemy.Hp"), "source Niche HP draw for the real weak encounter");
+                Check.Equal("FIRST_ACID_GOOP", Public(snapshot, "Enemy.MoveId"), "real enemy initial intent");
+                Check.Equal("1", Public(snapshot, "Player.TurnNumber"), "first real player turn starts automatically");
+                Check.Equal("3", Public(snapshot, "Player.Energy"), "Monster room does not receive Conch Elite energy");
+                var hand = snapshot.LegalActions.Where(a => a.ActionType is "net:action:base-spire:PlayCardFromHand" or "net:action:base-spire:PlayAttackFromHand")
+                    .Select(a => ((WireString)a.Fields.Single().Value!).Value).Distinct().ToArray();
+                var deck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members;
+                Check.Equal(5, hand.Length, "five actual combat copies have legal play candidates");
+                Check.Equal(10, deck.Count, "ten permanent instances remain distinct");
+                Check.False(hand.Any(id => deck.Any(card => card.EntityRef == id)), "opening hand uses separate combat instances");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "unresolved combat blocks another map visit");
+                var payload = WireCanonical.Text(snapshot.ToWire());
+                Check.False(payload.Contains("OpeningDefinition", StringComparison.Ordinal) || payload.Contains("MapSegment", StringComparison.Ordinal), "private source pools and map work stay out of public output");
             }
             if (mode.StartsWith("pickup-upgrade-", StringComparison.Ordinal))
             {

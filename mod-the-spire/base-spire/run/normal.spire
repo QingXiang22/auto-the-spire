@@ -1,7 +1,7 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-enum MapPointType { members = [Ancient, Monster, RestSite, Boss] }
+enum MapPointType { members = [Unassigned, Unknown, Shop, Treasure, RestSite, Monster, Elite, Boss, Ancient] }
 
 entity Run {
   owner = Owner
@@ -16,6 +16,10 @@ entity Run {
     CurrentVisit = { type = Ref(RunVisit) optional = true }
     VisitSequence = { type = Int(min = 0) default = 0 }
     NeowPending = { type = Bool default = true }
+    Profile = { type = String(length = 64) default = "ironclad-a0-fully-unlocked-singleplayer" }
+    NormalEncounterIndex = { type = Int default = 0 visibility = Hidden }
+    RestCount = { type = Int default = 0 visibility = Hidden }
+    UnknownCount = { type = Int default = 0 visibility = Hidden }
   }
 }
 
@@ -26,6 +30,10 @@ entity MapNode {
     Col = { type = Int(min = 0, max = 7) }
     Row = { type = Int(min = 0, max = 16) }
     Type = { type = Enum(MapPointType) }
+    Kind = { type = Int default = 0 visibility = Hidden }
+    CanModify = { type = Bool default = true visibility = Hidden }
+    Removed = { type = Bool default = false visibility = Hidden }
+    IsStart = { type = Bool default = false visibility = Hidden }
     Visited = { type = Bool default = false }
     Selectable = { type = Bool default = false }
   }
@@ -37,7 +45,7 @@ entity NeowVisit {
   fields = {
     Run = { type = Ref(Run) visibility = Hidden }
     Status = { type = String(length = 16) default = "pending" }
-    Choice = { type = Bool default = false }
+    SelectedRelic = { type = String(length = 64) default = "none" }
   }
 }
 
@@ -56,10 +64,23 @@ entity RunVisit {
 }
 collection RunVisits { element = RunVisit ordered = true }
 
+procedure CanStartNormalRun {
+  pure = true parameters = { owner = Ref(Player) } result = Bool
+  body = {
+    if = { condition = or(not(equal(field(owner, Player.CharacterId), "none")), not(isNone(field(owner, Player.CurrentRun)))) then = { return = { value = false } } }
+    if = { condition = or(field(owner, Player.CombatActive), or(not(equal(field(owner, Player.Room), "none")), not(equal(field(owner, Player.TurnNumber), 0)))) then = { return = { value = false } } }
+    if = { condition = or(not(equal(field(owner, Player.Hp), 80)), not(equal(field(owner, Player.MaxHp), 80))) then = { return = { value = false } } }
+    if = { condition = or(exists(type(Enemy)), or(exists(collection(Relics)), exists(collection(Potions)))) then = { return = { value = false } } }
+    if = { condition = or(not(equal(count(type(Card)), 3)), not(equal(count(collection(DiscardPile)), 3))) then = { return = { value = false } } }
+    if = { condition = exists(where(type(Card), c, not(equal(field(c, Card.DefinitionId), "base-spire:development-card")))) then = { return = { value = false } } }
+    return = { value = true }
+  }
+}
+
 procedure InitializeNormalIronclad {
   parameters = { owner = Ref(Player) }
   body = {
-    if = { condition = or(not(equal(field(owner, Player.CharacterId), "none")), not(isNone(field(owner, Player.CurrentRun)))) then = { fail = { message = "A normal Run can only start before character selection" } } }
+    if = { condition = not(pureCall(CanStartNormalRun, owner)) then = { fail = { message = "A normal Run requires the untouched opening state" } } }
     forEach = { query = type(Card) item = card body = { destroy = { target = card } } }
     set = { target = owner field = Player.Hp value = 80 }
     set = { target = owner field = Player.MaxHp value = 80 }
@@ -76,39 +97,13 @@ procedure InitializeNormalIronclad {
 
 procedure BuildNormalActOneMap {
   parameters = { owner = Ref(Player) run = Ref(Run) }
-  locals = { start = Binding first = Binding rest = Binding boss = Binding layout = Int }
-  body = {
-    seedStream = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
-    sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = 4294967296 into = layout }
-    create = { type = MapNode scope = entityScope(run) into = start collection = MapNodes fields = { Run = run Index = 0 Col = 3 Row = 0 Type = enum(MapPointType, Ancient) Visited = true } }
-    create = { type = MapNode scope = entityScope(run) into = first collection = MapNodes fields = { Run = run Index = 1 Col = 3 Row = 1 Type = enum(MapPointType, Monster) Selectable = true } }
-    create = { type = MapNode scope = entityScope(run) into = rest collection = MapNodes fields = { Run = run Index = 2 Col = 3 Row = 2 Type = enum(MapPointType, RestSite) } }
-    create = { type = MapNode scope = entityScope(run) into = boss collection = MapNodes fields = { Run = run Index = 3 Col = 3 Row = 3 Type = enum(MapPointType, Boss) } }
-    addRelation = { relation = MapChildren owner = start target = first }
-    addRelation = { relation = MapChildren owner = first target = rest }
-    addRelation = { relation = MapChildren owner = rest target = boss }
-    set = { target = run field = Run.MapNodeCount value = count(collection(MapNodes)) }
-    set = { target = run field = Run.CurrentNode value = start }
-    set = { target = run field = Run.MapFloor value = 0 }
-    set = { target = run field = Run.Phase value = "map" }
-    set = { target = owner field = Player.Room value = "map" }
-  }
+  body = { call = { procedure = GenerateSourceActOneMap args = { owner = owner run = run } } }
 }
 
-procedure CompleteNeow {
-  parameters = { owner = Ref(Player) run = Ref(Run) neow = Ref(NeowVisit) choice = Bool }
-  body = {
-    if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(field(run, Run.NeowPending), equal(field(neow, NeowVisit.Status), "pending")))) then = { fail = { message = "The normal Run is not waiting for Neow" } } }
-    set = { target = neow field = NeowVisit.Choice value = choice }
-    set = { target = neow field = NeowVisit.Status value = "closed" }
-    set = { target = run field = Run.NeowPending value = false }
-    call = { procedure = BuildNormalActOneMap args = { owner = owner run = run } }
-  }
-}
 
 procedure StartNormalRun {
   parameters = { owner = Ref(Player) }
-  locals = { run = Binding neow = Binding choice = Bool }
+  locals = { run = Binding neow = Binding choice = Binding continued = Bool }
   body = {
     call = { procedure = InitializeNormalIronclad args = { owner = owner } }
     let = { into = run value = first(type(Run)) }
@@ -127,50 +122,60 @@ procedure StartNormalRun {
     set = { target = run field = Run.NeowPending value = true }
     set = { target = owner field = Player.CurrentRun value = run }
     create = { type = NeowVisit scope = entityScope(run) into = neow fields = { Run = run } }
-    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Neow: accept the opening blessing" into = choice }
-    call = { procedure = CompleteNeow args = { owner = owner run = run neow = neow choice = choice } }
+    call = { procedure = InitializeSourceOpeningPools args = { run = run } }
+    call = { procedure = BuildNormalActOneMap args = { owner = owner run = run } }
+    set = { target = run field = Run.Phase value = "neow" }
+    set = { target = owner field = Player.Room value = "neow" }
+    call = { procedure = GenerateSourceNeowOptions args = { visit = neow } }
+    decide = { participant = field(owner, Player.Owner) kind = EntityRef min = 1 max = 1 candidates = relation(NeowOptions, neow) prompt = "Neow: choose a relic" into = choice }
+    call = { procedure = ResolveSourceNeow args = { owner = owner run = run visit = neow option = choice } }
+    decide = { participant = field(owner, Player.Owner) kind = Confirm prompt = "Neow: leave" into = continued }
+    set = { target = neow field = NeowVisit.Status value = "closed" }
+    set = { target = run field = Run.NeowPending value = false }
+    set = { target = run field = Run.Phase value = "map" }
+    set = { target = owner field = Player.Room value = "map" }
   }
 }
 action StartNormalRun {
   role = player
-  requires = and(equal(field(first(type(Player)), Player.CharacterId), "none"), isNone(field(first(type(Player)), Player.CurrentRun)))
+  requires = pureCall(CanStartNormalRun, first(type(Player)))
   body = { call = { procedure = StartNormalRun args = { owner = first(type(Player)) } } }
 }
 
 procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
-  locals = { visit = Binding next = Binding }
+  locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int }
   body = {
     if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.Phase), "map"), and(field(node, MapNode.Selectable), and(not(field(node, MapNode.Visited)), exists(where(relation(MapChildren, field(run, Run.CurrentNode)), child, equal(child, node)))))))) then = { fail = { message = "Map point is not an unvisited child of the current node" } } }
-    let = { into = next value = first(relation(MapChildren, node)) }
+    if = { condition = not(equal(field(node, MapNode.Type), enum(MapPointType, Monster))) then = { fail = { message = "unsupported_capability: this normal room has not been connected" } } }
+    let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
+    if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
+    let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
+    if = { condition = not(equal(encounter, "base-spire:fuzzy-wurm-crawler-weak")) then = { fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" } } }
     set = { target = node field = MapNode.Visited value = true }
-    set = { target = node field = MapNode.Selectable value = false }
-    if = { condition = not(isNone(next)) then = { set = { target = next field = MapNode.Selectable value = true } } }
+    forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = current body = { set = { target = current field = MapNode.Selectable value = false } } }
     set = { target = run field = Run.MapFloor value = field(node, MapNode.Row) }
     set = { target = run field = Run.CurrentNode value = node }
     set = { target = run field = Run.VisitSequence value = add(field(run, Run.VisitSequence), 1) }
     create = { type = RunVisit scope = entityScope(run) into = visit collection = RunVisits fields = { Run = run StableId = field(run, Run.VisitSequence) Node = node MapType = field(node, MapNode.Type) } }
     set = { target = run field = Run.CurrentVisit value = visit }
-    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Monster)) then = {
-      set = { target = visit field = RunVisit.RoomType value = "monster" }
-      set = { target = visit field = RunVisit.EncounterId value = "base-spire:ruby-raiders-normal" }
-      set = { target = run field = Run.Phase value = "combat" }
-      set = { target = owner field = Player.Room value = "none" }
-      call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
-      call = { procedure = SpawnRubyRaidersNormal }
-    } else = {
-      if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, RestSite)) then = {
-        set = { target = visit field = RunVisit.RoomType value = "rest-site" }
-        set = { target = run field = Run.Phase value = "room" }
-        call = { procedure = EnterDevelopmentRestSite args = { owner = owner } }
-      } }
-    } }
+
+    set = { target = visit field = RunVisit.RoomType value = "monster" }
+    set = { target = visit field = RunVisit.EncounterId value = encounter }
+    set = { target = visit field = RunVisit.Phase value = "combat" }
+    set = { target = run field = Run.NormalEncounterIndex value = add(field(run, Run.NormalEncounterIndex), 1) }
+    set = { target = run field = Run.Phase value = "combat" }
+    set = { target = owner field = Player.Room value = "none" }
+    sampleInt = { stream = "base-spire:run:niche" min = 55 max = 58 into = hp }
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = hp } }
+    call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
+    call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
   }
 }
 action ChooseMapPoint {
   role = player
   parameters = { node = Ref(MapNode) }
-  candidates = { parameter = node query = where(collection(MapNodes), n, field(n, MapNode.Selectable)) }
+  candidates = { parameter = node query = where(collection(MapNodes), n, and(field(n, MapNode.Selectable), equal(field(n, MapNode.Run), field(first(type(Player)), Player.CurrentRun)))) }
   requires = and(equal(field(first(type(Player)), Player.Room), "map"), and(not(field(first(type(Player)), Player.CombatActive)), not(isNone(field(first(type(Player)), Player.CurrentRun)))))
   body = { call = { procedure = EnterNormalMapPoint args = { owner = first(type(Player)) run = field(first(type(Player)), Player.CurrentRun) node = node } } }
 }

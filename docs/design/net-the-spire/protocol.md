@@ -182,6 +182,8 @@ LegalAction 为 `{candidate_id, action_type, fields}`。fields 沿用字段结�
 
 start.seed 可选；提供时为非空游戏字符串，不接受 JSON number 或 null。net 不 trim、不转大小写、不做数值转换；提供方按规则校验来源限制。省略时由提供方选种子，成功结果报告实际值；不支持指定 seed 的后端在执行前拒绝。
 
+通用 Engine 的 `Confirm` 暂停沿用 `net:action:net.answer_decision` 的布尔 Flag 字段，只发布 `true` 这一确认候选。`Bool` 仍发布真假两种候选；单实体选择要求恰好一个实例，不将多选请求缩成单选。确认不增加操作或响应形状，客户端仍提交公开候选 ID。
+
 start 的去重记录为进程级；step/close 为会话级。成功与拒绝响应都缓存。先核对 request_id 和 payload 指纹，再做候选/版本检查：完成的 step 原样重发返回原结果，另一个 request_id 使用旧版本报 stale_observation。start 原样重发不能启动两局。request_status 查询 start 时省略 session_id。
 
 首版无 reset-in-place、rollback/load/fork。模拟训练新开局不等于部署可回到之前决策；决策时搜索不作为前提。

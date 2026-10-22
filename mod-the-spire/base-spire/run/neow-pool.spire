@@ -1,0 +1,30 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Fully unlocked single-player: MassiveScroll requires multiplayer.
+procedure BuildSourceNeowPool {
+  parameters = { visit = Ref(NeowVisit) }
+  body = {
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:cursed-pearl" group = "curse" position = 0 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:hefty-tablet" group = "curse" position = 1 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:large-capsule" group = "curse" position = 2 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:leafy-poultice" group = "curse" position = 3 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:neows-bones" group = "curse" position = 4 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:precarious-shears" group = "curse" position = 5 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:silken-tress" group = "curse" position = 6 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:silver-crucible" group = "curse" position = 7 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:arcane-scroll" group = "positive" position = 0 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:booming-conch" group = "positive" position = 1 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:fishing-rod" group = "positive" position = 2 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:golden-pearl" group = "positive" position = 3 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:kaleidoscope" group = "positive" position = 4 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:lead-paperweight" group = "positive" position = 5 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:lost-coffer" group = "positive" position = 6 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:neows-torment" group = "positive" position = 7 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:new-leaf" group = "positive" position = 8 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:phial-holster" group = "positive" position = 9 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:precise-scissors" group = "positive" position = 10 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:scroll-boxes" group = "positive" position = 11 } }
+    call = { procedure = AddNeowPoolEntry args = { visit = visit definition = "base-spire:winged-boots" group = "positive" position = 12 } }
+  }
+}

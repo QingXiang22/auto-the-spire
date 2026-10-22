@@ -27,3 +27,24 @@ procedure SetupSourceRandom { body = {
   seedStream = { stream = "base-spire:player:shops" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "shops") }
   seedStream = { stream = "base-spire:player:transformations" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "transformations") }
 } }
+
+# Source Rng.NextGaussianInt: Box-Muller sine branch and ties-to-even rounding.
+# Two raw words per attempt; rejected attempts keep their actual stream consumption.
+procedure SourceGaussianInt {
+  parameters = { stream = String(length = 128) mean = Int deviation = Int min = Int max = Int }
+  result = Int
+  locals = { left = Int right = Int d = Int angle = Int normal = Int result = Int }
+  body = {
+    if = { condition = greater(min, max) then = { fail = { message = "Gaussian minimum exceeds maximum" } } }
+    repeat = { count = 100000 body = {
+      sampleInt = { stream = stream min = 0 max = 9007199254740992 into = left }
+      sampleInt = { stream = stream min = 0 max = 9007199254740992 into = right }
+      let = { into = d value = float64Subtract(float64(1), float64Divide(float64(left), float64(9007199254740992))) }
+      let = { into = angle value = float64Subtract(float64(1), float64Divide(float64(right), float64(9007199254740992))) }
+      let = { into = normal value = float64Multiply(float64Sqrt(float64Multiply(float64(-2), float64Log(d))), float64Sin(float64Multiply(float64Multiply(4614256656552045848, float64(2)), angle))) }
+      let = { into = result value = float64RoundToInt(float64Add(float64(mean), float64Multiply(float64(deviation), normal))) }
+      if = { condition = and(greaterOrEqual(result, min), lessOrEqual(result, max)) then = { return = { value = result } } }
+    } }
+    fail = { message = "Gaussian rejection sampling exceeded its execution limit" }
+  }
+}

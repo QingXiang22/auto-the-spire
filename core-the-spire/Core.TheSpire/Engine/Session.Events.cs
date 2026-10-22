@@ -118,7 +118,10 @@ public sealed partial class Session
 
                 return Value.Of(answer.Number);
 
-            case DecisionResponseKind.Bool or DecisionResponseKind.Confirm:
+            case DecisionResponseKind.Confirm:
+                if (!answer.Flag) throw Faults.Of(EngineFaultCode.InvalidDecisionResponse, "confirmation requires an affirmative answer");
+                return Value.Of(true);
+            case DecisionResponseKind.Bool:
                 return Value.Of(answer.Flag);
 
             case DecisionResponseKind.Enum:

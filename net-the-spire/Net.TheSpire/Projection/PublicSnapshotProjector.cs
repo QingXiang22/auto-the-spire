@@ -872,14 +872,14 @@ public sealed class PublicSnapshotProjector
     private (List<LegalActionDto>, List<CandidateBinding>) BuildDecisionAnswers(DecisionRequest pending,
         IReadOnlyDictionary<InstanceId, string> ids)
     {
-        if (pending.Kind == DecisionResponseKind.Bool)
+        if (pending.Kind is DecisionResponseKind.Bool or DecisionResponseKind.Confirm)
         {
             var boolRule = _profile.AnswerAction;
             var flagField = boolRule.Parameters.Values.SingleOrDefault(p => p.FieldId == DerivedPublicProfile.AnswerFlagFieldId && p.Kind == PublicValueKind.Boolean);
             if (flagField is null || flagField.Required)
                 throw new PublicMappingException("N-02-BOOL-ANSWER-PROFILE", "Bool decisions require the optional Flag field in the 0.2 derived profile.");
             var boolEntries = new List<(LegalActionDto Action, CandidateBinding Binding)>();
-            foreach (var flag in new[] { false, true })
+            foreach (var flag in pending.Kind == DecisionResponseKind.Confirm ? new[] { true } : new[] { false, true })
             {
                 var field = EncodeField(flagField, Value.Of(flag), -1, ids, "answer.flag", $"snapshot.legal_actions?fields[{flagField.FieldId}]");
                 var entry = BuildEntry(boolRule.ActionTypeId, [field], null, [], _candidateNamespace);
@@ -889,7 +889,7 @@ public sealed class PublicSnapshotProjector
         }
         if (pending.Kind is not (DecisionResponseKind.EntityRef or DecisionResponseKind.EntityRefList))
             throw new PublicMappingException("TODO-N02-DECISION-KIND",
-                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool及单实体引用应答；" +
+                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool、Confirm及单实体引用应答；" +
                 "需要协议/协调者裁定该形状，映射层不发明第二个应答结构");
         if (pending.Maximum != 1 || pending.Minimum is < 0 or > 1
             || pending.Kind == DecisionResponseKind.EntityRef && pending.Minimum != 1)

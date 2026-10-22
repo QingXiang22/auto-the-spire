@@ -25,6 +25,7 @@
 | supported_scopes | 非空标识字符串列表，不能重复 |
 | unsupported_scopes | scope 到非空原因的对象，不能与支持列表重叠 |
 | catalogs | 已加载内容目录 `.json` 的相对路径列表 |
+| instruction_budget | 可选正 Int64，指定每条宿主命令的指令上限；省略时使用 SessionBudget 默认值 100000，超过上限显式失败 |
 | random_profile | `engine-default` 或 `vanilla-uniform@1`；后者选 xoshiro256**／SplitMix64 与 double 截断有界映射，游戏流种子由 DSL 明确设置；其他值未支持 |
 
 包只允许 `.spire` 与 `.json`。所有 JSON 必须由 manifest 角色声明，所有 DSL 必须被入口引用；未知字段、重复 JSON 键、路径逃逸和链接均拒绝。任何层级出现 effects、conditions、hooks、script、code、body、dsl 字段均作为执行型 JSON 拒绝。
@@ -46,6 +47,6 @@ definition 指向至少含一个声明的完整 DSL 内容模块，可定义实�
 
 ## 加载结果与失败
 
-`DslPackage` 提供包 Id／Version／Scope、入口／公开元数据路径、CatalogPaths、RandomProfile、Digest 与编译好的 Rules。`CreateSession(seed, participantRoles, gameSeed=null)` 返回按包 profile 配置但尚未 Start 的 Session；应由宿主传入原始 gameSeed 文本，再由 DSL 确定流种子，不在 Host 重算游戏布局。省略文本时 gameSeed() 返回数值 seed 的 invariant 十进制文本。未支持 scope 或 random profile 抛 `NotSupportedException`；非法 schema／内容子集抛 `FormatException`，DSL 绑定错误保留 `DslSourceException` 及文件位置，缺失文件为 IO 错误。
+`DslPackage` 提供包 Id／Version／Scope、入口／公开元数据路径、CatalogPaths、RandomProfile、InstructionBudget、Digest 与编译好的 Rules。`CreateSession(seed, participantRoles, gameSeed=null)` 返回按包 random profile 和指令预算配置、尚未 Start 的 Session；应由宿主传入原始 gameSeed 文本，再由 DSL 确定流种子，不在 Host 重算游戏布局。省略文本时 gameSeed() 返回数值 seed 的 invariant 十进制文本。未支持 scope 或 random profile 抛 `NotSupportedException`；非法 schema／内容子集抛 `FormatException`，DSL 绑定错误保留 `DslSourceException` 及文件位置，缺失文件为 IO 错误。
 
 当前开发工具和 Host 将未支持映射为退出码 3，参数／加载错误映射为 2；Host 在建立会话前执行范围检查。Engine 包加载不解释 net 公开元数据的字段，Host 与工具通过同一公开 metadata schema 继续校验。

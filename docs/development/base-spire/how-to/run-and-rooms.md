@@ -6,7 +6,13 @@
 
 显式SapphireSeed／DoorsOfLightAndDark开发访问已使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。它们尚未接回正常地图／事件池和子战斗返回，不能据此开放正常Run scope。
 
-ENV-T05 的首段正常入口已经接通：提交 `StartNormalRun` 会在同一 Session 建立正常 Ironclad 初态并暂停 Neow 选择；回答后生成首幕公开 Ancient→Monster→RestSite→Boss 节点，随机消费来自 `base-spire:run:act_1_map`，`ChooseMapPoint` 只暴露当前后继。进入首个 Monster 会创建 `RunVisit` 并接入 Ruby Raiders normal 遭遇。该首段流程停在首个实际房间的战斗上下文，奖励关闭、回到地图、事件子战斗、跨幕和终局仍按下文完整恢复计划处理。
+在同一公开 Host 的新会话中，可提交 `StartNormalRun` 运行全解锁、A0、单人 Ironclad 的正常开局首段：
+
+1. 回答 Neow 的真实三选一。入口已建立源初态、完整前置队列和真实首幕地图。
+2. 选择已支持的 GoldenPearl、NutritiousOyster 或 BoomingConch。其余源选项保留，选择后明确报未支持。
+3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 FuzzyWurmCrawlerWeak 时，会按真实 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
+
+例如 seed `777` 提供 BoomingConch，首个真实遭遇为 FuzzyWurmCrawlerWeak。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。奖励关闭、返回地图及正常 Run scope 仍未开放。
 
 ## 定义角色、进阶与正常开局
 
