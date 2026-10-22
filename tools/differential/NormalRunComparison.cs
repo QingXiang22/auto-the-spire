@@ -37,7 +37,7 @@ internal static class NormalRunComparison
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
         "public.snapshot", "public.piles", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potion_inventory", "public.relic_inventory", "public.cards",
         "public.ownership", "public.map_members", "public.map_parents", "public.visit_links", "public.relation_types", "public.entity_counts",
-        "public.player", "public.enemies", "public.powers", "public.visits",
+        "public.player", "public.player_history", "public.enemies", "public.powers", "public.visits",
         "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
         "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "random.float32_calls", "random.scalar_calls", "random.weighted_candidates", "events.trace", "events.observed_order", "lifecycle.settlement"];
     internal static NormalDifference? First(int index, NormalBoundary left, NormalBoundary right)

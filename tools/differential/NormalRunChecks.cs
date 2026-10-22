@@ -57,12 +57,23 @@ internal static class NormalRunChecks
         using var left = new NormalDslRun(repository, Path.Combine(directory, "potion-discard.ndjson"));
         using var right = new NormalReferenceRun("777");
         left.Start("777"); left.Step(left.Action("StartNormalRun")); right.Start();
+        var histories = new List<NormalPlayerHistory>();
         Apply(new("neow", ["base-spire:booming-conch"])); Apply(new("leave-neow", []));
         Apply(left.Semantic(left.Action("ChooseMapPoint")));
         for (var i = 0; left.Phase == "combat" && i < 100; i++)
             Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
         var victory = left.Capture("victory");
+        Require(histories.Any(h => h.Plays > 0) && histories.Any(h => h.HpLosses > 0)
+            && histories[^1] is { Plays: 0, HpLosses: 0, LostHpThisTurn: false, ExhaustedThisTurn: false },
+            "real combat increments play and HP-loss counters before victory clears active history");
+        using (var diagnostic = System.Text.Json.JsonDocument.Parse(NormalPreflight.Json(right.Capture("victory").Diagnostic)))
+        {
+            var retained = diagnostic.RootElement.GetProperty("native_player_history");
+            Require(!retained.GetProperty("active").GetBoolean() && retained.GetProperty("retained_plays").GetInt32() > 0
+                && retained.GetProperty("retained_hp_losses").GetInt32() > 0,
+                "normalization retains the actual completed native history in diagnostics");
+        }
         NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         NormalWeightedChecks.Run(left.DebugRecords, victory);
         var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
@@ -121,8 +132,11 @@ internal static class NormalRunChecks
         void Apply(NormalAction action)
         {
             left.Apply(action); right.Apply(action);
-            Require(NormalRunComparison.First(0, left.Capture("potion-check"), right.Capture("potion-check")) is null,
-                "real acquisition and discard match reference candidates, assets, events and RNG");
+            var actual = left.Capture("potion-check");
+            histories.Add(System.Text.Json.JsonSerializer.Deserialize<NormalPlayerHistory>(actual.Values["public.player_history"])!);
+            var difference = NormalRunComparison.First(0, actual, right.Capture("potion-check"));
+            Require(difference is null,
+                "real acquisition and discard match reference candidates, assets, events and RNG: " + NormalPreflight.Json(difference));
         }
     }
 
@@ -236,6 +250,10 @@ internal static class NormalRunChecks
         Changed(Replace(First("NeowOption"), "Position", WireValue.Str("999")), "public.neow");
         Changed(Replace(First("Player"), "GoldRewardAmount", WireValue.Str("999")), "public.reward_offer");
         Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
+        foreach (var name in new[] { "PlaySequence", "HpLossCount" })
+            Changed(Replace(First("Player"), name, WireValue.Str("999")), "public.player_history");
+        foreach (var name in new[] { "LostHpThisTurn", "ExhaustedCardThisTurn", "EnemyPhase", "UsesRunDeck" })
+            Changed(Replace(First("Player"), name, WireValue.Bool(!NormalPublicObservation.Flag(First("Player"), name))), "public.player_history");
         Changed(Replace(First("Card"), "Cost", WireValue.Str("999")), "public.cards");
         Changed(Replace(First("Relic"), "IsMelted", WireValue.Bool(!NormalPublicObservation.Flag(First("Relic"), "IsMelted"))), "public.relic_inventory");
         var cards = snapshot.Groups.Single(g => g.TypeId.EndsWith(":CardRewardOptions", StringComparison.Ordinal));
