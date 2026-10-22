@@ -68,6 +68,15 @@ procedure DamagePlayer {
   call = { procedure = PublishDamageResult args = { result = result } }
  }
 }
+procedure DamagePlayerFromCard {
+ parameters = { owner = Ref(Player) card = Ref(Card) amount = Int(min = 0, max = 999999) }
+ locals = { result = Binding }
+ body = {
+  call = { procedure = ResolvePlayerDamage args = { owner = owner attacker = none card = card play = none attack = none amount = amount powered = false unblockable = false } into = result }
+  if = { condition = not(isNone(result)) then = { set = { target = result field = DamageResult.DealerPlayer value = owner } } }
+  call = { procedure = PublishDamageResult args = { result = result } }
+ }
+}
 procedure LosePlayerHpFromCard {
  parameters = { owner = Ref(Player) card = Ref(Card) play = Binding amount = Int(min = 0, max = 999999) }
  locals = { result = Binding }

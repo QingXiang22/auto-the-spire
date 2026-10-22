@@ -61,6 +61,10 @@
     {
       "id": "base-spire:twig-slime-s",
       "definition": "enemies/shared/twig-slime-s.spire"
+    },
+    {
+      "id": "base-spire:wriggler",
+      "definition": "enemies/shared/wriggler.spire"
     }
   ]
 }

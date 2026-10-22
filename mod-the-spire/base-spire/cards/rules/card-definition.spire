@@ -16,8 +16,8 @@ template CardDefinition {
     upgradedBaseDamage = { type = Int(min = 0, max = 999) default = 0 }
     upgradedInnate = { type = Bool default = false }
     definition = { type = String(length = 64) }
-    cost = { type = Int(min = 0, max = 9) }
-    upgradedCost = { type = Int(min = 0, max = 9) }
+    cost = { type = Int(min = -1, max = 9) }
+    upgradedCost = { type = Int(min = -1, max = 9) }
     targeted = { type = Bool }
     exhausts = { type = Bool }
     leavesPlay = { type = Bool }

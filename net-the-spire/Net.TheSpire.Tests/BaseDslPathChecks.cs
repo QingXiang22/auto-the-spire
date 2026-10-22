@@ -42,6 +42,7 @@ internal static class BaseDslPathChecks
         yield return ("CP56 real stdio the HP-loss flag drives the extra Spite hit", () => StdioTrajectory("spite"));
         yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
         yield return ("DUMMY real stdio publishes three-turn living escape and timeout outcome", () => StdioTrajectory("battle-friend"));
+        yield return ("WRIGGLER real stdio publishes four slot moves, Infection -1 cost and real turn-end damage", () => StdioTrajectory("wriggler"));
         yield return ("IC real stdio explicit target selects the second enemy", () => StdioTrajectory("explicit-target"));
         yield return ("IC real stdio mandatory hand choice resumes once after HP loss", () => StdioTrajectory("hand-exhaust"));
         yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
@@ -194,6 +195,16 @@ internal static class BaseDslPathChecks
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
                 "normal-opening" or "normal-claim" or "normal-skip" => [],
+                "wriggler" => [
+                    ("Wriggler.Spawn", "0", false, "0", "0", false, ""),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, ""),
+                    ("Infection.AddToHand", "0", true, "3", "1", true, ""),
+                    ("EndDevelopmentTurn", "0", true, "3", "1", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, ""),
+                    ("EndDevelopmentTurn", "0", true, "3", "2", false, ""),
+                    ("BeginDevelopmentTurn", "0", true, "3", "3", true, ""),
+                    ("EndDevelopmentTurn", "0", true, "3", "3", false, "")],
                 "battle-friend" => [
                     ("BattleFriendV3.Spawn", "0", false, "0", "0", false, "300"),
                     ("BeginDevelopmentCombat", "0", true, "0", "0", false, "300"),
@@ -445,6 +456,7 @@ internal static class BaseDslPathChecks
                 _ => [("TheAbacus.Obtain", "0", false, "0", "0", false, ""), ("Draw", "6", false, "0", "0", false, "")],
             };
             var stepNumber = 0;
+            var wrigglerInitialMoves = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var step in sequence)
             {
                 var candidates = snapshot.LegalActions.Where(a => a.ActionType.EndsWith(":" + step.Action, StringComparison.Ordinal)).ToArray();
@@ -460,6 +472,36 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
                 Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");
                 if (step.Target.Length > 0) Check.Equal(step.Target, Public(snapshot, "Enemy.Hp"), "public development target HP follows the real damage result");
+                if (mode == "wriggler")
+                {
+                    var enemies = snapshot.Entities.Where(e => e.ContentId == "base-spire:wriggler").ToArray();
+                    Check.Equal(4, enemies.Length, "four actual public enemies");
+                    string Text(EntityDto entity, string name) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + name, StringComparison.Ordinal)).Value!).Value;
+                    var completed = int.Parse(step.Turn, System.Globalization.CultureInfo.InvariantCulture) - (step.TurnOpen ? 1 : 0);
+                    if (step.Turn == "0") completed = 0;
+                    if (wrigglerInitialMoves.Count == 0)
+                    {
+                        foreach (var enemy in enemies) wrigglerInitialMoves.Add(enemy.InstanceId, Text(enemy, "Enemy.MoveId"));
+                        Check.Equal(2, wrigglerInitialMoves.Values.Count(m => m == "NASTY_BITE_MOVE"), "two initial bites");
+                        Check.Equal(2, wrigglerInitialMoves.Values.Count(m => m == "WRIGGLE_MOVE"), "two initial wriggles");
+                    }
+                    foreach (var enemy in enemies)
+                    {
+                        var bite = (wrigglerInitialMoves[enemy.InstanceId] == "NASTY_BITE_MOVE") == (completed % 2 == 0);
+                        Check.Equal(bite ? "NASTY_BITE_MOVE" : "WRIGGLE_MOVE", Text(enemy, "Enemy.MoveId"), "public instance keeps its saved move");
+                        Check.Equal(bite ? "attack" : "buff,status", Text(enemy, "Enemy.Intent"), "source intent order");
+                    }
+                    foreach (var card in snapshot.Entities.Where(e => e.ContentId == "base-spire:infection"))
+                    {
+                        Check.Equal("-1", Text(card, "Card.Cost"), "public source negative cost");
+                        Check.False(((WireBool)card.Fields.Single(f => f.FieldId.EndsWith(":Card.CanUpgrade", StringComparison.Ordinal)).Value!).Value, "no status upgrade");
+                        Check.False(snapshot.LegalActions.Where(a => a.ActionType.EndsWith(":PlayCardFromHand", StringComparison.Ordinal) || a.ActionType.EndsWith(":UpgradeCardInHand", StringComparison.Ordinal))
+                            .Any(a => a.Fields.Any(f => f.Value is WireString value && value.Value == card.InstanceId)), "no play or upgrade candidate for Infection");
+                    }
+                    Check.Equal(new[] { "80", "65", "49", "33" }[completed], Public(snapshot, "Player.Hp"), "real Infection and powered monster damage");
+                    Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("StartStunned", StringComparison.Ordinal), "birth condition state stays hidden");
+                    BaseDslPileChecks.CheckSnapshot(snapshot);
+                }
                 if (mode == "battle-friend")
                 {
                     var expired = step.Action == "EndDevelopmentTurn" && step.Turn == "3";

@@ -11,7 +11,7 @@ internal static class DslBackend
         if (fixture.Reshuffle && package.RandomProfile != RandomService.VanillaDrawProfileId)
             throw new NotSupportedException("Original reshuffle diagnostics require the declared vanilla raw-word profile.");
         var session = package.CreateSession((ulong)fixture.Seed, ["player"], fixture.GameSeed,
-            fixture.Reshuffle ? new SessionDebugOptions(MaxRecords: 20_000) : null);
+            fixture.Reshuffle ? new SessionDebugOptions(MaxRecords: 100_000) : null);
         session.Start();
         var player = Instances("Player").Single();
         var slots = new Dictionary<InstanceId, string>();

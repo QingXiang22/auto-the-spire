@@ -181,6 +181,8 @@ internal static partial class PackageChecks
         var enemies = RunEnemyTurnChecks(package, Case);
         Merge(RunEnemyMoveGraphChecks(package, Case), enemies);
         Merge(RunBattleFriendChecks(package, Case), enemies);
+        foreach (var row in RunWrigglerChecks(package, Case))
+            (row.Key == "base-spire:infection" ? cards : enemies).Add(row.Key, row.Value);
         Merge(RunSlimedChecks(package, Case), cards);
         var encounters = RunEncounterChecks(package, Case);
         foreach (var row in RunSlimeChecks(package, Case))

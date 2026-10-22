@@ -26,7 +26,7 @@ procedure ObtainCardReward {
 }
 procedure ObtainPermanentCard {
   parameters = {
-    owner = Ref(Player) definition = String(length = 64) cost = Int(min = 0, max = 9)
+    owner = Ref(Player) definition = String(length = 64) cost = Int(min = -1, max = 9)
     targeted = Bool exhausts = Bool leavesPlay = Bool kind = String(length = 16) strikeTag = Bool isX = Bool baseDamage = Int(min = 0, max = 999)
   }
   locals = { card = Binding }
