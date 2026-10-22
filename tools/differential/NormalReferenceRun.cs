@@ -391,6 +391,12 @@ internal sealed class NormalReferenceRun : IDisposable
         var scalars = diagnostics ? random.ScalarCalls() : null;
         if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (diagnostics) Put("random.weighted_candidates", random.WeightedCalls());
+        if (diagnostics)
+        {
+            var attempts = random.OpeningAttempts(); var queues = NormalOpeningQueues.Reference(run);
+            NormalOpeningQueues.Validate(random.WeightedCalls(), attempts, queues);
+            Put("random.weighted_attempts", attempts); Put("random.opening_queues", queues);
+        }
         if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
@@ -401,7 +407,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 native_reward_policies = rewardObservation?.Evidence,
                 unmapped_scalar_calls = scalars?.Unmapped,
-                unmapped_weighted_semantics = new[] { "previous-candidate context, compatibility predicate and accept/reject commit effects" },
+                unmapped_weighted_semantics = Array.Empty<string>(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
     public void Dispose() => random.Dispose();
@@ -459,11 +465,12 @@ internal sealed class NormalReferenceRandom : IDisposable
     }
     private void Before(Rng rng, string operation, double minimum, double maximum, int arity)
     {
+        opening?.FinishPending();
         // Upstream advances Counter before this callback, and the PRNG word afterwards.
         // Capture both real states; this hook never draws, replays or replaces a generator.
         var state = rng.ToSerializable(); state.counter--;
         var weighted = operation == "NextDouble" && Name(rng) == "base-spire:run:up_front"
-            ? (opening ?? throw NormalWeightedTrace.Missing("native opening bag observer")).Capture() : null;
+            ? (opening ?? throw NormalWeightedTrace.Missing("native opening bag observer")).Capture(state.counter) : null;
         if (!pending.TryAdd(rng, new(operation, minimum, maximum, arity, state) { Weighted = weighted }))
             throw new NotSupportedException("Reference RNG call is missing its post-result notification.");
         if (attached.Contains(rng)) return;
@@ -473,6 +480,7 @@ internal sealed class NormalReferenceRandom : IDisposable
             var parameters = pending[rng]; pending.Remove(rng);
             if (calls.Count == 20_000) { dropped++; return; }
             calls.Add(new(rng, op, result, cursor - 1, cursor, parameters, rng.ToSerializable()));
+            if (parameters.Weighted is not null) opening!.Result(double.Parse(result, System.Globalization.CultureInfo.InvariantCulture));
         };
         hook.SetValue(rng, observer); attached.Add(rng);
     }
@@ -509,6 +517,7 @@ internal sealed class NormalReferenceRandom : IDisposable
     }
     public object Capture() => new { dropped, unfinished = pending.Count,
         hp_initialization = hpOrigins,
+        opening_commits = opening?.Commits(),
         calls = calls.Select(c => new { stream = Name(c.Rng), c.Operation, c.Result, c.Before, c.After, c.Parameters, c.StateAfter }).ToArray(),
         streams = names.Keys.Concat(attached).Distinct().Select(r => new { name = Name(r), state = r.ToSerializable() }).ToArray() };
     internal NormalFloat32Call[] Float32Calls()
@@ -563,6 +572,7 @@ internal sealed class NormalReferenceRandom : IDisposable
                 double.Parse(c.Result, System.Globalization.CultureInfo.InvariantCulture));
         }));
     }
+    internal NormalOpeningAttempt[] OpeningAttempts() => (opening ?? throw NormalWeightedTrace.Missing("native opening attempt observer")).Attempts();
     // The factory-local generator is retained only by the enabled observer. Compare the
     // same run/player/event objects on both sides; per-call diagnostics retain its words.
     public string KnownState() => System.Text.Json.JsonSerializer.Serialize(names.Where(p => p.Value != "base-spire:encounter:monsters").OrderBy(p => p.Value, StringComparer.Ordinal)

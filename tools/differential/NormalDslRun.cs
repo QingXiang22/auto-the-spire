@@ -248,6 +248,17 @@ internal sealed class NormalDslRun : IDisposable
         var scalars = trace is null ? null : NormalScalarTrace.Dsl(trace.Capture(), trace.DroppedRecords);
         if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (trace is not null) Put("random.weighted_candidates", NormalWeightedTrace.Dsl(trace.Capture(), trace.DroppedRecords));
+        if (trace is not null)
+        {
+            var records = trace.Capture();
+            var attempts = NormalOpeningAttempts.Dsl(records, trace.DroppedRecords);
+            var queues = NormalOpeningQueues.Canonical(Instances("RunRoomPlan").Where(p => Field(p, "RunRoomPlan", "Room").AsString() is "Monster" or "Elite")
+                .Select(p => new NormalOpeningQueueEntry(Field(p, "RunRoomPlan", "Act").AsInt(), Field(p, "RunRoomPlan", "Room").AsString(),
+                    Field(p, "RunRoomPlan", "Position").AsInt(), Field(Field(p, "RunRoomPlan", "Definition").AsRef(), "OpeningDefinition", "DefinitionId").AsString())));
+            NormalOpeningQueues.Validate(NormalWeightedTrace.Dsl(records, trace.DroppedRecords), attempts, queues);
+            NormalOpeningQueues.ValidateCleanup(records, id => IsLive(new InstanceId(id)));
+            Put("random.weighted_attempts", attempts); Put("random.opening_queues", queues);
+        }
         if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
@@ -261,7 +272,7 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
                 unmapped_public_topology = new[] { "MapNodes sequence order" },
                 unmapped_scalar_calls = scalars?.Unmapped,
-                unmapped_weighted_semantics = new[] { "previous-candidate context, compatibility predicate and accept/reject commit effects" },
+                unmapped_weighted_semantics = Array.Empty<string>(),
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
@@ -346,6 +357,6 @@ internal sealed class NormalDslRun : IDisposable
     {
         log.Dispose();
         if (sessionId.Length > 0 && HasDebug)
-            File.WriteAllText(logPath + ".trace.json", NormalPreflight.Json(DebugRecords.Where(r => r.Snapshot is not null || NormalPhaseTrace.Relevant(r)).ToArray()));
+            File.WriteAllText(logPath + ".trace.json", NormalPreflight.Json(DebugRecords.Where(r => r.Snapshot is not null || NormalPhaseTrace.Relevant(r) || NormalOpeningAttempts.Relevant(r)).ToArray()));
     }
 }
