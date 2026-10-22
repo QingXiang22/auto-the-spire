@@ -18,6 +18,8 @@ internal sealed class NormalDslRun : IDisposable
     private readonly HashSet<int> generatedActions = [];
     private int actionIndex = -1;
     private int number;
+    private RequestDto? lastStep;
+    private ResponseDto? lastStepResponse;
     private string sessionId = "";
     public PublicSnapshotDto Snapshot { get; private set; } = null!;
     private Session Engine => host.GetSessionForTests(sessionId).EngineForTests;
@@ -49,14 +51,19 @@ internal sealed class NormalDslRun : IDisposable
     internal string PublicState => WireCanonical.Text(Snapshot.ToWire());
     internal bool HasCompleteDebug => Engine.Debug is { DroppedRecords: 0 };
     internal bool HasDebug => Engine.Debug is not null;
-    private ResponseDto Send(Operation op, params (string, WireValue)[] fields)
+    private RequestDto Request(Operation op, params (string, WireValue)[] fields) =>
+        new("normal-" + ++number, op, new WireObject(fields.Select(p => new KeyValuePair<string, WireValue>(p.Item1, p.Item2))));
+    private ResponseDto Exchange(RequestDto request)
     {
-        var request = new RequestDto("normal-" + ++number, op,
-            new WireObject(fields.Select(p => new KeyValuePair<string, WireValue>(p.Item1, p.Item2))));
         log.WriteLine(WireCanonical.Text(request.ToWire()));
         // Exercise the protocol codec as well as the real production dispatcher.
         var response = host.Dispatch(RequestDto.FromWire(WireParser.ParseUtf8Strict(Encoding.UTF8.GetBytes(WireCanonical.Text(request.ToWire())), "normal-compare")));
         log.WriteLine(WireCanonical.Text(response.ToWire())); log.Flush();
+        return response;
+    }
+    private ResponseDto Send(Operation op, params (string, WireValue)[] fields)
+    {
+        var response = Exchange(Request(op, fields));
         if (!response.Ok) throw new InvalidOperationException("Public Host: " + response.Error?.Message);
         return response;
     }
@@ -73,9 +80,37 @@ internal sealed class NormalDslRun : IDisposable
     public LegalActionDto Action(string name) => Find(name) ?? throw new InvalidOperationException("Missing public candidate: " + name);
     public void Step(LegalActionDto action)
     {
-        Send(Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(Snapshot.ObservationId)), ("candidate_id", WireValue.Str(action.CandidateId)));
+        lastStep = Request(Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(Snapshot.ObservationId)), ("candidate_id", WireValue.Str(action.CandidateId)));
+        lastStepResponse = Exchange(lastStep);
+        if (!lastStepResponse.Ok) throw new InvalidOperationException("Public Host: " + lastStepResponse.Error?.Message);
         Snapshot = PublicSnapshotDto.FromWire(Get(Send(Operation.Observe, ("session_id", WireValue.Str(sessionId))), "snapshot"), NetProtocol.V02);
         Remember();
+    }
+    internal object CheckRequestReplay()
+    {
+        if (lastStep is null || lastStepResponse is null) throw new InvalidOperationException("No real step to replay.");
+        var before = Signature();
+        var replay = Exchange(lastStep);
+        if (WireCanonical.Text(replay.ToWire()) != WireCanonical.Text(lastStepResponse.ToWire()))
+            throw new InvalidOperationException("The same public request did not return its cached result.");
+        Unchanged();
+        var stale = new RequestDto("normal-" + ++number, lastStep.Operation, lastStep.Payload);
+        var rejected = Exchange(stale);
+        if (rejected.Ok || rejected.Error?.Code != "stale_observation")
+            throw new InvalidOperationException("A fresh request with the previous observation was not rejected as stale.");
+        Unchanged();
+        if (WireCanonical.Text(Exchange(stale).ToWire()) != WireCanonical.Text(rejected.ToWire()))
+            throw new InvalidOperationException("A rejected request did not retain its cached rejection.");
+        Unchanged();
+        return new { duplicate_cached = true, stale_rejected = true, rejection_cached = true,
+            unchanged_state_random_pending_and_public = true, backend = "dsl:public-host" };
+        string Signature() => Engine.State.StateHash() + RandomState + NormalPreflight.Json(Engine.PendingDecision)
+            + Engine.StateVersion + Engine.Status + PublicState;
+        void Unchanged()
+        {
+            Snapshot = PublicSnapshotDto.FromWire(Get(Send(Operation.Observe, ("session_id", WireValue.Str(sessionId))), "snapshot"), NetProtocol.V02);
+            if (Signature() != before) throw new InvalidOperationException("Duplicate/stale request changed gameplay, RNG, pending decision or public observation.");
+        }
     }
     private InstanceId[] Instances(string type) => Engine.State.AllInstances(Engine.RuleSet.TypeByQualifiedId("base-spire:" + type).Id).ToArray();
     private InstanceId[] Members(string name) => Engine.State.CollectionMembers(Engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name).Id).ToArray();
@@ -110,6 +145,8 @@ internal sealed class NormalDslRun : IDisposable
     }
     public NormalAction Semantic(LegalActionDto action)
     {
+        if (action.ActionType == "net:action:net.answer_decision" && Phase == "combat")
+            return new("choose-target", [Binding(action.Fields.Single().Value!)]);
         if (action.ActionType == "net:action:net.answer_decision" && Phase == "neow")
             return action.Fields.Single().Value is WireBool ? new("leave-neow", []) : new("neow", [Binding(action.Fields.Single().Value!)]);
         var name = action.ActionType.Split(':')[^1];
@@ -173,9 +210,12 @@ internal sealed class NormalDslRun : IDisposable
         Put("actions.candidates", actions);
         var decision = Engine.PendingDecision;
         Put("decisions.current", decision is null ? null : new { min = decision.Minimum, max = decision.Maximum,
-            candidates = Snapshot.LegalActions.Select(a => Binding(a.Fields.Single().Value!)).Order(StringComparer.Ordinal).ToArray() });
+            candidates = Phase == "combat" ? decision.Candidates.Select(c => identities[c]).ToArray()
+                : Snapshot.LegalActions.Select(a => Binding(a.Fields.Single().Value!)).Order(StringComparer.Ordinal).ToArray() });
         // Public evidence remains the actual protocol snapshot, separate from tool-only hidden piles.
         var trace = Engine.Debug;
+        if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
+            .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
                 "decisions: targeted-play constraints", "lifecycle: final-kill effects and duplicate/stale submissions"],
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),

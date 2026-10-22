@@ -54,7 +54,7 @@ internal static class NormalRunChecks
             return result.ToArray();
             void Capture()
             {
-                result.Add(NormalPreflight.Json(reference.Capture("check").Values));
+                result.Add(NormalPreflight.Json(reference.Capture("check").Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal))));
                 result.Add(reference.KnownRandomState);
             }
         }
@@ -80,7 +80,8 @@ internal static class NormalRunChecks
         void Check()
         {
             var a = observed.Capture("check"); var b = plain.Capture("check");
-            Require(NormalRunComparison.First(0, a, b) is null, "diagnostics leave normal Host facts/actions/piles unchanged");
+            var gameplay = a with { Values = new(a.Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal)).ToDictionary(p => p.Key, p => p.Value), StringComparer.Ordinal) };
+            Require(NormalRunComparison.First(0, gameplay, b) is null, "diagnostics leave normal Host facts/actions/piles unchanged");
             Require(observed.RandomState == plain.RandomState, "diagnostics leave every stream/state/cursor unchanged");
             Require(observed.HasCompleteDebug && !plain.HasDebug, "debug is present only when requested and has no dropped records");
             Require(observed.PublicState == plain.PublicState, "diagnostics leave the complete public snapshot unchanged");

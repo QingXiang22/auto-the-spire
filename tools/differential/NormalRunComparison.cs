@@ -14,12 +14,14 @@ internal sealed record NormalDifference(int Boundary, string Kind, string Path, 
 internal sealed record NormalCase(string Id, string Status, string? Reason, NormalAction[] Prefix,
     NormalPair[] Boundaries, NormalDifference? FirstDifference, bool ReturnedToMap)
 {
+    public object[] ProtocolChecks { get; init; } = [];
     public bool Complete => ReturnedToMap && Status == "passed";
     public bool IndependentVerified => Complete;
 }
 
 internal static class NormalRunComparison
 {
+    internal static readonly string[] ExpectedCaseIds = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"];
     internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
         "public.snapshot", "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
@@ -52,14 +54,17 @@ internal static class NormalRunComparison
         try { reference = Repository.VerifyReference(repository); }
         catch (Exception e) { unavailable = e.GetType().Name + ": " + e.Message; }
         var results = new List<NormalCase>();
-        foreach (var path in new[] { "claim", "skip" })
+        foreach (var id in ExpectedCaseIds)
         {
+            var path = id.EndsWith("-claim", StringComparison.Ordinal) ? "claim" : "skip";
+            var targeted = id.StartsWith("m01-targeted-", StringComparison.Ordinal);
             var prefix = new List<NormalAction>(); var boundaries = new List<NormalPair>();
+            var protocolChecks = new List<object>();
             NormalDifference? difference = null; var returned = false; string? error = null;
             try
             {
                 if (unavailable is not null) throw new NotSupportedException(unavailable);
-                using var left = new NormalDslRun(repository, Path.Combine(output, path + ".public.ndjson"));
+                using var left = new NormalDslRun(repository, Path.Combine(output, id + ".public.ndjson"));
                 using var right = new NormalReferenceRun("777");
                 left.Start("777");
                 left.Step(left.Action("StartNormalRun")); right.Start();
@@ -75,7 +80,11 @@ internal static class NormalRunComparison
                 }
                 for (var moves = 0; difference is null && left.Phase == "combat" && moves < 100; moves++)
                 {
-                    var candidate = new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }
+                    if (left.Snapshot.LegalActions.All(a => a.ActionType == "net:action:net.answer_decision"))
+                    {
+                        Apply(left.Semantic(left.Snapshot.LegalActions.First())); Capture("target-resolved:" + moves); continue;
+                    }
+                    var candidate = new[] { targeted ? "PlayTargetedCard" : "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }
                         .Select(left.Find).FirstOrDefault(a => a is not null)
                         ?? throw new NotSupportedException("No registered public combat action.");
                     Apply(left.Semantic(candidate)); Capture("combat-action:" + moves);
@@ -94,22 +103,24 @@ internal static class NormalRunComparison
                 void Apply(NormalAction action) { prefix.Add(action); left.Apply(action); right.Apply(action); }
                 void Capture(string kind)
                 {
+                    protocolChecks.Add(new { boundary = kind, evidence = left.CheckRequestReplay() });
                     var a = left.Capture(kind); var b = right.Capture(kind); boundaries.Add(new(a, b));
                     difference ??= First(boundaries.Count - 1, a, b);
                 }
             }
             catch (Exception e) { error = e.GetType().Name + ": " + e.Message; }
-            var item = new NormalCase("m01-" + path, difference is null ? "blocked_compare" : "diverged", error,
-                prefix.ToArray(), boundaries.ToArray(), difference, returned);
+            var item = new NormalCase(id, difference is null ? "blocked_compare" : "diverged", error,
+                prefix.ToArray(), boundaries.ToArray(), difference, returned) { ProtocolChecks = protocolChecks.ToArray() };
             if (error is null && Certified(item)) item = item with { Status = "passed" };
             results.Add(item);
             Console.WriteLine($"{item.Id}: {item.Status}; paired boundaries={boundaries.Count}; first={difference?.Kind}/{difference?.Path}; {error}");
         }
-        var passed = results.Count == 2 && results.All(r => r.IndependentVerified);
+        var passed = results.Count == ExpectedCaseIds.Length && results.All(r => r.IndependentVerified);
         File.WriteAllText(Path.Combine(output, "result.json"), JsonSerializer.Serialize(new
         {
             schema = "normal-run/paired@1", status = passed ? "passed" : results.Any(r => r.FirstDifference is not null) ? "diverged" : "blocked_compare",
-            complete = passed, independent_verified = passed, expected_case_ids = new[] { "m01-claim", "m01-skip" },
+            complete = passed, independent_verified = passed, expected_case_ids = ExpectedCaseIds,
+            targeting_policy = "original claim/skip retain first-legal-target; additional targeted paths pause and choose the first public target",
             executed = results.Count(r => r.Boundaries.Length > 0), input = input.RootElement,
             required_dimensions = Dimensions, input_sha256 = NormalPreflight.Hash(inputPath), reference_identity = reference,
             adapter_sha256 = NormalPreflight.Hash(typeof(NormalRunComparison).Assembly.Location),
