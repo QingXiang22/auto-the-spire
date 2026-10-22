@@ -95,6 +95,8 @@ SlimesWeak 的三次 HP 抽样由原生 `NextInt(0, width)` 偏移规范化为 D
 
 Run.Profile 依据参考的实际角色、进阶、人数、epoch／无色卡解锁状态及完整角色池规范化；部分解锁或其他配置明确失败，原值保存在 `native_configuration`。Player.AutoDrawPerTurn 对应原生 CombatEngine 的 BaseHandDrawCount，表示修改钩子之前的基础抽牌配置。首战出现的 Vulnerable 按原生持续时间计数，不在玩家回合结束时整体失效，因此其 ExpiresAtTurnEnd 为 false；其他 Power 的此项语义未映射时明确失败。
 
+Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标待选状态。参考端读取当前房间、房间栈数量和真实访问历史，确认首幕只经过 Ancient 与首个 Monster 后，将尚不存在的休息点选择状态规范化为两个 false；原始依据保存在 `native_rest_context`。休息点、可能解析为休息点的 Unknown、多层房间或后续幕不适用此映射，明确报告缺失维度。
+
 `public.player_history` 比较当前活动战斗的出牌次数、正数 HP 损失次数、本回合损血／耗尽标记、敌方阶段及永久牌组使用状态。DSL 读取公开字段；参考读取原生玩家计数与伤害／耗尽历史、当前阵营及永久牌组类型。原生房间在奖励阶段保留已完成战斗的历史，DSL 在奖励发布前清理；共同表示将已结束战斗的计数与回合标记归零，并在 `native_player_history` 保留原生归档计数。这些字段的比较只覆盖实际执行的正常路径，尚未映射的公开字段继续单列。
 
 `public.reward_sets` 比较全部保留奖励集合的访问标识、房型来源、角色、生成幕／进阶、卡牌数量、稀有度策略、生成／关闭状态及待领药水引用。参考在真实奖励生成完成后保存来源上下文，读取 CardReward 的实际数量、策略和填充状态，并在各边界读取房间退出完成标记及 PotionReward 的处理状态。领取或跳过后待领药水引用归空；集合及生成上下文在返回地图后继续比较。

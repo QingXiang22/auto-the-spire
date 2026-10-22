@@ -11,7 +11,7 @@ internal sealed record NormalCardOffer(string Id, bool Upgraded, long Cost, stri
 internal sealed record NormalPotionView(string Origin, long Slot, string Usage, string Target);
 internal sealed record NormalRelicView(string Id, bool Melted);
 internal sealed record NormalPlayerView(long Hp, long MaxHp, long Gold, string Character, long MaxEnergy, bool CombatActive, string CombatOutcome,
-    string Room, bool TurnOpen, long Energy, long Turn, long Block, bool CurrentRun, long AutoDraw);
+    string Room, bool TurnOpen, long Energy, long Turn, long Block, bool CurrentRun, long AutoDraw, bool RoomUsed, bool PendingForge);
 internal sealed record NormalEnemyView(string Origin, string Id, long Hp, long MaxHp, long Block, string Move, long MoveIndex, string Intent);
 internal sealed record NormalPlayerHistory(long Plays, long HpLosses, bool LostHpThisTurn, bool ExhaustedThisTurn, bool EnemyPhase, bool UsesRunDeck);
 internal sealed record NormalPublicPower(string Id, string Holder, long Amount, bool SkipTick, bool ExpiresAtTurnEnd);
@@ -35,7 +35,7 @@ internal static class NormalPublicObservation
         ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending CurrentVisit VisitSequence Profile"),
         ("MapNode", "Col Row Type Visited Selectable"),
         ("NeowVisit", "Status SelectedRelic"), ("NeowOption", "Position RelicId"),
-        ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending PlaySequence HpLossCount LostHpThisTurn ExhaustedCardThisTurn EnemyPhase UsesRunDeck AutoDrawPerTurn"),
+        ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending PlaySequence HpLossCount LostHpThisTurn ExhaustedCardThisTurn EnemyPhase UsesRunDeck AutoDrawPerTurn RoomUsed PendingForge"),
         ("Enemy", "Hp MaxHp Block MoveId MoveIndex Intent"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick ExpiresAtTurnEnd"),
         ("RunVisit", "StableId Node MapType RoomType EncounterId Phase Status Committed Rewards"),
         ("Card", "Label SourceEntry Kind Rarity Cost BaseCost BaseDamage DamageGrowth Upgraded CanUpgrade Targeted Exhausts Innate LeavesPlay StrikeTag IsX PaidX"),
@@ -81,7 +81,8 @@ internal static class NormalPublicObservation
             Coord(byHandle[Text(run, "CurrentNode")]), Number(run, "MapNodeCount"), Flag(run, "NeowPending"), Text(run, "Profile")));
         Put("public.player", new NormalPlayerView(Number(player, "Hp"), Number(player, "MaxHp"), Number(player, "Gold"), Text(player, "CharacterId"),
             Number(player, "MaxEnergy"), Flag(player, "CombatActive"), Text(player, "CombatOutcome"), Text(player, "Room"), Flag(player, "TurnOpen"),
-            Number(player, "Energy"), Number(player, "TurnNumber"), Number(player, "Block"), Text(player, "CurrentRun") == run.InstanceId, Number(player, "AutoDrawPerTurn")));
+            Number(player, "Energy"), Number(player, "TurnNumber"), Number(player, "Block"), Text(player, "CurrentRun") == run.InstanceId, Number(player, "AutoDrawPerTurn"),
+            Flag(player, "RoomUsed"), Flag(player, "PendingForge")));
         Put("public.player_history", new NormalPlayerHistory(Number(player, "PlaySequence"), Number(player, "HpLossCount"),
             Flag(player, "LostHpThisTurn"), Flag(player, "ExhaustedCardThisTurn"), Flag(player, "EnemyPhase"), Flag(player, "UsesRunDeck")));
         Put("public.enemies", Entities("Enemy").Select(e => new NormalEnemyView(binding(WireValue.Str(e.InstanceId)), Content(e), Number(e, "Hp"),
