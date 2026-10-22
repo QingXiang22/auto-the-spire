@@ -6,6 +6,14 @@
 
 显式SapphireSeed／DoorsOfLightAndDark开发访问已使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。它们尚未接回正常地图／事件池和子战斗返回，不能据此开放正常Run scope。
 
+在同一公开 Host 的新会话中，可提交 `StartNormalRun` 运行全解锁、A0、单人 Ironclad 的正常开局首段：
+
+1. 回答 Neow 的真实三选一。入口已建立源初态、完整前置队列和真实首幕地图。
+2. 选择已支持的 GoldenPearl、NutritiousOyster 或 BoomingConch。其余源选项保留，选择后明确报未支持。
+3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 FuzzyWurmCrawlerWeak 时，会按真实 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
+
+例如 seed `777` 提供 BoomingConch，首个真实遭遇为 FuzzyWurmCrawlerWeak。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。奖励关闭、返回地图及正常 Run scope 仍未开放。
+
 ## 定义角色、进阶与正常开局
 
 在开发 scope 的干净初态提交 `Ironclad.Initialize`，可建立 80 HP、99 金币、5 Strike／4 Defend／1 Bash 的永久牌组及 BurningBlood。它拒绝覆盖已获得的牌、物品、房间或战斗进度。接着用真实遭遇的 `Spawn` 或开发目标入口建敌人，再提交 `BeginDevelopmentCombat` 和 `BeginDevelopmentTurn`：新副本先用原版 Shuffle 流洗牌，回合自动抽五张；后续回合也自动抽牌，首回合按 Innate 优先并扩展抽取数量至十张上限。不要再手动补五次 Draw。旧机制探针没有初始化角色时仍手动抽牌。

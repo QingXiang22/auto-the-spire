@@ -82,7 +82,7 @@ def iter_docs(root: Path, files: set[Path]):
     for path in sorted(files):
         if path.suffix != ".md" or not path.is_file() or path.name == "AGENTS.override.md":
             continue
-        if any(part in SKIP_DIRS for part in path.parts):
+        if any(part in SKIP_DIRS for part in path.relative_to(root).parts):
             continue
         # Retired implementation snapshots are checked by the migration contract.
         if "base-migration-baseline" in path.parts:
@@ -203,6 +203,9 @@ def main() -> int:
         print("FAIL: documentation checks require a Git checkout")
         return 1
     docs = list(iter_docs(root, files))
+    if not docs:
+        print("FAIL: no versioned Markdown files were selected")
+        return 1
     for path in docs:
         check_file(path, root, files, failures)
     check_traceability(root, failures)

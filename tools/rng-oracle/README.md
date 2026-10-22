@@ -16,6 +16,22 @@ python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanil
 分两个文件是因为判据分属两个项目：读数向量给 `Core.TheSpire.Engine.Tests`，
 布局向量给 `BaseSpire.Slice.Tests`（布局实现落在 base 侧）。
 
+## 正常开局与首幕地图
+
+重新生成固定开局、Gaussian和最终地图向量需要本地同版本只读源码：
+
+```powershell
+python -X utf8 tools/rng-oracle/normal_opening_vectors.py --output tools/base-spire-dev/fixtures/normal-opening-vectors.json --write-definitions mod-the-spire/base-spire/run/opening-source.spire --write-neow-pool mod-the-spire/base-spire/run/neow-pool.spire
+python -X utf8 tools/rng-oracle/map_gaussian_vectors.py --output tools/base-spire-dev/fixtures/map-gaussian-vectors.json --map-output tools/base-spire-dev/fixtures/act-one-map-vectors.json
+dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
+```
+
+开局神谕只读取源池和本目录独立RNG，比较完整遗物袋、三幕房间队列、有标签遭遇的拒绝抽取及真实Neow选项。生成的DSL池是实际开局消费者的数据，未实现效果继续显式失败，不缩减来源池。固定10组字符串seed含大小写、中文、代理对和空串，另保留原开局种子20261021的真实Neow未支持回归；CI无需游戏源码。
+
+Gaussian向量记录每次Box–Muller尝试的两个53位输入、偶数舍入结果和接受／拒绝游标。最终地图向量由[独立地图程序](map-reference/MapReference.csproj)调用固定版本的源地图移植生成；程序仅依赖工具层，与Engine及生产DSL隔离。数据保留原源SHA256、按UTF-8／LF规范化的移植文件SHA256、每个节点的坐标／房型／父子边和最终游标。生产DSL需逐项匹配，不能由生产结果回填期望。
+
+该检查另从公开动作执行seed `777`的Neow选择、离场确认、合法首节点、源出生HP与战斗首回合；人工池／地图探针只用于独立比较。它不等于完整Run、所有Neow效果或参考模拟器正常整局双侧验收。
+
 ## 两层向量
 
 首幕 A0 普通战斗完整奖励的固定来源数据：

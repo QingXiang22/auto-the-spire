@@ -1,0 +1,42 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source BoomingConch: only the first player turn of an actual Elite room.
+template BoomingConchContent { body = {
+  procedure AtEliteOpening {
+    pure = true parameters = { owner = Ref(Player) } result = Bool
+    locals = { run = Binding visit = Binding }
+    body = {
+      if = { condition = or(not(field(owner, Player.CombatActive)), greater(field(owner, Player.TurnNumber), 1)) then = { return = { value = false } } }
+      let = { into = run value = field(owner, Player.CurrentRun) }
+      if = { condition = isNone(run) then = { return = { value = false } } }
+      let = { into = visit value = field(run, Run.CurrentVisit) }
+      if = { condition = isNone(visit) then = { return = { value = false } } }
+      return = { value = equal(field(visit, RunVisit.RoomType), "elite") }
+    }
+  }
+  procedure Draw {
+    pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Relic) } result = Int
+    body = {
+      if = { condition = pureCall(AtEliteOpening, owner) then = { return = { value = add(value, 2) } } }
+      return = { value = value }
+    }
+  }
+  subscription Draw {
+    event = ModifyTurnDraw reaction = Draw
+    instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:booming-conch"))))
+    instance_order = collectionIndex(Relics, listener) priority = 100
+  }
+  procedure Energy {
+    parameters = { owner = Ref(Player) listener = Ref(Relic) }
+    body = {
+      if = { condition = and(not(field(owner, Player.EnemyPhase)), pureCall(AtEliteOpening, owner)) then = { call = { procedure = GainEnergy args = { owner = owner amount = 1 } } } }
+    }
+  }
+  subscription Energy {
+    event = AfterSideTurnStarted reaction = Energy
+    instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:booming-conch"))))
+    instance_order = collectionIndex(Relics, listener) priority = 100
+  }
+} }
+use BoomingConch { template = BoomingConchContent }

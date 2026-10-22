@@ -7,3 +7,13 @@ use RubyRaidersNormal {
   template = RubyRaidersFormation
   args = { definition = "base-spire:ruby-raiders-normal" }
 }
+
+procedure SpawnRubyRaidersNormal {
+  body = {
+    call = { procedure = BuildRubyRaiderPool }
+    call = { procedure = PickRaiderFromPool }
+    call = { procedure = PickRaiderFromPool }
+    call = { procedure = PickRaiderFromPool }
+    call = { procedure = ClearRaiderPool }
+  }
+}

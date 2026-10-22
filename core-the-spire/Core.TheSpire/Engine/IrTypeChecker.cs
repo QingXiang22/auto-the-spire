@@ -809,6 +809,27 @@ internal static class IrTypeChecker
                         randomValue.Op is RandomValueOp.Float32Less or RandomValueOp.Float32LessOrEqual ? Ty.Bool : Ty.Int;
                 }
 
+                case Binary64Expr binary64:
+                {
+                    var count = binary64.Op switch
+                    {
+                        Binary64Op.FromNumber or Binary64Op.Sqrt or Binary64Op.Log or Binary64Op.Sin or Binary64Op.RoundToInt => 1,
+                        Binary64Op.Add or Binary64Op.Subtract or Binary64Op.Multiply or Binary64Op.Divide or Binary64Op.Less or Binary64Op.LessOrEqual => 2,
+                        _ => throw Faults.TypeError($"{where}: unknown binary64 operation"),
+                    };
+                    if (binary64.Arguments.Count != count) throw Faults.TypeError($"{where}: invalid binary64 argument count");
+                    foreach (var argument in binary64.Arguments)
+                    {
+                        var type = CheckExpr(frame, argument, where);
+                        if (binary64.Op == Binary64Op.FromNumber)
+                        {
+                            if (type.Kind is not (FieldTypeKind.Int or FieldTypeKind.Fixed)) throw Faults.TypeError($"{where}: float64 requires a numeric value");
+                        }
+                        else Require(type, Ty.Int, where, "binary64 bits");
+                    }
+                    return binary64.Op is Binary64Op.Less or Binary64Op.LessOrEqual ? Ty.Bool : Ty.Int;
+                }
+
                 case EntityScopeExpr entityScope:
                 {
                     var entity = CheckExpr(frame, entityScope.Entity, where);

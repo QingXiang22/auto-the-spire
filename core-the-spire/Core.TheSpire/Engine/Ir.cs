@@ -918,6 +918,7 @@ public static class PrimitiveSignatures
             new("expr.not", [EngineEffect.PureExpression]),
             new("expr.convert", [EngineEffect.PureExpression]),
             new("expr.randomValue", [EngineEffect.PureExpression]),
+            new("expr.binary64", [EngineEffect.PureExpression]),
             new("expr.enum", [EngineEffect.PureExpression]),
             new("expr.count", readPure),
             new("expr.collectionIndex", readPure),

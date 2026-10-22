@@ -31,6 +31,7 @@ entity Player {
     # Opt-in permanent deck for this development scope. A normal character setup is not migrated.
     UsesRunDeck = { type = Bool default = false }
     CharacterId = { type = String(length = 64) default = "none" }
+    CurrentRun = { type = Ref(Run) optional = true }
     AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
     AttackDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     DamageDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }

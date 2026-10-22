@@ -46,7 +46,7 @@ public sealed record AnchorResolution(string Name) : Resolution;
 /// </summary>
 public sealed class RuleSetBuilder
 {
-    public const string EngineVersion = "engine/ir@0.7";
+    public const string EngineVersion = "engine/ir@0.8";
 
     private readonly List<EnginePackage> _packages = [];
     private readonly Dictionary<int, string> _backendDescriptors = [];
@@ -1004,6 +1004,11 @@ public static class IrDumper
             case RandomValueExpr randomValue:
                 text.Append('(').Append(randomValue.Op).Append(' ');
                 WriteList(randomValue.Arguments, text);
+                text.Append(')');
+                return;
+            case Binary64Expr binary64:
+                text.Append('(').Append(binary64.Op).Append(' ');
+                WriteList(binary64.Arguments, text);
                 text.Append(')');
                 return;
             case SeedStreamInst seedStream:

@@ -28,6 +28,27 @@ public sealed partial class Session
                 };
             }
 
+            case Binary64Expr binary64:
+            {
+                Value Arg(int index) => Eval(call, binary64.Arguments[index]);
+                double Number(int index) => Binary64.Read(Arg(index).AsInt());
+                return binary64.Op switch
+                {
+                    Binary64Op.FromNumber => Value.Of(Binary64.Bits(Arg(0).Kind == ValueKind.Fixed ? (double)Arg(0).AsDecimal() : (double)Arg(0).AsInt())),
+                    Binary64Op.Add => Value.Of(Binary64.Bits(Number(0) + Number(1))),
+                    Binary64Op.Subtract => Value.Of(Binary64.Bits(Number(0) - Number(1))),
+                    Binary64Op.Multiply => Value.Of(Binary64.Bits(Number(0) * Number(1))),
+                    Binary64Op.Divide => Value.Of(Binary64.Bits(Number(0) / Number(1))),
+                    Binary64Op.Sqrt => Value.Of(Binary64.Bits(Math.Sqrt(Number(0)))),
+                    Binary64Op.Log => Value.Of(Binary64.Bits(Math.Log(Number(0)))),
+                    Binary64Op.Sin => Value.Of(Binary64.Bits(Math.Sin(Number(0)))),
+                    Binary64Op.RoundToInt => Value.Of(Binary64.RoundToInt(Number(0))),
+                    Binary64Op.Less => Value.Of(Number(0) < Number(1)),
+                    Binary64Op.LessOrEqual => Value.Of(Number(0) <= Number(1)),
+                    _ => throw Faults.Schema("Unknown binary64 operation"),
+                };
+            }
+
             case LocalExpr local:
                 return call.Slots[local.Slot];
 
