@@ -1,6 +1,8 @@
 {
   "repository": "https://github.com/iRyougi/sts2-sim.git",
-  "commit": "2089659bd07920088b93226136c72b6b6ee590ad",
-  "tree": "8eb770da4e87677c54799801488b71a8ccba687b",
-  "status": "upstream-only; pinned after latest-main review on 2026-10-15"
+  "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+  "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+  "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+  "declared_game_baseline": "v0.111.0",
+  "rule_source": "src/Sts2Sim.Core"
 }

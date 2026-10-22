@@ -62,6 +62,7 @@ def main() -> int:
     if top.returncode == 0 and Path(top.stdout.strip()).resolve() == ROOT:
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     result = {"suite": args.suite, "configuration": config, "commit": commit,
+              "rule_authority_lock": json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8")),
               "reference_lock": json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8"))
               if args.suite == "differential" else None, "steps": [], "exit_code": 0}
     try:

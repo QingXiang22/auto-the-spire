@@ -35,6 +35,8 @@ internal static class NormalPreflight
         var output = Path.GetFullPath(args[1]); Directory.CreateDirectory(output);
         var inputPath = Path.Combine(repository, "tools/base-spire-dev/fixtures/normal-first-combat.json");
         using var input = JsonDocument.Parse(File.ReadAllText(inputPath));
+        using var sourceCatalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(repository,
+            "tools/base-spire-dev/fixtures/source-catalogs.json")));
         var spec = input.RootElement;
         ValidateInput(spec);
         foreach (var path in new[] { "claim", "skip" }) File.Delete(Path.Combine(output, path + ".public.ndjson"));
@@ -102,7 +104,10 @@ internal static class NormalPreflight
             expected_case_ids = new[] { "m01-claim", "m01-skip" },
             executed = results.Count(r => r.Left is not null && r.Right is not null),
             input = spec.Clone(), input_sha256 = Hash(inputPath), reference_identity = referenceIdentity,
-            source_identity = new { production_manifest_sha256 = Hash(Path.Combine(repository, "mod-the-spire/base-spire/package.json")),
+            source_identity = new { target_rule_authority = referenceIdentity,
+                production_source_baselines = sourceCatalog.RootElement.GetProperty("domains").EnumerateObject()
+                    .Select(d => d.Value.GetProperty("source_baseline").GetString()).Distinct().ToArray(),
+                production_manifest_sha256 = Hash(Path.Combine(repository, "mod-the-spire/base-spire/package.json")),
                 opening_source_fixture_sha256 = Hash(Path.Combine(repository, "tools/base-spire-dev/fixtures/normal-opening-vectors.json")),
                 production_rng_source_sha256 = Hash(Path.Combine(repository, "mod-the-spire/base-spire/run/random.spire")) },
             adapter_sha256 = Hash(typeof(NormalPreflight).Assembly.Location), cases = results,

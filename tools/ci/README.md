@@ -1,5 +1,7 @@
 # core、纯 DSL base、net 与迁移检查
 
+规则目标见[锁定 sts2-sim](../../reference/README.md)。现有 base 来源清单、随机向量和受控比较仍验证其原来源；各组通过不代表已经迁移到新目标，也不证明客户端保真。CI 报告分别保留目标锁定清单与实际检查范围。
+
 本页给出 [GitHub Actions](../../.github/workflows/core-base.yml) 的检查入口。在仓库根目录执行，需要 Python 3.12 和 Git；运行时检查另需根 `global.json` 指定的 .NET SDK，文档组另需 [Vale 3.24.0](../doc-check/README.md)。默认 Release，可用 `--configuration Debug`。
 
 功能分支由PR的创建／更新触发五组检查，main在push后验证，另保留手动触发；同一功能分支提交不再同时运行push和PR两套矩阵。尚未创建PR时，分支push不会自动运行本工作流。

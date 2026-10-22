@@ -1,5 +1,7 @@
 # DSL 与独立参考比较
 
+[锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。现有 DSL、固定向量及受控 hash32 适配仍保留实际旧来源标识，尚须向新基线迁移；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
+
 `regression` 的原 `strike-normal` 和 `random-reshuffle-unsupported` 使用当前生产 DSL 包和锁定的 `sts2-sim` 分别执行。Strike 通过，重洗保留真实首差；其余 15 个原用例及其他 10 份 suite 仍明确报告 `unsupported`。11 份原定义、必测 ID 和比较维度保持不变；完整 regression 返回 3，测试集的 `independent_verified` 为 false。
 
 在仓库根目录准备只读参考，再运行比较：
@@ -54,7 +56,7 @@ dotnet run --project tools/differential -c Release -- normal-preflight --output 
 
 `result.json` 保存包／固定输入／适配器摘要、参考 commit／tree／程序集、双方开局记录、首个可观察差异和公开动作前缀。`claim.public.ndjson` 与 `skip.public.ndjson` 保存真实协议请求／响应；动作前缀使用内容、坐标或当前同类候选下标，不复用其他会话的临时句柄。源码和原始日志分别用于定位规则与复现执行。
 
-固定 seed777 的首个可观察差异是 Neow 选项：DSL 为 NewLeaf／BoomingConch／NeowsBones，锁定参考为 WingedBoots／BoomingConch／CursedPearl；地图也不同。目标 DSL 使用已登记的 hash32 流派生，参考原生 RunRngSet 使用新版根及具名流派生；Neow 理论池也存在版本差异。预检保留这些差异，不能据此将正常流重键来使结果相同。版本与比较范围的恢复条件见[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)。
+固定 seed777 的首个可观察差异是 Neow 选项：DSL 为 NewLeaf／BoomingConch／NeowsBones，锁定参考为 WingedBoots／BoomingConch／CursedPearl；地图也不同。当前 DSL 仍使用旧来源的 hash32 流派生，参考原生 RunRngSet 使用新版根及具名流派生；Neow 理论池也存在版本差异。预检保留这些差异，不能据此将正常流重键来使结果相同。DSL 须向锁定新版迁移，不能反向改变参考；剩余比较范围见[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)。
 
 两侧确有记录且存在开局首差时返回1。缺参考、缺候选、超时、输入策略不完整、无法完成 DSL 返回，或者开局相同但后续双侧适配未完成时返回3。预检不返回0，`complete` 和 `independent_verified` 均为false；`executed` 只统计实际取得双方开局记录的路径，不代表完成该路径的逐步双侧比较。报告另列访问、永久实例映射、牌区、逐次随机和事件等未验证维度。完整 M01 仍须逐步比较，单侧领取／跳过成功不作为验收。
 

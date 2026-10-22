@@ -1,6 +1,6 @@
 # 纯 DSL 原版随机机制
 
-关联 CORE-AUTHOR-05／DSL-RNG-RESTORE-01；状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。来源为本地固定 sts2 的 MegaRandom、Rng、RunRngSet、PlayerRngSet、StringHelper、ListExtensions、CardModel.CompareTo 与 CardRarityOdds。
+关联 CORE-AUTHOR-05／DSL-RNG-RESTORE-01；状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。目标来源为[锁定 sts2-sim](../../../../reference/baselines/sts2-sim.json) 的顺序随机实现。下文 hash32 布局记录当前 DSL 的旧来源实现，尚未迁移到新版 XxHash64／ulong；旧向量通过不能证明符合新目标。
 
 ## 通用能力与内容职责
 
