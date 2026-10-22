@@ -186,6 +186,8 @@ start.seed 可选；提供时为非空游戏字符串，不接受 JSON number �
 
 start 的去重记录为进程级；step/close 为会话级。成功与拒绝响应都缓存。先核对 request_id 和 payload 指纹，再做候选/版本检查：完成的 step 原样重发返回原结果，另一个 request_id 使用旧版本报 stale_observation。start 原样重发不能启动两局。request_status 查询 start 时省略 session_id。
 
+模拟 Host 的 observation_id 从0开始，在每次实际控制动作或应答完成时递增一次；即使实体状态未变、连续决策提供同一个候选，也属于新边界。重复 observe、账本重发和被拒绝的请求不递增。不将实体存储写次数解释为观察版本；客户端只将当前版本与当前候选一同提交。此语义以新的 backend_profile_id 标识，协议仍为0.2；安全整数版本耗尽时在执行前返回 capacity_exceeded。
+
 首版无 reset-in-place、rollback/load/fork。模拟训练新开局不等于部署可回到之前决策；决策时搜索不作为前提。
 
 ## 5. 生命周期与恢复

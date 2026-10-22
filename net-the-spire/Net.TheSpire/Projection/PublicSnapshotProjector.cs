@@ -74,8 +74,8 @@ public sealed record ProjectedSnapshot(
 /// sequence 会泄漏内部顺序（V-02），因此直接拒绝。</item>
 /// </list>
 ///
-/// <c>observation_id</c> 映射为 <see cref="ParticipantView.StateVersion"/>（同一稳定边界重复观察得到同一值；
-/// 引擎没有自增观察号，见报告中的映射依据与 N-03 的过期判定责任）。
+/// Host 提供当前控制边界的 <c>observation_id</c>；独立投影调用默认使用视图的存储版本。
+/// 同一边界重复观察不推进版本，无存储写入的新决策仍由 Host 分配新版本。
 /// </summary>
 public sealed class PublicSnapshotProjector
 {
@@ -145,11 +145,19 @@ public sealed class PublicSnapshotProjector
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(input.View);
+        return Project(input, input.View.StateVersion);
+    }
+
+    internal ProjectedSnapshot Project(SnapshotInput input, long observationId)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(input.View);
         ArgumentNullException.ThrowIfNull(input.LegalActions);
 
         var view = input.View;
         var (sessionStatus, _) = MapSessionStatus(input.Status);
-        var observationId = view.StateVersion;
+        if (observationId < 0 || observationId > WireCanonical.SafeIntegerMax)
+            throw new PublicMappingException("N-03-OBSERVATION-VERSION", "观察版本必须是非负安全整数");
 
         if (input.Status == SessionStatus.Faulted)
         {

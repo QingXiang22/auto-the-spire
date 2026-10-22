@@ -39,6 +39,7 @@ internal static class DeclarationExtensionChecks
         yield return ("E-06 [真实] 过期候选/错 expected_identity 在推进前拒绝；重发幂等；换载荷冲突", RejectionsAndIdempotence);
         yield return ("E-07 [真实] 描述文件遇到未支持结构显式抛错，不静默丢公开事实", UnsupportedMetadataIsExplicit);
         yield return ("E-08 [真实] text-rules 的每类真实响应帧都通过 0.2 wire schema（与 Python 侧同一文件）", SchemaConformance);
+        yield return ("E-09 [真实] 无状态写入的连续决策与空动作推进观察版本，重发和拒绝不推进", ObservationBoundaries);
     }
 
     // ---- E-01 -----------------------------------------------------------------
@@ -419,6 +420,60 @@ internal static class DeclarationExtensionChecks
             Check.True(errors.Count == 0,
                 $"text-rules 的 0.2 载荷违反 schema（{role}）：{string.Join(" | ", errors.Take(3))}");
         }
+    }
+
+    private static void ObservationBoundaries()
+    {
+        var fixture = new FixtureHost(nameof(ObservationBoundaries), "boundary-decisions.spire");
+        var (sessionId, initial) = Start(fixture, "boundary-start", BaselineSeed);
+        var engine = fixture.Host.GetSessionForTests(sessionId).EngineForTests;
+        var storageVersion = engine.StateVersion;
+        var snapshot = initial;
+        var sequence = 0;
+        Advance(snapshot.LegalActions.Single(a => a.ActionType == "net:action:boundary:ChooseTwice"));
+        Check.Equal(storageVersion, engine.StateVersion, "first pause does not write entity state");
+        var answer = snapshot.LegalActions.Single();
+        Check.Equal("net:action:net.answer_decision", answer.ActionType, "first native choice is pending");
+        Advance(answer);
+        Check.Equal(storageVersion, engine.StateVersion, "second pause does not write entity state");
+        Check.Equal(answer.CandidateId, snapshot.LegalActions.Single().CandidateId, "consecutive choices deliberately have the same semantic answer handle");
+        Advance(snapshot.LegalActions.Single());
+        Check.Equal("1", ((WireString)snapshot.Entities.Single().Fields.Single().Value!).Value, "completion writes exactly once");
+        var afterCompletion = engine.StateVersion;
+        Advance(snapshot.LegalActions.Single(a => a.ActionType == "net:action:boundary:Noop"));
+        Check.Equal(afterCompletion, engine.StateVersion, "a successful empty action also leaves entity state untouched");
+
+        // Controlled numeric boundary; this is not a normal-run gameplay initialization.
+        typeof(ControlSession).GetField("_observationId", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(fixture.Host.GetSessionForTests(sessionId), WireCanonical.SafeIntegerMax);
+        snapshot = Observe(fixture, "boundary-limit-observe", sessionId);
+        var atLimit = Signature();
+        var exhausted = Step(fixture, "boundary-limit", sessionId, snapshot.ObservationId,
+            snapshot.LegalActions.Single(a => a.ActionType == "net:action:boundary:Noop").CandidateId);
+        Check.Equal("capacity_exceeded", ErrorCode(exhausted), "observation exhaustion rejects before executing");
+        Check.Equal(atLimit, Signature(), "observation exhaustion preserves state and pending work");
+        Check.Equal(WireCanonical.SafeIntegerMax, Observe(fixture, "boundary-limit-after", sessionId).ObservationId, "exhaustion cannot wrap the version");
+
+        void Advance(LegalActionDto candidate)
+        {
+            var previous = snapshot;
+            var requestId = "boundary-step-" + ++sequence;
+            var result = Step(fixture, requestId, sessionId, previous.ObservationId, candidate.CandidateId);
+            Check.True(result.Ok, "real control step succeeds");
+            snapshot = Snapshot(result);
+            Check.True(snapshot.ObservationId > previous.ObservationId, "every settled control boundary advances the public observation version");
+            var before = Signature();
+            Check.Equal(WireCanonical.Text(snapshot.ToWire()), WireCanonical.Text(Observe(fixture, requestId + "-observe", sessionId).ToWire()), "observe preserves the stable version and full snapshot");
+            var replay = Step(fixture, requestId, sessionId, previous.ObservationId, candidate.CandidateId);
+            Check.Equal(WireCanonical.Text(result.ToWire()), WireCanonical.Text(replay.ToWire()), "same request returns its original response before checking the old version");
+            var stale = Step(fixture, requestId + "-stale", sessionId, previous.ObservationId, candidate.CandidateId);
+            Check.Equal("stale_observation", ErrorCode(stale), "a different request with the previous version is stale even when the candidate handle still exists");
+            Check.Equal(WireCanonical.Text(stale.ToWire()), WireCanonical.Text(Step(fixture, requestId + "-stale", sessionId, previous.ObservationId, candidate.CandidateId).ToWire()), "rejected requests also retain their cached response");
+            Check.Equal(before, Signature(), "observe, cached replay and rejection preserve state, RNG and the pending decision");
+            Check.Equal(WireCanonical.Text(snapshot.ToWire()), WireCanonical.Text(Observe(fixture, requestId + "-after", sessionId).ToWire()), "rejections do not advance the public version");
+        }
+        string Signature() => engine.State.StateHash() + System.Text.Json.JsonSerializer.Serialize(engine.Random.Capture())
+            + System.Text.Json.JsonSerializer.Serialize(engine.PendingDecision) + engine.StateVersion + engine.Status;
     }
 
     // ---- 脚手架 ---------------------------------------------------------------
