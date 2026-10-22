@@ -35,12 +35,12 @@ internal sealed class NormalDslRun : IDisposable
             return (IReadOnlyDictionary<InstanceId, string>)projector.GetType().GetField("_publicRefs", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(projector)!;
         }
     }
-    public NormalDslRun(string repository, string path, bool debug = true)
+    public NormalDslRun(string repository, string path, bool debug = true, bool captureValues = false)
     {
         var factory = typeof(TextRuleProviderSpec).Assembly.GetType("NetTheSpire.Host.TextRuleScenario")!;
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
             [Path.Combine(repository, "mod-the-spire/base-spire/package.json"), null, 4096, null,
-                debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096) : null])!;
+                debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues) : null])!;
         var configured = (ControlHost)setup.GetType().GetProperty("Host")!.GetValue(setup)!;
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
@@ -50,6 +50,9 @@ internal sealed class NormalDslRun : IDisposable
     internal string RandomState => NormalPreflight.Json(Engine.Random.Capture());
     internal string PublicState => WireCanonical.Text(Snapshot.ToWire());
     internal bool HasCompleteDebug => Engine.Debug is { DroppedRecords: 0 };
+    internal IReadOnlyList<SessionDebugRecord> DebugRecords => Engine.Debug?.Capture() ?? [];
+    internal bool IsLive(InstanceId instance) => Engine.State.Exists(instance);
+    internal string StateHash => Engine.State.StateHash();
     internal bool HasDebug => Engine.Debug is not null;
     private RequestDto Request(Operation op, params (string, WireValue)[] fields) =>
         new("normal-" + ++number, op, new WireObject(fields.Select(p => new KeyValuePair<string, WireValue>(p.Item1, p.Item2))));

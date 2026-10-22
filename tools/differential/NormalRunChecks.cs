@@ -40,6 +40,7 @@ internal static class NormalRunChecks
         Require(!NormalRunComparison.Certified(item with { Prefix = [] }), "missing common decisions");
         Require(!NormalRunComparison.Certified(item with { FirstDifference = new(0, "start", "facts", "a", "b") }), "real difference");
         CheckHostDiagnostics(repository);
+        NormalSnapshotChecks.Run(repository);
 #if REFERENCE_SIM
         CheckReferenceDiagnostics();
 #endif
