@@ -1,6 +1,6 @@
 # DSL 与独立参考比较
 
-[锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。现有 DSL、固定向量及受控 hash32 适配仍保留实际旧来源标识，尚须向新基线迁移；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
+[锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。生产随机派生与开局向量使用同一锁定基线，旧source-catalogs仅保留原迁移清单；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
 
 `regression` 的原 `strike-normal` 和 `random-reshuffle-unsupported` 使用当前生产 DSL 包和锁定的 `sts2-sim` 分别执行。Strike 通过，重洗保留真实首差；其余 15 个原用例及其他 10 份 suite 仍明确报告 `unsupported`。11 份原定义、必测 ID 和比较维度保持不变；完整 regression 返回 3，测试集的 `independent_verified` 为 false。
 
@@ -38,7 +38,8 @@ dotnet run --project tools/differential -- test --suite regression --case random
 
 参考适配沿锁定上游已有的实例结果观察字段附加并释放本次诊断，不新增全局回调、不修改参考源码。洗牌候选从参考自己的实际牌区及 `CardModel.CompareTo` 构造，按实测交换更新诊断副本，再与真实手牌／抽牌堆顺序核对；核对失败便拒绝认证该轨迹。
 
-`source-compat-sts2-frozen@1` 仅按[已授权的受控初始化边界](../../docs/design/environment-implementation-constraints.md#env-t04受控初始化与回合case边界2026-10-11)配置参考 run 流的字符串 hash32、命名流 hash32／uint 回绕及完整 `old` 前缀解释，不调用 base 派生方法。参考自身初始化洗牌的消费在输入阶段单列并归零后才开始脚本，脚本期间禁止补抽、重键或重设游标。报告包含原始 seed、有效流种子、对齐前消费、源文件摘要和适配器摘要；迁移检查用独立 Python 神谕核对每条 run 流向量。参考玩家流仍使用原生派生，初始化前置消费也保留；这些差异如实失败，不扩大兼容范围来制造一致。
+`locked-native-sequential@1`使用参考原生根和具名流派生，不再覆盖全部run流为旧hash32。原[有序受控初始化](../../docs/design/environment-implementation-constraints.md#env-t04受控初始化与回合case边界2026-10-11)仍将参考初始牌区恢复为用例声明顺序，并在脚本起点以相同的原生Shuffle种子恢复该流游标0；这项消费单列，不能用于正常Run。脚本期间禁止补抽、重键或重设游标。报告保存原始seed、实际原生种子、来源摘要与初始化消费，迁移检查通过当前独立Python神谕核对15条流派生及抽样。玩家流保留原生状态，未迁移敌人的行动差异继续严格失败。
+
 
 [迁移检查](../ci/README.md)执行这两个原用例及严格失败检查，校验原 suite 和生产依赖隔离。`self-test` 另外检查候选错序、相同消费数但参数不同、结果／流位置首差，以及记录缺失／截断／溢出；故障注入不算独立玩法通过。原源与旧适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[CI 迁移数据](../ci/fixtures/legacy-dsl-checks.json)。受控机制比较不替代完整[ENV 验收](../../docs/design/environment-completion-and-differential-v1.md)；参考玩法保持只读。
 
@@ -56,8 +57,9 @@ dotnet run --project tools/differential -c Release -- normal-preflight --output 
 
 `result.json` 保存包／固定输入／适配器摘要、参考 commit／tree／程序集、双方开局记录、首个可观察差异和公开动作前缀。`claim.public.ndjson` 与 `skip.public.ndjson` 保存真实协议请求／响应；动作前缀使用内容、坐标或当前同类候选下标，不复用其他会话的临时句柄。源码和原始日志分别用于定位规则与复现执行。
 
-固定 seed777 的首个可观察差异是 Neow 选项：DSL 为 NewLeaf／BoomingConch／NeowsBones，锁定参考为 WingedBoots／BoomingConch／CursedPearl；地图也不同。当前 DSL 仍使用旧来源的 hash32 流派生，参考原生 RunRngSet 使用新版根及具名流派生；Neow 理论池也存在版本差异。预检保留这些差异，不能据此将正常流重键来使结果相同。DSL 须向锁定新版迁移，不能反向改变参考；剩余比较范围见[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)。
+固定seed777的Neow选项为WingedBoots／BoomingConch／CursedPearl，地图与生产DSL均按锁定新版来源生成。完成顺序随机与开局来源迁移后，开局事实相同仍只说明前缀符合；后续真实SlimesWeak战斗、奖励和返回虽已由DSL公开路径执行，但逐步双侧适配仍由[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)验收。
+
 
 两侧确有记录且存在开局首差时返回1。缺参考、缺候选、超时、输入策略不完整、无法完成 DSL 返回，或者开局相同但后续双侧适配未完成时返回3。预检不返回0，`complete` 和 `independent_verified` 均为false；`executed` 只统计实际取得双方开局记录的路径，不代表完成该路径的逐步双侧比较。报告另列访问、永久实例映射、牌区、逐次随机和事件等未验证维度。完整 M01 仍须逐步比较，单侧领取／跳过成功不作为验收。
 
-可运行 `normal-preflight-self-test` 定向检查比较器。迁移组会验证两条真实公开返回、实际参考 Neow 首差、缺参考与零执行失败，并保留原11份 suite 的全部必测 ID；故障注入不计作独立玩法通过。
+可运行 `normal-preflight-self-test` 定向检查比较器。迁移组会验证两条真实公开返回、全部开局事实一致、后续比较未完成仍失败、缺参考与零执行失败，并保留原11份 suite 的全部必测 ID；故障注入不计作独立玩法通过。

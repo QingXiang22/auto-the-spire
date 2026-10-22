@@ -24,6 +24,7 @@ internal static class EngineChecks
         RandomChecks();
         VanillaRandomChecks.Run();
         RandomDslChecks.Run();
+        Word64Checks.Run();
         Binary64Checks.Run();
         ConfirmationChecks.Run();
         StateIndexChecks.Run();

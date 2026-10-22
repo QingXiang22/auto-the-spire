@@ -45,8 +45,8 @@ internal static partial class PackageChecks
                 }
                 var floats = New(); Submit(floats, "InspectLayout");
                 var probe = floats.State.AllInstances(floats.RuleSet.TypeByQualifiedId("base-spire:RngProbe").Id).Single();
-                Equal(vector.GetProperty("run_seed").GetInt64(), IntField(floats, probe, "RngProbe", "Root"), "UTF16 source run seed");
-                Equal(vector.GetProperty("content_seed_slot2_mixin7").GetInt64(), IntField(floats, probe, "RngProbe", "Content"), "slot and mixin wrap");
+                Equal(unchecked((long)vector.GetProperty("run_seed").GetUInt64()), IntField(floats, probe, "RngProbe", "Root"), "UTF8 source run seed");
+                Equal(unchecked((long)vector.GetProperty("content_seed_slot2_mixin7").GetUInt64()), IntField(floats, probe, "RngProbe", "Content"), "slot and mixin wrap");
                 foreach (var expected in vector.GetProperty("float32_bits_first8").EnumerateArray())
                 { Submit(floats, "FloatProbe"); Equal(expected.GetInt64(), IntField(floats, probe, "RngProbe", "Content"), "exact NextFloat binary32 bits"); }
                 Equal(8L, floats.Random.DrawCount("base-spire:player:rewards"), "float counter");

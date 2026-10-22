@@ -10,6 +10,8 @@
     <EmbeddedResource Include="fixtures/source-catalogs.json" />
     <EmbeddedResource Include="fixtures/map-gaussian-vectors.json" />
     <EmbeddedResource Include="fixtures/normal-opening-vectors.json" />
+    <EmbeddedResource Include="fixtures/normal-combat-vectors.json" />
+    <EmbeddedResource Include="fixtures/slimes-vectors.json" />
     <EmbeddedResource Include="fixtures/act-one-map-vectors.json" />
     <EmbeddedResource Include="fixtures/ironclad-source-metadata.json" />
     <EmbeddedResource Include="fixtures/source-rng-vectors.json" />

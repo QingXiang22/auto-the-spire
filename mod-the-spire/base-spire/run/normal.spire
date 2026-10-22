@@ -11,6 +11,7 @@ entity Run {
     Phase = { type = String(length = 24) default = "neow" }
     ActIndex = { type = Int(min = 0, max = 3) default = 0 }
     MapFloor = { type = Int(min = 0, max = 16) default = 0 }
+    TotalFloor = { type = Int(min = 0) default = 0 }
     MapNodeCount = { type = Int(min = 0, max = 999) default = 0 }
     CurrentNode = { type = Ref(MapNode) optional = true }
     CurrentVisit = { type = Ref(RunVisit) optional = true }
@@ -112,6 +113,7 @@ procedure StartNormalRun {
     set = { target = run field = Run.Phase value = "neow" }
     set = { target = run field = Run.ActIndex value = 0 }
     set = { target = run field = Run.MapFloor value = 0 }
+    set = { target = run field = Run.TotalFloor value = 1 }
     set = { target = run field = Run.MapNodeCount value = 0 }
     set = { target = run field = Run.CurrentNode value = none }
     set = { target = run field = Run.CurrentVisit value = none }
@@ -148,10 +150,11 @@ procedure EnterNormalMapPoint {
     let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
     if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
     let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
-    if = { condition = not(equal(encounter, "base-spire:fuzzy-wurm-crawler-weak")) then = { fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" } } }
+    if = { condition = not(or(equal(encounter, "base-spire:fuzzy-wurm-crawler-weak"), equal(encounter, "base-spire:slimes-weak"))) then = { fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" } } }
     set = { target = node field = MapNode.Visited value = true }
     forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = current body = { set = { target = current field = MapNode.Selectable value = false } } }
     set = { target = run field = Run.MapFloor value = field(node, MapNode.Row) }
+    set = { target = run field = Run.TotalFloor value = add(field(run, Run.TotalFloor), 1) }
     set = { target = run field = Run.CurrentNode value = node }
     set = { target = run field = Run.VisitSequence value = add(field(run, Run.VisitSequence), 1) }
     create = { type = RunVisit scope = entityScope(run) into = visit collection = RunVisits fields = { Run = run StableId = field(run, Run.VisitSequence) Node = node MapType = field(node, MapNode.Type) } }
@@ -163,8 +166,12 @@ procedure EnterNormalMapPoint {
     set = { target = run field = Run.NormalEncounterIndex value = add(field(run, Run.NormalEncounterIndex), 1) }
     set = { target = run field = Run.Phase value = "combat" }
     set = { target = owner field = Player.Room value = "none" }
-    sampleInt = { stream = "base-spire:run:niche" min = 55 max = 58 into = hp }
-    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = hp } }
+    if = { condition = equal(encounter, "base-spire:slimes-weak") then = {
+      call = { procedure = SpawnSourceSlimesWeak args = { totalFloor = field(run, Run.TotalFloor) } }
+    } else = {
+      sampleInt = { stream = "base-spire:run:niche" min = 55 max = 58 into = hp }
+      call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = hp } }
+    } }
     call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
     call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
   }

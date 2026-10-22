@@ -77,6 +77,8 @@
       "content_ids": [
         "base-spire:development-target",
         "base-spire:fuzzy-wurm-crawler",
+        "base-spire:leaf-slime-s",
+        "base-spire:leaf-slime-m",
         "base-spire:twig-slime-m",
         "base-spire:twig-slime-s",
         "base-spire:assassin-ruby-raider",

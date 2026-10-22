@@ -792,6 +792,20 @@ internal static class IrTypeChecker
 
                 case FrameScopeExpr:
                     return Ty.Scope;
+                case Word64Expr word:
+                {
+                    var count = word.Op switch { Word64Op.HashUtf8 => 1, Word64Op.Add => 2,
+                        _ => throw Faults.TypeError($"{where}: unknown word64 operation") };
+                    if (word.Arguments.Count != count) throw Faults.TypeError($"{where}: invalid word64 argument count");
+                    foreach (var argument in word.Arguments)
+                        Require(CheckExpr(frame, argument, where), word.Op == Word64Op.HashUtf8 ? Ty.String : Ty.Int, where, "word64 operand");
+                    return Ty.Int;
+                }
+                case TextExpr text:
+                    if (!Enum.IsDefined(text.Op)) throw Faults.TypeError($"{where}: unknown text operation");
+                    Require(CheckExpr(frame, text.Text, where), Ty.String, where, "text operand");
+                    Require(CheckExpr(frame, text.Argument, where), text.Op == TextOp.StartsWith ? Ty.String : Ty.Int, where, "text argument");
+                    return text.Op == TextOp.StartsWith ? Ty.Bool : Ty.String;
                 case RandomValueExpr randomValue:
                 {
                     var count = randomValue.Op == RandomValueOp.GameSeed ? 0 : randomValue.Op is RandomValueOp.Hash32 or RandomValueOp.Float32 ? 1 : 2;

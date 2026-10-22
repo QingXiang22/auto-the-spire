@@ -6,12 +6,12 @@ internal static partial class PackageChecks
     public static int RunNormalRunOnly(DslPackage package)
     {
         RunNormalOpeningGuardChecks(package);
-        RunNormalOpeningChecks(package);
-        RunNormalReturnOnly(package);
         RunSourceOpeningChecks(package);
-        RunUnsupportedNormalOpeningChecks(package);
         RunMapGaussianChecks(package);
         RunSourceMapChecks(package);
+        RunNormalOpeningChecks(package);
+        RunNormalReturnOnly(package);
+        RunUnsupportedNormalOpeningChecks(package);
         return 0;
     }
 
@@ -70,8 +70,8 @@ internal static partial class PackageChecks
         session.Answer(new DecisionAnswer(session.PendingDecision.RequestId, Flag: true)); Healthy(session);
         var run = session.State.AllInstances(session.RuleSet.TypeByQualifiedId("base-spire:Run").Id).Single();
         var nodes = Members(session, "MapNodes");
-        Equal(56, nodes.Count, "seed 777 source map includes the ancient and boss");
-        Equal(270L, session.Random.DrawCount("base-spire:run:act_1_map"), "normal entry uses the complete source map stream");
+        Equal(61, nodes.Count, "seed 777 locked source map includes the ancient and boss");
+        Equal(264L, session.Random.DrawCount("base-spire:run:act_1_map"), "normal entry uses the complete locked source map stream");
         Equal("map", TextField(session, Player(session), "Player", "Room"), "leaving Neow returns to the real map");
         var choose = session.LegalActions(session.Participant(0)).Single(a => a.Definition.QualifiedId == "base-spire:ChooseMapPoint");
         var boss = nodes.Single(n => IntField(session, n, "MapNode", "Row") == 16);
@@ -79,16 +79,30 @@ internal static partial class PackageChecks
         Throws<EngineFaultException>(() => session.Submit(choose.Definition, session.Participant(0), [Value.OfRef(boss)]));
         Equal(state, session.State.StateHash(), "illegal map point changes no state"); Equal(draws, session.Random.TotalDraws, "illegal map point draws no RNG");
         session.Submit(choose.Definition, session.Participant(0), choose.Bindings[0]); Healthy(session);
-        Equal(1, session.State.AllInstances(session.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).Count(), "first source weak encounter has one Fuzzy Wurm");
-        Equal(55L, EnemyHp(session), "seed 777 source Niche HP sample");
-        Equal(1L, session.Random.DrawCount("base-spire:run:niche"), "one actual spawn HP draw");
+        using var sourceCombat = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.normal-combat-vectors.json")!);
+        var expectedCombat = sourceCombat.RootElement.GetProperty("vectors")[0];
+        var enemies = session.State.AllInstances(session.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).ToArray();
+        var expectedEnemies = expectedCombat.GetProperty("monsters").EnumerateArray().ToArray();
+        Equal(expectedEnemies.Length, enemies.Length, "complete source SlimesWeak formation");
+        for (var i = 0; i < enemies.Length; i++)
+        {
+            Equal(expectedEnemies[i].GetProperty("id").GetString(), TextField(session, enemies[i], "Enemy", "DefinitionId"), "source spawn order");
+            Equal(expectedEnemies[i].GetProperty("hp").GetInt64(), IntField(session, enemies[i], "Enemy", "Hp"), "source Niche HP sample");
+            Equal(expectedEnemies[i].GetProperty("move").GetString(), TextField(session, enemies[i], "Enemy", "MoveId"), "source initial saved move");
+        }
+        Equal(expectedCombat.GetProperty("total_floor").GetInt64(), IntField(session, run, "Run", "TotalFloor"), "Neow and first monster count toward total floor");
+        Equal(expectedCombat.GetProperty("niche_draws").GetInt64(), session.Random.DrawCount("base-spire:run:niche"), "actual spawn HP draws");
+        Equal(expectedCombat.GetProperty("monster_ai_draws").GetInt64(), session.Random.DrawCount("base-spire:run:monster_ai"), "initialize random move exactly once");
+        Equal(3L, session.Random.DrawCount("base-spire:encounter:monsters"), "composition retains singleton draw");
+        True(Hand(session).Select(c => CardDefinition(session, c)).SequenceEqual(expectedCombat.GetProperty("hand").EnumerateArray().Select(c => c.GetString())), "source first hand order");
+        True(Members(session, "DrawPile").Select(c => CardDefinition(session, c)).SequenceEqual(expectedCombat.GetProperty("draw_pile").EnumerateArray().Select(c => c.GetString())), "source remaining draw pile order");
         Equal("combat", TextField(session, run, "Run", "Phase"), "visit phase records real combat");
         Equal(1L, IntField(session, Player(session), "Player", "TurnNumber"), "normal entry starts the first turn");
         Equal(3L, IntField(session, Player(session), "Player", "Energy"), "Conch does not grant elite-only energy in a Monster room");
         Equal(5, Hand(session).Count, "normal first turn draws five real combat copies");
         Equal(10, Members(session, "RunDeck").Count, "permanent deck keeps its ten instances");
         var visit = Members(session, "RunVisits").Single();
-        Equal("base-spire:fuzzy-wurm-crawler-weak", TextField(session, visit, "RunVisit", "EncounterId"), "normal visit consumes the source queue");
+        Equal("base-spire:slimes-weak", TextField(session, visit, "RunVisit", "EncounterId"), "normal visit consumes the source queue");
         True(Hand(session).All(card => !Members(session, "RunDeck").Contains(card)), "combat copies and permanent instances are distinct");
         state = session.State.StateHash(); draws = session.Random.TotalDraws;
         Throws<EngineFaultException>(() => session.Submit(choose.Definition, session.Participant(0), choose.Bindings[0]));
@@ -251,7 +265,7 @@ internal static partial class PackageChecks
             entity GaussianProbe { fields = { Result = { type = Int } } }
             procedure SetupGaussianProbe { locals = { probe = Binding } body = {
               create = { type = GaussianProbe scope = frameScope() into = probe }
-              seedStream = { stream = "map-probe" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
+              seedStream64 = { stream = "map-probe" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
             } }
             action RestCount { role = player locals = { value = Int } body = {
               call = { procedure = SourceGaussianInt args = { stream = "map-probe" mean = 7 deviation = 1 min = 6 max = 7 } into = value }

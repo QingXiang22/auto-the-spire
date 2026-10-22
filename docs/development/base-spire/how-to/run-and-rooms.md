@@ -1,6 +1,6 @@
 # 开发角色、房间与完整 Run
 
-规则目标为[锁定 sts2-sim](../../../../reference/README.md) 的原生顺序路径。以下入口描述当前 DSL 可执行行为，其中 hash32 开局、来源池及固定 seed 路径仍属旧实现，须向新基线迁移；现有单侧执行不证明已与新版对齐。
+规则目标为[锁定 sts2-sim](../../../../reference/README.md) 的原生顺序路径。随机派生、开局来源和首幕地图已迁移到该目标；以下入口描述当前 DSL 可执行行为，完整后续双侧比较仍未完成。
 
 文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
@@ -12,9 +12,9 @@
 
 1. 回答 Neow 的真实三选一。入口已建立源初态、完整前置队列和真实首幕地图。
 2. 选择已支持的 GoldenPearl、NutritiousOyster 或 BoomingConch。其余源选项保留，选择后明确报未支持。
-3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 FuzzyWurmCrawlerWeak 时，会按真实 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
+3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 SlimesWeak 或 FuzzyWurmCrawlerWeak 时，会按真实编队及 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
 
-例如 seed `777` 提供 BoomingConch，首个真实遭遇为 FuzzyWurmCrawlerWeak。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
+例如 seed `777` 提供 BoomingConch，首个真实遭遇为 SlimesWeak，出生顺序为 LeafSlimeS／TwigSlimeM／TwigSlimeS，HP 为 14／28／11。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
 
 ## 定义角色、进阶与正常开局
 

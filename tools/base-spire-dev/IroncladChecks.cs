@@ -74,18 +74,18 @@ internal static partial class PackageChecks
         {
             using var stream = typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.ironclad-source-metadata.json")!;
             using var source = JsonDocument.Parse(stream);
-            var rows = source.RootElement.GetProperty("entries"); Equal(88, rows.GetArrayLength(), "87 source-pool cards plus GiantRock");
+            var rows = source.RootElement.GetProperty("entries"); Equal(91, rows.GetArrayLength(), "90 locked source-pool cards plus GiantRock");
             foreach (var row in rows.EnumerateArray())
             {
                 if (row.GetProperty("multiplayer_only").GetBoolean()) continue;
                 var s = Combat(); var c = IcAdd(s, row.GetProperty("name").GetString()!);
-                Equal(row.GetProperty("cost").GetInt64(), CardCost(s, c), "source base cost");
+                Equal((row.GetProperty("is_x").GetBoolean() && row.GetProperty("cost").GetInt64() == -1 ? 0 : row.GetProperty("cost").GetInt64()), CardCost(s, c), "source base cost (X sentinel stored separately by IsX)");
                 Equal(row.GetProperty("kind").GetString(), s.State.GetField(c, CardField(s, "Kind")).AsString(), "source type");
                 Equal(row.GetProperty("rarity").GetString(), s.State.GetField(c, CardField(s, "Rarity")).AsString(), "source rarity");
                 foreach (var (sourceName, field) in new[] { ("targeted", "Targeted"), ("strike_tag", "StrikeTag"), ("is_x", "IsX"), ("exhausts", "Exhausts") })
                     Equal(row.GetProperty(sourceName).GetBoolean(), s.State.GetField(c, CardField(s, field)).AsBool(), row.GetProperty("name").GetString() + ": " + field);
                 Submit(s, "UpgradeCardInHand", c);
-                Equal(row.GetProperty("upgraded_cost").GetInt64(), CardCost(s, c), "source upgraded cost");
+                Equal((row.GetProperty("is_x").GetBoolean() && row.GetProperty("upgraded_cost").GetInt64() == -1 ? 0 : row.GetProperty("upgraded_cost").GetInt64()), CardCost(s, c), "source upgraded cost (X sentinel stored separately by IsX)");
                 Equal(row.GetProperty("upgraded_innate").GetBoolean(), s.State.GetField(c, CardField(s, "Innate")).AsBool(), "source Innate upgrade");
             }
         });
@@ -100,7 +100,7 @@ internal static partial class PackageChecks
         Own("Cinder", (s, c, up) => { var a = IcAdd(s, "DefendIronclad"); IcPlay(s, c); Equal(up ? 976L : 982L, EnemyHp(s), "damage before exhaust"); True(Members(s, "ExhaustPile").Contains(a), "one random hand card exhausted"); });
         Own("Dominate", (s, c, up) => { IcPlay(s, IcAdd(s, "Tremble")); IcPlay(s, c); Equal(up ? 5L : 4L, IcPower(s, "base-spire:strength-power"), "strength uses total Vulnerable after application"); True(Members(s, "ExhaustPile").Contains(c), "exhaust result"); });
         Own("DrumOfBattle", (s, c, up) => { for (var i = 0; i < 2; i++) IcMove(s, IcAdd(s, "DefendIronclad"), "Hand", "DrawPile"); IcPlay(s, c); Equal(2, Hand(s).Count, "draw two"); IcMove(s, c, "DiscardPile", "Hand"); foreach (var a in Hand(s).Where(a => a != c).ToArray()) IcMove(s, a, "Hand", "DiscardPile"); var brand = IcAdd(s, "Brand"); var energy = Energy(s); IcPlay(s, brand); Equal(energy + (up ? 3 : 2), Energy(s), "Drum's own exhaust reaction"); });
-        Own("ExpectAFight", (s, c, up) => { IcAdd(s, "StrikeIronclad"); IcAdd(s, "Anger"); var blood = IcAdd(s, "Bloodletting"); IcPlay(s, c); Equal(up ? 31L : 30L, Energy(s), "gain remaining attack count after payment"); IcPlay(s, blood); Equal(up ? 31L : 30L, Energy(s), "NoEnergyGain blocks later gain"); IcNextTurn(s); IcPlay(s, IcAdd(s, "Bloodletting")); Equal(5L, Energy(s), "gain restored next turn"); });
+        Own("ExpectAFight", (s, c, up) => { IcPlay(s, IcAdd(s, "Inflame")); IcPlay(s, c); Equal(up ? 32L : 25L, Block(s), "source base block plus positive strength scaling"); Equal(26L, Energy(s), "Inflame and ExpectAFight pay one and three"); IcPlay(s, IcAdd(s, "Bloodletting")); Equal(28L, Energy(s), "new effect leaves energy gain available"); });
         Own("Feed", (s, c, up) => { Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(up ? 12L : 10L)); IcPlay(s, c); Equal(up ? 84L : 83L, IntField(s, Player(s), "Player", "MaxHp"), "fatal max HP gain before settlement"); Equal(up ? 84L : 83L, Hp(s), "also heals"); Equal("victory", Outcome(s), "final target ends combat after Feed"); True(Members(s, "ExhaustPile").Contains(c), "Feed exhausted before victory"); });
         Own("FiendFire", (s, c, up) => { IcAdd(s, "StrikeIronclad"); IcAdd(s, "DefendIronclad"); IcPlay(s, c); Equal(up ? 980L : 986L, EnemyHp(s), "two attacks for original hand snapshot"); Equal(3, Members(s, "ExhaustPile").Count, "two hand cards plus Fiend Fire"); });
         Own("FightMe", (s, c, up) => { IcPlay(s, c); Equal(up ? 988L : 990L, EnemyHp(s), "two hits before buffs"); Equal(up ? 5L : 4L, IcPower(s, "base-spire:strength-power"), "owner and enemy gain separate Strength"); });

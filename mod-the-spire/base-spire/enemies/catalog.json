@@ -27,6 +27,14 @@
       "definition": "enemies/shared/fuzzy-wurm-crawler.spire"
     },
     {
+      "id": "base-spire:leaf-slime-m",
+      "definition": "enemies/shared/leaf-slime-m.spire"
+    },
+    {
+      "id": "base-spire:leaf-slime-s",
+      "definition": "enemies/shared/leaf-slime-s.spire"
+    },
+    {
       "id": "base-spire:stabbot",
       "definition": "enemies/shared/stabbot.spire"
     },

@@ -43,4 +43,6 @@
 
 RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法与映射。整数区间、浮点转换、随机流布局和快照恢复按[随机作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)执行，禁止用不同随机实现冒用旧标识。
 
+`engine/ir@0.9` 增加通用 `hash64(text)`、`uint64Add(left,right)` 与 `seedStream64`：64 位无符号字以 Int 的有符号位型保存，哈希采用 UTF-8 XxHash64、种子 0，加法按模 2^64 回绕。普通 Int 运算及 `seedStream` 的非负检查保持；只有显式 64 位指令解释完整位型。`startsWith(text,prefix)` 使用 ordinal 比较，`substring(text,start)` 按 UTF-16 下标取到结尾，越界显式失败。这些纯表达式不消费随机，具体游戏派生公式仍属于 DSL。编译器与 SDK 生成相同 IR；操作与参数进入规则标识，公开目录和回放须按新引擎标识重建，wire 值仍使用原有 Int 编码。
+
 规则、编译器、执行语义、包内容及随机配置共同决定兼容性。行为改变后重建包与相关回放，旧包或旧输入不自动续接新版本。数值精度、乘法次序和取整位置属于规则语义，不通过重录预期值掩盖变化。公开协议不提供 rollback／load／fork；开发者调试能力不产生外部回退权限。

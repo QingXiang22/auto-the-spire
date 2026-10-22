@@ -10,6 +10,23 @@ public sealed partial class Session
         {
             case ConstExpr constant:
                 return constant.Value;
+            case Word64Expr word:
+                return Value.Of(word.Op switch
+                {
+                    Word64Op.HashUtf8 => Word64.HashUtf8(Eval(call, word.Arguments[0]).AsString()),
+                    Word64Op.Add => Word64.Add(Eval(call, word.Arguments[0]).AsInt(), Eval(call, word.Arguments[1]).AsInt()),
+                    _ => throw Faults.Schema("Unknown word64 operation"),
+                });
+            case TextExpr text:
+            {
+                var value = Eval(call, text.Text).AsString();
+                var argument = Eval(call, text.Argument);
+                if (text.Op == TextOp.StartsWith) return Value.Of(value.StartsWith(argument.AsString(), StringComparison.Ordinal));
+                if (text.Op != TextOp.Substring) throw Faults.Schema("Unknown text operation");
+                var start = argument.AsInt();
+                if (start < 0 || start > value.Length) throw Faults.Range("substring start is outside the UTF-16 text");
+                return Value.Of(value[(int)start..]);
+            }
             case RandomValueExpr randomValue:
             {
                 Value Arg(int index) => Eval(call, randomValue.Arguments[index]);

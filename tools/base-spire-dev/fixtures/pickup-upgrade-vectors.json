@@ -1,5 +1,14 @@
 {
-  "schema": "base-spire/source-pickup-upgrade-vectors@1",
+  "schema": "base-spire/source-pickup-upgrade-vectors@2",
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "source_hash_encoding": "utf8-lf",
   "cards": [
     {
       "name": "StrikeIronclad",
@@ -107,57 +116,57 @@
         {
           "relic": "Whetstone",
           "selected_indices": [
-            11,
+            13,
             0
           ],
           "upgraded_indices": [
             0,
             3,
-            11
+            13
           ],
           "niche_counter": 5
         },
         {
           "relic": "Whetstone",
           "selected_indices": [
-            1,
-            8
+            8,
+            1
           ],
           "upgraded_indices": [
             0,
             1,
             3,
             8,
-            11
+            13
           ],
           "niche_counter": 8
         },
         {
           "relic": "WarPaint",
           "selected_indices": [
-            2,
-            12
+            6,
+            5
           ],
           "upgraded_indices": [
             0,
             1,
-            2,
             3,
+            5,
+            6,
             8,
-            11,
-            12
+            13
           ],
           "niche_counter": 12
         },
         {
           "relic": "SandCastle",
           "selected_indices": [
+            11,
             9,
             7,
-            5,
-            10,
-            13,
-            6
+            12,
+            2,
+            10
           ],
           "upgraded_indices": [
             0,
@@ -184,28 +193,28 @@
         {
           "relic": "Whetstone",
           "selected_indices": [
-            8,
-            13
-          ],
-          "upgraded_indices": [
-            3,
-            8,
-            13
-          ],
-          "niche_counter": 5
-        },
-        {
-          "relic": "Whetstone",
-          "selected_indices": [
             0,
             10
           ],
           "upgraded_indices": [
             0,
             3,
-            8,
+            10
+          ],
+          "niche_counter": 5
+        },
+        {
+          "relic": "Whetstone",
+          "selected_indices": [
+            11,
+            1
+          ],
+          "upgraded_indices": [
+            0,
+            1,
+            3,
             10,
-            13
+            11
           ],
           "niche_counter": 8
         },
@@ -213,28 +222,28 @@
           "relic": "WarPaint",
           "selected_indices": [
             6,
-            9
+            12
           ],
           "upgraded_indices": [
             0,
+            1,
             3,
             6,
-            8,
-            9,
             10,
-            13
+            11,
+            12
           ],
           "niche_counter": 12
         },
         {
           "relic": "SandCastle",
           "selected_indices": [
-            11,
-            1,
-            12,
             5,
-            7,
-            2
+            8,
+            2,
+            13,
+            9,
+            7
           ],
           "upgraded_indices": [
             0,
@@ -261,57 +270,57 @@
         {
           "relic": "Whetstone",
           "selected_indices": [
-            0,
-            8
+            13,
+            0
           ],
           "upgraded_indices": [
             0,
             3,
-            8
+            13
           ],
           "niche_counter": 5
         },
         {
           "relic": "Whetstone",
           "selected_indices": [
-            11,
+            1,
             10
           ],
           "upgraded_indices": [
             0,
+            1,
             3,
-            8,
             10,
-            11
+            13
           ],
           "niche_counter": 8
         },
         {
           "relic": "WarPaint",
           "selected_indices": [
-            5,
+            2,
             12
           ],
           "upgraded_indices": [
             0,
+            1,
+            2,
             3,
-            5,
-            8,
             10,
-            11,
-            12
+            12,
+            13
           ],
           "niche_counter": 12
         },
         {
           "relic": "SandCastle",
           "selected_indices": [
+            8,
+            11,
             7,
             6,
-            9,
-            13,
-            2,
-            1
+            5,
+            9
           ],
           "upgraded_indices": [
             0,
@@ -334,26 +343,26 @@
     }
   ],
   "source_sha256": {
-    "sts2/src/Core/Extensions/ListExtensions.cs": "b1e5f234732e5f2031f5f6ef17e70ea043c36e9e0f61e7c353ca8d4198470496",
-    "sts2/src/Core/Helpers/StringHelper.cs": "fe7c73c12cd9d09225efcf9a24c6d0f7e719bc97cba9e95b6dcc26179f72efbb",
-    "sts2/src/Core/Models/CardModel.cs": "2e0c6eea66dfc1098c82386fa15838c6d376a83953a895c028b4f2ef60816919",
-    "sts2/src/Core/Models/Cards/Anger.cs": "29c2089f03c9a9fba166986bf4e8e7461ae1cd033eb589c8c3fcd1627b541d03",
-    "sts2/src/Core/Models/Cards/Armaments.cs": "1d9aafe923fea28d05883a6b847396ab42b2cb008ae60eff22acbc1ac9b6ac26",
-    "sts2/src/Core/Models/Cards/Bash.cs": "368bb650d332984a512142ad3dc5870339b0814b1b92a9abca7f06910efec9f7",
-    "sts2/src/Core/Models/Cards/BodySlam.cs": "b554a0550946c792f2564eb1bb1a2f028679ab3a39c6d5166ffc5f9d3089b4d3",
-    "sts2/src/Core/Models/Cards/Cascade.cs": "1609222e13b28784d26afa5d7629940ae9c7062760aa5f9e845ad9ee676c4f6e",
-    "sts2/src/Core/Models/Cards/DefendIronclad.cs": "f2707481e0be1a5e856cab0dc788fb520e80fe3dff9c0a0f53869b857b8c7740",
-    "sts2/src/Core/Models/Cards/Impervious.cs": "9a97b3091857c8f7ed35281b9ca1fa20af707bc56c17df651fec464e9bb79552",
-    "sts2/src/Core/Models/Cards/Inflame.cs": "adacf6eebe8337b67563e62dfee2bb3370fb65ff99bb5072ae2360cf966ad810",
-    "sts2/src/Core/Models/Cards/ShrugItOff.cs": "4ddebe1b0328ce5ebceca212b97bb5989d4492d94b29568c4e3c442a6bb19870",
-    "sts2/src/Core/Models/Cards/StrikeIronclad.cs": "b9514c7880abc575abc7a6e572273e1cb64a4a092192f83af7d4e3b6c211c388",
-    "sts2/src/Core/Models/Cards/TwinStrike.cs": "87131a9fa3797d8bc26be299aafc745ab698082346b98cbf6ac91d2697f63b29",
-    "sts2/src/Core/Models/Cards/Whirlwind.cs": "ffdb3485ce9ae1ed83f8cb076faf6aa4020813131e05e26ee5731220914aafe2",
-    "sts2/src/Core/Models/Relics/SandCastle.cs": "d1c52bc62e986500a9233f1672a9771503ae962319c553e672ccf777f702697b",
-    "sts2/src/Core/Models/Relics/WarPaint.cs": "898cfd36c7a76da4454700cdf19566f1406eafb434823830914ccf6a9f4234d6",
-    "sts2/src/Core/Models/Relics/Whetstone.cs": "45b465e6d17369add45a92abfe455b95a07e9701ea1a8460d8deeade301160ad",
-    "sts2/src/Core/Random/MegaRandom.cs": "a4544672d4909c878266e1b6e5597bca8771585c4106f3119044cc8a1ad0984b",
-    "sts2/src/Core/Random/Rng.cs": "99a404a807dae7b3c786821b3c287e6518b573f58265f98feaa63132748b7f40",
-    "sts2/src/Core/Runs/RunRngSet.cs": "059f7ab16345cb1147d68c540ed1a24f66f4b14e370b6c1f019cde6fbac80784"
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/ListExtensions.cs": "29c591c5ebc227f329ddfea40ffde38674b245936ac95b718de3b3530e314fbd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "cd05ee766f574de5db8ee8373cacdba1814586689cd554df07d69cfe3d18fc2b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/CardModel.cs": "f7f7ba8945e28c470e6bdbce747f36283db354485b9a66c022d06bd542d04018",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Anger.cs": "1e51fdc391d3b9fa016cbf0252dcb492c2d5c59fd82c7b0eb66e75d1ef2c4afb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Armaments.cs": "2ea87265bae98a3abfd16d74d5ac9f6857d214812e4b2999b039bfd0c0545885",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Bash.cs": "a86fb2f4db3a56acad10783eeb2e1af7592faee2120cdcf3c6d5bf0b09820dd7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/BodySlam.cs": "0fa21adfcee20d13408578d03bbfd41718a4f2dc3ec740a3386a5d73dc091032",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Cascade.cs": "41bbdcbf60c6f47bed1dbd6dcfa612e325cae6893e39b89ef1b54ddd94e19c4c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/DefendIronclad.cs": "386b7330854af372755f6e3bd3988ba2a00874a3be2b9cd2bb70290c02b1ddb2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Impervious.cs": "74588aadc4faebd9eb67e7584167214a18a9b4ef53deb9d3cd462f38ae61a339",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Inflame.cs": "e0a7522b8fe7a15e78271d0ded622726d1719a8029e1dda761559bd84d101fc3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/ShrugItOff.cs": "1c8afff30890645acd8b67c01a953976e95020b14299651b88af276763954054",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/StrikeIronclad.cs": "7a889459dd97c15e774b13fb5859efe5d0a5539f91d88ee676534819e7218886",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/TwinStrike.cs": "16a5cb796ab3324cfebf30ea27ef6af7f7bdd9737a1dd0483d605f9782b73fdc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Whirlwind.cs": "fa150bd07b4a4531a513a45b2d220b024f742f78fe170e07e52c2ec63ebea76d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SandCastle.cs": "fb0d8eb8dca966c5715da1dfb54d84c909d75bd6774aa311328434aa1dc44d80",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WarPaint.cs": "6a4bae266c20e791169576432f79db84d93cf0543e0475efc12ebf980010f401",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Whetstone.cs": "2b935eff4ce471b9082a3c741c35d0ad76de590aba35a4a7f085ebe43484f4cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "214c36ca6a11f21402443b1cc1dbe232784c18711f58ef736ede127d2956cceb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "4dd16efb443ad47220fb7565fe68d695e568e659a871a129233a2b05c79b6066",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs": "37fd18dded3485849a9d5bca213e4552d6a1150b8dca7f0818b87c00e41c2ad3"
   }
 }

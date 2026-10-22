@@ -163,9 +163,6 @@ procedure BuildSourceOpeningDefinitions {
     call = { procedure = AddOpeningDefinition args = { run = run category = "event" act = 0 definition = "base-spire:this-or-that" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "event" act = 0 definition = "base-spire:war-historian-repy" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "event" act = 0 definition = "base-spire:welcome-to-wongos" room = "none" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:bygone-effigy-elite" room = "Elite" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:byrdonis-elite" room = "Elite" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:ceremonial-beast-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:cubex-construct-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:flyconid-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Mushroom" } }
@@ -181,7 +178,6 @@ procedure BuildSourceOpeningDefinitions {
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:overgrowth-crawlers" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Shrinker" } }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Crawler" } }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:phrog-parasite-elite" room = "Elite" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:ruby-raiders-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:shrinker-beetle-weak" room = "Monster" rarity = "none" weak = true } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Shrinker" } }
@@ -190,11 +186,18 @@ procedure BuildSourceOpeningDefinitions {
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:slimes-weak" room = "Monster" rarity = "none" weak = true } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Slimes" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:slithering-strangler-normal" room = "Monster" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Jaxfruit" } }
+    call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Slimes" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:snapping-jaxfruit-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Mushroom" } }
+    call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Jaxfruit" } }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:vine-shambler-normal" room = "Monster" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:bygone-effigy-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:byrdonis-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:phrog-parasite-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:ceremonial-beast-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:the-kin-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:vantom-boss" room = "Boss" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 0 definition = "base-spire:vine-shambler-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 0 definition = "base-spire:neow" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "event" act = 1 definition = "base-spire:amalgamator" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "event" act = 1 definition = "base-spire:bugslayer" room = "none" rarity = "none" weak = false } into = entry }
@@ -230,28 +233,28 @@ procedure BuildSourceOpeningDefinitions {
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Workers" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:chompers-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Chomper" } }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:decimillipede-elite" room = "Elite" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:entomancer-elite" room = "Elite" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:exoskeletons-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Exoskeletons" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:exoskeletons-weak" room = "Monster" rarity = "none" weak = true } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Exoskeletons" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:hunter-killer-normal" room = "Monster" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:kaiser-crab-boss" room = "Boss" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:infested-prisms-elite" room = "Elite" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:knowledge-demon-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:louse-progenitor-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:mytes-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:ovicopter-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:slumbering-beetle-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Workers" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:spiny-toad-normal" room = "Monster" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:the-insatiable-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:the-obscura-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:thieving-hopper-weak" room = "Monster" rarity = "none" weak = true } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Thieves" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:tunneler-weak" room = "Monster" rarity = "none" weak = true } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Burrower" } }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:decimillipede-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:entomancer-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:infested-prisms-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:kaiser-crab-boss" room = "Boss" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:knowledge-demon-boss" room = "Boss" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 1 definition = "base-spire:the-insatiable-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 1 definition = "base-spire:orobas" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 1 definition = "base-spire:pael" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 1 definition = "base-spire:tezcatara" room = "none" rarity = "none" weak = false } into = entry }
@@ -283,24 +286,24 @@ procedure BuildSourceOpeningDefinitions {
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:axebots-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:construct-menagerie-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:devoted-sculptor-weak" room = "Monster" rarity = "none" weak = true } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:aeonglass-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:fabricator-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:frog-knight-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:globe-head-normal" room = "Monster" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:knights-elite" room = "Elite" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Knights" } }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:mecha-knight-elite" room = "Elite" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:owl-magistrate-normal" room = "Monster" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:queen-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:scrolls-of-biting-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Scrolls" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:scrolls-of-biting-weak" room = "Monster" rarity = "none" weak = true } into = entry }
     call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Scrolls" } }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:slimed-berserker-normal" room = "Monster" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:soul-nexus-elite" room = "Elite" rarity = "none" weak = false } into = entry }
-    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:test-subject-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:the-lost-and-forgotten-normal" room = "Monster" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:turret-operator-weak" room = "Monster" rarity = "none" weak = true } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:knights-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningTag args = { run = run entry = entry name = "Knights" } }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:mecha-knight-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:soul-nexus-elite" room = "Elite" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:aeonglass-boss" room = "Boss" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:queen-boss" room = "Boss" rarity = "none" weak = false } into = entry }
+    call = { procedure = AddOpeningDefinition args = { run = run category = "encounter" act = 2 definition = "base-spire:test-subject-boss" room = "Boss" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 2 definition = "base-spire:nonupeipe" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 2 definition = "base-spire:tanx" room = "none" rarity = "none" weak = false } into = entry }
     call = { procedure = AddOpeningDefinition args = { run = run category = "ancient" act = 2 definition = "base-spire:vakuu" room = "none" rarity = "none" weak = false } into = entry }

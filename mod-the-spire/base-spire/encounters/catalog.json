@@ -9,6 +9,10 @@
     {
       "id": "base-spire:ruby-raiders-normal",
       "definition": "encounters/shared/ruby-raiders-normal.spire"
+    },
+    {
+      "id": "base-spire:slimes-weak",
+      "definition": "encounters/shared/slimes-weak.spire"
     }
   ]
 }
