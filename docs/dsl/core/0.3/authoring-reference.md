@@ -2,7 +2,7 @@
 
 同包文件组合、严格纯文本 manifest 与静态源目录见[包格式参考](package-reference.md)。
 
-文档类型：参考（Reference）。core/0.3 在 [core/0.3 规则库](authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.3](language-reference.md)。活动引擎标识为 `engine/ir@0.9`，Core.TheSpire 包版本为 `0.9.2`。当前兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)。
+文档类型：参考（Reference）。core/0.3 在 [core/0.3 规则库](authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.3](language-reference.md)。活动引擎标识为 `engine/ir@0.9`，Core.TheSpire 包版本为 `0.9.3`。当前兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)。
 
 ## 绑定入口
 

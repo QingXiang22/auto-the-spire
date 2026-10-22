@@ -8,7 +8,26 @@ internal static class NormalSnapshotChecks
         && records.Any(r => r.Kind == SessionDebugKind.EventEmit) && records.Any(r => r.Kind == SessionDebugKind.RandomCall)
         && records.Where(r => r.Kind is SessionDebugKind.EventEmit or SessionDebugKind.RandomCall)
             .All(r => !r.TextTruncated && r.Snapshot is { Complete: true } && r.Random is not { CandidatesTruncated: true }
-                && r.Random is not { Operation: "double", Float32: null });
+                && r.Random is not { Operation: "double", Float32: null } && CandidateReferencesComplete(r));
+
+    private static bool CandidateReferencesComplete(SessionDebugRecord record)
+    {
+        if (record.Random?.Candidates is not { } candidates) return true;
+        if (record.Snapshot is not { ReferenceDepth: 1 } snapshot) return false;
+        foreach (var id in candidates)
+        {
+            var root = snapshot.Entities.SingleOrDefault(e => e.Instance == id);
+            if (root is null) return false;
+            foreach (var field in root.Fields)
+            {
+                var value = field.Value;
+                if (value.Kind == ValueKind.Ref && !Copied(long.Parse(value.Scalar!))) return false;
+                if (value.Kind == ValueKind.RefList && !value.Items!.All(Copied)) return false;
+            }
+        }
+        return true;
+        bool Copied(long id) => id == 0 || snapshot.Entities.Any(e => e.Instance.Value == id && !e.Missing);
+    }
 
     internal static void Run(string repository)
     {
@@ -33,6 +52,18 @@ internal static class NormalSnapshotChecks
         var expiredCandidates = records.Where(r => r.Random?.Candidates is not null)
             .SelectMany(r => r.Random!.Candidates!).Where(id => !observed.IsLive(id)).Distinct().ToArray();
         Require(expiredCandidates.Length > 0, "this path actually destroys temporary initialization candidates");
+        var opening = records.First(r => r.Random?.Candidates is not null && r.Snapshot!.Entities.Any(e => e.Type == "base-spire:OpeningListItem"));
+        var item = opening.Snapshot!.Entities.First(e => e.Type == "base-spire:OpeningListItem");
+        var definition = long.Parse(item.Fields.Single(f => f.Name == "Definition").Value.Scalar!);
+        var copiedDefinition = opening.Snapshot.Entities.Single(e => e.Instance.Value == definition);
+        Require(!observed.IsLive(item.Instance) && copiedDefinition.Type == "base-spire:OpeningDefinition"
+            && copiedDefinition.Fields.Any(f => f.Name == "DefinitionId" && f.Value.Kind == ValueKind.String && f.Value.Scalar!.StartsWith("base-spire:", StringComparison.Ordinal)),
+            "destroyed initialization candidate retains its actual indirect content definition");
+        var injected = records.ToArray(); var openingIndex = records.ToList().IndexOf(opening);
+        injected[openingIndex] = opening with { Snapshot = opening.Snapshot with { ReferenceDepth = 0 } };
+        Require(!Complete(injected, 0), "missing requested candidate reference depth cannot pass");
+        injected[openingIndex] = opening with { Snapshot = opening.Snapshot with { Entities = opening.Snapshot.Entities.Where(e => e != copiedDefinition).ToArray() } };
+        Require(!Complete(injected, 0), "missing indirect candidate definition cannot pass");
         foreach (var record in records.Where(r => r.Random?.Candidates is not null))
             Require(record.Random!.Candidates!.All(id => record.Snapshot!.Entities.Any(e => e.Instance == id)), "every ordered candidate has its own copied entity");
         var damage = records.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:DamageResolved").ToArray();
