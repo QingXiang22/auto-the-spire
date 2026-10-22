@@ -7,6 +7,7 @@
     "declared_game_baseline": "v0.111.0",
     "rule_source": "src/Sts2Sim.Core"
   },
+  "source_hash_encoding": "utf8-lf",
   "definitions": [
     {
       "category": "shared-relic",

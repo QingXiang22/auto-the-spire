@@ -64,7 +64,7 @@ def generate():
     # The source state log starts with the fixed first move; repeat limits inspect that saved log.
     for seed in ['20261018', '777', 'ENV-IRONCLAD-001', 'A😀B']:
         vectors.append(move_rolls(seed))
-    return {'schema': 'base-spire/source-enemy-moves@2', 'reference_lock': reference_lock(), 'source_sha256': hashes,
+    return {'schema': 'base-spire/source-enemy-moves@2', 'reference_lock': reference_lock(), 'source_hash_encoding': 'utf8-lf', 'source_sha256': hashes,
             'scope': 'Controlled A0 move selection only; no HP roll, normal encounter, complete combat or simulator comparison.',
             'vectors': vectors,
             'fractional_probe': {**move_rolls('20261018', (0.3, 0.9)),

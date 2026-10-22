@@ -56,7 +56,7 @@ def main() -> int:
         hashes = {}
         for name in current_vectors:
             vector = json.loads((fixtures / (name + ".json")).read_text(encoding="utf-8"))
-            if vector.get("reference_lock") != lock:
+            if vector.get("reference_lock") != lock or vector.get("source_hash_encoding") != "utf8-lf":
                 raise ValueError(f"{name}: current vectors must identify the actual locked reference")
             for path, digest in vector.get("source_sha256", {}).items():
                 if path in hashes and hashes[path] != digest:
@@ -67,7 +67,7 @@ def main() -> int:
                     hashes["reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/" + row["name"] + ".cs"] = row["source_sha256"]
         for path, digest in hashes.items():
             source = (ROOT / path).resolve()
-            if not source.is_relative_to((ROOT / "reference/sts2-sim/src/Sts2Sim.Core").resolve()) or hashlib.sha256(source.read_bytes()).hexdigest() != digest:
+            if not source.is_relative_to((ROOT / "reference/sts2-sim/src/Sts2Sim.Core").resolve()) or hashlib.sha256(source.read_bytes().replace(b'\r\n', b'\n')).hexdigest() != digest:
                 raise ValueError(f"current vector source differs from locked checkout: {path}")
         record = json.loads((ROOT / "tools/ci/fixtures/legacy-dsl-checks.json").read_text(encoding="utf-8"))
         if record.get("hash_encoding") != "utf8-lf":

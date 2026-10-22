@@ -8,6 +8,7 @@
     "declared_game_baseline": "v0.111.0",
     "rule_source": "src/Sts2Sim.Core"
   },
+  "source_hash_encoding": "utf8-lf",
   "cards": [
     {
       "name": "StrikeIronclad",
@@ -342,26 +343,26 @@
     }
   ],
   "source_sha256": {
-    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/ListExtensions.cs": "7d9281db117c2a4d8d9226e712c82688e878c0bbc671487ec92012d49d3a82e9",
-    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "bf089c58d685ed50431f6d4c8f57645f843142e889698067eb77d0f59022752f",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/CardModel.cs": "ee978e5821e54315b0dea7fc4a67bdf1f568f12f19b98d0aaa3a86b18228809d",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Anger.cs": "c15619c37865617f3d8d561b007f3bdb605e4eae5240574b77a8b8ce0339c650",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Armaments.cs": "be45795f4eb2215da0015c3f45f5de8ffaf748ecf33f913cc9a4375010d827e0",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Bash.cs": "57d2b984da3a44ae0626f0af0b3a62cc6ead383a4b02b9465bbfcc6dbbccea34",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/BodySlam.cs": "f1aec492808cedad999cc00646b306e6866d64026a923823fde32053ebcf3bcd",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Cascade.cs": "0fa196a14e55d411c7ed0180db149c32ee3632a1d362b4d23d0aa3d1f83441e9",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/DefendIronclad.cs": "f302ff689106d92f34167cdc6530c2f860c1faf3e3243217b10d4babaf48be3d",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Impervious.cs": "3a033f77f84aa423b79ebc58e5b5f4a1d4226ffe505d09cc4bc419a123d59a2b",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Inflame.cs": "4ea5c6b30c90f8bebcda92c8eab68bae8cf99dc3c4ad61e3889d36edcedb9d4e",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/ShrugItOff.cs": "db849e6a9818b1d86c755e99694b2fb4160514861ae6c4253fb5973805eb04ca",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/StrikeIronclad.cs": "daaa4880222c02a71f28c9d7d063fe7ca029c19ad8845bddefc3bbb60147baef",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/TwinStrike.cs": "782d069eb60e1236c5a6e5632b53037378f727945cfcfb4b6642c93b45569879",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Whirlwind.cs": "cbd20a1ddf33244bedbd790a28b785d623b991169c254c7aee3f3bf1712eb2e8",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SandCastle.cs": "384efc416b369b2d800231b0d0656d8dfc2dd3ce4dea419940d7746edba61931",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WarPaint.cs": "dc6e5e4f9a361be5a5527e5f2555db3b2b062db861f437252a0648b418062a61",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Whetstone.cs": "130b851252d3f1eacd7e91455250e533dc923660f73e51db6ecd02c465e63536",
-    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "0430027786093a90331ec29eeca1dc1d41619353e986d85f869b19409b720e66",
-    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "a1f93f52040f7271042425788d6cb30db7ece688659ca23dfc3a388c1db62230",
-    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs": "f7c62015dbd5967b8afa50d983cc8cd3fef18cb1466c17cf9885becdf5ab56fd"
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/ListExtensions.cs": "29c591c5ebc227f329ddfea40ffde38674b245936ac95b718de3b3530e314fbd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "cd05ee766f574de5db8ee8373cacdba1814586689cd554df07d69cfe3d18fc2b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/CardModel.cs": "f7f7ba8945e28c470e6bdbce747f36283db354485b9a66c022d06bd542d04018",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Anger.cs": "1e51fdc391d3b9fa016cbf0252dcb492c2d5c59fd82c7b0eb66e75d1ef2c4afb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Armaments.cs": "2ea87265bae98a3abfd16d74d5ac9f6857d214812e4b2999b039bfd0c0545885",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Bash.cs": "a86fb2f4db3a56acad10783eeb2e1af7592faee2120cdcf3c6d5bf0b09820dd7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/BodySlam.cs": "0fa21adfcee20d13408578d03bbfd41718a4f2dc3ec740a3386a5d73dc091032",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Cascade.cs": "41bbdcbf60c6f47bed1dbd6dcfa612e325cae6893e39b89ef1b54ddd94e19c4c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/DefendIronclad.cs": "386b7330854af372755f6e3bd3988ba2a00874a3be2b9cd2bb70290c02b1ddb2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Impervious.cs": "74588aadc4faebd9eb67e7584167214a18a9b4ef53deb9d3cd462f38ae61a339",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Inflame.cs": "e0a7522b8fe7a15e78271d0ded622726d1719a8029e1dda761559bd84d101fc3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/ShrugItOff.cs": "1c8afff30890645acd8b67c01a953976e95020b14299651b88af276763954054",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/StrikeIronclad.cs": "7a889459dd97c15e774b13fb5859efe5d0a5539f91d88ee676534819e7218886",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/TwinStrike.cs": "16a5cb796ab3324cfebf30ea27ef6af7f7bdd9737a1dd0483d605f9782b73fdc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Whirlwind.cs": "fa150bd07b4a4531a513a45b2d220b024f742f78fe170e07e52c2ec63ebea76d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SandCastle.cs": "fb0d8eb8dca966c5715da1dfb54d84c909d75bd6774aa311328434aa1dc44d80",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WarPaint.cs": "6a4bae266c20e791169576432f79db84d93cf0543e0475efc12ebf980010f401",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Whetstone.cs": "2b935eff4ce471b9082a3c741c35d0ad76de590aba35a4a7f085ebe43484f4cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "214c36ca6a11f21402443b1cc1dbe232784c18711f58ef736ede127d2956cceb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "4dd16efb443ad47220fb7565fe68d695e568e659a871a129233a2b05c79b6066",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs": "37fd18dded3485849a9d5bca213e4552d6a1150b8dca7f0818b87c00e41c2ad3"
   }
 }

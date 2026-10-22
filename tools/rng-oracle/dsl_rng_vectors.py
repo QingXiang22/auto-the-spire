@@ -74,7 +74,7 @@ def generate():
                         'float32_bits_first8': float_bits, 'initial_order': initial,
                         'reshuffle_order': reshuffled, 'shuffle_counter': shuffle.counter,
                         'content_seed_slot2_mixin7': content_seed(root, 2, 'SAPPHIRE_SEED', 7), 'rewards': offers})
-    return {'schema': 'base-spire/source-rng-vectors@2', 'reference_lock': reference_lock(), 'source_sha256': hashes,
+    return {'schema': 'base-spire/source-rng-vectors@2', 'reference_lock': reference_lock(), 'source_hash_encoding': 'utf8-lf', 'source_sha256': hashes,
             'reward_scope': 'migrated gold/card calls; excludes potion-roll and normal Run prerequisites', 'vectors': vectors}
 
 if __name__ == '__main__':

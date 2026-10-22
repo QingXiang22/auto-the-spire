@@ -16,7 +16,7 @@ def generate():
 
     def read(relative):
         path = SOURCE / relative
-        hashes[path.relative_to(ROOT).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+        hashes[path.relative_to(ROOT).as_posix()] = hashlib.sha256(path.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
         return path.read_text(encoding='utf-8-sig')
 
     for path in ['Rewards/RewardsSet.cs', 'Rewards/PotionReward.cs', 'Rewards/GoldReward.cs',
@@ -93,7 +93,7 @@ def generate():
                            'odds_bits': bits(odds), 'offset_bits': bits(offset), 'counter': rng.counter,
                            'calls': calls})
         vectors.append({'seed': seed, 'offers': offers})
-    return {'schema': 'base-spire/normal-reward-vectors@2', 'reference_lock': reference_lock(), 'source_sha256': hashes,
+    return {'schema': 'base-spire/normal-reward-vectors@2', 'reference_lock': reference_lock(), 'source_hash_encoding': 'utf8-lf', 'source_sha256': hashes,
             'scope': 'all unlocked Ironclad act-one A0 Monster, no reward modifiers; controlled visits',
             'potions': potions, 'vectors': vectors}
 

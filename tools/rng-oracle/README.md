@@ -10,7 +10,7 @@
 python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rng-vectors
 ```
 
-生成器校验commit、tree和未提交改动。它先运行只依赖锁定Sts2Sim.Core的[原生导出程序](reference-vectors/Program.cs)，再生成固定测试数据、开局池DSL和核心哈希向量。原生程序不引用本项目Engine或base，不读取生产运行结果；Python消费者神谕使用独立XxHash64与既有xoshiro映射。重新运行应得到相同纳管文件。
+生成器校验commit、tree和未提交改动。它先运行只依赖锁定Sts2Sim.Core的[原生导出程序](reference-vectors/Program.cs)，再生成固定测试数据、开局池DSL和核心哈希向量。原生程序不引用本项目Engine或base，不读取生产运行结果；Python消费者神谕使用独立XxHash64与既有xoshiro映射。来源SHA256统一使用UTF-8字节并将CRLF规范为LF，向量以`source_hash_encoding="utf8-lf"`声明，避免Git检出换行方式改变摘要。重新运行应得到相同纳管文件。
 
 | 产物 | 独立来源与检查范围 |
 | --- | --- |

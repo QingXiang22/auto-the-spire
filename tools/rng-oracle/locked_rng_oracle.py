@@ -51,7 +51,7 @@ def reference_lock():
 
 def source_hashes(paths):
     reference_lock()
-    return {(SOURCE / p).relative_to(ROOT).as_posix(): hashlib.sha256((SOURCE / p).read_bytes()).hexdigest() for p in paths}
+    return {(SOURCE / p).relative_to(ROOT).as_posix(): hashlib.sha256((SOURCE / p).read_bytes().replace(b'\r\n', b'\n')).hexdigest() for p in paths}
 
 
 def native_metadata():

@@ -8,18 +8,19 @@
     "declared_game_baseline": "v0.111.0",
     "rule_source": "src/Sts2Sim.Core"
   },
+  "source_hash_encoding": "utf8-lf",
   "source_sha256": {
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/TwigSlimeM.cs": "b3d41bfd27ddf9555c2e5d83afbde0682eadf9eecfd68921e5aaeacaa3f8236c",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/FuzzyWurmCrawler.cs": "b32cf13af11007b9f98e5aa232ff8854c87a793c902e9e7d89092c6a7488b725",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Slimed.cs": "14cacfffa3788a8ac485ed72f78e35aef829f650cb09c5d79bd4e63aef84e113",
-    "reference/sts2-sim/src/Sts2Sim.Core/Models/MonsterModel.cs": "e82a07635f2ddf7fde8bbe32c6388cc198be9e70c27486f33205f7676ca0c691",
-    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MonsterMoveStateMachine.cs": "9cb8d68142e0236c8a7c74c99e8cd66479077f3179e27a226a0c2eea64dccb31",
-    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/RandomBranchState.cs": "a751bd3be24c4492234a1ae43135371f6d30b5698a070ca2abdfca693081ef37",
-    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MoveState.cs": "472e3ef6b8993a9e47f062001be66db9a4bd83c83d4b8c2f353284195ed5cd5d",
-    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "a1f93f52040f7271042425788d6cb30db7ece688659ca23dfc3a388c1db62230",
-    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "0430027786093a90331ec29eeca1dc1d41619353e986d85f869b19409b720e66",
-    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs": "f7c62015dbd5967b8afa50d983cc8cd3fef18cb1466c17cf9885becdf5ab56fd",
-    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "bf089c58d685ed50431f6d4c8f57645f843142e889698067eb77d0f59022752f"
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/TwigSlimeM.cs": "a1ef592c7ed59c500f53b86cc58e388feb84844b452ae05e655a8006bffc2bbf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/FuzzyWurmCrawler.cs": "f029e4d48c1030e2afdb99cca36ef199b98872e0bf0e06b4daafe1502b0bcd49",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Slimed.cs": "75ba0ddc480f69de12a3773188bf140ff2ad4ae3fd2e0a00330c978aed4ad847",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/MonsterModel.cs": "c790697735d6f2880bec455ce5a569be0012b663fefeeb2ed2ae4ab758265f02",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MonsterMoveStateMachine.cs": "c0dc98053e3386b4d6245f0cdbc416c4262e3c69d0fe7ef0f5f9a66e963ade82",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/RandomBranchState.cs": "e58a643b04e37b5208d5b7f126e2ad3ce23dd2c8d5d6f24d0c2187535e14c64d",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MoveState.cs": "4c2061dc386b4e2303ce3cf0a93f7dbd5d69fae7cc978f7b7127e51c84db2639",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "4dd16efb443ad47220fb7565fe68d695e568e659a871a129233a2b05c79b6066",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "214c36ca6a11f21402443b1cc1dbe232784c18711f58ef736ede127d2956cceb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs": "37fd18dded3485849a9d5bca213e4552d6a1150b8dca7f0818b87c00e41c2ad3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "cd05ee766f574de5db8ee8373cacdba1814586689cd554df07d69cfe3d18fc2b"
   },
   "scope": "Controlled A0 move selection only; no HP roll, normal encounter, complete combat or simulator comparison.",
   "vectors": [

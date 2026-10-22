@@ -141,22 +141,23 @@ foreach (var seed in seeds.Append("20261021"))
 }
 var hashes = Directory.GetFiles(Path.Combine(root, "reference/sts2-sim/src/Sts2Sim.Core"), "*.cs", SearchOption.AllDirectories)
     .Where(p => !p.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar))
-    .Order(StringComparer.Ordinal).ToDictionary(p => Path.GetRelativePath(root, p).Replace('\\', '/'), p => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(p))));
+    .Order(StringComparer.Ordinal).ToDictionary(p => Path.GetRelativePath(root, p).Replace('\\', '/'), p => Convert.ToHexStringLower(SHA256.HashData(
+        System.Text.Encoding.UTF8.GetBytes(System.Text.Encoding.UTF8.GetString(File.ReadAllBytes(p)).Replace("\r\n", "\n")))));
 Dictionary<string, string> Subset(params string[] paths) => hashes.Where(pair => paths.Any(path => pair.Key.StartsWith("reference/sts2-sim/src/Sts2Sim.Core/" + path, StringComparison.Ordinal))).ToDictionary();
 var openingHashes = Subset("Content/Acts/", "Models/Events/Neow.cs", "Models/EventModel.cs", "Models/RelicPools/", "Runs/RunState", "Runs/RunRngSet.cs", "Random/", "Helpers/StringHelper.cs", "Helpers/ListExtensions.cs");
 var mapHashes = Subset("Content/Acts/Overgrowth.cs", "Map/", "Random/", "Helpers/StringHelper.cs");
-Write("normal-opening-vectors.json", new { format = "source-normal-opening-vectors@2", profile = "ironclad-a0-fully-unlocked-singleplayer-fixed-acts", reference_lock = locked.RootElement.Clone(), source_sha256 = openingHashes,
+Write("normal-opening-vectors.json", new { format = "source-normal-opening-vectors@2", profile = "ironclad-a0-fully-unlocked-singleplayer-fixed-acts", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = openingHashes,
     definitions, vectors = openings.Take(10), regression_vectors = openings.Skip(10) });
-Write("act-one-map-vectors.json", new { format = "source-map-vectors@2", reference_lock = locked.RootElement.Clone(), source_sha256 = mapHashes, vectors = maps.Take(10) });
-Write("map-gaussian-vectors.json", new { format = "source-map-gaussian-vectors@2", reference_lock = locked.RootElement.Clone(), source_sha256 = mapHashes, vectors = gaussians.Take(10) });
-Write("normal-combat-vectors.json", new { reference_lock = locked.RootElement.Clone(), vectors = combats });
-Write("slimes-vectors.json", new { reference_lock = locked.RootElement.Clone(), source_sha256 = Subset("Content/Acts/Overgrowth.cs", "Rooms/RoomFactory.cs", "Models/Monsters/LeafSlime", "Models/Monsters/TwigSlime", "Models/MonsterModel.cs", "MonsterMoves/", "Random/", "Entities/Creatures/Creature.cs", "Combat/CombatState.cs"), vectors = slimes });
-Write("metadata.json", new { reference_lock = locked.RootElement.Clone(), definitions,
+Write("act-one-map-vectors.json", new { format = "source-map-vectors@2", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = mapHashes, vectors = maps.Take(10) });
+Write("map-gaussian-vectors.json", new { format = "source-map-gaussian-vectors@2", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = mapHashes, vectors = gaussians.Take(10) });
+Write("normal-combat-vectors.json", new { reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", vectors = combats });
+Write("slimes-vectors.json", new { reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = Subset("Content/Acts/Overgrowth.cs", "Rooms/RoomFactory.cs", "Models/Monsters/LeafSlime", "Models/Monsters/TwigSlime", "Models/MonsterModel.cs", "MonsterMoves/", "Random/", "Entities/Creatures/Creature.cs", "Combat/CombatState.cs"), vectors = slimes });
+Write("metadata.json", new { reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", definitions,
     cards = new IroncladCardPool().AllCards.Select(c => new { id = Id(c.Id.Entry), name = c.GetType().Name, rarity = c.Rarity.ToString().ToLowerInvariant(), multiplayer_only = c.IsMultiplayerOnly }),
     potions = new IroncladPotionPool().AllPotions.Concat(SharedPotionPool.Instance.AllPotions).Select(p => new { id = Id(p.Id.Entry), name = p.GetType().Name, rarity = p.Rarity.ToString().ToLowerInvariant(), usage = p.Usage.ToString() }),
     neow = new { curse = ((Type[])typeof(Neow).GetField("CurseTypes", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Select(t => new { name = t.Name, id = TypeId(t) }),
         positive = ((Type[])typeof(Neow).GetField("PositiveTypes", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Select(t => new { name = t.Name, id = TypeId(t) }) } });
-Write("ironclad-source-metadata.json", new { schema = "base-spire/ironclad-source-metadata@2", reference_lock = locked.RootElement.Clone(),
+Write("ironclad-source-metadata.json", new { schema = "base-spire/ironclad-source-metadata@2", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf",
     entries = new IroncladCardPool().AllCards.Append(ModelDb.Card<Sts2Sim.Core.Models.Cards.GiantRock>()).Select(c =>
     {
         var upgraded = (CardModel)c.MutableClone(); upgraded.Upgrade();

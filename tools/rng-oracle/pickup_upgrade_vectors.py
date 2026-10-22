@@ -43,7 +43,7 @@ def generate():
             steps.append(dict(relic=name, selected_indices=selected,
                               upgraded_indices=sorted(upgraded), niche_counter=rng.counter))
         vectors.append(dict(seed=seed, steps=steps))
-    return dict(schema='base-spire/source-pickup-upgrade-vectors@2', reference_lock=reference_lock(), cards=cards, vectors=vectors,
+    return dict(schema='base-spire/source-pickup-upgrade-vectors@2', reference_lock=reference_lock(), source_hash_encoding='utf8-lf', cards=cards, vectors=vectors,
                 source_sha256=source_hashes(sorted(set(paths))))
 
 
