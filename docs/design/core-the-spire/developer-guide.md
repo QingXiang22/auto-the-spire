@@ -373,7 +373,7 @@ foreach (var record in session.Debug!.Capture())
 
 加载文本包时使用 `package.CreateSession(seed, roles, gameSeed, debug: new SessionDebugOptions())`，保持原包的随机配置。诊断沿每会话的拉取式轨迹保存，不使用全局回调。直接调用 `session.Random` 也记录调用；只有在 DSL 指令执行期间才有指令来源与执行上下文。失败指令可能留下已执行抽取的诊断，随机状态仍按指令的原子性规则恢复；故障后的记录不能充当成功边界。
 
-tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
+tools/differential 的 `normal-compare-self-test` 在正常首战中读取已销毁候选和伤害结果的字段，逐步核对关闭快照时的状态、随机和完整公开观察，并拒绝缺快照、截断、丢失及零执行。复制结果只在诊断输出目录保存一次。真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
 
 ## 9. 维护内核时修改哪里
 
