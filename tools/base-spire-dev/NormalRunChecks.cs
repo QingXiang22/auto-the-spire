@@ -5,12 +5,45 @@ internal static partial class PackageChecks
 {
     public static int RunNormalRunOnly(DslPackage package)
     {
+        RunNormalOpeningGuardChecks(package);
         RunNormalOpeningChecks(package);
         RunSourceOpeningChecks(package);
         RunUnsupportedNormalOpeningChecks(package);
         RunMapGaussianChecks(package);
         RunSourceMapChecks(package);
         return 0;
+    }
+
+    private static void RunNormalOpeningGuardChecks(DslPackage package)
+    {
+        var pickup = Start(package);
+        Submit(pickup, "GoldenPearl.Obtain");
+        Submit(pickup, "RemoveOwnedRelic", Members(pickup, "Relics").Single());
+        Equal(249L, IntField(pickup, Player(pickup), "Player", "Gold"), "removal preserves the actual pickup gold");
+        RejectModifiedOpening(pickup, "a removed pickup cannot hide modified starting gold");
+
+        foreach (var (field, value) in new (string, Value)[]
+        {
+            ("Energy", Value.Of(1)), ("Block", Value.Of(5)),
+            ("DrawBlocked", Value.Of(true)), ("TurnOpen", Value.Of(true)),
+            ("UsesRunDeck", Value.Of(true)),
+        })
+        {
+            var session = Start(package);
+            Set(session, Player(session), "Player", field, value);
+            RejectModifiedOpening(session, "normal entry refuses existing " + field);
+        }
+        Console.WriteLine("ok   ENV-T05 normal opening rejects prior resource and combat changes without state or RNG changes");
+
+        static void RejectModifiedOpening(Session session, string why)
+        {
+            var state = session.State.StateHash(); var draws = session.Random.TotalDraws;
+            True(!session.LegalActions(session.Participant(0)).Any(a => a.Definition.QualifiedId == "base-spire:StartNormalRun"), why);
+            var start = session.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:StartNormalRun");
+            Throws<EngineFaultException>(() => session.Submit(start, session.Participant(0), []));
+            Equal(state, session.State.StateHash(), why + ": rejected start preserves state");
+            Equal(draws, session.Random.TotalDraws, why + ": rejected start preserves random streams");
+        }
     }
 
     private static void RunNormalOpeningChecks(DslPackage package)

@@ -25,7 +25,7 @@
 
 ### 正常开局首段
 
-`StartNormalRun` 使用全解锁、A0、单人 Ironclad 配置。它只接受未开始开发操作的初态，复用 Session 中的 Player 与空 Run，建立 80 HP、99 金币、5 Strike／4 Defend／Bash 及 BurningBlood。Run.Profile 公开说明该输入配置；其他角色、进阶和解锁配置尚未接入。
+`StartNormalRun` 使用全解锁、A0、单人 Ironclad 配置。它只接受未开始开发操作的初态，复用 Session 中的 Player 与空 Run，建立 80 HP、99 金币、5 Strike／4 Defend／Bash 及 BurningBlood。入口复用角色初始化守卫，检查资源、回合、牌区与物品状态，并要求尚未关联 Run；获得再移除遗物后遗留的金币变化也会阻止开局。拒绝启动不改状态或随机流。Run.Profile 公开说明该输入配置；其他角色、进阶和解锁配置尚未接入。
 
 开局先按 `RunManager.InitializeNewRun`／`GenerateRooms` 建立两侧遗物袋，分配共享 Ancient，再按 Overgrowth→Hive→Glory 预生成事件、普通／精英遭遇、Boss 和 Ancient 队列。源池成员及顺序完整保留。相邻遭遇使用源标签拒绝抽样，未支持内容仍参与源队列，不改成已实现子集。获得遗物时，先移除两侧袋中相同标识，再执行获得监听。
 

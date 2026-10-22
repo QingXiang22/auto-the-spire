@@ -67,13 +67,8 @@ collection RunVisits { element = RunVisit ordered = true }
 procedure CanStartNormalRun {
   pure = true parameters = { owner = Ref(Player) } result = Bool
   body = {
-    if = { condition = or(not(equal(field(owner, Player.CharacterId), "none")), not(isNone(field(owner, Player.CurrentRun)))) then = { return = { value = false } } }
-    if = { condition = or(field(owner, Player.CombatActive), or(not(equal(field(owner, Player.Room), "none")), not(equal(field(owner, Player.TurnNumber), 0)))) then = { return = { value = false } } }
-    if = { condition = or(not(equal(field(owner, Player.Hp), 80)), not(equal(field(owner, Player.MaxHp), 80))) then = { return = { value = false } } }
-    if = { condition = or(exists(type(Enemy)), or(exists(collection(Relics)), exists(collection(Potions)))) then = { return = { value = false } } }
-    if = { condition = or(not(equal(count(type(Card)), 3)), not(equal(count(collection(DiscardPile)), 3))) then = { return = { value = false } } }
-    if = { condition = exists(where(type(Card), c, not(equal(field(c, Card.DefinitionId), "base-spire:development-card")))) then = { return = { value = false } } }
-    return = { value = true }
+    if = { condition = not(isNone(field(owner, Player.CurrentRun))) then = { return = { value = false } } }
+    return = { value = pureCall(CanInitializeCharacter, owner) }
   }
 }
 
