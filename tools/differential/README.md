@@ -81,7 +81,9 @@ dotnet run --project tools/differential -c Release -- normal-compare-self-test
 
 `random.float32_calls` 逐条比较正常路径中的浮点取样：具名流、调用前后游标、已求值的上下界及最终 binary32 位型。DSL 读取真实 `RandomCallDetails.Float32`，参考读取自身 `NextFloat` 参数和实际结果；原始 double 记录保留在诊断中。比较按流名与流内游标规范化，不要求独立流有相同的全局初始化顺序。缺附加数据、截断、丢失、重复或流内错序均失败。固定首战有敌人三次与奖励八次浮点调用；这部分一致不代表离散候选、权重及拒绝过程已经比较，完整 `random.trace` 仍为必需维度。
 
-`random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。固定首战累计比较 631 次数值调用，其中 627 次整数与四次 Gaussian 输入；独立流按流名分组，流内原顺序仍须完整保留。另有 94 次开局加权单位区间抽样尚未取得共同数值表示，双方在 `unmapped_scalar_calls` 逐条保留；其离散候选另见下文。数值结果相同不证明全部候选或拒绝过程相同，完整 `random.trace` 继续作为必需维度。
+`random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。94 次开局加权抽样读取 core 0.9.5 在实际抽样时保留的 `SingleRawWord`，按 vanilla 公式 `(raw >> 11) * 2^-53` 规范化，同时校验实际离散结果确为该单位值乘候选数后的截断。缺字或多字消费明确失败，不从选中索引反推或重跑生成器。
+
+固定首战累计比较 725 次数值调用，其中 627 次整数、四次 Gaussian 输入及 94 次加权单位值，双方 `unmapped_scalar_calls` 为空。独立流按流名分组，流内原顺序仍须完整保留；其离散候选另见下文。数值结果相同不证明全部候选或拒绝过程相同，完整 `random.trace` 继续作为必需维度。
 
 SlimesWeak 的三次 HP 抽样由原生 `NextInt(0, width)` 偏移规范化为 DSL 的完整 HP 区间。参考通过已有的只读 before-setup 诊断，在真实创建完成、任何 Setup 效果之前保存 `SpawnedEnemies` 原创建顺序、同一怪物的初始区间及 MaxHp，并关联同一创建窗口的真实 niche 调用。必须逐项符合区间宽度与 `minimum + offset == initial HP`，且先前创建怪物的实际 HP 均不落在当前区间；存在已用 HP 排除、缺抽样或关联不符时明确失败。该映射仅覆盖已锁定的 SlimesWeak 初始化，不推断其他遭遇或排除候选的语义；原生偏移参数和 `hp_initialization` 副本同时保留，后续 Setup／战斗值不参与重建。
 
@@ -89,7 +91,7 @@ SlimesWeak 的三次 HP 抽样由原生 `NextInt(0, width)` 偏移规范化为 D
 
 `random.weighted_attempts` 比较每次抽样时上一次接受的遭遇、兼容性结果列表、是否启用谓词及实际接受／拒绝结果。DSL 读取实际纯过程参数／返回和选择过程返回，要求预检覆盖完整候选，并核对抽中项的实际兼容性结果；诊断格式改变、截断或缺记录时失败。参考从同一次回调的真实候选与上次接受对象计算纯兼容性条件，在下一个 RNG 回调或边界核对实际 bag、总权重与 LastPicked／LastMonster：拒绝保持原袋，接受删除选中项；若下一次抽样前已补池，要求与同一幕的完整源池一致。原生实际后状态保留在 `opening_commits`，不追加随机调用。
 
-固定输入有 87 次接受和七次拒绝。`random.opening_queues` 从实际保留的 RunRoomPlan 与原生 GeneratedActRooms 读取三幕的 87 项普通／精英队列，比较幕、房型、顺序和定义；各侧还要求队列逐项等于实际接受的抽样，防止正确抽中却错误提交。DSL 的九个临时遭遇袋在开局完成后必须已销毁；原生保留 bag 属于不同存储方式，以相同的实际队列和已核对的提交变化比较。`unmapped_weighted_semantics` 因此为空；原始加权数值、其他候选语义和完整 `random.trace` 要求仍保留，不能据此认证全部随机维度。
+固定输入有 87 次接受和七次拒绝。`random.opening_queues` 从实际保留的 RunRoomPlan 与原生 GeneratedActRooms 读取三幕的 87 项普通／精英队列，比较幕、房型、顺序和定义；各侧还要求队列逐项等于实际接受的抽样，防止正确抽中却错误提交。DSL 的九个临时遭遇袋在开局完成后必须已销毁；原生保留 bag 属于不同存储方式，以相同的实际队列和已核对的提交变化比较。`unmapped_weighted_semantics` 因此为空；其他候选语义和完整 `random.trace` 要求仍保留，不能据此认证全部随机维度。
 
 公开语义投影直接消费真实 Host 快照，比较整张地图的坐标／房型／连接／访问和可选状态、Run 阶段与当前位置、Neow 选项原位置和选择结果、访问顺序及提交状态、金币／卡牌／药水奖励，以及持有药水槽位和遗物熔化状态。玩家、敌人和 Power 的已映射公开资源也单独比较，不用内部事实填补未知或缺失的公开字段。数组按各自声明的成员／顺序语义规范化；单人 Profile 中参考药水的 AnyPlayer 目标对应自己。
 

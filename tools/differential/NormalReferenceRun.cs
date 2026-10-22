@@ -569,9 +569,8 @@ internal sealed class NormalReferenceRandom : IDisposable
                 result.Add(NormalScalarTrace.Integer(stream, call.Before, call.After, 0, 2, bool.Parse(call.Result) ? 0 : 1));
             else if (p.Operation == "NextDouble" && p.Arity == 0)
             {
-                if (stream == "base-spire:run:up_front")
-                { unmapped.Add(new(stream, call.Before, call.After, "opening weighted bag normalization")); continue; }
-                if (stream != "base-spire:run:act_1_map") throw new NotSupportedException("missing_dimension: unclassified native double source");
+                if (stream == "base-spire:run:up_front" && p.Weighted is null) throw new NotSupportedException("missing_dimension: native weighted scalar attribution");
+                if (stream is not ("base-spire:run:act_1_map" or "base-spire:run:up_front")) throw new NotSupportedException("missing_dimension: unclassified native double source");
                 result.Add(NormalScalarTrace.UnitDouble(stream, call.Before, call.After, double.Parse(call.Result, System.Globalization.CultureInfo.InvariantCulture)));
             }
             else throw new NotSupportedException("missing_dimension: native scalar operation " + p.Operation);

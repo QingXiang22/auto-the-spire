@@ -7,13 +7,12 @@ internal static class NormalScalarChecks
     internal static void Run(IReadOnlyList<SessionDebugRecord> records, NormalBoundary left, NormalBoundary right)
     {
         var projection = NormalScalarTrace.Dsl(records, 0);
-        Require(projection.Calls.Length == 631 && projection.Calls.Count(c => c.Kind == "binary64") == 4,
-            "fixed normal path compares 627 integer and four Gaussian input calls");
-        Require(projection.Unmapped.Length == 94 && projection.Unmapped.All(c => c.Reason == "opening weighted bag normalization"),
-            "94 weighted unit draws remain explicitly unmapped as scalars");
+        Require(projection.Calls.Length == 725 && projection.Calls.Count(c => c.Kind == "binary64") == 98,
+            "fixed normal path compares 627 integer, four Gaussian input and 94 weighted unit calls");
+        Require(projection.Unmapped.Length == 0, "all scalar calls have bilateral representations");
         using var diagnostic = System.Text.Json.JsonDocument.Parse(NormalPreflight.Json(right.Diagnostic));
-        Require(diagnostic.RootElement.GetProperty("unmapped_scalar_calls").GetArrayLength() == 94,
-            "reference also retains every unmapped scalar call");
+        Require(diagnostic.RootElement.GetProperty("unmapped_scalar_calls").GetArrayLength() == 0,
+            "reference maps every actual scalar call");
         var hp = projection.Calls.Where(c => c.Stream == "base-spire:run:niche").ToArray();
         Require(hp.Select(c => (c.Minimum, c.Maximum, c.Result)).SequenceEqual(new[] { ("11", "16", "14"), ("26", "29", "28"), ("7", "12", "11") }),
             "three real SlimesWeak HP draws compare actual intervals and final values");
@@ -40,6 +39,16 @@ internal static class NormalScalarChecks
         Reject(random, 1);
         Reject([.. random, random[index]], 0);
         Reject(random.Reverse().ToArray(), 0);
+        var weightedIndex = Array.FindIndex(random, r => r.Random!.Operation == "pick" && r.Subject == "base-spire:run:up_front"
+            && r.Snapshot!.Entities.Any(e => e.Type == "base-spire:OpeningListItem"));
+        var weighted = random[weightedIndex];
+        foreach (var invalid in new[] { weighted.Random! with { SingleRawWord = null },
+            weighted.Random! with { SingleRawWord = ulong.MaxValue, Result = "0" },
+            weighted.Random! with { TotalAfter = weighted.Random.TotalAfter + 1 } })
+            Reject(records.Select(r => r == weighted ? r with { Random = invalid } : r).ToArray(), 0);
+        var changedWord = weighted.Random! with { SingleRawWord = weighted.Random.SingleRawWord!.Value ^ 2048UL };
+        var changedCalls = NormalScalarTrace.Dsl(records.Select(r => r == weighted ? r with { Random = changedWord } : r).ToArray(), 0).Calls;
+        Require(!projection.Calls.SequenceEqual(changedCalls), "same discrete index with a changed actual unit sample still differs");
         var regrouped = random.GroupBy(r => r.Subject).Reverse().SelectMany(g => g).ToArray();
         Require(projection.Calls.SequenceEqual(NormalScalarTrace.Dsl(regrouped, 0).Calls),
             "independent streams may initialize in a different global order");

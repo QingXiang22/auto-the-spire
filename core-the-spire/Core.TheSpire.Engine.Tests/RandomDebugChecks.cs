@@ -44,6 +44,9 @@ internal static class RandomDebugChecks
             Check.Sequence(new[] { "int", "pick", "shuffle", "shuffle", "double" }, calls.Select(c => c.Operation), "individual API calls, including every swap");
             // Independent source vector: tools/rng-oracle/vanilla_rng_oracle.py, Rng(12345), bounds 100/3/3/2.
             Check.Sequence(new[] { "74", "0", "2", "0", "0.5551828553264562" }, calls.Select(c => c.Result), "actual sampled results");
+            Check.Sequence(new ulong?[] { 13720838825685603483UL, 2398916695208396998UL, 17770384849984869256UL,
+                891717726879801395UL, 10241316046318454344UL }, calls.Select(c => c.SingleRawWord),
+                "actual raw words match independent MegaRandom(12345) output, including pick and every shuffle swap");
             Check.Sequence(new[] { "100", "3", "3", "2", "1" }, calls.Select(c => c.Maximum), "bounds survive recording");
             Check.True(calls.Take(4).All(c => c.Float32 is null), "only sampleFloat32 has binary32 metadata");
             Check.Equal(new Float32SampleDetails(0, 1065353216, 1057890423), calls[^1].Float32!, "default float range and independently rounded result");
@@ -87,6 +90,27 @@ internal static class RandomDebugChecks
             Check.Sequence(old, sparse.Debug.Capture(), "another session cannot append here");
             Check.Equal(15L, sparse.Random.TotalDraws, "another session cannot advance this stream");
             Check.Equal(15, old.Count(r => r.Kind == SessionDebugKind.RandomCall), "all individual calls retained");
+        });
+
+        Check.Run("DEBUG zero or multiple raw words never reuse a previous single-word observation", () =>
+        {
+            var profile = new WordCountProfile();
+            var s = new Session(rules, 1, ["player"], debug: new(), randomProfile: profile); s.Start();
+            foreach (var words in new[] { 1, 0, 2, 0, 1 })
+            {
+                profile.Words = words;
+                var before = s.Random.TotalDraws;
+                s.Random.DrawInt("test", 0, 100);
+                var call = s.Debug!.Records.Last().Random!;
+                Check.Equal(before + words, s.Random.TotalDraws, "diagnostics consume no extra words");
+                Check.Equal(words == 1, call.SingleRawWord.HasValue, "only exactly one real word has single-word evidence");
+            }
+            profile.ExtraDraw = () => s.Random.DrawUInt64("other");
+            s.Random.DrawInt("test", 0, 100);
+            var crossed = s.Debug!.Records.Last().Random!;
+            Check.Equal(1L, crossed.After - crossed.Before, "outer call consumes one word on its own stream");
+            Check.Equal(2L, crossed.TotalAfter - crossed.TotalBefore, "nested call also consumed another stream");
+            Check.True(crossed.SingleRawWord is null, "cross-stream extra consumption cannot masquerade as one raw word");
         });
 
         Check.Run("DEBUG truncated candidates and capacity loss are explicit without changing gameplay", () =>
@@ -140,5 +164,18 @@ internal static class RandomDebugChecks
             Check.Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(pending.RequestId, Flag: true)), "duplicate answer rejected");
             Check.Equal(2L, s.Random.TotalDraws, "duplicate answer does not draw");
         });
+    }
+
+    private sealed class WordCountProfile : IRandomProfile
+    {
+        internal int Words { get; set; } = 1;
+        internal Action? ExtraDraw { get; set; }
+        public string AlgorithmId => "test/word-count@1";
+        public string DrawProfileId => "test/word-count-mapping@1";
+        public IRandomGenerator Create(ulong seed) => new Xoshiro256StarStar(seed);
+        public long DrawBounded(Func<ulong> next, long minInclusive, long maxExclusive)
+        { for (var i = 0; i < Words; i++) next(); ExtraDraw?.Invoke(); return minInclusive; }
+        public double DrawDouble(Func<ulong> next) => throw new NotSupportedException();
+        public bool DrawBool(Func<ulong> next) => throw new NotSupportedException();
     }
 }
