@@ -29,6 +29,7 @@ internal static class NormalSnapshotChecks
         var floats = records.Where(r => r.Random?.Float32 is not null).ToArray();
         Require(floats.Any(r => r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1073741824 }), "real enemy sampling retains the [0,2) range");
         Require(floats.Any(r => r.Subject!.Contains("rewards") && r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1065353216 }), "real reward sampling retains the [0,1) range");
+        CheckFloat32Projection(records);
         var expiredCandidates = records.Where(r => r.Random?.Candidates is not null)
             .SelectMany(r => r.Random!.Candidates!).Where(id => !observed.IsLive(id)).Distinct().ToArray();
         CheckPhaseProjection(records);
@@ -99,6 +100,36 @@ internal static class NormalSnapshotChecks
             var rejected = false;
             try { NormalPhaseTrace.Merge(injected, starts); } catch (NotSupportedException) { rejected = true; }
             Require(rejected, "phase comparison rejects " + name);
+        }
+    }
+
+    private static void CheckFloat32Projection(IReadOnlyList<SessionDebugRecord> records)
+    {
+        var actual = NormalFloat32Trace.Dsl(records, 0);
+        Require(actual.Length > 1 && actual.Select(c => c.Stream).Distinct().Count() > 1, "normal combat has real float draws in independent streams");
+        Require(actual.SequenceEqual(NormalFloat32Trace.Dsl(records.OrderBy(r => r.Subject, StringComparer.Ordinal).ToArray(), 0)),
+            "independent streams do not impose a cross-stream execution order");
+        var index = records.ToList().FindIndex(r => r.Random?.Float32 is not null);
+        var record = records[index]; var value = record.Random!.Float32!;
+        foreach (var changed in new[] { record with { Random = record.Random with { Float32 = value with { MaximumBits = 1077936128 } } },
+            record with { Random = record.Random with { Float32 = value with { ResultBits = value.ResultBits + 1 } } } })
+        {
+            var injected = records.ToArray(); injected[index] = changed;
+            Require(!actual.SequenceEqual(NormalFloat32Trace.Dsl(injected, 0)), "same raw double cannot hide changed actual float bounds or result");
+        }
+        Require(!actual.SequenceEqual(NormalFloat32Trace.Dsl(records.Where((_, i) => i != index).ToArray(), 0)), "a missing actual float call changes compared evidence");
+        Reject(records, 1, "dropped records");
+        var missing = records.ToArray(); missing[index] = record with { Random = record.Random with { Float32 = null } };
+        Reject(missing, 0, "missing evaluated bounds");
+        missing[index] = record with { TextTruncated = true }; Reject(missing, 0, "truncated stream");
+        missing[index] = record with { Random = record.Random with { After = record.Random.After + 1 } }; Reject(missing, 0, "invalid cursor");
+        Reject([.. records, record], 0, "duplicate cursor");
+        Reject(records.Reverse().ToArray(), 0, "within-stream reordering");
+        void Reject(IReadOnlyList<SessionDebugRecord> injected, long dropped, string name)
+        {
+            var rejected = false;
+            try { NormalFloat32Trace.Dsl(injected, dropped); } catch (NotSupportedException) { rejected = true; }
+            Require(rejected, "float comparison rejects " + name);
         }
     }
 

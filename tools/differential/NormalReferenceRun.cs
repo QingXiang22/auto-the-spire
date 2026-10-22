@@ -356,7 +356,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 .OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
         Put("actions.candidates", Actions().Select(a => a.Key).Distinct().Order(StringComparer.Ordinal).ToArray());
-        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
+        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
@@ -448,6 +448,18 @@ internal sealed class NormalReferenceRandom : IDisposable
     public object Capture() => new { dropped, unfinished = pending.Count,
         calls = calls.Select(c => new { stream = Name(c.Rng), c.Operation, c.Result, c.Before, c.After, c.Parameters, c.StateAfter }).ToArray(),
         streams = names.Keys.Concat(attached).Distinct().Select(r => new { name = Name(r), state = r.ToSerializable() }).ToArray() };
+    internal NormalFloat32Call[] Float32Calls()
+    {
+        if (dropped != 0 || pending.Count != 0) throw new NotSupportedException("missing_dimension: incomplete native random diagnostics");
+        return NormalFloat32Trace.Canonical(calls.Where(c => c.Parameters.Operation == "NextFloat").Select(c =>
+        {
+            if (c.Parameters.Arity != 2 || c.Parameters.Minimum != (float)c.Parameters.Minimum || c.Parameters.Maximum != (float)c.Parameters.Maximum)
+                throw new NotSupportedException("missing_dimension: native float parameter shape");
+            return new NormalFloat32Call(Name(c.Rng), c.Before, c.After,
+                BitConverter.SingleToUInt32Bits((float)c.Parameters.Minimum), BitConverter.SingleToUInt32Bits((float)c.Parameters.Maximum),
+                BitConverter.SingleToUInt32Bits(float.Parse(c.Result, System.Globalization.CultureInfo.InvariantCulture)));
+        }));
+    }
     // The factory-local generator is retained only by the enabled observer. Compare the
     // same run/player/event objects on both sides; per-call diagnostics retain its words.
     public string KnownState() => System.Text.Json.JsonSerializer.Serialize(names.Where(p => p.Value != "base-spire:encounter:monsters").OrderBy(p => p.Value, StringComparer.Ordinal)

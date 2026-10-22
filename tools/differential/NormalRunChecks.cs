@@ -63,6 +63,20 @@ internal static class NormalRunChecks
             Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
         var victory = left.Capture("victory");
+        var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
+        Require(floatCalls.Length == 11 && floatCalls.Count(c => c.Stream == "base-spire:run:monster_ai") == 3
+            && floatCalls.Count(c => c.Stream == "base-spire:player:rewards") == 8,
+            "normal fixed path compares every actual native float parameter and result");
+        foreach (var injected in new[] { floatCalls[..^1], floatCalls.Concat(floatCalls.Take(1)).ToArray(),
+            new[] { floatCalls[0] with { MaximumBits = 1077936128 } }.Concat(floatCalls.Skip(1)).ToArray(),
+            new[] { floatCalls[0] with { ResultBits = floatCalls[0].ResultBits + 1 } }.Concat(floatCalls.Skip(1)).ToArray(),
+            new[] { floatCalls[0] with { Before = floatCalls[0].Before + 1 } }.Concat(floatCalls.Skip(1)).ToArray() })
+        {
+            var changed = new SortedDictionary<string, string>(victory.Values, StringComparer.Ordinal)
+                { ["random.float32_calls"] = NormalPreflight.Json(injected) };
+            Require(NormalRunComparison.First(0, victory, victory with { Values = changed })?.Path == "random.float32_calls",
+                "missing, duplicate, changed range, final bits and cursor report a float first difference");
+        }
         CheckPublicProjection(left.Snapshot);
         var actualEvents = System.Text.Json.JsonSerializer.Deserialize<NormalObservedEvent[]>(victory.Values["events.observed_order"])!;
         foreach (var (phase, count) in new[] { ("combat-started", 1), ("player-turn-prepared", 4), ("enemy-turn-starting", 3),
