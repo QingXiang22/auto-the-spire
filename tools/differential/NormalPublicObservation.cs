@@ -4,17 +4,17 @@ using NetTheSpire.Contracts.Dto;
 namespace Differential;
 
 internal sealed record NormalMapNode(string Coordinate, string Type, bool Visited, bool Selectable, string[] Children);
-internal sealed record NormalRunView(string Phase, long Act, long Floor, long TotalFloor, string CurrentNode, long NodeCount, bool NeowPending);
+internal sealed record NormalRunView(string Phase, long Act, long Floor, long TotalFloor, string CurrentNode, long NodeCount, bool NeowPending, string Profile);
 internal sealed record NormalNeowOption(string Relic, long Position);
 internal sealed record NormalNeowView(string Status, string SelectedRelic, NormalNeowOption[] Options);
 internal sealed record NormalCardOffer(string Id, bool Upgraded, long Cost, string Rarity);
 internal sealed record NormalPotionView(string Origin, long Slot, string Usage, string Target);
 internal sealed record NormalRelicView(string Id, bool Melted);
 internal sealed record NormalPlayerView(long Hp, long MaxHp, long Gold, string Character, long MaxEnergy, bool CombatActive, string CombatOutcome,
-    string Room, bool TurnOpen, long Energy, long Turn, long Block, bool CurrentRun);
+    string Room, bool TurnOpen, long Energy, long Turn, long Block, bool CurrentRun, long AutoDraw);
 internal sealed record NormalEnemyView(string Origin, string Id, long Hp, long MaxHp, long Block, string Move, long MoveIndex, string Intent);
 internal sealed record NormalPlayerHistory(long Plays, long HpLosses, bool LostHpThisTurn, bool ExhaustedThisTurn, bool EnemyPhase, bool UsesRunDeck);
-internal sealed record NormalPublicPower(string Id, string Holder, long Amount, bool SkipTick);
+internal sealed record NormalPublicPower(string Id, string Holder, long Amount, bool SkipTick, bool ExpiresAtTurnEnd);
 internal sealed record NormalVisitView(long Id, string Node, string MapType, string Room, string Encounter, string Phase, string Status, bool Committed);
 internal sealed record NormalCardView(string Scope, string Origin, string Id, string Label, string SourceEntry, string Kind, string Rarity,
     long Cost, long BaseCost, long Damage, bool Upgraded, bool CanUpgrade, bool Targeted, bool Exhausts, bool Innate, bool LeavesPlay, bool Strike, bool IsX, long PaidX);
@@ -32,11 +32,11 @@ internal static class NormalPublicObservation
     private static string FieldName(FieldDto field) => field.FieldId.Split(':')[^1];
     private static readonly HashSet<string> MappedFields = new[]
     {
-        ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending CurrentVisit VisitSequence"),
+        ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending CurrentVisit VisitSequence Profile"),
         ("MapNode", "Col Row Type Visited Selectable"),
         ("NeowVisit", "Status SelectedRelic"), ("NeowOption", "Position RelicId"),
-        ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending PlaySequence HpLossCount LostHpThisTurn ExhaustedCardThisTurn EnemyPhase UsesRunDeck"),
-        ("Enemy", "Hp MaxHp Block MoveId MoveIndex Intent"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick"),
+        ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending PlaySequence HpLossCount LostHpThisTurn ExhaustedCardThisTurn EnemyPhase UsesRunDeck AutoDrawPerTurn"),
+        ("Enemy", "Hp MaxHp Block MoveId MoveIndex Intent"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick ExpiresAtTurnEnd"),
         ("RunVisit", "StableId Node MapType RoomType EncounterId Phase Status Committed Rewards"),
         ("Card", "Label SourceEntry Kind Rarity Cost BaseCost BaseDamage DamageGrowth Upgraded CanUpgrade Targeted Exhausts Innate LeavesPlay StrikeTag IsX PaidX"),
         ("CombatRewardSet", "PotionPending VisitId Source CharacterId ActIndex Ascension CardCount RarityPolicy Generated Closed Potion PoolEligibility UpgradePolicy ModifiersPolicy RandomStream"), ("Potion", "Slot Usage Target"), ("Relic", "IsMelted"),
@@ -78,16 +78,16 @@ internal static class NormalPublicObservation
             snapshot.Relations.Where(r => r.TypeId == "net:relation:base-spire:MapChildren" && r.SourceRef == n.InstanceId)
                 .Select(r => Coord(byHandle[r.TargetRef])).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
         Put("public.run", new NormalRunView(Text(run, "Phase"), Number(run, "ActIndex"), Number(run, "MapFloor"), Number(run, "TotalFloor"),
-            Coord(byHandle[Text(run, "CurrentNode")]), Number(run, "MapNodeCount"), Flag(run, "NeowPending")));
+            Coord(byHandle[Text(run, "CurrentNode")]), Number(run, "MapNodeCount"), Flag(run, "NeowPending"), Text(run, "Profile")));
         Put("public.player", new NormalPlayerView(Number(player, "Hp"), Number(player, "MaxHp"), Number(player, "Gold"), Text(player, "CharacterId"),
             Number(player, "MaxEnergy"), Flag(player, "CombatActive"), Text(player, "CombatOutcome"), Text(player, "Room"), Flag(player, "TurnOpen"),
-            Number(player, "Energy"), Number(player, "TurnNumber"), Number(player, "Block"), Text(player, "CurrentRun") == run.InstanceId));
+            Number(player, "Energy"), Number(player, "TurnNumber"), Number(player, "Block"), Text(player, "CurrentRun") == run.InstanceId, Number(player, "AutoDrawPerTurn")));
         Put("public.player_history", new NormalPlayerHistory(Number(player, "PlaySequence"), Number(player, "HpLossCount"),
             Flag(player, "LostHpThisTurn"), Flag(player, "ExhaustedCardThisTurn"), Flag(player, "EnemyPhase"), Flag(player, "UsesRunDeck")));
         Put("public.enemies", Entities("Enemy").Select(e => new NormalEnemyView(binding(WireValue.Str(e.InstanceId)), Content(e), Number(e, "Hp"),
             Number(e, "MaxHp"), Number(e, "Block"), Text(e, "MoveId"), Number(e, "MoveIndex"), Text(e, "Intent"))).OrderBy(e => e.Origin, StringComparer.Ordinal).ToArray());
         Put("public.powers", Entities("Power").Select(p => new NormalPublicPower(Content(p), binding(Field(p,
-            p.Fields.Any(f => FieldName(f) == "Power.HolderPlayer") ? "HolderPlayer" : "HolderEnemy")), Number(p, "Stacks"), Flag(p, "SkipTick")))
+            p.Fields.Any(f => FieldName(f) == "Power.HolderPlayer") ? "HolderPlayer" : "HolderEnemy")), Number(p, "Stacks"), Flag(p, "SkipTick"), Flag(p, "ExpiresAtTurnEnd")))
                 .OrderBy(p => p.Holder, StringComparer.Ordinal).ThenBy(p => p.Id, StringComparer.Ordinal).ToArray());
         Put("public.visits", snapshot.Sequences.Single(s => s.TypeId == "net:sequence_type:base-spire:RunVisits").Elements
             .Select(id => byHandle[id]).Select(v => new NormalVisitView(Number(v, "StableId"), Coord(byHandle[Text(v, "Node")]),
