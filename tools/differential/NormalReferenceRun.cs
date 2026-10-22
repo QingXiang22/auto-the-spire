@@ -288,6 +288,12 @@ internal sealed class NormalReferenceRun : IDisposable
         Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
             active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,
             active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true));
+        // Compare the active combat's counters. The native room retains its completed
+        // history during rewards; DSL clears that history before publishing rewards.
+        var history = combat?.Engine.State.DamageHistory.Entries.Where(e => ReferenceEquals(e.Receiver, player.Creature) && e.Result.UnblockedDamage > 0).ToArray() ?? [];
+        Put("public.player_history", new NormalPlayerHistory(active ? state!.CardsPlayedThisCombat : 0, active ? history.Length : 0,
+            active && history.Any(e => e.HappenedThisTurn(combat!.Engine.State)), active && combat!.Engine.State.CountCardsExhaustedThisTurn(player) > 0,
+            combat?.Engine.State.CurrentSide == CombatSide.Enemy, player.Deck.Type == PileType.Deck));
         Put("public.enemies", combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Select(e =>
             new NormalEnemyView(Creature(e), Id(e.Monster!.Id), e.CurrentHp, e.MaxHp, e.Block, e.Monster.NextMove!.Id)).OrderBy(e => e.Origin, StringComparer.Ordinal).ToArray() : []);
         Put("public.powers", (combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Prepend(player.Creature).SelectMany(c => c.Powers) : [])
@@ -365,6 +371,7 @@ internal sealed class NormalReferenceRun : IDisposable
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"],
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
+                native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 unmapped_scalar_calls = scalars?.Unmapped,
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
