@@ -244,6 +244,7 @@ internal sealed class NormalDslRun : IDisposable
         var trace = Engine.Debug;
         if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("lifecycle.settlement", Settlement());
+        if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
             .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
         string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"];
