@@ -217,6 +217,11 @@ public sealed class ControlSession
                 null, "correct_input", "not_started");
         }
 
+        if (_observationId == WireCanonical.SafeIntegerMax)
+        {
+            return Fail(request, "capacity_exceeded", "观察版本已达到安全整数上限：拒绝新动作", null, "stop", "not_started");
+        }
+
         if (!TryBegin(request, out var entry))
         {
             return FailCapacity(request);
@@ -310,7 +315,7 @@ public sealed class ControlSession
             _session.LegalActions(_participant),
             _session.PendingDecision,
             _session.Status,
-            _session.Terminal));
+            _session.Terminal), _observationId);
         _observationId = projected.ObservationId;
         _bindings.Clear();
         foreach (var binding in projected.Bindings)
@@ -323,6 +328,9 @@ public sealed class ControlSession
 
     private ResponseDto Settle(LedgerEntry entry, RequestDto request)
     {
+        // A new decision can leave entity storage unchanged. Versions belong to settled
+        // control boundaries, not to StateStore writes or the number of observe calls.
+        _observationId++;
         var projected = Snapshot();
         var result = WireValue.Object(
             ("session_status", WireValue.Str(projected.SessionStatus)),

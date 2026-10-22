@@ -436,8 +436,10 @@ internal static class BaseDslPathChecks
                     ? candidates.Single(a => a.Fields.Any(f => f.Value is WireString value && value.Value == snapshot.Entities.Single(e => e.ContentId == "base-spire:brand").InstanceId))
                     : candidates.Single();
                 var suffix = (++stepNumber).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                var priorObservation = snapshot.ObservationId;
                 Send(Request("pipe-step-" + suffix, Operation.Step, ("session_id", WireValue.Str(sessionId)), ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId))));
                 snapshot = Snapshot(Send(Request("pipe-observe-" + suffix, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                Check.Equal(priorObservation + 1, snapshot.ObservationId, "real stdio publishes a new version for every completed control boundary, including a pause without field writes");
                 Check.Equal(step.Block, Public(snapshot, "Player.Block"), "real host exposes the expected block at every step");
                 Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
                 Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");

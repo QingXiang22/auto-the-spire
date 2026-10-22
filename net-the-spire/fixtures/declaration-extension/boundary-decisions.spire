@@ -1,0 +1,16 @@
+using namespace boundary;
+dsl_version = "core/0.3";
+imports = ["baseline.spire"];
+
+# Both pauses leave entity storage untouched and publish the same answer candidate.
+action ChooseTwice {
+    role = player
+    locals = { selected = Binding }
+    body = {
+        decide = { participant = participant(1) kind = EntityRef prompt = "First choice" into = selected min = 1 max = 1 candidates = type(declaration:Marker) }
+        decide = { participant = participant(1) kind = EntityRef prompt = "Second choice" into = selected min = 1 max = 1 candidates = type(declaration:Marker) }
+        set = { target = selected field = declaration:Marker.Value value = add(field(selected, declaration:Marker.Value), 1) }
+    }
+}
+
+action Noop { role = player body = {} }
