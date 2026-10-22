@@ -10,6 +10,7 @@ try
     if (args.FirstOrDefault() == "wriggler-compare") return WrigglerComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "whistle-compare") return WhistleComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "unknown-room-compare") return UnknownRoomComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "event-selection-compare") return EventSelectionComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "normal-compare") return NormalRunComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.SequenceEqual(new[] { "normal-compare-self-test" })) { NormalRunChecks.Run(Repository.Find()); return 0; }
     if (args.FirstOrDefault() == "normal-preflight") return NormalPreflight.Run(Repository.Find(), args.Skip(1).ToArray());

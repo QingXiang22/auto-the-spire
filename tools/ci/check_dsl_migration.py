@@ -52,7 +52,7 @@ def main() -> int:
         fixtures = ROOT / "tools/base-spire-dev/fixtures"
         current_vectors = ["source-rng-vectors", "normal-reward-vectors", "enemy-move-vectors", "pickup-upgrade-vectors",
                            "normal-opening-vectors", "act-one-map-vectors", "map-gaussian-vectors", "normal-combat-vectors",
-                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata", "normal-unknown-room-vector"]
+                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata", "normal-unknown-room-vector", "normal-event-selection-vector"]
         hashes = {}
         for name in current_vectors:
             vector = json.loads((fixtures / (name + ".json")).read_text(encoding="utf-8"))
@@ -146,6 +146,32 @@ def main() -> int:
                         or sum(b["float_bits"] is not None for b in boundaries) != 18
                         or any(len(b["state"]) != 4 or len(b["odds"]) != 4 for b in boundaries)):
                     raise ValueError("Unknown room comparison lost source draws, complete state or reset boundaries")
+
+        events = run("event-selection", ["event-selection-compare", "--output", str(args.output / "event-selection")], 0)
+        event_modes = ("default", "gold43", "gold44", "gold100", "gold148", "gold149", "gold150",
+                       "hp9", "hp10", "hp56", "hp57", "floor6", "floor7", "no-deck", "one-card",
+                       "eternal-deck", "empty-bag", "two-potions", "egg", "byrdpip", "paels-legion")
+        event_ids = [seed + ":" + mode for seed in ("777", "A😀B") for mode in event_modes]
+        if (events is None or events["status"] != "passed" or events["independent_verified"] is not True
+                or events["normal_run_verified"] is not False
+                or [c["id"] for c in events["cases"]] != event_ids
+                or any(c["status"] != "passed" or c["left"] != c["right"] for c in events["cases"])):
+            raise ValueError("Event selection comparison did not execute every required controlled case")
+        # Obtain the complete source denominator from the independently generated opening vector.
+        opening = json.loads((fixtures / "normal-opening-vectors.json").read_text(encoding="utf-8"))
+        expected_events = sorted(row["id"] for row in opening["definitions"] if row["category"] == "event" and row["act"] == 0)
+        if len(expected_events) != 31 or len(set(expected_events)) != 31:
+            raise ValueError("First-act event source denominator changed")
+        for case in events["cases"]:
+            for side in ("left", "right"):
+                result = case[side]
+                if (result["random_unchanged"] is not True or result["queries_read_only"] is not True
+                        or [e["id"] for e in result["eligibility"]] != expected_events
+                        or len(result["boundaries"]) != 41 or result["boundaries"][0] != {"selected": "none", "cursor": 1, "visited": []}
+                        or any(b["selected"] not in expected_events or b["selected"] not in b["visited"]
+                               or b["cursor"] <= previous["cursor"]
+                               for previous, b in zip(result["boundaries"], result["boundaries"][1:]))):
+                    raise ValueError("Event selection lost full eligibility, scan history or read-only/RNG evidence")
 
         for row in record["suites"]:
             definition = json.loads((ROOT / row["active_definition"]).read_text(encoding="utf-8"))

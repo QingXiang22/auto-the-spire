@@ -104,6 +104,7 @@ internal static partial class PackageChecks
         RunNormalSettlementOrderChecks(package);
         RunDeathPowerChecks(package);
         RunNormalUnknownRoom(package);
+        RunNormalEventSelection(package);
         return 0;
     }
 

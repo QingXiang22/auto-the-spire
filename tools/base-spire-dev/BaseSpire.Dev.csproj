@@ -19,6 +19,7 @@
     <EmbeddedResource Include="fixtures/normal-reward-vectors.json" />
     <EmbeddedResource Include="fixtures/normal-first-combat.json" />
     <EmbeddedResource Include="fixtures/normal-unknown-room-vector.json" />
+    <EmbeddedResource Include="fixtures/normal-event-selection-vector.json" />
     <EmbeddedResource Include="fixtures/pickup-upgrade-vectors.json" />
     <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <ProjectReference Include="../../net-the-spire/Net.TheSpire.Host/Net.TheSpire.Host.csproj" />

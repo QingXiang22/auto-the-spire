@@ -22,6 +22,8 @@ entity Run {
     RestCount = { type = Int default = 0 visibility = Hidden }
     UnknownCount = { type = Int default = 0 visibility = Hidden }
     CurrentPointHasShop = { type = Bool default = false visibility = Hidden }
+    NormalEventIndex = { type = Int(min = 0) default = 0 visibility = Hidden }
+    SelectedNormalEvent = { type = String(length = 64) default = "none" visibility = Hidden }
   }
 }
 
@@ -133,6 +135,8 @@ procedure StartNormalRun {
     set = { target = run field = Run.Phase value = "neow" }
     set = { target = owner field = Player.Room value = "neow" }
     call = { procedure = GenerateSourceNeowOptions args = { visit = neow } }
+    # Native top-level Ancient entry advances the same event selection cursor once.
+    set = { target = run field = Run.NormalEventIndex value = add(field(run, Run.NormalEventIndex), 1) }
     decide = { participant = field(owner, Player.Owner) kind = EntityRef min = 1 max = 1 candidates = relation(NeowOptions, neow) prompt = "Neow: choose a relic" into = choice }
     call = { procedure = ResolveSourceNeow args = { owner = owner run = run visit = neow option = choice } }
     decide = { participant = field(owner, Player.Owner) kind = Confirm prompt = "Neow: leave" into = continued }
@@ -155,7 +159,10 @@ procedure EnterNormalMapPoint {
     if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.Phase), "map"), and(field(node, MapNode.Selectable), and(not(field(node, MapNode.Visited)), exists(where(relation(MapChildren, field(run, Run.CurrentNode)), child, equal(child, node)))))))) then = { fail = { message = "Map point is not an unvisited child of the current node" } } }
     if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
     call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
-    if = { condition = equal(room, "event") then = { fail = { message = "unsupported_capability: actual normal Event room has not been connected" } } }
+    if = { condition = equal(room, "event") then = {
+      call = { procedure = PullNextNormalEvent args = { run = run } into = encounter }
+      fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" }
+    } }
     if = { condition = equal(room, "elite") then = { fail = { message = "unsupported_capability: actual normal Elite room has not been connected" } } }
     if = { condition = equal(room, "treasure") then = { fail = { message = "unsupported_capability: actual normal Treasure room has not been connected" } } }
     if = { condition = equal(room, "shop") then = { fail = { message = "unsupported_capability: actual normal Shop room has not been connected" } } }
