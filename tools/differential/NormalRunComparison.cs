@@ -9,6 +9,10 @@ internal sealed record NormalAction(string Kind, string[] Arguments)
 }
 internal sealed record NormalBoundary(string Kind, SortedDictionary<string, string> Values,
     string[] MissingDimensions, object Diagnostic);
+internal sealed record NormalDamageEvent(string? Dealer, string Receiver, string Blocked, string Unblocked, string Overkill, bool Killed);
+internal sealed record NormalPowerEvent(string Id, string Holder, string Amount, string Delta);
+internal sealed record NormalObservedEvent(string Kind, string? Card = null, NormalDamageEvent? Damage = null,
+    NormalPowerEvent? Power = null, string? Actor = null, string? Move = null);
 internal sealed record NormalPair(NormalBoundary Left, NormalBoundary Right);
 internal sealed record NormalDifference(int Boundary, string Kind, string Path, string? Left, string? Right);
 internal sealed record NormalProtocolCheck(bool DuplicateCached, bool StaleRejected, bool RejectionCached,
@@ -31,7 +35,7 @@ internal static class NormalRunComparison
     internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
         "public.snapshot", "public.piles", "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
-        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "events.trace"];
+        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "events.trace", "events.observed_order"];
     internal static NormalDifference? First(int index, NormalBoundary left, NormalBoundary right)
     {
         if (left.Kind != right.Kind) return new(index, left.Kind, "boundary.kind", left.Kind, right.Kind);
