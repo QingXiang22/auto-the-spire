@@ -14,6 +14,7 @@ internal static class SapphireSeedVector
     internal static async Task<object> Capture(JsonElement referenceLock, Dictionary<string, string> hashes)
     {
         var branches = new List<object>();
+        var randomJson = new JsonSerializerOptions { IncludeFields = true };
         foreach (var eat in new[] { true, false })
         {
             var run = new RunState("sapphire-normal-79", [new Overgrowth(), new Hive(), new Glory()]);
@@ -47,7 +48,7 @@ internal static class SapphireSeedVector
             if (room.Event is not SapphireSeed) throw new InvalidOperationException("Native Sapphire path selected another event.");
             var beforeHp = player.Creature.CurrentHp;
             var candidates = player.Deck.Cards.Select((c, i) => (c, i)).Where(x => x.c.IsUpgradable).Select(x => x.i).ToArray();
-            var randomBefore = JsonSerializer.Serialize(new { run = run.Rng.ToSerializable(), player = player.PlayerRng.ToSerializable() });
+            var randomBefore = JsonSerializer.Serialize(new { run = run.Rng.ToSerializable(), player = player.PlayerRng.ToSerializable() }, randomJson);
             await room.Event.ChooseOption(room.Event.CurrentOptions.Single(o => o.Key == (eat ? "EAT" : "PLANT")));
             if (!room.Event.IsFinished) throw new InvalidOperationException("Native Sapphire branch did not finish.");
             await room.Exit(run); run.PopCurrentRoom();
@@ -59,7 +60,7 @@ internal static class SapphireSeedVector
                 upgrade_candidates = eat ? candidates : [], selected_index = eat ? candidates.Last() : 0,
                 deck = player.Deck.Cards.Select(c => new { id = Id(c.Id), upgraded = c.IsUpgraded, enchantments = c.Enchantments.Select(e => new { id = Id(e.Id), amount = e.Magnitude }).ToArray() }).ToArray(),
                 successors = next.Children.Select(n => new[] { n.coord.col, n.coord.row }).OrderBy(n => n[0]).ThenBy(n => n[1]).ToArray(),
-                random_unchanged = randomBefore == JsonSerializer.Serialize(new { run = run.Rng.ToSerializable(), player = player.PlayerRng.ToSerializable() }),
+                random_unchanged = randomBefore == JsonSerializer.Serialize(new { run = run.Rng.ToSerializable(), player = player.PlayerRng.ToSerializable() }, randomJson),
                 random = new { random.counter, random.state0, random.state1, random.state2, random.state3 }
             });
         }
