@@ -27,6 +27,8 @@ public sealed record RandomCallDetails(string Operation, string Minimum, string 
     IReadOnlyList<InstanceId>? Candidates, int CandidateCount, bool CandidatesTruncated)
 {
     public Float32SampleDetails? Float32 { get; init; }
+    /// <summary>Actual generator output only when this API consumed exactly one raw word; otherwise null.</summary>
+    public ulong? SingleRawWord { get; init; }
 }
 
 /// <summary>Evaluated binary32 bounds and final result, encoded as unsigned 32-bit patterns in Int values.</summary>
@@ -88,7 +90,7 @@ public sealed partial class SessionDebugTrace
             Random = new(operation, minimum, maximum, result, before, service.DrawCount(stream),
                 totalBefore, service.TotalDraws,
                 candidates is null ? null : Array.AsReadOnly(candidates.Take(_options.MaxCandidates).ToArray()),
-                count, count > _options.MaxCandidates),
+                count, count > _options.MaxCandidates) { SingleRawWord = service.SingleRawWord(stream, before, totalBefore) },
             Snapshot = _options.CaptureValues ? CaptureSnapshot([], candidates?.Take(_options.MaxCandidates), count > _options.MaxCandidates,
                 _options.CaptureCandidateReferences && candidates is not null,
                 _options.CaptureCandidateRelations && candidates is not null) : null,

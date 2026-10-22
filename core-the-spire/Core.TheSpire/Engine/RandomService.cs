@@ -51,6 +51,7 @@ public sealed class RandomService
     private readonly Dictionary<string, ulong> _explicitSeeds = new(StringComparer.Ordinal);
 
     private readonly IRandomProfile _profile;
+    private ulong? _lastRawWord;
     internal SessionDebugTrace? Debug { get; set; }
 
     public RandomService(ulong sessionSeed, string algorithmId = DefaultAlgorithmId,
@@ -124,8 +125,13 @@ public sealed class RandomService
     private ulong Next(RandomStream stream)
     {
         TotalDraws++;
-        return stream.Next();
+        var result = stream.Next();
+        if (Debug is not null) _lastRawWord = result;
+        return result;
     }
+
+    internal ulong? SingleRawWord(string stream, long before, long totalBefore) =>
+        TotalDraws == totalBefore + 1 && DrawCount(stream) == before + 1 ? _lastRawWord : null;
 
     /// <summary>
     /// 显式指定一条流的种子（原版兼容 Profile 用：原版的流种子是内容/角色/槽位算出来的 **uint**，

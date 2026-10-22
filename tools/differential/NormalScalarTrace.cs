@@ -33,7 +33,15 @@ internal static class NormalScalarTrace
                     ?? throw Missing("initialization candidate shape");
                 if (roots.Length != value.CandidateCount) throw Missing("initialization candidate roots");
                 if (roots.All(e => e.Type == "base-spire:OpeningListItem"))
-                { unmapped.Add(new(stream, value.Before, value.After, "opening weighted bag normalization")); continue; }
+                {
+                    if (value.SingleRawWord is not { } word || value.After != value.Before + 1 || value.TotalAfter != value.TotalBefore + 1
+                        || value.CandidateCount == 0 || value.Minimum != "0" || value.Maximum != value.CandidateCount.ToString(CultureInfo.InvariantCulture))
+                        throw Missing("actual single-word weighted sample");
+                    var unit = (word >> 11) * (1d / 9007199254740992d);
+                    if ((long)(unit * value.CandidateCount) != long.Parse(value.Result, CultureInfo.InvariantCulture))
+                        throw Missing("weighted raw word disagrees with actual discrete result");
+                    calls.Add(UnitDouble(stream, value.Before, value.After, unit)); continue;
+                }
                 if (roots.Any(e => e.Type != "base-spire:OpeningDefinition")) throw Missing("unclassified initialization pick");
             }
             var min = long.Parse(value.Minimum, CultureInfo.InvariantCulture); var max = long.Parse(value.Maximum, CultureInfo.InvariantCulture);
