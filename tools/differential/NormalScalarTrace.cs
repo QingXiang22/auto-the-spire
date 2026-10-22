@@ -23,8 +23,9 @@ internal static class NormalScalarTrace
                 if (value.Float32 is null) throw Missing("unclassified raw double");
                 continue; // Independently compared in random.float32_calls.
             }
-            if (stream == "base-spire:run:niche")
-            { unmapped.Add(new(stream, value.Before, value.After, "monster HP offset normalization")); continue; }
+            if (stream == "base-spire:run:niche" && !(value.Operation == "int"
+                && record.Source?.Source.Replace('\\', '/').EndsWith("/encounters/shared/slimes-weak.spire", StringComparison.Ordinal) == true))
+                throw Missing("unclassified niche random source");
             if (value.Operation is not ("int" or "pick" or "shuffle")) throw Missing("scalar operation " + value.Operation);
             if (value.Operation == "pick" && stream == "base-spire:run:up_front")
             {
