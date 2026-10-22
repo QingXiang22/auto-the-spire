@@ -1,0 +1,115 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity NormalEventHistory { fields = {
+  Run = { type = Ref(Run) visibility = Hidden }
+  DefinitionId = { type = String(length = 64) visibility = Hidden }
+} }
+event ModifyNextNormalEvent { payload = { value = String(length = 64) run = Ref(Run) } }
+
+procedure CanSelectFirstActEvents {
+  pure = true parameters = { run = Ref(Run) } result = Bool
+  body = { return = { value = and(equal(field(run, Run.ActIndex), 0), equal(field(run, Run.Profile), "ironclad-a0-fully-unlocked-singleplayer")) } }
+}
+procedure NormalEventGate {
+  pure = true parameters = { definition = String(length = 64) } result = String(length = 16)
+  body = {
+    if = { condition = equal(definition, "base-spire:unrest-site") then = { return = { value = "unrest" } } }
+    if = { condition = equal(definition, "base-spire:wood-carvings") then = { return = { value = "wood" } } }
+    if = { condition = equal(definition, "base-spire:whispering-hollow") then = { return = { value = "hollow" } } }
+    if = { condition = equal(definition, "base-spire:byrdonis-nest") then = { return = { value = "pet" } } }
+    if = { condition = equal(definition, "base-spire:luminous-choir") then = { return = { value = "bag-gold" } } }
+    if = { condition = equal(definition, "base-spire:morphic-grove") then = { return = { value = "transform" } } }
+    if = { condition = equal(definition, "base-spire:slippery-bridge") then = { return = { value = "bridge" } } }
+    if = { condition = equal(definition, "base-spire:tea-master") then = { return = { value = "tea" } } }
+    if = { condition = equal(definition, "base-spire:the-future-of-potions") then = { return = { value = "potions" } } }
+    if = { condition = equal(definition, "base-spire:the-legends-were-true") then = { return = { value = "legends" } } }
+    if = { condition = or(equal(definition, "base-spire:crystal-sphere"), or(equal(definition, "base-spire:doll-room"), or(equal(definition, "base-spire:fake-merchant"), or(equal(definition, "base-spire:potion-courier"), or(equal(definition, "base-spire:ranwid-the-elder"), or(equal(definition, "base-spire:relic-trader"), or(equal(definition, "base-spire:stone-of-all-time"), or(equal(definition, "base-spire:symbiote"), equal(definition, "base-spire:welcome-to-wongos"))))))))) then = { return = { value = "later" } } }
+    if = { condition = equal(definition, "base-spire:war-historian-repy") then = { return = { value = "never" } } }
+    if = { condition = or(equal(definition, "base-spire:aroma-of-chaos"), or(equal(definition, "base-spire:dense-vegetation"), or(equal(definition, "base-spire:jungle-maze-adventure"), or(equal(definition, "base-spire:sapphire-seed"), or(equal(definition, "base-spire:sunken-statue"), or(equal(definition, "base-spire:tablet-of-truth"), or(equal(definition, "base-spire:wellspring"), or(equal(definition, "base-spire:brain-leech"), or(equal(definition, "base-spire:room-full-of-cheese"), or(equal(definition, "base-spire:self-help-book"), equal(definition, "base-spire:this-or-that"))))))))))) then = { return = { value = "always" } } }
+    fail = { message = "unsupported_capability: event has no audited first-act source predicate" }
+  }
+}
+procedure NormalEventCanAppearNaturally {
+  pure = true parameters = { definition = String(length = 64) } result = Bool
+  body = { return = { value = not(equal(pureCall(NormalEventGate, definition), "never")) } }
+}
+procedure NormalEventIsAllowed {
+  pure = true parameters = { run = Ref(Run) definition = String(length = 64) } result = Bool
+  locals = { owner = Binding gate = String(length = 16) }
+  body = {
+    if = { condition = not(pureCall(CanSelectFirstActEvents, run)) then = { fail = { message = "unsupported_capability: event eligibility requires the first-act single-player Ironclad profile" } } }
+    let = { into = owner value = field(run, Run.Player) }
+    let = { into = gate value = pureCall(NormalEventGate, definition) }
+    if = { condition = equal(gate, "pet") then = {
+      return = { value = and(not(exists(where(collection(RunDeck), card, and(equal(field(card, Card.Owner), field(owner, Player.Owner)), equal(field(card, Card.DefinitionId), "base-spire:byrdonis-egg"))))), not(exists(where(collection(Relics), relic, and(equal(field(relic, Relic.Owner), field(owner, Player.Owner)), or(equal(field(relic, Relic.DefinitionId), "base-spire:byrdpip"), equal(field(relic, Relic.DefinitionId), "base-spire:paels-legion"))))))) }
+    } }
+    if = { condition = equal(gate, "bag-gold") then = {
+      return = { value = and(greaterOrEqual(field(owner, Player.Gold), 149), exists(where(type(OpeningList), bag, and(equal(field(bag, OpeningList.Run), run), and(equal(field(bag, OpeningList.Category), "player-bag"), and(or(equal(field(bag, OpeningList.Rarity), "Common"), or(equal(field(bag, OpeningList.Rarity), "Uncommon"), or(equal(field(bag, OpeningList.Rarity), "Rare"), equal(field(bag, OpeningList.Rarity), "Shop")))), exists(relation(OpeningItems, bag)))))))) }
+    } }
+    if = { condition = equal(gate, "transform") then = {
+      return = { value = and(greaterOrEqual(field(owner, Player.Gold), 100), greaterOrEqual(count(where(collection(RunDeck), card, pureCall(PermanentCardEligible, owner, card, "remove", ""))), 2)) }
+    } }
+    if = { condition = equal(gate, "bridge") then = {
+      return = { value = and(greater(field(run, Run.TotalFloor), 6), exists(where(collection(RunDeck), card, pureCall(PermanentCardEligible, owner, card, "remove", "")))) }
+    } }
+    if = { condition = equal(gate, "tea") then = { return = { value = greaterOrEqual(field(owner, Player.Gold), 150) } } }
+    if = { condition = equal(gate, "potions") then = {
+      return = { value = greaterOrEqual(count(where(collection(Potions), potion, equal(field(potion, Potion.Owner), field(owner, Player.Owner)))), 2) }
+    } }
+    if = { condition = equal(gate, "legends") then = {
+      return = { value = and(exists(where(collection(RunDeck), card, equal(field(card, Card.Owner), field(owner, Player.Owner)))), greaterOrEqual(field(owner, Player.Hp), 10)) }
+    } }
+    if = { condition = equal(gate, "unrest") then = { return = { value = lessOrEqual(multiply(field(owner, Player.Hp), 10), multiply(field(owner, Player.MaxHp), 7)) } } }
+    if = { condition = equal(gate, "wood") then = {
+      return = { value = exists(where(collection(RunDeck), card, and(equal(field(card, Card.Rarity), "basic"), pureCall(PermanentCardEligible, owner, card, "remove", "")))) }
+    } }
+    if = { condition = equal(gate, "hollow") then = { return = { value = greaterOrEqual(field(owner, Player.Gold), 44) } } }
+    # These source predicates exclude act zero before evaluating their other requirements.
+    if = { condition = or(equal(gate, "later"), equal(gate, "never")) then = { return = { value = false } } }
+    # Only these audited source defaults/act-zero or single-player predicates are unconditional here.
+    if = { condition = equal(gate, "always") then = { return = { value = true } } }
+    fail = { message = "unsupported_capability: event eligibility has no audited source predicate" }
+  }
+}
+procedure AcceptNormalEvent {
+  parameters = { run = Ref(Run) definition = String(length = 64) } result = String(length = 64)
+  locals = { selected = String(length = 64) history = Binding }
+  body = {
+    let = { into = selected value = foldEvent(ModifyNextNormalEvent, definition, run) }
+    if = { condition = not(exists(where(type(NormalEventHistory), h, and(equal(field(h, NormalEventHistory.Run), run), equal(field(h, NormalEventHistory.DefinitionId), selected))))) then = {
+      create = { type = NormalEventHistory scope = entityScope(run) into = history fields = { Run = run DefinitionId = selected } }
+    } }
+    set = { target = run field = Run.SelectedNormalEvent value = selected }
+    set = { target = run field = Run.NormalEventIndex value = add(field(run, Run.NormalEventIndex), 1) }
+    return = { value = selected }
+  }
+}
+procedure PullNextNormalEvent {
+  parameters = { run = Ref(Run) } result = String(length = 64)
+  locals = { size = Int selected = String(length = 64) plan = Binding definition = String(length = 64) }
+  body = {
+    if = { condition = not(pureCall(CanSelectFirstActEvents, run)) then = { fail = { message = "unsupported_capability: normal event selection requires the first-act single-player Ironclad profile" } } }
+    let = { into = size value = count(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), equal(field(p, RunRoomPlan.Room), "event"))))) }
+    if = { condition = equal(size, 0) then = { fail = { message = "The current act has no source events" } } }
+    repeat = { count = size body = {
+      let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "event"), equal(field(p, RunRoomPlan.Position), modulo(field(run, Run.NormalEventIndex), size))))))) }
+      let = { into = definition value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
+      if = { condition = and(pureCall(NormalEventCanAppearNaturally, definition), and(not(exists(where(type(NormalEventHistory), h, and(equal(field(h, NormalEventHistory.Run), run), equal(field(h, NormalEventHistory.DefinitionId), definition))))), pureCall(NormalEventIsAllowed, run, definition))) then = {
+        call = { procedure = AcceptNormalEvent args = { run = run definition = definition } into = selected }
+        return = { value = selected }
+      } }
+      set = { target = run field = Run.NormalEventIndex value = add(field(run, Run.NormalEventIndex), 1) }
+    } }
+    repeat = { count = size body = {
+      let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "event"), equal(field(p, RunRoomPlan.Position), modulo(field(run, Run.NormalEventIndex), size))))))) }
+      let = { into = definition value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
+      if = { condition = pureCall(NormalEventCanAppearNaturally, definition) then = {
+        call = { procedure = AcceptNormalEvent args = { run = run definition = definition } into = selected }
+        return = { value = selected }
+      } }
+      set = { target = run field = Run.NormalEventIndex value = add(field(run, Run.NormalEventIndex), 1) }
+    } }
+    fail = { message = "The current act has no naturally selectable source event" }
+  }
+}

@@ -38,6 +38,8 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 
 问号房型另有两seed共10种受控组件场景，由migration逐边界核对18次抽样与赔率重置；`normal_run_verified`保持false。base正常组和net真实stdio新增seed `unknown-normal-354`，从Neow、首战胜利及奖励关闭进入真实问号Monster，保留原始地图类型并核对实际遭遇。base还比较源生命、访问、四类赔率与完整问号流状态；完整事件和Run不在该前缀验收范围。
 
+首幕事件选择增加两seed共42种受控双侧场景，migration核对完整31项资格、每种41个边界、最终事件标识／游标／访问历史及无随机消费。base正常组与net真实stdio保留新增seed `event-normal-11` 的真实胜利后问号Event路径，核对源选择与未接效果的明确失败；不会创建空访问。正常事件效果、父子战斗与后幕仍未验收。
+
 ## 原完整差异测试与覆盖缺口
 
 ```powershell

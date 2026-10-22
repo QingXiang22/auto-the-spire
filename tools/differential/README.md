@@ -28,6 +28,10 @@ Strike 保持原受控语义：10 张起始牌组、手牌仅一张普通 Strike
 
 ## 问号房型受控组件比较
 
+首幕事件选择另用 `dotnet run --project tools/differential -c Release -- event-selection-compare --output .artifacts/differential/event-selection`。两seed各21种受控资源／牌组／宠物／药水／遗物袋／楼层输入，逐项比较31种资格及40次选择的标识、扫描游标和最终访问集合；两侧查询只读且全部Run／玩家随机状态不变。真实Neow进入推进同一游标一次。migration严格要求42种场景及41个边界全部存在，`normal_run_verified`保持false；这不证明事件效果或父子战斗已接通。
+
+新增正常seed `event-normal-11` 由base和真实stdio走BoomingConch、起始牌组首战胜利、奖励关闭，再从(2,1)进入(1,2)问号。锁定原生向量选中AromaOfChaos、游标3、生命75、金币99；base比较选择标识、历史、进入前楼层和问号流，效果未接入时明确失败且不创建空访问。stdio核对真实失败及其重复请求缓存，故障会话不公开隐藏选择状态。该路径与原777及Unknown→Monster同时保留。
+
 运行`dotnet run --project tools/differential -c Release -- unknown-room-compare --output .artifacts/differential/unknown-rooms`。两个seed各执行普通、禁Shop、双倍未选增长、仅Event和禁Event五种受控输入；每种实际抽取18次，第12次后恢复base赔率并保留随机游标。逐边界比较实际房型、四类赔率的binary32位型、实际NextFloat(0,1)结果、游标与四字状态。负Elite不进轮盘，黑名单不重新归一化；资格和增长hook只用于组件输入，不代表对应遗物已迁移。
 
 migration要求十种场景全部成功，`normal_run_verified`保持false。另由base和真实stdio检查新增正常seed `unknown-normal-354`：选择GoldenPearl，用起始牌组赢下首战、关闭奖励，然后从(3,1)进入真实后继(3,2)。首次问号自然判为Monster并消费下一场FuzzyWurmCrawlerWeak，原地图与访问MapType保留Unknown；固定原生向量核对生命、编队、赔率和完整问号流状态。向量由[锁定来源生成器](../rng-oracle/README.md)独立导出；原seed777和全部必测集保留。组件比较与正常前缀均不替代事件、后续房型或完整Run验收。

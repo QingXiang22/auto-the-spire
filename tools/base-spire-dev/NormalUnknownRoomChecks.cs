@@ -3,9 +3,11 @@ using System.Text.Json;
 
 internal static partial class PackageChecks
 {
-    private static void RunNormalUnknownRoom(DslPackage package)
+    private static void RunNormalEventSelection(DslPackage package) => RunNormalUnknownRoom(package, eventSelection: true);
+    private static void RunNormalUnknownRoom(DslPackage package, bool eventSelection = false)
     {
-        using var data = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.normal-unknown-room-vector.json")!);
+        using var data = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream(eventSelection
+            ? "BaseSpire.Dev.fixtures.normal-event-selection-vector.json" : "BaseSpire.Dev.fixtures.normal-unknown-room-vector.json")!);
         var expected = data.RootElement;
         var s = package.CreateSession(1, ["player"], expected.GetProperty("seed").GetString()); s.Start(); Submit(s, "StartNormalRun");
         var option = s.PendingDecision!.Candidates.Single(o => TextField(s, o, "NeowOption", "RelicId") == expected.GetProperty("neow_relic").GetString());
@@ -35,12 +37,40 @@ internal static partial class PackageChecks
         Equal("victory", Outcome(s), "starter deck naturally wins the first source encounter");
         Submit(s, "CloseDevelopmentRewards"); Reject(Node("first"));
         var run = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Run").Id).Single();
+        Equal(1L, IntField(s, run, "Run", "NormalEventIndex"), "Neow advances the same event cursor once");
         var before = s.State.StateHash(); var draws = JsonSerializer.Serialize(s.Random.Capture());
         var view = s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0));
         var hidden = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:UnknownRoomOdds").Id);
         True(view.Instances.All(i => !hidden.Contains(i.Id)), "hidden odds have no public instance");
         Equal(before, s.State.StateHash(), "query does not change cumulative odds");
         Equal(draws, JsonSerializer.Serialize(s.Random.Capture()), "query does not consume RNG");
+        if (eventSelection)
+        {
+            var randomBefore = s.Random.Capture();
+            Throws<EngineFaultException>(() => Submit(s, "ChooseMapPoint", Node("unknown")));
+            True(s.Fault!.Message.Contains("selected source normal Event effect", StringComparison.Ordinal), "selected effect remains explicitly unsupported");
+            Equal(expected.GetProperty("selected").GetString(), TextField(s, run, "Run", "SelectedNormalEvent"), "real source selected identity");
+            Equal(expected.GetProperty("cursor").GetInt64(), IntField(s, run, "Run", "NormalEventIndex"), "complete rejected and accepted source slots");
+            var history = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:NormalEventHistory").Id);
+            True(history.Select(h => TextField(s, h, "NormalEventHistory", "DefinitionId")).Order(StringComparer.Ordinal)
+                .SequenceEqual(expected.GetProperty("visited").EnumerateArray().Select(v => v.GetString())), "source final event history");
+            Equal(expected.GetProperty("selection_floor").GetInt64(), IntField(s, run, "Run", "TotalFloor"), "eligibility precedes destination history append");
+            Equal(expected.GetProperty("hp").GetInt64(), Hp(s), "native combat permanent HP");
+            Equal(expected.GetProperty("gold").GetInt64(), IntField(s, Player(s), "Player", "Gold"), "no extra event payment");
+            Equal(1, Members(s, "RunVisits").Count, "unsupported effect creates no empty visit");
+            True(!s.State.GetField(Node("unknown"), s.RuleSet.TypeByQualifiedId("base-spire:MapNode").FieldIndex("Visited")).AsBool(), "unsupported effect does not commit map entry");
+            var remainingBefore = randomBefore.Streams.Where(r => r.Name != stream);
+            var remainingAfter = s.Random.Capture().Streams.Where(r => r.Name != stream);
+            Equal(JsonSerializer.Serialize(remainingBefore), JsonSerializer.Serialize(remainingAfter), "event selection adds no random consumption");
+            var source = expected.GetProperty("random"); var actualRandom = s.Random.Capture().Streams.Single(r => r.Name == stream);
+            Equal(source.GetProperty("counter").GetInt64(), s.Random.DrawCount(stream), "one actual Unknown classification draw");
+            True(actualRandom.BackendState!.SequenceEqual(Enumerable.Range(0, 4).Select(i => source.GetProperty("state" + i).GetUInt64())), "complete native classification state");
+            var currentOdds = Members(s, "UnknownRoomOddsOrder");
+            for (var i = 0; i < currentOdds.Count; i++) Equal(expected.GetProperty("odds")[i].GetInt64(), IntField(s, currentOdds[i], "UnknownRoomOdds", "Current"), "source odds after Event roll");
+            True(view.Instances.All(i => !history.Contains(i.Id)), "event selection history is hidden");
+            Console.WriteLine("ok   EVENT normal Neow, real victory and Unknown→Event preserve source selection, cursor, history and RNG before explicit unsupported effect");
+            return;
+        }
         Submit(s, "ChooseMapPoint", Node("unknown"));
         var visit = Members(s, "RunVisits").Last();
         Equal(1, s.State.GetField(visit, s.RuleSet.TypeByQualifiedId("base-spire:RunVisit").FieldIndex("MapType")).AsEnumOrdinal(), "actual Monster retains original Unknown MapType");
