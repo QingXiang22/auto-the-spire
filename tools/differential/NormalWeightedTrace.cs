@@ -7,7 +7,7 @@ using Sts2Sim.Core.Content;
 
 namespace Differential;
 
-internal sealed record NormalWeightedEntry(long Act, string Room, bool Weak, string Id, long WeightBits);
+internal sealed record NormalWeightedEntry(long Act, string Room, bool Weak, string Id, long WeightBits, string[] Tags);
 internal sealed record NormalWeightedSnapshot(NormalWeightedEntry[] Entries, long TotalBits);
 internal sealed record NormalWeightedCall(string Stream, long Before, long After, NormalWeightedSnapshot Candidates, int Selected);
 
@@ -20,7 +20,7 @@ internal static class NormalWeightedTrace
         foreach (var record in records.Where(r => r.Kind == SessionDebugKind.RandomCall && r.Subject == "base-spire:run:up_front" && r.Random?.Operation == "pick"))
         {
             if (record.TextTruncated || record.Random is not { Candidates: { } roots, CandidatesTruncated: false } draw
-                || record.Snapshot is not { Complete: true, ReferenceDepth: >= 1 } snapshot || roots.Count != draw.CandidateCount || roots.Count == 0)
+                || record.Snapshot is not { Complete: true, ReferenceDepth: >= 1, RelationsCaptured: true } snapshot || roots.Count != draw.CandidateCount || roots.Count == 0)
                 throw Missing("incomplete opening candidate definitions");
             var entities = snapshot.Entities.ToDictionary(e => e.Instance.Value);
             var items = roots.Select(id => entities.TryGetValue(id.Value, out var entity) ? entity : throw Missing("missing historical candidate root")).ToArray();
@@ -37,7 +37,10 @@ internal static class NormalWeightedTrace
                     || definition.Type != "base-spire:OpeningDefinition" || Scalar(definition, "Category") != "encounter")
                     throw Missing("historical weighted definition reference");
                 return new NormalWeightedEntry(long.Parse(Scalar(definition, "Act"), CultureInfo.InvariantCulture), Scalar(definition, "Room"),
-                    bool.Parse(Scalar(definition, "Weak")), Scalar(definition, "DefinitionId"), BitConverter.DoubleToInt64Bits(1d));
+                    bool.Parse(Scalar(definition, "Weak")), Scalar(definition, "DefinitionId"), BitConverter.DoubleToInt64Bits(1d),
+                    snapshot.Relations.Where(r => r.Owner == definition.Instance && r.Relation == "base-spire:OpeningTags").SelectMany(r => r.Targets)
+                        .Select(id => entities.TryGetValue(id.Value, out var tag) && tag.Type == "base-spire:OpeningTag" ? Scalar(tag, "Name")
+                            : throw Missing("historical compatibility tag target")).Order(StringComparer.Ordinal).ToArray());
             }).ToArray();
             if (draw.Minimum != "0" || draw.Maximum != roots.Count.ToString(CultureInfo.InvariantCulture)) throw Missing("weighted discrete bounds");
             calls.Add(Call(record.Subject!, draw.Before, draw.After, new(entries, BitConverter.DoubleToInt64Bits(entries.Length)),
@@ -116,7 +119,8 @@ internal sealed class NormalReferenceWeightedBags(ActDefinition[] acts)
         var current = bags.Single(b => ReferenceEquals(b.Bag, active));
         var entries = ((IEnumerable<(EncounterDefinition Item, double Weight)>)Entries.GetValue(current.Bag)!).Select(e =>
             new NormalWeightedEntry(current.Act.Index, current.Room, e.Item.IsWeak,
-                "base-spire:" + e.Item.IdEntry.ToLowerInvariant().Replace('_', '-'), BitConverter.DoubleToInt64Bits(e.Weight))).ToArray();
+                "base-spire:" + e.Item.IdEntry.ToLowerInvariant().Replace('_', '-'), BitConverter.DoubleToInt64Bits(e.Weight),
+                e.Item.Tags.Where(t => t != EncounterTag.None).Select(t => t.ToString()).Order(StringComparer.Ordinal).ToArray())).ToArray();
         if (entries.Length == 0) throw NormalWeightedTrace.Missing("empty active native bag");
         return new(entries, BitConverter.DoubleToInt64Bits((double)Total.GetValue(current.Bag)!));
     }

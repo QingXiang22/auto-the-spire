@@ -261,7 +261,7 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
                 unmapped_public_topology = new[] { "MapNodes sequence order" },
                 unmapped_scalar_calls = scalars?.Unmapped,
-                unmapped_weighted_semantics = new[] { "compatibility predicate/tag relations and accept/reject commit effects" },
+                unmapped_weighted_semantics = new[] { "previous-candidate context, compatibility predicate and accept/reject commit effects" },
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });

@@ -22,6 +22,26 @@ internal static class NormalWeightedChecks
         }
         var index = records.ToList().FindIndex(r => r.Random?.Before == actual[0].Before && r.Subject == actual[0].Stream);
         var record = records[index]; var snapshot = record.Snapshot!;
+        Require(actual[0].Candidates.Entries[0].Tags.SequenceEqual(new[] { "Crawler" }), "first actual FuzzyWurmCrawler candidate retains its source compatibility tag");
+        Require(actual.SelectMany(c => c.Candidates.Entries).First(e => e.Id == "base-spire:flyconid-normal").Tags.SequenceEqual(new[] { "Mushroom", "Slimes" }),
+            "actual Flyconid candidates retain both source compatibility tags");
+        var edge = snapshot.Relations.First(r => r.Relation == "base-spire:OpeningTags");
+        var tag = snapshot.Entities.Single(e => e.Instance == edge.Targets[0]);
+        var tagged = record with { Snapshot = snapshot with { Entities = snapshot.Entities.Select(e => e != tag ? e : e with
+            { Fields = e.Fields.Select(f => f.Name != "Name" ? f : f with { Value = f.Value with { Scalar = "Changed" } }).ToArray() }).ToArray() } };
+        var tagMutation = records.ToArray(); tagMutation[index] = tagged;
+        Require(NormalPreflight.Json(actual) != NormalPreflight.Json(NormalWeightedTrace.Dsl(tagMutation, 0)), "historical tag values participate in weighted evidence");
+        var multiIndex = records.ToList().FindIndex(r => r.Random?.Operation == "pick" && r.Snapshot!.Entities.Any(e => e.Type == "base-spire:OpeningListItem")
+            && r.Snapshot.Relations.Any(e => e.Relation == "base-spire:OpeningTags" && e.Targets.Count > 1));
+        Require(multiIndex >= 0, "actual candidate snapshot contains a multi-tag relation");
+        var multi = records[multiIndex];
+        var multiEdge = multi.Snapshot!.Relations.First(e => e.Relation == "base-spire:OpeningTags" && e.Targets.Count > 1);
+        tagMutation = records.ToArray();
+        tagMutation[multiIndex] = multi with { Snapshot = multi.Snapshot with { Relations = multi.Snapshot.Relations.Select(r => r != multiEdge ? r : r with { Targets = r.Targets.Reverse().ToArray() }).ToArray() } };
+        Require(NormalPreflight.Json(actual) == NormalPreflight.Json(NormalWeightedTrace.Dsl(tagMutation, 0)), "compatibility tag membership is unordered while candidate order remains significant");
+        Reject(record with { Snapshot = snapshot with { RelationsCaptured = false } });
+        Reject(record with { Snapshot = snapshot with { Relations = [] } });
+        Reject(record with { Snapshot = snapshot with { Entities = snapshot.Entities.Where(e => e != tag).ToArray() } });
         var definition = snapshot.Entities.First(e => e.Type == "base-spire:OpeningDefinition");
         var changed = record with { Snapshot = snapshot with { Entities = snapshot.Entities.Select(e => e != definition ? e : e with
             { Fields = e.Fields.Select(f => f.Name != "DefinitionId" ? f : f with { Value = f.Value with { Scalar = "base-spire:changed" } }).ToArray() }).ToArray() } };

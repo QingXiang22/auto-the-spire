@@ -383,7 +383,7 @@ internal sealed class NormalReferenceRun : IDisposable
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 unmapped_scalar_calls = scalars?.Unmapped,
-                unmapped_weighted_semantics = new[] { "compatibility predicate/tag relations and accept/reject commit effects" },
+                unmapped_weighted_semantics = new[] { "previous-candidate context, compatibility predicate and accept/reject commit effects" },
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
     public void Dispose() => random.Dispose();
