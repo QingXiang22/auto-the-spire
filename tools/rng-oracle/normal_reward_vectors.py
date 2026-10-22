@@ -6,10 +6,9 @@ from pathlib import Path
 import re
 
 from dsl_rng_vectors import f32, bits, next_float
-from vanilla_rng_oracle import Rng, deterministic_hash_code, stream_seed
+from locked_rng_oracle import Rng, deterministic_hash_code, stream_seed, SOURCE, source_hashes, reference_lock, native_metadata
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE = ROOT / 'sts2/src/Core'
 
 
 def generate():
@@ -25,27 +24,21 @@ def generate():
                  'Odds/PotionRewardOdds.cs', 'Odds/CardRarityOdds.cs', 'Odds/PlayerOddsSet.cs',
                  'Runs/CardCreationOptions.cs', 'Commands/PotionCmd.cs', 'Random/Rng.cs', 'Random/MegaRandom.cs']:
         read(path)
-    catalog = json.loads((ROOT / 'tools/base-spire-dev/fixtures/source-catalogs.json').read_text(encoding='utf-8-sig'))['domains']['potions']
-    ids = {row['name']: row['id'] for row in catalog['entries']}
-    names = re.findall(r'ModelDb.Potion<(\w+)>\(\)', read('Timeline/Epochs/Ironclad4Epoch.cs'))
-    names += re.findall(r'ModelDb.Potion<(\w+)>\(\)', read('Models/PotionPools/SharedPotionPool.cs'))
-    assert len(names) == len(set(names)) == 48
+    metadata = native_metadata()
     supported = {'BloodPotion', 'FirePotion', 'BlockPotion', 'EnergyPotion', 'SwiftPotion', 'FruitJuice'}
     potions = []
-    for name in names:
-        text = read(f'Models/Potions/{name}.cs')
-        potions.append({'id': ids[name], 'name': name,
-                        'rarity': re.search(r'PotionRarity\.(\w+)', text).group(1).lower(),
-                        'usage': 'anytime' if 'PotionUsage.AnyTime' in text else 'combat',
-                        'target': 'enemy' if name == 'FirePotion' else 'self',
-                        'effect_supported': name in supported})
+    for potion in metadata['potions']:
+        name = potion['name']; read(f'Models/Potions/{name}.cs')
+        potions.append({**potion, 'usage': 'anytime' if potion['usage'] == 'AnyTime' else 'combat',
+                        'target': 'enemy' if name == 'FirePotion' else 'self', 'effect_supported': name in supported})
+    assert len(potions) == 48
+    read('Models/PotionPools/IroncladPotionPool.cs'); read('Models/PotionPools/SharedPotionPool.cs')
+    read('Models/CardPools/IroncladCardPool.cs')
     cards = []
-    for name in re.findall(r'ModelDb.Card<(\w+)>\(\)', read('Models/CardPools/IroncladCardPool.cs')):
-        text = read(f'Models/Cards/{name}.cs')
-        rarity = re.search(r'CardRarity\.(\w+)', text).group(1).lower()
-        if 'CardMultiplayerConstraint.MultiplayerOnly' in text or rarity not in ('common', 'uncommon', 'rare'):
-            continue
-        cards.append({'id': 'base-spire:' + re.sub(r'(?<!^)(?=[A-Z])', '-', name).lower(), 'rarity': rarity})
+    for card in metadata['cards']:
+        read(f"Models/Cards/{card['name']}.cs")
+        if not card['multiplayer_only'] and card['rarity'] in ('common', 'uncommon', 'rare'):
+            cards.append({'id': card['id'], 'rarity': card['rarity']})
     assert len(cards) == 80
     vectors = []
     for seed in ['20261018', '777', '1234', '99', 'ABC', 'abc', 'BASE-DSL-STDIO-00', '斩杀尖塔2', 'A😀B', '']:
@@ -100,7 +93,7 @@ def generate():
                            'odds_bits': bits(odds), 'offset_bits': bits(offset), 'counter': rng.counter,
                            'calls': calls})
         vectors.append({'seed': seed, 'offers': offers})
-    return {'schema': 'base-spire/normal-reward-vectors@1', 'source_sha256': hashes,
+    return {'schema': 'base-spire/normal-reward-vectors@2', 'reference_lock': reference_lock(), 'source_sha256': hashes,
             'scope': 'all unlocked Ironclad act-one A0 Monster, no reward modifiers; controlled visits',
             'potions': potions, 'vectors': vectors}
 

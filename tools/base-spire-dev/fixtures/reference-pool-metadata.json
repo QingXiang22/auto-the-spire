@@ -1,0 +1,3770 @@
+{
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "definitions": [
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Akabeko",
+      "id": "base-spire:akabeko",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "AmethystAubergine",
+      "id": "base-spire:amethyst-aubergine",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Anchor",
+      "id": "base-spire:anchor",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "ArtOfWar",
+      "id": "base-spire:art-of-war",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BagOfMarbles",
+      "id": "base-spire:bag-of-marbles",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BagOfPreparation",
+      "id": "base-spire:bag-of-preparation",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BeatingRemnant",
+      "id": "base-spire:beating-remnant",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Bellows",
+      "id": "base-spire:bellows",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BeltBuckle",
+      "id": "base-spire:belt-buckle",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BloodVial",
+      "id": "base-spire:blood-vial",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BookOfFiveRings",
+      "id": "base-spire:book-of-five-rings",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BowlerHat",
+      "id": "base-spire:bowler-hat",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Bread",
+      "id": "base-spire:bread",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BronzeScales",
+      "id": "base-spire:bronze-scales",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "BurningSticks",
+      "id": "base-spire:burning-sticks",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Candelabra",
+      "id": "base-spire:candelabra",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "CaptainsWheel",
+      "id": "base-spire:captains-wheel",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Cauldron",
+      "id": "base-spire:cauldron",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "CentennialPuzzle",
+      "id": "base-spire:centennial-puzzle",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Chandelier",
+      "id": "base-spire:chandelier",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "ChemicalX",
+      "id": "base-spire:chemical-x",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "CloakClasp",
+      "id": "base-spire:cloak-clasp",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "DingyRug",
+      "id": "base-spire:dingy-rug",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "DollysMirror",
+      "id": "base-spire:dollys-mirror",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "DragonFruit",
+      "id": "base-spire:dragon-fruit",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "EternalFeather",
+      "id": "base-spire:eternal-feather",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "FestivePopper",
+      "id": "base-spire:festive-popper",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "FresnelLens",
+      "id": "base-spire:fresnel-lens",
+      "room": "none",
+      "rarity": "Event",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "FrozenEgg",
+      "id": "base-spire:frozen-egg",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "GamblingChip",
+      "id": "base-spire:gambling-chip",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "GamePiece",
+      "id": "base-spire:game-piece",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "GhostSeed",
+      "id": "base-spire:ghost-seed",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Girya",
+      "id": "base-spire:girya",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "GnarledHammer",
+      "id": "base-spire:gnarled-hammer",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Gorget",
+      "id": "base-spire:gorget",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "GremlinHorn",
+      "id": "base-spire:gremlin-horn",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "HappyFlower",
+      "id": "base-spire:happy-flower",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "HornCleat",
+      "id": "base-spire:horn-cleat",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "IceCream",
+      "id": "base-spire:ice-cream",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "IntimidatingHelmet",
+      "id": "base-spire:intimidating-helmet",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "JossPaper",
+      "id": "base-spire:joss-paper",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "JuzuBracelet",
+      "id": "base-spire:juzu-bracelet",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Kifuda",
+      "id": "base-spire:kifuda",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Kunai",
+      "id": "base-spire:kunai",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Kusarigama",
+      "id": "base-spire:kusarigama",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Lantern",
+      "id": "base-spire:lantern",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LastingCandy",
+      "id": "base-spire:lasting-candy",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LavaLamp",
+      "id": "base-spire:lava-lamp",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LeesWaffle",
+      "id": "base-spire:lees-waffle",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LetterOpener",
+      "id": "base-spire:letter-opener",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LizardTail",
+      "id": "base-spire:lizard-tail",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LoomingFruit",
+      "id": "base-spire:looming-fruit",
+      "room": "none",
+      "rarity": "Ancient",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "LuckyFysh",
+      "id": "base-spire:lucky-fysh",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Mango",
+      "id": "base-spire:mango",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MealTicket",
+      "id": "base-spire:meal-ticket",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MeatOnTheBone",
+      "id": "base-spire:meat-on-the-bone",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MembershipCard",
+      "id": "base-spire:membership-card",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MercuryHourglass",
+      "id": "base-spire:mercury-hourglass",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MiniatureCannon",
+      "id": "base-spire:miniature-cannon",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MiniatureTent",
+      "id": "base-spire:miniature-tent",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MoltenEgg",
+      "id": "base-spire:molten-egg",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MummifiedHand",
+      "id": "base-spire:mummified-hand",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "MysticLighter",
+      "id": "base-spire:mystic-lighter",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Nunchaku",
+      "id": "base-spire:nunchaku",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "OddlySmoothStone",
+      "id": "base-spire:oddly-smooth-stone",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "OldCoin",
+      "id": "base-spire:old-coin",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Orichalcum",
+      "id": "base-spire:orichalcum",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "OrnamentalFan",
+      "id": "base-spire:ornamental-fan",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Orrery",
+      "id": "base-spire:orrery",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Pantograph",
+      "id": "base-spire:pantograph",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "ParryingShield",
+      "id": "base-spire:parrying-shield",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Pear",
+      "id": "base-spire:pear",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "PenNib",
+      "id": "base-spire:pen-nib",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Pendulum",
+      "id": "base-spire:pendulum",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Permafrost",
+      "id": "base-spire:permafrost",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "PetrifiedToad",
+      "id": "base-spire:petrified-toad",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Planisphere",
+      "id": "base-spire:planisphere",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Pocketwatch",
+      "id": "base-spire:pocketwatch",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "PotionBelt",
+      "id": "base-spire:potion-belt",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "PrayerWheel",
+      "id": "base-spire:prayer-wheel",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "PunchDagger",
+      "id": "base-spire:punch-dagger",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RainbowRing",
+      "id": "base-spire:rainbow-ring",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RazorTooth",
+      "id": "base-spire:razor-tooth",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RedMask",
+      "id": "base-spire:red-mask",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RegalPillow",
+      "id": "base-spire:regal-pillow",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "ReptileTrinket",
+      "id": "base-spire:reptile-trinket",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RingingTriangle",
+      "id": "base-spire:ringing-triangle",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RippleBasin",
+      "id": "base-spire:ripple-basin",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "RoyalStamp",
+      "id": "base-spire:royal-stamp",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "ScreamingFlagon",
+      "id": "base-spire:screaming-flagon",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Shovel",
+      "id": "base-spire:shovel",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Shuriken",
+      "id": "base-spire:shuriken",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "SlingOfCourage",
+      "id": "base-spire:sling-of-courage",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "SparklingRouge",
+      "id": "base-spire:sparkling-rouge",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "StoneCalendar",
+      "id": "base-spire:stone-calendar",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "StoneCracker",
+      "id": "base-spire:stone-cracker",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Strawberry",
+      "id": "base-spire:strawberry",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "StrikeDummy",
+      "id": "base-spire:strike-dummy",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "SturdyClamp",
+      "id": "base-spire:sturdy-clamp",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "TheAbacus",
+      "id": "base-spire:the-abacus",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "TheCourier",
+      "id": "base-spire:the-courier",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "TinyMailbox",
+      "id": "base-spire:tiny-mailbox",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Toolbox",
+      "id": "base-spire:toolbox",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "ToxicEgg",
+      "id": "base-spire:toxic-egg",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "TungstenRod",
+      "id": "base-spire:tungsten-rod",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "TuningFork",
+      "id": "base-spire:tuning-fork",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "UnceasingTop",
+      "id": "base-spire:unceasing-top",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "UnsettlingLamp",
+      "id": "base-spire:unsettling-lamp",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Vajra",
+      "id": "base-spire:vajra",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Vambrace",
+      "id": "base-spire:vambrace",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "VenerableTeaSet",
+      "id": "base-spire:venerable-tea-set",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "VeryHotCocoa",
+      "id": "base-spire:very-hot-cocoa",
+      "room": "none",
+      "rarity": "Ancient",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "VexingPuzzlebox",
+      "id": "base-spire:vexing-puzzlebox",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "WarPaint",
+      "id": "base-spire:war-paint",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "Whetstone",
+      "id": "base-spire:whetstone",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "WhiteBeastStatue",
+      "id": "base-spire:white-beast-statue",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "WhiteStar",
+      "id": "base-spire:white-star",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-relic",
+      "act": -1,
+      "name": "WingCharm",
+      "id": "base-spire:wing-charm",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "Brimstone",
+      "id": "base-spire:brimstone",
+      "room": "none",
+      "rarity": "Shop",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "BurningBlood",
+      "id": "base-spire:burning-blood",
+      "room": "none",
+      "rarity": "Starter",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "CharonsAshes",
+      "id": "base-spire:charons-ashes",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "DemonTongue",
+      "id": "base-spire:demon-tongue",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "PaperPhrog",
+      "id": "base-spire:paper-phrog",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "RedSkull",
+      "id": "base-spire:red-skull",
+      "room": "none",
+      "rarity": "Common",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "RuinedHelmet",
+      "id": "base-spire:ruined-helmet",
+      "room": "none",
+      "rarity": "Rare",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ironclad-relic",
+      "act": -1,
+      "name": "SelfFormingClay",
+      "id": "base-spire:self-forming-clay",
+      "room": "none",
+      "rarity": "Uncommon",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "AromaOfChaos",
+      "id": "base-spire:aroma-of-chaos",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "ByrdonisNest",
+      "id": "base-spire:byrdonis-nest",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "DenseVegetation",
+      "id": "base-spire:dense-vegetation",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "JungleMazeAdventure",
+      "id": "base-spire:jungle-maze-adventure",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "LuminousChoir",
+      "id": "base-spire:luminous-choir",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "MorphicGrove",
+      "id": "base-spire:morphic-grove",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "SapphireSeed",
+      "id": "base-spire:sapphire-seed",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "SunkenStatue",
+      "id": "base-spire:sunken-statue",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "TabletOfTruth",
+      "id": "base-spire:tablet-of-truth",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "UnrestSite",
+      "id": "base-spire:unrest-site",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "Wellspring",
+      "id": "base-spire:wellspring",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "WhisperingHollow",
+      "id": "base-spire:whispering-hollow",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "WoodCarvings",
+      "id": "base-spire:wood-carvings",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "BrainLeech",
+      "id": "base-spire:brain-leech",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "CrystalSphere",
+      "id": "base-spire:crystal-sphere",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "DollRoom",
+      "id": "base-spire:doll-room",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "FakeMerchant",
+      "id": "base-spire:fake-merchant",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "PotionCourier",
+      "id": "base-spire:potion-courier",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "RanwidTheElder",
+      "id": "base-spire:ranwid-the-elder",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "RelicTrader",
+      "id": "base-spire:relic-trader",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "RoomFullOfCheese",
+      "id": "base-spire:room-full-of-cheese",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "SelfHelpBook",
+      "id": "base-spire:self-help-book",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "SlipperyBridge",
+      "id": "base-spire:slippery-bridge",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "StoneOfAllTime",
+      "id": "base-spire:stone-of-all-time",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "Symbiote",
+      "id": "base-spire:symbiote",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "TeaMaster",
+      "id": "base-spire:tea-master",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "TheFutureOfPotions",
+      "id": "base-spire:the-future-of-potions",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "TheLegendsWereTrue",
+      "id": "base-spire:the-legends-were-true",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "ThisOrThat",
+      "id": "base-spire:this-or-that",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "WarHistorianRepy",
+      "id": "base-spire:war-historian-repy",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 0,
+      "name": "WelcomeToWongos",
+      "id": "base-spire:welcome-to-wongos",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "CubexConstruct",
+      "id": "base-spire:cubex-construct-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "FlyconidNormal",
+      "id": "base-spire:flyconid-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Mushroom",
+        "Slimes"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "Fogmog",
+      "id": "base-spire:fogmog-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "FuzzyWurmCrawler",
+      "id": "base-spire:fuzzy-wurm-crawler-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Crawler"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "Inklets",
+      "id": "base-spire:inklets-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "Mawler",
+      "id": "base-spire:mawler-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "Nibbits",
+      "id": "base-spire:nibbits-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "LoneNibbit",
+      "id": "base-spire:nibbits-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Nibbit"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "ShrinkerBeetleAndFuzzyWurmCrawler",
+      "id": "base-spire:overgrowth-crawlers",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Shrinker",
+        "Crawler"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "RubyRaiders",
+      "id": "base-spire:ruby-raiders-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "ShrinkerBeetle",
+      "id": "base-spire:shrinker-beetle-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Shrinker"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "SlimesNormal",
+      "id": "base-spire:slimes-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Slimes"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "SlimesWeak",
+      "id": "base-spire:slimes-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Slimes"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "SlitheringStrangler",
+      "id": "base-spire:slithering-strangler-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Jaxfruit",
+        "Slimes"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "SnappingJaxfruitAndFlyconid",
+      "id": "base-spire:snapping-jaxfruit-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Mushroom",
+        "Jaxfruit"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "VineShambler",
+      "id": "base-spire:vine-shambler-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "BygoneEffigy",
+      "id": "base-spire:bygone-effigy-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "Byrdonis",
+      "id": "base-spire:byrdonis-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "PhrogParasite",
+      "id": "base-spire:phrog-parasite-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "CeremonialBeast",
+      "id": "base-spire:ceremonial-beast-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "TheKin",
+      "id": "base-spire:the-kin-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 0,
+      "name": "Vantom",
+      "id": "base-spire:vantom-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 0,
+      "name": "Neow",
+      "id": "base-spire:neow",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "Amalgamator",
+      "id": "base-spire:amalgamator",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "Bugslayer",
+      "id": "base-spire:bugslayer",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "ColorfulPhilosophers",
+      "id": "base-spire:colorful-philosophers",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "ColossalFlower",
+      "id": "base-spire:colossal-flower",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "FieldOfManSizedHoles",
+      "id": "base-spire:field-of-man-sized-holes",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "InfestedAutomaton",
+      "id": "base-spire:infested-automaton",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "LostWisp",
+      "id": "base-spire:lost-wisp",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "SpiritGrafter",
+      "id": "base-spire:spirit-grafter",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "TheLanternKey",
+      "id": "base-spire:the-lantern-key",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "ZenWeaver",
+      "id": "base-spire:zen-weaver",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "BrainLeech",
+      "id": "base-spire:brain-leech",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "CrystalSphere",
+      "id": "base-spire:crystal-sphere",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "DollRoom",
+      "id": "base-spire:doll-room",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "FakeMerchant",
+      "id": "base-spire:fake-merchant",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "PotionCourier",
+      "id": "base-spire:potion-courier",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "RanwidTheElder",
+      "id": "base-spire:ranwid-the-elder",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "RelicTrader",
+      "id": "base-spire:relic-trader",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "RoomFullOfCheese",
+      "id": "base-spire:room-full-of-cheese",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "SelfHelpBook",
+      "id": "base-spire:self-help-book",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "SlipperyBridge",
+      "id": "base-spire:slippery-bridge",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "StoneOfAllTime",
+      "id": "base-spire:stone-of-all-time",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "Symbiote",
+      "id": "base-spire:symbiote",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "TeaMaster",
+      "id": "base-spire:tea-master",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "TheFutureOfPotions",
+      "id": "base-spire:the-future-of-potions",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "TheLegendsWereTrue",
+      "id": "base-spire:the-legends-were-true",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "ThisOrThat",
+      "id": "base-spire:this-or-that",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "WarHistorianRepy",
+      "id": "base-spire:war-historian-repy",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 1,
+      "name": "WelcomeToWongos",
+      "id": "base-spire:welcome-to-wongos",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "BowlbugsNormal",
+      "id": "base-spire:bowlbugs-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Workers"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "BowlbugsWeak",
+      "id": "base-spire:bowlbugs-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Workers"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "ChompersNormal",
+      "id": "base-spire:chompers-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Chomper"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "ExoskeletonsNormal",
+      "id": "base-spire:exoskeletons-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Exoskeletons"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "ExoskeletonsWeak",
+      "id": "base-spire:exoskeletons-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Exoskeletons"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "HunterKillerNormal",
+      "id": "base-spire:hunter-killer-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "LouseProgenitorNormal",
+      "id": "base-spire:louse-progenitor-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "MytesNormal",
+      "id": "base-spire:mytes-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "OvicopterNormal",
+      "id": "base-spire:ovicopter-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "SlumberingBeetleNormal",
+      "id": "base-spire:slumbering-beetle-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Workers"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "SpinyToadNormal",
+      "id": "base-spire:spiny-toad-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "TheObscuraNormal",
+      "id": "base-spire:the-obscura-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "ThievingHopperWeak",
+      "id": "base-spire:thieving-hopper-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Thieves"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "TunnelerWeak",
+      "id": "base-spire:tunneler-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Burrower"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "DecimillipedeElite",
+      "id": "base-spire:decimillipede-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "EntomancerElite",
+      "id": "base-spire:entomancer-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "InfestedPrismsElite",
+      "id": "base-spire:infested-prisms-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "KaiserCrabBoss",
+      "id": "base-spire:kaiser-crab-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "KnowledgeDemonBoss",
+      "id": "base-spire:knowledge-demon-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 1,
+      "name": "TheInsatiableBoss",
+      "id": "base-spire:the-insatiable-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 1,
+      "name": "Orobas",
+      "id": "base-spire:orobas",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 1,
+      "name": "Pael",
+      "id": "base-spire:pael",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 1,
+      "name": "Tezcatara",
+      "id": "base-spire:tezcatara",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "BattlewornDummy",
+      "id": "base-spire:battleworn-dummy",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "GraveOfTheForgotten",
+      "id": "base-spire:grave-of-the-forgotten",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "HungryForMushrooms",
+      "id": "base-spire:hungry-for-mushrooms",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "Reflections",
+      "id": "base-spire:reflections",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "RoundTeaParty",
+      "id": "base-spire:round-tea-party",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "Trial",
+      "id": "base-spire:trial",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "TinkerTime",
+      "id": "base-spire:tinker-time",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "BrainLeech",
+      "id": "base-spire:brain-leech",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "CrystalSphere",
+      "id": "base-spire:crystal-sphere",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "DollRoom",
+      "id": "base-spire:doll-room",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "FakeMerchant",
+      "id": "base-spire:fake-merchant",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "PotionCourier",
+      "id": "base-spire:potion-courier",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "RanwidTheElder",
+      "id": "base-spire:ranwid-the-elder",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "RelicTrader",
+      "id": "base-spire:relic-trader",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "RoomFullOfCheese",
+      "id": "base-spire:room-full-of-cheese",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "SelfHelpBook",
+      "id": "base-spire:self-help-book",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "SlipperyBridge",
+      "id": "base-spire:slippery-bridge",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "StoneOfAllTime",
+      "id": "base-spire:stone-of-all-time",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "Symbiote",
+      "id": "base-spire:symbiote",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "TeaMaster",
+      "id": "base-spire:tea-master",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "TheFutureOfPotions",
+      "id": "base-spire:the-future-of-potions",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "TheLegendsWereTrue",
+      "id": "base-spire:the-legends-were-true",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "ThisOrThat",
+      "id": "base-spire:this-or-that",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "WarHistorianRepy",
+      "id": "base-spire:war-historian-repy",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "event",
+      "act": 2,
+      "name": "WelcomeToWongos",
+      "id": "base-spire:welcome-to-wongos",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "AxebotsNormal",
+      "id": "base-spire:axebots-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "ConstructMenagerieNormal",
+      "id": "base-spire:construct-menagerie-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "DevotedSculptorWeak",
+      "id": "base-spire:devoted-sculptor-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "FabricatorNormal",
+      "id": "base-spire:fabricator-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "FrogKnightNormal",
+      "id": "base-spire:frog-knight-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "GlobeHeadNormal",
+      "id": "base-spire:globe-head-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "OwlMagistrateNormal",
+      "id": "base-spire:owl-magistrate-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "ScrollsOfBitingNormal",
+      "id": "base-spire:scrolls-of-biting-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Scrolls"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "ScrollsOfBitingWeak",
+      "id": "base-spire:scrolls-of-biting-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": [
+        "Scrolls"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "SlimedBerserkerNormal",
+      "id": "base-spire:slimed-berserker-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "TheLostAndForgottenNormal",
+      "id": "base-spire:the-lost-and-forgotten-normal",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "TurretOperatorWeak",
+      "id": "base-spire:turret-operator-weak",
+      "room": "Monster",
+      "rarity": "none",
+      "weak": true,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "KnightsElite",
+      "id": "base-spire:knights-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": [
+        "Knights"
+      ]
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "MechaKnightElite",
+      "id": "base-spire:mecha-knight-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "SoulNexusElite",
+      "id": "base-spire:soul-nexus-elite",
+      "room": "Elite",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "AeonglassBoss",
+      "id": "base-spire:aeonglass-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "QueenBoss",
+      "id": "base-spire:queen-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "encounter",
+      "act": 2,
+      "name": "TestSubjectBoss",
+      "id": "base-spire:test-subject-boss",
+      "room": "Boss",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 2,
+      "name": "Nonupeipe",
+      "id": "base-spire:nonupeipe",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 2,
+      "name": "Tanx",
+      "id": "base-spire:tanx",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "ancient",
+      "act": 2,
+      "name": "Vakuu",
+      "id": "base-spire:vakuu",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    },
+    {
+      "category": "shared-ancient",
+      "act": -1,
+      "name": "Darv",
+      "id": "base-spire:darv",
+      "room": "none",
+      "rarity": "none",
+      "weak": false,
+      "tags": []
+    }
+  ],
+  "cards": [
+    {
+      "id": "base-spire:aggression",
+      "name": "Aggression",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:anger",
+      "name": "Anger",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:armaments",
+      "name": "Armaments",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:ashen-strike",
+      "name": "AshenStrike",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:barricade",
+      "name": "Barricade",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:bash",
+      "name": "Bash",
+      "rarity": "basic",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:battle-trance",
+      "name": "BattleTrance",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:blaze",
+      "name": "Blaze",
+      "rarity": "uncommon",
+      "multiplayer_only": true
+    },
+    {
+      "id": "base-spire:blood-wall",
+      "name": "BloodWall",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:bloodletting",
+      "name": "Bloodletting",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:bludgeon",
+      "name": "Bludgeon",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:body-slam",
+      "name": "BodySlam",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:brand",
+      "name": "Brand",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:break",
+      "name": "Break",
+      "rarity": "ancient",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:breakthrough",
+      "name": "Breakthrough",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:bully",
+      "name": "Bully",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:burning-pact",
+      "name": "BurningPact",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:cascade",
+      "name": "Cascade",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:cinder",
+      "name": "Cinder",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:colossus",
+      "name": "Colossus",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:conflagration",
+      "name": "Conflagration",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:corruption",
+      "name": "Corruption",
+      "rarity": "ancient",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:crimson-mantle",
+      "name": "CrimsonMantle",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:cruelty",
+      "name": "Cruelty",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:dark-embrace",
+      "name": "DarkEmbrace",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:defend-ironclad",
+      "name": "DefendIronclad",
+      "rarity": "basic",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:demon-form",
+      "name": "DemonForm",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:demonic-shield",
+      "name": "DemonicShield",
+      "rarity": "uncommon",
+      "multiplayer_only": true
+    },
+    {
+      "id": "base-spire:dismantle",
+      "name": "Dismantle",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:dominate",
+      "name": "Dominate",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:drum-of-battle",
+      "name": "DrumOfBattle",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:evil-eye",
+      "name": "EvilEye",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:expect-a-fight",
+      "name": "ExpectAFight",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:feed",
+      "name": "Feed",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:feel-no-pain",
+      "name": "FeelNoPain",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:fiend-fire",
+      "name": "FiendFire",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:fight-me",
+      "name": "FightMe",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:flame-barrier",
+      "name": "FlameBarrier",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:forgotten-ritual",
+      "name": "ForgottenRitual",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:havoc",
+      "name": "Havoc",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:headbutt",
+      "name": "Headbutt",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:hellraiser",
+      "name": "Hellraiser",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:hemokinesis",
+      "name": "Hemokinesis",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:howl-from-beyond",
+      "name": "HowlFromBeyond",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:impervious",
+      "name": "Impervious",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:infernal-blade",
+      "name": "InfernalBlade",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:inferno",
+      "name": "Inferno",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:inflame",
+      "name": "Inflame",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:iron-wave",
+      "name": "IronWave",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:juggernaut",
+      "name": "Juggernaut",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:juggling",
+      "name": "Juggling",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:mangle",
+      "name": "Mangle",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:midnight",
+      "name": "Midnight",
+      "rarity": "rare",
+      "multiplayer_only": true
+    },
+    {
+      "id": "base-spire:molten-fist",
+      "name": "MoltenFist",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:not-yet",
+      "name": "NotYet",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:offering",
+      "name": "Offering",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:one-two-punch",
+      "name": "OneTwoPunch",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:outrage",
+      "name": "Outrage",
+      "rarity": "uncommon",
+      "multiplayer_only": true
+    },
+    {
+      "id": "base-spire:pacts-end",
+      "name": "PactsEnd",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:perfected-strike",
+      "name": "PerfectedStrike",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:pillage",
+      "name": "Pillage",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:pommel-strike",
+      "name": "PommelStrike",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:primal-force",
+      "name": "PrimalForce",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:pyre",
+      "name": "Pyre",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:rage",
+      "name": "Rage",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:rampage",
+      "name": "Rampage",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:rupture",
+      "name": "Rupture",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:second-wind",
+      "name": "SecondWind",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:setup-strike",
+      "name": "SetupStrike",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:shrug-it-off",
+      "name": "ShrugItOff",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:spite",
+      "name": "Spite",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:stampede",
+      "name": "Stampede",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:stoke",
+      "name": "Stoke",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:stomp",
+      "name": "Stomp",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:stone-armor",
+      "name": "StoneArmor",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:strike-ironclad",
+      "name": "StrikeIronclad",
+      "rarity": "basic",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:sword-boomerang",
+      "name": "SwordBoomerang",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:tank",
+      "name": "Tank",
+      "rarity": "rare",
+      "multiplayer_only": true
+    },
+    {
+      "id": "base-spire:taunt",
+      "name": "Taunt",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:tear-asunder",
+      "name": "TearAsunder",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:thrash",
+      "name": "Thrash",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:thunderclap",
+      "name": "Thunderclap",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:tremble",
+      "name": "Tremble",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:true-grit",
+      "name": "TrueGrit",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:twin-strike",
+      "name": "TwinStrike",
+      "rarity": "common",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:unmovable",
+      "name": "Unmovable",
+      "rarity": "rare",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:unrelenting",
+      "name": "Unrelenting",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:uppercut",
+      "name": "Uppercut",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:vicious",
+      "name": "Vicious",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    },
+    {
+      "id": "base-spire:whirlwind",
+      "name": "Whirlwind",
+      "rarity": "uncommon",
+      "multiplayer_only": false
+    }
+  ],
+  "potions": [
+    {
+      "id": "base-spire:blood-potion",
+      "name": "BloodPotion",
+      "rarity": "common",
+      "usage": "AnyTime"
+    },
+    {
+      "id": "base-spire:soldiers-stew",
+      "name": "SoldiersStew",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:ashwater",
+      "name": "Ashwater",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:attack-potion",
+      "name": "AttackPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:beetle-juice",
+      "name": "BeetleJuice",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:blessing-of-the-forge",
+      "name": "BlessingOfTheForge",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:block-potion",
+      "name": "BlockPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:bottled-potential",
+      "name": "BottledPotential",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:clarity",
+      "name": "Clarity",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:colorless-potion",
+      "name": "ColorlessPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:cure-all",
+      "name": "CureAll",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:dexterity-potion",
+      "name": "DexterityPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:distilled-chaos",
+      "name": "DistilledChaos",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:droplet-of-precognition",
+      "name": "DropletOfPrecognition",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:duplicator",
+      "name": "Duplicator",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:energy-potion",
+      "name": "EnergyPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:entropic-brew",
+      "name": "EntropicBrew",
+      "rarity": "rare",
+      "usage": "AnyTime"
+    },
+    {
+      "id": "base-spire:explosive-ampoule",
+      "name": "ExplosiveAmpoule",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:fairy-in-a-bottle",
+      "name": "FairyInABottle",
+      "rarity": "rare",
+      "usage": "Automatic"
+    },
+    {
+      "id": "base-spire:fire-potion",
+      "name": "FirePotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:flex-potion",
+      "name": "FlexPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:fortifier",
+      "name": "Fortifier",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:fruit-juice",
+      "name": "FruitJuice",
+      "rarity": "rare",
+      "usage": "AnyTime"
+    },
+    {
+      "id": "base-spire:fysh-oil",
+      "name": "FyshOil",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:gamblers-brew",
+      "name": "GamblersBrew",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:gigantification-potion",
+      "name": "GigantificationPotion",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:heart-of-iron",
+      "name": "HeartOfIron",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:liquid-bronze",
+      "name": "LiquidBronze",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:liquid-memories",
+      "name": "LiquidMemories",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:lucky-tonic",
+      "name": "LuckyTonic",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:mazaleths-gift",
+      "name": "MazalethsGift",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:orobic-acid",
+      "name": "OrobicAcid",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:potion-of-binding",
+      "name": "PotionOfBinding",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:powdered-demise",
+      "name": "PowderedDemise",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:power-potion",
+      "name": "PowerPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:radiant-tincture",
+      "name": "RadiantTincture",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:regen-potion",
+      "name": "RegenPotion",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:shackling-potion",
+      "name": "ShacklingPotion",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:ship-in-a-bottle",
+      "name": "ShipInABottle",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:skill-potion",
+      "name": "SkillPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:snecko-oil",
+      "name": "SneckoOil",
+      "rarity": "rare",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:speed-potion",
+      "name": "SpeedPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:stable-serum",
+      "name": "StableSerum",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:strength-potion",
+      "name": "StrengthPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:swift-potion",
+      "name": "SwiftPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:touch-of-insanity",
+      "name": "TouchOfInsanity",
+      "rarity": "uncommon",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:vulnerable-potion",
+      "name": "VulnerablePotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    },
+    {
+      "id": "base-spire:weak-potion",
+      "name": "WeakPotion",
+      "rarity": "common",
+      "usage": "CombatOnly"
+    }
+  ],
+  "neow": {
+    "curse": [
+      {
+        "name": "CursedPearl",
+        "id": "base-spire:cursed-pearl"
+      },
+      {
+        "name": "DowsingRod",
+        "id": "base-spire:dowsing-rod"
+      },
+      {
+        "name": "HeftyTablet",
+        "id": "base-spire:hefty-tablet"
+      },
+      {
+        "name": "LargeCapsule",
+        "id": "base-spire:large-capsule"
+      },
+      {
+        "name": "LeafyPoultice",
+        "id": "base-spire:leafy-poultice"
+      },
+      {
+        "name": "NeowsBones",
+        "id": "base-spire:neows-bones"
+      },
+      {
+        "name": "NeowsSacrifice",
+        "id": "base-spire:neows-sacrifice"
+      },
+      {
+        "name": "PrecariousShears",
+        "id": "base-spire:precarious-shears"
+      },
+      {
+        "name": "SilkenTress",
+        "id": "base-spire:silken-tress"
+      },
+      {
+        "name": "SilverCrucible",
+        "id": "base-spire:silver-crucible"
+      }
+    ],
+    "positive": [
+      {
+        "name": "ArcaneScroll",
+        "id": "base-spire:arcane-scroll"
+      },
+      {
+        "name": "BoomingConch",
+        "id": "base-spire:booming-conch"
+      },
+      {
+        "name": "FishingRod",
+        "id": "base-spire:fishing-rod"
+      },
+      {
+        "name": "GoldenPearl",
+        "id": "base-spire:golden-pearl"
+      },
+      {
+        "name": "Kaleidoscope",
+        "id": "base-spire:kaleidoscope"
+      },
+      {
+        "name": "LeadPaperweight",
+        "id": "base-spire:lead-paperweight"
+      },
+      {
+        "name": "LostCoffer",
+        "id": "base-spire:lost-coffer"
+      },
+      {
+        "name": "MassiveScroll",
+        "id": "base-spire:massive-scroll"
+      },
+      {
+        "name": "NeowsTorment",
+        "id": "base-spire:neows-torment"
+      },
+      {
+        "name": "NewLeaf",
+        "id": "base-spire:new-leaf"
+      },
+      {
+        "name": "PhialHolster",
+        "id": "base-spire:phial-holster"
+      },
+      {
+        "name": "PreciseScissors",
+        "id": "base-spire:precise-scissors"
+      },
+      {
+        "name": "ScrollBoxes",
+        "id": "base-spire:scroll-boxes"
+      },
+      {
+        "name": "WingedBoots",
+        "id": "base-spire:winged-boots"
+      }
+    ]
+  }
+}

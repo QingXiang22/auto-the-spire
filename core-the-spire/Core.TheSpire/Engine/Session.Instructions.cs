@@ -129,8 +129,8 @@ public sealed partial class Session
             case SeedStreamInst seedStream:
             {
                 var seed = Eval(call, seedStream.Seed).AsInt();
-                if (seed < 0) throw Faults.Range("stream seed must be nonnegative");
-                Random.SeedStream(RequireStream(Eval(call, seedStream.Stream)), (ulong)seed);
+                if (!seedStream.Word64 && seed < 0) throw Faults.Range("stream seed must be nonnegative");
+                Random.SeedStream(RequireStream(Eval(call, seedStream.Stream)), unchecked((ulong)seed));
                 return Outcome.Continue;
             }
             case SampleFloat32Inst sampleFloat:

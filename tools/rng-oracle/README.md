@@ -1,116 +1,41 @@
-# rng-oracle：原版随机数的独立神谕
+# 锁定来源的随机向量
 
-ENV-01 的已知向量来源。它**只按只读原版源码重写**，不参考本仓库任何 C# 实现——
-否则"被测实现 vs 对照实现"会变成同一份代码自己撞自己。
+本工具供随机机制与base内容维护者重新生成独立期望。当前规则依据为[参考锁](../../reference/baselines/sts2-sim.json)指定的sts2-sim顺序随机路径；参考checkout保持只读。生产base仍通过DSL执行。
+
+## 重新生成
+
+先按[参考准备说明](../../reference/README.md)准备干净checkout，再从仓库根运行：
 
 ```powershell
-# 仓库根目录
-python tools/rng-oracle/vanilla_rng_oracle.py --json artifacts/environment/vanilla-rng-vectors.json `
-  --layout artifacts/environment/vanilla-rng-layout.json `
-  --cs core-the-spire/Core.TheSpire.Engine.Tests/VanillaRandomVectors.cs `
-  --cs-layout mod-the-spire/base-spire/BaseSpire.Slice.Tests/Randomness/VanillaSeedLayoutVectors.cs
+python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rng-vectors
 ```
 
-`--cs` / `--cs-layout` 直接**生成** C# 向量表而不是手抄：转录错误在这里是不可接受的（一个数字抄错，
-检查就从"没通过"变成"通过了错的实现"）。生成的文件里带生成命令，重新生成即可。
-分两个文件是因为判据分属两个项目：读数向量给 `Core.TheSpire.Engine.Tests`，
-布局向量给 `BaseSpire.Slice.Tests`（布局实现落在 base 侧）。
+生成器校验commit、tree和未提交改动。它先运行只依赖锁定Sts2Sim.Core的[原生导出程序](reference-vectors/Program.cs)，再生成固定测试数据、开局池DSL和核心哈希向量。原生程序不引用本项目Engine或base，不读取生产运行结果；Python消费者神谕使用独立XxHash64与既有xoshiro映射。重新运行应得到相同纳管文件。
 
-## 正常开局与首幕地图
+| 产物 | 独立来源与检查范围 |
+| --- | --- |
+| normal-opening-vectors、reference-pool-metadata | 原生RunState、Player、Neow，完整遗物袋、三幕来源队列、候选资格与顺序；固定Overgrowth／Hive／Glory，不声称随机替代幕选择 |
+| act-one-map-vectors、map-gaussian-vectors | 原生Overgrowth与StandardActMap，最终节点／类型／边／游标及Gaussian拒绝抽样 |
+| normal-combat-vectors | seed777正常Neow选择BoomingConch，首个合法后继真实遭遇、HP、首招、手牌与抽牌堆 |
+| slimes-vectors | 十组原seed，原生SlimesWeak累计楼层2的受控编队、HP、三回合行动、Slimed与游标 |
+| ironclad-source-metadata | 原生90项完整池及GiantRock；五项多人资格、基本／升级属性与来源摘要 |
+| source-rng-vectors | Python独立派生，15条流、初始／重洗、局部金币／卡牌；保留原seed并增加old前缀边界 |
+| normal-reward-vectors | Python独立完整首幕A0普通奖励，三次访问、48项药水池和每次抽样的候选／结果／游标 |
+| enemy-move-vectors、pickup-upgrade-vectors | Python独立招式图与永久升级随机；分数权重为明确的算法探针 |
+| Word64Vectors.cs | 原生StringHelper的UTF-8哈希输出；生成时同时核对Python哈希及根seed分支 |
 
-重新生成固定开局、Gaussian和最终地图向量需要本地同版本只读源码：
+局部生成器可使用各自`--output`参数；其来源池读取先由原生导出得到的reference-pool-metadata，要求锁一致。`normal_opening_vectors.py`只渲染已导出的来源定义，不再维护第二套开局算法。
+
+## 验证与限制
 
 ```powershell
-python -X utf8 tools/rng-oracle/normal_opening_vectors.py --output tools/base-spire-dev/fixtures/normal-opening-vectors.json --write-definitions mod-the-spire/base-spire/run/opening-source.spire --write-neow-pool mod-the-spire/base-spire/run/neow-pool.spire
-python -X utf8 tools/rng-oracle/map_gaussian_vectors.py --output tools/base-spire-dev/fixtures/map-gaussian-vectors.json --map-output tools/base-spire-dev/fixtures/act-one-map-vectors.json
+dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests -c Release
+dotnet run --project tools/base-spire-dev -c Release -- check --rng-only
+dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only
+dotnet run --project tools/base-spire-dev -c Release -- check --card-rewards-only
 dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
 ```
 
-开局神谕只读取源池和本目录独立RNG，比较完整遗物袋、三幕房间队列、有标签遭遇的拒绝抽取及真实Neow选项。生成的DSL池是实际开局消费者的数据，未实现效果继续显式失败，不缩减来源池。固定10组字符串seed含大小写、中文、代理对和空串，另保留原开局种子20261021的真实Neow未支持回归；CI无需游戏源码。
+所有向量保留实际来源标识与摘要，不能将旧来源SHA改名后当新版证明。`vanilla_rng_oracle.py`保留旧32位布局与原始数值算法的历史回归；当前消费者改用`locked_rng_oracle.py`，只复用未变的原始xoshiro／有界抽样算法。旧source-catalogs清单不能证明当前版本全内容行为符合。
 
-Gaussian向量记录每次Box–Muller尝试的两个53位输入、偶数舍入结果和接受／拒绝游标。最终地图向量由[独立地图程序](map-reference/MapReference.csproj)调用固定版本的源地图移植生成；程序仅依赖工具层，与Engine及生产DSL隔离。数据保留原源SHA256、按UTF-8／LF规范化的移植文件SHA256、每个节点的坐标／房型／父子边和最终游标。生产DSL需逐项匹配，不能由生产结果回填期望。
-
-该检查另从公开动作执行seed `777`的Neow选择、离场确认、合法首节点、源出生HP与战斗首回合；人工池／地图探针只用于独立比较。它不等于完整Run、所有Neow效果或参考模拟器正常整局双侧验收。
-
-## 两层向量
-
-首幕 A0 普通战斗完整奖励的固定来源数据：
-
-```powershell
-python -X utf8 tools/rng-oracle/normal_reward_vectors.py --output tools/base-spire-dev/fixtures/normal-reward-vectors.json
-dotnet run --project tools/base-spire-dev -c Release -- check --card-rewards-only
-```
-
-生成器按只读源码独立计算药水掉落、金币、适用药水稀有度与选取、卡牌稀有度／去重／升级。数据保存48项完整药水顺序、来源SHA256、每次调用参数／结果／前后游标及有序候选；10组seed各连续三次访问。CI读取固定数据，无需游戏源码。药水获得支持与效果支持分开，受控访问向量不表示正常Run可达或完整参考模拟器双侧已通过。
-
-共享敌人招式图的固定来源数据按只读源码独立生成：
-
-```powershell
-python -X utf8 tools/rng-oracle/enemy_move_vectors.py --output tools/base-spire-dev/fixtures/enemy-move-vectors.json
-dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only
-```
-
-生成器只使用本目录独立RNG重写，核对TwigSlimeM的真实AddBranch重载和RandomBranchState／Rng运算，并记录来源SHA256。数据保留初始状态、源候选顺序、有效权重位型、原始double、缩放结果及前后游标；CI消费固定JSON，不需要本地游戏源码。范围是A0受控选招，缺少正常出生HP、遭遇前置消费及完整模拟器双侧，不宣称正常Run或ENV-T01全部通过。
-
-拾取随机升级的固定向量独立生成：
-
-```powershell
-python -X utf8 tools/rng-oracle/pickup_upgrade_vectors.py --output tools/base-spire-dev/fixtures/pickup-upgrade-vectors.json
-```
-
-该神谕只导入本目录的原版RNG重写，读取三件遗物／卡牌／排序／随机源并保存hash，不导入Engine或base DSL。三个预定seed对比连续两次Whetstone、WarPaint、SandCastle的选中实例、升级事件顺序及共用Niche游标；候选范围小于16，等键顺序适用当前.NET小范围插入排序，不将此向量扩张为大型等键牌组或正常Run差异测试。
-
-纯DSL恢复使用新的源消费者向量入口：
-
-```powershell
-python -X utf8 tools/rng-oracle/dsl_rng_vectors.py --output tools/base-spire-dev/fixtures/source-rng-vectors.json
-dotnet run --project tools/base-spire-dev -- check --rng-only
-```
-
-生成需要本地sts2源；CI消费固定JSON无需源码。向量保存98份源SHA256，独立生成10组UTF-16字符串seed、12条run／3条player流、精确binary32位型、初始／重洗排列与两轮金币／卡牌奖励。奖励向量限定已迁移的操作序列，不包含药水掉落判定、正常Run初始化前置消费或参考模拟器执行，不能据此关闭原严格套件。大型同键牌组的 .NET 排序行为不由十张起始牌向量覆盖。原命令中的旧Slice向量路径为迁移前历史，当前可执行消费者以此入口为准。
-
-| 层 | 内容 | 谁检查 |
-| --- | --- | --- |
-| **读数** | 原始字、`NextInt(100)`、`NextInt(1,7)`、`NextDouble`、10 张牌洗牌排列、消耗计数 | `Core.TheSpire.Engine.Tests` |
-| **布局** | 字符串 seed → run seed / player seed / 12 条 run 流 + 3 条玩家流 + 内容流种子、SnakeCase、以及按布局抽出的 Shuffle 流读数与洗牌 | `BaseSpire.Slice.Tests` |
-
-## 它按什么写（布局层）
-
-| 原版位置 | 语义 |
-| --- | --- |
-| `Runs/RunRngSet.cs:104-119` | `Seed = (uint)GetDeterministicHashCode(seed)`；每条流 `new Rng(Seed, SnakeCase(枚举名))` |
-| `Random/Rng.cs:52-55` | `Rng(seed, name)` = `seed + (uint)GetDeterministicHashCode(name)` |
-| `Entities/Players/Player.cs:324-328` | 玩家级 seed = `hash(stringSeed) + 玩家槽位` |
-| `Random/PlayerRngSet.cs:33-47` | 玩家级流同 run 级规则 |
-| `Random/Rng.cs:47-50` | 内容级 `(uint)(runSeed + 槽位 + hash(内容 entry)) + mixin` |
-| `Helpers/StringHelper.cs` | `GetDeterministicHashCode`（int 循环）、`SnakeCase`（CamelCase 拆分） |
-
-## 已登记的参考偏离（重要）
-
-`reference/sts2-sim` 的检出**领先于**我们固定的 `sts2/` 基线，run/流种子派生已经不是同一版本：
-
-| | 版本基线 `sts2/`（判据） | 参考检出 |
-| --- | --- | --- |
-| `RunRngSet.Seed` | `uint`，`(uint)GetDeterministicHashCode`（int 循环） | `ulong`，`GetDeterministicHashCode` 返回 **XxHash64**（旧实现改名 `…Old`） |
-| 流种子 | `Seed + (uint)hash(name)` | `Seed + hash(name)`（ulong）+ `CreateSemanticKeyRequired` 重键模式 |
-
-因此：**不得**用参考的数值"对齐"我们的实现，也不得据此修改 `VanillaRandomLayout`。
-`dotnet run --project tools/differential -- rng` 会把这条差异按**已登记偏离**分类并返回 0；
-未登记的偏离返回 1（否则"参考又变了"会被静默吞掉）。ENV-00 需要把参考固定到与 `sts2/` 同一版本，
-或逐处登记此类差异。
-
-## 三方互证
-
-| 哪两方 | 谁做 | 覆盖 |
-| --- | --- | --- |
-| 我们的 Engine ↔ 神谕 | `Core.TheSpire.Engine.Tests` 的 `VanillaRandomChecks` | 原始字、有界映射、双精度、洗牌排列、消耗计数 |
-| 我们的 base ↔ 神谕 | `BaseSpire.Slice.Tests` 的 `SliceVanillaSeedLayoutChecks` | SnakeCase、run/player/内容流种子、按布局抽出的 Shuffle 流读数与洗牌 |
-| 神谕 ↔ 参考实现 | `tools/differential rng` | 读数层一致；布局层为**已登记参考偏离** |
-
-参考实现是第三份独立实现，用来证明神谕没读偏；但它**不是权威**，裁决依据是只读的 `sts2/`（ENV §6.3）。
-
-## 纪律
-
-- 向量由脚本生成，**不手改**生成出来的 `.cs`。
-- 原版语义只从 `sts2/` 读；参考实现只为交叉核对，不据其修改神谕。
-- 抽样规则（截断 vs 拒绝采样、取最高位 vs 最低位）属于**行为差异**，不同 Profile 之间不得互换或"对齐"。
+这里验证组件与指定正常路径；完整M01公开状态、实例、事件与逐次随机比较仍由[差异工具](../differential/README.md)验收。不得换seed、缩池、补抽、重键参考或把缺消费者当作通过。

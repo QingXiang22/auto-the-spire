@@ -1,8 +1,8 @@
 """Generate independent source-based vectors for the pure DSL RNG consumers.
 
-Uses only the recovered source and the independent vanilla_rng_oracle, never Engine code.
+Uses the locked source, native pool metadata and independent numerical oracle, never Engine code.
 The reward sequence deliberately covers the migrated gold/card operations; PotionRewardOdds
-and its as-yet-unmigrated population are not simulated as hidden compensation draws.
+and population are checked separately by normal_reward_vectors, never compensation draws.
 """
 import argparse
 import hashlib
@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 import struct
 
-from vanilla_rng_oracle import Rng, deterministic_hash_code, stream_seed, content_seed, RUN_RNG_TYPES, PLAYER_RNG_TYPES, snake_case
+from locked_rng_oracle import Rng, deterministic_hash_code, stream_seed, content_seed, RUN_RNG_TYPES, PLAYER_RNG_TYPES, snake_case, SOURCE, source_hashes, reference_lock, native_metadata
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -26,28 +26,15 @@ def next_float(rng):
 
 def generate():
     paths = ['Random/MegaRandom.cs', 'Random/Rng.cs', 'Random/PlayerRngSet.cs',
-             'Runs/RunRngSet.cs', 'Helpers/StringHelper.cs', 'Extensions/ListExtensions.cs',
+             'Runs/RunRngSet.cs', 'Helpers/StringHelper.cs', 'Helpers/ListExtensions.cs',
              'Models/CardModel.cs', 'Odds/CardRarityOdds.cs', 'Odds/PlayerOddsSet.cs',
              'Factories/CardFactory.cs', 'Models/CardPools/IroncladCardPool.cs']
-    source = ROOT / 'sts2/src/Core'
-    hashes = {str(Path('sts2/src/Core') / p).replace('\\', '/'): hashlib.sha256((source / p).read_bytes()).hexdigest() for p in paths}
-    pool_source = (source / 'Models/CardPools/IroncladCardPool.cs').read_text(encoding='utf-8-sig')
-    names = re.findall(r'ModelDb.Card<(\w+)>\(\)', pool_source)
-    assert len(names) == 87
-    pool = []
-    for name in names:
-        path = source / f'Models/Cards/{name}.cs'
-        text = path.read_text(encoding='utf-8-sig')
-        hashes[str(path.relative_to(ROOT)).replace('\\', '/')] = hashlib.sha256(path.read_bytes()).hexdigest()
-        rarity = re.search(r'CardRarity\.(\w+)', text).group(1).lower()
-        if 'CardMultiplayerConstraint.MultiplayerOnly' in text or re.search(r'MultiplayerOnly\s*=>\s*true', text):
-            continue
-        if rarity not in ('common', 'uncommon', 'rare'):
-            continue
-        pool.append({'id': 'base-spire:' + re.sub(r'(?<!^)(?=[A-Z])', '-', name).lower(), 'rarity': rarity})
+    pool = [{'id': c['id'], 'rarity': c['rarity']} for c in native_metadata()['cards']
+            if not c['multiplayer_only'] and c['rarity'] in ('common', 'uncommon', 'rare')]
     assert len(pool) == 80
+    hashes = source_hashes(paths + [f"Models/Cards/{c['name']}.cs" for c in native_metadata()['cards']])
     vectors = []
-    for seed in ['20261018', '777', 'ENV-IRONCLAD-001', 'BASE-DSL-STDIO-00', 'ABC', 'abc', '斩杀尖塔2', 'A😀B', ' seed ', '']:
+    for seed in ['20261018', '777', 'ENV-IRONCLAD-001', 'BASE-DSL-STDIO-00', 'ABC', 'abc', '斩杀尖塔2', 'A😀B', ' seed ', '', 'old', 'old777', 'oldold777', 'Old777']:
         root = deterministic_hash_code(seed)
         streams = {f'base-spire:run:{snake_case(name)}': stream_seed(root, name) for name in RUN_RNG_TYPES}
         streams.update({f'base-spire:player:{name.lower()}': stream_seed(root, name) for name in PLAYER_RNG_TYPES})
@@ -87,7 +74,7 @@ def generate():
                         'float32_bits_first8': float_bits, 'initial_order': initial,
                         'reshuffle_order': reshuffled, 'shuffle_counter': shuffle.counter,
                         'content_seed_slot2_mixin7': content_seed(root, 2, 'SAPPHIRE_SEED', 7), 'rewards': offers})
-    return {'schema': 'base-spire/source-rng-vectors@1', 'source_sha256': hashes,
+    return {'schema': 'base-spire/source-rng-vectors@2', 'reference_lock': reference_lock(), 'source_sha256': hashes,
             'reward_scope': 'migrated gold/card calls; excludes potion-roll and normal Run prerequisites', 'vectors': vectors}
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ internal static partial class PackageChecks
     {
         var count = 0;
         void Case(string name, Action body) { body(); count++; Console.WriteLine("ok   " + name); }
-        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case);
+        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case);
         Console.WriteLine($"All {count} enemy move checks passed; controlled development combat, not normal encounters or full simulator comparison.");
         return 0;
     }
@@ -22,14 +22,12 @@ internal static partial class PackageChecks
         var witnesses = new List<string>();
         void Case(string name, Action body) { check(name, body); witnesses.Add(name); }
         using var vectors = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.enemy-move-vectors.json")!);
-        Case("MOVE source versions match the unchanged enemy and status catalog rows", () =>
+        Case("MOVE vectors identify the locked reference and actual source paths", () =>
         {
-            foreach (var domain in new[] { "enemies", "cards" })
-            {
-                foreach (var row in SourceCatalog.Entries(domain))
-                    if (vectors.RootElement.GetProperty("source_sha256").TryGetProperty(row.GetProperty("source_path").GetString()!, out var hash))
-                        Equal(hash.GetString(), row.GetProperty("source_sha256").GetString(), "source SHA256 is not replaced to match production");
-            }
+            using var opening = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.normal-opening-vectors.json")!);
+            Equal(opening.RootElement.GetProperty("reference_lock").GetProperty("commit").GetString(), vectors.RootElement.GetProperty("reference_lock").GetProperty("commit").GetString(), "same locked current rule authority");
+            foreach (var hash in vectors.RootElement.GetProperty("source_sha256").EnumerateObject())
+                True(hash.Name.StartsWith("reference/sts2-sim/src/Sts2Sim.Core/", StringComparison.Ordinal) && hash.Value.GetString()!.Length == 64, "current source locator and digest");
         });
         using var copy = new Copy(package.Root);
         var probes = """
@@ -40,7 +38,7 @@ internal static partial class PackageChecks
             probes += $$"""
                 action {{name}} { role = player locals = { state = Binding } body = {
                   let = { into = state value = first(type(EnemyMoveState)) }
-                  forEach = { query = type(EnemyMoveBranch) item = branch body = {
+                  forEach = { query = where(type(EnemyMoveBranch), b, equal(field(field(field(b, EnemyMoveBranch.Node), EnemyMoveNode.Graph), EnemyMoveGraph.DefinitionId), "base-spire:twig-slime-m")) item = branch body = {
                     if = { condition = equal(field(field(branch, EnemyMoveBranch.Target), EnemyMoveNode.Id), "POKEY_POUNCE_MOVE") then = {
                       if = { condition = not(equal(pureCall(EnemyBranchWeight, state, branch), float32({{a}}))) then = { fail = { message = "attack source weight" } } }
                     } else = {
@@ -64,7 +62,7 @@ internal static partial class PackageChecks
                 Equal(vector.GetProperty("monster_ai_seed").GetUInt64(), s.Random.Capture().ExplicitSeeds[MonsterAi], "source stream seed");
                 var branchType = s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveBranch");
                 var nodeType = s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveNode");
-                var candidates = s.State.AllInstances(branchType.Id).Select(b => s.State.GetField(b, branchType.FieldIndex("Target")).AsRef())
+                var candidates = s.State.AllInstances(branchType.Id).Where(b => MoveText(s, s.State.GetField(b, branchType.FieldIndex("Node")).AsRef(), "EnemyMoveNode", "Id") == "RAND" && MoveText(s, s.State.GetField(b, branchType.FieldIndex("Target")).AsRef(), "EnemyMoveNode", "Id") is "POKEY_POUNCE_MOVE" or "STICKY_SHOT_MOVE").Select(b => s.State.GetField(b, branchType.FieldIndex("Target")).AsRef())
                     .Select(n => s.State.GetField(n, nodeType.FieldIndex("Id")).AsString()).ToArray();
                 Submit(s, "BeginDevelopmentCombat");
                 Set(s, Player(s), "Player", "Hp", Value.Of(1000L)); Set(s, Player(s), "Player", "MaxHp", Value.Of(1000L));

@@ -1,0 +1,672 @@
+{
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "source_sha256": {
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatState.cs": "33184334ecb00a59a3ab91a58b7597581364e039ca5bd2f80c53b3078073af0d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Overgrowth.cs": "1b8d338468d04f7e896c76cf63d448f211810669ddf721743a5e8adfd4f98c9d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Creatures/Creature.cs": "c34887619421ca7f92d6cf351e7b06c2f5743ecf7a3a1d6a795ac9cc150027a6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/MonsterModel.cs": "e82a07635f2ddf7fde8bbe32c6388cc198be9e70c27486f33205f7676ca0c691",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/LeafSlimeM.cs": "73b0833ed5be6d66d041ca668b4919d17cde2360f64631a4752bc1c75bccfd37",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/LeafSlimeS.cs": "c95c6688da473e06c4fa7ead3e7f18b9889d1be3e427261eeeaa4861b5eba55b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/TwigSlimeM.cs": "b3d41bfd27ddf9555c2e5d83afbde0682eadf9eecfd68921e5aaeacaa3f8236c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/TwigSlimeS.cs": "29e0615b539d705e70b1a4dee92a70812b3e87797a5fb5328b2a3e1373018f4a",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/ConditionalBranchState.cs": "4a23cdb189d72c12ee1a2f10a3f88fee64dfe406faec681e99b40c2dc3caedea",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/AbstractIntent.cs": "27b92f3d92d497e6d1ce92d17fe4ec3190f417d3d50e3df2cf3e37d2bab3f605",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/AttackIntent.cs": "46a69ec4019d90a63e38185109fb1d8ecd0659129ca22cd13be9dd85ce024f72",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/BuffIntent.cs": "1e596214963d092728ba7e494cb7db4d4c18e29a97f2456c9d14574cf3ee5fd6",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/CardDebuffIntent.cs": "cd6644a5ddbae3bd279a2784ba5254dcc7f695ba39adc5f639e3a746c1dbe003",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/DeathBlowIntent.cs": "1f361a066022374a8a2435b124a4285937583d69d7905430c6cf8e2c91bb62ac",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/DebuffIntent.cs": "839ede28ad1a09ad9fa91ea4f65e4d95a4802e5e17cff59aab1ab737cb4a9c4a",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/DefendIntent.cs": "5db6c109b7f211b1c449333c9d590b7aeeedfb51e40017a7ff6ccea3a0c015cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/EscapeIntent.cs": "ba349a8cc91380f97fd0a94dba02761aad49fa1938e4d5e65bcb61f6b498fe4a",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/HealIntent.cs": "2ac1b9a297827f2f1318d4bc9842fd7a6ec6d6325bd6b2d83ae781346c475bd2",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/IntentType.cs": "d9804db488a4413b013298af282f99792e98739558e2023dad411fd2a5df9102",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/MultiAttackIntent.cs": "999f70ca62726a40eae0565b0f08ed46964779a9cf5ecc1edca2ee191127a697",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/SingleAttackIntent.cs": "b7625fdb14bf62694b2bdb02ca9b0a96cf2d119a74e9bdcde452f4e65edf5d72",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/SleepIntent.cs": "4683efffa28f239736563340beef8b6b4fec1b9bc77375c84f311d0587730540",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/StatusIntent.cs": "d4ad24ddf2a451cd759161c3e6ca3ef8c48f724bbb1dc1d7cc06485314d8508e",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/StunIntent.cs": "ec06f1dd740666e324f960fb92e80a0eb07cf0d45a0d4a09db53f3048bb8e6c9",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/SummonIntent.cs": "fd11bff97a215897d8803ec2db134fa598f556c25d9a998166ced67818b28ec9",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MonsterMoveStateMachine.cs": "9cb8d68142e0236c8a7c74c99e8cd66479077f3179e27a226a0c2eea64dccb31",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MonsterState.cs": "03f21b1e83aa3dc193048fdfd0c9c6af00db6a6688a127bcc325e62593ea90e2",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MoveRepeatType.cs": "8a179c07e485341561c911b13a6bc7ebde186715174b9bbbd27b616e6863a0ab",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MoveState.cs": "472e3ef6b8993a9e47f062001be66db9a4bd83c83d4b8c2f353284195ed5cd5d",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/RandomBranchState.cs": "a751bd3be24c4492234a1ae43135371f6d30b5698a070ca2abdfca693081ef37",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngDraw.cs": "effbf54b4b95b78ca8d0638159651ed66d21a6b107e63e3a04eaf919fbbad6ee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngSeed.cs": "5085e61fd94e884f036982a344da909280c4b337faa7fe9d989327d40db44a7f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngTrace.cs": "3f95910665c5485b4eb2106cdf01d14ea0e34d501db3753a67da69fae1de38d3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "0430027786093a90331ec29eeca1dc1d41619353e986d85f869b19409b720e66",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/PlayerRngSet.cs": "970aac53742f9cb76148b88caf3e1844db967c1a4c774696bfbb9eb1ac62c62b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "a1f93f52040f7271042425788d6cb30db7ece688659ca23dfc3a388c1db62230",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/RngDiagnostics.cs": "8962063ae7b317a5b996004326d39ff5bb146cdd3cbfa3f74006e82754e6a493",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/RoomFactory.cs": "bcf2140c7a0e5258002f62872dc2654d079ff8e3bd2d26ef05f09528e4eb4efd"
+  },
+  "vectors": [
+    {
+      "seed": "20261018",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 8
+        },
+        {
+          "id": "base-spire:twig-slime-m",
+          "hp": 26
+        },
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 12
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 73,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "GOOP_MOVE"
+          ],
+          "slimed": 1
+        },
+        {
+          "hp": 58,
+          "monster_ai_draws": 5,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 51,
+          "monster_ai_draws": 7,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "GOOP_MOVE"
+          ],
+          "slimed": 3
+        }
+      ]
+    },
+    {
+      "seed": "777",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 14
+        },
+        {
+          "id": "base-spire:twig-slime-m",
+          "hp": 28
+        },
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 11
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 58,
+          "monster_ai_draws": 5,
+          "moves": [
+            "GOOP_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 43,
+          "monster_ai_draws": 7,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        }
+      ]
+    },
+    {
+      "seed": "1234",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 9
+        },
+        {
+          "id": "base-spire:leaf-slime-m",
+          "hp": 34
+        },
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 11
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 73,
+          "monster_ai_draws": 2,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "GOOP_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 61,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 54,
+          "monster_ai_draws": 4,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "GOOP_MOVE"
+          ],
+          "slimed": 5
+        }
+      ]
+    },
+    {
+      "seed": "99",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 11
+        },
+        {
+          "id": "base-spire:leaf-slime-m",
+          "hp": 33
+        },
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 15
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT",
+            "GOOP_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 2,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 61,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT",
+            "GOOP_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 57,
+          "monster_ai_draws": 4,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 6
+        }
+      ]
+    },
+    {
+      "seed": "ABC",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 12
+        },
+        {
+          "id": "base-spire:twig-slime-m",
+          "hp": 26
+        },
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 9
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 58,
+          "monster_ai_draws": 5,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 54,
+          "monster_ai_draws": 7,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 4
+        }
+      ]
+    },
+    {
+      "seed": "abc",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 13
+        },
+        {
+          "id": "base-spire:leaf-slime-m",
+          "hp": 34
+        },
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 10
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 2,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 61,
+          "monster_ai_draws": 3,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 57,
+          "monster_ai_draws": 4,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 6
+        }
+      ]
+    },
+    {
+      "seed": "BASE-DSL-STDIO-00",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 12
+        },
+        {
+          "id": "base-spire:leaf-slime-m",
+          "hp": 35
+        },
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 8
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 2,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 61,
+          "monster_ai_draws": 3,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 57,
+          "monster_ai_draws": 4,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 6
+        }
+      ]
+    },
+    {
+      "seed": "斩杀尖塔2",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 10
+        },
+        {
+          "id": "base-spire:twig-slime-m",
+          "hp": 27
+        },
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 13
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT_MOVE",
+            "GOOP_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 58,
+          "monster_ai_draws": 5,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT_MOVE",
+            "GOOP_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 54,
+          "monster_ai_draws": 7,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 4
+        }
+      ]
+    },
+    {
+      "seed": "A😀B",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 13
+        },
+        {
+          "id": "base-spire:twig-slime-m",
+          "hp": 26
+        },
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 11
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "GOOP_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 76,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 58,
+          "monster_ai_draws": 5,
+          "moves": [
+            "GOOP_MOVE",
+            "POKEY_POUNCE_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 43,
+          "monster_ai_draws": 7,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT_MOVE",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        }
+      ]
+    },
+    {
+      "seed": "",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 9
+        },
+        {
+          "id": "base-spire:leaf-slime-m",
+          "hp": 32
+        },
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 12
+        }
+      ],
+      "composition_draws": 3,
+      "niche_draws": 3,
+      "states": [
+        {
+          "hp": 80,
+          "monster_ai_draws": 1,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 0
+        },
+        {
+          "hp": 73,
+          "monster_ai_draws": 2,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "GOOP_MOVE"
+          ],
+          "slimed": 2
+        },
+        {
+          "hp": 61,
+          "monster_ai_draws": 3,
+          "moves": [
+            "TACKLE_MOVE",
+            "STICKY_SHOT",
+            "TACKLE_MOVE"
+          ],
+          "slimed": 3
+        },
+        {
+          "hp": 54,
+          "monster_ai_draws": 4,
+          "moves": [
+            "TACKLE_MOVE",
+            "CLUMP_SHOT",
+            "GOOP_MOVE"
+          ],
+          "slimed": 5
+        }
+      ]
+    }
+  ]
+}

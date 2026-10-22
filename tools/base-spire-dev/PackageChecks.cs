@@ -182,6 +182,8 @@ internal static partial class PackageChecks
         Merge(RunEnemyMoveGraphChecks(package, Case), enemies);
         Merge(RunSlimedChecks(package, Case), cards);
         var encounters = RunEncounterChecks(package, Case);
+        foreach (var row in RunSlimeChecks(package, Case))
+            (row.Key == "base-spire:slimes-weak" ? encounters : enemies).Add(row.Key, row.Value);
         witnesses.Add("base-spire:the-abacus", scenarios.Take(5).ToArray());
         using (var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "relics/catalog.json"))))
         {

@@ -2682,7 +2682,9 @@
     {
       "source": "tools/base-migration-baseline/differential/suites/regression.json",
       "active_definition": "tools/differential/suites/regression.json",
-      "sha256": "12cb26913aae2788425f797499f131923433c64d8662945d0f32a057832a786e",
+      "sha256": "cd0cbe247bf50078b230111324a0f46451e29df6ed1aafe7a243eb9b4eb9b892",
+      "previous_definition_sha256": "12cb26913aae2788425f797499f131923433c64d8662945d0f32a057832a786e",
+      "definition_migration": "Only random-reshuffle-unsupported rng_derivation now names locked-native-sequential@1; all original IDs, seeds, setup, scripts and dimensions retained",
       "expected_case_ids": [
         "strike-normal",
         "strike-upgraded",

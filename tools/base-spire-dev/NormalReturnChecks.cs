@@ -135,6 +135,9 @@ internal static partial class PackageChecks
             subscription Victory { event = CombatVictory reaction = CheckVictory priority = 200 }
             """);
         var s = NormalFirstCombat(copy.Load());
+        // Controlled last-kill fixture: keep the real formation, mark the other enemies already defeated.
+        foreach (var enemy in s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).Skip(1))
+            Set(s, enemy, "Enemy", "Hp", Value.Of(0));
         Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(5));
         Set(s, Player(s), "Player", "Hp", Value.Of(40));
         Submit(s, "Feed.AddToHand");
@@ -162,6 +165,8 @@ internal static partial class PackageChecks
         Submit(turnEnd, "EndDevelopmentTurn");
         Equal("victory", Outcome(turnEnd), "turn-end effect settles after all callbacks");
         var potionKill = NormalFirstCombat(compiled);
+        foreach (var enemy in potionKill.State.AllInstances(potionKill.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).Skip(1))
+            Set(potionKill, enemy, "Enemy", "Hp", Value.Of(0));
         Set(potionKill, FirstTarget(potionKill), "Enemy", "Hp", Value.Of(10));
         Submit(potionKill, "FirePotion.Obtain");
         Submit(potionKill, "UsePotionOnTarget", Members(potionKill, "Potions").Single());

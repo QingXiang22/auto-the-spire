@@ -48,6 +48,27 @@ def main() -> int:
     args.output.mkdir(parents=True, exist_ok=True)
     try:
         projects = check_projects()
+        lock = json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8"))
+        fixtures = ROOT / "tools/base-spire-dev/fixtures"
+        current_vectors = ["source-rng-vectors", "normal-reward-vectors", "enemy-move-vectors", "pickup-upgrade-vectors",
+                           "normal-opening-vectors", "act-one-map-vectors", "map-gaussian-vectors", "normal-combat-vectors",
+                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata"]
+        hashes = {}
+        for name in current_vectors:
+            vector = json.loads((fixtures / (name + ".json")).read_text(encoding="utf-8"))
+            if vector.get("reference_lock") != lock:
+                raise ValueError(f"{name}: current vectors must identify the actual locked reference")
+            for path, digest in vector.get("source_sha256", {}).items():
+                if path in hashes and hashes[path] != digest:
+                    raise ValueError(f"conflicting current source digest: {path}")
+                hashes[path] = digest
+            if name == "ironclad-source-metadata":
+                for row in vector["entries"]:
+                    hashes["reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/" + row["name"] + ".cs"] = row["source_sha256"]
+        for path, digest in hashes.items():
+            source = (ROOT / path).resolve()
+            if not source.is_relative_to((ROOT / "reference/sts2-sim/src/Sts2Sim.Core").resolve()) or hashlib.sha256(source.read_bytes()).hexdigest() != digest:
+                raise ValueError(f"current vector source differs from locked checkout: {path}")
         record = json.loads((ROOT / "tools/ci/fixtures/legacy-dsl-checks.json").read_text(encoding="utf-8"))
         if record.get("hash_encoding") != "utf8-lf":
             raise ValueError("retired-source hashes must declare canonical text encoding")
@@ -64,6 +85,19 @@ def main() -> int:
             active = ROOT / row["active_definition"]
             if source_hash(active) != row["sha256"]:
                 raise ValueError(f"changed original suite denominator: {active}")
+            definition = json.loads(active.read_text(encoding="utf-8"))
+            if definition["expected_case_ids"] != row["expected_case_ids"]:
+                raise ValueError(f"original required case IDs changed: {active}")
+            if "previous_definition_sha256" in row:
+                original_path = ROOT / row["source"]
+                if source_hash(original_path) != row["previous_definition_sha256"]:
+                    raise ValueError("missing original suite evidence before derivation metadata migration")
+                migrated = next(c for c in definition["cases"] if c["id"] == "random-reshuffle-unsupported")
+                if migrated["setup"]["initial_piles"]["rng_derivation"] != "locked-native-sequential@1":
+                    raise ValueError("reshuffle fixture must name its actual native derivation")
+                migrated["setup"]["initial_piles"]["rng_derivation"] = "source-compat-sts2-frozen@1"
+                if definition != json.loads(original_path.read_text(encoding="utf-8")):
+                    raise ValueError("derivation metadata migration changed original inputs, scripts or dimensions")
         executable = ROOT / f"tools/differential/bin/{args.configuration}/net9.0/Differential.dll"
 
         def run(name: str, arguments: list[str], expected_code: int, dll: Path = executable) -> dict | None:
@@ -105,21 +139,23 @@ def main() -> int:
                             or len(backend["boundaries"][-1]["random"]["calls"]) != 9
                             or any(b["random"]["dropped"] or b["random"]["truncated"] for b in backend["boundaries"])):
                         raise ValueError("random case did not extract all real original reshuffle calls")
-                spec = importlib.util.spec_from_file_location("source_rng_oracle", ROOT / "tools/rng-oracle/vanilla_rng_oracle.py")
+                import sys
+                sys.path.insert(0, str(ROOT / "tools/rng-oracle"))
+                spec = importlib.util.spec_from_file_location("source_rng_oracle", ROOT / "tools/rng-oracle/locked_rng_oracle.py")
                 oracle = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(oracle)
                 initialization = reshuffle["right"]["initialization"]
                 raw_seed = initialization["raw_game_seed"]
-                if initialization["source_run_seed"] != oracle.run_seed(raw_seed):
+                if initialization["source_run_seed"] != oracle.deterministic_hash_code(raw_seed):
                     raise ValueError("reference source profile root differs from independent oracle")
                 if {row["source"] for row in initialization["run_streams"]} != set(oracle.RUN_RNG_TYPES):
                     raise ValueError("reference source profile omitted a run stream")
                 for row in initialization["run_streams"]:
-                    if row["seed"] != oracle.stream_seed(oracle.run_seed(raw_seed), row["source"]):
+                    if row["seed"] != oracle.stream_seed(oracle.deterministic_hash_code(raw_seed), row["source"]):
                         raise ValueError(f"reference stream derivation differs from independent oracle: {row['source']}")
                 # Verify actual extracted calls against independent source vectors, not only agreeing adapters.
                 for side in ("left", "right"):
-                    source_rng = oracle.Rng(oracle.stream_seed(oracle.run_seed(raw_seed), "Shuffle"))
+                    source_rng = oracle.Rng(oracle.stream_seed(oracle.deterministic_hash_code(raw_seed), "Shuffle"))
                     calls = reshuffle[side]["boundaries"][-1]["random"]["calls"]
                     for index, call in enumerate(calls):
                         bound = 10 - index
@@ -140,13 +176,13 @@ def main() -> int:
             raise ValueError("selected case must pass without claiming the entire suite passed")
         run("comparator-checks", ["self-test"], 0)
         normal_output = args.output / "normal-preflight"
-        normal = run("normal-preflight", ["normal-preflight", "--output", str(normal_output)], 1)
+        normal = run("normal-preflight", ["normal-preflight", "--output", str(normal_output)], 3)
         if (normal["expected_case_ids"] != ["m01-claim", "m01-skip"] or normal["executed"] != 2
                 or normal["complete"] or normal["independent_verified"]
-                or any(c["status"] != "diverged" or not c["dsl_returned_to_map"]
-                       or c["first_difference"]["path"] != "neow.options" or not c["unverified_dimensions"]
+                or any(c["status"] != "blocked_compare" or not c["dsl_returned_to_map"]
+                       or c["first_difference"] is not None or c["left"]["facts"] != c["right"]["facts"] or not c["unverified_dimensions"]
                        or c["right"]["diagnostic"]["normal_compatibility_alignment"] for c in normal["cases"])):
-            raise ValueError("normal preflight must retain both real public returns and the native Neow first difference without certifying M01")
+            raise ValueError("normal preflight must match every opening fact and retain both public returns, while rejecting incomplete M01")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")
@@ -193,7 +229,7 @@ def main() -> int:
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
-                  "strict_failure_checks": True, "normal_preflight": "native-neow-divergence; incomplete-M01", "independent_verified": False}
+                  "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01", "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

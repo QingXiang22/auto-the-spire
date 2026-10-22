@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using CoreTheSpire.Engine;
 using NetTheSpire.Contracts;
 using NetTheSpire.Contracts.Dto;
@@ -489,10 +490,20 @@ internal static class BaseDslPathChecks
                 Check.Equal("neow", Public(snapshot, "Player.Room"), "event waits for leave confirmation");
                 StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool value && value.Value)));
                 Check.Equal("map", Public(snapshot, "Player.Room"), "confirmed Neow returns to map");
-                Check.Equal(56, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete source map");
+                using var mapVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/act-one-map-vectors.json")));
+                var sourceMap = mapVectors.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == "777");
+                Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
                 StepOpening(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
-                Check.Equal("55", Public(snapshot, "Enemy.Hp"), "source Niche HP draw for the real weak encounter");
-                Check.Equal("FIRST_ACID_GOOP", Public(snapshot, "Enemy.MoveId"), "real enemy initial intent");
+                using var combatVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-combat-vectors.json")));
+                var sourceMonsters = combatVectors.RootElement.GetProperty("vectors")[0].GetProperty("monsters");
+                Check.Equal(sourceMonsters.GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy"), "complete actual SlimesWeak formation");
+                foreach (var expected in sourceMonsters.EnumerateArray())
+                {
+                    var monster = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Enemy" && e.ContentId == expected.GetProperty("id").GetString());
+                    string EnemyValue(string field) => ((WireString)monster.Fields.Single(f => f.FieldId.EndsWith(":Enemy." + field, StringComparison.Ordinal)).Value!).Value;
+                    Check.Equal(expected.GetProperty("hp").GetInt64().ToString(System.Globalization.CultureInfo.InvariantCulture), EnemyValue("Hp"), "source Niche HP of actual weak encounter");
+                    Check.Equal(expected.GetProperty("move").GetString(), EnemyValue("MoveId"), "actual initial saved move");
+                }
                 Check.Equal("1", Public(snapshot, "Player.TurnNumber"), "first real player turn starts automatically");
                 Check.Equal("3", Public(snapshot, "Player.Energy"), "Monster room does not receive Conch Elite energy");
                 var hand = snapshot.LegalActions.Where(a => a.ActionType is "net:action:base-spire:PlayCardFromHand" or "net:action:base-spire:PlayAttackFromHand")
@@ -666,7 +677,9 @@ internal static class BaseDslPathChecks
                 var claim = mode == "card-reward-claim";
                 var potionOffer = snapshot.Groups.Single(g => g.TypeId.EndsWith(":PotionRewardOptions", StringComparison.Ordinal)).Members.Single().EntityRef;
                 var potionEntity = snapshot.Entities.Single(e => e.InstanceId == potionOffer);
-                Check.Equal("base-spire:blessing-of-the-forge", potionEntity.ContentId, "independent source vector for the public seed includes the complete potion pool");
+                using var rewardVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-reward-vectors.json")));
+                var expectedPotion = rewardVectors.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == "BASE-DSL-STDIO-00").GetProperty("offers")[0].GetProperty("potion").GetString();
+                Check.Equal(expectedPotion, potionEntity.ContentId, "independent current source vector includes the complete potion pool");
                 Check.False(((WireBool)potionEntity.Fields.Single(f => f.FieldId.EndsWith(":Potion.EffectSupported", StringComparison.Ordinal)).Value!).Value, "unimplemented effect is explicit");
                 Check.Equal(1, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:CombatRewardSet"), "one public visit container");
                 Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("PotionRewardOdds", StringComparison.Ordinal), "future potion odds remain hidden");

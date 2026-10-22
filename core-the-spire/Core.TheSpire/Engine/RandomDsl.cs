@@ -10,11 +10,12 @@ public sealed class RandomValueExpr(RandomValueOp op, params Expr[] arguments) :
     public override IReadOnlyList<IrNode> Children => Arguments;
 }
 
-public sealed class SeedStreamInst(Expr stream, Expr seed) : Inst
+public sealed class SeedStreamInst(Expr stream, Expr seed, bool word64 = false) : Inst
 {
     public Expr Stream { get; } = stream;
     public Expr Seed { get; } = seed;
-    public override string Primitive => "inst.seedStream";
+    public bool Word64 { get; } = word64;
+    public override string Primitive => Word64 ? "inst.seedStream64" : "inst.seedStream";
     public override IReadOnlyList<IrNode> Children => [Stream, Seed];
 }
 

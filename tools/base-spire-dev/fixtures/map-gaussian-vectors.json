@@ -1,16 +1,38 @@
 {
-  "format": "source-map-gaussian-vectors@1",
+  "format": "source-map-gaussian-vectors@2",
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
   "source_sha256": {
-    "sts2/src/Core/Models/Acts/Overgrowth.cs": "61ff9d71f9b17f2f6a2f7f51f64bbfaa6752ec8cf7e75b4d291f2b0f89dc232b",
-    "sts2/src/Core/Map/MapPointTypeCounts.cs": "2ca2f858c6b04ddddc5657951f0eae010994fcdc8eecb2c3d55d98781b309ab2",
-    "sts2/src/Core/Map/StandardActMap.cs": "6f927e075056ac49cf4eb93943d332901d11208c8196a0b778c03d522e7ec9bb",
-    "sts2/src/Core/Random/Rng.cs": "99a404a807dae7b3c786821b3c287e6518b573f58265f98feaa63132748b7f40",
-    "sts2/src/Core/Random/MegaRandom.cs": "a4544672d4909c878266e1b6e5597bca8771585c4106f3119044cc8a1ad0984b"
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Overgrowth.cs": "1b8d338468d04f7e896c76cf63d448f211810669ddf721743a5e8adfd4f98c9d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "bf089c58d685ed50431f6d4c8f57645f843142e889698067eb77d0f59022752f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/ActMap.cs": "cf4dd96af43fb7fb441623a43dd6380e5dd898e09613fbf3259e258f8e0a0ec0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/GoldenPathActMap.cs": "2c9bbc7085a62c05aa2b34f75bed6162ccf87a6797cc1c6907b632c4965addf3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapCoord.cs": "2933f79abc57436129e9577796b3d7eb16e69fa41709a9ac97e7b436ec8e74fe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPathPruning.cs": "d2205894e209fe52214aa03871a7fda897f56d403b02bb98b68b05baf098fe4e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPoint.cs": "71c483ddaaf88302313c66663ddbf244f3d6640ecd17a8f4a710b40e6611bd5b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPointType.cs": "df67fc7e2a3e05dfe8e2a3c85d5b7580282107c9679380585be46f9342e65c12",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPointTypeCounts.cs": "7bdd8ec941846ac948eb736f027c0fdd626171c023c3100e521fa33311f18063",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPostProcessing.cs": "7d30f497bb736f4d7ea388dfd04b8c5b87094676a2b5f3f66dce6e42c5f6cf33",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapTravel.cs": "b703a76136e1cd9efba31c89455cdf1016e184954c3dc6227f8f4ff9d20f461d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/SpoilsActMap.cs": "01e90c8b2825981e3e6a4a5be63fbaa6329b6ddc077576ed99f2409ce7c1b6df",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs": "e6306ca18d6e1af803c243d2329d7a2797b6df74c5764290fd162b2ee34da581",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngDraw.cs": "effbf54b4b95b78ca8d0638159651ed66d21a6b107e63e3a04eaf919fbbad6ee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngSeed.cs": "5085e61fd94e884f036982a344da909280c4b337faa7fe9d989327d40db44a7f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngTrace.cs": "3f95910665c5485b4eb2106cdf01d14ea0e34d501db3753a67da69fae1de38d3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "0430027786093a90331ec29eeca1dc1d41619353e986d85f869b19409b720e66",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/PlayerRngSet.cs": "970aac53742f9cb76148b88caf3e1844db967c1a4c774696bfbb9eb1ac62c62b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "a1f93f52040f7271042425788d6cb30db7ece688659ca23dfc3a388c1db62230",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/RngDiagnostics.cs": "8962063ae7b317a5b996004326d39ff5bb146cdd3cbfa3f74006e82754e6a493"
   },
   "vectors": [
     {
       "seed": "20261018",
-      "stream_seed": 2284976315,
       "calls": [
         {
           "mean": 7,
@@ -18,25 +40,26 @@
           "min": 6,
           "max": 7,
           "before": 0,
+          "after": 2,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
           "after": 6,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 8733514551487666,
-              "right_payload": 8501516382493480,
-              "rounded": 8
-            },
-            {
-              "left_payload": 8205824295216459,
-              "right_payload": 8460280803030333,
-              "rounded": 8
-            },
-            {
-              "left_payload": 2053998226627501,
-              "right_payload": 8298603995979898,
-              "rounded": 7
-            }
-          ]
+          "result": 6
         },
         {
           "mean": 12,
@@ -45,14 +68,7 @@
           "max": 14,
           "before": 6,
           "after": 8,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 4741985739787288,
-              "right_payload": 2186175585434704,
-              "rounded": 11
-            }
-          ]
+          "result": 12
         },
         {
           "mean": 7,
@@ -61,14 +77,7 @@
           "max": 7,
           "before": 8,
           "after": 10,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 971245746788552,
-              "right_payload": 2787785378981588,
-              "rounded": 7
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -77,14 +86,7 @@
           "max": 14,
           "before": 10,
           "after": 12,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 5703598840843477,
-              "right_payload": 6932895960650936,
-              "rounded": 13
-            }
-          ]
+          "result": 12
         },
         {
           "mean": 7,
@@ -93,14 +95,7 @@
           "max": 7,
           "before": 12,
           "after": 14,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 4409349582022914,
-              "right_payload": 1491283732375513,
-              "rounded": 6
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -109,52 +104,12 @@
           "max": 14,
           "before": 14,
           "after": 16,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 3800912422723579,
-              "right_payload": 1445751347735274,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 16,
-          "after": 18,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 4917690625562643,
-              "right_payload": 1937419261177858,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 18,
-          "after": 20,
-          "result": 14,
-          "attempts": [
-            {
-              "left_payload": 7907694749377201,
-              "right_payload": 7699655612125284,
-              "rounded": 14
-            }
-          ]
+          "result": 12
         }
       ]
     },
     {
       "seed": "777",
-      "stream_seed": 76092414,
       "calls": [
         {
           "mean": 7,
@@ -163,14 +118,7 @@
           "max": 7,
           "before": 0,
           "after": 2,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 5447204164572493,
-              "right_payload": 1515429838762869,
-              "rounded": 6
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -179,14 +127,7 @@
           "max": 14,
           "before": 2,
           "after": 4,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 2804581992568530,
-              "right_payload": 8273176318658826,
-              "rounded": 12
-            }
-          ]
+          "result": 10
         },
         {
           "mean": 7,
@@ -195,19 +136,7 @@
           "max": 7,
           "before": 4,
           "after": 8,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 4949243583249534,
-              "right_payload": 5883215310676748,
-              "rounded": 8
-            },
-            {
-              "left_payload": 7238859760151057,
-              "right_payload": 3731574544895274,
-              "rounded": 6
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -216,14 +145,7 @@
           "max": 14,
           "before": 8,
           "after": 10,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 2772292899021780,
-              "right_payload": 975028541301686,
-              "rounded": 11
-            }
-          ]
+          "result": 11
         },
         {
           "mean": 7,
@@ -232,14 +154,7 @@
           "max": 7,
           "before": 10,
           "after": 12,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 6197630919561312,
-              "right_payload": 4964409933031465,
-              "rounded": 7
-            }
-          ]
+          "result": 6
         },
         {
           "mean": 12,
@@ -248,14 +163,7 @@
           "max": 14,
           "before": 12,
           "after": 14,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 2335142840680619,
-              "right_payload": 5943683986880859,
-              "rounded": 13
-            }
-          ]
+          "result": 14
         },
         {
           "mean": 7,
@@ -263,37 +171,22 @@
           "min": 6,
           "max": 7,
           "before": 14,
-          "after": 16,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 6987249805954927,
-              "right_payload": 3143160832966997,
-              "rounded": 6
-            }
-          ]
+          "after": 18,
+          "result": 7
         },
         {
           "mean": 12,
           "deviation": 1,
           "min": 10,
           "max": 14,
-          "before": 16,
-          "after": 18,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 4766662866832070,
-              "right_payload": 2089804594427978,
-              "rounded": 11
-            }
-          ]
+          "before": 18,
+          "after": 20,
+          "result": 12
         }
       ]
     },
     {
       "seed": "1234",
-      "stream_seed": 381398805,
       "calls": [
         {
           "mean": 7,
@@ -301,99 +194,62 @@
           "min": 6,
           "max": 7,
           "before": 0,
-          "after": 2,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 4631105758900541,
-              "right_payload": 8542456974788200,
-              "rounded": 7
-            }
-          ]
+          "after": 4,
+          "result": 7
         },
         {
           "mean": 12,
           "deviation": 1,
           "min": 10,
           "max": 14,
-          "before": 2,
-          "after": 4,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 5233407132578288,
-              "right_payload": 2965565426490081,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
           "before": 4,
           "after": 6,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 7135066401137100,
-              "right_payload": 3066484698905090,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 6,
-          "after": 8,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 4548615888147670,
-              "right_payload": 1975046571858091,
-              "rounded": 11
-            }
-          ]
+          "result": 12
         },
         {
           "mean": 7,
           "deviation": 1,
           "min": 6,
           "max": 7,
+          "before": 6,
+          "after": 8,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
           "before": 8,
+          "after": 10,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 10,
+          "after": 12,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 12,
+          "after": 14,
+          "result": 10
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 14,
           "after": 18,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 4857167434033598,
-              "right_payload": 8377775110467397,
-              "rounded": 8
-            },
-            {
-              "left_payload": 4316501758199705,
-              "right_payload": 7884713542463435,
-              "rounded": 8
-            },
-            {
-              "left_payload": 7138050382959653,
-              "right_payload": 2800379107825519,
-              "rounded": 5
-            },
-            {
-              "left_payload": 1953123434442108,
-              "right_payload": 6593336802147447,
-              "rounded": 8
-            },
-            {
-              "left_payload": 554634777957530,
-              "right_payload": 645551316800866,
-              "rounded": 7
-            }
-          ]
+          "result": 6
         },
         {
           "mean": 12,
@@ -402,77 +258,12 @@
           "max": 14,
           "before": 18,
           "after": 20,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 3966519545627760,
-              "right_payload": 6444204908886409,
-              "rounded": 13
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 20,
-          "after": 32,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 6454563097434915,
-              "right_payload": 7065924710082378,
-              "rounded": 9
-            },
-            {
-              "left_payload": 5844979443906573,
-              "right_payload": 5543711140184175,
-              "rounded": 8
-            },
-            {
-              "left_payload": 2415005657702473,
-              "right_payload": 7834869061562590,
-              "rounded": 8
-            },
-            {
-              "left_payload": 5644392750793539,
-              "right_payload": 5719831905054848,
-              "rounded": 8
-            },
-            {
-              "left_payload": 8969858903384294,
-              "right_payload": 6483823220910548,
-              "rounded": 10
-            },
-            {
-              "left_payload": 1194692384976600,
-              "right_payload": 847705457918894,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 32,
-          "after": 34,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 146457886674473,
-              "right_payload": 2036171537579635,
-              "rounded": 12
-            }
-          ]
+          "result": 13
         }
       ]
     },
     {
       "seed": "99",
-      "stream_seed": 4110930855,
       "calls": [
         {
           "mean": 7,
@@ -480,47 +271,8 @@
           "min": 6,
           "max": 7,
           "before": 0,
-          "after": 2,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 4665266135280741,
-              "right_payload": 32673914106016,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 2,
-          "after": 4,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 382824394913160,
-              "right_payload": 4089896725241112,
-              "rounded": 12
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 4,
           "after": 6,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 1605564216237607,
-              "right_payload": 8111354147188091,
-              "rounded": 7
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -529,14 +281,7 @@
           "max": 14,
           "before": 6,
           "after": 8,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 7339647138660533,
-              "right_payload": 4245993421303711,
-              "rounded": 12
-            }
-          ]
+          "result": 11
         },
         {
           "mean": 7,
@@ -545,19 +290,7 @@
           "max": 7,
           "before": 8,
           "after": 12,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 8974295944182327,
-              "right_payload": 7625480072109306,
-              "rounded": 10
-            },
-            {
-              "left_payload": 2432131547746036,
-              "right_payload": 1156791875800853,
-              "rounded": 6
-            }
-          ]
+          "result": 6
         },
         {
           "mean": 12,
@@ -566,14 +299,7 @@
           "max": 14,
           "before": 12,
           "after": 14,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 8446073421395790,
-              "right_payload": 8737588391863589,
-              "rounded": 12
-            }
-          ]
+          "result": 13
         },
         {
           "mean": 7,
@@ -582,14 +308,7 @@
           "max": 7,
           "before": 14,
           "after": 16,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 165196417693041,
-              "right_payload": 134436711657031,
-              "rounded": 7
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -598,109 +317,7 @@
           "max": 14,
           "before": 16,
           "after": 18,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 701504033523911,
-              "right_payload": 2855380538229474,
-              "rounded": 12
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "seed": "ABC",
-      "stream_seed": 49243849,
-      "calls": [
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 0,
-          "after": 8,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 7966168066767316,
-              "right_payload": 5404009929780953,
-              "rounded": 8
-            },
-            {
-              "left_payload": 8562040919262788,
-              "right_payload": 8121617599219639,
-              "rounded": 8
-            },
-            {
-              "left_payload": 8434085847607268,
-              "right_payload": 4872901680318922,
-              "rounded": 8
-            },
-            {
-              "left_payload": 362116101635350,
-              "right_payload": 6993390536302810,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 8,
-          "after": 10,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 4388921044391574,
-              "right_payload": 4164122143088890,
-              "rounded": 12
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 10,
-          "after": 16,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 8102273508349760,
-              "right_payload": 3127159063560036,
-              "rounded": 5
-            },
-            {
-              "left_payload": 7570031178674333,
-              "right_payload": 2005543887358266,
-              "rounded": 5
-            },
-            {
-              "left_payload": 570520505116281,
-              "right_payload": 7683867463813277,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 16,
-          "after": 18,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 1542089945199134,
-              "right_payload": 4158852997178193,
-              "rounded": 12
-            }
-          ]
+          "result": 10
         },
         {
           "mean": 7,
@@ -708,613 +325,8 @@
           "min": 6,
           "max": 7,
           "before": 18,
-          "after": 22,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 6068529598203067,
-              "right_payload": 6161857037390605,
-              "rounded": 8
-            },
-            {
-              "left_payload": 8674577019203137,
-              "right_payload": 4707886631673735,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 22,
-          "after": 24,
-          "result": 10,
-          "attempts": [
-            {
-              "left_payload": 8453388816796453,
-              "right_payload": 2526620317175794,
-              "rounded": 10
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 24,
-          "after": 26,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 1415063008264364,
-              "right_payload": 5764468410726490,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 26,
-          "after": 28,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 1244410842423069,
-              "right_payload": 5601692361767765,
-              "rounded": 12
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "seed": "abc",
-      "stream_seed": 1474164265,
-      "calls": [
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 0,
-          "after": 4,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 5260394360312150,
-              "right_payload": 6206500163185642,
-              "rounded": 8
-            },
-            {
-              "left_payload": 1095555072378893,
-              "right_payload": 7707634753027594,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 4,
-          "after": 6,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 2863510035776958,
-              "right_payload": 761338910397560,
-              "rounded": 12
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 6,
-          "after": 8,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 312836395763677,
-              "right_payload": 4954986290946591,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 8,
-          "after": 10,
-          "result": 10,
-          "attempts": [
-            {
-              "left_payload": 6967519143621521,
-              "right_payload": 2077153576315244,
-              "rounded": 10
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 10,
-          "after": 12,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 1931403389576858,
-              "right_payload": 121623020291553,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 12,
-          "after": 14,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 3493378429321898,
-              "right_payload": 2716288997348449,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 14,
-          "after": 16,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 789352011721231,
-              "right_payload": 2710928114610689,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 16,
-          "after": 18,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 7862773024227832,
-              "right_payload": 4834770726143059,
-              "rounded": 12
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "seed": "BASE-DSL-STDIO-00",
-      "stream_seed": 1230188971,
-      "calls": [
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 0,
-          "after": 2,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 8499305821099596,
-              "right_payload": 376218558303125,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 2,
-          "after": 4,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 5789204639397373,
-              "right_payload": 1288905779109183,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 4,
-          "after": 6,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 4432591031590506,
-              "right_payload": 2606534008094630,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 6,
-          "after": 8,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 179308495168666,
-              "right_payload": 2497885487169570,
-              "rounded": 12
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 8,
-          "after": 10,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 5756249558038249,
-              "right_payload": 2475787628842518,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 10,
-          "after": 12,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 3567045120708668,
-              "right_payload": 2261952228885362,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 12,
-          "after": 14,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 4629178039443139,
-              "right_payload": 462513208423949,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 14,
-          "after": 16,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 4316423141670159,
-              "right_payload": 8899895273327499,
-              "rounded": 12
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "seed": "斩杀尖塔2",
-      "stream_seed": 2412561628,
-      "calls": [
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 0,
-          "after": 2,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 5481848070463278,
-              "right_payload": 2347227067131096,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 2,
-          "after": 4,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 3916965894187646,
-              "right_payload": 4361821809966724,
-              "rounded": 12
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 4,
-          "after": 6,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 1239767767528639,
-              "right_payload": 5972030600558066,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 6,
-          "after": 8,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 5873081210225452,
-              "right_payload": 8422747102022814,
-              "rounded": 13
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 8,
-          "after": 10,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 4029232135406276,
-              "right_payload": 3071891678750220,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 10,
-          "after": 12,
-          "result": 10,
-          "attempts": [
-            {
-              "left_payload": 7565956976297434,
-              "right_payload": 2419729240015216,
-              "rounded": 10
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 12,
-          "after": 16,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 4272105239120534,
-              "right_payload": 7593883565359241,
-              "rounded": 8
-            },
-            {
-              "left_payload": 2505733754533880,
-              "right_payload": 5024319547305390,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 16,
-          "after": 18,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 2326125729623871,
-              "right_payload": 6540305525944041,
-              "rounded": 13
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "seed": "A😀B",
-      "stream_seed": 1479853029,
-      "calls": [
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 0,
-          "after": 4,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 1996760215806726,
-              "right_payload": 6165316144037252,
-              "rounded": 8
-            },
-            {
-              "left_payload": 7091758571248897,
-              "right_payload": 1155374160543289,
-              "rounded": 6
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 4,
-          "after": 6,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 4965992362998118,
-              "right_payload": 1981359736534275,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 6,
-          "after": 8,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 3746551681687457,
-              "right_payload": 4590436823274020,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 8,
-          "after": 10,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 7180833301787733,
-              "right_payload": 705781212816041,
-              "rounded": 11
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 10,
-          "after": 12,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 6665941515463925,
-              "right_payload": 8583474016652921,
-              "rounded": 7
-            }
-          ]
-        },
-        {
-          "mean": 12,
-          "deviation": 1,
-          "min": 10,
-          "max": 14,
-          "before": 12,
-          "after": 14,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 7288747633530589,
-              "right_payload": 7935658188073387,
-              "rounded": 13
-            }
-          ]
-        },
-        {
-          "mean": 7,
-          "deviation": 1,
-          "min": 6,
-          "max": 7,
-          "before": 14,
           "after": 20,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 8763526310242710,
-              "right_payload": 6080890733181601,
-              "rounded": 9
-            },
-            {
-              "left_payload": 2661257528711761,
-              "right_payload": 7513809719693124,
-              "rounded": 8
-            },
-            {
-              "left_payload": 1240198788112772,
-              "right_payload": 3373631275670404,
-              "rounded": 7
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -1323,20 +335,12 @@
           "max": 14,
           "before": 20,
           "after": 22,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 2267109055052671,
-              "right_payload": 5015726575153643,
-              "rounded": 12
-            }
-          ]
+          "result": 12
         }
       ]
     },
     {
-      "seed": "",
-      "stream_seed": 2552355453,
+      "seed": "ABC",
       "calls": [
         {
           "mean": 7,
@@ -1345,14 +349,7 @@
           "max": 7,
           "before": 0,
           "after": 2,
-          "result": 6,
-          "attempts": [
-            {
-              "left_payload": 6523345006650489,
-              "right_payload": 1726945943788808,
-              "rounded": 6
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -1361,14 +358,7 @@
           "max": 14,
           "before": 2,
           "after": 4,
-          "result": 12,
-          "attempts": [
-            {
-              "left_payload": 990379557347586,
-              "right_payload": 482691714848765,
-              "rounded": 12
-            }
-          ]
+          "result": 13
         },
         {
           "mean": 7,
@@ -1377,14 +367,7 @@
           "max": 7,
           "before": 4,
           "after": 6,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 664574952633225,
-              "right_payload": 3680699039360743,
-              "rounded": 7
-            }
-          ]
+          "result": 6
         },
         {
           "mean": 12,
@@ -1393,14 +376,7 @@
           "max": 14,
           "before": 6,
           "after": 8,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 3192176961244527,
-              "right_payload": 2542661791414885,
-              "rounded": 11
-            }
-          ]
+          "result": 12
         },
         {
           "mean": 7,
@@ -1409,14 +385,7 @@
           "max": 7,
           "before": 8,
           "after": 10,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 1063515242414320,
-              "right_payload": 1844176065742327,
-              "rounded": 7
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -1425,14 +394,7 @@
           "max": 14,
           "before": 10,
           "after": 12,
-          "result": 11,
-          "attempts": [
-            {
-              "left_payload": 6095640191704664,
-              "right_payload": 2780925156157400,
-              "rounded": 11
-            }
-          ]
+          "result": 12
         },
         {
           "mean": 7,
@@ -1441,14 +403,7 @@
           "max": 7,
           "before": 12,
           "after": 14,
-          "result": 7,
-          "attempts": [
-            {
-              "left_payload": 8920696518257986,
-              "right_payload": 4312899051783886,
-              "rounded": 7
-            }
-          ]
+          "result": 7
         },
         {
           "mean": 12,
@@ -1457,14 +412,392 @@
           "max": 14,
           "before": 14,
           "after": 16,
-          "result": 13,
-          "attempts": [
-            {
-              "left_payload": 5079446543175171,
-              "right_payload": 6565435424717934,
-              "rounded": 13
-            }
-          ]
+          "result": 13
+        }
+      ]
+    },
+    {
+      "seed": "abc",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 8,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 8,
+          "after": 10,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 10,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 16,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "BASE-DSL-STDIO-00",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 6,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 10,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 10,
+          "after": 12,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 12,
+          "after": 16,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 16,
+          "after": 18,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 18,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "斩杀尖塔2",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 6,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 16,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 22,
+          "after": 24,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 24,
+          "after": 26,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "A😀B",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 6,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 16,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 10
+        }
+      ]
+    },
+    {
+      "seed": "",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 6,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 12,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 12,
+          "after": 14,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 14,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 13
         }
       ]
     }

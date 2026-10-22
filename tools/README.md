@@ -12,7 +12,7 @@ Git仅维护可复用、具有实际消费者的工程工具。一次性修复�
 | [contract-check](contract-check/check_contracts.py) | 协议/编码检查及AI当前导入的共享协议实现与fixtures |
 | [doc-check](doc-check/README.md) | Git 文档链接、格式、需求映射与 Vale 术语检查 |
 | [dsl-generate](dsl-generate/generate-core.ps1) | ANTLR解析代码生成，供核心维护复现 |
-| [rng-oracle](rng-oracle/README.md) | 独立随机数向量与差异测试依据 |
+| [rng-oracle](rng-oracle/README.md) | 锁定参考的原生来源导出、独立64位随机向量与复现入口 |
 | [source-manifest](source-manifest/README.md) | 旧游戏源码建局／遗物迁移核对；当前规则源见 reference 锁定清单 |
 | [collect](collect/collect.py) | AI既有有界采样入口；保留工具不代表恢复训练 |
 

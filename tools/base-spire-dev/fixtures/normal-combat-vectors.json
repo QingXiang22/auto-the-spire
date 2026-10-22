@@ -1,0 +1,50 @@
+{
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "vectors": [
+    {
+      "seed": "777",
+      "encounter": "base-spire:slimes-weak",
+      "total_floor": 2,
+      "monsters": [
+        {
+          "id": "base-spire:leaf-slime-s",
+          "hp": 14,
+          "move": "GOOP_MOVE"
+        },
+        {
+          "id": "base-spire:twig-slime-m",
+          "hp": 28,
+          "move": "STICKY_SHOT_MOVE"
+        },
+        {
+          "id": "base-spire:twig-slime-s",
+          "hp": 11,
+          "move": "TACKLE_MOVE"
+        }
+      ],
+      "hand": [
+        "base-spire:bash",
+        "base-spire:strike-ironclad",
+        "base-spire:defend-ironclad",
+        "base-spire:strike-ironclad",
+        "base-spire:defend-ironclad"
+      ],
+      "draw_pile": [
+        "base-spire:strike-ironclad",
+        "base-spire:strike-ironclad",
+        "base-spire:defend-ironclad",
+        "base-spire:strike-ironclad",
+        "base-spire:defend-ironclad"
+      ],
+      "niche_draws": 3,
+      "monster_ai_draws": 1
+    }
+  ]
+}

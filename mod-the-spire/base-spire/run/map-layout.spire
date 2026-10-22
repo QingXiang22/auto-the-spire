@@ -96,7 +96,7 @@ procedure GenerateSourceActOneMap {
   parameters = { owner = Ref(Player) run = Ref(Run) }
   locals = { start = Binding boss = Binding rest = Int unknown = Int row = Int }
   body = {
-    seedStream = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
+    seedStream64 = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
     call = { procedure = SourceGaussianInt args = { stream = "base-spire:run:act_1_map" mean = 7 deviation = 1 min = 6 max = 7 } into = rest }
     call = { procedure = SourceGaussianInt args = { stream = "base-spire:run:act_1_map" mean = 12 deviation = 1 min = 10 max = 14 } into = unknown }
     set = { target = run field = Run.RestCount value = rest }

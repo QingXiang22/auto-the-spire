@@ -105,8 +105,9 @@ internal static class NormalPreflight
             executed = results.Count(r => r.Left is not null && r.Right is not null),
             input = spec.Clone(), input_sha256 = Hash(inputPath), reference_identity = referenceIdentity,
             source_identity = new { target_rule_authority = referenceIdentity,
-                production_source_baselines = sourceCatalog.RootElement.GetProperty("domains").EnumerateObject()
+                legacy_catalog_source_baselines = sourceCatalog.RootElement.GetProperty("domains").EnumerateObject()
                     .Select(d => d.Value.GetProperty("source_baseline").GetString()).Distinct().ToArray(),
+                current_rng_and_opening_authority = "reference/baselines/sts2-sim.json",
                 production_manifest_sha256 = Hash(Path.Combine(repository, "mod-the-spire/base-spire/package.json")),
                 opening_source_fixture_sha256 = Hash(Path.Combine(repository, "tools/base-spire-dev/fixtures/normal-opening-vectors.json")),
                 production_rng_source_sha256 = Hash(Path.Combine(repository, "mod-the-spire/base-spire/run/random.spire")) },

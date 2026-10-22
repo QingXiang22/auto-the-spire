@@ -1,11 +1,11 @@
-"""Generate source-only move vectors; no Engine, DSL or reference simulator is imported."""
+"""Generate source-only move vectors; no Engine or production DSL is imported; source paths belong to the locked reference."""
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import struct
 
-from vanilla_rng_oracle import Rng, deterministic_hash_code, stream_seed
+from locked_rng_oracle import Rng, deterministic_hash_code, stream_seed, SOURCE, source_hashes, reference_lock
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -49,25 +49,22 @@ def move_rolls(seed, branch_weights=(1, 1)):
 def generate():
     paths = ['Models/Monsters/TwigSlimeM.cs', 'Models/Monsters/FuzzyWurmCrawler.cs',
              'Models/Cards/Slimed.cs', 'Models/MonsterModel.cs',
-             'MonsterMoves/MonsterMoveStateMachine/MonsterMoveStateMachine.cs',
-             'MonsterMoves/MonsterMoveStateMachine/RandomBranchState.cs',
-             'MonsterMoves/MonsterMoveStateMachine/MoveState.cs', 'Random/Rng.cs',
+             'MonsterMoves/MonsterMoveStateMachine.cs',
+             'MonsterMoves/RandomBranchState.cs',
+             'MonsterMoves/MoveState.cs', 'Random/Rng.cs',
              'Random/MegaRandom.cs', 'Runs/RunRngSet.cs', 'Helpers/StringHelper.cs']
-    source = ROOT / 'sts2/src/Core'
-    hashes = {f'sts2/src/Core/{p}': hashlib.sha256((source / p).read_bytes()).hexdigest() for p in paths}
+    source = SOURCE
+    hashes = source_hashes(paths)
     twig = (source / paths[0]).read_text(encoding='utf-8-sig')
     branch = (source / paths[5]).read_text(encoding='utf-8-sig')
-    rng_source = (source / 'Random/Rng.cs').read_text(encoding='utf-8-sig')
-    assert 'AddBranch(moveState, 2);' in twig and 'AddBranch(moveState2, MoveRepeatType.CannotRepeat);' in twig
-    assert 'return new MonsterMoveStateMachine(list, moveState2);' in twig
-    assert 'AddBranch(state, maxRepeats, 1f);' in branch
-    assert 'float num = rng.NextFloat(max);' in branch and 'num -= GetStateWeight(state, owner);' in branch
-    assert 'return (float)(_random.NextDouble() * (double)(max - min) + (double)min);' in rng_source
+    assert 'random.AddBranch(pokeyPounce, maxRepeats: 2);' in twig
+    assert 'random.AddBranch(stickyShot, MoveRepeatType.CannotRepeat, 1f);' in twig
+    assert 'rng.NextFloat(totalWeight)' in branch
     vectors = []
     # The source state log starts with the fixed first move; repeat limits inspect that saved log.
     for seed in ['20261018', '777', 'ENV-IRONCLAD-001', 'A😀B']:
         vectors.append(move_rolls(seed))
-    return {'schema': 'base-spire/source-enemy-moves@1', 'source_sha256': hashes,
+    return {'schema': 'base-spire/source-enemy-moves@2', 'reference_lock': reference_lock(), 'source_sha256': hashes,
             'scope': 'Controlled A0 move selection only; no HP roll, normal encounter, complete combat or simulator comparison.',
             'vectors': vectors,
             'fractional_probe': {**move_rolls('20261018', (0.3, 0.9)),

@@ -1,0 +1,35 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Locked Overgrowth.CreateSlimesWeak: A, remaining B (including singleton draw), medium.
+procedure SpawnSourceSlimesWeak {
+  parameters = { totalFloor = Int }
+  locals = { small = Int singleton = Int medium = Int hp = Int target = Binding }
+  body = {
+    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "SLIMES_WEAK", 0) }
+    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = small }
+    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 1 into = singleton }
+    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = medium }
+    if = { condition = equal(small, 0) then = {
+      sampleInt = { stream = "base-spire:run:niche" min = 11 max = 16 into = hp }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:leaf-slime-s" hp = hp } into = target }
+    } else = {
+      sampleInt = { stream = "base-spire:run:niche" min = 7 max = 12 into = hp }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:twig-slime-s" hp = hp } into = target }
+    } }
+    if = { condition = equal(medium, 0) then = {
+      sampleInt = { stream = "base-spire:run:niche" min = 32 max = 36 into = hp }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:leaf-slime-m" hp = hp } into = target }
+    } else = {
+      sampleInt = { stream = "base-spire:run:niche" min = 26 max = 29 into = hp }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:twig-slime-m" hp = hp } into = target }
+    } }
+    if = { condition = equal(small, 0) then = {
+      sampleInt = { stream = "base-spire:run:niche" min = 7 max = 12 into = hp }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:twig-slime-s" hp = hp } into = target }
+    } else = {
+      sampleInt = { stream = "base-spire:run:niche" min = 11 max = 16 into = hp }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:leaf-slime-s" hp = hp } into = target }
+    } }
+  }
+}

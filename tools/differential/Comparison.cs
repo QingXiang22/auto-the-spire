@@ -60,7 +60,7 @@ internal sealed record CombatFixture(string Id, string GameSeed, int Seed, int P
             || item.GetProperty("rng_profile").GetString() != "vanilla-compatible@1"
             || piles.GetProperty("version").GetString() != "ordered-starting-piles@1"
             || piles.GetProperty("source").GetString() != "Ironclad.StartingDeck+controlled-slice@1"
-            || piles.GetProperty("rng_derivation").GetString() != "source-compat-sts2-frozen@1"
+            || piles.GetProperty("rng_derivation").GetString() != "locked-native-sequential@1"
             || new[] { "hand", "discard", "exhaust" }.Any(p => piles.GetProperty(p).GetArrayLength() != 0)
             || cards.Any(c => string.IsNullOrWhiteSpace(c.Slot) || c.Upgraded) || cards.Select(c => c.Slot).Distinct().Count() != 10
             || !cards.Select(c => c.Card).Order().SequenceEqual(expected.Order())

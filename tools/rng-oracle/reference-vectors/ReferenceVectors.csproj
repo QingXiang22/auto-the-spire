@@ -6,6 +6,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../base-migration-baseline/BaseSpire/Maps/Generation/*.cs" Link="SourceMap/%(Filename)%(Extension)" />
+    <ProjectReference Include="../../../reference/sts2-sim/src/Sts2Sim.Core/Sts2Sim.Core.csproj" />
   </ItemGroup>
 </Project>

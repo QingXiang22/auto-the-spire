@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+template LeafSlimeSContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:leaf-slime-s" initial = "RAND" } }
+  use Attack { template = EnemyMoveNodeDefinition args = { definition = "base-spire:leaf-slime-s" id = "TACKLE_MOVE" next = "RAND" intent = "attack" index = 0 } }
+  use Sticky { template = EnemyMoveNodeDefinition args = { definition = "base-spire:leaf-slime-s" id = "GOOP_MOVE" next = "RAND" intent = "status" index = 1 } }
+  use Random { template = EnemyMoveNodeDefinition args = { definition = "base-spire:leaf-slime-s" id = "RAND" kind = "random" } }
+  use AttackBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:leaf-slime-s" node = "RAND" target = "TACKLE_MOVE" maxRepeats = 1 } }
+  use StickyBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:leaf-slime-s" node = "RAND" target = "GOOP_MOVE" maxRepeats = 1 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    locals = { card = Binding }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "GOOP_MOVE") then = {
+        call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:slimed" } into = card }
+        call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "generate" } }
+      } else = { call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 3 } } } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:leaf-slime-s" procedure = Execute }
+  action Spawn { role = player body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:leaf-slime-s" hp = 11 } } } }
+} }
+use LeafSlimeS { template = LeafSlimeSContent }

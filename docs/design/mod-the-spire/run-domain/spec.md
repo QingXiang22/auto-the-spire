@@ -33,7 +33,7 @@
 
 Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，保留源排除关系及随机顺序。选择恰好一个 NeowOption 后，通过共享获得操作执行效果，等待离开确认后回到地图。GoldenPearl、NutritiousOyster、BoomingConch 的效果已接入；其余选项仍公开，选择时明确报告未支持，不以无效果获得代替。
 
-`ChooseMapPoint` 只允许当前节点的未访问后继。首个 Monster 消费实际普通遭遇队列，创建稳定递增的 RunVisit，记录原地图类型、实际房型及遭遇标识。已接通 FuzzyWurmCrawlerWeak：先按 Niche 流抽取真实 HP，再生成敌人、重建和洗牌战斗副本，并自动启动首回合抽五张牌。其他遭遇或房型在修改访问和抽取 HP 之前报告未支持。非法、重复或非后继选点不改状态或 RNG。
+`ChooseMapPoint` 只允许当前节点的未访问后继。首个 Monster 消费实际普通遭遇队列，创建稳定递增的 RunVisit，记录原地图类型、实际房型及遭遇标识。已接通 SlimesWeak 和 FuzzyWurmCrawlerWeak：按源编队顺序及 Niche 流抽取真实 HP，再生成敌人、重建和洗牌战斗副本，并自动启动首回合抽五张牌。SlimesWeak 的累计楼层与初始化消费见下文。其他遭遇或房型在修改访问和抽取 HP 之前报告未支持。非法、重复或非后继选点不改状态或 RNG。
 
 正常普通战斗胜利沿用出牌、攻击和伤害深度保护；手动出牌、回合开始／结束及药水使用还以 `Player.EffectDepth` 等待整个外层操作结束，药水先消耗，回合末通知先完成。胜利还要求本场已有真实敌人死亡通知，不能仅因旧目标已死而在回合边界凭空生成奖励。战斗结束反应先执行，再按 `Player.AfterCombatEnd` 清理能力、格挡及战斗牌，随后执行早期胜利反应（MeatOnTheBone），最后执行普通胜利反应（BurningBlood／BlackBlood）。`CombatEnded`、`CombatVictoryEarly` 与 `CombatVictory` 分开通知；单人死亡不发胜利通知、不生成奖励。开发战斗仍保留其检查所需的战斗牌，正常访问清理不改变开发场景的生命周期。
 
@@ -101,6 +101,10 @@ AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL �
 源码依据为CardSelectCmd.FromDeckForUpgrade/FromDeckForTransformation、CardFactory.GetDefaultTransformationOptions与CardCmd.Transform；永久Deck变换追加末尾，其他战斗牌区才保留旧下标。普通移除的BeforeRemoved不等于变换的AfterTransformedFrom/To，不能混用生命周期。
 
 ## 战斗副本来源与结算写回
+
+正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak以根seed加累计楼层、再加 `SLIMES_WEAK` 的UTF-8 XxHash64派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。未迁移遭遇在访问、HP及编队抽样之前失败。
+
+`SpawnDevelopmentEnemy` 供受控单敌入口立即发布意图；正常批量出生调用只创建实例的 `CreateEncounterEnemy`，由 `BeforeCombatStart` 对全体按序初始化。LeafSlimeS初始RAND且两个等权分支不能连用；LeafSlimeM固定状态与攻击交替；TwigSlimeS固定TACKLE_MOVE。三者复用共享图及状态牌生成操作。
 
 正常差异测试在各侧分别保留永久实例的首次出现编号，删除后不复用。每个战斗牌区逐实例记录永久来源：base读取LongTermSource，独立参考读取DeckVersion；生成的临时牌标为temporary，诊断来源不发布到net或策略输入。同定义不同来源必须保持可区分，不按当前卡名重匹配。
 

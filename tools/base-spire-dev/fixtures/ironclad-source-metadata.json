@@ -1,11 +1,18 @@
 {
-  "schema": "base-spire/ironclad-source-metadata@1",
-  "source_baseline": "local-sts2-source-2026-10-18",
+  "schema": "base-spire/ironclad-source-metadata@2",
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
   "entries": [
     {
       "name": "Aggression",
       "id": "base-spire:aggression",
-      "source_sha256": "f93b9da1d02671aa49f21db9f84948e35242caa8b85df8954722d5b362f4956c",
+      "source_sha256": "8bf157e3134ff057be68fe2d65f21584790030f0b876aea73543c7ee6624d734",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -20,7 +27,7 @@
     {
       "name": "Anger",
       "id": "base-spire:anger",
-      "source_sha256": "29c2089f03c9a9fba166986bf4e8e7461ae1cd033eb589c8c3fcd1627b541d03",
+      "source_sha256": "c15619c37865617f3d8d561b007f3bdb605e4eae5240574b77a8b8ce0339c650",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -35,7 +42,7 @@
     {
       "name": "Armaments",
       "id": "base-spire:armaments",
-      "source_sha256": "1d9aafe923fea28d05883a6b847396ab42b2cb008ae60eff22acbc1ac9b6ac26",
+      "source_sha256": "be45795f4eb2215da0015c3f45f5de8ffaf748ecf33f913cc9a4375010d827e0",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -50,7 +57,7 @@
     {
       "name": "AshenStrike",
       "id": "base-spire:ashen-strike",
-      "source_sha256": "7024789ffbcf1e36cd296f9cce1b8909a61bf01728152e1b9f558572dcb6e01c",
+      "source_sha256": "708a22aa057179a5ad8812c465476c6d58547899920085c24e2c5f67cfab66ca",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -65,7 +72,7 @@
     {
       "name": "Barricade",
       "id": "base-spire:barricade",
-      "source_sha256": "71b82ac3b4c8e22d7b1b2606d296b6760b27c80ffce8999c87764bf3aa0e6f21",
+      "source_sha256": "4561844d23fc428317cfec53ceac0f1ed095c80f18c3b80f1347b24fe332cf4e",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 2,
@@ -80,7 +87,7 @@
     {
       "name": "Bash",
       "id": "base-spire:bash",
-      "source_sha256": "368bb650d332984a512142ad3dc5870339b0814b1b92a9abca7f06910efec9f7",
+      "source_sha256": "57d2b984da3a44ae0626f0af0b3a62cc6ead383a4b02b9465bbfcc6dbbccea34",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -95,7 +102,7 @@
     {
       "name": "BattleTrance",
       "id": "base-spire:battle-trance",
-      "source_sha256": "572c91bff78707a7eb406dc893f17377d1c733db4dbbd4609fb5a70f53ebea88",
+      "source_sha256": "20c4f69a2061d77833caf4217097a87c9702bddf775d7cfa99adb5eb23f73ea5",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -108,24 +115,24 @@
       "rarity": "uncommon"
     },
     {
-      "name": "Bloodletting",
-      "id": "base-spire:bloodletting",
-      "source_sha256": "3787518b201654ff4b0cc050eaa0c61237d0ee3a1b0a147c37a50a66e98c323f",
-      "multiplayer_only": false,
-      "cost": 0,
-      "upgraded_cost": 0,
+      "name": "Blaze",
+      "id": "base-spire:blaze",
+      "source_sha256": "e4fa7d8a3af441dba4eedcc1b08aceab3e28f392378ee38d590f0fc26410b555",
+      "multiplayer_only": true,
+      "cost": 2,
+      "upgraded_cost": 2,
       "kind": "skill",
       "targeted": false,
       "strike_tag": false,
       "is_x": false,
       "exhausts": false,
       "upgraded_innate": false,
-      "rarity": "common"
+      "rarity": "uncommon"
     },
     {
       "name": "BloodWall",
       "id": "base-spire:blood-wall",
-      "source_sha256": "2ce56cad532dec9dc04fe8cdfebb5af4d867f97b40d56faa11b2b31883b7165e",
+      "source_sha256": "f49602dc7fbd78954d78baed782e09c837af55288ab91bfd86763d1522df378e",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -138,9 +145,24 @@
       "rarity": "common"
     },
     {
+      "name": "Bloodletting",
+      "id": "base-spire:bloodletting",
+      "source_sha256": "5741734b17d927784442f006ea0b0641fc47232ab92b07ece1dad69caa394977",
+      "multiplayer_only": false,
+      "cost": 0,
+      "upgraded_cost": 0,
+      "kind": "skill",
+      "targeted": false,
+      "strike_tag": false,
+      "is_x": false,
+      "exhausts": false,
+      "upgraded_innate": false,
+      "rarity": "uncommon"
+    },
+    {
       "name": "Bludgeon",
       "id": "base-spire:bludgeon",
-      "source_sha256": "2770f0c34b301cc901d0f9865192f83847b7d4c0687ff393c9d36e21fd9c6ab8",
+      "source_sha256": "cc9bda856dd3793d527e70915d670a7aecb13d90ba53d934e60d4363207a8463",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 3,
@@ -155,7 +177,7 @@
     {
       "name": "BodySlam",
       "id": "base-spire:body-slam",
-      "source_sha256": "b554a0550946c792f2564eb1bb1a2f028679ab3a39c6d5166ffc5f9d3089b4d3",
+      "source_sha256": "f1aec492808cedad999cc00646b306e6866d64026a923823fde32053ebcf3bcd",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 0,
@@ -170,7 +192,7 @@
     {
       "name": "Brand",
       "id": "base-spire:brand",
-      "source_sha256": "a446f7f575b20e103fbf23f5bdc90ad48b9570d7e8a0f08fa2eaf3a78676dede",
+      "source_sha256": "a681ef7a2a77c4f4824f5d670a736e071f2526ad5c7cf3c2a80e9fe85102a199",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -185,7 +207,7 @@
     {
       "name": "Break",
       "id": "base-spire:break",
-      "source_sha256": "911170f2aef4662fb0c22de295f55c5844e0811663e1cdd002cfe046c8581312",
+      "source_sha256": "666d69b7a4b95651bad1016724e87a6addb009c055426f222f799bdc46148181",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -200,7 +222,7 @@
     {
       "name": "Breakthrough",
       "id": "base-spire:breakthrough",
-      "source_sha256": "ecf88399ce7afd4ca6c49766c54956b72929bef1259570d0f9a62d27913f0110",
+      "source_sha256": "9df7b8cc97f00f6e482cbc24d9857940e8c5cdf352d39f7a2e93d97ba27b5676",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -215,7 +237,7 @@
     {
       "name": "Bully",
       "id": "base-spire:bully",
-      "source_sha256": "779897707970d9e46565efeab5e1c2e17e6ddb8fe327c474661c280bf01fce78",
+      "source_sha256": "36a178abad77a39f31c974856bdfe00a66cc0c75014a5b2e2a5be1cbed36978a",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -230,7 +252,7 @@
     {
       "name": "BurningPact",
       "id": "base-spire:burning-pact",
-      "source_sha256": "b802324268261d68dec777a4198b9532b86a1e9633b7e2de62c4d88f9c096ef5",
+      "source_sha256": "71c0cf979cea69db45c49708a56b65a1f9f9275883247bb8b98b37533458d132",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -245,10 +267,10 @@
     {
       "name": "Cascade",
       "id": "base-spire:cascade",
-      "source_sha256": "1609222e13b28784d26afa5d7629940ae9c7062760aa5f9e845ad9ee676c4f6e",
+      "source_sha256": "0fa196a14e55d411c7ed0180db149c32ee3632a1d362b4d23d0aa3d1f83441e9",
       "multiplayer_only": false,
-      "cost": 0,
-      "upgraded_cost": 0,
+      "cost": -1,
+      "upgraded_cost": -1,
       "kind": "skill",
       "targeted": false,
       "strike_tag": false,
@@ -260,7 +282,7 @@
     {
       "name": "Cinder",
       "id": "base-spire:cinder",
-      "source_sha256": "b7ad61466591c09416980950d3629bfe28f7a41c7f88b40bfeef02d20c55d96f",
+      "source_sha256": "23d713b05e715fcde9edc27c0e0310ce2a43b5239c8b448b304cd4edc67f2797",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -275,7 +297,7 @@
     {
       "name": "Colossus",
       "id": "base-spire:colossus",
-      "source_sha256": "7deb9179bd046acf49527bf9a2dfbd261747bc6e81027f362d136dbeef22b7fa",
+      "source_sha256": "69c912111cd72bb3978a9238895a7429826f8a3a4421cdf8ee0d3230bc212517",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -290,7 +312,7 @@
     {
       "name": "Conflagration",
       "id": "base-spire:conflagration",
-      "source_sha256": "2824cf8a8e7256b8a362d824e04e3848d34c908d3fee010c2949e5facbfb39d8",
+      "source_sha256": "5be9640534411f96819b78afffbb16bc1f49ddf655eb4591a15331d109f631dc",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -305,7 +327,7 @@
     {
       "name": "Corruption",
       "id": "base-spire:corruption",
-      "source_sha256": "86d7a2632443ca7d763c957f93c66c6dd440bbcb7770b440f59c1098bba75ed2",
+      "source_sha256": "513064b5d249892e5dbf74e4d394ab5311d67463103f48400a96cdc0e8e3c52d",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 2,
@@ -320,7 +342,7 @@
     {
       "name": "CrimsonMantle",
       "id": "base-spire:crimson-mantle",
-      "source_sha256": "46e68d6155ed33d5453c4427592828d4589e9e2c670666ff53dde1ee760de723",
+      "source_sha256": "3f72218fd6689332ad5d76efbaf79805d9bdf1cc27a57c6cf51f12d170f874fa",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -335,7 +357,7 @@
     {
       "name": "Cruelty",
       "id": "base-spire:cruelty",
-      "source_sha256": "a395863cfb5d8d79dc37cdae9ef2ec8bcf5df8d6fa8a21796cacf9bb46dcfa34",
+      "source_sha256": "388c421ee253f3c1b094454bdc63dd66e652f1c614d22be419a8da0ba40ce4cd",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -345,12 +367,12 @@
       "is_x": false,
       "exhausts": false,
       "upgraded_innate": false,
-      "rarity": "rare"
+      "rarity": "uncommon"
     },
     {
       "name": "DarkEmbrace",
       "id": "base-spire:dark-embrace",
-      "source_sha256": "8c01995865f494962c9a456cf5cbee438a393825049de60b939ee8eda501ef24",
+      "source_sha256": "e9dd4ffa0bd5fd8dfc005868ed4515d81ae706efda208a98739764d3eb798d4f",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 1,
@@ -365,7 +387,7 @@
     {
       "name": "DefendIronclad",
       "id": "base-spire:defend-ironclad",
-      "source_sha256": "f2707481e0be1a5e856cab0dc788fb520e80fe3dff9c0a0f53869b857b8c7740",
+      "source_sha256": "f302ff689106d92f34167cdc6530c2f860c1faf3e3243217b10d4babaf48be3d",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -380,7 +402,7 @@
     {
       "name": "DemonForm",
       "id": "base-spire:demon-form",
-      "source_sha256": "668a291971ddf0f55638f93fab2a87a479598f5a285076dff72b82edbb7dcf7a",
+      "source_sha256": "76713dd8576fc6e44575acc6c7b8d2a5cf175fd76231f012cf16df81bf8471d7",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 3,
@@ -395,7 +417,7 @@
     {
       "name": "DemonicShield",
       "id": "base-spire:demonic-shield",
-      "source_sha256": "69fea0b8ae81d1b823da636eb8654317c9be610bb5aedc150ddbb7b87afc1b59",
+      "source_sha256": "334d51cdd4ba54a3fa57cd53e243607759b64a343f831f531cede348104cc2ea",
       "multiplayer_only": true,
       "cost": 0,
       "upgraded_cost": 0,
@@ -410,7 +432,7 @@
     {
       "name": "Dismantle",
       "id": "base-spire:dismantle",
-      "source_sha256": "f05eee5269c09b30362631cc022d55c7c9ffe50926fa6f12b1a7312ab22e9853",
+      "source_sha256": "547a4398ddd85ed0b50024277a07893401930d781d8696329026bc18f9e7a98e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -425,7 +447,7 @@
     {
       "name": "Dominate",
       "id": "base-spire:dominate",
-      "source_sha256": "a1dc4446e5f82c80480718c920c9309667898a564a127c46e56fd8e6e9f52e7e",
+      "source_sha256": "56803fbbe56f8ecc4adb11b37c8dbc6c6172852dcbc4b3bdeb2ef623a893b52a",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -435,12 +457,12 @@
       "is_x": false,
       "exhausts": true,
       "upgraded_innate": false,
-      "rarity": "uncommon"
+      "rarity": "rare"
     },
     {
       "name": "DrumOfBattle",
       "id": "base-spire:drum-of-battle",
-      "source_sha256": "a6a0c53a80614a1069b08675b71ddba1c9d15218de5a243c6075f91c899dd884",
+      "source_sha256": "ba9e83d9c225a8a09d304d74a33764363ef3cd02dce7ad1c394bb623cf7b62e1",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -455,7 +477,7 @@
     {
       "name": "EvilEye",
       "id": "base-spire:evil-eye",
-      "source_sha256": "e0dd0995e6aa163633e0d5722d6c7f35683294104a2e7f343fb4e81002a486de",
+      "source_sha256": "7843a760597357c4133390123d20624c094e292879d211727e3c4531c6432dfe",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -470,10 +492,10 @@
     {
       "name": "ExpectAFight",
       "id": "base-spire:expect-a-fight",
-      "source_sha256": "75afb2bf5aa6262d3e2a01bce0d456b87731b87c4956c9499b9dd03e9c2b826f",
+      "source_sha256": "cba6b167249cf88a63272f0f3db7f4af2fdf3f340b6ca696c2d75014c0465fae",
       "multiplayer_only": false,
-      "cost": 2,
-      "upgraded_cost": 1,
+      "cost": 3,
+      "upgraded_cost": 3,
       "kind": "skill",
       "targeted": false,
       "strike_tag": false,
@@ -485,7 +507,7 @@
     {
       "name": "Feed",
       "id": "base-spire:feed",
-      "source_sha256": "e2ed8ecbf992205df6032f182a23a351b8f32c7358d38552048e1db904ddf525",
+      "source_sha256": "9e87e718d1e4a8f26568c73ccef2656bdd920a640218f262efc58fb7dd2bdbbb",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -500,7 +522,7 @@
     {
       "name": "FeelNoPain",
       "id": "base-spire:feel-no-pain",
-      "source_sha256": "e9b652eb19a412b5f748528ef586d489d6402782405024ef117f17ec2b19257d",
+      "source_sha256": "5a1040f563f32592b97a0d7e41559c1ae3fd67639713bd402abc81aa38c71a2e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -515,7 +537,7 @@
     {
       "name": "FiendFire",
       "id": "base-spire:fiend-fire",
-      "source_sha256": "d13c22a1cc57fdc71ceb86811d03c7463b1e12d4984618c36f4228329437a329",
+      "source_sha256": "8958937f4c86a6d53f655aa0d39c178e8015771c1d480382be2373805040e44a",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -530,7 +552,7 @@
     {
       "name": "FightMe",
       "id": "base-spire:fight-me",
-      "source_sha256": "37d5267fc20684e8d320112cf0f4c7900b4e630e31b96338e9d1a5ae0b2e172d",
+      "source_sha256": "07b96766175698d9d0c389e7ab500facc26e363ecec349af1bcef3c542e66c35",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -545,7 +567,7 @@
     {
       "name": "FlameBarrier",
       "id": "base-spire:flame-barrier",
-      "source_sha256": "8f3cf2ecc74813d99dafec741623da84af9ee9f20df8b7ebeb04137e085618d2",
+      "source_sha256": "08c0ebdde0998b763e96b802518d81ea79a07c94a5e8d6fa1e7f93edd16550b3",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -560,7 +582,7 @@
     {
       "name": "ForgottenRitual",
       "id": "base-spire:forgotten-ritual",
-      "source_sha256": "73102d95acdb93d50706a4660cd71978441088ed659c688a4932a815da77e291",
+      "source_sha256": "e9b45879bab5029a2a38b67ba7713ee94d1fdb1e8ea4d6109cc512f2363141ae",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -573,24 +595,9 @@
       "rarity": "uncommon"
     },
     {
-      "name": "GiantRock",
-      "id": "base-spire:giant-rock",
-      "source_sha256": "926eaa638821e22bc2d6090c8d017d19f3655182fea0347dcae99946e850ad75",
-      "multiplayer_only": false,
-      "cost": 1,
-      "upgraded_cost": 1,
-      "kind": "attack",
-      "targeted": true,
-      "strike_tag": false,
-      "is_x": false,
-      "exhausts": false,
-      "upgraded_innate": false,
-      "rarity": "token"
-    },
-    {
       "name": "Havoc",
       "id": "base-spire:havoc",
-      "source_sha256": "d4bc82f11ad9ef1ac000709dae9d57df51e7253049821e2a238d85ebdfc355bc",
+      "source_sha256": "4404c6957ac67e1c678d6002774348bef62d62896f791599759a54243d3fb10c",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 0,
@@ -605,7 +612,7 @@
     {
       "name": "Headbutt",
       "id": "base-spire:headbutt",
-      "source_sha256": "bed1dd135e0dcf0bbf1329231e30cd2c6aeb98d094670dbc243672dc287be77c",
+      "source_sha256": "19799785fb3b7298feb1c521ba34e13de96271abb721c8bcfef6db3f275b975e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -620,7 +627,7 @@
     {
       "name": "Hellraiser",
       "id": "base-spire:hellraiser",
-      "source_sha256": "48e8afb46028a32de0a7d01dea6a0269a9d4d079723e2ed4664e2afe451330c8",
+      "source_sha256": "b537fff2080747d2a54520b95f1621cde1a02a2440339c90ce1aa809305ad734",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 1,
@@ -635,7 +642,7 @@
     {
       "name": "Hemokinesis",
       "id": "base-spire:hemokinesis",
-      "source_sha256": "7c6c14611887c121058c70268677e8f90f61c44b68cf6bab25d3324bc86d2003",
+      "source_sha256": "fb83133919d0851cb0f2d776fa2187651823451e8d82f1a7d5701c12fe78afa8",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -650,7 +657,7 @@
     {
       "name": "HowlFromBeyond",
       "id": "base-spire:howl-from-beyond",
-      "source_sha256": "140f3bc98dd8d3634fb50c6a9101478c07857598a6449412956763ecf1ed65e0",
+      "source_sha256": "b1b57822542a64a4cc8fbd8c431e840167e564de853c1d97a8b5b2c6418a1701",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 3,
@@ -665,7 +672,7 @@
     {
       "name": "Impervious",
       "id": "base-spire:impervious",
-      "source_sha256": "9a97b3091857c8f7ed35281b9ca1fa20af707bc56c17df651fec464e9bb79552",
+      "source_sha256": "3a033f77f84aa423b79ebc58e5b5f4a1d4226ffe505d09cc4bc419a123d59a2b",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -680,7 +687,7 @@
     {
       "name": "InfernalBlade",
       "id": "base-spire:infernal-blade",
-      "source_sha256": "f74fdf5b2750e2ded89ceb780ffd4d762dd57488ad21584e1c9eaa82f679dc0b",
+      "source_sha256": "d432b0fa0c455ae96a2585d6bce286a3a3e7652f28281ea729cf47c3d3ba429d",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 0,
@@ -695,7 +702,7 @@
     {
       "name": "Inferno",
       "id": "base-spire:inferno",
-      "source_sha256": "61a885725e242acb055502b51479c7fc9f9410aaa627f67812f61af87de27919",
+      "source_sha256": "f2dd3f70ebbd29f44e3a939cbff0921da5d23d16373b56396241335fe4fbebf2",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -710,7 +717,7 @@
     {
       "name": "Inflame",
       "id": "base-spire:inflame",
-      "source_sha256": "adacf6eebe8337b67563e62dfee2bb3370fb65ff99bb5072ae2360cf966ad810",
+      "source_sha256": "4ea5c6b30c90f8bebcda92c8eab68bae8cf99dc3c4ad61e3889d36edcedb9d4e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -725,7 +732,7 @@
     {
       "name": "IronWave",
       "id": "base-spire:iron-wave",
-      "source_sha256": "842df21871b44f19af5e9848dc71ebfb5fe9c9832aa308584b95a0b20b0f2ca4",
+      "source_sha256": "1f4c4b471bb5f4e4a3350abd0a46a5b282b6d4af5e4cd2028f78a6aa1a946c73",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -740,7 +747,7 @@
     {
       "name": "Juggernaut",
       "id": "base-spire:juggernaut",
-      "source_sha256": "7b2ac0d9d3e9f2771b6d6b15876cf99ff589a380ce4b4d72e0c2c214a2451579",
+      "source_sha256": "f5c7d43b37bd43ea88ce96a1000a3091f5b53d5c50c8c6ab3a9e91fa1becd940",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -755,7 +762,7 @@
     {
       "name": "Juggling",
       "id": "base-spire:juggling",
-      "source_sha256": "0a4d2a82704fe2d3b381ac3f7c298a4f4f911ac7b5dd754ab6ba49f56b190290",
+      "source_sha256": "6842e31ad1ff32203d037c655aa060ca544856eebb596c4662d753c8d729f8ff",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -770,7 +777,7 @@
     {
       "name": "Mangle",
       "id": "base-spire:mangle",
-      "source_sha256": "e51907ffcc7c766f0baf42cdc41ecbdd7b562b884c46d666d86c9b2939526ad3",
+      "source_sha256": "07ead663ae4968ab440b6e5643111ef3718e5093355d7bf7ab2a098d9401c0ae",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 3,
@@ -783,9 +790,24 @@
       "rarity": "rare"
     },
     {
+      "name": "Midnight",
+      "id": "base-spire:midnight",
+      "source_sha256": "02ed00e285fe992264f18fc4aecba801cdb48ec02ebe19a47e46c2e2d7af6778",
+      "multiplayer_only": true,
+      "cost": 12,
+      "upgraded_cost": 12,
+      "kind": "attack",
+      "targeted": true,
+      "strike_tag": false,
+      "is_x": false,
+      "exhausts": false,
+      "upgraded_innate": false,
+      "rarity": "rare"
+    },
+    {
       "name": "MoltenFist",
       "id": "base-spire:molten-fist",
-      "source_sha256": "35a3922f45fd0a09dcf7a4cb894a352deb0f4d9d221d8ec4c9d5d5564d41b8a5",
+      "source_sha256": "c1d824bde6164756d7c1e5dc13647a7946ef325f0bb5cdf5e98991eb34ea2806",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -800,7 +822,7 @@
     {
       "name": "NotYet",
       "id": "base-spire:not-yet",
-      "source_sha256": "21ef8b51093329ca22f1fb830b3d18c39863cf8c5deb94339a15c0dbaf2923a2",
+      "source_sha256": "6a6c5a3450f045ac1a6b2554b55666e3c7bb67b41ef3cec1b10539aaedaf5289",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -815,7 +837,7 @@
     {
       "name": "Offering",
       "id": "base-spire:offering",
-      "source_sha256": "4c46c4634993cbecb34b587c5b2a83477a722da86339fb3b24e6ebd0a3147db1",
+      "source_sha256": "772c12793d0b98d65bf629492309d9a5eb2f2858eeee72c8b4d5e26aea6dc95e",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -830,7 +852,7 @@
     {
       "name": "OneTwoPunch",
       "id": "base-spire:one-two-punch",
-      "source_sha256": "c6b3cf08f00742415d55da841989c93c1ca5576beceb3b11858265df1c32e2e3",
+      "source_sha256": "fbda29b471714f2aac4fbf3a409244db3ded1ad71308fbad3730a5ea02dd77f6",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -843,9 +865,24 @@
       "rarity": "rare"
     },
     {
+      "name": "Outrage",
+      "id": "base-spire:outrage",
+      "source_sha256": "27e113d031a7156be9e405615fcb68f487f24ddcc0be04c6bcbd4ee30033b66f",
+      "multiplayer_only": true,
+      "cost": 0,
+      "upgraded_cost": 0,
+      "kind": "attack",
+      "targeted": true,
+      "strike_tag": false,
+      "is_x": false,
+      "exhausts": false,
+      "upgraded_innate": false,
+      "rarity": "uncommon"
+    },
+    {
       "name": "PactsEnd",
       "id": "base-spire:pacts-end",
-      "source_sha256": "c924fae262fbe5b9c429436e31ed6076e47bae12f322ed42301ce71086901052",
+      "source_sha256": "9d0e15de5dfdb21eaf00721d12d6d16c97fd3a0e26f4993a3796031bd04023a3",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -860,7 +897,7 @@
     {
       "name": "PerfectedStrike",
       "id": "base-spire:perfected-strike",
-      "source_sha256": "d3c99b130922f4ed892e14a7f05278fc474d03d3a27ecd7301cc977e177735c7",
+      "source_sha256": "20e7905d1b2cd3c5be40527e8ade733079d5761dbef1162b9e455cd648e86aa2",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -875,7 +912,7 @@
     {
       "name": "Pillage",
       "id": "base-spire:pillage",
-      "source_sha256": "2590dc1223707c3b0f93d1c58ae914b54db0de346bf44a66e416dfde8ab3b6ed",
+      "source_sha256": "f06b95d8cbf95d61cb5f545b3fef5ac21ca11bd138330772ed2ac3b0b34fa6cb",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -890,7 +927,7 @@
     {
       "name": "PommelStrike",
       "id": "base-spire:pommel-strike",
-      "source_sha256": "3a3330a2970eda5de7a717121aa9f7973b918ded9da5678240e514740f56a681",
+      "source_sha256": "1e5ac7e533e4d084fc66082c987f6dde3dd24959b7a271dd6941c6d158b684dd",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -905,7 +942,7 @@
     {
       "name": "PrimalForce",
       "id": "base-spire:primal-force",
-      "source_sha256": "688d0745593b8b71db07fe55d542e162a7a6dc9780278144071dab369f353ccb",
+      "source_sha256": "472216072657a40f4fe0882514d254ad0b5b80857f4e280cc2eb99f3b1fdfe73",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -920,7 +957,7 @@
     {
       "name": "Pyre",
       "id": "base-spire:pyre",
-      "source_sha256": "762838f7db1f5110ff3d462fc9cb103638a8c9199db95ad96684de05afa62fbd",
+      "source_sha256": "6390cf177ddd67cc42b646ce7bc2e4b8124c179b02970c7bf71522cf0b4fd5fe",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -935,7 +972,7 @@
     {
       "name": "Rage",
       "id": "base-spire:rage",
-      "source_sha256": "ca126d5e9f49350158798985389427f9c124a07474fa0ed9fa1a06fdcfa9f08a",
+      "source_sha256": "2c557564b1f857762e679947e60cb65343a97b868e67f23ae07441b9aeac97e3",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -950,7 +987,7 @@
     {
       "name": "Rampage",
       "id": "base-spire:rampage",
-      "source_sha256": "aea1b8eda1a15597c0263b20c5e1aa85e62fd861d0d2cf3263a779758a94f96c",
+      "source_sha256": "4fe4c6438eaaeabb553b21d8cb4adadfe0e6ac59a7f4fd6d71f0e7d02f99da8e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -965,7 +1002,7 @@
     {
       "name": "Rupture",
       "id": "base-spire:rupture",
-      "source_sha256": "910670cb0b0b8e2b443acc2c737a99c03b458a3fadbad4335e6b0f2858d62d79",
+      "source_sha256": "eac69b7d1e916d35e85fff282b64ab6cfb625a978fcfcfc7256bc9da734b7122",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -980,7 +1017,7 @@
     {
       "name": "SecondWind",
       "id": "base-spire:second-wind",
-      "source_sha256": "dcfc892a918145a24ad9e11eaa945b0f07f147547a27b100469b31516b5c494d",
+      "source_sha256": "76a2303c46b59cbb1f222f2ab08fafe6f3c98e1217eee779e52f2987a4ae701a",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -995,7 +1032,7 @@
     {
       "name": "SetupStrike",
       "id": "base-spire:setup-strike",
-      "source_sha256": "608e2c4aadffa5b2521f23e802a64bc9be00457bf6ab207540b089401468af5d",
+      "source_sha256": "7359609407848c6ab27491a64ef141f23212999e54703a3e3aaf1ac299cba017",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1010,7 +1047,7 @@
     {
       "name": "ShrugItOff",
       "id": "base-spire:shrug-it-off",
-      "source_sha256": "4ddebe1b0328ce5ebceca212b97bb5989d4492d94b29568c4e3c442a6bb19870",
+      "source_sha256": "db849e6a9818b1d86c755e99694b2fb4160514861ae6c4253fb5973805eb04ca",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1025,7 +1062,7 @@
     {
       "name": "Spite",
       "id": "base-spire:spite",
-      "source_sha256": "790529f8b68821a35fa0c5ae285d46db80f60586067db46b8d429b1e53495132",
+      "source_sha256": "89dfeadcd92ec6cdb0730d9b9b86e6aaf2bbd4a9ecb85e706964c6ee6d66efc9",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -1040,7 +1077,7 @@
     {
       "name": "Stampede",
       "id": "base-spire:stampede",
-      "source_sha256": "85bb2ae1cd06a165b134172482c972643d5ff9685a0102da3cfae2da0eba6c0c",
+      "source_sha256": "43939e8a0c7489c5a7f57f72edf9ee7568fdd7dff4b8a1d80baaab846b779c73",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 1,
@@ -1055,7 +1092,7 @@
     {
       "name": "Stoke",
       "id": "base-spire:stoke",
-      "source_sha256": "d3c70d52fe6678775d0279ed0b1e810806b0cf29999c3c74b2ed8e8a282090b6",
+      "source_sha256": "f80ef1b842ae953f755468204e9683ab63961678fdf56ad1ff6c2eb97430df49",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1070,7 +1107,7 @@
     {
       "name": "Stomp",
       "id": "base-spire:stomp",
-      "source_sha256": "0cdf6de7d279ff5fb1f3bfe99dd8eab793b137b86d4c5d67e26665bb1cc50882",
+      "source_sha256": "c29726eea16854843bb378846db605fe89ba947ede601dc43f27c2d1336e9a38",
       "multiplayer_only": false,
       "cost": 3,
       "upgraded_cost": 3,
@@ -1085,7 +1122,7 @@
     {
       "name": "StoneArmor",
       "id": "base-spire:stone-armor",
-      "source_sha256": "208b95d5af886537f7526ce104226b6eec00c0156063062fd6e1c39cbaa3f230",
+      "source_sha256": "5d82f39416e20544a214d7795b39ded9e0d8220df69aad2204716a0a62b9e45e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1100,7 +1137,7 @@
     {
       "name": "StrikeIronclad",
       "id": "base-spire:strike-ironclad",
-      "source_sha256": "b9514c7880abc575abc7a6e572273e1cb64a4a092192f83af7d4e3b6c211c388",
+      "source_sha256": "daaa4880222c02a71f28c9d7d063fe7ca029c19ad8845bddefc3bbb60147baef",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1115,7 +1152,7 @@
     {
       "name": "SwordBoomerang",
       "id": "base-spire:sword-boomerang",
-      "source_sha256": "c2158cac3112be02890e281ac32cd61ff13efc048a8f97e2fd71ee2ab265aa2d",
+      "source_sha256": "862598cada74c76b961c859b391daae7900822f19fc02603d98a3ebfc519591f",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1130,7 +1167,7 @@
     {
       "name": "Tank",
       "id": "base-spire:tank",
-      "source_sha256": "7d8a24c77c1548fa6972430e4c20d2d3da18481388029e33d615cd3983a2034a",
+      "source_sha256": "45034c8667057aea324387c84c41fe28e8f50638b80835585a1e8cf56dfbd60b",
       "multiplayer_only": true,
       "cost": 1,
       "upgraded_cost": 0,
@@ -1145,7 +1182,7 @@
     {
       "name": "Taunt",
       "id": "base-spire:taunt",
-      "source_sha256": "8a0bb5f3d10f5e8ec6a9cf685dacfe687a5fc84f5346a61204b3205f1858d4d4",
+      "source_sha256": "f8a644c18e1a6152f32b91739db56edd4fe5a218e159b399b845adf7dc2f553b",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1155,12 +1192,12 @@
       "is_x": false,
       "exhausts": false,
       "upgraded_innate": false,
-      "rarity": "uncommon"
+      "rarity": "common"
     },
     {
       "name": "TearAsunder",
       "id": "base-spire:tear-asunder",
-      "source_sha256": "420206af4340353b34934718085ab27ed69c4b72783e169bf0403c8b23d2e8b8",
+      "source_sha256": "f87337a35ced39764e2a51063b8f94c6fb5d195346dbe23957b5de7755064e1d",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -1175,7 +1212,7 @@
     {
       "name": "Thrash",
       "id": "base-spire:thrash",
-      "source_sha256": "f2b5b5395f30bc61ff798b5e44bb581077db3645fa942634a01147be279082d8",
+      "source_sha256": "afaa7f46a1321cf3517677967d8446852ab3c4397e9cd41072f8442d285847ef",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1190,7 +1227,7 @@
     {
       "name": "Thunderclap",
       "id": "base-spire:thunderclap",
-      "source_sha256": "e37f9e89989c192156cd650e8ba6b6d316e9e4aa9fd0f04a0a8ef90399620e81",
+      "source_sha256": "96947c4a0d18e6ff8a82d9b81befcd91a596fd328ce4dd8aa4396e6ba140ae73",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1205,7 +1242,7 @@
     {
       "name": "Tremble",
       "id": "base-spire:tremble",
-      "source_sha256": "87308806d019335117c87fec728f399f91ac329d4b534d0f5ecce977b71bc9cd",
+      "source_sha256": "da1747a3762f048329b64ade00d197d95b508edca9d72e77737325dde9dd0d8e",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1220,7 +1257,7 @@
     {
       "name": "TrueGrit",
       "id": "base-spire:true-grit",
-      "source_sha256": "7d34fdf40fbbba5389b200cac9746ac0597471744c1db16ac23f16b83f97956d",
+      "source_sha256": "b5534fd3e7ff7296242b0678231feede01c833a9987605aab535a4b4de97b68a",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1235,7 +1272,7 @@
     {
       "name": "TwinStrike",
       "id": "base-spire:twin-strike",
-      "source_sha256": "87131a9fa3797d8bc26be299aafc745ab698082346b98cbf6ac91d2697f63b29",
+      "source_sha256": "782d069eb60e1236c5a6e5632b53037378f727945cfcfb4b6642c93b45569879",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1250,7 +1287,7 @@
     {
       "name": "Unmovable",
       "id": "base-spire:unmovable",
-      "source_sha256": "77495e893e781107168673e5e593d994a3035a61d929408752ccae444de4c906",
+      "source_sha256": "f7006d9de157d3df6b2d4c07687e7c917fc86017b6187056b38186d18ad0a83a",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 1,
@@ -1265,7 +1302,7 @@
     {
       "name": "Unrelenting",
       "id": "base-spire:unrelenting",
-      "source_sha256": "50640fe1545fc2d3ee11f0fdcda98910bacadb8a3c1ad648c32f35846cfa51ca",
+      "source_sha256": "f059d1e34bbd47c1a9780d2ff0de2e0cfe019180983b2566ceab31600797be25",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -1280,7 +1317,7 @@
     {
       "name": "Uppercut",
       "id": "base-spire:uppercut",
-      "source_sha256": "a9d2d834247eb1b141fb0e80d33bf1108f0bf6620bd044caf1face8c285aa1fd",
+      "source_sha256": "63998b9f36bd0bcd67f887417bc30e1f4f58888172f1e6df494ae56b149b65ce",
       "multiplayer_only": false,
       "cost": 2,
       "upgraded_cost": 2,
@@ -1295,7 +1332,7 @@
     {
       "name": "Vicious",
       "id": "base-spire:vicious",
-      "source_sha256": "61ce974ed2486108fa6f779ea573054c855d2d643429b52313988e8862271d7c",
+      "source_sha256": "30d905374240895d4e2f04777101bf79bc1e7dbe0be9663bfab8f29bedf576c1",
       "multiplayer_only": false,
       "cost": 1,
       "upgraded_cost": 1,
@@ -1310,7 +1347,7 @@
     {
       "name": "Whirlwind",
       "id": "base-spire:whirlwind",
-      "source_sha256": "ffdb3485ce9ae1ed83f8cb076faf6aa4020813131e05e26ee5731220914aafe2",
+      "source_sha256": "cbd20a1ddf33244bedbd790a28b785d623b991169c254c7aee3f3bf1712eb2e8",
       "multiplayer_only": false,
       "cost": 0,
       "upgraded_cost": 0,
@@ -1321,6 +1358,21 @@
       "exhausts": false,
       "upgraded_innate": false,
       "rarity": "uncommon"
+    },
+    {
+      "name": "GiantRock",
+      "id": "base-spire:giant-rock",
+      "source_sha256": "cd8d981575e946bfe6dbaa5d6184843057bcd59210f2f67b03cbb37767cff52f",
+      "multiplayer_only": false,
+      "cost": 1,
+      "upgraded_cost": 1,
+      "kind": "attack",
+      "targeted": true,
+      "strike_tag": false,
+      "is_x": false,
+      "exhausts": false,
+      "upgraded_innate": false,
+      "rarity": "token"
     }
   ]
 }

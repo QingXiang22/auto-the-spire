@@ -58,7 +58,7 @@ procedure GenerateSourceNeowOptions {
   parameters = { visit = Ref(NeowVisit) }
   locals = { curse = Binding excluded = String(length = 64) index = Int pick = Int left = Binding right = Binding }
   body = {
-    seedStream = { stream = "base-spire:event:neow" seed = pureCall(SourceContentSeed, 0, "NEOW", 0) }
+    seedStream64 = { stream = "base-spire:event:neow" seed = pureCall(SourceContentSeed, 0, "NEOW", 0) }
     call = { procedure = BuildSourceNeowPool args = { visit = visit } }
     samplePick = { stream = "base-spire:event:neow" candidates = where(relation(NeowPool, visit), e, equal(field(e, NeowPoolEntry.Group), "curse")) into = curse }
     let = { into = excluded value = "none" }
@@ -68,6 +68,7 @@ procedure GenerateSourceNeowOptions {
     if = { condition = equal(field(curse, NeowPoolEntry.RelicId), "base-spire:precarious-shears") then = { let = { into = excluded value = "base-spire:precise-scissors" } } }
     forEach = { query = relation(NeowPool, visit) item = entry body = {
       if = { condition = equal(field(entry, NeowPoolEntry.RelicId), excluded) then = { set = { target = entry field = NeowPoolEntry.Eligible value = false } } }
+      if = { condition = and(equal(field(curse, NeowPoolEntry.RelicId), "base-spire:neows-sacrifice"), or(equal(field(entry, NeowPoolEntry.RelicId), "base-spire:phial-holster"), equal(field(entry, NeowPoolEntry.RelicId), "base-spire:lost-coffer"))) then = { set = { target = entry field = NeowPoolEntry.Eligible value = false } } }
     } }
     if = { condition = not(equal(field(curse, NeowPoolEntry.RelicId), "base-spire:large-capsule")) then = {
       call = { procedure = AddNeowPair args = { visit = visit left = "base-spire:lava-rock" right = "base-spire:small-capsule" position = 100 } }
