@@ -142,7 +142,9 @@ public sealed partial class Session
                 if (!float.IsFinite(width)) throw Faults.Range("binary32 sampling width must be finite");
                 // Source NextFloat scales the double first, then rounds once; equal bounds still consume.
                 var raw = Random.DrawDouble(RequireStream(Eval(call, sampleFloat.Stream)));
-                call.Slots[sampleFloat.ResultSlot] = Value.Of(Binary32.Bits((float)(raw * (double)width + (double)min)));
+                var result = Binary32.Bits((float)(raw * (double)width + (double)min));
+                call.Slots[sampleFloat.ResultSlot] = Value.Of(result);
+                Debug?.RecordFloat32(Binary32.Bits(min), Binary32.Bits(max), result);
                 return Outcome.Continue;
             }
 

@@ -7,7 +7,8 @@ internal static class NormalSnapshotChecks
     internal static bool Complete(IReadOnlyList<SessionDebugRecord> records, long dropped) => dropped == 0
         && records.Any(r => r.Kind == SessionDebugKind.EventEmit) && records.Any(r => r.Kind == SessionDebugKind.RandomCall)
         && records.Where(r => r.Kind is SessionDebugKind.EventEmit or SessionDebugKind.RandomCall)
-            .All(r => !r.TextTruncated && r.Snapshot is { Complete: true } && r.Random is not { CandidatesTruncated: true });
+            .All(r => !r.TextTruncated && r.Snapshot is { Complete: true } && r.Random is not { CandidatesTruncated: true }
+                && r.Random is not { Operation: "double", Float32: null });
 
     internal static void Run(string repository)
     {
@@ -25,6 +26,9 @@ internal static class NormalSnapshotChecks
         Require(observed.Phase == "rewards", "the real normal run reaches its reward boundary");
         var records = observed.DebugRecords;
         Require(observed.HasCompleteDebug && Complete(records, 0), "all actual event/candidate snapshots are available and untruncated");
+        var floats = records.Where(r => r.Random?.Float32 is not null).ToArray();
+        Require(floats.Any(r => r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1073741824 }), "real enemy sampling retains the [0,2) range");
+        Require(floats.Any(r => r.Subject!.Contains("rewards") && r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1065353216 }), "real reward sampling retains the [0,1) range");
         var expiredCandidates = records.Where(r => r.Random?.Candidates is not null)
             .SelectMany(r => r.Random!.Candidates!).Where(id => !observed.IsLive(id)).Distinct().ToArray();
         Require(expiredCandidates.Length > 0, "this path actually destroys temporary initialization candidates");
@@ -48,6 +52,10 @@ internal static class NormalSnapshotChecks
         Require(!Complete(missing, 0) && !Complete(records, 1) && !Complete([], 0), "truncation, dropped records and zero execution cannot pass");
         missing[index] = records[index] with { TextTruncated = true };
         Require(!Complete(missing, 0), "truncated stream/event labels cannot pass");
+        var floatIndex = records.ToList().FindIndex(r => r.Random?.Float32 is not null);
+        missing = records.ToArray();
+        missing[floatIndex] = records[floatIndex] with { Random = records[floatIndex].Random! with { Float32 = null } };
+        Require(!Complete(missing, 0), "missing actual float range and result cannot pass");
         File.WriteAllText(Path.Combine(directory, "historical-snapshots.json"), NormalPreflight.Json(new
         {
             schema = "normal-run/historical-snapshots@1", seed = "777", independent_verified = false,

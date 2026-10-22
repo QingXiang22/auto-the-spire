@@ -23,7 +23,13 @@ public sealed record SessionDebugRecord(
 /// <summary>One successful API draw, with raw-word cursors and a bounded copy of ordered instance candidates.</summary>
 public sealed record RandomCallDetails(string Operation, string Minimum, string Maximum, string Result,
     long Before, long After, long TotalBefore, long TotalAfter,
-    IReadOnlyList<InstanceId>? Candidates, int CandidateCount, bool CandidatesTruncated);
+    IReadOnlyList<InstanceId>? Candidates, int CandidateCount, bool CandidatesTruncated)
+{
+    public Float32SampleDetails? Float32 { get; init; }
+}
+
+/// <summary>Evaluated binary32 bounds and final result, encoded as unsigned 32-bit patterns in Int values.</summary>
+public sealed record Float32SampleDetails(long MinimumBits, long MaximumBits, long ResultBits);
 
 /// <summary>Bounded pull-based diagnostics. No sink callback runs inside the scheduler.</summary>
 public sealed partial class SessionDebugTrace
@@ -53,6 +59,17 @@ public sealed partial class SessionDebugTrace
             session.StateVersion, session.Status, session.DebugInstructions);
 
     internal void EndRandom() => _randomContext = null;
+
+    internal void RecordFloat32(long minimumBits, long maximumBits, long resultBits)
+    {
+        // A dropped draw must never attach metadata to a previously retained record.
+        if (_records.Count == 0 || _records[^1] is not { Sequence: var sequence, Random.Operation: "double" } record
+            || sequence != _sequence) return;
+        _records[^1] = record with
+        {
+            Random = record.Random! with { Float32 = new(minimumBits, maximumBits, resultBits) }
+        };
+    }
 
     internal void RecordRandom(RandomService service, string stream, string operation,
         string minimum, string maximum, string result, long before, long totalBefore,

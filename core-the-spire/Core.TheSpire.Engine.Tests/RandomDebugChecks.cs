@@ -45,6 +45,8 @@ internal static class RandomDebugChecks
             // Independent source vector: tools/rng-oracle/vanilla_rng_oracle.py, Rng(12345), bounds 100/3/3/2.
             Check.Sequence(new[] { "74", "0", "2", "0", "0.5551828553264562" }, calls.Select(c => c.Result), "actual sampled results");
             Check.Sequence(new[] { "100", "3", "3", "2", "1" }, calls.Select(c => c.Maximum), "bounds survive recording");
+            Check.True(calls.Take(4).All(c => c.Float32 is null), "only sampleFloat32 has binary32 metadata");
+            Check.Equal(new Float32SampleDetails(0, 1065353216, 1057890423), calls[^1].Float32!, "default float range and independently rounded result");
             Check.Sequence(items, calls[1].Candidates!, "pick candidates copied before sampling");
             Check.Sequence(items, calls[2].Candidates!, "first shuffle candidates before swap");
             Check.Sequence(items.Take(2), calls[3].Candidates!, "active shuffle prefix");
@@ -63,6 +65,8 @@ internal static class RandomDebugChecks
             var singleton = s.Debug.Records.Last().Random!;
             Check.Equal("1", singleton.Maximum, "singleton bound retained");
             Check.Sequence(new[] { items[0] }, singleton.Candidates!, "singleton candidate retained");
+            s.Random.DrawDouble("direct");
+            Check.True(s.Debug.Records.Last().Random!.Float32 is null, "direct double has no DSL float metadata");
         });
 
         Check.Run("DEBUG pull frequency and independent sessions cannot change state or random calls", () =>
@@ -100,6 +104,20 @@ internal static class RandomDebugChecks
             Check.Fault(EngineFaultCode.ValueOutOfRange, () => bad.Submit(rules.Actions.Single(a => a.QualifiedId == "random-debug:Invalid"), bad.Participant(0), []), "invalid range rejected");
             Check.Equal(before.TotalDraws, bad.Random.TotalDraws, "invalid range consumes nothing");
             Check.DoesNotContain(bad.Debug!.Records, r => r.Kind == SessionDebugKind.RandomCall, "invalid range is not a successful draw");
+        });
+
+        Check.Run("DEBUG dropped float draws cannot overwrite a retained float or an earlier capture", () =>
+        {
+            var complete = New(new()); complete.Start(); Roll(complete);
+            var lastFloat = complete.Debug!.Records.Last(r => r.Random?.Float32 is not null);
+            var limited = New(new(MaxRecords: (int)lastFloat.Sequence)); limited.Start(); Roll(limited);
+            var before = limited.Debug!.Capture(); var dropped = limited.Debug.DroppedRecords;
+            Roll(limited);
+            Check.Sequence(before, limited.Debug.Capture(), "capacity exhaustion leaves every retained record unchanged");
+            Check.True(limited.Debug.DroppedRecords > dropped, "subsequent draws still count as dropped records");
+            Check.Equal(lastFloat.Random!.Float32!, before.Last().Random!.Float32!, "last retained float remains the first draw");
+            var old = complete.Debug.Capture(); Roll(complete);
+            Check.Sequence(old, complete.Debug.Capture().Take(old.Count), "future metadata cannot mutate a captured record");
         });
 
         Check.Run("DEBUG random trace survives decision suspension without replaying or consuming invalid answers", () =>
