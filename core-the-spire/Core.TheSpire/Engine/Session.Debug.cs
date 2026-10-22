@@ -2,7 +2,8 @@ namespace CoreTheSpire.Engine;
 
 public sealed record SessionDebugOptions(int MaxRecords = 10_000, bool IncludeInstructions = false,
     int MaxTextLength = 1024, int MaxCandidates = 256, bool CaptureValues = false,
-    int MaxSnapshotEntities = 256, int MaxSnapshotValues = 4096, bool CaptureCandidateReferences = false);
+    int MaxSnapshotEntities = 256, int MaxSnapshotValues = 4096, bool CaptureCandidateReferences = false,
+    bool CaptureCandidateRelations = false);
 
 public enum SessionDebugKind
 {
@@ -89,7 +90,8 @@ public sealed partial class SessionDebugTrace
                 candidates is null ? null : Array.AsReadOnly(candidates.Take(_options.MaxCandidates).ToArray()),
                 count, count > _options.MaxCandidates),
             Snapshot = _options.CaptureValues ? CaptureSnapshot([], candidates?.Take(_options.MaxCandidates), count > _options.MaxCandidates,
-                _options.CaptureCandidateReferences && candidates is not null) : null,
+                _options.CaptureCandidateReferences && candidates is not null,
+                _options.CaptureCandidateRelations && candidates is not null) : null,
         });
     }
 

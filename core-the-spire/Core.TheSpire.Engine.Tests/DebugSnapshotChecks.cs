@@ -184,6 +184,89 @@ internal static class DebugSnapshotChecks
             }
         });
 
+        Check.Run("DEBUG candidate relations preserve one bounded outgoing layer and shared targets", () =>
+        {
+            var linked = new RuleSetBuilder().Add(EngineDslCompiler.Compile("""
+                using namespace debug-relations;
+                dsl_version = "core/0.3"
+                entity Node { fields = { Name = { type = String default = "old" } Next = { type = Ref(Node) optional = true } } }
+                collection Roots { element = Node ordered = true }
+                relation Tags { target = Node }
+                event Seen { payload = { node = Ref(Node) } }
+                action Run { locals = { picked = Binding definition = Binding } body = {
+                  samplePick = { stream = "test" candidates = collection(Roots) into = picked }
+                  emit = { event = Seen payload = { node = picked } }
+                  let = { into = definition value = field(picked, Node.Next) }
+                  forEach = { query = relation(Tags, definition) item = tag body = {
+                    set = { target = tag field = Node.Name value = "changed" }
+                    destroy = { target = tag }
+                  } }
+                  forEach = { query = collection(Roots) item = root body = { destroy = { target = root } } }
+                  destroy = { target = definition }
+                } }
+                """)).Build();
+            (Session Session, InstanceId[] Roots, InstanceId Definition, InstanceId[] Tags, InstanceId Deep) Create(SessionDebugOptions? options)
+            {
+                var s = new Session(linked, 42, ["player"], debug: options); s.Start(); var type = linked.Types.Single();
+                InstanceId Node() => s.State.CreateInstance(type.Id, s.State.RootScope);
+                var roots = new[] { Node(), Node() }; var definition = Node(); var tags = new[] { Node(), Node() }; var deep = Node();
+                foreach (var root in roots)
+                {
+                    s.State.AddToCollection(linked.Collections.Single().Id, root);
+                    s.State.SetField(root, type.FieldIndex("Next"), Value.OfRef(definition));
+                }
+                s.State.SetField(definition, type.FieldIndex("Next"), Value.OfRef(deep));
+                s.State.SetField(tags[0], type.FieldIndex("Next"), Value.OfRef(deep));
+                var relation = linked.Relations.Single().Id;
+                s.State.AddRelation(relation, roots[0], tags[0]);
+                foreach (var tag in tags.Reverse()) s.State.AddRelation(relation, definition, tag);
+                s.State.AddRelation(relation, tags[0], deep);
+                return (s, roots, definition, tags, deep);
+            }
+            var plain = Create(null); plain.Session.Submit(linked.Actions.Single(), plain.Session.Participant(0), []);
+            foreach (var options in new[] { new SessionDebugOptions(CaptureValues: true, CaptureCandidateReferences: true),
+                new(CaptureValues: true, CaptureCandidateReferences: true, CaptureCandidateRelations: true),
+                new(CaptureValues: true, CaptureCandidateRelations: true),
+                new(CaptureValues: true, CaptureCandidateReferences: true, CaptureCandidateRelations: true, MaxSnapshotEntities: 3),
+                new(CaptureValues: true, CaptureCandidateReferences: true, CaptureCandidateRelations: true, MaxSnapshotValues: 9),
+                new(CaptureValues: true, CaptureCandidateReferences: true, CaptureCandidateRelations: true, MaxSnapshotValues: 12),
+                new(CaptureValues: true, CaptureCandidateReferences: true, CaptureCandidateRelations: true, MaxTextLength: 5),
+                new(CaptureCandidateRelations: true), new(CaptureValues: true, CaptureCandidateRelations: true, MaxRecords: 1) })
+            {
+                var sample = Create(options); var s = sample.Session;
+                s.Submit(linked.Actions.Single(), s.Participant(0), []);
+                Check.Equal(plain.Session.Identity, s.Identity, "relation copying preserves identity");
+                Check.Equal(plain.Session.State.StateHash(), s.State.StateHash(), "relation copying preserves gameplay");
+                Check.Sequence(plain.Session.Random.Diagnostics(), s.Random.Diagnostics(), "relation copying preserves RNG");
+                if (!options.CaptureValues || options.MaxRecords == 1)
+                { Check.True(s.Debug!.Records.All(r => r.Snapshot is null), "disabled values and full records allocate no relation copies"); continue; }
+                var snapshot = s.Debug!.Records.Single(r => r.Random is not null).Snapshot!;
+                Check.Equal(options.CaptureCandidateRelations, snapshot.RelationsCaptured, "relation request explicit");
+                if (!options.CaptureCandidateRelations)
+                { Check.Equal(0, snapshot.RelationCount, "default does not copy relations"); Check.Equal(3, snapshot.Entities.Count, "default does not copy relation targets"); continue; }
+                if (!options.CaptureCandidateReferences)
+                { Check.Equal(1, snapshot.RelationCount, "only root owners expanded without reference option"); Check.DoesNotContain(snapshot.Entities, e => e.Instance == sample.Definition, "relation option does not enable field traversal"); continue; }
+                Check.Equal(2, snapshot.RelationCount, "nonempty groups on roots and one reference layer counted");
+                if (options.MaxSnapshotEntities == 3 || options.MaxSnapshotValues < 20 || options.MaxTextLength == 5)
+                { Check.False(snapshot.Complete, "entity, shared value and relation text loss explicit"); continue; }
+                Check.True(snapshot.Complete, "complete outgoing relation copy");
+                Check.Sequence(sample.Tags.Reverse(), snapshot.Relations.Single(r => r.Owner == sample.Definition).Targets, "actual insertion order retained");
+                Check.Equal(5, snapshot.Entities.Count, "shared relation target copied once");
+                Check.True(sample.Tags.All(id => !s.State.Exists(id)), "targets actually rewritten and destroyed");
+                Check.True(snapshot.Entities.Where(e => sample.Tags.Contains(e.Instance)).All(e => e.Fields.Single(f => f.Name == "Name").Value.Scalar == "old"), "target fields copied before later rewrite");
+                Check.DoesNotContain(snapshot.Entities, e => e.Instance == sample.Deep, "neither target fields nor target relations recurse");
+                Check.False((snapshot with { Relations = [] }).Complete, "missing relation groups cannot claim completeness");
+                Check.Throws<NotSupportedException>(() => ((IList<SessionDebugRelationSnapshot>)snapshot.Relations).Clear(), "relation copies readonly");
+                Check.Throws<NotSupportedException>(() => ((IList<InstanceId>)snapshot.Relations[0].Targets).Clear(), "target lists readonly");
+                Check.False(s.Debug.Records.Single(r => r.Kind == SessionDebugKind.EventEmit).Snapshot!.RelationsCaptured, "event copying unchanged");
+            }
+            var empty = Create(new(CaptureValues: true, CaptureCandidateRelations: true));
+            empty.Session.State.ClearRelation(linked.Relations.Single().Id, empty.Roots[0]);
+            empty.Session.Random.DrawPick("empty", empty.Roots);
+            var zero = empty.Session.Debug!.Records.Last().Snapshot!;
+            Check.True(zero.RelationsCaptured && zero.Complete && zero.RelationCount == 0, "requested empty outgoing relation set differs from disabled copying");
+        });
+
         Check.Run("DEBUG value copying is opt-in, pull-only and isolated without changing gameplay or RNG", () =>
         {
             var sessions = new[] { New(null), New(new()), New(new(CaptureValues: true)), New(new(CaptureValues: true)) };

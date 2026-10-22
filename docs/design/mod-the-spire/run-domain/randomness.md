@@ -4,7 +4,7 @@
 
 ## 通用能力与内容职责
 
-core复用显式选择的xoshiro256**／SplitMix64及vanilla-uniform@1映射，默认engine-default抽样行为不变。`engine/ir@0.9`／Core.TheSpire 0.9.3提供gameSeed、hash32／hash64、uint64Add、ordinal文本前缀与UTF-16字符串截取、显式流种子和binary32／binary64操作；所有随机消费仍由唯一RandomService计数与快照。浮点和无符号64位均用Int保存位型，只通过对应操作解释。具体操作见[作者参考](../../../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。
+core复用显式选择的xoshiro256**／SplitMix64及vanilla-uniform@1映射，默认engine-default抽样行为不变。`engine/ir@0.9`／Core.TheSpire 0.9.4提供gameSeed、hash32／hash64、uint64Add、ordinal文本前缀与UTF-16字符串截取、显式流种子和binary32／binary64操作；所有随机消费仍由唯一RandomService计数与快照。浮点和无符号64位均用Int保存位型，只通过对应操作解释。具体操作见[作者参考](../../../dsl/core/0.3/authoring-reference.md#随机流与-binary32)。
 
 gameSeed 为不可变会话输入，公开入口保留请求原文（bootstrap 语义），不隐式 trim、大小写或大厅标准化；默认无字符串输入时使用数字种子的 invariant 十进制文本。hash32 是352654597双累加器对UTF-16 code unit 的 unchecked 32位哈希，返回0..4294967295。流种子必须在首次消费之前设置，重复声明拒绝；快照保留尚未抽取的显式种子。非法范围不得消费随机数。
 

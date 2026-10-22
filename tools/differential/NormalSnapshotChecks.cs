@@ -13,7 +13,7 @@ internal static class NormalSnapshotChecks
     private static bool CandidateReferencesComplete(SessionDebugRecord record)
     {
         if (record.Random?.Candidates is not { } candidates) return true;
-        if (record.Snapshot is not { ReferenceDepth: 1 } snapshot) return false;
+        if (record.Snapshot is not { ReferenceDepth: 1, RelationsCaptured: true } snapshot) return false;
         foreach (var id in candidates)
         {
             var root = snapshot.Entities.SingleOrDefault(e => e.Instance == id);
@@ -25,6 +25,7 @@ internal static class NormalSnapshotChecks
                 if (value.Kind == ValueKind.RefList && !value.Items!.All(Copied)) return false;
             }
         }
+        if (snapshot.Relations.Any(r => !Copied(r.Owner.Value) || r.Targets.Any(id => !Copied(id.Value)))) return false;
         return true;
         bool Copied(long id) => id == 0 || snapshot.Entities.Any(e => e.Instance.Value == id && !e.Missing);
     }
@@ -49,6 +50,20 @@ internal static class NormalSnapshotChecks
         Require(floats.Any(r => r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1073741824 }), "real enemy sampling retains the [0,2) range");
         Require(floats.Any(r => r.Subject!.Contains("rewards") && r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1065353216 }), "real reward sampling retains the [0,1) range");
         CheckFloat32Projection(records);
+        var relatedIndex = records.ToList().FindIndex(r => r.Random?.Candidates is not null
+            && r.Snapshot!.Relations.Any(edge => edge.Relation == "base-spire:OpeningTags"));
+        Require(relatedIndex >= 0, "real normal initialization has historical candidate tag relations");
+        var related = records[relatedIndex]; var relations = related.Snapshot!.Relations;
+        var tag = relations.First(edge => edge.Relation == "base-spire:OpeningTags").Targets[0];
+        Require(related.Snapshot.Entities.Single(e => e.Instance == tag) is { Type: "base-spire:OpeningTag" } copiedTag
+            && copiedTag.Fields.Single(f => f.Name == "Name").Value.Scalar is { Length: > 0 }, "actual historical tag target fields are available");
+        foreach (var bad in new[] { related.Snapshot with { RelationsCaptured = false }, related.Snapshot with { Relations = [] },
+            related.Snapshot with { Entities = related.Snapshot.Entities.Where(e => e.Instance != tag).ToArray() },
+            related.Snapshot with { Relations = relations.Select((edge, i) => i != 0 ? edge : edge with { Targets = [] }).ToArray() } })
+        {
+            var relationInjected = records.ToArray(); relationInjected[relatedIndex] = related with { Snapshot = bad };
+            Require(!Complete(relationInjected, 0), "missing historical relation request, group, target or member cannot pass");
+        }
         var expiredCandidates = records.Where(r => r.Random?.Candidates is not null)
             .SelectMany(r => r.Random!.Candidates!).Where(id => !observed.IsLive(id)).Distinct().ToArray();
         CheckPhaseProjection(records);
