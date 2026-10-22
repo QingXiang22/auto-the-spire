@@ -45,7 +45,7 @@ internal sealed class NormalDslRun : IDisposable
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
             [Path.Combine(repository, "mod-the-spire/base-spire/package.json"), null, 4096, null,
                 debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues,
-                    CaptureCandidateReferences: true) : null])!;
+                    CaptureCandidateReferences: true, CaptureCandidateRelations: true) : null])!;
         var configured = (ControlHost)setup.GetType().GetProperty("Host")!.GetValue(setup)!;
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
