@@ -242,6 +242,8 @@ internal sealed class NormalDslRun : IDisposable
         NormalPublicObservation.Add(Snapshot, v, Binding);
         // Public evidence remains the actual protocol snapshot, separate from tool-only hidden piles.
         var trace = Engine.Debug;
+        var scalars = trace is null ? null : NormalScalarTrace.Dsl(trace.Capture(), trace.DroppedRecords);
+        if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
@@ -254,6 +256,7 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_public_actions = unmapped,
                 unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
                 unmapped_public_topology = new[] { "MapNodes sequence order" },
+                unmapped_scalar_calls = scalars?.Unmapped,
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });

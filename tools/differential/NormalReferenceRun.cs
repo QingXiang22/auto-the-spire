@@ -356,6 +356,8 @@ internal sealed class NormalReferenceRun : IDisposable
                 .OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
         Put("actions.candidates", Actions().Select(a => a.Key).Distinct().Order(StringComparer.Ordinal).ToArray());
+        var scalars = diagnostics ? random.ScalarCalls() : null;
+        if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
@@ -363,6 +365,7 @@ internal sealed class NormalReferenceRun : IDisposable
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"],
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
+                unmapped_scalar_calls = scalars?.Unmapped,
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
     public void Dispose() => random.Dispose();
@@ -459,6 +462,33 @@ internal sealed class NormalReferenceRandom : IDisposable
                 BitConverter.SingleToUInt32Bits((float)c.Parameters.Minimum), BitConverter.SingleToUInt32Bits((float)c.Parameters.Maximum),
                 BitConverter.SingleToUInt32Bits(float.Parse(c.Result, System.Globalization.CultureInfo.InvariantCulture)));
         }));
+    }
+    internal NormalScalarProjection ScalarCalls()
+    {
+        if (dropped != 0 || pending.Count != 0) throw new NotSupportedException("missing_dimension: incomplete native scalar diagnostics");
+        var result = new List<NormalScalarCall>(); var unmapped = new List<NormalUnmappedScalar>();
+        foreach (var call in calls)
+        {
+            var stream = Name(call.Rng); var p = call.Parameters;
+            if (p.Operation == "NextFloat") continue;
+            if (stream == "base-spire:run:niche" && p.Operation == "NextInt")
+            { unmapped.Add(new(stream, call.Before, call.After, "monster HP offset normalization")); continue; }
+            if (p.Operation == "NextInt" && p.Arity is 1 or 2)
+                result.Add(NormalScalarTrace.Integer(stream, call.Before, call.After, Integral(p.Minimum), Integral(p.Maximum), long.Parse(call.Result, System.Globalization.CultureInfo.InvariantCulture)));
+            else if (p.Operation == "NextBool" && p.Arity == 0)
+                result.Add(NormalScalarTrace.Integer(stream, call.Before, call.After, 0, 2, bool.Parse(call.Result) ? 0 : 1));
+            else if (p.Operation == "NextDouble" && p.Arity == 0)
+            {
+                if (stream == "base-spire:run:up_front")
+                { unmapped.Add(new(stream, call.Before, call.After, "opening weighted bag normalization")); continue; }
+                if (stream != "base-spire:run:act_1_map") throw new NotSupportedException("missing_dimension: unclassified native double source");
+                result.Add(NormalScalarTrace.UnitDouble(stream, call.Before, call.After, double.Parse(call.Result, System.Globalization.CultureInfo.InvariantCulture)));
+            }
+            else throw new NotSupportedException("missing_dimension: native scalar operation " + p.Operation);
+        }
+        return new(NormalScalarTrace.Canonical(result), unmapped.OrderBy(c => c.Stream, StringComparer.Ordinal).ThenBy(c => c.Before).ToArray());
+        static long Integral(double value) => double.IsFinite(value) && value == Math.Truncate(value) && value >= int.MinValue && value <= int.MaxValue
+            ? (long)value : throw new NotSupportedException("missing_dimension: non-integral native integer bound");
     }
     // The factory-local generator is retained only by the enabled observer. Compare the
     // same run/player/event objects on both sides; per-call diagnostics retain its words.

@@ -63,6 +63,7 @@ internal static class NormalRunChecks
             Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
         var victory = left.Capture("victory");
+        NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
         Require(floatCalls.Length == 11 && floatCalls.Count(c => c.Stream == "base-spire:run:monster_ai") == 3
             && floatCalls.Count(c => c.Stream == "base-spire:player:rewards") == 8,
