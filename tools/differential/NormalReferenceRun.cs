@@ -108,7 +108,6 @@ internal sealed class NormalReferenceRun : IDisposable
                 if (node.PointType.ToString() != "Monster") throw new NotSupportedException("Normal first encounter requires a Monster map point.");
                 run.AddVisitedMapCoord(node.coord);
                 combat = (CombatRoom)RoomFactory.CreateRoom(run, RoomType.Monster); run.PushRoom(combat);
-                random.NameEncounter(unchecked(run.Rng.Seed + (ulong)run.TotalFloor + StringHelper.GetDeterministicHashCode(combat.Encounter!.IdEntry)));
                 if (diagnostics)
                 {
                     var observerType = typeof(CombatRoom).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!;
@@ -116,7 +115,9 @@ internal sealed class NormalReferenceRun : IDisposable
                     ((NormalReferenceObserver)observer).Record = (name, args) => events.Add(new { name, arguments = args.Select(EventArgument).ToArray() });
                     typeof(CombatRoom).GetMethod("ConfigureObserver", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combat, [observer]);
                 }
-                await combat.Enter(run); Phase = "combat"; break;
+                await combat.Enter(run);
+                random.NameEncounter(unchecked(run.Rng.Seed + (ulong)run.TotalFloor + StringHelper.GetDeterministicHashCode(combat.Encounter!.IdEntry)));
+                Phase = "combat"; break;
             case "targeted-play":
                 targetedCard = player.PlayerCombatState!.Hand.Cards.Single(c => Card(c) == action.Arguments[0]);
                 break;
@@ -309,7 +310,9 @@ internal sealed class NormalReferenceRandom : IDisposable
     public object Capture() => new { dropped, unfinished = pending.Count,
         calls = calls.Select(c => new { stream = Name(c.Rng), c.Operation, c.Result, c.Before, c.After, c.Parameters, c.StateAfter }).ToArray(),
         streams = names.Keys.Concat(attached).Distinct().Select(r => new { name = Name(r), state = r.ToSerializable() }).ToArray() };
-    public string KnownState() => System.Text.Json.JsonSerializer.Serialize(names.OrderBy(p => p.Value, StringComparer.Ordinal)
+    // The factory-local generator is retained only by the enabled observer. Compare the
+    // same run/player/event objects on both sides; per-call diagnostics retain its words.
+    public string KnownState() => System.Text.Json.JsonSerializer.Serialize(names.Where(p => p.Value != "base-spire:encounter:monsters").OrderBy(p => p.Value, StringComparer.Ordinal)
         .Select(p => new { name = p.Value, state = p.Key.ToSerializable() }), new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
     public void Dispose()
     {
