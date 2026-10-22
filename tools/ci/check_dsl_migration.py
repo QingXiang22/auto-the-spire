@@ -121,6 +121,14 @@ def main() -> int:
                 or len(dummy["cases"]) != 13 or any(c["status"] != "passed" for c in dummy["cases"])):
             raise ValueError("BattleFriend controlled component comparison did not execute all required cases")
 
+        wriggler = run("wriggler", ["wriggler-compare", "--output", str(args.output / "wriggler")], 0)
+        wriggler_cases = [seed + ":" + mode for seed in ("777", "A😀B")
+                          for mode in ("four", "stunned", "hp-exhausted", "block", "unpowered", "death", "retain", "ethereal", "auto", "force-auto", "cost", "nonhand")]
+        if (wriggler is None or wriggler["status"] != "passed" or wriggler["independent_verified"] is not True
+                or wriggler["normal_run_verified"] is not False or wriggler["parent_event_verified"] is not False
+                or [c["id"] for c in wriggler["cases"]] != wriggler_cases or any(c["status"] != "passed" for c in wriggler["cases"])):
+            raise ValueError("Wriggler/Infection controlled component comparison did not execute all required cases")
+
         for row in record["suites"]:
             definition = json.loads((ROOT / row["active_definition"]).read_text(encoding="utf-8"))
             suite = definition["suite"]

@@ -236,8 +236,7 @@ procedure CloseNormalVisit {
     set = { target = visit field = RunVisit.Phase value = "closed" }
     set = { target = visit field = RunVisit.Status value = "closed" }
     forEach = { query = type(Enemy) item = enemy body = {
-      call = { procedure = ResetEnemyMoves args = { target = enemy } }
-      destroy = { target = enemy }
+      call = { procedure = RemoveCombatEnemy args = { target = enemy } }
     } }
     forEach = { query = relation(MapChildren, field(run, Run.CurrentNode)) item = child body = {
       set = { target = child field = MapNode.Selectable value = not(field(child, MapNode.Visited)) }

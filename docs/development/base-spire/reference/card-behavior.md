@@ -37,17 +37,19 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 | 操作 | 参数／返回与语义 |
 | --- | --- |
 | `AddCardCostModifier` | card: Ref(Card)、source: String(64)、operation: String(16)、amount: Int、lifetime: String(16)；operation 为 set／add，lifetime 为 turn／play／turn-or-play／combat，按插入顺序折叠 |
-| `LocalCardCost` | card → Int，pure；从 BaseCost 折叠独立修正，夹至0..9；RefreshCardCost 更新公开 Cost 缓存。实际费用仍经 GetCardEnergyCost 的 Power 修正 |
+| `LocalCardCost` | card → Int，pure；BaseCost为-1时直接保留哨兵；非负费用折叠独立修正后夹至0..9。RefreshCardCost更新公开Cost缓存，实际费用仍经GetCardEnergyCost的Power修正 |
 | `ExpireCardCostModifiers` | card、boundary: String(16)；共享出牌／回合流程负责到期。新战开始清除所有临时费用，克隆独立复制现有修正 |
 | `MoveCombatCard` | owner、card、to: String(16)、reason: String(32)；to 为 hand／draw-top／draw／discard／play／removed。拒绝永久牌及外来拥有者；满手转弃牌，通知 CardMoved(owner,card,from,to,reason) |
 | `DiscardCombatCard` | owner、card；只接受手牌，移动后发 CardDiscarded。回合末 flush 和正常打出结果区只发移动通知，不冒充主动弃牌 |
 | `ExhaustCombatCard` | owner、card；移动后依次发 CardMoved、CardExhausted；拒绝永久牌、已耗尽和离场牌 |
 | `CardHasKeyword` | card、keyword: String(16) → Bool，pure；innate／exhaust 的基础事实加 ModifyCardKeyword 修正，retain／ethereal／unplayable／eternal 可由内容提供 |
 | `CardPlayAllowed` | owner、card、auto: Bool → Bool，pure；共享已定义／拥有者／Unplayable／ShouldPlayCard 门禁；手动另验证手牌、回合、能量和目标 |
-| `FinishTurnHand` | owner；固定 Ethereal 批次，处理消耗，再 BeforeHandFlush、留手筛选、整批移动及 AfterHandFlush。新抽入牌不追加到旧 Ethereal 批次 |
+| `FinishTurnHand` | owner；保存原手牌的效果牌与其他Ethereal牌名单，先耗尽后者，再依原手牌顺序将效果牌移入Play、通知CardTurnEndInHandEffect并移入结果区。死亡守卫拒绝后续移动；仍活跃才BeforeHandFlush、留手筛选、整批移动及AfterHandFlush。新抽牌不追加旧批次 |
+| `CardHasTurnEndInHandEffect`／`CardTurnEndInHandEffect` | 前者payload为value: Bool、card: Ref(Card)，pure修正返回资格；后者通知owner、card，所属模块执行效果。Infection使用这两个入口 |
+| `DamagePlayerFromCard` | owner: Ref(Player)、card: Ref(Card)、amount: Int(0..999999)；玩家为伤害来源与目标，保留牌源、空play，可格挡且无加成，经DamageResult通知及失败判定 |
 | `AutoPlayFromDrawPile` | owner、play: Binding、count: Int、forceExhaust: Bool；先预取并移出整个批次，再逐张共用自动出牌流程；嵌套批次独立 |
 
-上述牌区仍为单玩家全局集合。带独有回合末手牌效果、完整多选／取消策略和所有变换政策未由本表一并承诺。
+上述牌区仍为单玩家全局集合。回合末手牌效果已由Infection接入；完整多选／取消策略和所有变换政策未由本表一并承诺。
 
 ## 复制、附魔与永久牌
 

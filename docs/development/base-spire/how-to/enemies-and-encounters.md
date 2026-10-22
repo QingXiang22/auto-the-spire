@@ -20,7 +20,9 @@
 
 确定性行动不要额外消耗随机；空候选、死亡目标和分支被跳过时同样记录是否应抽样。用固定输入检查下一行动与流游标，再与真正独立参考比较；只检查两次自运行相同不能证明原版保真。
 
-核对AddBranch的确切重载：TwigSlimeM的整数2是最多连续次数，默认权重1。共享图保留零权重项及源候选顺序，单个有效分支仍消费monster_ai；总权重为0明确失败。静态分数权重转成binary32，按源的double缩放和逐项float扣减顺序执行。条件节点、动态权重及强制迁移尚未支持，需要真实消费者时再扩展。
+核对AddBranch的确切重载：TwigSlimeM的整数2是最多连续次数，默认权重1。共享图保留零权重项及源候选顺序，单个有效分支仍消费monster_ai；总权重为0明确失败。静态分数权重转成binary32，按源的double缩放和逐项float扣减顺序执行。条件节点使用ResolveEnemyMoveCondition的pure分派返回同图下一节点，解析至真实招式后才保存历史，不抽随机；动态权重及强制迁移仍需真实消费者接入。
+
+Wriggler.Create(slot,startStunned)支持wriggler1..wriggler4，按当前活动敌人已用的最大HP排除17..21中的值，再用niche抽候选偏移；耗尽才按整个区间抽取。未知槽位在抽样前失败。1／3槽首招bite，2／4槽首招wriggle；StartStunned先执行SPAWNED_MOVE再进入槽位初招。wriggle生成Infection到弃牌堆后获得2力量，复合意图按源顺序发布为buff,status。Wriggler.Spawn提供四槽开发入口；父事件调用完整Create过程，不能据开发动作宣称事件访问已完成。移除实例时调用RemoveCombatEnemy，清理Power、招式和模块私有状态。
 
 ## 编排遭遇与编队
 

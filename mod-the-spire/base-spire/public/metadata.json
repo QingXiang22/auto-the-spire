@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.55",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.56",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -90,7 +90,8 @@
         "base-spire:tracker-ruby-raider",
         "base-spire:battle-friend-v1",
         "base-spire:battle-friend-v2",
-        "base-spire:battle-friend-v3"
+        "base-spire:battle-friend-v3",
+        "base-spire:wriggler"
       ]
     },
     "base-spire:Card": {
@@ -184,7 +185,8 @@
         "base-spire:unrelenting",
         "base-spire:uppercut",
         "base-spire:vicious",
-        "base-spire:whirlwind"
+        "base-spire:whirlwind",
+        "base-spire:infection"
       ]
     },
     "base-spire:Potion": {

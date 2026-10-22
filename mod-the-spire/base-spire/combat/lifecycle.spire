@@ -21,6 +21,7 @@ event AfterTurnEnded { payload = { owner = Ref(Player) } }
 event EnemyDied { payload = { target = Ref(Enemy) } }
 event EnemyEscaped { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 event EnemyAddedToCombat { payload = { owner = Ref(Player) target = Ref(Enemy) } }
+event EnemyRemoving { payload = { target = Ref(Enemy) } }
 # The development combat finished: victory when no hittable enemy remains, defeat when the player reaches 0 HP.
 event CombatEnded { payload = { owner = Ref(Player) victory = Bool } }
 event CombatVictory { payload = { owner = Ref(Player) victory = Bool } }
@@ -33,6 +34,17 @@ event AfterEnemyTurnEnded { payload = { owner = Ref(Player) } }
 procedure EnemySideTurnEndOrder {
   pure = true parameters = { target = Ref(Enemy) } result = Int
   body = { return = { value = add(multiply(add(field(target, Enemy.SpawnOrder), 1), add(count(collection(Powers)), 1)), count(collection(Powers))) } }
+}
+procedure RemoveCombatEnemy {
+  parameters = { target = Ref(Enemy) }
+  body = {
+    forEach = { query = where(collection(Powers), p, equal(field(p, Power.HolderEnemy), target)) item = power body = {
+      call = { procedure = RemovePower args = { power = power } }
+    } }
+    call = { procedure = ClearEnemyMoves args = { target = target } }
+    emit = { event = EnemyRemoving payload = { target = target } }
+    destroy = { target = target }
+  }
 }
 procedure EscapeEnemy {
   parameters = { owner = Ref(Player) target = Ref(Enemy) }
@@ -212,6 +224,8 @@ procedure EndDevelopmentTurn {
     if = { condition = field(owner, Player.CombatActive) then = { emit = { event = BeforePlayerTurnEnd payload = { owner = owner } } } }
     if = { condition = field(owner, Player.CombatActive) then = {
       call = { procedure = FinishTurnHand args = { owner = owner } }
+    } }
+    if = { condition = field(owner, Player.CombatActive) then = {
       emit = { event = AfterTurnEnded payload = { owner = owner } }
         emit = {
           event = AfterPlayerSideEnd payload = { owner = owner } }

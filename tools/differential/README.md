@@ -32,6 +32,12 @@ Strike 保持原受控语义：10 张起始牌组、手牌仅一张普通 Strike
 
 这项比较有独立的13个组件场景，migration要求全部通过。报告的independent_verified只适用于该组件范围，normal_run_verified及parent_event_verified保持false；不关闭BattlewornDummy父事件、M01或原11份suite的缺口。
 
+## Wriggler与Infection受控组件比较
+
+运行`dotnet run --project tools/differential -c Release -- wriggler-compare --output .artifacts/differential/wriggler`。两侧使用空永久牌组及真实战斗开始、抽牌／重洗和回合命令，验证四槽三回合、StartStunned、HP候选耗尽，以及Infection格挡、无加成、致死、Retain／Ethereal、非手牌、费用修改与自动尝试。niche比较实际参数、结果、游标及完整状态，并核对run／怪物AI消费和shuffle消费。参考的StatusCard意图名称显式映射为DSL的status，保留buff,status顺序。
+
+工具只在受控初态设置HP、格挡和效果牌；测试附加DSL入口调用相同生产过程，参考使用真实CombatEngine及AutoPlayCmd.FromCards。致死场景保留原生牌区守卫结果：致死牌在Play，后一张效果牌在Hand。两个seed共24个组件场景必须全部通过，migration保留原11份suite与严格失败；normal_run_verified和parent_event_verified保持false，不关闭DenseVegetation父事件或完整Run。
+
 ## 重洗诊断
 
 ```powershell

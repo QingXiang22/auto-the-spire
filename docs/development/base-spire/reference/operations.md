@@ -104,6 +104,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | StatusMultiplierRelic模板 | definition: String(64)、vulnerableBonus: Int(0..100)=0、weakReduction: Int(0..75)=0 | 有效持有实例订阅两个状态倍率站点；PaperPhrog配置25、PaperKrane配置15，虚弱倍率最低0；不改变状态层数／时长 |
 | ResetTurnEnergy／AfterEnergyReset | owner: Ref(Player)，过程／事件 | 首回合重置；后续有有效保留能量资格时将最大能量加到余能，上限999，否则重置。该操作绕过禁止获得能量，随后发事件；额外奖励仍调用GainEnergy |
 | DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的未阻挡伤害发 PlayerHpLost 并检查开发失败；不改变 MaxHp |
+| DamagePlayerFromCard | owner=Ref(Player)、card=Ref(Card)、amount=Int(0..999999) | 玩家自伤，保留牌源与空play，可格挡、无加成；经DamageResult、生命损失通知和失败判定，Infection回合末消费 |
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗／回合、手牌、共享资格与能量；付款、进入InPlay、执行唯一正文；全部重复完成后提交捕获的结果区 |
 | PlayAttackCard | owner、card | 同上，但把敌人解析为第一个 `Hp > 0` 的开发目标后调用唯一正文；无目标不是合法候选 |
@@ -123,6 +124,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [DamagePlayerPowered](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire) | attacker=Ref(Enemy)、owner=Ref(Player)、amount | 敌方攻击链：防守方 `after-attacked-damage`（Thorns）先以无加成伤害反击攻击者，再按攻击者 Strength→攻击者 Weak ×0.75→防守方 Vulnerable ×1.5（整数向下取整）→格挡→生命，并做失败判定 |
 | RunEnemyTurn | owner=Ref(Player) | 敌方阶段：对每个可命中敌人先清空其格挡（源 `Creature.AfterTurnStart` 的敌侧语义），再发 EnemyTurnStarted；最后发 AfterEnemyTurnEnded |
 | [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义图保存初始招式；固定首招不抽样。生成和BeforeCombatStart复用，不重置随机流 |
+| ClearEnemyMoves／RemoveCombatEnemy | target=Ref(Enemy) | 前者只清招式及历史；后者依次移除Power、清招式、发EnemyRemoving供内容清私有状态，再销毁敌人。正常访问关闭复用后者 |
+| Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态并初始化图；条件节点不消费AI随机，未知槽位拒绝 |
 | PerformEnemyMove | owner=Ref(Player)、target=Ref(Enemy) | 复核双方生命，按保存节点分派ExecuteEnemyMove；完成后标记需要选招，暂停续接不重放正文 |
 | SelectNextEnemyMove | target=Ref(Enemy) | 对存活且未准备实例解析共享后继，保存MoveId／MoveIndex／Intent及实例历史；随机节点按源顺序与binary32权重消费monster_ai，已准备实例不再选招 |
 | [SingleAttackEnemy](../../../../mod-the-spire/base-spire/enemies/rules/single-attack-enemy.spire) 模板 | definition、hp、damage | 生成 `WhenEnemyTurn`（每回合对玩家造成固定伤害并保持 attack 意图）与 `Spawn`（用源最小 HP 创建） | TwigSlimeS（7 HP，4 伤害）、AssassinRubyRaider（18 HP，10 伤害） |
@@ -164,7 +167,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | --- | --- | --- |
 | RunDeck | 有序 Card 集合 | 永久实例，公开为 group；与全部战斗牌区分离 |
 | Player.UsesRunDeck | Bool=false | 第一次显式获得永久牌后为 true，后续不再使用默认开发占位牌 |
-| ObtainPermanentCard | owner: Ref(Player)、definition: String(64)、cost: Int(0..9)、targeted／exhausts／leavesPlay／strikeTag／isX: Bool、kind: String(16)、baseDamage: Int(0..999) | 只允许存活玩家在房间与战斗外获得；以给定已迁移定义创建永久实例，CanUpgrade=true，置 UsesRunDeck 后发 CardObtained；没有随机池或获得修正 |
+| ObtainPermanentCard | owner: Ref(Player)、definition: String(64)、cost: Int(-1..9)、targeted／exhausts／leavesPlay／strikeTag／isX: Bool、kind: String(16)、baseDamage: Int(0..999) | 只允许存活玩家在房间与战斗外获得；以给定已迁移定义创建永久实例，CanUpgrade=true，置 UsesRunDeck 后发 CardObtained；没有随机池或获得修正 |
 | CardDefinition 生成的 Obtain | owner: Ref(Player)；公开 action 无参数 | 以本定义配置调用共享获得过程，例如 Strike.Obtain；每次调用是独立实例 |
 | BuildCombatDeck | owner: Ref(Player) | UsesRunDeck=true 时删除本玩家所有旧非永久牌，从 RunDeck 复制已支持字段到 DrawPile；PermanentSource 隐藏引用具体原实例；顺序不变，不自动洗牌／抽牌，也不反写永久牌 |
 | HasUpgradablePermanentCards | owner: Ref(Player)，纯过程→Bool | 检查本玩家 RunDeck 中 CanUpgrade=true 且 Upgraded=false 的实例 |

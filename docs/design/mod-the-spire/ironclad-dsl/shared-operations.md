@@ -35,7 +35,7 @@
 | `PlayCard` | `owner, card` | 手牌中的非选敌牌；验证战斗／回合、持有与能量后付款一次 |
 | `PlayTargetedCard` | `owner, card` | 先验证可支付性，再发布存活敌人必须单选决策；答复后付款。对应公开 action 同名 |
 | `PlayAttackCard` | `owner, card` | 兼容旧开发脚本，默认首个存活敌人；新客户端使用显式目标入口。也服务有选敌目标的 Skill |
-| `AutoPlayCard` | `owner, card, forceExhaust` | 从该玩家手牌、抽牌、弃牌或耗尽堆免费打出；不重新抽牌、不支付能量，X 捕获当前能量。保留父出牌上下文；没有存活敌人或玩家已死亡时不开始 |
+| `AutoPlayCard` | `owner, card, forceExhaust` | 从该玩家手牌、抽牌、弃牌或耗尽堆免费尝试；Unplayable经过Play移至结果牌区，不执行正文、不记录真实出牌。其余不重新抽牌、不支付能量，X捕获当前能量。保留父上下文；没有存活敌人或玩家已死亡时不开始 |
 | `AttacksPlayedThisTurn` | `owner` → Int，pure | 每次开始的攻击分别计数，包括同实例重复和嵌套出牌；Stomp 初始化另用 finished 历史 |
 | `CardBaseDamage` | `owner, card, target` → Int，pure | 计算普通／升级基础伤害、战斗成长、耗尽数量、Strike 标签数、目标易伤层数或当前格挡。target 可为 none；攻击者／目标修正由伤害链再处理 |
 

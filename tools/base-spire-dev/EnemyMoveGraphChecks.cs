@@ -8,7 +8,7 @@ internal static partial class PackageChecks
     {
         var count = 0;
         void Case(string name, Action body) { body(); count++; Console.WriteLine("ok   " + name); }
-        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case); RunBattleFriendChecks(package, Case);
+        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case); RunBattleFriendChecks(package, Case); RunWrigglerChecks(package, Case);
         Console.WriteLine($"All {count} enemy move checks passed; controlled development combat, not normal encounters or full simulator comparison.");
         return 0;
     }

@@ -8,7 +8,7 @@ entity Card {
     Label = { type = String(length = 64) default = "development-card" }
     # Runtime definition identity; source rarity and complete pool identity remain in the static catalog.
     DefinitionId = { type = String(length = 64) default = "base-spire:development-card" }
-    Cost = { type = Int(min = 0, max = 9) default = 0 }
+    Cost = { type = Int(min = -1, max = 9) default = 0 }
     Upgraded = { type = Bool default = false }
     # Only migrated definitions implement a single source upgrade; development placeholders do not.
     CanUpgrade = { type = Bool default = false }
@@ -19,7 +19,7 @@ entity Card {
     IsX = { type = Bool default = false }
     # Captured energy X; effect bonuses are queried separately through ResolveEnergyXValue.
     PaidX = { type = Int(min = 0, max = 999) default = 0 }
-    BaseCost = { type = Int(min = 0, max = 9) default = 0 }
+    BaseCost = { type = Int(min = -1, max = 9) default = 0 }
     ForceExhaust = { type = Bool default = false visibility = Hidden }
     DamageGrowth = { type = Int(min = 0, max = 999999) default = 0 }
     BaseDamage = { type = Int(min = 0, max = 999) default = 0 }

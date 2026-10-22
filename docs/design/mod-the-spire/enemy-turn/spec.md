@@ -4,13 +4,13 @@
 
 ## 已核实来源与范围
 
-从 `sts2/src/Core/Models/Monsters/FuzzyWurmCrawler.cs` 核对：Ascension 0 的初始 HP 55..57；招式为 `FIRST_ACID_GOOP`（4 点攻击）→ `INHALE`（对自身施加强度 7）→ `ACID_GOOP`（4 点攻击）→ 回到 `FIRST_ACID_GOOP`，三个状态的后继关系确定，没有随机分支。两个 goop 状态伤害与意图相同，因此用 `MoveIndex` 0／1／2 表示这三个招位。
+从锁定的 `reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/FuzzyWurmCrawler.cs` 核对：Ascension 0 的初始 HP 55..57；招式为 `FIRST_ACID_GOOP`（4 点攻击）→ `INHALE`（对自身施加强度 7）→ `ACID_GOOP`（4 点攻击）→ 回到 `FIRST_ACID_GOOP`，三个状态的后继关系确定，没有随机分支。两个 goop 状态伤害与意图相同，因此用 `MoveIndex` 0／1／2 表示这三个招位。
 
 `TwigSlimeM.cs` 的 A0 初始 HP 为26..28，攻击 `POKEY_POUNCE_MOVE` 造成11点伤害，状态招 `STICKY_SHOT_MOVE` 向每个目标的弃牌堆加入一张Slimed，首招固定为状态招。源码 `AddBranch(moveState, 2)` 选择最多连续两次的重载，默认权重1；状态招使用CannotRepeat，同样权重1，冷却均为0。两个分支保持攻击、状态的源顺序。Slimed花1能量，抽1张后耗尽，不能升级。
 
 敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
-当前图消费者是FuzzyWurmCrawler和TwigSlimeM，其他既有敌人仍使用原模板。开发生成使用源最小HP；正常出生随机、完整遭遇队列、意图伤害数值、条件节点、动态权重函数、强制迁移、死亡移除及正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档和Wriggler，其他既有敌人仍使用原模板。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、强制迁移、死亡移除及正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
 
 ## 行为要求与设计
 
@@ -23,6 +23,14 @@
 | EN05 | 独有图和正文保留在敌人内容文件，共用选招放领域规则；敌人目录121项来源总数不变 | 新增实际消费者不改变原遭遇池、未支持项或来源SHA256 |
 
 ## 共享招式图目标要求
+
+### Wriggler槽位条件与实例寿命
+
+锁定Wriggler在A0按niche从17..21的尚未使用最大生命候选中抽取；按当前活动敌人出生顺序排除已用值，候选耗尽才按原范围抽样，不重设流或补抽。四槽wriggler1／3初始NASTY_BITE_MOVE（6点加成攻击），wriggler2／4初始WRIGGLE_MOVE（给目标玩家弃牌堆生成一张Infection，再获得2层Strength），两招固定交替。StartStunned=true先执行一次SPAWNED_MOVE空招，再按槽位进入上述初招。没有AI随机消费；未知槽位明确拒绝，不使用注释中的无槽回退。开发创建入口在抽HP前验证这项支持前置。
+
+共享图的conditional节点通过定义分派返回下一节点，递归解析至真实move，不记入已选行动历史，也不抽随机。缺分派／静态未知节点在装配时拒绝，无合法条件在执行时失败，循环仍受既有预算保护。实例保留真实槽名与StartStunned；重置行动图不能改写它们。WRIGGLE的复合意图按源顺序发布为buff,status，具体状态牌数量以真实生成结果验证；通用意图伤害数值仍未迁移。
+
+内容私有状态由Wriggler模块拥有；RemoveCombatEnemy先清理Power与招式状态、发布EnemyRemoving供所属模块清理，再销毁实例。正常访问结束使用同一入口，不能在尚有非可选引用时直接destroy。死亡和逃离保留出生实例的边界沿用战斗结束约定；召唤／复活和父事件入口不由本组件恢复。
 
 以下 MOVE-01～05 是ENV-T01的完整迁移要求，当前实现范围见下节。招式图与执行规则在base DSL中表达，core提供通用查询、过程、事件与随机；固定轮转复用共享节点。
 

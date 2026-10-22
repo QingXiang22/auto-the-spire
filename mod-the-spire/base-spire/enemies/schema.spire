@@ -40,3 +40,4 @@ event RegisterEnemyMoveGraphs { }
 event RegisterEnemyMoveNodes { }
 event RegisterEnemyMoveBranches { }
 dispatch ExecuteEnemyMove { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } }
+dispatch ResolveEnemyMoveCondition { pure = true parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding }
