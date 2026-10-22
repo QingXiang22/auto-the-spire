@@ -125,7 +125,7 @@ procedure ResetEnemyMoves {
     let = { into = graph value = first(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), field(target, Enemy.DefinitionId)))) }
     if = { condition = not(isNone(graph)) then = {
       set = { target = target field = Enemy.MoveId value = "none" }
-      if = { condition = greater(field(target, Enemy.Hp), 0) then = {
+      if = { condition = pureCall(EnemyIsActive, target) then = {
         create = { type = EnemyMoveState scope = entityScope(target) into = state fields = { Enemy = target Graph = graph } }
         call = { procedure = ResolveEnemyMoveNode args = { state = state node = pureCall(FindEnemyMoveNode, graph, field(graph, EnemyMoveGraph.Initial)) } into = node }
         call = { procedure = SaveEnemyMove args = { state = state node = node } }
@@ -143,8 +143,8 @@ procedure PerformEnemyMove {
   body = {
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     if = { condition = isNone(state) then = { return = {} } }
+    if = { condition = or(not(pureCall(EnemyIsActive, target)), lessOrEqual(field(owner, Player.Hp), 0)) then = { return = {} } }
     if = { condition = or(not(field(state, EnemyMoveState.Ready)), isNone(field(state, EnemyMoveState.Current))) then = { fail = { message = "Enemy move graph: no saved move" } } }
-    if = { condition = or(lessOrEqual(field(target, Enemy.Hp), 0), lessOrEqual(field(owner, Player.Hp), 0)) then = { return = {} } }
     let = { into = node value = field(state, EnemyMoveState.Current) }
     call = { procedure = ExecuteEnemyMove args = { key = field(target, Enemy.DefinitionId) owner = owner target = target node = node } }
     set = { target = state field = EnemyMoveState.FirstPerformed value = true }
@@ -157,7 +157,7 @@ procedure SelectNextEnemyMove {
   body = {
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     if = { condition = isNone(state) then = { return = {} } }
-    if = { condition = or(field(state, EnemyMoveState.Ready), lessOrEqual(field(target, Enemy.Hp), 0)) then = { return = {} } }
+    if = { condition = or(field(state, EnemyMoveState.Ready), not(pureCall(EnemyIsActive, target))) then = { return = {} } }
     let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Current), EnemyMoveNode.Next)) }
     call = { procedure = ResolveEnemyMoveNode args = { state = state node = node } into = node }
     call = { procedure = SaveEnemyMove args = { state = state node = node } }

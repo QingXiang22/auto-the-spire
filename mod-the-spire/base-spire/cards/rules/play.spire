@@ -82,7 +82,7 @@ procedure ResolvePaidCard {
   body = {
     call = { procedure = EnsureManualCardPlayable args = { owner = owner card = card } }
     if = { condition = and(field(card, Card.Targeted), isNone(target)) then = { fail = { message = "A targeted card requires a living enemy" } } }
-    if = { condition = not(isNone(target)) then = { if = { condition = lessOrEqual(field(target, Enemy.Hp), 0) then = { fail = { message = "Target is no longer alive" } } } } }
+    if = { condition = not(isNone(target)) then = { if = { condition = not(pureCall(EnemyIsActive, target)) then = { fail = { message = "Target is no longer alive" } } } } }
     let = { into = price value = pureCall(GetCardEnergyCost, owner, card) }
     set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     set = { target = card field = Card.PaidX value = 0 }
@@ -100,7 +100,7 @@ procedure ResolveAutoCard {
   locals = { target = Binding resultPile = String(length = 16) }
   body = {
     if = { condition = not(pureCall(ExecuteCardBody.Contains, field(card, Card.DefinitionId))) then = { fail = { message = "Unknown card body" } } }
-    if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))) then = {
+    if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))))) then = {
       if = { condition = or(greaterOrEqual(collectionIndex(RunDeck, card), 0), and(not(prepared), greaterOrEqual(collectionIndex(InPlay, card), 0))) then = { fail = { message = "Cannot autoplay a permanent or already resolving card" } } }
       if = { condition = or(not(equal(field(card, Card.Owner), field(owner, Player.Owner))), not(or(greaterOrEqual(collectionIndex(Hand, card), 0), or(greaterOrEqual(collectionIndex(DrawPile, card), 0), or(greaterOrEqual(collectionIndex(DiscardPile, card), 0), or(greaterOrEqual(collectionIndex(ExhaustPile, card), 0), and(prepared, greaterOrEqual(collectionIndex(InPlay, card), 0)))))))) then = { fail = { message = "Autoplay requires an owned hand, draw, discard or exhausted card" } } }
       if = { condition = not(pureCall(CardPlayAllowed, owner, card, true)) then = {
@@ -136,7 +136,7 @@ procedure PlayCard {
 # Compatibility entry for existing development scripts; clients may explicitly select any living target.
 procedure PlayAttackCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
-  body = { call = { procedure = ResolvePaidCard args = { owner = owner card = card target = first(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))) } } }
+  body = { call = { procedure = ResolvePaidCard args = { owner = owner card = card target = first(where(type(Enemy), e, pureCall(EnemyIsActive, e))) } } }
 }
 procedure PlayTargetedCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
@@ -144,8 +144,8 @@ procedure PlayTargetedCard {
   body = {
     call = { procedure = EnsureManualCardPlayable args = { owner = owner card = card } }
     if = { condition = not(field(card, Card.Targeted)) then = { fail = { message = "This card does not select an enemy" } } }
-    if = { condition = not(exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)))) then = { fail = { message = "No living target" } } }
-    decide = { participant = field(owner, Player.Owner) kind = EntityRef prompt = "Choose the target" into = target min = 1 max = 1 candidates = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) }
+    if = { condition = not(exists(where(type(Enemy), e, pureCall(EnemyIsActive, e)))) then = { fail = { message = "No living target" } } }
+    decide = { participant = field(owner, Player.Owner) kind = EntityRef prompt = "Choose the target" into = target min = 1 max = 1 candidates = where(type(Enemy), e, pureCall(EnemyIsActive, e)) }
     call = { procedure = ResolvePaidCard args = { owner = owner card = card target = target } }
   }
 }
@@ -166,13 +166,13 @@ action PlayCardFromHand {
 action PlayAttackFromHand {
   role = player parameters = { card = Ref(Card) }
   candidates = { parameter = card query = where(collection(Hand), c, field(c, Card.Targeted)) }
-  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))))
+  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))))))
   body = { call = { procedure = PlayAttackCard args = { owner = first(type(Player)) card = card } } }
 }
 action PlayTargetedCard {
   role = player parameters = { card = Ref(Card) }
   candidates = { parameter = card query = where(collection(Hand), c, field(c, Card.Targeted)) }
-  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))))
+  requires = and(pureCall(CardPlayAllowed, first(type(Player)), card, false), and(and(field(first(type(Player)), Player.CombatActive), field(first(type(Player)), Player.TurnOpen)), and(greaterOrEqual(field(first(type(Player)), Player.Energy), pureCall(GetCardEnergyCost, first(type(Player)), card)), exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))))))
   body = { call = { procedure = PlayTargetedCard args = { owner = first(type(Player)) card = card } } }
 }
 action UpgradeCardInHand {

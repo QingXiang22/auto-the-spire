@@ -19,6 +19,8 @@ event AfterTurnEnded { payload = { owner = Ref(Player) } }
 # Confirmed ordinary death notification, before the supported source Power cleanup. The instance
 # remains available to damage/play references; complete death prevention/removal hooks are not migrated.
 event EnemyDied { payload = { target = Ref(Enemy) } }
+event EnemyEscaped { payload = { owner = Ref(Player) target = Ref(Enemy) } }
+event EnemyAddedToCombat { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 # The development combat finished: victory when no hittable enemy remains, defeat when the player reaches 0 HP.
 event CombatEnded { payload = { owner = Ref(Player) victory = Bool } }
 event CombatVictory { payload = { owner = Ref(Player) victory = Bool } }
@@ -27,6 +29,25 @@ event CombatVictoryEarly { payload = { owner = Ref(Player) victory = Bool } }
 event EnemyTurnStarted { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 # The enemy phase finished; source duration tick-down happens here rather than at the player's end of turn.
 event AfterEnemyTurnEnded { payload = { owner = Ref(Player) } }
+
+procedure EnemySideTurnEndOrder {
+  pure = true parameters = { target = Ref(Enemy) } result = Int
+  body = { return = { value = add(multiply(add(field(target, Enemy.SpawnOrder), 1), add(count(collection(Powers)), 1)), count(collection(Powers))) } }
+}
+procedure EscapeEnemy {
+  parameters = { owner = Ref(Player) target = Ref(Enemy) }
+  body = {
+    if = { condition = or(not(field(owner, Player.CombatActive)), not(pureCall(EnemyIsActive, target))) then = { return = {} } }
+    # Source Escape removes the current powers before detaching the still-living creature.
+    forEach = { query = where(collection(Powers), p, equal(field(p, Power.HolderEnemy), target)) item = power body = {
+      call = { procedure = RemovePower args = { power = power } }
+    } }
+    set = { target = target field = Enemy.Escaped value = true }
+    set = { target = owner field = Player.CombatTimedOut value = true }
+    emit = { event = EnemyEscaped payload = { owner = owner target = target } }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
+  }
+}
 
 # Source order: finish the outer effect, close combat, notify end, clean the normal combat, notify victory,
 # then commit the normal visit and offer rewards. A
@@ -39,7 +60,7 @@ procedure CheckCombatVictory {
       condition = and(and(greater(field(owner, Player.Hp), 0), equal(field(owner, Player.AttackDepth), 0)), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
       then = {
         if = {
-          condition = and(field(owner, Player.EnemyDiedInCombat), and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))))))
+          condition = and(or(field(owner, Player.EnemyDiedInCombat), field(owner, Player.CombatTimedOut)), and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy))))))
           then = {
             set = { target = owner field = Player.CombatOutcome value = "victory" }
             set = { target = owner field = Player.TurnOpen value = false }
@@ -99,12 +120,16 @@ procedure BeginDevelopmentCombat {
     set = { target = owner field = Player.Energy value = 0 }
     set = { target = owner field = Player.TurnOpen value = false }
     set = { target = owner field = Player.CombatOutcome value = "none" }
+    set = { target = owner field = Player.CombatTimedOut value = false }
     set = { target = owner field = Player.EnemyDiedInCombat value = false }
     set = { target = owner field = Player.Room value = "battle" }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.CombatActive value = true }
     if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
       shuffle = { collection = DrawPile stream = "base-spire:run:shuffle" }
+    } }
+    forEach = { query = where(type(Enemy), e, pureCall(EnemyIsActive, e)) item = enemy body = {
+      emit = { event = EnemyAddedToCombat payload = { owner = owner target = enemy } }
     } }
     emit = { event = BeforeCombatStart payload = { owner = owner } }
   }

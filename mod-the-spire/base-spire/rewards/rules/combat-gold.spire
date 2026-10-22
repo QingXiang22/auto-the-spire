@@ -26,6 +26,10 @@ procedure WhenCombatEnded {
   parameters = { owner = Ref(Player) victory = Bool }
   body = {
     if = { condition = not(isNone(field(owner, Player.CurrentRun))) then = { return = {} } }
+    if = { condition = field(owner, Player.CombatTimedOut) then = {
+      set = { target = owner field = Player.Room value = "none" }
+      return = {}
+    } }
     if = {
       condition = and(victory, greater(field(owner, Player.Hp), 0))
       then = {

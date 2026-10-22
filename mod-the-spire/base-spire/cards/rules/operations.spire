@@ -168,8 +168,8 @@ procedure RandomLivingEnemy {
   locals = { target = Binding } result = Binding
   body = {
     let = { into = target value = none }
-    if = { condition = exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))) then = {
-      samplePick = { stream = "base-spire:run:combat_targets" candidates = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) into = target }
+    if = { condition = exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))) then = {
+      samplePick = { stream = "base-spire:run:combat_targets" candidates = where(type(Enemy), e, pureCall(EnemyIsActive, e)) into = target }
     } }
     return = { value = target }
   }

@@ -41,6 +41,7 @@ internal static class BaseDslPathChecks
         yield return ("BEHAVIOR real stdio event choices publish Sown without leaking hidden combat copies", () => StdioTrajectory("sown-event"));
         yield return ("CP56 real stdio the HP-loss flag drives the extra Spite hit", () => StdioTrajectory("spite"));
         yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
+        yield return ("DUMMY real stdio publishes three-turn living escape and timeout outcome", () => StdioTrajectory("battle-friend"));
         yield return ("IC real stdio explicit target selects the second enemy", () => StdioTrajectory("explicit-target"));
         yield return ("IC real stdio mandatory hand choice resumes once after HP loss", () => StdioTrajectory("hand-exhaust"));
         yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
@@ -193,6 +194,15 @@ internal static class BaseDslPathChecks
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
                 "normal-opening" or "normal-claim" or "normal-skip" => [],
+                "battle-friend" => [
+                    ("BattleFriendV3.Spawn", "0", false, "0", "0", false, "300"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "300"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "300"),
+                    ("EndDevelopmentTurn", "0", true, "3", "1", false, "300"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, "300"),
+                    ("EndDevelopmentTurn", "0", true, "3", "2", false, "300"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "3", true, "300"),
+                    ("EndDevelopmentTurn", "0", false, "3", "3", false, "300")],
                 "sown-event" => [
                     ("Strike.Obtain", "0", false, "0", "0", false, ""),
                     ("Defend.Obtain", "0", false, "0", "0", false, ""),
@@ -450,6 +460,18 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
                 Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");
                 if (step.Target.Length > 0) Check.Equal(step.Target, Public(snapshot, "Enemy.Hp"), "public development target HP follows the real damage result");
+                if (mode == "battle-friend")
+                {
+                    var expired = step.Action == "EndDevelopmentTurn" && step.Turn == "3";
+                    Check.Equal(expired, PublicBool(snapshot, "Enemy.Escaped"), "living escape is public at exact third side end");
+                    Check.Equal(expired, PublicBool(snapshot, "Player.CombatTimedOut"), "timeout remains separate from victory");
+                    Check.Equal("IDLE", Public(snapshot, "Enemy.MoveId"), "fixed move remains visible");
+                    var powers = snapshot.Entities.Where(e => e.ContentId == "base-spire:battleworn-dummy-time-limit-power").ToArray();
+                    Check.Equal(expired || step.Action.EndsWith(".Spawn", StringComparison.Ordinal) ? 0 : 1, powers.Length, "room-entry timer removed before final escape snapshot");
+                    if (powers.Length > 0)
+                        Check.Equal((4 - int.Parse(step.Turn) - (step.TurnOpen ? 0 : 1)).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Power.Stacks"), "actual public countdown");
+                    Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("SpawnOrder", StringComparison.Ordinal), "listener order stays hidden");
+                }
                 if (mode == "self-forming-clay")
                 {
                     var powers = snapshot.Entities.Where(e => e.Fields.Any(f => f.FieldId.EndsWith(":Power.Stacks", StringComparison.Ordinal))).ToArray();
@@ -822,6 +844,12 @@ internal static class BaseDslPathChecks
                 Check.True(Has("BeginDevelopmentCombat") && Has("EnterDevelopmentRestSite"), "next rooms become available");
             }
             if (mode == "spite") Check.True(PublicBool(snapshot, "Player.LostHpThisTurn"), "the per-turn HP-loss flag is public");
+            if (mode == "battle-friend")
+            {
+                Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "native victory and timeout coexist");
+                Check.False(PublicBool(snapshot, "Player.GoldRewardPending"), "timeout does not offer monster gold");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":PlayAttackFromHand", StringComparison.Ordinal)), "escaped target offers no attack candidate");
+            }
             if (mode == "wurm") { Check.Equal("76", Public(snapshot, "Player.Hp"), "the enemy attack reached the public player HP"); Check.Equal("buff", Public(snapshot, "Enemy.Intent"), "the next intent is public"); }
             process.StandardInput.Close(); Check.True(process.WaitForExit(10000), "host exits after EOF"); Check.Equal(0, process.ExitCode, "host exit");
         }

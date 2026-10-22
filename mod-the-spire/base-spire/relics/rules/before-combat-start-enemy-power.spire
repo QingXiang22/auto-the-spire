@@ -14,7 +14,7 @@ template BeforeCombatStartEnemyPowerRelic {
       parameters = { owner = Ref(Player) listener = Ref(Relic) }
       body = {
         forEach = {
-          query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
+          query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
           body = {
             call = {
               procedure = ApplyEnemyPower args = {

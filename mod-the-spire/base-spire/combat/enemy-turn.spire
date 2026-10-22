@@ -21,7 +21,7 @@ procedure RunEnemyTurn {
   body = {
     set = { target = owner field = Player.EnemyPhase value = true }
     forEach = {
-      query = where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)) item = enemy
+      query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
       body = {
         # Source Creature.AfterTurnStart clears block for the side starting its turn; the player-side turn-one
         # exception does not apply to enemies, so every enemy turn starts with zero block.
@@ -32,7 +32,7 @@ procedure RunEnemyTurn {
     emit = { event = AfterEnemyTurnEnded payload = { owner = owner } }
     # Source prepares all surviving enemies for the next player side, after the completed enemy phase.
     if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
-      forEach = { query = where(type(Enemy), e, greater(field(e, Enemy.Hp), 0)) item = enemy body = {
+      forEach = { query = where(type(Enemy), e, pureCall(EnemyIsActive, e)) item = enemy body = {
         call = { procedure = SelectNextEnemyMove args = { target = enemy } }
       } }
     } }

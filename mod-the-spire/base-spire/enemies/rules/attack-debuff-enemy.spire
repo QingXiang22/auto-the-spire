@@ -32,7 +32,7 @@ template AttackDebuffEnemy {
       body = {
         create = {
           type = Enemy scope = frameScope() into = target
-          fields = { DefinitionId = arg(definition) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
+          fields = { DefinitionId = arg(definition) SpawnOrder = count(type(Enemy)) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
         }
       }
     }

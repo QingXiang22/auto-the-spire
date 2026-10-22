@@ -11,6 +11,10 @@
       "definition": "powers/shared/barricade-power.spire"
     },
     {
+      "id": "base-spire:battleworn-dummy-time-limit-power",
+      "definition": "powers/shared/battleworn-dummy-time-limit-power.spire"
+    },
+    {
       "id": "base-spire:colossus-power",
       "definition": "powers/shared/colossus-power.spire"
     },

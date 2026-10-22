@@ -11,6 +11,18 @@
       "definition": "enemies/shared/axe-ruby-raider.spire"
     },
     {
+      "id": "base-spire:battle-friend-v1",
+      "definition": "enemies/shared/battle-friend-v1.spire"
+    },
+    {
+      "id": "base-spire:battle-friend-v2",
+      "definition": "enemies/shared/battle-friend-v2.spire"
+    },
+    {
+      "id": "base-spire:battle-friend-v3",
+      "definition": "enemies/shared/battle-friend-v3.spire"
+    },
+    {
       "id": "base-spire:bowlbug-egg",
       "definition": "enemies/shared/bowlbug-egg.spire"
     },

@@ -11,6 +11,17 @@ procedure RemovePower {
   } }
  }
 }
+procedure PowerSideTurnEndOrder {
+ pure = true parameters = { power = Ref(Power) } result = Int
+ locals = { group = Int }
+ body = {
+  let = { into = group value = 0 }
+  if = { condition = not(isNone(field(power, Power.HolderEnemy))) then = {
+   let = { into = group value = add(field(field(power, Power.HolderEnemy), Enemy.SpawnOrder), 1) }
+  } }
+  return = { value = add(multiply(group, add(count(collection(Powers)), 1)), collectionIndex(Powers, power)) }
+ }
+}
 procedure RemoveEnemyPowersOnDeath {
  parameters = { target = Ref(Enemy) }
  body = {
@@ -42,7 +53,7 @@ procedure ApplyPowerWithSource {
   if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Power requires exactly one holder" } } }
   if = { condition = and(not(isNone(applierPlayer)), not(isNone(applierEnemy))) then = { fail = { message = "Power requires at most one applier" } } }
   if = { condition = not(isNone(enemy)) then = {
-   if = { condition = field(enemy, Enemy.DeathResolved) then = { return = { value = none } } }
+   if = { condition = or(field(enemy, Enemy.DeathResolved), field(enemy, Enemy.Escaped)) then = { return = { value = none } } }
   } }
   if = { condition = not(foldEvent(ShouldApplyPower, true, player, enemy, definition, applierPlayer, applierEnemy, card, play)) then = { return = { value = none } } }
   let = { into = actual value = stacks }

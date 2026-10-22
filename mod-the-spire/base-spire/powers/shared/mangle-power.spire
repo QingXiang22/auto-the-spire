@@ -22,7 +22,7 @@ procedure RestoreStrength {
 }
 
 subscription RestoreStrength {
-  event = AfterEnemyTurnEnded reaction = RestoreStrength instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:mangle-power")) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterEnemyTurnEnded reaction = RestoreStrength instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:mangle-power")) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0
 }
 } }
 use ManglePower { template = ManglePowerModule }

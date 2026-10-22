@@ -3,10 +3,14 @@ dsl_version = "core/0.3"
 
 # Creature.IsHittable also consults ShouldAllowHitting for living creatures.
 event ShouldAllowHittingEnemy { payload = { value = Bool target = Ref(Enemy) } }
+procedure EnemyIsActive {
+ pure = true parameters = { target = Ref(Enemy) } result = Bool
+ body = { return = { value = and(greater(field(target, Enemy.Hp), 0), not(field(target, Enemy.Escaped))) } }
+}
 procedure EnemyIsHittable {
  pure = true parameters = { target = Ref(Enemy) } result = Bool
  body = {
-  if = { condition = lessOrEqual(field(target, Enemy.Hp), 0) then = { return = { value = false } } }
+  if = { condition = not(pureCall(EnemyIsActive, target)) then = { return = { value = false } } }
   return = { value = foldEvent(ShouldAllowHittingEnemy, true, target) }
  }
 }

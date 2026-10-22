@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.54",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.55",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -87,7 +87,10 @@
         "base-spire:stabbot",
         "base-spire:axe-ruby-raider",
         "base-spire:crossbow-ruby-raider",
-        "base-spire:tracker-ruby-raider"
+        "base-spire:tracker-ruby-raider",
+        "base-spire:battle-friend-v1",
+        "base-spire:battle-friend-v2",
+        "base-spire:battle-friend-v3"
       ]
     },
     "base-spire:Card": {
@@ -273,7 +276,8 @@
         "base-spire:vicious-power",
         "base-spire:vigor-power",
         "base-spire:vulnerable-power",
-        "base-spire:weak-power"
+        "base-spire:weak-power",
+        "base-spire:battleworn-dummy-time-limit-power"
       ]
     },
     "base-spire:CardAttachment": {

@@ -180,6 +180,7 @@ internal static partial class PackageChecks
         Merge(RunIroncladChecks(package, Case), cards);
         var enemies = RunEnemyTurnChecks(package, Case);
         Merge(RunEnemyMoveGraphChecks(package, Case), enemies);
+        Merge(RunBattleFriendChecks(package, Case), enemies);
         Merge(RunSlimedChecks(package, Case), cards);
         var encounters = RunEncounterChecks(package, Case);
         foreach (var row in RunSlimeChecks(package, Case))
