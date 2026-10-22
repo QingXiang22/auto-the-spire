@@ -43,10 +43,36 @@ internal static class NormalRunChecks
         NormalSnapshotChecks.Run(repository);
 #if REFERENCE_SIM
         CheckReferenceDiagnostics();
+        CheckPotionDiscard(repository);
 #endif
         Console.WriteLine("Normal comparison checks passed: all dimensions/first differences, zero execution, incomplete policy/return, and real Host diagnostic non-interference.");
     }
 #if REFERENCE_SIM
+    private static void CheckPotionDiscard(string repository)
+    {
+        var directory = Path.Combine(repository, ".artifacts/differential/diagnostic-checks");
+        using var left = new NormalDslRun(repository, Path.Combine(directory, "potion-discard.ndjson"));
+        using var right = new NormalReferenceRun("777");
+        left.Start("777"); left.Step(left.Action("StartNormalRun")); right.Start();
+        Apply(new("neow", ["base-spire:booming-conch"])); Apply(new("leave-neow", []));
+        Apply(left.Semantic(left.Action("ChooseMapPoint")));
+        for (var i = 0; left.Phase == "combat" && i < 100; i++)
+            Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
+        Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
+        Apply(new("claim-potion", [])); Apply(new("close-rewards", []));
+        var discard = left.Semantic(left.Action("DiscardPotion"));
+        Require(discard.Arguments.Single().Contains(":potion-reward:0:", StringComparison.Ordinal), "held potion retains its actual reward creation origin");
+        Apply(discard);
+        Require(left.Find("DiscardPotion") is null && left.Capture("discarded").Values["permanent.potions"] == "[]", "the same acquired potion is removed by the real public action");
+        Require(left.CheckRequestReplay().Passed, "discard request cache and stale rejection preserve state and RNG");
+        void Apply(NormalAction action)
+        {
+            left.Apply(action); right.Apply(action);
+            Require(NormalRunComparison.First(0, left.Capture("potion-check"), right.Capture("potion-check")) is null,
+                "real acquisition and discard match reference candidates, assets, events and RNG");
+        }
+    }
+
     private static void CheckReferenceDiagnostics()
     {
         var enabled = Replay(true); var disabled = Replay(false);
