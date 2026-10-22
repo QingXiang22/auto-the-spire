@@ -26,6 +26,12 @@ Strike 保持原受控语义：10 张起始牌组、手牌仅一张普通 Strike
 
 报告保存双方完整边界、包摘要／规则标识、参考 commit／tree／程序集及适配器摘要和受控输入；发生差异时给出首差维度、路径、双方值、最后一致边界及复现命令。缺参考、缺用例、零执行、缺维度、错误终点、违反随机 Profile 的消费、异常和差异均非零。
 
+## Whistle受控组件比较
+
+运行`dotnet run --project tools/differential -c Release -- whistle-compare --output .artifacts/differential/whistle`。两侧使用空永久牌组和真实CombatEngine，实际支付2费、造成33／44伤害并耗尽Whistle。场景覆盖首招前、待执行增益／攻击、随机招式、同定义双实例、目标死亡和重复击晕；逐边界比较生命、力量、招式／意图、已选历史、能量、出牌计数、Whistle手牌与耗尽费用，以及完整monster_ai状态／游标和shuffle消费。源StateLog不加入瞬态STUNNED，空招执行后恢复已选真实节点本身；恢复不重新抽分支。
+
+组件初态在出生后将双方敌人HP设为1000、玩家HP设为1000；致死场景只把目标设为33。出生HP生成与niche不属于此项比较，没有重键、重设流或补抽。未消费的DSL流按实际配置seed只读投影初始状态，不创建或推进流。migration要求两seed共16个场景全部通过；normal_run_verified保持false，不能替代正常Run或完整行动控制验收。
+
 ## BattleFriend受控组件比较
 
 运行`dotnet run --project tools/differential -c Release -- battle-friend-compare --output .artifacts/differential/battle-friend`。两侧各自创建真实三档靶人、执行入场与前三回合，比较HP、计时、活动／逃离／死亡、意图、胜利／超时、最大生命，以及niche的实际抽样参数／结果／游标／完整状态和AI消费。真实击杀场景在第三回合出牌前将双方目标HP设置为5，再实际打出Feed；双实例场景核对固定HP的候选耗尽抽样形式。没有重设随机种子或注入结束结果。

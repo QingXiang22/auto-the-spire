@@ -27,6 +27,7 @@ entity EnemyMoveState { fields = {
   Graph = { type = Ref(EnemyMoveGraph) visibility = Hidden }
   Current = { type = Ref(EnemyMoveNode) optional = true visibility = Hidden }
   Ready = { type = Bool default = false visibility = Hidden }
+  Stunned = { type = Bool default = false visibility = Hidden }
   FirstPerformed = { type = Bool default = false visibility = Hidden }
   Sequence = { type = Int default = 0 visibility = Hidden }
   Consecutive = { type = Int default = 0 visibility = Hidden }

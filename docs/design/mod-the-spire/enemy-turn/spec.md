@@ -10,7 +10,7 @@
 
 敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
-图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档和Wriggler，其他既有敌人仍使用原模板。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、强制迁移、死亡移除及正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档和Wriggler，其他既有敌人仍使用原模板。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
 
 ## 行为要求与设计
 
@@ -43,6 +43,14 @@
 | MOVE-05 失败与寿命 | 图装配检查未知节点、重复节点及缺后继；运行时无合法分支具名失败，不补抽或默选。迁移循环受既有执行预算保护；目标及成员资格在源规定时点复核 | 非法图、无分支、目标死亡及两局隔离可定位；故障沿 core 约定，不吞错继续运行 |
 
 首批迁移复用 FuzzyWurmCrawler 或 Raider 的固定轮转，并选择一个经源码核对的随机限制消费者；强制迁移使用 Whistle 所需行动控制或另一项明确源消费者。各消费者分别核对公开意图、动作轨迹、历史、随机调用和同定义实例隔离。共享图完成不等于全部敌人／遭遇、完整出生 HP 或正常 Run 已恢复。
+
+### Whistle击晕与恢复
+
+锁定Whistle为2费Ancient Attack，基础33／升级44伤害并耗尽，先完成攻击再调用CreatureCmd.Stun。目标死亡或战斗已结束时不击晕。仍存活的目标必须使用已迁移招式图；未迁移图明确报unsupported_capability，不静默忽略。
+
+StunEnemy保存当前已选真实节点，以公开STUNNED／stun替换下一行动。此瞬态不加入EnemyMoveHistory，不改变原节点连续次数，不抽随机。必须实际执行一次空招后才能恢复；执行前再次击晕不重置或提前推进。恢复时将原节点本身再次记入已选历史并发布其原意图；首招前恢复首招，随机节点已解析的招式直接复用，不重新抽分支。随后真实执行该招，再按通常后继选招。多个敌人各自保存状态，新战及完整移除清理击晕标志；STUNNED期间MoveIndex仍为底层保存节点的索引，具体行动以MoveId及Intent为准。
+
+该接口只承接Whistle默认follow-up的真实消费者，不提供任意nextMoveId、回调正文或尚未迁移的enter／exit钩子。受控两侧比较单列卡牌成本／伤害／耗尽、招式／历史／意图、回合资源和随机消费，不替代正常Run或全部行动控制验收。
 
 ## 共享图的当前操作与失败方式
 

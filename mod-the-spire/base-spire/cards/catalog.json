@@ -357,6 +357,10 @@
     {
       "id": "base-spire:whirlwind",
       "definition": "cards/ironclad/whirlwind.spire"
+    },
+    {
+      "id": "base-spire:whistle",
+      "definition": "cards/colorless/whistle.spire"
     }
   ]
 }

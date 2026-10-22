@@ -197,6 +197,14 @@ def main() -> int:
                        or c["first_difference"] is not None or c["left"]["facts"] != c["right"]["facts"] or not c["unverified_dimensions"]
                        or c["right"]["diagnostic"]["normal_compatibility_alignment"] for c in normal["cases"])):
             raise ValueError("normal preflight must match every opening fact and retain both public returns, while rejecting incomplete M01")
+        whistle = run("whistle", ["whistle-compare", "--output", str(args.output / "whistle")], 0)
+        whistle_cases = [seed + ":" + mode for seed in ("777", "A😀B")
+                         for mode in ("first", "upgraded", "pending-buff", "pending-attack", "random", "two", "lethal", "repeat")]
+        if (whistle is None or whistle["status"] != "passed" or whistle["independent_verified"] is not True
+                or whistle["normal_run_verified"] is not False
+                or [c["id"] for c in whistle["cases"]] != whistle_cases or any(c["status"] != "passed" for c in whistle["cases"])):
+            raise ValueError("Whistle controlled comparison did not execute all required paid-card and stun cases")
+
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
         paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]

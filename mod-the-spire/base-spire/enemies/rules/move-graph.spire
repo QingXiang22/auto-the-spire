@@ -160,6 +160,11 @@ procedure PerformEnemyMove {
     if = { condition = isNone(state) then = { return = {} } }
     if = { condition = or(not(pureCall(EnemyIsActive, target)), lessOrEqual(field(owner, Player.Hp), 0)) then = { return = {} } }
     if = { condition = or(not(field(state, EnemyMoveState.Ready)), isNone(field(state, EnemyMoveState.Current))) then = { fail = { message = "Enemy move graph: no saved move" } } }
+    if = { condition = field(state, EnemyMoveState.Stunned) then = {
+      set = { target = state field = EnemyMoveState.FirstPerformed value = true }
+      set = { target = state field = EnemyMoveState.Ready value = false }
+      return = {}
+    } }
     let = { into = node value = field(state, EnemyMoveState.Current) }
     call = { procedure = ExecuteEnemyMove args = { key = field(target, Enemy.DefinitionId) owner = owner target = target node = node } }
     set = { target = state field = EnemyMoveState.FirstPerformed value = true }
@@ -173,8 +178,35 @@ procedure SelectNextEnemyMove {
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     if = { condition = isNone(state) then = { return = {} } }
     if = { condition = or(field(state, EnemyMoveState.Ready), not(pureCall(EnemyIsActive, target))) then = { return = {} } }
+    if = { condition = field(state, EnemyMoveState.Stunned) then = {
+      # ForceCurrentState does not add STUNNED to StateLog. Resume its last
+      # selected real move itself, even before that move has ever executed.
+      let = { into = node value = field(state, EnemyMoveState.Current) }
+      if = { condition = isNone(node) then = { fail = { message = "Enemy move graph: stunned state has no saved move" } } }
+      set = { target = state field = EnemyMoveState.Stunned value = false }
+      call = { procedure = SaveEnemyMove args = { state = state node = node } }
+      return = {}
+    } }
     let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Current), EnemyMoveNode.Next)) }
     call = { procedure = ResolveEnemyMoveNode args = { state = state node = node } into = node }
     call = { procedure = SaveEnemyMove args = { state = state node = node } }
+  }
+}
+
+# CreatureCmd.Stun defaults to StateLog.Last().Id and must perform once.
+procedure StunEnemy {
+  parameters = { target = Ref(Enemy) }
+  locals = { state = Binding }
+  body = {
+    if = { condition = not(pureCall(EnemyIsActive, target)) then = { return = {} } }
+    if = { condition = not(field(first(type(Player)), Player.CombatActive)) then = { return = {} } }
+    let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
+    if = { condition = isNone(state) then = { fail = { message = "unsupported_capability: stun requires a migrated enemy move graph" } } }
+    if = { condition = and(field(state, EnemyMoveState.Stunned), field(state, EnemyMoveState.Ready)) then = { return = {} } }
+    if = { condition = isNone(field(state, EnemyMoveState.Current)) then = { fail = { message = "Enemy move graph: cannot stun without a saved move" } } }
+    set = { target = state field = EnemyMoveState.Stunned value = true }
+    set = { target = state field = EnemyMoveState.Ready value = true }
+    set = { target = target field = Enemy.MoveId value = "STUNNED" }
+    set = { target = target field = Enemy.Intent value = "stun" }
   }
 }

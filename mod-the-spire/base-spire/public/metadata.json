@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.56",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.57",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -142,6 +142,7 @@
         "base-spire:hemokinesis",
         "base-spire:howl-from-beyond",
         "base-spire:impervious",
+        "base-spire:infection",
         "base-spire:infernal-blade",
         "base-spire:inferno",
         "base-spire:inflame",
@@ -186,7 +187,7 @@
         "base-spire:uppercut",
         "base-spire:vicious",
         "base-spire:whirlwind",
-        "base-spire:infection"
+        "base-spire:whistle"
       ]
     },
     "base-spire:Potion": {
@@ -247,6 +248,7 @@
       "content_ids": [
         "base-spire:aggression-power",
         "base-spire:barricade",
+        "base-spire:battleworn-dummy-time-limit-power",
         "base-spire:colossus-power",
         "base-spire:corruption-power",
         "base-spire:crimson-mantle-power",
@@ -278,8 +280,7 @@
         "base-spire:vicious-power",
         "base-spire:vigor-power",
         "base-spire:vulnerable-power",
-        "base-spire:weak-power",
-        "base-spire:battleworn-dummy-time-limit-power"
+        "base-spire:weak-power"
       ]
     },
     "base-spire:CardAttachment": {

@@ -43,6 +43,7 @@ internal static class BaseDslPathChecks
         yield return ("CP61 real stdio the enemy phase damages the player and publishes its intent", () => StdioTrajectory("wurm"));
         yield return ("DUMMY real stdio publishes three-turn living escape and timeout outcome", () => StdioTrajectory("battle-friend"));
         yield return ("WRIGGLER real stdio publishes four slot moves, Infection -1 cost and real turn-end damage", () => StdioTrajectory("wriggler"));
+        yield return ("MOVE Whistle real stdio pays two, exhausts, skips one action and restores the selected first move", () => StdioTrajectory("whistle"));
         yield return ("IC real stdio explicit target selects the second enemy", () => StdioTrajectory("explicit-target"));
         yield return ("IC real stdio mandatory hand choice resumes once after HP loss", () => StdioTrajectory("hand-exhaust"));
         yield return ("IC real stdio X card captures and pays three energy", () => StdioTrajectory("whirlwind"));
@@ -195,6 +196,15 @@ internal static class BaseDslPathChecks
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
                 "normal-opening" or "normal-claim" or "normal-skip" => [],
+                "whistle" => [
+                    ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
+                    ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
+                    ("BeginDevelopmentCombat", "0", true, "0", "0", false, "55"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "1", true, "55"),
+                    ("PlayAttackFromHand", "0", true, "1", "1", true, "22"),
+                    ("EndDevelopmentTurn", "0", true, "1", "1", false, "22"),
+                    ("BeginDevelopmentTurn", "0", true, "3", "2", true, "22"),
+                    ("EndDevelopmentTurn", "0", true, "3", "2", false, "22")],
                 "wriggler" => [
                     ("Wriggler.Spawn", "0", false, "0", "0", false, ""),
                     ("BeginDevelopmentCombat", "0", true, "0", "0", false, ""),
@@ -472,6 +482,17 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Energy, Public(snapshot, "Player.Energy"), "public energy follows the DSL turn cycle");
                 Check.Equal(step.Turn, Public(snapshot, "Player.TurnNumber"), "public turn counter follows the DSL turn cycle");
                 if (step.Target.Length > 0) Check.Equal(step.Target, Public(snapshot, "Enemy.Hp"), "public development target HP follows the real damage result");
+                if (mode == "whistle")
+                {
+                    Check.Equal(step.Action == "PlayAttackFromHand" ? "STUNNED" : step.Action == "EndDevelopmentTurn" && step.Turn == "2" ? "INHALE" : "FIRST_ACID_GOOP",
+                        Public(snapshot, "Enemy.MoveId"), "public saved move restores itself after the actual skip");
+                    Check.Equal(step.Action == "PlayAttackFromHand" ? "stun" : step.Action == "EndDevelopmentTurn" && step.Turn == "2" ? "buff" : "attack",
+                        Public(snapshot, "Enemy.Intent"), "public intent follows the same saved move");
+                    Check.Equal(step.Action == "EndDevelopmentTurn" && step.Turn == "2" ? "76" : "80", Public(snapshot, "Player.Hp"), "skipped turn does no damage; resumed attack deals four");
+                    foreach (var card in snapshot.Entities.Where(e => e.ContentId == "base-spire:whistle"))
+                        Check.Equal("2", ((WireString)card.Fields.Single(f => f.FieldId.EndsWith(":Card.Cost", StringComparison.Ordinal)).Value!).Value, "locked source cost is public");
+                    BaseDslPileChecks.CheckSnapshot(snapshot);
+                }
                 if (mode == "wriggler")
                 {
                     var enemies = snapshot.Entities.Where(e => e.ContentId == "base-spire:wriggler").ToArray();
