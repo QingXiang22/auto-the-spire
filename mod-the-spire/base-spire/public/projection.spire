@@ -1,9 +1,33 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
+# One stable public anchor for each session-wide collection. These entities carry
+# no duplicated count, membership or order; the generic projector reads the collection.
+entity HandView { fields = { Player = { type = Ref(Player) } } }
+entity DrawPileView { fields = { Player = { type = Ref(Player) } } }
+entity DiscardPileView { fields = { Player = { type = Ref(Player) } } }
+entity ExhaustPileView { fields = { Player = { type = Ref(Player) } } }
+entity InPlayView { fields = { Player = { type = Ref(Player) } } }
+entity RemovedFromCombatView { fields = { Player = { type = Ref(Player) } } }
+entity RunDeckView { fields = { Player = { type = Ref(Player) } } }
+
+procedure SetupPublicPiles {
+  locals = { owner = Binding pile = Binding }
+  body = {
+    let = { into = owner value = first(type(Player)) }
+    create = { type = HandView scope = entityScope(owner) into = pile fields = { Player = owner } }
+    create = { type = DrawPileView scope = entityScope(owner) into = pile fields = { Player = owner } }
+    create = { type = DiscardPileView scope = entityScope(owner) into = pile fields = { Player = owner } }
+    create = { type = ExhaustPileView scope = entityScope(owner) into = pile fields = { Player = owner } }
+    create = { type = InPlayView scope = entityScope(owner) into = pile fields = { Player = owner } }
+    create = { type = RemovedFromCombatView scope = entityScope(owner) into = pile fields = { Player = owner } }
+    create = { type = RunDeckView scope = entityScope(owner) into = pile fields = { Player = owner } }
+  }
+}
+
 projection PlayerView {
   role = player
-  types = { Player = {} Run = {} MapNode = {} RunVisit = {} NeowVisit = {} NeowOption = {} Card = {} CardAttachment = { identity_from = Card } Relic = {} Enemy = {} Power = {} Potion = {} CombatRewardSet = {} EventVisit = {} }
+  types = { Player = {} Run = {} MapNode = {} RunVisit = {} NeowVisit = {} NeowOption = {} Card = {} CardAttachment = { identity_from = Card } Relic = {} Enemy = {} Power = {} Potion = {} CombatRewardSet = {} EventVisit = {} HandView = {} DrawPileView = {} DiscardPileView = {} ExhaustPileView = {} InPlayView = {} RemovedFromCombatView = {} RunDeckView = {} }
   collections = true
   relations = true
 }

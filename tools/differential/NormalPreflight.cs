@@ -220,8 +220,8 @@ internal static class NormalPreflight
         {
             var nodes = Snapshot.Entities.Where(e => e.KindId.EndsWith(":MapNode", StringComparison.Ordinal)).ToDictionary(e => e.InstanceId);
             string Coord(string id) => Field(nodes[id], "MapNode.Col") + "," + Field(nodes[id], "MapNode.Row");
-            var deck = Snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members
-                .Select(m => Snapshot.Entities.Single(e => e.InstanceId == m.EntityRef).ContentId).Order(StringComparer.Ordinal).ToArray();
+            var deck = Snapshot.Piles.Single(p => Snapshot.Entities.Single(e => e.InstanceId == p.PileRef).KindId == "net:kind:base-spire:RunDeckView").VisibleMembers
+                .Select(id => Snapshot.Entities.Single(e => e.InstanceId == id).ContentId).Order(StringComparer.Ordinal).ToArray();
             var facts = new SortedDictionary<string, string>(StringComparer.Ordinal)
             {
                 ["player.hp"] = Player("Hp"), ["player.max_hp"] = Player("MaxHp"), ["player.gold"] = Player("Gold"),
