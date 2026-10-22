@@ -20,6 +20,7 @@ internal sealed class TextRuleSource : ISessionSource
     private readonly string _participantRole;
     private readonly string _defaultGameSeed;
     private readonly DslPackage? _package;
+    private readonly SessionDebugOptions? _debugOptions;
 
     public TextRuleSource(
         RuleSet rules,
@@ -27,7 +28,7 @@ internal sealed class TextRuleSource : ISessionSource
         string scenarioProfile,
         string projectionId,
         string participantRole,
-        string defaultGameSeed, DslPackage? package = null)
+        string defaultGameSeed, DslPackage? package = null, SessionDebugOptions? debugOptions = null)
     {
         ArgumentNullException.ThrowIfNull(rules);
         ArgumentNullException.ThrowIfNull(profile);
@@ -43,6 +44,7 @@ internal sealed class TextRuleSource : ISessionSource
         _participantRole = participantRole;
         _defaultGameSeed = defaultGameSeed;
         _package = package;
+        _debugOptions = debugOptions;
 
         // Report the profile selected by the package; ordinary text-rule scenarios keep the default.
         RngProfileId = package is { RandomProfile: not "engine-default" } ? RandomService.VanillaDrawProfileId : RandomService.DefaultDrawProfileId;
@@ -65,12 +67,12 @@ internal sealed class TextRuleSource : ISessionSource
         }
 
         // 「已配置、尚未 Start」：建会话阶段只种随机流，不执行开局程序、不消费任何随机数。
-        var session = _package?.CreateSession(SessionSeed(requested), [_participantRole], requested) ?? new Session(
+        var session = _package?.CreateSession(SessionSeed(requested), [_participantRole], requested, _debugOptions) ?? new Session(
             _rules,
             SessionSeed(requested),
             [_participantRole],
             randomAlgorithmId: RandomService.DefaultAlgorithmId,
-            randomDrawProfileId: RandomService.DefaultDrawProfileId, gameSeed: requested);
+            randomDrawProfileId: RandomService.DefaultDrawProfileId, gameSeed: requested, debug: _debugOptions);
 
         return new ProvidedSession(
             session,

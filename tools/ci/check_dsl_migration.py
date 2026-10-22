@@ -183,6 +183,14 @@ def main() -> int:
                        or c["first_difference"] is not None or c["left"]["facts"] != c["right"]["facts"] or not c["unverified_dimensions"]
                        or c["right"]["diagnostic"]["normal_compatibility_alignment"] for c in normal["cases"])):
             raise ValueError("normal preflight must match every opening fact and retain both public returns, while rejecting incomplete M01")
+        paired_output = args.output / "normal-paired"
+        paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 1)
+        if (paired["expected_case_ids"] != ["m01-claim", "m01-skip"] or paired["executed"] != 2
+                or paired["complete"] or paired["independent_verified"]
+                or any(c["status"] != "diverged" or c["independent_verified"] or c["complete"]
+                       or c["reason"] or not c["first_difference"] or len(c["boundaries"]) < 4
+                       or not c["boundaries"][-1]["left"]["missing_dimensions"] for c in paired["cases"])):
+            raise ValueError("normal paired prefix must retain actual common boundaries and reject real differences/incomplete dimensions")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")
@@ -226,10 +234,17 @@ def main() -> int:
                 or len(absent["cases"]) != 2 or any(c["status"] != "blocked_compare"
                    or "unsupported_reference_adapter" not in c["reason"] for c in absent["cases"])):
             raise ValueError("normal preflight must reject a missing native reference and zero execution")
+        absent_paired_output = args.output / "paired-without-reference"
+        absent_paired = run("paired-without-reference", ["normal-compare", "--output", str(absent_paired_output)], 3, fallback)
+        if (absent_paired["executed"] or absent_paired["complete"] or absent_paired["independent_verified"]
+                or len(absent_paired["cases"]) != 2 or any(c["status"] != "blocked_compare"
+                   or "unsupported_reference_adapter" not in c["reason"] for c in absent_paired["cases"])):
+            raise ValueError("normal paired comparison must reject missing reference and zero execution")
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
-                  "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01", "independent_verified": False}
+                  "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01",
+                  "normal_paired": "common-action-prefix; real-difference; incomplete-M01", "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

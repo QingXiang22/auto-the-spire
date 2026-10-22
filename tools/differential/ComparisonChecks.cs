@@ -45,6 +45,7 @@ internal static class ComparisonChecks
         }
         CheckRandom(repository, document.RootElement);
         NormalPreflightChecks.Run();
+        NormalRunChecks.Run(repository);
         Console.WriteLine("Comparator checks passed: independent execution, missing data, terminal, RNG and four first-difference dimensions.");
         return 0;
     }
