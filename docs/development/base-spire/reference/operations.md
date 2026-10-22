@@ -49,6 +49,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 ## 过程与公开动作
 
+开发便利 action 只在 `Player.CurrentRun` 未关联正常 Run 时提供；`CanUseDevelopmentActions(owner)` 返回这一资格。直接加牌／获得／生成、移除遗物、开发靶人、免费抽牌／弃手牌／升级和直接进入开发房间均受该守卫约束。`StartNormalRun` 后仍复用正常出牌、回合、药水、奖励和地图动作；正常规则调用下表共享 procedure 不受开发 action 守卫限制。
+
 遗物与Power统一使用[通知与修正监听](../../../design/mod-the-spire/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。具体监听与私有状态位于powers/shared对应模块；通用定义与生命周期位于powers/rules。
 
 遗物共享生命周期提供以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。

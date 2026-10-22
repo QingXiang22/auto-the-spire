@@ -8,6 +8,6 @@ template TwigSlimeSContent { body = {
     body = { call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 4 } } }
   }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:twig-slime-s" procedure = Execute }
-  action Spawn { role = player body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:twig-slime-s" hp = 7 } } } }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:twig-slime-s" hp = 7 } } } }
 } }
 use TwigSlimeS { template = TwigSlimeSContent }

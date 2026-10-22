@@ -7,6 +7,7 @@ template PotionDefinition {
   body = {
     action Obtain {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       locals = { potion = Binding }
       body = {
         call = { procedure = CreatePotionInstance args = { owner = first(type(Player)) definition = arg(definition) } into = potion }

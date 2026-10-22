@@ -31,7 +31,7 @@ template TurnEndNoBlockRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
       body = {
         call = {
           procedure = ObtainRelic args = {
@@ -73,7 +73,7 @@ template EveryTurnsDrawRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
       body = {
         call = {
           procedure = ObtainRelic args = {
@@ -122,7 +122,7 @@ template ObtainMaxHpRelic {
     action Obtain {
       role = player
       locals = { owner = Binding }
-      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition))))
       body = {
         let = { into = owner value = first(type(Player)) }
         call = {
@@ -168,7 +168,7 @@ template CombatEndHealRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
       body = {
         call = {
           procedure = ObtainRelic args = {

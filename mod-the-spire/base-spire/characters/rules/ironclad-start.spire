@@ -42,7 +42,7 @@ template IroncladCharacterDefinition {
     }
     action Initialize {
       role = player
-      requires = pureCall(CanInitializeCharacter, first(type(Player)))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), pureCall(CanInitializeCharacter, first(type(Player))))
       body = { call = { procedure = Initialize args = { owner = first(type(Player)) } } }
     }
   }

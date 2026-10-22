@@ -44,7 +44,10 @@ internal static class BaseDslPileChecks
         var id = ((WireString)started.Get("session_id")!).Value;
         var snapshot = PublicSnapshotDto.FromWire(started.Get("snapshot")!, NetProtocol.V02);
         var pileRefs = Names.ToDictionary(name => name, name => Pile(snapshot, name).PileRef);
+        var normalStarted = false;
         CheckBoundary();
+        Check.True(snapshot.LegalActions.Any(a => a.ActionType.EndsWith(".AddToHand", StringComparison.Ordinal)), "development Host still offers setup actions before normal entry");
+        normalStarted = true;
         Step(snapshot.LegalActions.Single(a => a.ActionType.EndsWith(":StartNormalRun", StringComparison.Ordinal)));
         var option = snapshot.Entities.Single(e => e.KindId.EndsWith(":NeowOption", StringComparison.Ordinal)
             && e.Fields.Any(f => f.FieldId.EndsWith(":NeowOption.RelicId", StringComparison.Ordinal) && f.Value is WireString { Value: "base-spire:booming-conch" }));
@@ -71,6 +74,11 @@ internal static class BaseDslPileChecks
         void CheckBoundary()
         {
             CheckSnapshot(snapshot);
+            if (normalStarted)
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType.EndsWith(".AddToHand", StringComparison.Ordinal)
+                    || a.ActionType.EndsWith(".Obtain", StringComparison.Ordinal) || a.ActionType.EndsWith(".Spawn", StringComparison.Ordinal)
+                    || a.ActionType.Split(':')[^1] is "Draw" or "DiscardHand" or "UpgradeCardInHand" or "RemoveOwnedRelic" or "AddDevelopmentTarget"),
+                    "normal Host excludes development setup actions at each public boundary");
             var engine = host.GetSessionForTests(id).EngineForTests;
             foreach (var name in Names)
             {

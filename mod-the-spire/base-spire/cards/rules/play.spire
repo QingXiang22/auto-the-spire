@@ -176,7 +176,8 @@ action PlayTargetedCard {
   body = { call = { procedure = PlayTargetedCard args = { owner = first(type(Player)) card = card } } }
 }
 action UpgradeCardInHand {
-  role = player parameters = { card = Ref(Card) }
+  role = player
+  requires = pureCall(CanUseDevelopmentActions, first(type(Player))) parameters = { card = Ref(Card) }
   candidates = { parameter = card query = where(collection(Hand), c, and(field(c, Card.CanUpgrade), not(field(c, Card.Upgraded)))) }
   body = { call = { procedure = UpgradeCard args = { card = card } } }
 }

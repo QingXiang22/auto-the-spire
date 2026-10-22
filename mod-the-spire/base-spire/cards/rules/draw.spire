@@ -55,6 +55,7 @@ procedure DrawOne {
 }
 action Draw {
   role = player
+  requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
   body = { call = { procedure = DrawOne args = { owner = first(type(Player)) } } }
 }
 # Shared "draw N cards" operation used by card effects. Each card goes through DrawOne, so reshuffle,
@@ -70,6 +71,7 @@ procedure DrawCards {
 }
 action DiscardHand {
   role = player
+  requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
   body = {
     forEach = {
       query = collection(Hand) item = card

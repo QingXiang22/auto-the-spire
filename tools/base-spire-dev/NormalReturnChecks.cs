@@ -5,6 +5,15 @@ internal static partial class PackageChecks
 {
     public static int RunNormalReturnOnly(DslPackage package)
     {
+        var development = Start(package);
+        Submit(development, "Strike.AddToHand");
+        Submit(development, "UpgradeCardInHand", Hand(development).Single());
+        Submit(development, "FirePotion.Obtain");
+        Submit(development, "TheAbacus.Obtain");
+        Submit(development, "RemoveOwnedRelic", Members(development, "Relics").Single());
+        Submit(development, "LeafSlimeS.Spawn");
+        Submit(development, "Draw"); Submit(development, "DiscardHand");
+        Equal(0, Hand(development).Count, "development setup actions still execute outside a normal Run");
         var noNewDeath = Start(package);
         Submit(noNewDeath, "AddDevelopmentTarget");
         Set(noNewDeath, FirstTarget(noNewDeath), "Enemy", "Hp", Value.Of(0));
@@ -18,6 +27,7 @@ internal static partial class PackageChecks
         {
             var claim = path.GetString() == "claim";
             var s = NormalFirstCombat(package);
+            AssertNoDevelopmentActions(s, rejectSubmissions: claim);
             var permanent = Members(s, "RunDeck").ToArray();
             for (var step = 0; Active(s) && step < input.RootElement.GetProperty("maximum_combat_actions").GetInt32(); step++)
             {
@@ -27,6 +37,7 @@ internal static partial class PackageChecks
                 Healthy(s);
             }
             Equal("victory", Outcome(s), "starter cards defeat the real source encounter");
+            AssertNoDevelopmentActions(s);
             var visit = Members(s, "RunVisits").Single();
             var rewards = s.State.GetField(visit, s.RuleSet.TypeByQualifiedId("base-spire:RunVisit").FieldIndex("Rewards")).AsRef();
             Equal(1L, IntField(s, rewards, "CombatRewardSet", "VisitId"), "rewards belong to the actual first visit");
@@ -56,6 +67,7 @@ internal static partial class PackageChecks
                 if (potionOptions.Length > 0) Submit(s, "SkipDevelopmentPotionReward");
             }
             Submit(s, "CloseDevelopmentRewards");
+            AssertNoDevelopmentActions(s, rejectSubmissions: claim);
             Equal(draws, s.Random.TotalDraws, "claim, skip and close never reroll");
             Equal(claim ? 99L + amount : 99L, IntField(s, Player(s), "Player", "Gold"), "only claimed gold is permanent");
             True(permanent.All(c => Members(s, "RunDeck").Contains(c)), "starter permanent identities survive");
@@ -98,9 +110,12 @@ internal static partial class PackageChecks
     {
         using var input = NormalCombatInput();
         var s = package.CreateSession(777, ["player"], input.RootElement.GetProperty("seed").GetString()); s.Start(); Submit(s, "StartNormalRun");
+        AssertNoDevelopmentActions(s);
         var conch = s.PendingDecision!.Candidates.Single(o => TextField(s, o, "NeowOption", "RelicId") == input.RootElement.GetProperty("neow_relic").GetString());
         s.Answer(new DecisionAnswer(s.PendingDecision.RequestId, Instances: [conch]));
+        AssertNoDevelopmentActions(s);
         s.Answer(new DecisionAnswer(s.PendingDecision!.RequestId, Flag: true));
+        AssertNoDevelopmentActions(s);
         var choose = s.LegalActions(s.Participant(0)).Single(a => a.Definition.QualifiedId == "base-spire:ChooseMapPoint");
         s.Submit(choose.Definition, s.Participant(0), choose.Bindings[0]); Healthy(s);
         True(!Legal(s, "EndDevelopmentCombat"), "normal combat cannot be forcibly ended");
@@ -108,6 +123,32 @@ internal static partial class PackageChecks
     }
 
     private static JsonDocument NormalCombatInput() => JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.normal-first-combat.json")!);
+
+    private static void AssertNoDevelopmentActions(Session s, bool rejectSubmissions = false)
+    {
+        bool Development(ActionDefinition a)
+        {
+            var name = a.QualifiedId.Split(':')[^1];
+            return name.EndsWith(".Obtain", StringComparison.Ordinal) || name.EndsWith(".AddToHand", StringComparison.Ordinal)
+                || name.EndsWith(".Spawn", StringComparison.Ordinal) || name.EndsWith(".Initialize", StringComparison.Ordinal)
+                || name is "Draw" or "DiscardHand" or "UpgradeCardInHand" or "RemoveOwnedRelic" or "AddDevelopmentTarget"
+                    or "BeginDevelopmentCombat" or "EndDevelopmentCombat" || name.StartsWith("EnterDevelopment", StringComparison.Ordinal);
+        }
+        True(!s.LegalActions(s.Participant(0)).Any(a => Development(a.Definition)), "normal Run has no external development setup candidates");
+        if (!rejectSubmissions) return;
+        var state = s.State.StateHash(); var random = JsonSerializer.Serialize(s.Random.Capture());
+        foreach (var action in s.RuleSet.Actions.Where(Development))
+        {
+            if (action.Parameters.Count == 0)
+                Throws<EngineFaultException>(() => s.Submit(action, s.Participant(0), []));
+            else if (action.QualifiedId == "base-spire:RemoveOwnedRelic")
+                Throws<EngineFaultException>(() => s.Submit(action, s.Participant(0), [Value.OfRef(Members(s, "Relics").First())]));
+            else if (action.QualifiedId == "base-spire:UpgradeCardInHand" && Hand(s).Count > 0)
+                Throws<EngineFaultException>(() => s.Submit(action, s.Participant(0), [Value.OfRef(Hand(s).First())]));
+        }
+        Equal(state, s.State.StateHash(), "directly submitted development actions preserve normal state");
+        Equal(random, JsonSerializer.Serialize(s.Random.Capture()), "directly submitted development actions preserve all random streams");
+    }
 
     private static void RejectNormalAction(Session s, string name)
     {
@@ -134,6 +175,10 @@ internal static partial class PackageChecks
               if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "Rewards must wait for all victory hooks" } } }
             } }
             subscription Victory { event = CombatVictory reaction = CheckVictory priority = 200 }
+            action SetupControlledFeed { role = player locals = { card = Binding } body = {
+              call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = "base-spire:feed" } into = card }
+              call = { procedure = AddGeneratedToHand args = { card = card } }
+            } }
             """);
         var s = NormalFirstCombat(copy.Load());
         // Controlled last-kill fixture: keep the real formation, mark the other enemies already defeated.
@@ -141,7 +186,7 @@ internal static partial class PackageChecks
             Set(s, enemy, "Enemy", "Hp", Value.Of(0));
         Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(5));
         Set(s, Player(s), "Player", "Hp", Value.Of(40));
-        Submit(s, "Feed.AddToHand");
+        Submit(s, "SetupControlledFeed");
         var feed = Hand(s).Single(c => CardDefinition(s, c) == "base-spire:feed");
         Submit(s, "PlayAttackFromHand", feed);
         Equal(83L, IntField(s, Player(s), "Player", "MaxHp"), "last-kill growth persists");
@@ -160,6 +205,10 @@ internal static partial class PackageChecks
               if = { condition = or(not(field(owner, Player.CombatActive)), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "Potion effect settled before consumption" } } }
             } }
             subscription PotionAfterKill { event = PotionUsedOnTarget reaction = PotionAfterKill priority = 1000 }
+            action SetupControlledFirePotion { role = player locals = { potion = Binding } body = {
+              call = { procedure = CreatePotionInstance args = { owner = first(type(Player)) definition = "base-spire:fire-potion" } into = potion }
+              call = { procedure = ObtainPotion args = { owner = first(type(Player)) potion = potion } }
+            } }
             """);
         var compiled = effects.Load();
         var turnEnd = NormalFirstCombat(compiled);
@@ -169,7 +218,7 @@ internal static partial class PackageChecks
         foreach (var enemy in potionKill.State.AllInstances(potionKill.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).Skip(1))
             Set(potionKill, enemy, "Enemy", "Hp", Value.Of(0));
         Set(potionKill, FirstTarget(potionKill), "Enemy", "Hp", Value.Of(10));
-        Submit(potionKill, "FirePotion.Obtain");
+        Submit(potionKill, "SetupControlledFirePotion");
         Submit(potionKill, "UsePotionOnTarget", Members(potionKill, "Potions").Single());
         Equal("victory", Outcome(potionKill), "potion last kill settles after consumption");
         Equal(0, Members(potionKill, "Potions").Count, "the used potion is consumed once");

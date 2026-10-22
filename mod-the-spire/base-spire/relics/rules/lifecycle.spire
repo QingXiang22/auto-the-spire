@@ -57,6 +57,7 @@ procedure RemoveRelic {
 
 action RemoveOwnedRelic {
   role = player
+  requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
   parameters = { instance = Ref(Relic) }
   candidates = { parameter = instance query = collection(Relics) }
   body = {
