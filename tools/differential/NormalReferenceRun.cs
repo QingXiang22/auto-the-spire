@@ -12,6 +12,8 @@ using Sts2Sim.Core.Helpers;
 using Sts2Sim.Core.Models;
 using Sts2Sim.Core.Models.Characters;
 using Sts2Sim.Core.Models.Events;
+using Sts2Sim.Core.MonsterMoves;
+using Sts2Sim.Core.MonsterMoves.Intents;
 using Sts2Sim.Core.Random;
 using Sts2Sim.Core.Rooms;
 using Sts2Sim.Core.Runs;
@@ -95,6 +97,19 @@ internal sealed class NormalReferenceRun : IDisposable
     }
     private string Creature(Creature creature) => ReferenceEquals(creature, player.Creature) ? "player" :
         "enemy:" + combat!.Engine.State.SpawnedEnemies.ToList().IndexOf(creature);
+    private NormalEnemyView Enemy(Creature creature)
+    {
+        var monster = creature.Monster!;
+        var move = monster.NextMove ?? throw new NotSupportedException("missing_dimension: native next move");
+        var index = Array.IndexOf(monster.MoveStateMachine!.States.Values.OfType<MoveState>().ToArray(), move);
+        if (index < 0 || move.Intents.Count != 1) throw new NotSupportedException("missing_dimension: native registered move index or compound intent");
+        var intent = move.Intents.Single().IntentType switch
+        {
+            IntentType.Attack => "attack", IntentType.StatusCard => "status",
+            _ => throw new NotSupportedException("missing_dimension: native first-encounter intent")
+        };
+        return new(Creature(creature), Id(monster.Id), creature.CurrentHp, creature.MaxHp, creature.Block, move.Id, index, intent);
+    }
     private string Potion(PotionModel potion) => potionOrigins.TryGetValue(potion, out var origin) ? origin + ":" + Id(potion.Id)
         : throw new NotSupportedException("missing_dimension: reference potion acquisition origin");
     private NormalAction[] PotionDiscards() => player.CanUseOrRemovePotions ? player.PotionSlots.Where(p => p is not null)
@@ -305,8 +320,7 @@ internal sealed class NormalReferenceRun : IDisposable
         Put("public.player_history", new NormalPlayerHistory(active ? state!.CardsPlayedThisCombat : 0, active ? history.Length : 0,
             active && history.Any(e => e.HappenedThisTurn(combat!.Engine.State)), active && combat!.Engine.State.CountCardsExhaustedThisTurn(player) > 0,
             combat?.Engine.State.CurrentSide == CombatSide.Enemy, player.Deck.Type == PileType.Deck));
-        Put("public.enemies", combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Select(e =>
-            new NormalEnemyView(Creature(e), Id(e.Monster!.Id), e.CurrentHp, e.MaxHp, e.Block, e.Monster.NextMove!.Id)).OrderBy(e => e.Origin, StringComparer.Ordinal).ToArray() : []);
+        Put("public.enemies", combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Select(Enemy).OrderBy(e => e.Origin, StringComparer.Ordinal).ToArray() : []);
         Put("public.powers", (combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Prepend(player.Creature).SelectMany(c => c.Powers) : [])
             .Select(p => new NormalPublicPower(Id(p.Id), Creature(p.Owner), (long)p.Amount, p.SkipNextDurationTick))
             .OrderBy(p => p.Holder, StringComparer.Ordinal).ThenBy(p => p.Id, StringComparer.Ordinal).ToArray());
