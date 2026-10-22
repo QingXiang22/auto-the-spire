@@ -252,6 +252,7 @@ internal sealed class NormalDslRun : IDisposable
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
                 unmapped_public_actions = unmapped,
                 unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
+                unmapped_public_topology = new[] { "MapNodes sequence order" },
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
