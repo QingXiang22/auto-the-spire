@@ -61,7 +61,9 @@ internal sealed class NormalReferenceRun : IDisposable
         try
         {
             RunReplayDemo.EnsureModelsRegistered();
-            run = new RunState(seed, [new Overgrowth(), new Hive(), new Glory()]);
+            Sts2Sim.Core.Content.ActDefinition[] acts = [new Overgrowth(), new Hive(), new Glory()];
+            random.WatchOpening(acts);
+            run = new RunState(seed, acts);
             player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run); run.AddPlayer(player);
             random.Name(run, player);
             foreach (var card in player.Deck.Cards) permanent.Add(card, "permanent:" + permanent.Count.ToString("D2"));
@@ -364,6 +366,7 @@ internal sealed class NormalReferenceRun : IDisposable
         Put("actions.candidates", Actions().Select(a => a.Key).Distinct().Order(StringComparer.Ordinal).ToArray());
         var scalars = diagnostics ? random.ScalarCalls() : null;
         if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
+        if (diagnostics) Put("random.weighted_candidates", random.WeightedCalls());
         if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
@@ -373,6 +376,7 @@ internal sealed class NormalReferenceRun : IDisposable
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 unmapped_scalar_calls = scalars?.Unmapped,
+                unmapped_weighted_semantics = new[] { "compatibility predicate/tag relations and accept/reject commit effects" },
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
     public void Dispose() => random.Dispose();
@@ -393,7 +397,8 @@ internal sealed class NormalReferenceRandom : IDisposable
     private readonly FieldInfo hook = typeof(Rng).GetField("_drawObserver", BindingFlags.NonPublic | BindingFlags.Instance)!;
     private readonly Dictionary<Rng, string> names = [];
     private readonly List<Rng> attached = [];
-    private sealed record Draw(string Operation, double Minimum, double Maximum, int Arity, Sts2Sim.Core.Saves.SerializableRng State);
+    private sealed record Draw(string Operation, double Minimum, double Maximum, int Arity, Sts2Sim.Core.Saves.SerializableRng State)
+    { public NormalWeightedSnapshot? Weighted { get; init; } }
     private sealed record Call(Rng Rng, string Operation, string Result, int Before, int After, Draw Parameters,
         Sts2Sim.Core.Saves.SerializableRng StateAfter);
     private readonly Dictionary<Rng, Draw> pending = [];
@@ -401,6 +406,9 @@ internal sealed class NormalReferenceRandom : IDisposable
     private long dropped;
     private readonly RngDrawObserver? previous;
     private readonly bool enabled;
+    private NormalReferenceWeightedBags? opening;
+    internal void WatchOpening(Sts2Sim.Core.Content.ActDefinition[] acts)
+    { if (enabled) opening = new(acts); }
     public NormalReferenceRandom(bool enabled)
     {
         this.enabled = enabled;
@@ -413,7 +421,9 @@ internal sealed class NormalReferenceRandom : IDisposable
         // Upstream advances Counter before this callback, and the PRNG word afterwards.
         // Capture both real states; this hook never draws, replays or replaces a generator.
         var state = rng.ToSerializable(); state.counter--;
-        if (!pending.TryAdd(rng, new(operation, minimum, maximum, arity, state)))
+        var weighted = operation == "NextDouble" && Name(rng) == "base-spire:run:up_front"
+            ? (opening ?? throw NormalWeightedTrace.Missing("native opening bag observer")).Capture() : null;
+        if (!pending.TryAdd(rng, new(operation, minimum, maximum, arity, state) { Weighted = weighted }))
             throw new NotSupportedException("Reference RNG call is missing its post-result notification.");
         if (attached.Contains(rng)) return;
         if (hook.GetValue(rng) is not null) throw new NotSupportedException("Reference result observer already owned.");
@@ -496,6 +506,16 @@ internal sealed class NormalReferenceRandom : IDisposable
         return new(NormalScalarTrace.Canonical(result), unmapped.OrderBy(c => c.Stream, StringComparer.Ordinal).ThenBy(c => c.Before).ToArray());
         static long Integral(double value) => double.IsFinite(value) && value == Math.Truncate(value) && value >= int.MinValue && value <= int.MaxValue
             ? (long)value : throw new NotSupportedException("missing_dimension: non-integral native integer bound");
+    }
+    internal NormalWeightedCall[] WeightedCalls()
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalWeightedTrace.Missing("incomplete native weighted diagnostics");
+        return NormalWeightedTrace.Canonical(calls.Where(c => c.Parameters.Operation == "NextDouble" && Name(c.Rng) == "base-spire:run:up_front").Select(c =>
+        {
+            if (c.Parameters.Arity != 0 || c.Parameters.Weighted is not { } candidates) throw NormalWeightedTrace.Missing("actual native weighted candidates");
+            return NormalWeightedTrace.FromUnit(Name(c.Rng), c.Before, c.After, candidates,
+                double.Parse(c.Result, System.Globalization.CultureInfo.InvariantCulture));
+        }));
     }
     // The factory-local generator is retained only by the enabled observer. Compare the
     // same run/player/event objects on both sides; per-call diagnostics retain its words.

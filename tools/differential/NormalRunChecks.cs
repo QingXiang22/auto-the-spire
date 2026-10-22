@@ -75,6 +75,7 @@ internal static class NormalRunChecks
                 "normalization retains the actual completed native history in diagnostics");
         }
         NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
+        NormalWeightedChecks.Run(left.DebugRecords, victory);
         var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
         Require(floatCalls.Length == 11 && floatCalls.Count(c => c.Stream == "base-spire:run:monster_ai") == 3
             && floatCalls.Count(c => c.Stream == "base-spire:player:rewards") == 8,
