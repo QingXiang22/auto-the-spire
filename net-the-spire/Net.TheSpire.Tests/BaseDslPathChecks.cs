@@ -13,6 +13,7 @@ internal static class BaseDslPathChecks
 {
     public static IEnumerable<(string Name, Action Body)> Build()
     {
+        yield return ("PUBLIC-PILES normal opening publishes real counts and memberships without hidden draw identities", BaseDslPileChecks.NormalPiles);
         yield return ("DB-A11 pure DSL package describe/catalog/start/step/observe publishes the real effect", Trajectory);
         yield return ("RNG package host uses the source stream layout and isolates repeated seeds", SourceRandomSessions);
         yield return ("DB-A11 real stdio process runs the same package and public trajectory", () => StdioTrajectory("draw"));
@@ -73,7 +74,12 @@ internal static class BaseDslPathChecks
     private static RequestDto Request(string id, Operation operation, params (string Key, WireValue Value)[] fields) =>
         new(id, operation, new WireObject(fields.Select(p => new KeyValuePair<string, WireValue>(p.Key, p.Value))));
     private static WireValue Field(ResponseDto response, string name) => ((WireObject)response.Result!).Get(name)!;
-    private static PublicSnapshotDto Snapshot(ResponseDto response) => PublicSnapshotDto.FromWire(Field(response, "snapshot"), NetProtocol.V02);
+    private static PublicSnapshotDto Snapshot(ResponseDto response)
+    {
+        var snapshot = PublicSnapshotDto.FromWire(Field(response, "snapshot"), NetProtocol.V02);
+        BaseDslPileChecks.CheckSnapshot(snapshot);
+        return snapshot;
+    }
 
     private static void SourceRandomSessions()
     {
@@ -463,6 +469,17 @@ internal static class BaseDslPathChecks
                 Check.Equal(step.Active && !step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":BeginDevelopmentTurn", StringComparison.Ordinal)), "turn candidate follows the real turn gate");
                 Check.Equal(step.TurnOpen, snapshot.LegalActions.Any(a => a.ActionType.EndsWith(":EndDevelopmentTurn", StringComparison.Ordinal)), "end turn candidate follows the real turn gate");
             }
+            if (mode is "exhaust" or "inflame")
+            {
+                var content = mode == "exhaust" ? "base-spire:impervious" : "base-spire:inflame";
+                var resolved = snapshot.Entities.Single(e => e.ContentId == content).InstanceId;
+                var destination = BaseDslPileChecks.Pile(snapshot, mode == "exhaust" ? "ExhaustPile" : "RemovedFromCombat");
+                Check.Equal(1, destination.TotalCount, "the resolved card has exactly one destination membership");
+                Check.True(destination.VisibleMembers.Contains(resolved), "the actual resolved instance is published in its destination");
+                Check.False(BaseDslPileChecks.Pile(snapshot, "Hand").VisibleMembers.Contains(resolved)
+                    || BaseDslPileChecks.Pile(snapshot, "DiscardPile").VisibleMembers.Contains(resolved)
+                    || BaseDslPileChecks.Pile(snapshot, "InPlay").VisibleMembers.Contains(resolved), "resolution removes the card from its previous piles");
+            }
             if (mode == "chemical-x")
             {
                 Check.True(snapshot.Entities.Any(e => e.ContentId == "base-spire:chemical-x"), "real ChemicalX is public");
@@ -510,10 +527,10 @@ internal static class BaseDslPathChecks
                 Check.Equal("3", Public(snapshot, "Player.Energy"), "Monster room does not receive Conch Elite energy");
                 var hand = snapshot.LegalActions.Where(a => a.ActionType is "net:action:base-spire:PlayCardFromHand" or "net:action:base-spire:PlayAttackFromHand")
                     .Select(a => ((WireString)a.Fields.Single().Value!).Value).Distinct().ToArray();
-                var deck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members;
+                var deck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers;
                 Check.Equal(5, hand.Length, "five actual combat copies have legal play candidates");
                 Check.Equal(10, deck.Count, "ten permanent instances remain distinct");
-                Check.False(hand.Any(id => deck.Any(card => card.EntityRef == id)), "opening hand uses separate combat instances");
+                Check.False(hand.Any(id => deck.Contains(id)), "opening hand uses separate combat instances");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "unresolved combat blocks another map visit");
                 var payload = WireCanonical.Text(snapshot.ToWire());
                 Check.False(payload.Contains("OpeningDefinition", StringComparison.Ordinal) || payload.Contains("MapSegment", StringComparison.Ordinal), "private source pools and map work stay out of public output");
@@ -552,9 +569,9 @@ internal static class BaseDslPathChecks
                     StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"));
                     Check.Equal("map", Public(snapshot, "Player.Room"), "rewards close into the normal map");
                     Check.Equal((mode == "normal-claim" ? 99 + amount : 99).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "claim or skip credits gold once");
-                    var finalDeck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Select(m => m.EntityRef).ToHashSet();
+                    var finalDeck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.ToHashSet();
                     Check.Equal(mode == "normal-claim" ? 11 : 10, finalDeck.Count, "reward changes only the permanent deck");
-                    Check.True(deck.All(c => finalDeck.Contains(c.EntityRef)), "permanent starter identities survive the actual combat");
+                    Check.True(deck.All(finalDeck.Contains), "permanent starter identities survive the actual combat");
                     Check.True(offered.Skip(mode == "normal-claim" ? 1 : 0).All(id => !snapshot.Entities.Any(e => e.InstanceId == id)), "unselected actual instances are removed");
                     Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "legal source successors are published");
                     Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"), "the visit cannot close twice");
@@ -563,7 +580,7 @@ internal static class BaseDslPathChecks
             }
             if (mode.StartsWith("pickup-upgrade-", StringComparison.Ordinal))
             {
-                var permanent = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Select(m => m.EntityRef).ToHashSet();
+                var permanent = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.ToHashSet();
                 Check.Equal(2, permanent.Count, "original permanent instances remain in the deck");
                 foreach (var card in snapshot.Entities.Where(e => e.KindId == "net:kind:base-spire:Card"))
                 {
@@ -635,12 +652,12 @@ internal static class BaseDslPathChecks
                 Check.Equal("base-spire:ironclad", Public(snapshot, "Player.CharacterId"), "actual character identity");
                 Check.Equal("80", Public(snapshot, "Player.Hp"), "source HP");
                 Check.Equal("99", Public(snapshot, "Player.Gold"), "source gold");
-                var deck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members;
+                var deck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers;
                 var hand = snapshot.LegalActions.Where(a => a.ActionType is "net:action:base-spire:PlayCardFromHand" or "net:action:base-spire:PlayAttackFromHand")
                     .Select(a => ((WireString)a.Fields.Single().Value!).Value).Distinct().ToArray();
                 Check.Equal(10, deck.Count, "ten permanent cards"); Check.Equal(5, hand.Length, "five automatic opening cards have actual play candidates");
-                Check.False(hand.Any(id => deck.Any(permanent => permanent.EntityRef == id)), "combat copies have separate public handles");
-                var definitions = deck.Select(member => snapshot.Entities.Single(e => e.InstanceId == member.EntityRef).ContentId).ToArray();
+                Check.False(hand.Any(id => deck.Contains(id)), "combat copies have separate public handles");
+                var definitions = deck.Select(member => snapshot.Entities.Single(e => e.InstanceId == member).ContentId).ToArray();
                 Check.Equal(5, definitions.Count(id => id == "base-spire:strike-ironclad"), "source strikes");
                 Check.Equal(4, definitions.Count(id => id == "base-spire:defend-ironclad"), "source defends");
                 Check.Equal(1, definitions.Count(id => id == "base-spire:bash"), "source bash");
@@ -671,7 +688,7 @@ internal static class BaseDslPathChecks
                 var offered = snapshot.Groups.Single(g => g.TypeId.EndsWith(":CardRewardOptions", StringComparison.Ordinal)).Members.Select(m => m.EntityRef).ToArray();
                 Check.Equal(3, offered.Length, "three public reward options");
                 Check.Equal(3, offered.Select(id => snapshot.Entities.Single(e => e.InstanceId == id).ContentId).Distinct().Count(), "three distinct definitions");
-                Check.Equal(10, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "unclaimed cards are not permanent");
+                Check.Equal(10, BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.Count, "unclaimed cards are not permanent");
                 Check.Equal(3, snapshot.LegalActions.Count(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"), "one claim per actual option");
                 foreach (var id in offered)
                     Check.True(snapshot.Entities.Single(e => e.InstanceId == id).Fields.Any(f => f.FieldId.EndsWith(":Card.Rarity", StringComparison.Ordinal)), "reward rarity is public");
@@ -698,15 +715,15 @@ internal static class BaseDslPathChecks
                 else Named("SkipDevelopmentCardReward");
                 Check.False(PublicBool(snapshot, "Player.CardRewardPending"), "card reward spent");
                 Check.True(PublicBool(snapshot, "Player.GoldRewardPending"), "gold reward remains independent");
-                var deck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members;
+                var deck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers;
                 Check.Equal(claim ? 11 : 10, deck.Count, "only a selected card joins the permanent deck");
-                if (claim) Check.True(deck.Any(m => m.EntityRef == chosen), "selected public handle becomes permanent");
+                if (claim) Check.True(deck.Contains(chosen), "selected public handle becomes permanent");
                 Check.True(offered.Where(id => !claim || id != chosen).All(id => snapshot.Entities.All(e => e.InstanceId != id)), "unselected reward instances destroyed");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"), "no repeated claim candidates");
                 Named("CloseDevelopmentRewards"); Check.Equal("none", Public(snapshot, "Player.Room"), "explicit reward close");
                 Check.Equal(claim, snapshot.Entities.Any(e => e.InstanceId == potionOffer), "close preserves only an acquired potion");
                 Named("TwigSlimeS.Spawn"); Named("BeginDevelopmentCombat"); Named("BeginDevelopmentTurn");
-                Check.Equal(claim ? 11 : 10, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "permanent deck survives next combat");
+                Check.Equal(claim ? 11 : 10, BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.Count, "permanent deck survives next combat");
                 Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("Card.PermanentSource", StringComparison.Ordinal), "combat source references stay hidden");
             }
             if (mode == "rupture") { Check.Equal("78", Public(snapshot, "Player.Hp"), "real HP loss"); Check.Equal("2", Public(snapshot, "Player.PlaySequence"), "real play count"); }
@@ -752,7 +769,7 @@ internal static class BaseDslPathChecks
                 Check.False(PublicBool(snapshot, "Player.RoomUsed"), "the option has not been consumed");
                 Check.Equal(3, snapshot.LegalActions.Count, "two permanent choices plus cancellation");
                 Check.True(snapshot.LegalActions.All(a => a.ActionType == "net:action:net.answer_decision"), "only real decision answers are available while paused");
-                Check.Equal(2, snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Count, "the permanent deck is publicly visible");
+                Check.Equal(2, BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.Count, "the permanent deck is publicly visible");
                 var choice = cancel ? snapshot.LegalActions.Single(a => a.Fields.Count == 0) : snapshot.LegalActions.Last(a => a.Fields.Count > 0);
                 var chosenId = cancel ? null : ((WireString)choice.Fields.Single().Value!).Value;
                 StepSmith(choice);

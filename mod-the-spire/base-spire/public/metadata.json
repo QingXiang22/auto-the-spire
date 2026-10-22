@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.50",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.53",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -301,29 +301,24 @@
       "owner_kind_type_id": "base-spire:Player"
     },
     "base-spire:Hand": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:HandView"
     },
     "base-spire:DrawPile": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:DrawPileView"
     },
     "base-spire:DiscardPile": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:DiscardPileView"
     },
     "base-spire:InPlay": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "The development in-play pile exists only while a card resolves; no vanilla play-history contract is migrated. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:InPlayView"
     },
     "base-spire:ExhaustPile": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Only the development Exhaust card keyword feeds this pile; no vanilla exhaust-history contract is migrated. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:ExhaustPileView"
     },
     "base-spire:Powers": {
       "use": "not_published",
@@ -340,13 +335,12 @@
       "reason": "Temporary encounter candidate pool; entries only exist while a development formation is being spawned and are cleared before it returns."
     },
     "base-spire:RemovedFromCombat": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Resolved Power combat copies remain here until the next rebuild; permanent instances live separately in RunDeck. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:RemovedFromCombatView"
     },
     "base-spire:RunDeck": {
-      "use": "group",
-      "owner_kind_type_id": "base-spire:Player"
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:RunDeckView"
     },
     "base-spire:CardPlays": {
       "use": "not_published",
