@@ -23,13 +23,13 @@ internal static class TextRuleScenario
     public const string Scenario = "text-rules";
 
     public static TextRuleScenarioSetup CreatePackage(string manifestPath, string? scope = null,
-        int ledgerCapacity = 4096, string? defaultGameSeed = null)
+        int ledgerCapacity = 4096, string? defaultGameSeed = null, SessionDebugOptions? debugOptions = null)
     {
         var package = DslPackage.Load(manifestPath, scope);
         var spec = TextRuleProviderSpec.Load(package.PublicMetadataPath);
         if (spec.ScenarioProfile != package.Scope) throw new FormatException("Package scope and public metadata disagree.");
         spec = spec with { Metadata = spec.Metadata with { StaticBuildIdentity = spec.Metadata.StaticBuildIdentity + "|package=" + package.Digest } };
-        return Create([package.EntryPath], spec, ledgerCapacity, defaultGameSeed, package.Rules, package);
+        return Create([package.EntryPath], spec, ledgerCapacity, defaultGameSeed, package.Rules, package, debugOptions);
     }
 
     public static TextRuleScenarioSetup Create(
@@ -37,7 +37,7 @@ internal static class TextRuleScenario
         TextRuleProviderSpec spec,
         int ledgerCapacity = 4096,
         string? defaultGameSeed = null,
-        RuleSet? compiledRules = null, DslPackage? package = null)
+        RuleSet? compiledRules = null, DslPackage? package = null, SessionDebugOptions? debugOptions = null)
     {
         ArgumentNullException.ThrowIfNull(rulePaths);
         ArgumentNullException.ThrowIfNull(spec);
@@ -70,7 +70,7 @@ internal static class TextRuleScenario
             spec.ScenarioProfile,
             spec.ProjectionId,
             spec.ParticipantRole,
-            defaultGameSeed ?? spec.DefaultGameSeed, package);
+            defaultGameSeed ?? spec.DefaultGameSeed, package, debugOptions);
 
         return new TextRuleScenarioSetup(new ControlHost(source, ledgerCapacity), metadata.StaticBuildIdentity, rules);
     }

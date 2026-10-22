@@ -63,3 +63,20 @@ dotnet run --project tools/differential -c Release -- normal-preflight --output 
 两侧确有记录且存在开局首差时返回1。缺参考、缺候选、超时、输入策略不完整、无法完成 DSL 返回，或者开局相同但后续双侧适配未完成时返回3。预检不返回0，`complete` 和 `independent_verified` 均为false；`executed` 只统计实际取得双方开局记录的路径，不代表完成该路径的逐步双侧比较。报告另列访问、永久实例映射、牌区、逐次随机和事件等未验证维度。完整 M01 仍须逐步比较，单侧领取／跳过成功不作为验收。
 
 可运行 `normal-preflight-self-test` 定向检查比较器。迁移组会验证两条真实公开返回、全部开局事实一致、后续比较未完成仍失败、缺参考与零执行失败，并保留原11份 suite 的全部必测 ID；故障注入不计作独立玩法通过。
+
+## 比较正常流程的共同动作前缀
+
+```powershell
+dotnet run --project tools/differential -c Release -- normal-compare --output .artifacts/differential/normal-paired
+dotnet run --project tools/differential -c Release -- normal-compare-self-test
+```
+
+`normal-compare` 使用同一固定输入和两条奖励路径。DSL 侧通过正式 Host 工厂、协议编码和 `ControlHost.Dispatch` 执行公开候选；内部诊断读取该 Host 正在执行的同一会话。参考侧从原生 RunState、Player 和真实房间入口独立执行同一个语义动作。它与启动 stdio 子进程的 `normal-preflight` 分开报告。
+
+每个共同边界保存正常动作候选、Neow 决策约束、玩家资源、全部初始敌人及 Power、访问阶段与坐标、永久资产和六个有序战斗牌区。永久卡按各自正常起始牌组建立槽位，战斗副本沿 `PermanentSource`／`DeckVersion` 对应；死亡敌人沿参考的 `SpawnedEnemies` 保留最初编号，不按剩余敌人重新编号。Neow 的可选实体集合按语义排序比较，选项原位置仍保留在真实公开快照中。
+
+固定策略的 `PlayAttackFromHand` 对应同一张卡及 `first-legal-target` 指令；`PlayTargetedCard` 单列候选，尚未执行的目标选择约束明确列为未验证。一次共同结束回合包含 DSL 的显式下一回合续接，对应参考原生结束回合所包含的敌方行动和下一玩家回合。工具不插入玩法效果，也不修改敌人、血量、奖励、流种子或游标。
+
+遇到已比较维度的首差便停止共同前缀，保存动作、双方边界和首差。`missing_dimensions` 另列尚缺的完整公开投影、逐次随机候选与规范化、适用事件、目标选择约束及末杀／重复／过期提交。原始公开协议、Engine 事件与随机诊断、参考原生战斗观察及初始化以来的原始随机结果保留供定位；这些原始记录不等于完成跨后端比较。报告为非零，`complete`／`independent_verified` 保持 false，不能认证 M01 或推断尚未到达的奖励后缀已通过。
+
+自检逐项删除双方同一个必需字段、注入各维度首差、检查零执行和缺动作／终点，并核对开启与关闭诊断时真实 Host 的完整公开快照、已比较状态及所有随机状态完全一致。迁移组同时执行正常共同前缀和缺参考构建；原11份 suite、必测ID和严格失败语义保留。
