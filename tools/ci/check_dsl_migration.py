@@ -52,7 +52,7 @@ def main() -> int:
         fixtures = ROOT / "tools/base-spire-dev/fixtures"
         current_vectors = ["source-rng-vectors", "normal-reward-vectors", "enemy-move-vectors", "pickup-upgrade-vectors",
                            "normal-opening-vectors", "act-one-map-vectors", "map-gaussian-vectors", "normal-combat-vectors",
-                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata"]
+                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata", "normal-unknown-room-vector"]
         hashes = {}
         for name in current_vectors:
             vector = json.loads((fixtures / (name + ".json")).read_text(encoding="utf-8"))
@@ -128,6 +128,24 @@ def main() -> int:
                 or wriggler["normal_run_verified"] is not False or wriggler["parent_event_verified"] is not False
                 or [c["id"] for c in wriggler["cases"]] != wriggler_cases or any(c["status"] != "passed" for c in wriggler["cases"])):
             raise ValueError("Wriggler/Infection controlled component comparison did not execute all required cases")
+
+        unknown = run("unknown-rooms", ["unknown-room-compare", "--output", str(args.output / "unknown-rooms")], 0)
+        unknown_cases = [seed + ":" + mode for seed in ("777", "A😀B")
+                         for mode in ("normal", "exclude-shop", "double", "event-only", "no-event")]
+        if (unknown is None or unknown["status"] != "passed" or unknown["independent_verified"] is not True
+                or unknown["normal_run_verified"] is not False
+                or [c["id"] for c in unknown["cases"]] != unknown_cases
+                or any(c["status"] != "passed" for c in unknown["cases"])):
+            raise ValueError("Unknown room comparison did not execute all required controlled cases")
+        for case in unknown["cases"]:
+            for side in ("left", "right"):
+                boundaries = case[side]
+                if (len(boundaries) != 20 or boundaries[0]["at"] != "start"
+                        or boundaries[13]["at"] != "reset" or boundaries[13]["draws"] != 12
+                        or boundaries[-1]["draws"] != 18
+                        or sum(b["float_bits"] is not None for b in boundaries) != 18
+                        or any(len(b["state"]) != 4 or len(b["odds"]) != 4 for b in boundaries)):
+                    raise ValueError("Unknown room comparison lost source draws, complete state or reset boundaries")
 
         for row in record["suites"]:
             definition = json.loads((ROOT / row["active_definition"]).read_text(encoding="utf-8"))

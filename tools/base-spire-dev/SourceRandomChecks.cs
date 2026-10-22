@@ -11,6 +11,7 @@ internal static partial class PackageChecks
     }
     private static void RunSourceRandomChecks(DslPackage package, Action<string, Action> check)
     {
+        RunUnknownRoomChecks(package, check);
         using var data = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.source-rng-vectors.json")!);
         foreach (var vector in data.RootElement.GetProperty("vectors").EnumerateArray())
         {

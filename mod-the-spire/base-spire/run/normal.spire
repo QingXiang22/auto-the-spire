@@ -21,6 +21,7 @@ entity Run {
     NormalEncounterIndex = { type = Int default = 0 visibility = Hidden }
     RestCount = { type = Int default = 0 visibility = Hidden }
     UnknownCount = { type = Int default = 0 visibility = Hidden }
+    CurrentPointHasShop = { type = Bool default = false visibility = Hidden }
   }
 }
 
@@ -125,6 +126,7 @@ procedure StartNormalRun {
     set = { target = run field = Run.VisitSequence value = 0 }
     set = { target = run field = Run.NeowPending value = true }
     set = { target = owner field = Player.CurrentRun value = run }
+    call = { procedure = InitializeUnknownRoomOdds args = { run = run } }
     create = { type = NeowVisit scope = entityScope(run) into = neow fields = { Run = run } }
     call = { procedure = InitializeSourceOpeningPools args = { run = run } }
     call = { procedure = BuildNormalActOneMap args = { owner = owner run = run } }
@@ -148,10 +150,15 @@ action StartNormalRun {
 
 procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
-  locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int }
+  locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int room = String(length = 16) }
   body = {
     if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.Phase), "map"), and(field(node, MapNode.Selectable), and(not(field(node, MapNode.Visited)), exists(where(relation(MapChildren, field(run, Run.CurrentNode)), child, equal(child, node)))))))) then = { fail = { message = "Map point is not an unvisited child of the current node" } } }
-    if = { condition = not(equal(field(node, MapNode.Type), enum(MapPointType, Monster))) then = { fail = { message = "unsupported_capability: this normal room has not been connected" } } }
+    if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
+    call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
+    if = { condition = equal(room, "event") then = { fail = { message = "unsupported_capability: actual normal Event room has not been connected" } } }
+    if = { condition = equal(room, "elite") then = { fail = { message = "unsupported_capability: actual normal Elite room has not been connected" } } }
+    if = { condition = equal(room, "treasure") then = { fail = { message = "unsupported_capability: actual normal Treasure room has not been connected" } } }
+    if = { condition = equal(room, "shop") then = { fail = { message = "unsupported_capability: actual normal Shop room has not been connected" } } }
     let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
     if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
     let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
@@ -164,6 +171,7 @@ procedure EnterNormalMapPoint {
     set = { target = run field = Run.VisitSequence value = add(field(run, Run.VisitSequence), 1) }
     create = { type = RunVisit scope = entityScope(run) into = visit collection = RunVisits fields = { Run = run StableId = field(run, Run.VisitSequence) Node = node MapType = field(node, MapNode.Type) } }
     set = { target = run field = Run.CurrentVisit value = visit }
+    set = { target = run field = Run.CurrentPointHasShop value = false }
 
     set = { target = visit field = RunVisit.RoomType value = "monster" }
     set = { target = visit field = RunVisit.EncounterId value = encounter }
