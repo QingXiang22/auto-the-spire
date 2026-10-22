@@ -38,6 +38,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly HashSet<int> generatedActions = [];
     private int actionIndex = -1;
     private readonly List<object> events = [];
+    private readonly List<NormalObservedEvent> observedEvents = [];
     private readonly NormalReferenceRandom random;
     private readonly bool diagnostics;
     private CombatRoom? combat;
@@ -112,7 +113,23 @@ internal sealed class NormalReferenceRun : IDisposable
                 {
                     var observerType = typeof(CombatRoom).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!;
                     var observer = DispatchProxy.Create(observerType, typeof(NormalReferenceObserver));
-                    ((NormalReferenceObserver)observer).Record = (name, args) => events.Add(new { name, arguments = args.Select(EventArgument).ToArray() });
+                    ((NormalReferenceObserver)observer).Record = (name, args) =>
+                    {
+                        events.Add(new { name, arguments = args.Select(EventArgument).ToArray() });
+                        if (name == "DamageResolved" && args[1] is DamageResult result)
+                            observedEvents.Add(new("damage", Damage: new(args[0] is Creature dealer ? Creature(dealer) : null,
+                                Creature(result.Receiver), result.BlockedDamage.ToString("G29", System.Globalization.CultureInfo.InvariantCulture),
+                                result.UnblockedDamage.ToString("G29", System.Globalization.CultureInfo.InvariantCulture),
+                                result.OverkillDamage.ToString("G29", System.Globalization.CultureInfo.InvariantCulture), result.WasTargetKilled)));
+                        else if (name is "CardDrawn" or "CardPlayStarted" or "CardPlayFinished")
+                            observedEvents.Add(new(name switch { "CardDrawn" => "draw", "CardPlayStarted" => "before-play", _ => "after-play" }, Card((CardModel)args[0]!)));
+                        else if (name == "PowerAmountChanged" && args[0] is PowerModel power)
+                            observedEvents.Add(new("power-amount-changed", Power: new(Id(power.Id), Creature(power.Owner),
+                                power.Amount.ToString("G29", System.Globalization.CultureInfo.InvariantCulture),
+                                ((decimal)args[1]!).ToString("G29", System.Globalization.CultureInfo.InvariantCulture))));
+                        else if (name == "PlayerTurnStarted") observedEvents.Add(new("player-turn-started"));
+                        else if (name == "EnemyMoveStarted") observedEvents.Add(new("enemy-move-started", Actor: Creature((Creature)args[0]!), Move: (string)args[1]!));
+                    };
                     typeof(CombatRoom).GetMethod("ConfigureObserver", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combat, [observer]);
                 }
                 await combat.Enter(run);
@@ -230,7 +247,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 .OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
         Put("actions.candidates", Actions().Select(a => a.Key).Distinct().Order(StringComparer.Ordinal).ToArray());
-        if (diagnostics) Put("random.stream_states", random.ConsumedStates());
+        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("events.observed_order", observedEvents.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :

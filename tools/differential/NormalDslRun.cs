@@ -12,6 +12,7 @@ internal sealed class NormalDslRun : IDisposable
 {
     private readonly ControlHost host;
     private readonly StreamWriter log;
+    private readonly string logPath;
     private readonly Dictionary<InstanceId, string> slots = [];
     private readonly Dictionary<InstanceId, string> identities = [];
     private readonly Dictionary<InstanceId, string> generated = [];
@@ -35,7 +36,7 @@ internal sealed class NormalDslRun : IDisposable
             return (IReadOnlyDictionary<InstanceId, string>)projector.GetType().GetField("_publicRefs", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(projector)!;
         }
     }
-    public NormalDslRun(string repository, string path, bool debug = true, bool captureValues = false)
+    public NormalDslRun(string repository, string path, bool debug = true, bool captureValues = true)
     {
         var factory = typeof(TextRuleProviderSpec).Assembly.GetType("NetTheSpire.Host.TextRuleScenario")!;
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
@@ -45,6 +46,7 @@ internal sealed class NormalDslRun : IDisposable
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
         host = new ControlHost(configured.SourceForTests, runToken: "normal-compare");
+        logPath = path;
         log = new StreamWriter(path, false, new UTF8Encoding(false));
     }
     internal string RandomState => NormalPreflight.Json(Engine.Random.Capture());
@@ -131,6 +133,7 @@ internal sealed class NormalDslRun : IDisposable
             var slot = slots.GetValueOrDefault(card) ?? (!source.IsNone ? slots[source.AsRef()] : generated[card]);
             identities[card] = slot + ":" + Field(card, "Card", "DefinitionId").AsString() + (Field(card, "Card", "Upgraded").AsBool() ? "+" : "");
         }
+        identities[Instances("Player").Single()] = "player";
         var enemies = Instances("Enemy");
         for (var i = 0; i < enemies.Length; i++) identities[enemies[i]] = "enemy:" + i;
         foreach (var node in Instances("MapNode")) identities[node] = Field(node, "MapNode", "Col").AsInt() + "," + Field(node, "MapNode", "Row").AsInt();
@@ -209,6 +212,7 @@ internal sealed class NormalDslRun : IDisposable
                 amount = Field(p, "Power", "Stacks").AsInt() }).OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
         var actions = Snapshot.LegalActions.Select(TrySemantic).Where(a => a is not null).Select(a => a!.Key).Distinct().Order(StringComparer.Ordinal).ToArray();
+        var unmapped = Snapshot.LegalActions.Where(a => TrySemantic(a) is null).ToArray();
         Put("actions.candidates", actions);
         var decision = Engine.PendingDecision;
         Put("decisions.current", decision is null ? null : new { min = decision.Minimum, max = decision.Maximum,
@@ -223,14 +227,71 @@ internal sealed class NormalDslRun : IDisposable
         }).ToArray());
         // Public evidence remains the actual protocol snapshot, separate from tool-only hidden piles.
         var trace = Engine.Debug;
+        if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
             .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
-        return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
-                "lifecycle: final-kill effects"],
+        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
+                "lifecycle: final-kill effects"];
+        if (unmapped.Length > 0) missing = [.. missing, $"actions: {unmapped.Length} public candidates have no normal reference mapping"];
+        return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
+                unmapped_public_actions = unmapped,
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
-                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).ToArray(), dropped = trace?.DroppedRecords,
+                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
     }
-    public void Dispose() => log.Dispose();
+    private NormalObservedEvent[] ObservedEvents()
+    {
+        if (!HasCompleteDebug) throw new NotSupportedException("missing_dimension: dropped event diagnostics");
+        return DebugRecords.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject is
+            "base-spire:AfterCardDrawn" or "base-spire:BeforeCardPlayed" or "base-spire:AfterCardPlayed" or "base-spire:DamageResolved"
+            or "base-spire:PowerApplied" or "base-spire:EnemyTurnStarted" or "base-spire:AfterPlayerTurnStartLate")
+            .Select(r =>
+            {
+                if (r.TextTruncated || r.Snapshot is not { Complete: true }) throw new NotSupportedException("missing_dimension: event snapshot");
+                var snapshot = r.Snapshot;
+                if (r.Subject == "base-spire:AfterPlayerTurnStartLate") return new NormalObservedEvent("player-turn-started");
+                if (r.Subject == "base-spire:EnemyTurnStarted")
+                {
+                    var enemy = snapshot.Entities.Single(e => e.Type == "base-spire:Enemy");
+                    return new NormalObservedEvent("enemy-move-started", Actor: identities[enemy.Instance],
+                        Move: enemy.Fields.Single(f => f.Name == "MoveId").Value.Scalar!);
+                }
+                if (r.Subject == "base-spire:PowerApplied")
+                {
+                    var power = snapshot.Entities.Single(e => e.Type == "base-spire:Power");
+                    SessionDebugValueSnapshot F(string name) => power.Fields.Single(f => f.Name == name).Value;
+                    var holder = new[] { F("HolderPlayer"), F("HolderEnemy") }.Single(v => v.Kind == ValueKind.Ref);
+                    return new NormalObservedEvent("power-amount-changed", Power: new(F("DefinitionId").Scalar!,
+                        identities[new InstanceId(int.Parse(holder.Scalar!))], F("Stacks").Scalar!, snapshot.Values[1].Scalar!));
+                }
+                if (r.Subject == "base-spire:DamageResolved")
+                {
+                    var entity = snapshot.Entities.Single(e => e.Type == "base-spire:DamageResult");
+                    SessionDebugValueSnapshot F(string name) => entity.Fields.Single(f => f.Name == name).Value;
+                    string? Ref(string name) => F(name) is { Kind: ValueKind.Ref, Scalar: not "0" } value
+                        ? identities[new InstanceId(int.Parse(value.Scalar!))] : null;
+                    string Number(string name) => F(name) is { Kind: ValueKind.Int, Scalar: {} value } ? value
+                        : throw new NotSupportedException("missing_dimension: typed damage amount");
+                    var killed = F("Killed");
+                    if (killed.Kind != ValueKind.Bool) throw new NotSupportedException("missing_dimension: typed kill flag");
+                    return new NormalObservedEvent("damage", Damage: new(Ref("DealerPlayer") ?? Ref("DealerEnemy"),
+                        Ref("Player") ?? Ref("Enemy") ?? throw new NotSupportedException("missing_dimension: damage receiver"),
+                        Number("Blocked"), Number("Unblocked"), Number("Overkill"), killed.Scalar == "true"));
+                }
+                var card = snapshot.Entities.Single(e => e.Type == "base-spire:Card");
+                var identity = identities[card.Instance];
+                var origin = identity[..identity.IndexOf(":base-spire:", StringComparison.Ordinal)];
+                var content = card.Fields.Single(f => f.Name == "DefinitionId").Value.Scalar!;
+                var upgraded = card.Fields.Single(f => f.Name == "Upgraded").Value.Scalar == "true";
+                return new NormalObservedEvent(r.Subject switch { "base-spire:AfterCardDrawn" => "draw",
+                    "base-spire:BeforeCardPlayed" => "before-play", _ => "after-play" }, origin + ":" + content + (upgraded ? "+" : ""));
+            }).ToArray();
+    }
+    public void Dispose()
+    {
+        log.Dispose();
+        if (sessionId.Length > 0 && HasDebug)
+            File.WriteAllText(logPath + ".trace.json", NormalPreflight.Json(DebugRecords.Where(r => r.Snapshot is not null).ToArray()));
+    }
 }
