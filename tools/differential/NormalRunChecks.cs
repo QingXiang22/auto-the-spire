@@ -180,9 +180,31 @@ internal static class NormalRunChecks
             }).ToArray()
         };
         EntityDto First(string kind) => snapshot.Entities.First(e => e.KindId.EndsWith(":" + kind, StringComparison.Ordinal));
+        var run = First("Run");
+        var pileOwner = First("HandView");
+        Changed(Replace(pileOwner, "Player", WireValue.Str(run.InstanceId)), "public.ownership");
+        var sequence = snapshot.Sequences.Single(s => s.TypeId.EndsWith(":MapNodes", StringComparison.Ordinal));
+        Changed(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { OwnerRef = First("Player").InstanceId }).ToArray() }, "public.ownership");
+        Reject(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { Elements = s.Elements.Skip(1).ToArray() }).ToArray() }, "missing map sequence member");
+        Reject(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { Elements = [.. s.Elements, s.Elements[0]] }).ToArray() }, "duplicate map sequence member");
+        var group = snapshot.Groups.First();
+        Reject(snapshot with { Groups = snapshot.Groups.Select(g => g != group ? g : g with { OwnerRef = run.InstanceId }).ToArray() }, "incorrect inventory owner");
+        Reject(snapshot with { Entities = [.. snapshot.Entities, First("Relic") with { InstanceId = "orphan-relic" }] }, "orphan visible relic");
+        if (snapshot.Entities.Any(e => e.KindId.EndsWith(":RunVisit", StringComparison.Ordinal)))
+        {
+            var visit = First("RunVisit");
+            var withoutCurrent = snapshot with { Entities = snapshot.Entities.Select(e => e != run ? e : e with
+                { Fields = e.Fields.Where(f => !f.FieldId.EndsWith(".CurrentVisit", StringComparison.Ordinal)).ToArray() }).ToArray() };
+            Changed(withoutCurrent, "public.visit_links");
+            Changed(Replace(run, "VisitSequence", WireValue.Str("999")), "public.visit_links");
+            if (visit.Fields.Any(f => f.FieldId.EndsWith(".Rewards", StringComparison.Ordinal)))
+                Changed(Replace(First("CombatRewardSet"), "VisitId", WireValue.Str("999")), "public.visit_links");
+        }
         Changed(Replace(First("MapNode"), "Visited", WireValue.Bool(!NormalPublicObservation.Flag(First("MapNode"), "Visited"))), "public.map");
         var edge = snapshot.Relations.First(r => r.TypeId.EndsWith(":MapChildren", StringComparison.Ordinal));
         Changed(snapshot with { Relations = snapshot.Relations.Where(r => r != edge).ToArray() }, "public.map");
+        var parent = snapshot.Relations.First(r => r.TypeId.EndsWith(":MapParents", StringComparison.Ordinal));
+        Changed(snapshot with { Relations = snapshot.Relations.Where(r => r != parent).ToArray() }, "public.map_parents");
         Changed(Replace(First("Run"), "TotalFloor", WireValue.Str("999")), "public.run");
         Changed(Replace(First("NeowOption"), "Position", WireValue.Str("999")), "public.neow");
         Changed(Replace(First("Player"), "GoldRewardAmount", WireValue.Str("999")), "public.reward_offer");
@@ -208,6 +230,16 @@ internal static class NormalRunChecks
         var extended = snapshot with { Entities = snapshot.Entities.Select(e => e != node ? e : e with
         { Fields = [.. e.Fields, field with { FieldId = "net:field:base-spire:MapNode.FutureField", Value = WireValue.Bool(true) }] }).ToArray() };
         Require(NormalPublicObservation.UnmappedFields(extended).Contains("MapNode.FutureField"), "new public fields remain explicitly unverified until mapped");
+        var relation = snapshot.Relations.First();
+        Reject(snapshot with { Relations = [.. snapshot.Relations, relation with { SourceRef = First("Player").InstanceId }] }, "relation endpoint has wrong kind");
+        Reject(snapshot with { Relations = snapshot.Relations.Select(r => r != relation ? r : r with { Position = 0 }).ToArray() }, "unordered relation has unexpected position");
+        Changed(snapshot with { Relations = [.. snapshot.Relations, relation with { TypeId = "net:relation:base-spire:FutureRelation" }] }, "public.relation_types");
+        void Reject(PublicSnapshotDto value, string name)
+        {
+            var failed = false;
+            try { Project(value); } catch (NotSupportedException) { failed = true; }
+            Require(failed, "actual public topology corruption fails: " + name);
+        }
     }
     private static void Require(bool condition, string name)
     { if (!condition) throw new InvalidOperationException("Normal comparison check failed: " + name); }

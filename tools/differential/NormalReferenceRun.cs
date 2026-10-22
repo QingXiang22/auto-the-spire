@@ -325,6 +325,24 @@ internal sealed class NormalReferenceRun : IDisposable
                 c.GetKeywordsWithSources(KeywordSources.Local).Contains(CardKeyword.Exhaust), c.HasKeyword(CardKeyword.Innate), c.Type == CardType.Power,
                 c.Tags.Contains(CardTag.Strike), c.CostsXEnergy, 0);
         }).OrderBy(c => c.Scope, StringComparer.Ordinal).ThenBy(c => c.Origin, StringComparer.Ordinal).ToArray());
+        Put("public.ownership", NormalPublicTopology.NativeOwnership());
+        Put("public.map_members", map.Select(Coord).Order(StringComparer.Ordinal).ToArray());
+        Put("public.map_parents", map.SelectMany(n => n.parents.Select(parent => Coord(n) + "->" + Coord(parent))).Order(StringComparer.Ordinal).ToArray());
+        Put("public.visit_links", new NormalVisitLinks(combat?.Id, combat?.Id ?? 0, Phase == "rewards" ? combat?.Id : null,
+            combat is null ? [] : [combat.Id + (combat.GeneratedRewards.Count == 0 ? ":none" : ":reward:" + combat.Id)]));
+        Put("public.relation_types", new[] { "net:relation:base-spire:MapChildren", "net:relation:base-spire:MapParents", "net:relation:base-spire:NeowOptions" });
+        // DTO-only view entities stand for the native player's seven piles and the native run.
+        // Native rooms and their generated reward sets remain retained after returning to the map.
+        Put("public.entity_counts", new Dictionary<string, int>
+        {
+            ["Player"] = run.Players.Count, ["Run"] = 1, ["NeowVisit"] = 1, ["NeowOption"] = neowOptions.Length,
+            ["MapNode"] = map.Length, ["RunVisit"] = combat is null ? 0 : 1, ["CombatRewardSet"] = combat?.GeneratedRewards.Count ?? 0,
+            ["Card"] = visibleCards.Count(), ["Relic"] = player.Relics.Count,
+            ["Potion"] = player.PotionSlots.Count(p => p is not null) + (offer?.Potion is { IsResolved: false, Potion: not null } ? 1 : 0),
+            ["Enemy"] = combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Count : 0,
+            ["Power"] = combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Prepend(player.Creature).Sum(c => c.Powers.Count) : 0,
+        }.Concat(NormalPublicTopology.Piles.Select(p => new KeyValuePair<string, int>(p + "View", 1)))
+            .Where(p => p.Value > 0).OrderBy(p => p.Key, StringComparer.Ordinal).Select(p => p.Key + ":" + p.Value).ToArray());
         if (Phase == "combat")
         {
             Put("facts.player.block", player.Creature.Block); Put("facts.player.energy", state!.Energy); Put("facts.player.turn", state.TurnNumber);

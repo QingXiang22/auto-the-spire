@@ -28,14 +28,16 @@ internal static class NormalPublicObservation
     private static string FieldName(FieldDto field) => field.FieldId.Split(':')[^1];
     private static readonly HashSet<string> MappedFields = new[]
     {
-        ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending"),
+        ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending CurrentVisit VisitSequence"),
         ("MapNode", "Col Row Type Visited Selectable"),
         ("NeowVisit", "Status SelectedRelic"), ("NeowOption", "Position RelicId"),
         ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending"),
         ("Enemy", "Hp MaxHp Block MoveId"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick"),
-        ("RunVisit", "StableId Node MapType RoomType EncounterId Phase Status Committed"),
+        ("RunVisit", "StableId Node MapType RoomType EncounterId Phase Status Committed Rewards"),
         ("Card", "Label SourceEntry Kind Rarity Cost BaseCost BaseDamage DamageGrowth Upgraded CanUpgrade Targeted Exhausts Innate LeavesPlay StrikeTag IsX PaidX"),
-        ("CombatRewardSet", "PotionPending"), ("Potion", "Slot Usage Target"), ("Relic", "IsMelted")
+        ("CombatRewardSet", "PotionPending VisitId"), ("Potion", "Slot Usage Target"), ("Relic", "IsMelted"),
+        ("HandView", "Player"), ("DrawPileView", "Player"), ("DiscardPileView", "Player"), ("ExhaustPileView", "Player"),
+        ("InPlayView", "Player"), ("RemovedFromCombatView", "Player"), ("RunDeckView", "Player")
     }.SelectMany(p => p.Item2.Split(' ').Select(f => p.Item1 + "." + f)).ToHashSet(StringComparer.Ordinal);
     internal static string[] UnmappedFields(PublicSnapshotDto snapshot) => snapshot.Entities.SelectMany(e => e.Fields)
         .Select(FieldName).Where(f => !MappedFields.Contains(f)).Distinct().Order(StringComparer.Ordinal).ToArray();
@@ -54,6 +56,7 @@ internal static class NormalPublicObservation
         : throw new NotSupportedException("missing_dimension: public content identity for " + entity.KindId);
     internal static void Add(PublicSnapshotDto snapshot, SortedDictionary<string, string> values, Func<WireValue, string> binding)
     {
+        NormalPublicTopology.Add(snapshot, values);
         EntityDto[] Entities(string kind) => snapshot.Entities.Where(e => e.KindId == "net:kind:base-spire:" + kind).ToArray();
         var byHandle = snapshot.Entities.ToDictionary(e => e.InstanceId, StringComparer.Ordinal);
         EntityDto[] Group(string name)
