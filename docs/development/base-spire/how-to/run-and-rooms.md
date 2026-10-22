@@ -1,5 +1,7 @@
 # 开发角色、房间与完整 Run
 
+规则目标为[锁定 sts2-sim](../../../../reference/README.md) 的原生顺序路径。以下入口描述当前 DSL 可执行行为，其中 hash32 开局、来源池及固定 seed 路径仍属旧实现，须向新基线迁移；现有单侧执行不证明已与新版对齐。
+
 文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
 先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
