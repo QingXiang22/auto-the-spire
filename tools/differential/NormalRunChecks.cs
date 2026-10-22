@@ -1,3 +1,6 @@
+using NetTheSpire.Contracts;
+using NetTheSpire.Contracts.Dto;
+
 namespace Differential;
 
 internal static class NormalRunChecks
@@ -60,6 +63,7 @@ internal static class NormalRunChecks
             Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
         var victory = left.Capture("victory");
+        CheckPublicProjection(left.Snapshot);
         using (var document = System.Text.Json.JsonDocument.Parse(victory.Values["lifecycle.settlement"]))
         {
             var stages = document.RootElement.EnumerateArray().ToArray();
@@ -81,6 +85,7 @@ internal static class NormalRunChecks
             }
         }
         Apply(new("claim-potion", [])); Apply(new("close-rewards", []));
+        CheckPublicProjection(left.Snapshot);
         var discard = left.Semantic(left.Action("DiscardPotion"));
         Require(discard.Arguments.Single().Contains(":potion-reward:0:", StringComparison.Ordinal), "held potion retains its actual reward creation origin");
         Apply(discard);
@@ -121,6 +126,7 @@ internal static class NormalRunChecks
         using var plain = new NormalDslRun(repository, Path.Combine(directory, "plain.ndjson"), debug: false);
         observed.Start("777"); plain.Start("777");
         observed.Step(observed.Action("StartNormalRun")); plain.Step(plain.Action("StartNormalRun"));
+        CheckPublicProjection(observed.Snapshot);
         Check();
         foreach (var action in new[] { new NormalAction("neow", ["base-spire:booming-conch"]), new("leave-neow", []) })
         { observed.Apply(action); plain.Apply(action); Check(); }
@@ -152,6 +158,56 @@ internal static class NormalRunChecks
                 }
             }
         }
+    }
+    private static void CheckPublicProjection(PublicSnapshotDto snapshot)
+    {
+        SortedDictionary<string, string> Project(PublicSnapshotDto value)
+        {
+            var result = new SortedDictionary<string, string>(StringComparer.Ordinal);
+            NormalPublicObservation.Add(value, result, WireCanonical.Text); return result;
+        }
+        var original = new NormalBoundary("public-check", Project(snapshot), [], new { fault_injection = true });
+        void Changed(PublicSnapshotDto changed, string path)
+        {
+            Require(NormalRunComparison.First(0, original, original with { Values = Project(changed) })?.Path == path,
+                "actual public snapshot corruption is detected at " + path);
+        }
+        PublicSnapshotDto Replace(EntityDto entity, string field, WireValue value) => snapshot with
+        {
+            Entities = snapshot.Entities.Select(e => e != entity ? e : e with
+            {
+                Fields = e.Fields.Select(f => f.FieldId.EndsWith("." + field, StringComparison.Ordinal) ? f with { Value = value } : f).ToArray()
+            }).ToArray()
+        };
+        EntityDto First(string kind) => snapshot.Entities.First(e => e.KindId.EndsWith(":" + kind, StringComparison.Ordinal));
+        Changed(Replace(First("MapNode"), "Visited", WireValue.Bool(!NormalPublicObservation.Flag(First("MapNode"), "Visited"))), "public.map");
+        var edge = snapshot.Relations.First(r => r.TypeId.EndsWith(":MapChildren", StringComparison.Ordinal));
+        Changed(snapshot with { Relations = snapshot.Relations.Where(r => r != edge).ToArray() }, "public.map");
+        Changed(Replace(First("Run"), "TotalFloor", WireValue.Str("999")), "public.run");
+        Changed(Replace(First("NeowOption"), "Position", WireValue.Str("999")), "public.neow");
+        Changed(Replace(First("Player"), "GoldRewardAmount", WireValue.Str("999")), "public.reward_offer");
+        Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
+        Changed(Replace(First("Card"), "Cost", WireValue.Str("999")), "public.cards");
+        Changed(Replace(First("Relic"), "IsMelted", WireValue.Bool(!NormalPublicObservation.Flag(First("Relic"), "IsMelted"))), "public.relic_inventory");
+        var cards = snapshot.Groups.Single(g => g.TypeId.EndsWith(":CardRewardOptions", StringComparison.Ordinal));
+        if (cards.Members.Count > 0)
+            Changed(snapshot with { Groups = snapshot.Groups.Select(g => g != cards ? g : g with { Members = [] }).ToArray(),
+                Entities = snapshot.Entities.Where(e => !cards.Members.Any(m => m.EntityRef == e.InstanceId)).ToArray() }, "public.cards");
+        var potions = snapshot.Groups.Single(g => g.TypeId.EndsWith(":Potions", StringComparison.Ordinal));
+        if (potions.Members.Count > 0)
+        {
+            var held = snapshot.Entities.Single(e => e.InstanceId == potions.Members[0].EntityRef);
+            Changed(Replace(held, "Slot", WireValue.Str("999")), "public.potion_inventory");
+        }
+        var node = First("MapNode"); var field = node.Fields.First(f => f.FieldId.EndsWith(".Visited", StringComparison.Ordinal));
+        var unknown = snapshot with { Entities = snapshot.Entities.Select(e => e != node ? e : e with
+        { Fields = e.Fields.Select(f => f != field ? f : f with { State = "unknown", Value = null }).ToArray() }).ToArray() };
+        var rejected = false;
+        try { Project(unknown); } catch (NotSupportedException) { rejected = true; }
+        Require(rejected, "unknown public field is not replaced by a hidden Engine value");
+        var extended = snapshot with { Entities = snapshot.Entities.Select(e => e != node ? e : e with
+        { Fields = [.. e.Fields, field with { FieldId = "net:field:base-spire:MapNode.FutureField", Value = WireValue.Bool(true) }] }).ToArray() };
+        Require(NormalPublicObservation.UnmappedFields(extended).Contains("MapNode.FutureField"), "new public fields remain explicitly unverified until mapped");
     }
     private static void Require(bool condition, string name)
     { if (!condition) throw new InvalidOperationException("Normal comparison check failed: " + name); }
