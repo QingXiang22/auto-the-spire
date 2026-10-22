@@ -66,6 +66,7 @@ entity RunVisit {
     Status = { type = String(length = 24) default = "active" }
     Committed = { type = Bool default = false }
     Rewards = { type = Ref(CombatRewardSet) optional = true }
+    Event = { type = Ref(EventVisit) optional = true }
   }
 }
 collection RunVisits { element = RunVisit ordered = true }
@@ -152,24 +153,10 @@ action StartNormalRun {
   body = { call = { procedure = StartNormalRun args = { owner = first(type(Player)) } } }
 }
 
-procedure EnterNormalMapPoint {
-  parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
-  locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int room = String(length = 16) }
+procedure BeginNormalMapVisit {
+  parameters = { run = Ref(Run) node = Ref(MapNode) } result = Ref(RunVisit)
+  locals = { visit = Binding }
   body = {
-    if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.Phase), "map"), and(field(node, MapNode.Selectable), and(not(field(node, MapNode.Visited)), exists(where(relation(MapChildren, field(run, Run.CurrentNode)), child, equal(child, node)))))))) then = { fail = { message = "Map point is not an unvisited child of the current node" } } }
-    if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
-    call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
-    if = { condition = equal(room, "event") then = {
-      call = { procedure = PullNextNormalEvent args = { run = run } into = encounter }
-      fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" }
-    } }
-    if = { condition = equal(room, "elite") then = { fail = { message = "unsupported_capability: actual normal Elite room has not been connected" } } }
-    if = { condition = equal(room, "treasure") then = { fail = { message = "unsupported_capability: actual normal Treasure room has not been connected" } } }
-    if = { condition = equal(room, "shop") then = { fail = { message = "unsupported_capability: actual normal Shop room has not been connected" } } }
-    let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
-    if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
-    let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
-    if = { condition = not(or(equal(encounter, "base-spire:fuzzy-wurm-crawler-weak"), equal(encounter, "base-spire:slimes-weak"))) then = { fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" } } }
     set = { target = node field = MapNode.Visited value = true }
     forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = current body = { set = { target = current field = MapNode.Selectable value = false } } }
     set = { target = run field = Run.MapFloor value = field(node, MapNode.Row) }
@@ -179,6 +166,31 @@ procedure EnterNormalMapPoint {
     create = { type = RunVisit scope = entityScope(run) into = visit collection = RunVisits fields = { Run = run StableId = field(run, Run.VisitSequence) Node = node MapType = field(node, MapNode.Type) } }
     set = { target = run field = Run.CurrentVisit value = visit }
     set = { target = run field = Run.CurrentPointHasShop value = false }
+    return = { value = visit }
+  }
+}
+procedure EnterNormalMapPoint {
+  parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
+  locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int room = String(length = 16) }
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.Phase), "map"), and(field(node, MapNode.Selectable), and(not(field(node, MapNode.Visited)), exists(where(relation(MapChildren, field(run, Run.CurrentNode)), child, equal(child, node)))))))) then = { fail = { message = "Map point is not an unvisited child of the current node" } } }
+    if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
+    call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
+    if = { condition = equal(room, "event") then = {
+      call = { procedure = PullNextNormalEvent args = { run = run } into = encounter }
+      if = { condition = not(equal(encounter, "base-spire:sapphire-seed")) then = { fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" } } }
+      call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
+      call = { procedure = EnterNormalEvent args = { owner = owner run = run visit = visit definition = encounter } }
+      return = {}
+    } }
+    if = { condition = equal(room, "elite") then = { fail = { message = "unsupported_capability: actual normal Elite room has not been connected" } } }
+    if = { condition = equal(room, "treasure") then = { fail = { message = "unsupported_capability: actual normal Treasure room has not been connected" } } }
+    if = { condition = equal(room, "shop") then = { fail = { message = "unsupported_capability: actual normal Shop room has not been connected" } } }
+    let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
+    if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
+    let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
+    if = { condition = not(or(equal(encounter, "base-spire:fuzzy-wurm-crawler-weak"), equal(encounter, "base-spire:slimes-weak"))) then = { fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" } } }
+    call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
 
     set = { target = visit field = RunVisit.RoomType value = "monster" }
     set = { target = visit field = RunVisit.EncounterId value = encounter }

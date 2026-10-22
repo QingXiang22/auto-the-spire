@@ -40,6 +40,8 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 
 首幕事件选择增加两seed共42种受控双侧场景，migration核对完整31项资格、每种41个边界、最终事件标识／游标／访问历史及无随机消费。base正常组与net真实stdio保留新增seed `event-normal-11` 的真实胜利后问号Event路径，核对源选择与未接效果的明确失败；不会创建空访问。正常事件效果、父子战斗与后幕仍未验收。
 
+正常事件访问另保留seed `sapphire-normal-79`：真实Neow、首战胜利及奖励跳过后自然进入SapphireSeed，分别执行EAT与PLANT并返回真实地图后继。base核对独立原生向量的资源、永久实例／升级／附魔、完整问号流、访问双向引用及重复关闭拒绝；net真实stdio验证公开访问关系、请求重放与地图返回。PLANT按锁定来源自动选择首张合资格永久牌；其他未接事件、父子战斗与后幕仍明确未支持。
+
 ## 原完整差异测试与覆盖缺口
 
 ```powershell

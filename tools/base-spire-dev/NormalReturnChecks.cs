@@ -105,6 +105,7 @@ internal static partial class PackageChecks
         RunDeathPowerChecks(package);
         RunNormalUnknownRoom(package);
         RunNormalEventSelection(package);
+        RunNormalSapphireSeed(package);
         return 0;
     }
 

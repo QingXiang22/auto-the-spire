@@ -61,7 +61,7 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 
 `HealWithSource(owner,amount,source)` 和 `GainGoldWithSource(owner,amount,source)` 提供来源及实际变化通知；GainGold 先经过 ModifyGoldGained／AfterModifyingGoldGained，再提交正收益。`LoseGold(owner,amount,reason,source)` 夹至实际余额，reason 为 spent／lost／stolen；需要余额足额的购买使用 `SpendGold(owner,amount,source)`。
 
-SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`EnterDevelopmentDoorsOfLightAndDark` 进入开发访问。叶模块只定义选项与效果，共享 EventVisit 保存页面、状态、返回位置与访问序号；`CloseDevelopmentEvent(visit)` 关闭。它们不是正常事件池、子战斗恢复或地图 Run 入口。
+SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`EnterDevelopmentDoorsOfLightAndDark` 进入开发访问。叶模块只定义选项与效果，共享 EventVisit 保存页面、状态、返回位置与访问序号；`CloseDevelopmentEvent(visit)` 关闭。SapphireSeed另由正常地图的完整源事件选择器进入，关联同一RunVisit，并使用 `CloseNormalEvent(visit)` 返回地图；开发关闭入口不能推进正常Run。子战斗恢复仍未接通。
 
 ## 生成候选与选择的行为要求
 
@@ -75,7 +75,7 @@ SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`En
 
 Sown 使用独立附着状态。新卡无附魔；复制保留源规定状态但实例独立，升级不清除，变换为新牌不继承旧附魔。资格排除 Status／Curse／Quest、永久牌组中的 Unplayable 及已附魔实例，Sown 不叠加。
 
-SapphireSeed 的 Plant 使用真实永久候选：空域关闭、唯一候选自动执行、多候选暂停；Eat 先回复9，再调用永久升级选择。两项均不消费随机。
+SapphireSeed 的 Plant 按锁定来源自动附魔首张合资格永久牌，不暂停选牌；空域直接完成。Eat 先回复9，再调用永久升级选择；空域不产生决策。两项均不消费随机。
 
 牌正文完成且玩家仍存活时，在完成通知前触发 Sown：正常状态先获得层数对应能量，再禁用；禁止获得能量时仍禁用。末杀仍执行，玩家先死亡则不触发。副本禁用状态不回写永久牌；下一战从永久实例创建的新副本按永久状态初始化。战斗克隆与永久到战斗复制分别遵守源策略，不能统一重置掩盖差异。
 

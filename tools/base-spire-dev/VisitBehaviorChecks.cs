@@ -31,17 +31,44 @@ internal static partial class PackageChecks
                 var s = Start(package); Submit(s, "Ironclad.Initialize"); Set(s, Player(s), "Player", "Hp", Value.Of(50L));
                 Submit(s, "EnterDevelopmentSapphireSeed"); Equal(50L, Hp(s), "entry pauses at real option choice"); AnswerBool(s, eat);
                 Equal(eat ? 59L : 50L, Hp(s), "eat healing happens before selection");
-                var decision = s.PendingDecision!; True(decision.Candidates.Count > 1, "real permanent candidates");
-                var hash = s.State.StateHash(); Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(decision.RequestId, [Player(s)]))); Equal(hash, s.State.StateHash(), "invalid answer cannot repeat healing or advance visit");
-                var chosen = decision.Candidates[0]; s.Answer(new DecisionAnswer(decision.RequestId, [chosen])); Healthy(s);
+                var decision = s.PendingDecision; var chosen = Members(s, "RunDeck")[0];
+                if (eat)
+                {
+                    True(decision!.Candidates.Count > 1, "real permanent upgrade candidates");
+                    var hash = s.State.StateHash(); Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(decision.RequestId, [Player(s)]))); Equal(hash, s.State.StateHash(), "invalid answer cannot repeat healing or advance visit");
+                    chosen = decision.Candidates[0]; s.Answer(new DecisionAnswer(decision.RequestId, [chosen])); Healthy(s);
+                }
+                else True(decision is null, "source PLANT automatically chooses the first eligible permanent card");
                 Equal(eat ? "eat" : "plant", Page(s), "leaf owns final page"); Equal(eat ? 59L : 50L, Hp(s), "answer does not replay healing");
                 if (eat) True(CardUpgraded(s, chosen), "upgrade is shared command");
                 else Equal(1, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:CardAttachment").Id).Count, "one permanent Sown attachment");
-                Close(s); Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(decision.RequestId, [chosen])));
+                Close(s); if (decision is not null) Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(decision.RequestId, [chosen])));
                 Submit(s, "EnterDevelopmentRestSite"); True(s.Status != SessionStatus.Faulted, "closed event releases next visit");
             }
         });
         witnesses["base-spire:sapphire-seed"] = [sapphire];
+        check("VISIT SapphireSeed empty upgrade and enchantment domains finish without a card decision", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("empty-event-deck.spire", """
+                action EmptyEventDeck { role = player body = { forEach = { query = collection(RunDeck) item = card body = { destroy = { target = card } } } } }
+                """);
+            var rules = copy.Load();
+            foreach (var eat in new[] { true, false })
+            {
+                var s = Start(rules); Submit(s, "Ironclad.Initialize"); Submit(s, "EmptyEventDeck");
+                Set(s, Player(s), "Player", "Hp", Value.Of(50)); var random = s.Random.TotalDraws;
+                Submit(s, "EnterDevelopmentSapphireSeed"); AnswerBool(s, eat);
+                True(s.PendingDecision is null, "empty domain creates no extra decision");
+                Equal(eat ? 59L : 50L, Hp(s), "empty EAT still heals and PLANT changes no HP");
+                Equal(eat ? "eat" : "plant", Page(s), "empty branch completes its page");
+                Close(s); Equal(random, s.Random.TotalDraws, "empty event does not draw");
+            }
+            var upgraded = Start(package); Submit(upgraded, "Ironclad.Initialize");
+            foreach (var card in Members(upgraded, "RunDeck")) Set(upgraded, card, "Card", "Upgraded", Value.Of(true));
+            Submit(upgraded, "EnterDevelopmentSapphireSeed"); AnswerBool(upgraded, true);
+            True(upgraded.PendingDecision is null, "fully upgraded deck has no upgrade decision"); Close(upgraded);
+        });
         const string doors = "VISIT DoorsOfLightAndDark isolates event random stream and removes the selected permanent instance";
         check(doors, () =>
         {

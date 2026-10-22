@@ -42,4 +42,6 @@ dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
 
 `normal-event-selection-vector.json`由同一独立生成器执行seed `event-normal-11` 的BoomingConch、首战自然胜利及奖励跳过，通过真实RoomFactory选择问号Event后停止，不进入事件效果。它保存最终事件标识、游标／已访问集合、资格使用的进入前楼层、生命／金币、四类赔率及完整问号流状态。migration校验其来源摘要；base正常组消费向量，事件效果未连接时必须明确失败。
 
+`normal-sapphire-seed-vector.json`独立执行seed `sapphire-normal-79` 的真实Neow、首战自然胜利、奖励跳过和SapphireSeed两个分支，保存完整永久牌顺序／定义／升级／附魔、生命／金币、进入楼层、选择游标、地图后继与完整问号流。EAT使用参考默认选牌策略的最后一个合资格实例，PLANT按来源自动附魔首个实例；两侧效果均不消耗额外随机数。base正常回归消费该文件，migration核对锁定来源摘要。
+
 这里验证组件与指定正常路径；完整M01公开状态、实例、事件与逐次随机比较仍由[差异工具](../differential/README.md)验收。不得换seed、缩池、补抽、重键参考或把缺消费者当作通过。
