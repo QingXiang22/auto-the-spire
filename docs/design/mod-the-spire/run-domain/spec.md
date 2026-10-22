@@ -57,7 +57,7 @@ Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，
 
 ### 正常问号房型
 
-Run分别保存原地图节点类型和实际进入房型。问号使用unknown_map_point流的一次源NextFloat，不重设流或重新归一化被禁类型。隐藏赔率按Monster、Elite、Treasure、Shop顺序保存；初始binary32值为0.1、-1、0.02、0.03。负赔率不加入轮盘，其他可选项按binary32顺序累加，roll小于等于累计值时选中，否则使用Event。选中项恢复base，其他可选项增加base；被禁项保持不变，负值仍按源继续增加负base。
+Run分别保存原地图节点类型和实际进入房型。问号使用unknown_map_point流的一次源NextFloat，不重设流或重新归一化被禁类型。隐藏赔率按Monster、Elite、Treasure、Shop顺序保存；初始binary32值为0.1、-1、0.02、0.03。负赔率不加入轮盘，其他可选项按binary32顺序累加，roll小于等于累计值时选中，否则使用Event。若pure资格修正禁用Event，默认改用源RoomType枚举顺序中的首个可选房型；空集合在抽样前失败，仅Event可选仍抽一次。选中项恢复base，其他可选项增加base；被禁项保持不变，负值仍按源继续增加负base。
 
 前一地图点实际包含Shop，或目标节点的非空后继全为Shop时，先禁用Shop。房型资格和未选增长使用pure修正接缝；当前未迁移的遗物／事件参与者不因此宣称支持。幕初ResetUnknownRoomOdds将当前值恢复已配置base，不重新抽样。观察不显示赔率或抽样，不推进流。
 
