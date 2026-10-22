@@ -86,7 +86,7 @@ internal sealed class NormalDslRun : IDisposable
         Snapshot = PublicSnapshotDto.FromWire(Get(Send(Operation.Observe, ("session_id", WireValue.Str(sessionId))), "snapshot"), NetProtocol.V02);
         Remember();
     }
-    internal object CheckRequestReplay()
+    internal NormalProtocolCheck CheckRequestReplay()
     {
         if (lastStep is null || lastStepResponse is null) throw new InvalidOperationException("No real step to replay.");
         var before = Signature();
@@ -102,8 +102,7 @@ internal sealed class NormalDslRun : IDisposable
         if (WireCanonical.Text(Exchange(stale).ToWire()) != WireCanonical.Text(rejected.ToWire()))
             throw new InvalidOperationException("A rejected request did not retain its cached rejection.");
         Unchanged();
-        return new { duplicate_cached = true, stale_rejected = true, rejection_cached = true,
-            unchanged_state_random_pending_and_public = true, backend = "dsl:public-host" };
+        return new(true, true, true, true, "dsl:public-host");
         string Signature() => Engine.State.StateHash() + RandomState + NormalPreflight.Json(Engine.PendingDecision)
             + Engine.StateVersion + Engine.Status + PublicState;
         void Unchanged()
@@ -212,12 +211,19 @@ internal sealed class NormalDslRun : IDisposable
         Put("decisions.current", decision is null ? null : new { min = decision.Minimum, max = decision.Maximum,
             candidates = Phase == "combat" ? decision.Candidates.Select(c => identities[c]).ToArray()
                 : Snapshot.LegalActions.Select(a => Binding(a.Fields.Single().Value!)).Order(StringComparer.Ordinal).ToArray() });
+        Put("public.piles", new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay", "RemovedFromCombat", "RunDeck" }.Select(name =>
+        {
+            var pile = Snapshot.Piles.Single(p => Snapshot.Entities.Single(e => e.InstanceId == p.PileRef).KindId == "net:kind:base-spire:" + name + "View");
+            return new { name, total = pile.TotalCount, complete = pile.MembersComplete,
+                members = pile.VisibleMembers.Select(id => Binding(WireValue.Str(id))).Order(StringComparer.Ordinal).ToArray(),
+                positions = pile.KnownPositions.Select(p => new { card = Binding(WireValue.Str(p.CardRef)), p.Position }).ToArray() };
+        }).ToArray());
         // Public evidence remains the actual protocol snapshot, separate from tool-only hidden piles.
         var trace = Engine.Debug;
         if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
             .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
-                "decisions: targeted-play constraints", "lifecycle: final-kill effects and duplicate/stale submissions"],
+                "lifecycle: final-kill effects"],
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).ToArray(), dropped = trace?.DroppedRecords,

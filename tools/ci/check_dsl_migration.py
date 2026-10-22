@@ -185,12 +185,20 @@ def main() -> int:
             raise ValueError("normal preflight must match every opening fact and retain both public returns, while rejecting incomplete M01")
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
-        if (paired["expected_case_ids"] != ["m01-claim", "m01-skip"] or paired["executed"] != 2
+        paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]
+        if (paired["expected_case_ids"] != paired_ids or paired["executed"] != 4
+                or [c["id"] for c in paired["cases"]] != paired_ids
                 or paired["complete"] or paired["independent_verified"]
                 or any(c["status"] != "blocked_compare" or c["independent_verified"] or c["complete"]
                        or c["reason"] or c["first_difference"] or not c["returned_to_map"] or len(c["boundaries"]) < 19
-                       or not c["boundaries"][-1]["left"]["missing_dimensions"] for c in paired["cases"])):
-            raise ValueError("normal paired paths must reach both map returns with matching measured dimensions while rejecting incomplete M01")
+                       or not c["boundaries"][-1]["left"]["missing_dimensions"]
+                       or len(c["protocol_checks"]) != len(c["boundaries"])
+                       or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
+                       or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
+                              for b in c["boundaries"] for side in ("left", "right"))
+                       or (c["id"].startswith("m01-targeted-")
+                           and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):
+            raise ValueError("all four normal paths must return with matching dimensions, real target decisions and protocol evidence while rejecting incomplete M01")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")
@@ -237,14 +245,14 @@ def main() -> int:
         absent_paired_output = args.output / "paired-without-reference"
         absent_paired = run("paired-without-reference", ["normal-compare", "--output", str(absent_paired_output)], 3, fallback)
         if (absent_paired["executed"] or absent_paired["complete"] or absent_paired["independent_verified"]
-                or len(absent_paired["cases"]) != 2 or any(c["status"] != "blocked_compare"
+                or absent_paired["expected_case_ids"] != paired_ids or len(absent_paired["cases"]) != 4 or any(c["status"] != "blocked_compare"
                    or "unsupported_reference_adapter" not in c["reason"] for c in absent_paired["cases"])):
             raise ValueError("normal paired comparison must reject missing reference and zero execution")
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
                   "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01",
-                  "normal_paired": "paired-claim-skip-map-returns; incomplete-M01", "independent_verified": False}
+                  "normal_paired": "four-claim-skip-targeted-map-returns; protocol-replay-verified; incomplete-M01", "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

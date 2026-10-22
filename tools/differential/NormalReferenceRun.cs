@@ -208,6 +208,19 @@ internal sealed class NormalReferenceRun : IDisposable
         foreach (var (name, pile) in new[] { ("Hand", state?.Hand), ("DrawPile", state?.DrawPile), ("DiscardPile", state?.DiscardPile), ("ExhaustPile", state?.ExhaustPile), ("InPlay", state?.PlayPile) })
             Put("piles." + name, pile?.Cards.Select(Card).ToArray() ?? []);
         Put("piles.RemovedFromCombat", Array.Empty<string>());
+        Put("public.piles", new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay", "RemovedFromCombat", "RunDeck" }.Select(name =>
+        {
+            var cards = name switch
+            {
+                "Hand" => state?.Hand.Cards.ToArray() ?? [], "DrawPile" => state?.DrawPile.Cards.ToArray() ?? [],
+                "DiscardPile" => state?.DiscardPile.Cards.ToArray() ?? [], "ExhaustPile" => state?.ExhaustPile.Cards.ToArray() ?? [],
+                "InPlay" => state?.PlayPile.Cards.ToArray() ?? [], "RunDeck" => player.Deck.Cards.ToArray(),
+                "RemovedFromCombat" => Array.Empty<CardModel>(), _ => throw new NotSupportedException(name)
+            };
+            return new { name, total = (long)cards.Length, complete = name != "DrawPile",
+                members = name == "DrawPile" ? Array.Empty<string>() : cards.Select(Card).Order(StringComparer.Ordinal).ToArray(),
+                positions = Array.Empty<object>() };
+        }).ToArray());
         if (Phase == "combat")
         {
             Put("facts.player.block", player.Creature.Block); Put("facts.player.energy", state!.Energy); Put("facts.player.turn", state.TurnNumber);
@@ -223,7 +236,7 @@ internal sealed class NormalReferenceRun : IDisposable
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
-                "decisions: targeted-play constraints", "lifecycle: final-kill effects and duplicate/stale submissions"],
+                "lifecycle: final-kill effects"],
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }

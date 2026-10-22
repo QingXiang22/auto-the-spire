@@ -10,9 +10,15 @@ internal static class NormalRunChecks
         var pairs = Enumerable.Range(0, 6).Select(i => new NormalPair(boundary with { Kind = i == 5 ? "map-return" : "neow-ready" },
             boundary with { Kind = i == 5 ? "map-return" : "neow-ready" })).ToArray();
         NormalAction[] prefix = [new("neow", ["relic"]), new("leave-neow", []), new("map", ["0,1"]), new("play", ["card"]), new("close-rewards", [])];
-        var item = new NormalCase("fault-injection", "blocked_compare", null, prefix, pairs, null, true);
+        var item = new NormalCase("fault-injection", "blocked_compare", null, prefix, pairs, null, true)
+        { ProtocolChecks = pairs.Select(_ => new NormalProtocolBoundary("synthetic", new(true, true, true, true, "synthetic-gate-check"))).ToArray() };
         // Synthetic records exercise the evidence gate only. They never count as gameplay passes.
         Require(NormalRunComparison.Certified(item), "complete synthetic evidence gate");
+        Require(!NormalRunComparison.Certified(item with { ProtocolChecks = [] }), "missing protocol replay evidence");
+        foreach (var failed in new[] { new NormalProtocolCheck(false, true, true, true, "synthetic"),
+            new(true, false, true, true, "synthetic"), new(true, true, false, true, "synthetic"), new(true, true, true, false, "synthetic") })
+            Require(!NormalRunComparison.Certified(item with { ProtocolChecks = [.. item.ProtocolChecks[..^1], item.ProtocolChecks[^1] with { Evidence = failed }] }), "failed protocol invariant");
+        Require(!NormalRunComparison.Certified(item with { Id = "m01-targeted-claim" }), "targeted path requires a real target decision");
         foreach (var key in NormalRunComparison.RequiredPaths)
         {
             var missing = new SortedDictionary<string, string>(values, StringComparer.Ordinal); missing.Remove(key);

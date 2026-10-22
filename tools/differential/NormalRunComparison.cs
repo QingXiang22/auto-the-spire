@@ -11,10 +11,16 @@ internal sealed record NormalBoundary(string Kind, SortedDictionary<string, stri
     string[] MissingDimensions, object Diagnostic);
 internal sealed record NormalPair(NormalBoundary Left, NormalBoundary Right);
 internal sealed record NormalDifference(int Boundary, string Kind, string Path, string? Left, string? Right);
+internal sealed record NormalProtocolCheck(bool DuplicateCached, bool StaleRejected, bool RejectionCached,
+    bool UnchangedStateRandomPendingAndPublic, string Backend)
+{
+    public bool Passed => DuplicateCached && StaleRejected && RejectionCached && UnchangedStateRandomPendingAndPublic;
+}
+internal sealed record NormalProtocolBoundary(string Boundary, NormalProtocolCheck Evidence);
 internal sealed record NormalCase(string Id, string Status, string? Reason, NormalAction[] Prefix,
     NormalPair[] Boundaries, NormalDifference? FirstDifference, bool ReturnedToMap)
 {
-    public object[] ProtocolChecks { get; init; } = [];
+    public NormalProtocolBoundary[] ProtocolChecks { get; init; } = [];
     public bool Complete => ReturnedToMap && Status == "passed";
     public bool IndependentVerified => Complete;
 }
@@ -24,8 +30,8 @@ internal static class NormalRunComparison
     internal static readonly string[] ExpectedCaseIds = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"];
     internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
-        "public.snapshot", "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
-        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "events.trace"];
+        "public.snapshot", "public.piles", "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
+        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "events.trace"];
     internal static NormalDifference? First(int index, NormalBoundary left, NormalBoundary right)
     {
         if (left.Kind != right.Kind) return new(index, left.Kind, "boundary.kind", left.Kind, right.Kind);
@@ -37,10 +43,13 @@ internal static class NormalRunComparison
         return null;
     }
     internal static bool Certified(NormalCase item) => item.Reason is null && item.ReturnedToMap && item.Boundaries.Length > 4
+        && item.ProtocolChecks.Length == item.Boundaries.Length && item.ProtocolChecks.All(p => p.Evidence.Passed)
         && item.FirstDifference is null && item.Boundaries.All(p => new[] { p.Left, p.Right }.All(b =>
             b.MissingDimensions.Length == 0 && RequiredPaths.All(b.Values.ContainsKey)))
         && item.Prefix.Length >= 5 && item.Prefix[0].Kind == "neow" && item.Prefix[1].Kind == "leave-neow" && item.Prefix[2].Kind == "map"
-        && item.Prefix.Any(a => a.Kind == "play") && item.Prefix[^1].Kind == "close-rewards"
+        && item.Prefix.Any(a => a.Kind is "play" or "targeted-play") && item.Prefix[^1].Kind == "close-rewards"
+        && (!item.Id.StartsWith("m01-targeted-", StringComparison.Ordinal)
+            || (item.Prefix.Any(a => a.Kind == "targeted-play") && item.Prefix.Any(a => a.Kind == "choose-target")))
         && item.Boundaries[0].Left.Kind == "neow-ready" && item.Boundaries[^1].Left.Kind == "map-return";
 
     public static int Run(string repository, string[] args)
@@ -59,7 +68,7 @@ internal static class NormalRunComparison
             var path = id.EndsWith("-claim", StringComparison.Ordinal) ? "claim" : "skip";
             var targeted = id.StartsWith("m01-targeted-", StringComparison.Ordinal);
             var prefix = new List<NormalAction>(); var boundaries = new List<NormalPair>();
-            var protocolChecks = new List<object>();
+            var protocolChecks = new List<NormalProtocolBoundary>();
             NormalDifference? difference = null; var returned = false; string? error = null;
             try
             {
@@ -103,7 +112,7 @@ internal static class NormalRunComparison
                 void Apply(NormalAction action) { prefix.Add(action); left.Apply(action); right.Apply(action); }
                 void Capture(string kind)
                 {
-                    protocolChecks.Add(new { boundary = kind, evidence = left.CheckRequestReplay() });
+                    protocolChecks.Add(new(kind, left.CheckRequestReplay()));
                     var a = left.Capture(kind); var b = right.Capture(kind); boundaries.Add(new(a, b));
                     difference ??= First(boundaries.Count - 1, a, b);
                 }
