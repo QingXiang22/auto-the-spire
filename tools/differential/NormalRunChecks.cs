@@ -75,6 +75,16 @@ internal static class NormalRunChecks
         using (var diagnostic = System.Text.Json.JsonDocument.Parse(NormalPreflight.Json(right.Capture("victory").Diagnostic)))
         {
             var retained = diagnostic.RootElement.GetProperty("native_player_history");
+            var configuration = System.Text.Json.JsonSerializer.Deserialize<NormalRunConfiguration>(diagnostic.RootElement.GetProperty("native_configuration"))!;
+            Require(configuration.BaseDraw == 5 && NormalReferenceConfiguration.Profile(configuration) == "ironclad-a0-fully-unlocked-singleplayer",
+                "actual native unlock state and base draw configuration determine the declared profile");
+            foreach (var invalid in new[] { configuration with { Ascension = 1 }, configuration with { Players = 2 },
+                configuration with { AllEpochs = false }, configuration with { AllColorless = false }, configuration with { FullCharacterPool = false } })
+            {
+                var rejected = false;
+                try { NormalReferenceConfiguration.Profile(invalid); } catch (NotSupportedException) { rejected = true; }
+                Require(rejected, "profile does not claim unsupported or partially unlocked configuration");
+            }
             Require(!retained.GetProperty("active").GetBoolean() && retained.GetProperty("retained_plays").GetInt32() > 0
                 && retained.GetProperty("retained_hp_losses").GetInt32() > 0,
                 "normalization retains the actual completed native history in diagnostics");
@@ -268,6 +278,7 @@ internal static class NormalRunChecks
         var parent = snapshot.Relations.First(r => r.TypeId.EndsWith(":MapParents", StringComparison.Ordinal));
         Changed(snapshot with { Relations = snapshot.Relations.Where(r => r != parent).ToArray() }, "public.map_parents");
         Changed(Replace(First("Run"), "TotalFloor", WireValue.Str("999")), "public.run");
+        Changed(Replace(First("Run"), "Profile", WireValue.Str("corrupted-profile")), "public.run");
         Changed(Replace(First("NeowOption"), "Position", WireValue.Str("999")), "public.neow");
         Changed(Replace(First("Player"), "GoldRewardAmount", WireValue.Str("999")), "public.reward_offer");
         if (snapshot.Entities.Any(e => e.KindId.EndsWith(":CombatRewardSet", StringComparison.Ordinal)))
@@ -282,6 +293,12 @@ internal static class NormalRunChecks
                     { Fields = e.Fields.Where(f => !f.FieldId.EndsWith(".Potion", StringComparison.Ordinal)).ToArray() }).ToArray() }, "public.reward_sets");
         }
         Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
+        Changed(Replace(First("Player"), "AutoDrawPerTurn", WireValue.Str("999")), "public.player");
+        if (snapshot.Entities.Any(e => e.KindId.EndsWith(":Power", StringComparison.Ordinal)))
+        {
+            var power = First("Power");
+            Changed(Replace(power, "ExpiresAtTurnEnd", WireValue.Bool(!NormalPublicObservation.Flag(power, "ExpiresAtTurnEnd"))), "public.powers");
+        }
         if (snapshot.Entities.Any(e => e.KindId.EndsWith(":Enemy", StringComparison.Ordinal)))
         {
             var enemy = First("Enemy");

@@ -12,6 +12,7 @@ using Sts2Sim.Core.Helpers;
 using Sts2Sim.Core.Models;
 using Sts2Sim.Core.Models.Characters;
 using Sts2Sim.Core.Models.Events;
+using Sts2Sim.Core.Models.Powers;
 using Sts2Sim.Core.MonsterMoves;
 using Sts2Sim.Core.MonsterMoves.Intents;
 using Sts2Sim.Core.Random;
@@ -110,6 +111,9 @@ internal sealed class NormalReferenceRun : IDisposable
         };
         return new(Creature(creature), Id(monster.Id), creature.CurrentHp, creature.MaxHp, creature.Block, move.Id, index, intent);
     }
+    private NormalPublicPower PublicPower(PowerModel power) => power is VulnerablePower
+        ? new(Id(power.Id), Creature(power.Owner), power.Amount, power.SkipNextDurationTick, false)
+        : throw new NotSupportedException("missing_dimension: native power turn-end expiry outside Vulnerable duration semantics");
     private string Potion(PotionModel potion) => potionOrigins.TryGetValue(potion, out var origin) ? origin + ":" + Id(potion.Id)
         : throw new NotSupportedException("missing_dimension: reference potion acquisition origin");
     private NormalAction[] PotionDiscards() => player.CanUseOrRemovePotions ? player.PotionSlots.Where(p => p is not null)
@@ -279,6 +283,7 @@ internal sealed class NormalReferenceRun : IDisposable
     public NormalBoundary Capture(string kind)
     {
         var v = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        var configuration = NormalReferenceConfiguration.Capture(run, player);
         void Put(string key, object? value) => v.Add(key, NormalPreflight.Json(value));
         Put("facts.player.hp", player.Creature.CurrentHp); Put("facts.player.max_hp", player.Creature.MaxHp); Put("facts.player.gold", player.Gold);
         Put("visits.phase", Phase); Put("visits.act", run.CurrentActIndex); Put("visits.total_floor", run.TotalFloor);
@@ -309,11 +314,11 @@ internal sealed class NormalReferenceRun : IDisposable
             Phase is "neow" or "map" && run.CurrentMapPoint!.Children.Contains(n) && !run.VisitedMapCoords.Contains(n.coord),
             n.Children.Select(Coord).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
         Put("public.run", new NormalRunView(Phase, run.CurrentActIndex, run.CurrentMapCoord!.Value.row, run.TotalFloor,
-            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow"));
+            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow", NormalReferenceConfiguration.Profile(configuration)));
         var active = combat?.Engine.IsInProgress ?? false;
         Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
             active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,
-            active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true));
+            active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true, configuration.BaseDraw));
         // Compare the active combat's counters. The native room retains its completed
         // history during rewards; DSL clears that history before publishing rewards.
         var history = combat?.Engine.State.DamageHistory.Entries.Where(e => ReferenceEquals(e.Receiver, player.Creature) && e.Result.UnblockedDamage > 0).ToArray() ?? [];
@@ -322,7 +327,7 @@ internal sealed class NormalReferenceRun : IDisposable
             combat?.Engine.State.CurrentSide == CombatSide.Enemy, player.Deck.Type == PileType.Deck));
         Put("public.enemies", combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Select(Enemy).OrderBy(e => e.Origin, StringComparer.Ordinal).ToArray() : []);
         Put("public.powers", (combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Prepend(player.Creature).SelectMany(c => c.Powers) : [])
-            .Select(p => new NormalPublicPower(Id(p.Id), Creature(p.Owner), (long)p.Amount, p.SkipNextDurationTick))
+            .Select(PublicPower)
             .OrderBy(p => p.Holder, StringComparer.Ordinal).ThenBy(p => p.Id, StringComparer.Ordinal).ToArray());
         Put("public.visits", combat is null ? Array.Empty<NormalVisitView>() : [new NormalVisitView(combat.Id ?? throw new NotSupportedException("Native room has no visit identity"),
             Coord(run.CurrentMapPoint!), run.CurrentMapPoint!.PointType.ToString(), combat.RoomType.ToString().ToLowerInvariant(), "base-spire:" + combat.Encounter!.IdEntry.ToLowerInvariant().Replace('_', '-'),
@@ -405,6 +410,7 @@ internal sealed class NormalReferenceRun : IDisposable
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"],
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
+                native_configuration = configuration,
                 native_reward_policies = rewardObservation?.Evidence,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
