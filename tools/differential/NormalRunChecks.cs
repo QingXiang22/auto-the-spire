@@ -59,6 +59,27 @@ internal static class NormalRunChecks
         for (var i = 0; left.Phase == "combat" && i < 100; i++)
             Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
+        var victory = left.Capture("victory");
+        using (var document = System.Text.Json.JsonDocument.Parse(victory.Values["lifecycle.settlement"]))
+        {
+            var stages = document.RootElement.EnumerateArray().ToArray();
+            Require(stages.Length == 2 && stages[0].GetProperty("Phase").GetString() == "effects-finished"
+                && stages[1].GetProperty("Phase").GetString() == "rewards-published"
+                && !stages[0].GetProperty("RewardsGenerated").GetBoolean() && stages[1].GetProperty("RewardsGenerated").GetBoolean(),
+                "real last kill finishes its outer card before publishing rewards");
+            var hp = stages[0].GetProperty("Hp").GetInt64();
+            Require(hp < stages[0].GetProperty("MaxHp").GetInt64()
+                && stages[1].GetProperty("Hp").GetInt64() == Math.Min(hp + 6, stages[0].GetProperty("MaxHp").GetInt64())
+                && stages[0].GetProperty("Gold").GetInt64() == stages[1].GetProperty("Gold").GetInt64(),
+                "normal BurningBlood heals six only after card effects, before reward claiming");
+            foreach (var invalid in new[] { stages.Reverse().ToArray(), stages[..1], stages.Concat(stages.Take(1)).ToArray() })
+            {
+                var changed = new SortedDictionary<string, string>(victory.Values, StringComparer.Ordinal)
+                    { ["lifecycle.settlement"] = NormalPreflight.Json(invalid) };
+                Require(NormalRunComparison.First(0, victory, victory with { Values = changed })?.Path == "lifecycle.settlement",
+                    "wrong order, missing and repeated actual settlement stages are detected");
+            }
+        }
         Apply(new("claim-potion", [])); Apply(new("close-rewards", []));
         var discard = left.Semantic(left.Action("DiscardPotion"));
         Require(discard.Arguments.Single().Contains(":potion-reward:0:", StringComparison.Ordinal), "held potion retains its actual reward creation origin");
@@ -87,7 +108,7 @@ internal static class NormalRunChecks
             return result.ToArray();
             void Capture()
             {
-                result.Add(NormalPreflight.Json(reference.Capture("check").Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal) && !p.Key.StartsWith("events.", StringComparison.Ordinal))));
+                result.Add(NormalPreflight.Json(reference.Capture("check").Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal) && !p.Key.StartsWith("events.", StringComparison.Ordinal) && !p.Key.StartsWith("lifecycle.", StringComparison.Ordinal))));
                 result.Add(reference.KnownRandomState);
             }
         }
@@ -113,7 +134,7 @@ internal static class NormalRunChecks
         void Check()
         {
             var a = observed.Capture("check"); var b = plain.Capture("check");
-            var gameplay = a with { Values = new(a.Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal) && !p.Key.StartsWith("events.", StringComparison.Ordinal)).ToDictionary(p => p.Key, p => p.Value), StringComparer.Ordinal) };
+            var gameplay = a with { Values = new(a.Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal) && !p.Key.StartsWith("events.", StringComparison.Ordinal) && !p.Key.StartsWith("lifecycle.", StringComparison.Ordinal)).ToDictionary(p => p.Key, p => p.Value), StringComparer.Ordinal) };
             Require(NormalRunComparison.First(0, gameplay, b) is null, "diagnostics leave normal Host facts/actions/piles unchanged");
             Require(observed.RandomState == plain.RandomState, "diagnostics leave every stream/state/cursor unchanged");
             Require(observed.HasCompleteDebug && !plain.HasDebug, "debug is present only when requested and has no dropped records");

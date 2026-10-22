@@ -11,6 +11,7 @@ internal sealed record NormalBoundary(string Kind, SortedDictionary<string, stri
     string[] MissingDimensions, object Diagnostic);
 internal sealed record NormalDamageEvent(string? Dealer, string Receiver, string Blocked, string Unblocked, string Overkill, bool Killed);
 internal sealed record NormalPowerEvent(string Id, string Holder, string Amount, string Delta);
+internal sealed record NormalSettlement(string Phase, long Hp, long MaxHp, long Gold, bool RewardsGenerated);
 internal sealed record NormalObservedEvent(string Kind, string? Card = null, NormalDamageEvent? Damage = null,
     NormalPowerEvent? Power = null, string? Actor = null, string? Move = null);
 internal sealed record NormalPair(NormalBoundary Left, NormalBoundary Right);
@@ -32,10 +33,10 @@ internal sealed record NormalCase(string Id, string Status, string? Reason, Norm
 internal static class NormalRunComparison
 {
     internal static readonly string[] ExpectedCaseIds = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"];
-    internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events"];
+    internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events", "lifecycle"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
         "public.snapshot", "public.piles", "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
-        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "events.trace", "events.observed_order"];
+        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "events.trace", "events.observed_order", "lifecycle.settlement"];
     internal static NormalDifference? First(int index, NormalBoundary left, NormalBoundary right)
     {
         if (left.Kind != right.Kind) return new(index, left.Kind, "boundary.kind", left.Kind, right.Kind);

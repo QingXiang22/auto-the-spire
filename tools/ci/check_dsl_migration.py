@@ -197,8 +197,11 @@ def main() -> int:
                        or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
                        or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
                               or "events.observed_order" not in b[side]["values"]
+                              or "lifecycle.settlement" not in b[side]["values"]
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
+                              for side in ("left", "right"))
+                       or any(len(json.loads(c["boundaries"][-1][side]["values"]["lifecycle.settlement"])) != 2
                               for side in ("left", "right"))
                        or (c["id"].startswith("m01-targeted-")
                            and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):

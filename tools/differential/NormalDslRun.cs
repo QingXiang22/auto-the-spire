@@ -18,6 +18,7 @@ internal sealed class NormalDslRun : IDisposable
     private readonly Dictionary<InstanceId, string> generated = [];
     private readonly Dictionary<InstanceId, string> potionOrigins = [];
     private readonly HashSet<int> generatedActions = [];
+    private NormalSettlement[]? settlement;
     private int actionIndex = -1;
     private int number;
     private RequestDto? lastStep;
@@ -237,10 +238,10 @@ internal sealed class NormalDslRun : IDisposable
         // Public evidence remains the actual protocol snapshot, separate from tool-only hidden piles.
         var trace = Engine.Debug;
         if (trace is not null) Put("events.observed_order", ObservedEvents());
+        if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
             .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
-        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
-                "lifecycle: final-kill effects"];
+        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"];
         if (unmapped.Length > 0) missing = [.. missing, $"actions: {unmapped.Length} public candidates have no normal reference mapping"];
         return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
@@ -248,6 +249,32 @@ internal sealed class NormalDslRun : IDisposable
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
+    }
+    private NormalSettlement[] Settlement()
+    {
+        if (settlement is not null) return settlement;
+        var records = DebugRecords;
+        var ended = records.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:CombatEnded").ToArray();
+        if (ended.Length == 0) return [];
+        if (ended.Length != 1 || ended[0].Snapshot is not { Complete: true } snapshot || ended[0].TextTruncated
+            || snapshot.Values[1].Scalar != "true")
+            throw new NotSupportedException("missing_dimension: normal victory settlement snapshot");
+        var owner = snapshot.Entities.Single(e => e.Type == "base-spire:Player");
+        SessionDebugValueSnapshot F(string name) => owner.Fields.Single(f => f.Name == name).Value;
+        var finished = records.Last(r => r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:AfterCardPlayed");
+        var kill = records.Last(r => r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:DamageResolved");
+        if (kill.Snapshot is not { Complete: true } damage || !damage.Entities.Single().Fields.Any(f => f.Name == "Killed" && f.Value.Scalar == "true")
+            || !(kill.Sequence < ended[0].Sequence && finished.Sequence < ended[0].Sequence)
+            || new[] { "AttackDepth", "DamageDepth", "EffectDepth", "PlayDepth" }.Any(n => F(n).Scalar != "0")
+            || F("CurrentRewardSet").Kind != ValueKind.None || F("GoldRewardPending").Scalar != "false" || F("CardRewardPending").Scalar != "false")
+            throw new NotSupportedException("missing_dimension: final card effects must finish before victory settlement and rewards");
+        var player = Instances("Player").Single();
+        var rewards = Field(player, "Player", "CurrentRewardSet");
+        if (Phase != "rewards" || rewards.IsNone || !Field(rewards.AsRef(), "CombatRewardSet", "Generated").AsBool())
+            throw new NotSupportedException("missing_dimension: first settled victory boundary must publish generated rewards");
+        settlement = [new("effects-finished", int.Parse(F("Hp").Scalar!), int.Parse(F("MaxHp").Scalar!), int.Parse(F("Gold").Scalar!), false),
+            new("rewards-published", Field(player, "Player", "Hp").AsInt(), Field(player, "Player", "MaxHp").AsInt(), Field(player, "Player", "Gold").AsInt(), true)];
+        return settlement;
     }
     private NormalObservedEvent[] ObservedEvents()
     {
