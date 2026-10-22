@@ -114,6 +114,7 @@ internal static class NormalRunChecks
         NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         NormalWeightedChecks.Run(left.DebugRecords, victory);
         NormalOpeningAttemptChecks.Run(left.DebugRecords, victory);
+        CheckNativeEventCoverage(right.Capture("victory"));
         var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
         Require(floatCalls.Length == 11 && floatCalls.Count(c => c.Stream == "base-spire:run:monster_ai") == 3
             && floatCalls.Count(c => c.Stream == "base-spire:player:rewards") == 8,
@@ -180,6 +181,45 @@ internal static class NormalRunChecks
             Require(difference is null,
                 "real acquisition and discard match reference candidates, assets, events and RNG: " + NormalPreflight.Json(difference));
         }
+    }
+
+    private static void CheckNativeEventCoverage(NormalBoundary boundary)
+    {
+        using var diagnostic = System.Text.Json.JsonDocument.Parse(NormalPreflight.Json(boundary.Diagnostic));
+        var coverage = System.Text.Json.JsonSerializer.Deserialize<NormalNativeEventCoverage>(diagnostic.RootElement.GetProperty("native_event_coverage"))!;
+        Require(coverage.Total == 773 && coverage.Mapped == 77 && coverage.Listeners.Length == 696
+            && coverage.Unmapped.Length == 0 && coverage.Listeners.All(l => l.DefaultNoOp),
+            "all 773 real notifications are accounted for: 77 projected and 696 default virtual-method entries/exits");
+        Require(coverage.Listeners.Select(l => l.Hook).Distinct().Count() == 4
+            && coverage.Listeners.Select(l => l.Side).Distinct().Order().SequenceEqual(new[] { "Enemy", "Player" }),
+            "real listener evidence preserves all four hook phases and both actual side values");
+        var model = Sts2Sim.Core.Models.ModelDb.Relic<Sts2Sim.Core.Models.Relics.BurningBlood>();
+        object?[] Args(bool starting) => ["AfterSideTurnEnd", model, Sts2Sim.Core.Combat.CombatSide.Player, starting];
+        foreach (var mode in new[] { "finish-first", "missing-finish", "nested-start", "wrong-side" })
+        {
+            var audit = new NormalReferenceEventCoverage(); var rejected = false;
+            try
+            {
+                if (mode == "finish-first") audit.Record("SideTurnEndListener", Args(false), false);
+                else
+                {
+                    audit.Record("SideTurnEndListener", Args(true), false);
+                    if (mode == "nested-start") audit.Record("SideTurnEndListener", Args(true), false);
+                    if (mode == "wrong-side") audit.Record("SideTurnEndListener",
+                        ["AfterSideTurnEnd", model, Sts2Sim.Core.Combat.CombatSide.Enemy, false], false);
+                    audit.Capture();
+                }
+            }
+            catch (NotSupportedException) { rejected = true; }
+            Require(rejected, "missing, nested, wrong-side and unmatched listener pairs cannot be classified");
+        }
+        var overridden = new NormalReferenceEventCoverage();
+        var power = Sts2Sim.Core.Models.ModelDb.Power<Sts2Sim.Core.Models.Powers.VulnerablePower>();
+        foreach (var starting in new[] { true, false })
+            overridden.Record("SideTurnEndListener", ["AfterSideTurnEnd", power, Sts2Sim.Core.Combat.CombatSide.Player, starting], false);
+        overridden.Record("FutureUnmappedObserver", [], false);
+        Require(overridden.Capture() is { Unmapped.Length: 3 } unknown && unknown.Listeners.All(l => !l.DefaultNoOp),
+            "overridden hooks stay unmapped even on a side where their body has no effect; unknown observers stay visible");
     }
 
     private static void CheckReferenceDiagnostics()

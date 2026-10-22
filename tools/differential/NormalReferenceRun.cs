@@ -45,6 +45,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private int actionIndex = -1;
     private readonly List<object> events = [];
     private readonly List<NormalObservedEvent> observedEvents = [];
+    private readonly NormalReferenceEventCoverage eventCoverage = new();
     private readonly List<NormalSettlement> settlement = [];
     private bool cardEffectFinished;
     private readonly NormalReferenceRandom random;
@@ -124,6 +125,7 @@ internal sealed class NormalReferenceRun : IDisposable
         PowerModel p => new { id = Id(p.Id), holder = Creature(p.Owner), amount = p.Amount },
         DamageResult d => new { receiver = Creature(d.Receiver), d.BlockedDamage, d.UnblockedDamage, d.OverkillDamage, d.WasTargetKilled, props = d.Props.ToString() },
         AbstractModel m => Id(m.Id), string or int or decimal or bool => arg,
+        CombatSide side => side.ToString(),
         _ => arg.GetType().FullName
     };
     public void Apply(NormalAction action) => ApplyAsync(action).GetAwaiter().GetResult();
@@ -156,6 +158,7 @@ internal sealed class NormalReferenceRun : IDisposable
                     var observer = DispatchProxy.Create(observerType, typeof(NormalReferenceObserver));
                     ((NormalReferenceObserver)observer).Record = (name, args) =>
                     {
+                        var projectedBefore = observedEvents.Count;
                         events.Add(new { name, arguments = args.Select(EventArgument).ToArray() });
                         if (name == "CardPlayStarted") cardEffectFinished = false;
                         if (name == "CardPlayFinished") cardEffectFinished = true;
@@ -176,6 +179,7 @@ internal sealed class NormalReferenceRun : IDisposable
                                 "EnemyTurnStarting" => "enemy-turn-starting", _ => "player-turn-ended" }));
                         else if (name == "EnemyMoveStarted") observedEvents.Add(new("enemy-move-started", Actor: Creature((Creature)args[0]!), Move: (string)args[1]!));
                         else if (name == "EnemyMoveFinished") observedEvents.Add(new("enemy-move-finished", Actor: Creature((Creature)args[0]!), Move: (string)args[1]!));
+                        eventCoverage.Record(name, args, observedEvents.Count == projectedBefore + 1);
                     };
                     typeof(CombatRoom).GetMethod("ConfigureObserver", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combat, [observer]);
                 }
@@ -410,11 +414,15 @@ internal sealed class NormalReferenceRun : IDisposable
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
-        return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"],
+        var coverage = eventCoverage.Capture();
+        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"];
+        if (coverage.Unmapped.Length > 0) missing = [.. missing, $"events: {coverage.Unmapped.Length} native notifications remain unmapped"];
+        return new(kind, v, missing,
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 native_configuration = configuration,
                 native_rest_context = restContext,
+                native_event_coverage = coverage,
                 native_reward_policies = rewardObservation?.Evidence,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
