@@ -31,6 +31,7 @@ internal static class NormalSnapshotChecks
         Require(floats.Any(r => r.Subject!.Contains("rewards") && r.Random!.Float32 is { MinimumBits: 0, MaximumBits: 1065353216 }), "real reward sampling retains the [0,1) range");
         var expiredCandidates = records.Where(r => r.Random?.Candidates is not null)
             .SelectMany(r => r.Random!.Candidates!).Where(id => !observed.IsLive(id)).Distinct().ToArray();
+        CheckPhaseProjection(records);
         Require(expiredCandidates.Length > 0, "this path actually destroys temporary initialization candidates");
         foreach (var record in records.Where(r => r.Random?.Candidates is not null))
             Require(record.Random!.Candidates!.All(id => record.Snapshot!.Entities.Any(e => e.Instance == id)), "every ordered candidate has its own copied entity");
@@ -70,6 +71,34 @@ internal static class NormalSnapshotChecks
         {
             Require(observed.StateHash == plain.StateHash && observed.RandomState == plain.RandomState
                 && observed.PublicState == plain.PublicState, "copying leaves every real normal boundary unchanged");
+        }
+    }
+
+    private static void CheckPhaseProjection(IReadOnlyList<SessionDebugRecord> records)
+    {
+        var starts = records.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:EnemyTurnStarted")
+            .ToDictionary(r => r.Sequence, r =>
+            {
+                var enemy = r.Snapshot!.Entities.Single(e => e.Type == "base-spire:Enemy");
+                return new NormalObservedEvent("enemy-move-started", Actor: enemy.Instance.ToString(),
+                    Move: enemy.Fields.Single(f => f.Name == "MoveId").Value.Scalar!);
+            });
+        var actual = NormalPhaseTrace.Merge(records, starts);
+        Require(actual.Count(e => e.Kind == "enemy-move-finished") == starts.Count && starts.Count > 0, "every actual enemy move completes once with its original actor and move");
+        var prepared = records.First(r => r.Kind == SessionDebugKind.ProcedureExit && r.Subject == "base-spire:DrawDevelopmentTurnHand");
+        Require(!actual.SequenceEqual(NormalPhaseTrace.Merge(records.Where(r => r != prepared).ToArray(), starts)), "missing actual draw-completion phase changes evidence");
+        Require(!actual.SequenceEqual(NormalPhaseTrace.Merge(records.SelectMany(r => r == prepared ? new[] { r, r } : new[] { r }).ToArray(), starts)), "duplicate actual phase changes evidence");
+        foreach (var subject in new[] { "base-spire:RunEnemyTurn", "base-spire:PerformEnemyMove" })
+        {
+            var finish = records.First(r => r.Kind == SessionDebugKind.ProcedureExit && r.Subject == subject);
+            Reject(records.Where(r => r != finish).ToArray(), "missing " + subject + " completion");
+        }
+        Reject(records.Select(r => r != prepared ? r : r with { TextTruncated = true }).ToArray(), "truncated phase");
+        void Reject(IReadOnlyList<SessionDebugRecord> injected, string name)
+        {
+            var rejected = false;
+            try { NormalPhaseTrace.Merge(injected, starts); } catch (NotSupportedException) { rejected = true; }
+            Require(rejected, "phase comparison rejects " + name);
         }
     }
 
