@@ -47,6 +47,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly NormalReferenceRandom random;
     private readonly bool diagnostics;
     private CombatRoom? combat;
+    private NormalReferenceRewards? rewardObservation;
     private CardModel? targetedCard;
     private PlayerCombatState? lastCombatState;
     private string[] neowOptions = [];
@@ -216,6 +217,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 settlement.Add(new("effects-finished", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, false));
             }
             await combat.ResolveOutcomeAsync(); Phase = "rewards";
+            rewardObservation = new(run, combat);
             if (diagnostics) settlement.Add(new("rewards-published", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, combat.GeneratedRewards.Count > 0));
             if (combat.Rewards!.Potion?.Potion is { } potion)
                 potionOrigins.Add(potion, $"generated:action:{actionIndex}:potion-reward:0");
@@ -314,6 +316,7 @@ internal sealed class NormalReferenceRun : IDisposable
         Put("public.neow", new NormalNeowView(Phase != "neow" ? "closed" : Neow.IsFinished ? "finished" : "pending",
             player.Relics.Select(r => Id(r.Id)).SingleOrDefault(neowOptions.Contains) ?? "none", neowOptions.Select((id, index) => new NormalNeowOption(id, index)).ToArray()));
         var offer = Phase == "rewards" ? combat!.Rewards : null;
+        Put("public.reward_sets", rewardObservation?.Capture(Potion) ?? []);
         Put("public.reward_offer", new NormalRewardView(offer is not null, offer is not null && !offer.Gold.IsResolved,
             offer is not null && !offer.Gold.IsResolved ? offer.Gold.Amount : 0, offer is not null && !offer.Card.IsResolved,
             offer?.Potion is { IsResolved: false }, offer is not null && !offer.Card.IsResolved
