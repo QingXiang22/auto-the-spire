@@ -142,7 +142,11 @@ internal sealed class NormalReferenceRun : IDisposable
                                 power.Amount.ToString("G29", System.Globalization.CultureInfo.InvariantCulture),
                                 ((decimal)args[1]!).ToString("G29", System.Globalization.CultureInfo.InvariantCulture))));
                         else if (name == "PlayerTurnStarted") observedEvents.Add(new("player-turn-started"));
+                        else if (name is "CombatStarted" or "PlayerTurnPrepared" or "EnemyTurnStarting" or "PlayerTurnEnded")
+                            observedEvents.Add(new(name switch { "CombatStarted" => "combat-started", "PlayerTurnPrepared" => "player-turn-prepared",
+                                "EnemyTurnStarting" => "enemy-turn-starting", _ => "player-turn-ended" }));
                         else if (name == "EnemyMoveStarted") observedEvents.Add(new("enemy-move-started", Actor: Creature((Creature)args[0]!), Move: (string)args[1]!));
+                        else if (name == "EnemyMoveFinished") observedEvents.Add(new("enemy-move-finished", Actor: Creature((Creature)args[0]!), Move: (string)args[1]!));
                     };
                     typeof(CombatRoom).GetMethod("ConfigureObserver", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combat, [observer]);
                 }
