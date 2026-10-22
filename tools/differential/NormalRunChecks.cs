@@ -66,7 +66,9 @@ internal static class NormalRunChecks
         var victory = left.Capture("victory");
         var generatedReward = System.Text.Json.JsonSerializer.Deserialize<NormalRewardSetView[]>(victory.Values["public.reward_sets"])!.Single();
         Require(generatedReward is { Source: "monster", Character: "base-spire:ironclad", Act: 0, Ascension: 0, CardCount: 3,
-            RarityPolicy: "regular-encounter", Generated: true, Closed: false, Potion: not null }, "real reward generation metadata and pending potion");
+            RarityPolicy: "regular-encounter", Generated: true, Closed: false, Potion: not null,
+            Policies: { PoolEligibility: "all-unlocked-ironclad", UpgradePolicy: "act-one", ModifiersPolicy: "none", RandomStream: "base-spire:player:rewards" } },
+            "real reward generation metadata, policies and pending potion");
         Require(histories.Any(h => h.Plays > 0) && histories.Any(h => h.HpLosses > 0)
             && histories[^1] is { Plays: 0, HpLosses: 0, LostHpThisTurn: false, ExhaustedThisTurn: false },
             "real combat increments play and HP-loss counters before victory clears active history");
@@ -76,6 +78,16 @@ internal static class NormalRunChecks
             Require(!retained.GetProperty("active").GetBoolean() && retained.GetProperty("retained_plays").GetInt32() > 0
                 && retained.GetProperty("retained_hp_losses").GetInt32() > 0,
                 "normalization retains the actual completed native history in diagnostics");
+            var policy = System.Text.Json.JsonSerializer.Deserialize<NormalRewardPolicyEvidence[]>(diagnostic.RootElement.GetProperty("native_reward_policies"))!.Single();
+            Require(policy.UnlockedPool.Length == 85 && NormalReferenceRewards.Classify(policy) == generatedReward.Policies,
+                "policy names have actual full native pool and default-path evidence");
+            foreach (var invalid in new[] { policy with { Act = 1 }, policy with { Players = 2 }, policy with { DefaultEncounter = false },
+                policy with { SemanticKeys = true }, policy with { UnlockedPool = policy.UnlockedPool[..^1] }, policy with { Modifiers = ["changed-hook"] } })
+            {
+                var rejected = false;
+                try { NormalReferenceRewards.Classify(invalid); } catch (NotSupportedException) { rejected = true; }
+                Require(rejected, "policy classification rejects unsupported context instead of filling expected labels");
+            }
         }
         NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         NormalWeightedChecks.Run(left.DebugRecords, victory);
@@ -260,7 +272,7 @@ internal static class NormalRunChecks
         if (snapshot.Entities.Any(e => e.KindId.EndsWith(":CombatRewardSet", StringComparison.Ordinal)))
         {
             var rewardSet = First("CombatRewardSet");
-            foreach (var name in new[] { "Source", "CharacterId", "ActIndex", "Ascension", "CardCount", "RarityPolicy" })
+            foreach (var name in new[] { "Source", "CharacterId", "ActIndex", "Ascension", "CardCount", "RarityPolicy", "PoolEligibility", "UpgradePolicy", "ModifiersPolicy", "RandomStream" })
                 Changed(Replace(rewardSet, name, WireValue.Str("999")), "public.reward_sets");
             foreach (var name in new[] { "Generated", "Closed" })
                 Changed(Replace(rewardSet, name, WireValue.Bool(!NormalPublicObservation.Flag(rewardSet, name))), "public.reward_sets");

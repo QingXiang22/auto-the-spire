@@ -232,7 +232,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 settlement.Add(new("effects-finished", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, false));
             }
             await combat.ResolveOutcomeAsync(); Phase = "rewards";
-            rewardObservation = new(run, combat);
+            rewardObservation = new(run, combat, random.StreamName);
             if (diagnostics) settlement.Add(new("rewards-published", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, combat.GeneratedRewards.Count > 0));
             if (combat.Rewards!.Potion?.Potion is { } potion)
                 potionOrigins.Add(potion, $"generated:action:{actionIndex}:potion-reward:0");
@@ -399,6 +399,7 @@ internal sealed class NormalReferenceRun : IDisposable
         return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"],
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
+                native_reward_policies = rewardObservation?.Evidence,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = new[] { "previous-candidate context, compatibility predicate and accept/reject commit effects" },
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
@@ -477,6 +478,7 @@ internal sealed class NormalReferenceRandom : IDisposable
     }
     private string Name(Rng rng) => names.GetValueOrDefault(rng) ?? (rng.DiagnosticStreamName is { } name && name.StartsWith("named.", StringComparison.Ordinal)
         ? "base-spire:run:" + name[6..] : rng.DiagnosticStreamName) ?? "unidentified:" + attached.IndexOf(rng);
+    internal string StreamName(Rng rng) => Name(rng);
     public void Name(Rng rng, string name)
     {
         if (names.TryGetValue(rng, out var previous) && previous != name) throw new NotSupportedException("Conflicting reference RNG identity.");
