@@ -7,6 +7,7 @@ internal static partial class PackageChecks
     {
         RunNormalOpeningGuardChecks(package);
         RunNormalOpeningChecks(package);
+        RunNormalReturnOnly(package);
         RunSourceOpeningChecks(package);
         RunUnsupportedNormalOpeningChecks(package);
         RunMapGaussianChecks(package);

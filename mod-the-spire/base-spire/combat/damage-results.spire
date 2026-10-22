@@ -122,6 +122,9 @@ procedure PublishDamageDeath {
     if = { condition = not(isNone(result)) then = {
       if = { condition = and(field(result, DamageResult.Killed), and(not(field(result, DamageResult.DeathNotified)), not(isNone(field(result, DamageResult.Enemy))))) then = {
         set = { target = result field = DamageResult.DeathNotified value = true }
+        forEach = { query = where(type(Player), p, field(p, Player.CombatActive)) item = owner body = {
+          set = { target = owner field = Player.EnemyDiedInCombat value = true }
+        } }
         emit = { event = EnemyDied payload = { target = field(result, DamageResult.Enemy) } }
       } }
     } }

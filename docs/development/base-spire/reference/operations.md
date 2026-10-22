@@ -36,7 +36,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | AfterPlayerTurnStartLate | owner: Ref(Player) | 紧随 AfterPlayerTurnStart 发出，对应原版 AfterPlayerTurnStartLate；三个玩家回合开始时点都在同一执行栈内按声明顺序完成 |
 | AfterTurnEnded | owner: Ref(Player) | 回合末自动打出后弃掉手牌，再发出；临时玩家侧 Power 随后清理，debuff 的减层在敌方阶段结束时发生 |
 | EnemyDied | target: Ref(Enemy) | 敌人生命从正数到 0 时发出一次；原版的移除生物与死亡钩子未迁移 |
-| CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；胜利后可生成开发金币待领项；没有正常 Run 结算 |
+| CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；开发胜利可生成奖励；正常访问在结束通知、清理及胜利通知后提交并生成奖励 |
+| CombatVictoryEarly／CombatVictory | owner: Ref(Player)、victory: Bool | 胜利时依次通知早期／普通胜利效果；正常访问先清理能力、格挡与战斗牌，再发送这两项通知，之后提交访问及生成奖励 |
 | EnemyTurnStarted | owner: Ref(Player)、target: Ref(Enemy) | 玩家回合结束后，对每个 `Hp > 0` 的敌人各发一次；敌人内容模板按 DefinitionId 订阅并实现自己的招 |
 | AfterEnemyTurnEnded | owner: Ref(Player) | 敌方阶段结束时发出；共享规则在这里做 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
 | AfterShuffle | owner: Ref(Player) | 仅在实际转移并完成 shuffle 后发出 |
@@ -108,10 +109,10 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | RestAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：只在营火且未使用时允许，回复 `floor(MaxHp × 0.3)` 后把选项标记为已用；过程在非营火或重复使用时失败 |
 | ForgeAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：未用过的营火、存活且非战斗，有本玩家可升级永久牌时发出 Engine 的 0..1 实例决策；选择升级该永久实例并用掉选项，取消不消耗；成功后发 AfterRestSiteSmith |
 | LeaveDevelopmentRoom | owner=Ref(Player) | 公开 action 与同名过程：只有成功用过营火选项、没有选择待决且非战斗时可离开，房间复位为 `none`；奖励界面必须使用 CloseDevelopmentRewards |
-| [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 存活玩家胜利时，Ironclad调用完整普通奖励操作；未选角色的金币探针仅从命名流 `base-spire:player:rewards` 的 `[10, 21)` 抽金额；写入待领状态、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
+| [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 仅用于开发战斗；存活玩家胜利时，Ironclad调用完整普通奖励操作；未选角色的金币探针仅从命名流 `base-spire:player:rewards` 的 `[10, 21)` 抽金额；写入待领状态、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
 | ClaimDevelopmentGoldReward | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 且条目 pending 时把保存金额加进 Gold（开发上限 99999），清空条目；领取不关闭界面，不重抽，不能重复领取 |
 | CloseDevelopmentRewards | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 时清空未领条目、金额与房间状态；允许不领取直接关闭，不给金币也不抽随机；关闭前禁止开始新战斗、进入营火或 LeaveDevelopmentRoom |
-| [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 只在敌人死亡后调用：若已无 `Hp > 0` 的敌人且战斗仍活跃，写 victory、关闭回合门与活跃标记并发 CombatEnded |
+| [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 在伤害、攻击、出牌、回合或药水操作的外层边界检查；本场已有真实敌人死亡通知、深度均归零且已无存活敌人时，写 victory、关闭回合与活跃标记，按结束→正常清理→早期胜利→普通胜利顺序通知，再提交正常访问及生成奖励 |
 | CheckCombatDefeat | owner=Ref(Player) | 每次玩家掉血后调用：生命为 0 且战斗仍活跃时写 defeat 并关闭状态，再发 CombatEnded |
 | [DamagePlayerPowered](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire) | attacker=Ref(Enemy)、owner=Ref(Player)、amount | 敌方攻击链：防守方 `after-attacked-damage`（Thorns）先以无加成伤害反击攻击者，再按攻击者 Strength→攻击者 Weak ×0.75→防守方 Vulnerable ×1.5（整数向下取整）→格挡→生命，并做失败判定 |
 | RunEnemyTurn | owner=Ref(Player) | 敌方阶段：对每个可命中敌人先清空其格挡（源 `Creature.AfterTurnStart` 的敌侧语义），再发 EnemyTurnStarted；最后发 AfterEnemyTurnEnded |
@@ -219,7 +220,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 `BeforeCombatStartEnemyPowerRelic` 参数相同但作用于每个 `Hp > 0` 的敌人（`use BagOfMarbles` 施加 Vulnerable 1）。`EnemyDiedEnergyDrawRelic` 的参数为 definition、energy、cards，订阅 EnemyDied 后对持有者给能量并抽牌（`use GremlinHorn` 为 1／1）。
 
-回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（CombatEnded 且胜利、Hp 不超过 MaxHp 的阈值百分比时回复，`use MeatOnTheBone` 为 12／50）。显式EndDevelopmentCombat和下次BeginDevelopmentCombat通过ClearCombatPowers调用各实例的RemovePower；自然胜负仅发布CombatEnded，其他Power沿用现有开发清理边界。ExpireTurnPower订阅AfterPlayerTurnFinished，移除带ExpiresAtTurnEnd的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
+回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（胜利且 Hp 不超过 MaxHp 的阈值百分比时回复；early=true 订阅 CombatVictoryEarly，否则订阅 CombatVictory；`use MeatOnTheBone` 为 12／50 且 early=true）。显式EndDevelopmentCombat和下次BeginDevelopmentCombat通过ClearCombatPowers调用各实例的RemovePower；开发场景的自然胜负保留原能力清理边界；正常胜利在结束通知后清理能力、格挡和战斗牌，再发胜利通知并生成奖励。ExpireTurnPower订阅AfterPlayerTurnFinished，移除带ExpiresAtTurnEnd的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
 
 药水：`PotionDefinition` 生成 `Obtain`（创建实例后调用共享ObtainPotion放进三格库存），效果模板按 DefinitionId 订阅 `PotionUsed`／`PotionUsedOnTarget`：`PotionBlockEffect`（无加成格挡，BlockPotion 12）、`PotionEnergyEffect`（EnergyPotion 2）、`PotionDrawEffect`（SwiftPotion 3）、`PotionMaxHpEffect`（FruitJuice 5，提高上限并回复同量）、`PotionHealPercentEffect`（BloodPotion 20% 上限）与 `PotionDamageEffect`（FirePotion 20 点无加成伤害）。
 

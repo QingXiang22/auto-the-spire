@@ -60,6 +60,8 @@ entity RunVisit {
     EncounterId = { type = String(length = 64) default = "none" }
     Phase = { type = String(length = 24) default = "entered" }
     Status = { type = String(length = 24) default = "active" }
+    Committed = { type = Bool default = false }
+    Rewards = { type = Ref(CombatRewardSet) optional = true }
   }
 }
 collection RunVisits { element = RunVisit ordered = true }
@@ -173,4 +175,62 @@ action ChooseMapPoint {
   candidates = { parameter = node query = where(collection(MapNodes), n, and(field(n, MapNode.Selectable), equal(field(n, MapNode.Run), field(first(type(Player)), Player.CurrentRun)))) }
   requires = and(equal(field(first(type(Player)), Player.Room), "map"), and(not(field(first(type(Player)), Player.CombatActive)), not(isNone(field(first(type(Player)), Player.CurrentRun)))))
   body = { call = { procedure = EnterNormalMapPoint args = { owner = first(type(Player)) run = field(first(type(Player)), Player.CurrentRun) node = node } } }
+}
+
+# Player resources and RunDeck are already the authoritative permanent instances.
+# Commit the visit once after the outer effect and combat-end/victory hooks, without copying combat cards back.
+procedure SettleNormalCombat {
+  parameters = { owner = Ref(Player) victory = Bool }
+  locals = { run = Binding visit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = isNone(run) then = { return = {} } }
+    let = { into = visit value = field(run, Run.CurrentVisit) }
+    if = { condition = or(isNone(visit), not(equal(field(run, Run.Phase), "combat"))) then = { fail = { message = "No normal combat visit is active" } } }
+    if = { condition = or(field(visit, RunVisit.Committed), not(equal(field(visit, RunVisit.Phase), "combat"))) then = { fail = { message = "Normal combat visit was already committed" } } }
+    set = { target = visit field = RunVisit.Committed value = true }
+    if = { condition = not(victory) then = {
+      set = { target = visit field = RunVisit.Status value = "defeated" }
+      set = { target = visit field = RunVisit.Phase value = "defeated" }
+      set = { target = run field = Run.Phase value = "defeated" }
+      return = {}
+    } }
+    call = { procedure = OfferNormalCombatRewards args = { owner = owner visitId = field(visit, RunVisit.StableId) source = field(visit, RunVisit.RoomType) actIndex = field(run, Run.ActIndex) ascension = 0 } }
+    set = { target = visit field = RunVisit.Rewards value = field(owner, Player.CurrentRewardSet) }
+    set = { target = visit field = RunVisit.Phase value = "rewards" }
+    set = { target = run field = Run.Phase value = "rewards" }
+  }
+}
+procedure ClearNormalCombat {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = { condition = isNone(field(owner, Player.CurrentRun)) then = { return = {} } }
+    call = { procedure = ClearCombatPowers }
+    set = { target = owner field = Player.Block value = 0 }
+    call = { procedure = ClearCardPlayHistory args = { owner = owner } }
+    forEach = { query = where(type(Card), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), less(collectionIndex(RunDeck, c), 0))) item = card body = {
+      call = { procedure = DestroyCombatCard args = { card = card } }
+    } }
+  }
+}
+procedure CloseNormalVisit {
+  parameters = { owner = Ref(Player) rewards = Ref(CombatRewardSet) }
+  locals = { run = Binding visit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = isNone(run) then = { return = {} } }
+    let = { into = visit value = field(run, Run.CurrentVisit) }
+    if = { condition = or(not(equal(field(run, Run.Phase), "rewards")), or(not(equal(field(visit, RunVisit.Rewards), rewards)), not(equal(field(visit, RunVisit.Phase), "rewards")))) then = { fail = { message = "Rewards do not belong to the current normal visit" } } }
+    set = { target = visit field = RunVisit.Phase value = "closed" }
+    set = { target = visit field = RunVisit.Status value = "closed" }
+    forEach = { query = type(Enemy) item = enemy body = {
+      call = { procedure = ResetEnemyMoves args = { target = enemy } }
+      destroy = { target = enemy }
+    } }
+    forEach = { query = relation(MapChildren, field(run, Run.CurrentNode)) item = child body = {
+      set = { target = child field = MapNode.Selectable value = not(field(child, MapNode.Visited)) }
+    } }
+    set = { target = run field = Run.Phase value = "map" }
+    set = { target = owner field = Player.Room value = "map" }
+  }
 }

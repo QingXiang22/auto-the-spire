@@ -55,7 +55,7 @@ ExpiresAtTurnEnd是一次施加的临时寿命事实，保留临时FlameBarrier�
 
 Weak／Vulnerable／Frail在自己的模块监听AfterEnemyTurnEnded并调用TickPowerDuration。Rage等短期Power自行订阅AfterPlayerSideEnd。AfterBlockCleared在每次玩家回合开始的格挡处理阶段发布，包括首回合以及格挡被保留时；它不是“Block值发生变化”的通知。
 
-显式EndDevelopmentCombat和下次BeginDevelopmentCombat调用ClearCombatPowers。自然胜负发布CombatEnded；其他Power沿用现有开发清理边界，不保证在胜负通知当场全部销毁。精确阶段见[战斗操作参考](operations.md)。
+显式EndDevelopmentCombat和下次BeginDevelopmentCombat调用ClearCombatPowers。自然胜负发布CombatEnded；开发场景沿用现有能力清理边界。正常胜利在该通知后清理所有能力、格挡及战斗牌，再通知早期／普通胜利效果并生成奖励。精确阶段见[战斗操作参考](operations.md)。
 
 ## 私有状态与未支持范围
 

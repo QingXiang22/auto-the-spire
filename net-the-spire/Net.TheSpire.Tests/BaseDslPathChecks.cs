@@ -16,6 +16,8 @@ internal static class BaseDslPathChecks
         yield return ("RNG package host uses the source stream layout and isolates repeated seeds", SourceRandomSessions);
         yield return ("DB-A11 real stdio process runs the same package and public trajectory", () => StdioTrajectory("draw"));
         yield return ("ENV-T05 real stdio normal Neow, source map and first real encounter", () => StdioTrajectory("normal-opening"));
+        foreach (var path in new[] { "claim", "skip" })
+            yield return ("ENV-T05 real stdio normal combat rewards and map return: " + path, () => StdioTrajectory("normal-" + path));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
         yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
@@ -171,7 +173,7 @@ internal static class BaseDslPathChecks
             {
                 process.StandardInput.WriteLine(WireCanonical.Text(request.ToWire())); process.StandardInput.Flush();
                 var line = process.StandardOutput.ReadLineAsync();
-                Check.True(line.Wait(mode == "normal-opening" ? 60000 : 10000), "stdio responds within the check timeout");
+                Check.True(line.Wait(mode.StartsWith("normal-", StringComparison.Ordinal) ? 60000 : 10000), "stdio responds within the check timeout");
                 Check.True(line.Result is not null, "stdio frame exists");
                 var response = ResponseDto.FromWire(WireParser.ParseUtf8Strict(Encoding.UTF8.GetBytes(line.Result!), "stdio-test"));
                 Check.True(response.Ok, "stdio: " + response.Error?.Message); return response;
@@ -179,11 +181,11 @@ internal static class BaseDslPathChecks
             Send(Request("pipe-describe", Operation.Describe));
             Send(Request("pipe-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
-            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode == "normal-opening" ? "777" : "BASE-DSL-STDIO-00"))));
+            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" => [],
                 "sown-event" => [
                     ("Strike.Obtain", "0", false, "0", "0", false, ""),
                     ("Defend.Obtain", "0", false, "0", "0", false, ""),
@@ -465,7 +467,7 @@ internal static class BaseDslPathChecks
                     .Select(e => ((WireString)e.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value).Order().ToArray();
                 Check.True(captured.SequenceEqual(new[] { "0", "3" }), "public captures remain zero and three despite two additional hits each");
             }
-            if (mode == "normal-opening")
+            if (mode.StartsWith("normal-", StringComparison.Ordinal))
             {
                 void StepOpening(LegalActionDto candidate)
                 {
@@ -502,6 +504,49 @@ internal static class BaseDslPathChecks
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "unresolved combat blocks another map visit");
                 var payload = WireCanonical.Text(snapshot.ToWire());
                 Check.False(payload.Contains("OpeningDefinition", StringComparison.Ordinal) || payload.Contains("MapSegment", StringComparison.Ordinal), "private source pools and map work stay out of public output");
+                if (mode != "normal-opening")
+                {
+                    Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:EndDevelopmentCombat"), "normal combat cannot be force-finished");
+                    for (var move = 0; Public(snapshot, "Player.CombatOutcome") == "none" && move < 100; move++)
+                    {
+                        var candidate = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand")
+                            ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayCardFromHand")
+                            ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:EndDevelopmentTurn")
+                            ?? snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:BeginDevelopmentTurn");
+                        StepOpening(candidate);
+                    }
+                    Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "source starter deck wins without injected damage");
+                    Check.Equal("rewards", Public(snapshot, "Player.Room"), "real victory offers rewards");
+                    Check.Equal("99", Public(snapshot, "Player.Gold"), "gold remains unclaimed");
+                    Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "rewards block map travel");
+                    var amount = long.Parse(Public(snapshot, "Player.GoldRewardAmount"), System.Globalization.CultureInfo.InvariantCulture);
+                    var offered = snapshot.LegalActions.Where(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward")
+                        .Select(a => ((WireString)a.Fields.Single().Value!).Value).ToArray();
+                    if (mode == "normal-claim")
+                    {
+                        StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentGoldReward"));
+                        Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentGoldReward"), "gold cannot be claimed twice");
+                        StepOpening(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"));
+                        var potion = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentPotionReward");
+                        if (potion is not null) StepOpening(potion);
+                    }
+                    else
+                    {
+                        StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:SkipDevelopmentCardReward"));
+                        var potion = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:SkipDevelopmentPotionReward");
+                        if (potion is not null) StepOpening(potion);
+                    }
+                    StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"));
+                    Check.Equal("map", Public(snapshot, "Player.Room"), "rewards close into the normal map");
+                    Check.Equal((mode == "normal-claim" ? 99 + amount : 99).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "claim or skip credits gold once");
+                    var finalDeck = snapshot.Groups.Single(g => g.TypeId.EndsWith(":RunDeck", StringComparison.Ordinal)).Members.Select(m => m.EntityRef).ToHashSet();
+                    Check.Equal(mode == "normal-claim" ? 11 : 10, finalDeck.Count, "reward changes only the permanent deck");
+                    Check.True(deck.All(c => finalDeck.Contains(c.EntityRef)), "permanent starter identities survive the actual combat");
+                    Check.True(offered.Skip(mode == "normal-claim" ? 1 : 0).All(id => !snapshot.Entities.Any(e => e.InstanceId == id)), "unselected actual instances are removed");
+                    Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "legal source successors are published");
+                    Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"), "the visit cannot close twice");
+                }
+
             }
             if (mode.StartsWith("pickup-upgrade-", StringComparison.Ordinal))
             {

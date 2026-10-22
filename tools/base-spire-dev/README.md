@@ -41,4 +41,6 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 永久牌组与营火锻造使用已迁移定义的开发获得入口，例如 `Strike.Obtain`。营火从公开 RunDeck 选择可升级永久实例，选择／取消走通用 `net.answer_decision`；取消不消耗选项，成功后显式离场。后续战斗重建副本，临时升级不反写永久牌；显式 Ironclad 初态使用原版 Shuffle 流洗牌并自动抽牌；正常开局另由 `StartNormalRun` 执行，完整房间返回与整局仍未迁移。见[永久牌组与锻造约定](../../docs/design/mod-the-spire/permanent-deck-smith/spec.md)。
 
-显式 Ironclad 的首幕开发战斗胜利还提供三张不同的卡牌奖励。通过 `ClaimDevelopmentCardReward` 候选选择一张，所选同一实例加入 RunDeck；未选实例销毁。`SkipDevelopmentCardReward` 仅跳过卡牌，金币仍可领取；`CloseDevelopmentRewards` 丢弃全部未领奖励。奖励使用完整80张可奖励源牌、稀有度偏移与去重，已使用原版随机映射和共享 Rewards 游标，但药水掉落等前置流程尚缺，不代表正常 Run 或完整原版独立参考比较通过。
+显式 Ironclad 的首幕开发战斗胜利还提供三张不同的卡牌奖励。通过 `ClaimDevelopmentCardReward` 候选选择一张，所选同一实例加入 RunDeck；未选实例销毁。`SkipDevelopmentCardReward` 仅跳过卡牌，金币仍可领取；`CloseDevelopmentRewards` 丢弃全部未领奖励。奖励使用完整80张可奖励源牌、稀有度偏移与去重，已使用原版随机映射和共享 Rewards 游标，包含普通来源药水掉落等前置消费；正常首战接入见下文，完整 Run 与独立参考比较仍未通过验收。
+
+正常首战奖励返回可定向执行 `dotnet run --project tools/base-spire-dev -c Release -- check --normal-return-only`。该组也包含在 `--normal-run-only` 中；使用纳管的 `fixtures/normal-first-combat.json` 固定 seed、Neow 选择、公开动作优先级和领取／跳过路径，可作为正常双侧比较的输入。它验证真实首战与合法后继，另用受控状态检查 Feed 末杀、回合余效和药水消耗顺序；完整独立比较仍未验证。
