@@ -22,7 +22,7 @@ procedure AddDevelopmentTarget {
   body = {
     create = {
       type = Enemy scope = entityScope(owner) into = target
-      fields = { Owner = field(owner, Player.Owner) DefinitionId = "base-spire:development-target" Hp = 40 MaxHp = 40 }
+      fields = { Owner = field(owner, Player.Owner) DefinitionId = "base-spire:development-target" SpawnOrder = count(type(Enemy)) Hp = 40 MaxHp = 40 }
     }
   }
 }

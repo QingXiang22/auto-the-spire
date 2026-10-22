@@ -37,7 +37,7 @@ subscription EnemyWeak {
   event = ModifyEnemyAttackMultiplier reaction = EnemyWeak instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = collectionIndex(Powers, listener) priority = 0
 }
 procedure Duration { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = TickPowerDuration args = { power = listener } } } }
-subscription Duration { event = AfterEnemyTurnEnded reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = collectionIndex(Powers, listener) priority = -10 }
+subscription Duration { event = AfterEnemyTurnEnded reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0 }
 
 } }
 use WeakPower { template = WeakPowerModule }

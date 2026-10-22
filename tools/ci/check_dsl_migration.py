@@ -115,6 +115,12 @@ def main() -> int:
                 raise ValueError(f"{name}: expected exit {expected_code}, got {process.returncode}; see {folder / 'command.log'}")
             return json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
 
+        dummy = run("battle-friend", ["battle-friend-compare", "--output", str(args.output / "battle-friend")], 0)
+        if (dummy is None or dummy["status"] != "passed" or dummy["independent_verified"] is not True
+                or dummy["normal_run_verified"] is not False or dummy["parent_event_verified"] is not False
+                or len(dummy["cases"]) != 13 or any(c["status"] != "passed" for c in dummy["cases"])):
+            raise ValueError("BattleFriend controlled component comparison did not execute all required cases")
+
         for row in record["suites"]:
             definition = json.loads((ROOT / row["active_definition"]).read_text(encoding="utf-8"))
             suite = definition["suite"]

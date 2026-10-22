@@ -110,7 +110,7 @@ internal sealed class NormalReferenceRun : IDisposable
             IntentType.Attack => "attack", IntentType.StatusCard => "status",
             _ => throw new NotSupportedException("missing_dimension: native first-encounter intent")
         };
-        return new(Creature(creature), Id(monster.Id), creature.CurrentHp, creature.MaxHp, creature.Block, move.Id, index, intent);
+        return new(Creature(creature), Id(monster.Id), creature.CurrentHp, creature.MaxHp, creature.Block, move.Id, index, intent, combat!.Engine.State.EscapedCreatures.Contains(creature));
     }
     private NormalPublicPower PublicPower(PowerModel power) => power is VulnerablePower
         ? new(Id(power.Id), Creature(power.Owner), power.Amount, power.SkipNextDurationTick, false)
@@ -325,7 +325,7 @@ internal sealed class NormalReferenceRun : IDisposable
         Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
             active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,
             active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true, configuration.BaseDraw,
-            rest.RoomUsed, rest.PendingForge));
+            rest.RoomUsed, rest.PendingForge, combat?.Engine.State.EscapedCreatures.Count > 0));
         // Compare the active combat's counters. The native room retains its completed
         // history during rewards; DSL clears that history before publishing rewards.
         var history = combat?.Engine.State.DamageHistory.Entries.Where(e => ReferenceEquals(e.Receiver, player.Creature) && e.Result.UnblockedDamage > 0).ToArray() ?? [];

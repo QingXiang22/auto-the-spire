@@ -346,7 +346,7 @@ internal static class NormalRunChecks
         }
         Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
         Changed(Replace(First("Player"), "AutoDrawPerTurn", WireValue.Str("999")), "public.player");
-        foreach (var name in new[] { "RoomUsed", "PendingForge" })
+        foreach (var name in new[] { "RoomUsed", "PendingForge", "CombatTimedOut" })
             Changed(Replace(First("Player"), name, WireValue.Bool(!NormalPublicObservation.Flag(First("Player"), name))), "public.player");
         if (snapshot.Entities.Any(e => e.KindId.EndsWith(":Power", StringComparison.Ordinal)))
         {
@@ -357,6 +357,7 @@ internal static class NormalRunChecks
         {
             var enemy = First("Enemy");
             Changed(Replace(enemy, "MoveIndex", WireValue.Str("999")), "public.enemies");
+            Changed(Replace(enemy, "Escaped", WireValue.Bool(!NormalPublicObservation.Flag(enemy, "Escaped"))), "public.enemies");
             Changed(Replace(enemy, "Intent", WireValue.Str("corrupted-intent")), "public.enemies");
         }
         foreach (var name in new[] { "PlaySequence", "HpLossCount" })

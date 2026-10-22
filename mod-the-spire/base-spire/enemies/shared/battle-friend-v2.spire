@@ -1,0 +1,3 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+use BattleFriendV2 { template = BattleFriendEnemy args = { definition = "base-spire:battle-friend-v2" hp = 150 } }

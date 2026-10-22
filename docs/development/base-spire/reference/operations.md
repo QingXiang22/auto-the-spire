@@ -16,9 +16,9 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
-| [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
+| [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；CombatTimedOut: Bool=false；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
 | [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；Rarity 字段保存源稀有度，奖励资格与战斗生成资格分别维护 |
-| [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
+| [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none`；Escaped: Bool=false；隐藏SpawnOrder: Int | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；死亡和逃离各有独立状态；招式图、编队及支持范围见敌人指南 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
 | Powers | 有序 Power 集合 | 按定义的shared／per-applier／independent策略匹配实例；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
 | [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64)、EffectSupported: Bool、Usage／Target: String(16)、Slot: Int(-1..2) | 真实药水实例，Slot=-1表示未入库存；来源池元数据与效果支持分别维护 |
@@ -35,11 +35,13 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | AfterPlayerTurnStart | owner: Ref(Player) | AfterSideTurnStarted和起手抽牌后发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
 | AfterPlayerTurnStartLate | owner: Ref(Player) | 紧随 AfterPlayerTurnStart 发出，对应原版 AfterPlayerTurnStartLate；三个玩家回合开始时点都在同一执行栈内按声明顺序完成 |
 | AfterTurnEnded | owner: Ref(Player) | 回合末自动打出后弃掉手牌，再发出；临时玩家侧 Power 随后清理，debuff 的减层在敌方阶段结束时发生 |
+| EnemyAddedToCombat | owner: Ref(Player)、target: Ref(Enemy) | 开战时对活动敌人在 BeforeCombatStart 前逐一发出；BattleFriend 在此获得3层计时 Power |
+| EnemyEscaped | owner: Ref(Player)、target: Ref(Enemy) | 全部Power移除、Escaped及CombatTimedOut写入后发出；不发EnemyDied或Fatal |
 | EnemyDied | target: Ref(Enemy) | 普通敌人确认死亡时发出一次，完成通知后标记DeathResolved并通过RemovePower清理其Power；完整死亡钩子、防死与保留策略未迁移，见[死亡约定](../../../design/mod-the-spire/combat-end/spec.md) |
 | CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；开发胜利可生成奖励；正常访问在结束通知、清理及胜利通知后提交并生成奖励 |
 | CombatVictoryEarly／CombatVictory | owner: Ref(Player)、victory: Bool | 胜利时依次通知早期／普通胜利效果；正常访问先清理能力、格挡与战斗牌，再发送这两项通知，之后提交访问及生成奖励 |
 | EnemyTurnStarted | owner: Ref(Player)、target: Ref(Enemy) | 玩家回合结束后，对每个 `Hp > 0` 的敌人各发一次；敌人内容模板按 DefinitionId 订阅并实现自己的招 |
-| AfterEnemyTurnEnded | owner: Ref(Player) | 敌方阶段结束时发出；共享规则在这里做 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
+| AfterEnemyTurnEnded | owner: Ref(Player) | 敌方阶段结束时发出；按生物出生顺序，每个生物先执行其Power（获得顺序）再执行怪物监听；这里做计时及 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
 | AfterShuffle | owner: Ref(Player) | 仅在实际转移并完成 shuffle 后发出 |
 | AfterCardDrawn | owner: Ref(Player)、card: Ref(Card) | 成功移到 Hand 后发出；未抽到牌不发 |
 | [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 旧声明保留，当前正文管线不发布；新增主效果绑定ExecuteCardBody，外部反应使用Before／After通知 |
@@ -86,11 +88,13 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999) | 累加并截到 999，不应用卡牌／Power 的加性或乘性修正；不是通用获得格挡流程 |
 | GainBlock | owner=Ref(Player)、amount=Int(0..999) | 卡牌格挡链：先由Dexterity贡献加性修正，再在持有正层Frail时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
 | [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
-| ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义 |
+| ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义；已确认死亡或逃离的持有者不再接受Power |
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
 | GainEnergy | owner=Ref(Player)、amount=Int(0..999) | Energy 增加并可超过 MaxEnergy（上限 999），尊重 NoEnergyGain；回合重置使用 GetMaxEnergy |
 | [DamageEnemy](../../../../mod-the-spire/base-spire/combat/damage.spire) | target=Ref(Enemy)、amount=Int(0..999999) | 先扣 `min(Block, amount)` 格挡，剩余从 Hp 扣除且不低于 0；无加成伤害，修正参与者不参与（遗物与 Power 用它） |
-| EnemyIsHittable | target: Ref(Enemy)，pure，返回 Bool | Hp<=0 直接返回 false；存活敌人以 true 为初值征询 ShouldAllowHittingEnemy |
+| EnemyIsActive | target: Ref(Enemy)，pure，返回 Bool | 正 HP 且未逃离；选敌、出牌、伤害、敌方行动及终局判断共享此资格 |
+| EnemyIsHittable | target: Ref(Enemy)，pure，返回 Bool | 非活动目标返回 false；其余以 true 为初值征询 ShouldAllowHittingEnemy |
+| EscapeEnemy | owner: Ref(Player)、target: Ref(Enemy) | 活战中的活动敌人先逐个RemovePower，再写Escaped／CombatTimedOut、发EnemyEscaped并在外层效果结束后检查胜利；保留正HP，重复调用无效果 |
 | ShouldAllowHittingEnemy | value: Bool、target: Ref(Enemy)，pure修正事件 | 供命中资格监听返回当前目标是否允许命中；不写状态或消费随机 |
 | DamageAllEnemiesFromPlayer | owner: Ref(Player)、amount: Int(0..999999) | 对当前 EnemyIsHittable 目标执行无加成群伤；整批提交生命／格挡后才逐项通知伤害和死亡。无目标直接返回；其他攻击、选敌和胜利条件仍沿各自现有资格 |
 | DamageEnemyPowered | owner: Ref(Player)、card: Ref(Card)、target: Ref(Enemy)、amount: Int(0..999999) | 以显式攻击者和牌源计算Strength、Strike及升级牌遗物加成，再应用Weak、目标Vulnerable和攻击者Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam等计算伤害也走此链 |

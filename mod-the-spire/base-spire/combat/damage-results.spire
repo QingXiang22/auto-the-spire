@@ -37,7 +37,7 @@ procedure ResolveEnemyDamage {
   result = Binding
   body = {
     let = { into = before value = field(target, Enemy.Hp) }
-    if = { condition = lessOrEqual(before, 0) then = { return = { value = none } } }
+    if = { condition = not(pureCall(EnemyIsActive, target)) then = { return = { value = none } } }
     let = { into = hit value = 0 }
     if = { condition = not(isNone(attack)) then = { let = { into = hit value = field(attack, Attack.Hit) } } }
     create = { type = DamageResult scope = entityScope(target) into = result collection = DamageResults fields = {

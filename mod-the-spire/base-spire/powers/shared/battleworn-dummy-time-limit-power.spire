@@ -1,0 +1,38 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Locked BattlewornDummyTimeLimitPower keeps amount 1 when it expires.
+template BattlewornDummyTimerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:battleworn-dummy-time-limit-power" } }
+  entity State { fields = {
+    Power = { type = Ref(Power) visibility = Hidden }
+    Expired = { type = Bool default = false visibility = Hidden }
+  } }
+  procedure Created { parameters = { power = Ref(Power) } locals = { state = Binding } body = {
+    if = { condition = equal(field(power, Power.DefinitionId), "base-spire:battleworn-dummy-time-limit-power") then = {
+      if = { condition = isNone(field(power, Power.HolderEnemy)) then = { fail = { message = "unsupported_capability: dummy timer requires an enemy holder" } } }
+      create = { type = State scope = entityScope(power) into = state fields = { Power = power } }
+    } }
+  } }
+  subscription Created { event = PowerCreated reaction = Created }
+  procedure Removed { parameters = { power = Ref(Power) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Power), power)) item = state body = { destroy = { target = state } } }
+  } }
+  subscription Removed { event = PowerRemoved reaction = Removed }
+  procedure Tick { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+    if = { condition = greater(field(listener, Power.Stacks), 1) then = {
+      call = { procedure = ModifyPowerAmount args = { power = listener delta = -1 } }
+    } else = {
+      set = { target = first(where(type(State), s, equal(field(s, State.Power), listener))) field = State.Expired value = true }
+    } }
+  } }
+  subscription Tick {
+    event = AfterEnemyTurnEnded reaction = Tick
+    instances = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "base-spire:battleworn-dummy-time-limit-power"), and(not(isNone(field(p, Power.HolderEnemy))), pureCall(EnemyIsActive, field(p, Power.HolderEnemy)))))
+    instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0
+  }
+  procedure Expired { pure = true parameters = { target = Ref(Enemy) } result = Bool body = {
+    return = { value = exists(where(type(State), s, and(equal(field(field(s, State.Power), Power.HolderEnemy), target), field(s, State.Expired)))) }
+  } }
+} }
+use BattlewornDummyTimeLimitPower { template = BattlewornDummyTimerModule }

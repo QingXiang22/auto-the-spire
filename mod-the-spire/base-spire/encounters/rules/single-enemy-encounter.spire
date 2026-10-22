@@ -11,7 +11,7 @@ procedure CreateEncounterEnemy {
   body = {
     create = {
       type = Enemy scope = frameScope() into = target
-      fields = { DefinitionId = definition Hp = hp MaxHp = hp MoveIndex = 0 Intent = "attack" }
+      fields = { DefinitionId = definition SpawnOrder = count(type(Enemy)) Hp = hp MaxHp = hp MoveIndex = 0 Intent = "attack" }
     }
     return = { value = target }
   }
