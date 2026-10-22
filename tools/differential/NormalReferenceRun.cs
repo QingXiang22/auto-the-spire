@@ -284,6 +284,8 @@ internal sealed class NormalReferenceRun : IDisposable
     {
         var v = new SortedDictionary<string, string>(StringComparer.Ordinal);
         var configuration = NormalReferenceConfiguration.Capture(run, player);
+        var restContext = NormalReferenceRestState.Capture(run);
+        var rest = NormalReferenceRestState.Normalize(restContext);
         void Put(string key, object? value) => v.Add(key, NormalPreflight.Json(value));
         Put("facts.player.hp", player.Creature.CurrentHp); Put("facts.player.max_hp", player.Creature.MaxHp); Put("facts.player.gold", player.Gold);
         Put("visits.phase", Phase); Put("visits.act", run.CurrentActIndex); Put("visits.total_floor", run.TotalFloor);
@@ -318,7 +320,8 @@ internal sealed class NormalReferenceRun : IDisposable
         var active = combat?.Engine.IsInProgress ?? false;
         Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
             active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,
-            active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true, configuration.BaseDraw));
+            active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true, configuration.BaseDraw,
+            rest.RoomUsed, rest.PendingForge));
         // Compare the active combat's counters. The native room retains its completed
         // history during rewards; DSL clears that history before publishing rewards.
         var history = combat?.Engine.State.DamageHistory.Entries.Where(e => ReferenceEquals(e.Receiver, player.Creature) && e.Result.UnblockedDamage > 0).ToArray() ?? [];
@@ -411,6 +414,7 @@ internal sealed class NormalReferenceRun : IDisposable
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 native_configuration = configuration,
+                native_rest_context = restContext,
                 native_reward_policies = rewardObservation?.Evidence,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),

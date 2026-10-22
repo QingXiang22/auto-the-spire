@@ -76,6 +76,18 @@ internal static class NormalRunChecks
         {
             var retained = diagnostic.RootElement.GetProperty("native_player_history");
             var configuration = System.Text.Json.JsonSerializer.Deserialize<NormalRunConfiguration>(diagnostic.RootElement.GetProperty("native_configuration"))!;
+            var rest = System.Text.Json.JsonSerializer.Deserialize<NormalRestContext>(diagnostic.RootElement.GetProperty("native_rest_context"))!;
+            Require(rest.VisitedTypes.SequenceEqual(new[] { "Ancient", "Monster" }) && rest.CurrentRoom == "Monster"
+                && NormalReferenceRestState.Normalize(rest) is { RoomUsed: false, PendingForge: false },
+                "actual first-fight history proves that no rest-site decision has occurred");
+            foreach (var invalid in new[] { rest with { Act = 1 }, rest with { TotalFloor = 3 }, rest with { RoomCount = 2 },
+                rest with { CurrentRoom = "RestSite" }, rest with { VisitedTypes = ["Ancient", "RestSite"] },
+                rest with { VisitedTypes = ["Ancient", "Unknown"] } })
+            {
+                var rejected = false;
+                try { NormalReferenceRestState.Normalize(invalid); } catch (NotSupportedException) { rejected = true; }
+                Require(rejected, "rest-state absence cannot be assumed after unsupported room or history");
+            }
             Require(configuration.BaseDraw == 5 && NormalReferenceConfiguration.Profile(configuration) == "ironclad-a0-fully-unlocked-singleplayer",
                 "actual native unlock state and base draw configuration determine the declared profile");
             foreach (var invalid in new[] { configuration with { Ascension = 1 }, configuration with { Players = 2 },
@@ -294,6 +306,8 @@ internal static class NormalRunChecks
         }
         Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
         Changed(Replace(First("Player"), "AutoDrawPerTurn", WireValue.Str("999")), "public.player");
+        foreach (var name in new[] { "RoomUsed", "PendingForge" })
+            Changed(Replace(First("Player"), name, WireValue.Bool(!NormalPublicObservation.Flag(First("Player"), name))), "public.player");
         if (snapshot.Entities.Any(e => e.KindId.EndsWith(":Power", StringComparison.Ordinal)))
         {
             var power = First("Power");
