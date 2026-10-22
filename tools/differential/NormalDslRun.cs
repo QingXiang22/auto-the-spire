@@ -44,7 +44,8 @@ internal sealed class NormalDslRun : IDisposable
         var factory = typeof(TextRuleProviderSpec).Assembly.GetType("NetTheSpire.Host.TextRuleScenario")!;
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
             [Path.Combine(repository, "mod-the-spire/base-spire/package.json"), null, 4096, null,
-                debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues) : null])!;
+                debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues,
+                    CaptureCandidateReferences: true) : null])!;
         var configured = (ControlHost)setup.GetType().GetProperty("Host")!.GetValue(setup)!;
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
@@ -199,6 +200,8 @@ internal sealed class NormalDslRun : IDisposable
     private NormalAction? TrySemantic(LegalActionDto a) { try { return Semantic(a); } catch (NotSupportedException) { return null; } }
     public NormalBoundary Capture(string kind)
     {
+        if (Engine.Debug is { } diagnostics && !NormalSnapshotChecks.Complete(diagnostics.Capture(), diagnostics.DroppedRecords))
+            throw new NotSupportedException("missing_dimension: incomplete normal event or random candidate history");
         Remember(); var v = new SortedDictionary<string, string>(StringComparer.Ordinal);
         void Put(string key, object? value) => v.Add(key, NormalPreflight.Json(value));
         var player = Instances("Player").Single();

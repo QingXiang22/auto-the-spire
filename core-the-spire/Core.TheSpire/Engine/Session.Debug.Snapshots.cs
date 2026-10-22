@@ -16,6 +16,7 @@ public sealed record SessionDebugEntitySnapshot(InstanceId Instance, string? Typ
 public sealed record SessionDebugSnapshot(IReadOnlyList<SessionDebugValueSnapshot> Values, int ValueCount,
     IReadOnlyList<SessionDebugEntitySnapshot> Entities, bool EntitiesTruncated)
 {
+    public int ReferenceDepth { get; init; }
     public bool Truncated => Values.Count != ValueCount || Values.Any(v => v.Truncated)
         || EntitiesTruncated || Entities.Any(e => e.Truncated);
     public bool Complete => !Truncated && !Entities.Any(e => e.Missing);
@@ -24,7 +25,7 @@ public sealed record SessionDebugSnapshot(IReadOnlyList<SessionDebugValueSnapsho
 public sealed partial class SessionDebugTrace
 {
     private SessionDebugSnapshot? CaptureSnapshot(IReadOnlyList<Value> payload, IEnumerable<InstanceId>? candidates = null,
-        bool rootsTruncated = false)
+        bool rootsTruncated = false, bool captureCandidateReferences = false)
     {
         if (!_options.CaptureValues) return null;
         var remaining = _options.MaxSnapshotValues;
@@ -37,14 +38,26 @@ public sealed partial class SessionDebugTrace
         var entities = new List<SessionDebugEntitySnapshot>();
         var seen = new HashSet<InstanceId>();
         var truncated = rootsTruncated;
-        // Follow only roots in the copied payload/candidate prefix. Fields keep references as IDs;
-        // walking them recursively could retain an entire run and is deliberately unsupported.
+        // Preserve the root candidate prefix before spending any budget on optional references.
         foreach (var instance in candidates ?? PayloadReferences())
+            if (!CopyEntity(instance)) break;
+        if (captureCandidateReferences)
         {
-            if (instance.IsNone || !seen.Add(instance)) continue;
-            if (entities.Count == _options.MaxSnapshotEntities) { truncated = true; break; }
+            // Freeze roots: referenced entities are never traversed again, even through cycles.
+            var roots = entities.ToArray();
+            foreach (var instance in roots.SelectMany(e => e.Fields).SelectMany(f => References(f.Value)))
+                if (!CopyEntity(instance)) break;
+        }
+        return new(values.AsReadOnly(), payload.Count, entities.AsReadOnly(), truncated)
+        { ReferenceDepth = captureCandidateReferences ? 1 : 0 };
+
+        bool CopyEntity(InstanceId instance)
+        {
+            if (instance.IsNone || seen.Contains(instance)) return true;
+            if (entities.Count == _options.MaxSnapshotEntities) { truncated = true; return false; }
+            seen.Add(instance);
             if (!_session.State.Exists(instance))
-            { entities.Add(new(instance, null, Array.Empty<SessionDebugFieldSnapshot>(), 0, true)); continue; }
+            { entities.Add(new(instance, null, Array.Empty<SessionDebugFieldSnapshot>(), 0, true)); return true; }
             var type = _session.RuleSet.Type(_session.State.TypeIdOf(instance));
             var fields = new List<SessionDebugFieldSnapshot>();
             foreach (var field in type.Fields)
@@ -53,8 +66,15 @@ public sealed partial class SessionDebugTrace
                 fields.Add(new(field.Name, CopyValue(_session.State.GetField(instance, field.Index), ref remaining)));
             }
             entities.Add(new(instance, type.QualifiedId, fields.AsReadOnly(), type.Fields.Count, false));
+            return true;
         }
-        return new(values.AsReadOnly(), payload.Count, entities.AsReadOnly(), truncated);
+
+        static IEnumerable<InstanceId> References(SessionDebugValueSnapshot value)
+        {
+            if (value.Kind == ValueKind.Ref) yield return new(int.Parse(value.Scalar!, CultureInfo.InvariantCulture));
+            else if (value.Kind == ValueKind.RefList)
+                foreach (var id in value.Items!) yield return new((int)id);
+        }
 
         IEnumerable<InstanceId> PayloadReferences()
         {

@@ -108,6 +108,82 @@ internal static class DebugSnapshotChecks
                 Check.Throws<EngineFaultException>(() => New(options), "invalid snapshot budget rejected");
         });
 
+        Check.Run("DEBUG candidate references retain one bounded historical layer without expanding events", () =>
+        {
+            var linked = new RuleSetBuilder().Add(EngineDslCompiler.Compile("""
+                using namespace linked-copy; dsl_version = "core/0.3"
+                entity Node { fields = {
+                  Name = { type = String default = "original" }
+                  Next = { type = Ref(Node) optional = true }
+                  Links = { type = List(Ref(Node), length = 4) }
+                } }
+                collection Roots { element = Node ordered = true }
+                event Seen { payload = { node = Ref(Node) } }
+                action Run { locals = { picked = Binding definition = Binding } body = {
+                  samplePick = { stream = "test" candidates = collection(Roots) into = picked }
+                  emit = { event = Seen payload = { node = picked } }
+                  let = { into = definition value = field(picked, Node.Next) }
+                  set = { target = definition field = Node.Name value = "changed" }
+                  forEach = { query = collection(Roots) item = root body = { destroy = { target = root } } }
+                  destroy = { target = definition }
+                } }
+                """)).Build();
+            (Session Session, InstanceId[] Roots, InstanceId Definition, InstanceId Deep) Create(SessionDebugOptions? options)
+            {
+                var session = new Session(linked, 42, ["player"], debug: options); session.Start();
+                var type = linked.Types.Single();
+                var roots = Enumerable.Range(0, 2).Select(_ => session.State.CreateInstance(type.Id, session.State.RootScope)).ToArray();
+                var definition = session.State.CreateInstance(type.Id, session.State.RootScope);
+                var deep = session.State.CreateInstance(type.Id, session.State.RootScope);
+                foreach (var root in roots)
+                {
+                    session.State.SetField(root, type.FieldIndex("Next"), Value.OfRef(definition));
+                    session.State.AddToCollection(linked.Collections.Single().Id, root);
+                }
+                session.State.SetField(roots[0], type.FieldIndex("Links"), Value.OfRefs(definition, definition));
+                session.State.SetField(definition, type.FieldIndex("Next"), Value.OfRef(deep));
+                session.State.SetField(definition, type.FieldIndex("Links"), Value.OfRefs(roots[0]));
+                return (session, roots, definition, deep);
+            }
+            var plain = Create(null); plain.Session.Submit(linked.Actions.Single(), plain.Session.Participant(0), []);
+            foreach (var options in new[] { new SessionDebugOptions(CaptureValues: true),
+                new(CaptureValues: true, CaptureCandidateReferences: true),
+                new(CaptureValues: true, CaptureCandidateReferences: true, MaxSnapshotEntities: 2),
+                new(CaptureValues: true, CaptureCandidateReferences: true, MaxSnapshotValues: 10),
+                new(CaptureValues: true, CaptureCandidateReferences: true, MaxCandidates: 1),
+                new(CaptureCandidateReferences: true), new(CaptureValues: true, CaptureCandidateReferences: true, MaxRecords: 1) })
+            {
+                var sample = Create(options); var s = sample.Session;
+                s.Submit(linked.Actions.Single(), s.Participant(0), []);
+                Check.Equal(plain.Session.Identity, s.Identity, "reference copying preserves identity");
+                Check.Equal(plain.Session.State.StateHash(), s.State.StateHash(), "reference copying preserves real changes and destruction");
+                Check.Sequence(plain.Session.Random.Diagnostics(), s.Random.Diagnostics(), "reference copying preserves draws");
+                if (!options.CaptureValues || options.MaxRecords == 1)
+                { Check.True(s.Debug!.Records.All(r => r.Snapshot is null), "disabled values or record exhaustion creates no snapshots"); continue; }
+                var snapshot = s.Debug!.Records.Single(r => r.Random is not null).Snapshot!;
+                Check.Sequence(sample.Roots.Take(options.MaxCandidates), snapshot.Entities.Take(Math.Min(2, options.MaxCandidates)).Select(e => e.Instance), "root order has priority over references");
+                Check.Equal(options.CaptureCandidateReferences ? 1 : 0, snapshot.ReferenceDepth, "requested reference boundary explicit");
+                if (!options.CaptureCandidateReferences)
+                    Check.Equal(2, snapshot.Entities.Count, "old calls copy only root candidates");
+                else if (options.MaxSnapshotEntities == 2 || options.MaxSnapshotValues == 10 || options.MaxCandidates == 1)
+                    Check.False(snapshot.Complete, "entity, value or root prefix loss remains explicit");
+                else
+                {
+                    Check.True(snapshot.Complete, "one layer copied completely");
+                    Check.Equal(3, snapshot.Entities.Count, "shared and cyclic references deduplicate");
+                    var definition = snapshot.Entities.Single(e => e.Instance == sample.Definition);
+                    Check.Equal("original", definition.Fields.Single(f => f.Name == "Name").Value.Scalar, "indirect value survives its later rewrite and destruction");
+                    Check.False(s.State.Exists(sample.Definition), "definition actually destroyed");
+                    Check.DoesNotContain(snapshot.Entities, e => e.Instance == sample.Deep, "second reference layer is not traversed");
+                    var before = s.Debug.Capture(); _ = s.Debug.Capture();
+                    Check.Sequence(before, s.Debug.Capture(), "pulls cannot mutate indirect snapshots");
+                    var emitted = s.Debug.Records.Single(r => r.Kind == SessionDebugKind.EventEmit).Snapshot!;
+                    Check.Equal(0, emitted.ReferenceDepth, "event rule remains direct payload references");
+                    Check.Equal(1, emitted.Entities.Count, "candidate option never expands event graphs");
+                }
+            }
+        });
+
         Check.Run("DEBUG value copying is opt-in, pull-only and isolated without changing gameplay or RNG", () =>
         {
             var sessions = new[] { New(null), New(new()), New(new(CaptureValues: true)), New(new(CaptureValues: true)) };
