@@ -20,7 +20,7 @@ public sealed partial class Session
         _stack.Add(new DispatchActivation(eventType, listeners, payload, inheritedScope));
         if (Debug is not null)
             Trace(SessionDebugKind.EventEmit, eventType.QualifiedId,
-                $"scope={inheritedScope}; listeners={listeners.Length}; payload=[{string.Join(',', payload)}]");
+                $"scope={inheritedScope}; listeners={listeners.Length}; payload=[{string.Join(',', payload)}]", payload: payload);
     }
 
     private ListenerActivation[] SnapshotListeners(EventDefinition eventType, Value[] payload, ScopeId scope)
@@ -118,7 +118,10 @@ public sealed partial class Session
 
                 return Value.Of(answer.Number);
 
-            case DecisionResponseKind.Bool or DecisionResponseKind.Confirm:
+            case DecisionResponseKind.Confirm:
+                if (!answer.Flag) throw Faults.Of(EngineFaultCode.InvalidDecisionResponse, "confirmation requires an affirmative answer");
+                return Value.Of(true);
+            case DecisionResponseKind.Bool:
                 return Value.Of(answer.Flag);
 
             case DecisionResponseKind.Enum:

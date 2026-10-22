@@ -9,9 +9,16 @@ event ModifyCardKeyword { payload = { value = Bool card = Ref(Card) keyword = St
 event ShouldFlushHand { payload = { value = Bool owner = Ref(Player) } }
 event ShouldTriggerEthereal { payload = { value = Bool owner = Ref(Player) card = Ref(Card) } }
 event ShouldPlayCard { payload = { value = Bool owner = Ref(Player) card = Ref(Card) auto = Bool } }
+event CardHasTurnEndInHandEffect { payload = { value = Bool card = Ref(Card) } }
+event CardTurnEndInHandEffect { payload = { owner = Ref(Player) card = Ref(Card) } }
 
 entity HandFlushBatch { fields = { Owner = { type = Ref(Player) visibility = Hidden } } }
 entity HandFlushEntry { fields = { Batch = { type = Ref(HandFlushBatch) visibility = Hidden } Card = { type = Ref(Card) visibility = Hidden } } }
+entity TurnEndHandEntry { fields = {
+  Batch = { type = Ref(HandFlushBatch) visibility = Hidden }
+  Card = { type = Ref(Card) visibility = Hidden }
+  Effect = { type = Bool visibility = Hidden }
+} }
 
 procedure CardPlayAllowed {
   pure = true parameters = { owner = Ref(Player) card = Ref(Card) auto = Bool } result = Bool
@@ -68,14 +75,38 @@ procedure DiscardCombatCard {
     emit = { event = CardDiscarded payload = { owner = owner card = card } }
   }
 }
-# Each forEach freezes its query. Ethereal reactions can draw cards; those new cards are not exhausted.
+# Freeze effect cards and other ethereal cards together, before any reactions can draw or move cards.
 # Flush commits its whole selected batch before any movement callbacks, like CardPileCmd.Add(batch).
 procedure FinishTurnHand {
-  parameters = { owner = Ref(Player) } locals = { flush = Bool batch = Binding entry = Binding }
+  parameters = { owner = Ref(Player) } locals = { flush = Bool batch = Binding entry = Binding effect = Bool effectCard = Binding }
   body = {
-    forEach = { query = where(collection(Hand), c, and(pureCall(CardHasKeyword, c, "ethereal"), foldEvent(ShouldTriggerEthereal, true, owner, c))) item = card body = {
-      if = { condition = and(field(owner, Player.CombatActive), greaterOrEqual(collectionIndex(Hand, card), 0)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = card } } } }
+    create = { type = HandFlushBatch scope = entityScope(owner) into = batch fields = { Owner = owner } }
+    forEach = { query = collection(Hand) item = candidate body = {
+      let = { into = effect value = foldEvent(CardHasTurnEndInHandEffect, false, candidate) }
+      if = { condition = or(effect, and(pureCall(CardHasKeyword, candidate, "ethereal"), foldEvent(ShouldTriggerEthereal, true, owner, candidate))) then = {
+        create = { type = TurnEndHandEntry scope = entityScope(batch) into = entry fields = { Batch = batch Card = candidate Effect = effect } }
+      } }
     } }
+    forEach = { query = where(type(TurnEndHandEntry), e, and(equal(field(e, TurnEndHandEntry.Batch), batch), not(field(e, TurnEndHandEntry.Effect)))) item = selected body = {
+      if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
+        call = { procedure = ExhaustCombatCard args = { owner = owner card = field(selected, TurnEndHandEntry.Card) } }
+      } }
+      destroy = { target = selected }
+    } }
+    forEach = { query = where(type(TurnEndHandEntry), e, equal(field(e, TurnEndHandEntry.Batch), batch)) item = selected body = {
+      let = { into = effectCard value = field(selected, TurnEndHandEntry.Card) }
+      if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
+        call = { procedure = MoveCombatCard args = { owner = owner card = effectCard to = "play" reason = "turn-end-effect" } }
+      } }
+      emit = { event = CardTurnEndInHandEffect payload = { owner = owner card = effectCard } }
+      if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
+        if = { condition = pureCall(CardHasKeyword, effectCard, "ethereal") then = {
+          call = { procedure = ExhaustCombatCard args = { owner = owner card = effectCard } }
+        } else = { call = { procedure = MoveCombatCard args = { owner = owner card = effectCard to = "discard" reason = "turn-end-effect" } } } }
+      } }
+      destroy = { target = selected }
+    } }
+    destroy = { target = batch }
     if = { condition = field(owner, Player.CombatActive) then = {
       emit = { event = BeforeHandFlush payload = { owner = owner } }
       let = { into = flush value = foldEvent(ShouldFlushHand, true, owner) }

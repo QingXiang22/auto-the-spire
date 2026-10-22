@@ -1,0 +1,125 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure MapHorizontalGap {
+  pure = true parameters = { run = Ref(Run) node = Ref(MapNode) col = Int } result = Int
+  locals = { gap = Int distance = Int }
+  body = {
+    let = { into = gap value = 2147483647 }
+    forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(equal(field(n, MapNode.Row), field(node, MapNode.Row)), not(equal(n, node)))))) item = other body = {
+      let = { into = distance value = subtract(col, field(other, MapNode.Col)) }
+      let = { into = gap value = minimum(gap, maximum(distance, subtract(0, distance))) }
+    } }
+    return = { value = gap }
+  }
+}
+procedure MapColumnAllowed {
+  pure = true parameters = { node = Ref(MapNode) col = Int } result = Bool
+  body = {
+    forEach = { query = relation(MapParents, node) item = neighbor body = {
+      if = { condition = or(less(col, subtract(field(neighbor, MapNode.Col), 1)), greater(col, add(field(neighbor, MapNode.Col), 1))) then = { return = { value = false } } }
+    } }
+    forEach = { query = relation(MapChildren, node) item = neighbor body = {
+      if = { condition = or(less(col, subtract(field(neighbor, MapNode.Col), 1)), greater(col, add(field(neighbor, MapNode.Col), 1))) then = { return = { value = false } } }
+    } }
+    return = { value = true }
+  }
+}
+procedure CenterSourceMap {
+  parameters = { run = Ref(Run) }
+  locals = { leftEmpty = Bool rightEmpty = Bool shift = Int }
+  body = {
+    let = { into = leftEmpty value = not(exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), and(less(field(n, MapNode.Row), 16), less(field(n, MapNode.Col), 2)))))))) }
+    let = { into = rightEmpty value = not(exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), and(less(field(n, MapNode.Row), 16), greater(field(n, MapNode.Col), 4)))))))) }
+    let = { into = shift value = 0 }
+    if = { condition = and(leftEmpty, not(rightEmpty)) then = { let = { into = shift value = -1 } } }
+    if = { condition = and(not(leftEmpty), rightEmpty) then = { let = { into = shift value = 1 } } }
+    if = { condition = not(equal(shift, 0)) then = {
+      forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), less(field(n, MapNode.Row), 16))))) item = node body = {
+        set = { target = node field = MapNode.Col value = add(field(node, MapNode.Col), shift) }
+      } }
+    } }
+  }
+}
+procedure SpreadSourceMapRow {
+  parameters = { run = Ref(Run) row = Int }
+  locals = { items = Binding changed = Bool col = Int candidate = Int best = Int gap = Int bestGap = Int node = Binding }
+  body = {
+    create = { type = MapWorkGroup scope = entityScope(run) into = items }
+    forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), equal(field(n, MapNode.Row), row)))), n, field(n, MapNode.Col)) item = item body = { call = { procedure = AddMapWork args = { group = items node = item value = 0 } } } }
+    repeat = { count = 1000 body = {
+      let = { into = changed value = false }
+      forEach = { query = sort(relation(MapWorkItems, items), w, field(w, MapWork.Position)) item = item body = {
+        let = { into = node value = field(item, MapWork.Node) }
+        let = { into = col value = field(node, MapNode.Col) }
+        let = { into = best value = col }
+        let = { into = bestGap value = pureCall(MapHorizontalGap, run, node, col) }
+        let = { into = candidate value = 0 }
+        repeat = { count = 7 body = {
+          if = { condition = and(not(equal(candidate, col)), and(pureCall(MapColumnAllowed, node, candidate), isNone(pureCall(SourceMapPoint, run, candidate, row)))) then = {
+            let = { into = gap value = pureCall(MapHorizontalGap, run, node, candidate) }
+            if = { condition = greater(gap, bestGap) then = { let = { into = best value = candidate } let = { into = bestGap value = gap } } }
+          } }
+          let = { into = candidate value = add(candidate, 1) }
+        } }
+        if = { condition = not(equal(best, col)) then = { set = { target = node field = MapNode.Col value = best } let = { into = changed value = true } } }
+      } }
+      if = { condition = not(changed) then = { call = { procedure = DestroyMapWork args = { group = items } } return = {} } }
+    } }
+    fail = { message = "Source map layout did not converge" }
+  }
+}
+procedure StraightenSourceMap {
+  parameters = { run = Ref(Run) }
+  locals = { row = Int col = Int node = Binding parent = Binding child = Binding shift = Int }
+  body = {
+    let = { into = row value = 0 }
+    repeat = { count = 16 body = {
+      let = { into = col value = 0 }
+      repeat = { count = 7 body = {
+        let = { into = node value = pureCall(SourceMapPoint, run, col, row) }
+        if = { condition = and(not(isNone(node)), and(not(equal(row, 0)), and(equal(count(relation(MapParents, node)), 1), equal(count(relation(MapChildren, node)), 1)))) then = {
+          let = { into = parent value = first(relation(MapParents, node)) }
+          let = { into = child value = first(relation(MapChildren, node)) }
+          let = { into = shift value = 0 }
+          if = { condition = and(less(col, field(parent, MapNode.Col)), and(less(col, field(child, MapNode.Col)), less(col, 6))) then = { let = { into = shift value = 1 } } }
+          if = { condition = and(greater(col, field(parent, MapNode.Col)), and(greater(col, field(child, MapNode.Col)), greater(col, 0))) then = { let = { into = shift value = -1 } } }
+          if = { condition = and(not(equal(shift, 0)), isNone(pureCall(SourceMapPoint, run, add(col, shift), row))) then = { set = { target = node field = MapNode.Col value = add(col, shift) } } }
+        } }
+        let = { into = col value = add(col, 1) }
+      } }
+      let = { into = row value = add(row, 1) }
+    } }
+  }
+}
+procedure GenerateSourceActOneMap {
+  parameters = { owner = Ref(Player) run = Ref(Run) }
+  locals = { start = Binding boss = Binding rest = Int unknown = Int row = Int }
+  body = {
+    seedStream64 = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
+    call = { procedure = SourceGaussianInt args = { stream = "base-spire:run:act_1_map" mean = 7 deviation = 1 min = 6 max = 7 } into = rest }
+    call = { procedure = SourceGaussianInt args = { stream = "base-spire:run:act_1_map" mean = 12 deviation = 1 min = 10 max = 14 } into = unknown }
+    set = { target = run field = Run.RestCount value = rest }
+    set = { target = run field = Run.UnknownCount value = unknown }
+    call = { procedure = GetOrCreateMapPoint args = { run = run col = 3 row = 0 } into = start }
+    call = { procedure = GetOrCreateMapPoint args = { run = run col = 3 row = 16 } into = boss }
+    set = { target = start field = MapNode.Kind value = 8 }
+    set = { target = boss field = MapNode.Kind value = 7 }
+    set = { target = start field = MapNode.Visited value = true }
+    call = { procedure = GenerateSourceMapPaths args = { run = run start = start boss = boss } }
+    call = { procedure = AssignSourceMapKinds args = { run = run } }
+    call = { procedure = PruneAndRepairSourceMap args = { run = run start = start } }
+    call = { procedure = CenterSourceMap args = { run = run } }
+    let = { into = row value = 1 }
+    repeat = { count = 15 body = { call = { procedure = SpreadSourceMapRow args = { run = run row = row } } let = { into = row value = add(row, 1) } } }
+    call = { procedure = StraightenSourceMap args = { run = run } }
+    forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), field(n, MapNode.Removed))) item = node body = { destroy = { target = node } } }
+    call = { procedure = PublishSourceMapTypes args = { run = run } }
+    forEach = { query = relation(MapChildren, start) item = node body = { set = { target = node field = MapNode.Selectable value = true } } }
+    set = { target = run field = Run.MapNodeCount value = count(where(collection(MapNodes), n, equal(field(n, MapNode.Run), run))) }
+    set = { target = run field = Run.CurrentNode value = start }
+    set = { target = run field = Run.MapFloor value = 0 }
+    set = { target = run field = Run.Phase value = "map" }
+    set = { target = owner field = Player.Room value = "map" }
+  }
+}

@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.45",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.57",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -31,6 +31,7 @@
         "base-spire:black-blood",
         "base-spire:captains-wheel",
         "base-spire:centennial-puzzle",
+        "base-spire:charons-ashes",
         "base-spire:fake-lees-waffle",
         "base-spire:kunai",
         "base-spire:lees-waffle",
@@ -65,8 +66,10 @@
         "base-spire:paper-phrog",
         "base-spire:paper-krane",
         "base-spire:self-forming-clay",
+        "base-spire:tough-bandages",
         "base-spire:akabeko",
-        "base-spire:pen-nib"
+        "base-spire:pen-nib",
+        "base-spire:booming-conch"
       ]
     },
     "base-spire:Enemy": {
@@ -74,6 +77,8 @@
       "content_ids": [
         "base-spire:development-target",
         "base-spire:fuzzy-wurm-crawler",
+        "base-spire:leaf-slime-s",
+        "base-spire:leaf-slime-m",
         "base-spire:twig-slime-m",
         "base-spire:twig-slime-s",
         "base-spire:assassin-ruby-raider",
@@ -82,7 +87,11 @@
         "base-spire:stabbot",
         "base-spire:axe-ruby-raider",
         "base-spire:crossbow-ruby-raider",
-        "base-spire:tracker-ruby-raider"
+        "base-spire:tracker-ruby-raider",
+        "base-spire:battle-friend-v1",
+        "base-spire:battle-friend-v2",
+        "base-spire:battle-friend-v3",
+        "base-spire:wriggler"
       ]
     },
     "base-spire:Card": {
@@ -133,6 +142,7 @@
         "base-spire:hemokinesis",
         "base-spire:howl-from-beyond",
         "base-spire:impervious",
+        "base-spire:infection",
         "base-spire:infernal-blade",
         "base-spire:inferno",
         "base-spire:inflame",
@@ -238,6 +248,7 @@
       "content_ids": [
         "base-spire:aggression-power",
         "base-spire:barricade",
+        "base-spire:battleworn-dummy-time-limit-power",
         "base-spire:colossus-power",
         "base-spire:corruption-power",
         "base-spire:crimson-mantle-power",
@@ -297,29 +308,24 @@
       "owner_kind_type_id": "base-spire:Player"
     },
     "base-spire:Hand": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:HandView"
     },
     "base-spire:DrawPile": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:DrawPileView"
     },
     "base-spire:DiscardPile": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Development draw objects have no normal card or known-position contract. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:DiscardPileView"
     },
     "base-spire:InPlay": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "The development in-play pile exists only while a card resolves; no vanilla play-history contract is migrated. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:InPlayView"
     },
     "base-spire:ExhaustPile": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Only the development Exhaust card keyword feeds this pile; no vanilla exhaust-history contract is migrated. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:ExhaustPileView"
     },
     "base-spire:Powers": {
       "use": "not_published",
@@ -336,13 +342,12 @@
       "reason": "Temporary encounter candidate pool; entries only exist while a development formation is being spawned and are cleared before it returns."
     },
     "base-spire:RemovedFromCombat": {
-      "use": "not_published",
-      "rule_id": "DB-DEVELOPMENT-PILES",
-      "reason": "Resolved Power combat copies remain here until the next rebuild; permanent instances live separately in RunDeck. Public counts and entities remain declaration-derived."
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:RemovedFromCombatView"
     },
     "base-spire:RunDeck": {
-      "use": "group",
-      "owner_kind_type_id": "base-spire:Player"
+      "use": "pile",
+      "pile_kind_type_id": "base-spire:RunDeckView"
     },
     "base-spire:CardPlays": {
       "use": "not_published",
@@ -386,6 +391,14 @@
     "base-spire:PotionRewardOptions": {
       "use": "group",
       "owner_kind_type_id": "base-spire:Player"
+    },
+    "base-spire:MapNodes": {
+      "use": "sequence",
+      "owner_kind_type_id": "base-spire:Run"
+    },
+    "base-spire:RunVisits": {
+      "use": "sequence",
+      "owner_kind_type_id": "base-spire:Run"
     }
   },
   "terminal_outcomes": {},

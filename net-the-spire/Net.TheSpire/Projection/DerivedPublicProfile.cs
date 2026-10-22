@@ -119,6 +119,7 @@ public static class DerivedPublicProfile
                               Short(WireCanonical.Digest(WireValue.Object(
                                   ("canonical_version", WireValue.Str(WireCanonical.CanonicalVersion)),
                                   ("kind", WireValue.Str("derived-engine-simulation")),
+                                  ("observation_version", WireValue.Str("settled-control-boundary-v1")),
                                   ("projection_and_catalog", WireValue.Str(projectionAndCatalog))))),
             kinds: kinds,
             collections: collections,

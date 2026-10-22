@@ -19,6 +19,7 @@ entity Player {
     # Development combat outcome: none while it runs, then victory or defeat. Run settlement, rewards and
     # the true engine terminal are not migrated.
     CombatOutcome = { type = String(length = 16) default = "none" }
+    CombatTimedOut = { type = Bool default = false }
     # Development stand-ins for the source's per-turn combat history (Spite, EvilEye). Both reset at turn start.
     LostHpThisTurn = { type = Bool default = false }
     ExhaustedCardThisTurn = { type = Bool default = false }
@@ -31,9 +32,12 @@ entity Player {
     # Opt-in permanent deck for this development scope. A normal character setup is not migrated.
     UsesRunDeck = { type = Bool default = false }
     CharacterId = { type = String(length = 64) default = "none" }
+    CurrentRun = { type = Ref(Run) optional = true }
     AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
     AttackDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     DamageDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    EffectDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    EnemyDiedInCombat = { type = Bool default = false visibility = Hidden }
     PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     PlaySequence = { type = Int default = 0 }
     CardActionNumber = { type = Int default = 0 visibility = Hidden }
@@ -65,6 +69,11 @@ entity Enemy {
     Hp = { type = Int(min = 0, max = 999999) default = 0 }
     MaxHp = { type = Int(min = 0, max = 999999) default = 0 }
     Block = { type = Int(min = 0, max = 999) default = 0 }
+    # Ordinary confirmed death detaches the source creature before Power removal callbacks.
+    # Keep the instance for damage/play references; non-death escape has its own flag.
+    DeathResolved = { type = Bool default = false visibility = Hidden }
+    Escaped = { type = Bool default = false }
+    SpawnOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
     # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
     MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
     # Saved source node for migrated move graphs; observations never roll another move.

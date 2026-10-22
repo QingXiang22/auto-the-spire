@@ -48,6 +48,27 @@ def main() -> int:
     args.output.mkdir(parents=True, exist_ok=True)
     try:
         projects = check_projects()
+        lock = json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8"))
+        fixtures = ROOT / "tools/base-spire-dev/fixtures"
+        current_vectors = ["source-rng-vectors", "normal-reward-vectors", "enemy-move-vectors", "pickup-upgrade-vectors",
+                           "normal-opening-vectors", "act-one-map-vectors", "map-gaussian-vectors", "normal-combat-vectors",
+                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata"]
+        hashes = {}
+        for name in current_vectors:
+            vector = json.loads((fixtures / (name + ".json")).read_text(encoding="utf-8"))
+            if vector.get("reference_lock") != lock or vector.get("source_hash_encoding") != "utf8-lf":
+                raise ValueError(f"{name}: current vectors must identify the actual locked reference")
+            for path, digest in vector.get("source_sha256", {}).items():
+                if path in hashes and hashes[path] != digest:
+                    raise ValueError(f"conflicting current source digest: {path}")
+                hashes[path] = digest
+            if name == "ironclad-source-metadata":
+                for row in vector["entries"]:
+                    hashes["reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/" + row["name"] + ".cs"] = row["source_sha256"]
+        for path, digest in hashes.items():
+            source = (ROOT / path).resolve()
+            if not source.is_relative_to((ROOT / "reference/sts2-sim/src/Sts2Sim.Core").resolve()) or hashlib.sha256(source.read_bytes().replace(b'\r\n', b'\n')).hexdigest() != digest:
+                raise ValueError(f"current vector source differs from locked checkout: {path}")
         record = json.loads((ROOT / "tools/ci/fixtures/legacy-dsl-checks.json").read_text(encoding="utf-8"))
         if record.get("hash_encoding") != "utf8-lf":
             raise ValueError("retired-source hashes must declare canonical text encoding")
@@ -64,6 +85,19 @@ def main() -> int:
             active = ROOT / row["active_definition"]
             if source_hash(active) != row["sha256"]:
                 raise ValueError(f"changed original suite denominator: {active}")
+            definition = json.loads(active.read_text(encoding="utf-8"))
+            if definition["expected_case_ids"] != row["expected_case_ids"]:
+                raise ValueError(f"original required case IDs changed: {active}")
+            if "previous_definition_sha256" in row:
+                original_path = ROOT / row["source"]
+                if source_hash(original_path) != row["previous_definition_sha256"]:
+                    raise ValueError("missing original suite evidence before derivation metadata migration")
+                migrated = next(c for c in definition["cases"] if c["id"] == "random-reshuffle-unsupported")
+                if migrated["setup"]["initial_piles"]["rng_derivation"] != "locked-native-sequential@1":
+                    raise ValueError("reshuffle fixture must name its actual native derivation")
+                migrated["setup"]["initial_piles"]["rng_derivation"] = "source-compat-sts2-frozen@1"
+                if definition != json.loads(original_path.read_text(encoding="utf-8")):
+                    raise ValueError("derivation metadata migration changed original inputs, scripts or dimensions")
         executable = ROOT / f"tools/differential/bin/{args.configuration}/net9.0/Differential.dll"
 
         def run(name: str, arguments: list[str], expected_code: int, dll: Path = executable) -> dict | None:
@@ -80,6 +114,20 @@ def main() -> int:
             if process.returncode != expected_code:
                 raise ValueError(f"{name}: expected exit {expected_code}, got {process.returncode}; see {folder / 'command.log'}")
             return json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+
+        dummy = run("battle-friend", ["battle-friend-compare", "--output", str(args.output / "battle-friend")], 0)
+        if (dummy is None or dummy["status"] != "passed" or dummy["independent_verified"] is not True
+                or dummy["normal_run_verified"] is not False or dummy["parent_event_verified"] is not False
+                or len(dummy["cases"]) != 13 or any(c["status"] != "passed" for c in dummy["cases"])):
+            raise ValueError("BattleFriend controlled component comparison did not execute all required cases")
+
+        wriggler = run("wriggler", ["wriggler-compare", "--output", str(args.output / "wriggler")], 0)
+        wriggler_cases = [seed + ":" + mode for seed in ("777", "A😀B")
+                          for mode in ("four", "stunned", "hp-exhausted", "block", "unpowered", "death", "retain", "ethereal", "auto", "force-auto", "cost", "nonhand")]
+        if (wriggler is None or wriggler["status"] != "passed" or wriggler["independent_verified"] is not True
+                or wriggler["normal_run_verified"] is not False or wriggler["parent_event_verified"] is not False
+                or [c["id"] for c in wriggler["cases"]] != wriggler_cases or any(c["status"] != "passed" for c in wriggler["cases"])):
+            raise ValueError("Wriggler/Infection controlled component comparison did not execute all required cases")
 
         for row in record["suites"]:
             definition = json.loads((ROOT / row["active_definition"]).read_text(encoding="utf-8"))
@@ -105,21 +153,23 @@ def main() -> int:
                             or len(backend["boundaries"][-1]["random"]["calls"]) != 9
                             or any(b["random"]["dropped"] or b["random"]["truncated"] for b in backend["boundaries"])):
                         raise ValueError("random case did not extract all real original reshuffle calls")
-                spec = importlib.util.spec_from_file_location("source_rng_oracle", ROOT / "tools/rng-oracle/vanilla_rng_oracle.py")
+                import sys
+                sys.path.insert(0, str(ROOT / "tools/rng-oracle"))
+                spec = importlib.util.spec_from_file_location("source_rng_oracle", ROOT / "tools/rng-oracle/locked_rng_oracle.py")
                 oracle = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(oracle)
                 initialization = reshuffle["right"]["initialization"]
                 raw_seed = initialization["raw_game_seed"]
-                if initialization["source_run_seed"] != oracle.run_seed(raw_seed):
+                if initialization["source_run_seed"] != oracle.deterministic_hash_code(raw_seed):
                     raise ValueError("reference source profile root differs from independent oracle")
                 if {row["source"] for row in initialization["run_streams"]} != set(oracle.RUN_RNG_TYPES):
                     raise ValueError("reference source profile omitted a run stream")
                 for row in initialization["run_streams"]:
-                    if row["seed"] != oracle.stream_seed(oracle.run_seed(raw_seed), row["source"]):
+                    if row["seed"] != oracle.stream_seed(oracle.deterministic_hash_code(raw_seed), row["source"]):
                         raise ValueError(f"reference stream derivation differs from independent oracle: {row['source']}")
                 # Verify actual extracted calls against independent source vectors, not only agreeing adapters.
                 for side in ("left", "right"):
-                    source_rng = oracle.Rng(oracle.stream_seed(oracle.run_seed(raw_seed), "Shuffle"))
+                    source_rng = oracle.Rng(oracle.stream_seed(oracle.deterministic_hash_code(raw_seed), "Shuffle"))
                     calls = reshuffle[side]["boundaries"][-1]["random"]["calls"]
                     for index, call in enumerate(calls):
                         bound = 10 - index
@@ -139,6 +189,48 @@ def main() -> int:
         if partial["complete"] or partial["independent_verified"] or partial["cases"][0]["status"] != "passed":
             raise ValueError("selected case must pass without claiming the entire suite passed")
         run("comparator-checks", ["self-test"], 0)
+        normal_output = args.output / "normal-preflight"
+        normal = run("normal-preflight", ["normal-preflight", "--output", str(normal_output)], 3)
+        if (normal["expected_case_ids"] != ["m01-claim", "m01-skip"] or normal["executed"] != 2
+                or normal["complete"] or normal["independent_verified"]
+                or any(c["status"] != "blocked_compare" or not c["dsl_returned_to_map"]
+                       or c["first_difference"] is not None or c["left"]["facts"] != c["right"]["facts"] or not c["unverified_dimensions"]
+                       or c["right"]["diagnostic"]["normal_compatibility_alignment"] for c in normal["cases"])):
+            raise ValueError("normal preflight must match every opening fact and retain both public returns, while rejecting incomplete M01")
+        whistle = run("whistle", ["whistle-compare", "--output", str(args.output / "whistle")], 0)
+        whistle_cases = [seed + ":" + mode for seed in ("777", "A😀B")
+                         for mode in ("first", "upgraded", "pending-buff", "pending-attack", "random", "two", "lethal", "repeat")]
+        if (whistle is None or whistle["status"] != "passed" or whistle["independent_verified"] is not True
+                or whistle["normal_run_verified"] is not False
+                or [c["id"] for c in whistle["cases"]] != whistle_cases or any(c["status"] != "passed" for c in whistle["cases"])):
+            raise ValueError("Whistle controlled comparison did not execute all required paid-card and stun cases")
+
+        paired_output = args.output / "normal-paired"
+        paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
+        paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]
+        if (paired["expected_case_ids"] != paired_ids or paired["executed"] != 4
+                or [c["id"] for c in paired["cases"]] != paired_ids
+                or paired["complete"] or paired["independent_verified"]
+                or any(c["status"] != "blocked_compare" or c["independent_verified"] or c["complete"]
+                       or c["reason"] or c["first_difference"] or not c["returned_to_map"] or len(c["boundaries"]) < 19
+                       or not c["boundaries"][-1]["left"]["missing_dimensions"]
+                       or len(c["protocol_checks"]) != len(c["boundaries"])
+                       or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
+                       or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
+                       or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
+                              or "events.observed_order" not in b[side]["values"]
+                              or "lifecycle.settlement" not in b[side]["values"]
+                              or any(path not in b[side]["values"] for path in (
+                                  "public.map", "public.run", "public.neow", "public.reward_offer", "public.potion_inventory",
+                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits"))
+                              for b in c["boundaries"] for side in ("left", "right"))
+                       or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
+                              for side in ("left", "right"))
+                       or any(len(json.loads(c["boundaries"][-1][side]["values"]["lifecycle.settlement"])) != 2
+                              for side in ("left", "right"))
+                       or (c["id"].startswith("m01-targeted-")
+                           and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):
+            raise ValueError("all four normal paths must return with matching dimensions, real target decisions and protocol evidence while rejecting incomplete M01")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")
@@ -176,10 +268,23 @@ def main() -> int:
         missing = run("missing-reference", ["test", "--case", "strike-normal"], 3, fallback)
         if missing["executed"] or missing["passed"] or "unsupported_reference_adapter" not in missing["cases"][0]["reason"]:
             raise ValueError("missing reference adapter was not rejected explicitly")
+        absent_output = args.output / "normal-without-reference"
+        absent = run("normal-without-reference", ["normal-preflight", "--output", str(absent_output)], 3, fallback)
+        if (absent["executed"] or absent["complete"] or absent["independent_verified"]
+                or len(absent["cases"]) != 2 or any(c["status"] != "blocked_compare"
+                   or "unsupported_reference_adapter" not in c["reason"] for c in absent["cases"])):
+            raise ValueError("normal preflight must reject a missing native reference and zero execution")
+        absent_paired_output = args.output / "paired-without-reference"
+        absent_paired = run("paired-without-reference", ["normal-compare", "--output", str(absent_paired_output)], 3, fallback)
+        if (absent_paired["executed"] or absent_paired["complete"] or absent_paired["independent_verified"]
+                or absent_paired["expected_case_ids"] != paired_ids or len(absent_paired["cases"]) != 4 or any(c["status"] != "blocked_compare"
+                   or "unsupported_reference_adapter" not in c["reason"] for c in absent_paired["cases"])):
+            raise ValueError("normal paired comparison must reject missing reference and zero execution")
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
-                  "strict_failure_checks": True, "independent_verified": False}
+                  "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01",
+                  "normal_paired": "four-claim-skip-targeted-map-returns; protocol-replay-verified; incomplete-M01", "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

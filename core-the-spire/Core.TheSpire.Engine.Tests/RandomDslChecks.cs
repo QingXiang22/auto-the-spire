@@ -41,7 +41,7 @@ internal static class RandomDslChecks
             RuleSet Rules(string text) => new RuleSetBuilder().Add(EngineDslCompiler.Compile(text)).Build();
             var rules = Rules(source);
             var s = new Session(rules, 1, ["player"], randomAlgorithmId: RandomService.VanillaAlgorithmId,
-                randomDrawProfileId: RandomService.VanillaDrawProfileId);
+                randomDrawProfileId: RandomService.VanillaDrawProfileId, debug: new());
             s.Start();
             // Independent Python source oracle, seed 12345; indices 4,7,8 detect premature float rounding.
             long[] expected = [1076573955, 1046574956, 1080256996, 3185206742, 1073076871, 3196304185,
@@ -51,8 +51,20 @@ internal static class RandomDslChecks
             {
                 s.Submit(s.LegalActions(s.Participant(0)).Single().Definition, s.Participant(0), []);
                 Check.Equal(bits, s.State.GetField(probe, 0).AsInt(), "source ranged float bits");
+                var sample = s.Debug!.Records.Last(r => r.Random is not null).Random!.Float32!;
+                Check.Equal(3197737370L, sample.MinimumBits, "evaluated -0.3 binary32 bound");
+                Check.Equal(1080872141L, sample.MaximumBits, "evaluated 3.7 binary32 bound");
+                Check.Equal(bits, sample.ResultBits, "diagnostic result matches independent oracle");
             }
             Check.Equal(12L, s.Random.DrawCount("source"), "one raw word for each float");
+            var other = new Session(Rules(source.Replace("float32(3.7)", "float32(7.7)")), 1, ["player"],
+                randomAlgorithmId: RandomService.VanillaAlgorithmId, randomDrawProfileId: RandomService.VanillaDrawProfileId, debug: new());
+            other.Start(); other.Submit(other.LegalActions(other.Participant(0)).Single().Definition, other.Participant(0), []);
+            var original = s.Debug!.Records.First(r => r.Random is not null).Random!;
+            var changed = other.Debug!.Records.Single(r => r.Random is not null).Random!;
+            Check.Equal(original.Result, changed.Result, "same raw double for different evaluated ranges");
+            Check.True(original.Float32!.MaximumBits != changed.Float32!.MaximumBits
+                && original.Float32.ResultBits != changed.Float32.ResultBits, "float metadata distinguishes actual range and scaled result");
             Check.True(rules.Identity != Rules(source.Replace("float32(3.7)", "float32(3.8)")).Identity, "range affects rules identity");
             Check.True(rules.Identity != Rules(source.Replace("float32(-0.3)", "float32(-0.4)")).Identity, "minimum affects rules identity");
         });
@@ -70,10 +82,14 @@ internal static class RandomDslChecks
                       if = { condition = not(equal(float32Subtract(float32(0.5), float32(0.25)), float32(0.25))) then = { fail = { message = "subtract" } } }
                     } } start = [Setup]
                     """)).Build();
-                var s = new Session(rules, 1, ["player"]);
+                var s = new Session(rules, 1, ["player"], debug: new());
                 if (valid) s.Start();
                 else Check.Fault(EngineFaultCode.ValueOutOfRange, s.Start, "invalid range before RNG");
                 Check.Equal(valid ? 1L : 0L, s.Random.TotalDraws, "invalid input never samples");
+                var samples = s.Debug!.Records.Where(r => r.Random is not null).ToArray();
+                Check.Equal(valid ? 1 : 0, samples.Length, "only successful float draws are recorded");
+                if (valid) Check.Equal(new Float32SampleDetails(1073741824, 1073741824, 1073741824),
+                    samples.Single().Random!.Float32!, "equal bounds retain their real result and consumption");
             }
         });
         Check.Run("RNG DSL typed seed/float operations execute without decimal quantization", () =>

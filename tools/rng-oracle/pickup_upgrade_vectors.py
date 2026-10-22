@@ -5,17 +5,17 @@ import json
 from pathlib import Path
 import re
 
-from vanilla_rng_oracle import Rng, deterministic_hash_code, stream_seed
+from locked_rng_oracle import Rng, deterministic_hash_code, stream_seed, SOURCE, source_hashes, reference_lock
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def generate():
-    source = ROOT / 'sts2/src/Core'
+    source = SOURCE
     names = ['StrikeIronclad', 'Anger', 'DefendIronclad', 'Bash', 'StrikeIronclad',
              'Armaments', 'Impervious', 'Inflame', 'TwinStrike', 'ShrugItOff',
              'BodySlam', 'Whirlwind', 'Cascade', 'StrikeIronclad']
-    paths = ['Extensions/ListExtensions.cs', 'Models/CardModel.cs', 'Random/Rng.cs',
+    paths = ['Helpers/ListExtensions.cs', 'Models/CardModel.cs', 'Random/Rng.cs',
              'Random/MegaRandom.cs', 'Runs/RunRngSet.cs', 'Helpers/StringHelper.cs']
     paths += [f'Models/Relics/{name}.cs' for name in ['Whetstone', 'WarPaint', 'SandCastle']]
     cards = []
@@ -43,9 +43,8 @@ def generate():
             steps.append(dict(relic=name, selected_indices=selected,
                               upgraded_indices=sorted(upgraded), niche_counter=rng.counter))
         vectors.append(dict(seed=seed, steps=steps))
-    return dict(schema='base-spire/source-pickup-upgrade-vectors@1', cards=cards, vectors=vectors,
-                source_sha256={f'sts2/src/Core/{p}': hashlib.sha256((source / p).read_bytes()).hexdigest()
-                               for p in sorted(set(paths))})
+    return dict(schema='base-spire/source-pickup-upgrade-vectors@2', reference_lock=reference_lock(), source_hash_encoding='utf8-lf', cards=cards, vectors=vectors,
+                source_sha256=source_hashes(sorted(set(paths))))
 
 
 if __name__ == '__main__':

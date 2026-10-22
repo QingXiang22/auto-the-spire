@@ -865,7 +865,7 @@
         "initial_piles": {
           "version": "ordered-starting-piles@1",
           "source": "Ironclad.StartingDeck+controlled-slice@1",
-          "rng_derivation": "source-compat-sts2-frozen@1",
+          "rng_derivation": "locked-native-sequential@1",
           "hand": [],
           "draw": [
             {

@@ -44,6 +44,8 @@ internal static class ComparisonChecks
                 && result.FirstDifference.Dimension == dimension, dimension + " first difference");
         }
         CheckRandom(repository, document.RootElement);
+        NormalPreflightChecks.Run();
+        NormalRunChecks.Run(repository);
         Console.WriteLine("Comparator checks passed: independent execution, missing data, terminal, RNG and four first-difference dimensions.");
         return 0;
     }
@@ -85,9 +87,9 @@ internal static class ComparisonChecks
         Assert(Comparison.Compare(fixture, missing, right).Status == "missing_dimension", "missing trace cannot pass streams");
         Assert(Comparison.Compare(fixture, left, right with { ScriptRandomCount = 10 }).Status == "missing_dimension", "unregistered reference draw cannot vanish");
 #if REFERENCE_SIM
-        Assert(ReferenceRandomTrace.Hash32("A😀B") == 3980066918u, "UTF16 source hash vector");
-        Assert(ReferenceRandomTrace.Hash32(fixture.GameSeed) == 764289779u
-            && ReferenceRandomTrace.SourceSeed(fixture.GameSeed, "shuffle") == 3072570454u, "independent source derivation vector");
+        // Independent locked_rng_oracle.py golden values for the unchanged original game_seed.
+        Assert(new Sts2Sim.Core.Runs.RunRngSet(fixture.GameSeed).Seed == 10353177550043027975UL
+            && ReferenceRandomTrace.SourceSeed(fixture.GameSeed, "shuffle") == 13438661683528184091UL, "independent native-source derivation vector");
 #endif
         Console.WriteLine("Random diagnostic checks passed: real original reshuffle, ordered candidates, parameters, result, position and strict trace-loss failures.");
     }

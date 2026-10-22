@@ -11,6 +11,30 @@ procedure RemovePower {
   } }
  }
 }
+procedure PowerSideTurnEndOrder {
+ pure = true parameters = { power = Ref(Power) } result = Int
+ locals = { group = Int }
+ body = {
+  let = { into = group value = 0 }
+  if = { condition = not(isNone(field(power, Power.HolderEnemy))) then = {
+   let = { into = group value = add(field(field(power, Power.HolderEnemy), Enemy.SpawnOrder), 1) }
+  } }
+  return = { value = add(multiply(group, add(count(collection(Powers)), 1)), collectionIndex(Powers, power)) }
+ }
+}
+procedure RemoveEnemyPowersOnDeath {
+ parameters = { target = Ref(Enemy) }
+ body = {
+  if = { condition = field(target, Enemy.DeathResolved) then = { return = {} } }
+  if = { condition = greater(field(target, Enemy.Hp), 0) then = { fail = { message = "Power death cleanup requires a confirmed zero-HP enemy" } } }
+  # All currently loaded Powers use both source default removal policies. Retention/veto
+  # consumers must implement their source queries before being added to this package.
+  set = { target = target field = Enemy.DeathResolved value = true }
+  forEach = { query = where(collection(Powers), p, equal(field(p, Power.HolderEnemy), target)) item = power body = {
+   call = { procedure = RemovePower args = { power = power } }
+  } }
+ }
+}
 procedure ModifyPowerAmount {
  parameters = { power = Ref(Power) delta = Int }
  body = {
@@ -28,6 +52,9 @@ procedure ApplyPowerWithSource {
   if = { condition = isNone(entry) then = { fail = { message = "Unknown Power definition" } } }
   if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Power requires exactly one holder" } } }
   if = { condition = and(not(isNone(applierPlayer)), not(isNone(applierEnemy))) then = { fail = { message = "Power requires at most one applier" } } }
+  if = { condition = not(isNone(enemy)) then = {
+   if = { condition = or(field(enemy, Enemy.DeathResolved), field(enemy, Enemy.Escaped)) then = { return = { value = none } } }
+  } }
   if = { condition = not(foldEvent(ShouldApplyPower, true, player, enemy, definition, applierPlayer, applierEnemy, card, play)) then = { return = { value = none } } }
   let = { into = actual value = stacks }
   if = { condition = or(not(isNone(applierPlayer)), not(isNone(applierEnemy))) then = {

@@ -10,6 +10,23 @@ public sealed partial class Session
         {
             case ConstExpr constant:
                 return constant.Value;
+            case Word64Expr word:
+                return Value.Of(word.Op switch
+                {
+                    Word64Op.HashUtf8 => Word64.HashUtf8(Eval(call, word.Arguments[0]).AsString()),
+                    Word64Op.Add => Word64.Add(Eval(call, word.Arguments[0]).AsInt(), Eval(call, word.Arguments[1]).AsInt()),
+                    _ => throw Faults.Schema("Unknown word64 operation"),
+                });
+            case TextExpr text:
+            {
+                var value = Eval(call, text.Text).AsString();
+                var argument = Eval(call, text.Argument);
+                if (text.Op == TextOp.StartsWith) return Value.Of(value.StartsWith(argument.AsString(), StringComparison.Ordinal));
+                if (text.Op != TextOp.Substring) throw Faults.Schema("Unknown text operation");
+                var start = argument.AsInt();
+                if (start < 0 || start > value.Length) throw Faults.Range("substring start is outside the UTF-16 text");
+                return Value.Of(value[(int)start..]);
+            }
             case RandomValueExpr randomValue:
             {
                 Value Arg(int index) => Eval(call, randomValue.Arguments[index]);
@@ -25,6 +42,27 @@ public sealed partial class Session
                     RandomValueOp.Float32Less => Value.Of(Float(0) < Float(1)),
                     RandomValueOp.Float32LessOrEqual => Value.Of(Float(0) <= Float(1)),
                     _ => throw Faults.Schema("Unknown random value operation"),
+                };
+            }
+
+            case Binary64Expr binary64:
+            {
+                Value Arg(int index) => Eval(call, binary64.Arguments[index]);
+                double Number(int index) => Binary64.Read(Arg(index).AsInt());
+                return binary64.Op switch
+                {
+                    Binary64Op.FromNumber => Value.Of(Binary64.Bits(Arg(0).Kind == ValueKind.Fixed ? (double)Arg(0).AsDecimal() : (double)Arg(0).AsInt())),
+                    Binary64Op.Add => Value.Of(Binary64.Bits(Number(0) + Number(1))),
+                    Binary64Op.Subtract => Value.Of(Binary64.Bits(Number(0) - Number(1))),
+                    Binary64Op.Multiply => Value.Of(Binary64.Bits(Number(0) * Number(1))),
+                    Binary64Op.Divide => Value.Of(Binary64.Bits(Number(0) / Number(1))),
+                    Binary64Op.Sqrt => Value.Of(Binary64.Bits(Math.Sqrt(Number(0)))),
+                    Binary64Op.Log => Value.Of(Binary64.Bits(Math.Log(Number(0)))),
+                    Binary64Op.Sin => Value.Of(Binary64.Bits(Math.Sin(Number(0)))),
+                    Binary64Op.RoundToInt => Value.Of(Binary64.RoundToInt(Number(0))),
+                    Binary64Op.Less => Value.Of(Number(0) < Number(1)),
+                    Binary64Op.LessOrEqual => Value.Of(Number(0) <= Number(1)),
+                    _ => throw Faults.Schema("Unknown binary64 operation"),
                 };
             }
 

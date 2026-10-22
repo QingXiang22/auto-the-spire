@@ -4,14 +4,23 @@ dsl_version = "core/0.3"
 # Shared development encounter pieces. A source encounter spawns its monster list; this scope has no battle or
 # room yet, so an encounter content file only exposes a Spawn action. Initial HP uses the source minimum
 # because the roll inside the source range is part of the (unmigrated) run RNG.
-procedure SpawnDevelopmentEnemy {
+procedure CreateEncounterEnemy {
   parameters = { definition = String(length = 64) hp = Int(min = 1, max = 9999) }
+  result = Binding
   locals = { target = Binding }
   body = {
     create = {
       type = Enemy scope = frameScope() into = target
-      fields = { DefinitionId = definition Hp = hp MaxHp = hp MoveIndex = 0 Intent = "attack" }
+      fields = { DefinitionId = definition SpawnOrder = count(type(Enemy)) Hp = hp MaxHp = hp MoveIndex = 0 Intent = "attack" }
     }
+    return = { value = target }
+  }
+}
+procedure SpawnDevelopmentEnemy {
+  parameters = { definition = String(length = 64) hp = Int(min = 1, max = 9999) }
+  locals = { target = Binding }
+  body = {
+    call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
     call = { procedure = ResetEnemyMoves args = { target = target } }
   }
 }
@@ -26,6 +35,7 @@ template SingleEnemyEncounter {
   body = {
     action Spawn {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(enemyDefinition) hp = arg(hp) } } }
     }
   }

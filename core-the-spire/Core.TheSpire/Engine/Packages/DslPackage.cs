@@ -15,6 +15,7 @@ public sealed class DslPackage
     public string PublicMetadataPath { get; }
     public string RandomProfile { get; }
     public string Digest { get; }
+    public long InstructionBudget { get; }
     public IReadOnlyList<string> CatalogPaths { get; }
     public RuleSet Rules { get; }
 
@@ -24,7 +25,7 @@ public sealed class DslPackage
         using var document = Read(manifestPath);
         var manifest = document.RootElement;
         Keys(manifest, "format", "id", "version", "language", "entry", "public_metadata", "default_scope",
-            "supported_scopes", "unsupported_scopes", "catalogs", "random_profile");
+            "supported_scopes", "unsupported_scopes", "catalogs", "random_profile", "instruction_budget");
         if (Text(manifest, "format") != "engine-dsl/package@1" || Text(manifest, "language") != EngineDslCompiler.LanguageVersion)
             throw new FormatException("Unsupported DSL package format or language.");
         Id = Text(manifest, "id"); Version = Text(manifest, "version");
@@ -42,6 +43,13 @@ public sealed class DslPackage
                 (unsupported.TryGetProperty(Scope, out var why) ? why.GetString() : "This scope is not implemented by the DSL package."));
         RandomProfile = Text(manifest, "random_profile");
         if (RandomProfile is not ("engine-default" or RandomService.VanillaDrawProfileId)) throw new NotSupportedException("unsupported_capability: package random profile is not implemented.");
+        InstructionBudget = SessionBudget.Default.MaxInstructions;
+        if (manifest.TryGetProperty("instruction_budget", out var budget))
+        {
+            if (budget.ValueKind != JsonValueKind.Number || !budget.TryGetInt64(out var value) || value <= 0)
+                throw new FormatException("instruction_budget must be a positive Int64.");
+            InstructionBudget = value;
+        }
         EntryPath = Resolve(Text(manifest, "entry"));
         PublicMetadataPath = Resolve(Text(manifest, "public_metadata"));
         CatalogPaths = Strings(manifest.GetProperty("catalogs")).Select(Resolve).ToArray();
@@ -76,7 +84,7 @@ public sealed class DslPackage
     /// <summary>Returns a configured, unstarted session; game-owned DSL defines stream seeds at start.</summary>
     public Session CreateSession(ulong seed, IReadOnlyList<string> participantRoles, string? gameSeed = null,
         SessionDebugOptions? debug = null) =>
-        new(Rules, seed, participantRoles,
+        new(Rules, seed, participantRoles, budget: new SessionBudget(MaxInstructions: InstructionBudget),
             randomAlgorithmId: RandomProfile == "engine-default" ? RandomService.DefaultAlgorithmId : RandomService.VanillaAlgorithmId,
             randomDrawProfileId: RandomProfile == "engine-default" ? RandomService.DefaultDrawProfileId : RandomService.VanillaDrawProfileId,
             gameSeed: gameSeed, debug: debug);

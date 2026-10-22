@@ -37,6 +37,7 @@ def main() -> int:
         project = "tools/base-spire-dev/BaseSpire.Dev.csproj"
         commands = [build(project), run(project) + ["--", "validate"],
                     run(project) + ["--", "check", "--report", str(output / "behavior")],
+                    run(project) + ["--", "check", "--normal-run-only"],
                     [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/package-behavior.json")],
                     [sys.executable, "-X", "utf8", "tools/ci/check_card_coverage.py", str(output / "behavior/package-behavior.json"), "--require-ironclad-complete"]]
     elif args.suite == "net":
@@ -61,6 +62,7 @@ def main() -> int:
     if top.returncode == 0 and Path(top.stdout.strip()).resolve() == ROOT:
         commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
     result = {"suite": args.suite, "configuration": config, "commit": commit,
+              "rule_authority_lock": json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8")),
               "reference_lock": json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8"))
               if args.suite == "differential" else None, "steps": [], "exit_code": 0}
     try:

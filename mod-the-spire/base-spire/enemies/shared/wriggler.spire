@@ -1,0 +1,84 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+template WrigglerContent { body = {
+  entity State { fields = {
+    Enemy = { type = Ref(Enemy) visibility = Hidden }
+    Slot = { type = String(length = 16) visibility = Hidden }
+    StartStunned = { type = Bool visibility = Hidden }
+  } }
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:wriggler" initial = "START" } }
+  use Start { template = EnemyMoveNodeDefinition args = { definition = "base-spire:wriggler" id = "START" kind = "conditional" } }
+  use Initial { template = EnemyMoveNodeDefinition args = { definition = "base-spire:wriggler" id = "INIT_MOVE" kind = "conditional" } }
+  use Bite { template = EnemyMoveNodeDefinition args = { definition = "base-spire:wriggler" id = "NASTY_BITE_MOVE" next = "WRIGGLE_MOVE" intent = "attack" index = 0 } }
+  use Wriggle { template = EnemyMoveNodeDefinition args = { definition = "base-spire:wriggler" id = "WRIGGLE_MOVE" next = "NASTY_BITE_MOVE" intent = "buff,status" index = 1 } }
+  use Spawned { template = EnemyMoveNodeDefinition args = { definition = "base-spire:wriggler" id = "SPAWNED_MOVE" next = "INIT_MOVE" intent = "stun" index = 2 } }
+  procedure Condition { pure = true parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding
+    locals = { own = Binding }
+    body = {
+      let = { into = own value = first(where(type(State), s, equal(field(s, State.Enemy), field(state, EnemyMoveState.Enemy)))) }
+      if = { condition = isNone(own) then = { fail = { message = "Wriggler: missing birth state" } } }
+      if = { condition = and(equal(field(node, EnemyMoveNode.Id), "START"), field(own, State.StartStunned)) then = {
+        return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "SPAWNED_MOVE") }
+      } }
+      if = { condition = or(equal(field(own, State.Slot), "wriggler1"), equal(field(own, State.Slot), "wriggler3")) then = {
+        return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "NASTY_BITE_MOVE") }
+      } }
+      if = { condition = or(equal(field(own, State.Slot), "wriggler2"), equal(field(own, State.Slot), "wriggler4")) then = {
+        return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "WRIGGLE_MOVE") }
+      } }
+      return = { value = none }
+    }
+  }
+  dispatchCase Condition { dispatch = ResolveEnemyMoveCondition key = "base-spire:wriggler" procedure = Condition }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { card = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "NASTY_BITE_MOVE") then = {
+      call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 6 } }
+    } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "WRIGGLE_MOVE") then = {
+      call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:infection" } into = card }
+      call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "generate" } }
+      call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } }
+    } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:wriggler" procedure = Execute }
+  procedure Create {
+    parameters = { slot = String(length = 16) startStunned = Bool } result = Binding
+    locals = { available = Int value = Int offset = Int hp = Int target = Binding own = Binding }
+    body = {
+      if = { condition = not(or(equal(slot, "wriggler1"), or(equal(slot, "wriggler2"), or(equal(slot, "wriggler3"), equal(slot, "wriggler4"))))) then = { fail = { message = "Wriggler: unsupported slot" } } }
+      let = { into = available value = 0 }
+      let = { into = value value = 17 }
+      repeat = { count = 5 body = {
+        if = { condition = not(exists(where(type(Enemy), e, and(pureCall(EnemyIsActive, e), equal(field(e, Enemy.MaxHp), value))))) then = { let = { into = available value = add(available, 1) } } }
+        let = { into = value value = add(value, 1) }
+      } }
+      if = { condition = greater(available, 0) then = {
+        sampleInt = { stream = "base-spire:run:niche" min = 0 max = available into = offset }
+        let = { into = value value = 17 }
+        repeat = { count = 5 body = {
+          if = { condition = not(exists(where(type(Enemy), e, and(pureCall(EnemyIsActive, e), equal(field(e, Enemy.MaxHp), value))))) then = {
+            if = { condition = equal(offset, 0) then = { let = { into = hp value = value } } }
+            let = { into = offset value = subtract(offset, 1) }
+          } }
+          let = { into = value value = add(value, 1) }
+        } }
+      } else = { sampleInt = { stream = "base-spire:run:niche" min = 17 max = 22 into = hp } } }
+      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:wriggler" hp = hp } into = target }
+      create = { type = State scope = entityScope(target) into = own fields = { Enemy = target Slot = slot StartStunned = startStunned } }
+      call = { procedure = ResetEnemyMoves args = { target = target } }
+      return = { value = target }
+    }
+  }
+  procedure Remove { parameters = { target = Ref(Enemy) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Enemy), target)) item = own body = { destroy = { target = own } } }
+  } }
+  subscription Remove { event = EnemyRemoving reaction = Remove }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = Create args = { slot = "wriggler1" startStunned = false } into = target }
+    call = { procedure = Create args = { slot = "wriggler2" startStunned = false } into = target }
+    call = { procedure = Create args = { slot = "wriggler3" startStunned = false } into = target }
+    call = { procedure = Create args = { slot = "wriggler4" startStunned = false } into = target }
+  } }
+} }
+use Wriggler { template = WrigglerContent }

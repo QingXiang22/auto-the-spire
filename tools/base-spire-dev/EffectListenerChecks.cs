@@ -4,7 +4,22 @@ internal static partial class PackageChecks
 {
     private static void RunEffectListenerChecks(DslPackage package, Action<string, Action> check)
     {
-        check("HOOK relic completion follows acquisition order rather than content declaration order", () =>
+        check("HOOK same-phase configured relic completion follows acquisition order rather than content declaration order", () =>
+        {
+            using var copy = new Copy(package.Root);
+            var path = copy.Path("relics/shared/black-blood.spire");
+            File.WriteAllText(path, File.ReadAllText(path).Replace("threshold = 100", "threshold = 100 early = true", StringComparison.Ordinal));
+            var configured = copy.Load();
+            foreach (var meatFirst in new[] { false, true })
+            {
+                var s = Start(configured);
+                foreach (var name in meatFirst ? new[] { "MeatOnTheBone", "BlackBlood" } : new[] { "BlackBlood", "MeatOnTheBone" }) Submit(s, name + ".Obtain");
+                Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+                Set(s, Player(s), "Player", "Hp", Value.Of(35L)); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(1L));
+                IcPlay(s, IcAdd(s, "StrikeIronclad")); Equal(meatFirst ? 59L : 47L, Hp(s), "earlier healing determines later threshold qualification");
+            }
+        });
+        check("HOOK source MeatOnTheBone early victory precedes BlackBlood healing in either acquisition order", () =>
         {
             foreach (var meatFirst in new[] { false, true })
             {
@@ -12,7 +27,7 @@ internal static partial class PackageChecks
                 foreach (var name in meatFirst ? new[] { "MeatOnTheBone", "BlackBlood" } : new[] { "BlackBlood", "MeatOnTheBone" }) Submit(s, name + ".Obtain");
                 Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
                 Set(s, Player(s), "Player", "Hp", Value.Of(35L)); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(1L));
-                IcPlay(s, IcAdd(s, "StrikeIronclad")); Equal(meatFirst ? 59L : 47L, Hp(s), "earlier healing determines later threshold qualification");
+                IcPlay(s, IcAdd(s, "StrikeIronclad")); Equal(59L, Hp(s), "source early victory heals before ordinary victory");
             }
         });
         check("HOOK removing or melting a snapshotted relic cancels its later notification and private state is cleaned", () =>

@@ -2,7 +2,9 @@
 
 本文规定完整环境的模块边界、状态、随机、公开接口和验证要求。当前生产 base 为纯 DSL／静态 JSON，core 行为按[核心约定](../contracts/core-engine-baseline.md)维护。正常 Run 尚未恢复；支持范围以包 manifest 和 CI 为准，任务状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
-随机版本须显式区分：v0.109 目标采用 UTF-8 XxHash64 派生根及具名流、ulong 加法回绕，`old` 前缀仅对根 seed 使用旧 hash32，`reference/sts2-sim` 保持只读。当前 DSL 的实际实现与边界见[随机约定](mod-the-spire/run-domain/randomness.md)，不能把旧 C# 工厂的 `RandomLayoutId=sts2-v0.109-xxhash64@1` 当作当前包已实现该目标。游戏内容源基线单独标识；受控机制 case 的窄适配范围见第 10 节，不自动扩展到正常 Run。
+规则来源以[锁定 sts2-sim](../../reference/baselines/sts2-sim.json)为准，替代本地 `sts2/`；当前锁定实现声明 v0.111.0。参考 checkout 保持纯上游，只在明确更新基线时切换干净提交，不修改其规则。
+
+随机目标采用锁定实现的默认顺序路径：UTF-8 XxHash64 派生根及具名流、ulong 加法回绕，`old` 前缀仅对根 seed 使用旧 hash32。当前 DSL 的实际实现与边界见[随机约定](mod-the-spire/run-domain/randomness.md)，不能把旧 C# 工厂的 `RandomLayoutId=sts2-v0.109-xxhash64@1` 当作当前包已实现该目标。游戏内容源基线单独标识；受控机制 case 的窄适配范围见第 10 节，不自动扩展到正常 Run。
 
 | 项目 | 约定 |
 | --- | --- |
@@ -14,6 +16,8 @@
 执行 ENV 任务时，用本文件核对架构约束与验证安排。主验收包括完整 Ironclad 中间里程碑、五角色全量环境与严格差异测试；约束条目数量不能代替运行成果。
 
 接续按[开发约定](../../CONTRIBUTING.md)：A拥有base的DSL玩法／初始化，B拥有独立参考比较并协调构建，C拥有net公开约定；各线加载同一manifest与规则标识。本文出现“补通用能力”指负责人核对最小复现后安排维护，不授权另建调度器。D/客户端取证、E/指定mod后排独立派单，不是当前原版编码前置。
+
+旧固定源码向量与第10节历史窄源适配只表示其原来源，不构成当前目标通过。当前DSL及具名流已使用锁定来源的64位派生，受控比较保留原生种子；未迁移规则继续显式失败，不扩大旧适配改变参考。原必测 ID、比较维度与未支持的非零语义保留。
 
 ## 1. 决策边界与执行范围
 

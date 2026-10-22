@@ -2,7 +2,7 @@
 
 同包文件组合、严格纯文本 manifest 与静态源目录见[包格式参考](package-reference.md)。
 
-文档类型：参考（Reference）。core/0.3 在 [core/0.3 规则库](authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.3](language-reference.md)。活动引擎标识为 `engine/ir@0.7`，Core.TheSpire 包版本为 `0.7.0`。当前兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)。
+文档类型：参考（Reference）。core/0.3 在 [core/0.3 规则库](authoring-guide.md)基础上支持宿主同包绑定与具名调用；基础语法见 [core/0.3](language-reference.md)。活动引擎标识为 `engine/ir@0.9`，Core.TheSpire 包版本为 `0.9.4`。当前兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)。
 
 ## 绑定入口
 
@@ -56,7 +56,7 @@ dispatchCase DoubleBinding { dispatch = ReadValue key = "double" procedure = Dou
 
 投影类型项可声明 `identity_from = Ref字段名`，例如 `types = { Item = {} Component = { identity_from = Item } }`。字段必须属于该类型且为 Ref；目标已经能被本查看者识别时，依附实例才参与类型／字段投影。目标为空、隐藏、未纳入投影或处于无可见根的引用环时，依附实例保持隐藏。它不提升目标的可见性，也不覆盖字段与集合自身的公开政策；作者不能另用公开集合暴露隐藏依附实例的成员或数量。
 
-观察使用只读有限遍历，不创建临时状态。该政策进入规则标识。可选值的 `none == none` 现在返回 true，避免空引用相等比较导致求值故障；这些语义变更使运行标识迁移至 `engine/ir@0.7`，旧回放保留原标识。
+观察使用只读有限遍历，不创建临时状态。该政策进入规则标识。可选值的 `none == none` 现在返回 true，避免空引用相等比较导致求值故障；当前运行标识为 `engine/ir@0.9`，旧回放不自动迁移。
 
 ## 随机流与 binary32
 
@@ -66,6 +66,11 @@ dispatchCase DoubleBinding { dispatch = ReadValue key = "double" procedure = Dou
 | --- | --- |
 | gameSeed() | 无参，返回 String；宿主须传每局原始文本，不隐式归一化 |
 | hash32(text) | String → Int(0..4294967295)，UTF-16 code unit 双累加器哈希：初始352654597、逐字符乘33异或，最终 left + right ×1566083941，unchecked uint32 |
+| hash64(text) | String → Int 位型；UTF-8 XxHash64，种子0，完整64位结果以unchecked signed Int保存；纯表达式 |
+| uint64Add(left,right) | 两个Int位型按模2^64相加；普通Int加法的溢出规则不变 |
+| startsWith(text,prefix) | String、String → Bool；ordinal比较，不隐式改变大小写或空白 |
+| substring(text,start) | String、Int → String；UTF-16下标取到结尾，0..Length合法，越界明确失败 |
+| seedStream64 = { stream = name seed = value } | 将Int的全部64位解释为无符号种子，允许负的位型；与seedStream共用首次消费前设置及禁止重复设置的约束；不消费随机，pure过程禁止 |
 | seedStream = { stream = name seed = value } | 非空字符串流名、非负 Int seed；首次抽取前设置，重复设置或已消费后设置失败；不消费 RNG，pure 过程禁止 |
 | sampleFloat32 = { stream = name min = low max = high into = value } | value 为 Int 槽；可选 min／max 是 binary32 位型，默认0／1。先按 binary32 算范围宽度，再在 double 上缩放一次 DrawDouble，最后舍入至 binary32，返回0..4294967295的IEEE754位型；相等边界仍消费一次，逆序／非有限范围抽样前失败；pure过程禁止 |
 | float32(value) | Int／Fixed 数值转换成binary32位型；不是把输入Int当位型解读 |
@@ -78,6 +83,23 @@ dispatchCase DoubleBinding { dispatch = ReadValue key = "double" procedure = Dou
 binary32 位型不能用普通整数加减或大小比较代替浮点运算。所有抽样由同一 RandomService 计数；Capture／Restore 保留尚未消费流的显式种子，不是完整暂停 Session 恢复。sampleInt 继续是半开区间，shuffle 继续是降序 Fisher-Yates；原版预排序由游戏包组合。
 
 本版修正 vanilla profile 的 DrawBool 为源 NextInt(2)==0；engine-default 映射不变。由于该语义修正及新IR原语，旧 engine/ir@0.4 包须重建，旧回放保留原标识；不要只改产物标签。
+
+## binary64 纯运算
+
+`float64(value)` 将 Int／Fixed 数值转换为 IEEE754 binary64，并将有符号 64 位编码放入 Int 槽。其余函数接收该编码；普通整数运算不等同于浮点运算。所有函数均为 pure，不读取或消费随机流。
+
+| 写法 | 结果与失败 |
+| --- | --- |
+| `float64Add(a,b)`、`float64Subtract(a,b)`、`float64Multiply(a,b)`、`float64Divide(a,b)` | 按 binary64 执行对应运算，返回编码；不合并相邻运算，不使用十进制定点中间值 |
+| `float64Sqrt(value)`、`float64Log(value)`、`float64Sin(value)` | 分别调用 .NET 的平方根、自然对数、正弦；返回编码 |
+| `float64Less(a,b)`、`float64LessOrEqual(a,b)` | 比较两个已解码的值，返回 Bool |
+| `float64RoundToInt(value)` | 按最近整数舍入，恰好居中时取偶数；返回 Int 数值。越出 Int64 范围时失败 |
+
+非有限操作数或结果均报 ValueOutOfRange，包括 NaN、无穷、负数平方根、零的对数和除零。负数编码与负零保留符号位，不使用 binary32 的无符号位型范围限制。
+
+base 的 `SourceGaussianInt` 组合上述运算与既有 `sampleInt`：在 vanilla profile 下抽取 `[0,2^53)` 的有效位，再除以 `2^53`，精确保留源 NextDouble。Box–Muller 变换、偶数舍入、范围检查及拒绝后重试均由 DSL 决定，每次尝试实际消费两个原始字。core 不内置地图或房型规则。
+
+`Confirm` 决策只接受 `Flag=true`。`false` 在续接前拒绝，原请求、状态和随机流保留；需要真假两种回答时使用 `Bool`。binary64 与确认语义由 `engine/ir@0.9` 标识，已有消费者须重建规则和公开目录。
 
 ## 错误定位与标识
 

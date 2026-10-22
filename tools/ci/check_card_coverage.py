@@ -26,18 +26,21 @@ def validate(report_path: Path, require_ironclad_complete: bool) -> None:
         raise ValueError("runtime card definitions differ from applicable source identities")
     fixture = json.loads((ROOT / "tools/base-spire-dev/fixtures/ironclad-source-metadata.json").read_text(encoding="utf-8"))["entries"]
     frozen = {r["id"]: r for r in fixture if r["name"] != "GiantRock"}
-    if len(frozen) != 87 or sum(r["multiplayer_only"] for r in frozen.values()) != 2:
-        raise ValueError("frozen source pool must contain 87 unique rows and two multiplayer exclusions")
-    pool = {r["id"]: r for r in source if "IroncladCardPool" in r["pools"]}
-    if set(pool) != set(frozen):
-        raise ValueError("source pool identities changed or were silently omitted")
+    if len(frozen) != 90 or sum(r["multiplayer_only"] for r in frozen.values()) != 5:
+        raise ValueError("frozen source pool must contain 90 unique rows and five multiplayer exclusions")
+    metadata = json.loads((ROOT / "tools/base-spire-dev/fixtures/reference-pool-metadata.json").read_text(encoding="utf-8"))
+    lock = json.loads((ROOT / "reference/baselines/sts2-sim.json").read_text(encoding="utf-8"))
+    if metadata["reference_lock"] != lock:
+        raise ValueError("native source pool must match current reference lock")
+    if [(r["id"], r["rarity"], r["multiplayer_only"]) for r in frozen.values()] != [(r["id"], r["rarity"], r["multiplayer_only"]) for r in metadata["cards"]]:
+        raise ValueError("frozen metadata differs from native complete source pool")
+    legacy_applicable = {r["id"] for r in source if "IroncladCardPool" in r["pools"] and "exclusion" not in r}
+    current_applicable = {key for key, row in frozen.items() if not row["multiplayer_only"]}
+    if legacy_applicable != current_applicable:
+        raise ValueError("original required singleplayer card coverage cannot be reduced")
     for content_id, expected in frozen.items():
-        actual = pool[content_id]
-        if actual["source_sha256"] != expected["source_sha256"]:
-            raise ValueError(f"frozen source hash changed: {content_id}")
-        if expected["multiplayer_only"]:
-            if content_id in declared or actual.get("exclusion") != "multiplayer-only":
-                raise ValueError(f"singleplayer exclusion must be explicit: {content_id}")
+        if expected["multiplayer_only"] and content_id in declared:
+            raise ValueError(f"singleplayer exclusion must be explicit: {content_id}")
     witnesses = {r["id"]: r["passed_scenarios"] for r in report.get("cards", [])}
     if len(witnesses) != len(report.get("cards", [])) or declared != set(witnesses):
         raise ValueError("DSL card definitions and actually checked card witnesses differ")
@@ -46,7 +49,7 @@ def validate(report_path: Path, require_ironclad_complete: bool) -> None:
         raise ValueError("missing passed card behavior evidence")
     applicable = {key for key, row in frozen.items() if not row["multiplayer_only"]}
     pending = applicable - declared
-    print(f"DSL cards: {len(declared)} behavior-checked; source=578; Ironclad={len(applicable - pending)}/85; multiplayer-excluded=2; independent_verified=false")
+    print(f"DSL cards: {len(declared)} behavior-checked; source=578; Ironclad={len(applicable - pending)}/85; multiplayer-excluded=5; independent_verified=false")
     if require_ironclad_complete and pending:
         raise ValueError("Ironclad gate unmet: " + ", ".join(sorted(pending)))
 

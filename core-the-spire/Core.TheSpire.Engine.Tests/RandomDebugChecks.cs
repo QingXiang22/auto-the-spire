@@ -44,7 +44,12 @@ internal static class RandomDebugChecks
             Check.Sequence(new[] { "int", "pick", "shuffle", "shuffle", "double" }, calls.Select(c => c.Operation), "individual API calls, including every swap");
             // Independent source vector: tools/rng-oracle/vanilla_rng_oracle.py, Rng(12345), bounds 100/3/3/2.
             Check.Sequence(new[] { "74", "0", "2", "0", "0.5551828553264562" }, calls.Select(c => c.Result), "actual sampled results");
+            Check.Sequence(new ulong?[] { 13720838825685603483UL, 2398916695208396998UL, 17770384849984869256UL,
+                891717726879801395UL, 10241316046318454344UL }, calls.Select(c => c.SingleRawWord),
+                "actual raw words match independent MegaRandom(12345) output, including pick and every shuffle swap");
             Check.Sequence(new[] { "100", "3", "3", "2", "1" }, calls.Select(c => c.Maximum), "bounds survive recording");
+            Check.True(calls.Take(4).All(c => c.Float32 is null), "only sampleFloat32 has binary32 metadata");
+            Check.Equal(new Float32SampleDetails(0, 1065353216, 1057890423), calls[^1].Float32!, "default float range and independently rounded result");
             Check.Sequence(items, calls[1].Candidates!, "pick candidates copied before sampling");
             Check.Sequence(items, calls[2].Candidates!, "first shuffle candidates before swap");
             Check.Sequence(items.Take(2), calls[3].Candidates!, "active shuffle prefix");
@@ -63,6 +68,8 @@ internal static class RandomDebugChecks
             var singleton = s.Debug.Records.Last().Random!;
             Check.Equal("1", singleton.Maximum, "singleton bound retained");
             Check.Sequence(new[] { items[0] }, singleton.Candidates!, "singleton candidate retained");
+            s.Random.DrawDouble("direct");
+            Check.True(s.Debug.Records.Last().Random!.Float32 is null, "direct double has no DSL float metadata");
         });
 
         Check.Run("DEBUG pull frequency and independent sessions cannot change state or random calls", () =>
@@ -85,6 +92,27 @@ internal static class RandomDebugChecks
             Check.Equal(15, old.Count(r => r.Kind == SessionDebugKind.RandomCall), "all individual calls retained");
         });
 
+        Check.Run("DEBUG zero or multiple raw words never reuse a previous single-word observation", () =>
+        {
+            var profile = new WordCountProfile();
+            var s = new Session(rules, 1, ["player"], debug: new(), randomProfile: profile); s.Start();
+            foreach (var words in new[] { 1, 0, 2, 0, 1 })
+            {
+                profile.Words = words;
+                var before = s.Random.TotalDraws;
+                s.Random.DrawInt("test", 0, 100);
+                var call = s.Debug!.Records.Last().Random!;
+                Check.Equal(before + words, s.Random.TotalDraws, "diagnostics consume no extra words");
+                Check.Equal(words == 1, call.SingleRawWord.HasValue, "only exactly one real word has single-word evidence");
+            }
+            profile.ExtraDraw = () => s.Random.DrawUInt64("other");
+            s.Random.DrawInt("test", 0, 100);
+            var crossed = s.Debug!.Records.Last().Random!;
+            Check.Equal(1L, crossed.After - crossed.Before, "outer call consumes one word on its own stream");
+            Check.Equal(2L, crossed.TotalAfter - crossed.TotalBefore, "nested call also consumed another stream");
+            Check.True(crossed.SingleRawWord is null, "cross-stream extra consumption cannot masquerade as one raw word");
+        });
+
         Check.Run("DEBUG truncated candidates and capacity loss are explicit without changing gameplay", () =>
         {
             var limited = New(new(MaxCandidates: 1)); var overflow = New(new(MaxRecords: 1)); var normal = New(null);
@@ -100,6 +128,20 @@ internal static class RandomDebugChecks
             Check.Fault(EngineFaultCode.ValueOutOfRange, () => bad.Submit(rules.Actions.Single(a => a.QualifiedId == "random-debug:Invalid"), bad.Participant(0), []), "invalid range rejected");
             Check.Equal(before.TotalDraws, bad.Random.TotalDraws, "invalid range consumes nothing");
             Check.DoesNotContain(bad.Debug!.Records, r => r.Kind == SessionDebugKind.RandomCall, "invalid range is not a successful draw");
+        });
+
+        Check.Run("DEBUG dropped float draws cannot overwrite a retained float or an earlier capture", () =>
+        {
+            var complete = New(new()); complete.Start(); Roll(complete);
+            var lastFloat = complete.Debug!.Records.Last(r => r.Random?.Float32 is not null);
+            var limited = New(new(MaxRecords: (int)lastFloat.Sequence)); limited.Start(); Roll(limited);
+            var before = limited.Debug!.Capture(); var dropped = limited.Debug.DroppedRecords;
+            Roll(limited);
+            Check.Sequence(before, limited.Debug.Capture(), "capacity exhaustion leaves every retained record unchanged");
+            Check.True(limited.Debug.DroppedRecords > dropped, "subsequent draws still count as dropped records");
+            Check.Equal(lastFloat.Random!.Float32!, before.Last().Random!.Float32!, "last retained float remains the first draw");
+            var old = complete.Debug.Capture(); Roll(complete);
+            Check.Sequence(old, complete.Debug.Capture().Take(old.Count), "future metadata cannot mutate a captured record");
         });
 
         Check.Run("DEBUG random trace survives decision suspension without replaying or consuming invalid answers", () =>
@@ -122,5 +164,18 @@ internal static class RandomDebugChecks
             Check.Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(pending.RequestId, Flag: true)), "duplicate answer rejected");
             Check.Equal(2L, s.Random.TotalDraws, "duplicate answer does not draw");
         });
+    }
+
+    private sealed class WordCountProfile : IRandomProfile
+    {
+        internal int Words { get; set; } = 1;
+        internal Action? ExtraDraw { get; set; }
+        public string AlgorithmId => "test/word-count@1";
+        public string DrawProfileId => "test/word-count-mapping@1";
+        public IRandomGenerator Create(ulong seed) => new Xoshiro256StarStar(seed);
+        public long DrawBounded(Func<ulong> next, long minInclusive, long maxExclusive)
+        { for (var i = 0; i < Words; i++) next(); ExtraDraw?.Invoke(); return minInclusive; }
+        public double DrawDouble(Func<ulong> next) => throw new NotSupportedException();
+        public bool DrawBool(Func<ulong> next) => throw new NotSupportedException();
     }
 }

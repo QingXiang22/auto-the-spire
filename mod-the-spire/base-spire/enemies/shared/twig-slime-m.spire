@@ -21,6 +21,6 @@ template TwigSlimeMContent { body = {
     }
   }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:twig-slime-m" procedure = Execute }
-  action Spawn { role = player body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:twig-slime-m" hp = 26 } } } }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:twig-slime-m" hp = 26 } } } }
 } }
 use TwigSlimeM { template = TwigSlimeMContent }

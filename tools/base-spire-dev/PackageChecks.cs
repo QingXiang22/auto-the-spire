@@ -87,6 +87,19 @@ internal static partial class PackageChecks
             RejectCopy(package.Root, c => c.EditJson("relics/catalog.json", root => root["unknown"] = 1));
             RejectCopy(package.Root, c => File.WriteAllText(c.Path("package.json"), File.ReadAllText(c.Path("package.json")).Replace("{", "{\"format\":\"duplicate\",", StringComparison.Ordinal)));
         });
+        Case("package instruction budget validates configuration and is enforced by its sessions", () =>
+        {
+            foreach (var invalid in new[] { "0", "-1", "1.5", "9223372036854775808", "true", "null", "\"100\"" })
+                RejectCopy(package.Root, c => c.EditJson("package.json", root => root["instruction_budget"] = System.Text.Json.Nodes.JsonNode.Parse(invalid)));
+            using var defaults = new Copy(package.Root);
+            defaults.EditJson("package.json", root => root.Remove("instruction_budget"));
+            Equal(SessionBudget.Default.MaxInstructions, defaults.Load().CreateSession(1, ["player"]).Budget.MaxInstructions, "omitted budget uses the engine default");
+            using var limited = new Copy(package.Root);
+            limited.EditJson("package.json", root => root["instruction_budget"] = 1);
+            var session = limited.Load().CreateSession(1, ["player"]);
+            Throws<EngineFaultException>(session.Start);
+            Equal(EngineFaultCode.BudgetExceeded, session.Fault!.Code, "configured limit is enforced during actual execution");
+        });
         Case("DB-A03/A04: package rejects escaping references, missing and unreferenced DSL files", () =>
         {
             RejectCopy(package.Root, c => c.EditJson("package.json", root => root["entry"] = "../outside.spire"));
@@ -130,6 +143,10 @@ internal static partial class PackageChecks
         }
         Merge(RunCombatTurnChecks(package, Case), witnesses);
         Merge(RunDamageChecks(package, Case), witnesses);
+        Merge(RunToughBandagesChecks(package, Case), witnesses);
+
+        Merge(RunCharonsAshesChecks(package, Case), witnesses);
+        Merge(RunBoomingConchChecks(package, Case), witnesses);
         var cards = RunCardPlayChecks(package, Case);
         Merge(RunPowerChecks(package, Case), cards);
         Merge(RunCardBatchChecks(package, Case), cards);
@@ -163,9 +180,14 @@ internal static partial class PackageChecks
         Merge(RunIroncladChecks(package, Case), cards);
         var enemies = RunEnemyTurnChecks(package, Case);
         Merge(RunEnemyMoveGraphChecks(package, Case), enemies);
+        Merge(RunBattleFriendChecks(package, Case), enemies);
+        foreach (var row in RunWrigglerChecks(package, Case))
+            (row.Key == "base-spire:infection" ? cards : enemies).Add(row.Key, row.Value);
         Merge(RunSlimedChecks(package, Case), cards);
         Merge(RunWhistleChecks(package, Case), cards);
         var encounters = RunEncounterChecks(package, Case);
+        foreach (var row in RunSlimeChecks(package, Case))
+            (row.Key == "base-spire:slimes-weak" ? encounters : enemies).Add(row.Key, row.Value);
         witnesses.Add("base-spire:the-abacus", scenarios.Take(5).ToArray());
         using (var catalog = JsonDocument.Parse(File.ReadAllText(Path.Combine(package.Root, "relics/catalog.json"))))
         {

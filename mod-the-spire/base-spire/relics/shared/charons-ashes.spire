@@ -1,0 +1,9 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source: sts2/src/Core/Models/Relics/CharonsAshes.cs; three unpowered damage
+# to every hittable enemy when the owner's card is exhausted.
+use CharonsAshes {
+  template = CardExhaustDamageRelic
+  args = { definition = "base-spire:charons-ashes" amount = 3 }
+}

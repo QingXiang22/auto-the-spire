@@ -1,0 +1,109 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity NeowPoolEntry { fields = {
+  Visit = { type = Ref(NeowVisit) }
+  RelicId = { type = String(length = 64) }
+  Group = { type = String(length = 16) }
+  Position = { type = Int }
+  Eligible = { type = Bool default = true }
+} }
+entity NeowOption { fields = {
+  Visit = { type = Ref(NeowVisit) visibility = Hidden }
+  RelicId = { type = String(length = 64) }
+  Position = { type = Int(min = 0, max = 2) }
+  EffectSupported = { type = Bool }
+} }
+relation NeowPool { target = NeowPoolEntry }
+relation NeowOptions { target = NeowOption public = true }
+
+procedure SupportedNeowRelic {
+  pure = true parameters = { definition = String(length = 64) } result = Bool
+  body = { return = { value = or(equal(definition, "base-spire:booming-conch"), or(equal(definition, "base-spire:golden-pearl"), equal(definition, "base-spire:nutritious-oyster"))) } }
+}
+procedure AddNeowPoolEntry {
+  parameters = { visit = Ref(NeowVisit) definition = String(length = 64) group = String(length = 16) position = Int }
+  locals = { entry = Binding }
+  body = {
+    create = { type = NeowPoolEntry scope = entityScope(visit) into = entry fields = { Visit = visit RelicId = definition Group = group Position = position } }
+    addRelation = { relation = NeowPool owner = visit target = entry }
+  }
+}
+procedure AddNeowOption {
+  parameters = { visit = Ref(NeowVisit) entry = Ref(NeowPoolEntry) position = Int }
+  locals = { option = Binding }
+  body = {
+    create = { type = NeowOption scope = entityScope(visit) into = option fields = { Visit = visit RelicId = field(entry, NeowPoolEntry.RelicId) Position = position EffectSupported = pureCall(SupportedNeowRelic, field(entry, NeowPoolEntry.RelicId)) } }
+    addRelation = { relation = NeowOptions owner = visit target = option }
+  }
+}
+procedure NeowSourceBool {
+  result = Bool locals = { roll = Int }
+  body = {
+    sampleInt = { stream = "base-spire:event:neow" min = 0 max = 2 into = roll }
+    return = { value = equal(roll, 0) }
+  }
+}
+procedure AddNeowPair {
+  parameters = { visit = Ref(NeowVisit) left = String(length = 64) right = String(length = 64) position = Int }
+  locals = { flag = Bool }
+  body = {
+    call = { procedure = NeowSourceBool into = flag }
+    if = { condition = flag then = {
+      call = { procedure = AddNeowPoolEntry args = { visit = visit definition = left group = "positive" position = position } }
+    } else = { call = { procedure = AddNeowPoolEntry args = { visit = visit definition = right group = "positive" position = position } } } }
+  }
+}
+procedure GenerateSourceNeowOptions {
+  parameters = { visit = Ref(NeowVisit) }
+  locals = { curse = Binding excluded = String(length = 64) index = Int pick = Int left = Binding right = Binding }
+  body = {
+    seedStream64 = { stream = "base-spire:event:neow" seed = pureCall(SourceContentSeed, 0, "NEOW", 0) }
+    call = { procedure = BuildSourceNeowPool args = { visit = visit } }
+    samplePick = { stream = "base-spire:event:neow" candidates = where(relation(NeowPool, visit), e, equal(field(e, NeowPoolEntry.Group), "curse")) into = curse }
+    let = { into = excluded value = "none" }
+    if = { condition = equal(field(curse, NeowPoolEntry.RelicId), "base-spire:cursed-pearl") then = { let = { into = excluded value = "base-spire:golden-pearl" } } }
+    if = { condition = equal(field(curse, NeowPoolEntry.RelicId), "base-spire:hefty-tablet") then = { let = { into = excluded value = "base-spire:arcane-scroll" } } }
+    if = { condition = equal(field(curse, NeowPoolEntry.RelicId), "base-spire:leafy-poultice") then = { let = { into = excluded value = "base-spire:new-leaf" } } }
+    if = { condition = equal(field(curse, NeowPoolEntry.RelicId), "base-spire:precarious-shears") then = { let = { into = excluded value = "base-spire:precise-scissors" } } }
+    forEach = { query = relation(NeowPool, visit) item = entry body = {
+      if = { condition = equal(field(entry, NeowPoolEntry.RelicId), excluded) then = { set = { target = entry field = NeowPoolEntry.Eligible value = false } } }
+      if = { condition = and(equal(field(curse, NeowPoolEntry.RelicId), "base-spire:neows-sacrifice"), or(equal(field(entry, NeowPoolEntry.RelicId), "base-spire:phial-holster"), equal(field(entry, NeowPoolEntry.RelicId), "base-spire:lost-coffer"))) then = { set = { target = entry field = NeowPoolEntry.Eligible value = false } } }
+    } }
+    if = { condition = not(equal(field(curse, NeowPoolEntry.RelicId), "base-spire:large-capsule")) then = {
+      call = { procedure = AddNeowPair args = { visit = visit left = "base-spire:lava-rock" right = "base-spire:small-capsule" position = 100 } }
+    } }
+    call = { procedure = AddNeowPair args = { visit = visit left = "base-spire:nutritious-oyster" right = "base-spire:stone-humidifier" position = 101 } }
+    call = { procedure = AddNeowPair args = { visit = visit left = "base-spire:neows-talisman" right = "base-spire:pomander" position = 102 } }
+    let = { into = index value = 0 }
+    forEach = { query = sort(where(relation(NeowPool, visit), e, and(equal(field(e, NeowPoolEntry.Group), "positive"), field(e, NeowPoolEntry.Eligible))), e, field(e, NeowPoolEntry.Position)) item = entry body = {
+      set = { target = entry field = NeowPoolEntry.Position value = index }
+      let = { into = index value = add(index, 1) }
+    } }
+    let = { into = index value = subtract(index, 1) }
+    repeat = { count = index body = {
+      sampleInt = { stream = "base-spire:event:neow" min = 0 max = add(index, 1) into = pick }
+      let = { into = left value = first(where(relation(NeowPool, visit), e, and(equal(field(e, NeowPoolEntry.Group), "positive"), and(field(e, NeowPoolEntry.Eligible), equal(field(e, NeowPoolEntry.Position), index))))) }
+      let = { into = right value = first(where(relation(NeowPool, visit), e, and(equal(field(e, NeowPoolEntry.Group), "positive"), and(field(e, NeowPoolEntry.Eligible), equal(field(e, NeowPoolEntry.Position), pick))))) }
+      set = { target = left field = NeowPoolEntry.Position value = pick }
+      set = { target = right field = NeowPoolEntry.Position value = index }
+      let = { into = index value = subtract(index, 1) }
+    } }
+    forEach = { query = take(sort(where(relation(NeowPool, visit), e, and(equal(field(e, NeowPoolEntry.Group), "positive"), field(e, NeowPoolEntry.Eligible))), e, field(e, NeowPoolEntry.Position)), 2) item = entry body = {
+      call = { procedure = AddNeowOption args = { visit = visit entry = entry position = field(entry, NeowPoolEntry.Position) } }
+    } }
+    call = { procedure = AddNeowOption args = { visit = visit entry = curse position = 2 } }
+    forEach = { query = relation(NeowPool, visit) item = entry body = { destroy = { target = entry } } }
+  }
+}
+procedure ResolveSourceNeow {
+  parameters = { owner = Ref(Player) run = Ref(Run) visit = Ref(NeowVisit) option = Ref(NeowOption) }
+  body = {
+    if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(visit, NeowVisit.Run), run), and(equal(field(option, NeowOption.Visit), visit), equal(field(visit, NeowVisit.Status), "pending"))))) then = { fail = { message = "Neow choice does not belong to the current pending visit" } } }
+    if = { condition = not(pureCall(SupportedNeowRelic, field(option, NeowOption.RelicId))) then = { fail = { message = "unsupported_capability: selected Neow relic effect is not implemented" } } }
+    set = { target = visit field = NeowVisit.Status value = "resolving" }
+    call = { procedure = ObtainRelic args = { owner = owner definition = field(option, NeowOption.RelicId) } }
+    set = { target = visit field = NeowVisit.SelectedRelic value = field(option, NeowOption.RelicId) }
+    set = { target = visit field = NeowVisit.Status value = "finished" }
+  }
+}

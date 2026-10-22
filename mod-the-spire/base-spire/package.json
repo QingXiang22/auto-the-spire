@@ -1,7 +1,7 @@
 {
   "format": "engine-dsl/package@1",
   "id": "base-spire",
-  "version": "0.7.0-dsl.45",
+  "version": "0.7.0-dsl.57",
   "language": "core/0.3",
   "entry": "base.spire",
   "public_metadata": "public/metadata.json",
@@ -10,11 +10,11 @@
     "base-spire-dsl-relic-draw-dev-v1"
   ],
   "unsupported_scopes": {
-    "base-spire-singleplayer-dev-v1": "Normal game initialization, combat content, rooms and Run are not yet migrated to DSL. No legacy fallback.",
-    "base-spire-singleplayer-dev-map-v1": "Normal game initialization, combat content, rooms and Run are not yet migrated to DSL. No legacy fallback.",
-    "base-spire-singleplayer-dev-run-v1": "Normal game initialization, combat content, rooms and Run are not yet migrated to DSL. No legacy fallback.",
-    "base-spire-ironclad-singleplayer-v1": "Normal game initialization, combat content, rooms and Run are not yet migrated to DSL. No legacy fallback.",
-    "base-spire-singleplayer-v1": "Normal game initialization, combat content, rooms and Run are not yet migrated to DSL. No legacy fallback."
+    "base-spire-singleplayer-dev-v1": "Full normal Run, all Neow effects, encounters and room returns are not yet supported. The separate StartNormalRun opening path is partial; no legacy fallback.",
+    "base-spire-singleplayer-dev-map-v1": "Full normal Run, all Neow effects, encounters and room returns are not yet supported. The separate StartNormalRun opening path is partial; no legacy fallback.",
+    "base-spire-singleplayer-dev-run-v1": "Full normal Run, all Neow effects, encounters and room returns are not yet supported. The separate StartNormalRun opening path is partial; no legacy fallback.",
+    "base-spire-ironclad-singleplayer-v1": "Full normal Run, all Neow effects, encounters and room returns are not yet supported. The separate StartNormalRun opening path is partial; no legacy fallback.",
+    "base-spire-singleplayer-v1": "Full normal Run, all Neow effects, encounters and room returns are not yet supported. The separate StartNormalRun opening path is partial; no legacy fallback."
   },
   "catalogs": [
     "cards/catalog.json",
@@ -26,5 +26,6 @@
     "characters/catalog.json",
     "encounters/catalog.json"
   ],
-  "random_profile": "vanilla-uniform@1"
+  "random_profile": "vanilla-uniform@1",
+  "instruction_budget": 4000000
 }

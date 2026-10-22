@@ -26,10 +26,8 @@ entity EnemyMoveState { fields = {
   Enemy = { type = Ref(Enemy) visibility = Hidden }
   Graph = { type = Ref(EnemyMoveGraph) visibility = Hidden }
   Current = { type = Ref(EnemyMoveNode) optional = true visibility = Hidden }
-  LastPerformed = { type = Ref(EnemyMoveNode) optional = true visibility = Hidden }
   Ready = { type = Bool default = false visibility = Hidden }
   Stunned = { type = Bool default = false visibility = Hidden }
-  StunResume = { type = Ref(EnemyMoveNode) optional = true visibility = Hidden }
   FirstPerformed = { type = Bool default = false visibility = Hidden }
   Sequence = { type = Int default = 0 visibility = Hidden }
   Consecutive = { type = Int default = 0 visibility = Hidden }
@@ -43,3 +41,4 @@ event RegisterEnemyMoveGraphs { }
 event RegisterEnemyMoveNodes { }
 event RegisterEnemyMoveBranches { }
 dispatch ExecuteEnemyMove { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } }
+dispatch ResolveEnemyMoveCondition { pure = true parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding }

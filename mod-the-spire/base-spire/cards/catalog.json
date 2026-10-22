@@ -179,6 +179,10 @@
       "definition": "cards/ironclad/impervious.spire"
     },
     {
+      "id": "base-spire:infection",
+      "definition": "cards/status/infection.spire"
+    },
+    {
       "id": "base-spire:infernal-blade",
       "definition": "cards/ironclad/infernal-blade.spire"
     },

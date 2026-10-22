@@ -14,6 +14,7 @@ procedure LocalCardCost {
   pure = true parameters = { card = Ref(Card) } result = Int locals = { value = Int }
   body = {
     let = { into = value value = field(card, Card.BaseCost) }
+    if = { condition = less(value, 0) then = { return = { value = value } } }
     forEach = { query = where(collection(CardCostModifiers), m, equal(field(m, CardCostModifier.Card), card)) item = modifier body = {
       if = { condition = equal(field(modifier, CardCostModifier.Operation), "set") then = {
         let = { into = value value = field(modifier, CardCostModifier.Amount) }

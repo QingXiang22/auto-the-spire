@@ -74,8 +74,8 @@ public sealed record ProjectedSnapshot(
 /// sequence 会泄漏内部顺序（V-02），因此直接拒绝。</item>
 /// </list>
 ///
-/// <c>observation_id</c> 映射为 <see cref="ParticipantView.StateVersion"/>（同一稳定边界重复观察得到同一值；
-/// 引擎没有自增观察号，见报告中的映射依据与 N-03 的过期判定责任）。
+/// Host 提供当前控制边界的 <c>observation_id</c>；独立投影调用默认使用视图的存储版本。
+/// 同一边界重复观察不推进版本，无存储写入的新决策仍由 Host 分配新版本。
 /// </summary>
 public sealed class PublicSnapshotProjector
 {
@@ -145,11 +145,19 @@ public sealed class PublicSnapshotProjector
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(input.View);
+        return Project(input, input.View.StateVersion);
+    }
+
+    internal ProjectedSnapshot Project(SnapshotInput input, long observationId)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+        ArgumentNullException.ThrowIfNull(input.View);
         ArgumentNullException.ThrowIfNull(input.LegalActions);
 
         var view = input.View;
         var (sessionStatus, _) = MapSessionStatus(input.Status);
-        var observationId = view.StateVersion;
+        if (observationId < 0 || observationId > WireCanonical.SafeIntegerMax)
+            throw new PublicMappingException("N-03-OBSERVATION-VERSION", "观察版本必须是非负安全整数");
 
         if (input.Status == SessionStatus.Faulted)
         {
@@ -872,14 +880,14 @@ public sealed class PublicSnapshotProjector
     private (List<LegalActionDto>, List<CandidateBinding>) BuildDecisionAnswers(DecisionRequest pending,
         IReadOnlyDictionary<InstanceId, string> ids)
     {
-        if (pending.Kind == DecisionResponseKind.Bool)
+        if (pending.Kind is DecisionResponseKind.Bool or DecisionResponseKind.Confirm)
         {
             var boolRule = _profile.AnswerAction;
             var flagField = boolRule.Parameters.Values.SingleOrDefault(p => p.FieldId == DerivedPublicProfile.AnswerFlagFieldId && p.Kind == PublicValueKind.Boolean);
             if (flagField is null || flagField.Required)
                 throw new PublicMappingException("N-02-BOOL-ANSWER-PROFILE", "Bool decisions require the optional Flag field in the 0.2 derived profile.");
             var boolEntries = new List<(LegalActionDto Action, CandidateBinding Binding)>();
-            foreach (var flag in new[] { false, true })
+            foreach (var flag in pending.Kind == DecisionResponseKind.Confirm ? new[] { true } : new[] { false, true })
             {
                 var field = EncodeField(flagField, Value.Of(flag), -1, ids, "answer.flag", $"snapshot.legal_actions?fields[{flagField.FieldId}]");
                 var entry = BuildEntry(boolRule.ActionTypeId, [field], null, [], _candidateNamespace);
@@ -889,7 +897,7 @@ public sealed class PublicSnapshotProjector
         }
         if (pending.Kind is not (DecisionResponseKind.EntityRef or DecisionResponseKind.EntityRefList))
             throw new PublicMappingException("TODO-N02-DECISION-KIND",
-                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool及单实体引用应答；" +
+                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool、Confirm及单实体引用应答；" +
                 "需要协议/协调者裁定该形状，映射层不发明第二个应答结构");
         if (pending.Maximum != 1 || pending.Minimum is < 0 or > 1
             || pending.Kind == DecisionResponseKind.EntityRef && pending.Minimum != 1)

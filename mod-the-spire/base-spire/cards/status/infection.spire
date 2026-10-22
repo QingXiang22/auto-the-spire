@@ -1,0 +1,30 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use Infection { template = CardDefinition args = { definition = "base-spire:infection" sourceEntry = "INFECTION" kind = "status" rarity = "status" cost = -1 upgradedCost = -1 targeted = false exhausts = false leavesPlay = false } }
+template InfectionContent { body = {
+  procedure Created { parameters = { card = Ref(Card) } body = {
+    if = { condition = equal(field(card, Card.DefinitionId), "base-spire:infection") then = { set = { target = card field = Card.CanUpgrade value = false } } }
+  } }
+  subscription Created { event = CardCreated reaction = Created }
+  procedure Keyword { pure = true parameters = { value = Bool card = Ref(Card) keyword = String(length = 16) } result = Bool body = {
+    return = { value = or(value, and(equal(field(card, Card.DefinitionId), "base-spire:infection"), equal(keyword, "unplayable"))) }
+  } }
+  subscription Keyword { event = ModifyCardKeyword reaction = Keyword }
+  procedure HasEffect { pure = true parameters = { value = Bool card = Ref(Card) } result = Bool body = {
+    return = { value = or(value, equal(field(card, Card.DefinitionId), "base-spire:infection")) }
+  } }
+  subscription HasEffect { event = CardHasTurnEndInHandEffect reaction = HasEffect }
+  procedure TurnEnd { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+    if = { condition = equal(field(card, Card.DefinitionId), "base-spire:infection") then = {
+      call = { procedure = DamagePlayerFromCard args = { owner = owner card = card amount = 3 } }
+    } }
+  } }
+  subscription TurnEnd { event = CardTurnEndInHandEffect reaction = TurnEnd }
+  # Registration identifies executable content; Unplayable must prevent every body invocation.
+  procedure Execute { parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) } body = { fail = { message = "Infection cannot be played" } } }
+  dispatchCase Execute { dispatch = ExecuteCardBody key = "base-spire:infection" procedure = Execute }
+  procedure Damage { pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int body = { return = { value = 0 } } }
+  dispatchCase Damage { dispatch = ReadCardDamage key = "base-spire:infection" procedure = Damage }
+} }
+use InfectionBehavior { template = InfectionContent }

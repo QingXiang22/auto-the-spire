@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+template LeafSlimeMContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:leaf-slime-m" initial = "STICKY_SHOT" } }
+  use Attack { template = EnemyMoveNodeDefinition args = { definition = "base-spire:leaf-slime-m" id = "CLUMP_SHOT" next = "STICKY_SHOT" intent = "attack" index = 0 } }
+  use Sticky { template = EnemyMoveNodeDefinition args = { definition = "base-spire:leaf-slime-m" id = "STICKY_SHOT" next = "CLUMP_SHOT" intent = "status" index = 1 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    locals = { card = Binding }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "STICKY_SHOT") then = {
+        repeat = { count = 2 body = {
+        call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:slimed" } into = card }
+        call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "generate" } }
+        } }
+      } else = { call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 8 } } } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:leaf-slime-m" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:leaf-slime-m" hp = 32 } } } }
+} }
+use LeafSlimeM { template = LeafSlimeMContent }

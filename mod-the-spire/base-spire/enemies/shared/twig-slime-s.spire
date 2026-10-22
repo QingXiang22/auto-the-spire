@@ -1,8 +1,13 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-
-# Source: TwigSlimeS.cs; Ascension 0: initial HP 7..11 (development spawn uses the minimum) and TACKLE for 4.
-use TwigSlimeS {
-  template = SingleAttackEnemy
-  args = { definition = "base-spire:twig-slime-s" hp = 7 damage = 4 }
-}
+template TwigSlimeSContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:twig-slime-s" initial = "TACKLE_MOVE" } }
+  use Tackle { template = EnemyMoveNodeDefinition args = { definition = "base-spire:twig-slime-s" id = "TACKLE_MOVE" next = "TACKLE_MOVE" intent = "attack" index = 0 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = { call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 4 } } }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:twig-slime-s" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:twig-slime-s" hp = 7 } } } }
+} }
+use TwigSlimeS { template = TwigSlimeSContent }

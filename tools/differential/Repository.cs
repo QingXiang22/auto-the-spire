@@ -35,6 +35,8 @@ internal static class Repository
             || head != root.GetProperty("commit").GetString() || tree != root.GetProperty("tree").GetString()
             || Git("status", "--porcelain", "--untracked-files=all").Length != 0)
             throw new InvalidOperationException("Independent reference does not match the clean locked commit/tree.");
-        return new { repository = root.GetProperty("repository").GetString(), commit = head, tree, clean = true };
+        return new { repository = root.GetProperty("repository").GetString(), commit = head, tree, clean = true,
+            declared_game_baseline = root.GetProperty("declared_game_baseline").GetString(),
+            rule_source = root.GetProperty("rule_source").GetString() };
     }
 }

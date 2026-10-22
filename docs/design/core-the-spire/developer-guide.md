@@ -348,9 +348,42 @@ var firstFault = session.Debug.FirstFault;
 
 `RandomCall` 的 `Random` 字段保存操作、上下界、实际结果，以及流和总原始字数的调用前后游标。一次 API 调用可能消费多个原始字；洗牌为每次交换各记一条，候选是交换前的有效前缀，`pick` 保存实际查询顺序。候选实例为只读副本，默认最多 256 项，可通过 `SessionDebugOptions.MaxCandidates` 调整；`CandidateCount` 保留完整数量，截断由 `CandidatesTruncated` 明示。候选截断或记录丢失时，工具不能宣称对应诊断维度一致。
 
+`sampleFloat32` 在同一条 `RandomCallDetails.Float32` 中保存已求值的 `MinimumBits`、`MaximumBits` 和最终 `ResultBits`。三个字段均为 Int 承载的无符号 binary32 位型；原 `double` 操作、`[0,1)` 上下界、原始结果与游标仍保留。直接调用 `Random.DrawDouble` 和其他随机指令没有该附加数据。相等浮点边界仍消费一次，无效边界在取样前失败；附加数据不增加记录数量，容量耗尽时不回写旧记录或已拉取快照。比较 `sampleFloat32` 的实际参数和结果时，缺少该数据必须报告缺维度。
+
+需要在临时实体销毁后读取事件载荷或随机候选字段时，显式设置 `CaptureValues: true`。当前 Core.TheSpire 0.9.4 提供浮点附加诊断、候选的一层引用与出关系复制、该诊断选项及下列只读记录，执行语义标识保持 `engine/ir@0.9`；原调试调用默认不复制这些值。
+
+```csharp
+var options = new SessionDebugOptions(CaptureValues: true,
+    MaxSnapshotEntities: 256, MaxSnapshotValues: 4096);
+var session = new Session(rules, 42, ["player"], debug: options);
+session.Start();
+foreach (var record in session.Debug!.Capture())
+{
+    if (record.Snapshot is { Complete: true } snapshot)
+    {
+        // Values 保存事件的类型化载荷；Entities 保存直接载荷引用或随机候选的类型和字段。
+        // 引用仍是本 Session 的实例编号，跨后端比较需另建语义实例对应。
+    }
+}
+```
+
+`Snapshot` 在事件发出、监听器开始前复制载荷及直接引用实体；随机候选在实际取样后、交换或后续规则修改前复制。字段包括内部字段，引用字段只复制编号，不递归遍历对象图。记录保存发生时的字段，之后的修改和销毁不影响它；记录不能用于恢复或回写游戏状态。
+
+候选通过字段引用另一个定义实体时，可同时设置 `CaptureCandidateReferences: true`。随机记录先按候选原顺序复制根实体，再复制这些根字段中的一层 `Ref` 或已复制 `RefList` 前缀所指向的实体。共享引用去重，循环不扩张，引用实体中的字段仍只保存编号，不再继续跟随。事件载荷的复制规则保持不变；`CaptureValues` 关闭时该选项不创建快照。
+
+`Snapshot.ReferenceDepth` 为 1 表示本条随机候选请求复制一层字段引用，0 表示仅复制原根实体。它说明所请求的边界；完整性仍须检查 `Complete`，不能据此宣称完整对象图。根与一层引用共用实体、值和文本预算，没有额外容量；缺实体或超限仍明确不完整。需要读取间接定义的消费者必须拒绝深度不足、定义副本缺失或不完整的记录，不能用后续边界上的定义值替代取样时的值。
+
+候选定义通过关系连接标签等实体时，可设置 `CaptureCandidateRelations: true`。随机记录先完成根及请求的一层字段引用复制，再保存这些实体当时的非空出关系及关系目标字段。仅展开这一次出关系；新增目标的字段引用和关系不会继续展开，共享目标仍去重。该选项不自动开启字段引用复制，不扩展事件快照；`CaptureValues` 关闭或随机调用没有候选时也不展开关系。
+
+`Snapshot.RelationsCaptured` 表明本条记录请求了关系复制；值为 true、`RelationCount` 为 0 且 `Complete` 为 true 时，所请求实体的出关系确实为空。每个 `Relations` 条目保存 Owner、Relation、原顺序 Targets、原 TargetCount 和关系名称截断标记。`RelationCount` 保存复制前的非空关系组数，记录缺失或目标前缀不完整均使 `Truncated` 为 true。关系目标副本缺失时消费者须失败，不能回查当前关系补齐历史。
+
+每条记录的实体数由 `MaxSnapshotEntities` 限制，默认 256。`MaxSnapshotValues` 默认 4096，是载荷值、实体字段值、列表元素、关系组和目标编号共用的复制数量上限；每项各占一个。根与字段引用优先，再复制关系及其目标；没有额外容量。字符串和关系名称使用 `MaxTextLength` 上限。复制前检查剩余容量；记录容量耗尽后不再创建值快照。
+
+值记录保留 `ValueKind`；标量使用 invariant 文本，实体／参与者／作用域引用和枚举保存数值编号，列表通过只读 `Items` 保存整数或引用编号。`OriginalLength` 保留字符串或列表的原长度，`ValueCount` 和 `FieldCount` 保留原载荷值数和字段数；`Truncated` 明确指出文本、列表、字段、载荷、实体或关系截断。记录的 `Subject`／`Detail` 截断另由 `TextTruncated` 标记。实际不存在的候选实体标记 `Missing`。`Complete` 仅表示本条所请求复制边界完整，不代表完整对象图、语义对应或玩法比较完成；缺 `Snapshot`、文本截断、缺实体或 `DroppedRecords > 0` 时，对应比较继续失败。
+
 加载文本包时使用 `package.CreateSession(seed, roles, gameSeed, debug: new SessionDebugOptions())`，保持原包的随机配置。诊断沿每会话的拉取式轨迹保存，不使用全局回调。直接调用 `session.Random` 也记录调用；只有在 DSL 指令执行期间才有指令来源与执行上下文。失败指令可能留下已执行抽取的诊断，随机状态仍按指令的原子性规则恢复；故障后的记录不能充当成功边界。
 
-tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
+tools/differential 的 `normal-compare-self-test` 在正常首战中读取已销毁候选、候选间接定义和伤害结果的字段，确认敌人 `[0,2)` 与奖励 `[0,1)` 的实际浮点取样范围，逐步核对关闭快照时的状态、随机和完整公开观察，并拒绝缺浮点附加数据、缺间接定义或复制深度、缺快照、截断、丢失及零执行。正常比较也检查这些历史记录的完整性。复制结果只在诊断输出目录保存一次。真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。
 
 ## 9. 维护内核时修改哪里
 

@@ -23,6 +23,28 @@
 
 以下 RUN-01～05 是完整 Run 的目标要求，不改变上文开发操作的实际支持范围。正常入口须包含 Neow、真实地图与前置随机消费；复用角色初态、战斗、奖励及永久实例，不另建 C# RunDriver 或 Host 玩法循环。
 
+### 正常开局首段
+
+`StartNormalRun` 使用全解锁、A0、单人 Ironclad 配置。它只接受未开始开发操作的初态，复用 Session 中的 Player 与空 Run，建立 80 HP、99 金币、5 Strike／4 Defend／Bash 及 BurningBlood。入口复用角色初始化守卫，检查资源、回合、牌区与物品状态，并要求尚未关联 Run；获得再移除遗物后遗留的金币变化也会阻止开局。拒绝启动不改状态或随机流。Run.Profile 公开说明该输入配置；其他角色、进阶和解锁配置尚未接入。
+
+`Player.CurrentRun` 一旦关联正常 Run，开发便利动作便由 DSL 前置拒绝：直接加牌／获得物品／生成敌人、移除遗物、开发靶人、免费抽牌／弃手牌／升级手牌及直接进入开发房间。未关联 Run 的开发会话保留原候选与执行方式；仅创建开发 Run 容器不构成关联。正常出牌、目标选择、回合推进、药水使用／丢弃、奖励领取／跳过与地图操作继续使用各自资格。该限制只作用于外部开发 action，共享 procedure 仍由正常初始化和来源规则调用；不改变来源池、随机顺序或内容支持范围。直接提交被限制的 action 也须在执行前拒绝，状态与随机不变。
+
+开局先按 `RunManager.InitializeNewRun`／`GenerateRooms` 建立两侧遗物袋，分配共享 Ancient，再按 Overgrowth→Hive→Glory 预生成事件、普通／精英遭遇、Boss 和 Ancient 队列。源池成员及顺序完整保留。相邻遭遇使用源标签拒绝抽样，未支持内容仍参与源队列，不改成已实现子集。获得遗物时，先移除两侧袋中相同标识，再执行获得监听。
+
+首幕地图在进入 Neow 前生成。`SourceGaussianInt` 从 `act_1_map` 流按源算法计算营火／问号数量；随后执行七条路径、源预排序与洗牌、房型分配、重复路径裁剪／修复及坐标整理。公开 MapNode.Type 与 MapChildren 保存最终真实地图，临时列表和路径段在发布前清理。路径段在裁剪阶段以每列三位编码，17 个节点占用最多 51 位；坐标在裁剪结束前不改变。
+
+Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，保留源排除关系及随机顺序。选择恰好一个 NeowOption 后，通过共享获得操作执行效果，等待离开确认后回到地图。GoldenPearl、NutritiousOyster、BoomingConch 的效果已接入；其余选项仍公开，选择时明确报告未支持，不以无效果获得代替。
+
+`ChooseMapPoint` 只允许当前节点的未访问后继。首个 Monster 消费实际普通遭遇队列，创建稳定递增的 RunVisit，记录原地图类型、实际房型及遭遇标识。已接通 SlimesWeak 和 FuzzyWurmCrawlerWeak：按源编队顺序及 Niche 流抽取真实 HP，再生成敌人、重建和洗牌战斗副本，并自动启动首回合抽五张牌。SlimesWeak 的累计楼层与初始化消费见下文。其他遭遇或房型在修改访问和抽取 HP 之前报告未支持。非法、重复或非后继选点不改状态或 RNG。
+
+正常普通战斗胜利沿用出牌、攻击和伤害深度保护；手动出牌、回合开始／结束及药水使用还以 `Player.EffectDepth` 等待整个外层操作结束，药水先消耗，回合末通知先完成。胜利还要求本场已有真实敌人死亡通知，不能仅因旧目标已死而在回合边界凭空生成奖励。战斗结束反应先执行，再按 `Player.AfterCombatEnd` 清理能力、格挡及战斗牌，随后执行早期胜利反应（MeatOnTheBone），最后执行普通胜利反应（BurningBlood／BlackBlood）。`CombatEnded`、`CombatVictoryEarly` 与 `CombatVictory` 分开通知；单人死亡不发胜利通知、不生成奖励。开发战斗仍保留其检查所需的战斗牌，正常访问清理不改变开发场景的生命周期。
+
+`RunVisit.Committed` 在余效及结束反应完成后只设置一次。Player 资源和 RunDeck 本身就是权威永久实例，不另复制生命或将战斗牌字段回写永久牌。胜利调用共享普通奖励生成，以实际访问 StableId、房型与幕号为输入，`RunVisit.Rewards` 关联同一 CombatRewardSet，Run 与访问阶段变为 rewards；失败访问标记 defeated，不开放后继。正常战斗不能通过 EndDevelopmentCombat 强行关闭。
+
+正常访问复用现有 `ClaimDevelopmentGoldReward`、卡牌／药水领取与跳过、`CloseDevelopmentRewards` 动作。领取和跳过不抽样，关闭清理未选实例并标记奖励容器与访问已关闭，然后返回 map，仅将当前节点的未访问子节点设为 Selectable。关闭和再次领取由原守卫拒绝；后续未迁移房型／遭遇仍在修改访问或随机流前失败。已领取永久实例在下一场重建为独立副本。
+
+包为地图生成声明每条命令四百万条指令上限；超出时保留显式 BudgetExceeded，不截断路径、裁剪步骤或随机消费。跨幕、事件子战斗和终局尚未接入该访问。源移植地图比较、开局操作向量、同一公开 Host 流程和完整模拟器逐步比较分别验证，不能据此关闭 M01。
+
 | 要求 | 输入、状态与执行顺序 | 失败与可观察结果 |
 | --- | --- | --- |
 | RUN-01 阶段与所有者 | Run 保存当前幕、旅行／访问／幕转换／终局阶段；每次访问有稳定标识、原地图节点类型、实际房型、局部阶段与待完成事项。战斗、奖励各由该访问关联；具体阶段名由 DSL 声明 | 合法动作来自同一阶段及真实后继图；未答决策、未完成余效或未关闭奖励时，跨房动作不可用 |
@@ -81,6 +103,10 @@ AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL �
 源码依据为CardSelectCmd.FromDeckForUpgrade/FromDeckForTransformation、CardFactory.GetDefaultTransformationOptions与CardCmd.Transform；永久Deck变换追加末尾，其他战斗牌区才保留旧下标。普通移除的BeforeRemoved不等于变换的AfterTransformedFrom/To，不能混用生命周期。
 
 ## 战斗副本来源与结算写回
+
+正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak以根seed加累计楼层、再加 `SLIMES_WEAK` 的UTF-8 XxHash64派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。未迁移遭遇在访问、HP及编队抽样之前失败。
+
+`SpawnDevelopmentEnemy` 供受控单敌入口立即发布意图；正常批量出生调用只创建实例的 `CreateEncounterEnemy`，由 `BeforeCombatStart` 对全体按序初始化。LeafSlimeS初始RAND且两个等权分支不能连用；LeafSlimeM固定状态与攻击交替；TwigSlimeS固定TACKLE_MOVE。三者复用共享图及状态牌生成操作。
 
 正常差异测试在各侧分别保留永久实例的首次出现编号，删除后不复用。每个战斗牌区逐实例记录永久来源：base读取LongTermSource，独立参考读取DeckVersion；生成的临时牌标为temporary，诊断来源不发布到net或策略输入。同定义不同来源必须保持可区分，不按当前卡名重匹配。
 

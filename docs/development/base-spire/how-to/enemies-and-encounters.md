@@ -1,6 +1,6 @@
 # 开发敌人、意图与遭遇
 
-文档类型：操作指南（How-to）。纯DSL包已有受控开发战斗；FuzzyWurmCrawler和TwigSlimeM使用共享招式图，其余支持内容以实际definition和行为测试为准。正常遭遇队列与Run尚未恢复，不能直接运行旧 `enemies*.spire` 或C#敌人编译器。
+文档类型：操作指南（How-to）。纯DSL包已有受控开发战斗与指定正常开局。FuzzyWurmCrawler、TwigSlimeM和SlimesWeak四类史莱姆使用共享招式图；seed777正常首战进入真实SlimesWeak，按累计楼层派生编队并按出生顺序抽HP。其他支持范围以实际definition和行为测试为准，不能直接运行旧 `enemies*.spire` 或C#敌人编译器。
 
 从 enemies/catalog 的 source_path 读目标敌人，从 encounters/catalog 与 source 快照确认编队。旧[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t08)保留完整范围，具体动作机制依赖[战斗指南](cards-and-combat.md)。
 
@@ -20,7 +20,11 @@
 
 确定性行动不要额外消耗随机；空候选、死亡目标和分支被跳过时同样记录是否应抽样。用固定输入检查下一行动与流游标，再与真正独立参考比较；只检查两次自运行相同不能证明原版保真。
 
-核对AddBranch的确切重载：TwigSlimeM的整数2是最多连续次数，默认权重1。共享图保留零权重项及源候选顺序，单个有效分支仍消费monster_ai；总权重为0明确失败。静态分数权重转成binary32，按源的double缩放和逐项float扣减顺序执行。条件节点和动态权重仍未支持；Whistle 已通过共享 `StunEnemy` 接入强制迁移，验证覆盖跳过、恢复、公开意图及同定义实例隔离。
+核对AddBranch的确切重载：TwigSlimeM的整数2是最多连续次数，默认权重1。共享图保留零权重项及源候选顺序，单个有效分支仍消费monster_ai；总权重为0明确失败。静态分数权重转成binary32，按源的double缩放和逐项float扣减顺序执行。条件节点使用ResolveEnemyMoveCondition的pure分派返回同图下一节点，解析至真实招式后才保存历史，不抽随机；动态权重仍未支持；Whistle的默认击晕已接入StunEnemy。
+
+Wriggler.Create(slot,startStunned)支持wriggler1..wriggler4，按当前活动敌人已用的最大HP排除17..21中的值，再用niche抽候选偏移；耗尽才按整个区间抽取。未知槽位在抽样前失败。1／3槽首招bite，2／4槽首招wriggle；StartStunned先执行SPAWNED_MOVE再进入槽位初招。wriggle生成Infection到弃牌堆后获得2力量，复合意图按源顺序发布为buff,status。Wriggler.Spawn提供四槽开发入口；父事件调用完整Create过程，不能据开发动作宣称事件访问已完成。移除实例时调用RemoveCombatEnemy，清理Power、招式和模块私有状态。
+
+Whistle为2费Ancient攻击，造成33／44伤害后耗尽，并对仍存活的目标调用StunEnemy。目标公开STUNNED／stun，实际跳过一次行动后恢复原已选招式本身；恢复不抽随机，不能跳到其后继。此入口只支持已迁移招式图，未迁移图具名失败；不在Host补偿行动。详见[击晕约定](../../../design/mod-the-spire/enemy-turn/spec.md#whistle击晕与恢复)。
 
 ## 编排遭遇与编队
 
@@ -28,7 +32,9 @@
 
 将 weak／regular／elite／boss 资格与幕内队列放 encounter／Run 的共享规则。保持相邻重复／tag 回避、源回退与队列轮换，不能把暂未实现的敌人从池里删掉。抽到未支持内容应具名失败，既不替换弱怪，也不返回空战斗。
 
-召唤、复活、逃离与行动控制是独立机制。源敌人需要它们时记录依赖；主清单仍暂停的机制不由本指南自动授权恢复。一个普通敌人可单独实现，不因召唤缺口阻挡所有其他敌人。
+BattleFriendV1／V2／V3使用固定IDLE自循环和stun意图，HP分别为75／150／300。固定HP仍消费niche；首个实例从单元素可用集合抽偏移，已有相同最大HP时按源区间形式抽样。入战获得3层BattlewornDummyTimeLimitPower，前三次敌方回合结束依次为2、1、过期并逃离。逃离先移除Power，再将正HP实例排除出活动集合；CombatOutcome为victory时，父事件仍须用CombatTimedOut排除档位奖励。父事件入口不由开发Spawn动作代替。
+
+召唤、复活与其他行动控制是独立机制。源敌人需要它们时记录依赖；主清单仍暂停的机制不由本指南自动授权恢复。一个普通敌人可单独实现，不因召唤缺口阻挡所有其他敌人。
 
 ## 验证真实消费者
 

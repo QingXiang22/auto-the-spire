@@ -16,9 +16,9 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
-| [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
+| [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；CombatTimedOut: Bool=false；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
 | [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；Rarity 字段保存源稀有度，奖励资格与战斗生成资格分别维护 |
-| [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none` | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；没有移除、死亡钩子、遭遇编队或原版 AI 选择 |
+| [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none`；Escaped: Bool=false；隐藏SpawnOrder: Int | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；死亡和逃离各有独立状态；招式图、编队及支持范围见敌人指南 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
 | Powers | 有序 Power 集合 | 按定义的shared／per-applier／independent策略匹配实例；公开元数据把它标为 not_published，因为当前 group／sequence 集合元数据无法表达两种持有者类型 |
 | [Potion](../../../../mod-the-spire/base-spire/potions/schema.spire) | DefinitionId: String(64)、EffectSupported: Bool、Usage／Target: String(16)、Slot: Int(-1..2) | 真实药水实例，Slot=-1表示未入库存；来源池元数据与效果支持分别维护 |
@@ -35,10 +35,13 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | AfterPlayerTurnStart | owner: Ref(Player) | AfterSideTurnStarted和起手抽牌后发出，对应原版 AfterPlayerTurnStart（原版按 Early、正常、Late 三轮遍历） |
 | AfterPlayerTurnStartLate | owner: Ref(Player) | 紧随 AfterPlayerTurnStart 发出，对应原版 AfterPlayerTurnStartLate；三个玩家回合开始时点都在同一执行栈内按声明顺序完成 |
 | AfterTurnEnded | owner: Ref(Player) | 回合末自动打出后弃掉手牌，再发出；临时玩家侧 Power 随后清理，debuff 的减层在敌方阶段结束时发生 |
-| EnemyDied | target: Ref(Enemy) | 敌人生命从正数到 0 时发出一次；原版的移除生物与死亡钩子未迁移 |
-| CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；胜利后可生成开发金币待领项；没有正常 Run 结算 |
+| EnemyAddedToCombat | owner: Ref(Player)、target: Ref(Enemy) | 开战时对活动敌人在 BeforeCombatStart 前逐一发出；BattleFriend 在此获得3层计时 Power |
+| EnemyEscaped | owner: Ref(Player)、target: Ref(Enemy) | 全部Power移除、Escaped及CombatTimedOut写入后发出；不发EnemyDied或Fatal |
+| EnemyDied | target: Ref(Enemy) | 普通敌人确认死亡时发出一次，完成通知后标记DeathResolved并通过RemovePower清理其Power；完整死亡钩子、防死与保留策略未迁移，见[死亡约定](../../../design/mod-the-spire/combat-end/spec.md) |
+| CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；开发胜利可生成奖励；正常访问在结束通知、清理及胜利通知后提交并生成奖励 |
+| CombatVictoryEarly／CombatVictory | owner: Ref(Player)、victory: Bool | 胜利时依次通知早期／普通胜利效果；正常访问先清理能力、格挡与战斗牌，再发送这两项通知，之后提交访问及生成奖励 |
 | EnemyTurnStarted | owner: Ref(Player)、target: Ref(Enemy) | 玩家回合结束后，对每个 `Hp > 0` 的敌人各发一次；敌人内容模板按 DefinitionId 订阅并实现自己的招 |
-| AfterEnemyTurnEnded | owner: Ref(Player) | 敌方阶段结束时发出；共享规则在这里做 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
+| AfterEnemyTurnEnded | owner: Ref(Player) | 敌方阶段结束时发出；按生物出生顺序，每个生物先执行其Power（获得顺序）再执行怪物监听；这里做计时及 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
 | AfterShuffle | owner: Ref(Player) | 仅在实际转移并完成 shuffle 后发出 |
 | AfterCardDrawn | owner: Ref(Player)、card: Ref(Card) | 成功移到 Hand 后发出；未抽到牌不发 |
 | [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 旧声明保留，当前正文管线不发布；新增主效果绑定ExecuteCardBody，外部反应使用Before／After通知 |
@@ -47,6 +50,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | CardExhausted | owner: Ref(Player)、card: Ref(Card) | 任何受支持的完整耗尽操作把牌移入 ExhaustPile 后发出；订阅时可确认卡已在消耗堆 |
 
 ## 过程与公开动作
+
+开发便利 action 只在 `Player.CurrentRun` 未关联正常 Run 时提供；`CanUseDevelopmentActions(owner)` 返回这一资格。直接加牌／获得／生成、移除遗物、开发靶人、免费抽牌／弃手牌／升级和直接进入开发房间均受该守卫约束。`StartNormalRun` 后仍复用正常出牌、回合、药水、奖励和地图动作；正常规则调用下表共享 procedure 不受开发 action 守卫限制。
 
 遗物与Power统一使用[通知与修正监听](../../../design/mod-the-spire/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。具体监听与私有状态位于powers/shared对应模块；通用定义与生命周期位于powers/rules。
 
@@ -83,10 +88,15 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999) | 累加并截到 999，不应用卡牌／Power 的加性或乘性修正；不是通用获得格挡流程 |
 | GainBlock | owner=Ref(Player)、amount=Int(0..999) | 卡牌格挡链：先由Dexterity贡献加性修正，再在持有正层Frail时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
 | [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
-| ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义 |
+| ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义；已确认死亡或逃离的持有者不再接受Power |
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
 | GainEnergy | owner=Ref(Player)、amount=Int(0..999) | Energy 增加并可超过 MaxEnergy（上限 999），尊重 NoEnergyGain；回合重置使用 GetMaxEnergy |
 | [DamageEnemy](../../../../mod-the-spire/base-spire/combat/damage.spire) | target=Ref(Enemy)、amount=Int(0..999999) | 先扣 `min(Block, amount)` 格挡，剩余从 Hp 扣除且不低于 0；无加成伤害，修正参与者不参与（遗物与 Power 用它） |
+| EnemyIsActive | target: Ref(Enemy)，pure，返回 Bool | 正 HP 且未逃离；选敌、出牌、伤害、敌方行动及终局判断共享此资格 |
+| EnemyIsHittable | target: Ref(Enemy)，pure，返回 Bool | 非活动目标返回 false；其余以 true 为初值征询 ShouldAllowHittingEnemy |
+| EscapeEnemy | owner: Ref(Player)、target: Ref(Enemy) | 活战中的活动敌人先逐个RemovePower，再写Escaped／CombatTimedOut、发EnemyEscaped并在外层效果结束后检查胜利；保留正HP，重复调用无效果 |
+| ShouldAllowHittingEnemy | value: Bool、target: Ref(Enemy)，pure修正事件 | 供命中资格监听返回当前目标是否允许命中；不写状态或消费随机 |
+| DamageAllEnemiesFromPlayer | owner: Ref(Player)、amount: Int(0..999999) | 对当前 EnemyIsHittable 目标执行无加成群伤；整批提交生命／格挡后才逐项通知伤害和死亡。无目标直接返回；其他攻击、选敌和胜利条件仍沿各自现有资格 |
 | DamageEnemyPowered | owner: Ref(Player)、card: Ref(Card)、target: Ref(Enemy)、amount: Int(0..999999) | 以显式攻击者和牌源计算Strength、Strike及升级牌遗物加成，再应用Weak、目标Vulnerable和攻击者Cruelty，最终一次向下取整，再按格挡→生命结算；BodySlam等计算伤害也走此链 |
 | ModifyVulnerableMultiplier | value: Int、owner: Ref(Player)、card: Binding、target: Binding；pure修正事件 | 正层目标Vulnerable在玩家加成攻击链以150百分数点征询；PaperPhrog加25，之后叠加Cruelty，再乘伤害；无目标状态不征询 |
 | ModifyEnemyWeakMultiplier | value: Int、owner: Ref(Player)、attacker: Ref(Enemy)；pure修正事件 | 正层攻击者Weak在敌方加成攻击链以75百分数点征询；owner为防守玩家，PaperKrane减15；无攻击者状态不征询 |
@@ -94,6 +104,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | StatusMultiplierRelic模板 | definition: String(64)、vulnerableBonus: Int(0..100)=0、weakReduction: Int(0..75)=0 | 有效持有实例订阅两个状态倍率站点；PaperPhrog配置25、PaperKrane配置15，虚弱倍率最低0；不改变状态层数／时长 |
 | ResetTurnEnergy／AfterEnergyReset | owner: Ref(Player)，过程／事件 | 首回合重置；后续有有效保留能量资格时将最大能量加到余能，上限999，否则重置。该操作绕过禁止获得能量，随后发事件；额外奖励仍调用GainEnergy |
 | DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的未阻挡伤害发 PlayerHpLost 并检查开发失败；不改变 MaxHp |
+| DamagePlayerFromCard | owner=Ref(Player)、card=Ref(Card)、amount=Int(0..999999) | 玩家自伤，保留牌源与空play，可格挡、无加成；经DamageResult、生命损失通知和失败判定，Infection回合末消费 |
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗／回合、手牌、共享资格与能量；付款、进入InPlay、执行唯一正文；全部重复完成后提交捕获的结果区 |
 | PlayAttackCard | owner、card | 同上，但把敌人解析为第一个 `Hp > 0` 的开发目标后调用唯一正文；无目标不是合法候选 |
@@ -105,14 +116,16 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | RestAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：只在营火且未使用时允许，回复 `floor(MaxHp × 0.3)` 后把选项标记为已用；过程在非营火或重复使用时失败 |
 | ForgeAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：未用过的营火、存活且非战斗，有本玩家可升级永久牌时发出 Engine 的 0..1 实例决策；选择升级该永久实例并用掉选项，取消不消耗；成功后发 AfterRestSiteSmith |
 | LeaveDevelopmentRoom | owner=Ref(Player) | 公开 action 与同名过程：只有成功用过营火选项、没有选择待决且非战斗时可离开，房间复位为 `none`；奖励界面必须使用 CloseDevelopmentRewards |
-| [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 存活玩家胜利时，Ironclad调用完整普通奖励操作；未选角色的金币探针仅从命名流 `base-spire:player:rewards` 的 `[10, 21)` 抽金额；写入待领状态、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
+| [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 仅用于开发战斗；存活玩家胜利时，Ironclad调用完整普通奖励操作；未选角色的金币探针仅从命名流 `base-spire:player:rewards` 的 `[10, 21)` 抽金额；写入待领状态、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
 | ClaimDevelopmentGoldReward | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 且条目 pending 时把保存金额加进 Gold（开发上限 99999），清空条目；领取不关闭界面，不重抽，不能重复领取 |
 | CloseDevelopmentRewards | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 时清空未领条目、金额与房间状态；允许不领取直接关闭，不给金币也不抽随机；关闭前禁止开始新战斗、进入营火或 LeaveDevelopmentRoom |
-| [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 只在敌人死亡后调用：若已无 `Hp > 0` 的敌人且战斗仍活跃，写 victory、关闭回合门与活跃标记并发 CombatEnded |
+| [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 在伤害、攻击、出牌、回合或药水操作的外层边界检查；本场已有真实敌人死亡通知、深度均归零且已无存活敌人时，写 victory、关闭回合与活跃标记，按结束→正常清理→早期胜利→普通胜利顺序通知，再提交正常访问及生成奖励 |
 | CheckCombatDefeat | owner=Ref(Player) | 每次玩家掉血后调用：生命为 0 且战斗仍活跃时写 defeat 并关闭状态，再发 CombatEnded |
 | [DamagePlayerPowered](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire) | attacker=Ref(Enemy)、owner=Ref(Player)、amount | 敌方攻击链：防守方 `after-attacked-damage`（Thorns）先以无加成伤害反击攻击者，再按攻击者 Strength→攻击者 Weak ×0.75→防守方 Vulnerable ×1.5（整数向下取整）→格挡→生命，并做失败判定 |
 | RunEnemyTurn | owner=Ref(Player) | 敌方阶段：对每个可命中敌人先清空其格挡（源 `Creature.AfterTurnStart` 的敌侧语义），再发 EnemyTurnStarted；最后发 AfterEnemyTurnEnded |
 | [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义图保存初始招式；固定首招不抽样。生成和BeforeCombatStart复用，不重置随机流 |
+| ClearEnemyMoves／RemoveCombatEnemy | target=Ref(Enemy) | 前者只清招式及历史；后者依次移除Power、清招式、发EnemyRemoving供内容清私有状态，再销毁敌人。正常访问关闭复用后者 |
+| Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态并初始化图；条件节点不消费AI随机，未知槽位拒绝 |
 | PerformEnemyMove | owner=Ref(Player)、target=Ref(Enemy) | 复核双方生命，按保存节点分派ExecuteEnemyMove；完成后标记需要选招，暂停续接不重放正文 |
 | SelectNextEnemyMove | target=Ref(Enemy) | 对存活且未准备实例解析共享后继，保存MoveId／MoveIndex／Intent及实例历史；随机节点按源顺序与binary32权重消费monster_ai，已准备实例不再选招 |
 | [SingleAttackEnemy](../../../../mod-the-spire/base-spire/enemies/rules/single-attack-enemy.spire) 模板 | definition、hp、damage | 生成 `WhenEnemyTurn`（每回合对玩家造成固定伤害并保持 attack 意图）与 `Spawn`（用源最小 HP 创建） | TwigSlimeS（7 HP，4 伤害）、AssassinRubyRaider（18 HP，10 伤害） |
@@ -154,7 +167,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | --- | --- | --- |
 | RunDeck | 有序 Card 集合 | 永久实例，公开为 group；与全部战斗牌区分离 |
 | Player.UsesRunDeck | Bool=false | 第一次显式获得永久牌后为 true，后续不再使用默认开发占位牌 |
-| ObtainPermanentCard | owner: Ref(Player)、definition: String(64)、cost: Int(0..9)、targeted／exhausts／leavesPlay／strikeTag／isX: Bool、kind: String(16)、baseDamage: Int(0..999) | 只允许存活玩家在房间与战斗外获得；以给定已迁移定义创建永久实例，CanUpgrade=true，置 UsesRunDeck 后发 CardObtained；没有随机池或获得修正 |
+| ObtainPermanentCard | owner: Ref(Player)、definition: String(64)、cost: Int(-1..9)、targeted／exhausts／leavesPlay／strikeTag／isX: Bool、kind: String(16)、baseDamage: Int(0..999) | 只允许存活玩家在房间与战斗外获得；以给定已迁移定义创建永久实例，CanUpgrade=true，置 UsesRunDeck 后发 CardObtained；没有随机池或获得修正 |
 | CardDefinition 生成的 Obtain | owner: Ref(Player)；公开 action 无参数 | 以本定义配置调用共享获得过程，例如 Strike.Obtain；每次调用是独立实例 |
 | BuildCombatDeck | owner: Ref(Player) | UsesRunDeck=true 时删除本玩家所有旧非永久牌，从 RunDeck 复制已支持字段到 DrawPile；PermanentSource 隐藏引用具体原实例；顺序不变，不自动洗牌／抽牌，也不反写永久牌 |
 | HasUpgradablePermanentCards | owner: Ref(Player)，纯过程→Bool | 检查本玩家 RunDeck 中 CanUpgrade=true 且 Upgraded=false 的实例 |
@@ -164,9 +177,13 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 ## 模板与内容配置
 
+[CardDiscardBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/card-discard-block.spire) 接受 definition: String(64)、amount: Int(0..999)，生成 `WhenCardDiscarded`、`OnCardDiscarded` 与 `Obtain`。有效持有实例在 CardDiscarded 后、CombatActive 且非 EnemyPhase 时调用 GainUnpoweredBlock；ToughBandages 配置为 3。DiscardCombatCard 先移动本玩家手牌、发布 CardMoved，再发布 CardDiscarded；普通移牌和回合末 FinishTurnHand 清手不发布弃牌通知。
+
 [AfterShuffleBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/after-shuffle-block.spire) 的参数为 definition: String(64)、amount: Int(0..999)。它生成 `WhenShuffled`、`OnShuffle` 与 `Obtain`，按当前持有库存过滤并调用 GainUnpoweredBlock。`use TheAbacus` 生成 `TheAbacus.Obtain` 等名称；TheAbacus 正式参数为 6。
 
 [BeforeCombatStartBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/before-combat-start-block.spire) 的参数同样是 definition: String(64)、amount: Int(0..999)，生成 `WhenCombatStarts`、`OnCombatStart`（订阅 BeforeCombatStart）与 `Obtain`。它按持有者、DefinitionId 和 IsMelted 过滤后调用同一 GainUnpoweredBlock；`use Anchor` 为 10，`use FakeAnchor` 为 4，两者同时持有在同一次开始中共得 14。
+
+[CardExhaustDamageRelic](../../../../mod-the-spire/base-spire/relics/rules/card-exhaust-damage.spire) 接受 definition: String(64)、amount: Int(0..999)，生成 `WhenCardExhausted`、`OnCardExhausted` 与 `Obtain`。它在 CardExhausted 时按持有者、DefinitionId、IsMelted 和库存顺序绑定有效实例，调用 DamageAllEnemiesFromPlayer；CharonsAshes 配置为 3。
 
 回合资源模板共享 `{ definition: String(64) }`，各自再取一个触发回合、计数周期或伤害数值；它们都生成各自的监听过程与 `Obtain`：
 
@@ -212,7 +229,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 `BeforeCombatStartEnemyPowerRelic` 参数相同但作用于每个 `Hp > 0` 的敌人（`use BagOfMarbles` 施加 Vulnerable 1）。`EnemyDiedEnergyDrawRelic` 的参数为 definition、energy、cards，订阅 EnemyDied 后对持有者给能量并抽牌（`use GremlinHorn` 为 1／1）。
 
-回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（CombatEnded 且胜利、Hp 不超过 MaxHp 的阈值百分比时回复，`use MeatOnTheBone` 为 12／50）。显式EndDevelopmentCombat和下次BeginDevelopmentCombat通过ClearCombatPowers调用各实例的RemovePower；自然胜负仅发布CombatEnded，其他Power沿用现有开发清理边界。ExpireTurnPower订阅AfterPlayerTurnFinished，移除带ExpiresAtTurnEnd的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
+回合末与拾取类模板：`TurnEndNoBlockRelic`（AfterTurnEnded 时若 Block 为 0 则给无加成格挡，`use Orichalcum` 为 6）、`EveryTurnsDrawRelic`（AfterSideTurnStarted 计数取模，归零时抽牌，`use Pendulum` 为 3 回合 1 张）、`ObtainMaxHpRelic`（获得时提高 MaxHp 并回复同量，`use Strawberry` 为 7）、`CombatEndHealRelic`（胜利且 Hp 不超过 MaxHp 的阈值百分比时回复；early=true 订阅 CombatVictoryEarly，否则订阅 CombatVictory；`use MeatOnTheBone` 为 12／50 且 early=true）。显式EndDevelopmentCombat和下次BeginDevelopmentCombat通过ClearCombatPowers调用各实例的RemovePower；开发场景的自然胜负保留原能力清理边界；正常胜利在结束通知后清理能力、格挡和战斗牌，再发胜利通知并生成奖励。ExpireTurnPower订阅AfterPlayerTurnFinished，移除带ExpiresAtTurnEnd的能力（对应源 `FlameBarrierPower` 的当回合寿命），因此在敌方攻击期间仍会反击。
 
 药水：`PotionDefinition` 生成 `Obtain`（创建实例后调用共享ObtainPotion放进三格库存），效果模板按 DefinitionId 订阅 `PotionUsed`／`PotionUsedOnTarget`：`PotionBlockEffect`（无加成格挡，BlockPotion 12）、`PotionEnergyEffect`（EnergyPotion 2）、`PotionDrawEffect`（SwiftPotion 3）、`PotionMaxHpEffect`（FruitJuice 5，提高上限并回复同量）、`PotionHealPercentEffect`（BloodPotion 20% 上限）与 `PotionDamageEffect`（FirePotion 20 点无加成伤害）。
 

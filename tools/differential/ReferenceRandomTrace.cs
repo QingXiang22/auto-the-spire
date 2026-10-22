@@ -114,27 +114,9 @@ internal sealed class ReferenceRandomTrace : IDisposable
         hooks.Clear();
     }
 
-    // Only the three seed-derivation differences authorized for this original controlled case.
-    // The upstream generator, mapping, default constructor and game effects remain unchanged.
-    public static void ConfigureSourceStreams(RunRngSet run, string seed)
-    {
-        foreach (var type in Enum.GetValues<RunRngType>()) run.MockRng(type, SourceSeed(seed, StringHelper.SnakeCase(type.ToString())));
-    }
-
-    public static uint SourceSeed(string gameSeed, string name) => unchecked(Hash32(gameSeed) + Hash32(name));
-
-    public static uint Hash32(string text)
-    {
-        unchecked
-        {
-            var a = 352654597; var b = a;
-            for (var i = 0; i < text.Length; i += 2)
-            {
-                a = ((a << 5) + a) ^ text[i];
-                if (i + 1 < text.Length) b = ((b << 5) + b) ^ text[i + 1];
-            }
-            return (uint)(a + b * 1566083941);
-        }
-    }
+    // Native seed identity for the original ordered controlled fixture only.
+    // No run/player compatibility replacement or semantic rekeying is applied.
+    public static ulong SourceSeed(string gameSeed, string name) =>
+        unchecked(new RunRngSet(gameSeed).Seed + StringHelper.GetDeterministicHashCode(name));
 }
 #endif

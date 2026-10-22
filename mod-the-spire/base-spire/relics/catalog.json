@@ -233,6 +233,18 @@
     {
       "id": "base-spire:whetstone",
       "definition": "relics/shared/whetstone.spire"
+    },
+    {
+      "id": "base-spire:charons-ashes",
+      "definition": "relics/shared/charons-ashes.spire"
+    },
+    {
+      "id": "base-spire:tough-bandages",
+      "definition": "relics/shared/tough-bandages.spire"
+    },
+    {
+      "id": "base-spire:booming-conch",
+      "definition": "relics/shared/booming-conch.spire"
     }
   ]
 }

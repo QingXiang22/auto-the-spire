@@ -1,0 +1,240 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Temporary ordered lists belong to a single synchronous map build and are removed
+# before publishing the map. They never replace the Run's persistent node graph.
+entity MapWorkGroup { fields = {} }
+entity MapWork {
+  fields = {
+    Group = { type = Ref(MapWorkGroup) }
+    Position = { type = Int }
+    Node = { type = Ref(MapNode) optional = true }
+    Value = { type = Int default = 0 }
+  }
+}
+relation MapParents { target = MapNode }
+relation MapWorkItems { target = MapWork }
+relation MapKeySegments { target = MapSegment }
+
+procedure SourceMapOrder {
+  pure = true parameters = { node = Ref(MapNode) } result = Int
+  body = { return = { value = add(multiply(field(node, MapNode.Col), 32), field(node, MapNode.Row)) } }
+}
+procedure SourceMapPoint {
+  pure = true parameters = { run = Ref(Run) col = Int row = Int } result = Binding
+  body = { return = { value = first(where(type(MapNode), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(equal(field(n, MapNode.Col), col), equal(field(n, MapNode.Row), row)))))) } }
+}
+procedure MapWorkAt {
+  pure = true parameters = { group = Ref(MapWorkGroup) position = Int } result = Binding
+  body = { return = { value = first(where(relation(MapWorkItems, group), w, equal(field(w, MapWork.Position), position))) } }
+}
+procedure AddMapWork {
+  parameters = { group = Ref(MapWorkGroup) node = Binding value = Int }
+  locals = { item = Binding position = Int }
+  body = {
+    let = { into = position value = count(relation(MapWorkItems, group)) }
+    create = { type = MapWork scope = entityScope(group) into = item fields = { Group = group Position = position Node = node Value = value } }
+    addRelation = { relation = MapWorkItems owner = group target = item }
+  }
+}
+procedure DestroyMapWork {
+  parameters = { group = Ref(MapWorkGroup) }
+  body = {
+    forEach = { query = relation(MapWorkItems, group) item = item body = { destroy = { target = item } } }
+    destroy = { target = group }
+  }
+}
+procedure ShuffleMapWork {
+  parameters = { group = Ref(MapWorkGroup) }
+  locals = { index = Int pick = Int left = Binding right = Binding }
+  body = {
+    let = { into = index value = subtract(count(relation(MapWorkItems, group)), 1) }
+    repeat = { count = maximum(index, 0) body = {
+      sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = add(index, 1) into = pick }
+      let = { into = left value = pureCall(MapWorkAt, group, index) }
+      let = { into = right value = pureCall(MapWorkAt, group, pick) }
+      set = { target = left field = MapWork.Position value = pick }
+      set = { target = right field = MapWork.Position value = index }
+      let = { into = index value = subtract(index, 1) }
+    } }
+  }
+}
+procedure ConnectMapPoints {
+  parameters = { parent = Ref(MapNode) child = Ref(MapNode) }
+  body = {
+    if = { condition = not(exists(where(relation(MapChildren, parent), n, equal(n, child)))) then = {
+      addRelation = { relation = MapChildren owner = parent target = child }
+      addRelation = { relation = MapParents owner = child target = parent }
+    } }
+  }
+}
+procedure DisconnectMapPoints {
+  parameters = { parent = Ref(MapNode) child = Ref(MapNode) }
+  body = {
+    removeRelation = { relation = MapChildren owner = parent target = child }
+    removeRelation = { relation = MapParents owner = child target = parent }
+  }
+}
+procedure GetOrCreateMapPoint {
+  parameters = { run = Ref(Run) col = Int row = Int } result = Ref(MapNode)
+  locals = { node = Binding }
+  body = {
+    let = { into = node value = pureCall(SourceMapPoint, run, col, row) }
+    if = { condition = isNone(node) then = {
+      create = { type = MapNode scope = entityScope(run) into = node collection = MapNodes fields = { Run = run Index = count(collection(MapNodes)) Col = col Row = row } }
+    } }
+    return = { value = node }
+  }
+}
+procedure MapHasCrossover {
+  pure = true parameters = { current = Ref(MapNode) col = Int } result = Bool
+  locals = { neighbor = Binding delta = Int }
+  body = {
+    let = { into = delta value = subtract(col, field(current, MapNode.Col)) }
+    if = { condition = equal(delta, 0) then = { return = { value = false } } }
+    let = { into = neighbor value = pureCall(SourceMapPoint, field(current, MapNode.Run), col, field(current, MapNode.Row)) }
+    if = { condition = isNone(neighbor) then = { return = { value = false } } }
+    return = { value = exists(where(relation(MapChildren, neighbor), child, equal(subtract(field(child, MapNode.Col), col), subtract(0, delta)))) }
+  }
+}
+procedure NextSourceMapPoint {
+  parameters = { run = Ref(Run) current = Ref(MapNode) } result = Ref(MapNode)
+  locals = { group = Binding selected = Binding col = Int value = Int }
+  body = {
+    create = { type = MapWorkGroup scope = entityScope(run) into = group }
+    call = { procedure = AddMapWork args = { group = group node = none value = -1 } }
+    call = { procedure = AddMapWork args = { group = group node = none value = 0 } }
+    call = { procedure = AddMapWork args = { group = group node = none value = 1 } }
+    call = { procedure = ShuffleMapWork args = { group = group } }
+    forEach = { query = sort(relation(MapWorkItems, group), w, field(w, MapWork.Position)) item = option body = {
+      if = { condition = isNone(selected) then = {
+        let = { into = col value = minimum(6, maximum(0, add(field(current, MapNode.Col), field(option, MapWork.Value)))) }
+        if = { condition = not(pureCall(MapHasCrossover, current, col)) then = {
+          call = { procedure = GetOrCreateMapPoint args = { run = run col = col row = add(field(current, MapNode.Row), 1) } into = selected }
+        } }
+      } }
+    } }
+    call = { procedure = DestroyMapWork args = { group = group } }
+    if = { condition = isNone(selected) then = { fail = { message = "Source map cannot find a noncrossing successor" } } }
+    return = { value = selected }
+  }
+}
+procedure GenerateSourceMapPaths {
+  parameters = { run = Ref(Run) start = Ref(MapNode) boss = Ref(MapNode) }
+  locals = { path = Int col = Int current = Binding next = Binding }
+  body = {
+    let = { into = path value = 0 }
+    repeat = { count = 7 body = {
+      call = { procedure = SelectSourceMapStart args = { run = run distinct = equal(path, 1) } into = current }
+      call = { procedure = GenerateSourceMapPath args = { run = run current = current } }
+      let = { into = path value = add(path, 1) }
+    } }
+    forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Row), 15))), n, field(n, MapNode.Col)) item = node body = { call = { procedure = ConnectMapPoints args = { parent = node child = boss } } } }
+    forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Row), 1))), n, field(n, MapNode.Col)) item = node body = { call = { procedure = ConnectMapPoints args = { parent = start child = node } } } }
+  }
+}
+procedure GenerateSourceMapPath {
+  parameters = { run = Ref(Run) current = Ref(MapNode) }
+  locals = { node = Binding next = Binding }
+  body = {
+    set = { target = current field = MapNode.IsStart value = true }
+    let = { into = node value = current }
+    repeat = { count = 14 body = {
+      call = { procedure = NextSourceMapPoint args = { run = run current = node } into = next }
+      call = { procedure = ConnectMapPoints args = { parent = node child = next } }
+      let = { into = node value = next }
+    } }
+  }
+}
+
+procedure ValidSourceMapKind {
+  pure = true parameters = { node = Ref(MapNode) kind = Int } result = Bool
+  body = {
+    if = { condition = and(greaterOrEqual(field(node, MapNode.Row), 13), equal(kind, 4)) then = { return = { value = false } } }
+    if = { condition = and(less(field(node, MapNode.Row), 6), or(equal(kind, 4), equal(kind, 6))) then = { return = { value = false } } }
+    if = { condition = or(or(equal(kind, 4), equal(kind, 6)), or(equal(kind, 3), equal(kind, 2))) then = {
+      if = { condition = or(exists(where(relation(MapParents, node), n, equal(field(n, MapNode.Kind), kind))), exists(where(relation(MapChildren, node), n, equal(field(n, MapNode.Kind), kind)))) then = { return = { value = false } } }
+    } }
+    if = { condition = not(equal(kind, 3)) then = {
+      forEach = { query = relation(MapParents, node) item = parent body = {
+        if = { condition = exists(where(relation(MapChildren, parent), sibling, and(not(equal(sibling, node)), equal(field(sibling, MapNode.Kind), kind)))) then = { return = { value = false } } }
+      } }
+    } }
+    return = { value = true }
+  }
+}
+procedure TakeValidSourceMapKind {
+  parameters = { node = Ref(MapNode) queue = Ref(MapWorkGroup) } result = Int
+  locals = { item = Binding kind = Int tail = Int }
+  body = {
+    repeat = { count = count(relation(MapWorkItems, queue)) body = {
+      let = { into = item value = first(sort(relation(MapWorkItems, queue), w, field(w, MapWork.Position))) }
+      let = { into = kind value = field(item, MapWork.Value) }
+      if = { condition = pureCall(ValidSourceMapKind, node, kind) then = { destroy = { target = item } return = { value = kind } } }
+      let = { into = tail value = add(aggregate(relation(MapWorkItems, queue), Maximum, w, field(w, MapWork.Position)), 1) }
+      set = { target = item field = MapWork.Position value = tail }
+    } }
+    return = { value = 0 }
+  }
+}
+procedure AssignSourceMapKinds {
+  parameters = { run = Ref(Run) }
+  locals = { queue = Binding points = Binding kind = Int }
+  body = {
+    forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = node body = {
+      if = { condition = equal(field(node, MapNode.Row), 15) then = { set = { target = node field = MapNode.Kind value = 4 } set = { target = node field = MapNode.CanModify value = false } } }
+      if = { condition = equal(field(node, MapNode.Row), 9) then = { set = { target = node field = MapNode.Kind value = 3 } set = { target = node field = MapNode.CanModify value = false } } }
+      if = { condition = equal(field(node, MapNode.Row), 1) then = { set = { target = node field = MapNode.Kind value = 5 } set = { target = node field = MapNode.CanModify value = false } } }
+    } }
+    create = { type = MapWorkGroup scope = entityScope(run) into = queue }
+    repeat = { count = field(run, Run.RestCount) body = { call = { procedure = AddMapWork args = { group = queue node = none value = 4 } } } }
+    repeat = { count = 3 body = { call = { procedure = AddMapWork args = { group = queue node = none value = 2 } } } }
+    repeat = { count = 5 body = { call = { procedure = AddMapWork args = { group = queue node = none value = 6 } } } }
+    repeat = { count = field(run, Run.UnknownCount) body = { call = { procedure = AddMapWork args = { group = queue node = none value = 1 } } } }
+    repeat = { count = 3 body = {
+      if = { condition = exists(relation(MapWorkItems, queue)) then = {
+        create = { type = MapWorkGroup scope = entityScope(run) into = points }
+        forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Kind), 0))), n, pureCall(SourceMapOrder, n)) item = node body = { call = { procedure = AddMapWork args = { group = points node = node value = 0 } } } }
+        call = { procedure = ShuffleMapWork args = { group = points } }
+        forEach = { query = sort(relation(MapWorkItems, points), w, field(w, MapWork.Position)) item = item body = {
+          if = { condition = exists(relation(MapWorkItems, queue)) then = {
+            call = { procedure = TakeValidSourceMapKind args = { node = field(item, MapWork.Node) queue = queue } into = kind }
+            set = { target = field(item, MapWork.Node) field = MapNode.Kind value = kind }
+          } }
+        } }
+        call = { procedure = DestroyMapWork args = { group = points } }
+      } }
+    } }
+    call = { procedure = DestroyMapWork args = { group = queue } }
+    forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Kind), 0))) item = node body = { set = { target = node field = MapNode.Kind value = 5 } } }
+  }
+}
+
+procedure SelectSourceMapStart {
+  parameters = { run = Ref(Run) distinct = Bool } result = Ref(MapNode)
+  locals = { col = Int node = Binding }
+  body = {
+    repeat = { count = 100000 body = {
+      sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = 7 into = col }
+      call = { procedure = GetOrCreateMapPoint args = { run = run col = col row = 1 } into = node }
+      if = { condition = or(not(distinct), not(field(node, MapNode.IsStart))) then = { return = { value = node } } }
+    } }
+    fail = { message = "Source map cannot draw a distinct second path" }
+  }
+}
+procedure PublishSourceMapTypes {
+  parameters = { run = Ref(Run) }
+  body = {
+    forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = node body = {
+      if = { condition = equal(field(node, MapNode.Kind), 0) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Unassigned) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 1) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Unknown) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 2) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Shop) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 3) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Treasure) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 4) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, RestSite) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 5) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Monster) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 6) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Elite) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 7) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Boss) } } }
+      if = { condition = equal(field(node, MapNode.Kind), 8) then = { set = { target = node field = MapNode.Type value = enum(MapPointType, Ancient) } } }
+    } }
+  }
+}

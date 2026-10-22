@@ -31,7 +31,7 @@ template TurnEndNoBlockRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
       body = {
         call = {
           procedure = ObtainRelic args = {
@@ -73,7 +73,7 @@ template EveryTurnsDrawRelic {
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
       body = {
         call = {
           procedure = ObtainRelic args = {
@@ -122,7 +122,7 @@ template ObtainMaxHpRelic {
     action Obtain {
       role = player
       locals = { owner = Binding }
-      requires = not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition)))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(pureCall(HasOwnedRelic, first(type(Player)), arg(definition))))
       body = {
         let = { into = owner value = first(type(Player)) }
         call = {
@@ -142,6 +142,7 @@ template CombatEndHealRelic {
     definition = { type = String(length = 64) }
     heal = { type = Int(min = 0, max = 999) }
     threshold = { type = Int(min = 1, max = 100) }
+    early = { type = Bool default = false }
   }
   body = {
     procedure WhenCombatEnded {
@@ -160,11 +161,14 @@ template CombatEndHealRelic {
       }
     }
     subscription OnCombatEnded {
-      event = CombatEnded reaction = WhenCombatEnded instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+      event = CombatVictoryEarly reaction = WhenCombatEnded instances = where(collection(Relics), candidate, and(arg(early), and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition)))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    }
+    subscription OnCombatVictory {
+      event = CombatVictory reaction = WhenCombatEnded instances = where(collection(Relics), candidate, and(not(arg(early)), and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition)))))) instance_order = collectionIndex(Relics, listener) priority = 100
     }
     action Obtain {
       role = player
-      requires = not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition)))))
+      requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
       body = {
         call = {
           procedure = ObtainRelic args = {

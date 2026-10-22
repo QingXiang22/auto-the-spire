@@ -19,11 +19,15 @@ try
     var contentModelOnly = false;
     var cardBehaviorOnly = false;
     var enemyMovesOnly = false;
+    var normalRunOnly = false;
+    var normalReturnOnly = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
         else if (args[index] == "--enemy-moves-only") enemyMovesOnly = true;
+        else if (args[index] == "--normal-run-only") normalRunOnly = true;
+        else if (args[index] == "--normal-return-only") { normalRunOnly = true; normalReturnOnly = true; }
         else if (args[index] == "--card-behavior-only") cardBehaviorOnly = true;
         else if (args[index] == "--content-model-only") contentModelOnly = true;
         else if (args[index] == "--relic-content-only") relicContentOnly = true;
@@ -35,13 +39,13 @@ try
         else if (index == 1 && !args[index].StartsWith("--", StringComparison.Ordinal)) manifest = args[index];
         else throw new ArgumentException("Unknown option: " + args[index]);
     }
-    if (filter is not null && (string.IsNullOrWhiteSpace(filter) || command != "check" || !(relicContentOnly ^ cardBehaviorOnly) || report is not null || ironcladOnly || cardRewardsOnly || rngOnly || contentModelOnly || enemyMovesOnly))
+    if (filter is not null && (string.IsNullOrWhiteSpace(filter) || command != "check" || !(relicContentOnly ^ cardBehaviorOnly) || report is not null || ironcladOnly || cardRewardsOnly || rngOnly || contentModelOnly || enemyMovesOnly || normalRunOnly))
         throw new ArgumentException("--filter requires a nonempty name and check --relic-content-only or --card-behavior-only without other focused flags or --report.");
     if (Path.GetExtension(manifest) != ".json") throw new NotSupportedException("unsupported_capability: the DSL package tool requires a package.json manifest; legacy card probes are retired.");
     var package = DslPackage.Load(manifest, scope);
     if (command == "sync-content")
     {
-        if (report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly)
+        if (report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly || normalRunOnly)
             throw new ArgumentException("sync-content accepts only the package manifest and optional --scope.");
         ContentRegistration.Check(package, synchronize: true);
         Console.WriteLine("Derived Card/Power public IDs from executable definition libraries and explicit startup fixtures; frozen sources and visibility policies unchanged.");
@@ -51,10 +55,17 @@ try
     var metadata = TextRuleProviderSpec.Load(package.PublicMetadataPath);
     if (enemyMovesOnly)
     {
-        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly)
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || normalRunOnly)
             throw new ArgumentException("--enemy-moves-only requires check without other focused flags or report.");
         if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
         return PackageChecks.RunEnemyMovesOnly(package);
+    }
+    if (normalRunOnly)
+    {
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly)
+            throw new ArgumentException("--normal-run-only requires check without other focused flags or report.");
+        if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
+        return normalReturnOnly ? PackageChecks.RunNormalReturnOnly(package) : PackageChecks.RunNormalRunOnly(package);
     }
     if (cardBehaviorOnly)
     {

@@ -1,0 +1,806 @@
+{
+  "format": "source-map-gaussian-vectors@2",
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "source_hash_encoding": "utf8-lf",
+  "source_sha256": {
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Overgrowth.cs": "7ea866cde5786814ce32b6d598af4179a91a093172c89698e7b2503b02342c77",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "cd05ee766f574de5db8ee8373cacdba1814586689cd554df07d69cfe3d18fc2b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/ActMap.cs": "47458e7ed72aa461789faa27882d1e3bfb5aa76a5b9bdfeb4d02f88554110849",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/GoldenPathActMap.cs": "187a4a08de89a8439129bf544caca6bf6dacf1b26f50e669a89fce4ac7537e35",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapCoord.cs": "ec3427fbaaba0e9ce81b36bb76080aad52868bd0fee7f2c5c646b58f80294ec7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPathPruning.cs": "aa41dae490bc28eb746b6b327b42a23c73f623cd391f22aa990a48bfe1d757c2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPoint.cs": "36b92fde861c041613ca2b88becf55ba1e4131d9cbc0b1cce838080f4d75e435",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPointType.cs": "85b999bdf6bd3922e29d0ddc2615f85014ebfb29b03b3fdf2866beb81892ed4e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPointTypeCounts.cs": "241a46dc007beb800814832f68d499e36adcbe5136ec4dedcdc3f52d74149ef8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPostProcessing.cs": "98bda10e194bdbcb0c5a4ae8a83fe3e14d9660acdb263643678ee63473138f93",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapTravel.cs": "d4396a51420943b8a7d330a196032da1242ebaddd9a71e8a75ab3e5ca0a5f7bb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/SpoilsActMap.cs": "164d2b08e02643d1a2a49dfff38f00657bbbe464bbdf2bec79ffad36b3b6defc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs": "3570f09e349d1ac5aaa5a5b1d58a8ea56f298d662fa357b2092c34bb072dd2b6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngDraw.cs": "9972a7d4940a19965c00b1944626cb4fb7bbb8b6f665063cd177acc691c5d90d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngSeed.cs": "692cbe86b1a9b1efde4aa2f2d7124edee36589303c2739b1368b7ca8ea66bc90",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngTrace.cs": "3214b89cf4614ce1e254d3637f574cf94669e6f8151e8e2ecfb8407012b3f5b8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "214c36ca6a11f21402443b1cc1dbe232784c18711f58ef736ede127d2956cceb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/PlayerRngSet.cs": "a117689b2d6f2072a123015da23e40d32e18b8a05348fd14c8a4c43d69c5b53f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "4dd16efb443ad47220fb7565fe68d695e568e659a871a129233a2b05c79b6066",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/RngDiagnostics.cs": "e7dca8802f525aac86409dfe7ada7b0e9464da9902f69bcf0ad4e6569b5da6e8"
+  },
+  "vectors": [
+    {
+      "seed": "20261018",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 6,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 10,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 10,
+          "after": 12,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 12,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "777",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 10
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 8,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 8,
+          "after": 10,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 10,
+          "after": 12,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 12,
+          "after": 14,
+          "result": 14
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 14,
+          "after": 18,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 18,
+          "after": 20,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "1234",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 4,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 4,
+          "after": 6,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 6,
+          "after": 8,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 8,
+          "after": 10,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 10,
+          "after": 12,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 12,
+          "after": 14,
+          "result": 10
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 14,
+          "after": 18,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 18,
+          "after": 20,
+          "result": 13
+        }
+      ]
+    },
+    {
+      "seed": "99",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 6,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 12,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 12,
+          "after": 14,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 14,
+          "after": 16,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 16,
+          "after": 18,
+          "result": 10
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 18,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "ABC",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 6,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 10,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 10,
+          "after": 12,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 12,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 13
+        }
+      ]
+    },
+    {
+      "seed": "abc",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 8,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 8,
+          "after": 10,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 10,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 16,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "BASE-DSL-STDIO-00",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 6,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 10,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 10,
+          "after": 12,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 12,
+          "after": 16,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 16,
+          "after": 18,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 18,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "斩杀尖塔2",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 6,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 11
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 16,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 22,
+          "after": 24,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 24,
+          "after": 26,
+          "result": 12
+        }
+      ]
+    },
+    {
+      "seed": "A😀B",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 6,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 14,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 14,
+          "after": 16,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 16,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 10
+        }
+      ]
+    },
+    {
+      "seed": "",
+      "calls": [
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 0,
+          "after": 2,
+          "result": 6
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 2,
+          "after": 4,
+          "result": 12
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 4,
+          "after": 6,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 6,
+          "after": 8,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 8,
+          "after": 12,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 12,
+          "after": 14,
+          "result": 13
+        },
+        {
+          "mean": 7,
+          "deviation": 1,
+          "min": 6,
+          "max": 7,
+          "before": 14,
+          "after": 20,
+          "result": 7
+        },
+        {
+          "mean": 12,
+          "deviation": 1,
+          "min": 10,
+          "max": 14,
+          "before": 20,
+          "after": 22,
+          "result": 13
+        }
+      ]
+    }
+  ]
+}

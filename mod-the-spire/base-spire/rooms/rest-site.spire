@@ -82,7 +82,7 @@ procedure LeaveDevelopmentRoom {
 
 action EnterDevelopmentRestSite {
   role = player
-  requires = and(equal(field(first(type(Player)), Player.Room), "none"), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0)))
+  requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), and(equal(field(first(type(Player)), Player.Room), "none"), and(not(field(first(type(Player)), Player.CombatActive)), greater(field(first(type(Player)), Player.Hp), 0))))
   body = { call = { procedure = EnterDevelopmentRestSite args = { owner = first(type(Player)) } } }
 }
 action RestAtDevelopmentCampfire {

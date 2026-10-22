@@ -25,6 +25,11 @@ procedure OfferCombatGold {
 procedure WhenCombatEnded {
   parameters = { owner = Ref(Player) victory = Bool }
   body = {
+    if = { condition = not(isNone(field(owner, Player.CurrentRun))) then = { return = {} } }
+    if = { condition = field(owner, Player.CombatTimedOut) then = {
+      set = { target = owner field = Player.Room value = "none" }
+      return = {}
+    } }
     if = {
       condition = and(victory, greater(field(owner, Player.Hp), 0))
       then = {
@@ -52,11 +57,13 @@ procedure ClaimDevelopmentGoldReward {
 }
 procedure CloseDevelopmentRewards {
   parameters = { owner = Ref(Player) }
+  locals = { rewards = Binding }
   body = {
     if = {
       condition = not(equal(field(owner, Player.Room), "rewards"))
       then = { fail = { message = "No development rewards are open" } }
     }
+    let = { into = rewards value = field(owner, Player.CurrentRewardSet) }
     call = { procedure = ClearCombatCardReward args = { owner = owner } }
     call = { procedure = ClearCombatPotionReward args = { owner = owner } }
     if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = {
@@ -68,6 +75,7 @@ procedure CloseDevelopmentRewards {
     set = { target = owner field = Player.Room value = "none" }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.PendingForge value = false }
+    if = { condition = not(isNone(field(owner, Player.CurrentRun))) then = { call = { procedure = CloseNormalVisit args = { owner = owner rewards = rewards } } } }
   }
 }
 action ClaimDevelopmentGoldReward {

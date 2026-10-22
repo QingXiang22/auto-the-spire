@@ -35,6 +35,8 @@ public sealed class SessionState
     private readonly RuleSet _ruleSet;
     private readonly Dictionary<int, ScopeRecord> _scopes = [];
     private readonly Dictionary<int, InstanceRecord> _instances = [];
+    private readonly Dictionary<int, SortedSet<InstanceId>> _instancesByType = [];
+    private readonly Dictionary<int, HashSet<int>> _referrerTypes = [];
     private readonly Dictionary<int, List<InstanceId>> _collections = [];
     private readonly Dictionary<int, Dictionary<int, List<InstanceId>>> _relations = [];
     private readonly Dictionary<string, List<int>> _membershipGroups = new(StringComparer.Ordinal);
@@ -62,6 +64,13 @@ public sealed class SessionState
         }
 
         foreach (var relation in ruleSet.Relations) _relations[relation.Id] = [];
+        foreach (var type in ruleSet.Types)
+            foreach (var field in type.Fields.Where(field => field.Kind == FieldTypeKind.Ref))
+            {
+                if (!_referrerTypes.TryGetValue(field.TargetTypeId, out var owners))
+                    _referrerTypes[field.TargetTypeId] = owners = [];
+                owners.Add(type.Id);
+            }
     }
 
     /// <summary>Collections declared by the linked rule set, in dense id order.</summary>
@@ -239,15 +248,8 @@ public sealed class SessionState
     /// <summary>All live instances of one type, in creation order. <paramref name="typeId"/> -1 means every type.</summary>
     public IReadOnlyList<InstanceId> AllInstances(int typeId = -1)
     {
-        var result = new List<InstanceId>();
-        foreach (var record in _instances.Values)
-        {
-            if (typeId >= 0 && record.TypeId != typeId) continue;
-            result.Add(record.Id);
-        }
-
-        result.Sort();
-        return result;
+        if (typeId >= 0) return _instancesByType.TryGetValue(typeId, out var instances) ? instances.ToArray() : [];
+        return _instances.Values.Select(record => record.Id).Order().ToArray();
     }
 
     public InstanceId CreateInstance(int typeId, ScopeId scope)
@@ -259,7 +261,9 @@ public sealed class SessionState
         for (var index = 0; index < values.Length; index++) values[index] = definition.Fields[index].DefaultValue;
         var record = new InstanceRecord(id, typeId, scope, values);
         _instances.Add(id.Value, record);
-        Record(() => _instances.Remove(id.Value));
+        if (!_instancesByType.TryGetValue(typeId, out var typed)) _instancesByType[typeId] = typed = [];
+        typed.Add(id);
+        Record(() => { _instances.Remove(id.Value); typed.Remove(id); });
         Version++;
         return id;
     }
@@ -296,7 +300,8 @@ public sealed class SessionState
             }
         }
 
-        foreach (var other in _instances.Values)
+        if (_referrerTypes.TryGetValue(typeId, out var referrerTypes))
+        foreach (var other in _instances.Values.Where(other => referrerTypes.Contains(other.TypeId)))
         {
             if (other.Id == instance) continue;
             var otherType = _ruleSet.Type(other.TypeId);
@@ -320,7 +325,9 @@ public sealed class SessionState
         }
 
         _instances.Remove(instance.Value);
-        Record(() => _instances[instance.Value] = record);
+        var typed = _instancesByType[typeId];
+        typed.Remove(instance);
+        Record(() => { _instances[instance.Value] = record; typed.Add(instance); });
         Version++;
     }
 
@@ -598,6 +605,13 @@ public sealed class SessionState
         {
             clone._instances.Add(key,
                 new InstanceRecord(value.Id, value.TypeId, value.Scope, (Value[])value.Values.Clone()));
+        }
+
+        foreach (var record in clone._instances.Values)
+        {
+            if (!clone._instancesByType.TryGetValue(record.TypeId, out var typed))
+                clone._instancesByType[record.TypeId] = typed = [];
+            typed.Add(record.Id);
         }
 
         clone._collections.Clear();

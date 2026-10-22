@@ -24,7 +24,6 @@ internal static class ReferenceBackend
         using var random = fixture.Reshuffle ? null : new DrawCounter();
         CombatReplayDemo.EnsureModelsRegistered();
         var run = new RunState(fixture.Reshuffle ? fixture.GameSeed : fixture.Seed.ToString(CultureInfo.InvariantCulture), new Overgrowth());
-        if (fixture.Reshuffle) ReferenceRandomTrace.ConfigureSourceStreams(run.Rng, fixture.GameSeed);
         var player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run);
         run.AddPlayer(player);
         var deckSlots = new Dictionary<CardModel, string>();
@@ -94,8 +93,8 @@ internal static class ReferenceBackend
             {
                 Initialization = new
                 {
-                    kind = "ordered-controlled", profile = "source-compat-sts2-frozen@1", raw_game_seed = fixture.GameSeed,
-                    native_run_seed = run.Rng.Seed, source_run_seed = ReferenceRandomTrace.Hash32(fixture.GameSeed),
+                    kind = "ordered-controlled", profile = "locked-native-sequential@1", raw_game_seed = fixture.GameSeed,
+                    native_run_seed = run.Rng.Seed, source_run_seed = run.Rng.Seed,
                     run_streams = Enum.GetValues<Sts2Sim.Core.Entities.Rngs.RunRngType>().Select(type => new
                     {
                         source = type.ToString(), stream = "base-spire:run:" + Sts2Sim.Core.Helpers.StringHelper.SnakeCase(type.ToString()),
@@ -105,12 +104,9 @@ internal static class ReferenceBackend
                     alignment_scope = "Original ordered controlled reshuffle initialization only; no script reseeding.",
                     player_streams = "Native reference derivation retained; any difference remains a failure.",
                     random_measurement = "Named run/player API counters; each supported NextInt consumes one raw word. Per-instance hooks, no global observer for this case.",
-                    source_files = new Dictionary<string, string>
-                    {
-                        ["sts2/src/Core/Helpers/StringHelper.cs"] = "f153e81217ae1b261322acfd00f597d3758e78d065f7cdd184c58be2b7a23718",
-                        ["sts2/src/Core/Random/Rng.cs"] = "495ff2a8884105d5b3e50942c63379d91dedeb80d0e7ff86cf8669ccbc519974",
-                        ["sts2/src/Core/Runs/RunRngSet.cs"] = "ec9ac8ad7c4c361d17e952636b1aa9506ddbe787c5bdf69647bf1d26f19ff507",
-                    },
+                    source_files = new[] { "Helpers/StringHelper.cs", "Random/Rng.cs", "Runs/RunRngSet.cs" }
+                        .ToDictionary(path => "reference/sts2-sim/src/Sts2Sim.Core/" + path,
+                            path => Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(Path.Combine(Repository.Find(), "reference/sts2-sim/src/Sts2Sim.Core", path))))),
                 },
             };
         }

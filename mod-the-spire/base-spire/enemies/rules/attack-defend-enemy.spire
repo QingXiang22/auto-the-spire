@@ -27,11 +27,12 @@ template AttackDefendEnemy {
     subscription OnEnemyTurn { event = EnemyTurnStarted reaction = WhenEnemyTurn }
     action Spawn {
       role = player
+      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
       locals = { target = Binding }
       body = {
         create = {
           type = Enemy scope = frameScope() into = target
-          fields = { DefinitionId = arg(definition) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
+          fields = { DefinitionId = arg(definition) SpawnOrder = count(type(Enemy)) Hp = arg(hp) MaxHp = arg(hp) MoveIndex = 0 Intent = "attack" }
         }
       }
     }

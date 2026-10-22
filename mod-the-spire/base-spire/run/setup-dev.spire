@@ -3,10 +3,11 @@ dsl_version = "core/0.3"
 
 # A declared mechanism-development setup, not Ironclad's deck or a normal Run.
 procedure SetupDevelopmentDraw {
-  locals = { owner = Binding card = Binding }
+  locals = { owner = Binding card = Binding run = Binding }
   body = {
     call = { procedure = RegisterCardLibrary }
     create = { type = Player scope = frameScope() into = owner }
+    create = { type = Run scope = entityScope(owner) into = run fields = { Owner = field(owner, Player.Owner) Player = owner Phase = "development" NeowPending = false } }
     repeat = {
       count = 3
       body = { create = { type = Card scope = frameScope() into = card collection = DiscardPile } }
@@ -21,11 +22,12 @@ procedure AddDevelopmentTarget {
   body = {
     create = {
       type = Enemy scope = entityScope(owner) into = target
-      fields = { Owner = field(owner, Player.Owner) DefinitionId = "base-spire:development-target" Hp = 40 MaxHp = 40 }
+      fields = { Owner = field(owner, Player.Owner) DefinitionId = "base-spire:development-target" SpawnOrder = count(type(Enemy)) Hp = 40 MaxHp = 40 }
     }
   }
 }
 action AddDevelopmentTarget {
   role = player
+  requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
   body = { call = { procedure = AddDevelopmentTarget args = { owner = first(type(Player)) } } }
 }

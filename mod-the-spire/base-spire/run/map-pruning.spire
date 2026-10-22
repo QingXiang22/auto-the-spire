@@ -1,0 +1,219 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity MapSegmentKey { fields = { Run = { type = Ref(Run) } Key = { type = String(length = 256) } } }
+# Columns use three bits per row (0..6), at most 17 rows: the complete path
+# fits in 51 bits. Coordinates are immutable until pruning finishes. This avoids
+# allocating an Engine entity for every temporary element of every segment.
+entity MapSegment { fields = { Key = { type = Ref(MapSegmentKey) } Columns = { type = Int } StartRow = { type = Int } Length = { type = Int } Position = { type = Int } } }
+
+procedure ClearMapSegments {
+  body = {
+    forEach = { query = type(MapSegment) item = item body = { destroy = { target = item } } }
+    forEach = { query = type(MapSegmentKey) item = item body = { destroy = { target = item } } }
+  }
+}
+procedure MapSegmentNode {
+  pure = true parameters = { segment = Ref(MapSegment) index = Int } result = Ref(MapNode)
+  locals = { columns = Int }
+  body = {
+    let = { into = columns value = field(segment, MapSegment.Columns) }
+    repeat = { count = subtract(subtract(field(segment, MapSegment.Length), 1), index) body = { let = { into = columns value = divide(columns, 8) } } }
+    return = { value = first(where(type(MapNode), n, and(equal(field(n, MapNode.Run), field(field(segment, MapSegment.Key), MapSegmentKey.Run)), and(equal(field(n, MapNode.Row), add(field(segment, MapSegment.StartRow), index)), equal(field(n, MapNode.Col), modulo(columns, 8)))))) }
+  }
+}
+procedure MapSegmentContains {
+  pure = true parameters = { segment = Ref(MapSegment) node = Ref(MapNode) } result = Bool
+  locals = { index = Int }
+  body = {
+    let = { into = index value = subtract(field(node, MapNode.Row), field(segment, MapSegment.StartRow)) }
+    if = { condition = or(less(index, 0), greaterOrEqual(index, field(segment, MapSegment.Length))) then = { return = { value = false } } }
+    return = { value = equal(pureCall(MapSegmentNode, segment, index), node) }
+  }
+}
+procedure MapSegmentOverlaps {
+  pure = true parameters = { left = Int right = Int length = Int } result = Bool
+  locals = { a = Int b = Int }
+  body = {
+    let = { into = a value = divide(left, 8) }
+    let = { into = b value = divide(right, 8) }
+    repeat = { count = subtract(length, 2) body = {
+      if = { condition = equal(modulo(a, 8), modulo(b, 8)) then = { return = { value = true } } }
+      let = { into = a value = divide(a, 8) }
+      let = { into = b value = divide(b, 8) }
+    } }
+    return = { value = false }
+  }
+}
+procedure AddSourceMapSegment {
+  parameters = { run = Ref(Run) startRow = Int columns = Int length = Int key = String(length = 256) }
+  locals = { match = Binding segment = Binding position = Int }
+  body = {
+    let = { into = match value = first(where(type(MapSegmentKey), k, and(equal(field(k, MapSegmentKey.Run), run), equal(field(k, MapSegmentKey.Key), key)))) }
+    if = { condition = isNone(match) then = { create = { type = MapSegmentKey scope = entityScope(run) into = match fields = { Run = run Key = key } } } }
+    forEach = { query = relation(MapKeySegments, match) item = previous body = {
+      if = { condition = pureCall(MapSegmentOverlaps, field(previous, MapSegment.Columns), columns, length) then = { return = {} } }
+    } }
+    let = { into = position value = count(relation(MapKeySegments, match)) }
+    create = { type = MapSegment scope = entityScope(run) into = segment fields = { Key = match Columns = columns StartRow = startRow Length = length Position = position } }
+    addRelation = { relation = MapKeySegments owner = match target = segment }
+  }
+}
+# Prefix DFS preserves the source's accepted per-key order, without replaying
+# suffix copies of a segment that the source immediately rejects as overlapping.
+procedure FindSourceMapSegments {
+  parameters = { run = Ref(Run) node = Ref(MapNode) startRow = Int columns = Int prefix = String(length = 64) types = String(length = 64) depth = Int }
+  locals = { sequence = String(length = 64) encoded = Int }
+  body = {
+    if = { condition = equal(types, "") then = { let = { into = sequence value = concat("", field(node, MapNode.Kind)) } } else = { let = { into = sequence value = concat(types, ",", field(node, MapNode.Kind)) } } }
+    let = { into = encoded value = add(multiply(columns, 8), field(node, MapNode.Col)) }
+    if = { condition = and(greaterOrEqual(depth, 2), greaterOrEqual(count(relation(MapParents, node)), 2)) then = {
+      call = { procedure = AddSourceMapSegment args = { run = run startRow = startRow columns = encoded length = add(depth, 1) key = concat(prefix, field(node, MapNode.Col), ",", field(node, MapNode.Row), "-", sequence) } }
+    } }
+    if = { condition = not(equal(field(node, MapNode.Kind), 7)) then = {
+      forEach = { query = relation(MapChildren, node) item = child body = { call = { procedure = FindSourceMapSegments args = { run = run node = child startRow = startRow columns = encoded prefix = prefix types = sequence depth = add(depth, 1) } } } }
+    } }
+  }
+}
+
+procedure RemoveSourceMapPoint {
+  parameters = { node = Ref(MapNode) }
+  body = {
+    set = { target = node field = MapNode.Removed value = true }
+    set = { target = node field = MapNode.IsStart value = false }
+    forEach = { query = relation(MapChildren, node) item = child body = { call = { procedure = DisconnectMapPoints args = { parent = node child = child } } } }
+    forEach = { query = relation(MapParents, node) item = parent body = { call = { procedure = DisconnectMapPoints args = { parent = parent child = node } } } }
+  }
+}
+procedure PruneSourceMapSegment {
+  parameters = { segment = Ref(MapSegment) } result = Bool
+  locals = { changed = Bool node = Binding lastNode = Binding length = Int index = Int scan = Int candidate = Binding blocked = Bool outside = Bool }
+  body = {
+    let = { into = length value = field(segment, MapSegment.Length) }
+    let = { into = lastNode value = pureCall(MapSegmentNode, segment, subtract(length, 1)) }
+    let = { into = index value = 0 }
+    repeat = { count = subtract(length, 1) body = {
+      let = { into = node value = pureCall(MapSegmentNode, segment, index) }
+      if = { condition = field(node, MapNode.Removed) then = { return = { value = true } } }
+      if = { condition = not(or(greater(count(relation(MapChildren, node)), 1), or(greater(count(relation(MapParents, node)), 1), exists(where(relation(MapParents, node), p, and(equal(count(relation(MapChildren, p)), 1), and(not(field(p, MapNode.Removed)), not(equal(field(p, MapNode.Kind), 8))))))))) then = {
+        let = { into = blocked value = false }
+        let = { into = scan value = index }
+        repeat = { count = subtract(length, index) body = {
+          let = { into = candidate value = pureCall(MapSegmentNode, segment, scan) }
+          if = { condition = and(greater(count(relation(MapChildren, candidate)), 1), equal(count(relation(MapParents, candidate)), 1)) then = { let = { into = blocked value = true } } }
+          let = { into = scan value = add(scan, 1) }
+        } }
+        if = { condition = not(blocked) then = {
+          if = { condition = equal(count(relation(MapParents, lastNode)), 1) then = { return = { value = false } } }
+          let = { into = outside value = exists(where(relation(MapChildren, node), child, and(not(pureCall(MapSegmentContains, segment, child)), equal(count(relation(MapParents, child)), 1)))) }
+          if = { condition = not(outside) then = { call = { procedure = RemoveSourceMapPoint args = { node = node } } let = { into = changed value = true } } }
+        } }
+      } }
+      let = { into = index value = add(index, 1) }
+    } }
+    return = { value = changed }
+  }
+}
+procedure BreakSourceMapSegment {
+  parameters = { segment = Ref(MapSegment) } result = Bool
+  locals = { changed = Bool index = Int node = Binding child = Binding }
+  body = {
+    let = { into = index value = 0 }
+    repeat = { count = subtract(field(segment, MapSegment.Length), 1) body = {
+      let = { into = node value = pureCall(MapSegmentNode, segment, index) }
+      let = { into = child value = pureCall(MapSegmentNode, segment, add(index, 1)) }
+      if = { condition = and(greaterOrEqual(count(relation(MapChildren, node)), 2), not(equal(count(relation(MapParents, child)), 1))) then = {
+        call = { procedure = DisconnectMapPoints args = { parent = node child = child } }
+        let = { into = changed value = true }
+      } }
+      let = { into = index value = add(index, 1) }
+    } }
+    return = { value = changed }
+  }
+}
+
+procedure PruneSourceMapMatches {
+  parameters = { run = Ref(Run) } result = Bool
+  locals = { size = Int index = Int pick = Int left = Binding right = Binding changed = Bool removed = Int }
+  body = {
+    forEach = { query = sort(where(type(MapSegmentKey), k, and(equal(field(k, MapSegmentKey.Run), run), greater(count(relation(MapKeySegments, k)), 1))), k, field(k, MapSegmentKey.Key)) item = key body = {
+      let = { into = size value = count(relation(MapKeySegments, key)) }
+      let = { into = index value = subtract(size, 1) }
+      repeat = { count = index body = {
+        sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = add(index, 1) into = pick }
+        let = { into = left value = first(where(relation(MapKeySegments, key), s, equal(field(s, MapSegment.Position), index))) }
+        let = { into = right value = first(where(relation(MapKeySegments, key), s, equal(field(s, MapSegment.Position), pick))) }
+        set = { target = left field = MapSegment.Position value = pick }
+        set = { target = right field = MapSegment.Position value = index }
+        let = { into = index value = subtract(index, 1) }
+      } }
+      let = { into = removed value = 0 }
+      forEach = { query = sort(relation(MapKeySegments, key), s, field(s, MapSegment.Position)) item = segment body = {
+        if = { condition = less(removed, subtract(size, 1)) then = {
+          call = { procedure = PruneSourceMapSegment args = { segment = segment } into = changed }
+          if = { condition = changed then = { let = { into = removed value = add(removed, 1) } } }
+        } }
+      } }
+      if = { condition = greater(removed, 0) then = { return = { value = true } } }
+      forEach = { query = sort(relation(MapKeySegments, key), s, field(s, MapSegment.Position)) item = segment body = {
+        call = { procedure = BreakSourceMapSegment args = { segment = segment } into = changed }
+        if = { condition = changed then = { return = { value = true } } }
+      } }
+    } }
+    return = { value = false }
+  }
+}
+procedure PruneSourceMapDuplicates {
+  parameters = { run = Ref(Run) start = Ref(MapNode) }
+  locals = { path = Binding changed = Bool prefix = String(length = 64) }
+  body = {
+    repeat = { count = 51 body = {
+      forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), or(equal(field(n, MapNode.Row), 0), greater(count(relation(MapChildren, n)), 1))))) item = fork body = {
+        if = { condition = equal(field(fork, MapNode.Row), 0) then = { let = { into = prefix value = "0-" } } else = { let = { into = prefix value = concat(field(fork, MapNode.Col), ",", field(fork, MapNode.Row), "-") } } }
+        call = { procedure = FindSourceMapSegments args = { run = run node = fork startRow = field(fork, MapNode.Row) columns = 0 prefix = prefix types = "" depth = 0 } }
+      } }
+      call = { procedure = PruneSourceMapMatches args = { run = run } into = changed }
+      call = { procedure = ClearMapSegments }
+      if = { condition = not(changed) then = { return = {} } }
+    } }
+    fail = { message = "Source map cannot prune matching segments in 51 iterations" }
+  }
+}
+procedure RepairSourceMapKind {
+  parameters = { run = Ref(Run) kind = Int target = Int } result = Bool
+  locals = { needed = Int points = Binding changed = Bool }
+  body = {
+    let = { into = needed value = subtract(target, count(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), equal(field(n, MapNode.Kind), kind)))))) }
+    if = { condition = lessOrEqual(needed, 0) then = { return = { value = false } } }
+    create = { type = MapWorkGroup scope = entityScope(run) into = points }
+    forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(equal(field(n, MapNode.Kind), 5), field(n, MapNode.CanModify))))), n, pureCall(SourceMapOrder, n)) item = node body = { call = { procedure = AddMapWork args = { group = points node = node value = 0 } } } }
+    call = { procedure = ShuffleMapWork args = { group = points } }
+    forEach = { query = sort(relation(MapWorkItems, points), w, field(w, MapWork.Position)) item = item body = {
+      if = { condition = and(greater(needed, 0), pureCall(ValidSourceMapKind, field(item, MapWork.Node), kind)) then = {
+        set = { target = field(item, MapWork.Node) field = MapNode.Kind value = kind }
+        let = { into = needed value = subtract(needed, 1) }
+        let = { into = changed value = true }
+      } }
+    } }
+    call = { procedure = DestroyMapWork args = { group = points } }
+    return = { value = changed }
+  }
+}
+procedure PruneAndRepairSourceMap {
+  parameters = { run = Ref(Run) start = Ref(MapNode) }
+  locals = { changed = Bool repaired = Bool }
+  body = {
+    repeat = { count = 3 body = {
+      call = { procedure = PruneSourceMapDuplicates args = { run = run start = start } }
+      let = { into = changed value = false }
+      call = { procedure = RepairSourceMapKind args = { run = run kind = 2 target = 3 } into = repaired }
+      let = { into = changed value = or(changed, repaired) }
+      call = { procedure = RepairSourceMapKind args = { run = run kind = 6 target = 5 } into = repaired }
+      let = { into = changed value = or(changed, repaired) }
+      call = { procedure = RepairSourceMapKind args = { run = run kind = 4 target = field(run, Run.RestCount) } into = repaired }
+      let = { into = changed value = or(changed, repaired) }
+      call = { procedure = RepairSourceMapKind args = { run = run kind = 1 target = field(run, Run.UnknownCount) } into = repaired }
+      if = { condition = not(or(changed, repaired)) then = { return = {} } }
+    } }
+  }
+}

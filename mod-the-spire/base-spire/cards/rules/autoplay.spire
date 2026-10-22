@@ -23,7 +23,7 @@ procedure AutoPlayFromDrawPile {
     } }
     forEach = { query = where(type(AutoPlayEntry), e, equal(field(e, AutoPlayEntry.Batch), batch)) item = item body = {
       let = { into = next value = field(item, AutoPlayEntry.Card) }
-      if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, greater(field(e, Enemy.Hp), 0))))) then = {
+      if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))))) then = {
         call = { procedure = ResolveAutoCard args = { owner = owner card = next forceExhaust = forceExhaust prepared = true } }
       } else = {
         if = { condition = greater(field(owner, Player.Hp), 0) then = {

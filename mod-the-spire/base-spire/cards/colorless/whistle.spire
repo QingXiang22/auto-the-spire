@@ -1,11 +1,11 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: sts2/src/Core/Models/Cards/Whistle.cs; 3 cost, 33 damage (44 upgraded),
+# Source: reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Whistle.cs; 2 cost, 33 damage (44 upgraded),
 # then CreatureCmd.Stun, and CardKeyword.Exhaust.
 use Whistle {
   template = CardDefinition
-  args = { sourceEntry = "WHISTLE" rarity = "ancient" baseDamage = 33 upgradedBaseDamage = 44 kind = "attack" strikeTag = false generatable = false definition = "base-spire:whistle" cost = 3 upgradedCost = 3 targeted = true exhausts = true leavesPlay = false }
+  args = { sourceEntry = "WHISTLE" rarity = "ancient" baseDamage = 33 upgradedBaseDamage = 44 kind = "attack" strikeTag = false generatable = false definition = "base-spire:whistle" cost = 2 upgradedCost = 2 targeted = true exhausts = true leavesPlay = false }
 }
 use WhistleDamage { template = AttackEffect args = { definition = "base-spire:whistle" hits = 1 } }
 

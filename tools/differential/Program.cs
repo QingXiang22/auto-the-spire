@@ -6,6 +6,13 @@ using Differential;
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 try
 {
+    if (args.FirstOrDefault() == "battle-friend-compare") return BattleFriendComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "wriggler-compare") return WrigglerComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "whistle-compare") return WhistleComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "normal-compare") return NormalRunComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.SequenceEqual(new[] { "normal-compare-self-test" })) { NormalRunChecks.Run(Repository.Find()); return 0; }
+    if (args.FirstOrDefault() == "normal-preflight") return NormalPreflight.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.SequenceEqual(new[] { "normal-preflight-self-test" })) { NormalPreflightChecks.Run(); return 0; }
     if (args.SequenceEqual(new[] { "self-test" })) return ComparisonChecks.Run(Repository.Find());
     string? Option(string name)
     {

@@ -16,7 +16,7 @@ call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  
   }
 }
 
-use Dominate { template = CardDefinition args = { sourceEntry = "DOMINATE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:dominate" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = true exhausts = true leavesPlay = false } }
+use Dominate { template = CardDefinition args = { sourceEntry = "DOMINATE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:dominate" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = true exhausts = true leavesPlay = false } }
 use DominateEffect1 { template = ApplyEnemyPowerEffect args = { definition = "base-spire:dominate" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 2 } }
 use DominateEffect2 { template = DominateStrengthEffect args = { definition = "base-spire:dominate" } }
 

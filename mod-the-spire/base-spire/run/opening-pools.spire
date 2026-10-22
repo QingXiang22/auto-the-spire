@@ -1,0 +1,190 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Fully unlocked A0 single-player source definitions and actual per-run queues.
+# A source definition is not a claim that its room or effect is implemented.
+entity OpeningDefinition { fields = {
+  Run = { type = Ref(Run) }
+  Category = { type = String(length = 24) }
+  Act = { type = Int }
+  DefinitionId = { type = String(length = 64) }
+  Room = { type = String(length = 16) default = "none" }
+  Rarity = { type = String(length = 16) default = "none" }
+  Weak = { type = Bool default = false }
+  AssignedAct = { type = Int default = -1 }
+} }
+entity OpeningTag { fields = { Name = { type = String(length = 32) } } }
+relation OpeningTags { target = OpeningTag }
+entity OpeningList { fields = { Run = { type = Ref(Run) } Category = { type = String(length = 24) } Rarity = { type = String(length = 16) default = "none" } } }
+entity OpeningListItem { fields = { Definition = { type = Ref(OpeningDefinition) } Position = { type = Int } } }
+relation OpeningItems { target = OpeningListItem }
+entity RunRoomPlan { fields = { Run = { type = Ref(Run) } Act = { type = Int } Room = { type = String(length = 16) } Position = { type = Int } Definition = { type = Ref(OpeningDefinition) } } }
+
+procedure AddOpeningDefinition {
+  parameters = { run = Ref(Run) category = String(length = 24) act = Int definition = String(length = 64) room = String(length = 16) rarity = String(length = 16) weak = Bool }
+  result = Ref(OpeningDefinition) locals = { entry = Binding }
+  body = {
+    create = { type = OpeningDefinition scope = entityScope(run) into = entry fields = { Run = run Category = category Act = act DefinitionId = definition Room = room Rarity = rarity Weak = weak } }
+    return = { value = entry }
+  }
+}
+procedure AddOpeningTag {
+  parameters = { run = Ref(Run) entry = Ref(OpeningDefinition) name = String(length = 32) }
+  locals = { tag = Binding }
+  body = {
+    create = { type = OpeningTag scope = entityScope(run) into = tag fields = { Name = name } }
+    addRelation = { relation = OpeningTags owner = entry target = tag }
+  }
+}
+procedure AddOpeningItem {
+  parameters = { list = Ref(OpeningList) definition = Ref(OpeningDefinition) }
+  locals = { item = Binding position = Int }
+  body = {
+    let = { into = position value = count(relation(OpeningItems, list)) }
+    create = { type = OpeningListItem scope = entityScope(list) into = item fields = { Definition = definition Position = position } }
+    addRelation = { relation = OpeningItems owner = list target = item }
+  }
+}
+procedure ShuffleOpeningList {
+  parameters = { list = Ref(OpeningList) }
+  locals = { index = Int pick = Int left = Binding right = Binding }
+  body = {
+    let = { into = index value = subtract(count(relation(OpeningItems, list)), 1) }
+    repeat = { count = maximum(0, index) body = {
+      sampleInt = { stream = "base-spire:run:up_front" min = 0 max = add(index, 1) into = pick }
+      let = { into = left value = first(where(relation(OpeningItems, list), i, equal(field(i, OpeningListItem.Position), index))) }
+      let = { into = right value = first(where(relation(OpeningItems, list), i, equal(field(i, OpeningListItem.Position), pick))) }
+      set = { target = left field = OpeningListItem.Position value = pick }
+      set = { target = right field = OpeningListItem.Position value = index }
+      let = { into = index value = subtract(index, 1) }
+    } }
+  }
+}
+procedure DestroyOpeningList {
+  parameters = { list = Ref(OpeningList) }
+  body = {
+    forEach = { query = relation(OpeningItems, list) item = item body = { destroy = { target = item } } }
+    destroy = { target = list }
+  }
+}
+procedure AddOpeningRoomPlan {
+  parameters = { run = Ref(Run) act = Int room = String(length = 16) definition = Ref(OpeningDefinition) }
+  locals = { entry = Binding position = Int }
+  body = {
+    let = { into = position value = count(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), act), equal(field(p, RunRoomPlan.Room), room))))) }
+    create = { type = RunRoomPlan scope = entityScope(run) into = entry fields = { Run = run Act = act Room = room Position = position Definition = definition } }
+  }
+}
+procedure PopulateOpeningRelicBag {
+  parameters = { run = Ref(Run) shared = Bool }
+  locals = { category = String(length = 24) list = Binding rarity = String(length = 16) }
+  body = {
+    if = { condition = shared then = { let = { into = category value = "shared-bag" } } else = { let = { into = category value = "player-bag" } } }
+    forEach = { query = where(type(OpeningDefinition), d, and(equal(field(d, OpeningDefinition.Run), run), or(equal(field(d, OpeningDefinition.Category), "shared-relic"), and(not(shared), equal(field(d, OpeningDefinition.Category), "ironclad-relic"))))) item = definition body = {
+      let = { into = rarity value = field(definition, OpeningDefinition.Rarity) }
+      if = { condition = or(shared, or(or(equal(rarity, "Common"), equal(rarity, "Uncommon")), or(equal(rarity, "Rare"), equal(rarity, "Shop")))) then = {
+        let = { into = list value = first(where(type(OpeningList), l, and(equal(field(l, OpeningList.Run), run), and(equal(field(l, OpeningList.Category), category), equal(field(l, OpeningList.Rarity), rarity))))) }
+        if = { condition = isNone(list) then = { create = { type = OpeningList scope = entityScope(run) into = list fields = { Run = run Category = category Rarity = rarity } } } }
+        call = { procedure = AddOpeningItem args = { list = list definition = definition } }
+      } }
+    } }
+    forEach = { query = where(type(OpeningList), l, and(equal(field(l, OpeningList.Run), run), equal(field(l, OpeningList.Category), category))) item = bag body = { call = { procedure = ShuffleOpeningList args = { list = bag } } } }
+  }
+}
+procedure OpeningEncountersCompatible {
+  pure = true parameters = { candidate = Ref(OpeningDefinition) previous = Binding } result = Bool
+  body = {
+    if = { condition = isNone(previous) then = { return = { value = true } } }
+    if = { condition = equal(candidate, previous) then = { return = { value = false } } }
+    return = { value = not(exists(where(relation(OpeningTags, candidate), tag, exists(where(relation(OpeningTags, previous), other, equal(field(tag, OpeningTag.Name), field(other, OpeningTag.Name))))))) }
+  }
+}
+procedure PickOpeningEncounter {
+  parameters = { list = Ref(OpeningList) previous = Binding } result = Ref(OpeningListItem)
+  locals = { usePredicate = Bool picked = Binding }
+  body = {
+    let = { into = usePredicate value = exists(where(relation(OpeningItems, list), item, pureCall(OpeningEncountersCompatible, field(item, OpeningListItem.Definition), previous))) }
+    repeat = { count = 100000 body = {
+      samplePick = { stream = "base-spire:run:up_front" candidates = sort(relation(OpeningItems, list), item, field(item, OpeningListItem.Position)) into = picked }
+      if = { condition = or(not(usePredicate), pureCall(OpeningEncountersCompatible, field(picked, OpeningListItem.Definition), previous)) then = { return = { value = picked } } }
+    } }
+    fail = { message = "Opening encounter rejection sampling exceeded its execution limit" }
+  }
+}
+procedure GenerateOpeningEncounterQueue {
+  parameters = { run = Ref(Run) act = Int room = String(length = 16) weak = Bool count = Int previous = Binding }
+  result = Binding locals = { bag = Binding last = Binding picked = Binding }
+  body = {
+    create = { type = OpeningList scope = entityScope(run) into = bag fields = { Run = run Category = "encounter-bag" } }
+    let = { into = last value = previous }
+    repeat = { count = count body = {
+      if = { condition = not(exists(relation(OpeningItems, bag))) then = {
+        forEach = { query = where(type(OpeningDefinition), d, and(equal(field(d, OpeningDefinition.Run), run), and(equal(field(d, OpeningDefinition.Category), "encounter"), and(equal(field(d, OpeningDefinition.Act), act), and(equal(field(d, OpeningDefinition.Room), room), equal(field(d, OpeningDefinition.Weak), weak)))))) item = definition body = { call = { procedure = AddOpeningItem args = { list = bag definition = definition } } } }
+      } }
+      call = { procedure = PickOpeningEncounter args = { list = bag previous = last } into = picked }
+      let = { into = last value = field(picked, OpeningListItem.Definition) }
+      call = { procedure = AddOpeningRoomPlan args = { run = run act = act room = room definition = last } }
+      destroy = { target = picked }
+    } }
+    call = { procedure = DestroyOpeningList args = { list = bag } }
+    return = { value = last }
+  }
+}
+procedure GenerateOpeningActRooms {
+  parameters = { run = Ref(Run) act = Int weakCount = Int rooms = Int }
+  locals = { events = Binding last = Binding picked = Binding }
+  body = {
+    create = { type = OpeningList scope = entityScope(run) into = events fields = { Run = run Category = "event-shuffle" } }
+    forEach = { query = where(type(OpeningDefinition), d, and(equal(field(d, OpeningDefinition.Run), run), and(equal(field(d, OpeningDefinition.Category), "event"), equal(field(d, OpeningDefinition.Act), act)))) item = definition body = { call = { procedure = AddOpeningItem args = { list = events definition = definition } } } }
+    call = { procedure = ShuffleOpeningList args = { list = events } }
+    forEach = { query = sort(relation(OpeningItems, events), item, field(item, OpeningListItem.Position)) item = item body = { call = { procedure = AddOpeningRoomPlan args = { run = run act = act room = "event" definition = field(item, OpeningListItem.Definition) } } } }
+    call = { procedure = DestroyOpeningList args = { list = events } }
+    call = { procedure = GenerateOpeningEncounterQueue args = { run = run act = act room = "Monster" weak = true count = weakCount previous = none } into = last }
+    call = { procedure = GenerateOpeningEncounterQueue args = { run = run act = act room = "Monster" weak = false count = subtract(rooms, weakCount) previous = last } into = last }
+    call = { procedure = GenerateOpeningEncounterQueue args = { run = run act = act room = "Elite" weak = false count = 15 previous = none } into = last }
+    samplePick = { stream = "base-spire:run:up_front" candidates = where(type(OpeningDefinition), d, and(equal(field(d, OpeningDefinition.Run), run), and(equal(field(d, OpeningDefinition.Category), "encounter"), and(equal(field(d, OpeningDefinition.Act), act), equal(field(d, OpeningDefinition.Room), "Boss"))))) into = picked }
+    call = { procedure = AddOpeningRoomPlan args = { run = run act = act room = "Boss" definition = picked } }
+    samplePick = { stream = "base-spire:run:up_front" candidates = where(type(OpeningDefinition), d, and(equal(field(d, OpeningDefinition.Run), run), or(and(equal(field(d, OpeningDefinition.Category), "ancient"), equal(field(d, OpeningDefinition.Act), act)), and(equal(field(d, OpeningDefinition.Category), "shared-ancient"), equal(field(d, OpeningDefinition.AssignedAct), act))))) into = picked }
+    call = { procedure = AddOpeningRoomPlan args = { run = run act = act room = "ancient" definition = picked } }
+  }
+}
+procedure InitializeSourceOpeningPools {
+  parameters = { run = Ref(Run) }
+  locals = { shared = Binding take = Int act = Int }
+  body = {
+    call = { procedure = BuildSourceOpeningDefinitions args = { run = run } }
+    call = { procedure = PopulateOpeningRelicBag args = { run = run shared = true } }
+    call = { procedure = PopulateOpeningRelicBag args = { run = run shared = false } }
+    create = { type = OpeningList scope = entityScope(run) into = shared fields = { Run = run Category = "shared-ancient-shuffle" } }
+    forEach = { query = where(type(OpeningDefinition), d, and(equal(field(d, OpeningDefinition.Run), run), equal(field(d, OpeningDefinition.Category), "shared-ancient"))) item = definition body = { call = { procedure = AddOpeningItem args = { list = shared definition = definition } } } }
+    call = { procedure = ShuffleOpeningList args = { list = shared } }
+    let = { into = act value = 1 }
+    repeat = { count = 2 body = {
+      sampleInt = { stream = "base-spire:run:up_front" min = 0 max = add(count(relation(OpeningItems, shared)), 1) into = take }
+      forEach = { query = take(sort(relation(OpeningItems, shared), item, field(item, OpeningListItem.Position)), take) item = item body = {
+        set = { target = field(item, OpeningListItem.Definition) field = OpeningDefinition.AssignedAct value = act }
+        destroy = { target = item }
+      } }
+      let = { into = act value = add(act, 1) }
+    } }
+    call = { procedure = DestroyOpeningList args = { list = shared } }
+    call = { procedure = GenerateOpeningActRooms args = { run = run act = 0 weakCount = 3 rooms = 15 } }
+    call = { procedure = GenerateOpeningActRooms args = { run = run act = 1 weakCount = 2 rooms = 14 } }
+    call = { procedure = GenerateOpeningActRooms args = { run = run act = 2 weakCount = 2 rooms = 13 } }
+  }
+}
+
+# Source RelicCmd.Obtain removes the obtained definition from both initial bags
+# before its pickup callback. No bags exist in the unrelated development path.
+procedure RemoveObtainedOpeningRelic {
+  parameters = { owner = Ref(Player) relic = Ref(Relic) }
+  locals = { run = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = isNone(run) then = { return = {} } }
+    forEach = { query = where(type(OpeningList), l, and(equal(field(l, OpeningList.Run), run), or(equal(field(l, OpeningList.Category), "shared-bag"), equal(field(l, OpeningList.Category), "player-bag")))) item = bag body = {
+      forEach = { query = where(relation(OpeningItems, bag), item, equal(field(field(item, OpeningListItem.Definition), OpeningDefinition.DefinitionId), field(relic, Relic.DefinitionId))) item = item body = { destroy = { target = item } } }
+    } }
+  }
+}
+subscription OpeningRelicObtained { event = RelicObtained reaction = RemoveObtainedOpeningRelic priority = -100 }
