@@ -139,6 +139,14 @@ def main() -> int:
         if partial["complete"] or partial["independent_verified"] or partial["cases"][0]["status"] != "passed":
             raise ValueError("selected case must pass without claiming the entire suite passed")
         run("comparator-checks", ["self-test"], 0)
+        normal_output = args.output / "normal-preflight"
+        normal = run("normal-preflight", ["normal-preflight", "--output", str(normal_output)], 1)
+        if (normal["expected_case_ids"] != ["m01-claim", "m01-skip"] or normal["executed"] != 2
+                or normal["complete"] or normal["independent_verified"]
+                or any(c["status"] != "diverged" or not c["dsl_returned_to_map"]
+                       or c["first_difference"]["path"] != "neow.options" or not c["unverified_dimensions"]
+                       or c["right"]["diagnostic"]["normal_compatibility_alignment"] for c in normal["cases"])):
+            raise ValueError("normal preflight must retain both real public returns and the native Neow first difference without certifying M01")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")
@@ -176,10 +184,16 @@ def main() -> int:
         missing = run("missing-reference", ["test", "--case", "strike-normal"], 3, fallback)
         if missing["executed"] or missing["passed"] or "unsupported_reference_adapter" not in missing["cases"][0]["reason"]:
             raise ValueError("missing reference adapter was not rejected explicitly")
+        absent_output = args.output / "normal-without-reference"
+        absent = run("normal-without-reference", ["normal-preflight", "--output", str(absent_output)], 3, fallback)
+        if (absent["executed"] or absent["complete"] or absent["independent_verified"]
+                or len(absent["cases"]) != 2 or any(c["status"] != "blocked_compare"
+                   or "unsupported_reference_adapter" not in c["reason"] for c in absent["cases"])):
+            raise ValueError("normal preflight must reject a missing native reference and zero execution")
         result = {"gate": "migration-contract", "active_projects": projects, "retired_source_groups": len(recorded),
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
-                  "strict_failure_checks": True, "independent_verified": False}
+                  "strict_failure_checks": True, "normal_preflight": "native-neow-divergence; incomplete-M01", "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

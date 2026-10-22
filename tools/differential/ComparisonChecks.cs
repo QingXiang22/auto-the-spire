@@ -44,6 +44,7 @@ internal static class ComparisonChecks
                 && result.FirstDifference.Dimension == dimension, dimension + " first difference");
         }
         CheckRandom(repository, document.RootElement);
+        NormalPreflightChecks.Run();
         Console.WriteLine("Comparator checks passed: independent execution, missing data, terminal, RNG and four first-difference dimensions.");
         return 0;
     }
