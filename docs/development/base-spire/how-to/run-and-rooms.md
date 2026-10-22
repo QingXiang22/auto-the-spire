@@ -12,7 +12,7 @@
 2. 选择已支持的 GoldenPearl、NutritiousOyster 或 BoomingConch。其余源选项保留，选择后明确报未支持。
 3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 FuzzyWurmCrawlerWeak 时，会按真实 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
 
-例如 seed `777` 提供 BoomingConch，首个真实遭遇为 FuzzyWurmCrawlerWeak。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。奖励关闭、返回地图及正常 Run scope 仍未开放。
+例如 seed `777` 提供 BoomingConch，首个真实遭遇为 FuzzyWurmCrawlerWeak。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
 
 ## 定义角色、进阶与正常开局
 

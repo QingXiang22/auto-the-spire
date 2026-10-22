@@ -1,7 +1,7 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Mechanism-development boundaries, not normal combat setup, turns, victory or Run settlement.
+# Shared combat boundaries, also used by the supported normal first-visit path.
 event BeforeCombatStart { payload = { owner = Ref(Player) } }
 event BeforePlayerTurnStart { payload = { owner = Ref(Player) } }
 event BeforePlayerTurnEnd { payload = { owner = Ref(Player) } }
@@ -21,28 +21,34 @@ event AfterTurnEnded { payload = { owner = Ref(Player) } }
 event EnemyDied { payload = { target = Ref(Enemy) } }
 # The development combat finished: victory when no hittable enemy remains, defeat when the player reaches 0 HP.
 event CombatEnded { payload = { owner = Ref(Player) victory = Bool } }
+event CombatVictory { payload = { owner = Ref(Player) victory = Bool } }
+event CombatVictoryEarly { payload = { owner = Ref(Player) victory = Bool } }
 # One enemy's turn. The enemy content template subscribes and filters by its DefinitionId.
 event EnemyTurnStarted { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 # The enemy phase finished; source duration tick-down happens here rather than at the player's end of turn.
 event AfterEnemyTurnEnded { payload = { owner = Ref(Player) } }
 
-# Source order for a finished combat: the state is closed before listeners observe it. Rewards, Run
-# settlement and the engine terminal are not migrated. Victory is only evaluated when an enemy dies, so a
-# development combat without targets is never silently won; defeat is evaluated on every player HP loss.
+# Source order: finish the outer effect, close combat, notify end, clean the normal combat, notify victory,
+# then commit the normal visit and offer rewards. A
+# combat without targets is never silently won; defeat is evaluated on every player HP loss.
 procedure CheckCombatVictory {
   parameters = { owner = Ref(Player) }
   body = {
-    if = { condition = greater(field(owner, Player.DamageDepth), 0) then = { return = {} } }
+    if = { condition = or(greater(field(owner, Player.DamageDepth), 0), greater(field(owner, Player.EffectDepth), 0)) then = { return = {} } }
     if = {
       condition = and(and(greater(field(owner, Player.Hp), 0), equal(field(owner, Player.AttackDepth), 0)), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
       then = {
         if = {
-          condition = and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0)))))
+          condition = and(field(owner, Player.EnemyDiedInCombat), and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))))))
           then = {
             set = { target = owner field = Player.CombatOutcome value = "victory" }
             set = { target = owner field = Player.TurnOpen value = false }
             set = { target = owner field = Player.CombatActive value = false }
             emit = { event = CombatEnded payload = { owner = owner victory = true } }
+            call = { procedure = ClearNormalCombat args = { owner = owner } }
+            emit = { event = CombatVictoryEarly payload = { owner = owner victory = true } }
+            emit = { event = CombatVictory payload = { owner = owner victory = true } }
+            call = { procedure = SettleNormalCombat args = { owner = owner victory = true } }
           }
         }
       }
@@ -64,6 +70,7 @@ procedure CheckCombatDefeat {
             set = { target = owner field = Player.Room value = "none" }
             set = { target = owner field = Player.RoomUsed value = false }
             emit = { event = CombatEnded payload = { owner = owner victory = false } }
+            call = { procedure = SettleNormalCombat args = { owner = owner victory = false } }
           }
         }
       }
@@ -92,6 +99,7 @@ procedure BeginDevelopmentCombat {
     set = { target = owner field = Player.Energy value = 0 }
     set = { target = owner field = Player.TurnOpen value = false }
     set = { target = owner field = Player.CombatOutcome value = "none" }
+    set = { target = owner field = Player.EnemyDiedInCombat value = false }
     set = { target = owner field = Player.Room value = "battle" }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.CombatActive value = true }
@@ -104,6 +112,7 @@ procedure BeginDevelopmentCombat {
 procedure EndDevelopmentCombat {
   parameters = { owner = Ref(Player) }
   body = {
+    if = { condition = not(isNone(field(owner, Player.CurrentRun))) then = { fail = { message = "Normal combat must finish through its real outcome" } } }
     if = {
       condition = not(field(owner, Player.CombatActive))
       then = { fail = { message = "Development combat is not active" } }
@@ -131,6 +140,7 @@ procedure BeginDevelopmentTurn {
       condition = field(owner, Player.TurnOpen)
       then = { fail = { message = "Development turn is already open" } }
     }
+    set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     set = { target = owner field = Player.TurnNumber value = add(field(owner, Player.TurnNumber), 1) }
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
@@ -153,6 +163,8 @@ procedure BeginDevelopmentTurn {
     } }
     emit = { event = AfterPlayerTurnStart payload = { owner = owner } }
     emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } }
+    set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
 # End of the player's turn. The hand is discarded, the player's end-of-turn time point runs, then every
@@ -169,6 +181,7 @@ procedure EndDevelopmentTurn {
       condition = not(field(owner, Player.TurnOpen))
       then = { fail = { message = "Development turn is not open" } }
     }
+    set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     emit = {
       event = BeforeTurnEndEffects payload = { owner = owner } }
     if = { condition = field(owner, Player.CombatActive) then = { emit = { event = BeforePlayerTurnEnd payload = { owner = owner } } } }
@@ -184,6 +197,8 @@ procedure EndDevelopmentTurn {
       call = { procedure = ResetCardTurnCosts }
       set = { target = owner field = Player.TurnOpen value = false }
     } }
+    set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
 
@@ -194,7 +209,7 @@ action BeginDevelopmentCombat {
 }
 action EndDevelopmentCombat {
   role = player
-  requires = field(first(type(Player)), Player.CombatActive)
+  requires = and(field(first(type(Player)), Player.CombatActive), isNone(field(first(type(Player)), Player.CurrentRun)))
   body = { call = { procedure = EndDevelopmentCombat args = { owner = first(type(Player)) } } }
 }
 action BeginDevelopmentTurn {

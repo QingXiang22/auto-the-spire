@@ -84,12 +84,15 @@ procedure ResolvePaidCard {
     if = { condition = and(field(card, Card.Targeted), isNone(target)) then = { fail = { message = "A targeted card requires a living enemy" } } }
     if = { condition = not(isNone(target)) then = { if = { condition = lessOrEqual(field(target, Enemy.Hp), 0) then = { fail = { message = "Target is no longer alive" } } } } }
     let = { into = price value = pureCall(GetCardEnergyCost, owner, card) }
+    set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     set = { target = card field = Card.PaidX value = 0 }
     if = { condition = field(card, Card.IsX) then = { set = { target = card field = Card.PaidX value = price } } }
     set = { target = owner field = Player.Energy value = subtract(field(owner, Player.Energy), price) }
     set = { target = card field = Card.ForceExhaust value = foldEvent(ShouldExhaustSkill, false, owner, card) }
     call = { procedure = MoveCombatCard args = { owner = owner card = card to = "play" reason = "play" } }
     call = { procedure = ResolveCardEffects args = { owner = owner card = card target = target paidEnergy = price auto = false } }
+    set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
 procedure ResolveAutoCard {

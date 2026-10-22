@@ -1,0 +1,16 @@
+{
+  "format": "normal-first-combat-input@1",
+  "seed": "777",
+  "neow_relic": "base-spire:booming-conch",
+  "map_choice": "first-legal-successor",
+  "combat_action_priority": [
+    "PlayAttackFromHand",
+    "PlayCardFromHand",
+    "EndDevelopmentTurn",
+    "BeginDevelopmentTurn"
+  ],
+  "binding_choice": "first-legal-binding",
+  "maximum_combat_actions": 100,
+  "reward_paths": ["claim", "skip"],
+  "comparison_status": "not-independently-compared"
+}

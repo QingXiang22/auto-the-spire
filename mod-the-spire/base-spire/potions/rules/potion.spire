@@ -27,8 +27,11 @@ procedure UsePotion {
   body = {
     call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
     if = { condition = equal(field(potion, Potion.Target), "enemy") then = { fail = { message = "Potion requires a target" } } }
+    set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     emit = { event = PotionUsed payload = { owner = owner potion = potion } }
     call = { procedure = ConsumePotion args = { potion = potion } }
+    set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
 procedure UsePotionOnTarget {
@@ -36,11 +39,14 @@ procedure UsePotionOnTarget {
   body = {
     call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
     if = { condition = not(equal(field(potion, Potion.Target), "enemy")) then = { fail = { message = "Potion does not target an enemy" } } }
+    set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     emit = {
       event = PotionUsedOnTarget
       payload = { owner = owner potion = potion target = first(where(type(Enemy), enemy, greater(field(enemy, Enemy.Hp), 0))) }
     }
     call = { procedure = ConsumePotion args = { potion = potion } }
+    set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
 

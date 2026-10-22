@@ -6,7 +6,7 @@
 
 `sts2/src/Core/Rewards/GoldReward.cs` 的 `Populate` 用 Rewards RNG 生成金额，`OnSelect` 才调用 `PlayerCmd.GainGold`。`Reward.SelectUnsynchronized` 记录成功选择，`RewardsSet.Offer` 在玩家活着时提供奖励。`EncounterModel.MinGoldReward/MaxGoldReward` 的 A0 Monster 区间为 10..20。上一包“胜利即到账”是开发简化，本包改为显式领取。
 
-金币使用原版布局的 `base-spire:player:rewards` 与 double 截断整数映射。卡牌按下节恢复；Elite／Boss、逃脱比例、进阶、金币修正参与者、遗物奖励与地图／正常 Run 仍未迁移，不建立未来奖励种类的通用框架。
+金币使用原版布局的 `base-spire:player:rewards` 与 double 截断整数映射。卡牌按下节恢复；Elite／Boss、逃脱比例、进阶、金币修正参与者、遗物奖励与完整正常 Run 仍未迁移，不建立未来奖励种类的通用框架。
 
 ## 奖励来源上下文目标要求
 
@@ -24,13 +24,13 @@
 
 ### 普通战斗上下文与药水
 
-`OfferNormalCombatRewards(owner, visitId, source, actIndex, ascension)` 接受唯一正整数访问标识，仅支持全部解锁、无奖励修正的 Ironclad 首幕 A0 Monster。角色、来源、幕、进阶、已有奖励和重复访问均在抽样前检查。`CombatRewardSet` 保存这些输入及 Generated／Closed；关闭后保留访问凭据，拒绝同一访问再次生成。开发胜利使用独立递增访问号，正常访问由调用者传入，不由本操作推进地图。
+`OfferNormalCombatRewards(owner, visitId, source, actIndex, ascension)` 接受唯一正整数访问标识，仅支持全部解锁、无奖励修正的 Ironclad 首幕 A0 Monster。角色、来源、幕、进阶、已有奖励和重复访问均在抽样前检查。`CombatRewardSet` 保存这些输入及 Generated／Closed；关闭后保留访问凭据，拒绝同一访问再次生成。开发胜利使用独立递增访问号，正常访问由调用者传入，不由本操作推进地图。正常首战沿源战斗结束／胜利通知和清理顺序完成后调用本操作，奖励容器关联实际 RunVisit；共享关闭动作清理未选实例后关闭访问并返回合法地图后继。
 
 源 RewardsSet 构造列表时先执行 PotionRewardOdds.Roll，再按列表顺序 Populate：金币→适用药水→三张卡牌。药水初始掉落率为 binary32(0.4)，严格小于时掉落并减 binary32(0.1)，否则加同量；不封顶或归零。药水 Populate 先抽稀有度，`<=0.1f` 为 Rare、`<=0.35f` 为 Uncommon，其余 Common，再从该稀有度的源顺序候选中 NextItem。卡牌继续复用现有偏移、去重和升级操作。
 
 药水候选为 Ironclad4Epoch 的三项，接 SharedPotionPool 的45项，全部解锁，共48项；不能按效果支持情况过滤。静态 `PotionBlueprint` 只承载候选元数据。待领药水为真实 `Potion`，绑定当前奖励容器；获得调用 `ObtainPotion`，将同一实例放入第一个空槽后通知 `PotionObtained`。满三栏时领取不改变待领条目，玩家可丢弃已有药水后再次领取，也可跳过或关闭；没有自动替换或额外取消选择。观察、满栏重试、领取、跳过和关闭均不抽样。关闭清理未领药水与卡牌，互不消耗其他已生成条目。
 
-药水获得支持与效果支持分别记录：48项可生成及获得，只有已有六种效果可使用；其余条目明确标记 EffectSupported=false，不发布使用候选，直接调用使用过程报告 unsupported_capability。未知定义明确失败。此范围不包含药水修正遗物、额外槽位、其他来源、正常访问可达或完整独立模拟器比较。
+药水获得支持与效果支持分别记录：48项可生成及获得，只有已有六种效果可使用；其余条目明确标记 EffectSupported=false，不发布使用候选，直接调用使用过程报告 unsupported_capability。未知定义明确失败。此范围不包含药水修正遗物、额外槽位、其他来源或完整独立模拟器比较。正常首幕普通访问已由[Run 结算](../run-domain/spec.md#正常开局首段)接入相同生成及获得操作。
 
 ## 状态与过程
 

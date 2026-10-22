@@ -35,6 +35,8 @@ entity Player {
     AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
     AttackDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     DamageDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    EffectDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    EnemyDiedInCombat = { type = Bool default = false visibility = Hidden }
     PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     PlaySequence = { type = Int default = 0 }
     CardActionNumber = { type = Int default = 0 visibility = Hidden }
