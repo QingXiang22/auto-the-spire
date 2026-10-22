@@ -187,6 +187,7 @@ internal static class NormalRunChecks
         }
         void Check()
         {
+            CheckPublicProjection(observed.Snapshot);
             var a = observed.Capture("check"); var b = plain.Capture("check");
             var gameplay = a with { Values = new(a.Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal) && !p.Key.StartsWith("events.", StringComparison.Ordinal) && !p.Key.StartsWith("lifecycle.", StringComparison.Ordinal)).ToDictionary(p => p.Key, p => p.Value), StringComparer.Ordinal) };
             Require(NormalRunComparison.First(0, gameplay, b) is null, "diagnostics leave normal Host facts/actions/piles unchanged");
@@ -268,6 +269,12 @@ internal static class NormalRunChecks
                     { Fields = e.Fields.Where(f => !f.FieldId.EndsWith(".Potion", StringComparison.Ordinal)).ToArray() }).ToArray() }, "public.reward_sets");
         }
         Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
+        if (snapshot.Entities.Any(e => e.KindId.EndsWith(":Enemy", StringComparison.Ordinal)))
+        {
+            var enemy = First("Enemy");
+            Changed(Replace(enemy, "MoveIndex", WireValue.Str("999")), "public.enemies");
+            Changed(Replace(enemy, "Intent", WireValue.Str("corrupted-intent")), "public.enemies");
+        }
         foreach (var name in new[] { "PlaySequence", "HpLossCount" })
             Changed(Replace(First("Player"), name, WireValue.Str("999")), "public.player_history");
         foreach (var name in new[] { "LostHpThisTurn", "ExhaustedCardThisTurn", "EnemyPhase", "UsesRunDeck" })
