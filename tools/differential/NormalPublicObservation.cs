@@ -21,7 +21,8 @@ internal sealed record NormalCardView(string Scope, string Origin, string Id, st
 internal sealed record NormalRewardView(bool Open, bool GoldPending, long GoldAmount, bool CardPending, bool PotionPending,
     NormalCardOffer[] Cards, string[] Potions);
 internal sealed record NormalRewardSetView(long Visit, string Source, string Character, long Act, long Ascension, long CardCount,
-    string RarityPolicy, bool Generated, bool Closed, string? Potion);
+    string RarityPolicy, bool Generated, bool Closed, string? Potion, NormalRewardPolicyView Policies);
+internal sealed record NormalRewardPolicyView(string PoolEligibility, string UpgradePolicy, string ModifiersPolicy, string RandomStream);
 
 // These projections read the protocol snapshot, never Engine fields or hidden collection members.
 // They cover named semantic surfaces; the full public.snapshot gate stays required until every
@@ -38,7 +39,7 @@ internal static class NormalPublicObservation
         ("Enemy", "Hp MaxHp Block MoveId MoveIndex Intent"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick"),
         ("RunVisit", "StableId Node MapType RoomType EncounterId Phase Status Committed Rewards"),
         ("Card", "Label SourceEntry Kind Rarity Cost BaseCost BaseDamage DamageGrowth Upgraded CanUpgrade Targeted Exhausts Innate LeavesPlay StrikeTag IsX PaidX"),
-        ("CombatRewardSet", "PotionPending VisitId Source CharacterId ActIndex Ascension CardCount RarityPolicy Generated Closed Potion"), ("Potion", "Slot Usage Target"), ("Relic", "IsMelted"),
+        ("CombatRewardSet", "PotionPending VisitId Source CharacterId ActIndex Ascension CardCount RarityPolicy Generated Closed Potion PoolEligibility UpgradePolicy ModifiersPolicy RandomStream"), ("Potion", "Slot Usage Target"), ("Relic", "IsMelted"),
         ("HandView", "Player"), ("DrawPileView", "Player"), ("DiscardPileView", "Player"), ("ExhaustPileView", "Player"),
         ("InPlayView", "Player"), ("RemovedFromCombatView", "Player"), ("RunDeckView", "Player")
     }.SelectMany(p => p.Item2.Split(' ').Select(f => p.Item1 + "." + f)).ToHashSet(StringComparer.Ordinal);
@@ -106,7 +107,8 @@ internal static class NormalPublicObservation
             Group("PotionRewardOptions").Select(p => binding(WireValue.Str(p.InstanceId))).Order(StringComparer.Ordinal).ToArray()));
         Put("public.reward_sets", Entities("CombatRewardSet").Select(r => new NormalRewardSetView(Number(r, "VisitId"), Text(r, "Source"),
             Text(r, "CharacterId"), Number(r, "ActIndex"), Number(r, "Ascension"), Number(r, "CardCount"), Text(r, "RarityPolicy"),
-            Flag(r, "Generated"), Flag(r, "Closed"), r.Fields.Any(f => FieldName(f) == "CombatRewardSet.Potion") ? binding(Field(r, "Potion")) : null))
+            Flag(r, "Generated"), Flag(r, "Closed"), r.Fields.Any(f => FieldName(f) == "CombatRewardSet.Potion") ? binding(Field(r, "Potion")) : null,
+            new(Text(r, "PoolEligibility"), Text(r, "UpgradePolicy"), Text(r, "ModifiersPolicy"), Text(r, "RandomStream"))))
                 .OrderBy(r => r.Visit).ToArray());
         Put("public.potion_inventory", Group("Potions").Select(p => new NormalPotionView(binding(WireValue.Str(p.InstanceId)), Number(p, "Slot"), Text(p, "Usage"), Text(p, "Target")))
             .OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
