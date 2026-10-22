@@ -7,6 +7,7 @@ internal static class DebugChecks
     public static void Run()
     {
         RandomDebugChecks.Run();
+        DebugSnapshotChecks.Run();
         Check.Run("DEBUG enabling trace leaves identity, state, random and public choices unchanged", () =>
         {
             var package = EngineDslCompiler.Compile("""

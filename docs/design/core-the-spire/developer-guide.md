@@ -348,6 +348,29 @@ var firstFault = session.Debug.FirstFault;
 
 `RandomCall` 的 `Random` 字段保存操作、上下界、实际结果，以及流和总原始字数的调用前后游标。一次 API 调用可能消费多个原始字；洗牌为每次交换各记一条，候选是交换前的有效前缀，`pick` 保存实际查询顺序。候选实例为只读副本，默认最多 256 项，可通过 `SessionDebugOptions.MaxCandidates` 调整；`CandidateCount` 保留完整数量，截断由 `CandidatesTruncated` 明示。候选截断或记录丢失时，工具不能宣称对应诊断维度一致。
 
+需要在临时实体销毁后读取事件载荷或随机候选字段时，显式设置 `CaptureValues: true`。Core.TheSpire 0.9.1 增加该诊断选项及下列只读记录，执行语义标识保持 `engine/ir@0.9`；原调试调用默认不复制这些值。
+
+```csharp
+var options = new SessionDebugOptions(CaptureValues: true,
+    MaxSnapshotEntities: 256, MaxSnapshotValues: 4096);
+var session = new Session(rules, 42, ["player"], debug: options);
+session.Start();
+foreach (var record in session.Debug!.Capture())
+{
+    if (record.Snapshot is { Complete: true } snapshot)
+    {
+        // Values 保存事件的类型化载荷；Entities 保存直接载荷引用或随机候选的类型和字段。
+        // 引用仍是本 Session 的实例编号，跨后端比较需另建语义实例对应。
+    }
+}
+```
+
+`Snapshot` 在事件发出、监听器开始前复制载荷及直接引用实体；随机候选在实际取样后、交换或后续规则修改前复制。字段包括内部字段，引用字段只复制编号，不递归遍历对象图。记录保存发生时的字段，之后的修改和销毁不影响它；记录不能用于恢复或回写游戏状态。
+
+每条记录的实体数由 `MaxSnapshotEntities` 限制，默认 256。`MaxSnapshotValues` 默认 4096，是载荷值、实体字段值和列表元素共用的复制数量上限；每个标量、列表值及列表元素各占一个。字符串使用 `MaxTextLength` 上限。复制前检查剩余容量；记录容量耗尽后不再创建值快照。
+
+值记录保留 `ValueKind`；标量使用 invariant 文本，实体／参与者／作用域引用和枚举保存数值编号，列表通过只读 `Items` 保存整数或引用编号。`OriginalLength` 保留字符串或列表的原长度，`ValueCount` 和 `FieldCount` 保留原载荷值数和字段数；`Truncated` 明确指出文本、列表、字段、载荷或实体截断。记录的 `Subject`／`Detail` 截断另由 `TextTruncated` 标记。实际不存在的候选实体标记 `Missing`。`Complete` 仅表示本条直接复制完整，不代表递归引用、语义对应或玩法比较完成；缺 `Snapshot`、文本截断、缺实体或 `DroppedRecords > 0` 时，对应比较继续失败。
+
 加载文本包时使用 `package.CreateSession(seed, roles, gameSeed, debug: new SessionDebugOptions())`，保持原包的随机配置。诊断沿每会话的拉取式轨迹保存，不使用全局回调。直接调用 `session.Random` 也记录调用；只有在 DSL 指令执行期间才有指令来源与执行上下文。失败指令可能留下已执行抽取的诊断，随机状态仍按指令的原子性规则恢复；故障后的记录不能充当成功边界。
 
 tools/differential 已把真实轨迹写入本侧 case 产物；参考事件规范化与全量一致性仍需后续验收。Debug 不进公开观察、不改变状态/RNG/候选/规则标识，也不是给 AI 的额外公开历史。没有独立日志系统。

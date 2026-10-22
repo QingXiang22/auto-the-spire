@@ -119,7 +119,7 @@ public sealed partial class Session
         Random = new RandomService(seed, randomAlgorithmId, randomDrawProfileId, randomProfile);
         Seed = seed;
         GameSeed = gameSeed ?? seed.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        Debug = debug is null ? null : new SessionDebugTrace(debug);
+        Debug = debug is null ? null : new SessionDebugTrace(this, debug);
         Random.Debug = Debug;
 
         for (var i = 0; i < participantRoles.Count; i++)

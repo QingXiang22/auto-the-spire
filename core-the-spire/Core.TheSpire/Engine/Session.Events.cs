@@ -20,7 +20,7 @@ public sealed partial class Session
         _stack.Add(new DispatchActivation(eventType, listeners, payload, inheritedScope));
         if (Debug is not null)
             Trace(SessionDebugKind.EventEmit, eventType.QualifiedId,
-                $"scope={inheritedScope}; listeners={listeners.Length}; payload=[{string.Join(',', payload)}]");
+                $"scope={inheritedScope}; listeners={listeners.Length}; payload=[{string.Join(',', payload)}]", payload: payload);
     }
 
     private ListenerActivation[] SnapshotListeners(EventDefinition eventType, Value[] payload, ScopeId scope)
