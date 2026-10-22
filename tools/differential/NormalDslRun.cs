@@ -287,10 +287,11 @@ internal sealed class NormalDslRun : IDisposable
     private NormalObservedEvent[] ObservedEvents()
     {
         if (!HasCompleteDebug) throw new NotSupportedException("missing_dimension: dropped event diagnostics");
-        return DebugRecords.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject is
+        var records = DebugRecords;
+        var selected = records.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject is
             "base-spire:AfterCardDrawn" or "base-spire:BeforeCardPlayed" or "base-spire:AfterCardPlayed" or "base-spire:DamageResolved"
-            or "base-spire:PowerApplied" or "base-spire:EnemyTurnStarted" or "base-spire:AfterPlayerTurnStartLate")
-            .Select(r =>
+            or "base-spire:PowerApplied" or "base-spire:EnemyTurnStarted" or "base-spire:AfterPlayerTurnStartLate").ToArray();
+        var emitted = selected.Select(r =>
             {
                 if (r.TextTruncated || r.Snapshot is not { Complete: true }) throw new NotSupportedException("missing_dimension: event snapshot");
                 var snapshot = r.Snapshot;
@@ -331,11 +332,12 @@ internal sealed class NormalDslRun : IDisposable
                 return new NormalObservedEvent(r.Subject switch { "base-spire:AfterCardDrawn" => "draw",
                     "base-spire:BeforeCardPlayed" => "before-play", _ => "after-play" }, origin + ":" + content + (upgraded ? "+" : ""));
             }).ToArray();
+        return NormalPhaseTrace.Merge(records, selected.Zip(emitted).ToDictionary(p => p.First.Sequence, p => p.Second));
     }
     public void Dispose()
     {
         log.Dispose();
         if (sessionId.Length > 0 && HasDebug)
-            File.WriteAllText(logPath + ".trace.json", NormalPreflight.Json(DebugRecords.Where(r => r.Snapshot is not null).ToArray()));
+            File.WriteAllText(logPath + ".trace.json", NormalPreflight.Json(DebugRecords.Where(r => r.Snapshot is not null || NormalPhaseTrace.Relevant(r)).ToArray()));
     }
 }

@@ -78,6 +78,17 @@ internal static class NormalRunChecks
                 "missing, duplicate, changed range, final bits and cursor report a float first difference");
         }
         CheckPublicProjection(left.Snapshot);
+        var actualEvents = System.Text.Json.JsonSerializer.Deserialize<NormalObservedEvent[]>(victory.Values["events.observed_order"])!;
+        foreach (var (phase, count) in new[] { ("combat-started", 1), ("player-turn-prepared", 4), ("enemy-turn-starting", 3),
+            ("enemy-move-finished", 5), ("player-turn-ended", 3) })
+        {
+            Require(actualEvents.Count(e => e.Kind == phase) == count, "normal path has all actual " + phase + " phases");
+            var first = Array.FindIndex(actualEvents, e => e.Kind == phase);
+            var changed = new SortedDictionary<string, string>(victory.Values, StringComparer.Ordinal)
+                { ["events.observed_order"] = NormalPreflight.Json(actualEvents.Where((_, i) => i != first).ToArray()) };
+            Require(NormalRunComparison.First(0, victory, victory with { Values = changed })?.Path == "events.observed_order",
+                "missing actual phase reports an event first difference: " + phase);
+        }
         using (var document = System.Text.Json.JsonDocument.Parse(victory.Values["lifecycle.settlement"]))
         {
             var stages = document.RootElement.EnumerateArray().ToArray();
