@@ -64,6 +64,9 @@ internal static class NormalRunChecks
             Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
         var victory = left.Capture("victory");
+        var generatedReward = System.Text.Json.JsonSerializer.Deserialize<NormalRewardSetView[]>(victory.Values["public.reward_sets"])!.Single();
+        Require(generatedReward is { Source: "monster", Character: "base-spire:ironclad", Act: 0, Ascension: 0, CardCount: 3,
+            RarityPolicy: "regular-encounter", Generated: true, Closed: false, Potion: not null }, "real reward generation metadata and pending potion");
         Require(histories.Any(h => h.Plays > 0) && histories.Any(h => h.HpLosses > 0)
             && histories[^1] is { Plays: 0, HpLosses: 0, LostHpThisTurn: false, ExhaustedThisTurn: false },
             "real combat increments play and HP-loss counters before victory clears active history");
@@ -122,13 +125,17 @@ internal static class NormalRunChecks
                     "wrong order, missing and repeated actual settlement stages are detected");
             }
         }
-        Apply(new("claim-potion", [])); Apply(new("close-rewards", []));
+        Apply(new("claim-potion", []));
+        Require(RewardSet() == generatedReward with { Potion = null }, "claim clears only the pending reward potion link");
+        Apply(new("close-rewards", []));
+        Require(RewardSet() == generatedReward with { Potion = null, Closed = true }, "room exit closes and retains the same generated reward context");
         CheckPublicProjection(left.Snapshot);
         var discard = left.Semantic(left.Action("DiscardPotion"));
         Require(discard.Arguments.Single().Contains(":potion-reward:0:", StringComparison.Ordinal), "held potion retains its actual reward creation origin");
         Apply(discard);
         Require(left.Find("DiscardPotion") is null && left.Capture("discarded").Values["permanent.potions"] == "[]", "the same acquired potion is removed by the real public action");
         Require(left.CheckRequestReplay().Passed, "discard request cache and stale rejection preserve state and RNG");
+        NormalRewardSetView RewardSet() => System.Text.Json.JsonSerializer.Deserialize<NormalRewardSetView[]>(left.Capture("reward-check").Values["public.reward_sets"])!.Single();
         void Apply(NormalAction action)
         {
             left.Apply(action); right.Apply(action);
@@ -239,7 +246,7 @@ internal static class NormalRunChecks
             Changed(withoutCurrent, "public.visit_links");
             Changed(Replace(run, "VisitSequence", WireValue.Str("999")), "public.visit_links");
             if (visit.Fields.Any(f => f.FieldId.EndsWith(".Rewards", StringComparison.Ordinal)))
-                Changed(Replace(First("CombatRewardSet"), "VisitId", WireValue.Str("999")), "public.visit_links");
+                Changed(Replace(First("CombatRewardSet"), "VisitId", WireValue.Str("999")), "public.reward_sets");
         }
         Changed(Replace(First("MapNode"), "Visited", WireValue.Bool(!NormalPublicObservation.Flag(First("MapNode"), "Visited"))), "public.map");
         var edge = snapshot.Relations.First(r => r.TypeId.EndsWith(":MapChildren", StringComparison.Ordinal));
@@ -249,6 +256,17 @@ internal static class NormalRunChecks
         Changed(Replace(First("Run"), "TotalFloor", WireValue.Str("999")), "public.run");
         Changed(Replace(First("NeowOption"), "Position", WireValue.Str("999")), "public.neow");
         Changed(Replace(First("Player"), "GoldRewardAmount", WireValue.Str("999")), "public.reward_offer");
+        if (snapshot.Entities.Any(e => e.KindId.EndsWith(":CombatRewardSet", StringComparison.Ordinal)))
+        {
+            var rewardSet = First("CombatRewardSet");
+            foreach (var name in new[] { "Source", "CharacterId", "ActIndex", "Ascension", "CardCount", "RarityPolicy" })
+                Changed(Replace(rewardSet, name, WireValue.Str("999")), "public.reward_sets");
+            foreach (var name in new[] { "Generated", "Closed" })
+                Changed(Replace(rewardSet, name, WireValue.Bool(!NormalPublicObservation.Flag(rewardSet, name))), "public.reward_sets");
+            if (rewardSet.Fields.Any(f => f.FieldId.EndsWith(".Potion", StringComparison.Ordinal)))
+                Changed(snapshot with { Entities = snapshot.Entities.Select(e => e != rewardSet ? e : e with
+                    { Fields = e.Fields.Where(f => !f.FieldId.EndsWith(".Potion", StringComparison.Ordinal)).ToArray() }).ToArray() }, "public.reward_sets");
+        }
         Changed(Replace(First("Player"), "Hp", WireValue.Str("999")), "public.player");
         foreach (var name in new[] { "PlaySequence", "HpLossCount" })
             Changed(Replace(First("Player"), name, WireValue.Str("999")), "public.player_history");

@@ -35,7 +35,7 @@ internal static class NormalRunComparison
     internal static readonly string[] ExpectedCaseIds = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"];
     internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events", "lifecycle"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
-        "public.snapshot", "public.piles", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potion_inventory", "public.relic_inventory", "public.cards",
+        "public.snapshot", "public.piles", "public.map", "public.run", "public.neow", "public.reward_offer", "public.reward_sets", "public.potion_inventory", "public.relic_inventory", "public.cards",
         "public.ownership", "public.map_members", "public.map_parents", "public.visit_links", "public.relation_types", "public.entity_counts",
         "public.player", "public.player_history", "public.enemies", "public.powers", "public.visits",
         "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
