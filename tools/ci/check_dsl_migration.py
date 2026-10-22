@@ -194,6 +194,7 @@ def main() -> int:
                        or not c["boundaries"][-1]["left"]["missing_dimensions"]
                        or len(c["protocol_checks"]) != len(c["boundaries"])
                        or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
+                       or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
                        or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
                               or "events.observed_order" not in b[side]["values"]
                               for b in c["boundaries"] for side in ("left", "right"))

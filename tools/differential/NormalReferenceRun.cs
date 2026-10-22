@@ -2,6 +2,7 @@ using System.Reflection;
 #if REFERENCE_SIM
 using Sts2Sim.Core.Content.Acts;
 using Sts2Sim.Core.Combat;
+using Sts2Sim.Core.Commands;
 using Sts2Sim.Core.Demo;
 using Sts2Sim.Core.Entities.Cards;
 using Sts2Sim.Core.Entities.Creatures;
@@ -35,6 +36,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly EventRoom opening;
     private readonly Dictionary<CardModel, string> permanent = [];
     private readonly Dictionary<CardModel, string> generated = [];
+    private readonly Dictionary<PotionModel, string> potionOrigins = [];
     private readonly HashSet<int> generatedActions = [];
     private int actionIndex = -1;
     private readonly List<object> events = [];
@@ -84,6 +86,10 @@ internal sealed class NormalReferenceRun : IDisposable
     }
     private string Creature(Creature creature) => ReferenceEquals(creature, player.Creature) ? "player" :
         "enemy:" + combat!.Engine.State.SpawnedEnemies.ToList().IndexOf(creature);
+    private string Potion(PotionModel potion) => potionOrigins.TryGetValue(potion, out var origin) ? origin + ":" + Id(potion.Id)
+        : throw new NotSupportedException("missing_dimension: reference potion acquisition origin");
+    private NormalAction[] PotionDiscards() => player.CanUseOrRemovePotions ? player.PotionSlots.Where(p => p is not null)
+        .Select(p => new NormalAction("discard-potion", [Potion(p!)])).ToArray() : [];
     private object? EventArgument(object? arg) => arg switch
     {
         null => null, CardModel c => Card(c), Creature c => Creature(c),
@@ -160,6 +166,7 @@ internal sealed class NormalReferenceRun : IDisposable
             case "skip-card": await combat!.Rewards!.Card.Skip(); break;
             case "claim-potion": await combat!.Rewards!.Potion!.Take(); break;
             case "skip-potion": await combat!.Rewards!.Potion!.Skip(); break;
+            case "discard-potion": await PotionCmd.Discard(player.PotionSlots.Single(p => p is not null && Potion(p) == action.Arguments[0])!); break;
             case "close-rewards":
                 if (!combat!.Rewards!.Gold.IsResolved) await combat.Rewards.Gold.Skip();
                 if (!combat.Rewards.Card.IsResolved) await combat.Rewards.Card.Skip();
@@ -174,13 +181,16 @@ internal sealed class NormalReferenceRun : IDisposable
         {
             if (!combat.Engine.Won) throw new InvalidOperationException("Normal reference lost the combat.");
             await combat.ResolveOutcomeAsync(); Phase = "rewards";
+            if (combat.Rewards!.Potion?.Potion is { } potion)
+                potionOrigins.Add(potion, $"generated:action:{actionIndex}:potion-reward:0");
         }
     }
     private NormalAction[] Actions()
     {
         if (Phase == "neow") return Neow.IsFinished ? [new("leave-neow", [])] : Neow.CurrentOptions.Select(o => new NormalAction("neow", [Relic(o.Key)])).ToArray();
-        if (Phase == "map") return run.CurrentMapPoint!.Children.Where(n => !run.VisitedMapCoords.Contains(n.coord)).Select(n => new NormalAction("map", [n.coord.col + "," + n.coord.row])).ToArray();
-        var result = new List<NormalAction>();
+        if (Phase == "map") return run.CurrentMapPoint!.Children.Where(n => !run.VisitedMapCoords.Contains(n.coord))
+            .Select(n => new NormalAction("map", [n.coord.col + "," + n.coord.row])).Concat(PotionDiscards()).ToArray();
+        var result = PotionDiscards().ToList();
         if (Phase == "combat")
         {
             if (targetedCard is not null)

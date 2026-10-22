@@ -16,6 +16,7 @@ internal sealed class NormalDslRun : IDisposable
     private readonly Dictionary<InstanceId, string> slots = [];
     private readonly Dictionary<InstanceId, string> identities = [];
     private readonly Dictionary<InstanceId, string> generated = [];
+    private readonly Dictionary<InstanceId, string> potionOrigins = [];
     private readonly HashSet<int> generatedActions = [];
     private int actionIndex = -1;
     private int number;
@@ -134,6 +135,13 @@ internal sealed class NormalDslRun : IDisposable
             identities[card] = slot + ":" + Field(card, "Card", "DefinitionId").AsString() + (Field(card, "Card", "Upgraded").AsBool() ? "+" : "");
         }
         identities[Instances("Player").Single()] = "player";
+        var offers = Members("PotionRewardOptions");
+        for (var i = 0; i < offers.Length; i++)
+            if (!potionOrigins.ContainsKey(offers[i])) potionOrigins.Add(offers[i], $"generated:action:{actionIndex}:potion-reward:{i}");
+        foreach (var potion in offers.Concat(Members("Potions")))
+            identities[potion] = potionOrigins.TryGetValue(potion, out var origin)
+                ? origin + ":" + Field(potion, "Potion", "DefinitionId").AsString()
+                : throw new NotSupportedException("missing_dimension: potion acquisition origin");
         var enemies = Instances("Enemy");
         for (var i = 0; i < enemies.Length; i++) identities[enemies[i]] = "enemy:" + i;
         foreach (var node in Instances("MapNode")) identities[node] = Field(node, "MapNode", "Col").AsInt() + "," + Field(node, "MapNode", "Row").AsInt();
@@ -159,6 +167,7 @@ internal sealed class NormalDslRun : IDisposable
         {
             "PlayAttackFromHand" or "PlayCardFromHand" => "play", "PlayTargetedCard" => "targeted-play", "EndDevelopmentTurn" => "end-turn",
             "ChooseMapPoint" => "map", "ClaimDevelopmentCardReward" => "claim-card",
+            "DiscardPotion" => "discard-potion",
             "ClaimDevelopmentPotionReward" => "claim-potion", "SkipDevelopmentPotionReward" => "skip-potion",
             "ClaimDevelopmentGoldReward" => "claim-gold", "SkipDevelopmentCardReward" => "skip-card",
             "CloseDevelopmentRewards" => "close-rewards", _ => throw new NotSupportedException("Unmapped normal action: " + name)
