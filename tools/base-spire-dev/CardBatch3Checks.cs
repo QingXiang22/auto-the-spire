@@ -65,14 +65,19 @@ internal static partial class PackageChecks
         });
         Own("base-spire:break", "CP53 Break: cost 1 for 20 damage plus 5 vulnerable, 30 and 7 when upgraded", () =>
         {
-            var s = Start(package); Submit(s, "Break.AddToHand"); Submit(s, "AddDevelopmentTarget");
-            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Submit(s, "PlayAttackFromHand", Hand(s).Single());
-            Equal(20L, EnemyHp(s), "normal Break deals 20"); Equal(5L, PowerStacks(s, "base-spire:vulnerable-power"), "and five vulnerable");
-            Submit(s, "Break.AddToHand"); Submit(s, "UpgradeCardInHand", Hand(s).Single());
-            Set(s, Player(s), "Player", "Energy", Value.Of(3L));
-            Submit(s, "PlayAttackFromHand", Hand(s).Single(card => CardUpgraded(s, card)));
-            Equal(0L, EnemyHp(s), "upgraded Break deals 30 x 1.5 against the vulnerable target, flooring at zero"); Equal(12L, PowerStacks(s, "base-spire:vulnerable-power"), "vulnerable stacks add up");
+            foreach (var initialHp in new[] { 40L, 100L })
+            {
+                var s = Start(package); Submit(s, "Break.AddToHand"); Submit(s, "AddDevelopmentTarget");
+                Set(s, FirstTarget(s), "Enemy", "MaxHp", Value.Of(initialHp)); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(initialHp));
+                Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+                Submit(s, "PlayAttackFromHand", Hand(s).Single());
+                Equal(initialHp - 20, EnemyHp(s), "normal Break deals 20"); Equal(5L, PowerStacks(s, "base-spire:vulnerable-power"), "and five vulnerable");
+                Submit(s, "Break.AddToHand"); Submit(s, "UpgradeCardInHand", Hand(s).Single());
+                Set(s, Player(s), "Player", "Energy", Value.Of(3L));
+                Submit(s, "PlayAttackFromHand", Hand(s).Single(card => CardUpgraded(s, card)));
+                Equal(Math.Max(0, initialHp - 65), EnemyHp(s), "upgraded Break deals 30 x 1.5 against the vulnerable target, flooring at zero");
+                Equal(initialHp == 40 ? 0L : 12L, PowerStacks(s, "base-spire:vulnerable-power"), "death removes Vulnerable and rejects reapplication; surviving targets add stacks");
+            }
         });
         Own("base-spire:howl-from-beyond", "CP54 Howl From Beyond: cost 3 for 16 damage to all enemies, 21 upgraded; the exhaust hover tip is not a keyword", () =>
         {

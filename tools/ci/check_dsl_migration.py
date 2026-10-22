@@ -184,13 +184,13 @@ def main() -> int:
                        or c["right"]["diagnostic"]["normal_compatibility_alignment"] for c in normal["cases"])):
             raise ValueError("normal preflight must match every opening fact and retain both public returns, while rejecting incomplete M01")
         paired_output = args.output / "normal-paired"
-        paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 1)
+        paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
         if (paired["expected_case_ids"] != ["m01-claim", "m01-skip"] or paired["executed"] != 2
                 or paired["complete"] or paired["independent_verified"]
-                or any(c["status"] != "diverged" or c["independent_verified"] or c["complete"]
-                       or c["reason"] or not c["first_difference"] or len(c["boundaries"]) < 4
+                or any(c["status"] != "blocked_compare" or c["independent_verified"] or c["complete"]
+                       or c["reason"] or c["first_difference"] or not c["returned_to_map"] or len(c["boundaries"]) < 19
                        or not c["boundaries"][-1]["left"]["missing_dimensions"] for c in paired["cases"])):
-            raise ValueError("normal paired prefix must retain actual common boundaries and reject real differences/incomplete dimensions")
+            raise ValueError("normal paired paths must reach both map returns with matching measured dimensions while rejecting incomplete M01")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")
@@ -244,7 +244,7 @@ def main() -> int:
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
                   "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01",
-                  "normal_paired": "common-action-prefix; real-difference; incomplete-M01", "independent_verified": False}
+                  "normal_paired": "paired-claim-skip-map-returns; incomplete-M01", "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

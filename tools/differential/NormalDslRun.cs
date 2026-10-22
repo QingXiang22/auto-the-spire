@@ -14,6 +14,9 @@ internal sealed class NormalDslRun : IDisposable
     private readonly StreamWriter log;
     private readonly Dictionary<InstanceId, string> slots = [];
     private readonly Dictionary<InstanceId, string> identities = [];
+    private readonly Dictionary<InstanceId, string> generated = [];
+    private readonly HashSet<int> generatedActions = [];
+    private int actionIndex = -1;
     private int number;
     private string sessionId = "";
     public PublicSnapshotDto Snapshot { get; private set; } = null!;
@@ -80,10 +83,15 @@ internal sealed class NormalDslRun : IDisposable
     private void Remember()
     {
         foreach (var card in Members("RunDeck")) if (!slots.ContainsKey(card)) slots.Add(card, "permanent:" + slots.Count.ToString("D2"));
-        foreach (var card in Instances("Card"))
+        var combatCards = new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay", "RemovedFromCombat" }.SelectMany(Members).Distinct().ToArray();
+        var fresh = combatCards.Where(c => !slots.ContainsKey(c) && Field(c, "Card", "PermanentSource").IsNone && !generated.ContainsKey(c)).ToArray();
+        if (fresh.Length > 1 || (fresh.Length == 1 && !generatedActions.Add(actionIndex)))
+            throw new NotSupportedException("missing_dimension: multiple generated cards in one common action require native creation-origin observation.");
+        if (fresh.Length == 1) generated.Add(fresh[0], "generated:action:" + actionIndex);
+        foreach (var card in Members("RunDeck").Concat(combatCards).Distinct())
         {
             var source = Field(card, "Card", "PermanentSource");
-            var slot = slots.GetValueOrDefault(card) ?? (!source.IsNone ? slots[source.AsRef()] : "generated:" + card.Value);
+            var slot = slots.GetValueOrDefault(card) ?? (!source.IsNone ? slots[source.AsRef()] : generated[card]);
             identities[card] = slot + ":" + Field(card, "Card", "DefinitionId").AsString() + (Field(card, "Card", "Upgraded").AsBool() ? "+" : "");
         }
         var enemies = Instances("Enemy");
@@ -120,6 +128,7 @@ internal sealed class NormalDslRun : IDisposable
     }
     public void Apply(NormalAction action)
     {
+        actionIndex++;
         LegalActionDto candidate;
         if (action.Kind == "neow") candidate = Snapshot.LegalActions.Single(a => a.Fields.Any(f => Binding(f.Value!) == action.Arguments[0]));
         else if (action.Kind == "leave-neow") candidate = Snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool { Value: true }));

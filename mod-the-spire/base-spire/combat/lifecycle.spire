@@ -16,8 +16,8 @@ event AfterPlayerTurnStart { payload = { owner = Ref(Player) } }
 event AfterPlayerTurnStartLate { payload = { owner = Ref(Player) } }
 # Development end-of-turn time point: the hand is discarded first, then this fires before the turn gate closes.
 event AfterTurnEnded { payload = { owner = Ref(Player) } }
-# An enemy reached zero HP from above. Vanilla also removes the creature and fires death hooks; this scope
-# only reports the transition and recomputes the combat outcome.
+# Confirmed ordinary death notification, before the supported source Power cleanup. The instance
+# remains available to damage/play references; complete death prevention/removal hooks are not migrated.
 event EnemyDied { payload = { target = Ref(Enemy) } }
 # The development combat finished: victory when no hittable enemy remains, defeat when the player reaches 0 HP.
 event CombatEnded { payload = { owner = Ref(Player) victory = Bool } }

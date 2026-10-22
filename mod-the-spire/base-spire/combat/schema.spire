@@ -68,6 +68,9 @@ entity Enemy {
     Hp = { type = Int(min = 0, max = 999999) default = 0 }
     MaxHp = { type = Int(min = 0, max = 999999) default = 0 }
     Block = { type = Int(min = 0, max = 999) default = 0 }
+    # Ordinary confirmed death detaches the source creature before Power removal callbacks.
+    # Keep the instance for damage/play references; escape and revival are separate unsupported paths.
+    DeathResolved = { type = Bool default = false visibility = Hidden }
     # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
     MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
     # Saved source node for migrated move graphs; observations never roll another move.
