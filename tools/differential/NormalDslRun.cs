@@ -17,6 +17,7 @@ internal sealed class NormalDslRun : IDisposable
     private readonly Dictionary<InstanceId, string> identities = [];
     private readonly Dictionary<InstanceId, string> generated = [];
     private readonly Dictionary<InstanceId, string> potionOrigins = [];
+    private readonly Dictionary<InstanceId, string> rewardCardOrigins = [];
     private readonly HashSet<int> generatedActions = [];
     private NormalSettlement[]? settlement;
     private int actionIndex = -1;
@@ -123,16 +124,19 @@ internal sealed class NormalDslRun : IDisposable
     private Value Field(InstanceId id, string type, string name) => Engine.State.GetField(id, Engine.RuleSet.TypeByQualifiedId("base-spire:" + type).FieldIndex(name));
     private void Remember()
     {
-        foreach (var card in Members("RunDeck")) if (!slots.ContainsKey(card)) slots.Add(card, "permanent:" + slots.Count.ToString("D2"));
+        var cardOffers = Members("CardRewardOptions");
+        for (var i = 0; i < cardOffers.Length; i++)
+            if (!rewardCardOrigins.ContainsKey(cardOffers[i])) rewardCardOrigins.Add(cardOffers[i], $"generated:action:{actionIndex}:card-reward:{i}");
+        foreach (var card in Members("RunDeck")) if (!slots.ContainsKey(card)) slots.Add(card, rewardCardOrigins.GetValueOrDefault(card) ?? "permanent:" + slots.Count.ToString("D2"));
         var combatCards = new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay", "RemovedFromCombat" }.SelectMany(Members).Distinct().ToArray();
         var fresh = combatCards.Where(c => !slots.ContainsKey(c) && Field(c, "Card", "PermanentSource").IsNone && !generated.ContainsKey(c)).ToArray();
         if (fresh.Length > 1 || (fresh.Length == 1 && !generatedActions.Add(actionIndex)))
             throw new NotSupportedException("missing_dimension: multiple generated cards in one common action require native creation-origin observation.");
         if (fresh.Length == 1) generated.Add(fresh[0], "generated:action:" + actionIndex);
-        foreach (var card in Members("RunDeck").Concat(combatCards).Distinct())
+        foreach (var card in Members("RunDeck").Concat(combatCards).Concat(cardOffers).Distinct())
         {
             var source = Field(card, "Card", "PermanentSource");
-            var slot = slots.GetValueOrDefault(card) ?? (!source.IsNone ? slots[source.AsRef()] : generated[card]);
+            var slot = slots.GetValueOrDefault(card) ?? (!source.IsNone ? slots[source.AsRef()] : rewardCardOrigins.GetValueOrDefault(card) ?? generated[card]);
             identities[card] = slot + ":" + Field(card, "Card", "DefinitionId").AsString() + (Field(card, "Card", "Upgraded").AsBool() ? "+" : "");
         }
         identities[Instances("Player").Single()] = "player";
@@ -235,6 +239,7 @@ internal sealed class NormalDslRun : IDisposable
                 members = pile.VisibleMembers.Select(id => Binding(WireValue.Str(id))).Order(StringComparer.Ordinal).ToArray(),
                 positions = pile.KnownPositions.Select(p => new { card = Binding(WireValue.Str(p.CardRef)), p.Position }).ToArray() };
         }).ToArray());
+        NormalPublicObservation.Add(Snapshot, v, Binding);
         // Public evidence remains the actual protocol snapshot, separate from tool-only hidden piles.
         var trace = Engine.Debug;
         if (trace is not null) Put("events.observed_order", ObservedEvents());
@@ -246,6 +251,7 @@ internal sealed class NormalDslRun : IDisposable
         return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
                 unmapped_public_actions = unmapped,
+                unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
                     or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });

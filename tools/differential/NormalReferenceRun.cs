@@ -37,6 +37,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly Dictionary<CardModel, string> permanent = [];
     private readonly Dictionary<CardModel, string> generated = [];
     private readonly Dictionary<PotionModel, string> potionOrigins = [];
+    private readonly Dictionary<CardModel, string> rewardCardOrigins = [];
     private readonly HashSet<int> generatedActions = [];
     private int actionIndex = -1;
     private readonly List<object> events = [];
@@ -47,6 +48,8 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly bool diagnostics;
     private CombatRoom? combat;
     private CardModel? targetedCard;
+    private PlayerCombatState? lastCombatState;
+    private string[] neowOptions = [];
     public string Phase { get; private set; } = "neow";
     private Neow Neow => (Neow)opening.Event;
     internal static string Id(ModelId id) => "base-spire:" + id.Entry.ToLowerInvariant().Replace('_', '-');
@@ -71,6 +74,7 @@ internal sealed class NormalReferenceRun : IDisposable
     {
         opening.Enter(run).GetAwaiter().GetResult();
         random.Name(Neow.Rng, "base-spire:event:neow");
+        neowOptions = Neow.CurrentOptions.Select(o => Relic(o.Key)).ToArray();
     }
     private string Card(CardModel card)
     {
@@ -143,6 +147,7 @@ internal sealed class NormalReferenceRun : IDisposable
                     typeof(CombatRoom).GetMethod("ConfigureObserver", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combat, [observer]);
                 }
                 await combat.Enter(run);
+                lastCombatState = player.PlayerCombatState;
                 random.NameEncounter(unchecked(run.Rng.Seed + (ulong)run.TotalFloor + StringHelper.GetDeterministicHashCode(combat.Encounter!.IdEntry)));
                 Phase = "combat"; break;
             case "targeted-play":
@@ -164,8 +169,15 @@ internal sealed class NormalReferenceRun : IDisposable
             case "claim-gold": await combat!.Rewards!.Gold.Take(); break;
             case "claim-card":
                 var chosen = combat!.Rewards!.Card.Options.Single(c => Id(c.Id) == action.Arguments[0]);
+                var beforeDeck = player.Deck.Cards.ToHashSet();
                 await combat.Rewards.Card.SelectOption(chosen);
-                foreach (var acquired in player.Deck.Cards) if (!permanent.ContainsKey(acquired)) permanent.Add(acquired, "permanent:" + permanent.Count.ToString("D2"));
+                var acquired = player.Deck.Cards.Where(c => !beforeDeck.Contains(c)).ToArray();
+                // Native SelectOption clones its chosen offer before AddToDeck. This registered
+                // one-card acquisition has one new object and an actual SelectedOption source;
+                // never re-pair a permanent card by its name or position after the operation.
+                if (acquired.Length != 1 || !ReferenceEquals(combat.Rewards.Card.SelectedOption, chosen))
+                    throw new NotSupportedException("missing_dimension: unique native reward acquisition origin");
+                permanent.Add(acquired[0], rewardCardOrigins[combat.Rewards.Card.SelectedOption]);
                 break;
             case "skip-card": await combat!.Rewards!.Card.Skip(); break;
             case "claim-potion": await combat!.Rewards!.Potion!.Take(); break;
@@ -194,6 +206,8 @@ internal sealed class NormalReferenceRun : IDisposable
             if (diagnostics) settlement.Add(new("rewards-published", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, combat.GeneratedRewards.Count > 0));
             if (combat.Rewards!.Potion?.Potion is { } potion)
                 potionOrigins.Add(potion, $"generated:action:{actionIndex}:potion-reward:0");
+            foreach (var (rewardCard, index) in combat.Rewards.Card.Options.Select((card, index) => (card, index)))
+                rewardCardOrigins.Add(rewardCard, $"generated:action:{actionIndex}:card-reward:{index}");
         }
     }
     private NormalAction[] Actions()
@@ -259,6 +273,58 @@ internal sealed class NormalReferenceRun : IDisposable
                 members = name == "DrawPile" ? Array.Empty<string>() : cards.Select(Card).Order(StringComparer.Ordinal).ToArray(),
                 positions = Array.Empty<object>() };
         }).ToArray());
+        var map = run.Map.GetAllMapPoints().Append(run.Map.StartingMapPoint).Append(run.Map.BossMapPoint).Distinct().ToArray();
+        string Coord(Sts2Sim.Core.Map.MapPoint point) => point.coord.col + "," + point.coord.row;
+        Put("public.map", map.Select(n => new NormalMapNode(Coord(n), n.PointType.ToString(), run.VisitedMapCoords.Contains(n.coord),
+            Phase is "neow" or "map" && run.CurrentMapPoint!.Children.Contains(n) && !run.VisitedMapCoords.Contains(n.coord),
+            n.Children.Select(Coord).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
+        Put("public.run", new NormalRunView(Phase, run.CurrentActIndex, run.CurrentMapCoord!.Value.row, run.TotalFloor,
+            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow"));
+        var active = combat?.Engine.IsInProgress ?? false;
+        Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
+            active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,
+            active && lastCombatState?.Phase == PlayerTurnPhase.Play, lastCombatState?.Energy ?? 0, lastCombatState?.TurnNumber ?? 0, player.Creature.Block, true));
+        Put("public.enemies", combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Select(e =>
+            new NormalEnemyView(Creature(e), Id(e.Monster!.Id), e.CurrentHp, e.MaxHp, e.Block, e.Monster.NextMove!.Id)).OrderBy(e => e.Origin, StringComparer.Ordinal).ToArray() : []);
+        Put("public.powers", (combat is not null && Phase != "map" ? combat.Engine.State.SpawnedEnemies.Prepend(player.Creature).SelectMany(c => c.Powers) : [])
+            .Select(p => new NormalPublicPower(Id(p.Id), Creature(p.Owner), (long)p.Amount, p.SkipNextDurationTick))
+            .OrderBy(p => p.Holder, StringComparer.Ordinal).ThenBy(p => p.Id, StringComparer.Ordinal).ToArray());
+        Put("public.visits", combat is null ? Array.Empty<NormalVisitView>() : [new NormalVisitView(combat.Id ?? throw new NotSupportedException("Native room has no visit identity"),
+            Coord(run.CurrentMapPoint!), run.CurrentMapPoint!.PointType.ToString(), combat.RoomType.ToString().ToLowerInvariant(), "base-spire:" + combat.Encounter!.IdEntry.ToLowerInvariant().Replace('_', '-'),
+            Phase == "map" ? "closed" : Phase, Phase == "map" ? "closed" : "active", combat.Won)]);
+        Put("public.neow", new NormalNeowView(Phase != "neow" ? "closed" : Neow.IsFinished ? "finished" : "pending",
+            player.Relics.Select(r => Id(r.Id)).SingleOrDefault(neowOptions.Contains) ?? "none", neowOptions.Select((id, index) => new NormalNeowOption(id, index)).ToArray()));
+        var offer = Phase == "rewards" ? combat!.Rewards : null;
+        Put("public.reward_offer", new NormalRewardView(offer is not null, offer is not null && !offer.Gold.IsResolved,
+            offer is not null && !offer.Gold.IsResolved ? offer.Gold.Amount : 0, offer is not null && !offer.Card.IsResolved,
+            offer?.Potion is { IsResolved: false }, offer is not null && !offer.Card.IsResolved
+                ? offer.Card.Options.Select(c => new NormalCardOffer(Id(c.Id), c.IsUpgraded, c.EnergyCost, c.Rarity.ToString().ToLowerInvariant()))
+                    .OrderBy(c => c.Id, StringComparer.Ordinal).ThenBy(c => c.Upgraded).ToArray() : [],
+            offer?.Potion is { IsResolved: false, Potion: {} offeredPotion } ? [Potion(offeredPotion)] : []));
+        Put("public.potion_inventory", player.PotionSlots.Select((p, index) => (p, index)).Where(p => p.p is not null)
+            .Select(p => new NormalPotionView(Potion(p.p!), p.index, p.p!.Usage switch
+            {
+                Sts2Sim.Core.Entities.Potions.PotionUsage.CombatOnly => "combat", Sts2Sim.Core.Entities.Potions.PotionUsage.AnyTime => "anytime",
+                Sts2Sim.Core.Entities.Potions.PotionUsage.Automatic => "automatic", _ => throw new NotSupportedException("Unmapped native potion usage")
+            }, p.p.TargetType switch { TargetType.Self => "self", TargetType.AnyPlayer when run.Players.Count == 1 => "self",
+                TargetType.AnyEnemy => "enemy", TargetType.None => "none",
+                _ => throw new NotSupportedException("Unmapped native potion target") })).OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
+        Put("public.relic_inventory", player.Relics.Select(r => new NormalRelicView(Id(r.Id), r.IsMelted)).OrderBy(r => r.Id, StringComparer.Ordinal).ToArray());
+        var visibleCards = player.Deck.Cards.Select(c => (scope: "deck", card: c))
+            .Concat(state?.AllPiles.Where(p => p.Type != PileType.Draw).SelectMany(p => p.Cards).Select(c => (scope: "combat", card: c)) ?? [])
+            .Concat(offer is not null && !offer.Card.IsResolved ? offer.Card.Options.Select(c => (scope: "reward", card: c)) : []);
+        Put("public.cards", visibleCards.Select(pair =>
+        {
+            var c = pair.card;
+            if (c.CostsXEnergy) throw new NotSupportedException("missing_dimension: native captured energy X for public card");
+            var origin = pair.scope == "reward" ? rewardCardOrigins[c] + ":" + Id(c.Id) + (c.IsUpgraded ? "+" : "") : Card(c);
+            var damage = c is Sts2Sim.Core.Models.Cards.ICardDamageVariableProvider provider && provider.TryGetThrashDamageVariable(out var value) ? value : 0m;
+            if (damage != decimal.Truncate(damage)) throw new NotSupportedException("missing_dimension: noninteger public card damage");
+            return new NormalCardView(pair.scope, origin, Id(c.Id), Id(c.Id), c.Id.Entry, c.Type.ToString().ToLowerInvariant(), c.Rarity.ToString().ToLowerInvariant(),
+                c.LocalEnergyCost, c.CanonicalEnergyCostValue, (long)damage, c.IsUpgraded, c.MaxUpgradeLevel > 0, c.TargetType == TargetType.AnyEnemy,
+                c.GetKeywordsWithSources(KeywordSources.Local).Contains(CardKeyword.Exhaust), c.HasKeyword(CardKeyword.Innate), c.Type == CardType.Power,
+                c.Tags.Contains(CardTag.Strike), c.CostsXEnergy, 0);
+        }).OrderBy(c => c.Scope, StringComparer.Ordinal).ThenBy(c => c.Origin, StringComparer.Ordinal).ToArray());
         if (Phase == "combat")
         {
             Put("facts.player.block", player.Creature.Block); Put("facts.player.energy", state!.Energy); Put("facts.player.turn", state.TurnNumber);

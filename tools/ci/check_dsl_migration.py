@@ -198,6 +198,9 @@ def main() -> int:
                        or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
                               or "events.observed_order" not in b[side]["values"]
                               or "lifecycle.settlement" not in b[side]["values"]
+                              or any(path not in b[side]["values"] for path in (
+                                  "public.map", "public.run", "public.neow", "public.reward_offer", "public.potion_inventory",
+                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits"))
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
                               for side in ("left", "right"))
