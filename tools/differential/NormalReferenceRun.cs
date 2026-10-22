@@ -41,6 +41,8 @@ internal sealed class NormalReferenceRun : IDisposable
     private int actionIndex = -1;
     private readonly List<object> events = [];
     private readonly List<NormalObservedEvent> observedEvents = [];
+    private readonly List<NormalSettlement> settlement = [];
+    private bool cardEffectFinished;
     private readonly NormalReferenceRandom random;
     private readonly bool diagnostics;
     private CombatRoom? combat;
@@ -122,6 +124,8 @@ internal sealed class NormalReferenceRun : IDisposable
                     ((NormalReferenceObserver)observer).Record = (name, args) =>
                     {
                         events.Add(new { name, arguments = args.Select(EventArgument).ToArray() });
+                        if (name == "CardPlayStarted") cardEffectFinished = false;
+                        if (name == "CardPlayFinished") cardEffectFinished = true;
                         if (name == "DamageResolved" && args[1] is DamageResult result)
                             observedEvents.Add(new("damage", Damage: new(args[0] is Creature dealer ? Creature(dealer) : null,
                                 Creature(result.Receiver), result.BlockedDamage.ToString("G29", System.Globalization.CultureInfo.InvariantCulture),
@@ -180,7 +184,14 @@ internal sealed class NormalReferenceRun : IDisposable
         if (!combat!.Engine.IsInProgress)
         {
             if (!combat.Engine.Won) throw new InvalidOperationException("Normal reference lost the combat.");
+            if (diagnostics)
+            {
+                if (!cardEffectFinished || combat.GeneratedRewards.Count != 0)
+                    throw new NotSupportedException("missing_dimension: native final card must finish before rewards are generated");
+                settlement.Add(new("effects-finished", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, false));
+            }
             await combat.ResolveOutcomeAsync(); Phase = "rewards";
+            if (diagnostics) settlement.Add(new("rewards-published", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, combat.GeneratedRewards.Count > 0));
             if (combat.Rewards!.Potion?.Potion is { } potion)
                 potionOrigins.Add(potion, $"generated:action:{actionIndex}:potion-reward:0");
         }
@@ -257,13 +268,12 @@ internal sealed class NormalReferenceRun : IDisposable
                 .OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
         Put("actions.candidates", Actions().Select(a => a.Key).Distinct().Order(StringComparer.Ordinal).ToArray());
-        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("events.observed_order", observedEvents.ToArray()); }
+        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
-        return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection",
-                "lifecycle: final-kill effects"],
+        return new(kind, v, ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"],
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
