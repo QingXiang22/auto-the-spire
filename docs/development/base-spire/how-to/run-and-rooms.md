@@ -34,6 +34,10 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 源地图生成、问号赔率、事件／遭遇队列和 Ancient 分配分别消费明确随机流。静态 act-plan／act-pools 只保存来源，不能靠 JSON 中的效果字段执行整局。
 
+正常`ChooseMapPoint`已接入问号房型抽取。每次合法Unknown选择只从`unknown_map_point`流抽一次；四类隐藏赔率按Monster／Elite／Treasure／Shop顺序更新。前一实际访问包含商店，或目标的非空后继全为Shop时排除Shop；资格和增长修正使用pure接缝。`ResetUnknownRoomOdds`恢复已配置base，不重置随机流；跨幕入口恢复时须调用它。
+
+实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event／Elite／Treasure／Shop尚未接入正常入口，实际抽中后具名报未支持；分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表事件或完整Run已开放。
+
 ## 实现各类房间
 
 开发包的营火已可消费永久牌组：先在房间外通过 `Strike.Obtain` 等已迁移定义入口建立 `RunDeck`，再 `EnterDevelopmentRestSite`。`ForgeAtDevelopmentCampfire` 会发布可取消的单张选择；公开 `net.answer_decision` 中带实例字段的是选牌，空字段候选是取消。取消后仍可休息或重新锻造；成功后用 `LeaveDevelopmentRoom` 离场，升级进入后续战斗副本。没有永久可升级牌时不提供锻造，不能用手牌代替；同次访问不能靠重复进入重置选项。旧原稿 `ForgeCardInHand` 已移除。营火遗物修正、多个升级目标和正常地图入口仍未恢复；见[约定](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。

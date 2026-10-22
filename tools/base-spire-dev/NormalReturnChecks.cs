@@ -103,6 +103,7 @@ internal static partial class PackageChecks
         Console.WriteLine("ok   ENV-T05 normal source enemy death path has no rewards or map return");
         RunNormalSettlementOrderChecks(package);
         RunDeathPowerChecks(package);
+        RunNormalUnknownRoom(package);
         return 0;
     }
 

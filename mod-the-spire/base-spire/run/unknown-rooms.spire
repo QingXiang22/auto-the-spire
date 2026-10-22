@@ -1,0 +1,106 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Binary32 bits use Int, like the other source odds and RNG operations.
+entity UnknownRoomOdds { fields = {
+  Run = { type = Ref(Run) visibility = Hidden }
+  Kind = { type = String(length = 16) visibility = Hidden }
+  Base = { type = Int visibility = Hidden }
+  Current = { type = Int visibility = Hidden }
+} }
+collection UnknownRoomOddsOrder { element = UnknownRoomOdds ordered = true }
+event ModifyUnknownRoomAllowed { payload = { value = Bool run = Ref(Run) kind = String(length = 16) } }
+event ModifyUnknownRoomOddsIncrease { payload = { value = Int run = Ref(Run) kind = String(length = 16) } }
+
+procedure AddUnknownRoomOdds {
+  parameters = { run = Ref(Run) kind = String(length = 16) base = Int }
+  locals = { odds = Binding }
+  body = { create = { type = UnknownRoomOdds scope = entityScope(run) into = odds collection = UnknownRoomOddsOrder fields = { Run = run Kind = kind Base = base Current = base } } }
+}
+procedure InitializeUnknownRoomOdds {
+  parameters = { run = Ref(Run) }
+  body = {
+    if = { condition = exists(where(collection(UnknownRoomOddsOrder), o, equal(field(o, UnknownRoomOdds.Run), run))) then = { fail = { message = "Unknown room odds are already initialized" } } }
+    call = { procedure = AddUnknownRoomOdds args = { run = run kind = "monster" base = float32(0.1) } }
+    call = { procedure = AddUnknownRoomOdds args = { run = run kind = "elite" base = float32(-1) } }
+    call = { procedure = AddUnknownRoomOdds args = { run = run kind = "treasure" base = float32(0.02) } }
+    call = { procedure = AddUnknownRoomOdds args = { run = run kind = "shop" base = float32(0.03) } }
+  }
+}
+procedure ResetUnknownRoomOdds {
+  parameters = { run = Ref(Run) }
+  body = { forEach = { query = where(collection(UnknownRoomOddsOrder), o, equal(field(o, UnknownRoomOdds.Run), run)) item = odds body = {
+    set = { target = odds field = UnknownRoomOdds.Current value = field(odds, UnknownRoomOdds.Base) }
+  } } }
+}
+procedure UnknownShopIsExcluded {
+  pure = true parameters = { run = Ref(Run) node = Ref(MapNode) } result = Bool
+  body = { return = { value = or(field(run, Run.CurrentPointHasShop), and(exists(relation(MapChildren, node)), not(exists(where(relation(MapChildren, node), child, not(equal(field(child, MapNode.Type), enum(MapPointType, Shop)))))))) } }
+}
+procedure UnknownRoomIsAllowed {
+  pure = true parameters = { run = Ref(Run) kind = String(length = 16) excludeShop = Bool } result = Bool
+  body = { return = { value = foldEvent(ModifyUnknownRoomAllowed, not(and(equal(kind, "shop"), excludeShop)), run, kind) } }
+}
+procedure DefaultUnknownRoom {
+  pure = true parameters = { run = Ref(Run) excludeShop = Bool } result = String(length = 16)
+  locals = { result = String(length = 16) }
+  body = {
+    if = { condition = not(equal(count(where(collection(UnknownRoomOddsOrder), o, equal(field(o, UnknownRoomOdds.Run), run))), 4)) then = { fail = { message = "Unknown room odds require all four source types" } } }
+    let = { into = result value = "event" }
+    if = { condition = not(pureCall(UnknownRoomIsAllowed, run, "event", excludeShop)) then = {
+      let = { into = result value = "none" }
+      forEach = { query = where(collection(UnknownRoomOddsOrder), o, equal(field(o, UnknownRoomOdds.Run), run)) item = odds body = {
+        if = { condition = and(equal(result, "none"), pureCall(UnknownRoomIsAllowed, run, field(odds, UnknownRoomOdds.Kind), excludeShop)) then = { let = { into = result value = field(odds, UnknownRoomOdds.Kind) } } }
+      } }
+      if = { condition = equal(result, "none") then = { fail = { message = "Unknown room selection has no allowed type" } } }
+    } }
+    return = { value = result }
+  }
+}
+procedure SelectUnknownRoomForRoll {
+  pure = true parameters = { run = Ref(Run) excludeShop = Bool roll = Int } result = String(length = 16)
+  locals = { result = String(length = 16) cumulative = Int chosen = Bool }
+  body = {
+    let = { into = result value = pureCall(DefaultUnknownRoom, run, excludeShop) }
+    let = { into = cumulative value = float32(0) }
+    let = { into = chosen value = false }
+    forEach = { query = where(collection(UnknownRoomOddsOrder), o, equal(field(o, UnknownRoomOdds.Run), run)) item = odds body = {
+      if = { condition = and(not(chosen), and(pureCall(UnknownRoomIsAllowed, run, field(odds, UnknownRoomOdds.Kind), excludeShop), not(float32Less(field(odds, UnknownRoomOdds.Current), float32(0))))) then = {
+        let = { into = cumulative value = float32Add(cumulative, field(odds, UnknownRoomOdds.Current)) }
+        if = { condition = float32LessOrEqual(roll, cumulative) then = { let = { into = result value = field(odds, UnknownRoomOdds.Kind) } let = { into = chosen value = true } } }
+      } }
+    } }
+    return = { value = result }
+  }
+}
+procedure RollUnknownRoom {
+  parameters = { run = Ref(Run) excludeShop = Bool } result = String(length = 16)
+  locals = { result = String(length = 16) roll = Int }
+  body = {
+    # Validate the source default before drawing, including the empty-set failure.
+    let = { into = result value = pureCall(DefaultUnknownRoom, run, excludeShop) }
+    sampleFloat32 = { stream = "base-spire:run:unknown_map_point" into = roll }
+    let = { into = result value = pureCall(SelectUnknownRoomForRoll, run, excludeShop, roll) }
+    # forEach snapshots this allowed set before any odds update, as the source does.
+    forEach = { query = where(collection(UnknownRoomOddsOrder), o, and(equal(field(o, UnknownRoomOdds.Run), run), pureCall(UnknownRoomIsAllowed, run, field(o, UnknownRoomOdds.Kind), excludeShop))) item = odds body = {
+      if = { condition = equal(result, field(odds, UnknownRoomOdds.Kind)) then = {
+        set = { target = odds field = UnknownRoomOdds.Current value = field(odds, UnknownRoomOdds.Base) }
+      } else = {
+        set = { target = odds field = UnknownRoomOdds.Current value = float32Add(field(odds, UnknownRoomOdds.Current), foldEvent(ModifyUnknownRoomOddsIncrease, field(odds, UnknownRoomOdds.Base), run, field(odds, UnknownRoomOdds.Kind))) }
+      } }
+    } }
+    return = { value = result }
+  }
+}
+procedure ResolveNormalRoomType {
+  parameters = { run = Ref(Run) node = Ref(MapNode) } result = String(length = 16)
+  locals = { room = String(length = 16) }
+  body = {
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Monster)) then = { return = { value = "monster" } } }
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Unknown)) then = {
+      call = { procedure = RollUnknownRoom args = { run = run excludeShop = pureCall(UnknownShopIsExcluded, run, node) } into = room }
+      return = { value = room }
+    } }
+    fail = { message = "unsupported_capability: this normal map type has not been connected" }
+  }
+}

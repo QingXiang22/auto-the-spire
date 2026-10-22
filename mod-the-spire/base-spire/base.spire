@@ -1,6 +1,6 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-version = "0.7.0-dsl.57"
+version = "0.7.0-dsl.58"
 includes = [
   "combat/index.spire",
   "cards/index.spire",
@@ -14,6 +14,7 @@ includes = [
   "characters/index.spire",
   "run/random.spire",
   "run/normal.spire",
+  "run/unknown-rooms.spire",
   "run/opening-pools.spire",
   "run/opening-source.spire",
   "run/neow.spire",

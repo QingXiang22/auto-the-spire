@@ -20,6 +20,7 @@ internal static class BaseDslPathChecks
         yield return ("ENV-T05 real stdio normal Neow, source map and first real encounter", () => StdioTrajectory("normal-opening"));
         foreach (var path in new[] { "claim", "skip" })
             yield return ("ENV-T05 real stdio normal combat rewards and map return: " + path, () => StdioTrajectory("normal-" + path));
+        yield return ("UNKNOWN real stdio normal victory, map return and actual Unknown→Monster", () => StdioTrajectory("normal-unknown"));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
         yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
@@ -191,11 +192,11 @@ internal static class BaseDslPathChecks
             Send(Request("pipe-describe", Operation.Describe));
             Send(Request("pipe-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
-            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
+            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -574,6 +575,15 @@ internal static class BaseDslPathChecks
             }
             if (mode.StartsWith("normal-", StringComparison.Ordinal))
             {
+                var unknown = mode == "normal-unknown";
+                var relic = unknown ? "base-spire:golden-pearl" : "base-spire:booming-conch";
+                var initialGold = unknown ? 249 : 99;
+                string EntityValue(EntityDto entity, string suffix) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + suffix, StringComparison.Ordinal)).Value!).Value;
+                LegalActionDto MapAt(string col, string row)
+                {
+                    var node = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:MapNode" && EntityValue(e, "MapNode.Col") == col && EntityValue(e, "MapNode.Row") == row);
+                    return snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:ChooseMapPoint" && a.Fields.Any(f => f.Value is WireString value && value.Value == node.InstanceId));
+                }
                 void StepOpening(LegalActionDto candidate)
                 {
                     var request = Request("normal-opening-" + ++stepNumber, Operation.Step,
@@ -588,20 +598,20 @@ internal static class BaseDslPathChecks
                 Check.Equal("80", Public(snapshot, "Player.Hp"), "normal Ironclad source HP");
                 Check.Equal("99", Public(snapshot, "Player.Gold"), "normal Ironclad source gold");
                 Check.Equal(3, snapshot.LegalActions.Count, "three real Neow answers");
-                var option = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:NeowOption" && e.Fields.Any(f => f.FieldId.EndsWith(":NeowOption.RelicId", StringComparison.Ordinal) && f.Value is WireString value && value.Value == "base-spire:booming-conch"));
+                var option = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:NeowOption" && e.Fields.Any(f => f.FieldId.EndsWith(":NeowOption.RelicId", StringComparison.Ordinal) && f.Value is WireString value && value.Value == relic));
                 StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireString value && value.Value == option.InstanceId)));
-                Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == "base-spire:booming-conch"), "the chosen relic is acquired once");
+                Check.Equal(1, snapshot.Entities.Count(e => e.ContentId == relic), "the chosen relic is acquired once");
                 Check.Equal("neow", Public(snapshot, "Player.Room"), "event waits for leave confirmation");
                 StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool value && value.Value)));
                 Check.Equal("map", Public(snapshot, "Player.Room"), "confirmed Neow returns to map");
                 using var mapVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/act-one-map-vectors.json")));
                 var sourceMap = mapVectors.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == "777");
-                Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
-                StepOpening(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
+                if (!unknown) Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
+                StepOpening(unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
                 using var combatVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-combat-vectors.json")));
                 var sourceMonsters = combatVectors.RootElement.GetProperty("vectors")[0].GetProperty("monsters");
                 Check.Equal(sourceMonsters.GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy"), "complete actual SlimesWeak formation");
-                foreach (var expected in sourceMonsters.EnumerateArray())
+                foreach (var expected in sourceMonsters.EnumerateArray().Where(_ => !unknown))
                 {
                     var monster = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Enemy" && e.ContentId == expected.GetProperty("id").GetString());
                     string EnemyValue(string field) => ((WireString)monster.Fields.Single(f => f.FieldId.EndsWith(":Enemy." + field, StringComparison.Ordinal)).Value!).Value;
@@ -632,7 +642,7 @@ internal static class BaseDslPathChecks
                     }
                     Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "source starter deck wins without injected damage");
                     Check.Equal("rewards", Public(snapshot, "Player.Room"), "real victory offers rewards");
-                    Check.Equal("99", Public(snapshot, "Player.Gold"), "gold remains unclaimed");
+                    Check.Equal(initialGold.ToString(), Public(snapshot, "Player.Gold"), "gold remains unclaimed");
                     Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "rewards block map travel");
                     var amount = long.Parse(Public(snapshot, "Player.GoldRewardAmount"), System.Globalization.CultureInfo.InvariantCulture);
                     var offered = snapshot.LegalActions.Where(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward")
@@ -653,13 +663,25 @@ internal static class BaseDslPathChecks
                     }
                     StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"));
                     Check.Equal("map", Public(snapshot, "Player.Room"), "rewards close into the normal map");
-                    Check.Equal((mode == "normal-claim" ? 99 + amount : 99).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "claim or skip credits gold once");
+                    Check.Equal((mode == "normal-claim" ? initialGold + amount : initialGold).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "claim or skip credits gold once");
                     var finalDeck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.ToHashSet();
                     Check.Equal(mode == "normal-claim" ? 11 : 10, finalDeck.Count, "reward changes only the permanent deck");
                     Check.True(deck.All(finalDeck.Contains), "permanent starter identities survive the actual combat");
                     Check.True(offered.Skip(mode == "normal-claim" ? 1 : 0).All(id => !snapshot.Entities.Any(e => e.InstanceId == id)), "unselected actual instances are removed");
                     Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "legal source successors are published");
                     Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"), "the visit cannot close twice");
+                    if (unknown)
+                    {
+                        StepOpening(MapAt("3", "2"));
+                        var visit = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:RunVisit" && EntityValue(e, "RunVisit.StableId") == "2");
+                        Check.Equal("net:cat:base-spire:MapPointType:Unknown", EntityValue(visit, "RunVisit.MapType"), "original map type survives actual room classification");
+                        Check.Equal("monster", EntityValue(visit, "RunVisit.RoomType"), "real unknown roll enters Monster");
+                        Check.Equal("base-spire:fuzzy-wurm-crawler-weak", EntityValue(visit, "RunVisit.EncounterId"), "next source queue entry is actually consumed");
+                        Check.Equal("69", Public(snapshot, "Player.Hp"), "native normal combat and permanent HP");
+                        Check.Equal("1", Public(snapshot, "Player.TurnNumber"), "the next real combat starts its first turn");
+                        var visible = WireCanonical.Text(snapshot.ToWire());
+                        Check.False(visible.Contains("UnknownRoomOdds", StringComparison.Ordinal) || visible.Contains("CurrentPointHasShop", StringComparison.Ordinal) || visible.Contains("unknown_map_point", StringComparison.Ordinal), "hidden odds and random state stay out of stdio");
+                    }
                 }
 
             }

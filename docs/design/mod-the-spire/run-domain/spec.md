@@ -55,6 +55,14 @@ Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，
 
 验收从同一公开 Host 的正常开局执行地图→真实战斗→领取／跳过→长期提交→合法地图后继，另检查事件子战斗返回、最后击杀余效及跨幕／最终事件。受控机制用例与正常流程分列，双方比较合法候选、访问关系、阶段、资产及随机调用；未恢复独立执行时不能关闭正常 Run 验收。
 
+### 正常问号房型
+
+Run分别保存原地图节点类型和实际进入房型。问号使用unknown_map_point流的一次源NextFloat，不重设流或重新归一化被禁类型。隐藏赔率按Monster、Elite、Treasure、Shop顺序保存；初始binary32值为0.1、-1、0.02、0.03。负赔率不加入轮盘，其他可选项按binary32顺序累加，roll小于等于累计值时选中，否则使用Event。若pure资格修正禁用Event，默认改用源RoomType枚举顺序中的首个可选房型；空集合在抽样前失败，仅Event可选仍抽一次。选中项恢复base，其他可选项增加base；被禁项保持不变，负值仍按源继续增加负base。
+
+前一地图点实际包含Shop，或目标节点的非空后继全为Shop时，先禁用Shop。房型资格和未选增长使用pure修正接缝；当前未迁移的遗物／事件参与者不因此宣称支持。幕初ResetUnknownRoomOdds将当前值恢复已配置base，不重新抽样。观察不显示赔率或抽样，不推进流。
+
+ChooseMapPoint先验证当前Run、节点所有权、未访问及真实后继，再解析问号。问号判为Monster时消费真实普通遭遇队列，RunVisit.MapType仍为Unknown，RoomType为monster；成功进入后清理前一地图点的商店标记。尚未实现的实际房型在分类后具名失败，此时分类抽样及赔率更新已经发生；不承诺动作级回滚。其他直接未支持的地图类型仍在抽样前失败。问号机制不开放正常事件池、商店、宝箱、精英或跨幕；这些消费者各按完整条件验收。
+
 ## 遗物实例与生命周期
 
 ENV-T09-PR02首批公共接口复用`RunRelics`，不声明全部遗物效果已实现。依据`RelicCmd.Obtain/Remove/Replace/Melt`、`Player.AddRelicInternal/RemoveRelicInternal/MeltRelicInternal`。定义与编译符号不可变，持有列表、Counter、IsWax与IsMelted均在Engine实例中。Counter是隐藏的首批单计数器接缝（0..999999），不代替原版DisplayAmount、未来多变量、StackCount、FloorAddedToDeck或完整历史。IsWax／IsMelted是公开实例事实；蜡质内容来源、完整状态显示和蜡质特殊效果尚未实现。

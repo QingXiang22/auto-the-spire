@@ -38,4 +38,6 @@ dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
 
 所有向量保留实际来源标识与摘要，不能将旧来源SHA改名后当新版证明。`vanilla_rng_oracle.py`保留旧32位布局与原始数值算法的历史回归；当前消费者改用`locked_rng_oracle.py`，只复用未变的原始xoshiro／有界抽样算法。旧source-catalogs清单不能证明当前版本全内容行为符合。
 
+`normal-unknown-room-vector.json`由原生生成器独立走完新增seed `unknown-normal-354`的GoldenPearl选择、首战自然胜利与奖励跳过，再通过RoomFactory进入首次问号Monster；保存实际遭遇、生命、编队、四类赔率位型和完整问号流状态。它与原有十组seed及seed777路径同时保留，不作为完整Run比较的替代。
+
 这里验证组件与指定正常路径；完整M01公开状态、实例、事件与逐次随机比较仍由[差异工具](../differential/README.md)验收。不得换seed、缩池、补抽、重键参考或把缺消费者当作通过。
