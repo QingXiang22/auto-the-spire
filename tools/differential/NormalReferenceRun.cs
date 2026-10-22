@@ -125,6 +125,13 @@ internal sealed class NormalReferenceRun : IDisposable
                 combat = (CombatRoom)RoomFactory.CreateRoom(run, RoomType.Monster); run.PushRoom(combat);
                 if (diagnostics)
                 {
+                    var hpStart = random.CallCount;
+                    Action<CombatRoom, CombatState> beforeSetup = (room, state) =>
+                    {
+                        if (room.Encounter?.IdEntry != "SLIMES_WEAK") throw new NotSupportedException("missing_dimension: native initial HP source outside SlimesWeak");
+                        random.CaptureHpOrigins(state, hpStart);
+                    };
+                    typeof(CombatRoom).GetMethod("ConfigureBeforeSetupDiagnostic", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(combat, [beforeSetup]);
                     var observerType = typeof(CombatRoom).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!;
                     var observer = DispatchProxy.Create(observerType, typeof(NormalReferenceObserver));
                     ((NormalReferenceObserver)observer).Record = (name, args) =>
@@ -403,6 +410,22 @@ internal sealed class NormalReferenceRandom : IDisposable
         Sts2Sim.Core.Saves.SerializableRng StateAfter);
     private readonly Dictionary<Rng, Draw> pending = [];
     private readonly List<Call> calls = [];
+    private readonly Dictionary<Call, NormalScalarCall> hpCalls = [];
+    private NormalHpOrigin[] hpOrigins = [];
+    internal int CallCount => calls.Count;
+    internal void CaptureHpOrigins(CombatState state, int start)
+    {
+        if (hpOrigins.Length != 0 || state.SpawnedEnemies.Any(e => e.CurrentHp != e.MaxHp))
+            throw new NotSupportedException("missing_dimension: HP origin capture must precede setup effects");
+        var draws = calls.Skip(start).Where(c => Name(c.Rng) == "base-spire:run:niche").ToArray();
+        if (draws.Any(c => c.Parameters is not { Operation: "NextInt", Arity: 2 }))
+            throw new NotSupportedException("missing_dimension: non-integer HP initialization draw");
+        hpOrigins = state.SpawnedEnemies.Select((e, i) => new NormalHpOrigin("enemy:" + i + ":" + NormalReferenceRun.Id(e.Monster!.Id),
+            e.Monster.MinInitialHp, checked((long)e.Monster.MaxInitialHp + 1), e.MaxHp)).ToArray();
+        var normalized = NormalHpTrace.Normalize(hpOrigins, draws.Select(c => NormalScalarTrace.Integer(Name(c.Rng), c.Before, c.After,
+            checked((long)c.Parameters.Minimum), checked((long)c.Parameters.Maximum), long.Parse(c.Result, System.Globalization.CultureInfo.InvariantCulture))).ToArray());
+        for (var i = 0; i < draws.Length; i++) hpCalls.Add(draws[i], normalized[i]);
+    }
     private long dropped;
     private readonly RngDrawObserver? previous;
     private readonly bool enabled;
@@ -466,6 +489,7 @@ internal sealed class NormalReferenceRandom : IDisposable
         foreach (var type in Enum.GetValues<PlayerRngType>()) names.Add(player.PlayerRng.GetRng(type), "base-spire:player:" + StringHelper.SnakeCase(type.ToString()));
     }
     public object Capture() => new { dropped, unfinished = pending.Count,
+        hp_initialization = hpOrigins,
         calls = calls.Select(c => new { stream = Name(c.Rng), c.Operation, c.Result, c.Before, c.After, c.Parameters, c.StateAfter }).ToArray(),
         streams = names.Keys.Concat(attached).Distinct().Select(r => new { name = Name(r), state = r.ToSerializable() }).ToArray() };
     internal NormalFloat32Call[] Float32Calls()
@@ -489,7 +513,10 @@ internal sealed class NormalReferenceRandom : IDisposable
             var stream = Name(call.Rng); var p = call.Parameters;
             if (p.Operation == "NextFloat") continue;
             if (stream == "base-spire:run:niche" && p.Operation == "NextInt")
-            { unmapped.Add(new(stream, call.Before, call.After, "monster HP offset normalization")); continue; }
+            {
+                if (!hpCalls.TryGetValue(call, out var hp)) throw new NotSupportedException("missing_dimension: unattributed native niche HP draw");
+                result.Add(hp); continue;
+            }
             if (p.Operation == "NextInt" && p.Arity is 1 or 2)
                 result.Add(NormalScalarTrace.Integer(stream, call.Before, call.After, Integral(p.Minimum), Integral(p.Maximum), long.Parse(call.Result, System.Globalization.CultureInfo.InvariantCulture)));
             else if (p.Operation == "NextBool" && p.Arity == 0)

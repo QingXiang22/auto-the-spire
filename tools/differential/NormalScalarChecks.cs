@@ -7,13 +7,19 @@ internal static class NormalScalarChecks
     internal static void Run(IReadOnlyList<SessionDebugRecord> records, NormalBoundary left, NormalBoundary right)
     {
         var projection = NormalScalarTrace.Dsl(records, 0);
-        Require(projection.Calls.Length == 628 && projection.Calls.Count(c => c.Kind == "binary64") == 4,
-            "fixed normal path compares 624 integer and four Gaussian input calls");
-        Require(projection.Unmapped.Length == 97 && projection.Unmapped.Count(c => c.Reason == "opening weighted bag normalization") == 94,
-            "94 weighted bag and three HP calls remain explicitly unmapped");
+        Require(projection.Calls.Length == 631 && projection.Calls.Count(c => c.Kind == "binary64") == 4,
+            "fixed normal path compares 627 integer and four Gaussian input calls");
+        Require(projection.Unmapped.Length == 94 && projection.Unmapped.All(c => c.Reason == "opening weighted bag normalization"),
+            "94 weighted unit draws remain explicitly unmapped as scalars");
         using var diagnostic = System.Text.Json.JsonDocument.Parse(NormalPreflight.Json(right.Diagnostic));
-        Require(diagnostic.RootElement.GetProperty("unmapped_scalar_calls").GetArrayLength() == 97,
+        Require(diagnostic.RootElement.GetProperty("unmapped_scalar_calls").GetArrayLength() == 94,
             "reference also retains every unmapped scalar call");
+        var hp = projection.Calls.Where(c => c.Stream == "base-spire:run:niche").ToArray();
+        Require(hp.Select(c => (c.Minimum, c.Maximum, c.Result)).SequenceEqual(new[] { ("11", "16", "14"), ("26", "29", "28"), ("7", "12", "11") }),
+            "three real SlimesWeak HP draws compare actual intervals and final values");
+        var origins = System.Text.Json.JsonSerializer.Deserialize<NormalHpOrigin[]>(diagnostic.RootElement.GetProperty("random").GetProperty("hp_initialization").GetRawText())!;
+        Require(origins.Length == 3 && origins.Select(o => o.Hp).SequenceEqual(new long[] { 14, 28, 11 }), "native pre-setup origins remain in raw diagnostics");
+        CheckHpRejections(origins, hp);
         Require(left.Values["random.scalar_calls"] == right.Values["random.scalar_calls"], "actual bilateral scalar evidence agrees");
         var calls = projection.Calls;
         foreach (var injected in new[] { calls[..^1], calls.Concat(calls.Take(1)).ToArray(),
@@ -37,6 +43,21 @@ internal static class NormalScalarChecks
         var regrouped = random.GroupBy(r => r.Subject).Reverse().SelectMany(g => g).ToArray();
         Require(projection.Calls.SequenceEqual(NormalScalarTrace.Dsl(regrouped, 0).Calls),
             "independent streams may initialize in a different global order");
+    }
+
+    private static void CheckHpRejections(NormalHpOrigin[] origins, NormalScalarCall[] hp)
+    {
+        var offsets = hp.Select((c, i) => c with { Minimum = "0", Maximum = (origins[i].Maximum - origins[i].Minimum).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            Result = (origins[i].Hp - origins[i].Minimum).ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToArray();
+        foreach (var invalid in new[] { origins[..^1], origins.Reverse().ToArray(),
+            new[] { origins[0] with { Minimum = origins[0].Minimum + 1, Maximum = origins[0].Maximum + 1 } }.Concat(origins.Skip(1)).ToArray(),
+            new[] { origins[0] with { Hp = origins[0].Hp - 1 } }.Concat(origins.Skip(1)).ToArray(),
+            new[] { origins[0], origins[1] with { Minimum = 11, Maximum = 16, Hp = 15 }, origins[2] } })
+        {
+            var rejected = false;
+            try { NormalHpTrace.Normalize(invalid, offsets); } catch (NotSupportedException) { rejected = true; }
+            Require(rejected, "missing/reordered origins, moved interval, changed initial HP and uniqueness exclusions fail");
+        }
     }
 
     private static void Reject(SessionDebugRecord[] records, long dropped)
