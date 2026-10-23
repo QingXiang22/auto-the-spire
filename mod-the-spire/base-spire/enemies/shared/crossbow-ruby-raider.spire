@@ -1,8 +1,20 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: CrossbowRubyRaider.cs; Ascension 0 initial HP 18..21 (development spawn uses the minimum) and RELOAD gains 3 block then FIRE deals 14, alternating from RELOAD.
-use CrossbowRubyRaider {
-  template = BlockThenAttackEnemy
-  args = { definition = "base-spire:crossbow-ruby-raider" hp = 18 block = 3 damage = 14 }
-}
+template CrossbowRubyRaiderContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:crossbow-ruby-raider" initial = "RELOAD_MOVE" } }
+  use Reload { template = EnemyMoveNodeDefinition args = { definition = "base-spire:crossbow-ruby-raider" id = "RELOAD_MOVE" next = "FIRE_MOVE" intent = "defend" index = 0 } }
+  use Fire { template = EnemyMoveNodeDefinition args = { definition = "base-spire:crossbow-ruby-raider" id = "FIRE_MOVE" next = "RELOAD_MOVE" intent = "attack" index = 1 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "RELOAD_MOVE") then = {
+      call = { procedure = GainEnemyBlock args = { target = target amount = 3 } }
+    } else = {
+      call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 14 hits = 1 } }
+    } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:crossbow-ruby-raider" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:crossbow-ruby-raider" hp = 18 } }
+  } }
+} }
+use CrossbowRubyRaider { template = CrossbowRubyRaiderContent }
