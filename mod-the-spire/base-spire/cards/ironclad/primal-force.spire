@@ -2,33 +2,14 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/PrimalForce.cs; SHA-256 retained in cards/catalog.json.
-template TransformHandAttacksEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
-      locals = { replacement = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-forEach = { query = where(collection(Hand), c, equal(field(c, Card.Kind), "attack")) item = c body = {
-  call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:giant-rock" } into = replacement }
-  if = { condition = field(card, Card.Upgraded) then = { call = { procedure = UpgradeCard args = { card = replacement } } } }
-  call = { procedure = MoveCombatCard args = { owner = owner card = c to = "removed" reason = "transform" } }
-  call = { procedure = AddGeneratedToHand args = { card = replacement } }
-} }
-      } } }
-    }
-
-  }
-}
 
 use PrimalForce { template = CardDefinition args = { sourceEntry = "PRIMAL_FORCE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:primal-force" cost = 0 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
-use PrimalForceEffect1 { template = TransformHandAttacksEffect args = { definition = "base-spire:primal-force" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure PrimalForceBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
-    call = { procedure = PrimalForceEffect1.Apply args = { play = play  owner = owner card = card } }
+    call = { procedure = TransformHandCards args = { owner = owner kind = "attack" replacementDefinition = "base-spire:giant-rock" upgraded = field(card, Card.Upgraded) } }
   }
 }
 dispatchCase PrimalForceBody { dispatch = ExecuteCardBody key = "base-spire:primal-force" procedure = PrimalForceBody }

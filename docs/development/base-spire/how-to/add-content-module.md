@@ -29,7 +29,7 @@ call = {
 
 Power在自己的模块内展开PowerDefinition，随后订阅所需通知或pure修正。定义决定基础策略，调用方不传kind。SelfFormingClayPower的Cleared先调用GainUnpoweredBlock，再经RemovePower移除自身；它不修改共享回合过程，也不让遗物负责清理Power。
 
-多个内容确实共用同一行为时再抽模板进入领域rules。独有效果无需先建立一份只有单个消费者的共享模板文件。准确标志、生命周期及失败语义查[Power参考](../reference/powers.md)。
+可单独组合的选择、移动、生成、资源和结果操作进入领域rules，mod也可直接调用；当前消费者数量不决定行为是否进入公共库。模板负责定义绑定和参数配置，公共过程负责动作。只依赖本内容语义的私有状态与生命周期绑定保留在所属模块。准确标志、生命周期及失败语义查[Power参考](../reference/powers.md)。
 
 ## 3. 将私有状态绑定到实际实例
 

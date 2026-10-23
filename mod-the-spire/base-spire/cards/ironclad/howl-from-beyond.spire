@@ -25,17 +25,7 @@ use HowlFromBeyondDamageValue { template = StaticCardDamage args = { definition 
 
 procedure HowlFromBeyondAutoExhausted {
   parameters = { owner = Ref(Player) }
-  body = {
-    forEach = {
-      query = where(collection(ExhaustPile), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), equal(field(c, Card.DefinitionId), "base-spire:howl-from-beyond"))) item = c body = {
-        call = {
-          procedure = AutoPlayCard args = {
-            owner = owner card = c forceExhaust = false
-          }
-        }
-      }
-    }
-  }
+  body = { call = { procedure = AutoPlayExhaustedCards args = { owner = owner definition = "base-spire:howl-from-beyond" forceExhaust = false } } }
 }
 
 subscription HowlFromBeyondAutoExhausted {

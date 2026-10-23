@@ -22,11 +22,49 @@
 | `SelfPowerCardBody` | definition、power、stacks、upgradedStacks、可选untilTurnEnd（默认false）；调用ApplySelfPowerEffect，绑定正文与静态伤害读取 |
 | `StaticCardDamage` | definition；只绑定ReadCardDamage，读取Card.BaseDamage与Card.DamageGrowth之和，供显式组合正文复用 |
 
-这些正文模板与原名称的CardDefinition并列使用，数值仍在定义或效果参数中各自维护。一个定义只选一种正文绑定和一种伤害绑定；前三个模板已包含StaticCardDamage，不再额外展开。动态公式保留所属模块自己的pure过程与case；多个效果继续显式排列call，不以模板登记顺序代替正文顺序。
+这些正文模板与原名称的CardDefinition并列使用，数值仍在定义或效果参数中各自维护。一个定义只选一种正文绑定和一种伤害绑定；前三个模板已包含StaticCardDamage，不再额外展开。动态公式可以直接绑定共享pure过程；剩余专属公式才在所属模块定义pure过程与case。多个效果继续显式排列call，不以模板登记顺序代替正文顺序。
 
 效果内部的普通／升级常量选择共用pure过程`CardUpgradeValue(card: Ref(Card), baseValue: Int, upgradedValue: Int) → Int`。格挡、抽牌、能量、Power层数、失血、成长与段数模板调用同一过程；内容仍拥有两个输入值及额外的动态计算。目标卡是否需要选敌不影响自身Power效果，统一调用`ApplySelfPowerEffect.WhenPlayed(play,owner,card)`；临时效果通过untilTurnEnd显式选择原有到期操作。
 
 每次执行的 BeforeCardExecution／AfterCardExecution 载荷均为 owner、card、play。正文之后依次经过 ExecuteCardEnchantment 和 ExecuteCardAffliction，存活时才继续完成通知。CardPlayRecord 保存付款、原始 X、自动标记、目标、结果区、ActionNumber、ParentPlay 和 PlayIndex／PlayCount；内部执行历史不公开。新效果收到 play 后继续显式传给子操作。
+
+## 供内容与mod组合的公共操作
+
+公共过程不检查调用卡的DefinitionId；正文直接传参数，也可以由共享模板包装。只有绑定、数值及执行顺序属于具体卡牌。现有单一原版消费者不妨碍语义通用的过程进入公共库。下表沿用本页的单玩家牌区范围：owner为Ref(Player)，card为Ref(Card)，play／target未特别说明时为Binding；有返回值的call必须用into接收。
+
+[手牌操作](../../../../mod-the-spire/base-spire/cards/rules/hand-operations.spire)：
+
+| 操作 | 其他参数／返回 | 行为与边界 |
+| --- | --- | --- |
+| `SelectAndExhaustHandCard` | owner、random: Bool | 随机或原生单选手牌后完整消耗；空域／取消不执行消耗 |
+| `UpgradeHandCards` | owner、all: Bool | 升级所有可升级手牌，或原生单选一张；不创建替代实例 |
+| `MoveSelectedDiscardCard` | owner、to: String(16)、reason: String(32) | 原生单选弃牌再移动；回顶传draw-top，仍经过MoveCombatCard的检查与通知 |
+| `ExhaustHandCards` | owner → Int | 捕获数量和原手牌批次，逐张消耗后返回原数量；反应中新入手的牌不追加，供FiendFire／Stoke分别组合攻击／生成 |
+| `ExhaustNonAttackCardsForBlock` | owner、block: Int | 捕获非攻击手牌，每张先消耗再GainBlock；不能改成末尾合计，否则反应顺序不同 |
+| `TransformHandCards` | owner、kind: String(16)、replacementDefinition: String(64)、upgraded: Bool | 匹配kind的手牌逐张创建／升级新牌、移除原牌、放置新牌；不继承原附魔，不发消耗事件 |
+| `GenerateCardsToHand` | owner、count: Int、attacksOnly／upgraded: Bool | 依原池逐张随机生成，可升级后入手；满手走弃牌，无候选跳过；不是候选展示／选择操作 |
+| `GenerateCombatCardWithCost` | owner、attacksOnly: Bool、cost: Int、source: String(64)、lifetime: String(16) → Binding | 生成并附加set费用修正，返回尚未放置的实例或none；调用方再AddGeneratedToHand，保证改费早于移动通知；资格、费用及寿命沿用底层检查 |
+| `DrawUntilCardKindChanges` | owner、kind: String(16)、limit: Int | 至多抽limit张，抽到不同kind或DrawOne未抽到牌即停止；保留抽牌限制和LastDrawn语义 |
+| `AbsorbRandomHandAttack` | owner、card | 随机选一张手牌攻击，读取无目标修正伤害，加到card成长再消耗所选牌；空域不抽样、不成长 |
+
+[战斗数值与结果](../../../../mod-the-spire/base-spire/cards/rules/combat-values.spire)：
+
+| 操作 | 参数／返回 | 行为与边界 |
+| --- | --- | --- |
+| `PlayerCombatFlag` | owner、flag: String(32) → Bool，pure | flag接受lost-hp／exhausted-card，其他值明确失败 |
+| `PlayerCombatFlagValue` | owner、flag、baseValue／flaggedValue: Int → Int，pure | 按同一标志读取数值，供条件格挡／段数组合；不派发资源命令 |
+| `EnemyPowerHits` | target: Ref(Enemy)、power: String(64)、hits／poweredHits: Int → Int，pure | 指定Power正层时选poweredHits，否则hits |
+| `ReadCardDamageFromBlock` | owner、card、target → Int，pure | 与ReadCardDamage相同签名，直接绑定即可复用当前玩家格挡公式 |
+| `ReadUntargetedCardAttackDamage` | owner、card → Int，pure | 使用ModifyAttackAdditive及ModifyAttackMultiplier与四位整数计算，保留吸收行为的无目标语义；不消耗修正状态，完整伤害预览使用PreviewPoweredCardDamage |
+| `GrowCardDamage` | card、amount: Int | 只增加该实例DamageGrowth；适用于Rampage及吸收行为 |
+| `AttackKilledEnemy` | attack: Ref(Attack)、target: Ref(Enemy) → Bool，pure | 只读取本命令对本目标的致死DamageResult，不用当前HP或其他攻击的结果推断 |
+| `AmplifyEnemyPowerFromCard` | owner、card、play、target: Ref(Enemy)、definition: String(64)、multiplier: Int | 正层时以当前层数×(multiplier−1)调用带来源Power施加操作；不直接写层数，不绕过阻止／修正 |
+
+[费用库](../../../../mod-the-spire/base-spire/cards/rules/costs.spire)的`ModifyCombatCardCostsByDefinition(owner,definition: String(64),source: String(64),operation: String(16),amount: Int,lifetime: String(16))`逐个修改同拥有者的匹配战斗实例，排除RunDeck；仍由AddCardCostModifier验证参数并刷新费用。[自动出牌库](../../../../mod-the-spire/base-spire/cards/rules/autoplay.spire)的`AutoPlayExhaustedCards(owner,definition: String(64),forceExhaust: Bool)`捕获匹配的耗尽牌，逐张调用AutoPlayCard，供回合末绑定复用。
+
+[ExhaustEnergyReaction模板](../../../../mod-the-spire/base-spire/cards/rules/card-reactions.spire)接收definition、energy／upgradedEnergy，监听CardExhausted后按升级值回能。卡牌保留use绑定；未来需要同反应的mod无需复制监听。HowlFromBeyond和Stomp的事件时点与定义绑定仍留在所属内容，实际自动出牌与整批改费调用上述公共过程。
+
+例如Stoke的正文只需先调用ExhaustHandCards并into接收size，再调用GenerateCardsToHand，传入size与当前升级状态。mod可以将第二步替换成CardAttack或GrowCardDamage，无需拷贝手牌遍历与生命周期实现。
 
 ## 攻击与结果
 
@@ -36,6 +74,7 @@
 | --- | --- |
 | `CreateCardAttack` | owner: Ref(Player)、card: Ref(Card)、play／target: Binding、amount／hits: Int、mode: String(16)、dynamic: Bool → Binding；mode 只接受 single／all／random |
 | `ExecuteAttack` | attack: Ref(Attack)；一对 BeforeAttack／AfterAttack，ModifyAttackHits 修正段数；逐击刷新存活目标，本批全部提交后才通知结果及死亡 |
+| `CardAttackWithResult` | 与CreateCardAttack同参，返回Binding；创建并执行后返回本次Attack，供致死奖励及结果读取 |
 | `CardAttack` | 与 CreateCardAttack 同参，无返回；创建并执行一个命令。多段只调用一次，不能用多次调用代替一个多段攻击 |
 | `PreviewPoweredCardDamage` | owner: Ref(Player)、card: Ref(Card)、target: Binding → Int，pure；和执行共用 CalculatePoweredCardDamage，无临时实体或计数消耗 |
 | `DamageEnemyFromPlayer` | owner: Ref(Player)、target: Ref(Enemy)、amount: Int(0..999999)；非攻击直接伤害，明确玩家攻击者，card／play保持none |

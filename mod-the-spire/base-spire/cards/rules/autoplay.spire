@@ -38,3 +38,12 @@ procedure AutoPlayFromDrawPile {
     destroy = { target = batch }
   }
 }
+
+procedure AutoPlayExhaustedCards {
+  parameters = { owner = Ref(Player) definition = String(length = 64) forceExhaust = Bool }
+  body = {
+    forEach = { query = where(collection(ExhaustPile), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), equal(field(c, Card.DefinitionId), definition))) item = c body = {
+      call = { procedure = AutoPlayCard args = { owner = owner card = c forceExhaust = forceExhaust } }
+    } }
+  }
+}

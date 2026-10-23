@@ -3,58 +3,17 @@ dsl_version = "core/0.3"
 
 # Source: Spite.cs: cost 0, DamageVar(5, Move) with RepeatVar(2); it hits once normally and Repeat times when
 # the owner lost HP this turn. OnUpgrade raises Repeat by 1 (three hits when triggered).
-template FlaggedHitsAttackEffect {
-  parameters = {
-    definition = { type = String(length = 64) }
-    hits = { type = Int(min = 1, max = 9) }
-    flaggedHits = { type = Int(min = 1, max = 9) }
-    upgradedFlaggedHits = { type = Int(min = 1, max = 9) }
-    flag = { type = String(length = 32) }
-  }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int count = Int flagged = Bool }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-
-            if = {
-              condition = equal(arg(flag), "lost-hp")
-              then = { let = { into = flagged value = field(owner, Player.LostHpThisTurn) } }
-              else = { let = { into = flagged value = field(owner, Player.ExhaustedCardThisTurn) } }
-            }
-            if = {
-              condition = flagged
-              then = {
-                let = { into = count value = pureCall(CardUpgradeValue, card, arg(flaggedHits), arg(upgradedFlaggedHits)) }
-              }
-              else = { let = { into = count value = arg(hits) } }
-            }
-            call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = count mode = "single" dynamic = false } }
-          }
-        }
-      }
-    }
-
-  }
-}
 
 use Spite {
   template = CardDefinition
   args = { sourceEntry = "SPITE" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 5 upgradedBaseDamage = 5 kind = "attack" strikeTag = false definition = "base-spire:spite" cost = 0 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
-}
-use SpiteDamage {
-  template = FlaggedHitsAttackEffect
-  args = { definition = "base-spire:spite" hits = 1 flaggedHits = 2 upgradedFlaggedHits = 3 flag = "lost-hp" }
 }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure SpiteBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
-    call = { procedure = SpiteDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = pureCall(PlayerCombatFlagValue, owner, "lost-hp", 1, pureCall(CardUpgradeValue, card, 2, 3)) mode = "single" dynamic = false } }
   }
 }
 dispatchCase SpiteBody { dispatch = ExecuteCardBody key = "base-spire:spite" procedure = SpiteBody }

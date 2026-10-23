@@ -2,31 +2,14 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/ForgottenRitual.cs; SHA-256 retained in cards/catalog.json.
-template ExhaustHistoryEnergyEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(owner, Player.ExhaustedCardThisTurn) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
-call = { procedure = GainEnergy args = { owner = owner amount = amount } }
-} }
-      } } }
-    }
-
-  }
-}
 
 use ForgottenRitual { template = CardDefinition args = { sourceEntry = "FORGOTTEN_RITUAL" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:forgotten-ritual" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
-use ForgottenRitualEffect1 { template = ExhaustHistoryEnergyEffect args = { definition = "base-spire:forgotten-ritual" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure ForgottenRitualBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
-    call = { procedure = ForgottenRitualEffect1.Apply args = { play = play  owner = owner card = card } }
+    if = { condition = pureCall(PlayerCombatFlag, owner, "exhausted-card") then = { call = { procedure = GainEnergy args = { owner = owner amount = pureCall(CardUpgradeValue, card, 3, 4) } } } }
   }
 }
 dispatchCase ForgottenRitualBody { dispatch = ExecuteCardBody key = "base-spire:forgotten-ritual" procedure = ForgottenRitualBody }

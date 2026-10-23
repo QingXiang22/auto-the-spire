@@ -70,12 +70,20 @@ procedure ExecuteAttack {
     call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
+procedure CardAttackWithResult {
+  parameters = { owner = Ref(Player) card = Ref(Card) play = Binding target = Binding amount = Int hits = Int mode = String(length = 16) dynamic = Bool }
+  locals = { attack = Binding } result = Binding
+  body = {
+    call = { procedure = CreateCardAttack args = { owner = owner card = card play = play target = target amount = amount hits = hits mode = mode dynamic = dynamic } into = attack }
+    call = { procedure = ExecuteAttack args = { attack = attack } }
+    return = { value = attack }
+  }
+}
 procedure CardAttack {
   parameters = { owner = Ref(Player) card = Ref(Card) play = Binding target = Binding amount = Int hits = Int mode = String(length = 16) dynamic = Bool }
   locals = { attack = Binding }
   body = {
-    call = { procedure = CreateCardAttack args = { owner = owner card = card play = play target = target amount = amount hits = hits mode = mode dynamic = dynamic } into = attack }
-    call = { procedure = ExecuteAttack args = { attack = attack } }
+    call = { procedure = CardAttackWithResult args = { owner = owner card = card play = play target = target amount = amount hits = hits mode = mode dynamic = dynamic } into = attack }
   }
 }
 procedure ClearDamageHistory {

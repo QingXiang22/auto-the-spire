@@ -3,53 +3,17 @@ dsl_version = "core/0.3"
 
 # Source: Dismantle.cs: cost 1, DamageVar(8, Move) hitting once, or twice when the target already holds
 # Vulnerable; OnUpgrade adds 2 damage.
-template VulnerableHitsAttackEffect {
-  parameters = {
-    definition = { type = String(length = 64) }
-    hits = { type = Int(min = 1, max = 9) }
-    vulnerableHits = { type = Int(min = 1, max = 9) }
-  }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int count = Int vulnerable = Int }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-
-            let = {
-              into = vulnerable
-              value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.DefinitionId), "base-spire:vulnerable-power"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
-            }
-            if = {
-              condition = greater(vulnerable, 0)
-              then = { let = { into = count value = arg(vulnerableHits) } }
-              else = { let = { into = count value = arg(hits) } }
-            }
-            call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = count mode = "single" dynamic = false } }
-          }
-        }
-      }
-    }
-
-  }
-}
 
 use Dismantle {
   template = CardDefinition
   args = { sourceEntry = "DISMANTLE" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 8 upgradedBaseDamage = 10 kind = "attack" strikeTag = false definition = "base-spire:dismantle" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
-}
-use DismantleDamage {
-  template = VulnerableHitsAttackEffect
-  args = { definition = "base-spire:dismantle" hits = 1 vulnerableHits = 2 }
 }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure DismantleBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
-    call = { procedure = DismantleDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = pureCall(EnemyPowerHits, target, "base-spire:vulnerable-power", 1, 2) mode = "single" dynamic = false } }
   }
 }
 dispatchCase DismantleBody { dispatch = ExecuteCardBody key = "base-spire:dismantle" procedure = DismantleBody }

@@ -2,20 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/DrumOfBattle.cs; SHA-256 retained in cards/catalog.json.
-template ExhaustEnergyReaction {
-  parameters = { definition = { type = String(length = 64) } energy = { type = Int } upgradedEnergy = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = amount value = pureCall(CardUpgradeValue, card, arg(energy), arg(upgradedEnergy)) }
-call = { procedure = GainEnergy args = { owner = owner amount = amount } }
-      } } }
-    }
-    subscription Apply { event = CardExhausted reaction = Apply }
-  }
-}
 
 use DrumOfBattle { template = CardDefinition args = { sourceEntry = "DRUM_OF_BATTLE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:drum-of-battle" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use DrumOfBattleEffect1 { template = DrawEffect args = { definition = "base-spire:drum-of-battle" cards = 2 upgradedCards = 2 } }

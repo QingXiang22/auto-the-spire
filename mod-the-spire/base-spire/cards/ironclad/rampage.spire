@@ -2,31 +2,16 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Rampage.cs; SHA-256 retained in cards/catalog.json.
-template GrowDamageEffect {
-  parameters = { definition = { type = String(length = 64) } growth = { type = Int } upgradedGrowth = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = amount value = pureCall(CardUpgradeValue, card, arg(growth), arg(upgradedGrowth)) }
-set = { target = card field = Card.DamageGrowth value = add(field(card, Card.DamageGrowth), amount) }
-      } } }
-    }
-
-  }
-}
 
 use Rampage { template = CardDefinition args = { sourceEntry = "RAMPAGE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:rampage" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 9 upgradedBaseDamage = 9 } }
 use RampageEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:rampage" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
-use RampageEffect2 { template = GrowDamageEffect args = { definition = "base-spire:rampage" growth = 5 upgradedGrowth = 9 } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure RampageBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = RampageEffect1.Apply args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = RampageEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = GrowCardDamage args = { card = card amount = pureCall(CardUpgradeValue, card, 5, 9) } }
   }
 }
 dispatchCase RampageBody { dispatch = ExecuteCardBody key = "base-spire:rampage" procedure = RampageBody }

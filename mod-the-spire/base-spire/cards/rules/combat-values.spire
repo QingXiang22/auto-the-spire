@@ -1,0 +1,57 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure PlayerCombatFlag {
+  pure = true parameters = { owner = Ref(Player) flag = String(length = 32) } result = Bool
+  body = {
+    if = { condition = equal(flag, "lost-hp") then = { return = { value = field(owner, Player.LostHpThisTurn) } } }
+    if = { condition = equal(flag, "exhausted-card") then = { return = { value = field(owner, Player.ExhaustedCardThisTurn) } } }
+    fail = { message = "Unknown player combat flag" }
+  }
+}
+procedure PlayerCombatFlagValue {
+  pure = true parameters = { owner = Ref(Player) flag = String(length = 32) baseValue = Int flaggedValue = Int } result = Int
+  body = {
+    if = { condition = pureCall(PlayerCombatFlag, owner, flag) then = { return = { value = flaggedValue } } }
+    return = { value = baseValue }
+  }
+}
+procedure EnemyPowerHits {
+  pure = true parameters = { target = Ref(Enemy) power = String(length = 64) hits = Int poweredHits = Int } result = Int
+  body = {
+    if = { condition = greater(pureCall(EnemyPowerAmount, target, power), 0) then = { return = { value = poweredHits } } }
+    return = { value = hits }
+  }
+}
+procedure ReadCardDamageFromBlock {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = { return = { value = field(owner, Player.Block) } }
+}
+procedure ReadUntargetedCardAttackDamage {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) } result = Int
+  locals = { damage = Int }
+  body = {
+    let = { into = damage value = pureCall(CardBaseDamage, owner, card, none) }
+    let = { into = damage value = multiply(maximum(0, foldEvent(ModifyAttackAdditive, damage, owner, card, none)), 10000) }
+    let = { into = damage value = divide(foldEvent(ModifyAttackMultiplier, damage, owner, card, none), 10000) }
+    return = { value = damage }
+  }
+}
+procedure GrowCardDamage {
+  parameters = { card = Ref(Card) amount = Int }
+  body = { set = { target = card field = Card.DamageGrowth value = add(field(card, Card.DamageGrowth), amount) } }
+}
+procedure AttackKilledEnemy {
+  pure = true parameters = { attack = Ref(Attack) target = Ref(Enemy) } result = Bool
+  body = { return = { value = exists(where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), and(equal(field(r, DamageResult.Enemy), target), field(r, DamageResult.Killed))))) } }
+}
+procedure AmplifyEnemyPowerFromCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) play = Binding target = Ref(Enemy) definition = String(length = 64) multiplier = Int }
+  locals = { current = Int }
+  body = {
+    let = { into = current value = pureCall(EnemyPowerAmount, target, definition) }
+    if = { condition = greater(current, 0) then = {
+      call = { procedure = ApplyEnemyPowerFromCard args = { owner = owner card = card play = play target = target definition = definition stacks = multiply(current, subtract(multiplier, 1)) } }
+    } }
+  }
+}

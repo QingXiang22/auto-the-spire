@@ -169,6 +169,90 @@ internal static partial class PackageChecks
                 Submit(s, "EndDevelopmentCombat");
             }
         });
+        check("LIFECYCLE public hand operations compose across exhaust reactions without extending the batch", () =>
+        {
+            using var copy = new Copy(package.Root); copy.Include("hand-operation-probe.spire", """
+                procedure ReplaceExhausted { parameters = { owner = Ref(Player) card = Ref(Card) } locals = { replacement = Binding } body = {
+                  call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:anger" } into = replacement }
+                  call = { procedure = AddGeneratedToHand args = { card = replacement } }
+                } }
+                subscription ReplaceExhausted { event = CardExhausted reaction = ReplaceExhausted }
+                action Rebuild { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(InPlay) } locals = { size = Int } body = {
+                  call = { procedure = ExhaustHandCards args = { owner = first(type(Player)) } into = size }
+                  call = { procedure = GrowCardDamage args = { card = card amount = size } }
+                  call = { procedure = GenerateCardsToHand args = { owner = first(type(Player)) count = size attacksOnly = true upgraded = true } }
+                } }
+                """);
+            var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            var receiver = IcAdd(s, "StrikeIronclad"); IcMove(s, receiver, "Hand", "InPlay");
+            var originals = new[] { IcAdd(s, "DefendIronclad"), IcAdd(s, "Bash") };
+            Submit(s, "Rebuild", receiver);
+            Equal(2L, IntField(s, receiver, "Card", "DamageGrowth"), "captured original count, independent of callback additions");
+            True(originals.All(c => Members(s, "ExhaustPile").Contains(c)), "both original cards exhausted");
+            Equal(4, Hand(s).Count, "two callback cards survive alongside two generated cards");
+            Equal(2, Hand(s).Count(c => s.State.GetField(c, CardField(s, "Upgraded")).AsBool()), "only the generated batch upgraded");
+            True(Hand(s).All(c => s.State.GetField(c, CardField(s, "Kind")).AsString() == "attack"), "generation respects the caller's kind policy");
+        });
+        check("LIFECYCLE public transformation accepts a different kind and replacement without changing nonmatching cards", () =>
+        {
+            using var copy = new Copy(package.Root); copy.Include("transform-operation-probe.spire", """
+                action TransformSkills { role = player body = {
+                  call = { procedure = TransformHandCards args = { owner = first(type(Player)) kind = "skill" replacementDefinition = "base-spire:strike-ironclad" upgraded = true } }
+                } }
+                """);
+            var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            var kept = IcAdd(s, "Anger"); var originals = new[] { IcAdd(s, "DefendIronclad"), IcAdd(s, "Impervious") };
+            var draws = s.Random.TotalDraws; Submit(s, "TransformSkills");
+            Equal(3, Hand(s).Count, "two matching cards replaced once"); True(Hand(s).Contains(kept), "nonmatching original instance kept");
+            True(originals.All(c => !Hand(s).Contains(c) && !Members(s, "ExhaustPile").Contains(c)), "transformation removes without exhausting");
+            foreach (var replacement in Hand(s).Where(c => c != kept))
+            {
+                Equal("base-spire:strike-ironclad", CardDefinition(s, replacement), "caller-selected definition");
+                True(s.State.GetField(replacement, CardField(s, "Upgraded")).AsBool(), "replacement upgraded");
+                Equal(9L, IntField(s, replacement, "Card", "BaseDamage"), "upgrade applied to replacement values");
+            }
+            Equal(draws, s.Random.TotalDraws, "fixed transformation consumes no random draws");
+        });
+        check("LIFECYCLE public generation applies caller cost policy before placement notifications", () =>
+        {
+            using var copy = new Copy(package.Root); copy.Include("generation-operation-probe.spire", """
+                procedure CheckCost { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } body = {
+                  if = { condition = equal(reason, "generate") then = {
+                    if = { condition = not(equal(field(card, Card.Cost), 2)) then = { fail = { message = "cost applied after placement" } } }
+                  } }
+                } }
+                subscription CheckCost { event = CardMoved reaction = CheckCost }
+                action Generate { role = player locals = { generated = Binding } body = {
+                  call = { procedure = GenerateCombatCardWithCost args = { owner = first(type(Player)) attacksOnly = true cost = 2 source = "probe:generator" lifetime = "combat" } into = generated }
+                  if = { condition = not(isNone(generated)) then = { call = { procedure = AddGeneratedToHand args = { card = generated } } } }
+                } }
+                """);
+            var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            Submit(s, "Generate"); var card = Hand(s).Single(); Equal(2L, CardCost(s, card), "custom set value");
+            IcNextTurn(s); Equal(2L, CardCost(s, card), "custom combat lifetime survives turn boundary");
+            var modifier = Members(s, "CardCostModifiers").Single();
+            Equal("probe:generator", s.State.GetField(modifier, s.RuleSet.TypeByQualifiedId("base-spire:CardCostModifier").FieldIndex("Source")).AsString(), "caller source retained");
+        });
+        check("LIFECYCLE public attack result and Power operations compose outside their original card definitions", () =>
+        {
+            using var copy = new Copy(package.Root); copy.Include("attack-operation-probe.spire", """
+                action RewardFatal { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } locals = { attack = Binding } body = {
+                  call = { procedure = ApplyEnemyPowerFromCard args = { owner = first(type(Player)) card = card play = none target = first(type(Enemy)) definition = "base-spire:weak-power" stacks = 2 } }
+                  call = { procedure = AmplifyEnemyPowerFromCard args = { owner = first(type(Player)) card = card play = none target = first(type(Enemy)) definition = "base-spire:weak-power" multiplier = 3 } }
+                  if = { condition = not(equal(pureCall(EnemyPowerAmount, first(type(Enemy)), "base-spire:weak-power"), 6)) then = { fail = { message = "caller Power or multiplier ignored" } } }
+                  repeat = { count = 2 body = {
+                    call = { procedure = CardAttackWithResult args = { owner = first(type(Player)) card = card play = none target = first(type(Enemy)) amount = 20 hits = 1 mode = "single" dynamic = false } into = attack }
+                    if = { condition = pureCall(AttackKilledEnemy, attack, first(type(Enemy))) then = {
+                      call = { procedure = IncreaseMaxHp args = { owner = first(type(Player)) amount = 2 } }
+                    } }
+                  } }
+                } }
+                """);
+            var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            var card = IcAdd(s, "StrikeIronclad"); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(10L));
+            var maxHp = IntField(s, Player(s), "Player", "MaxHp"); Submit(s, "RewardFatal", card);
+            Equal(maxHp + 2, IntField(s, Player(s), "Player", "MaxHp"), "only the killing attack qualifies; stale results do not reward the second attack");
+        });
         check("LIFECYCLE Power instance policies and blocked applications use explicit appliers", () =>
         {
             using var copy = new Copy(package.Root); copy.Include("power-instance-probe.spire", """

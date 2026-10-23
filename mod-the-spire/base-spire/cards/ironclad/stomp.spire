@@ -18,17 +18,9 @@ use StompDamageValue { template = StaticCardDamage args = { definition = "base-s
 
 procedure StompAttackDiscounts {
   parameters = { owner = Ref(Player) card = Ref(Card) }
-  body = {
-    if = {
-      condition = equal(field(card, Card.Kind), "attack") then = {
-        forEach = {
-          query = where(type(Card), c, and(and(equal(field(c, Card.DefinitionId), "base-spire:stomp"), equal(field(c, Card.Owner), field(owner, Player.Owner))), less(collectionIndex(RunDeck, c), 0))) item = c body = {
-            call = { procedure = AddCardCostModifier args = { card = c source = "base-spire:stomp" operation = "add" amount = -1 lifetime = "turn" } }
-          }
-        }
-      }
-    }
-  }
+  body = { if = { condition = equal(field(card, Card.Kind), "attack") then = {
+    call = { procedure = ModifyCombatCardCostsByDefinition args = { owner = owner definition = "base-spire:stomp" source = "base-spire:stomp" operation = "add" amount = -1 lifetime = "turn" } }
+  } } }
 }
 
 subscription StompAttackDiscounts {

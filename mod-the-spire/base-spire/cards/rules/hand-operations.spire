@@ -1,0 +1,119 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Reusable hand operations. forEach captures its query before executing reactions.
+procedure SelectAndExhaustHandCard {
+  parameters = { owner = Ref(Player) random = Bool }
+  locals = { chosen = Binding }
+  body = {
+    if = { condition = random then = {
+      call = { procedure = RandomHandCard args = { owner = owner attacksOnly = false } into = chosen }
+    } else = {
+      call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = false } into = chosen }
+    } }
+    if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } } } }
+  }
+}
+procedure UpgradeHandCards {
+  parameters = { owner = Ref(Player) all = Bool }
+  locals = { chosen = Binding }
+  body = {
+    if = { condition = all then = {
+      forEach = { query = where(collection(Hand), c, and(field(c, Card.CanUpgrade), not(field(c, Card.Upgraded)))) item = c body = {
+        call = { procedure = UpgradeCard args = { card = c } }
+      } }
+    } else = {
+      call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = true } into = chosen }
+      if = { condition = not(isNone(chosen)) then = { call = { procedure = UpgradeCard args = { card = chosen } } } }
+    } }
+  }
+}
+procedure MoveSelectedDiscardCard {
+  parameters = { owner = Ref(Player) to = String(length = 16) reason = String(length = 32) }
+  locals = { chosen = Binding }
+  body = {
+    call = { procedure = SelectDiscardCard args = { owner = owner } into = chosen }
+    if = { condition = not(isNone(chosen)) then = {
+      call = { procedure = MoveCombatCard args = { owner = owner card = chosen to = to reason = reason } }
+    } }
+  }
+}
+procedure ExhaustHandCards {
+  parameters = { owner = Ref(Player) }
+  locals = { size = Int } result = Int
+  body = {
+    let = { into = size value = count(collection(Hand)) }
+    forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
+    return = { value = size }
+  }
+}
+procedure ExhaustNonAttackCardsForBlock {
+  parameters = { owner = Ref(Player) block = Int }
+  body = {
+    forEach = { query = where(collection(Hand), c, not(equal(field(c, Card.Kind), "attack"))) item = c body = {
+      call = { procedure = ExhaustCombatCard args = { owner = owner card = c } }
+      call = { procedure = GainBlock args = { owner = owner amount = block } }
+    } }
+  }
+}
+procedure TransformHandCards {
+  parameters = { owner = Ref(Player) kind = String(length = 16) replacementDefinition = String(length = 64) upgraded = Bool }
+  locals = { replacement = Binding }
+  body = {
+    forEach = { query = where(collection(Hand), c, equal(field(c, Card.Kind), kind)) item = c body = {
+      call = { procedure = CreateCombatCard args = { owner = owner definition = replacementDefinition } into = replacement }
+      if = { condition = upgraded then = { call = { procedure = UpgradeCard args = { card = replacement } } } }
+      call = { procedure = MoveCombatCard args = { owner = owner card = c to = "removed" reason = "transform" } }
+      call = { procedure = AddGeneratedToHand args = { card = replacement } }
+    } }
+  }
+}
+procedure GenerateCardsToHand {
+  parameters = { owner = Ref(Player) count = Int attacksOnly = Bool upgraded = Bool }
+  locals = { generated = Binding }
+  body = {
+    repeat = { count = count body = {
+      call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = attacksOnly } into = generated }
+      if = { condition = not(isNone(generated)) then = {
+        if = { condition = upgraded then = { call = { procedure = UpgradeCard args = { card = generated } } } }
+        call = { procedure = AddGeneratedToHand args = { card = generated } }
+      } }
+    } }
+  }
+}
+procedure GenerateCombatCardWithCost {
+  parameters = { owner = Ref(Player) attacksOnly = Bool cost = Int source = String(length = 64) lifetime = String(length = 16) }
+  locals = { generated = Binding } result = Binding
+  body = {
+    call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = attacksOnly } into = generated }
+    if = { condition = not(isNone(generated)) then = {
+      call = { procedure = AddCardCostModifier args = { card = generated source = source operation = "set" amount = cost lifetime = lifetime } }
+    } }
+    return = { value = generated }
+  }
+}
+procedure DrawUntilCardKindChanges {
+  parameters = { owner = Ref(Player) kind = String(length = 16) limit = Int }
+  locals = { drawing = Bool drawn = Binding }
+  body = {
+    let = { into = drawing value = true }
+    repeat = { count = limit body = { if = { condition = drawing then = {
+      call = { procedure = DrawOne args = { owner = owner fromHandDraw = false } }
+      let = { into = drawn value = field(owner, Player.LastDrawn) }
+      if = { condition = isNone(drawn) then = { let = { into = drawing value = false } } else = {
+        if = { condition = not(equal(field(drawn, Card.Kind), kind)) then = { let = { into = drawing value = false } } }
+      } }
+    } } } }
+  }
+}
+procedure AbsorbRandomHandAttack {
+  parameters = { owner = Ref(Player) card = Ref(Card) }
+  locals = { chosen = Binding }
+  body = {
+    call = { procedure = RandomHandCard args = { owner = owner attacksOnly = true } into = chosen }
+    if = { condition = not(isNone(chosen)) then = {
+      call = { procedure = GrowCardDamage args = { card = card amount = pureCall(ReadUntargetedCardAttackDamage, owner, chosen) } }
+      call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } }
+    } }
+  }
+}

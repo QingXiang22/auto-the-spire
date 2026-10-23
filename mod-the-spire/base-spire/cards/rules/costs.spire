@@ -63,3 +63,12 @@ procedure RemoveCardCosts { parameters = { card = Ref(Card) } body = {
   forEach = { query = where(collection(CardCostModifiers), m, equal(field(m, CardCostModifier.Card), card)) item = modifier body = { destroy = { target = modifier } } }
 } }
 subscription RemoveCardCosts { event = CardRemoving reaction = RemoveCardCosts }
+
+procedure ModifyCombatCardCostsByDefinition {
+  parameters = { owner = Ref(Player) definition = String(length = 64) source = String(length = 64) operation = String(length = 16) amount = Int lifetime = String(length = 16) }
+  body = {
+    forEach = { query = where(type(Card), c, and(and(equal(field(c, Card.DefinitionId), definition), equal(field(c, Card.Owner), field(owner, Player.Owner))), less(collectionIndex(RunDeck, c), 0))) item = c body = {
+      call = { procedure = AddCardCostModifier args = { card = c source = source operation = operation amount = amount lifetime = lifetime } }
+    } }
+  }
+}

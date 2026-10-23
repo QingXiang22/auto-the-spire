@@ -2,29 +2,14 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/SwordBoomerang.cs; SHA-256 retained in cards/catalog.json.
-template RandomHitsEffect {
-  parameters = { definition = { type = String(length = 64) } hits = { type = Int } upgradedHits = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
-      locals = { count = Int target = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = count value = pureCall(CardUpgradeValue, card, arg(hits), arg(upgradedHits)) }
-call = { procedure = CardAttack args = { owner = owner card = card play = play target = none amount = 0 hits = count mode = "random" dynamic = true } }
-      } } }
-    }
-
-  }
-}
 
 use SwordBoomerang { template = CardDefinition args = { sourceEntry = "SWORD_BOOMERANG" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:sword-boomerang" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = false exhausts = false leavesPlay = false baseDamage = 3 upgradedBaseDamage = 3 } }
-use SwordBoomerangEffect1 { template = RandomHitsEffect args = { definition = "base-spire:sword-boomerang" hits = 3 upgradedHits = 4 } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure SwordBoomerangBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
-    call = { procedure = SwordBoomerangEffect1.Apply args = { play = play  owner = owner card = card } }
+    call = { procedure = CardAttack args = { owner = owner card = card play = play target = none amount = 0 hits = pureCall(CardUpgradeValue, card, 3, 4) mode = "random" dynamic = true } }
   }
 }
 dispatchCase SwordBoomerangBody { dispatch = ExecuteCardBody key = "base-spire:sword-boomerang" procedure = SwordBoomerangBody }

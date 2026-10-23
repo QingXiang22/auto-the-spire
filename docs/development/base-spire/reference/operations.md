@@ -220,15 +220,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | ApplyAllEnemiesPowerEffect | power、stacks、upgradedStacks | 对每个 `Hp > 0` 的开发目标调用ApplyEnemyPowerFromCard | Shockwave（Weak 与 Vulnerable 各 3／5）、Thunderclap（Vulnerable 1／1） |
 | ApplySelfPowerEffect | power、stacks、upgradedStacks、untilTurnEnd（默认false） | 通过CardUpgradeValue取值，按到期标志调用对应的带来源Power操作；不要求目标敌人 | Inflame（Strength 2／3）、FightMe、Unrelenting、FlameBarrier（untilTurnEnd=true） |
 
-以下模板仅由一个内容拥有，已移到所属卡牌文件；它们不是effects.spire中的共享操作。需要类似能力时先确认语义，再决定是否抽成共用模板。
-
-| 独有效果 | 所属模块 |
-| --- | --- |
-| DamageEqualBlockEffect | [BodySlam](../../../../mod-the-spire/base-spire/cards/ironclad/body-slam.spire) |
-| FlaggedHitsAttackEffect | [Spite](../../../../mod-the-spire/base-spire/cards/ironclad/spite.spire) |
-| FlaggedBlockMultiplierEffect | [EvilEye](../../../../mod-the-spire/base-spire/cards/ironclad/evil-eye.spire) |
-| VulnerableHitsAttackEffect | [Dismantle](../../../../mod-the-spire/base-spire/cards/ironclad/dismantle.spire) |
-| AmplifyVulnerableEffect | [MoltenFist](../../../../mod-the-spire/base-spire/cards/ironclad/molten-fist.spire) |
+卡牌不再在本地声明选择消耗、手牌变换、生成改费、吸收伤害或条件攻击等效果模板。直接调用[供内容与mod组合的公共操作](card-behavior.md#供内容与mod组合的公共操作)：手牌操作管理选择、批次及实例生命周期，战斗数值库提供条件读取、成长和致死结果查询。BodySlam直接绑定共享格挡公式；Spite／EvilEye／Dismantle把条件值传入已有攻击／格挡命令，MoltenFist传入Power与倍率。通用操作不要求当前已有两个消费者。
 
 同一张牌内的效果顺序由所属ExecuteCardBody处理过程的call顺序决定，与模板use或事件订阅顺序无关。Bash、Uppercut的正文显式先伤害后施加。Weak、Vulnerable与Frail在所属Power模块监听AfterEnemyTurnEnded并调用TickPowerDuration，玩家新实例的首次跳过由debuff标志控制；详见[Power参考](powers.md)。
 

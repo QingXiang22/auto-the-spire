@@ -2,33 +2,16 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Feed.cs; SHA-256 retained in cards/catalog.json.
-template FeedEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { attack = Binding amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = CreateCardAttack args = { play = play hits = 1 mode = "single" dynamic = false owner = owner card = card target = target amount = pureCall(CardBaseDamage, owner, card, target) } into = attack }
-call = { procedure = ExecuteAttack args = { attack = attack } }
-if = { condition = exists(where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), and(equal(field(r, DamageResult.Enemy), target), field(r, DamageResult.Killed))))) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = 4 } } else = { let = { into = amount value = 3 } } }
-  call = { procedure = IncreaseMaxHp args = { owner = owner amount = amount } }
-} }
-      } } }
-    }
-
-  }
-}
 
 use Feed { template = CardDefinition args = { sourceEntry = "FEED" rarity = "rare" inIroncladPool = true generatable = false definition = "base-spire:feed" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 10 upgradedBaseDamage = 12 } }
-use FeedEffect1 { template = FeedEffect args = { definition = "base-spire:feed" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure FeedBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  locals = { attack = Binding }
   body = {
-    call = { procedure = FeedEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = CardAttackWithResult args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = 1 mode = "single" dynamic = false } into = attack }
+    if = { condition = pureCall(AttackKilledEnemy, attack, target) then = { call = { procedure = IncreaseMaxHp args = { owner = owner amount = pureCall(CardUpgradeValue, card, 3, 4) } } } }
   }
 }
 dispatchCase FeedBody { dispatch = ExecuteCardBody key = "base-spire:feed" procedure = FeedBody }
