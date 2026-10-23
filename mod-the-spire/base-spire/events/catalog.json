@@ -3,6 +3,10 @@
   "kind": "event",
   "entries": [
     {
+      "id": "base-spire:battleworn-dummy",
+      "definition": "events/battleworn-dummy.spire"
+    },
+    {
       "id": "base-spire:dense-vegetation",
       "definition": "events/dense-vegetation.spire"
     },

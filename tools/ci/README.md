@@ -42,7 +42,7 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 
 正常事件访问另保留seed `sapphire-normal-79`：真实Neow、首战胜利及奖励跳过后自然进入SapphireSeed，分别执行EAT与PLANT并返回真实地图后继。base核对独立原生向量的资源、永久实例／升级／附魔、完整问号流、访问双向引用及重复关闭拒绝；net真实stdio验证公开访问关系、请求重放与地图返回。PLANT按锁定来源自动选择首张合资格永久牌。
 
-seed `dense-normal-30` 自然进入DenseVegetation，TRUDGE_ON及REST后四Wriggler真实子战斗分别覆盖奖励领取／跳过和地图返回。base行为报告与正常组比较独立原生向量的资源、永久牌组、父子访问及完整Run／玩家／事件随机流；另检查受控踩踏致死、真实子战斗死亡、旧决策、重复FIGHT和错误关联原子拒绝。net真实stdio验证三条正常公开路径及请求重放；migration核对固定向量来源摘要。BattlewornDummy战后返回父事件、其他未接事件、后幕和完整Run仍未支持。
+seed `dense-normal-30` 自然进入DenseVegetation，TRUDGE_ON及REST后四Wriggler真实子战斗分别覆盖奖励领取／跳过和地图返回。base行为报告与正常组比较独立原生向量的资源、永久牌组、父子访问及完整Run／玩家／事件随机流；另检查受控踩踏致死、真实子战斗死亡、旧决策、重复FIGHT和错误关联原子拒绝。net真实stdio验证三条正常公开路径及请求重放；migration核对固定向量来源摘要。BattlewornDummy的开发升级档另用两个seed的独立组件向量核对击杀／超时后的同父恢复、永久升级实例与完整随机流；行为检查保留死亡、空／单张升级域、未支持奖励档与重复访问，真实stdio验证超时返回和重放。第三幕正常可达、药水／遗物档、其他未接事件、后幕和完整Run仍未支持。
 
 ## 原完整差异测试与覆盖缺口
 

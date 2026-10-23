@@ -91,6 +91,7 @@ internal static partial class PackageChecks
             }
         });
         witnesses["base-spire:doors-of-light-and-dark"] = [doors];
+        foreach (var row in RunBattlewornContinuationChecks(package, check)) witnesses.Add(row.Key, row.Value);
         return witnesses;
     }
 }

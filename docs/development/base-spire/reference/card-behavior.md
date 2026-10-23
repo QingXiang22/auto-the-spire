@@ -61,7 +61,7 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 
 `HealWithSource(owner,amount,source)` 和 `GainGoldWithSource(owner,amount,source)` 提供来源及实际变化通知；GainGold 先经过 ModifyGoldGained／AfterModifyingGoldGained，再提交正收益。`LoseGold(owner,amount,reason,source)` 夹至实际余额，reason 为 spent／lost／stolen；需要余额足额的购买使用 `SpendGold(owner,amount,source)`。
 
-SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`EnterDevelopmentDoorsOfLightAndDark` 进入开发访问。叶模块只定义选项与效果，共享 EventVisit 保存页面、状态、返回位置与访问序号；`CloseDevelopmentEvent(visit)` 关闭。SapphireSeed与DenseVegetation另由正常地图的完整源事件选择器进入，关联同一RunVisit；完成非战斗分支后使用 `CloseNormalEvent(visit)` 返回地图，开发关闭入口不能推进正常Run。DenseVegetation的 `DenseVegetationFight(visit)` 仅在REST后合法，建立公开Parent／ChildVisit关联的四Wriggler子战斗；普通奖励关闭后结束原父事件，其他事件的战后续接仍未接通。
+SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`EnterDevelopmentDoorsOfLightAndDark` 进入开发访问。叶模块只定义选项与效果，共享 EventVisit 保存页面、状态、返回位置与访问序号；`CloseDevelopmentEvent(visit)` 关闭。SapphireSeed与DenseVegetation另由正常地图的完整源事件选择器进入，关联同一RunVisit；完成非战斗分支后使用 `CloseNormalEvent(visit)` 返回地图，开发关闭入口不能推进正常Run。DenseVegetation的 `DenseVegetationFight(visit)` 仅在REST后合法，建立公开Parent／ChildVisit关联的四Wriggler子战斗；普通奖励关闭后结束原父事件，BattlewornDummy通过 `EnterDevelopmentBattlewornDummy` 提供开发升级档：三个BattlewornOption实例选择SETTING_2进入真实子战斗，EventCombatVisit.Parent与EventVisit.CombatVisit双向关联。击杀后随机升级最多两张永久牌，三回合超时只返回同一父事件；完成后用 `CloseDevelopmentEvent(visit)` 关闭。药水／遗物档选择后明确报未支持，第三幕正常可达尚未接通。
 
 ## 生成候选与选择的行为要求
 

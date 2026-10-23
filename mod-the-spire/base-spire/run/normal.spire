@@ -73,7 +73,7 @@ collection RunVisits { element = RunVisit ordered = true }
 
 procedure CanUseDevelopmentActions {
   pure = true parameters = { owner = Ref(Player) } result = Bool
-  body = { return = { value = isNone(field(owner, Player.CurrentRun)) } }
+  body = { return = { value = and(isNone(field(owner, Player.CurrentRun)), not(pureCall(HasDevelopmentEventCombat, owner))) } }
 }
 
 procedure CanStartNormalRun {
@@ -223,7 +223,7 @@ procedure SettleNormalCombat {
   locals = { run = Binding visit = Binding }
   body = {
     let = { into = run value = field(owner, Player.CurrentRun) }
-    if = { condition = isNone(run) then = { return = {} } }
+    if = { condition = isNone(run) then = { call = { procedure = SettleDevelopmentEventCombat args = { owner = owner victory = victory } } return = {} } }
     let = { into = visit value = field(run, Run.CurrentVisit) }
     if = { condition = or(isNone(visit), not(equal(field(run, Run.Phase), "combat"))) then = { fail = { message = "No normal combat visit is active" } } }
     if = { condition = or(field(visit, RunVisit.Committed), not(equal(field(visit, RunVisit.Phase), "combat"))) then = { fail = { message = "Normal combat visit was already committed" } } }
@@ -246,7 +246,7 @@ procedure SettleNormalCombat {
 procedure ClearNormalCombat {
   parameters = { owner = Ref(Player) }
   body = {
-    if = { condition = isNone(field(owner, Player.CurrentRun)) then = { return = {} } }
+    if = { condition = and(isNone(field(owner, Player.CurrentRun)), not(pureCall(HasDevelopmentEventCombat, owner))) then = { return = {} } }
     call = { procedure = ClearCombatPowers }
     set = { target = owner field = Player.Block value = 0 }
     call = { procedure = ClearCardPlayHistory args = { owner = owner } }

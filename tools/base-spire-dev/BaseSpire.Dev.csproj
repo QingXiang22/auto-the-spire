@@ -22,6 +22,7 @@
     <EmbeddedResource Include="fixtures/normal-event-selection-vector.json" />
     <EmbeddedResource Include="fixtures/normal-sapphire-seed-vector.json" />
     <EmbeddedResource Include="fixtures/normal-dense-vegetation-vector.json" />
+    <EmbeddedResource Include="fixtures/battleworn-continuation-vector.json" />
     <EmbeddedResource Include="fixtures/pickup-upgrade-vectors.json" />
     <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <ProjectReference Include="../../net-the-spire/Net.TheSpire.Host/Net.TheSpire.Host.csproj" />

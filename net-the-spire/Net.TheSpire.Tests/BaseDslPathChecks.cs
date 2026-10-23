@@ -26,6 +26,7 @@ internal static class BaseDslPathChecks
             yield return ("EVENT real stdio normal SapphireSeed and map return: " + branch, () => StdioTrajectory("normal-sapphire-" + branch));
         foreach (var branch in new[] { "trudge", "fight-skip", "fight-claim" })
             yield return ("EVENT real stdio normal DenseVegetation child visits and map return: " + branch, () => StdioTrajectory("normal-dense-" + branch));
+        yield return ("EVENT real stdio development BattlewornDummy timeout resumes same parent once", () => StdioTrajectory("battleworn-event"));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
         yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
@@ -201,7 +202,7 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -577,6 +578,47 @@ internal static class BaseDslPathChecks
                 var captured = snapshot.Entities.Where(e => e.ContentId == "base-spire:whirlwind")
                     .Select(e => ((WireString)e.Fields.Single(f => f.FieldId.EndsWith(":Card.PaidX", StringComparison.Ordinal)).Value!).Value).Order().ToArray();
                 Check.True(captured.SequenceEqual(new[] { "0", "3" }), "public captures remain zero and three despite two additional hits each");
+            }
+            if (mode == "battleworn-event")
+            {
+                string EntityValue(EntityDto entity, string field) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + field, StringComparison.Ordinal)).Value!).Value;
+                void StepEvent(LegalActionDto candidate)
+                {
+                    var prior = snapshot.ObservationId;
+                    var request = Request("dummy-" + ++stepNumber, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(prior)), ("candidate_id", WireValue.Str(candidate.CandidateId)));
+                    var response = Send(request);
+                    Check.Equal(WireCanonical.Text(response.ToWire()), WireCanonical.Text(Send(request).ToWire()), "event request replays cached result without repeating effects");
+                    snapshot = Snapshot(Send(Request("dummy-observe-" + stepNumber, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                    Check.Equal(prior + 1, snapshot.ObservationId, "event boundary advances observation once");
+                    Send(Request("dummy-stale-" + stepNumber, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(prior)), ("candidate_id", WireValue.Str(candidate.CandidateId))), false);
+                }
+                void Action(string name) => StepEvent(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + name));
+                Action("Ironclad.Initialize"); Action("EnterDevelopmentBattlewornDummy");
+                var parent = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:EventVisit");
+                var options = snapshot.Entities.Where(e => e.KindId == "net:kind:base-spire:BattlewornOption").ToArray();
+                Check.Sequence(new[] { "SETTING_1", "SETTING_2", "SETTING_3" }, options.Select(e => EntityValue(e, "BattlewornOption.Setting")), "complete source options stay public");
+                Check.Equal(3, snapshot.LegalActions.Count, "three real answers");
+                var selected = options.Single(e => EntityValue(e, "BattlewornOption.Setting") == "SETTING_2");
+                StepEvent(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireString v && v.Value == selected.InstanceId)));
+                var child = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:EventCombatVisit");
+                Check.Equal(parent.InstanceId, EntityValue(child, "EventCombatVisit.Parent"), "child retains actual parent");
+                Check.Equal(child.InstanceId, EntityValue(snapshot.Entities.Single(e => e.InstanceId == parent.InstanceId), "EventVisit.CombatVisit"), "parent retains actual child");
+                Check.Equal("150", Public(snapshot, "Enemy.Hp"), "real tier-two source enemy");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:EndDevelopmentCombat" or "net:action:base-spire:Draw" or "net:action:base-spire:CloseDevelopmentEvent"), "cannot bypass real combat");
+                for (var turn = 1; turn <= 3; turn++) { Action("EndDevelopmentTurn"); if (turn < 3) Action("BeginDevelopmentTurn"); }
+                var finished = snapshot.Entities.Single(e => e.InstanceId == parent.InstanceId);
+                child = snapshot.Entities.Single(e => e.InstanceId == child.InstanceId);
+                Check.Equal("finished", EntityValue(finished, "EventVisit.Status"), "same parent finishes after timeout");
+                Check.Equal("closed", EntityValue(child, "EventCombatVisit.Status"), "child settles once");
+                Check.True(((WireBool)child.Fields.Single(f => f.FieldId.EndsWith(":EventCombatVisit.TimedOut", StringComparison.Ordinal)).Value!).Value, "real timeout published");
+                Check.Equal("event", Public(snapshot, "Player.Room"), "returns to event before explicit close");
+                Check.Equal(10, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Card"), "combat copies cleared, permanent deck retained");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:ChooseMapPoint" or "net:action:base-spire:CloseDevelopmentRewards"), "no ordinary rewards or fake map");
+                Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("EventVisit.Sequence", StringComparison.Ordinal), "hidden stream sequence stays private");
+                Action("CloseDevelopmentEvent"); Check.Equal("none", Public(snapshot, "Player.Room"), "development close returns to its own location");
+                Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentEvent"), "cannot repeat close");
             }
             if (mode.StartsWith("normal-", StringComparison.Ordinal))
             {

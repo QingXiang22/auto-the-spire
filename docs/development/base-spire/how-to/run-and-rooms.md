@@ -8,13 +8,15 @@
 
 先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
 
-SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。SapphireSeed与DenseVegetation可由正常事件池自然进入；DoorsOfLightAndDark、BattlewornDummy返回父事件与完整正常Run仍未接通。
+SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。SapphireSeed与DenseVegetation可由正常事件池自然进入；BattlewornDummy的开发升级档可战后返回同一父事件；第三幕正常可达、其他奖励档和完整正常Run仍未接通。
 
 正常seed `sapphire-normal-79` 选择BoomingConch，沿(0,1)首战自然胜利、跳过奖励后进入(0,2)问号，实际选择SapphireSeed。EAT回复9后选择升级一张永久牌，PLANT自动附魔首张合资格永久牌；空候选直接完成。效果完成后提交 `CloseNormalEvent(visit)`，同一RunVisit与EventVisit只关闭一次，返回真实后继(0,3)。公开的 `RunVisit.Event` 与 `EventVisit.RunVisit` 指向同一访问，不复制永久牌或重放效果。
 
 正常seed `dense-normal-30` 选择BoomingConch，沿(1,1)首战自然胜利、跳过奖励后进入(0,2)问号，实际选择DenseVegetation。回答false执行TRUDGE_ON，先扣8生命再获得独立事件流预先抽取的61～99金币，完成后提交 `CloseNormalEvent(visit)`。回答true执行REST，按营火规则治疗最大生命的30%，随后只能提交 `DenseVegetationFight(visit)`，进入四只Wriggler的真实子战斗。
 
-子访问的公开 `RunVisit.Parent` 指向原访问，原 `EventVisit.ChildVisit` 指向子访问；两者使用同一地图节点，子战斗不增加楼层或普通遭遇游标。胜利后按普通战斗领取或跳过奖励，提交 `CloseDevelopmentRewards` 一次关闭子访问和已完成的父事件，返回真实后继(0,3)。父事件不会再次展示选项。踩踏致死或子战斗死亡均结束父访问，不提供地图后继或奖励；其他事件的战后续接另行实现。
+子访问的公开 `RunVisit.Parent` 指向原访问，原 `EventVisit.ChildVisit` 指向子访问；两者使用同一地图节点，子战斗不增加楼层或普通遭遇游标。胜利后按普通战斗领取或跳过奖励，提交 `CloseDevelopmentRewards` 一次关闭子访问和已完成的父事件，返回真实后继(0,3)。父事件不会再次展示选项。踩踏致死或子战斗死亡均结束父访问，不提供地图后继或奖励；其他正常事件的战后续接另行实现。
+
+开发初态先提交 `Ironclad.Initialize`，再提交 `EnterDevelopmentBattlewornDummy`，从三个真实 `BattlewornOption` 候选选择SETTING_2。入口要求无旧敌人和未清奖励。战斗沿真实150HP BattleFriendV2及三回合时限；普通击杀恢复同一父事件并随机升级最多两张永久牌，超时返回但不升级，死亡不返回。此战不产生普通Monster奖励，父事件完成后用 `CloseDevelopmentEvent(visit)` 返回开发位置。SETTING_1药水与SETTING_3遗物保留候选，选择后明确报未支持，不能继续该会话。该入口不代表第三幕正常可达。
 
 在同一公开 Host 的新会话中，可提交 `StartNormalRun` 运行全解锁、A0、单人 Ironclad 的正常开局首段：
 
