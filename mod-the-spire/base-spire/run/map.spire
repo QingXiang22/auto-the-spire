@@ -238,3 +238,23 @@ procedure PublishSourceMapTypes {
     } }
   }
 }
+procedure PublicSourceMapOrder {
+  pure = true parameters = { node = Ref(MapNode) } result = Int
+  body = {
+    if = { condition = equal(field(node, MapNode.Row), 0) then = { return = { value = 1000 } } }
+    if = { condition = equal(field(node, MapNode.Row), 16) then = { return = { value = 1001 } } }
+    return = { value = add(multiply(field(node, MapNode.Col), 17), field(node, MapNode.Row)) }
+  }
+}
+procedure PublishSourceMapOrder {
+  parameters = { run = Ref(Run) } locals = { index = Int }
+  body = {
+    let = { into = index value = 0 }
+    forEach = { query = sort(where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)), n, pureCall(PublicSourceMapOrder, n)) item = node body = {
+      removeFromCollection = { collection = MapNodes item = node }
+      addToCollection = { collection = MapNodes item = node }
+      set = { target = node field = MapNode.Index value = index }
+      let = { into = index value = add(index, 1) }
+    } }
+  }
+}

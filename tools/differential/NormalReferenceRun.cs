@@ -314,9 +314,11 @@ internal sealed class NormalReferenceRun : IDisposable
                 members = name == "DrawPile" ? Array.Empty<string>() : cards.Select(Card).Order(StringComparer.Ordinal).ToArray(),
                 positions = Array.Empty<object>() };
         }).ToArray());
-        var map = run.Map.GetAllMapPoints().Append(run.Map.StartingMapPoint).Append(run.Map.BossMapPoint).Distinct().ToArray();
+        var map = run.Map.GetAllMapPoints().Append(run.Map.StartingMapPoint).Append(run.Map.BossMapPoint).ToArray();
+        if (map.Distinct().Count() != map.Length || map.Select(n => n.coord).Distinct().Count() != map.Length)
+            throw new NotSupportedException("missing_dimension: ambiguous native map publication");
         string Coord(Sts2Sim.Core.Map.MapPoint point) => point.coord.col + "," + point.coord.row;
-        Put("public.map", map.Select(n => new NormalMapNode(Coord(n), n.PointType.ToString(), run.VisitedMapCoords.Contains(n.coord),
+        Put("public.map", map.Select((n, index) => new NormalMapNode(index, Coord(n), n.PointType.ToString(), run.VisitedMapCoords.Contains(n.coord),
             Phase is "neow" or "map" && run.CurrentMapPoint!.Children.Contains(n) && !run.VisitedMapCoords.Contains(n.coord),
             n.Children.Select(Coord).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
         Put("public.run", new NormalRunView(Phase, run.CurrentActIndex, run.CurrentMapCoord!.Value.row, run.TotalFloor,
@@ -375,6 +377,7 @@ internal sealed class NormalReferenceRun : IDisposable
         }).OrderBy(c => c.Scope, StringComparer.Ordinal).ThenBy(c => c.Origin, StringComparer.Ordinal).ToArray());
         Put("public.ownership", NormalPublicTopology.NativeOwnership());
         Put("public.map_members", map.Select(Coord).Order(StringComparer.Ordinal).ToArray());
+        Put("public.map_sequence", map.Select(Coord).ToArray());
         Put("public.map_parents", map.SelectMany(n => n.parents.Select(parent => Coord(n) + "->" + Coord(parent))).Order(StringComparer.Ordinal).ToArray());
         Put("public.visit_links", new NormalVisitLinks(combat?.Id, combat?.Id ?? 0, Phase == "rewards" ? combat?.Id : null,
             combat is null ? [] : [combat.Id + (combat.GeneratedRewards.Count == 0 ? ":none" : ":reward:" + combat.Id)]));

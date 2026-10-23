@@ -100,7 +100,9 @@ foreach (var seed in seeds.Append("20261021"))
     var cells = points.OrderBy(p => p.coord.row).ThenBy(p => p.coord.col)
         .Select(p => new { row = p.coord.row, col = p.coord.col, type = (int)p.PointType,
             children = p.Children.Sum(c => 1L << c.coord.col), parents = points.Where(candidate => candidate.Children.Contains(p)).Sum(c => 1L << c.coord.col) }).ToArray();
-    maps.Add(new { seed, draws = mapRng.Counter, cells });
+    var publication = map.GetAllMapPoints().Append(map.StartingMapPoint).Append(map.BossMapPoint)
+        .Select((point, index) => new { index, col = point.coord.col, row = point.coord.row }).ToArray();
+    maps.Add(new { seed, draws = mapRng.Counter, cells, publication });
     var gaussianRng = new Rng(run.Rng.Seed, "act_1_map"); var gaussianCalls = new List<object>();
     foreach (var (mean, deviation, min, max) in Enumerable.Repeat(new[] { (7, 1, 6, 7), (12, 1, 10, 14) }, 4).SelectMany(x => x))
     {

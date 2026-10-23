@@ -93,7 +93,7 @@ dotnet run --project tools/differential -c Release -- normal-preflight --output 
 
 固定seed777的Neow选项为WingedBoots／BoomingConch／CursedPearl，地图与生产DSL均按锁定新版来源生成。完成顺序随机与开局来源迁移后，开局事实相同仍只说明前缀符合；后续真实SlimesWeak战斗、奖励和返回虽已由DSL公开路径执行，但逐步双侧适配仍由[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)验收。
 
-三项Neow现均有生产效果，FlexPotion也可从原正常奖励池领取；WingedBoots／CursedPearl正常获得后首战与FlexPotion受控组件的独立期望由`neow-effects-vector.json`提供，base行为组消费，migration核对来源摘要。该向量保留正常与受控范围，不替代此处正常策略逐边界的全公开比较。MapNode.Index／MapNodes发布顺序和DrawBlocked仍须取得参考端对应状态后双侧比较，不能只检查DSL不变量或生成参考值。
+三项Neow现均有生产效果，FlexPotion也可从原正常奖励池领取；WingedBoots／CursedPearl正常获得后首战与FlexPotion受控组件的独立期望由`neow-effects-vector.json`提供，base行为组消费，migration核对来源摘要。该向量保留正常与受控范围，不替代此处正常策略逐边界的全公开比较。MapNode.Index／MapNodes发布顺序按下述实际原生遍历比较；DrawBlocked及其余未映射公开字段仍须取得参考对应状态，不能只检查DSL不变量或生成参考值。
 
 
 两侧确有记录且存在开局首差时返回1。缺参考、缺候选、超时、输入策略不完整、无法完成 DSL 返回，或者开局相同但后续双侧适配未完成时返回3。预检不返回0，`complete` 和 `independent_verified` 均为false；`executed` 只统计实际取得双方开局记录的路径，不代表完成该路径的逐步双侧比较。报告另列访问、永久实例映射、牌区、逐次随机和事件等未验证维度。完整 M01 仍须逐步比较，单侧领取／跳过成功不作为验收。
@@ -161,7 +161,7 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 
 公开结构另比较七个牌堆视图、库存组和 Run 序列的所有者，地图节点序列的成员、地图双向连接、全部公开实体的分类数量，以及当前访问／当前奖励／访问奖励之间的引用。实体句柄按玩家、Run、坐标与原生访问 ID 解释，不能用最终位置修复错误引用。缺失、重复或游离的公开地图节点、访问、奖励、药水、遗物和牌堆视图均拒绝；未知关系类型也进入比较。原生牌区没有独立视图实体，其视图名称和所有者规范化为单人玩家的对应牌区。
 
-地图节点序列在这里仅比较成员，不把原生地图枚举顺序当成 DSL 创建顺序；`unmapped_public_topology` 保留尚未比较的 `MapNodes` 顺序，`unmapped_public_fields` 保留其余字段。完整 `public.snapshot` 仍为必需维度，部分公开结构一致不能通过完整公开投影验收。
+地图节点以`public.map_sequence`比较实际发布顺序，以`public.map`逐节点比较公开Index、坐标及原有字段。base `0.7.0-dsl.64`将旧创建次序改为公开遍历语义：参考端直接读取`ActMap.GetAllMapPoints()`，随后接独立StartingMapPoint、BossMapPoint；Index为这份实际序列的位置。DSL在最终坐标整理后发布同一语义，不修改来源抽样、实例或边，也不按DSL输出重排参考。独立十seed向量保存该原生顺序，正常四路径在每个共同边界继续比较；倒序、错索引、缺字段和缺／重复成员均严格失败。`unmapped_public_fields`保留其余未比较字段；完整`public.snapshot`仍为必需维度，部分公开结构一致不能通过完整公开投影验收。
 
 药水按共同动作序号和各侧原生奖励位置登记创建来源，领取后保留同一实例对应，不按持有槽号或名称重新配对。合法丢弃候选对应参考原生 `PotionCmd.Discard`；自检通过正常战斗取得并领取药水，再回到地图实际丢弃，同时核对候选、资产、事件、随机状态和协议重放。持有药水缺少创建来源时明确报告缺维度。
 

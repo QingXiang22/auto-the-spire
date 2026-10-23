@@ -24,6 +24,8 @@ SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选
 2. 选择已支持的 GoldenPearl、NutritiousOyster、BoomingConch、WingedBoots 或 CursedPearl。其余源选项保留，选择后明确报未支持。
 3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 SlimesWeak 或 FuzzyWurmCrawlerWeak 时，会按真实编队及 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
 
+从base `0.7.0-dsl.64`开始，公开MapNodes按原生网格列优先、同列行序排列，随后是独立起点和Boss；MapNode.Index是该序列中的零基位置。使用坐标匹配节点并提交真实候选，不依赖旧创建索引或句柄排序。发布顺序在裁剪和坐标整理后确定，不改变地图抽样、节点实例或连接。
+
 例如 seed `777` 提供 BoomingConch，首个真实遭遇为 SlimesWeak，出生顺序为 LeafSlimeS／TwigSlimeM／TwigSlimeS，HP 为 14／28／11。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
 
 ## 定义角色、进阶与正常开局

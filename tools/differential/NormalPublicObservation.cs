@@ -3,7 +3,7 @@ using NetTheSpire.Contracts.Dto;
 
 namespace Differential;
 
-internal sealed record NormalMapNode(string Coordinate, string Type, bool Visited, bool Selectable, string[] Children);
+internal sealed record NormalMapNode(long Index, string Coordinate, string Type, bool Visited, bool Selectable, string[] Children);
 internal sealed record NormalRunView(string Phase, long Act, long Floor, long TotalFloor, string CurrentNode, long NodeCount, bool NeowPending, string Profile);
 internal sealed record NormalNeowOption(string Relic, long Position);
 internal sealed record NormalNeowView(string Status, string SelectedRelic, NormalNeowOption[] Options);
@@ -33,7 +33,7 @@ internal static class NormalPublicObservation
     private static readonly HashSet<string> MappedFields = new[]
     {
         ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending CurrentVisit VisitSequence Profile"),
-        ("MapNode", "Col Row Type Visited Selectable"),
+        ("MapNode", "Index Col Row Type Visited Selectable"),
         ("NeowVisit", "Status SelectedRelic"), ("NeowOption", "Position RelicId"),
         ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending PlaySequence HpLossCount LostHpThisTurn ExhaustedCardThisTurn EnemyPhase UsesRunDeck AutoDrawPerTurn RoomUsed PendingForge CombatTimedOut"),
         ("Enemy", "Hp MaxHp Block MoveId MoveIndex Intent Escaped"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick ExpiresAtTurnEnd"),
@@ -47,7 +47,8 @@ internal static class NormalPublicObservation
         .Select(FieldName).Where(f => !MappedFields.Contains(f)).Distinct().Order(StringComparer.Ordinal).ToArray();
     internal static WireValue Field(EntityDto entity, string name)
     {
-        var field = entity.Fields.Single(f => FieldName(f) == entity.KindId.Split(':')[^1] + "." + name);
+        var field = entity.Fields.SingleOrDefault(f => FieldName(f) == entity.KindId.Split(':')[^1] + "." + name)
+            ?? throw new NotSupportedException("missing_dimension: absent public field " + entity.KindId + "." + name);
         return field.State == "known" && field.Value is not null ? field.Value
             : throw new NotSupportedException("missing_dimension: public field " + field.FieldId + " is " + field.State);
     }
@@ -74,7 +75,7 @@ internal static class NormalPublicObservation
         string Coord(EntityDto node) => Number(node, "Col") + "," + Number(node, "Row");
         var run = Entities("Run").Single(); var player = Entities("Player").Single();
         void Put(string path, object value) => values.Add(path, NormalPreflight.Json(value));
-        Put("public.map", nodes.Select(n => new NormalMapNode(Coord(n), Text(n, "Type").Split(':')[^1], Flag(n, "Visited"), Flag(n, "Selectable"),
+        Put("public.map", nodes.Select(n => new NormalMapNode(Number(n, "Index"), Coord(n), Text(n, "Type").Split(':')[^1], Flag(n, "Visited"), Flag(n, "Selectable"),
             snapshot.Relations.Where(r => r.TypeId == "net:relation:base-spire:MapChildren" && r.SourceRef == n.InstanceId)
                 .Select(r => Coord(byHandle[r.TargetRef])).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
         Put("public.run", new NormalRunView(Text(run, "Phase"), Number(run, "ActIndex"), Number(run, "MapFloor"), Number(run, "TotalFloor"),

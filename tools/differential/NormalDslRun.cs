@@ -270,7 +270,7 @@ internal sealed class NormalDslRun : IDisposable
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
                 unmapped_public_actions = unmapped,
                 unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
-                unmapped_public_topology = new[] { "MapNodes sequence order" },
+                unmapped_public_topology = Array.Empty<string>(),
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter

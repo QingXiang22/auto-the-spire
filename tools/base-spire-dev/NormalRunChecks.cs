@@ -240,6 +240,14 @@ internal static partial class PackageChecks
             var nodes = Members(s, "MapNodes");
             var expected = vector.GetProperty("cells").EnumerateArray().ToArray();
             Equal(expected.Length, nodes.Count, "source map node count: " + seed);
+            var publication = vector.GetProperty("publication").EnumerateArray().ToArray();
+            Equal(nodes.Count, publication.Length, "complete independently enumerated native map publication: " + seed);
+            for (var i = 0; i < publication.Length; i++)
+            {
+                Equal(publication[i].GetProperty("index").GetInt64(), IntField(s, nodes[i], "MapNode", "Index"), "native map enumeration index: " + seed);
+                Equal(publication[i].GetProperty("col").GetInt64(), IntField(s, nodes[i], "MapNode", "Col"), "native published column order: " + seed);
+                Equal(publication[i].GetProperty("row").GetInt64(), IntField(s, nodes[i], "MapNode", "Row"), "native published row order: " + seed);
+            }
             var childRelation = s.RuleSet.Relations.Single(r => r.QualifiedId == "base-spire:MapChildren");
             var parentRelation = s.RuleSet.Relations.Single(r => r.QualifiedId == "base-spire:MapParents");
             foreach (var cell in expected)
