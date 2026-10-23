@@ -210,8 +210,8 @@ procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
   locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int room = String(length = 16) }
   body = {
-    if = { condition = not(and(equal(field(run, Run.Phase), "map"), pureCall(CanTravelToNormalMapPoint, owner, run, node))) then = { fail = { message = "Map point is not currently travelable from this Run" } } }
     if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
+    if = { condition = not(and(equal(field(run, Run.Phase), "map"), pureCall(CanTravelToNormalMapPoint, owner, run, node))) then = { fail = { message = "Map point is not currently travelable from this Run" } } }
     call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
     if = { condition = equal(room, "event") then = {
       call = { procedure = PullNextNormalEvent args = { run = run } into = encounter }
