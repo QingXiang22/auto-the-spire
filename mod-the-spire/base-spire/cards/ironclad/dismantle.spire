@@ -54,10 +54,4 @@ procedure DismantleBody {
 }
 dispatchCase DismantleBody { dispatch = ExecuteCardBody key = "base-spire:dismantle" procedure = DismantleBody }
 
-procedure DismantleDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase DismantleDamageValue { dispatch = ReadCardDamage key = "base-spire:dismantle" procedure = DismantleDamageValue }
+use DismantleDamageValue { template = StaticCardDamage args = { definition = "base-spire:dismantle" } }

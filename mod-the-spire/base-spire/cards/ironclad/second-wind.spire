@@ -32,10 +32,4 @@ procedure SecondWindBody {
 }
 dispatchCase SecondWindBody { dispatch = ExecuteCardBody key = "base-spire:second-wind" procedure = SecondWindBody }
 
-procedure SecondWindDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase SecondWindDamageValue { dispatch = ReadCardDamage key = "base-spire:second-wind" procedure = SecondWindDamageValue }
+use SecondWindDamageValue { template = StaticCardDamage args = { definition = "base-spire:second-wind" } }

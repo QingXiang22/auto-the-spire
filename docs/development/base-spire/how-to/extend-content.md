@@ -14,7 +14,7 @@
 
 在来源组新增一个 core/0.3 `.spire`，使用同一 namespace。已有模板足够时只写 `use` 和有界字面量；独有效果可在本文件的模板作用域内声明 procedure／subscription／私有 entity，再展开一次。获得、伤害、抽牌、施加／移除 Power 等操作复用领域入口。如果复用模板必须加 C# 按 ID 分支，先重新审查共享语义。
 
-卡牌还必须在所属文件绑定ExecuteCardBody和ReadCardDamage：正文显式顺序调用效果模板生成的过程，纯提供者声明基础／动态伤害；不能只增加CardDefinition后等待广播。签名见[行为操作参考](../reference/card-behavior.md)。
+卡牌复用[正文模板](../reference/card-behavior.md#定义正文与纯值)：普通攻击、格挡和自身Power分别使用AttackCardBody、BlockCardBody、SelfPowerCardBody，模板同时完成正文与静态伤害绑定。组合牌保留效果的显式调用顺序，基础伤害使用StaticCardDamage；动态公式保留自身pure绑定。不能只增加CardDefinition后等待广播。
 
 独有效果的文件与登记步骤见[新增内容模块](add-content-module.md)，已有内容改动见[修改单个内容](edit-content.md)。可运行的共享模板例子见[共享规则教程](../tutorials/shared-rule.md)。正式原版内容的定义参数应取自匹配版本源，不能直接保留教程数值。
 
@@ -30,7 +30,7 @@ Card／Power的content_ids可运行`dotnet run --project tools/base-spire-dev --
 
 ## 4. 验证与交付
 
-先用开发工具 validate 加载并启动，再运行该机制已承诺的行为检查。只改已有模板数值的内容不重复复制整个引擎测试，但要核对定义参数、资格、源池与实际调用。新行为的差异则必须有相应判别。
+同机制内容整批编辑完成后，一次运行`python tools/ci/check.py base docs`，入口自动构建、加载、执行行为与正常流程检查、核对覆盖并检查文档。改变公开行为或独立比较适配时，在同一次调用追加net或migration组；各组结果统一汇总。只改已有模板数值的内容复用参数化行为用例；新行为的差异必须有相应判别。失败后才按[验证指南](verify-and-debug.md)定向排障，不在每张牌之后重复构建与分段检查。
 
 新增正式遗物时，当前覆盖检查要求 definition 与真实行为报告一一对应；不能把 TheAbacus 的执行结果批量赋给其他遗物。执行结果生成由包外检查维护，开发 helper 观察成功不自动成为原版覆盖报告。[验证指南](verify-and-debug.md)说明命令边界。
 

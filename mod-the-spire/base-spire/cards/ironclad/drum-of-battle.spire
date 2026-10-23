@@ -30,10 +30,4 @@ procedure DrumOfBattleBody {
 }
 dispatchCase DrumOfBattleBody { dispatch = ExecuteCardBody key = "base-spire:drum-of-battle" procedure = DrumOfBattleBody }
 
-procedure DrumOfBattleDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase DrumOfBattleDamageValue { dispatch = ReadCardDamage key = "base-spire:drum-of-battle" procedure = DrumOfBattleDamageValue }
+use DrumOfBattleDamageValue { template = StaticCardDamage args = { definition = "base-spire:drum-of-battle" } }

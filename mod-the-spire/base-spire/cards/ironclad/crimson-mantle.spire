@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/CrimsonMantle.cs; SHA-256 retained in cards/catalog.json.
 use CrimsonMantle { template = CardDefinition args = { sourceEntry = "CRIMSON_MANTLE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:crimson-mantle" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use CrimsonMantleEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:crimson-mantle" power = "base-spire:crimson-mantle-power" stacks = 8 upgradedStacks = 10 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure CrimsonMantleBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = CrimsonMantleEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use CrimsonMantleEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:crimson-mantle" power = "base-spire:crimson-mantle-power" stacks = 8 upgradedStacks = 10 }
 }
-dispatchCase CrimsonMantleBody { dispatch = ExecuteCardBody key = "base-spire:crimson-mantle" procedure = CrimsonMantleBody }
-
-procedure CrimsonMantleDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase CrimsonMantleDamageValue { dispatch = ReadCardDamage key = "base-spire:crimson-mantle" procedure = CrimsonMantleDamageValue }

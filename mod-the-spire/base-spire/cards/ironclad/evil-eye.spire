@@ -59,10 +59,4 @@ procedure EvilEyeBody {
 }
 dispatchCase EvilEyeBody { dispatch = ExecuteCardBody key = "base-spire:evil-eye" procedure = EvilEyeBody }
 
-procedure EvilEyeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase EvilEyeDamageValue { dispatch = ReadCardDamage key = "base-spire:evil-eye" procedure = EvilEyeDamageValue }
+use EvilEyeDamageValue { template = StaticCardDamage args = { definition = "base-spire:evil-eye" } }

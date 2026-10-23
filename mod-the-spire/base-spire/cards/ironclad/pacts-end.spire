@@ -14,10 +14,4 @@ procedure PactsEndBody {
 }
 dispatchCase PactsEndBody { dispatch = ExecuteCardBody key = "base-spire:pacts-end" procedure = PactsEndBody }
 
-procedure PactsEndDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase PactsEndDamageValue { dispatch = ReadCardDamage key = "base-spire:pacts-end" procedure = PactsEndDamageValue }
+use PactsEndDamageValue { template = StaticCardDamage args = { definition = "base-spire:pacts-end" } }

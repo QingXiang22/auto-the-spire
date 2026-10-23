@@ -1,0 +1,62 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Static values share one pure implementation; each definition still has an explicit binding.
+procedure ReadStaticCardDamage {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = { return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) } }
+}
+
+template StaticCardDamage {
+  parameters = { definition = { type = String(length = 64) } }
+  body = {
+    dispatchCase Value { dispatch = ReadCardDamage key = arg(definition) procedure = ReadStaticCardDamage }
+  }
+}
+
+# Complete single-effect bodies reuse the same operations as explicitly composed card bodies.
+# CardDefinition stays at the content's existing name so Obtain/AddToHand action IDs are preserved.
+template AttackCardBody {
+  parameters = { definition = { type = String(length = 64) } hits = { type = Int(min = 1, max = 9) default = 1 } }
+  body = {
+    use Effect { template = AttackEffect args = { definition = arg(definition) hits = arg(hits) } }
+    procedure Execute {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+      body = { call = { procedure = Effect.WhenPlayedOnTarget args = { play = play owner = owner card = card target = target } } }
+    }
+    dispatchCase Execute { dispatch = ExecuteCardBody key = arg(definition) procedure = Execute }
+    use Damage { template = StaticCardDamage args = { definition = arg(definition) } }
+  }
+}
+
+template BlockCardBody {
+  parameters = {
+    definition = { type = String(length = 64) }
+    block = { type = Int(min = 0, max = 999) } upgradedBlock = { type = Int(min = 0, max = 999) }
+  }
+  body = {
+    use Effect { template = BlockEffect args = { definition = arg(definition) block = arg(block) upgradedBlock = arg(upgradedBlock) } }
+    procedure Execute {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+      body = { call = { procedure = Effect.WhenPlayed args = { play = play owner = owner card = card } } }
+    }
+    dispatchCase Execute { dispatch = ExecuteCardBody key = arg(definition) procedure = Execute }
+    use Damage { template = StaticCardDamage args = { definition = arg(definition) } }
+  }
+}
+
+template SelfPowerCardBody {
+  parameters = {
+    definition = { type = String(length = 64) } power = { type = String(length = 64) }
+    stacks = { type = Int(min = 1, max = 999) } upgradedStacks = { type = Int(min = 1, max = 999) }
+  }
+  body = {
+    use Effect { template = ApplySelfPowerEffect args = { definition = arg(definition) power = arg(power) stacks = arg(stacks) upgradedStacks = arg(upgradedStacks) } }
+    procedure Execute {
+      parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+      body = { call = { procedure = Effect.WhenPlayed args = { play = play owner = owner card = card } } }
+    }
+    dispatchCase Execute { dispatch = ExecuteCardBody key = arg(definition) procedure = Execute }
+    use Damage { template = StaticCardDamage args = { definition = arg(definition) } }
+  }
+}

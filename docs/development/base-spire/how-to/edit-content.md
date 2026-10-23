@@ -25,21 +25,19 @@ python -X utf8 .agents/skills/base-spire-development/scripts/locate.py relics --
 | 单个Power的私有计数 | 所属模块内部entity与创建／重置／移除监听 | 不向公共Power或CardPlayRecord增加该内容专属字段 |
 | 多个内容共用操作的不变量 | 对应领域rules与约定 | 明确所有受影响消费者；只改内容文件不能修复共享语义错误 |
 
-例：[Strike](../../../../mod-the-spire/base-spire/cards/ironclad/strike-ironclad.spire)只在CardDefinition中保存6／9两个基础值，StrikeDamage只配置definition和hits。将普通值改为12时，普通实例与实际基础伤害应同步变成12；升级仍取9。正式原版数值应以匹配版本来源为准，实验值留在隔离副本。
+例：[Strike](../../../../mod-the-spire/base-spire/cards/ironclad/strike-ironclad.spire)只在CardDefinition中保存6／9两个基础值，StrikeDamage使用AttackCardBody配置definition和hits，模板完成正文与伤害读取绑定。将普通值改为12时，普通实例与实际基础伤害应同步变成12；升级仍取9。正式原版数值应以匹配版本来源为准，实验值留在隔离副本。
 
 BlockEffect仍有block／upgradedBlock；按实际模板签名修改，不批量删除所有数值参数。每张可执行牌现在必须绑定有序正文与纯ReadCardDamage；CardBaseDamage不再分派DamageScale。费用、附魔及复制入口见[行为操作参考](../reference/card-behavior.md)，不要恢复公共专属字段。
 
 ## 3. 运行对应判别
 
-先构建一次工具；只改DSL后可以复用已构建的工具：
+先完成同一批内容及对应预期的修改，再调用一次批处理检查：
 
 ```powershell
-dotnet build tools/base-spire-dev/BaseSpire.Dev.csproj -v quiet
-dotnet run --no-build --project tools/base-spire-dev -- validate
-dotnet run --no-build --project tools/base-spire-dev -- check --content-model-only
+python tools/ci/check.py base docs
 ```
 
-内容模型组验证已登记定义、非法输入、私有状态清理及卡牌数值来源。SelfFormingClay专属判别可运行：
+入口自动构建并执行加载、行为、正常流程、覆盖与文档检查，最后统一汇总；需要公开或独立比较检查时，在同次调用追加net或migration。无需在每张牌修改后分别调用validate、定向组与覆盖脚本。失败定位到具体机制后，可复用已构建工具定向排障，例如SelfFormingClay：
 
 ```powershell
 dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter CLAY
@@ -47,7 +45,7 @@ dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-on
 
 正式数值改变后，同步更新对应的显式行为预期；不能原样运行旧数值断言再把失败解释为工具不通用。CLAY组中的数值实验自行创建副本，将3改为4并检查实际层数和格挡；它不会把正式遗物改成4。
 
-新增判别应区分本次可能出错的行为，例如普通／升级、层数归零、移除、两个实例或嵌套出牌。定向组不生成全包覆盖报告；批次收尾再按[验证指南](verify-and-debug.md)生成完整验证记录。仅修改内容数值时，无需重写项目级设计或逐次运行全部Engine／公开路径检查。
+新增判别应区分本次可能出错的行为，例如普通／升级、层数归零、移除、两个实例或嵌套出牌。定向组不生成全包覆盖报告；批处理的base组已生成实际覆盖报告，不另行重复执行。仅修改内容数值时，无需重写项目级设计或逐次运行全部Engine／公开路径检查。
 
 ## 4. 核对修改范围
 

@@ -29,10 +29,4 @@ procedure SwordBoomerangBody {
 }
 dispatchCase SwordBoomerangBody { dispatch = ExecuteCardBody key = "base-spire:sword-boomerang" procedure = SwordBoomerangBody }
 
-procedure SwordBoomerangDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase SwordBoomerangDamageValue { dispatch = ReadCardDamage key = "base-spire:sword-boomerang" procedure = SwordBoomerangDamageValue }
+use SwordBoomerangDamageValue { template = StaticCardDamage args = { definition = "base-spire:sword-boomerang" } }

@@ -14,10 +14,4 @@ procedure GiantRockBody {
 }
 dispatchCase GiantRockBody { dispatch = ExecuteCardBody key = "base-spire:giant-rock" procedure = GiantRockBody }
 
-procedure GiantRockDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase GiantRockDamageValue { dispatch = ReadCardDamage key = "base-spire:giant-rock" procedure = GiantRockDamageValue }
+use GiantRockDamageValue { template = StaticCardDamage args = { definition = "base-spire:giant-rock" } }

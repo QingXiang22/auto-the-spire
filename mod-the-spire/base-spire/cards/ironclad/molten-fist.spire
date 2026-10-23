@@ -54,10 +54,4 @@ procedure MoltenFistBody {
 }
 dispatchCase MoltenFistBody { dispatch = ExecuteCardBody key = "base-spire:molten-fist" procedure = MoltenFistBody }
 
-procedure MoltenFistDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase MoltenFistDamageValue { dispatch = ReadCardDamage key = "base-spire:molten-fist" procedure = MoltenFistDamageValue }
+use MoltenFistDamageValue { template = StaticCardDamage args = { definition = "base-spire:molten-fist" } }

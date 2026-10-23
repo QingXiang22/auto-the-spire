@@ -33,10 +33,4 @@ procedure FeedBody {
 }
 dispatchCase FeedBody { dispatch = ExecuteCardBody key = "base-spire:feed" procedure = FeedBody }
 
-procedure FeedDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase FeedDamageValue { dispatch = ReadCardDamage key = "base-spire:feed" procedure = FeedDamageValue }
+use FeedDamageValue { template = StaticCardDamage args = { definition = "base-spire:feed" } }

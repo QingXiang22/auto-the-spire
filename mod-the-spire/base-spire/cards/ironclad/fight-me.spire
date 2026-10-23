@@ -18,10 +18,4 @@ procedure FightMeBody {
 }
 dispatchCase FightMeBody { dispatch = ExecuteCardBody key = "base-spire:fight-me" procedure = FightMeBody }
 
-procedure FightMeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase FightMeDamageValue { dispatch = ReadCardDamage key = "base-spire:fight-me" procedure = FightMeDamageValue }
+use FightMeDamageValue { template = StaticCardDamage args = { definition = "base-spire:fight-me" } }

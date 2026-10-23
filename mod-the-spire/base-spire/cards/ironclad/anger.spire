@@ -44,10 +44,4 @@ procedure AngerBody {
 }
 dispatchCase AngerBody { dispatch = ExecuteCardBody key = "base-spire:anger" procedure = AngerBody }
 
-procedure AngerDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase AngerDamageValue { dispatch = ReadCardDamage key = "base-spire:anger" procedure = AngerDamageValue }
+use AngerDamageValue { template = StaticCardDamage args = { definition = "base-spire:anger" } }

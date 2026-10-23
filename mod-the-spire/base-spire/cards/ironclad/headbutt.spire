@@ -33,10 +33,4 @@ procedure HeadbuttBody {
 }
 dispatchCase HeadbuttBody { dispatch = ExecuteCardBody key = "base-spire:headbutt" procedure = HeadbuttBody }
 
-procedure HeadbuttDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase HeadbuttDamageValue { dispatch = ReadCardDamage key = "base-spire:headbutt" procedure = HeadbuttDamageValue }
+use HeadbuttDamageValue { template = StaticCardDamage args = { definition = "base-spire:headbutt" } }

@@ -14,10 +14,4 @@ procedure CascadeBody {
 }
 dispatchCase CascadeBody { dispatch = ExecuteCardBody key = "base-spire:cascade" procedure = CascadeBody }
 
-procedure CascadeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase CascadeDamageValue { dispatch = ReadCardDamage key = "base-spire:cascade" procedure = CascadeDamageValue }
+use CascadeDamageValue { template = StaticCardDamage args = { definition = "base-spire:cascade" } }

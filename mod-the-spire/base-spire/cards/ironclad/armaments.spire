@@ -35,10 +35,4 @@ procedure ArmamentsBody {
 }
 dispatchCase ArmamentsBody { dispatch = ExecuteCardBody key = "base-spire:armaments" procedure = ArmamentsBody }
 
-procedure ArmamentsDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ArmamentsDamageValue { dispatch = ReadCardDamage key = "base-spire:armaments" procedure = ArmamentsDamageValue }
+use ArmamentsDamageValue { template = StaticCardDamage args = { definition = "base-spire:armaments" } }

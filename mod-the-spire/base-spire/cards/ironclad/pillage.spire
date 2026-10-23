@@ -37,10 +37,4 @@ procedure PillageBody {
 }
 dispatchCase PillageBody { dispatch = ExecuteCardBody key = "base-spire:pillage" procedure = PillageBody }
 
-procedure PillageDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase PillageDamageValue { dispatch = ReadCardDamage key = "base-spire:pillage" procedure = PillageDamageValue }
+use PillageDamageValue { template = StaticCardDamage args = { definition = "base-spire:pillage" } }

@@ -36,10 +36,4 @@ procedure StokeBody {
 }
 dispatchCase StokeBody { dispatch = ExecuteCardBody key = "base-spire:stoke" procedure = StokeBody }
 
-procedure StokeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase StokeDamageValue { dispatch = ReadCardDamage key = "base-spire:stoke" procedure = StokeDamageValue }
+use StokeDamageValue { template = StaticCardDamage args = { definition = "base-spire:stoke" } }

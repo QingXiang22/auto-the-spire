@@ -203,7 +203,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | [EveryTurnsEnergyRelic](../../../../mod-the-spire/base-spire/relics/rules/every-turns-energy.spire) | amount、turns: Int(1..999) | AfterSideTurnStarted：实例 Counter 加一并取模 turns，为 0 时 GainEnergy；Counter 跨战斗保留 | HappyFlower（每 3 回合 1 能量） |
 | [TurnStartDamageAllEnemiesRelic](../../../../mod-the-spire/base-spire/relics/rules/turn-start-damage-all-enemies.spire) | amount: Int(0..999) | AfterPlayerTurnStart：对每个 `Hp > 0` 的 Enemy 调用 DamageEnemy；没有目标时无事发生也不消耗随机 | MercuryHourglass（3 点无加成伤害） |
 
-卡牌内容绑定唯一ExecuteCardBody及ReadCardDamage；正文显式顺序调用效果模板的过程。卡牌内容由**一次** [CardDefinition](../../../../mod-the-spire/base-spire/cards/rules/card-definition.spire)（definition、cost、upgradedCost、targeted、exhausts）加若干[效果模板](../../../../mod-the-spire/base-spire/cards/rules/effects.spire)组成；效果过程保留定义过滤，主效果不再订阅广播。CardDefinition 生成 `AddToHand`（开发授予，直接放进手牌）与升级订阅：
+卡牌内容由**一次** [CardDefinition](../../../../mod-the-spire/base-spire/cards/rules/card-definition.spire)与[正文模板](card-behavior.md#定义正文与纯值)或显式组合正文构成，绑定唯一ExecuteCardBody及ReadCardDamage。普通攻击、格挡和自身Power优先使用正文模板；组合牌按call顺序调用[效果模板](../../../../mod-the-spire/base-spire/cards/rules/effects.spire)，并用StaticCardDamage绑定静态公式，动态公式保留自己的pure绑定。效果过程保留定义过滤，主效果不再订阅广播。CardDefinition 生成 `AddToHand`（开发授予，直接放进手牌）与升级订阅：
 
 | 效果模板 | 参数 | 正文显式调用后的行为 | 当前内容 |
 | --- | --- | --- | --- |

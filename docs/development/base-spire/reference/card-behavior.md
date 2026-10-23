@@ -1,6 +1,6 @@
 # 卡牌行为、攻击与实例操作参考
 
-文档类型：参考（Reference）。适用于 base `0.7.0-dsl.40` 的单玩家开发 scope。来源顺序、状态归属和限制见[迁移约定](../../../design/mod-the-spire/content-behavior-migration.md)；通用语法见[封闭键分派](../../../dsl/core/0.3/authoring-reference.md#封闭键分派)。这些操作不开放正常 Run scope。
+文档类型：参考（Reference）。适用于当前base的单玩家开发scope，版本见[包manifest](../../../../mod-the-spire/base-spire/package.json)。来源顺序、状态归属和限制见[迁移约定](../../../design/mod-the-spire/content-behavior-migration.md)；通用语法见[封闭键分派](../../../dsl/core/0.3/authoring-reference.md#封闭键分派)。这些操作不开放正常 Run scope。
 
 ## 定义正文与纯值
 
@@ -12,6 +12,17 @@
 | `ReadCardDamage(owner: Ref(Player), card: Ref(Card), target: Binding) → Int` | pure；普通、升级与动态基础值由所属模块维护；`CardBaseDamage` 委托本表 |
 
 绑定使用 `dispatchCase Name { dispatch = ExecuteCardBody key = "完整定义ID" procedure = Body }`。值提供者同样绑定 ReadCardDamage。缺绑定在启动登记时失败，重复键在编译时失败；`CardPlayed`／`CardPlayedOnTarget` 不再执行正文。
+
+常见正文使用[共享卡牌模板](../../../../mod-the-spire/base-spire/cards/rules/card-bodies.spire)，不逐卡复制处理过程：
+
+| 模板 | 参数与生成内容 |
+| --- | --- |
+| `AttackCardBody` | definition、hits（默认1）；调用已有AttackEffect，一次攻击命令保留多段语义，绑定正文与静态伤害读取 |
+| `BlockCardBody` | definition、block、upgradedBlock；调用BlockEffect，绑定正文与静态伤害读取 |
+| `SelfPowerCardBody` | definition、power、stacks、upgradedStacks；调用ApplySelfPowerEffect，绑定正文与静态伤害读取 |
+| `StaticCardDamage` | definition；只绑定ReadCardDamage，读取Card.BaseDamage与Card.DamageGrowth之和，供显式组合正文复用 |
+
+这些正文模板与原名称的CardDefinition并列使用，数值仍在定义或效果参数中各自维护。一个定义只选一种正文绑定和一种伤害绑定；前三个模板已包含StaticCardDamage，不再额外展开。动态公式保留所属模块自己的pure过程与case；多个效果继续显式排列call，不以模板登记顺序代替正文顺序。
 
 每次执行的 BeforeCardExecution／AfterCardExecution 载荷均为 owner、card、play。正文之后依次经过 ExecuteCardEnchantment 和 ExecuteCardAffliction，存活时才继续完成通知。CardPlayRecord 保存付款、原始 X、自动标记、目标、结果区、ActionNumber、ParentPlay 和 PlayIndex／PlayCount；内部执行历史不公开。新效果收到 play 后继续显式传给子操作。
 

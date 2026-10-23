@@ -33,10 +33,4 @@ procedure PrimalForceBody {
 }
 dispatchCase PrimalForceBody { dispatch = ExecuteCardBody key = "base-spire:primal-force" procedure = PrimalForceBody }
 
-procedure PrimalForceDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase PrimalForceDamageValue { dispatch = ReadCardDamage key = "base-spire:primal-force" procedure = PrimalForceDamageValue }
+use PrimalForceDamageValue { template = StaticCardDamage args = { definition = "base-spire:primal-force" } }

@@ -8,6 +8,8 @@
 
 base 声明正文分派，参数为 owner／card／target／play。每个已执行卡定义有一个 case，正文显式顺序调用自己的效果过程；移除主效果对 CardPlayed／CardPlayedOnTarget 的广播订阅。外部反应仍使用 Before／After 通知，正文流程不靠这些通知收集效果。
 
+重复正文由卡牌共享模板展开：AttackCardBody、BlockCardBody、SelfPowerCardBody分别绑定单次攻击命令、格挡和自身Power效果，同时绑定静态伤害读取。StaticCardDamage只登记本定义的ReadCardDamage case，所有静态定义共用同一个pure过程。CardDefinition仍使用原实例名，保留开发获得／入手动作的公开ID。组合牌在内容文件保留有序正文，再使用StaticCardDamage；动态伤害牌保留自己的pure绑定。模板不新增运行时效果解释器、状态或通知发布点。
+
 一次出牌序列保留 owner、card、目标、自动标记、实际支付／原始 X、结果区及父执行；每次重复创建独立 CardPlayRecord，记录序列、index／count 与父执行。流程依次执行 Before、开始事实、正文、附着站点、完成事实、After，按玩家存活和源结束边界决定继续。序列付款一次、结果区提交一次；嵌套及 decide 使用同一 Engine 栈恢复，不重付费或重放正文。兼容 CurrentPlay 只做保存／恢复，新正文显式传 play。
 
 未定义正文与定义缺失在支付前失败；定义注册、catalog 来源和池顺序继续分别核对。开发占位牌不冒充正式定义或正常 Run。公开动作名称可保留，内部实体／执行关联隐藏，不让新运行态泄漏到公开内容列表。

@@ -12,14 +12,42 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def run_batch(suites: list[str], configuration: str, output: Path) -> int:
+    output.mkdir(parents=True, exist_ok=True)
+    result = {"suites": [], "configuration": configuration, "exit_code": 0}
+    for suite in suites:
+        suite_output = output / suite
+        command = [sys.executable, "-X", "utf8", str(Path(__file__).resolve()), suite,
+                   "--configuration", configuration, "--output", str(suite_output)]
+        try:
+            code = subprocess.run(command, cwd=ROOT).returncode
+        except OSError as error:
+            print(f"[{suite}] {error}", file=sys.stderr, flush=True)
+            code = 127
+        result["suites"].append({"suite": suite, "exit_code": code, "result": str(suite_output / "result.json")})
+        if code and not result["exit_code"]:
+            result["exit_code"] = code
+    (output / "batch-result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("\nBatch results:", flush=True)
+    for item in result["suites"]:
+        print(f"  {item['suite']}: exit {item['exit_code']}", flush=True)
+    print(f"Report: {output / 'batch-result.json'}", flush=True)
+    return result["exit_code"]
+
+
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=["core", "base", "net", "differential", "migration", "docs"])
+    parser.add_argument("suite", nargs="+", choices=["core", "base", "net", "differential", "migration", "docs"])
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
+    if len(set(args.suite)) != len(args.suite):
+        parser.error("each suite may be selected only once")
+    if len(args.suite) > 1:
+        return run_batch(args.suite, args.configuration, (args.output or ROOT / ".artifacts/ci").resolve())
+    args.suite = args.suite[0]
     output = (args.output or ROOT / ".artifacts/ci" / args.suite).resolve()
     output.mkdir(parents=True, exist_ok=True)
     config = args.configuration

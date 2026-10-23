@@ -14,10 +14,4 @@ procedure HavocBody {
 }
 dispatchCase HavocBody { dispatch = ExecuteCardBody key = "base-spire:havoc" procedure = HavocBody }
 
-procedure HavocDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase HavocDamageValue { dispatch = ReadCardDamage key = "base-spire:havoc" procedure = HavocDamageValue }
+use HavocDamageValue { template = StaticCardDamage args = { definition = "base-spire:havoc" } }

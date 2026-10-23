@@ -21,13 +21,7 @@ procedure HowlFromBeyondBody {
 }
 dispatchCase HowlFromBeyondBody { dispatch = ExecuteCardBody key = "base-spire:howl-from-beyond" procedure = HowlFromBeyondBody }
 
-procedure HowlFromBeyondDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase HowlFromBeyondDamageValue { dispatch = ReadCardDamage key = "base-spire:howl-from-beyond" procedure = HowlFromBeyondDamageValue }
+use HowlFromBeyondDamageValue { template = StaticCardDamage args = { definition = "base-spire:howl-from-beyond" } }
 
 procedure HowlFromBeyondAutoExhausted {
   parameters = { owner = Ref(Player) }

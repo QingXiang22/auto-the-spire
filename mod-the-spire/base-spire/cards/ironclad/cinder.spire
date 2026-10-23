@@ -31,10 +31,4 @@ procedure CinderBody {
 }
 dispatchCase CinderBody { dispatch = ExecuteCardBody key = "base-spire:cinder" procedure = CinderBody }
 
-procedure CinderDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase CinderDamageValue { dispatch = ReadCardDamage key = "base-spire:cinder" procedure = CinderDamageValue }
+use CinderDamageValue { template = StaticCardDamage args = { definition = "base-spire:cinder" } }

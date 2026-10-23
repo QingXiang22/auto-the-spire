@@ -30,10 +30,4 @@ procedure DominateBody {
 }
 dispatchCase DominateBody { dispatch = ExecuteCardBody key = "base-spire:dominate" procedure = DominateBody }
 
-procedure DominateDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase DominateDamageValue { dispatch = ReadCardDamage key = "base-spire:dominate" procedure = DominateDamageValue }
+use DominateDamageValue { template = StaticCardDamage args = { definition = "base-spire:dominate" } }

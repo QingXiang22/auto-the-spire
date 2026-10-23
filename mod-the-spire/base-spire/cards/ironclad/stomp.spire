@@ -14,13 +14,7 @@ procedure StompBody {
 }
 dispatchCase StompBody { dispatch = ExecuteCardBody key = "base-spire:stomp" procedure = StompBody }
 
-procedure StompDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase StompDamageValue { dispatch = ReadCardDamage key = "base-spire:stomp" procedure = StompDamageValue }
+use StompDamageValue { template = StaticCardDamage args = { definition = "base-spire:stomp" } }
 
 procedure StompAttackDiscounts {
   parameters = { owner = Ref(Player) card = Ref(Card) }

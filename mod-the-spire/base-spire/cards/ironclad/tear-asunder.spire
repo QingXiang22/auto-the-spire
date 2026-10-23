@@ -14,10 +14,4 @@ procedure TearAsunderBody {
 }
 dispatchCase TearAsunderBody { dispatch = ExecuteCardBody key = "base-spire:tear-asunder" procedure = TearAsunderBody }
 
-procedure TearAsunderDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase TearAsunderDamageValue { dispatch = ReadCardDamage key = "base-spire:tear-asunder" procedure = TearAsunderDamageValue }
+use TearAsunderDamageValue { template = StaticCardDamage args = { definition = "base-spire:tear-asunder" } }

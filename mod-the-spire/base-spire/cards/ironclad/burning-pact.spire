@@ -16,10 +16,4 @@ procedure BurningPactBody {
 }
 dispatchCase BurningPactBody { dispatch = ExecuteCardBody key = "base-spire:burning-pact" procedure = BurningPactBody }
 
-procedure BurningPactDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BurningPactDamageValue { dispatch = ReadCardDamage key = "base-spire:burning-pact" procedure = BurningPactDamageValue }
+use BurningPactDamageValue { template = StaticCardDamage args = { definition = "base-spire:burning-pact" } }

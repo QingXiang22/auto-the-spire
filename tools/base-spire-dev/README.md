@@ -2,6 +2,8 @@
 
 本工具在仓库根目录加载 Engine 的纯文本包，不调用旧 C# 玩法。需要根 `global.json` 指定的 .NET SDK。省略 manifest 时加载 `mod-the-spire/base-spire/package.json`。
 
+内容开发默认整批修改完成后调用一次`python tools/ci/check.py base docs`，需要公开／独立比较检查时追加net／migration组，入口自动执行构建、加载、行为、正常流程与覆盖检查并汇总。下面的单项命令用于查看包或失败排障，无需每张牌逐条调用。重复正文使用[卡牌模板](../../docs/development/base-spire/reference/card-behavior.md#定义正文与纯值)，组合正文保留显式顺序。
+
 ```powershell
 dotnet run --project tools/base-spire-dev -- validate
 dotnet run --project tools/base-spire-dev -- describe

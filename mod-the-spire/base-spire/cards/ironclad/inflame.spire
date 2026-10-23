@@ -8,23 +8,6 @@ use Inflame {
   args = { sourceEntry = "INFLAME" rarity = "uncommon" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "power" strikeTag = false definition = "base-spire:inflame" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = true }
 }
 use InflameStrength {
-  template = ApplySelfPowerEffect
+  template = SelfPowerCardBody
   args = { definition = "base-spire:inflame" power = "base-spire:strength-power" stacks = 2 upgradedStacks = 3 }
 }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure InflameBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = InflameStrength.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
-}
-dispatchCase InflameBody { dispatch = ExecuteCardBody key = "base-spire:inflame" procedure = InflameBody }
-
-procedure InflameDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase InflameDamageValue { dispatch = ReadCardDamage key = "base-spire:inflame" procedure = InflameDamageValue }

@@ -7,23 +7,6 @@ use Strike {
   args = { sourceEntry = "STRIKE_IRONCLAD" rarity = "basic" inIroncladPool = true generatable = false baseDamage = 6 upgradedBaseDamage = 9 kind = "attack" strikeTag = true definition = "base-spire:strike-ironclad" cost = 1 upgradedCost = 1 targeted = true exhausts = false leavesPlay = false }
 }
 use StrikeDamage {
-  template = AttackEffect
+  template = AttackCardBody
   args = { definition = "base-spire:strike-ironclad" hits = 1 }
 }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure StrikeBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = StrikeDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
-  }
-}
-dispatchCase StrikeBody { dispatch = ExecuteCardBody key = "base-spire:strike-ironclad" procedure = StrikeBody }
-
-procedure StrikeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase StrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:strike-ironclad" procedure = StrikeDamageValue }

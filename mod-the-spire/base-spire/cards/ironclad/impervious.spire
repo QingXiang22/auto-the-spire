@@ -7,23 +7,6 @@ use Impervious {
   args = { sourceEntry = "IMPERVIOUS" rarity = "rare" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:impervious" cost = 2 upgradedCost = 2 targeted = false exhausts = true leavesPlay = false }
 }
 use ImperviousBlock {
-  template = BlockEffect
+  template = BlockCardBody
   args = { definition = "base-spire:impervious" block = 30 upgradedBlock = 40 }
 }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure ImperviousBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = ImperviousBlock.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
-}
-dispatchCase ImperviousBody { dispatch = ExecuteCardBody key = "base-spire:impervious" procedure = ImperviousBody }
-
-procedure ImperviousDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ImperviousDamageValue { dispatch = ReadCardDamage key = "base-spire:impervious" procedure = ImperviousDamageValue }

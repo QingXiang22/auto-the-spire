@@ -38,10 +38,4 @@ procedure ThrashBody {
 }
 dispatchCase ThrashBody { dispatch = ExecuteCardBody key = "base-spire:thrash" procedure = ThrashBody }
 
-procedure ThrashDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ThrashDamageValue { dispatch = ReadCardDamage key = "base-spire:thrash" procedure = ThrashDamageValue }
+use ThrashDamageValue { template = StaticCardDamage args = { definition = "base-spire:thrash" } }

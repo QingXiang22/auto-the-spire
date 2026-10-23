@@ -55,10 +55,4 @@ procedure FlameBarrierBody {
 }
 dispatchCase FlameBarrierBody { dispatch = ExecuteCardBody key = "base-spire:flame-barrier" procedure = FlameBarrierBody }
 
-procedure FlameBarrierDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase FlameBarrierDamageValue { dispatch = ReadCardDamage key = "base-spire:flame-barrier" procedure = FlameBarrierDamageValue }
+use FlameBarrierDamageValue { template = StaticCardDamage args = { definition = "base-spire:flame-barrier" } }

@@ -26,10 +26,4 @@ procedure ShockwaveBody {
 }
 dispatchCase ShockwaveBody { dispatch = ExecuteCardBody key = "base-spire:shockwave" procedure = ShockwaveBody }
 
-procedure ShockwaveDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ShockwaveDamageValue { dispatch = ReadCardDamage key = "base-spire:shockwave" procedure = ShockwaveDamageValue }
+use ShockwaveDamageValue { template = StaticCardDamage args = { definition = "base-spire:shockwave" } }

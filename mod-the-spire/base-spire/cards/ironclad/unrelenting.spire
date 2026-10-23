@@ -16,10 +16,4 @@ procedure UnrelentingBody {
 }
 dispatchCase UnrelentingBody { dispatch = ExecuteCardBody key = "base-spire:unrelenting" procedure = UnrelentingBody }
 
-procedure UnrelentingDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase UnrelentingDamageValue { dispatch = ReadCardDamage key = "base-spire:unrelenting" procedure = UnrelentingDamageValue }
+use UnrelentingDamageValue { template = StaticCardDamage args = { definition = "base-spire:unrelenting" } }
