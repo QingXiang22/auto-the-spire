@@ -34,6 +34,8 @@ Strike 保持原受控语义：10 张起始牌组、手牌仅一张普通 Strike
 
 正常SapphireSeed由独立原生生成器使用新增seed `sapphire-normal-79` 执行真实Neow、首战胜利和奖励跳过，再从(0,1)进入(0,2)问号。两个分支分别导出：EAT回复9后选升级（生成器沿参考默认策略选最后一张合资格牌），PLANT自动附魔首张合资格牌。base正常组比较完整永久牌实例顺序／定义／升级／附魔、资源、事件游标和问号随机状态，再通过正常关闭恢复源后继；net真实stdio沿公开候选策略验证同一事件生命周期与请求重放，不把不同出牌策略的生命结果混为同一轨迹。该固定正常路径不认证完整Run或M01；原四路径和完整public.snapshot／random.trace／events.trace要求保留。
 
+正常DenseVegetation使用独立来源seed `dense-normal-30`，从(1,1)真实首战胜利、奖励跳过后到(0,2)问号，运行TRUDGE_ON及REST后的四Wriggler子战斗。固定向量覆盖普通奖励跳过／领取、父子访问关闭及(0,3)真实后继，保存各边界完整Run／玩家／事件RNG和资源；base正常组逐项比较，net真实stdio另验公开路径。来源生成器与摘要入口见[rng-oracle](../rng-oracle/README.md)。该结果只覆盖DenseVegetation结束父事件，不证明BattlewornDummy返回或完整Run比较完成。
+
 运行`dotnet run --project tools/differential -c Release -- unknown-room-compare --output .artifacts/differential/unknown-rooms`。两个seed各执行普通、禁Shop、双倍未选增长、仅Event和禁Event五种受控输入；每种实际抽取18次，第12次后恢复base赔率并保留随机游标。逐边界比较实际房型、四类赔率的binary32位型、实际NextFloat(0,1)结果、游标与四字状态。负Elite不进轮盘，黑名单不重新归一化；资格和增长hook只用于组件输入，不代表对应遗物已迁移。
 
 migration要求十种场景全部成功，`normal_run_verified`保持false。另由base和真实stdio检查新增正常seed `unknown-normal-354`：选择GoldenPearl，用起始牌组赢下首战、关闭奖励，然后从(3,1)进入真实后继(3,2)。首次问号自然判为Monster并消费下一场FuzzyWurmCrawlerWeak，原地图与访问MapType保留Unknown；固定原生向量核对生命、编队、赔率和完整问号流状态。向量由[锁定来源生成器](../rng-oracle/README.md)独立导出；原seed777和全部必测集保留。组件比较与正常前缀均不替代事件、后续房型或完整Run验收。

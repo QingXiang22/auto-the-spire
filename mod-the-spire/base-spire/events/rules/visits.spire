@@ -10,6 +10,7 @@ entity EventVisit { owner = Owner fields = {
   Sequence = { type = Int default = 0 visibility = Hidden }
   ReturnRoom = { type = String(length = 16) default = "none" visibility = Hidden }
   RunVisit = { type = Ref(RunVisit) optional = true }
+  ChildVisit = { type = Ref(RunVisit) optional = true }
 } }
 dispatch ExecuteEventVisit { parameters = { owner = Ref(Player) visit = Ref(EventVisit) } }
 event EventVisitEntered { payload = { owner = Ref(Player) visit = Ref(EventVisit) } }
@@ -72,16 +73,15 @@ procedure CanCloseNormalEvent {
     let = { into = run value = field(owner, Player.CurrentRun) }
     let = { into = visit value = field(eventVisit, EventVisit.RunVisit) }
     if = { condition = or(isNone(run), isNone(visit)) then = { return = { value = false } } }
+    if = { condition = lessOrEqual(field(owner, Player.Hp), 0) then = { return = { value = false } } }
     return = { value = and(equal(field(owner, Player.Owner), field(eventVisit, EventVisit.Owner)), and(equal(field(owner, Player.Room), "event"), and(not(field(owner, Player.CombatActive)), and(equal(field(run, Run.Phase), "event"), and(equal(field(run, Run.CurrentVisit), visit), and(equal(field(visit, RunVisit.Run), run), and(equal(field(visit, RunVisit.Event), eventVisit), and(equal(field(eventVisit, EventVisit.Status), "finished"), and(equal(field(visit, RunVisit.Phase), "finished"), not(field(visit, RunVisit.Committed))))))))))) }
   }
 }
-action CloseNormalEvent {
-  role = player parameters = { visit = Ref(EventVisit) }
-  candidates = { parameter = visit query = where(type(EventVisit), v, pureCall(CanCloseNormalEvent, first(type(Player)), v)) }
-  requires = pureCall(CanCloseNormalEvent, first(type(Player)), visit)
-  locals = { owner = Binding run = Binding normalVisit = Binding }
+procedure CloseNormalEvent {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) }
+  locals = { run = Binding normalVisit = Binding }
   body = {
-    let = { into = owner value = first(type(Player)) }
+    if = { condition = not(pureCall(CanCloseNormalEvent, owner, visit)) then = { fail = { message = "Normal event does not own a finished current visit" } } }
     let = { into = run value = field(owner, Player.CurrentRun) }
     let = { into = normalVisit value = field(visit, EventVisit.RunVisit) }
     set = { target = visit field = EventVisit.Status value = "closed" }
@@ -93,6 +93,12 @@ action CloseNormalEvent {
     set = { target = owner field = Player.Room value = "map" }
     emit = { event = EventVisitClosed payload = { owner = owner visit = visit } }
   }
+}
+action CloseNormalEvent {
+  role = player parameters = { visit = Ref(EventVisit) }
+  candidates = { parameter = visit query = where(type(EventVisit), v, pureCall(CanCloseNormalEvent, first(type(Player)), v)) }
+  requires = pureCall(CanCloseNormalEvent, first(type(Player)), visit)
+  body = { call = { procedure = CloseNormalEvent args = { owner = first(type(Player)) visit = visit } } }
 }
 action CloseDevelopmentEvent {
   role = player parameters = { visit = Ref(EventVisit) }

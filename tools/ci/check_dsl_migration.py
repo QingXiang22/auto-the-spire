@@ -52,7 +52,7 @@ def main() -> int:
         fixtures = ROOT / "tools/base-spire-dev/fixtures"
         current_vectors = ["source-rng-vectors", "normal-reward-vectors", "enemy-move-vectors", "pickup-upgrade-vectors",
                            "normal-opening-vectors", "act-one-map-vectors", "map-gaussian-vectors", "normal-combat-vectors",
-                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata", "normal-unknown-room-vector", "normal-event-selection-vector", "normal-sapphire-seed-vector"]
+                           "slimes-vectors", "reference-pool-metadata", "ironclad-source-metadata", "normal-unknown-room-vector", "normal-event-selection-vector", "normal-sapphire-seed-vector", "normal-dense-vegetation-vector"]
         hashes = {}
         for name in current_vectors:
             vector = json.loads((fixtures / (name + ".json")).read_text(encoding="utf-8"))

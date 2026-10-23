@@ -1,0 +1,50 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure DenseVegetationVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { gold = Int rest = Bool }
+  body = {
+    seedStream64 = { stream = pureCall(EventVisitStream, visit) seed = pureCall(SourceContentSeed, 0, "DENSE_VEGETATION", 0) }
+    sampleInt = { stream = pureCall(EventVisitStream, visit) min = 61 max = 100 into = gold }
+    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Dense Vegetation: rest (true) or trudge on (false)" into = rest }
+    if = { condition = rest then = {
+      call = { procedure = HealWithSource args = { owner = owner source = "base-spire:dense-vegetation" amount = foldEvent(ModifyRestHeal, divide(multiply(field(owner, Player.MaxHp), 30), 100), owner) } }
+      set = { target = visit field = EventVisit.Page value = "rest" }
+    } else = {
+      call = { procedure = LosePlayerHp args = { owner = owner amount = 8 } }
+      call = { procedure = GainGoldWithSource args = { owner = owner amount = gold source = "base-spire:dense-vegetation" } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "trudge" } }
+      if = { condition = lessOrEqual(field(owner, Player.Hp), 0) then = { call = { procedure = DefeatNormalEvent args = { owner = owner visit = visit } } } }
+    } }
+  }
+}
+dispatchCase DenseVegetationVisit { dispatch = ExecuteEventVisit key = "base-spire:dense-vegetation" procedure = DenseVegetationVisit }
+
+procedure CanFightDenseVegetation {
+  pure = true parameters = { owner = Ref(Player) visit = Ref(EventVisit) } result = Bool
+  locals = { run = Binding normalVisit = Binding } body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = normalVisit value = field(visit, EventVisit.RunVisit) }
+    if = { condition = or(isNone(run), isNone(normalVisit)) then = { return = { value = false } } }
+    if = { condition = not(and(equal(field(visit, EventVisit.Owner), field(owner, Player.Owner)), equal(field(visit, EventVisit.DefinitionId), "base-spire:dense-vegetation"))) then = { return = { value = false } } }
+    if = { condition = not(and(equal(field(visit, EventVisit.Status), "active"), and(equal(field(visit, EventVisit.Page), "rest"), isNone(field(visit, EventVisit.ChildVisit))))) then = { return = { value = false } } }
+    if = { condition = not(and(equal(field(run, Run.CurrentVisit), normalVisit), and(equal(field(normalVisit, RunVisit.Run), run), equal(field(normalVisit, RunVisit.Event), visit)))) then = { return = { value = false } } }
+    return = { value = and(not(field(normalVisit, RunVisit.Committed)), and(equal(field(run, Run.Phase), "event"), and(equal(field(owner, Player.Room), "event"), and(greater(field(owner, Player.Hp), 0), not(field(owner, Player.CombatActive)))))) }
+  }
+}
+action DenseVegetationFight {
+  role = player parameters = { visit = Ref(EventVisit) }
+  candidates = { parameter = visit query = where(type(EventVisit), v, pureCall(CanFightDenseVegetation, first(type(Player)), v)) }
+  requires = pureCall(CanFightDenseVegetation, first(type(Player)), visit)
+  locals = { owner = Binding child = Binding target = Binding } body = {
+    let = { into = owner value = first(type(Player)) }
+    call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "fight" } }
+    call = { procedure = BeginNormalEventCombat args = { owner = owner visit = visit encounter = "base-spire:dense-vegetation" } into = child }
+    call = { procedure = Wriggler.Create args = { slot = "wriggler1" startStunned = false } into = target }
+    call = { procedure = Wriggler.Create args = { slot = "wriggler2" startStunned = false } into = target }
+    call = { procedure = Wriggler.Create args = { slot = "wriggler3" startStunned = false } into = target }
+    call = { procedure = Wriggler.Create args = { slot = "wriggler4" startStunned = false } into = target }
+    call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
+    call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
+  }
+}

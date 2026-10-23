@@ -44,4 +44,6 @@ dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
 
 `normal-sapphire-seed-vector.json`独立执行seed `sapphire-normal-79` 的真实Neow、首战自然胜利、奖励跳过和SapphireSeed两个分支，保存完整永久牌顺序／定义／升级／附魔、生命／金币、进入楼层、选择游标、地图后继与完整问号流。EAT使用参考默认选牌策略的最后一个合资格实例，PLANT按来源自动附魔首个实例；两侧效果均不消耗额外随机数。base正常回归消费该文件，migration核对锁定来源摘要。
 
+`normal-dense-vegetation-vector.json`独立执行seed `dense-normal-30` 的真实Neow、首战胜利及奖励跳过，自然进入DenseVegetation，再走TRUDGE_ON、REST后子战斗奖励跳过／领取三条路径。向量保存进入、选择、四Wriggler出生、胜利奖励和关闭边界的资源及完整Run／玩家／事件RNG四字状态与游标，同时保留永久牌组和真实后继。TRUDGE_ON范围为61～99，源NextInt上界100不含；战后生命包含BurningBlood的胜利治疗。base正常组及行为报告消费该文件，migration核对来源摘要；stdio沿公开策略验证访问生命周期，出牌策略差异不用于断言同一战后生命。
+
 这里验证组件与指定正常路径；完整M01公开状态、实例、事件与逐次随机比较仍由[差异工具](../differential/README.md)验收。不得换seed、缩池、补抽、重键参考或把缺消费者当作通过。

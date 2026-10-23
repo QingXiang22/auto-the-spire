@@ -38,9 +38,11 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 
 问号房型另有两seed共10种受控组件场景，由migration逐边界核对18次抽样与赔率重置；`normal_run_verified`保持false。base正常组和net真实stdio新增seed `unknown-normal-354`，从Neow、首战胜利及奖励关闭进入真实问号Monster，保留原始地图类型并核对实际遭遇。base还比较源生命、访问、四类赔率与完整问号流状态；完整事件和Run不在该前缀验收范围。
 
-首幕事件选择增加两seed共42种受控双侧场景，migration核对完整31项资格、每种41个边界、最终事件标识／游标／访问历史及无随机消费。base正常组与net真实stdio保留新增seed `event-normal-11` 的真实胜利后问号Event路径，核对源选择与未接效果的明确失败；不会创建空访问。正常事件效果、父子战斗与后幕仍未验收。
+首幕事件选择增加两seed共42种受控双侧场景，migration核对完整31项资格、每种41个边界、最终事件标识／游标／访问历史及无随机消费。base正常组与net真实stdio保留新增seed `event-normal-11` 的真实胜利后问号Event路径，核对源选择与未接效果的明确失败；不会创建空访问。此选择器比较不替代各事件效果、父子战斗或后幕验收。
 
-正常事件访问另保留seed `sapphire-normal-79`：真实Neow、首战胜利及奖励跳过后自然进入SapphireSeed，分别执行EAT与PLANT并返回真实地图后继。base核对独立原生向量的资源、永久实例／升级／附魔、完整问号流、访问双向引用及重复关闭拒绝；net真实stdio验证公开访问关系、请求重放与地图返回。PLANT按锁定来源自动选择首张合资格永久牌；其他未接事件、父子战斗与后幕仍明确未支持。
+正常事件访问另保留seed `sapphire-normal-79`：真实Neow、首战胜利及奖励跳过后自然进入SapphireSeed，分别执行EAT与PLANT并返回真实地图后继。base核对独立原生向量的资源、永久实例／升级／附魔、完整问号流、访问双向引用及重复关闭拒绝；net真实stdio验证公开访问关系、请求重放与地图返回。PLANT按锁定来源自动选择首张合资格永久牌。
+
+seed `dense-normal-30` 自然进入DenseVegetation，TRUDGE_ON及REST后四Wriggler真实子战斗分别覆盖奖励领取／跳过和地图返回。base行为报告与正常组比较独立原生向量的资源、永久牌组、父子访问及完整Run／玩家／事件随机流；另检查受控踩踏致死、真实子战斗死亡、旧决策、重复FIGHT和错误关联原子拒绝。net真实stdio验证三条正常公开路径及请求重放；migration核对固定向量来源摘要。BattlewornDummy战后返回父事件、其他未接事件、后幕和完整Run仍未支持。
 
 ## 原完整差异测试与覆盖缺口
 

@@ -57,7 +57,7 @@ entity RunVisit {
   fields = {
     Run = { type = Ref(Run) visibility = Hidden }
     StableId = { type = Int(min = 1) }
-    Parent = { type = Ref(RunVisit) optional = true visibility = Hidden }
+    Parent = { type = Ref(RunVisit) optional = true }
     Node = { type = Ref(MapNode) }
     MapType = { type = Enum(MapPointType) }
     RoomType = { type = String(length = 24) default = "none" }
@@ -178,7 +178,7 @@ procedure EnterNormalMapPoint {
     call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
     if = { condition = equal(room, "event") then = {
       call = { procedure = PullNextNormalEvent args = { run = run } into = encounter }
-      if = { condition = not(equal(encounter, "base-spire:sapphire-seed")) then = { fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" } } }
+      if = { condition = not(or(equal(encounter, "base-spire:sapphire-seed"), equal(encounter, "base-spire:dense-vegetation"))) then = { fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" } } }
       call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
       call = { procedure = EnterNormalEvent args = { owner = owner run = run visit = visit definition = encounter } }
       return = {}
@@ -232,6 +232,9 @@ procedure SettleNormalCombat {
       set = { target = visit field = RunVisit.Status value = "defeated" }
       set = { target = visit field = RunVisit.Phase value = "defeated" }
       set = { target = run field = Run.Phase value = "defeated" }
+      if = { condition = not(isNone(field(visit, RunVisit.Parent))) then = {
+        call = { procedure = DefeatNormalEvent args = { owner = owner visit = field(field(visit, RunVisit.Parent), RunVisit.Event) } }
+      } }
       return = {}
     } }
     call = { procedure = OfferNormalCombatRewards args = { owner = owner visitId = field(visit, RunVisit.StableId) source = field(visit, RunVisit.RoomType) actIndex = field(run, Run.ActIndex) ascension = 0 } }
@@ -264,6 +267,10 @@ procedure CloseNormalVisit {
     set = { target = visit field = RunVisit.Status value = "closed" }
     forEach = { query = type(Enemy) item = enemy body = {
       call = { procedure = RemoveCombatEnemy args = { target = enemy } }
+    } }
+    if = { condition = not(isNone(field(visit, RunVisit.Parent))) then = {
+      call = { procedure = CloseNormalEventCombat args = { owner = owner visit = visit } }
+      return = {}
     } }
     forEach = { query = relation(MapChildren, field(run, Run.CurrentNode)) item = child body = {
       set = { target = child field = MapNode.Selectable value = not(field(child, MapNode.Visited)) }

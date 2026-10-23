@@ -55,12 +55,27 @@ procedure ClaimDevelopmentGoldReward {
     set = { target = owner field = Player.GoldRewardAmount value = 0 }
   }
 }
+procedure CanCloseDevelopmentRewards {
+  pure = true parameters = { owner = Ref(Player) } result = Bool
+  locals = { run = Binding visit = Binding rewards = Binding } body = {
+    if = { condition = not(equal(field(owner, Player.Room), "rewards")) then = { return = { value = false } } }
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = isNone(run) then = { return = { value = true } } }
+    let = { into = visit value = field(run, Run.CurrentVisit) }
+    let = { into = rewards value = field(owner, Player.CurrentRewardSet) }
+    if = { condition = or(isNone(visit), isNone(rewards)) then = { return = { value = false } } }
+    if = { condition = not(isNone(field(visit, RunVisit.Parent))) then = {
+      return = { value = pureCall(CanCloseNormalEventCombatRewards, owner, visit, rewards) }
+    } }
+    return = { value = true }
+  }
+}
 procedure CloseDevelopmentRewards {
   parameters = { owner = Ref(Player) }
   locals = { rewards = Binding }
   body = {
     if = {
-      condition = not(equal(field(owner, Player.Room), "rewards"))
+      condition = not(pureCall(CanCloseDevelopmentRewards, owner))
       then = { fail = { message = "No development rewards are open" } }
     }
     let = { into = rewards value = field(owner, Player.CurrentRewardSet) }
@@ -85,6 +100,6 @@ action ClaimDevelopmentGoldReward {
 }
 action CloseDevelopmentRewards {
   role = player
-  requires = equal(field(first(type(Player)), Player.Room), "rewards")
+  requires = pureCall(CanCloseDevelopmentRewards, first(type(Player)))
   body = { call = { procedure = CloseDevelopmentRewards args = { owner = first(type(Player)) } } }
 }
