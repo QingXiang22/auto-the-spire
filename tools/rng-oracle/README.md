@@ -50,3 +50,5 @@ dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
 `battleworn-continuation-vector.json`独立执行seed `777`／`dummy-continuation` 的真实BattlewornDummy升级档。受控初态为Ironclad起始牌组、50HP及直接EventRoom；击杀路径在第三回合将真实目标设为5HP并生成Feed，超时路径真实结束三个敌方回合。向量保存原父事件恢复前后资源、永久升级索引及niche／shuffle／rewards／事件流完整四字状态与游标；base行为检查消费，migration核对来源摘要。该组件场景不证明第三幕正常可达，stdio另以开发公开入口验证真实超时和父子关系。
 
 这里验证组件与指定正常路径；完整M01公开状态、实例、事件与逐次随机比较仍由[差异工具](../differential/README.md)验收。不得换seed、缩池、补抽、重键参考或把缺消费者当作通过。
+
+`draw-permission-vector.json` 从锁定原生实现导出受控 NoDraw 的实际查询、阻止者与手牌变化：效果抽牌被拒且不耗洗牌随机，回合手牌允许，移除与到期恢复。base 行为组消费此向量，migration 校验锁定来源摘要；它不代替正常 Run 的逐边界比较。

@@ -11,7 +11,7 @@ template DrawUntilNonAttackEffect {
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = drawing value = true }
 repeat = { count = 10 body = { if = { condition = drawing then = {
-  call = { procedure = DrawOne args = { owner = owner } }
+  call = { procedure = DrawOne args = { owner = owner fromHandDraw = false } }
   let = { into = drawn value = field(owner, Player.LastDrawn) }
   if = { condition = isNone(drawn) then = { let = { into = drawing value = false } } else = {
     if = { condition = not(equal(field(drawn, Card.Kind), "attack")) then = { let = { into = drawing value = false } } }

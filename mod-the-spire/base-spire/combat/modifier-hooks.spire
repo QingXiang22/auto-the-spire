@@ -72,7 +72,7 @@ event ShouldGainEnergy {
 }
 
 event ShouldDraw {
-  payload = { value = Bool owner = Ref(Player) }
+  payload = { value = Bool owner = Ref(Player) fromHandDraw = Bool }
 }
 
 event ShouldExhaustSkill {

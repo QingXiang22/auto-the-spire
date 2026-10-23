@@ -93,7 +93,7 @@ dotnet run --project tools/differential -c Release -- normal-preflight --output 
 
 固定seed777的Neow选项为WingedBoots／BoomingConch／CursedPearl，地图与生产DSL均按锁定新版来源生成。完成顺序随机与开局来源迁移后，开局事实相同仍只说明前缀符合；后续真实SlimesWeak战斗、奖励和返回虽已由DSL公开路径执行，但逐步双侧适配仍由[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)验收。
 
-三项Neow现均有生产效果，FlexPotion也可从原正常奖励池领取；WingedBoots／CursedPearl正常获得后首战与FlexPotion受控组件的独立期望由`neow-effects-vector.json`提供，base行为组消费，migration核对来源摘要。该向量保留正常与受控范围，不替代此处正常策略逐边界的全公开比较。MapNode.Index／MapNodes发布顺序按下述实际原生遍历比较；DrawBlocked及其余未映射公开字段仍须取得参考对应状态，不能只检查DSL不变量或生成参考值。
+三项Neow现均有生产效果，FlexPotion也可从原正常奖励池领取；WingedBoots／CursedPearl正常获得后首战与FlexPotion受控组件的独立期望由`neow-effects-vector.json`提供，base行为组消费，migration核对来源摘要。该向量保留正常与受控范围，不替代此处正常策略逐边界的全公开比较。MapNode.Index／MapNodes发布顺序按下述实际原生遍历比较；其余未映射公开字段仍须取得参考对应状态，不能只检查DSL不变量或生成参考值。
 
 
 两侧确有记录且存在开局首差时返回1。缺参考、缺候选、超时、输入策略不完整、无法完成 DSL 返回，或者开局相同但后续双侧适配未完成时返回3。预检不返回0，`complete` 和 `independent_verified` 均为false；`executed` 只统计实际取得双方开局记录的路径，不代表完成该路径的逐步双侧比较。报告另列访问、永久实例映射、牌区、逐次随机和事件等未验证维度。完整 M01 仍须逐步比较，单侧领取／跳过成功不作为验收。
@@ -172,3 +172,5 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 遇到已比较维度的首差便停止共同前缀，保存动作、双方边界和首差。`missing_dimensions` 另列尚缺的完整公开投影、逐次随机候选与规范化和适用事件。原始公开协议、Engine 事件与随机诊断、参考原生战斗观察及初始化以来的原始随机结果保留供定位；这些原始记录不等于完成跨后端比较。报告为非零，`complete`／`independent_verified` 保持 false，不能认证 M01 或推断尚未比较的维度已通过。
 
 自检逐项删除双方同一个必需字段、注入各维度首差、检查零执行、缺动作／终点、缺协议检查结果及目标脚本缺决策，并核对开启与关闭诊断时真实 Host 和原生参考的已比较状态及随机状态不变；Host 另核对完整公开快照。迁移组同时执行四条正常路径和缺参考构建；原11份 suite、必测ID和严格失败语义保留。
+
+公开 `Player.DrawBlocked` 比较实际效果抽牌资格：DSL 发布同一 `CanDrawCards(owner,false)` 查询的否决结果，参考战斗使用真实 `Hook.ShouldDraw`。首战创建前没有原生战斗态，参考直接枚举 `RunState.IterateHookListeners(null)` 并调用各原生 `ShouldDraw(player,false)`，不构造战斗态或填常量。正常四路径逐边界比较 `public.draw_blocked`；受控 `draw-permission-vector.json` 另用真实 NoDraw、效果抽牌、回合手牌及到期验证正负状态，不冒充正常路径已覆盖该 Power。

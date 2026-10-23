@@ -20,7 +20,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
-| [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；CombatTimedOut: Bool=false；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
+| [Player](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；Hp／MaxHp: Int=80；Energy: Int=0；MaxEnergy: Int=3；TurnNumber: Int=0；TurnOpen: Bool=false；Block: Int(0..999)=0；DrawBlocked: Bool=false（效果抽牌查询被否决的发布值）；CombatActive: Bool=false；CombatOutcome: String(16)=`none`；CombatTimedOut: Bool=false；LostHpThisTurn／ExhaustedCardThisTurn: Bool=false | 开发玩家；CombatOutcome 是开发态结果（none／victory／defeat），不是协议终局；TurnOpen 是开发态回合门；两个 ThisTurn 标志在回合开始时复位，逐次 CardPlays 和 HpLossCount 补充所需历史 |
 | [Card](../../../../mod-the-spire/base-spire/cards/schema.spire) | Owner: Participant；Label: String(64)；DefinitionId: String(64)=`base-spire:development-card`；Cost: Int(0..9)=0；Upgraded: Bool=false；CanUpgrade: Bool=false；PermanentSource: 隐藏可选 Ref(Card)；Targeted: Bool=false；Exhausts: Bool=false；LeavesPlay: Bool=false | Targeted 是原版 TargetType 的开发替身；Exhausts 是 CardKeyword.Exhaust 的开发替身；LeavesPlay 是 CardType.Power 的开发替身（结算后离开战斗）；Rarity 字段保存源稀有度，奖励资格与战斗生成资格分别维护 |
 | [Enemy](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner: Participant；DefinitionId: String(64)；Hp／MaxHp: Int=0；Block: Int(0..999)=0；MoveIndex: Int(0..9)=0；Intent: String(32)=`none`；Escaped: Bool=false；隐藏SpawnOrder: Int | 开发敌人：MoveIndex 是它自己轮转里的招位（含义由敌人模板拥有），Intent 是公开的下一个意图名（不含伤害数值）；死亡和逃离各有独立状态；招式图、编队及支持范围见敌人指南 |
 | [Power](../../../../mod-the-spire/base-spire/combat/schema.spire) | Owner；DefinitionId: String(64)；隐藏Definition: Ref(PowerBlueprint)；HolderPlayer／HolderEnemy: 可选Ref；Stacks: Int(-999..999)=0；SkipTick／ExpiresAtTurnEnd: Bool=false | 两个持有者引用恰好设置一个；所属模块拥有行为与私有状态，已删除Kind及专属计数槽。准确语义见[Power参考](powers.md) |
@@ -113,7 +113,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗／回合、手牌、共享资格与能量；付款、进入InPlay、执行唯一正文；全部重复完成后提交捕获的结果区 |
 | PlayAttackCard | owner、card | 同上，但把敌人解析为第一个 `Hp > 0` 的开发目标后调用唯一正文；无目标不是合法候选 |
 | UpgradeCard | card=Ref(Card) | 只允许 CanUpgrade=true 且未升级的实例；置 `Upgraded=true` 并发 CardUpgraded，定义层费用变化由 CardDefinition 应用；只改当前实例 |
-| [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(0..9) | 逐张调用 DrawOne，保留重洗、手牌上限、禁止抽牌与 AfterCardDrawn 的既有顺序；不是一次抽多张的新算法 |
+| [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(0..999) | 效果抽牌，fromHandDraw=false；逐张调用 DrawOne，保留重洗、手牌上限、禁止抽牌与 AfterCardDrawn 的既有顺序；不是一次抽多张的新算法 |
 | PlayCardFromHand／PlayAttackFromHand／UpgradeCardInHand | 参数 card=Ref(Card)，候选来自 Hand | 公开 action：分别打出无目标牌、打出有目标牌与升级手牌；PlayCardFromHand 只提供 `Targeted=false` 的候选，PlayAttackFromHand 只提供 `Targeted=true` 的候选 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) 结算收尾 | — | 效果结算后按 `Exhausts`→ExhaustPile、`LeavesPlay`→RemovedFromCombat、否则 DiscardPile 分流；只有 Exhausts 分支发 CardExhausted |
 | [EnterDevelopmentRestSite](../../../../mod-the-spire/base-spire/rooms/rest-site.spire) | owner=Ref(Player) | 公开 action：把房间置为 `rest-site` 并清掉已使用标记；不是地图节点入口 |
@@ -145,12 +145,15 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | RemoveRelic | instance=Ref(Relic) | 必须在 Relics；先移出，再发移除事件，再销毁；不持有时报错 |
 | RemoveOwnedRelic | instance=Ref(Relic)，公开候选来自 Relics | action，调用 RemoveRelic；参数必须来自实际候选，不能伪造实例字符串 |
 | [ReshuffleDiscard](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player) | DrawPile 空且 DiscardPile 非空才按源条目／升级排序后转移、shuffle、emit AfterShuffle；与初始洗牌共用原版流 base-spire:run:shuffle |
-| DrawOne | owner=Ref(Player) | 未禁止抽牌且手牌不足 10 时先尝试重洗，再取首张，成功移动后 emit AfterCardDrawn |
+| CanDrawCards | owner=Ref(Player)、fromHandDraw=Bool → Bool | 纯 ShouldDraw 查询；非活跃战斗跳过战斗监听，不含容量或牌堆条件，不改状态或随机 |
+| RefreshDrawPermissions | 无 | 战斗活跃状态或 Power 生命周期改变资格后同步所有 Player.DrawBlocked；新增其他资格状态的消费者须在状态改变后调用 |
+| DrawCardsWithSource | owner=Ref(Player)、count=Int(0..999)、fromHandDraw=Bool | 逐张抽牌并明确来源；回合手牌为 true，效果抽牌为 false |
+| DrawOne | owner=Ref(Player)、fromHandDraw=Bool | 实际来源的 CanDrawCards 查询允许且手牌不足 10 时先尝试重洗，再取首张，成功移动后 emit AfterCardDrawn |
 | Draw／DiscardHand | 无参数，role=player | Draw 使用 first(type(Player))；DiscardHand 将全局 Hand 移到 DiscardPile；均是开发动作 |
 | [BeginDevelopmentCombat](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | action 与同名过程：inactive 时先置 Block=0、TurnNumber=0、Energy=0、TurnOpen=false、CombatActive=true，再 emit BeforeCombatStart；已活跃时报 "Development combat is already active"。不是正常战斗初始化 |
 | EndDevelopmentCombat | owner=Ref(Player) | action 与同名过程：只在活跃时允许，置 CombatActive=false，不发开始事件也不发胜利；不活跃时报 "Development combat is not active" |
 | BeginDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门关闭时允许；自增TurnNumber并发BeforePlayerTurnStart，非首回合按保留资格清格挡，随后每回合均发AfterBlockCleared，发BeforeTurnResources，ResetTurnEnergy并发AfterEnergyReset，再打开回合门和发AfterSideTurnStarted；AutoDrawPerTurn大于0时DrawDevelopmentTurnHand，最后发AfterPlayerTurnStart与Late |
-| DrawDevelopmentTurnHand | owner=Ref(Player) | 以 AutoDrawPerTurn 为基础，首回合逐张把 Innate 移到顶部，抽取数至少为 Innate 数且至多十张；调用 DrawCards，继承满手／禁止抽牌和真实抽牌事件。不实现附魔底部排序或完整手牌修正 |
+| DrawDevelopmentTurnHand | owner=Ref(Player) | 以 AutoDrawPerTurn 为基础，首回合逐张把 Innate 移到顶部，抽取数至少为 Innate 数且至多十张；调用 DrawCardsWithSource(fromHandDraw=true)，继承满手／来源资格和真实抽牌事件，NoDraw 不阻止回合手牌。不实现附魔底部排序或完整手牌修正 |
 | EndDevelopmentTurn | owner=Ref(Player) | action与同名过程：活跃且回合门打开时允许；先回合末自动出牌，再BeforePlayerTurnEnd；仍活跃才弃牌、发AfterTurnEnded并处理能力及敌方阶段。末杀后停止后续阶段，不逐张派发弃牌钩子 |
 | [AddDevelopmentTarget](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | owner=Ref(Player) | 过程与公开 action：在 owner 作用域创建一个 Hp／MaxHp 为 40、DefinitionId 为 `base-spire:development-target` 的 Enemy；不是遭遇或原版怪物生成 |
 | [SetupDevelopmentDraw](../../../../mod-the-spire/base-spire/run/setup-dev.spire) | 无参数；根 start 调用一次 | 创建一个 Player 和弃牌堆三张开发 Card；不提供正常 Run 初始化 |

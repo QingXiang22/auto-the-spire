@@ -45,7 +45,7 @@ CardPlays／CardLibrary 和内部引用不作为完整公开历史或牌区发�
 
 ## 资源、能力与时间点
 
-`combat/` 拥有 HP、格挡、能量、Power 与战斗状态。`IncreaseMaxHp(owner, amount)` 同时增加上限并按同量治疗，Feed、Strawberry 和 FruitJuice 复用；`GainEnergy` 尊重 NoEnergyGain，`DrawOne` 尊重 NoDraw／容量，`RecordPlayerHpLoss` 对每次正的未阻挡损伤分别记录并通知。
+`combat/` 拥有 HP、格挡、能量、Power 与战斗状态。`IncreaseMaxHp(owner, amount)` 同时增加上限并按同量治疗，Feed、Strawberry 和 FruitJuice 复用；`GainEnergy` 尊重 NoEnergyGain，`DrawOne(owner,fromHandDraw)` 按来源征询 NoDraw 并检查容量；`DrawCards(owner,count)` 用于效果抽牌，回合手牌调用 `DrawCardsWithSource(owner,count,true)`，`RecordPlayerHpLoss` 对每次正的未阻挡损伤分别记录并通知。
 
 `GainBlock` 处理 Dexterity／Frail／Unmovable，`GainUnpoweredBlock` 绕过这些修正；正的格挡事件供 Juggernaut 消费。攻击通过独立Attack和DamageResult归集结果；现有伤害修正使用四位整数中间量至最终取整，尚不能宣称与原版decimal完全等价。兼容`DamageEnemyPowered`／`DamagePlayerPowered`共用此链，前者接 Strength／Weak／Vulnerable／Cruelty，后者接敌方修正和 Colossus。HpLossCount 是事件次数，不是失血总量。
 

@@ -77,6 +77,7 @@ procedure CheckCombatVictory {
             set = { target = owner field = Player.CombatOutcome value = "victory" }
             set = { target = owner field = Player.TurnOpen value = false }
             set = { target = owner field = Player.CombatActive value = false }
+            call = { procedure = RefreshDrawPermissions }
             emit = { event = CombatEnded payload = { owner = owner victory = true } }
             call = { procedure = ClearNormalCombat args = { owner = owner } }
             emit = { event = CombatVictoryEarly payload = { owner = owner victory = true } }
@@ -100,6 +101,7 @@ procedure CheckCombatDefeat {
             set = { target = owner field = Player.CombatOutcome value = "defeat" }
             set = { target = owner field = Player.TurnOpen value = false }
             set = { target = owner field = Player.CombatActive value = false }
+            call = { procedure = RefreshDrawPermissions }
             set = { target = owner field = Player.Room value = "none" }
             set = { target = owner field = Player.RoomUsed value = false }
             emit = { event = CombatEnded payload = { owner = owner victory = false } }
@@ -137,6 +139,7 @@ procedure BeginDevelopmentCombat {
     set = { target = owner field = Player.Room value = "battle" }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.CombatActive value = true }
+    call = { procedure = RefreshDrawPermissions }
     if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
       shuffle = { collection = DrawPile stream = "base-spire:run:shuffle" }
     } }
@@ -156,6 +159,7 @@ procedure EndDevelopmentCombat {
       then = { fail = { message = "Development combat is not active" } }
     }
     set = { target = owner field = Player.CombatActive value = false }
+    call = { procedure = RefreshDrawPermissions }
     set = { target = owner field = Player.TurnOpen value = false }
     set = { target = owner field = Player.Room value = "none" }
     set = { target = owner field = Player.RoomUsed value = false }

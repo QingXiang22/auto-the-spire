@@ -20,6 +20,7 @@ internal static class BaseDslPathChecks
         yield return ("ENV-T05 real stdio normal Neow, source map and first real encounter", () => StdioTrajectory("normal-opening"));
         foreach (var relic in new[] { "boots", "pearl" })
             yield return ("NEOW-EFFECT real stdio normal acquisition, permanent deck and first combat: " + relic, () => StdioTrajectory("normal-neow-" + relic));
+        yield return ("DRAW-PERMISSION real stdio BattleTrance blocks effect draw, publishes expiry and cleanup", () => StdioTrajectory("draw-permission"));
         yield return ("NEOW-EFFECT real stdio development FlexPotion stacks, real attack, expiry and replay", () => StdioTrajectory("flex-potion"));
         foreach (var path in new[] { "claim", "skip" })
             yield return ("ENV-T05 real stdio normal combat rewards and map return: " + path, () => StdioTrajectory("normal-" + path));
@@ -205,7 +206,7 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" or "normal-neow-boots" or "normal-neow-pearl" or "flex-potion" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" or "normal-neow-boots" or "normal-neow-pearl" or "flex-potion" or "draw-permission" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -622,6 +623,32 @@ internal static class BaseDslPathChecks
                 Check.False(WireCanonical.Text(snapshot.ToWire()).Contains("EventVisit.Sequence", StringComparison.Ordinal), "hidden stream sequence stays private");
                 Action("CloseDevelopmentEvent"); Check.Equal("none", Public(snapshot, "Player.Room"), "development close returns to its own location");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentEvent"), "cannot repeat close");
+            }
+            if (mode == "draw-permission")
+            {
+                void Action(string name, string? content = null)
+                {
+                    var candidates = snapshot.LegalActions.Where(a => a.ActionType == "net:action:base-spire:" + name);
+                    var candidate = content is null ? candidates.Single() : candidates.First(a => a.Fields.Any(f => f.Value is WireString v
+                        && snapshot.Entities.Single(e => e.InstanceId == v.Value).ContentId == content));
+                    var id = "pipe-draw-permission-" + ++stepNumber;
+                    var request = Request(id, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)), ("candidate_id", WireValue.Str(candidate.CandidateId)));
+                    var result = Send(request);
+                    Check.Equal(WireCanonical.Text(result.ToWire()), WireCanonical.Text(Send(request).ToWire()), "draw step replay returns cached response");
+                    snapshot = Snapshot(Send(Request(id + "-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                }
+                Action("Ironclad.Initialize"); Action("AddDevelopmentTarget"); Action("BeginDevelopmentCombat"); Action("BeginDevelopmentTurn");
+                Check.False(PublicBool(snapshot, "Player.DrawBlocked"), "ordinary opening allows effects");
+                Action("BattleTrance.AddToHand"); Action("PlayCardFromHand", "base-spire:battle-trance");
+                Check.Equal(8, BaseDslPileChecks.Pile(snapshot, "Hand").VisibleMembers.Count, "BattleTrance draws three before applying NoDraw");
+                Check.True(PublicBool(snapshot, "Player.DrawBlocked"), "real NoDraw veto is public");
+                Action("Draw"); Check.Equal(8, BaseDslPileChecks.Pile(snapshot, "Hand").VisibleMembers.Count, "effect draw is actually blocked");
+                Action("EndDevelopmentTurn"); Check.False(PublicBool(snapshot, "Player.DrawBlocked"), "NoDraw expires at player-side end");
+                Action("BeginDevelopmentTurn"); Check.Equal(5, BaseDslPileChecks.Pile(snapshot, "Hand").VisibleMembers.Count, "next actual turn draws five");
+                Action("BattleTrance.AddToHand"); Action("PlayCardFromHand", "base-spire:battle-trance");
+                Check.True(PublicBool(snapshot, "Player.DrawBlocked"), "second application publishes its veto");
+                Action("EndDevelopmentCombat"); Check.False(PublicBool(snapshot, "Player.DrawBlocked"), "combat cleanup clears published veto");
             }
             if (mode.StartsWith("normal-neow-", StringComparison.Ordinal) || mode == "flex-potion")
             {

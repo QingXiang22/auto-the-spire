@@ -14,6 +14,7 @@ entity Player {
     # Development turn gate. Vanilla tracks PlayerTurnPhase instead; that lifecycle is not migrated.
     TurnOpen = { type = Bool default = false }
     Block = { type = Int(min = 0, max = 999) default = 0 }
+    # Published result of the effect-draw permission query; not an independent switch.
     DrawBlocked = { type = Bool default = false }
     CombatActive = { type = Bool default = false }
     # Development combat outcome: none while it runs, then victory or defeat. Run settlement, rewards and

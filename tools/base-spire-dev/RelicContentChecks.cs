@@ -149,12 +149,12 @@ internal static partial class PackageChecks
         {
             foreach (var mode in new[] { "normal", "innate", "removed", "melted", "blocked" })
             {
-                var s = Start(package); Submit(s, "Ironclad.Initialize"); Submit(s, "BagOfPreparation.Obtain"); var relic = Relic(s, "base-spire:bag-of-preparation");
+                using var copy = DrawPermissionCopy(package); var s = Start(copy.Load()); Submit(s, "Ironclad.Initialize"); Submit(s, "BagOfPreparation.Obtain"); var relic = Relic(s, "base-spire:bag-of-preparation");
                 if (mode == "removed") Submit(s, "RemoveOwnedRelic", relic);
                 if (mode == "melted") Set(s, relic, "Relic", "IsMelted", Value.Of(true));
                 if (mode == "innate") foreach (var c in Members(s, "RunDeck").Take(8)) Set(s, c, "Card", "Innate", Value.Of(true));
-                Submit(s, "BeginDevelopmentCombat"); if (mode == "blocked") Set(s, Player(s), "Player", "DrawBlocked", Value.Of(true));
-                Submit(s, "BeginDevelopmentTurn"); Equal(mode == "normal" ? 7 : mode == "innate" ? 8 : mode == "blocked" ? 0 : 5, Hand(s).Count, mode + " initial hand");
+                Submit(s, "BeginDevelopmentCombat"); if (mode == "blocked") Submit(s, "BlockEffectDraw");
+                Submit(s, "BeginDevelopmentTurn"); Equal(mode == "normal" || mode == "blocked" ? 7 : mode == "innate" ? 8 : 5, Hand(s).Count, mode + " initial hand");
                 if (mode == "normal") { IcNextTurn(s); Equal(5, Hand(s).Count, "turn two uses base five"); }
             }
         });

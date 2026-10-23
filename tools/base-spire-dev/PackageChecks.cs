@@ -29,8 +29,8 @@ internal static partial class PackageChecks
             var s = Start(package); Submit(s, "TheAbacus.Obtain");
             Set(s, Members(s, "Relics").Single(), "Relic", "IsMelted", Value.Of(true));
             Submit(s, "Draw"); Equal(0L, Block(s), "melted instance is inactive");
-            var blocked = Start(package); Submit(blocked, "TheAbacus.Obtain");
-            Set(blocked, Player(blocked), "Player", "DrawBlocked", Value.Of(true));
+            using var blockedCopy = DrawPermissionCopy(package);
+            var blocked = Start(blockedCopy.Load()); Submit(blocked, "TheAbacus.Obtain"); Submit(blocked, "BeginDevelopmentCombat"); Submit(blocked, "BlockEffectDraw");
             var before = blocked.Random.DrawCount("base-spire:run:shuffle"); Submit(blocked, "Draw");
             Equal(before, blocked.Random.DrawCount("base-spire:run:shuffle"), "blocked draw consumes no shuffle random samples");
             Equal(3, Members(blocked, "DiscardPile").Count, "blocked draw leaves discard intact"); Equal(0L, Block(blocked), "no block");
@@ -162,6 +162,7 @@ internal static partial class PackageChecks
         Merge(RunPickupUpgradeChecks(package, Case), witnesses);
         Merge(RunSelfFormingClayChecks(package, Case), witnesses);
         RunEffectListenerChecks(package, Case);
+        RunDrawPermissionChecks(package, Case);
         RunContentModelChecks(package, Case);
         RunCardBehaviorChecks(package, Case);
         Merge(RunAttackBehaviorChecks(package, Case), witnesses);

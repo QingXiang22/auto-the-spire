@@ -6,6 +6,7 @@ procedure RemovePower {
  body = {
   if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = {
    removeFromCollection = { collection = Powers item = power }
+   call = { procedure = RefreshDrawPermissions }
    emit = { event = PowerRemoved payload = { power = power } }
    destroy = { target = power }
   } }
@@ -43,6 +44,7 @@ procedure ModifyPowerAmountWithSource {
  parameters = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding }
  body = {
   set = { target = power field = Power.Stacks value = add(field(power, Power.Stacks), delta) }
+  call = { procedure = RefreshDrawPermissions }
   if = { condition = not(equal(delta, 0)) then = { emit = { event = PowerAmountChanged payload = { power = power delta = delta applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } } } }
   if = { condition = or(equal(field(power, Power.Stacks), 0), and(not(field(field(power, Power.Definition), PowerBlueprint.AllowNegative)), less(field(power, Power.Stacks), 0))) then = {
    call = { procedure = RemovePower args = { power = power } }
@@ -83,6 +85,7 @@ procedure ApplyPowerWithSource {
     set = { target = power field = Power.Owner value = field(player, Player.Owner) }
     set = { target = power field = Power.SkipTick value = field(entry, PowerBlueprint.Debuff) }
    } }
+   call = { procedure = RefreshDrawPermissions }
    emit = { event = PowerCreated payload = { power = power } }
   } else = {
    let = { into = delta value = actual }
