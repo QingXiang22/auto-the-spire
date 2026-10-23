@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.60",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.61",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -293,7 +293,8 @@
       "field_name": "DefinitionId",
       "content_ids": [
         "base-spire:sapphire-seed",
-        "base-spire:doors-of-light-and-dark"
+        "base-spire:doors-of-light-and-dark",
+        "base-spire:dense-vegetation"
       ]
     }
   },

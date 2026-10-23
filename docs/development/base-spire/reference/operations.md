@@ -6,6 +6,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 有序正文、显式执行、攻击结果、费用、牌区、附魔及事件的新增接口见[行为操作参考](card-behavior.md)。
 
+正常事件子战斗使用[共享访问操作](../../../../mod-the-spire/base-spire/events/rules/combat-visits.spire)：`BeginNormalEventCombat(owner: Ref(Player), visit: Ref(EventVisit), encounter: String(64)) → Ref(RunVisit)` 只接受已完成的当前事件，创建同节点子访问；`CloseNormalEventCombat(owner, visit: Ref(RunVisit))` 在普通奖励关闭后结束已完成父事件；`DefeatNormalEvent(owner, visit: Ref(EventVisit))` 标记父事件与Run失败。`CanCloseNormalEventCombatRewards(owner, visit: Ref(RunVisit), rewards: Ref(CombatRewardSet)) → Bool` 是pure关联守卫，奖励清理前验证当前子访问、父事件和存活状态。真实消费者是DenseVegetation；BattlewornDummy的父事件续接不使用此结束语义。
+
 ## 状态与事件
 
 拾取时随机升级永久牌使用[`UpgradeRandomPermanentCards(owner,kind,amount)`](../../../../mod-the-spire/base-spire/cards/rules/random-permanent-upgrade.spire)：owner为Ref(Player)，kind只接受attack／skill／all，amount为Int(1..999)。操作拥有资格筛选、SourceCardSortKey、完整Niche洗牌、原实例UpgradeCard及临时状态清理；不改RunDeck顺序，不触发战斗洗牌事件。调用方法和边界见[遗物指南](../how-to/powers-relics-potions.md)。

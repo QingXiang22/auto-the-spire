@@ -61,7 +61,7 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 
 `HealWithSource(owner,amount,source)` 和 `GainGoldWithSource(owner,amount,source)` 提供来源及实际变化通知；GainGold 先经过 ModifyGoldGained／AfterModifyingGoldGained，再提交正收益。`LoseGold(owner,amount,reason,source)` 夹至实际余额，reason 为 spent／lost／stolen；需要余额足额的购买使用 `SpendGold(owner,amount,source)`。
 
-SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`EnterDevelopmentDoorsOfLightAndDark` 进入开发访问。叶模块只定义选项与效果，共享 EventVisit 保存页面、状态、返回位置与访问序号；`CloseDevelopmentEvent(visit)` 关闭。SapphireSeed另由正常地图的完整源事件选择器进入，关联同一RunVisit，并使用 `CloseNormalEvent(visit)` 返回地图；开发关闭入口不能推进正常Run。子战斗恢复仍未接通。
+SapphireSeed 与 DoorsOfLightAndDark 通过 `EnterDevelopmentSapphireSeed`／`EnterDevelopmentDoorsOfLightAndDark` 进入开发访问。叶模块只定义选项与效果，共享 EventVisit 保存页面、状态、返回位置与访问序号；`CloseDevelopmentEvent(visit)` 关闭。SapphireSeed与DenseVegetation另由正常地图的完整源事件选择器进入，关联同一RunVisit；完成非战斗分支后使用 `CloseNormalEvent(visit)` 返回地图，开发关闭入口不能推进正常Run。DenseVegetation的 `DenseVegetationFight(visit)` 仅在REST后合法，建立公开Parent／ChildVisit关联的四Wriggler子战斗；普通奖励关闭后结束原父事件，其他事件的战后续接仍未接通。
 
 ## 生成候选与选择的行为要求
 

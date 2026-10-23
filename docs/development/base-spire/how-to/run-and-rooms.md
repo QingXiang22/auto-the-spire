@@ -2,15 +2,19 @@
 
 规则目标为[锁定 sts2-sim](../../../../reference/README.md) 的原生顺序路径。随机派生、开局来源和首幕地图已迁移到该目标；以下入口描述当前 DSL 可执行行为，完整后续双侧比较仍未完成。
 
-首幕正常事件选择由 `PullNextNormalEvent` 使用完整31项源队列，资格读取当前资源、永久牌组与进入目标前的累计楼层。Neow进入推进同一游标一次；第一轮优先未访问且合资格的自然事件，耗尽后允许已访问或临时不合资格者，永久禁止自然出现项仍排除。选择不抽随机数，pure `ModifyNextNormalEvent` 修正后才记录最终标识。后幕及未审计profile明确失败；当前仅SapphireSeed已接入正常事件效果，其余选中事件仍具名失败且不创建空访问。
+首幕正常事件选择由 `PullNextNormalEvent` 使用完整31项源队列，资格读取当前资源、永久牌组与进入目标前的累计楼层。Neow进入推进同一游标一次；第一轮优先未访问且合资格的自然事件，耗尽后允许已访问或临时不合资格者，永久禁止自然出现项仍排除。选择不抽随机数，pure `ModifyNextNormalEvent` 修正后才记录最终标识。后幕及未审计profile明确失败；SapphireSeed与DenseVegetation已接入正常事件效果，其余选中事件仍具名失败且不创建空访问。
 
 文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
 先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
 
-SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。SapphireSeed另可由正常事件池自然进入；DoorsOfLightAndDark、子战斗返回与完整正常Run仍未接通。
+SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。SapphireSeed与DenseVegetation可由正常事件池自然进入；DoorsOfLightAndDark、BattlewornDummy返回父事件与完整正常Run仍未接通。
 
 正常seed `sapphire-normal-79` 选择BoomingConch，沿(0,1)首战自然胜利、跳过奖励后进入(0,2)问号，实际选择SapphireSeed。EAT回复9后选择升级一张永久牌，PLANT自动附魔首张合资格永久牌；空候选直接完成。效果完成后提交 `CloseNormalEvent(visit)`，同一RunVisit与EventVisit只关闭一次，返回真实后继(0,3)。公开的 `RunVisit.Event` 与 `EventVisit.RunVisit` 指向同一访问，不复制永久牌或重放效果。
+
+正常seed `dense-normal-30` 选择BoomingConch，沿(1,1)首战自然胜利、跳过奖励后进入(0,2)问号，实际选择DenseVegetation。回答false执行TRUDGE_ON，先扣8生命再获得独立事件流预先抽取的61～99金币，完成后提交 `CloseNormalEvent(visit)`。回答true执行REST，按营火规则治疗最大生命的30%，随后只能提交 `DenseVegetationFight(visit)`，进入四只Wriggler的真实子战斗。
+
+子访问的公开 `RunVisit.Parent` 指向原访问，原 `EventVisit.ChildVisit` 指向子访问；两者使用同一地图节点，子战斗不增加楼层或普通遭遇游标。胜利后按普通战斗领取或跳过奖励，提交 `CloseDevelopmentRewards` 一次关闭子访问和已完成的父事件，返回真实后继(0,3)。父事件不会再次展示选项。踩踏致死或子战斗死亡均结束父访问，不提供地图后继或奖励；其他事件的战后续接另行实现。
 
 在同一公开 Host 的新会话中，可提交 `StartNormalRun` 运行全解锁、A0、单人 Ironclad 的正常开局首段：
 
@@ -40,7 +44,7 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 正常`ChooseMapPoint`已接入问号房型抽取。每次合法Unknown选择只从`unknown_map_point`流抽一次；四类隐藏赔率按Monster／Elite／Treasure／Shop顺序更新。前一实际访问包含商店，或目标的非空后继全为Shop时排除Shop；资格和增长修正使用pure接缝。`ResetUnknownRoomOdds`恢复已配置base，不重置随机流；跨幕入口恢复时须调用它。
 
-实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event／Elite／Treasure／Shop尚未接入正常入口，实际抽中后具名报未支持；分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表事件或完整Run已开放。
+实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现效果或抽中Elite／Treasure／Shop后具名报未支持。分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表完整Run已开放。
 
 ## 实现各类房间
 

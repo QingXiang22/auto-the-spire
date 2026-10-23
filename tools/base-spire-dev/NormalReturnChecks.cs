@@ -106,6 +106,7 @@ internal static partial class PackageChecks
         RunNormalUnknownRoom(package);
         RunNormalEventSelection(package);
         RunNormalSapphireSeed(package);
+        RunNormalDenseVegetation(package);
         return 0;
     }
 

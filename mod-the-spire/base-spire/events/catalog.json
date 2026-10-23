@@ -3,6 +3,10 @@
   "kind": "event",
   "entries": [
     {
+      "id": "base-spire:dense-vegetation",
+      "definition": "events/dense-vegetation.spire"
+    },
+    {
       "id": "base-spire:doors-of-light-and-dark",
       "definition": "events/doors-of-light-and-dark.spire"
     },

@@ -1,0 +1,66 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure BeginNormalEventCombat {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) encounter = String(length = 64) }
+  result = Ref(RunVisit) locals = { run = Binding parent = Binding child = Binding }
+  body = {
+    if = { condition = not(pureCall(CanCloseNormalEvent, owner, visit)) then = { fail = { message = "Event combat requires a finished owned current event" } } }
+    if = { condition = not(isNone(field(visit, EventVisit.ChildVisit))) then = { fail = { message = "Event combat was already created" } } }
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = parent value = field(visit, EventVisit.RunVisit) }
+    set = { target = run field = Run.VisitSequence value = add(field(run, Run.VisitSequence), 1) }
+    create = { type = RunVisit scope = entityScope(run) into = child collection = RunVisits fields = {
+      Run = run StableId = field(run, Run.VisitSequence) Parent = parent Node = field(parent, RunVisit.Node)
+      MapType = field(parent, RunVisit.MapType) RoomType = "monster" EncounterId = encounter Phase = "combat"
+    } }
+    set = { target = visit field = EventVisit.ChildVisit value = child }
+    set = { target = parent field = RunVisit.Phase value = "child-combat" }
+    set = { target = run field = Run.CurrentVisit value = child }
+    set = { target = run field = Run.Phase value = "combat" }
+    set = { target = owner field = Player.Room value = "none" }
+    return = { value = child }
+  }
+}
+procedure CanCloseNormalEventCombatRewards {
+  pure = true result = Bool
+  parameters = { owner = Ref(Player) visit = Ref(RunVisit) rewards = Ref(CombatRewardSet) }
+  locals = { run = Binding parent = Binding eventVisit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = parent value = field(visit, RunVisit.Parent) }
+    if = { condition = or(isNone(run), isNone(parent)) then = { return = { value = false } } }
+    if = { condition = not(and(greater(field(owner, Player.Hp), 0), and(equal(field(run, Run.CurrentVisit), visit), and(equal(field(visit, RunVisit.Run), run), and(equal(field(run, Run.Phase), "rewards"), and(equal(field(visit, RunVisit.Phase), "rewards"), and(equal(field(visit, RunVisit.Rewards), rewards), field(visit, RunVisit.Committed)))))))) then = { return = { value = false } } }
+    let = { into = eventVisit value = field(parent, RunVisit.Event) }
+    if = { condition = isNone(eventVisit) then = { return = { value = false } } }
+    return = { value = and(equal(field(parent, RunVisit.Run), run), and(not(field(parent, RunVisit.Committed)), and(equal(field(parent, RunVisit.Phase), "child-combat"), and(equal(field(eventVisit, EventVisit.Owner), field(owner, Player.Owner)), and(equal(field(eventVisit, EventVisit.ChildVisit), visit), and(equal(field(eventVisit, EventVisit.RunVisit), parent), equal(field(eventVisit, EventVisit.Status), "finished"))))))) }
+  }
+}
+procedure CloseNormalEventCombat {
+  parameters = { owner = Ref(Player) visit = Ref(RunVisit) }
+  locals = { run = Binding parent = Binding eventVisit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = parent value = field(visit, RunVisit.Parent) }
+    if = { condition = or(isNone(run), isNone(parent)) then = { fail = { message = "Event combat is missing its owned Run or parent" } } }
+    let = { into = eventVisit value = field(parent, RunVisit.Event) }
+    if = { condition = or(isNone(eventVisit), not(and(equal(field(run, Run.CurrentVisit), visit), and(equal(field(parent, RunVisit.Run), run), and(equal(field(eventVisit, EventVisit.ChildVisit), visit), and(equal(field(eventVisit, EventVisit.RunVisit), parent), and(equal(field(eventVisit, EventVisit.Status), "finished"), and(equal(field(visit, RunVisit.Phase), "closed"), field(visit, RunVisit.Committed))))))))) then = { fail = { message = "Event combat cannot close another parent or unfinished effect" } } }
+    set = { target = parent field = RunVisit.Phase value = "finished" }
+    set = { target = run field = Run.CurrentVisit value = parent }
+    set = { target = run field = Run.Phase value = "event" }
+    set = { target = owner field = Player.Room value = "event" }
+    call = { procedure = CloseNormalEvent args = { owner = owner visit = eventVisit } }
+  }
+}
+procedure DefeatNormalEvent {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { parent = Binding }
+  body = {
+    let = { into = parent value = field(visit, EventVisit.RunVisit) }
+    set = { target = parent field = RunVisit.Committed value = true }
+    set = { target = parent field = RunVisit.Phase value = "defeated" }
+    set = { target = parent field = RunVisit.Status value = "defeated" }
+    set = { target = visit field = EventVisit.Status value = "defeated" }
+    set = { target = field(owner, Player.CurrentRun) field = Run.Phase value = "defeated" }
+    set = { target = owner field = Player.Room value = "none" }
+  }
+}

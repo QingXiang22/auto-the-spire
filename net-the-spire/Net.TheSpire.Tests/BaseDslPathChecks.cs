@@ -24,6 +24,8 @@ internal static class BaseDslPathChecks
         yield return ("EVENT real stdio normal victory and source-selected unsupported Event failure", () => StdioTrajectory("normal-event"));
         foreach (var branch in new[] { "eat", "plant" })
             yield return ("EVENT real stdio normal SapphireSeed and map return: " + branch, () => StdioTrajectory("normal-sapphire-" + branch));
+        foreach (var branch in new[] { "trudge", "fight-skip", "fight-claim" })
+            yield return ("EVENT real stdio normal DenseVegetation child visits and map return: " + branch, () => StdioTrajectory("normal-dense-" + branch));
         yield return ("RC07 real stdio start relics publish 14 block once in each development combat", () => StdioTrajectory("start"));
         yield return ("TC07 real stdio turn resources publish energy, HP, turn number and block", () => StdioTrajectory("turn"));
         yield return ("DD07 real stdio target takes the source damage through block absorption", () => StdioTrajectory("damage"));
@@ -195,11 +197,11 @@ internal static class BaseDslPathChecks
             Send(Request("pipe-describe", Operation.Describe));
             Send(Request("pipe-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
-            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-sapphire-", StringComparison.Ordinal) ? "sapphire-normal-79" : mode == "normal-event" ? "event-normal-11" : mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
+            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-dense-", StringComparison.Ordinal) ? "dense-normal-30" : mode.StartsWith("normal-sapphire-", StringComparison.Ordinal) ? "sapphire-normal-79" : mode == "normal-event" ? "event-normal-11" : mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -581,6 +583,7 @@ internal static class BaseDslPathChecks
                 var unknown = mode == "normal-unknown";
                 var eventSelection = mode == "normal-event";
                 var sapphire = mode.StartsWith("normal-sapphire-", StringComparison.Ordinal);
+                var dense = mode.StartsWith("normal-dense-", StringComparison.Ordinal);
                 var relic = unknown ? "base-spire:golden-pearl" : "base-spire:booming-conch";
                 var initialGold = unknown ? 249 : 99;
                 string EntityValue(EntityDto entity, string suffix) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + suffix, StringComparison.Ordinal)).Value!).Value;
@@ -611,12 +614,12 @@ internal static class BaseDslPathChecks
                 Check.Equal("map", Public(snapshot, "Player.Room"), "confirmed Neow returns to map");
                 using var mapVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/act-one-map-vectors.json")));
                 var sourceMap = mapVectors.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == "777");
-                if (!unknown && !eventSelection && !sapphire) Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
-                StepOpening(sapphire ? MapAt("0", "1") : eventSelection ? MapAt("2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
+                if (!unknown && !eventSelection && !sapphire && !dense) Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
+                StepOpening(dense ? MapAt("1", "1") : sapphire ? MapAt("0", "1") : eventSelection ? MapAt("2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
                 using var combatVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-combat-vectors.json")));
                 var sourceMonsters = combatVectors.RootElement.GetProperty("vectors")[0].GetProperty("monsters");
                 Check.Equal(sourceMonsters.GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy"), "complete actual SlimesWeak formation");
-                foreach (var expected in sourceMonsters.EnumerateArray().Where(_ => !unknown && !eventSelection && !sapphire))
+                foreach (var expected in sourceMonsters.EnumerateArray().Where(_ => !unknown && !eventSelection && !sapphire && !dense))
                 {
                     var monster = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Enemy" && e.ContentId == expected.GetProperty("id").GetString());
                     string EnemyValue(string field) => ((WireString)monster.Fields.Single(f => f.FieldId.EndsWith(":Enemy." + field, StringComparison.Ordinal)).Value!).Value;
@@ -675,6 +678,69 @@ internal static class BaseDslPathChecks
                     Check.True(offered.Skip(mode == "normal-claim" ? 1 : 0).All(id => !snapshot.Entities.Any(e => e.InstanceId == id)), "unselected actual instances are removed");
                     Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "legal source successors are published");
                     Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"), "the visit cannot close twice");
+                    if (dense)
+                    {
+                        StepOpening(MapAt("0", "2"));
+                        var parent = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:RunVisit" && EntityValue(e, "RunVisit.StableId") == "2");
+                        var eventVisit = snapshot.Entities.Single(e => e.ContentId == "base-spire:dense-vegetation" && e.KindId == "net:kind:base-spire:EventVisit");
+                        Check.Equal(eventVisit.InstanceId, EntityValue(parent, "RunVisit.Event"), "public parent owns actual DenseVegetation");
+                        Check.Equal(parent.InstanceId, EntityValue(eventVisit, "EventVisit.RunVisit"), "event retains its original parent");
+                        var rest = mode != "normal-dense-trudge";
+                        var beforeHp = long.Parse(Public(snapshot, "Player.Hp"), System.Globalization.CultureInfo.InvariantCulture);
+                        StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool value && value.Value == rest)));
+                        if (!rest)
+                        {
+                            Check.Equal((beforeHp - 8).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Hp"), "TRUDGE_ON loses eight HP once");
+                            Check.Equal("163", Public(snapshot, "Player.Gold"), "independent source event roll grants 64 gold");
+                            StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseNormalEvent"));
+                        }
+                        else
+                        {
+                            Check.Equal(Math.Min(80, beforeHp + 24).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Hp"), "REST heals once before FIGHT");
+                            Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:CloseNormalEvent" or "net:action:base-spire:ChooseMapPoint"), "rest requires the actual fight");
+                            StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:DenseVegetationFight"));
+                            var child = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:RunVisit" && EntityValue(e, "RunVisit.StableId") == "3");
+                            Check.Equal(parent.InstanceId, EntityValue(child, "RunVisit.Parent"), "public child points to original parent");
+                            Check.Equal(child.InstanceId, EntityValue(snapshot.Entities.Single(e => e.InstanceId == eventVisit.InstanceId), "EventVisit.ChildVisit"), "original event owns child");
+                            Check.Equal(EntityValue(parent, "RunVisit.Node"), EntityValue(child, "RunVisit.Node"), "child shares original map node");
+                            Check.Equal(4, snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy" && e.ContentId == "base-spire:wriggler"), "four actual Wrigglers enter combat");
+                            var normalRun = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Run");
+                            Check.Equal("3", EntityValue(normalRun, "Run.TotalFloor"), "child does not add a floor");
+                            for (var move = 0; Public(snapshot, "Player.CombatOutcome") == "none" && move < 200; move++)
+                            {
+                                var candidate = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand")
+                                    ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayCardFromHand")
+                                    ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:EndDevelopmentTurn")
+                                    ?? snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:BeginDevelopmentTurn");
+                                StepOpening(candidate);
+                            }
+                            Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "real public policy defeats four Wrigglers");
+                            Check.Equal("rewards", Public(snapshot, "Player.Room"), "child victory offers real ordinary rewards");
+                            Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:CloseNormalEvent" or "net:action:base-spire:ChooseMapPoint"), "parent cannot bypass child rewards");
+                            var claim = mode == "normal-dense-fight-claim";
+                            var childGold = long.Parse(Public(snapshot, "Player.GoldRewardAmount"), System.Globalization.CultureInfo.InvariantCulture);
+                            if (claim)
+                            {
+                                StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentGoldReward"));
+                                StepOpening(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"));
+                                var potion = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentPotionReward");
+                                if (potion is not null) StepOpening(potion);
+                            }
+                            StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseDevelopmentRewards"));
+                            Check.Equal((claim ? 99 + childGold : 99).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "child reward credits once only when claimed");
+                            Check.Equal(claim ? 11 : 10, BaseDslPileChecks.Pile(snapshot, "RunDeck").TotalCount, "actual child reward persists in permanent deck");
+                            Check.Equal("closed", EntityValue(snapshot.Entities.Single(e => e.InstanceId == child.InstanceId), "RunVisit.Status"), "child closes once after rewards");
+                            Check.Equal(parent.InstanceId, EntityValue(snapshot.Entities.Single(e => e.InstanceId == normalRun.InstanceId), "Run.CurrentVisit"), "closed child restores same parent");
+                        }
+                        Check.Equal("map", Public(snapshot, "Player.Room"), "normal event closes back to actual map");
+                        Check.Equal("closed", EntityValue(snapshot.Entities.Single(e => e.InstanceId == parent.InstanceId), "RunVisit.Status"), "same parent closes once");
+                        Check.Equal("closed", EntityValue(snapshot.Entities.Single(e => e.InstanceId == eventVisit.InstanceId), "EventVisit.Status"), "event never restarts after child");
+                        Check.Equal(1, snapshot.LegalActions.Count(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "exact source successor count");
+                        MapAt("0", "3");
+                        Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:CloseNormalEvent" or "net:action:base-spire:DenseVegetationFight" or "net:action:base-spire:CloseDevelopmentRewards"), "closed visits expose no replay actions");
+                        var visible = WireCanonical.Text(snapshot.ToWire());
+                        Check.False(visible.Contains("NormalEventHistory", StringComparison.Ordinal) || visible.Contains("UnknownRoomOdds", StringComparison.Ordinal) || visible.Contains("NormalEncounterIndex", StringComparison.Ordinal), "hidden queues and odds remain private");
+                    }
                     if (sapphire)
                     {
                         var beforeHp = long.Parse(Public(snapshot, "Player.Hp"), System.Globalization.CultureInfo.InvariantCulture);

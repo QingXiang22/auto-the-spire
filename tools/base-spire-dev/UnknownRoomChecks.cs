@@ -70,6 +70,10 @@ internal static partial class PackageChecks
               call = { procedure = AddOpeningDefinition args = { run = first(type(Run)) category = "event" act = 0 definition = "base-spire:dense-vegetation" room = "none" rarity = "none" weak = false } into = definition }
               call = { procedure = AddOpeningRoomPlan args = { run = first(type(Run)) act = 0 room = "event" definition = definition } }
             } }
+            action SetupUnsupportedUnknownEventQueue { role = player locals = { definition = Binding } body = {
+              call = { procedure = AddOpeningDefinition args = { run = first(type(Run)) category = "event" act = 0 definition = "base-spire:aroma-of-chaos" room = "none" rarity = "none" weak = false } into = definition }
+              call = { procedure = AddOpeningRoomPlan args = { run = first(type(Run)) act = 0 room = "event" definition = definition } }
+            } }
             """);
         var rules = copy.Load();
         Session New(string mode = "none")
@@ -137,13 +141,22 @@ internal static partial class PackageChecks
         });
         check("UNKNOWN unsupported actual Event fails by name after one real classification draw", () =>
         {
-            var s = New("event-only"); Submit(s, "SetupForeignChild"); Submit(s, "MakeOwnChild"); Submit(s, "SetupUnknownEventQueue");
+            var s = New("event-only"); Submit(s, "SetupForeignChild"); Submit(s, "MakeOwnChild"); Submit(s, "SetupUnsupportedUnknownEventQueue");
             var odds = Odds(s).Select(o => IntField(s, o, "UnknownRoomOdds", "Current")).ToArray();
             Throws<EngineFaultException>(() => Submit(s, "EnterForeignChild"));
             True(s.Fault!.Message.Contains("source normal Event effect", StringComparison.Ordinal), "unsupported actual effect is explicit");
             Equal(1L, s.Random.DrawCount(stream), "unsupported actual room does not compensate or retry its draw");
             True(odds.SequenceEqual(Odds(s).Select(o => IntField(s, o, "UnknownRoomOdds", "Current"))), "event-only leaves excluded odds unchanged");
             Equal(0, Members(s, "RunVisits").Count, "unsupported room creates no empty visit");
+        });
+        check("UNKNOWN supported DenseVegetation creates its actual event visit after one classification draw", () =>
+        {
+            var s = New("event-only"); Submit(s, "SetupForeignChild"); Submit(s, "MakeOwnChild"); Submit(s, "SetupUnknownEventQueue");
+            Submit(s, "EnterForeignChild"); Healthy(s);
+            Equal(1L, s.Random.DrawCount(stream), "supported event keeps one classification draw");
+            Equal(1, Members(s, "RunVisits").Count, "supported event creates one actual visit");
+            Equal("base-spire:dense-vegetation", TextField(s, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EventVisit").Id).Single(), "EventVisit", "DefinitionId"), "selected effect is entered");
+            True(s.PendingDecision is not null, "real event suspends at its branch decision");
         });
     }
 }
