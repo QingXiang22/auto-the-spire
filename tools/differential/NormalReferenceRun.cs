@@ -331,6 +331,11 @@ internal sealed class NormalReferenceRun : IDisposable
         // Compare the active combat's counters. The native room retains its completed
         // history during rewards; DSL clears that history before publishing rewards.
         var history = combat?.Engine.State.DamageHistory.Entries.Where(e => ReferenceEquals(e.Receiver, player.Creature) && e.Result.UnblockedDamage > 0).ToArray() ?? [];
+        // Before the first combat there is no native ICombatState. Read the actual
+        // run listener set and its native methods rather than inventing a combat state.
+        Put("public.draw_blocked", combat is not null
+            ? !Sts2Sim.Core.Hooks.Hook.ShouldDraw(combat.Engine.State, player, false, out _)
+            : !run.IterateHookListeners(null).All(model => model.ShouldDraw(player, false)));
         Put("public.player_history", new NormalPlayerHistory(active ? state!.CardsPlayedThisCombat : 0, active ? history.Length : 0,
             active && history.Any(e => e.HappenedThisTurn(combat!.Engine.State)), active && combat!.Engine.State.CountCardsExhaustedThisTurn(player) > 0,
             combat?.Engine.State.CurrentSide == CombatSide.Enemy, player.Deck.Type == PileType.Deck));

@@ -65,12 +65,12 @@ internal static partial class PackageChecks
             True(Hand(one).Concat(Members(one, "DrawPile")).All(c => IntField(one, c, "Card", "DamageGrowth") == 0), "temporary growth did not persist");
             Equal(70L, Hp(one), "manual ending did not heal or reset HP"); Equal(1, Members(one, "Relics").Count, "same held starter relic");
         });
-        Case("IS05: ordinary turn draw respects no-draw and full hand without consuming another shuffle", () =>
+        Case("IS05: NoDraw allows turn hand while full hand prevents another shuffle", () =>
         {
-            var blocked = Character(); Submit(blocked, "BeginDevelopmentCombat");
-            Set(blocked, Player(blocked), "Player", "DrawBlocked", Value.Of(true));
+            using var copy = DrawPermissionCopy(package);
+            var blocked = Start(copy.Load()); Submit(blocked, "Ironclad.Initialize"); Submit(blocked, "BeginDevelopmentCombat"); Submit(blocked, "BlockEffectDraw");
             var before = blocked.Random.DrawCount("base-spire:run:shuffle"); Submit(blocked, "BeginDevelopmentTurn");
-            Equal(0, Hand(blocked).Count, "blocked automatic draw"); Equal(10, Members(blocked, "DrawPile").Count, "deck unchanged");
+            Equal(5, Hand(blocked).Count, "NoDraw permits automatic turn hand"); Equal(5, Members(blocked, "DrawPile").Count, "actual automatic draw");
             Equal(before, blocked.Random.DrawCount("base-spire:run:shuffle"), "no unnecessary reshuffle");
             var full = Character(); Submit(full, "BeginDevelopmentCombat"); for (var i = 0; i < 10; i++) Submit(full, "Draw");
             Submit(full, "BeginDevelopmentTurn"); Equal(10, Hand(full).Count, "full hand remains ten");

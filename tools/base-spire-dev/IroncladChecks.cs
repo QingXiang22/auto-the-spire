@@ -8,6 +8,7 @@ internal static partial class PackageChecks
     {
         var count = 0;
         RunIroncladChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
+        RunDrawPermissionChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         Console.WriteLine($"All {count} focused Ironclad checks passed; run full check for package coverage evidence."); return 0;
     }
     // Frozen source roster, independent of the executable definitions and generated-card candidate list.

@@ -368,6 +368,9 @@ internal static class NormalRunChecks
             Changed(Replace(First("Player"), name, WireValue.Str("999")), "public.player_history");
         foreach (var name in new[] { "LostHpThisTurn", "ExhaustedCardThisTurn", "EnemyPhase", "UsesRunDeck" })
             Changed(Replace(First("Player"), name, WireValue.Bool(!NormalPublicObservation.Flag(First("Player"), name))), "public.player_history");
+        Changed(Replace(First("Player"), "DrawBlocked", WireValue.Bool(!NormalPublicObservation.Flag(First("Player"), "DrawBlocked"))), "public.draw_blocked");
+        var drawPlayer = First("Player");
+        Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != drawPlayer ? e : e with { Fields = e.Fields.Where(f => !f.FieldId.EndsWith("Player.DrawBlocked", StringComparison.Ordinal)).ToArray() }).ToArray() }, "missing public DrawBlocked");
         Changed(Replace(First("Card"), "Cost", WireValue.Str("999")), "public.cards");
         Changed(Replace(First("Relic"), "IsMelted", WireValue.Bool(!NormalPublicObservation.Flag(First("Relic"), "IsMelted"))), "public.relic_inventory");
         var cards = snapshot.Groups.Single(g => g.TypeId.EndsWith(":CardRewardOptions", StringComparison.Ordinal));

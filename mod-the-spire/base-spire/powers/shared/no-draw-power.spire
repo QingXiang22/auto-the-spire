@@ -6,10 +6,10 @@ template NoDrawPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:no-draw-power" } }
 
 procedure NoDraw {
-  pure = true parameters = { value = Bool owner = Ref(Player) listener = Ref(Power) }
+  pure = true parameters = { value = Bool owner = Ref(Player) fromHandDraw = Bool listener = Ref(Power) }
   result = Bool body = {
     if = {
-      condition = greater(field(listener, Power.Stacks), 0) then = {
+      condition = and(not(fromHandDraw), greater(field(listener, Power.Stacks), 0)) then = {
         return = { value = false }
       }
     }
