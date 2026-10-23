@@ -37,6 +37,8 @@ Neow的WingedBoots与CursedPearl使用完整遗物获得生命周期。CursedPea
 
 首幕地图在进入 Neow 前生成。`SourceGaussianInt` 从 `act_1_map` 流按源算法计算营火／问号数量；随后执行七条路径、源预排序与洗牌、房型分配、重复路径裁剪／修复及坐标整理。公开 MapNode.Type 与 MapChildren 保存最终真实地图，临时列表和路径段在发布前清理。路径段在裁剪阶段以每列三位编码，17 个节点占用最多 51 位；坐标在裁剪结束前不改变。
 
+公开MapNodes的顺序采用原生`ActMap.GetAllMapPoints()`的实际网格遍历：列优先、同列按行，随后依次发布独立的StartingMapPoint和BossMapPoint。MapNode.Index为该序列中的零基位置，按Run分别编号，不再表示DSL创建次序。地图裁剪与坐标整理完成后，发布操作只移动已有集合成员并改Index，保留节点实例、双向边、Visited／Selectable及随机状态；不参与房型抽样、修复或出行资格。`0.7.0-dsl.64`迁移此公开语义；消费者须使用坐标对应节点，不能将旧创建索引或公开句柄当作原生编号。参考端直接枚举自己的实际地图及独立起点／Boss引用，不读取DSL结果来构造顺序。
+
 Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，保留源排除关系及随机顺序。选择恰好一个 NeowOption 后，通过共享获得操作执行效果，等待离开确认后回到地图。GoldenPearl、NutritiousOyster、BoomingConch、WingedBoots、CursedPearl 的效果已接入；其余选项仍公开，选择时明确报告未支持，不以无效果获得代替。
 
 `ChooseMapPoint` 只允许当前节点的未访问后继。首个 Monster 消费实际普通遭遇队列，创建稳定递增的 RunVisit，记录原地图类型、实际房型及遭遇标识。已接通 SlimesWeak 和 FuzzyWurmCrawlerWeak：按源编队顺序及 Niche 流抽取真实 HP，再生成敌人、重建和洗牌战斗副本，并自动启动首回合抽五张牌。SlimesWeak 的累计楼层与初始化消费见下文。其他遭遇或房型在修改访问和抽取 HP 之前报告未支持。非法、重复或非后继选点不改状态或 RNG。

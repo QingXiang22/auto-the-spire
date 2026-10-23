@@ -36,7 +36,7 @@ internal static class NormalRunComparison
     internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events", "lifecycle"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
         "public.snapshot", "public.piles", "public.map", "public.run", "public.neow", "public.reward_offer", "public.reward_sets", "public.potion_inventory", "public.relic_inventory", "public.cards",
-        "public.ownership", "public.map_members", "public.map_parents", "public.visit_links", "public.relation_types", "public.entity_counts",
+        "public.ownership", "public.map_members", "public.map_sequence", "public.map_parents", "public.visit_links", "public.relation_types", "public.entity_counts",
         "public.player", "public.player_history", "public.enemies", "public.powers", "public.visits",
         "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
         "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "random.float32_calls", "random.scalar_calls", "random.weighted_candidates", "random.weighted_attempts", "random.opening_queues", "events.trace", "events.observed_order", "lifecycle.settlement"];

@@ -115,6 +115,7 @@ procedure GenerateSourceActOneMap {
     call = { procedure = StraightenSourceMap args = { run = run } }
     forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), field(n, MapNode.Removed))) item = node body = { destroy = { target = node } } }
     call = { procedure = PublishSourceMapTypes args = { run = run } }
+    call = { procedure = PublishSourceMapOrder args = { run = run } }
     forEach = { query = relation(MapChildren, start) item = node body = { set = { target = node field = MapNode.Selectable value = true } } }
     set = { target = run field = Run.MapNodeCount value = count(where(collection(MapNodes), n, equal(field(n, MapNode.Run), run))) }
     set = { target = run field = Run.CurrentNode value = start }

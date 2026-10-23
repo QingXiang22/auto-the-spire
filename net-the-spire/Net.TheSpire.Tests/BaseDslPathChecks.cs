@@ -720,7 +720,20 @@ internal static class BaseDslPathChecks
                 Check.Equal("map", Public(snapshot, "Player.Room"), "confirmed Neow returns to map");
                 using var mapVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/act-one-map-vectors.json")));
                 var sourceMap = mapVectors.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == "777");
-                if (!unknown && !eventSelection && !sapphire && !dense) Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
+                if (!unknown && !eventSelection && !sapphire && !dense)
+                {
+                    Check.Equal(sourceMap.GetProperty("cells").GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:MapNode"), "seed 777 complete locked source map");
+                    var published = snapshot.Sequences.Single(s => s.TypeId == "net:sequence_type:base-spire:MapNodes").Elements;
+                    var sourceOrder = sourceMap.GetProperty("publication").EnumerateArray().ToArray();
+                    Check.Equal(sourceOrder.Length, published.Count, "actual native enumeration and public sequence have the same complete membership");
+                    for (var i = 0; i < sourceOrder.Length; i++)
+                    {
+                        var node = snapshot.Entities.Single(e => e.InstanceId == published[i]);
+                        Check.Equal(sourceOrder[i].GetProperty("index").ToString(), EntityValue(node, "MapNode.Index"), "public index equals native traversal position");
+                        Check.Equal(sourceOrder[i].GetProperty("col").ToString(), EntityValue(node, "MapNode.Col"), "native public map column order");
+                        Check.Equal(sourceOrder[i].GetProperty("row").ToString(), EntityValue(node, "MapNode.Row"), "native public map row order");
+                    }
+                }
                 StepOpening(dense ? MapAt("1", "1") : sapphire ? MapAt("0", "1") : eventSelection ? MapAt("2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
                 using var combatVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-combat-vectors.json")));
                 var sourceMonsters = combatVectors.RootElement.GetProperty("vectors")[0].GetProperty("monsters");

@@ -308,6 +308,10 @@ internal static class NormalRunChecks
         var pileOwner = First("HandView");
         Changed(Replace(pileOwner, "Player", WireValue.Str(run.InstanceId)), "public.ownership");
         var sequence = snapshot.Sequences.Single(s => s.TypeId.EndsWith(":MapNodes", StringComparison.Ordinal));
+        Changed(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { Elements = s.Elements.Reverse().ToArray() }).ToArray() }, "public.map_sequence");
+        Changed(Replace(First("MapNode"), "Index", WireValue.Str("999")), "public.map");
+        Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != First("MapNode") ? e : e with
+            { Fields = e.Fields.Where(f => !f.FieldId.EndsWith(".Index", StringComparison.Ordinal)).ToArray() }).ToArray() }, "missing public map index");
         Changed(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { OwnerRef = First("Player").InstanceId }).ToArray() }, "public.ownership");
         Reject(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { Elements = s.Elements.Skip(1).ToArray() }).ToArray() }, "missing map sequence member");
         Reject(snapshot with { Sequences = snapshot.Sequences.Select(s => s != sequence ? s : s with { Elements = [.. s.Elements, s.Elements[0]] }).ToArray() }, "duplicate map sequence member");

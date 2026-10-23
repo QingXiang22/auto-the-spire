@@ -5,7 +5,7 @@ namespace Differential;
 internal sealed record NormalVisitLinks(long? CurrentVisit, long VisitSequence, long? CurrentReward, string[] Rewards);
 
 // Compare public references through their semantic owners and actual memberships.
-// MapNodes membership is unordered here; its published sequence order remains unverified.
+// MapNodes membership and its actual published traversal order are separate comparison paths.
 internal static class NormalPublicTopology
 {
     internal static readonly string[] Piles = ["Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay", "RemovedFromCombat", "RunDeck"];
@@ -33,6 +33,7 @@ internal static class NormalPublicTopology
             ? NormalPublicObservation.Number(e, "Col") + "," + NormalPublicObservation.Number(e, "Row")
             : throw new NotSupportedException("missing_dimension: non-map entity in public MapNodes");
         Put("public.map_members", map.Elements.Select(id => Coordinate(entities[id])).Order(StringComparer.Ordinal).ToArray());
+        Put("public.map_sequence", map.Elements.Select(id => Coordinate(entities[id])).ToArray());
         Put("public.map_parents", snapshot.Relations.Where(r => r.TypeId == "net:relation:base-spire:MapParents")
             .Select(r => Coordinate(entities[r.SourceRef]) + "->" + Coordinate(entities[r.TargetRef])).Order(StringComparer.Ordinal).ToArray());
         var visits = snapshot.Sequences.Single(s => s.TypeId == "net:sequence_type:base-spire:RunVisits");
