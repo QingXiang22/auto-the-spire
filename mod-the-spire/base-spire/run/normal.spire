@@ -58,6 +58,8 @@ entity RunVisit {
     Run = { type = Ref(Run) visibility = Hidden }
     StableId = { type = Int(min = 1) }
     Parent = { type = Ref(RunVisit) optional = true }
+    PreviousNode = { type = Ref(MapNode) optional = true visibility = Hidden }
+    RoomEntered = { type = Bool default = false visibility = Hidden }
     Node = { type = Ref(MapNode) }
     MapType = { type = Enum(MapPointType) }
     RoomType = { type = String(length = 24) default = "none" }
@@ -70,6 +72,40 @@ entity RunVisit {
   }
 }
 collection RunVisits { element = RunVisit ordered = true }
+event ShouldAllowFreeTravel { payload = { value = Bool owner = Ref(Player) } }
+event NormalRoomEntered { payload = { owner = Ref(Player) visit = Ref(RunVisit) } }
+procedure CanTravelToNormalMapPoint {
+  pure = true parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) } result = Bool
+  locals = { current = Binding } body = {
+    if = { condition = or(not(equal(field(owner, Player.CurrentRun), run)), or(not(equal(field(node, MapNode.Run), run)), field(node, MapNode.Visited))) then = { return = { value = false } } }
+    let = { into = current value = field(run, Run.CurrentNode) }
+    if = { condition = isNone(current) then = { return = { value = false } } }
+    if = { condition = and(foldEvent(ShouldAllowFreeTravel, false, owner), exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(equal(field(n, MapNode.Row), add(field(current, MapNode.Row), 1)), less(field(n, MapNode.Row), 16)))))) then = {
+      return = { value = equal(field(node, MapNode.Row), add(field(current, MapNode.Row), 1)) }
+    } }
+    return = { value = exists(where(relation(MapChildren, current), c, equal(c, node))) }
+  }
+}
+procedure RefreshNormalMapChoices {
+  parameters = { owner = Ref(Player) run = Ref(Run) } body = {
+    forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = node body = {
+      set = { target = node field = MapNode.Selectable value = pureCall(CanTravelToNormalMapPoint, owner, run, node) }
+    } }
+  }
+}
+procedure NotifyNormalRoomEntered {
+  parameters = { owner = Ref(Player) visit = Ref(RunVisit) } body = {
+    if = { condition = or(field(visit, RunVisit.RoomEntered), not(isNone(field(visit, RunVisit.Parent)))) then = { return = {} } }
+    if = { condition = not(equal(field(field(owner, Player.CurrentRun), Run.CurrentVisit), visit)) then = { fail = { message = "Room entry must belong to the current Run visit" } } }
+    set = { target = visit field = RunVisit.RoomEntered value = true }
+    emit = { event = NormalRoomEntered payload = { owner = owner visit = visit } }
+  }
+}
+procedure NotifyNormalEventRoomEntered {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } body = {
+    if = { condition = not(isNone(field(visit, EventVisit.RunVisit))) then = { call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = field(visit, EventVisit.RunVisit) } } } }
+  }
+}
 
 procedure CanUseDevelopmentActions {
   pure = true parameters = { owner = Ref(Player) } result = Bool
@@ -145,6 +181,7 @@ procedure StartNormalRun {
     set = { target = run field = Run.NeowPending value = false }
     set = { target = run field = Run.Phase value = "map" }
     set = { target = owner field = Player.Room value = "map" }
+    call = { procedure = RefreshNormalMapChoices args = { owner = owner run = run } }
   }
 }
 action StartNormalRun {
@@ -161,9 +198,9 @@ procedure BeginNormalMapVisit {
     forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = current body = { set = { target = current field = MapNode.Selectable value = false } } }
     set = { target = run field = Run.MapFloor value = field(node, MapNode.Row) }
     set = { target = run field = Run.TotalFloor value = add(field(run, Run.TotalFloor), 1) }
-    set = { target = run field = Run.CurrentNode value = node }
     set = { target = run field = Run.VisitSequence value = add(field(run, Run.VisitSequence), 1) }
-    create = { type = RunVisit scope = entityScope(run) into = visit collection = RunVisits fields = { Run = run StableId = field(run, Run.VisitSequence) Node = node MapType = field(node, MapNode.Type) } }
+    create = { type = RunVisit scope = entityScope(run) into = visit collection = RunVisits fields = { Run = run StableId = field(run, Run.VisitSequence) Node = node PreviousNode = field(run, Run.CurrentNode) MapType = field(node, MapNode.Type) } }
+    set = { target = run field = Run.CurrentNode value = node }
     set = { target = run field = Run.CurrentVisit value = visit }
     set = { target = run field = Run.CurrentPointHasShop value = false }
     return = { value = visit }
@@ -173,7 +210,7 @@ procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
   locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int room = String(length = 16) }
   body = {
-    if = { condition = not(and(equal(field(owner, Player.CurrentRun), run), and(equal(field(run, Run.Phase), "map"), and(field(node, MapNode.Selectable), and(not(field(node, MapNode.Visited)), exists(where(relation(MapChildren, field(run, Run.CurrentNode)), child, equal(child, node)))))))) then = { fail = { message = "Map point is not an unvisited child of the current node" } } }
+    if = { condition = not(and(equal(field(run, Run.Phase), "map"), pureCall(CanTravelToNormalMapPoint, owner, run, node))) then = { fail = { message = "Map point is not currently travelable from this Run" } } }
     if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
     call = { procedure = ResolveNormalRoomType args = { run = run node = node } into = room }
     if = { condition = equal(room, "event") then = {
@@ -205,13 +242,14 @@ procedure EnterNormalMapPoint {
       call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = hp } }
     } }
     call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
+    call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = visit } }
     call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
   }
 }
 action ChooseMapPoint {
   role = player
   parameters = { node = Ref(MapNode) }
-  candidates = { parameter = node query = where(collection(MapNodes), n, and(field(n, MapNode.Selectable), equal(field(n, MapNode.Run), field(first(type(Player)), Player.CurrentRun)))) }
+  candidates = { parameter = node query = where(collection(MapNodes), n, pureCall(CanTravelToNormalMapPoint, first(type(Player)), field(first(type(Player)), Player.CurrentRun), n)) }
   requires = and(equal(field(first(type(Player)), Player.Room), "map"), and(not(field(first(type(Player)), Player.CombatActive)), not(isNone(field(first(type(Player)), Player.CurrentRun)))))
   body = { call = { procedure = EnterNormalMapPoint args = { owner = first(type(Player)) run = field(first(type(Player)), Player.CurrentRun) node = node } } }
 }
@@ -272,9 +310,7 @@ procedure CloseNormalVisit {
       call = { procedure = CloseNormalEventCombat args = { owner = owner visit = visit } }
       return = {}
     } }
-    forEach = { query = relation(MapChildren, field(run, Run.CurrentNode)) item = child body = {
-      set = { target = child field = MapNode.Selectable value = not(field(child, MapNode.Visited)) }
-    } }
+    call = { procedure = RefreshNormalMapChoices args = { owner = owner run = run } }
     set = { target = run field = Run.Phase value = "map" }
     set = { target = owner field = Player.Room value = "map" }
   }

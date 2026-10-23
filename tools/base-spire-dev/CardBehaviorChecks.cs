@@ -14,6 +14,7 @@ internal static partial class PackageChecks
         RunAttackBehaviorChecks(package, Check);
         RunCardLifecycleChecks(package, Check);
         RunVisitBehaviorChecks(package, Check);
+        RunNeowEffectChecks(package, Check);
         if (count == 0) throw new ArgumentException("No card-behavior checks matched --filter.");
         Console.WriteLine($"All {count} focused card-behavior checks passed; no independent coverage claim.");
         return 0;

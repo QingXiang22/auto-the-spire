@@ -3,6 +3,10 @@
   "kind": "power",
   "entries": [
     {
+      "id": "base-spire:flex-potion-power",
+      "definition": "powers/shared/flex-potion-power.spire"
+    },
+    {
       "id": "base-spire:aggression-power",
       "definition": "powers/shared/aggression-power.spire"
     },

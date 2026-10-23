@@ -93,6 +93,8 @@ dotnet run --project tools/differential -c Release -- normal-preflight --output 
 
 固定seed777的Neow选项为WingedBoots／BoomingConch／CursedPearl，地图与生产DSL均按锁定新版来源生成。完成顺序随机与开局来源迁移后，开局事实相同仍只说明前缀符合；后续真实SlimesWeak战斗、奖励和返回虽已由DSL公开路径执行，但逐步双侧适配仍由[工单 #47](https://github.com/QingXiang22/auto-the-spire/issues/47)验收。
 
+三项Neow现均有生产效果，FlexPotion也可从原正常奖励池领取；WingedBoots／CursedPearl正常获得后首战与FlexPotion受控组件的独立期望由`neow-effects-vector.json`提供，base行为组消费，migration核对来源摘要。该向量保留正常与受控范围，不替代此处正常策略逐边界的全公开比较。MapNode.Index／MapNodes发布顺序和DrawBlocked仍须取得参考端对应状态后双侧比较，不能只检查DSL不变量或生成参考值。
+
 
 两侧确有记录且存在开局首差时返回1。缺参考、缺候选、超时、输入策略不完整、无法完成 DSL 返回，或者开局相同但后续双侧适配未完成时返回3。预检不返回0，`complete` 和 `independent_verified` 均为false；`executed` 只统计实际取得双方开局记录的路径，不代表完成该路径的逐步双侧比较。报告另列访问、永久实例映射、牌区、逐次随机和事件等未验证维度。完整 M01 仍须逐步比较，单侧领取／跳过成功不作为验收。
 

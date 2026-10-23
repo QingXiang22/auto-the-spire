@@ -171,6 +171,8 @@ internal static partial class PackageChecks
         Case(dense, () => RunNormalDenseVegetation(package));
         events["base-spire:dense-vegetation"] = [dense];
         var potions = RunPotionChecks(package, Case);
+        var sourceEffects = RunNeowEffectChecks(package, Case);
+        Merge(sourceEffects.Relics, witnesses); Merge(sourceEffects.Cards, cards); Merge(sourceEffects.Potions, potions);
         var rooms = RunRestSiteChecks(package, Case);
         Merge(RunPermanentDeckChecks(package, Case), rooms);
         Merge(RunCharacterStartChecks(package, Case), witnesses);

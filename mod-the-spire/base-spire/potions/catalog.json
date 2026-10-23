@@ -3,6 +3,10 @@
   "kind": "potion",
   "entries": [
     {
+      "id": "base-spire:flex-potion",
+      "definition": "potions/shared/flex-potion.spire"
+    },
+    {
       "id": "base-spire:block-potion",
       "definition": "potions/shared/block-potion.spire"
     },

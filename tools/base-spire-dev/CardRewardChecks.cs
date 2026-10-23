@@ -176,7 +176,7 @@ internal static partial class PackageChecks
             using var copy = new Copy(package.Root);
             copy.Include("force-reward-offer.spire", "action ForceOffer { role = player body = { call = { procedure = WhenCombatEnded args = { owner = first(type(Player)) victory = true } } } }");
             var s = Start(copy.Load()); Submit(s, "Ironclad.Initialize");
-            var missing = Members(s, "CardLibrary").First();
+            var missing = Members(s, "CardLibrary").First(c => s.State.GetField(c, s.RuleSet.TypeByQualifiedId("base-spire:CardBlueprint").FieldIndex("InIroncladPool")).AsBool());
             s.State.RunAtomic(() => s.State.DestroyInstance(missing));
             ForceRejected(s, "Offer");
             Equal(0L, Cursor(s), "no card randomness before source validation");

@@ -3,6 +3,14 @@
   "kind": "relic",
   "entries": [
     {
+      "id": "base-spire:winged-boots",
+      "definition": "relics/shared/winged-boots.spire"
+    },
+    {
+      "id": "base-spire:cursed-pearl",
+      "definition": "relics/shared/cursed-pearl.spire"
+    },
+    {
       "id": "base-spire:akabeko",
       "definition": "relics/shared/akabeko.spire"
     },

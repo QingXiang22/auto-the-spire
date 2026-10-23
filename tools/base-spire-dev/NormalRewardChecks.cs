@@ -39,7 +39,7 @@ internal static partial class PackageChecks
                 Equal(expected[i].GetProperty("rarity").GetString(), s.State.GetField(actual[i], blueprint.FieldIndex("Rarity")).AsString(), "source rarity");
                 Equal(expected[i].GetProperty("effect_supported").GetBoolean(), s.State.GetField(actual[i], blueprint.FieldIndex("EffectSupported")).AsBool(), "metadata is not an effect implementation");
             }
-            Equal(6, actual.Count(b => s.State.GetField(b, blueprint.FieldIndex("EffectSupported")).AsBool()), "only existing six effects declared supported");
+            Equal(7, actual.Count(b => s.State.GetField(b, blueprint.FieldIndex("EffectSupported")).AsBool()), "seven effects have real consumers, including FlexPotion");
         });
         foreach (var vector in data.RootElement.GetProperty("vectors").EnumerateArray())
         {

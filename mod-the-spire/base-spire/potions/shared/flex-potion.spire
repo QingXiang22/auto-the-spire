@@ -1,0 +1,15 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use FlexPotion { template = PotionDefinition args = { definition = "base-spire:flex-potion" } }
+template FlexPotionContent { body = {
+  procedure Used {
+    parameters = { owner = Ref(Player) potion = Ref(Potion) } locals = { applied = Binding } body = {
+      if = { condition = equal(field(potion, Potion.DefinitionId), "base-spire:flex-potion") then = {
+        call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:flex-potion-power" stacks = 5 untilTurnEnd = false applierPlayer = owner applierEnemy = none card = none play = none } into = applied }
+      } }
+    }
+  }
+  subscription Used { event = PotionUsed reaction = Used }
+} }
+use FlexPotionBehavior { template = FlexPotionContent }

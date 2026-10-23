@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.62",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.63",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -69,7 +69,9 @@
         "base-spire:tough-bandages",
         "base-spire:akabeko",
         "base-spire:pen-nib",
-        "base-spire:booming-conch"
+        "base-spire:booming-conch",
+        "base-spire:winged-boots",
+        "base-spire:cursed-pearl"
       ]
     },
     "base-spire:Enemy": {
@@ -187,7 +189,8 @@
         "base-spire:uppercut",
         "base-spire:vicious",
         "base-spire:whirlwind",
-        "base-spire:whistle"
+        "base-spire:whistle",
+        "base-spire:greed"
       ]
     },
     "base-spire:Potion": {
@@ -280,7 +283,8 @@
         "base-spire:vicious-power",
         "base-spire:vigor-power",
         "base-spire:vulnerable-power",
-        "base-spire:weak-power"
+        "base-spire:weak-power",
+        "base-spire:flex-potion-power"
       ]
     },
     "base-spire:CardAttachment": {

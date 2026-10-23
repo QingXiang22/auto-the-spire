@@ -1,0 +1,2086 @@
+{
+  "format": "neow-effects-vector@1",
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "source_hash_encoding": "utf8-lf",
+  "source_sha256": {
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CardSelectionDecisionSources.cs": "674ae0f6a38b937a8d77a2b141fea58e51f2722db30518e716e62ceb3234e9da",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CardSelectionRequest.cs": "c7138bc202980c698333997c8c71a4a51cc1fc6645bf8dc899cc412a483821d0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatCloneMap.cs": "a63798e3512ba3bbf2d7e3f229e5212200a23345e5675a891f005de8a5da5316",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatDamageHistory.cs": "d27e077b4bb23907306cdff8c4444b76b50238fc89df11928ef915fc2e1856ae",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatDamageHistoryEntry.cs": "c6ca195c966792561a45645b9233a50f024947ba936393f5af9d375430980013",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatEngine.cs": "c129810f8dadb2cc825ab3342e06dc7c9599c8a2dc2f14cc7028376ab62b303a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatSemanticHistory.cs": "272769cd63b49fc30c6cadbfbf77d321b511fe8f719730ee7ea3a3b91ad4dc41",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatSide.cs": "d3e43bee3770f204d40254a6763eb2efd2419033371bc6b6745c9d347cc70ca0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatState.Clone.cs": "e7514644c0c66864a77bf08b88003bcce2627d5023a991f80d629d0ca6dd8543",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatState.HookListeners.cs": "12d974d9101bc68587ca1f6356b077879dc4e6c3d9e73fa36296e92d4365f525",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatState.cs": "8ccc88eb73762991e8496f4f390ace43ae9b20ac433df196adcb03e48fff4975",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatTargetCandidates.cs": "ff617f6c6dc232c50a1e62e6a11d0d1635fefb0362588af82d5df730f47b50c6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/DecisionSuspendedException.cs": "e87f6b3f92ffa20632cd36f102aab06d20e0a9ba8ef0fa3820a72fb9e963f63f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/ICombatObserver.cs": "4f5a4ea40cc5d6cf7024dd3ad3d945cbdde2edfd2b79da718cdb4855b7903683",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/ICombatOpeningPlanner.cs": "0431a5126ff80b01ad8f414d382112db11be093be17fea951e70d44dc48203e2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/ICombatPredictionSink.cs": "83441c3765c7eacde13d73c49d9398285c14b9f1b918cd65e6dd7b5cc444893f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/ICombatState.cs": "ebdf1460962a976d1199c8d213676d533f1f0df47cd77213e5491eda31e85613",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/CombatPrivateStateClassification.cs": "3e5eae51a6aa682ec476f2b010ddd5a369dbd61a35b397fbd99c58acea0c99b3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/CombatPrivateStateRegistry.cs": "5875d3b8e438ebafa748e1de3217886bde45221436b53c8c30a9df3de380b140",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/CombatStateDescription.cs": "f2f5e6419878624490f08d623183ac93a5b6a39161c39ca755e2c39a5f1d2765",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/CombatStateDescriptionBuilder.cs": "d4b0d5140b25b1e87c143a126942691ea1a4e16629452455f6e8f26329d6556f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/CombatStateDescriptionContext.cs": "aa60deef7c161007e5315aa4f49d3d33d3b48d686e40c56178e9e5908a9490fc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/CombatStateDescriptionDigest.cs": "ed7af86976369e1d657ed9854e792ad1ebd53517e0157744c471d35b668b4fa7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/ICombatStateDescriptionContributor.cs": "0271fd8b0bf3e842a02355edbe109f00c87d199fbfe057a529b910a54b9b0dcb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Combat/StateDescription/PocketwatchStateDescription.cs": "e8110aa45492d2834070db316b3a4139630a4fb973a17eab773462984caf6d74",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/AutoPlayCmd.cs": "582e600b6675f20a05f8f76e98c24f7026a3b5fffb3a0500159a7910ace8c518",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/Builders/AttackCommand.cs": "fb376b8063343a9d6a722262dcac46d00c796655c56e4d06723b22b1ae229e58",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/Builders/AttackContext.cs": "ee1657bed25ea8640336c734fa95552dbd6fdb09d8b3d7eb56310770be48f0c5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/CardCmd.cs": "75202dab925bde563ed066406e0a06b30062f397c368e56e36480aa527164181",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/CardPileCmd.cs": "eb802c3cfc4726985aa114b3c6cd32cf4ee52463772806a6eff7e83a6b2fca4d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/CardSelectCmd.cs": "5a8f64e37253ba992a2c4c91454796b00d97b4ba957bd9adbf78be92dbc024b0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/Cmd.cs": "225add525b6a14942f021ff83355c2af6ff79dd1a35b92f0c0c761e9a9c63d55",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/CreatureCmd.cs": "c48c55456ecd655e6d7e5a667c0744f56e8d2516162e594b2ae60754e13bc69d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/DamageCmd.cs": "fe57501dd11ebf5d1e6faeb8bebcae248b6125be433ae71f70cf34e5fc981de9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/ForgeCmd.cs": "0856b6aa8f8526a268d1f912db69dae1a243e02fb972ffc9ad5c6725c2627bcd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/OrbCmd.cs": "ce0879abd6a4f1fa706d6814cdeae85d71677d0d3bba939bf5a2a42ff84ef6d8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/OstyCmd.cs": "52c3b8ebe9adb90fc21d4209d52e36ce0464e18c1f94580abfd70e3dbc5ba37d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/PlayerCmd.cs": "ebbbc846016e47fb3d0a844b4861b18ac6b54b2d84f9ffdd8d8ca89ca2d8f9f4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/PotionCmd.cs": "2bcdd3993b43086d630a809a2ec57440b1fdf447daf259294e6c881810261ab6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/PowerCmd.cs": "3e7476e790698145e0f5d102413d191387723e7e0d6a6372e00bc56e5bfd370a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/RelicCmd.cs": "202165b75b56a57f23b5d9108b6371e4a272121b14b4aae7b69cc4a8e9234d82",
+    "reference/sts2-sim/src/Sts2Sim.Core/Commands/RewardsCmd.cs": "f1a52a130a1ac4558cb4ccb071fca3a5e5870fbb111d3172c6452984218e8eaf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Glory.cs": "3c1c951434ecb531394136a737d2a6cb9d7996c7777a5abcc2217cd43deae2d7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/GloryEncounters.BatchA.cs": "0b0feb9559a1bbed67c20c890a5dca5462f63a5994578df854499d415ce6fa75",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/GloryEncounters.BatchB.cs": "a1c92510126bc52d8e68e68fbaa998337b3a606a8ae22915b45feac74306729b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/GloryEncounters.Bosses.cs": "f91ddcf5780c2e4e84531b6ca713b6455296aa736cb70993108f2081873f6a3b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Hive.cs": "bb47c3efaef57061774f1093a26d7c36a5caac2c14931d5cc1fe74eb8c1231cc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/HiveEncounters.BatchA.cs": "69f24c452dc328fc197b1412b0fae17c7712272ad9179f23d169d42a1b04430c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/HiveEncounters.BatchB.cs": "125101499a4c2eca4743bcd7474b774a0c4b581cb7cabdfd9a6b08c5f77eb241",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Overgrowth.cs": "7ea866cde5786814ce32b6d598af4179a91a093172c89698e7b2503b02342c77",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Underdocks.cs": "ba5a03c6e39f05d2b534064458286e3f93bd8d0ababbc7d3c89846d9fe12581f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/UnderdocksEncounters.BatchA.cs": "c853800ff5b3392aed730698af3d73e9ac5e059d4d9c5c1e3fdac31be88e6351",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/UnderdocksEncounters.BatchB.cs": "633dcf96069176505ad13cb6d4cb5a81fb8fdd4d821a5c314e4be42257ba7ccc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/UnderdocksEncounters.Bosses.cs": "2c1c8e351dd997b1e1bef7d6ca22d86671adc832886e852810bc883fe90ed110",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/UnderdocksEncounters.Elites.cs": "96a03e00c34d65e9025d7ffadd2238015be60f89e6e7b46e3a70219b53af3b8f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Ascension/AscensionLevel.cs": "13ff9d70e57e3a082f92bfc4498761e189fd993116c13cd13cdf7d4c78eafa15",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Ascension/AscensionManager.cs": "037f7adc8ea585c825a82893e8bf3934d880f8551274bde5e3b3bb1791fbddbd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardKeyword.cs": "f4941eb3fea19d60dddd122b94553a019155cd40f5ec07949087fa059d8b7cf3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardLocation.cs": "713bf5062d37f5f545cb1b4b7079efb7acaf4a072b946ad2773e0ef824d9d368",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPile.cs": "9225d78ef2c94bd21e69fb79c33c5161d347194337a5562c0e457084cd1c042b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPilePosition.cs": "3670ba55fcb636180504331b10efe0d29269e90e226fcbc1728ca59d3ab1e364",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardPlay.cs": "d1fdffa7236436cd42b649212f3a818dde1191c5392a6a9b8e95b0c2f7e8671c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardRarity.cs": "98f393e9367675a3af7dfec103e13ac685c579c1f8b802e328854a57fbb46505",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardTag.cs": "f3106e2e3db7cbac3681413be50f8930dddd0c01392927224762b9788ed6e3e1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardTransformation.cs": "8b339bbfcc8c0e898069fbc1d9de57c815bc96044ce9ed9c3acd06665d223259",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/CardType.cs": "0203caf95e1e14090df20f75e6daa281d1d768612af6d60780261f9810718e92",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/KeywordSources.cs": "19d5695601b57304c41664eeb34f4abd277f7a2e2842f76bcb8276bd4ac8853d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/PileType.cs": "5baf46cac77117b5db213d6c63b553a6193717673f5fdc3ae3007c977c24a583",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/ResourceInfo.cs": "cf36168fea35ad197cc6144aa43c41a23decc230c05fc3caef44c1262e32c18f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/TargetType.cs": "e189a5fed23bc0cee82072a3cc6d466e671322eb638e9b27ffb97e064a224065",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Cards/UnplayableReason.cs": "43ae91c0b80c5a3f4ac8571db1c152e4140a98504eee0436e5fe814d0e68a15e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Creatures/Creature.cs": "bc868a894878b2ebf5992dfc919f1295fc32166314e094e58d7dc81d0372b495",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Creatures/DamageResult.cs": "856ef327abe67143c74e8ab8867156fa85ba92cff7a0c8fadc4ac5ee6bad6dbc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Gold/GoldLossType.cs": "acd981fc044ee46f42f7e03c4c0a6a7b2dc06bb09305153f47d4511bee0f9217",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantCardEntry.cs": "e1b342d6b564bd60f4b6e33c21db5b421ef1999dad7f72998ea235f47825428c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantCardRemovalEntry.cs": "6c4d7458bc61ef51bf04def62011c71405058622993a2cb6c45c8b5be9e05ff7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantEntry.cs": "d9a62a5f4e4769843400a9f4202a4dfe7b99c1ccafa363ec6eaf76443d2dd309",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantInventory.cs": "a8171901cb039a35056a030b32a7e707e7c9b317feff422aecee73276d24d2e5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantPotionEntry.cs": "35abe6ab90bf5bd96d796c4ef0ce980a1d52cbe65028072b79e7b4fdd624a59c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantRelicEntry.cs": "b214059d6b9e59bda7be0faf5a393f7bb01e5474a85e1333432f457b3d4d6dfa",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Orbs/OrbQueue.cs": "5c7122dabc86a7cc31fe4cfea802676b37dd646342d719c59471e306ebffb7ba",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/Player.cs": "dc1aab8039d2716e859ceeb66f48a2bd1736d387b93d0018378866a254f356b4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/PlayerCombatState.cs": "0728b905940037f72a7b04fdfa20e101c06692ab3ffaa375bcc917925b0e36a0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/PlayerTurnPhase.cs": "39ad85bfb9ee92555e9bbd1f9d029c577efc426efb65969ba81d6d60e1e578bb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Players/PlayerUnlockState.cs": "c3440754b14129de6fa4f86840da1a87fdd80126bc81c4657929d74e25201664",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Potions/PotionRarity.cs": "ddcdf36903d5438524bf47b2b9d211050d537b7e6cbde25e7edd07cf308278cf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Potions/PotionUsage.cs": "d16855c08b0d39ca978b7c0957bb38076f136f1096ede0c8b13b94dc1d79084b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Powers/ITemporaryPower.cs": "3c46a0c3b376de1b932309a92237ca7c52752d300332432b50bd6b3a0eec91cf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Powers/PowerInstanceType.cs": "63d8ed2ce3a066583519ad4d66bad1a2828db0491ebc56e16925bfb329764ef2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Powers/PowerStackType.cs": "6768145214e2b68be3eacad7b45bce73e142829eeffa4d0ff71f744655b9fc47",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Powers/PowerType.cs": "d9a187612fd33841cb062ddffd068897480027da422c20b1207e1dbb42861180",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Relics/RelicRarity.cs": "08cce486c38f47c28d41b088cf06ac1281ccbc14efc2a15db9e21a235fe2578e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/RestSite/CloneRestSiteOption.cs": "832834e420f8e0bf3aa85a80cfeee1ce11a04ea0b336cfc7ea849c375b53ae77",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/RestSite/DigRestSiteOption.cs": "f797217deadd9dc31bece24d66c8d8e9cd5194fa01af7eb716112bf4cac2430b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/RestSite/KindleRestSiteOption.cs": "c8f7285c176e58d60757d5bc73c4e8864ab9fa6c4920435c9578a3189cee02f0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/RestSite/LiftRestSiteOption.cs": "66e5e12d27c2d2c2d9a1574811ca9ee31e7e678d152dcaae8087440de4612f4f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Rngs/PlayerRngType.cs": "3704f4c689691e07b4a4f8cfff093fd85c514b37e6a5a4a46f6df4f98e5c7643",
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Rngs/RunRngType.cs": "0f97bf3e072ebc264cc8abb3584efd45f2b51ac6fe2d2a6163e5245427be6296",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/ListExtensions.cs": "29c591c5ebc227f329ddfea40ffde38674b245936ac95b718de3b3530e314fbd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Helpers/StringHelper.cs": "cd05ee766f574de5db8ee8373cacdba1814586689cd554df07d69cfe3d18fc2b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Hooks/Hook.cs": "4efb75f4c1edde3c50aab6a83d66e673de39524831013473e593e89d6f572c32",
+    "reference/sts2-sim/src/Sts2Sim.Core/Hooks/HookOverrideIndex.cs": "dc75444ce3b994f5cc1ee7a1c4a50f9ea1ed7e7435c639a66095f79101efed09",
+    "reference/sts2-sim/src/Sts2Sim.Core/Hooks/HpLossHookPhase.cs": "c4f0b47e2a4ac6b5529768ce84732f5eb5f5b22282073f183cd8d928694c492e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Hooks/ModifyDamageHookType.cs": "cc9dc9afcf158c91a3f0346baf3d5bee36958c0771fe8ea326021a60a82347bd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/ActMap.cs": "47458e7ed72aa461789faa27882d1e3bfb5aa76a5b9bdfeb4d02f88554110849",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/GoldenPathActMap.cs": "187a4a08de89a8439129bf544caca6bf6dacf1b26f50e669a89fce4ac7537e35",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapCoord.cs": "ec3427fbaaba0e9ce81b36bb76080aad52868bd0fee7f2c5c646b58f80294ec7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPathPruning.cs": "aa41dae490bc28eb746b6b327b42a23c73f623cd391f22aa990a48bfe1d757c2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPoint.cs": "36b92fde861c041613ca2b88becf55ba1e4131d9cbc0b1cce838080f4d75e435",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPointType.cs": "85b999bdf6bd3922e29d0ddc2615f85014ebfb29b03b3fdf2866beb81892ed4e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPointTypeCounts.cs": "241a46dc007beb800814832f68d499e36adcbe5136ec4dedcdc3f52d74149ef8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapPostProcessing.cs": "98bda10e194bdbcb0c5a4ae8a83fe3e14d9660acdb263643678ee63473138f93",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/MapTravel.cs": "d4396a51420943b8a7d330a196032da1242ebaddd9a71e8a75ab3e5ca0a5f7bb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/SpoilsActMap.cs": "164d2b08e02643d1a2a49dfff38f00657bbbe464bbdf2bec79ffad36b3b6defc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Map/StandardActMap.cs": "3570f09e349d1ac5aaa5a5b1d58a8ea56f298d662fa357b2092c34bb072dd2b6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/CardModel.cs": "f7f7ba8945e28c470e6bdbce747f36283db354485b9a66c022d06bd542d04018",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Cards/Greed.cs": "bc9d19a87091aa8ef35efb990204ce6711d42d44be0158674316d37475f661ed",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/EventModel.cs": "8b628811090853c16b846062bed8f01711c1ba6f48dd3ab2afd8fdcace4ed129",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/MonsterModel.cs": "c790697735d6f2880bec455ce5a569be0012b663fefeeb2ed2ae4ab758265f02",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/BattleFriendV1.cs": "e426f645273d7ca4138b6556fec0a37815f13cc85b19e6798d6f49eaae796c17",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/BattleFriendV2.cs": "f38aaebe81d37d4df48028da9f9d450ac252695829d553c4f05fcf77c63dffba",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/BattleFriendV3.cs": "9fd31912f78e6be4f7efd9487bae9576adb6c466e8ec298187f60306dc9e16c1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/PotionModel.cs": "cb00da6f38898d641cb74b037c6c7e176180b1b2b9302ca1080eead59391eaed",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Potions/FlexPotion.cs": "c5a070a879d005a40417595527c53e0ae003b3bc5d943ceadb305ed32d56311e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/PowerModel.cs": "f430ec3035b7b4932c5d88340e3148670599bbb41f9d089a6f5e78a99293e6e1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AccelerantPower.cs": "39d17a5280e6596db794c4f073fc430d959a68e0e0ce0be22b80aa049bccb9f0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AccuracyPower.cs": "d42a1fa561650a342a34a17a73354f2469ab03b939cf00ad3696dee79ad2e0c7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AdaptablePower.cs": "13d7c9197e9e938f91990ad0950b908e4305828760f651595aa29aa1a77b8525",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AfterimagePower.cs": "deba32c392354229f337f56f9c414b7e1f1b961ec44140d65349271d88f1f58f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AggressionPower.cs": "9be36db566bf36e3f583ec80e4255c4531e2523222a68b41b41adb9ff553bf2a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AmbergrisPower.cs": "616b3e41e98138198108b421c2b40926d4b4436af813edb9d1ab3d86fdc8090f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AnticipatePower.cs": "d507188875bbaff8c245cd71f76740efbcf5b1333bc69e07025c33b04e79ff57",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ArsenalPower.cs": "a59a4325367ea44adf3e423c779b8887bb76b832bebe12f881114a0aec835047",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ArtifactPower.cs": "47a91564b35f1bb525417102fdbeb26bb351e0fa38d62e5186251d33aef4db05",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AsleepPower.cs": "4f8d6ffe6a96ae4a2aed60fdad08c2a2f4b80b716362493061c0f0747350f5bf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/AutomationPower.cs": "b527f4f9f5325b3862a56e431efb37763fdc0f154fbae6714fab561c61a2b618",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BackAttackLeftPower.cs": "389ffd30ac3e91792f9f1a66a8daf3d8b3f9cdf960133edd2bf1365d0b10aa70",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BackAttackRightPower.cs": "8458e56393a6a68e7cefc10fa53374da1b7a08ca7a27954575c93ddf28b3cd43",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BarricadePower.cs": "5d17a47833acb9efc147fceb6175860b13cec3a1ceb5e3e310ebebb402478a8d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BattlewornDummyTimeLimitPower.cs": "b75bc440a89c8c787e626d1a2624e792929d5d0ff5dbe5a8ce84fb0f489eb471",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BeaconOfHopePower.cs": "2ae888ec59680aea6edec2a64eae061cbe6e0bffed15017770fe1df9216a62f1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BiasedCognitionPower.cs": "f2a0b81956b1c1c7f88c8bc2abd636178d80ee1f1a2deff1063baef1e1f60611",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BlackHolePower.cs": "0695991155257b05626e9a973eebb706ec3dfe720bb92a79705fda2cbbe0e364",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BlockNextTurnPower.cs": "efeb8cd716be76fb7fd5b149f4986de07391b8c27db9a987633355523c9002b6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BlurPower.cs": "125a468c61b90e022bd133e86aeb8bc8333dfed75cd06643fee8ba6bf06ed5e2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BorrowedTimePower.cs": "0a392f9090b829098f2dfeec6230bd5d7b7950af4b9da652c1a18b900e0be180",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BufferPower.cs": "d6c66065683516305193845a82e5bc2a31f9b3fc09462bf8d4ebcba5c2f9076a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BurrowedPower.cs": "ca7594fb6931ee35885be83cce0929d3e12b4a1004f034126121261e00a782dd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/BurstPower.cs": "419411b8c508d64086aa6dc09fbad1be189a285266727b12f3736d141db39e1b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CacophonyPower.cs": "60296a4bf9c807cacf97a091c36e84817cb7a0bccc3c401deda84ab38a22f566",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CalamityPower.cs": "e55910a66cd1eafb21ffae8779df3b2c926b3088e3f353c06234d5f3f4cfca16",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CalcifyPower.cs": "6c9ce96de1efa6d5c90abefdc8a7399f78eea91a3c161f955cb83929ccc9f414",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CallOfTheVoidPower.cs": "32b231d49af9d6a683f8d9afebe5e6a7251b5e374a80cbe1594fa3dca3d0b1dd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ChainsOfBindingPower.cs": "9204b26f996855274108e98ef95ca47ae57cfa120afa15a24646c95efbe51064",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ChildOfTheStarsPower.cs": "77a31a70121de11876a07b1bfe171eb5d82d7811a37baaaf366311a6febdd4fb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ClarityPower.cs": "875b956f57c7be00ff462d3ad91e0883c5eb2fc9daec2058ba08ba94ea62f14f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ColossusPower.cs": "dcb8eced8858651502c72678b98f0c03d353103fa82d3a14906ab8db82fef7a1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ConcoctPower.cs": "6047fe77814b36b9e9b8c076d6a23b15abce806381696e58da110b986df3db85",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ConfusedPower.cs": "b722f161235b386feed1ba6e06d96408a0090eae2c54fcc62135934242907a5d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ConquerorPower.cs": "c1978d4e986d5fed208d293a3c104458f54a038f3a9eb4bbab60bee42ff41d9e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ConstrictPower.cs": "d28e972eaeea7d5eab25f020a3b4c516b43ff3a7cfcfb1afe6fb019d038d65ce",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ConsumingShadowPower.cs": "500abac4af794af97fe28c7563132b3f6e830e33acefe6b2330315d0cddb2e0f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CoolantPower.cs": "eb8bd1b8d22e52e76ccbc7fdd897b0bdfd9361ffcbb6dc1defd68529c63b1a20",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CoordinatePower.cs": "3d797d53daca7486b5b0ca60455b3c9c86a977d6abb7e8582fc74b38802b0b79",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CorrosiveWavePower.cs": "32e907e2caac94bc530b8c2276ee59895b11feecdab8aae5ac337abf73b2b8f4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CorruptionPower.cs": "d570eb77329fecd3bcfe776f568d4c0db40c493d68c1b6ef0359c38c36bd1ca6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CountdownPower.cs": "f8e74552b2f5570ecb7273d3491a90df4dcfaf4681fba7e3c588eac44c1c513b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CoveredPower.cs": "ae4a67000af0989aba14c97a9e02cea04f780fbfb6335d2731e8d3fb50ab5b44",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CrabRagePower.cs": "be3020507c167fc722d7a963b803aaab8e4dd08900328416d0bc6d4653555dfd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CreativeAiPower.cs": "f77831c3968fe9a23c7c469e2a8be85645cd86a032438482a70aedc26325019d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CrimsonMantlePower.cs": "e8df6c068ada22b0eb5f04e6e8be7abb54c9c57a654c2e6bf6ba9720e406fcc5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CrueltyPower.cs": "6ce17c344b1be6d4e62e3a72c7e2de01232df66a8be86a3aaa6c3115383ada1c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CrushUnderPower.cs": "6a0e3d763c986693f75b7d95427c5732f43d03ee6ed14f33f8caf852439045be",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CuriousPower.cs": "dca8810ffbef5d2f792eadfaf537a9e833220598870ad5b828eb298dce8a582b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/CurlUpPower.cs": "630fff75051da3a5d185d19daeac106442603b84a8258dd695771b0c66159f30",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DampenPower.cs": "edbd6a38bfcd8c4a474b80889d8a23ec617207dae33453c0116b7a33dab1f7b0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DanseMacabrePower.cs": "06a6181c613f079f3739ca53fd9c7f258dcdf33b62d85d582bb374529b31494c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DarkEmbracePower.cs": "2b4be578d7ac7b257245d590f4feb7a08d9e47d9b345715642e7d51bc21c631e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DarkShacklesPower.cs": "ce0fa205fddac51999e921c78c6ffd107003a24411c1d70609a3803d6ab74215",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DebilitatePower.cs": "5dff9993331ade5f1485a66d34ac2ea90ee62c6f2005fce15a7b958d12d6c529",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DemesnePower.cs": "463da538e8a658462204f36bb457918d2eb06bd777b590f7f09f7178c0ceca8b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DemisePower.cs": "ad78c16f23e33fa04837df50d32bc32dafd72d0d10b843adb6498efcd7f25153",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DemonFormPower.cs": "cf96f9ade5ef17c5ffc2536e088cb9e34d3032813a71b4b1acfa9ec1a156b07a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DevourLifePower.cs": "ab69ac812095ec6e0356e7de81db1c1248ca37f36518788905e1c67892788c3a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DexterityPower.cs": "46bc5a53db08a1c2f8ac15de403c60691a3a3b6419a6c6852373b726fb8a9743",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DieForYouPower.cs": "11409d58548ce74fdf412826bf4bdc1dae31390a286044b63f5eae0d66dfbaa0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DisintegrationPower.cs": "cdaf637bc768603fb71becb3c5c0bc8a064aef7d738197f71643e0ac14cc9298",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DoomPower.cs": "5060cb4cc7c5d35e95a375e93bc34da57c4c271b09b0bc7f7e918bfe0f371025",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DoubleDamagePower.cs": "5ccbf3d55414b629a563607fbb0571e61e059f37f7e14ca16f50c4d9200bedef",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DrawCardsNextTurnPower.cs": "285bdf111b594695c4ae93053d82debe02424e5b391c190248bb8dc044702c91",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DuplicationPower.cs": "823b45e67dda409eeb0c4d7e70e1305e3d45006162fb7d498443f01d9401e835",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/DyingStarPower.cs": "3aa51ec211533f9fec1567df6995213cc81b6a6916f51e9074839ae715852dcc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EchoFormPower.cs": "000144c87bc3121cdc4abb512b9d88fe8d558ac128340c378f8cf8f60dbc87a0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EnergyNextTurnPower.cs": "f308dd4238c7f7b240de2eb7e29d1a501b4cc5b64a5c8ae7e78a53cb51b5ab4f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EnfeeblingTouchPower.cs": "e171421de3d5cbb98d3f99bfe11aade2904535702b9bc0106c745289f565302d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EnragePower.cs": "8eecd9066e35be193fcd99388c8cf56285e9d66f006e9fe6dbc25e982a141423",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EntropyPower.cs": "6d0f70a424e12f6251d3c07bb54bfde7d755d3daffa89f39a035edaa909a8d07",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EnvenomPower.cs": "10eb60fba14c87c24ce1c71cb0e5b3f7d666a33fa44ed5610edcbfc41c2d7c80",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/EscapeArtistPower.cs": "da8cacf6c70b891d4b2b4fa49b59c70170596e40efc55e52f296bd339c95c9f6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FadePower.cs": "20efccd316f54da3b97d6f7cb26a56681dbbf23902076207fd03b4043ae503d8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FanOfKnivesPower.cs": "a02061fa35aad9948ca14203c1db032b60256aa2fba7062b139962096864b6ea",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FastenPower.cs": "46f4ba7f23f2a2343fec8c009b6a96e05171e7264993d121354cb80ae0e738c3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FeedingFrenzyPower.cs": "55f9a913ab2244b372c290f2b6530fa45360defcc3fd74096e622cf797731fee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FeelNoPainPower.cs": "d35b3b0e669549c34f3a506a5bb9e8c88345cbce1ad94f0d0d713d63b3f0643b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FeralPower.cs": "7690b0dd49ef146dbe904be98ce0fe4aa56e372d5905ed09b8ce06255082f9a8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FlameBarrierPower.cs": "2eebed60b655ff25b764618e36c9d779458ebc331d1890a1215ae0a0ffd8ca75",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FlankingPower.cs": "ab7637adef0097a8c73e24853129ea66d3f1115411bf3ca1e8f46779a15ae5e5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FlexPotionPower.cs": "55785cb70c2da04e9c8d2abb746ff4dd20d371482db4df43873425dae4bf1d19",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FlutterPower.cs": "b6a3165dc9e77c19487c7d8dc61124e0558334c4eac3ab4f550be216a12dcf1a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FocusPower.cs": "bc68a4d9926f366eb7ad645b84ec8ac1382ae901765b31d3abe8236b12d38c87",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FocusedStrikePower.cs": "feccd8228d6dfe789d4d5a041576c5e12d04ac9cc0be855c3d1339cca16334a4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ForbiddenGrimoirePower.cs": "fca100da75a86a4369982fa2032a0e5d2402b9238a23ab75146e904656135175",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ForegoneConclusionPower.cs": "d1fea9bc9f1ba5047f479db62beb6947022768fa0229cc8e1f02e30fc6aecfbf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FrailPower.cs": "ef52e7b8c6ff8c37bc696ab0f51b56c2aad3bb4684aad759c7392dd1c8da5272",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FreeAttackPower.cs": "216631b60579fae9b7fe3315dc8986ae8a4e10c7521ca67c4e24039766a8f442",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FreePowerPower.cs": "8fd28d4a6719349488d445e48cb63e59e7b077839776e683c57b3ab15f6d3dce",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FreeSkillPower.cs": "e77510536f3801b7d5da724dba867238ab85d2f292757f19e24f101765aa0b0b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FriendshipPower.cs": "af9282938b83981a3276509752f0e2fd80ec9be605eefe608947bc4aa16138c8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/FurnacePower.cs": "42f826f227502d4110f5cea4de9ada603f26d278ced593e394893f1a0b8b7314",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/GalvanicPower.cs": "7cde2fce8fca4b7f6f220a8320865bdd5246e279627706fd3841f199fd1811dc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/GeneratedPlanPowers.cs": "b7ed6939c06608266534a359d5af2d75a253ae34db23949f93c037875dea0b56",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/GeneratedPowerModel.cs": "ffbe85cf061baf76cef50c6addf58e08cad3b8b0d56388d4e5b30f779277a283",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/GenesisPower.cs": "0388ef936b9138654a8e0cd0e4647ae449c87460895c1811e066faccb8829185",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/GigantificationPower.cs": "d4b03e70db2b445903f8a566a14c4e434ff7194b58c1927f4c9bf90e629bc1e2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/GuardedPower.cs": "5cb09dfa3ec2091b35c8713accb92a9753fdf20ec8ee706370cfa328d431a6cc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HailstormPower.cs": "cf50f01e4ad0dcffd384a0d125d565cb5c4032fa122b2ed2655310cb0696125a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HammerTimePower.cs": "ca691c81a2dee4b577d1e80f0f1f3c20b10aab19c0e75e951337504f6aa6f385",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HangPower.cs": "1cafb59fdf2cf6827d71eb6658e38d654598a0805d2cda62936e337c15b5c6cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HardToKillPower.cs": "2417b654b50a4014ade080ae03e652c84cb3d7db749f63f60a15d4ad3e6ea884",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HardenedShellPower.cs": "d6789485937d2460d22f54cedf8ad70ead269f3680758403189c54a705f4715c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HatchPower.cs": "af88b3faa7061259881460125a6a819a9a91b6f2e0c0b9aa3b9eb66468489541",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HauntPower.cs": "27dc1ce0c8e0b449ee1b3bd89ebdafe3253d21ec3edafad3a2332fa21f793d5d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HeistPower.cs": "b38c282aa802e4717a494974ad77248142b607a6964fc8e543b2986607c68c6a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HelicalDartPower.cs": "a25acbbd41d4c7fc8c6e4682f7b498c3e8d669ea7cdccc199af98d3fe45a2301",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HelloWorldPower.cs": "5e045835e2ad4b0128aab1ecb30afb28c2c6346bd61c38af295b4a1ddc497d89",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HellraiserPower.cs": "488e39450bf72441fe1f759aa999dd58c1f1e4b5ee2d37b9bb97b2620069423e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HexPower.cs": "b04307ce55306853be44f06befff96eb2d719cb78eb18ed9d0825fdd82f7e24e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HibernatePower.cs": "b3ca348e4d64d7a3c9853928dc54db25c37c3d5506dd508a570d7305fe5ab9ef",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HighVoltagePower.cs": "6813d01da5b98df7bee809a461a5f4efcb5a7ef3c6ba7e573c2f48aae56a9d38",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HotfixPower.cs": "6be77eda95fa4d9c30056478ff3659b2ce00dcbdde5152780bc38079dbb93015",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/HyperbeamFocusDownPower.cs": "5791a33b005468845183f291aeca15eb31f5390579fe51666526f740e12fa692",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/IllusionPower.cs": "df0faaf9d4a60ff3dd3d7067916c1c88ea809aa387d3970065902a5f9adbd334",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ImbalancedPower.cs": "054c65c42455454ed3090f7bbd4802b27d10c2f278a53d22e4baf83bc884142a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ImitationLearningPower.cs": "29ae11d5375bb3b3a940a37c4113a83d1583f006740fe868370870232245b746",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ImprovementPower.cs": "189c4f753d852434f6da19aa29c4a616612c4f9f242481ff43a522897ae20524",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/InfernoPower.cs": "fc7c30971167c0d8891ba6ed1a0720cb31919bb8032348c206b3129f390947a6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/InfestedPower.cs": "bc8c305c5663fb69ca7fc21fb2ab39d1b4b411ea747c47b9b166eefa2849ebab",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/InfiniteBladesPower.cs": "f4d9a06a782ec50ec83b60f7ef378e386cd82a13a95d557785df6276f39b92b8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/IntangiblePower.cs": "6e388a26b73b76ad425cde0f2efb82a1e90b4f8eaffddce9d24f8bc47c331c48",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/IterationPower.cs": "b27ef29885e970da9713c6f704dfc1d956cb4f5095bd8bf554ac9675176bd575",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/JuggernautPower.cs": "974be8f082b03fec6276873345ff2ba35a09c1f689a84deeba3057add8a1fe2d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/JugglingPower.cs": "ecfc456a710858c49cfe603d8fe88fa5365af0173f1b7809073070c5440efa20",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/KnockdownPower.cs": "9da4ad46cb963441dd45a1450b0aa4e88e94cd2d5354376c335835f5bc5051da",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/LethalityPower.cs": "06f81f0187453a47bed095fd339e0f55fa009e07e7bf99be6b6c4a0d4a284e77",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/LightningRodPower.cs": "3a25a5d1b2b1b241f3e7441b16f461bd0f7db09ee9d4f99cd4e0c0ffb325d471",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/LoopPower.cs": "194a1d45cc6811c9c2567baa68f544a78450086ea95ccbab86df2808b089d6eb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MachineLearningPower.cs": "2428024c01fe15087cc2df7d6ba8b2c3cfd5c93b8cf7234a720ea6d94419c38d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ManglePower.cs": "4fe724311f479500f8618c2c789d3738d661f5efeb19ae61d89da5071ace8f13",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MasterPlannerPower.cs": "2f25fbd296563f82a9d85af6a4c9edd3b41d8bcf0612ca237bf4c26b0d1ef448",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MayhemPower.cs": "6045a1068cb5cfe9ffff31f48def3fdd5a2f6cb6d9e1a0d143661da993c186d2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MindRotPower.cs": "6e25b32bbb75456650947e2938f1fd1ccaff4c705869d72f5860b3d99efc9200",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MinionPower.cs": "e8bcf869be7b709d4bdb9f8a3dbe8ab327c83572083d444652b415abffe0c6dc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MonarchsGazePower.cs": "0ee9d82e6fcd3155a62252fa95be2dede582c060ab663209c08c9270d53616d9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MonarchsGazeStrengthDownPower.cs": "c9138723b6e5493a8bd11a50b01863e040d6472151bdacce6293e2717c00ae8d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/MonologuePower.cs": "2bde22aff84d0158a57b8f4e86b0c2338224683fd5419ca27c7ff7c8daa1ff1f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NecroMasteryPower.cs": "8a5c7b833dc703b26388a0b78a19c404f747e28655a304a1c9f87542a8b48a5b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NemesisPower.cs": "2313ec2ee0364c9c024a464e8bb18d35bae3755ea2cee55736489348cc8d4baa",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NeurosurgePower.cs": "7c16e8267582c4f89f2f43710ed77be50263c1bd189e56c8bd1ace62a8714bdd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NightmarePower.cs": "4f948c1d9eccf7a579ce5f0dbafb42c971b5d1b7d01687b60130b6be92386d79",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NoBlockPower.cs": "75c27c0e0cc0c1e9233f6fb1da1f99065805d043940d0d039339045cac56f92a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NoDrawPower.cs": "9f3596c250786f53d1e6dac5f664a3ef4fdbd5a5f322eda4523c99d4fa5329b2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NostalgiaPower.cs": "9cc90f529430e4843673bc3e27a7ee3e31f625456a2489e32dd0d56e1bd4b391",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/NoxiousFumesPower.cs": "58566e0ad44288da7f08d665c42cd682f9b73e331c784508f0aa257c963c373a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/OblivionPower.cs": "ca64bd2c2de2444786d4884853e3e324098f045c61e497bc47b17f47d7e5cd8a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/OneForAllPower.cs": "473d0e68f83a82dab0f803bbd813fa28e3d14dc5e4164097cf332b3aa55ba6b1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/OneTwoPunchPower.cs": "7b2c8f222fa415cfa133f6785978685740c821f8ce8b0082b2e2696d6b578895",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/OrbitPower.cs": "0d828838c1f1b401c10881523bf51c392d1dde1a32ce105a6c576b022eee7e5b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PagestormPower.cs": "a6dba2586f07eb70fde644ed76b9d71852742c08cc399972872f0b260d873dc6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PainfulStabsPower.cs": "66198e201de6eb2c4160b9587edffc77ac376b9115fc678b1a317f2d7ce4ae66",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PaleBlueDotPower.cs": "8a8db511659dcc0b2ef03c4c4a7d506cd8c8f3670599c3a2c35cd9a603bf2880",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PanachePower.cs": "5b5b8a9d68717caf01e1b0941a57e5151425fb105addb5ee6d4a8e23cb4c8f71",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PaperCutsPower.cs": "0179e91e4a1dea21af54f0eee94f778f31836d646b8cc8affc66a6e41406f39d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PersonalHivePower.cs": "9d7ba1198d28142c21dab5cdd34828e5d8beea67543313cdc24131d3b4af2d67",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PhantomBladesPower.cs": "d27f2e734298801088d6ffa90594645919615f341ffa45ebbc51a782f1bf6c2f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PiercingWailPower.cs": "f1623c44d94795d3c37df31fab0fbc74ab2e3235aa5dccc3041ebe329b0ef381",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PillarOfCreationPower.cs": "6caeca3b3a6a466895369a2159fcbd7b3b30439a0c077b676e2734bc4742612f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PlatingPower.cs": "e5e9dd82e9e7901eff23fdf945f20d6812b51914297bfc710ec6d2ece0bf4aa9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PlowPower.cs": "f5e405a76346077155b284c0bac4dce59fc61696e2ba62d8c4b1201b519312ce",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PoisonPower.cs": "81ad51902a63e4a38b41e3d0a68873a055c58026596f16d859cba131862089b0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PossessSpeedPower.cs": "ed8b926ddceaf52c02a06571dee348f61ec29ec0f0da1b7a7d4486034f3ed284",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PossessStrengthPower.cs": "296ad3332213100ea33f667674b35fce6e36e41c4c725cd585afecfc80b92df9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PrepTimePower.cs": "23ea534681520d60b4f84cad9e64414dc12de0e53274c4053669af93520dd5d3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/PyrePower.cs": "b839cf6ddc391ca4bcfb953161741b0757193c4806d8ae134875e646a8b5cd23",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RadiancePower.cs": "c10bbff5f496875b53c44cf29b65eefb34b45dd3f876f4996d987e13c3060d53",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RagePower.cs": "69b1d46ff186580bd9a5c4ad36d2f4ca7b6b1910f9a4e57e19be51e9c874b297",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RampartPower.cs": "5e3e5a6f4d67e11064cb878bfd7a9eeabcc58ab38fcf48d1fc0f778d1959fc9d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RavenousPower.cs": "c03b223073f510cce1b6cbf0af6a89b03ed65cdaada802bc61762a05ca471b37",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ReaperFormPower.cs": "f082da5fe6f073eb251e855d36b69b52b0ba84cdfde5b3c05591317615744695",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ReattachPower.cs": "eb566477d3640a6bb6b74cb23d32ba0416ff514a64a71e0a82c0d5d8a5ce1c38",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ReboundPower.cs": "bb57dff7c61760530f746ac15d3cf9bf9a321e9c2bcce8295aa03f036d49f9ab",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ReflectPower.cs": "9eddff435d57b266c9c9d9b51fe6138e7bee8296c85abf8f87dc706aba2ccb05",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RegenPower.cs": "7d1b64ce110438909e1687bac4509b4fa430497cd6e5c5e31c962e55b0ac5f62",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ReptileTrinketPower.cs": "14f167fa088a528d75958ccc6d4d02b95dad88578a96e60bb3e0ca003e994517",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RetainHandPower.cs": "f8639e22ff91fc1c07c277cefeadf3ce987aa03def5af576a68b1f000e79c0c9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RingingPower.cs": "352525a31d5f2aa5125bab82b41684ec4d8aa50aae73fe8b72ab732443be33ce",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RitualPower.cs": "ffd4c49bd3bda0cd67aa21cf41f8cd3533f2c0a5901b3ee4e8fbcb0be3ecd453",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RollingBoulderPower.cs": "0572e17f728dd7b27f5fb13d6a9c0b17ca30893c7d3400d30c422a470151a6ce",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RoyaltiesPower.cs": "0f91991a16f3a904626aa82b7cbcb3214a22c4fbdc24699db9cf9c3953b13756",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/RupturePower.cs": "12b2e8b9dbac065c476ddfb6f4476987510721f4c028396cc469f9b375c93d10",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SandpitPower.cs": "50f887934b2296175aba101492c5dfdd9d7531a375e2549db79aec78c6ec7445",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SelfFormingClayPower.cs": "7796809f2dd2edf341b27b833d70b51486cb7c2f0151c770c73580d4f5e7b110",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SentryModePower.cs": "8c6ba8066b748b243558539ff14a5b275c370f24d125a72d6da1318a3fad3e0a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SerpentFormPower.cs": "75ee24a7e861bac335cfa96b6c064a9b9cc9ead38b5e7682db06d5b901a5ed2a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SetupStrikePower.cs": "febe99b6ef10228cb9ffaf1e93395f41960bb3530efb8e68d8e111025671bb99",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ShacklingPotionPower.cs": "afcf820883abc5f06f54aeed16c59c9d855a9527fa68c2a8c5b61d6c8123b25d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ShadowStepPower.cs": "dcb629af08c47f3564782bcf599cbdf47cc8a3df06d2364869d05b25ac244805",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ShadowmeldPower.cs": "4baeed0a6145f137fb25965e589b541de5964535f0c079e9e74d55458412500a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ShriekPower.cs": "850d8b7dc669dd2eb820be3092d01790aa3729fe662e32875f479e4a64e7aa6b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ShrinkPower.cs": "cf9ceba2e4b6a71f2e1d318759795cb2f9576b5ce6a7ccd51f2abe4098dbf4ac",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ShroudPower.cs": "f9ae0755cc36b4bc7c3459bde4936586798a267334225d892b74653482d7589a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SicEmPower.cs": "17346aa775f1cf5b16cda3d157ed134bea89b2af9ce93e3fb6198409b2759b5b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SignalBoostPower.cs": "a2443dee21e6567d21ffb66811714783d4cdb8223a1ad242b019d2d6322176c0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SkittishPower.cs": "1fec74194f94502b9415e40768503572b9897d018c21a6d516d01f32fcb9e551",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SleightOfFleshPower.cs": "5eccefe06668535b0ee13cb9e6ad621a169da1aecf85a8653632ebaf1ec4d001",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SlipperyPower.cs": "64d52702d3d9fab3aa1bc5b5067b76fbaa4f44424066e354353b24b7e1eb6710",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SlothPower.cs": "88eb85aa1ad6c8f90a6b4bbc91369243141136f9ce130e343d255149dd7a5f83",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SlowPower.cs": "8ac38f625be8c6732141af5404b2c8edfceb4d79e2e9908c9579d831e85ca21e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SlumberPower.cs": "037839e20a4a397e8ee823ef0ed7ed28a6497556a1ebd9afb921840dd34950d0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SmoggyPower.cs": "42a66e499fee5af6faf11fa7ae4dd2bdaa47f5a6a4eb0ce310b192bab64a7353",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SmokestackPower.cs": "3ab350d661137135fba57774132518dbedc5a91bd094b60513c8e9c1cefc91ed",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SneakyPower.cs": "7ebb7537eceabd6762e4cd26de1cf83a6a7c8d9466e4914894f1de337504320c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SoarPower.cs": "0dd552722c9dc863242a234b64d17a31c496f272f34452a2a6f329be46a0bcf3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SoulboundPower.cs": "f038fbb323fcdd0a662271cd9c37128d6d5dc82e9c2c63c0daf5fe5bb3248e01",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SpectrumShiftPower.cs": "35b37b94c41605e6fbc4b0ac91809f4b5c103f34e6bbf1211ba9bb8a066c69c1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SpeedPotionPower.cs": "529d24a6b65a76acee76602c2bf031c5a520fc8ea4b0cadaf1be8283f6ff079d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SpeedsterPower.cs": "446fe49f80ef8df81e4205d4d6e195dec2749d545fc540a5e26f536f5e0bf855",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SpinnerPower.cs": "407fbd708058601fc4bf3cb38832fc9e69511b2640dbd1a499539edce67649d1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SpiritOfAshPower.cs": "f0d0d7fc09940abd5f3f56bde9840550b0ee79b6cd3c7f1f4cb6518ab0b0f541",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StampedePower.cs": "88be4b4c75ba32fdc30cb14dae364c35addaa8a9b82d659258780df633b5f0e3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StarNextTurnPower.cs": "699772bb10d412949d6845e89f06423710ecd463273f9f111e465d564bcd0d22",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SteamEruptionPower.cs": "4f06c9e398791858658ffde2a39135f7960401bb017adbfb1045ff67fe7d99ae",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StockPower.cs": "5adbf7f4be64c35d05edb4ee72f073609a5b198344b5a96d7f9610df1c4dc479",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StormPower.cs": "191952850e005867f92deaed013aad832d25b0fc58aa0790a0931b1f48f5913a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StranglePower.cs": "c84900ebeff7ca0953a2ba0dccafd438b90d445c9e799ceccece1cc8225acc49",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StratagemPower.cs": "5b3c8df73f12cf306d92039d7cd9f9c2aeae162474c2af8d3afe8b9e4c5b49a4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/StrengthPower.cs": "f50db3c51466a5a3458869c9c9799f91769137246423ccd8d62b235959fa7c57",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SubroutinePower.cs": "d62637f37c5aceed28679552c075652a1e92941a53808b4fdbfc542f65a6e4df",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SuckPower.cs": "07503b6b796d752d1c93cbf1cb1e0d3af552c6f834d4291128142bb35dd9bfd5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SummonNextTurnPower.cs": "3d969643121e471bf9a7a013fef89b8cd9308c6ea6a0627ac0af38fbc9697d9e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SurprisePower.cs": "24b190d5fd6bd8080607da53af47830e5bc7319203e7cc628db8fa15c1820164",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SurroundedPower.cs": "59d0e5305ed8ca20c3cb5bbd4fb383c8148d6914d5d3c53f8f583ebf49c4a6d1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SwipePower.cs": "02031ff37f87c93bd70a85f1455833bc4ac7b0c69829f3b6825a40bc3ca21619",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SwordSagePower.cs": "134fcd01bbbeed9c6fc10b63d2b89934bdf74fbc6d944f308efe7b2250b0dba7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/SynchronizePower.cs": "5869a0a1b3c4cae76af25faa61be80183255e6ae2e9883dd226573724a62d4c2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TagTeamPower.cs": "c75d42054eb80a56216d5f8952b6353bd009a43009a3239dc6b51b883ae57c62",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TaintedPower.cs": "d161f19b524e52c34c99c444664ef45a43a67254892bc4a6e72fd884403df5ef",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TangledPower.cs": "60d9c35b37448ba755ef54ea802ce65f4fb7984e9c87ac3c73537b7061eedee1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TankPower.cs": "3ef8cffeb4be2084d3f5247718136ee96aa41c9a41ebe3ee92282e4e7fe696a5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TemporaryDexterityPower.cs": "18c49ac9aa8264615ed1d932226686a989b03909616420aceef73d8ba452014a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TemporaryFocusPower.cs": "c417a55897731700290e761b211d030fa81e7f59925c2960efa6b778183dc54d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TemporaryStrengthPower.cs": "354141bb81d65a8a6182f82e19c612132561c9b46022cff6b96b9f8d349b6c1d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TenderPower.cs": "4b7ddac50b5c46f528a8505a2ab0fbecaf5f6ff5ce2b1016332289ac815fe3f8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TerritorialPower.cs": "a850924297eefe229f5b40c20e6d0d287b533ce5198fca465edeae39b537b3e8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TheBombPower.cs": "13dbbc911b54cc9b3bce03fd3df9daf68a4c93c959f1999a0c5de59ae50ff175",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TheGambitPower.cs": "01976550c1017e2514dc6d0fe0a2c030f5849994440c8af6257451681a762112",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TheHuntPower.cs": "82554050b3803455fbcc2e99e5d972b506083fdc4969410d8b9b030e68a4fbbf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TheSealedThronePower.cs": "233c67cc67a845c451c7d99cda6a1156980c0be3ddaf7647bb20ff315fda3b7e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ThieveryPower.cs": "72f55a43c2cdd9b3a7c1de68d29a83723bf84ca77699bbceece04101bdee05cf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ThornsPower.cs": "bef6713efaadae57b2e8ec6f41affe583313114867a3007d023fcc5c11da789b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ThunderPower.cs": "36a6fe5c2fb6e22a7eafb75f00205fb5f1426edf4fc5e341e282184c99f37b72",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ToolsOfTheTradePower.cs": "c292c00ae7d5f86ca5f13cd51df4ad7e5d29c7689953b159004aabe5ffecef0c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ToricToughnessPower.cs": "c5607eeef09a574792f75afcff582a376c3e448590a6d20e82e84d6ca1d4b78e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TrackingPower.cs": "5df2e3ceb6b708f9a1097a61633ba545d6612f36a51e6774fccc7ed4a42fc4e4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TrashToTreasurePower.cs": "875eab196d9a36e142c9521c59abb8ac584342e0696d414888241d0c9ed66954",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/TyrannyPower.cs": "f008022a3a7c4f17bc0874e394f4c2617d0f666d4df737bf880949f05b0688d8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/UnderworldPower.cs": "4894bf3963f8d722b37d05f2cd6ab7c251447f00ae8c9b9b261ccbaab2328648",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/UnmovablePower.cs": "be34126c23295f203cf10806acfb8109386b9e8a39b8b4797fbb9931fc11ba1d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VeilpiercerPower.cs": "3103b0d2f9cad1f5aa4774c6d38daacc63789ffec9974eef2d4163b2dd82fa10",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/ViciousPower.cs": "9d8b15046510e443b574e7a68de713b6a57586279488d5d1ebf2cecb7453d8d7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VigorPower.cs": "b259157fb2fc29cbdec213d686b2da12be82e214a4a0b778ec712b22e0aa83eb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VitalSparkPower.cs": "d36257c4caa75434d6be77c49b5807ee4ac467f5a9a93669a3957d4c667dc175",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VoidFormPower.cs": "934c01fce647f43e1eb7180a9b3e1463e52a5dfece9ef484a56db6a7849a1f7e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/VulnerablePower.cs": "6f528ab10fc187ca2878cb57193c9d745579fe6f676c0237a9beffa55101d492",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WasteAwayPower.cs": "3d0dc4b639490929c9ae24ebfed1e39023b4676b12e7981549b5eba4d2da6df2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WeakPower.cs": "df231e568ac8bf5961a51d92da4e4ba268be99e7ba86c822f833bbb9b0e9982f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WellLaidPlansPower.cs": "7f5f20a820b1ac4eae5f2c1128fe5037cd2c7923271b8b2d48e03532cf1a0fc0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WitheringPresencePower.cs": "06d366958cfbb7f6b023672933dff12bddcbedca4b2cf4666d435b6227f4db7a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Powers/WraithFormPower.cs": "b7bab8c028ad87a2264d2e3243a4a1805fa02ad833be59ed4041ac11c5d71d1e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/RelicModel.cs": "f6d9cd714e5a575d33a008ee0e4c7341e2d9efad98853c21def7b8678114f8e5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Akabeko.cs": "0b740b1b478da388b4d5fa461c508cb4087599ea887513d94d22e5850a4c3a03",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/AlchemicalCoffer.cs": "7edc2c526941b2b429ddab347f60246bdbec26cbd005357e082aac2778033f66",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/AmethystAubergine.cs": "a81582ec4baf328f91c662795b72ea8a4cd16f1953b3f809bbb7cfa1fc5248f8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Anchor.cs": "ed71bc7975c20f2fd23006bfbaa2454e918982b71f62d9bd4f41c0d8ee44023d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ArcaneScroll.cs": "af0b07e0c27b712f25bea85f660a68a658396adf0d14b70e76c2e04d761dd26e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ArchaicTooth.cs": "9dea37f2f71ac7cbb8aeb077fdc80db9166ce217bf120a3d5ac06557307546a4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ArtOfWar.cs": "4a6fae0594190392f8429c0c9e1bc3823a3dec146d6711cc61effca58149ae44",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Astrolabe.cs": "2f8cfa1fd6c0d2b408781db3b28f296276320eeb5ee41bd5a996f89d983a676a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BagOfMarbles.cs": "6737db753a62c67fb7c2dbe945367125b045bce92590f0f1a868faf6b49408bd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BagOfPreparation.cs": "d8db16de45ea1ecf658f818d65b639b563ec2a57707a793a01b4b351ed1bf7b2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BeatingRemnant.cs": "3278e938d04075d13d2401721d98ec8b62865cbdfecb806062771d3cdba2766d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BeautifulBracelet.cs": "8fd0d76200b843082a1ea5b0996402ad5e013f66f5a053651790a20b86994f9b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Bellows.cs": "c5ec668fd5decff315b20e5e6a897b8d22589901c5fef1937d19ab03c56ddf64",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BeltBuckle.cs": "9e3023479fe3ed0d3ed01e4609c82b6b739f24f6c85f69fe36e0f99563006c14",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BigHat.cs": "c7a65889ec0da645ff9791d581a542e1c53742ba4dd558388681d25158918b8b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BigMushroom.cs": "3a0e4973a8715833210e32c3d5689d11166881488e52a504b4606f6e81541ad4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BiiigHug.cs": "4475b9579b41b7025f7ba7c0e2b0e279cc0f6092e0185979130b03eb966eb815",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BingBong.cs": "780178f89253298d8f4ad7f734df43dd4a8e6462df1060c9dc9136a497233572",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BlackBlood.cs": "e4d1f433bddeb00c67574ca7a7655f5e715ab7de945cbecd73185db5797b5b4c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BlackStar.cs": "2c3500740d063e462d6b9695487df3aec3fb85ec02f128fb0a93936c6e7dda42",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BlessedAntler.cs": "7f3e4da3a0c75935b2289772a610d4e3231dfac2cffcb5f539cd5478bf2ad466",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BloodSoakedRose.cs": "fe1825085615d7223538b4f3aef94cecdbaeb472fde23d159e5d70f2eb95b5d8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BloodVial.cs": "2708511db606839dd7a562af2d59c5ad1ff35d3569e12d908d1a219406d9c89e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BoneFlute.cs": "ae2955894f3bbac2e162c03b1b6ee704b26f02ef4b7d507c9418e401fd14829d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BoneTea.cs": "5fcf18f6681315f31b59566cf8f611c6a82ef2ca40b1850034f9c82b0df266c5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BookOfFiveRings.cs": "4f0327dc437a6a22552207a3e0f1255cfaac2f434561f4748edde4606574c5b6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BookRepairKnife.cs": "4930d75579d26e42104d7c94bf1289bdbb31213b87fa50eebfaeaf4da40ed02f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Bookmark.cs": "ae89aaa5867a2230386dbc216d0cc4d234d516f079c4b01d4045dcd30e8f54b3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BoomingConch.cs": "04d38fa99f2e499e914f6e4b8e30825af236d2793619b2d13db824db0f876408",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BoundPhylactery.cs": "516f07c5784de6c6fba81599c5522a813324db9ac93aa676096686c1f5cb2f82",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BowlerHat.cs": "859e1663493b0b4042bcc02ed4d57ff18466ef3b6b2e3c07699f2ff2902ce860",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Bread.cs": "fdadd73a1d5488ed46e37b6752405735361ca14cf0fd92b0ef105096a97ccb62",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BrilliantScarf.cs": "f1dd2283b8596ee6f7b031681993b4d661eb62919133e76a9072ac3918dca4cc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Brimstone.cs": "7e7d056cc03aa3cf9cc384cac123c64f476e1b4176c51a8b2b20b7f81a1bbb36",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BronzeScales.cs": "0ef3bab2c02a479be874d64389d8d5163a0995cf8ce4679ee5f13656e620606d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BurningBlood.cs": "22bd2ab467f3482ac1746a5de86ffdd5970fb4a3f0f02c5c0d1edeb539369199",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/BurningSticks.cs": "319a165a9a562699d4f883cc56cf5f72bf52787055829d1401d4909ff7fe2197",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Byrdpip.cs": "9d21ebcc766ebdeeb3c2625fd5e40927cae2caff452e0829cb7a0aa07b4883ee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CallingBell.cs": "029822925dccf0bb8947c73ad0c546f0c8e3474de146d59075b01e1cdf9eb967",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Candelabra.cs": "61b01aa846d667b631a3bf2a71635c9abcb6faf25b901adb20cda3ce0c05ef95",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CaptainsWheel.cs": "ecb1a4e238b8ddf032c110095747a80c531a5fdc6fc4517a93ed0ad39877c888",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Cauldron.cs": "91a24b2999ff27b8f6350088bae865baa76f34a6801996dc89267880683c6ee2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CentennialPuzzle.cs": "3ec1c08a1bc6f89f2d79003a2f3a460b9cb41fcc53f00bd6ced7697c6a36a02c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Chandelier.cs": "bad20f1642860be8c2034f7ae1bf2a66ed0869ec9b7410ce48e16e21ec62f26b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CharonsAshes.cs": "63f0fd50165a89e41911a59e27165e5bf0628232ba2344e96732b5c5290b3cfe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ChemicalX.cs": "d2b1417d9cee0e6c0d04adc116c06eeb9b20cfd46be145d5f9c4e72b273a36ee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ChoicesParadox.cs": "a5e38be857ebac18adfd0e350a92f24af3978dcbaa4c5047a0f81153d34a9a72",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ChosenCheese.cs": "46b97d1ebeda5e1ab0167288169077adc8cbd832f3f66b2c5b8d1654590d1d0c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Circlet.cs": "31ca447c4b720e3d93aa7cb2a5677a27830285745e6f65d928d4a0400ad23930",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Claws.cs": "3b00ca02c6f40b1847cbf88fe54215d7b56b6fe4ba90c2980f291708e381ea37",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CloakClasp.cs": "46d8ef90ed272782a8a5ba6408b5de90fa506807d2e33671b860a103707b61d0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CrackedCore.cs": "034565e2f1452adbfc63fef33b91d1d4dbf20e3d0f476ed9efd2bbeeed436ac2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Crossbow.cs": "64c8595e55ab703a6e2d875c4311c54b6844fc271de1f6d94391f489b8ee1a74",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/CursedPearl.cs": "e24292df4b072ffd4fb7025b947c665060496d9c49aed58e52669c437c3c7ce0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DarkstonePeriapt.cs": "e5515682c85e28ff2e3eef89294d5df10152715346f7b66a3a20cc73bbd16ca4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DataDisk.cs": "8792d98396bd53bbe1d7e503ea5ee3478a9be3fb6c8211c8c24cccebd8b29584",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DaughterOfTheWind.cs": "3f1b6a629fe0b04286e52b22b875696195a8e465c9b09fb75417523b98bbfff6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DelicateFrond.cs": "ee993f5c28b373f75653d2aaaa7e1c966c2fa64a102dc04d8c246a540e69f613",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DemonTongue.cs": "a5e54e6c468a0b5b7a1926dae8b6d55e9c9bcfc65f7d7281f058ef0061f8bc14",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DiamondDiadem.cs": "a25b55ccec66327085bd9e464c1cb6de5d2d861bf2397169e8da4bf8812877e2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DingyRug.cs": "8685a85593258c81f29aeea81e7782084cb5de73e21c981dd777cc21cfaad979",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DistinguishedCape.cs": "fbcde7c99ae98af50d7bb0e0678383505bac79fc05e5a78429fa9921e8d2cbeb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DivineDestiny.cs": "2245da393a665e47e6c1813df5ea3e15277ae68dd0024fdd8a5cfe699bbfd03f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DivineRight.cs": "558ddb0de44d752cd5dff53943c62051f36b561408c7b62fa789f58c68fa9025",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DollysMirror.cs": "1cdae52cfd02c1286b9f5aed292d62e5eca46053fcef6b96d0a39f6e7cf32417",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DowsingRod.cs": "9a3205952e12f703b50b614f6a77db7148bf92e7005dbe5df3da31b651269a87",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DragonFruit.cs": "bae5e1ceddb0b5cbaa48822ca66f5b8699039384a638c7b629fe1185a6426ad6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DreamCatcher.cs": "793edcae1a73e959a23b3d852c9b235ccc372795ea6c51e03a2b8fb0e82c651e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Driftwood.cs": "6b57e74689782ae4faceef5b79022b9614b49b7b57c29c4d987a4e320c6d48fd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/DustyTome.cs": "1b2649f7c1617ccfa455e119fd828581e987ba9307dd1ec2dafac329d6071d15",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Ectoplasm.cs": "8f1b5e25f5f85312ce4222aa8a917bb779fda9f4ed1cf4c2b23f46332bf9a4cf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ElectricShrymp.cs": "886740387ebbd91526826be87e8cb94ebabcef0bfe04def05c1b208c1ee7246b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/EmberTea.cs": "fc6f6dd3f22a2eba6737635118cbf8a0bd5b475289710ce284d0c44a16affd69",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/EmotionChip.cs": "180202b6798e8a02cc040d88b9531d7b0608dcba5a3b4d974db3676c5035a94b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/EmptyCage.cs": "92cec23d9453452c527900e9d95922d72fc6cb9e2cc0e5512ed51ef4c8f04c45",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/EternalFeather.cs": "2bb93659b1cef9146c795bdefdfc7686c7d8454e374c0dfe6e4c61390c747e2f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeAnchor.cs": "e2d1ce905f7fbc14bae8aaabcf1a44786f0a450584936de58155d714098f85aa",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeBloodVial.cs": "a869b9a78b52c02192467dbcf9f02f5cddc301a8a00aa0a43b8af1e704b53c10",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeHappyFlower.cs": "c1e934bcd6fbd979b38dece0bfad30fc58b6d4a5fe95f7b92dd16e42fd6021e0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeLeesWaffle.cs": "7a0390adb53da72ae8b11482fe558a191c3f59a453ce1fe422b206435e8bb4ba",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeMango.cs": "2b43e594f32684b338ace2e8f0bd0f88d2824eca022ea99753b52df04012a709",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeMerchantsRug.cs": "dfa54aac9977c53d718563da821348499926e4ff32a370f5a589c4815175ff7d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeOrichalcum.cs": "13805c230f554f2abc126ae5bc6b672c971e139bb2457203df0d5792f3d9a621",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeSneckoEye.cs": "765e0469f3d3bd04992ec5bcce30695140d528c5ce0b4d43cf41c1bc5ae29155",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeStrikeDummy.cs": "95bffdf7cbc2bccf727d68a8a13f7c337d09fe0be98b1ad81e2159696d84b998",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FakeVenerableTeaSet.cs": "1a6bc1fa35d349bbc971193436088e066223ba262fbb1c4341239571cf79b9e0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FencingManual.cs": "21aa248daa431ac068d59d6a9338415079828c219c4f4f37371ce8ea06f44ab8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FestivePopper.cs": "68b3bfc966f2c90b95677830e1db909b276723014ec23c64e90638acb621be33",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Fiddle.cs": "05f2ce2c4fc69721a718b7e0d948c9a7bd2b4d92bafd1a8987a7aec6089f5174",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FishingRod.cs": "9ec448aa90541aeb1647b2faf6b2f0f8a471efe61bf4cf7616f1a4b62086968d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ForgottenSoul.cs": "73c2ecd951beec526f8a614d33d58b2582550d59f29b4ee2396b86d253ae14be",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FragrantMushroom.cs": "bbf4a58ac49a02c005c5fefd076f13427038b058d6b0687c77dd1d6a212720c6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FresnelLens.cs": "8eb1f995b3bd8adb3246ca03af5c488dcdde0ed46354b9714ba9687c0dcf1960",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FrozenEgg.cs": "60df7b4e11df621d6f151276a0df85975adf7ed07d4fabca546595ba4df4b426",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FuneraryMask.cs": "671bbb0c3e515df23ee3ccd107795f4d59995cac45e57b31660727fb9bf98a2f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/FurCoat.cs": "6d1a725c1ad3a7761d2fc2cb824d23bbabaebca6d23d20d98232c0a37c79ad5a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GalacticDust.cs": "6ad3037daa5079ff1de5d98a07f768befa94a4d6e5f7aa6d76f470ed8c55a8d9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GamblingChip.cs": "842680ddd335eb408af662599c89f00758465a2624ecd4c85a29c70243d77e2f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GamePiece.cs": "9615fd4ce5dc80baac264e986912c9e6c2753802c7190099e8f3c3756f74c044",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GhostSeed.cs": "41865bf1d7e30374949487170a2ca18c03bcd48fe2a282ff65bbc295f9edeeaa",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Girya.cs": "6e9312361b8d9da4484e0c76f972fbd015f02ff2c4b26e617c9f367ee44d3e09",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GlassEye.cs": "c1d3e41f1ce9ba119dc3007402f2203ccc64c3d14dd3600bac3f7b8245484fc6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Glitter.cs": "af0001eeae9174ae2962ab94a7b3a7d23fcf8ae0b745b86a4b3781354d334141",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GnarledHammer.cs": "d3d6eace38c6873c10a8e5577a0428db8d2708ee13c6af92b863e7745596342b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GoldPlatedCables.cs": "fff01282cf46ac82eb49f17de65e304aa0197ebce252016ec6c183881871651d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GoldenCompass.cs": "78b0bf83f1c1100f7c4f910e6b9177e66a653d00d47daa32c9686dbe9de53165",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GoldenPearl.cs": "07713b4697dcef07112e76344c55e86770ae5acc4fbc2fc1bad3500cb18519a7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Gorget.cs": "03f2d00aa9e730eccb2581f82685b4421089f2a5950e1db8e75cffc1286c47ee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/GremlinHorn.cs": "2fff9d510adb5908ff97c1376a2b6e3f1f63ca4add4946acaeca3513ae7c59ee",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/HandDrill.cs": "e0e2e045c46cdd46876fd3c8b05ab257c89c054beee89a7836bf1b469119aeb7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/HappyFlower.cs": "18d90b39fc31e6f39a184817995f8abe80522ac75a45760b952ba9b234258ec9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/HeftyTablet.cs": "87affc6a168255cc00c274b7f866fcf7b050d63d0bf43675cc31ea1584951caa",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/HelicalDart.cs": "74567f5ee0e370c37bd0c24d4bf57c2da62c88e8fd9531b7ce30bbf3537bcbf0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/HistoryCourse.cs": "bace26d2eddedc42a8b87ddfc3bf9c27aa6c06cefdd02fb18bfe7e4d9232a982",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/HornCleat.cs": "485c7e8bac1e088a6d69298da2667f6a41f6ce57630f238df481e7e93e7e3fe4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/IceCream.cs": "8973690599c61d8de0883bee081cb3178b6c60ca4acb868ec6ec98331b83c719",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/InfusedCore.cs": "6dc3e8b7dd78a5120329c9a1d2a884da4e1fdf655d027d60f2b0960ff2fa26d3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/IntimidatingHelmet.cs": "575fb398d245b9b8d15971dc9b0a4611f2f7f15d0c313090a8221cc4fc549459",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/IronClub.cs": "5d5f936ba017db0293d7d760ce465d25cd312e85fa2d7e8aa34f4f9049c35610",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/IvoryTile.cs": "cb4731c445cd16544967bbd9ebbac302dcafa6a9e41cb7e8a2fb4fcda235a064",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/JeweledMask.cs": "cf8ca490d6f894a0337650bf5951bf46a99da00484a60e4fff175431fb085482",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/JewelryBox.cs": "2b58172cb04a9b820223eca8771de2816029bf0eb43e2b924df28c6f258d52f6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/JossPaper.cs": "994af0f2a7241731a93d8018a939f4efe25023f8cfea8636bf602a666b052e88",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/JuzuBracelet.cs": "eac06825156682b9ea8e0c9eab83a4efa677f5580bfd4c4709dfc6a2c7896ce1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Kaleidoscope.cs": "2cfd3c59a6f7e77131094ee95e2dee62f9458fd3ab9215eba25ecd1da9978b53",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Kifuda.cs": "dfde0904887155099a0402bb036b54466aa92fd006d538dd253ae41a76c293c3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Kunai.cs": "b4ca0fdfe30eee3a9f97f7a2e1d106e0b9866057cd1fb4cc33ece01fd5bf2e85",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Kusarigama.cs": "97912092b6755cfb9a7929f0f957766fdc739fa05f22168c8924308c769afeec",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Lantern.cs": "a8a8f98f60eaa443ece5c9457766ccdab2e961cd0f767490b73c2c3075f739ea",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LargeCapsule.cs": "80dc55e7cd3b3c5cf33c2160ce9cd6c05ba08a53c350babced1fe2010f749838",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LastingCandy.cs": "24a8a8d43a7511914a60b2f7e6e4d59957d72459a4d21399b90bbb374ce1eb9f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LavaLamp.cs": "3a11383c8f3349e43057e3e18d3fbd6d8879ed7e0475a1dd6cb2c50edee9a744",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LavaRock.cs": "7fa0405fadae47a55dfc5621b7ccc24be6432f8593ecd962c2c03d5833d5a411",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LeadPaperweight.cs": "1c9a8455c689c68572871288348d5b17175a66d0c0ccdea041ad63159eae0fcb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LeafyPoultice.cs": "bc51b0963b63d3f05d3e7747eb07f045fd8726a485625de97f6003942b89bbe1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LeesWaffle.cs": "a408fc8e5d547db85f6dc36b858d1440d67ba1ea98fff14ee441515ec7a33133",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LetterOpener.cs": "2b964b5070c94eec634f8ed08b16508c0523872f9d3f86255d3e57bd46416ae4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LizardTail.cs": "ad8dd3eb57bf0916f02468d97b56b183140fa53d90a053a4581ab59c3a62bcc0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LoomingFruit.cs": "05c0b19f779aebd1428f22631f0367e55b09aec1672a55568dfe5fda0e32dce6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LordsParasol.cs": "a013f07e5db852d3f8848540e59a68a65bfba1d734ea1bfd9ea178bd7c37da1d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LostCoffer.cs": "12aaef04382db257835e7f2bab6c995aec2783a19a1391c297ec8c7f8972a4a2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LostWisp.cs": "d2bcd97e1702b55b16a26ade3512fbe42ade6797aa6f6d2056ae44c35464acc5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LuckyFysh.cs": "b4f43d97225128e6d020477b43a93053218fd8f4908edc66651884e3a624cac4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/LunarPastry.cs": "b5643a81472c039b6e52d255744c8a2bb7f1077b8cdec33d76d67cf3f92c7468",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Mango.cs": "c05986d94e78b819f2072f52fbed139bf805bc6d9a6fcc438830ed1e5c98a0f1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MassiveScroll.cs": "21804b9b5783b75539b2c838430a0b616786eeef88732eb15d4fa88d33f9f13b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MawBank.cs": "60b37b758867850c9ede5a62b518123a09f1e6375dfb5f1b41f7bb677a33d15d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MealTicket.cs": "f4a5c805e0d58e75251e2407bf66a471006de773fcc202e28ca33e93a9e954a9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MeatCleaver.cs": "b1f198b6ee700d62dbf6fe5fa23f25ab502f310e381da9485544effff502eec4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MeatOnTheBone.cs": "1981e80ecd6590db2f385c8d6911d034d582afb6e9e1c9ba105204dd94364e76",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MembershipCard.cs": "02d74560a702848739e27160e74c41db76cb3e85bce59192d8d94f3306bf56ea",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MercuryHourglass.cs": "9c98d87117292750a34e3276cd0e6a60f49653821c34cf9047b8b28db1c95321",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Metronome.cs": "a1d7f0b7e770ad6fa04dbbfbe332e392d2072e326f86c403b0489cf25a9b226e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MiniRegent.cs": "506b959f1aed75e12747e4139bb856528a05bef1013d2ced11878c6b50d5bf36",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MiniatureCannon.cs": "93412efa4ecefd3d7de52518ed13a48ff189244e70c0a7f2f3973443937ddccb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MiniatureTent.cs": "9d1a66f1db9c92a4b0917f90bef568f17a7286e7f2ccf2956726c508917cdd5b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MoltenEgg.cs": "282cb579c5f3edab0c643a97c92c00910565fad45bbe1d5671a585c49292c5fe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MrStruggles.cs": "c6108772581fd9df2852c7b3f9bc144b1dd389e1a6241bb8515dae31b7ee1cf1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MummifiedHand.cs": "0dd3a9d6b0f8b8ab22251134350285cae398aa2dd96dec754c6391965da0aa90",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MusicBox.cs": "8848bc232cedd5a09b1177b538b6477b24ef335502ab4b4296edb198567ca1f5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/MysticLighter.cs": "f60afc40955e3258693a25d5a4740c69448d54654ce1349ea90ef56100e7963d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NeowsBones.cs": "aef6efce69735333131fdc51861960b1b626a175d94c94710ce2fc2bb927222c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NeowsSacrifice.cs": "a0cbf62d4a53a76ffde59ffba5aa7336d4fc02d50563955d584a25e39198bdc0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NeowsTalisman.cs": "c7405b2ba904babadd285affad048f7164604de7e175ddb0216c312514640461",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NeowsTorment.cs": "3b68505af8df95505d4ed17e761df1291f8f15394c48b4ef0162157881dbe882",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NewLeaf.cs": "8e435e50b4d942583afc2bb04b8e59eb5c6f87fa42c0d6dd1558b7adecf1c6d9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NinjaScroll.cs": "3ba20ffe740d4fec52f6e0dd1995b57d9ecd3cc8c0771695c362b2e978c0e26b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Nunchaku.cs": "c5b8d94f6b1a4e837f43ced76a0c180005d1c426ea9d239ec24d9f76897c4656",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NutritiousOyster.cs": "42ef2724354fdd73edd58d2b42e15d48fceec7eea29842fad12f3b3bb8427183",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/NutritiousSoup.cs": "69dd33ce14839c56f9f1dffb49de2f47c4d65bf9fa79c03578029e6ac5894c93",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/OddlySmoothStone.cs": "bcaa147e77706d0eaec5104397da46805b5008cf7ecda091120ba57209c09fa1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/OldCoin.cs": "a36cdb15467a62f1345a12eee77f224a6822ab7386a42934413ddf4417a41ae8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/OrangeDough.cs": "4721dab6a0e0d6647680bf55f3a26cf75dc3f2c432563ef965d795fa14b94c66",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Orichalcum.cs": "b7bbc72aa6e070a6e82e3b69ece4b122232e4bcd5d3273788716f684c3f43cc9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/OrnamentalFan.cs": "db8b7a8120e27d7d69c9131f4233cf18b29175df9ab8c895020946e9f36c83ac",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Orrery.cs": "1386ea17d1fe1d0e66e48bdc0cc1c3153359acef8dd4890d23f089d82328bbf3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsBlood.cs": "d4d0c441cd26e6846e50fc531d5fd036ca3b317657de20baea57e74c28f9bf49",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsClaw.cs": "91e801f7f760d46c994ecc31d41b435c44972e51e88f37c2f45e662d3e3022fe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsEye.cs": "df9af17030aebf63d17266cc9f66cedd72abea3ed3afc70e9c118ad5984ad5a3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsFlesh.cs": "bcd100f58b32bc91b569dbc981f1dab94f9e352a511863f65809d010b0762bef",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsGrowth.cs": "8c7e7a31d0f749ffd78de6f1f29e5e1a953ad319b0cee079c3b2166b28688396",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsHorn.cs": "ac82b18139a0059ea23329a3f1c4cdd71ae6317e612f4f36494d66f5446790cc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsLegion.cs": "8dfedf0f7fffbd3cc009d45aceaf67893905bfe5eabc5c3a504502400de91ea3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsTears.cs": "1086bca59c72ba2d67934bd2d79b8e5f55b3874b9376406d23bd7adad08e6428",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsTooth.cs": "d464dae03603b9f445550af07e3b7b13773af103512b4a6c12c5b94f55f06f2f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaelsWing.cs": "324d0b4d1f3f2cfce13687387538ca644ed82d1fb9a11cc2a76507d47f267428",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PandorasBox.cs": "ac75d98ec668c588e77fe8146ac0685bb2396914be8971d9d283a5c4b1d433f9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Pantograph.cs": "8944428f357663e168f7f7c82e2a5a8728f2d97d10ac7199afe72cd6d04d90de",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaperKrane.cs": "0d4558ac94c4e50caa6094cf677685d09284ac2770c5091f6ddbab1aad3d08e6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PaperPhrog.cs": "339a6af52c9cc330b9c41d92eb2b818ae2a4f56a865650e0de166dba43a868f4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ParryingShield.cs": "71386772624d5d333c58dded4f5c248d1bc42b66c1f8c46dd566a3009f15a056",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Pear.cs": "917ccfbbc3004389481d8389a0a194bedb179d613d65747bb0d4a1c0604b93c9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PenNib.cs": "7ab69a3db674768b72cd941e91171d919650c55445c571a2797ce8a68ab4322f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Pendulum.cs": "f96579994f1607befb40cf447c6222a7bdbbb59fdf5e93a03abc6490592ccbfb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Permafrost.cs": "f11931cfd98e0b3d7239bba31bff437af2a340bf696e624965331684b0c6f24a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PetrifiedToad.cs": "73182cdc4826ba63d4fb3222079e20b69a53f2de643b76ea17f1d4ef183bd9c4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PhialHolster.cs": "f3bd912f47d1b27be5c546be4b1462ae9ceca91b4cc94582f67363926c273961",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PhilosophersStone.cs": "240eb1f0625036d9990fc96da6c74a0d4eb2c62e2c462b8240439a8decc950fb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PhylacteryUnbound.cs": "2b87be3d9f332f16c6adeba83994a34a3ff8557aaa700902f68d27600eb23a65",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Planisphere.cs": "9e40b6862a4414f7afb03afd11bd654b5a295f35dfc3702bfeb79c84794b5eb5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Pocketwatch.cs": "d4334d34dc687a2f3254bf47aaeee8cc4e2a92b4e567be2517b827f715c3288b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PollinousCore.cs": "359accc5c4ebb03f6434d7fabfe27b135fb00c2304b4989492b93b975a071e5f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Pomander.cs": "6988943c8fe5e317e0c490c88515c4c1053898cc23488c0d53e6982937cbf422",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PotionBelt.cs": "ae30827ebe6b46cc95c1c293d6c3e69f01caf0e7cfa9917b5337e23f2daf9ba5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PowerCell.cs": "d5e42d1466774d5509fc55bca5817f0f82c011dfaba963ea56c1ed424cac69b4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PrayerWheel.cs": "2e83e47212e639c8563a5e923c1a3a4db0eabf1995fb5d9aee58ff55b3981a98",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PrecariousShears.cs": "7992406b03e56cd03ad723fa1ca669e9289631c3b4ae31e3d06c1e1e8cd5cb70",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PreciseScissors.cs": "3ae5eebd512a0e00a8e6afed2c1a64fa466fe7c9890db09e8728e56e2f62c3f6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PreservedFog.cs": "52a7662145f2e53b08846eb531c488753f4700f5a5dd0f00d32aa8e2311151cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PrismaticGem.cs": "6a066ed3fc1140652adc671088d590f0edd10d9751bec9fb529c5db31b527088",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PumpkinCandle.cs": "75bfc11252ea793943f83a218b5db0bd274adfb28622c1eb8b163f2d49c53a83",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/PunchDagger.cs": "c55d6ec07de462575f42de1fcaf764742447ee07baa24f3338a6355efa27656e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RadiantPearl.cs": "61587b7d0122787107728bdc77df79b1de2c44aebda1731a9e95026e72a3ece3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RainbowRing.cs": "90263fad4f8d1dd44fe99a125c92225e7cb23ca0a040823a9cf638bc46a5b766",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RazorTooth.cs": "b70ef09a3361f5cc5e818aa0b2ef2e1142bfd101b818304a27cf3ee59d24deae",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RedMask.cs": "0fa00a24444779d4f3e520a3be289de8d762e79422710b7117fc74b49393ce21",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RedSkull.cs": "53992a69feb01e19d425c3af9ae313c6b9ce22ca42b522e35731efc4856f70b6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RegalPillow.cs": "c635f0188b59c910056a33a4b8a9007ef2221672dd0d2d04efbb947b746e6b7f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Regalite.cs": "4af6ae2fb3ca02e9f04d5ad204680ff8887e440180ca4e79de6c9fc389b5999b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ReptileTrinket.cs": "8eafd6ed89647f5ba0b58a467eb7e6baa736467a4bf918ed8692d5d13c82de85",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RingOfTheDrake.cs": "4e7647e2b221b4e4c1c8077aeb9b8d3d8dd6cde3b80e1ca0aed36cb082d24aa8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RingOfTheSnake.cs": "ba29131b7489bb377be36667ce681a037bc27f65359464e1d6434b7600a44e34",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RingingTriangle.cs": "4f554d68cbcbc50ba038542d6bcfafe4e7dad7194619c056f285d645e961d092",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RippleBasin.cs": "60385947d01eedee0610bed31706738f98033d75387026d1014d6ebec38b247e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RoyalPoison.cs": "52745c519acbe9cc2dd5134c6137c026427d08ce06f52ea6dd8b3752b1084aa4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RoyalStamp.cs": "0ada2eefaf81be61b46b6516a38667584e354cb5449fb0a3429df58cf156bdb1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RuinedHelmet.cs": "f5bc8a2ce6b2c420f4bfa7012c36bbaaee979ab489aec7a257c7876238fb2942",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RunicCapacitor.cs": "7ed155fc35290ff27b548483aad65f7d62bdaf224d2a400238324f94282142ad",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/RunicPyramid.cs": "0d14d90d640998896f9182944282b4e7aa26f5ce0e8bf3684046c58d3c4ba3cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Sai.cs": "1de0a7eafb7f028dacba34a32f3699a15d5081c5e2e7d542d4b615b4573ff027",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SandCastle.cs": "fb0d8eb8dca966c5715da1dfb54d84c909d75bd6774aa311328434aa1dc44d80",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ScreamingFlagon.cs": "e090b50dad346bcc3b2b4b1ffe21fbdd7920474673bd7988d8cdc81069130033",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ScrollBoxes.cs": "99c9235b5677ab07f0ea7d726f6d5f201d0ff1a239137447dca6e6926330397b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SeaGlass.cs": "51bb57fed867d3322bda32caff3ba71908de497e2bbacb875b17b9fde432dab2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SealOfGold.cs": "b8f0b725cff2a768a48c7eef6e2cf820b0da96f0b605e05a128354d284d892bd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SelfFormingClay.cs": "4b790a9c31341a4819dd01fee5b0e772d6b880ae8bf074ce48700c27df3910af",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SereTalon.cs": "f3ae3fbfb64b348b9996a9dcf7c83a8cdcd7c7b35102a45aab09371b073e57f9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Shovel.cs": "7f22590676eeffc243941647435582ced8a57b448461b8cea6fe48adcd48b3fb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Shuriken.cs": "3ce857daeb370e1c9c192ed09ddeb2b99176c966050b2d87478b8d9faa880b4e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SignetRing.cs": "c2bd6c0d8cda4eb2d9ed1d677e1d4a766a41232b25b17c3c7a733ba16d7582d9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SilkenTress.cs": "0f2ae0d93aeb184a7697031f50ec36d4f979cc31e2a4e05b719fe363b4882736",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SilverCrucible.cs": "467cab1cec1405293d5df79b257585e6251eb5acd932cb8dea5071c4425e3bcb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SlingOfCourage.cs": "228f15c0b112d647dc87a7a0acf66c6dcb4047cc365db65b55b752f223646d71",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SmallCapsule.cs": "5e2b6e11ada79e90a9b0bef175c2978976838de1d5b47fffcb7899bd62c7ea9f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SneckoEye.cs": "fff46b2d89b202d0b88e0b7a2ea293d3edcc9e17cfb3198d1a66561d717da194",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SneckoSkull.cs": "492e0f176eaa6f162ada8b8ab382954ef0f5f9e779f6b4ebbf1230ab5ad5249b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Sozu.cs": "06bbaf32e962170fe90e8ece2220c20213eb20c7ecaae39095c97bfb2eeeeb6c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SparklingRouge.cs": "5d4c588a7cd476dfef721d5396b88ef58e879a52deb37c812e27ad5cfed1044a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SpikedGauntlets.cs": "760414001f91e86feae0d39c00bdee4c297fcef33c4aff131953035dde3a635e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/StoneCalendar.cs": "a7672eb62ae0023ce0351082e448a3c2551dff93671d957d6b068ad7a07eedc3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/StoneCracker.cs": "9778bf94a0c9d92bec5ed90fcf15e0ec0a0ed7e31bf0a7e7b70898c96a95a49c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/StoneHumidifier.cs": "3bcc8598a673400d74a04e53923ccf02761d180d307d67dca581508b7e830bd6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Storybook.cs": "d0ca7a6ca66341e5fcb4c179842fd5e52755e48ce66e9f6ba9e52efd3a160e43",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Strawberry.cs": "6ee51c956d402d1cf3c640a021c32160921e537c91c04292b682b855acec00a3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/StrikeDummy.cs": "f1c2786c72bc98e02ff9b9bef648edce87389ae424aadffd1867af17b3941fad",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SturdyClamp.cs": "2e37ccba260ace1018c2021257cb69de8545837c39d4a0fe2b88762e1e4a5424",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SwordOfJade.cs": "dc5ed564bc3d381223122a0519836e76873173022037b4bc2d28f43dfe0f1e95",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SwordOfStone.cs": "41276ea4c8eabed7d240c9dc400f4ab6cb9676d0cd34a6664c5a4663780c7917",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/SymbioticVirus.cs": "921d00457e8cd5bbdcae196195dc50c93a10900926bc1c5dbae4617247c6edf7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TanxsWhistle.cs": "5b6bffc4038cad1c4c9c9f68e09068eca6452f791cc4a255cbbad2353619000c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TeaOfDiscourtesy.cs": "8e227f1cb08c37b53eeec7a9334c5f3bb4966f6fce8b5dfcd8a19d1e183533ca",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TheAbacus.cs": "83c2b4eb86c38472e53cea3e070895055a069cc6a8a1b1fac22f8037d61bab47",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TheBoot.cs": "8226434a8751e0fe70e51562ced8ae0fe29d6d8088291f098fbbdb2607555260",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TheCourier.cs": "1e965735547b89031bc2784e3bf891d0f589b0ab77dec1af18af2c03d5efe0bd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ThrowingAxe.cs": "c71218edbafac7387e0034885a3035f2eca820cdf56e32b3437a9ead4df1513a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Tingsha.cs": "1ea01be72771a3298de8846a06a19f13d97bd3195062144b2b75fc52cd22b9da",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TinyMailbox.cs": "f5df244c8f3d066cbaaf8237dcc0acb14f193ab46d21b7502e9af21c5c5f731d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ToastyMittens.cs": "e685a671b7d40b94a0c42f95cca4f6962c6392ae305a2cdca90efe41ca795ff9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Toolbox.cs": "09ad13680dc2c99866fbd2ebf8f2c6613e77b72f69340a58604c8e517b067c0d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TouchOfOrobas.cs": "ec36f346edd565cc6642dadeff9bd38654bc1ca2aa9e7be5805d2cea0613c259",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ToughBandages.cs": "13d4b9bb66993b174e527bb973343e83aa4f97e1d729ba9338cb155bb6a76d96",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ToxicEgg.cs": "742ba72ab8211fd3a59a1b79bad71fc8ca115666e7ac5046117b68e58f5ac23a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/ToyBox.cs": "2cf875a23881439ccaacd15361b5efc170d52b4c848ba1aed612c6b7efee9356",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TriBoomerang.cs": "5a622f69d47cc8e5bed29d9827745e7ffa0b2ca5ed499499ba84e1a5b35df0f2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TungstenRod.cs": "bbb61ccb2080ff37f2293ab27253244512c62d3aee0a430c7d7fba0e5e4271fd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TuningFork.cs": "aedd8a03bb180462231bb985219b076cc5998afbfe3da626cb4cadeee0eed1e7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/TwistedFunnel.cs": "9cf763cad757dc5ecb1ed62c558b839343f2daa151751ef30713ffe013f389c4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/UnceasingTop.cs": "f97457e641d03b045a7ffe25c7af24079b3f3d408e36cfdf51305b3630828718",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/UndyingSigil.cs": "1919ac05c0923898fa5e6263d636d7d2a78763264b5529d54f0c399edbb6c2fe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/UnsettlingLamp.cs": "85b8918b507f1ada5b0e09e6e93eae5e98bbe8cf6f9d9ca097bbed7293f71947",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Vajra.cs": "41e1013a157150e8db844045143f1a0a28669b123c8bf4632a1ba913b0663da2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Vambrace.cs": "67b2a81fb2ca2f9a3b36a92b22dfb63d23eb52661b8383e77da2c812b968e1d3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/VelvetChoker.cs": "ad6d3afd7400a4bd6f71473c69eb0f5552388ed0b2feeacc48f418acf74cdd5d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/VenerableTeaSet.cs": "3c7058b26ef46ff91aff57fc08d5642666cb30e3ec91b52af6c9675758119064",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/VeryHotCocoa.cs": "fb25b3000c4fd293fe92ab8eec715db5bf3ed8c84467c74cc801d9ef05bb49bc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/VexingPuzzlebox.cs": "7da81219be33bbd40071aa72148f5d62ca3f36f255275d23ab9ad12fd60dcfd9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/VitruvianMinion.cs": "b77fec12610e7c3e9a203c007f5935280eb730a0d5222f710e9ee93e795b090b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WarHammer.cs": "b2fd9b331db81b54c3a105add8f84b65c265f465e2cf8dbb865b4a5a9e66d249",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WarPaint.cs": "6a4bae266c20e791169576432f79db84d93cf0543e0475efc12ebf980010f401",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/Whetstone.cs": "2b935eff4ce471b9082a3c741c35d0ad76de590aba35a4a7f085ebe43484f4cb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WhisperingEarring.cs": "13d0ee5b8e42f1bcfa4d934153c8f603df2fb50a34ab7fec08f2c58fd75adebe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WhiteBeastStatue.cs": "1ea4788c8b545b056718c6a050a44642ed5efa1359aedb3dfff23dc47b95be2e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WhiteStar.cs": "6e606291cfd7777a261cda2eb203cdf408b957b81470554acee22454a3ebe22d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WingCharm.cs": "28e1fb9cc864d52a3a898d0ada883055e67237683773afdfc96cdd2eff056401",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WingedBoots.cs": "5219d3904a48ef24a3d8a08b43719ac3085f68de8a5fe3ca095afc757a2876ae",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WongoCustomerAppreciationBadge.cs": "039b97f9330ce9f2a563fad9ba13db5b1337999776e577a71aeeb2294cc3d6a7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/WongosMysteryTicket.cs": "5c1ab182f06b7732eda78fcb839dc195781c3feecfd14ba0a964bfb1e1deee03",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Relics/YummyCookie.cs": "3e5d6f485df23403f3082df40057e301aaf2b061a0b3fb41122983c67e3aad55",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/ConditionalBranchState.cs": "533b7db9fd23ad744ec6fd4bbab69325f3f40debfc3953a52a0dfe5605d0c4b9",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/AbstractIntent.cs": "7b65e570bcfe4d3f852c10aa36abb2982ffc857222fa42404b166a56350834bc",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/AttackIntent.cs": "988914e972c98e197a2d52dbceced282a3c1fcaef05c052235a000417f4e1592",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/BuffIntent.cs": "13b6fd627cab5ca8408c4a434c072df76f785c057f3f1b94617d1d9f42f20f5c",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/CardDebuffIntent.cs": "040a2bbe8713a35a75384e901ae55be3572459a39700bca960e7af2c3b94132b",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/DeathBlowIntent.cs": "5cb1fdcd0382e5eed34151d098bfecf8a09bf01d61cfa8fae5bdbea3317411bc",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/DebuffIntent.cs": "69adb6f9aabd3724192132d473ebeb779ef29ba29a0899325878f44a47d55153",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/DefendIntent.cs": "a8573377e828b01c8dc7d8d32cfee6b7a75cff0d1e7753dfc600dd98efa49535",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/EscapeIntent.cs": "01a958c370767d7fef453b1df7c757032a3bbb4a9d4bf288e1b81285d520c088",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/HealIntent.cs": "e2d61d016c3c2a09b7d1d536976d91c6e18db47e62ba92338bbf6ad54ccc7043",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/IntentType.cs": "2354fd96f6c25a2d3e6194267a6e3b412d75939b14f51fd6e1c5a2845af9f8c1",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/MultiAttackIntent.cs": "71c4e94da684c47c6270a742723b2edc3164720c4a2f35c1ec13ee45ba06ac34",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/SingleAttackIntent.cs": "7f4975c72d268ab19d2c8be93c309193db87d23c4c19cae7f537f971f5c0e5a9",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/SleepIntent.cs": "4ff40aa9ab3e57a3e429b4feaf4bfca4c080c780d526866f8df1ff565e2ac84e",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/StatusIntent.cs": "f70a168a9f89c6eaf002517e6d6bd9171c154544d48856d238073b7eef1381f5",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/StunIntent.cs": "5a549de4e971e571d53a862610197c796ca8cf3dd900a6efc316e1b980deb6b1",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/Intents/SummonIntent.cs": "2f765b352af77d5ccb07a42168d4d389827b3ef584e2fc6f438676a10c544c2f",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MonsterMoveStateMachine.cs": "c0dc98053e3386b4d6245f0cdbc416c4262e3c69d0fe7ef0f5f9a66e963ade82",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MonsterState.cs": "5c6218ed175504e73e432e066ec61d12689ada7c370d2fa3128ba84e74ba048f",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MoveRepeatType.cs": "bac6efc79a6e9a9e1ea574e61dd7b7901446a81949354a80f26b03ded4039403",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/MoveState.cs": "4c2061dc386b4e2303ce3cf0a93f7dbd5d69fae7cc978f7b7127e51c84db2639",
+    "reference/sts2-sim/src/Sts2Sim.Core/MonsterMoves/RandomBranchState.cs": "e58a643b04e37b5208d5b7f126e2ad3ce23dd2c8d5d6f24d0c2187535e14c64d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngDraw.cs": "9972a7d4940a19965c00b1944626cb4fb7bbb8b6f665063cd177acc691c5d90d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngSeed.cs": "692cbe86b1a9b1efde4aa2f2d7124edee36589303c2739b1368b7ca8ea66bc90",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/KeyedRngTrace.cs": "3214b89cf4614ce1e254d3637f574cf94669e6f8151e8e2ecfb8407012b3f5b8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/MegaRandom.cs": "214c36ca6a11f21402443b1cc1dbe232784c18711f58ef736ede127d2956cceb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/PlayerRngSet.cs": "a117689b2d6f2072a123015da23e40d32e18b8a05348fd14c8a4c43d69c5b53f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/Rng.cs": "4dd16efb443ad47220fb7565fe68d695e568e659a871a129233a2b05c79b6066",
+    "reference/sts2-sim/src/Sts2Sim.Core/Random/RngDiagnostics.cs": "e7dca8802f525aac86409dfe7ada7b0e9464da9902f69bcf0ad4e6569b5da6e8",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/AbstractRoom.cs": "9deb725d23f8d04ffa6087d9b919755950ae7f8aee15e2e34b4d802ccd73640b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/Act1EventPool.cs": "25928f9523b66335767f632a4592988521ed8b6e341399f7ff90c665bd02adf5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/Act2EventPool.cs": "48c4d69be80d936b97ec5f1ad8023a111a10c5b70e8000e22dea6a79b8dcc3df",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/Act3EventPool.cs": "15a270d5e1a542c2802d462cb13372e1f13f4cda6dead672b49f40e2ad4b4aaa",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/CombatRoom.cs": "937cf9472b2d5529121d68c5aa63d522aa2f26ef285e56073089fd35481e0d57",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/EventRoom.cs": "3193b21d74ceb07fb5df8f2abbd23d5e1877faed07da070246085a9ea73c5309",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/MerchantRoom.cs": "6d31b571beaad907fbe2143bcf03b6050a4d3812ebd10f3a4fe655139f2f3db4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/RestSiteRoom.cs": "cea435f236f0d4b85cd9ab623d8d5f7bccf1dd8e64d61596b10dc637467d1b83",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/RoomFactory.cs": "9c5f34df104d815d5e4f3a68356ce63372304df1b226b818493ce558a18785af",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/RoomType.cs": "b49035c41a8cd97e30c322e274876cc43276766adb3df4188104bc2f094ce0b3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/SharedAncientPool.cs": "a245270aa1089e01655499fb8eadbcd33f5aae50f9ea99224e007299208b82ba",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/SharedEventPool.cs": "2a824af9fa249c37fb3860f429b2882c59ba4092010c0617747028762138babe",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/TreasureRoom.cs": "094265a4eba50ddf1b52222b0fb21f236f4821a2dc8244444b1153a31764d69a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/TreasureRoomResolution.cs": "58e5bb24bd0bbd9162e42f63d9dbd0aa85da2c5dfeadffa9d49b4b801317fffb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/UnderdocksEventPool.cs": "d9a59df1f8dc652a2879c5309ebf997854823e3f46ae3242134b06cd3c95b6ab",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CardCreationFlags.cs": "b330e91a45af4bebf0fdf4d8a5fe736a02a95264ab3d1459c910a1a6a805b805",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CardCreationOptions.cs": "7f6c61fd3090e52def16e8131e256d39f34e32e27ad6fd1ded6d1fc56cf5094e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CardCreationSource.cs": "67d0d1ac4b1486ef850e33ecf33a0f00590da0ed72ee5d54dc1578a7b2cec62a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CardRarityOddsType.cs": "9b186f7f9faf6eb868d53c1ddccd68752ca03fbb34361823f6eff4c8c84761f3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CombatDecision.cs": "eef9ced9fdc5717d0a521bed15ca349bbd50a9dcb7134fd77e58c9c0ea4049d1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CombatPotionPolicy.cs": "f0f00248fec3c1adbee5481f87af59232cd33cd7bb849da78f219fbea6a544f6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CombatTurnLimitExceededException.cs": "817d51cfd40694a56f2b9cea95069ae48f1f42eb0f2d5820a4c00188b6228438",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CombinedRunDecisionSource.cs": "402bf2912d197f63e0719c4885892b7809b5821653985eee03888e475715d2c2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CustomEventDecision.cs": "d5bccf90d8214482c388ab38d5352dbe35543f1f9427e3b8568488f66ce0a0f6",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/CustomEventDecisionPolicy.cs": "2d5cfbc6799d19897c5abbe3fd23a1e2a9ac2bd2fc117271e59904f9439fb11c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/EventOptionDecisionPolicy.cs": "b0da3e2aeecbc6540b8c8cca1d3f6877ea812d6f34c4b31c005be1ef1c4bc7bb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/GeneratedActRooms.cs": "392d99e5be46786fb6a95804307eea6efe555585c990446bb40ef2bbd95496ec",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/HeadlessProgress.cs": "b819b695b409ec2b2a9ba3ac1c16c72ee89021b98ce4e31dfd283875395d78a1",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/ICombatCompletionValidator.cs": "a47081d13a42e7bbd7284d3300b641e417d312198d44e6b3aa3e778a5972849d",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/ICombatOutcomeOverride.cs": "cd5d031808cfd3577befadb9d99ea1cc6d269d1996fceca780390f582d795673",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/IRunDecisionSource.cs": "c6fe7cc8ca9e1f8701131d55554500d1f6aa117078ee68e510909e6f8b24dc88",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/IRunState.cs": "96a3b0be0269178ae09f19d40e3a875709db589ef66ae92fc95afb7ad5cf3dfd",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/ImaginationHiddenStateRegistry.cs": "df0be5d20a9c21b89b893f4511fb2b45e80a20ce83bac29b1593a443cce6dd77",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/MapLocation.cs": "f94f297448c6fe02b9ed01bf93ec28b5d6013b95640a6e7acfd0e5749cb81177",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RelicGrabBag.cs": "e0ce9bae1377891e2b506142e5d4d39bd51fff0666ee3ceb40585ddeb6dad455",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RestSiteDecision.cs": "79d2fcd857ff548d8e23ebb8dd8c5ed749df2ac72033ced8dbde58022b519dbf",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RestSiteDecisionPolicy.cs": "97464e7eb694a555aa2414c77a86389bd4afc2a4c4e19dc6833fc1bebde13229",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RewardDecision.cs": "ce409a8305f69e936d85662ff45bf3003dcecf2c1be6d4f73157fa3f8cdeb88f",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RewardDecisionClassifier.cs": "f87fd8fa270cd85a6933185d482665fdaa0ab0e8fef4eb674f78f6c953f94126",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunCloneFieldRegistry.cs": "d53cfbdeba7af1427f5ebaa98ea066cf792225a179e45a70ae6bed428159cfae",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunCloneNotSupportedException.cs": "94bcc9ca295b6503a270140d7957f05682ab7aad5184d151175af0e96d032467",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunDriver.cs": "a03152ffb55d4c4cd0b5ad2f20f0cce4d65794f5634756cf7b1a2834217fa76b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunEngine.cs": "8bce7460d20d075c86b8d4838f77f65bca334c00850d691a733e2d66f483b7f5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunEntryPhase.cs": "686b52d3cd270ab865ea74ef4a86399afaca53f78abfec01fc509562bab22fcb",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunOutcome.cs": "f5639d541c0cecee03d34e395cc2e486fa1bb0c194886481ef542ac014bafba9",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunRngSet.cs": "37fd18dded3485849a9d5bca213e4552d6a1150b8dca7f0818b87c00e41c2ad3",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.ActEntrySnapshot.cs": "6bbb8e22bbf5ec47a35dc47101d2a2ffcb65ef2e47e7b6908fd20f7a073e0405",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.Clone.cs": "e03255fb8feb0433f5e690d2fbee73340990038a3cc88194dd397324538fa8ab",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.Transplant.cs": "9645cabedc0a4ead9f8c89f8b9a21693f8da2c025e7d1d51971bfd1f0fa48d8b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs": "9cba5a6e9c239e81fc077a3f32da5a6c741cebb462cd707be2af9b121793fd7c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/ShopDecision.cs": "51e381112699e2eef795be9cde2482ac79e2597e6754f58ae836771d12b6eca0",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/ActEntrySnapshot.cs": "21d607615b253d984e6465517112c0189aa4634db0283a461a2436581333afba",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/ActEntrySnapshotCodec.cs": "e6a8c4de2f200b5137487ca2f3a31bacba9829b46fbb2d86e4d88a91bb4106d2",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/RunTransplantExporter.cs": "8ca28d03265a4f1ee2237bb48fa4694e9daaed35d977dae0ecf0e9483f26495e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/RunTransplantImporter.cs": "6f113dc6e4ec8df7fe2807199f2e38dbd0ab9e97cc741218e94f61b86ffccbe7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/RunTransplantSnapshot.cs": "e0f0f230bab110b5370a72b52630c778897cde501c7b7177ac87dcef3d20ebba",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/TransplantFieldRegistry.cs": "712f551895483cef42e2d5b291cead00d9abb81e6d25d7cac97123ba9ecf9297",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/TransplantMappingException.cs": "3abfcef77b152ce8dad54f5c1c3e814b22c4bffc4a1666eedb0242492c4acda4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/Transplant/TransplantSavedProperties.cs": "403ffddc1be2762bd49b27e901182e3d574254144b1ea31fb97026e434fc8f5b"
+  },
+  "controlled_setup": "Openings are real seed777 Neow and first combat. Travel uses the real generated map and actual RestSiteRoom entry hooks without choosing a rest effect. Flex uses a direct real BattleFriendV2 combat, controlled initial Strength and direct real potion procurement; no normal-map claim for these components.",
+  "openings": [
+    {
+      "choice": "WingedBoots",
+      "seed": "777",
+      "options": [
+        "WingedBoots",
+        "BoomingConch",
+        "CursedPearl"
+      ],
+      "obtained": {
+        "hp": 80,
+        "gold": 99,
+        "deck": [
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:bash",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 2,
+            "keywords": []
+          }
+        ],
+        "hand": null,
+        "rng": {
+          "up_front": {
+            "counter": 413,
+            "state0": 330061813812137758,
+            "state1": 15482581142629715337,
+            "state2": 6266483534946059744,
+            "state3": 17102018836369832753
+          },
+          "niche": {
+            "counter": 0,
+            "state0": 3898065898674283028,
+            "state1": 15172846129158359536,
+            "state2": 12422131439206027081,
+            "state3": 15845920745007548117
+          },
+          "shuffle": {
+            "counter": 0,
+            "state0": 7381810378514239972,
+            "state1": 18166595171837921890,
+            "state2": 14991119090934323333,
+            "state3": 713562154088047583
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          },
+          "neow": {
+            "counter": 18,
+            "state0": 17856448205112841793,
+            "state1": 18030445487223130175,
+            "state2": 8407798465251535903,
+            "state3": 602297058459315070
+          }
+        }
+      },
+      "first": [
+        0,
+        1
+      ],
+      "legal": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "started": {
+        "hp": 80,
+        "gold": 99,
+        "deck": [
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:bash",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 2,
+            "keywords": []
+          }
+        ],
+        "hand": [
+          "base-spire:bash",
+          "base-spire:strike-ironclad",
+          "base-spire:defend-ironclad",
+          "base-spire:strike-ironclad",
+          "base-spire:defend-ironclad"
+        ],
+        "rng": {
+          "up_front": {
+            "counter": 413,
+            "state0": 330061813812137758,
+            "state1": 15482581142629715337,
+            "state2": 6266483534946059744,
+            "state3": 17102018836369832753
+          },
+          "niche": {
+            "counter": 3,
+            "state0": 11636563349744407076,
+            "state1": 10463271282427620368,
+            "state2": 15526693802518939857,
+            "state3": 15227553122088561971
+          },
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          },
+          "neow": {
+            "counter": 18,
+            "state0": 17856448205112841793,
+            "state1": 18030445487223130175,
+            "state2": 8407798465251535903,
+            "state3": 602297058459315070
+          }
+        }
+      }
+    },
+    {
+      "choice": "CursedPearl",
+      "seed": "777",
+      "options": [
+        "WingedBoots",
+        "BoomingConch",
+        "CursedPearl"
+      ],
+      "obtained": {
+        "hp": 80,
+        "gold": 432,
+        "deck": [
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:bash",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 2,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:greed",
+            "upgraded": false,
+            "upgradable": false,
+            "cost": -1,
+            "keywords": [
+              "eternal",
+              "unplayable"
+            ]
+          }
+        ],
+        "hand": null,
+        "rng": {
+          "up_front": {
+            "counter": 413,
+            "state0": 330061813812137758,
+            "state1": 15482581142629715337,
+            "state2": 6266483534946059744,
+            "state3": 17102018836369832753
+          },
+          "niche": {
+            "counter": 0,
+            "state0": 3898065898674283028,
+            "state1": 15172846129158359536,
+            "state2": 12422131439206027081,
+            "state3": 15845920745007548117
+          },
+          "shuffle": {
+            "counter": 0,
+            "state0": 7381810378514239972,
+            "state1": 18166595171837921890,
+            "state2": 14991119090934323333,
+            "state3": 713562154088047583
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          },
+          "neow": {
+            "counter": 18,
+            "state0": 17856448205112841793,
+            "state1": 18030445487223130175,
+            "state2": 8407798465251535903,
+            "state3": 602297058459315070
+          }
+        }
+      },
+      "first": [
+        0,
+        1
+      ],
+      "legal": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "started": {
+        "hp": 80,
+        "gold": 432,
+        "deck": [
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:strike-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:defend-ironclad",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 1,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:bash",
+            "upgraded": false,
+            "upgradable": true,
+            "cost": 2,
+            "keywords": []
+          },
+          {
+            "id": "base-spire:greed",
+            "upgraded": false,
+            "upgradable": false,
+            "cost": -1,
+            "keywords": [
+              "eternal",
+              "unplayable"
+            ]
+          }
+        ],
+        "hand": [
+          "base-spire:strike-ironclad",
+          "base-spire:strike-ironclad",
+          "base-spire:defend-ironclad",
+          "base-spire:defend-ironclad",
+          "base-spire:strike-ironclad"
+        ],
+        "rng": {
+          "up_front": {
+            "counter": 413,
+            "state0": 330061813812137758,
+            "state1": 15482581142629715337,
+            "state2": 6266483534946059744,
+            "state3": 17102018836369832753
+          },
+          "niche": {
+            "counter": 3,
+            "state0": 11636563349744407076,
+            "state1": 10463271282427620368,
+            "state2": 15526693802518939857,
+            "state3": 15227553122088561971
+          },
+          "shuffle": {
+            "counter": 10,
+            "state0": 18275237977283953994,
+            "state1": 16828768154931785652,
+            "state2": 10183465797291844790,
+            "state3": 8601558195090213141
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          },
+          "neow": {
+            "counter": 18,
+            "state0": 17856448205112841793,
+            "state1": 18030445487223130175,
+            "state2": 8407798465251535903,
+            "state3": 602297058459315070
+          }
+        }
+      }
+    }
+  ],
+  "travel": [
+    {
+      "previous": [
+        3,
+        0
+      ],
+      "legal": [
+        [
+          0,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "next": [
+        0,
+        1
+      ],
+      "used": 0,
+      "free": true,
+      "after": [
+        [
+          0,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          6,
+          2
+        ]
+      ]
+    },
+    {
+      "previous": [
+        0,
+        1
+      ],
+      "legal": [
+        [
+          0,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          6,
+          2
+        ]
+      ],
+      "next": [
+        4,
+        2
+      ],
+      "used": 1,
+      "free": true,
+      "after": [
+        [
+          0,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ]
+    },
+    {
+      "previous": [
+        4,
+        2
+      ],
+      "legal": [
+        [
+          0,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ]
+      ],
+      "next": [
+        0,
+        3
+      ],
+      "used": 2,
+      "free": true,
+      "after": [
+        [
+          0,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ]
+    },
+    {
+      "previous": [
+        0,
+        3
+      ],
+      "legal": [
+        [
+          0,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "next": [
+        3,
+        4
+      ],
+      "used": 3,
+      "free": false,
+      "after": [
+        [
+          3,
+          5
+        ]
+      ]
+    }
+  ],
+  "flex": [
+    {
+      "seed": "777",
+      "baseline": -3,
+      "attack": "base-spire:bash",
+      "steps": [
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 2
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 5
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 7
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 10
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 4
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 4
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 138,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": -3
+            }
+          ],
+          "target_hp": 138,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        }
+      ]
+    },
+    {
+      "seed": "777",
+      "baseline": 2,
+      "attack": "base-spire:bash",
+      "steps": [
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 7
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 5
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 12
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 10
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 9
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 9
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 133,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 2
+            }
+          ],
+          "target_hp": 133,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 92703688209383356,
+            "state1": 3855266741105117954,
+            "state2": 15943369775224789770,
+            "state3": 14508136409771635188
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 2057875999363114537,
+            "state1": 273261500093446589,
+            "state2": 16859037863222442132,
+            "state3": 1013748753784540022
+          }
+        }
+      ]
+    },
+    {
+      "seed": "effects-component",
+      "baseline": -3,
+      "attack": "base-spire:strike-ironclad",
+      "steps": [
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 2
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 5
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 7
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 10
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 4
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 4
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 140,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": -3
+            }
+          ],
+          "target_hp": 140,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        }
+      ]
+    },
+    {
+      "seed": "effects-component",
+      "baseline": 2,
+      "attack": "base-spire:strike-ironclad",
+      "steps": [
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 7
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 5
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 12
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 10
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 9
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 150,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 9
+            },
+            {
+              "id": "base-spire:flex-potion-power",
+              "amount": 7
+            }
+          ],
+          "target_hp": 135,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        },
+        {
+          "powers": [
+            {
+              "id": "base-spire:strength-power",
+              "amount": 2
+            }
+          ],
+          "target_hp": 135,
+          "potion_count": 0,
+          "shuffle": {
+            "counter": 9,
+            "state0": 6896924478876461940,
+            "state1": 14980217012283222968,
+            "state2": 11785935786230694682,
+            "state3": 1786289055736011054
+          },
+          "rewards": {
+            "counter": 0,
+            "state0": 3310791566905895023,
+            "state1": 1828063233694327284,
+            "state2": 548788955905045650,
+            "state3": 15183044201850317196
+          }
+        }
+      ]
+    }
+  ]
+}

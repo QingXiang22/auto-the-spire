@@ -1,0 +1,19 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+use Greed { template = CardDefinition args = { definition = "base-spire:greed" sourceEntry = "GREED" kind = "curse" rarity = "curse" cost = -1 upgradedCost = -1 targeted = false exhausts = false leavesPlay = false } }
+template GreedContent { body = {
+  procedure Created { parameters = { card = Ref(Card) } body = {
+    if = { condition = equal(field(card, Card.DefinitionId), "base-spire:greed") then = { set = { target = card field = Card.CanUpgrade value = false } } }
+  } }
+  subscription Created { event = CardCreated reaction = Created }
+  procedure Keyword { pure = true parameters = { value = Bool card = Ref(Card) keyword = String(length = 16) } result = Bool body = {
+    return = { value = or(value, and(equal(field(card, Card.DefinitionId), "base-spire:greed"), or(equal(keyword, "unplayable"), equal(keyword, "eternal")))) }
+  } }
+  subscription Keyword { event = ModifyCardKeyword reaction = Keyword }
+  procedure Execute { parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) } body = { fail = { message = "Greed cannot be played" } } }
+  dispatchCase Execute { dispatch = ExecuteCardBody key = "base-spire:greed" procedure = Execute }
+  procedure Damage { pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int body = { return = { value = 0 } } }
+  dispatchCase Damage { dispatch = ReadCardDamage key = "base-spire:greed" procedure = Damage }
+} }
+use GreedBehavior { template = GreedContent }

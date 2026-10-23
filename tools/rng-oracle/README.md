@@ -17,6 +17,7 @@ python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rn
 | normal-opening-vectors、reference-pool-metadata | 原生RunState、Player、Neow，完整遗物袋、三幕来源队列、候选资格与顺序；固定Overgrowth／Hive／Glory，不声称随机替代幕选择 |
 | act-one-map-vectors、map-gaussian-vectors | 原生Overgrowth与StandardActMap，最终节点／类型／边／游标及Gaussian拒绝抽样 |
 | normal-combat-vectors | seed777正常Neow选择BoomingConch，首个合法后继真实遭遇、HP、首招、手牌与抽牌堆 |
+| neow-effects-vector | seed777真实Neow选择WingedBoots／CursedPearl后首战；另列WingedBoots三次非连接入房与两seed正负初始Strength的FlexPotion受控组件，保存资源、实例顺序和随机四字状态／游标 |
 | slimes-vectors | 十组原seed，原生SlimesWeak累计楼层2的受控编队、HP、三回合行动、Slimed与游标 |
 | ironclad-source-metadata | 原生90项完整池及GiantRock；五项多人资格、基本／升级属性与来源摘要 |
 | source-rng-vectors | Python独立派生，15条流、初始／重洗、局部金币／卡牌；保留原seed并增加old前缀边界 |

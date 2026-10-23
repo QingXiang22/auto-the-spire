@@ -90,7 +90,7 @@ procedure CloseNormalEvent {
     set = { target = normalVisit field = RunVisit.Committed value = true }
     set = { target = normalVisit field = RunVisit.Phase value = "closed" }
     set = { target = normalVisit field = RunVisit.Status value = "closed" }
-    forEach = { query = relation(MapChildren, field(run, Run.CurrentNode)) item = child body = { set = { target = child field = MapNode.Selectable value = not(field(child, MapNode.Visited)) } } }
+    call = { procedure = RefreshNormalMapChoices args = { owner = owner run = run } }
     set = { target = run field = Run.Phase value = "map" }
     set = { target = owner field = Player.Room value = "map" }
     emit = { event = EventVisitClosed payload = { owner = owner visit = visit } }

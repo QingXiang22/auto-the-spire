@@ -37,8 +37,13 @@ procedure RemoveEnemyPowersOnDeath {
 }
 procedure ModifyPowerAmount {
  parameters = { power = Ref(Power) delta = Int }
+ body = { call = { procedure = ModifyPowerAmountWithSource args = { power = power delta = delta applierPlayer = none applierEnemy = none card = none play = none } } }
+}
+procedure ModifyPowerAmountWithSource {
+ parameters = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding }
  body = {
   set = { target = power field = Power.Stacks value = add(field(power, Power.Stacks), delta) }
+  if = { condition = not(equal(delta, 0)) then = { emit = { event = PowerAmountChanged payload = { power = power delta = delta applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } } } }
   if = { condition = or(equal(field(power, Power.Stacks), 0), and(not(field(field(power, Power.Definition), PowerBlueprint.AllowNegative)), less(field(power, Power.Stacks), 0))) then = {
    call = { procedure = RemovePower args = { power = power } }
   } }
@@ -69,6 +74,7 @@ procedure ApplyPowerWithSource {
   let = { into = created value = isNone(power) }
   if = { condition = created then = {
    if = { condition = or(equal(actual, 0), and(not(field(entry, PowerBlueprint.AllowNegative)), less(actual, 0))) then = { return = { value = none } } }
+   emit = { event = BeforePowerCreated payload = { player = player enemy = enemy definition = definition amount = actual applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } }
    create = { type = Power scope = frameScope() into = power collection = Powers fields = {
     DefinitionId = definition Definition = entry HolderPlayer = player HolderEnemy = enemy Stacks = actual
     ExpiresAtTurnEnd = untilTurnEnd ApplierPlayer = applierPlayer ApplierEnemy = applierEnemy SourceCard = card SourcePlay = play
@@ -82,7 +88,7 @@ procedure ApplyPowerWithSource {
    let = { into = delta value = actual }
    if = { condition = field(entry, PowerBlueprint.SingleStack) then = { let = { into = delta value = 0 } } }
    let = { into = delta value = subtract(foldEvent(ModifyPowerStacks, add(field(power, Power.Stacks), delta), power, delta), field(power, Power.Stacks)) }
-   call = { procedure = ModifyPowerAmount args = { power = power delta = delta } }
+   call = { procedure = ModifyPowerAmountWithSource args = { power = power delta = delta applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } }
    if = { condition = untilTurnEnd then = { if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = { set = { target = power field = Power.ExpiresAtTurnEnd value = true } } } } }
   } }
   if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = {

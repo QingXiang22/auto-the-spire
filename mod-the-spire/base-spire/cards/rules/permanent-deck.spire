@@ -24,6 +24,15 @@ procedure ObtainCardReward {
     emit = { event = CardObtained payload = { owner = owner card = card } }
   }
 }
+procedure AcquirePermanentCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+    if = { condition = or(field(owner, Player.CombatActive), or(lessOrEqual(field(owner, Player.Hp), 0), or(not(equal(field(card, Card.Owner), field(owner, Player.Owner))), greaterOrEqual(collectionIndex(RunDeck, card), 0)))) then = { fail = { message = "Permanent acquisition requires a living owned noncombat card outside the deck" } } }
+    if = { condition = or(greaterOrEqual(collectionIndex(Hand, card), 0), or(greaterOrEqual(collectionIndex(DrawPile, card), 0), or(greaterOrEqual(collectionIndex(DiscardPile, card), 0), or(greaterOrEqual(collectionIndex(InPlay, card), 0), or(greaterOrEqual(collectionIndex(ExhaustPile, card), 0), greaterOrEqual(collectionIndex(RemovedFromCombat, card), 0)))))) then = { fail = { message = "Combat card cannot become a permanent acquisition" } } }
+    addToCollection = { collection = RunDeck item = card }
+    set = { target = owner field = Player.UsesRunDeck value = true }
+    emit = { event = CardObtained payload = { owner = owner card = card } }
+  }
+}
 procedure ObtainPermanentCard {
   parameters = {
     owner = Ref(Player) definition = String(length = 64) cost = Int(min = -1, max = 9)

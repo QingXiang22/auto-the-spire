@@ -19,7 +19,7 @@ relation NeowOptions { target = NeowOption public = true }
 
 procedure SupportedNeowRelic {
   pure = true parameters = { definition = String(length = 64) } result = Bool
-  body = { return = { value = or(equal(definition, "base-spire:booming-conch"), or(equal(definition, "base-spire:golden-pearl"), equal(definition, "base-spire:nutritious-oyster"))) } }
+  body = { return = { value = or(or(equal(definition, "base-spire:winged-boots"), equal(definition, "base-spire:cursed-pearl")), or(equal(definition, "base-spire:booming-conch"), or(equal(definition, "base-spire:golden-pearl"), equal(definition, "base-spire:nutritious-oyster")))) } }
 }
 procedure AddNeowPoolEntry {
   parameters = { visit = Ref(NeowVisit) definition = String(length = 64) group = String(length = 16) position = Int }
