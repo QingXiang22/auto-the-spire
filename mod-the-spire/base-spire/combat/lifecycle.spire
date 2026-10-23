@@ -149,6 +149,7 @@ procedure BeginDevelopmentCombat {
 procedure EndDevelopmentCombat {
   parameters = { owner = Ref(Player) }
   body = {
+    if = { condition = pureCall(HasDevelopmentEventCombat, owner) then = { fail = { message = "Event combat must finish through its real outcome" } } }
     if = { condition = not(isNone(field(owner, Player.CurrentRun))) then = { fail = { message = "Normal combat must finish through its real outcome" } } }
     if = {
       condition = not(field(owner, Player.CombatActive))
@@ -248,7 +249,7 @@ action BeginDevelopmentCombat {
 }
 action EndDevelopmentCombat {
   role = player
-  requires = and(field(first(type(Player)), Player.CombatActive), isNone(field(first(type(Player)), Player.CurrentRun)))
+  requires = and(field(first(type(Player)), Player.CombatActive), pureCall(CanUseDevelopmentActions, first(type(Player))))
   body = { call = { procedure = EndDevelopmentCombat args = { owner = first(type(Player)) } } }
 }
 action BeginDevelopmentTurn {

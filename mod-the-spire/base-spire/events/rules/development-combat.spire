@@ -1,0 +1,47 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity EventCombatVisit { owner = Owner fields = {
+  Owner = { type = Participant }
+  Parent = { type = Ref(EventVisit) }
+  Status = { type = String(length = 16) default = "active" }
+  Outcome = { type = String(length = 16) default = "none" }
+  TimedOut = { type = Bool default = false }
+} }
+dispatch ResumeEventCombat { parameters = { owner = Ref(Player) visit = Ref(EventVisit) victory = Bool timedOut = Bool } }
+procedure CanPrepareDevelopmentEventCombat { pure = true parameters = { owner = Ref(Player) } result = Bool body = {
+  return = { value = and(not(exists(type(Enemy))), and(isNone(field(owner, Player.CurrentRewardSet)), not(field(owner, Player.GoldRewardPending)))) }
+} }
+procedure HasDevelopmentEventCombat { pure = true parameters = { owner = Ref(Player) } result = Bool body = {
+  return = { value = exists(where(type(EventCombatVisit), c, and(equal(field(c, EventCombatVisit.Owner), field(owner, Player.Owner)), equal(field(c, EventCombatVisit.Status), "active")))) }
+} }
+procedure BeginDevelopmentEventCombat {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { child = Binding } body = {
+    if = { condition = not(pureCall(CanPrepareDevelopmentEventCombat, owner)) then = { fail = { message = "Event combat requires no previous enemies or pending rewards" } } }
+    if = { condition = not(and(isNone(field(owner, Player.CurrentRun)), and(equal(field(owner, Player.Room), "event"), and(greater(field(owner, Player.Hp), 0), and(not(field(owner, Player.CombatActive)), and(equal(field(visit, EventVisit.Owner), field(owner, Player.Owner)), and(equal(field(visit, EventVisit.Status), "active"), isNone(field(visit, EventVisit.CombatVisit))))))))) then = { fail = { message = "Event combat requires a living owned active development event" } } }
+    create = { type = EventCombatVisit scope = entityScope(visit) into = child fields = { Owner = field(owner, Player.Owner) Parent = visit } }
+    set = { target = visit field = EventVisit.CombatVisit value = child }
+    set = { target = visit field = EventVisit.Status value = "suspended" }
+    set = { target = owner field = Player.Room value = "none" }
+  }
+}
+procedure SettleDevelopmentEventCombat {
+  parameters = { owner = Ref(Player) victory = Bool } locals = { child = Binding visit = Binding } body = {
+    let = { into = child value = first(where(type(EventCombatVisit), c, and(equal(field(c, EventCombatVisit.Owner), field(owner, Player.Owner)), equal(field(c, EventCombatVisit.Status), "active")))) }
+    if = { condition = isNone(child) then = { return = {} } }
+    let = { into = visit value = field(child, EventCombatVisit.Parent) }
+    if = { condition = not(and(equal(field(visit, EventVisit.CombatVisit), child), and(equal(field(visit, EventVisit.Owner), field(owner, Player.Owner)), equal(field(visit, EventVisit.Status), "suspended")))) then = { fail = { message = "Event combat cannot resume a different parent" } } }
+    set = { target = child field = EventCombatVisit.Outcome value = field(owner, Player.CombatOutcome) }
+    set = { target = child field = EventCombatVisit.TimedOut value = field(owner, Player.CombatTimedOut) }
+    if = { condition = not(victory) then = {
+      set = { target = child field = EventCombatVisit.Status value = "defeated" }
+      set = { target = visit field = EventVisit.Status value = "defeated" }
+      return = {}
+    } }
+    set = { target = child field = EventCombatVisit.Status value = "closed" }
+    forEach = { query = type(Enemy) item = enemy body = { call = { procedure = RemoveCombatEnemy args = { target = enemy } } } }
+    set = { target = owner field = Player.Room value = "event" }
+    set = { target = visit field = EventVisit.Status value = "active" }
+    call = { procedure = ResumeEventCombat args = { key = field(visit, EventVisit.DefinitionId) owner = owner visit = visit victory = victory timedOut = field(owner, Player.CombatTimedOut) } }
+  }
+}

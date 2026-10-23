@@ -1,0 +1,38 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity BattlewornOption { fields = {
+  Visit = { type = Ref(EventVisit) }
+  Setting = { type = String(length = 16) }
+} }
+procedure BattlewornDummyVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { option = Binding selected = List(Ref(BattlewornOption), length = 1) hp = Int } body = {
+    seedStream64 = { stream = pureCall(EventVisitStream, visit) seed = pureCall(SourceContentSeed, 0, "BATTLEWORN_DUMMY", 0) }
+    create = { type = BattlewornOption scope = entityScope(visit) into = option fields = { Visit = visit Setting = "SETTING_1" } }
+    create = { type = BattlewornOption scope = entityScope(visit) into = option fields = { Visit = visit Setting = "SETTING_2" } }
+    create = { type = BattlewornOption scope = entityScope(visit) into = option fields = { Visit = visit Setting = "SETTING_3" } }
+    decide = { participant = field(owner, Player.Owner) kind = EntityRefList prompt = "Battleworn Dummy setting" into = selected min = 1 max = 1 candidates = where(type(BattlewornOption), o, equal(field(o, BattlewornOption.Visit), visit)) }
+    if = { condition = not(equal(field(first(refList(selected)), BattlewornOption.Setting), "SETTING_2")) then = { fail = { message = "unsupported_capability: BattlewornDummy potion and relic rewards are not connected" } } }
+    forEach = { query = where(type(BattlewornOption), o, equal(field(o, BattlewornOption.Visit), visit)) item = previous body = { destroy = { target = previous } } }
+    set = { target = visit field = EventVisit.Page value = "setting-2" }
+    call = { procedure = BeginDevelopmentEventCombat args = { owner = owner visit = visit } }
+    sampleInt = { stream = "base-spire:run:niche" min = 0 max = 1 into = hp }
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:battle-friend-v2" hp = add(150, hp) } }
+    call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
+    call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
+  }
+}
+dispatchCase BattlewornDummyVisit { dispatch = ExecuteEventVisit key = "base-spire:battleworn-dummy" procedure = BattlewornDummyVisit }
+procedure ResumeBattlewornDummy {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) victory = Bool timedOut = Bool } body = {
+    if = { condition = not(equal(field(visit, EventVisit.Page), "setting-2")) then = { fail = { message = "BattlewornDummy cannot resume an unselected setting" } } }
+    if = { condition = and(victory, not(timedOut)) then = {
+      call = { procedure = UpgradeRandomPermanentCardsFromStream args = { owner = owner kind = "all" amount = 2 stream = pureCall(EventVisitStream, visit) } }
+    } }
+    call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "finished" } }
+  }
+}
+dispatchCase ResumeBattlewornDummy { dispatch = ResumeEventCombat key = "base-spire:battleworn-dummy" procedure = ResumeBattlewornDummy }
+action EnterDevelopmentBattlewornDummy { role = player requires = and(pureCall(CanPrepareDevelopmentEventCombat, first(type(Player))), and(pureCall(CanUseDevelopmentActions, first(type(Player))), pureCall(CanEnterDevelopmentEvent, first(type(Player))))) body = {
+  call = { procedure = EnterDevelopmentEvent args = { owner = first(type(Player)) definition = "base-spire:battleworn-dummy" } }
+} }

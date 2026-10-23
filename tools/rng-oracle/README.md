@@ -46,4 +46,6 @@ dotnet run --project tools/base-spire-dev -c Release -- check --normal-run-only
 
 `normal-dense-vegetation-vector.json`独立执行seed `dense-normal-30` 的真实Neow、首战胜利及奖励跳过，自然进入DenseVegetation，再走TRUDGE_ON、REST后子战斗奖励跳过／领取三条路径。向量保存进入、选择、四Wriggler出生、胜利奖励和关闭边界的资源及完整Run／玩家／事件RNG四字状态与游标，同时保留永久牌组和真实后继。TRUDGE_ON范围为61～99，源NextInt上界100不含；战后生命包含BurningBlood的胜利治疗。base正常组及行为报告消费该文件，migration核对来源摘要；stdio沿公开策略验证访问生命周期，出牌策略差异不用于断言同一战后生命。
 
+`battleworn-continuation-vector.json`独立执行seed `777`／`dummy-continuation` 的真实BattlewornDummy升级档。受控初态为Ironclad起始牌组、50HP及直接EventRoom；击杀路径在第三回合将真实目标设为5HP并生成Feed，超时路径真实结束三个敌方回合。向量保存原父事件恢复前后资源、永久升级索引及niche／shuffle／rewards／事件流完整四字状态与游标；base行为检查消费，migration核对来源摘要。该组件场景不证明第三幕正常可达，stdio另以开发公开入口验证真实超时和父子关系。
+
 这里验证组件与指定正常路径；完整M01公开状态、实例、事件与逐次随机比较仍由[差异工具](../differential/README.md)验收。不得换seed、缩池、补抽、重键参考或把缺消费者当作通过。

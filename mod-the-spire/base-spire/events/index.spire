@@ -1,3 +1,3 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-includes = ["rules/visits.spire", "rules/combat-visits.spire", "sapphire-seed.spire", "doors-of-light-and-dark.spire", "dense-vegetation.spire"]
+includes = ["rules/visits.spire", "rules/combat-visits.spire", "rules/development-combat.spire", "sapphire-seed.spire", "doors-of-light-and-dark.spire", "dense-vegetation.spire", "battleworn-dummy.spire"]

@@ -11,6 +11,7 @@ entity EventVisit { owner = Owner fields = {
   ReturnRoom = { type = String(length = 16) default = "none" visibility = Hidden }
   RunVisit = { type = Ref(RunVisit) optional = true }
   ChildVisit = { type = Ref(RunVisit) optional = true }
+  CombatVisit = { type = Ref(EventCombatVisit) optional = true }
 } }
 dispatch ExecuteEventVisit { parameters = { owner = Ref(Player) visit = Ref(EventVisit) } }
 event EventVisitEntered { payload = { owner = Ref(Player) visit = Ref(EventVisit) } }
@@ -31,6 +32,7 @@ procedure EnterDevelopmentEvent {
   body = {
     if = { condition = not(and(pureCall(CanEnterDevelopmentEvent, owner), pureCall(ExecuteEventVisit.Contains, definition))) then = { fail = { message = "Cannot enter an unknown event or overlap an existing visit" } } }
     let = { into = sequence value = add(aggregate(where(type(EventVisit), v, equal(field(v, EventVisit.Owner), field(owner, Player.Owner))), Maximum, v, field(v, EventVisit.Sequence)), 1) }
+    forEach = { query = where(type(EventCombatVisit), c, equal(field(c, EventCombatVisit.Owner), field(owner, Player.Owner))) item = previousCombat body = { destroy = { target = previousCombat } } }
     forEach = { query = where(type(EventVisit), v, equal(field(v, EventVisit.Owner), field(owner, Player.Owner))) item = previous body = { destroy = { target = previous } } }
     create = { type = EventVisit scope = entityScope(owner) into = visit fields = { Owner = field(owner, Player.Owner) DefinitionId = definition ReturnRoom = field(owner, Player.Room) Sequence = sequence } }
     set = { target = owner field = Player.Room value = "event" }
