@@ -4,14 +4,14 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/Unrelenting.cs; SHA-256 retained in cards/catalog.json.
 use Unrelenting { template = CardDefinition args = { sourceEntry = "UNRELENTING" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:unrelenting" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 14 upgradedBaseDamage = 20 } }
 use UnrelentingEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:unrelenting" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
-use UnrelentingEffect2 { template = TargetedSelfPowerEffect args = { definition = "base-spire:unrelenting" power = "base-spire:free-attack-power" stacks = 1 upgradedStacks = 1 } }
+use UnrelentingEffect2 { template = ApplySelfPowerEffect args = { definition = "base-spire:unrelenting" power = "base-spire:free-attack-power" stacks = 1 upgradedStacks = 1 } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure UnrelentingBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = UnrelentingEffect1.Apply args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = UnrelentingEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = UnrelentingEffect2.WhenPlayed args = { play = play owner = owner card = card } }
   }
 }
 dispatchCase UnrelentingBody { dispatch = ExecuteCardBody key = "base-spire:unrelenting" procedure = UnrelentingBody }

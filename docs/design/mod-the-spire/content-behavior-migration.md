@@ -30,6 +30,8 @@ base 声明正文分派，参数为 owner／card／target／play。每个已执�
 
 MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、插入位置、满手与移动通知；生成入手、回顶、Anger 复制和 PrimalForce 移除调用此操作。主动弃牌另发 CardDiscarded；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
 
+重复的克隆后放置使用CloneCombatCardToPile：保留CloneCombatCard的实例复制与全部回调，再交给MoveCombatCard处理落点。Anger与Juggling分别传入弃牌／手牌及原移动原因；满手时克隆仍只进入弃牌堆，不丢失或重新创建。ClonePlayedCardEffect只包装当前牌的这一操作，不增加敌人资格限制；不能用CreateCombatCard替代已有实例的克隆。普通／升级常量选择由CardUpgradeValue纯计算，自身Power模板统一处理是否在回合末到期，均不新增事件或改变正文顺序。
+
 CardCloned、CardCombatCopied、CardRemoving 是附属能力的复制与清理接缝。Stomp 的费用与 HowlFromBeyond 的耗尽堆自动行为归所属模块；通用 Card 不再保存它们的专属开关。CardAttachment 保存附魔标识与状态，Sown 在明确附魔阶段回能后禁用；永久→战斗副本与战斗克隆按各自来源复制，升级不重置状态，销毁前清理。公开附属实体采用通用 identity_from 依附卡标识，隐藏抽牌堆不泄漏附魔或卡引用。
 
 Power 施加接收 applierPlayer／applierEnemy／card／play，并经过 ShouldApplyPower、ModifyPowerGiven、ModifyPowerReceived。定义选择 shared／per-applier／independent 匹配；现有 singleStack 兼容语义保留，不能视为完整原版 StackType。Vigor 支持敌我攻击资格与层数快照，Rupture 消费实际 DamageResult 的来源。

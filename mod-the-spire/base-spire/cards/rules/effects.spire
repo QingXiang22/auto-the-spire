@@ -3,8 +3,7 @@ dsl_version = "core/0.3"
 
 # Composable card effect templates. A content file combines one CardDefinition with the effects it needs;
 # every effect filters on Card.DefinitionId, so several effects can share one card.
-# Targeted effects subscribe to CardPlayedOnTarget, which PlayAttackCard emits after CardPlayed, matching
-# the source order where a card gains block before it deals damage (IronWave.cs OnPlay).
+# Card bodies explicitly call these procedures in source order; they do not subscribe to play events.
 template AttackEffect {
   parameters = {
     definition = { type = String(length = 64) }
@@ -41,11 +40,7 @@ template BlockEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedBlock) } }
-              else = { let = { into = amount value = arg(block) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(block), arg(upgradedBlock)) }
             call = { procedure = GainBlock args = { owner = owner amount = amount } }
           }
         }
@@ -68,11 +63,7 @@ template DrawEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedCards) } }
-              else = { let = { into = amount value = arg(cards) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(cards), arg(upgradedCards)) }
             call = { procedure = DrawCards args = { owner = owner count = amount } }
           }
         }
@@ -81,10 +72,24 @@ template DrawEffect {
 
   }
 }
-# BodySlam.cs: CalculatedDamageVar(ValueProp.Move).WithMultiplier(card => card.Owner.Creature.Block),
-# so the damage equals the player's block when the card resolves.
-# Anger.cs: after the attack, a clone of the played card is added to the discard pile. The clone keeps the
-# upgraded state and is a combat-only card; permanent deck copies are not migrated.
+# Clone the played instance, including its instance-owned components, then place it through shared movement.
+template ClonePlayedCardEffect {
+  parameters = {
+    definition = { type = String(length = 64) }
+    destination = { type = String(length = 16) default = "discard" }
+  }
+  body = {
+    procedure WhenPlayed {
+      parameters = { play = Binding owner = Ref(Player) card = Ref(Card) }
+      locals = { copy = Binding }
+      body = {
+        if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
+          call = { procedure = CloneCombatCardToPile args = { owner = owner source = card to = arg(destination) reason = "clone" } into = copy }
+        } }
+      }
+    }
+  }
+}
 # Shared "gain energy" card effect (Bloodletting.cs, Offering.cs). GainEnergy does not clamp to MaxEnergy.
 template EnergyEffect {
   parameters = {
@@ -100,11 +105,7 @@ template EnergyEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedEnergy) } }
-              else = { let = { into = amount value = arg(energy) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(energy), arg(upgradedEnergy)) }
             call = { procedure = GainEnergy args = { owner = owner amount = amount } }
           }
         }
@@ -131,11 +132,7 @@ template AttackAllEnemiesEffect {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
 
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = count value = arg(upgradedHits) } }
-              else = { let = { into = count value = arg(hits) } }
-            }
+            let = { into = count value = pureCall(CardUpgradeValue, card, arg(hits), arg(upgradedHits)) }
             call = { procedure = CardAttack args = { owner = owner card = card play = play target = none amount = 0 hits = count mode = "all" dynamic = true } }
           }
         }
@@ -144,9 +141,7 @@ template AttackAllEnemiesEffect {
 
   }
 }
-# Shared debuff effect for single-target cards (Bash.cs, Uppercut.cs). It subscribes to the same event as
-# AttackEffect, so a content file that declares the attack effect first keeps the source order of
-# "deal damage, then apply the power" (listeners run in declaration order).
+# Shared debuff effect for single-target cards; the owning body calls it after damage when the source does.
 template ApplyEnemyPowerEffect {
   parameters = {
     definition = { type = String(length = 64) }
@@ -162,11 +157,7 @@ template ApplyEnemyPowerEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedStacks) } }
-              else = { let = { into = amount value = arg(stacks) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(stacks), arg(upgradedStacks)) }
             call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = arg(power) stacks = amount } }
           }
         }
@@ -192,11 +183,7 @@ template ApplyAllEnemiesPowerEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedStacks) } }
-              else = { let = { into = amount value = arg(stacks) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(stacks), arg(upgradedStacks)) }
             forEach = {
               query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
               body = { call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = enemy definition = arg(power) stacks = amount } } }
@@ -208,14 +195,14 @@ template ApplyAllEnemiesPowerEffect {
 
   }
 }
-# Shared self-buff effect for cards that power the player up (Flex.cs, Inflame.cs). No migrated card uses it
-# yet, so Strength and Dexterity are exercised by explicit development probes.
+# Shared self-buff effect for targeted and untargeted cards, with explicit turn-end expiry when needed.
 template ApplySelfPowerEffect {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
     stacks = { type = Int(min = 1, max = 999) }
     upgradedStacks = { type = Int(min = 1, max = 999) }
+    untilTurnEnd = { type = Bool default = false }
   }
   body = {
     procedure WhenPlayed {
@@ -225,12 +212,12 @@ template ApplySelfPowerEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedStacks) } }
-              else = { let = { into = amount value = arg(stacks) } }
-            }
-            call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = arg(power) stacks = amount } }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(stacks), arg(upgradedStacks)) }
+            if = { condition = arg(untilTurnEnd) then = {
+              call = { procedure = ApplyPlayerPowerFromCardUntilTurnEnd args = { card = card play = play owner = owner definition = arg(power) stacks = amount } }
+            } else = {
+              call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play owner = owner definition = arg(power) stacks = amount } }
+            } }
           }
         }
       }
@@ -252,11 +239,7 @@ template LoseHpEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedHp) } }
-              else = { let = { into = amount value = arg(hp) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(hp), arg(upgradedHp)) }
             call = { procedure = LosePlayerHpFromCard args = { card = card play = play  owner = owner amount = amount } }
           }
         }

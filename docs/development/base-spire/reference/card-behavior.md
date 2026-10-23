@@ -19,10 +19,12 @@
 | --- | --- |
 | `AttackCardBody` | definition、hits（默认1）；调用已有AttackEffect，一次攻击命令保留多段语义，绑定正文与静态伤害读取 |
 | `BlockCardBody` | definition、block、upgradedBlock；调用BlockEffect，绑定正文与静态伤害读取 |
-| `SelfPowerCardBody` | definition、power、stacks、upgradedStacks；调用ApplySelfPowerEffect，绑定正文与静态伤害读取 |
+| `SelfPowerCardBody` | definition、power、stacks、upgradedStacks、可选untilTurnEnd（默认false）；调用ApplySelfPowerEffect，绑定正文与静态伤害读取 |
 | `StaticCardDamage` | definition；只绑定ReadCardDamage，读取Card.BaseDamage与Card.DamageGrowth之和，供显式组合正文复用 |
 
 这些正文模板与原名称的CardDefinition并列使用，数值仍在定义或效果参数中各自维护。一个定义只选一种正文绑定和一种伤害绑定；前三个模板已包含StaticCardDamage，不再额外展开。动态公式保留所属模块自己的pure过程与case；多个效果继续显式排列call，不以模板登记顺序代替正文顺序。
+
+效果内部的普通／升级常量选择共用pure过程`CardUpgradeValue(card: Ref(Card), baseValue: Int, upgradedValue: Int) → Int`。格挡、抽牌、能量、Power层数、失血、成长与段数模板调用同一过程；内容仍拥有两个输入值及额外的动态计算。目标卡是否需要选敌不影响自身Power效果，统一调用`ApplySelfPowerEffect.WhenPlayed(play,owner,card)`；临时效果通过untilTurnEnd显式选择原有到期操作。
 
 每次执行的 BeforeCardExecution／AfterCardExecution 载荷均为 owner、card、play。正文之后依次经过 ExecuteCardEnchantment 和 ExecuteCardAffliction，存活时才继续完成通知。CardPlayRecord 保存付款、原始 X、自动标记、目标、结果区、ActionNumber、ParentPlay 和 PlayIndex／PlayCount；内部执行历史不公开。新效果收到 play 后继续显式传给子操作。
 
@@ -63,6 +65,10 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 上述牌区仍为单玩家全局集合。回合末手牌效果已由Infection接入；完整多选／取消策略和所有变换政策未由本表一并承诺。
 
 ## 复制、附魔与永久牌
+
+`CloneCombatCardToPile(owner: Ref(Player), source: Ref(Card), to: String(16), reason: String(32)) → Binding`组合完整战斗克隆与移动。先通过CloneCombatCard复制实例值、费用修正及附属能力，依次完成CardCloned、CardEnteredCombat，再调用MoveCombatCard处理目的区、满手回退和CardMoved，返回实际新实例。该操作只移动新实例，自身不抽样，回调仍按原顺序执行；特殊流程需要在克隆与移动之间插入操作时，继续分别调用底层过程。
+
+卡牌正文可使用`ClonePlayedCardEffect(definition,destination="discard")`，生成的WhenPlayed只接收play／owner／card，不依赖敌人目标；它以reason="clone"复制本次牌。Anger显式先攻击后调用该效果。Juggling直接复用CloneCombatCardToPile，目的区为hand、reason为generate；克隆与新生成同定义牌继续分别使用CloneCombatCard与CreateCombatCard，不混用初始化或复制通知。
 
 `CardCloned(owner,source,card)` 复制战斗实例；`CardCombatCopied(owner,source,card)` 从永久实例建立战斗副本；`CardRemoving(card)` 在销毁前让所属能力清理。共享 Card 仍复制共有事实，私有状态由所属模块消费生命周期通知，不再扩专属 Bool 或两份复制字段清单。
 

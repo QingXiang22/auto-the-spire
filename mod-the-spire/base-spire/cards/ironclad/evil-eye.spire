@@ -18,11 +18,7 @@ template FlaggedBlockMultiplierEffect {
         if = {
           condition = equal(field(card, Card.DefinitionId), arg(definition))
           then = {
-            if = {
-              condition = field(card, Card.Upgraded)
-              then = { let = { into = amount value = arg(upgradedBlock) } }
-              else = { let = { into = amount value = arg(block) } }
-            }
+            let = { into = amount value = pureCall(CardUpgradeValue, card, arg(block), arg(upgradedBlock)) }
             if = {
               condition = equal(arg(flag), "lost-hp")
               then = { let = { into = flagged value = field(owner, Player.LostHpThisTurn) } }

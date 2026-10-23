@@ -21,17 +21,7 @@ procedure SetupStrike {
           condition = equal(field(first(where(type(State), s, equal(field(s, State.Power), listener))), State.Value), 3) then = {
             repeat = {
               count = field(listener, Power.Stacks) body = {
-                call = {
-                  procedure = CloneCombatCard args = {
-                    owner = owner source = card
-                  }
-                  into = copy
-                }
-                call = {
-                  procedure = AddGeneratedToHand args = {
-                    card = copy
-                  }
-                }
+                call = { procedure = CloneCombatCardToPile args = { owner = owner source = card to = "hand" reason = "generate" } into = copy }
               }
             }
           }

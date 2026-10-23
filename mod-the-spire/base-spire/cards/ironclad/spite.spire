@@ -28,11 +28,7 @@ template FlaggedHitsAttackEffect {
             if = {
               condition = flagged
               then = {
-                if = {
-                  condition = field(card, Card.Upgraded)
-                  then = { let = { into = count value = arg(upgradedFlaggedHits) } }
-                  else = { let = { into = count value = arg(flaggedHits) } }
-                }
+                let = { into = count value = pureCall(CardUpgradeValue, card, arg(flaggedHits), arg(upgradedFlaggedHits)) }
               }
               else = { let = { into = count value = arg(hits) } }
             }

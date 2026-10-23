@@ -49,9 +49,10 @@ template SelfPowerCardBody {
   parameters = {
     definition = { type = String(length = 64) } power = { type = String(length = 64) }
     stacks = { type = Int(min = 1, max = 999) } upgradedStacks = { type = Int(min = 1, max = 999) }
+    untilTurnEnd = { type = Bool default = false }
   }
   body = {
-    use Effect { template = ApplySelfPowerEffect args = { definition = arg(definition) power = arg(power) stacks = arg(stacks) upgradedStacks = arg(upgradedStacks) } }
+    use Effect { template = ApplySelfPowerEffect args = { definition = arg(definition) power = arg(power) stacks = arg(stacks) upgradedStacks = arg(upgradedStacks) untilTurnEnd = arg(untilTurnEnd) } }
     procedure Execute {
       parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
       body = { call = { procedure = Effect.WhenPlayed args = { play = play owner = owner card = card } } }

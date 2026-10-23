@@ -2,24 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: Anger.cs: cost 0, DamageVar(6, Move), OnUpgrade adds 2, and OnPlay adds a clone to the discard pile.
-template AddCopyEffect {  parameters = { definition = { type = String(length = 64) } }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { copy = Binding }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            call = { procedure = CloneCombatCard args = { owner = owner source = card } into = copy }
-            call = { procedure = MoveCombatCard args = { owner = owner card = copy to = "discard" reason = "clone" } }
-          }
-        }
-      }
-    }
-
-  }
-}
 
 use Anger {
   template = CardDefinition
@@ -30,7 +12,7 @@ use AngerDamage {
   args = { definition = "base-spire:anger" hits = 1 }
 }
 use AngerCopy {
-  template = AddCopyEffect
+  template = ClonePlayedCardEffect
   args = { definition = "base-spire:anger" }
 }
 
@@ -39,7 +21,7 @@ procedure AngerBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = AngerDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = AngerCopy.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = AngerCopy.WhenPlayed args = { play = play owner = owner card = card } }
   }
 }
 dispatchCase AngerBody { dispatch = ExecuteCardBody key = "base-spire:anger" procedure = AngerBody }

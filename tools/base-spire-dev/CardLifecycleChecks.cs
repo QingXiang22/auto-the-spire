@@ -68,6 +68,55 @@ internal static partial class PackageChecks
             Equal(retain, Hand(s).Single(), "Retain survives the shared hand finish");
             Equal(0, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:HandFlushEntry").Id).Count, "temporary batch cleaned");
         });
+        check("LIFECYCLE clone placement preserves lifecycle order, instance values and full-hand fallback", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("clone-placement.spire", """
+                entity ClonePlacementProbe { fields = { Card = { type = Ref(Card) } Stage = { type = Int } } }
+                procedure Cloned { parameters = { owner = Ref(Player) source = Ref(Card) card = Ref(Card) } locals = { probe = Binding } body = {
+                  create = { type = ClonePlacementProbe scope = frameScope() into = probe fields = { Card = card Stage = 1 } }
+                } }
+                subscription Cloned { event = CardCloned reaction = Cloned }
+                procedure Entered { parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool } locals = { probe = Binding } body = {
+                  if = { condition = clone then = {
+                    let = { into = probe value = first(where(type(ClonePlacementProbe), p, equal(field(p, ClonePlacementProbe.Card), card))) }
+                    if = { condition = isNone(probe) then = { fail = { message = "clone entered before clone notification" } } }
+                    if = { condition = not(equal(field(probe, ClonePlacementProbe.Stage), 1)) then = { fail = { message = "duplicate clone entry" } } }
+                    set = { target = probe field = ClonePlacementProbe.Stage value = 2 }
+                  } }
+                } }
+                subscription Entered { event = CardEnteredCombat reaction = Entered }
+                procedure Moved { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } locals = { probe = Binding } body = {
+                  let = { into = probe value = first(where(type(ClonePlacementProbe), p, equal(field(p, ClonePlacementProbe.Card), card))) }
+                  if = { condition = not(isNone(probe)) then = {
+                    if = { condition = not(and(equal(field(probe, ClonePlacementProbe.Stage), 2), and(equal(from, "none"), equal(reason, "clone-probe")))) then = { fail = { message = "clone placement order or reason changed" } } }
+                    set = { target = probe field = ClonePlacementProbe.Stage value = 3 }
+                  } }
+                } }
+                subscription Moved { event = CardMoved reaction = Moved }
+                action CopyToHand { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } locals = { result = Binding } body = {
+                  call = { procedure = CloneCombatCardToPile args = { owner = first(type(Player)) source = card to = "hand" reason = "clone-probe" } into = result }
+                } }
+                action CopyToDiscard { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } locals = { result = Binding } body = {
+                  call = { procedure = CloneCombatCardToPile args = { owner = first(type(Player)) source = card to = "discard" reason = "clone-probe" } into = result }
+                } }
+                """);
+            var variant = copy.Load();
+            foreach (var (action, full, pile) in new[] { ("CopyToHand", false, "Hand"), ("CopyToHand", true, "DiscardPile"), ("CopyToDiscard", false, "DiscardPile") })
+            {
+                var s = Start(variant); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+                var source = IcAdd(s, "StrikeIronclad", upgraded: true);
+                Set(s, source, "Card", "DamageGrowth", Value.Of(4L));
+                if (full) for (var index = 0; index < 9; index++) IcAdd(s, "DefendIronclad");
+                var draws = s.Random.TotalDraws; Submit(s, action, source);
+                var type = s.RuleSet.TypeByQualifiedId("base-spire:ClonePlacementProbe"); var probe = s.State.AllInstances(type.Id).Single();
+                var clone = s.State.GetField(probe, type.FieldIndex("Card")).AsRef();
+                Equal(3L, IntField(s, probe, "ClonePlacementProbe", "Stage"), "clone notification, combat entry, then movement");
+                True(clone != source && Hand(s).Contains(source) && Members(s, pile).Contains(clone), "new instance reaches the resolved pile without moving its source");
+                True(CardUpgraded(s, clone), "clone retains the source upgrade"); Equal(4L, IntField(s, clone, "Card", "DamageGrowth"), "clone retains instance growth");
+                Equal(draws, s.Random.TotalDraws, "cloning and placement consume no random draws");
+            }
+        });
         check("LIFECYCLE card cost modifiers compose, clone independently and expire by their own boundary", () =>
         {
             using var copy = new Copy(package.Root); copy.Include("cost-probe.spire", """
@@ -76,8 +125,7 @@ internal static partial class PackageChecks
                   call = { procedure = AddCardCostModifier args = { card = card source = "probe:free" operation = "set" amount = 0 lifetime = "play" } }
                 } }
                 action Copy { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } locals = { result = Binding } body = {
-                  call = { procedure = CloneCombatCard args = { owner = first(type(Player)) source = card } into = result }
-                  call = { procedure = AddGeneratedToHand args = { card = result } }
+                  call = { procedure = CloneCombatCardToPile args = { owner = first(type(Player)) source = card to = "hand" reason = "generate" } into = result }
                 } }
                 """);
             var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
@@ -95,8 +143,7 @@ internal static partial class PackageChecks
                   call = { procedure = EnchantCard args = { owner = first(type(Player)) card = card definition = "base-spire:sown" amount = 1 } }
                 } }
                 action Copy { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(DiscardPile) } locals = { result = Binding } body = {
-                  call = { procedure = CloneCombatCard args = { owner = first(type(Player)) source = card } into = result }
-                  call = { procedure = AddGeneratedToHand args = { card = result } }
+                  call = { procedure = CloneCombatCardToPile args = { owner = first(type(Player)) source = card to = "hand" reason = "generate" } into = result }
                 } }
                 """);
             var s = Start(copy.Load()); Submit(s, "Ironclad.Initialize");

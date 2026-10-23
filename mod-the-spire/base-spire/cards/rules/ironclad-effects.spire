@@ -16,8 +16,6 @@ if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustComb
   }
 }
 
-
-
 template ComputedAttackEffect {
   parameters = { definition = { type = String(length = 64) } hits = { type = Int default = 1 } upgradedHits = { type = Int default = 1 } hitScale = { type = String(length = 16) default = "fixed" } }
   body = {
@@ -55,28 +53,6 @@ if = { condition = greaterOrEqual(count(collection(ExhaustPile)), arg(minExhaust
   }
 }
 
-
-
-
-
-
-
-template TargetedSelfPowerEffect {
-  parameters = { definition = { type = String(length = 64) } power = { type = String(length = 64) } stacks = { type = Int } upgradedStacks = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedStacks) } } else = { let = { into = amount value = arg(stacks) } } }
-call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = arg(power) stacks = amount } }
-
-      } } }
-    }
-
-  }
-}
-
 template TemporaryStrengthEffect {
   parameters = { definition = { type = String(length = 64) } stacks = { type = Int } upgradedStacks = { type = Int } enemy = { type = Bool } }
   body = {
@@ -84,7 +60,7 @@ template TemporaryStrengthEffect {
       parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
       locals = { amount = Int }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedStacks) } } else = { let = { into = amount value = arg(stacks) } } }
+let = { into = amount value = pureCall(CardUpgradeValue, card, arg(stacks), arg(upgradedStacks)) }
 if = { condition = arg(enemy) then = {
   call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = "base-spire:strength-power" stacks = subtract(0, amount) } }
   call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = "base-spire:mangle-power" stacks = amount } }
@@ -97,13 +73,6 @@ if = { condition = arg(enemy) then = {
 
   }
 }
-
-
-
-
-
-
-
 
 template AutoplayTopEffect {
   parameters = { definition = { type = String(length = 64) } xCost = { type = Bool default = false } exhaust = { type = Bool default = false } }

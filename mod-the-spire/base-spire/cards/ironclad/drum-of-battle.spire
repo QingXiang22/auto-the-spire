@@ -9,7 +9,7 @@ template ExhaustEnergyReaction {
       parameters = { owner = Ref(Player) card = Ref(Card) }
       locals = { amount = Int }
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedEnergy) } } else = { let = { into = amount value = arg(energy) } } }
+let = { into = amount value = pureCall(CardUpgradeValue, card, arg(energy), arg(upgradedEnergy)) }
 call = { procedure = GainEnergy args = { owner = owner amount = amount } }
       } } }
     }
