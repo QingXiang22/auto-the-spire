@@ -25,7 +25,7 @@ def generate():
                  'Runs/CardCreationOptions.cs', 'Commands/PotionCmd.cs', 'Random/Rng.cs', 'Random/MegaRandom.cs']:
         read(path)
     metadata = native_metadata()
-    supported = {'BloodPotion', 'FirePotion', 'BlockPotion', 'EnergyPotion', 'SwiftPotion', 'FruitJuice'}
+    supported = {'BloodPotion', 'FirePotion', 'BlockPotion', 'EnergyPotion', 'SwiftPotion', 'FruitJuice', 'FlexPotion'}
     potions = []
     for potion in metadata['potions']:
         name = potion['name']; read(f'Models/Potions/{name}.cs')

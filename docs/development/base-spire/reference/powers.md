@@ -1,6 +1,6 @@
 # Power定义与生命周期参考
 
-文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.54的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
+文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.63的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
 
 ## 定义与共有状态
 
@@ -32,7 +32,8 @@ ExpiresAtTurnEnd是一次施加的临时寿命事实，保留临时FlameBarrier�
 | ApplyPower | player: Binding、enemy: Binding、definition: String(64)、stacks: Int(-999..999)、untilTurnEnd: Bool；返回Binding | 先查定义并验证恰好一个持有者，再按定义与持有者匹配实例；返回仍有效的Power，否则none |
 | ApplyPowerWithSource | 上述参数加applierPlayer／applierEnemy／card／play: Binding；返回Binding | 验证来源及持有者后，已确认死亡的敌人直接返回none；其余经过ShouldApplyPower、ModifyPowerGiven（存在施加者时）、ModifyPowerReceived，再按instanceMode匹配；阻止及新实例零结果返回none |
 | ApplyPlayerPowerFromCard／ApplyEnemyPowerFromCard | owner、card、play、definition、stacks；敌方另加target | 卡牌效果显式传执行来源与玩家施加者；不通过CurrentPlay猜来源。临时版本ApplyPlayerPowerFromCardUntilTurnEnd同样保留来源 |
-| ModifyPowerAmount | power: Ref(Power)、delta: Int；无返回 | 加到Stacks；结果0或不允许的负数通过RemovePower移除。字段范围仍为-999..999 |
+| ModifyPowerAmount | power: Ref(Power)、delta: Int；无返回 | 委托ModifyPowerAmountWithSource，来源参数为none |
+| ModifyPowerAmountWithSource | power、delta，加applierPlayer／applierEnemy／card／play: Binding；无返回 | 先改Stacks，再对非零增量发布PowerAmountChanged，最后将0或不允许的负数通过RemovePower移除。字段范围仍为-999..999 |
 | RemovePower | power: Ref(Power)；无返回 | 有效实例在Powers中时先出集合、发PowerRemoved、再销毁；不直接destroy绕过清理 |
 | RemoveEnemyPowersOnDeath | target: Ref(Enemy)；无返回 | 普通敌人的死亡通知完成后，标记DeathResolved并按Powers顺序调用RemovePower；重复调用无额外效果，存活目标失败。仅覆盖当前Power的源默认移除策略，保留／否决消费者尚未接入，见[死亡约定](../../../design/mod-the-spire/combat-end/spec.md) |
 | ConsumePower | power: Ref(Power)；无返回 | 调用ModifyPowerAmount(-1) |
@@ -46,6 +47,8 @@ ExpiresAtTurnEnd是一次施加的临时寿命事实，保留临时FlameBarrier�
 | 事件 | 载荷 | 发布时点 |
 | --- | --- | --- |
 | RegisterPowerDefinitions | 无 | SetupPowerDefinitions时；定义模板登记各自Blueprint |
+| BeforePowerCreated | player／enemy: Binding、definition: String(64)、amount: Int、applierPlayer／applierEnemy／card／play: Binding | 通过施加守卫及Given／Received修正后，首次实例加入Powers前；amount为实际初始量，零结果不发布 |
+| PowerAmountChanged | power: Ref(Power)、delta: Int、applierPlayer／applierEnemy／card／play: Binding | 已有实例实际改量之后、零／负移除判定之前；首次创建不发布，直接改量也走同一通知 |
 | PowerCreated | power: Ref(Power) | 新实例已加入Powers，基础字段与玩家SkipTick已设置；用于建立私有状态 |
 | PowerApplied | power: Ref(Power)、amount: Int、created: Bool | 创建／合并后实例仍在Powers时；amount是Given／Received修正后的请求量，不保证等于最终层数增量 |
 | PlayerPowerApplied | owner: Ref(Player)、power: Ref(Power)、amount: Int | PowerApplied之后的玩家侧通知 |
@@ -55,6 +58,8 @@ ExpiresAtTurnEnd是一次施加的临时寿命事实，保留临时FlameBarrier�
 层数变化导致移除时，不再发布应用通知。创建时不调用ModifyPowerStacks，再施加时才调用。重新施加已有玩家实例不会重新设置SkipTick。
 
 Weak／Vulnerable／Frail在自己的模块监听AfterEnemyTurnEnded并调用TickPowerDuration。Rage等短期Power自行订阅AfterPlayerSideEnd。AfterBlockCleared在每次玩家回合开始的格挡处理阶段发布，包括首回合以及格挡被保留时；它不是“Block值发生变化”的通知。
+
+FlexPotionPower首次在BeforePowerCreated施加等量Strength，后续按PowerAmountChanged同步实际增量并保留本次施加来源。本方回合结束先RemovePower，再撤回保存层数。它不使用ExpiresAtTurnEnd：直接移除与跨战清理不会再次撤回Strength，零层变化已在移除前同步。
 
 显式EndDevelopmentCombat和下次BeginDevelopmentCombat调用ClearCombatPowers。自然胜负发布CombatEnded；开发场景沿用现有能力清理边界。正常胜利在该通知后清理所有能力、格挡及战斗牌，再通知早期／普通胜利效果并生成奖励。精确阶段见[战斗操作参考](operations.md)。
 

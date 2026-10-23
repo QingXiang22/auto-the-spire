@@ -4,6 +4,7 @@ dsl_version = "core/0.3"
 procedure SapphireSeedVisit {
   parameters = { owner = Ref(Player) visit = Ref(EventVisit) } locals = { eat = Bool card = Binding }
   body = {
+    call = { procedure = NotifyNormalEventRoomEntered args = { owner = owner visit = visit } }
     decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Sapphire Seed: eat (true) or plant (false)" into = eat }
     if = { condition = eat then = {
       call = { procedure = HealWithSource args = { owner = owner amount = 9 source = "base-spire:sapphire-seed" } }

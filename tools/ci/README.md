@@ -46,6 +46,8 @@ seed `dense-normal-30` 自然进入DenseVegetation，TRUDGE_ON及REST后四Wrigg
 
 ## 原完整差异测试与覆盖缺口
 
+Neow效果另用独立原生`neow-effects-vector.json`验证seed777的WingedBoots／CursedPearl正常获得至首战；受控组件分列三次自由旅行及两seed正负初始力量下的FlexPotion叠加、改量、攻击与到期。base完整行为组消费这些向量，net真实stdio验证两条正常公开开局、原首战FlexPotion奖励领取和开发药水生命周期，migration核对来源摘要。完整熔化操作、后幕及全公开比较仍未验收。
+
 ```powershell
 python tools/ci/check.py differential
 python tools/ci/check_relic_coverage.py .artifacts/ci/base/behavior/package-behavior.json --require-complete

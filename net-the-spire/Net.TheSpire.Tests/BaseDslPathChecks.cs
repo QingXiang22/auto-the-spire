@@ -18,6 +18,9 @@ internal static class BaseDslPathChecks
         yield return ("RNG package host uses the source stream layout and isolates repeated seeds", SourceRandomSessions);
         yield return ("DB-A11 real stdio process runs the same package and public trajectory", () => StdioTrajectory("draw"));
         yield return ("ENV-T05 real stdio normal Neow, source map and first real encounter", () => StdioTrajectory("normal-opening"));
+        foreach (var relic in new[] { "boots", "pearl" })
+            yield return ("NEOW-EFFECT real stdio normal acquisition, permanent deck and first combat: " + relic, () => StdioTrajectory("normal-neow-" + relic));
+        yield return ("NEOW-EFFECT real stdio development FlexPotion stacks, real attack, expiry and replay", () => StdioTrajectory("flex-potion"));
         foreach (var path in new[] { "claim", "skip" })
             yield return ("ENV-T05 real stdio normal combat rewards and map return: " + path, () => StdioTrajectory("normal-" + path));
         yield return ("UNKNOWN real stdio normal victory, map return and actual Unknown→Monster", () => StdioTrajectory("normal-unknown"));
@@ -202,7 +205,7 @@ internal static class BaseDslPathChecks
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" or "normal-neow-boots" or "normal-neow-pearl" or "flex-potion" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -620,7 +623,68 @@ internal static class BaseDslPathChecks
                 Action("CloseDevelopmentEvent"); Check.Equal("none", Public(snapshot, "Player.Room"), "development close returns to its own location");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:CloseDevelopmentEvent"), "cannot repeat close");
             }
-            if (mode.StartsWith("normal-", StringComparison.Ordinal))
+            if (mode.StartsWith("normal-neow-", StringComparison.Ordinal) || mode == "flex-potion")
+            {
+                string Text(EntityDto entity, string field) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + field, StringComparison.Ordinal)).Value!).Value;
+                void StepEffect(LegalActionDto candidate)
+                {
+                    var prior = snapshot.ObservationId;
+                    var request = Request("effect-" + ++stepNumber, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(prior)), ("candidate_id", WireValue.Str(candidate.CandidateId)));
+                    var response = Send(request);
+                    Check.Equal(WireCanonical.Text(response.ToWire()), WireCanonical.Text(Send(request).ToWire()), "replay does not repeat acquisition, consumption or expiry");
+                    snapshot = Snapshot(Send(Request("effect-observe-" + stepNumber, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                    Check.Equal(prior + 1, snapshot.ObservationId, "one public boundary per actual operation");
+                    Send(Request("effect-stale-" + stepNumber, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                        ("expected_observation_id", WireValue.Integer(prior)), ("candidate_id", WireValue.Str(candidate.CandidateId))), false);
+                }
+                void Action(string name) => StepEffect(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:" + name));
+                if (mode == "flex-potion")
+                {
+                    Action("Ironclad.Initialize"); Action("BattleFriendV2.Spawn"); Action("BeginDevelopmentCombat"); Action("BeginDevelopmentTurn");
+                    for (var i = 1; i <= 2; i++)
+                    {
+                        Action("FlexPotion.Obtain"); Action("UsePotion");
+                        foreach (var id in new[] { "base-spire:strength-power", "base-spire:flex-potion-power" })
+                            Check.Equal((5 * i).ToString(), Text(snapshot.Entities.Single(e => e.ContentId == id), "Power.Stacks"), "public temporary and actual Strength stack together");
+                        Check.False(snapshot.Entities.Any(e => e.ContentId == "base-spire:flex-potion"), "used potion is consumed once");
+                    }
+                    var strike = BaseDslPileChecks.Pile(snapshot, "Hand").VisibleMembers.First(id => snapshot.Entities.Single(e => e.InstanceId == id).ContentId == "base-spire:strike-ironclad");
+                    StepEffect(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand" && a.Fields.Any(f => f.Value is WireString v && v.Value == strike)));
+                    Check.Equal("134", Public(snapshot, "Enemy.Hp"), "real Strike deals six plus ten temporary Strength");
+                    Action("EndDevelopmentTurn");
+                    Check.False(snapshot.Entities.Any(e => e.ContentId is "base-spire:strength-power" or "base-spire:flex-potion-power"), "side end withdraws temporary Strength and removes marker");
+                }
+                else
+                {
+                    var boots = mode.EndsWith("boots", StringComparison.Ordinal);
+                    var relic = boots ? "base-spire:winged-boots" : "base-spire:cursed-pearl";
+                    Action("StartNormalRun");
+                    var option = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:NeowOption" && Text(e, "NeowOption.RelicId") == relic);
+                    Check.True(((WireBool)option.Fields.Single(f => f.FieldId.EndsWith(":NeowOption.EffectSupported", StringComparison.Ordinal)).Value!).Value, "real production effect is available");
+                    StepEffect(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireString v && v.Value == option.InstanceId)));
+                    Check.Equal(boots ? "99" : "432", Public(snapshot, "Player.Gold"), "source acquisition resources");
+                    var permanent = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.ToArray();
+                    Check.Equal(boots ? 10 : 11, permanent.Length, "real Greed is a permanent acquisition");
+                    if (!boots)
+                    {
+                        var greed = snapshot.Entities.Single(e => e.ContentId == "base-spire:greed");
+                        Check.True(permanent.Contains(greed.InstanceId), "Greed is actually in the permanent deck");
+                        Check.False(((WireBool)greed.Fields.Single(f => f.FieldId.EndsWith(":Card.CanUpgrade", StringComparison.Ordinal)).Value!).Value, "curse cannot be upgraded");
+                    }
+                    StepEffect(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool v && v.Value)));
+                    StepEffect(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
+                    Check.Equal("1", Public(snapshot, "Player.TurnNumber"), "normal first combat starts the real turn");
+                    using var vectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/neow-effects-vector.json")));
+                    var source = vectors.RootElement.GetProperty("openings").EnumerateArray().Single(r => r.GetProperty("choice").GetString() == (boots ? "WingedBoots" : "CursedPearl"));
+                    // Public pile memberships do not claim known positions; internal native order is checked by base.
+                    Check.Sequence(source.GetProperty("started").GetProperty("hand").EnumerateArray().Select(c => c.GetString()!).Order(StringComparer.Ordinal),
+                        BaseDslPileChecks.Pile(snapshot, "Hand").VisibleMembers.Select(id => snapshot.Entities.Single(e => e.InstanceId == id).ContentId!).Order(StringComparer.Ordinal), "complete public hand membership equals the independent native first hand");
+                    Check.Sequence(permanent.Order(StringComparer.Ordinal), BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.Order(StringComparer.Ordinal), "permanent instances survive combat copying");
+                    Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:EndDevelopmentCombat" or "net:action:base-spire:Draw"), "normal combat retains real action guards");
+                }
+            }
+            if (mode.StartsWith("normal-", StringComparison.Ordinal) && !mode.StartsWith("normal-neow-", StringComparison.Ordinal))
             {
                 var unknown = mode == "normal-unknown";
                 var eventSelection = mode == "normal-event";
@@ -703,7 +767,13 @@ internal static class BaseDslPathChecks
                         Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentGoldReward"), "gold cannot be claimed twice");
                         StepOpening(snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentCardReward"));
                         var potion = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:ClaimDevelopmentPotionReward");
-                        if (potion is not null) StepOpening(potion);
+                        if (potion is not null)
+                        {
+                            StepOpening(potion);
+                            var acquired = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Potion");
+                            Check.Equal("base-spire:flex-potion", acquired.ContentId, "original seed777 normal reward reaches real FlexPotion");
+                            Check.True(((WireBool)acquired.Fields.Single(f => f.FieldId.EndsWith(":Potion.EffectSupported", StringComparison.Ordinal)).Value!).Value, "normal reward has the same implemented production effect");
+                        }
                     }
                     else
                     {

@@ -6,6 +6,7 @@ procedure DenseVegetationVisit {
   body = {
     seedStream64 = { stream = pureCall(EventVisitStream, visit) seed = pureCall(SourceContentSeed, 0, "DENSE_VEGETATION", 0) }
     sampleInt = { stream = pureCall(EventVisitStream, visit) min = 61 max = 100 into = gold }
+    call = { procedure = NotifyNormalEventRoomEntered args = { owner = owner visit = visit } }
     decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Dense Vegetation: rest (true) or trudge on (false)" into = rest }
     if = { condition = rest then = {
       call = { procedure = HealWithSource args = { owner = owner source = "base-spire:dense-vegetation" amount = foldEvent(ModifyRestHeal, divide(multiply(field(owner, Player.MaxHp), 30), 100), owner) } }

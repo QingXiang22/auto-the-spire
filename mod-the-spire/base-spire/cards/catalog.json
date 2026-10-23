@@ -3,6 +3,10 @@
   "kind": "card",
   "entries": [
     {
+      "id": "base-spire:greed",
+      "definition": "cards/curse/greed.spire"
+    },
+    {
       "id": "base-spire:aggression",
       "definition": "cards/ironclad/aggression.spire"
     },

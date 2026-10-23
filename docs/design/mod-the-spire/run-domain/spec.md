@@ -25,6 +25,10 @@
 
 ### 正常开局首段
 
+Neow的WingedBoots与CursedPearl使用完整遗物获得生命周期。CursedPearl先创建真实Greed并加入永久牌组、发获得通知，再经共享金币操作获得333；Greed保留Curse／Eternal／Unplayable及不可升级、不可生成资格。此效果不删除或替换起始牌。
+
+地图旅行资格由纯ShouldAllowFreeTravel修正决定：默认沿当前节点的真实子连接；存在有效自由旅行时取下一网格行完整节点，网格外仍沿真实连接。资格、公开Selectable与实际提交使用同一查询；进入房间前按当前状态复核。顶层访问保存前一节点，完成入房准备后发布NormalRoomEntered；事件在展示初始选择前发布，战斗在战斗初始化后、首回合前发布。子战斗不重复发布。WingedBoots按有效持有实例在非父子移动时推进本实例次数，累计三次后停止提供自由旅行；普通连接、初始Ancient和嵌套房间不计。移除或熔化后立即退出资格，查询不推进次数或随机流。
+
 `StartNormalRun` 使用全解锁、A0、单人 Ironclad 配置。它只接受未开始开发操作的初态，复用 Session 中的 Player 与空 Run，建立 80 HP、99 金币、5 Strike／4 Defend／Bash 及 BurningBlood。入口复用角色初始化守卫，检查资源、回合、牌区与物品状态，并要求尚未关联 Run；获得再移除遗物后遗留的金币变化也会阻止开局。拒绝启动不改状态或随机流。Run.Profile 公开说明该输入配置；其他角色、进阶和解锁配置尚未接入。
 
 `Player.CurrentRun` 一旦关联正常 Run，开发便利动作便由 DSL 前置拒绝：直接加牌／获得物品／生成敌人、移除遗物、开发靶人、免费抽牌／弃手牌／升级手牌及直接进入开发房间。未关联 Run 的开发会话保留原候选与执行方式；仅创建开发 Run 容器不构成关联。正常出牌、目标选择、回合推进、药水使用／丢弃、奖励领取／跳过与地图操作继续使用各自资格。该限制只作用于外部开发 action，共享 procedure 仍由正常初始化和来源规则调用；不改变来源池、随机顺序或内容支持范围。直接提交被限制的 action 也须在执行前拒绝，状态与随机不变。
@@ -33,7 +37,7 @@
 
 首幕地图在进入 Neow 前生成。`SourceGaussianInt` 从 `act_1_map` 流按源算法计算营火／问号数量；随后执行七条路径、源预排序与洗牌、房型分配、重复路径裁剪／修复及坐标整理。公开 MapNode.Type 与 MapChildren 保存最终真实地图，临时列表和路径段在发布前清理。路径段在裁剪阶段以每列三位编码，17 个节点占用最多 51 位；坐标在裁剪结束前不改变。
 
-Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，保留源排除关系及随机顺序。选择恰好一个 NeowOption 后，通过共享获得操作执行效果，等待离开确认后回到地图。GoldenPearl、NutritiousOyster、BoomingConch 的效果已接入；其余选项仍公开，选择时明确报告未支持，不以无效果获得代替。
+Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，保留源排除关系及随机顺序。选择恰好一个 NeowOption 后，通过共享获得操作执行效果，等待离开确认后回到地图。GoldenPearl、NutritiousOyster、BoomingConch、WingedBoots、CursedPearl 的效果已接入；其余选项仍公开，选择时明确报告未支持，不以无效果获得代替。
 
 `ChooseMapPoint` 只允许当前节点的未访问后继。首个 Monster 消费实际普通遭遇队列，创建稳定递增的 RunVisit，记录原地图类型、实际房型及遭遇标识。已接通 SlimesWeak 和 FuzzyWurmCrawlerWeak：按源编队顺序及 Niche 流抽取真实 HP，再生成敌人、重建和洗牌战斗副本，并自动启动首回合抽五张牌。SlimesWeak 的累计楼层与初始化消费见下文。其他遭遇或房型在修改访问和抽取 HP 之前报告未支持。非法、重复或非后继选点不改状态或 RNG。
 
@@ -82,6 +86,8 @@ DenseVegetation先在独立事件流抽取61..99金币；TRUDGE_ON以不可格�
 BattlewornDummy通过关联原事件的BattlewornOption实例保留SETTING_1／2／3选择，使用原生单实例决策发布三个完整候选；选择后销毁候选，原事件页面保留档位。升级档SETTING_2进入真实150HP BattleFriendV2。Victory且未TimedOut才用该事件独立流对完整可升级永久牌按源StableShuffle升级前两张；空域与不足两张按实际数量处理。三敌方回合超时恢复同一父事件但不升级；恢复后事件完成，等待显式关闭。药水与遗物档仍明确未支持，在创建子战斗或消费随机前失败；第三幕正常可达及完整三档奖励另行验收。
 
 ## 遗物实例与生命周期
+
+FlexPotion仅在战斗中对当前单人玩家使用，调用真实FlexPotionPower而非永久力量。新实例在附着前按已修正初始量施加Strength；已有实例层数变化在移除判定前通知，临时力量同步实际增量。其持有者本方回合结束时先移除临时Power，再撤回保存层数；原有正负力量保留，多个药水叠加到同一临时实例。移除、跨战清理与零层通知不重复撤回；满栏、非法使用与重复消费按共享药水生命周期拒绝。
 
 ENV-T09-PR02首批公共接口复用`RunRelics`，不声明全部遗物效果已实现。依据`RelicCmd.Obtain/Remove/Replace/Melt`、`Player.AddRelicInternal/RemoveRelicInternal/MeltRelicInternal`。定义与编译符号不可变，持有列表、Counter、IsWax与IsMelted均在Engine实例中。Counter是隐藏的首批单计数器接缝（0..999999），不代替原版DisplayAmount、未来多变量、StackCount、FloorAddedToDeck或完整历史。IsWax／IsMelted是公开实例事实；蜡质内容来源、完整状态显示和蜡质特殊效果尚未实现。
 

@@ -13,6 +13,8 @@ event RegisterPowerDefinitions { }
 event PowerCreated { payload = { power = Ref(Power) } }
 event PowerApplied { payload = { power = Ref(Power) amount = Int created = Bool } }
 event PowerRemoved { payload = { power = Ref(Power) } }
+event BeforePowerCreated { payload = { player = Binding enemy = Binding definition = String(length = 64) amount = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
+event PowerAmountChanged { payload = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
 
 event ShouldApplyPower { payload = { value = Bool player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
 event ModifyPowerGiven { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }

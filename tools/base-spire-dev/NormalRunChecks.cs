@@ -188,8 +188,15 @@ internal static partial class PackageChecks
             var options = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:NeowOption").Id).OrderBy(o => IntField(s, o, "NeowOption", "Position"));
             True(options.Select(o => TextField(s, o, "NeowOption", "RelicId")).SequenceEqual(vector.GetProperty("neow_options").EnumerateArray().Select(id => id.GetString())), "full source Neow options and exclusions");
             Equal(vector.GetProperty("neow_draws").GetInt64(), s.Random.DrawCount("base-spire:event:neow"), "source Neow cursor");
-            var unsupported = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:NeowOption").Id)
-                .First(o => !s.State.GetField(o, s.RuleSet.TypeByQualifiedId("base-spire:NeowOption").FieldIndex("EffectSupported")).AsBool());
+            var unsupportedOptions = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:NeowOption").Id)
+                .Where(o => !s.State.GetField(o, s.RuleSet.TypeByQualifiedId("base-spire:NeowOption").FieldIndex("EffectSupported")).AsBool()).ToArray();
+            if (unsupportedOptions.Length == 0)
+            {
+                Equal("777", seed, "only the independently checked three-effect opening is entirely supported");
+                Console.WriteLine("ok   ENV-T05 source opening: complete original bags, queues, Neow offers and RNG; all three seed777 effects now executed by native effect checks");
+                continue;
+            }
+            var unsupported = unsupportedOptions[0];
             Set(s, Player(s), "Player", "CurrentRun", Value.OfRef(s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Run").Id).Single()));
             var state = s.State.StateHash(); var draws = s.Random.TotalDraws;
             Throws<EngineFaultException>(() => Submit(s, "ResolveNeowProbe", unsupported));

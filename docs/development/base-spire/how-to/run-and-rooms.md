@@ -21,12 +21,18 @@ SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选
 在同一公开 Host 的新会话中，可提交 `StartNormalRun` 运行全解锁、A0、单人 Ironclad 的正常开局首段：
 
 1. 回答 Neow 的真实三选一。入口已建立源初态、完整前置队列和真实首幕地图。
-2. 选择已支持的 GoldenPearl、NutritiousOyster 或 BoomingConch。其余源选项保留，选择后明确报未支持。
+2. 选择已支持的 GoldenPearl、NutritiousOyster、BoomingConch、WingedBoots 或 CursedPearl。其余源选项保留，选择后明确报未支持。
 3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 SlimesWeak 或 FuzzyWurmCrawlerWeak 时，会按真实编队及 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
 
 例如 seed `777` 提供 BoomingConch，首个真实遭遇为 SlimesWeak，出生顺序为 LeafSlimeS／TwigSlimeM／TwigSlimeS，HP 为 14／28／11。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
 
 ## 定义角色、进阶与正常开局
+
+WingedBoots使下一网格行的全部节点成为合法候选；离开网格后仍沿地图真实连接。实际进入非连接房间才消耗一次，最多三次；沿普通连接、重复通知和事件子战斗不消耗。候选查询与公开Selectable复用纯`CanTravelToNormalMapPoint`，不推进随机流。移除或IsMelted资格失效后不再提供自由旅行；完整熔化入口尚未接入。
+
+CursedPearl通过遗物获得通知先将真实Greed加入永久牌组，再获得333金币。Greed的战斗副本保留Eternal、Unplayable和不可升级资格，也不进入战斗生成池。seed `777` 的三项Neow均有生产效果，可分别选择WingedBoots或CursedPearl并正常进入首战；这不证明完整Run已通过双侧比较。
+
+FlexPotion可从完整正常药水奖励池领取，或在开发场景通过`FlexPotion.Obtain`获得。战斗中用`UsePotion`施加5点临时Strength；多瓶叠加，本方回合结束撤回全部临时量并保留原有正负Strength。药水只消费一次，战斗外没有使用候选。seed `777` 的现有首战领取路径自然提供该药水。
 
 在开发 scope 的干净初态提交 `Ironclad.Initialize`，可建立 80 HP、99 金币、5 Strike／4 Defend／1 Bash 的永久牌组及 BurningBlood。它拒绝覆盖已获得的牌、物品、房间或战斗进度。接着用真实遭遇的 `Spawn` 或开发目标入口建敌人，再提交 `BeginDevelopmentCombat` 和 `BeginDevelopmentTurn`：新副本先用原版 Shuffle 流洗牌，回合自动抽五张；后续回合也自动抽牌，首回合按 Innate 优先并扩展抽取数量至十张上限。不要再手动补五次 Draw。旧机制探针没有初始化角色时仍手动抽牌。
 

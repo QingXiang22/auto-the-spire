@@ -333,7 +333,7 @@
       "rarity": "common",
       "usage": "combat",
       "target": "self",
-      "effect_supported": false
+      "effect_supported": true
     },
     {
       "id": "base-spire:fortifier",
