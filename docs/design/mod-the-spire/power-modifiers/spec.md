@@ -12,7 +12,7 @@
 
 迁移三张新卡：Bash（2 费 8／10 伤害＋2／3 Vulnerable）、Uppercut（2 费 13 伤害＋Weak 与 Vulnerable 各 1／2）、Shockwave（2 费、消耗、对全部敌人 Weak 与 Vulnerable 各 3／5，属无色卡组）。
 
-后续包 **DSL-POWER-DURATION-01** 在此规格上补齐时长与 Power 牌离场：新增回合末时点 `AfterTurnEnded`（先弃手牌再派发），共享过程 `TickDownDebuffs` 把 debuff 角色能力减一层并在归零时移除；`Card.LeavesPlay` 对应 CardType.Power，结算后进入 `RemovedFromCombat`；并迁移 Inflame（1 费 Power 牌，+2／3 Strength）。源依据：VulnerablePower／WeakPower 在敌方回合结束时 `TickDownDuration`，Power 类牌由 `CardPileCmd.RemoveFromCombat` 离开战斗。
+后续包 **DSL-POWER-DURATION-01** 在此规格上补齐时长与 Power 牌离场：新增回合末时点 `AfterPlayerSideTurnEnd`（先弃手牌再派发），共享过程 `TickDownDebuffs` 把 debuff 角色能力减一层并在归零时移除；`Card.LeavesPlay` 对应 CardType.Power，结算后进入 `RemovedFromCombat`；并迁移 Inflame（1 费 Power 牌，+2／3 Strength）。源依据：VulnerablePower／WeakPower 在敌方回合结束时 `TickDownDuration`，Power 类牌由 `CardPileCmd.RemoveFromCombat` 离开战斗。
 
 不迁移：能力时长与回合末衰减（Vulnerable／Weak 在源里于敌方回合结束时减层）、能力移除与清零、能力类型与正负规则以外的语义、施加／移除反应、按能力的伤害来源区分、敌方攻击与 Weak 的实际作用。库存 260 条能力源标识保持 `definition` 为空：本包把修正角色写在应用它的卡牌内容里，Power 目录不新增定义文件。
 

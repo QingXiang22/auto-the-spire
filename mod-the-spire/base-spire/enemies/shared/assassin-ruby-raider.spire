@@ -1,9 +1,15 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: AssassinRubyRaider.cs; Ascension 0: initial HP 18..23 (development spawn uses the minimum) and
-# KILLSHOT for 10.
-use AssassinRubyRaider {
-  template = SingleAttackEnemy
-  args = { definition = "base-spire:assassin-ruby-raider" hp = 18 damage = 10 }
-}
+template AssassinRubyRaiderContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:assassin-ruby-raider" initial = "KILLSHOT_MOVE" } }
+  use Killshot { template = EnemyMoveNodeDefinition args = { definition = "base-spire:assassin-ruby-raider" id = "KILLSHOT_MOVE" next = "KILLSHOT_MOVE" intent = "attack" } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } body = {
+    call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 10 hits = 1 } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:assassin-ruby-raider" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:assassin-ruby-raider" hp = 18 } }
+  } }
+} }
+use AssassinRubyRaider { template = AssassinRubyRaiderContent }

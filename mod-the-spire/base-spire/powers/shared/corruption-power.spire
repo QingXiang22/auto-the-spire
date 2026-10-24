@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template CorruptionPowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:corruption-power" singleStack = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:corruption-power" stackType = "single" } }
 
 procedure CorruptionCost {
   pure = true parameters = { value = Int owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
@@ -18,7 +18,7 @@ procedure CorruptionCost {
 }
 
 subscription CorruptionCost {
-  event = ModifyCardCost reaction = CorruptionCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyCardCost reaction = CorruptionCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure CorruptionExhaust {
@@ -34,7 +34,7 @@ procedure CorruptionExhaust {
 }
 
 subscription CorruptionExhaust {
-  event = ShouldExhaustSkill reaction = CorruptionExhaust instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ShouldExhaustSkill reaction = CorruptionExhaust instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use CorruptionPower { template = CorruptionPowerModule }

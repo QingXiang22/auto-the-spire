@@ -39,7 +39,7 @@ internal static partial class PackageChecks
                     procedure Cancel { parameters = { owner = Ref(Player) } body = {
                       MUTATION
                     } }
-                    subscription Cancel { event = AfterSideTurnStarted reaction = Cancel priority = 99 }
+                    subscription Cancel { event = AfterPlayerSideTurnStart reaction = Cancel priority = -1 }
                     """.Replace("MUTATION", melt
                         ? "set = { target = first(collection(Relics)) field = Relic.IsMelted value = true }"
                         : "call = { procedure = RemoveRelic args = { instance = first(collection(Relics)) } }"));
@@ -66,10 +66,10 @@ internal static partial class PackageChecks
                 foreach (var name in drawFirst ? new[] { "DarkEmbrace", "FeelNoPain" } : new[] { "FeelNoPain", "DarkEmbrace" }) IcPlay(s, IcAdd(s, name));
                 IcPlay(s, IcAdd(s, "Hellraiser")); var top = IcAdd(s, "StrikeIronclad"); IcMove(s, top, "Hand", "DrawPile");
                 Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(1L));
-                IcPlay(s, IcAdd(s, "Impervious"));
+                var goldBefore = Field(s, "Gold"); IcPlay(s, IcAdd(s, "Impervious"));
                 Equal("victory", Outcome(s), "DarkEmbrace draws and Hellraiser automatically attacks");
-                Equal(33L, Block(s), "exhaust reactions finish despite nested final kill");
-                Equal(drawFirst ? 30L : 33L, Field(s, "Gold"), "draw callback sees block according to actual Power acquisition order");
+                Equal(drawFirst ? 30L : 33L, Block(s), "already-entered exhaust snapshot continues but GainBlock refuses ending after the nested kill");
+                Equal(goldBefore, Field(s, "Gold"), "ordinary draw pass starts after Hellraiser Early and is skipped once the attack ends combat");
             }
         });
         check("HOOK modifier guards are read-only and Thrash preview uses the same Power/relic chain", () =>

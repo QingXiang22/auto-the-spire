@@ -1,46 +1,5 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-template FlexPotionPowerContent { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:flex-potion-power" } }
-  procedure BeforeCreated {
-    parameters = { player = Binding enemy = Binding definition = String(length = 64) amount = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding listener = Ref(PowerBlueprint) }
-    locals = { applied = Binding }
-    body = { call = { procedure = ApplyPowerWithSource args = { player = player enemy = enemy definition = "base-spire:strength-power" stacks = amount untilTurnEnd = false applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } into = applied } }
-  }
-  subscription BeforeCreated {
-    event = BeforePowerCreated reaction = BeforeCreated
-    instances = where(collection(PowerLibrary), b, and(equal(field(b, PowerBlueprint.DefinitionId), definition), equal(definition, "base-spire:flex-potion-power")))
-    instance_order = collectionIndex(PowerLibrary, listener)
-  }
-  procedure Changed {
-    parameters = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding listener = Ref(Power) } locals = { applied = Binding } body = {
-      call = { procedure = ApplyPowerWithSource args = { player = field(listener, Power.HolderPlayer) enemy = field(listener, Power.HolderEnemy) definition = "base-spire:strength-power" stacks = delta untilTurnEnd = false applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } into = applied }
-    }
-  }
-  subscription Changed {
-    event = PowerAmountChanged reaction = Changed
-    instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:flex-potion-power")))
-    instance_order = collectionIndex(Powers, listener)
-  }
-  procedure Expire {
-    parameters = { owner = Ref(Player) listener = Ref(Power) } locals = { player = Binding enemy = Binding amount = Int applied = Binding } body = {
-      let = { into = player value = field(listener, Power.HolderPlayer) }
-      let = { into = enemy value = field(listener, Power.HolderEnemy) }
-      let = { into = amount value = field(listener, Power.Stacks) }
-      call = { procedure = RemovePower args = { power = listener } }
-      call = { procedure = ApplyPowerWithSource args = { player = player enemy = enemy definition = "base-spire:strength-power" stacks = subtract(0, amount) untilTurnEnd = false applierPlayer = player applierEnemy = enemy card = none play = none } into = applied }
-    }
-  }
-  subscription PlayerEnd {
-    event = AfterPlayerSideEnd reaction = Expire
-    instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:flex-potion-power")))
-    instance_order = pureCall(PowerSideTurnEndOrder, listener)
-  }
-  subscription EnemyEnd {
-    event = AfterEnemyTurnEnded reaction = Expire
-    instances = where(collection(Powers), p, and(not(isNone(field(p, Power.HolderEnemy))), equal(field(p, Power.DefinitionId), "base-spire:flex-potion-power")))
-    instance_order = pureCall(PowerSideTurnEndOrder, listener)
-  }
-} }
-use FlexPotionPower { template = FlexPotionPowerContent }
+# Locked FlexPotionPower inherits TemporaryStrengthPower's complete application and expiry.
+use FlexPotionPower { template = TemporaryStrengthPowerContent args = { definition = "base-spire:flex-potion-power" sign = 1 powerType = "buff" } }

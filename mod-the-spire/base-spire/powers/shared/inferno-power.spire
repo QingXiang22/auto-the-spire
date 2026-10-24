@@ -22,7 +22,7 @@ procedure Inferno {
 }
 
 subscription Inferno {
-  event = PlayerHpLost reaction = Inferno instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = PlayerHpLost reaction = Inferno instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure InfernoTurn {
@@ -37,7 +37,7 @@ procedure InfernoTurn {
 }
 
 subscription InfernoTurn {
-  event = AfterPlayerTurnStart reaction = InfernoTurn instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterPlayerTurnStart reaction = InfernoTurn instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 procedure Applied { parameters = { power = Ref(Power) amount = Int created = Bool listener = Ref(Power) } body = { set = { target = first(where(type(State), s, equal(field(s, State.Power), power))) field = State.Value value = add(field(first(where(type(State), s, equal(field(s, State.Power), power))), State.Value), 1) } } }
 subscription Applied { event = PowerApplied reaction = Applied instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = collectionIndex(Powers, listener) }

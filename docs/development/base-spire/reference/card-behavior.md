@@ -93,7 +93,7 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 | `ExpireCardCostModifiers` | card、boundary: String(16)；共享出牌／回合流程负责到期。新战开始清除所有临时费用，克隆独立复制现有修正 |
 | `MoveCombatCard` | owner、card、to: String(16)、reason: String(32)；to 为 hand／draw-top／draw／discard／play／removed。拒绝永久牌及外来拥有者；满手转弃牌，通知 CardMoved(owner,card,from,to,reason) |
 | `DiscardCombatCard` | owner、card；只接受手牌，移动后发 CardDiscarded。回合末 flush 和正常打出结果区只发移动通知，不冒充主动弃牌 |
-| `ExhaustCombatCard` | owner、card；移动后依次发 CardMoved、CardExhausted；拒绝永久牌、已耗尽和离场牌 |
+| `ExhaustCombatCard` | owner、card、causedByEthereal: Bool；移动后依次发CardMoved、含同一原因的CardExhausted；拒绝永久牌、已耗尽和离场牌 |
 | `CardHasKeyword` | card、keyword: String(16) → Bool，pure；innate／exhaust 的基础事实加 ModifyCardKeyword 修正，retain／ethereal／unplayable／eternal 可由内容提供 |
 | `CardPlayAllowed` | owner、card、auto: Bool → Bool，pure；共享已定义／拥有者／Unplayable／ShouldPlayCard 门禁；手动另验证手牌、回合、能量和目标 |
 | `FinishTurnHand` | owner；保存原手牌的效果牌与其他Ethereal牌名单，先耗尽后者，再依原手牌顺序将效果牌移入Play、通知CardTurnEndInHandEffect并移入结果区。死亡守卫拒绝后续移动；仍活跃才BeforeHandFlush、留手筛选、整批移动及AfterHandFlush。新抽牌不追加旧批次 |

@@ -169,7 +169,7 @@ internal static partial class PackageChecks
         copy.Include("settlement-order.spire", """
             procedure CheckEnd { parameters = { owner = Ref(Player) victory = Bool } body = {
               if = { condition = victory then = {
-                if = { condition = or(not(equal(field(owner, Player.MaxHp), 83)), not(equal(count(collection(ExhaustPile)), 1))) then = { fail = { message = "Feed growth and exhaustion must precede combat end" } } }
+                if = { condition = or(not(equal(field(owner, Player.MaxHp), 83)), or(not(equal(count(collection(ExhaustPile)), 0)), not(equal(field(first(collection(InPlay)), Card.DefinitionId), "base-spire:feed")))) then = { fail = { message = "Feed growth must precede combat end while ending refuses self-exhaust" } } }
                 if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "Rewards generated before combat-end hooks" } } }
               } }
             } }
@@ -196,7 +196,7 @@ internal static partial class PackageChecks
         Equal(83L, IntField(s, Player(s), "Player", "MaxHp"), "last-kill growth persists");
         Equal(49L, Hp(s), "growth heals three before victory heals six");
         Equal("rewards", TextField(s, Player(s), "Player", "Room"), "rewards publish after the source end order");
-        Console.WriteLine("ok   ENV-T05 controlled Feed last kill: parent effect, exhaust, end hook, cleanup, victory healing, rewards");
+        Console.WriteLine("ok   ENV-T05 controlled Feed last kill: parent growth, refused ending exhaust, end hook, cleanup, victory healing, rewards");
 
         using var effects = new Copy(package.Root);
         effects.Include("outer-effect-order.spire", """
@@ -204,7 +204,7 @@ internal static partial class PackageChecks
               call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = 999 } }
               if = { condition = or(not(field(owner, Player.CombatActive)), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "Turn effect settled before its outer callback finished" } } }
             } }
-            subscription EndTurnKill { event = AfterPlayerTurnFinished reaction = EndTurnKill }
+            subscription EndTurnKill { event = AfterEnemySideTurnEnd reaction = EndTurnKill }
             procedure PotionAfterKill { parameters = { owner = Ref(Player) potion = Ref(Potion) target = Ref(Enemy) } body = {
               if = { condition = or(not(field(owner, Player.CombatActive)), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "Potion effect settled before consumption" } } }
             } }

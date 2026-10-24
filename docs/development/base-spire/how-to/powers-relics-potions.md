@@ -6,7 +6,7 @@
 
 遗物与Power使用相同的通知／修正订阅模型。新增或迁移监听先沿[编写通知与修正监听](write-effect-listeners.md)选择入口、绑定实例并安排顺序；本页继续说明物品和能力各自的生命周期。定义标志、施加／合并／移除签名与通知顺序统一查[Power参考](../reference/powers.md)。
 
-1. 在powers/shared新增内容模块，用PowerDefinition声明definition、allowNegative、debuff、singleStack。通用Power实例只保留持有者、定义引用、层数与共有寿命事实；特有状态放模块内部实体，以实际Power引用关联。
+1. 在powers/shared新增内容模块，用PowerDefinition声明definition、allowNegative、powerType、stackType和instanceMode。类型、按符号判定的增量类型与实例模式分别处理，参数见[Power参考](../reference/powers.md)。通用Power实例只保留持有者、定义引用、层数与共有寿命事实；特有状态放模块内部实体，以实际Power引用关联。
 2. 在同一文件注册通知／修正／到期监听；PowerCreated时建立私有状态，PowerRemoved时清理。施加调用ApplyPlayerPower／ApplyEnemyPower(owner或target、definition、stacks)，移除调用RemovePower，降层调用ModifyPowerAmount。未知定义在产生实例前失败；两持有者不合并。debuff标志只服务已迁移Weak／Vulnerable／Frail的首次跳过衰减，其他寿命由模块监听决定。
 3. 用 combat 的统一修正阶段处理力量、敏捷、易伤等数值参与者，顺序和精度取自源约定；不要把 Power 数值缓存成另一个 C# 事实。
 4. 验证施加与初始持有差异、叠加／降层／到零、无限持续、两持有者隔离、移除后停止订阅，以及暂停续接不重复施加。
@@ -23,7 +23,7 @@
 
 出牌计数模板CardCountRelic按真实AfterCardPlayed逐次计数，自动／重复打出分别计算，多段攻击只计一次。perTurn决定回合开始早期重置或跨战保留，实例计数不能从全局出牌数反推。首回合抽牌和营火治疗修正通过ModifyTurnDraw／ModifyRestHeal纯监听贡献；移除／熔化后停止参与。共享参数、完整消费者和边界见[遗物生命周期约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
 
-回合开始资源监听AfterSideTurnStarted：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置后、起手抽牌前，因此监听AfterSideTurnStarted；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
+回合开始资源监听AfterPlayerSideTurnStart：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置、起手抽牌及玩家Early／普通／Late通知之后，因此监听AfterPlayerSideTurnStart；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
 
 替换与熔化尚无正式 DSL 操作。实现时明确：旧获得效果如何撤回，新获得效果何时生效，是否保留同一实例／计数，熔化时保留哪些库存事实与触发，跨战如何重建。不能仅写 DefinitionId 或 IsMelted 就宣称完整生命周期。
 

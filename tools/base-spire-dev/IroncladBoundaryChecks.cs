@@ -136,7 +136,7 @@ internal static partial class PackageChecks
             var s = Combat(); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(6L)); IcPlay(s, IcAdd(s, "Anger")); Equal("victory", Outcome(s), "victory");
             Equal(2, Members(s, "DiscardPile").Count, "lethal Anger still creates its copy before settlement");
             var t = Combat(); IcPlay(t, IcAdd(t, "DarkEmbrace")); Set(t, FirstTarget(t), "Enemy", "Hp", Value.Of(7L)); var fire = IcAdd(t, "FiendFire"); IcAdd(t, "DefendIronclad"); IcMove(t, IcAdd(t, "Anger"), "Hand", "DrawPile"); IcMove(t, IcAdd(t, "Anger"), "Hand", "DrawPile"); IcPlay(t, fire);
-            Equal("victory", Outcome(t), "settlement follows source self-exhaust"); Equal(2, Hand(t).Count, "all exhaust draws completed on final hit");
+            Equal("victory", Outcome(t), "settlement follows source self-exhaust"); Equal(1, Hand(t).Count, "hand exhaust draws before damage, then final-kill self-exhaust Draw refuses ending");
         });
         check("IC combat lifecycle: temporary growth, play history, powers and energy modifiers never leak to next combat", () =>
         {
@@ -174,10 +174,10 @@ internal static partial class PackageChecks
             True(s.Fault!.Message.Contains("unsupported_capability", StringComparison.Ordinal), "explicit unsupported diagnostic");
             Equal(before, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Card").Id).Count, "no empty fallback entity");
         });
-        check("IC merged power instances: self-damage applications accumulate and single-stack powers stay single", () =>
+        check("IC merged power instances: self-damage applications accumulate and Single display keeps source ModifyAmount", () =>
         {
             var s = Combat(); IcPlay(s, IcAdd(s, "CrimsonMantle")); IcPlay(s, IcAdd(s, "CrimsonMantle", true));
-            IcPlay(s, IcAdd(s, "Corruption")); IcPlay(s, IcAdd(s, "Corruption")); Equal(1L, IcPower(s, "base-spire:corruption-power"), "single source stack");
+            IcPlay(s, IcAdd(s, "Corruption")); IcPlay(s, IcAdd(s, "Corruption")); Equal(2L, IcPower(s, "base-spire:corruption-power"), "locked PowerCmd.ModifyAmount still adds the second application; Single is display metadata");
             IcNextTurn(s); Equal(78L, Hp(s), "two applications cause two self damage"); Equal(18L, Block(s), "normal and upgraded amounts merged");
         });
     }

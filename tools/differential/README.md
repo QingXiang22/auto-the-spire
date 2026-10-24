@@ -48,6 +48,30 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 组件初态在出生后将双方敌人HP设为1000、玩家HP设为1000；致死场景只把目标设为33。出生HP生成与niche不属于此项比较，没有重键、重设流或补抽。未消费的DSL流按实际配置seed只读投影初始状态，不创建或推进流。migration要求两seed共16个场景全部通过；normal_run_verified保持false，不能替代正常Run或完整行动控制验收。
 
+## 固定轮转敌人组件比较
+
+运行`dotnet run --project tools/differential -c Release -- enemy-rotation-compare --output .artifacts/differential/enemy-rotations`。七个既有敌人各自执行完整固定轮转、首招击晕及同定义双实例；Tracker另比较Vigor3、Thorns反击击杀攻击者、玩家致死，以及先移除Frail后的无Power致死。双侧使用真实怪物及普通回合，空永久牌组；敌人生命设置为1000，玩家生命通常为1000，专项显式改为100或3。反击专项只把首个Tracker设为3HP，并增加4层Thorns，保留另一个存活敌人。设置动作调用生产操作，参考源码与随机流不改动。
+
+逐边界核对节点、复合意图、实例历史、生命／格挡、Strength／Vigor／Frail、按承受方分组的逐击结果，以及完整monster_ai状态和游标。初始HP抽样、正常遭遇、全局事件顺序不属于此组件范围，开发行为检查另核对一次Attack及前后通知各一次。
+
+两seed共50个场景保留在报告中。玩家死亡后双方均移除Frail，ending期间拒绝消费敌人Vigor并保留3层；migration要求命令返回0、全部场景所有已比较边界相同。该结果只证明上述受控组件，不代表全部敌人、初始化或正常Run已验收。
+
+## Power改量组件比较
+
+运行`dotnet run --project tools/differential -c Release -- power-amount-compare --output .artifacts/differential/power-amounts`。两seed、玩家／敌人两类持有者与24种场景共96项，分别执行新建、叠加、直接Modify、零量、负Strength、负减益、到零移除、Artifact耗尽和临时力量到期；Given的非交换加法／乘法、通知顺序、嵌套、参与者失效与暂停续接另由base的`check --content-model-only`验证。
+
+双方从真实FuzzyWurmCrawler战斗启动，永久牌组为空，生命显式设为1000。每次命令后比较双方按持有者排列的完整Power库存、层数、PowerType／StackType、持续时间跳过标志、真实施加者，以及生命与monster_ai／shuffle完整状态和游标。侧回合末场景显式调用双方已有通知入口，不伪装成正常整回合；出生HP与niche不属于此组件。测试DSL只调用生产Power操作，参考源码只读。
+
+独立／按施加者两种模式使用明确的probe定义，分别与原生FlankingPower／StranglePower的实例策略比较；没有出牌、伤害或到期调用这些probe，不据此登记两项生产内容支持。来源场景使用真实卡牌引用与怪物施加者。migration要求全部96项、每条已声明命令及所有维度实际执行且一致，缺项或差异非零；normal_run_verified保持false。
+
+## 回合阶段与监听顺序组件比较
+
+运行`dotnet run --project tools/differential -c Release -- turn-phase-compare --output .artifacts/differential/turn-phases`。两seed共28项保留真实Orichalcum＋Plating、同定义双遗物、Charon普通耗尽末杀／非末杀／重洗、BloodVial与Lantern起手、Run与Direct监听顺序，以及Hellraiser嵌套末杀时FeelNoPain先后获得、OrnamentalFan末杀格挡、BagOfMarbles首侧易伤施加者、FiendFire自耗尽、GremlinHorn末杀抽牌及Feed保留最大生命收益但拒绝自身耗尽。双方均使用真实Fuzzy战斗；DSL显式获得参考玩家自带的BurningBlood。永久牌组通常为空，起手场景为Strike／Defend／Bash，生命等受控设置写入报告。
+
+每个声明边界比较回合号、能量、生命／最大生命／格挡、完整有序五牌区、双方Power及实际施加者、实际挡伤、ending，以及monster_ai／shuffle／combat_targets完整状态和游标。逐次随机调用保留操作、边界、结果和候选顺序；起手洗牌沿原牌组顺序，后续重洗沿StableShuffle排序，各自从参考自身牌堆重建并核对结果。监听顺序直接读取锁定参考的实际迭代器，与调用生产排序函数的DSL实例通知比较，覆盖玩家Power、库存、牌区、敌方Power及模型；ShouldClearBlock使用同一Direct路径。缺场景、维度、边界或差异均非零。
+
+末杀组件比较到耗尽／出牌完成，奖励结算不在组件内；base另验证外层胜利与合法余效。移除／熔化与跨战资格、起手阶段由base行为检查验证；新建／失效快照、嵌套及暂停续接保留core与Power改量原测试。敌人出生／槽位与选招时点、虚无耗尽原因／延迟抽牌仍有独立未支持边界。此结果不认证正常Run或M01。
+
 ## BattleFriend受控组件比较
 
 运行`dotnet run --project tools/differential -c Release -- battle-friend-compare --output .artifacts/differential/battle-friend`。两侧各自创建真实三档靶人、执行入场与前三回合，比较HP、计时、活动／逃离／死亡、意图、胜利／超时、最大生命，以及niche的实际抽样参数／结果／游标／完整状态和AI消费。真实击杀场景在第三回合出牌前将双方目标HP设置为5，再实际打出Feed；双实例场景核对固定HP的候选耗尽抽样形式。没有重设随机种子或注入结束结果。
@@ -174,3 +198,9 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 自检逐项删除双方同一个必需字段、注入各维度首差、检查零执行、缺动作／终点、缺协议检查结果及目标脚本缺决策，并核对开启与关闭诊断时真实 Host 和原生参考的已比较状态及随机状态不变；Host 另核对完整公开快照。迁移组同时执行四条正常路径和缺参考构建；原11份 suite、必测ID和严格失败语义保留。
 
 公开 `Player.DrawBlocked` 比较实际效果抽牌资格：DSL 发布同一 `CanDrawCards(owner,false)` 查询的否决结果，参考战斗使用真实 `Hook.ShouldDraw`。首战创建前没有原生战斗态，参考直接枚举 `RunState.IterateHookListeners(null)` 并调用各原生 `ShouldDraw(player,false)`，不构造战斗态或填常量。正常四路径逐边界比较 `public.draw_blocked`；受控 `draw-permission-vector.json` 另用真实 NoDraw、效果抽牌、回合手牌及到期验证正负状态，不冒充正常路径已覆盖该 Power。
+
+## 耗尽原因与延迟抽牌组件
+
+`dotnet run --project tools/differential -c Release -- exhaust-cause-compare --output .artifacts/differential/exhaust-causes`运行两seed各15种场景。受控命令例比较设置、耗尽后与侧结束三个边界，自然回合末例比较设置与敌方开始前两个边界；均比较五个有序牌区、实际Power与隐藏虚无次数、每次抽牌时已清零的次数、资源／ending及monster_ai、shuffle、combat_targets的完整状态、游标和逐次调用候选。普通耗尽、改量、NoDraw先后获得、满手、重洗、Hellraiser嵌套耗尽、移除重建、无事件生成、即时Charon／FeelNoPain、真实回合末虚无及Infection正文、末杀和暂停续接均执行实际命令。
+
+两侧明确使用空永久牌组、HP1000和受控牌区；Strike／Bash／Infection显式取得虚无，嵌套Strike另取得耗尽关键词。自然回合末比较参考原生EnemyTurnStarting观察点与DSL清手／侧结束后、敌方行动前的行政暂停；末杀停在奖励前。暂停抽牌先与参考只读CardDrawn通知比较首张，再续接完成。该报告仅认证受控组件，不认证正常Run或M01；原11份suite与正常比较的缺维度失败保持。

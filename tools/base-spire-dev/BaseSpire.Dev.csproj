@@ -25,6 +25,8 @@
     <EmbeddedResource Include="fixtures/battleworn-continuation-vector.json" />
     <EmbeddedResource Include="fixtures/neow-effects-vector.json" />
     <EmbeddedResource Include="fixtures/draw-permission-vector.json" />
+    <EmbeddedResource Include="fixtures/power-amount-probe.spire" />
+    <EmbeddedResource Include="fixtures/exhaust-cause-probe.spire" />
     <EmbeddedResource Include="fixtures/pickup-upgrade-vectors.json" />
     <ProjectReference Include="../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj" />
     <ProjectReference Include="../../net-the-spire/Net.TheSpire.Host/Net.TheSpire.Host.csproj" />

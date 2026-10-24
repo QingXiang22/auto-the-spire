@@ -6,10 +6,10 @@ template ViciousPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:vicious-power" } }
 
 procedure Vicious {
-  parameters = { target = Ref(Enemy) power = Ref(Power) amount = Int listener = Ref(Power) }
+  parameters = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding listener = Ref(Power) }
   body = {
     if = {
-      condition = and(equal(field(power, Power.DefinitionId), "base-spire:vulnerable-power"), greater(amount, 0)) then = {
+      condition = and(and(equal(field(power, Power.DefinitionId), "base-spire:vulnerable-power"), greater(delta, 0)), and(not(isNone(applierPlayer)), equal(applierPlayer, field(listener, Power.HolderPlayer)))) then = {
         call = {
           procedure = DrawCards args = {
             owner = field(listener, Power.HolderPlayer) count = maximum(0, field(listener, Power.Stacks))
@@ -21,7 +21,7 @@ procedure Vicious {
 }
 
 subscription Vicious {
-  event = EnemyPowerApplied reaction = Vicious instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vicious-power")) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = PowerAmountChanged reaction = Vicious instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vicious-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use ViciousPower { template = ViciousPowerModule }

@@ -21,10 +21,10 @@ procedure Rage {
 }
 
 subscription Rage {
-  event = AfterCardPlayed reaction = Rage instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rage-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterCardPlayed reaction = Rage instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rage-power"))) instance_order = pureCall(PowerHookOrder, listener, true) priority = 0
 }
 procedure Expire { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = RemovePower args = { power = listener } } } }
-subscription Expire { event = AfterPlayerSideEnd reaction = Expire instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rage-power"))) instance_order = collectionIndex(Powers, listener) priority = 10 }
+subscription Expire { event = AfterPlayerSideTurnEnd reaction = Expire instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rage-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
 
 } }
 use RagePower { template = RagePowerModule }

@@ -47,7 +47,7 @@ internal static partial class PackageChecks
                   return = { value = or(value, or(and(equal(keyword, "ethereal"), equal(field(card, Card.DefinitionId), "base-spire:strike-ironclad")), or(and(equal(keyword, "retain"), equal(field(card, Card.DefinitionId), "base-spire:defend-ironclad")), and(equal(keyword, "unplayable"), equal(field(card, Card.DefinitionId), "base-spire:bash"))))) }
                 } }
                 subscription Keywords { event = ModifyCardKeyword reaction = Keywords }
-                procedure ExhaustDraw { parameters = { owner = Ref(Player) card = Ref(Card) } body = { call = { procedure = DrawOne args = { owner = owner fromHandDraw = false } } } }
+                procedure ExhaustDraw { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } body = { call = { procedure = DrawOne args = { owner = owner fromHandDraw = false } } } }
                 subscription ExhaustDraw { event = CardExhausted reaction = ExhaustDraw }
                 procedure Flush { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } body = {
                   if = { condition = and(equal(reason, "flush"), not(equal(count(collection(Hand)), 1))) then = { fail = { message = "Flush callback ran before its whole batch committed" } } }
@@ -172,7 +172,7 @@ internal static partial class PackageChecks
         check("LIFECYCLE public hand operations compose across exhaust reactions without extending the batch", () =>
         {
             using var copy = new Copy(package.Root); copy.Include("hand-operation-probe.spire", """
-                procedure ReplaceExhausted { parameters = { owner = Ref(Player) card = Ref(Card) } locals = { replacement = Binding } body = {
+                procedure ReplaceExhausted { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } locals = { replacement = Binding } body = {
                   call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:anger" } into = replacement }
                   call = { procedure = AddGeneratedToHand args = { card = replacement } }
                 } }

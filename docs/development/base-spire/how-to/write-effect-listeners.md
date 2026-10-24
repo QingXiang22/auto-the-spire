@@ -30,8 +30,8 @@ subscription OnDraw {
   event = AfterCardDrawn
   reaction = WhenDrawn
   instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition)))))
-  instance_order = collectionIndex(Relics, listener)
-  priority = 100
+  instance_order = pureCall(RelicHookOrder, listener, false)
+  priority = 0
 }
 ```
 
@@ -41,7 +41,7 @@ instances只能读取事件载荷和查询自身的绑定，不能用尚未绑�
 
 主动弃牌使用 `CardDiscarded`：`DiscardCombatCard` 先移动牌、完成 `CardMoved`，再发布弃牌通知。ToughBandages 按有效持有实例响应，并复核 CombatActive／EnemyPhase；普通移牌和回合末清手只移动牌，不触发该遗物。
 
-`CardExhausted` 在 `ExhaustCombatCard` 把卡牌放入 `ExhaustPile` 后发布。CharonsAshes 订阅时过滤 `Relic.Holder == owner`、未熔化和定义 ID，反应中调用 `DamageAllEnemiesFromPlayer`；因此嵌套耗尽会逐事件结算，且每个有效遗物实例只响应自己的持有者。
+`CardExhausted(owner,card,causedByEthereal)` 在 `ExhaustCombatCard(owner,card,causedByEthereal)` 把卡牌放入 `ExhaustPile` 后发布。CharonsAshes 订阅时过滤 `Relic.Holder == owner`、未熔化和定义 ID，反应中调用 `DamageAllEnemiesFromPlayer`；因此嵌套耗尽会逐事件结算，且每个有效遗物实例只响应自己的持有者。
 
 ## 3. 用pure监听返回修正值
 
@@ -58,7 +58,7 @@ subscription Strength {
   event = ModifyAttackAdditive
   reaction = Strength
   instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:strength-power")))
-  instance_order = collectionIndex(Powers, listener)
+  instance_order = pureCall(PowerHookOrder, listener, false)
   priority = 0
 }
 ```
@@ -86,3 +86,5 @@ Power的持有者和层数在combat/schema.spire，定义与施加／合并／�
 - 移除后附属状态清理，下一战按源重建；已有内容数值、寿命和胜负余效保留。
 
 命令选择见[验证指南](verify-and-debug.md)。当前遗物定向入口是check --relic-content-only，完整行为报告用check --report；新内容或新机制需实际新增判别，旧命令通过不自动证明任意新效果。教学与受控探针不算独立原版比较或正常Run验证记录。
+
+耗尽调用者必须明确传causedByEthereal。回合末虚无及带回合末效果的虚无牌收尾为true；普通出牌、选牌、强制耗尽和正文效果为false，不能由牌是否带虚无关键词反推原因。全部订阅接收同一完整载荷，即使不使用原因。直接生成到ExhaustPile仅是放置，不发布CardExhausted。

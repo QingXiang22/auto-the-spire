@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template WeakPowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:weak-power" debuff = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:weak-power" powerType = "debuff" } }
 
 procedure Weak {
   pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Power) }
@@ -18,7 +18,7 @@ procedure Weak {
 }
 
 subscription Weak {
-  event = ModifyAttackMultiplier reaction = Weak instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:weak-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyAttackMultiplier reaction = Weak instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:weak-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure EnemyWeak {
@@ -34,10 +34,10 @@ procedure EnemyWeak {
 }
 
 subscription EnemyWeak {
-  event = ModifyEnemyAttackMultiplier reaction = EnemyWeak instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyEnemyAttackMultiplier reaction = EnemyWeak instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 procedure Duration { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = TickPowerDuration args = { power = listener } } } }
-subscription Duration { event = AfterEnemyTurnEnded reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0 }
+subscription Duration { event = AfterEnemySideTurnEnd reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:weak-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
 
 } }
 use WeakPower { template = WeakPowerModule }

@@ -22,6 +22,8 @@ internal static partial class PackageChecks
 
     private static void RunCardBehaviorChecks(DslPackage package, Action<string, Action> check)
     {
+        RunTurnPhaseChecks(package, check);
+        RunExhaustCauseChecks(package, check);
         check("BEHAVIOR owned body order changes actual damage without changing shared dispatch or notifications", () =>
         {
             foreach (var reverse in new[] { false, true })

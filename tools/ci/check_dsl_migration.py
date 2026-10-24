@@ -249,6 +249,107 @@ def main() -> int:
                 or [c["id"] for c in whistle["cases"]] != whistle_cases or any(c["status"] != "passed" for c in whistle["cases"])):
             raise ValueError("Whistle controlled comparison did not execute all required paid-card and stun cases")
 
+        rotations = run("enemy-rotations", ["enemy-rotation-compare", "--output", str(args.output / "enemy-rotations")], 0)
+        rotation_names = ("AssassinRubyRaider", "AxeRubyRaider", "BowlbugEgg", "BruteRubyRaider", "CrossbowRubyRaider", "Stabbot", "TrackerRubyRaider")
+        rotation_ids = [seed + ":" + name + ":" + mode for seed in ("777", "A😀B")
+                        for name in rotation_names for mode in ("rotation", "stun", "two")]
+        rotation_ids += [seed + ":TrackerRubyRaider:" + mode for seed in ("777", "A😀B")
+                         for mode in ("vigor", "retaliation", "lethal", "lethal-clean")]
+        if (rotations is None or rotations["status"] != "passed" or rotations["independent_verified"] is not True
+                or rotations["normal_run_verified"] is not False or [case["id"] for case in rotations["cases"]] != rotation_ids):
+            raise ValueError("Enemy rotations must execute and pass all original controlled cases")
+        for case in rotations["cases"]:
+            boundaries = 3 if case["id"].rsplit(":", 1)[1] in ("vigor", "retaliation", "lethal", "lethal-clean") else 5
+            if case["status"] != "passed" or case["left"] != case["right"] or len(case["left"]) != boundaries:
+                raise ValueError(f"Enemy rotation changed its measured boundaries: {case['id']}")
+
+        amounts = run("power-amounts", ["power-amount-compare", "--output", str(args.output / "power-amounts")], 0)
+        amount_steps = {
+            "new-debuff": 2, "stack-debuff": 3, "modify-debuff": 3, "negative-strength": 2,
+            "positive-strength": 2, "new-zero": 2, "existing-zero": 3, "remove-debuff": 3,
+            "negative-offset": 3, "negative-stack": 3, "negative-debuff": 2, "single-debuff": 2,
+            "single-buff-stack": 3, "blocked-mangle": 2, "artifact-exhaust": 3,
+            "flex": 4, "setup-strike": 4, "mangle": 4, "flex-artifact-expiry": 3,
+            "setup-artifact-expiry": 3, "mangle-artifact-expiry": 3, "independent": 3,
+            "per-applier": 5, "source": 5,
+        }
+        amount_ids = [seed + ":" + side + ":" + name for seed in ("777", "A😀B")
+                      for side in ("player", "enemy") for name in amount_steps]
+        if (amounts is None or amounts["schema"] != "dsl-migration/power-amounts@1"
+                or amounts["status"] != "passed" or amounts["independent_verified"] is not True
+                or amounts["normal_run_verified"] is not False or amounts["reference"]["commit"] != lock["commit"]
+                or [case["id"] for case in amounts["cases"]] != amount_ids):
+            raise ValueError("Power amount comparison must execute and pass all 96 controlled cases")
+        amount_dimensions = {"at", "player", "enemy", "player_hp", "enemy_hp", "ai_draws", "ai_state", "shuffle_draws", "shuffle_state"}
+        power_dimensions = {"definition", "amount", "type", "stack_type", "skip_tick", "applier"}
+        for case in amounts["cases"]:
+            if (case["status"] != "passed" or case["left"] != case["right"]
+                    or len(case["left"]) != amount_steps[case["id"].rsplit(":", 1)[1]] + 1
+                    or any(set(boundary) != amount_dimensions or len(boundary["ai_state"]) != 4
+                           or len(boundary["shuffle_state"]) != 4
+                           or any(set(power) != power_dimensions for side in ("player", "enemy") for power in boundary[side])
+                           for boundary in case["left"])):
+                raise ValueError(f"Power amount comparison omitted or changed a required boundary: {case['id']}")
+
+        turns = run("turn-phases", ["turn-phase-compare", "--output", str(args.output / "turn-phases")], 0)
+        turn_names = ("orichalcum-plating", "orichalcum-duplicate", "charon-lethal", "charon-survives",
+                      "charon-reshuffle", "starting-draw", "listener-order", "draw-before-block",
+                      "block-before-draw", "fan-ending", "bag-first-side", "fiend-fire-ending", "gremlin-horn-ending", "feed-ending")
+        turn_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in turn_names]
+        turn_dimensions = {"at", "turn", "energy", "hp", "block", "enemy_hp", "ending", "piles", "powers",
+                           "blocked_damage", "ai_draws", "ai_state", "shuffle_draws", "shuffle_state",
+                           "target_draws", "target_state", "calls", "run_order", "direct_order", "enemy_powers", "max_hp"}
+        call_dimensions = {"stream", "operation", "minimum", "maximum", "result", "before", "after", "candidates"}
+        if (turns is None or turns["schema"] != "dsl-migration/turn-phases@1" or turns["status"] != "passed"
+                or turns["independent_verified"] is not True or turns["normal_run_verified"] is not False
+                or turns["reference"]["commit"] != lock["commit"] or [c["id"] for c in turns["cases"]] != turn_ids):
+            raise ValueError("Turn phase comparison must execute and pass all 28 controlled cases")
+        for case in turns["cases"]:
+            name = case["id"].rsplit(":", 1)[1]
+            if (case["status"] != "passed" or case["left"] != case["right"]
+                    or len(case["left"]) != (1 if name in ("starting-draw", "listener-order", "bag-first-side") else 2)
+                    or any(set(b) != turn_dimensions or len(b["piles"]) != 5
+                           or any(len(b[s]) != 4 for s in ("ai_state", "shuffle_state", "target_state"))
+                           or any(set(c) != call_dimensions for c in b["calls"])
+                           or any(set(p) != {"definition", "amount", "applier"} for side in ("powers", "enemy_powers") for p in b[side]) for b in case["left"])):
+                raise ValueError(f"Turn phase comparison omitted a dimension or boundary: {case['id']}")
+            end = case["left"][-1]
+            if name == "listener-order" and (len(end["run_order"]) != 8 or len(end["direct_order"]) != 8
+                                              or end["run_order"] == end["direct_order"]):
+                raise ValueError("Run and Direct must measure their distinct actual source listener paths")
+            if name in ("starting-draw", "charon-reshuffle", "draw-before-block", "block-before-draw") and not end["calls"]:
+                raise ValueError("Nonempty shuffle/target random calls must be compared")
+
+        causes = run("exhaust-causes", ["exhaust-cause-compare", "--output", str(args.output / "exhaust-causes")], 0)
+        cause_names = ("ordinary", "deferred", "current-amount", "no-draw-before", "no-draw-after",
+                       "full-hand", "reshuffle", "nested", "remove-replace", "generated",
+                       "immediate-listeners", "natural", "natural-effect", "natural-lethal", "paused")
+        cause_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in cause_names]
+        cause_dimensions = {"at", "turn", "energy", "hp", "block", "enemy_hp", "ending", "piles", "powers",
+                            "deferred", "draws", "ai_draws", "ai_state", "shuffle_draws", "shuffle_state",
+                            "target_draws", "target_state", "calls"}
+        if (causes is None or causes["schema"] != "dsl-migration/exhaust-causes@1" or causes["status"] != "passed"
+                or causes["independent_verified"] is not True or causes["normal_run_verified"] is not False
+                or causes["reference"]["commit"] != lock["commit"] or [c["id"] for c in causes["cases"]] != cause_ids):
+            raise ValueError("Exhaust cause comparison must execute and pass all 30 controlled cases")
+        for case in causes["cases"]:
+            if (case["status"] != "passed" or case["left"] != case["right"] or len(case["left"]) != (2 if case["id"].rsplit(":", 1)[1].startswith("natural") else 3)
+                    or any(set(b) != cause_dimensions or len(b["piles"]) != 5
+                           or any(len(b[s]) != 4 for s in ("ai_state", "shuffle_state", "target_state"))
+                           or any(set(c) != call_dimensions for c in b["calls"])
+                           or any(set(p) != {"definition", "amount"} for p in b["powers"])
+                           or any(set(d) != {"card", "deferred"} or d["deferred"] != 0 for d in b["draws"])
+                           for b in case["left"])):
+                raise ValueError(f"Exhaust cause comparison omitted a dimension or boundary: {case['id']}")
+            name = case["id"].rsplit(":", 1)[1]
+            end = case["left"][-1]
+            if name in ("reshuffle", "nested") and not end["calls"]:
+                raise ValueError("Shuffle/target candidates must be measured for exhaust draws")
+            if name in ("natural", "natural-effect", "paused") and not end["draws"]:
+                raise ValueError("Deferred draw and natural half-turn must execute real draws")
+            if name == "natural-lethal" and (not end["ending"] or end["draws"] or end["deferred"] != [1]):
+                raise ValueError("Lethal snapshot must retain entered-listener counting and suppress later draws")
+
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
         paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]

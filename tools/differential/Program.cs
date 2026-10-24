@@ -9,6 +9,10 @@ try
     if (args.FirstOrDefault() == "battle-friend-compare") return BattleFriendComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "wriggler-compare") return WrigglerComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "whistle-compare") return WhistleComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "enemy-rotation-compare") return EnemyRotationComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "power-amount-compare") return PowerAmountComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "turn-phase-compare") return TurnPhaseComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "exhaust-cause-compare") return ExhaustCauseComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "unknown-room-compare") return UnknownRoomComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "event-selection-compare") return EventSelectionComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "normal-compare") return NormalRunComparison.Run(Repository.Find(), args.Skip(1).ToArray());

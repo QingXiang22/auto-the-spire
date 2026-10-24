@@ -20,17 +20,23 @@ internal sealed class ReferenceRandomTrace : IDisposable
     private readonly List<(Rng Rng, object? Previous)> hooks = [];
     private readonly List<RandomDraw> calls = [];
     private readonly Player player;
-    private readonly IReadOnlyDictionary<CardModel, string> slots;
+    private readonly Func<CardModel, string> cardSlot;
+    private readonly Func<string, int, string[]?>? indexCandidates;
     private List<CardModel>? shuffle;
     private int expectedShuffleCount;
     private long dropped;
     private bool truncated;
+    private bool initialShuffle;
     private readonly FieldInfo observer = typeof(Rng).GetField("_drawObserver", BindingFlags.Instance | BindingFlags.NonPublic)
         ?? throw new NotSupportedException("Locked reference has no per-instance result hook.");
 
-    public ReferenceRandomTrace(RunRngSet run, Player player, IReadOnlyDictionary<CardModel, string> slots)
+    public ReferenceRandomTrace(RunRngSet run, Player player, IReadOnlyDictionary<CardModel, string> slots, bool initialShuffle = false)
+        : this(run, player, card => slots[card], initialShuffle) { }
+
+    public ReferenceRandomTrace(RunRngSet run, Player player, Func<CardModel, string> cardSlot, bool initialShuffle = false,
+        Func<string, int, string[]?>? indexCandidates = null)
     {
-        this.player = player; this.slots = slots;
+        this.player = player; this.cardSlot = cardSlot; this.initialShuffle = initialShuffle; this.indexCandidates = indexCandidates;
         if (run.UsesSemanticKeys || player.PlayerRng.UsesSemanticKeys)
             throw new NotSupportedException("Original comparison requires sequential reference streams.");
         try
@@ -61,13 +67,17 @@ internal sealed class ReferenceRandomTrace : IDisposable
                     // source piles are still intact. Reconstruct that reference's own StableShuffle
                     // candidate order independently, then verify it against the real resulting piles.
                     var state = player.PlayerCombatState!;
-                    shuffle = state.DiscardPile.Cards.Concat(state.DrawPile.Cards).ToList(); shuffle.Sort();
+                    // PopulateCombatState/RandomizeOrderInternal uses the current deck order;
+                    // later CardPileCmd.Shuffle uses StableShuffle's sorted discard order.
+                    shuffle = state.DiscardPile.Cards.Concat(state.DrawPile.Cards).ToList();
+                    if (!initialShuffle) shuffle.Sort();
+                    initialShuffle = false;
                     expectedShuffleCount = shuffle.Count;
                 }
                 if (count > shuffle.Count || count < 2 || count != expectedShuffleCount) { truncated = true; }
                 else
                 {
-                    candidates = shuffle.Take(count).Select(c => slots[c]).ToArray();
+                    candidates = shuffle.Take(count).Select(cardSlot).ToArray();
                     var selected = int.Parse(result, CultureInfo.InvariantCulture);
                     (shuffle[count - 1], shuffle[selected]) = (shuffle[selected], shuffle[count - 1]);
                 }
@@ -77,8 +87,31 @@ internal sealed class ReferenceRandomTrace : IDisposable
             else
             {
                 var range = Regex.Match(operation, @"^NextInt\(minInclusive=(-?\d+),maxExclusive=(-?\d+)\)$");
-                if (range.Success) { operation = "int"; minimum = range.Groups[1].Value; maximum = range.Groups[2].Value; }
-                else if (match.Success) { operation = "index"; minimum = "0"; maximum = match.Groups[1].Value; }
+                if (range.Success)
+                {
+                    operation = "int"; minimum = range.Groups[1].Value; maximum = range.Groups[2].Value;
+                    if (minimum == "0")
+                    {
+                        var count = int.Parse(maximum, CultureInfo.InvariantCulture);
+                        candidates = indexCandidates?.Invoke(name, count);
+                        if (candidates is not null)
+                        {
+                            if (candidates.Length != count) truncated = true;
+                            operation = "pick";
+                        }
+                    }
+                }
+                else if (match.Success)
+                {
+                    operation = "index"; minimum = "0"; maximum = match.Groups[1].Value;
+                    var count = int.Parse(maximum, CultureInfo.InvariantCulture);
+                    candidates = indexCandidates?.Invoke(name, count);
+                    if (candidates is not null)
+                    {
+                        if (candidates.Length != count) truncated = true;
+                        operation = "pick";
+                    }
+                }
                 else truncated = true; // Never certify an unextracted operation/parameter surface.
             }
             calls.Add(new(name, operation, minimum, maximum, result, cursor - 1L, cursor, candidates,

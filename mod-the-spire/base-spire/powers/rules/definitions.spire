@@ -5,12 +5,14 @@ procedure SetupPowerDefinitions { body = {
  emit = { event = RegisterPowerDefinitions }
 } }
 template PowerDefinition {
- parameters = { instanceMode = { type = String(length = 16) default = "shared" } definition = { type = String(length = 64) } allowNegative = { type = Bool default = false } debuff = { type = Bool default = false } singleStack = { type = Bool default = false } }
+ parameters = { instanceMode = { type = String(length = 16) default = "shared" } definition = { type = String(length = 64) } allowNegative = { type = Bool default = false } powerType = { type = String(length = 8) default = "buff" } stackType = { type = String(length = 8) default = "counter" } }
  body = {
   procedure Register { locals = { entry = Binding } body = {
    if = { condition = not(or(equal(arg(instanceMode), "shared"), or(equal(arg(instanceMode), "per-applier"), equal(arg(instanceMode), "independent")))) then = { fail = { message = "Unknown Power instance mode" } } }
    if = { condition = exists(where(collection(PowerLibrary), d, equal(field(d, PowerBlueprint.DefinitionId), arg(definition)))) then = { fail = { message = "Duplicate Power definition" } } }
-   create = { type = PowerBlueprint scope = frameScope() into = entry collection = PowerLibrary fields = { DefinitionId = arg(definition) InstanceMode = arg(instanceMode) AllowNegative = arg(allowNegative) Debuff = arg(debuff) SingleStack = arg(singleStack) } }
+   if = { condition = not(or(equal(arg(powerType), "buff"), or(equal(arg(powerType), "debuff"), equal(arg(powerType), "none")))) then = { fail = { message = "Unknown Power type" } } }
+   if = { condition = not(or(equal(arg(stackType), "counter"), or(equal(arg(stackType), "single"), equal(arg(stackType), "none")))) then = { fail = { message = "Unknown Power stack type" } } }
+   create = { type = PowerBlueprint scope = frameScope() into = entry collection = PowerLibrary fields = { DefinitionId = arg(definition) InstanceMode = arg(instanceMode) AllowNegative = arg(allowNegative) PowerType = arg(powerType) StackType = arg(stackType) } }
   } }
   subscription Register { event = RegisterPowerDefinitions reaction = Register }
  }

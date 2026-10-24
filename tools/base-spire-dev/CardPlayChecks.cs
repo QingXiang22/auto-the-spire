@@ -138,7 +138,7 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root);
             copy.Include("exhaust-order.spire", """
-                procedure CheckExhausted { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+                procedure CheckExhausted { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } body = {
                   if = { condition = less(collectionIndex(ExhaustPile, card), 0) then = { fail = { message = "exhaust event fired before the card reached the exhaust pile" } } }
                 } }
                 subscription CheckExhausted { event = CardExhausted reaction = CheckExhausted }

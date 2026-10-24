@@ -15,6 +15,8 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 `sync-content`从实际CardLibrary／PowerLibrary及显式启动实例确定性派生这两类公开ID，只写public/metadata.json相应content_ids；公开可见性政策、生产定义目录及工具固定来源的池顺序继续显式维护。validate／check同时核对可执行ID、来源文件映射及公开列表，缺登记、错误映射和重复分别失败。该审计针对当前base的定义库形状，不是通用包的内容推断器。
 
+`check --content-model-only`包含共享Power改量与Artifact检查：新建／叠加／直接Modify、Given加法后乘法、正负增量／零量、临时力量同步、真实来源、移除后的修正者资格，以及暂停时隐藏计算上下文、续接一次与清理。它也保留原内容模型检查；受控行为不能替代[独立Power组件比较](../differential/README.md#power改量组件比较)或正常Run验收。
+
 行为迁移定向检查使用`check --card-behavior-only`，覆盖正文／执行、攻击／结果、费用／关键词、复制／附魔、Power来源、资源及开发事件。可加`--filter "LIFECYCLE "`或`--filter "VISIT "`按不区分大小写的名称前缀筛选；空筛选／零匹配返回2，不能与其他定向参数或report混用。它不生成整包覆盖报告。接口与未支持范围见[行为操作参考](../../docs/development/base-spire/reference/card-behavior.md)。
 
 可在命令后传入其他 manifest 路径，再使用 `--scope <id>`。本版 `check` 用于当前 base 开发范围；`validate`同样核对当前base定义库，不把加载成功记作行为通过。退出码 0 为当前命令完成，2 为格式／加载失败，3 为未支持。旧 `play`、`probe` 和直接传卡牌 `.spire` 的入口明确返回 3。

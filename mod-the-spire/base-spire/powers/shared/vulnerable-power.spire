@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template VulnerablePowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:vulnerable-power" debuff = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:vulnerable-power" powerType = "debuff" } }
 
 procedure Vulnerable {
   pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Power) }
@@ -18,7 +18,7 @@ procedure Vulnerable {
 }
 
 subscription Vulnerable {
-  event = ModifyAttackMultiplier reaction = Vulnerable instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vulnerable-power")) instance_order = collectionIndex(Powers, listener) priority = 10
+  event = ModifyAttackMultiplier reaction = Vulnerable instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vulnerable-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure PlayerVulnerable {
@@ -34,10 +34,10 @@ procedure PlayerVulnerable {
 }
 
 subscription PlayerVulnerable {
-  event = ModifyIncomingAttackMultiplier reaction = PlayerVulnerable instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:vulnerable-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyIncomingAttackMultiplier reaction = PlayerVulnerable instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:vulnerable-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 procedure Duration { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = TickPowerDuration args = { power = listener } } } }
-subscription Duration { event = AfterEnemyTurnEnded reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vulnerable-power")) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0 }
+subscription Duration { event = AfterEnemySideTurnEnd reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vulnerable-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
 
 } }
 use VulnerablePower { template = VulnerablePowerModule }

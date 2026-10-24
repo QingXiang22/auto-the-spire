@@ -1,8 +1,16 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: BowlbugEgg.cs; Ascension 0 initial HP 21..22 (development spawn uses the minimum) and BITE_MOVE 7 damage plus 7 block, one-move loop.
-use BowlbugEgg {
-  template = AttackDefendEnemy
-  args = { definition = "base-spire:bowlbug-egg" hp = 21 damage = 7 block = 7 }
-}
+template BowlbugEggContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:bowlbug-egg" initial = "BITE_MOVE" } }
+  use Bite { template = EnemyMoveNodeDefinition args = { definition = "base-spire:bowlbug-egg" id = "BITE_MOVE" next = "BITE_MOVE" intent = "attack,defend" } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } body = {
+    call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 7 hits = 1 } }
+    call = { procedure = GainEnemyBlock args = { target = target amount = 7 } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:bowlbug-egg" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:bowlbug-egg" hp = 21 } }
+  } }
+} }
+use BowlbugEgg { template = BowlbugEggContent }

@@ -6,7 +6,7 @@ template FeelNoPainPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:feel-no-pain-power" } }
 
 procedure FeelNoPain {
-  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool listener = Ref(Power) }
   body = {
     call = {
       procedure = GainUnpoweredBlock args = {
@@ -17,7 +17,7 @@ procedure FeelNoPain {
 }
 
 subscription FeelNoPain {
-  event = CardExhausted reaction = FeelNoPain instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:feel-no-pain-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = CardExhausted reaction = FeelNoPain instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:feel-no-pain-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use FeelNoPainPower { template = FeelNoPainPowerModule }

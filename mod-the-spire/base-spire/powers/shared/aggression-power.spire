@@ -39,7 +39,7 @@ procedure Aggression {
 }
 
 subscription Aggression {
-  event = BeforeTurnResources reaction = Aggression instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:aggression-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = BeforePlayerSideTurnStart reaction = Aggression instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:aggression-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use AggressionPower { template = AggressionPowerModule }

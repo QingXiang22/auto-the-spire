@@ -34,6 +34,8 @@ python tools/ci/check.py base net migration docs
 
 base组的 `check --normal-run-only` 保留10组固定字符串seed，比较完整前置遗物袋、三幕房间队列、Neow候选、Gaussian拒绝抽样，以及首幕最终节点／房型／父子边和随机游标；源向量的[生成入口](../rng-oracle/README.md#重新生成)与生产规则隔离。公开正向路径从Neow实际获得遗物到首个真实战斗，不注入敌人、清场或奖励。未支持选项／遭遇保留在源池并验证失败无额外状态／随机消费；同组还验证正常首战领取／跳过返回地图、自然死亡与受控末杀／余效顺序；完整整局及逐步双侧比较仍不在本组验收范围。
 
+migration另运行[七个固定轮转敌人组件比较](../differential/README.md#固定轮转敌人组件比较)，要求原50项全部一致，包括玩家致死时Frail清理与Vigor保留。另执行[Power改量组件](../differential/README.md#power改量组件比较)的96项，保留新建／叠加／直接Modify、Artifact、正负增量／零量、临时力量、实例模式及真实来源。两组均实际返回0并核对完整边界；组件初态与部分时点为受控设置，不表示完整正常Run或全部内容验收。
+
 铁甲战士卡牌检查可单独复查：
 
 ```powershell
@@ -43,6 +45,8 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 它校验当前包摘要、578 项全卡来源、锁定新版原生铁甲战士卡池、资格和来源摘要、普通／升级元数据对应的行为报告和全部已声明卡牌执行结果；不将局部 Ironclad 检查解释为全卡或原版独立比较通过。当前池元数据由锁定参考独立执行生成，并与当前锁核对；旧578项清单仅保留原迁移来源条目总数，CI不需要本地 `sts2/`。
 
 完整来源固定数据位于[包外工具 fixture](../base-spire-dev/fixtures/source-catalogs.json)，共10个领域1516项，保留来源路径、原始字节SHA256、池及成员顺序和源排除依据。base工具嵌入该文件，Python覆盖检查与定位助手读取同一份已纳管数据；生产目录只登记已加载定义。来源条目总数和实际执行结果分别校验，干净检出无需本地原版源码或历史报告。
+
+migration还要求[回合阶段与监听顺序组件](../differential/README.md#回合阶段与监听顺序组件比较)的28项全部一致：实际Orichalcum／Plating、Charon／DarkEmbrace、起手阶段、Run与Direct顺序，以及末杀后的抽牌与格挡门禁。保留逐次随机参数、候选、结果、游标及完整流状态；原50／96项和11份suite继续执行，不以组件结果认证M01。
 
 问号房型另有两seed共10种受控组件场景，由migration逐边界核对18次抽样与赔率重置；`normal_run_verified`保持false。base正常组和net真实stdio新增seed `unknown-normal-354`，从Neow、首战胜利及奖励关闭进入真实问号Monster，保留原始地图类型并核对实际遭遇。base还比较源生命、访问、四类赔率与完整问号流状态；完整事件和Run不在该前缀验收范围。
 
@@ -68,3 +72,5 @@ python tools/ci/check_relic_coverage.py .artifacts/ci/base/behavior/package-beha
 ## 其他检查
 
 文档组在 PR CI 执行；本地可运行 `python tools/ci/check.py docs`。忽略文件不能作为正式链接目标。本地原版源码核对、Python 客户端完整轨迹、AI 离线检查、完整正常 Run、完整差异测试／120 对矩阵及性能均不包含在上述行为组中。相关要求仍见[任务入口](../../docs/roadmap.md)、[ENV 范围](../../docs/design/environment-completion-and-differential-v1.md)和[参考版本](../../reference/README.md)。不得从开发检查通过推导这些项目已经验收。
+
+migration组另严格执行`exhaust-cause-compare`的30个耗尽原因组件，检查全部边界、延迟计数、抽牌事件和随机候选；缺例、缺字段、差异或无参考均失败，正常Run认证保持独立。

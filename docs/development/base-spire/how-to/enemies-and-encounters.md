@@ -14,6 +14,8 @@
 
 把敌人动作写成共享操作组合，目标使用真实存活集合与源资格。行动、回合末衰减和切换意图的时点由战斗流程调用，不为每个敌人再写一套轮转调度器。
 
+一次多击调用EnemyAttack(attacker、defender、amount、hits)，不循环调用单击DamagePlayerPowered。Tracker展示先施加Frail再进入1×8的固定循环；Axe与BowlbugEgg展示攻击后格挡及attack,defend复合意图，Stabbot保留attack,debuff。Power操作显式传真实applierEnemy，正文不直接写层数；这些敌人同样支持StunEnemy，不另写击晕调度。
+
 ## 保留原版随机语义
 
 先确定 HP、行动分支、编队与目标各使用哪个源随机流、seed 派生、调用顺序和候选顺序。Engine 能 shuffle 或 sample 不代表已具备原版布局。需要原版兼容时，约定必须给出独立依据及消费计数，不得在工具端补抽使答案对齐。

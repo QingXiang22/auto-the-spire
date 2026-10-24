@@ -15,7 +15,7 @@ template VigorPowerModule { body = {
       set = { target = state field = State.StartedStacks value = field(listener, Power.Stacks) }
     } }
   } }
-  subscription Before { event = BeforeAttack reaction = Before instances = where(collection(Powers), p, and(or(and(not(isNone(field(attack, Attack.Player))), equal(field(p, Power.HolderPlayer), field(attack, Attack.Player))), and(not(isNone(field(attack, Attack.Enemy))), equal(field(p, Power.HolderEnemy), field(attack, Attack.Enemy)))), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = collectionIndex(Powers, listener) }
+  subscription Before { event = BeforeAttack reaction = Before instances = where(collection(Powers), p, and(or(and(not(isNone(field(attack, Attack.Player))), equal(field(p, Power.HolderPlayer), field(attack, Attack.Player))), and(not(isNone(field(attack, Attack.Enemy))), equal(field(p, Power.HolderEnemy), field(attack, Attack.Enemy)))), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
   procedure Damage { pure = true parameters = { amount = Int owner = Ref(Player) card = Binding target = Binding attack = Binding play = Binding preview = Bool listener = Ref(Power) } result = Int
     locals = { state = Binding active = Binding } body = {
       let = { into = state value = first(where(type(State), s, equal(field(s, State.Power), listener))) }
@@ -28,7 +28,7 @@ template VigorPowerModule { body = {
   }
   subscription Damage { event = ModifyCardDamageAdditive reaction = Damage instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = collectionIndex(Powers, listener) }
   procedure EnemyDamage { pure = true parameters = { value = Int owner = Ref(Player) attacker = Ref(Enemy) listener = Ref(Power) } result = Int body = { return = { value = add(value, field(listener, Power.Stacks)) } } }
-  subscription EnemyDamage { event = ModifyEnemyAttackAdditive reaction = EnemyDamage instances = where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), attacker), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = collectionIndex(Powers, listener) }
+  subscription EnemyDamage { event = ModifyEnemyAttackAdditive reaction = EnemyDamage instances = where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), attacker), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
   procedure After { parameters = { attack = Ref(Attack) listener = Ref(Power) } locals = { state = Binding used = Int } body = {
     let = { into = state value = first(where(type(State), s, equal(field(s, State.Power), listener))) }
     if = { condition = equal(field(state, State.Attack), attack) then = {
@@ -38,7 +38,7 @@ template VigorPowerModule { body = {
       call = { procedure = ModifyPowerAmount args = { power = listener delta = subtract(0, used) } }
     } }
   } }
-  subscription After { event = AfterAttack reaction = After instances = where(collection(Powers), p, and(or(and(not(isNone(field(attack, Attack.Player))), equal(field(p, Power.HolderPlayer), field(attack, Attack.Player))), and(not(isNone(field(attack, Attack.Enemy))), equal(field(p, Power.HolderEnemy), field(attack, Attack.Enemy)))), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = collectionIndex(Powers, listener) }
+  subscription After { event = AfterAttack reaction = After instances = where(collection(Powers), p, and(or(and(not(isNone(field(attack, Attack.Player))), equal(field(p, Power.HolderPlayer), field(attack, Attack.Player))), and(not(isNone(field(attack, Attack.Enemy))), equal(field(p, Power.HolderEnemy), field(attack, Attack.Enemy)))), equal(field(p, Power.DefinitionId), "base-spire:vigor-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
   procedure Removed { parameters = { power = Ref(Power) } body = { forEach = { query = where(type(State), s, equal(field(s, State.Power), power)) item = state body = { destroy = { target = state } } } } }
   subscription Removed { event = PowerRemoved reaction = Removed }
 } }

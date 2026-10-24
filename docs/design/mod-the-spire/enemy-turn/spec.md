@@ -8,15 +8,25 @@
 
 `TwigSlimeM.cs` 的 A0 初始 HP 为26..28，攻击 `POKEY_POUNCE_MOVE` 造成11点伤害，状态招 `STICKY_SHOT_MOVE` 向每个目标的弃牌堆加入一张Slimed，首招固定为状态招。源码 `AddBranch(moveState, 2)` 选择最多连续两次的重载，默认权重1；状态招使用CannotRepeat，同样权重1，冷却均为0。两个分支保持攻击、状态的源顺序。Slimed花1能量，抽1张后耗尽，不能升级。
 
-敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
+敌方阶段依次发BeforeEnemySideTurnStart、清本侧全部格挡并逐个发AfterEnemyBlockCleared、AfterEnemySideTurnStart，然后按活动敌人各发一次 `EnemyTurnStarted`，结束时分VeryEarly／Early／普通阶段后发 `AfterEnemySideTurnEnd`。共享图消费者执行已经保存的招式；当前实现仍在敌方阶段结束、持续时间更新后为存活敌人选择下一招。源通常在玩家BeforeSideTurnStart后准备下一招；条件选招时点以及出生标识／槽位分离尚未迁移，不由本阶段调整认证。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
-图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档和Wriggler，其他既有敌人仍使用原模板。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档、Wriggler及下述七个固定轮转敌人。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+
+### 固定轮转与完整敌人攻击
+
+七个既有敌人按锁定参考的节点和后继登记同一共享图，正文由各自内容模块提供，不再由内容订阅EnemyTurnStarted自行改MoveIndex。Assassin的KILLSHOT_MOVE、BowlbugEgg的BITE_MOVE及Stabbot的STAB_MOVE各自循环；Axe为SWING_1→SWING_2→BIG_SWING→SWING_1；Brute为BEAT_MOVE与ROAR_MOVE交替；Crossbow从RELOAD_MOVE开始与FIRE_MOVE交替；Tracker从TRACK_MOVE进入HOUNDS_MOVE并保持。固定后继不消费monster_ai，首次生成、跨战重置和StunEnemy沿用已有共享图操作。
+
+Axe的两次普通挥击及BowlbugEgg公布attack,defend，Stabbot公布attack,debuff，顺序与源Intents一致。开发Spawn保留原动作ID和A0最小HP；这不包含正常编队的出生抽样或选招时点验收。
+
+EnemyAttack接收attacker、defender、amount和hits，拒绝负命中数，一次创建Attack再调用ExecuteAttack；DamagePlayerPowered作为单击调用复用它。BeforeAttack／AfterAttack各一次，逐击保留独立DamageResult与伤害反应；攻击者在反击中死亡后当前命中按已有伤害操作完成，后续命中停止，目标死亡也停止。普通非结束中的攻击由Vigor在整次攻击结束后消费开始层数，不能用多次单击或合并总伤害替代。Tracker的1×8与Vigor3应产生八次4点伤害、一次Attack；反击死亡与玩家致死分别验证命中边界和一次终局。玩家死亡按[死亡约定](../combat-end/spec.md)清理自身Power；ending期间的共享Power命令拒绝改量，因此致死攻击保留敌人Vigor3。组件比较同时核对命中与Power生命周期，不以命中数相同替代全部维度。
+
+怪物正文施加Power使用ApplyPowerWithSource，applierEnemy为真实怪物，card／play为空；自我强化仍保留自身施加者。已有逐实例历史、公开查询只读、击晕恢复、死亡清理与正常首战检查继续适用。独立组件比较使用真实参考怪物、空永久牌组和明确设置的生命／Power，比较逐回合节点、意图、历史、生命、格挡、逐击结果及AI随机状态；人工状态不证明正常遭遇可达或完整Run符合。
 
 ## 行为要求与设计
 
 | ID | 约定 | 判别 |
 | --- | --- | --- |
-| EN01 | 玩家回合结束后依次弃手牌、发 AfterTurnEnded、跑敌方阶段（每个可命中敌人一次）、发 AfterEnemyTurnEnded，最后关闭回合门 | 敌人已死亡时跳过；结束后仍可开下一回合 |
+| EN01 | 玩家回合结束后依次弃手牌、发 AfterPlayerSideTurnEnd、跑敌方阶段（每个可命中敌人一次）、发 AfterEnemySideTurnEnd，最后关闭回合门 | 敌人已死亡时跳过；结束后仍可开下一回合 |
 | EN02 | 敌方攻击按源顺序结算：攻击者 Strength 加性、攻击者 Weak ×0.75、防守方 Vulnerable ×1.5，整数向下取整，再格挡→生命 | 7 强度的 goop 打 11；1 层 Weak 的 4 点打 3；有 10 格挡时只掉 4 点格挡里的 4 并与剩余格挡共存 |
 | EN03 | 共享图执行保存的招式，内容按DefinitionId提供动作正文；未迁移敌人继续用原模板 | 三个招位按源顺序轮转，MoveId／MoveIndex／Intent一致 |
 | EN04 | debuff 减层发生在敌方阶段结束后 | Bash 施加 2 层 Vulnerable，结束玩家回合后变 1 层 |

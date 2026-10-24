@@ -4,18 +4,39 @@ dsl_version = "core/0.3"
 entity PowerBlueprint { fields = {
  DefinitionId = { type = String(length = 64) visibility = Hidden }
  AllowNegative = { type = Bool default = false visibility = Hidden }
- Debuff = { type = Bool default = false visibility = Hidden }
+ PowerType = { type = String(length = 8) default = "buff" visibility = Hidden }
+ StackType = { type = String(length = 8) default = "counter" visibility = Hidden }
  InstanceMode = { type = String(length = 16) default = "shared" visibility = Hidden }
- SingleStack = { type = Bool default = false visibility = Hidden }
 } }
 collection PowerLibrary { element = PowerBlueprint ordered = true }
 event RegisterPowerDefinitions { }
 event PowerCreated { payload = { power = Ref(Power) } }
 event PowerApplied { payload = { power = Ref(Power) amount = Int created = Bool } }
+event AfterPowerApplied { payload = { power = Ref(Power) amount = Int created = Bool } }
 event PowerRemoved { payload = { power = Ref(Power) } }
 event BeforePowerCreated { payload = { player = Binding enemy = Binding definition = String(length = 64) amount = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
 event PowerAmountChanged { payload = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
 
 event ShouldApplyPower { payload = { value = Bool player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
-event ModifyPowerGiven { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
-event ModifyPowerReceived { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
+event ModifyPowerGivenAdditive { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
+event ModifyPowerGivenMultiplicative { payload = { value = Int player = Binding enemy = Binding definition = String(length = 64) applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } }
+entity PowerAmountChange { fields = {
+ Definition = { type = Ref(PowerBlueprint) visibility = Hidden }
+ Power = { type = Ref(Power) optional = true visibility = Hidden }
+ Player = { type = Ref(Player) optional = true visibility = Hidden }
+ Enemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+ Requested = { type = Int visibility = Hidden }
+ Amount = { type = Int visibility = Hidden }
+ Created = { type = Bool visibility = Hidden }
+ ApplierPlayer = { type = Ref(Player) optional = true visibility = Hidden }
+ ApplierEnemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+ Card = { type = Ref(Card) optional = true visibility = Hidden }
+ Play = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
+} }
+entity PowerAmountModifier { fields = {
+ Change = { type = Ref(PowerAmountChange) visibility = Hidden }
+ Power = { type = Ref(Power) optional = true visibility = Hidden }
+} }
+event BeforePowerAmountChanged { payload = { change = Ref(PowerAmountChange) } }
+event PowerAmountReceiving { payload = { change = Ref(PowerAmountChange) } }
+event AfterModifyingPowerAmountReceived { payload = { change = Ref(PowerAmountChange) } }

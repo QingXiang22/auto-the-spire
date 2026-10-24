@@ -1,0 +1,96 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Empty development targets are a command-test context, not a natural victory.
+procedure PowerTypeForAmount {
+ pure = true parameters = { definition = Ref(PowerBlueprint) amount = Int } result = String(length = 8)
+ body = {
+  if = { condition = and(and(equal(field(definition, PowerBlueprint.StackType), "counter"), field(definition, PowerBlueprint.AllowNegative)), less(amount, 0)) then = { return = { value = "debuff" } } }
+  if = { condition = and(and(not(field(definition, PowerBlueprint.AllowNegative)), equal(field(definition, PowerBlueprint.PowerType), "debuff")), less(amount, 0)) then = { return = { value = "buff" } } }
+  return = { value = field(definition, PowerBlueprint.PowerType) }
+ }
+}
+procedure RecordPowerAmountModifier {
+ parameters = { change = Ref(PowerAmountChange) power = Ref(Power) amount = Int }
+ locals = { record = Binding }
+ body = {
+  if = { condition = not(exists(where(type(PowerAmountModifier), r, and(equal(field(r, PowerAmountModifier.Change), change), equal(field(r, PowerAmountModifier.Power), power))))) then = {
+   create = { type = PowerAmountModifier scope = entityScope(change) into = record fields = { Change = change Power = power } }
+  } }
+  set = { target = change field = PowerAmountChange.Amount value = amount }
+ }
+}
+procedure ExecutePowerAmountChange {
+ parameters = { initial = Binding entry = Ref(PowerBlueprint) player = Binding enemy = Binding amount = Int created = Bool applyCommand = Bool untilTurnEnd = Bool applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding }
+ locals = { change = Binding power = Binding actual = Int }
+ result = Binding
+ body = {
+  let = { into = power value = initial }
+  if = { condition = pureCall(CombatIsEnding) then = { return = { value = none } } }
+  if = { condition = not(isNone(enemy)) then = {
+   if = { condition = or(field(enemy, Enemy.DeathResolved), field(enemy, Enemy.Escaped)) then = { return = { value = none } } }
+  } }
+  if = { condition = not(created) then = {
+   if = { condition = less(collectionIndex(Powers, power), 0) then = { return = { value = none } } }
+  } }
+  create = { type = PowerAmountChange scope = entityScope(first(type(Player))) into = change fields = {
+   Definition = entry Power = power Player = player Enemy = enemy Requested = amount Amount = amount Created = created
+   ApplierPlayer = applierPlayer ApplierEnemy = applierEnemy Card = card Play = play
+  } }
+  emit = { event = BeforePowerAmountChanged payload = { change = change } }
+  let = { into = actual value = amount }
+  if = { condition = or(not(isNone(applierPlayer)), not(isNone(applierEnemy))) then = {
+   let = { into = actual value = foldEvent(ModifyPowerGivenAdditive, actual, player, enemy, field(entry, PowerBlueprint.DefinitionId), applierPlayer, applierEnemy, card, play) }
+   let = { into = actual value = foldEvent(ModifyPowerGivenMultiplicative, actual, player, enemy, field(entry, PowerBlueprint.DefinitionId), applierPlayer, applierEnemy, card, play) }
+  } }
+  set = { target = change field = PowerAmountChange.Amount value = actual }
+  emit = { event = PowerAmountReceiving payload = { change = change } }
+  let = { into = actual value = field(change, PowerAmountChange.Amount) }
+  if = { condition = created then = {
+   # The source calls BeforeApplied even when a receiver reduced the amount to zero.
+   emit = { event = BeforePowerCreated payload = { player = player enemy = enemy definition = field(entry, PowerBlueprint.DefinitionId) amount = actual applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } }
+   if = { condition = not(equal(actual, 0)) then = {
+    create = { type = Power scope = frameScope() into = power collection = Powers fields = {
+     DefinitionId = field(entry, PowerBlueprint.DefinitionId) Definition = entry HolderPlayer = player HolderEnemy = enemy Stacks = actual
+     ExpiresAtTurnEnd = untilTurnEnd ApplierPlayer = applierPlayer ApplierEnemy = applierEnemy SourceCard = card SourcePlay = play
+    } }
+    set = { target = change field = PowerAmountChange.Power value = power }
+    if = { condition = not(isNone(player)) then = {
+     set = { target = power field = Power.Owner value = field(player, Player.Owner) }
+     set = { target = power field = Power.SkipTick value = equal(field(entry, PowerBlueprint.PowerType), "debuff") }
+    } }
+    call = { procedure = RefreshDrawPermissions }
+    emit = { event = PowerCreated payload = { power = power } }
+   } }
+  } else = {
+   if = { condition = not(isNone(field(change, PowerAmountChange.Power))) then = {
+    set = { target = power field = Power.Stacks value = add(field(power, Power.Stacks), actual) }
+    call = { procedure = RefreshDrawPermissions }
+   } }
+  } }
+  emit = { event = AfterModifyingPowerAmountReceived payload = { change = change } }
+  # Optional references are cleared if a nested notification removed this Power.
+  let = { into = power value = field(change, PowerAmountChange.Power) }
+  if = { condition = not(isNone(power)) then = {
+   if = { condition = created then = { emit = { event = AfterPowerApplied payload = { power = power amount = actual created = true } } } }
+   if = { condition = and(not(isNone(field(change, PowerAmountChange.Power))), not(equal(actual, 0))) then = {
+    emit = { event = PowerAmountChanged payload = { power = power delta = actual applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } }
+   } }
+   let = { into = power value = field(change, PowerAmountChange.Power) }
+   if = { condition = and(not(created), not(isNone(power))) then = {
+    if = { condition = or(equal(field(power, Power.Stacks), 0), and(not(field(entry, PowerBlueprint.AllowNegative)), less(field(power, Power.Stacks), 0))) then = {
+     call = { procedure = RemovePower args = { power = power } }
+    } }
+   } }
+  } }
+  let = { into = power value = field(change, PowerAmountChange.Power) }
+  if = { condition = and(applyCommand, not(isNone(power))) then = {
+   if = { condition = untilTurnEnd then = { set = { target = power field = Power.ExpiresAtTurnEnd value = true } } }
+   emit = { event = PowerApplied payload = { power = power amount = actual created = created } }
+  } }
+  let = { into = power value = field(change, PowerAmountChange.Power) }
+  forEach = { query = where(type(PowerAmountModifier), r, equal(field(r, PowerAmountModifier.Change), change)) item = record body = { destroy = { target = record } } }
+  destroy = { target = change }
+  return = { value = power }
+ }
+}

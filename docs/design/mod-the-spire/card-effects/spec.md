@@ -26,7 +26,7 @@
 | CE01 | 内容由一次 CardDefinition 与若干效果模板组成；效果只按 DefinitionId 过滤，不按卡 ID 分支 | 同一张牌同时有格挡与伤害效果时两者都生效 |
 | CE02 | 有目标与无目标卡由不同公开动作提供候选；有目标卡在无敌人时没有攻击候选 | 自目标牌不出现在 PlayAttackFromHand 候选，攻击牌不出现在 PlayCardFromHand 候选 |
 | CE03 | 多段伤害逐段扣格挡与生命 | 目标 3 格挡时 Twin Strike 先消耗格挡再掉 2，第二段完整掉 5 |
-| CE04 | 抽牌效果复用 DrawCards→DrawOne，且在牌进入弃牌堆之前结算 | 抽牌时弃牌堆尚未包含本牌，结算后才移入 |
+| CE04 | 抽牌效果复用 DrawCards→DrawCardsWithSource→DrawNextCard，且在牌进入弃牌堆之前结算 | 抽牌时弃牌堆尚未包含本牌，结算后才移入 |
 | CE05 | 升级在实例上生效并触发定义层调整；克隆保留升级状态 | Body Slam 升到 0 费；Anger 的克隆与原牌同标识同升级状态 |
 | CE06 | 内容文件仅 use 模板参数，源资格、定义与 578 来源条目总数不变 | catalog 只新增六个非空 definition，资格来自本轮审阅 |
 

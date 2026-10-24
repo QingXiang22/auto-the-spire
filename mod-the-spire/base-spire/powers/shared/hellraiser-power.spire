@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template HellraiserPowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:hellraiser-power" singleStack = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:hellraiser-power" stackType = "single" } }
 
 procedure Hellraiser {
   parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
@@ -21,7 +21,7 @@ procedure Hellraiser {
 }
 
 subscription Hellraiser {
-  event = BeforeCardDrawnReactions reaction = Hellraiser instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:hellraiser-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterCardDrawnEarly reaction = Hellraiser instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:hellraiser-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use HellraiserPower { template = HellraiserPowerModule }

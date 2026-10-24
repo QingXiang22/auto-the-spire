@@ -13,6 +13,7 @@ internal static partial class PackageChecks
 
     private static void RunContentModelChecks(DslPackage package, Action<string, Action> check)
     {
+        RunPowerAmountChecks(package, check);
         const string commands = """
             action StrengthPlus { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" stacks = 2 } } } }
             action StrengthMinus { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" stacks = -2 } } } }

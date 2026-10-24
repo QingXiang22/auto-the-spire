@@ -1,28 +1,5 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
-template ManglePowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:mangle-power" } }
-
-procedure RestoreStrength {
-  parameters = { owner = Ref(Player) listener = Ref(Power) }
-  body = {
-    if = {
-      condition = not(isNone(field(listener, Power.HolderEnemy))) then = {
-        call = {
-          procedure = ApplyEnemyPower args = {
-            target = field(listener, Power.HolderEnemy) definition = "base-spire:strength-power" stacks = field(listener, Power.Stacks)
-          }
-        }
-        call = { procedure = RemovePower args = { power = listener } }
-      }
-    }
-  }
-}
-
-subscription RestoreStrength {
-  event = AfterEnemyTurnEnded reaction = RestoreStrength instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:mangle-power")) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0
-}
-} }
-use ManglePower { template = ManglePowerModule }
+# Locked ManglePower inherits TemporaryStrengthPower's complete application and expiry.
+use ManglePower { template = TemporaryStrengthPowerContent args = { definition = "base-spire:mangle-power" sign = -1 powerType = "debuff" } }

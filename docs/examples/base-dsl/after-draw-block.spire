@@ -18,8 +18,8 @@ template AfterDrawBlockRelic {
       event = AfterCardDrawn
       reaction = WhenDrawn
       instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition)))))
-      instance_order = collectionIndex(Relics, listener)
-      priority = 100
+      instance_order = pureCall(RelicHookOrder, listener, false)
+      priority = 0
     }
     action Obtain {
       role = player

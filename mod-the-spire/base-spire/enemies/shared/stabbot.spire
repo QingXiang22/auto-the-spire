@@ -1,8 +1,16 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: Stabbot.cs; Ascension 0 initial HP 18..23 (development spawn uses the minimum) and STAB_MOVE 11 damage plus FrailPower 1 on the target, one-move loop.
-use Stabbot {
-  template = AttackDebuffEnemy
-  args = { definition = "base-spire:stabbot" hp = 18 damage = 11 frail = 1 }
-}
+template StabbotContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:stabbot" initial = "STAB_MOVE" } }
+  use Stab { template = EnemyMoveNodeDefinition args = { definition = "base-spire:stabbot" id = "STAB_MOVE" next = "STAB_MOVE" intent = "attack,debuff" } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { power = Binding } body = {
+    call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 11 hits = 1 } }
+    call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:frail-power" stacks = 1 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = power }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:stabbot" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:stabbot" hp = 18 } }
+  } }
+} }
+use Stabbot { template = StabbotContent }

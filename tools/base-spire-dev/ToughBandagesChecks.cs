@@ -98,7 +98,7 @@ internal static partial class PackageChecks
                     if = { condition = not(equal(field(owner, Player.Block), 3)) then = { fail = { message = "child reward did not finish before parent" } } }
                   } }
                 } }
-                subscription NestedDiscard { event = CardDiscarded reaction = NestedDiscard priority = 99 }
+                subscription NestedDiscard { event = CardDiscarded reaction = NestedDiscard priority = -1 }
                 procedure ObserveBandages { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
                   if = { condition = equal(field(card, Card.DefinitionId), "base-spire:defend-ironclad") then = {
                     if = { condition = not(equal(field(owner, Player.Block), 3)) then = { fail = { message = "child reward missing or duplicated" } } }

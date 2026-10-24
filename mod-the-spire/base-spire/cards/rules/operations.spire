@@ -40,9 +40,12 @@ procedure RemoveFromCombatPiles {
   }
 }
 procedure ExhaustCombatCard {
-  parameters = { owner = Ref(Player) card = Ref(Card) }
+  parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool }
   locals = { from = String(length = 16) }
   body = {
+    # CardPileCmd.Exhaust checks ending before validation/movement; an already-entered
+    # exhaust notification still finishes its own listener snapshot.
+    if = { condition = not(pureCall(CanExecuteCombatCommand, owner)) then = { return = {} } }
     if = {
       condition = or(greaterOrEqual(collectionIndex(RunDeck, card), 0), or(greaterOrEqual(collectionIndex(ExhaustPile, card), 0), not(equal(field(card, Card.Owner), field(owner, Player.Owner)))))
       then = { fail = { message = "Only an owned non-exhausted combat card may be exhausted" } }
@@ -52,7 +55,7 @@ procedure ExhaustCombatCard {
     call = { procedure = RemoveFromCombatPiles args = { card = card } }
     addToCollection = { collection = ExhaustPile item = card }
     emit = { event = CardMoved payload = { owner = owner card = card from = from to = "exhaust" reason = "exhaust" } }
-    emit = { event = CardExhausted payload = { owner = owner card = card } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card causedByEthereal = causedByEthereal } } } }
   }
 }
 procedure SelectHandCard {

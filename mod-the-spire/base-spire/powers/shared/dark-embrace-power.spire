@@ -3,11 +3,28 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template DarkEmbracePowerModule { body = {
+  entity State { fields = { Power = { type = Ref(Power) visibility = Hidden } EtherealExhausts = { type = Int(min = 0) default = 0 visibility = Hidden } } }
+  procedure Created {
+    parameters = { power = Ref(Power) listener = Ref(Power) } locals = { state = Binding }
+    body = { create = { type = State scope = entityScope(power) into = state fields = { Power = power } } }
+  }
+  subscription Created { event = PowerCreated reaction = Created instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power"))) instance_order = collectionIndex(Powers, listener) }
+  procedure Removed {
+    parameters = { power = Ref(Power) }
+    body = { forEach = { query = where(type(State), s, equal(field(s, State.Power), power)) item = state body = { destroy = { target = state } } } }
+  }
+  subscription Removed { event = PowerRemoved reaction = Removed }
   use Definition { template = PowerDefinition args = { definition = "base-spire:dark-embrace-power" } }
 
 procedure DarkEmbrace {
-  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool listener = Ref(Power) }
+  locals = { state = Binding }
   body = {
+    if = { condition = causedByEthereal then = {
+      let = { into = state value = first(where(type(State), s, equal(field(s, State.Power), listener))) }
+      set = { target = state field = State.EtherealExhausts value = add(field(state, State.EtherealExhausts), 1) }
+      return = {}
+    } }
     call = {
       procedure = DrawCards args = {
         owner = owner count = maximum(0, field(listener, Power.Stacks))
@@ -17,7 +34,21 @@ procedure DarkEmbrace {
 }
 
 subscription DarkEmbrace {
-  event = CardExhausted reaction = DarkEmbrace instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = CardExhausted reaction = DarkEmbrace instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
+}
+procedure DeferredDraw {
+  parameters = { owner = Ref(Player) listener = Ref(Power) } locals = { state = Binding deferred = Int }
+  body = {
+    let = { into = state value = first(where(type(State), s, equal(field(s, State.Power), listener))) }
+    let = { into = deferred value = field(state, State.EtherealExhausts) }
+    set = { target = state field = State.EtherealExhausts value = 0 }
+    call = { procedure = DrawCards args = { owner = owner count = maximum(0, multiply(field(listener, Power.Stacks), deferred)) } }
+  }
+}
+subscription DeferredDraw {
+  event = AfterPlayerSideTurnEnd reaction = DeferredDraw
+  instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power")))
+  instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use DarkEmbracePower { template = DarkEmbracePowerModule }

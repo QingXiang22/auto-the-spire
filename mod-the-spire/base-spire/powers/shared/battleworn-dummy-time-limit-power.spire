@@ -27,9 +27,9 @@ template BattlewornDummyTimerModule { body = {
     } }
   } }
   subscription Tick {
-    event = AfterEnemyTurnEnded reaction = Tick
+    event = AfterEnemySideTurnEnd reaction = Tick
     instances = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "base-spire:battleworn-dummy-time-limit-power"), and(not(isNone(field(p, Power.HolderEnemy))), pureCall(EnemyIsActive, field(p, Power.HolderEnemy)))))
-    instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0
+    instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
   }
   procedure Expired { pure = true parameters = { target = Ref(Enemy) } result = Bool body = {
     return = { value = exists(where(type(State), s, and(equal(field(field(s, State.Power), Power.HolderEnemy), target), field(s, State.Expired)))) }
