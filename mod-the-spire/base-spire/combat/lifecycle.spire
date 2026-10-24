@@ -3,6 +3,7 @@ dsl_version = "core/0.3"
 
 # Shared combat boundaries, also used by the supported normal first-visit path.
 event BeforeCombatStart { payload = { owner = Ref(Player) } }
+event PlayerDied { payload = { owner = Ref(Player) } }
 event BeforePlayerTurnStart { payload = { owner = Ref(Player) } }
 event BeforePlayerTurnEnd { payload = { owner = Ref(Player) } }
 # sts2 Creature.AfterTurnStart -> CombatManager.Hook.AfterBlockCleared, dispatched for every creature starting the turn.
@@ -104,6 +105,8 @@ procedure CheckCombatDefeat {
             call = { procedure = RefreshDrawPermissions }
             set = { target = owner field = Player.Room value = "none" }
             set = { target = owner field = Player.RoomUsed value = false }
+            emit = { event = PlayerDied payload = { owner = owner } }
+            call = { procedure = RemovePowersOnDeath args = { player = owner enemy = none } }
             emit = { event = CombatEnded payload = { owner = owner victory = false } }
             call = { procedure = SettleNormalCombat args = { owner = owner victory = false } }
           }

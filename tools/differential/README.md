@@ -54,7 +54,7 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 逐边界核对节点、复合意图、实例历史、生命／格挡、Strength／Vigor／Frail、按承受方分组的逐击结果，以及完整monster_ai状态和游标。初始HP抽样、正常遭遇、全局事件顺序不属于此组件范围，开发行为检查另核对一次Attack及前后通知各一次。
 
-两seed共50个场景保留在报告中。当前玩家带Frail并被Vigor攻击击杀时仍存在真实差异：DSL在结束中消费敌人Vigor并保留玩家Frail，参考保留Vigor3并移除玩家Frail。命令因此返回1、independent_verified=false；migration核对全部50个场景，要求其他场景相同，并保留这两项准确差异，额外差异同样失败。该检查不表示敌人符合性或正常Run已验收；Power结束中改量与玩家死亡清理须按工单修复后同步比较条件。
+两seed共50个场景保留在报告中。玩家死亡后双方均移除Frail；带Vigor攻击击杀玩家时仍存在真实差异：DSL在结束中消费敌人Vigor为0，参考保留Vigor3。命令因此返回1、independent_verified=false；migration核对全部50个场景，要求其他场景相同，并保留这项准确差异，额外差异同样失败。该检查不表示敌人符合性或正常Run已验收；Power结束中改量须按工单修复后同步比较条件。
 
 ## BattleFriend受控组件比较
 

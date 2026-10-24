@@ -269,7 +269,7 @@ def main() -> int:
 
         for case in rotations["cases"]:
             differences = rotation_differences(case["left"], case["right"])
-            expected = [("[2].enemies[0].vigor", 0, 3), ("[2].frail", 1, 0)] if case["id"].endswith(":lethal") else []
+            expected = [("[2].enemies[0].vigor", 0, 3)] if case["id"].endswith(":lethal") else []
             if differences != expected or case["status"] != ("diverged" if expected else "passed"):
                 raise ValueError(f"Enemy rotation changed its measured boundaries: {case['id']}: {differences}")
 
