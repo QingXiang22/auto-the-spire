@@ -22,10 +22,10 @@ namespace Differential;
 
 internal static class TurnPhaseComparison
 {
-    private static readonly string[] Plans = ["orichalcum-plating", "orichalcum-duplicate", "charon-lethal", "charon-survives", "charon-reshuffle", "starting-draw", "listener-order", "draw-before-block", "block-before-draw", "fan-ending", "bag-first-side", "fiend-fire-ending", "gremlin-horn-ending"];
+    private static readonly string[] Plans = ["orichalcum-plating", "orichalcum-duplicate", "charon-lethal", "charon-survives", "charon-reshuffle", "starting-draw", "listener-order", "draw-before-block", "block-before-draw", "fan-ending", "bag-first-side", "fiend-fire-ending", "gremlin-horn-ending", "feed-ending"];
     private sealed record Call(string Stream, string Operation, string Minimum, string Maximum, string Result, long Before, long After, string[]? Candidates);
     private sealed record Power(string Definition, long Amount, string Applier);
-    private sealed record Boundary(string At, long Turn, long Energy, long Hp, long Block, long EnemyHp, bool Ending,
+    private sealed record Boundary(string At, long Turn, long Energy, long Hp, long MaxHp, long Block, long EnemyHp, bool Ending,
         string[][] Piles, Power[] Powers, Power[] EnemyPowers, long BlockedDamage, long AiDraws, ulong[] AiState, long ShuffleDraws, ulong[] ShuffleState, long TargetDraws, ulong[] TargetState, Call[] Calls, string[] RunOrder, string[] DirectOrder);
 
     internal static int Run(string repository, string[] args)
@@ -46,7 +46,7 @@ internal static class TurnPhaseComparison
         var report = new { schema = "dsl-migration/turn-phases@1", reference,
             package_digest = DslPackage.Load(Path.Combine(repository, "mod-the-spire/base-spire/package.json")).Digest, probe_digest = package.Digest,
             status = passed ? "passed" : "diverged", independent_verified = passed, normal_run_verified = false, scope = "controlled-component",
-            controlled_setup = "Real FuzzyWurmCrawler combat. Empty permanent decks except starting-draw (Strike, Defend, Bash); player/enemy HP explicitly normalized to 1000. Starting-draw uses HP970, BloodVial and Lantern. Orichalcum variants apply Plating5 and enemy Strength10 after turn one, then end the turn and start the next ordinary turn (native does both in EndPlayerTurnAsync). Duplicate relics are obtained by the real command. Charon variants exhaust Defend with DarkEmbrace1 at enemy HP3 or6; the reshuffle case supplies Bash/Strike/Offering in discard. Compare every listed command boundary, ordered piles/both-holder Powers and actual appliers, resources, ending, real blocked damage and complete monster_ai/shuffle/combat_targets states/cursors plus individual RNG calls and candidate order. Listener-order reads the actual locked Run/Direct iterators and compares all current fixture Power, inventory, card and monster instances. The native starting BurningBlood is also obtained in DSL. Hellraiser/FeelNoPain orders start with Block30 and enemy HP1; OrnamentalFan uses three real Strikes at enemy HP18. BagOfMarbles uses its real first-side hook and player applier. FiendFire draws for the hand exhaust before its lethal hit; its later self-exhaust is refused. GremlinHorn gains energy but its final-kill draw is refused. All lethal component boundaries precede reward settlement on both sides. No reference mutations, RNG resets or normal Run certification; birth/slots, exhaust causes and deferred ethereal draws remain separate work.", cases };
+            controlled_setup = "Real FuzzyWurmCrawler combat. Empty permanent decks except starting-draw (Strike, Defend, Bash); player/enemy HP explicitly normalized to 1000. Starting-draw uses HP970, BloodVial and Lantern. Orichalcum variants apply Plating5 and enemy Strength10 after turn one, then end the turn and start the next ordinary turn (native does both in EndPlayerTurnAsync). Duplicate relics are obtained by the real command. Charon variants exhaust Defend with DarkEmbrace1 at enemy HP3 or6; the reshuffle case supplies Bash/Strike/Offering in discard. Compare every listed command boundary, ordered piles/both-holder Powers and actual appliers, resources, ending, real blocked damage and complete monster_ai/shuffle/combat_targets states/cursors plus individual RNG calls and candidate order. Listener-order reads the actual locked Run/Direct iterators and compares all current fixture Power, inventory, card and monster instances. The native starting BurningBlood is also obtained in DSL. Hellraiser/FeelNoPain orders start with Block30 and enemy HP1; OrnamentalFan uses three real Strikes at enemy HP18. BagOfMarbles uses its real first-side hook and player applier. FiendFire draws for the hand exhaust before its lethal hit; its later self-exhaust is refused. GremlinHorn gains energy but its final-kill draw is refused. Feed at enemy HP10 still grants three MaxHp and healing, while its self-exhaust is refused; MaxHp is compared at every boundary. All lethal component boundaries precede reward settlement on both sides. No reference mutations, RNG resets or normal Run certification; birth/slots, exhaust causes and deferred ethereal draws remain separate work.", cases };
         var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
         if (args.Length != 0) { Directory.CreateDirectory(args[1]); File.WriteAllText(Path.Combine(args[1], "result.json"), json); }
         Console.WriteLine(json); return passed ? 0 : 1;
@@ -69,7 +69,7 @@ internal static class TurnPhaseComparison
         else if (plan == "fan-ending") Submit("OrnamentalFan.Obtain");
         else if (plan == "bag-first-side") Submit("BagOfMarbles.Obtain");
         else if (plan == "gremlin-horn-ending") Submit("GremlinHorn.Obtain");
-        else if (plan is "draw-before-block" or "block-before-draw" or "fiend-fire-ending") { }
+        else if (plan is "draw-before-block" or "block-before-draw" or "fiend-fire-ending" or "feed-ending") { }
         else { Submit("BloodVial.Obtain"); Submit("Lantern.Obtain"); foreach (var name in new[] { "Strike", "Defend", "Bash" }) Submit(name + ".Obtain"); }
         Submit("FuzzyWurmCrawler.Spawn"); var target = All("Enemy").Single(); Set(target, "Enemy", "MaxHp", Value.Of(1000L)); Set(target, "Enemy", "Hp", Value.Of(1000L));
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn");
@@ -81,6 +81,7 @@ internal static class TurnPhaseComparison
             for (var i = 0; i < 3; i++) { Submit("Strike.AddToHand"); Submit("PhasePlay", Pile("Hand").Single()); }
             return [before, Snapshot("played")];
         }
+        if (plan == "feed-ending") { Set(target, "Enemy", "Hp", Value.Of(10L)); Submit("Feed.AddToHand"); var before = Snapshot("configured"); Submit("PhasePlay", Pile("Hand").Single()); return [before, Snapshot("played")]; }
         if (plan == "gremlin-horn-ending")
         {
             Set(target, "Enemy", "Hp", Value.Of(6L)); Submit("Strike.AddToHand"); var drawn = Pile("Hand").Single();
@@ -118,7 +119,7 @@ internal static class TurnPhaseComparison
             string Card(InstanceId card) => Field(card, "Card", "SourceEntry").AsString();
             var rng = s.Random.Capture(); ulong[] Words(string name) => (rng.Streams.SingleOrDefault(x => x.Name == name)?.BackendState ?? new Xoshiro256StarStar(rng.ExplicitSeeds[name], false).Capture()).ToArray();
             var calls = s.Debug.Capture().Where(r => r.Kind == SessionDebugKind.RandomCall).Select(r => { var d = r.Random!; if (d.CandidatesTruncated) throw new InvalidOperationException("Turn RNG candidates truncated."); return new Call(r.Subject!, d.Operation, d.Minimum, d.Maximum, d.Result, d.Before, d.After, d.Candidates?.Select(c => r.Subject == "base-spire:run:combat_targets" ? "enemy:" + Array.IndexOf(All("Enemy"), c) : Card(c)).ToArray()); }).ToArray();
-            return new(at, Field(player, "Player", "TurnNumber").AsInt(), Field(player, "Player", "Energy").AsInt(), Field(player, "Player", "Hp").AsInt(), Field(player, "Player", "Block").AsInt(), Field(target, "Enemy", "Hp").AsInt(), Field(target, "Enemy", "Hp").AsInt() == 0,
+            return new(at, Field(player, "Player", "TurnNumber").AsInt(), Field(player, "Player", "Energy").AsInt(), Field(player, "Player", "Hp").AsInt(), Field(player, "Player", "MaxHp").AsInt(), Field(player, "Player", "Block").AsInt(), Field(target, "Enemy", "Hp").AsInt(), Field(target, "Enemy", "Hp").AsInt() == 0,
                 new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay" }.Select(p => Pile(p).Select(Card).ToArray()).ToArray(),
                 Powers(false), Powers(true),
                 Pile("DamageResults").Where(d => Field(d, "DamageResult", "Player") == Value.OfRef(player)).Sum(d => Field(d, "DamageResult", "Blocked").AsInt()),
@@ -142,7 +143,7 @@ internal static class TurnPhaseComparison
         else if (plan == "fan-ending") RelicCmd.Obtain(ModelDb.Relic<OrnamentalFan>(), player).GetAwaiter().GetResult();
         else if (plan == "bag-first-side") RelicCmd.Obtain(ModelDb.Relic<BagOfMarbles>(), player).GetAwaiter().GetResult();
         else if (plan == "gremlin-horn-ending") RelicCmd.Obtain(ModelDb.Relic<GremlinHorn>(), player).GetAwaiter().GetResult();
-        else if (plan is "draw-before-block" or "block-before-draw" or "fiend-fire-ending") { }
+        else if (plan is "draw-before-block" or "block-before-draw" or "fiend-fire-ending" or "feed-ending") { }
         else
         {
             RelicCmd.Obtain(ModelDb.Relic<BloodVial>(), player).GetAwaiter().GetResult(); RelicCmd.Obtain(ModelDb.Relic<Lantern>(), player).GetAwaiter().GetResult();
@@ -166,6 +167,11 @@ internal static class TurnPhaseComparison
             target.SetCurrentHpInternal(18); var before = Snapshot("configured");
             for (var i = 0; i < 3; i++) { var card = (CardModel)ModelDb.Card<StrikeIronclad>().MutableClone(); card.AssignOwner(player); player.PlayerCombatState!.Hand.AddInternal(card); engine.PlayCardAsync(player, card, target).GetAwaiter().GetResult(); }
             return [before, Snapshot("played")];
+        }
+        if (plan == "feed-ending")
+        {
+            target.SetCurrentHpInternal(10); var feed = (CardModel)ModelDb.Card<Feed>().MutableClone(); feed.AssignOwner(player); player.PlayerCombatState!.Hand.AddInternal(feed);
+            var before = Snapshot("configured"); engine.PlayCardAsync(player, feed, target).GetAwaiter().GetResult(); return [before, Snapshot("played")];
         }
         if (plan == "gremlin-horn-ending")
         {
@@ -204,7 +210,7 @@ internal static class TurnPhaseComparison
         {
             var random = trace.Capture(); if (random.Truncated || random.Dropped != 0) throw new InvalidOperationException("Source turn RNG trace incomplete: " + seed + ":" + plan + ":" + at + " " + JsonSerializer.Serialize(random));
             var ai = run.Rng.MonsterAi.ToSerializable(); var shuffle = run.Rng.Shuffle.ToSerializable(); var targets = run.Rng.CombatTargets.ToSerializable(); var state = player.PlayerCombatState!;
-            return new(at, state.TurnNumber, state.Energy, player.Creature.CurrentHp, player.Creature.Block, target.CurrentHp, combat.IsOverOrEnding(),
+            return new(at, state.TurnNumber, state.Energy, player.Creature.CurrentHp, player.Creature.MaxHp, player.Creature.Block, target.CurrentHp, combat.IsOverOrEnding(),
                 new[] { state.Hand, state.DrawPile, state.DiscardPile, state.ExhaustPile, state.PlayPile }.Select(p => p.Cards.Select(c => c.Id.Entry).ToArray()).ToArray(),
                 Powers(player.Creature), Powers(target),
                 (long)combat.DamageHistory.Entries.Where(d => d.Receiver == player.Creature).Sum(d => d.Result.BlockedDamage), ai.counter, [ai.state0, ai.state1, ai.state2, ai.state3], shuffle.counter, [shuffle.state0, shuffle.state1, shuffle.state2, shuffle.state3], targets.counter, [targets.state0, targets.state1, targets.state2, targets.state3],

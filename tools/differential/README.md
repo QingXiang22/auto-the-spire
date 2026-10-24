@@ -66,9 +66,9 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 ## 回合阶段与监听顺序组件比较
 
-运行`dotnet run --project tools/differential -c Release -- turn-phase-compare --output .artifacts/differential/turn-phases`。两seed共26项保留真实Orichalcum＋Plating、同定义双遗物、Charon普通耗尽末杀／非末杀／重洗、BloodVial与Lantern起手、Run与Direct监听顺序，以及Hellraiser嵌套末杀时FeelNoPain先后获得、OrnamentalFan末杀格挡、BagOfMarbles首侧易伤施加者、FiendFire自耗尽和GremlinHorn末杀抽牌。双方均使用真实Fuzzy战斗；DSL显式获得参考玩家自带的BurningBlood。永久牌组通常为空，起手场景为Strike／Defend／Bash，生命等受控设置写入报告。
+运行`dotnet run --project tools/differential -c Release -- turn-phase-compare --output .artifacts/differential/turn-phases`。两seed共28项保留真实Orichalcum＋Plating、同定义双遗物、Charon普通耗尽末杀／非末杀／重洗、BloodVial与Lantern起手、Run与Direct监听顺序，以及Hellraiser嵌套末杀时FeelNoPain先后获得、OrnamentalFan末杀格挡、BagOfMarbles首侧易伤施加者、FiendFire自耗尽、GremlinHorn末杀抽牌及Feed保留最大生命收益但拒绝自身耗尽。双方均使用真实Fuzzy战斗；DSL显式获得参考玩家自带的BurningBlood。永久牌组通常为空，起手场景为Strike／Defend／Bash，生命等受控设置写入报告。
 
-每个声明边界比较回合号、能量、生命／格挡、完整有序五牌区、双方Power及实际施加者、实际挡伤、ending，以及monster_ai／shuffle／combat_targets完整状态和游标。逐次随机调用保留操作、边界、结果和候选顺序；起手洗牌沿原牌组顺序，后续重洗沿StableShuffle排序，各自从参考自身牌堆重建并核对结果。监听顺序直接读取锁定参考的实际迭代器，与调用生产排序函数的DSL实例通知比较，覆盖玩家Power、库存、牌区、敌方Power及模型；ShouldClearBlock使用同一Direct路径。缺场景、维度、边界或差异均非零。
+每个声明边界比较回合号、能量、生命／最大生命／格挡、完整有序五牌区、双方Power及实际施加者、实际挡伤、ending，以及monster_ai／shuffle／combat_targets完整状态和游标。逐次随机调用保留操作、边界、结果和候选顺序；起手洗牌沿原牌组顺序，后续重洗沿StableShuffle排序，各自从参考自身牌堆重建并核对结果。监听顺序直接读取锁定参考的实际迭代器，与调用生产排序函数的DSL实例通知比较，覆盖玩家Power、库存、牌区、敌方Power及模型；ShouldClearBlock使用同一Direct路径。缺场景、维度、边界或差异均非零。
 
 末杀组件比较到耗尽／出牌完成，奖励结算不在组件内；base另验证外层胜利与合法余效。移除／熔化与跨战资格、起手阶段由base行为检查验证；新建／失效快照、嵌套及暂停续接保留core与Power改量原测试。敌人出生／槽位与选招时点、虚无耗尽原因／延迟抽牌仍有独立未支持边界。此结果不认证正常Run或M01。
 

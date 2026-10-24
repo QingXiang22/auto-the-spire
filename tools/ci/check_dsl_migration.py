@@ -294,16 +294,16 @@ def main() -> int:
         turns = run("turn-phases", ["turn-phase-compare", "--output", str(args.output / "turn-phases")], 0)
         turn_names = ("orichalcum-plating", "orichalcum-duplicate", "charon-lethal", "charon-survives",
                       "charon-reshuffle", "starting-draw", "listener-order", "draw-before-block",
-                      "block-before-draw", "fan-ending", "bag-first-side", "fiend-fire-ending", "gremlin-horn-ending")
+                      "block-before-draw", "fan-ending", "bag-first-side", "fiend-fire-ending", "gremlin-horn-ending", "feed-ending")
         turn_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in turn_names]
         turn_dimensions = {"at", "turn", "energy", "hp", "block", "enemy_hp", "ending", "piles", "powers",
                            "blocked_damage", "ai_draws", "ai_state", "shuffle_draws", "shuffle_state",
-                           "target_draws", "target_state", "calls", "run_order", "direct_order", "enemy_powers"}
+                           "target_draws", "target_state", "calls", "run_order", "direct_order", "enemy_powers", "max_hp"}
         call_dimensions = {"stream", "operation", "minimum", "maximum", "result", "before", "after", "candidates"}
         if (turns is None or turns["schema"] != "dsl-migration/turn-phases@1" or turns["status"] != "passed"
                 or turns["independent_verified"] is not True or turns["normal_run_verified"] is not False
                 or turns["reference"]["commit"] != lock["commit"] or [c["id"] for c in turns["cases"]] != turn_ids):
-            raise ValueError("Turn phase comparison must execute and pass all 26 controlled cases")
+            raise ValueError("Turn phase comparison must execute and pass all 28 controlled cases")
         for case in turns["cases"]:
             name = case["id"].rsplit(":", 1)[1]
             if (case["status"] != "passed" or case["left"] != case["right"]
