@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template FrailPowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:frail-power" debuff = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:frail-power" powerType = "debuff" } }
 
 procedure Frail {
   pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }

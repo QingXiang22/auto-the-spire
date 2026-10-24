@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template BarricadePowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:barricade" } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:barricade" stackType = "single" } }
 
 procedure Barricade {
   pure = true parameters = { value = Bool owner = Ref(Player) listener = Ref(Power) }

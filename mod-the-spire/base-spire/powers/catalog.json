@@ -7,6 +7,10 @@
       "definition": "powers/shared/flex-potion-power.spire"
     },
     {
+      "id": "base-spire:artifact-power",
+      "definition": "powers/shared/artifact-power.spire"
+    },
+    {
       "id": "base-spire:aggression-power",
       "definition": "powers/shared/aggression-power.spire"
     },

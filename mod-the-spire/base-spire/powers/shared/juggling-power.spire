@@ -46,7 +46,7 @@ subscription SetupReset {
   event = AfterPlayerSideEnd reaction = SetupReset instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
 }
 procedure Applied { parameters = { power = Ref(Power) amount = Int created = Bool listener = Ref(Power) } body = { set = { target = first(where(type(State), s, equal(field(s, State.Power), power))) field = State.Value value = pureCall(AttacksPlayedThisTurn, field(power, Power.HolderPlayer)) } } }
-subscription Applied { event = PowerApplied reaction = Applied instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = collectionIndex(Powers, listener) }
+subscription Applied { event = AfterPowerApplied reaction = Applied instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = collectionIndex(Powers, listener) }
 
 } }
 use JugglingPower { template = JugglingPowerModule }

@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template CorruptionPowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:corruption-power" singleStack = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:corruption-power" stackType = "single" } }
 
 procedure CorruptionCost {
   pure = true parameters = { value = Int owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
