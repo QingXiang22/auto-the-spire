@@ -13,4 +13,3 @@ action CauseGenerateExhaust { role = player locals = { card = Binding } body = {
   call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = "base-spire:defend-ironclad" } into = card }
   addToCollection = { collection = ExhaustPile item = card }
 } }
-
