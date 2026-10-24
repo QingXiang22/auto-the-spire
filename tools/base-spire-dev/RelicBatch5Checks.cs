@@ -22,10 +22,11 @@ internal static partial class PackageChecks
             Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat");
             Equal(1L, PowerStacks(s, "base-spire:strength-power"), "a new combat does not stack the same relic twice");
         });
-        Case("CP92: a combat-start enemy-power relic debuffs every hittable enemy", () =>
+        Case("CP92: a first-player-side enemy-power relic debuffs every hittable enemy", () =>
         {
             var s = Start(package); Submit(s, "BagOfMarbles.Obtain"); Submit(s, "AddDevelopmentTarget"); Submit(s, "AddDevelopmentTarget");
             Submit(s, "BeginDevelopmentCombat");
+            Equal(0, PowersOf(s), "BagOfMarbles has not reached BeforeSideTurnStart yet"); Submit(s, "BeginDevelopmentTurn");
             foreach (var target in Targets(s)) Equal(1L, PowerStacksFor(s, "base-spire:vulnerable-power", target), "each target is vulnerable");
             Equal(2, PowersOf(s), "one power instance per enemy, not per relic");
         });
@@ -42,7 +43,7 @@ internal static partial class PackageChecks
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "PlayCardFromHand", Hand(s).Single());
             Equal(6L, Block(s), "Defend gives 5 + 1 dexterity");
         });
-        Own("base-spire:bag-of-marbles", "CP95 Bag of Marbles: one vulnerable on every enemy at combat start", () =>
+        Own("base-spire:bag-of-marbles", "CP95 Bag of Marbles: one vulnerable on every enemy at first player side start", () =>
         {
             var s = Start(package); Submit(s, "BagOfMarbles.Obtain"); Submit(s, "Strike.AddToHand"); Submit(s, "AddDevelopmentTarget");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "PlayAttackFromHand", Hand(s).Single());
@@ -54,8 +55,11 @@ internal static partial class PackageChecks
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
             Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(5L));
             Submit(s, "PlayAttackFromHand", Hand(s).Single());
-            Equal(3L, Energy(s), "one energy spent, one energy gained"); Equal(1, Members(s, "Hand").Count, "one card drawn");
+            Equal(3L, Energy(s), "one energy spent, one energy gained"); Equal(0, Members(s, "Hand").Count, "ending Draw refuses the final-kill draw");
             Equal("victory", Outcome(s), "the kill still ends the combat");
+            var live = Start(package); Submit(live, "GremlinHorn.Obtain"); Submit(live, "Strike.AddToHand"); Submit(live, "AddDevelopmentTarget"); Submit(live, "AddDevelopmentTarget");
+            Submit(live, "BeginDevelopmentCombat"); Submit(live, "BeginDevelopmentTurn"); Set(live, FirstTarget(live), "Enemy", "Hp", Value.Of(5L)); Submit(live, "PlayAttackFromHand", Hand(live).Single());
+            Equal(3L, Energy(live), "nonfinal death also grants one energy"); Equal(1, Hand(live).Count, "nonfinal death still draws one real card"); Equal("none", Outcome(live), "remaining enemy keeps combat live");
         });
 
         foreach (var list in witness.Values) list.InsertRange(0, shared);

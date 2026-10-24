@@ -15,7 +15,7 @@ template FirstSideStartEnemyPowerRelic {
       body = {
         if = { condition = not(equal(field(owner, Player.TurnNumber), 0)) then = { return = {} } }
         forEach = {
-          query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
+          query = where(type(Enemy), enemy, pureCall(EnemyIsHittable, enemy)) item = enemy
           body = {
             call = {
               procedure = ApplyPowerWithSource args = {

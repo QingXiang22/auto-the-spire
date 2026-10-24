@@ -51,7 +51,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 旧声明保留，当前正文管线不发布；新增主效果绑定ExecuteCardBody，外部反应使用Before／After通知 |
 | CardPlayedOnTarget | owner、card、target: Ref(Enemy) | 旧声明保留，当前正文管线不发布；目标通过ExecuteCardBody的target传入；兼容入口选首个存活敌人，PlayTargetedCard使用原生决策 |
 | CardUpgraded | card: Ref(Card) | 实例标记为升级后发出；卡片定义用它应用定义层费用、伤害参数和 Innate 升级 |
-| CardExhausted | owner: Ref(Player)、card: Ref(Card) | 任何受支持的完整耗尽操作把牌移入 ExhaustPile 后发出；订阅时可确认卡已在消耗堆 |
+| CardExhausted | owner: Ref(Player)、card: Ref(Card) | ExhaustCombatCard入口按源拒绝ending；成功移动到ExhaustPile并完成CardMoved后，在未ending时发布本通知；已进入的监听快照保持，订阅时可确认实际耗尽牌已在耗尽堆 |
 
 ## 过程与公开动作
 
@@ -90,7 +90,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | 声明 | 准确参数 | 行为与边界 |
 | --- | --- | --- |
 | [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999) | 累加并截到 999，不应用卡牌／Power 的加性或乘性修正；不是通用获得格挡流程 |
-| GainBlock | owner=Ref(Player)、amount=Int(0..999) | 卡牌格挡链：先由Dexterity贡献加性修正，再在持有正层Frail时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
+| GainBlock | owner=Ref(Player)、amount=Int(0..999) | 入口依源拒绝ending与死亡玩家；卡牌格挡链先由Dexterity贡献加性修正，再在持有正层Frail时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
 | [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
 | ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义；已确认死亡或逃离的持有者不再接受Power |
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |
@@ -115,7 +115,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | UpgradeCard | card=Ref(Card) | 只允许 CanUpgrade=true 且未升级的实例；置 `Upgraded=true` 并发 CardUpgraded，定义层费用变化由 CardDefinition 应用；只改当前实例 |
 | [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(0..999) | 效果抽牌，fromHandDraw=false；逐张调用 DrawOne，保留重洗、手牌上限、禁止抽牌与 AfterCardDrawn 的既有顺序；不是一次抽多张的新算法 |
 | PlayCardFromHand／PlayAttackFromHand／UpgradeCardInHand | 参数 card=Ref(Card)，候选来自 Hand | 公开 action：分别打出无目标牌、打出有目标牌与升级手牌；PlayCardFromHand 只提供 `Targeted=false` 的候选，PlayAttackFromHand 只提供 `Targeted=true` 的候选 |
-| [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) 结算收尾 | — | 效果结算后按 `Exhausts`→ExhaustPile、`LeavesPlay`→RemovedFromCombat、否则 DiscardPile 分流；只有 Exhausts 分支发 CardExhausted |
+| [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) 结算收尾 | — | 效果后按Exhausts调用完整耗尽、LeavesPlay移出，否则弃牌；耗尽命令依源拒绝ending时牌仍在InPlay，不能为触发回调强制入堆 |
 | [EnterDevelopmentRestSite](../../../../mod-the-spire/base-spire/rooms/rest-site.spire) | owner=Ref(Player) | 公开 action：把房间置为 `rest-site` 并清掉已使用标记；不是地图节点入口 |
 | RestAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：只在营火且未使用时允许，回复 `floor(MaxHp × 0.3)` 后把选项标记为已用；过程在非营火或重复使用时失败 |
 | ForgeAtDevelopmentCampfire | owner=Ref(Player) | 公开 action 与同名过程：未用过的营火、存活且非战斗，有本玩家可升级永久牌时发出 Engine 的 0..1 实例决策；选择升级该永久实例并用掉选项，取消不消耗；成功后发 AfterRestSiteSmith |

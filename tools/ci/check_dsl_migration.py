@@ -294,24 +294,24 @@ def main() -> int:
         turns = run("turn-phases", ["turn-phase-compare", "--output", str(args.output / "turn-phases")], 0)
         turn_names = ("orichalcum-plating", "orichalcum-duplicate", "charon-lethal", "charon-survives",
                       "charon-reshuffle", "starting-draw", "listener-order", "draw-before-block",
-                      "block-before-draw", "fan-ending")
+                      "block-before-draw", "fan-ending", "bag-first-side", "fiend-fire-ending", "gremlin-horn-ending")
         turn_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in turn_names]
         turn_dimensions = {"at", "turn", "energy", "hp", "block", "enemy_hp", "ending", "piles", "powers",
                            "blocked_damage", "ai_draws", "ai_state", "shuffle_draws", "shuffle_state",
-                           "target_draws", "target_state", "calls", "run_order", "direct_order"}
+                           "target_draws", "target_state", "calls", "run_order", "direct_order", "enemy_powers"}
         call_dimensions = {"stream", "operation", "minimum", "maximum", "result", "before", "after", "candidates"}
         if (turns is None or turns["schema"] != "dsl-migration/turn-phases@1" or turns["status"] != "passed"
                 or turns["independent_verified"] is not True or turns["normal_run_verified"] is not False
                 or turns["reference"]["commit"] != lock["commit"] or [c["id"] for c in turns["cases"]] != turn_ids):
-            raise ValueError("Turn phase comparison must execute and pass all 20 controlled cases")
+            raise ValueError("Turn phase comparison must execute and pass all 26 controlled cases")
         for case in turns["cases"]:
             name = case["id"].rsplit(":", 1)[1]
             if (case["status"] != "passed" or case["left"] != case["right"]
-                    or len(case["left"]) != (1 if name in ("starting-draw", "listener-order") else 2)
+                    or len(case["left"]) != (1 if name in ("starting-draw", "listener-order", "bag-first-side") else 2)
                     or any(set(b) != turn_dimensions or len(b["piles"]) != 5
                            or any(len(b[s]) != 4 for s in ("ai_state", "shuffle_state", "target_state"))
                            or any(set(c) != call_dimensions for c in b["calls"])
-                           or any(set(p) != {"definition", "amount"} for p in b["powers"]) for b in case["left"])):
+                           or any(set(p) != {"definition", "amount", "applier"} for side in ("powers", "enemy_powers") for p in b[side]) for b in case["left"])):
                 raise ValueError(f"Turn phase comparison omitted a dimension or boundary: {case['id']}")
             end = case["left"][-1]
             if name == "listener-order" and (len(end["run_order"]) != 8 or len(end["direct_order"]) != 8
