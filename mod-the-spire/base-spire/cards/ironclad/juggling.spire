@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Juggling.cs; SHA-256 retained in cards/catalog.json.
 use Juggling { template = CardDefinition args = { sourceEntry = "JUGGLING" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:juggling" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true upgradedInnate = true } }
-use JugglingEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:juggling" power = "base-spire:juggling-power" stacks = 1 upgradedStacks = 1 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure JugglingBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = JugglingEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use JugglingEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:juggling" power = "base-spire:juggling-power" stacks = 1 upgradedStacks = 1 }
 }
-dispatchCase JugglingBody { dispatch = ExecuteCardBody key = "base-spire:juggling" procedure = JugglingBody }
-
-procedure JugglingDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase JugglingDamageValue { dispatch = ReadCardDamage key = "base-spire:juggling" procedure = JugglingDamageValue }

@@ -3,33 +3,6 @@ dsl_version = "core/0.3"
 
 # Source: MoltenFist.cs: cost 1, CardKeyword.Exhaust, DamageVar(10, Move) then Vulnerable applied equal to
 # the target's current Vulnerable stacks (doubling it); OnUpgrade adds 4 damage.
-template AmplifyVulnerableEffect {
-  parameters = { definition = { type = String(length = 64) } }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { vulnerable = Int }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = {
-            let = {
-              into = vulnerable
-              value = aggregate(where(collection(Powers), power, and(equal(field(power, Power.DefinitionId), "base-spire:vulnerable-power"), equal(field(power, Power.HolderEnemy), target))), Sum, power, field(power, Power.Stacks))
-            }
-            if = {
-              condition = greater(vulnerable, 0)
-              then = {
-                call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = "base-spire:vulnerable-power" stacks = vulnerable } }
-              }
-            }
-          }
-        }
-      }
-    }
-
-  }
-}
 
 use MoltenFist {
   template = CardDefinition
@@ -39,25 +12,15 @@ use MoltenFistDamage {
   template = AttackEffect
   args = { definition = "base-spire:molten-fist" hits = 1 }
 }
-use MoltenFistAmplify {
-  template = AmplifyVulnerableEffect
-  args = { definition = "base-spire:molten-fist" }
-}
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure MoltenFistBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = MoltenFistDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = MoltenFistAmplify.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = AmplifyEnemyPowerFromCard args = { owner = owner card = card play = play target = target definition = "base-spire:vulnerable-power" multiplier = 2 } }
   }
 }
 dispatchCase MoltenFistBody { dispatch = ExecuteCardBody key = "base-spire:molten-fist" procedure = MoltenFistBody }
 
-procedure MoltenFistDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase MoltenFistDamageValue { dispatch = ReadCardDamage key = "base-spire:molten-fist" procedure = MoltenFistDamageValue }
+use MoltenFistDamageValue { template = StaticCardDamage args = { definition = "base-spire:molten-fist" } }

@@ -8,6 +8,14 @@
 
 base 声明正文分派，参数为 owner／card／target／play。每个已执行卡定义有一个 case，正文显式顺序调用自己的效果过程；移除主效果对 CardPlayed／CardPlayedOnTarget 的广播订阅。外部反应仍使用 Before／After 通知，正文流程不靠这些通知收集效果。
 
+重复正文由卡牌共享模板展开：AttackCardBody、BlockCardBody、SelfPowerCardBody分别绑定单次攻击命令、格挡和自身Power效果，同时绑定静态伤害读取。StaticCardDamage只登记本定义的ReadCardDamage case，所有静态定义共用同一个pure过程。CardDefinition仍使用原实例名，保留开发获得／入手动作的公开ID。组合牌在内容文件保留有序正文，再使用StaticCardDamage；动态伤害牌保留自己的pure绑定。模板不新增运行时效果解释器、状态或通知发布点。
+
+可复用的行为以领域公共过程为入口，卡牌只保留定义、参数、顺序和必要的生命周期绑定。不以当前消费者数量决定归属：即使只有一张原版牌使用，选择后移动、整手消耗、手牌变换、生成后改费、条件段数、攻击结果读取和伤害成长等也供mod直接组合。公共过程不按调用卡ID过滤；绑定模板负责选择定义，普通过程显式接收owner、card、play和策略参数。状态仍归原实例所有，不增加通用效果解释器。
+
+整手消耗在执行前捕获数量及批次，逐张调用ExhaustCombatCard；反应中新抽的牌不加入批次。按张收益必须在每次消耗后结算，不能改成最后一次合计。手牌变换仍先创建／升级替代牌，再移除原牌并放置新牌；随机生成沿用原池和随机流，临时改费在入手通知前完成。抽到非指定kind为止的过程保留次数上限、DrawOne权限检查与LastDrawn中断，不能绕过抽牌领域操作。
+
+攻击致死读取按本次Attack和目标关联DamageResult，不用当前HP猜测；调用方决定致死后的奖励。吸收手牌攻击伤害保持无目标修正和原四位整数计算，先成长再消耗。条件数值纯读取不写状态，不抽样；无目标、选牌取消、无生成候选和满手继续遵循原底层操作的结果与失败方式。这些提取不改变单玩家scope、内容池或来源符合性声明。
+
 一次出牌序列保留 owner、card、目标、自动标记、实际支付／原始 X、结果区及父执行；每次重复创建独立 CardPlayRecord，记录序列、index／count 与父执行。流程依次执行 Before、开始事实、正文、附着站点、完成事实、After，按玩家存活和源结束边界决定继续。序列付款一次、结果区提交一次；嵌套及 decide 使用同一 Engine 栈恢复，不重付费或重放正文。兼容 CurrentPlay 只做保存／恢复，新正文显式传 play。
 
 未定义正文与定义缺失在支付前失败；定义注册、catalog 来源和池顺序继续分别核对。开发占位牌不冒充正式定义或正常 Run。公开动作名称可保留，内部实体／执行关联隐藏，不让新运行态泄漏到公开内容列表。
@@ -27,6 +35,8 @@ base 声明正文分派，参数为 owner／card／target／play。每个已执�
 费用修正作为独立 CardCostModifier 保存 card、source、set／add、amount 和 turn／play／turn-or-play／combat 寿命，按插入顺序折叠；临时费用不再依靠三个覆盖开关。公开 Cost 是命令维护的缓存，读取和预览不写缓存。克隆复制独立修正，新战清除临时费用，永久基础费用与临时费用分开。
 
 MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、插入位置、满手与移动通知；生成入手、回顶、Anger 复制和 PrimalForce 移除调用此操作。主动弃牌另发 CardDiscarded；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
+
+重复的克隆后放置使用CloneCombatCardToPile：保留CloneCombatCard的实例复制与全部回调，再交给MoveCombatCard处理落点。Anger与Juggling分别传入弃牌／手牌及原移动原因；满手时克隆仍只进入弃牌堆，不丢失或重新创建。ClonePlayedCardEffect只包装当前牌的这一操作，不增加敌人资格限制；不能用CreateCombatCard替代已有实例的克隆。普通／升级常量选择由CardUpgradeValue纯计算，自身Power模板统一处理是否在回合末到期，均不新增事件或改变正文顺序。
 
 CardCloned、CardCombatCopied、CardRemoving 是附属能力的复制与清理接缝。Stomp 的费用与 HowlFromBeyond 的耗尽堆自动行为归所属模块；通用 Card 不再保存它们的专属开关。CardAttachment 保存附魔标识与状态，Sown 在明确附魔阶段回能后禁用；永久→战斗副本与战斗克隆按各自来源复制，升级不重置状态，销毁前清理。公开附属实体采用通用 identity_from 依附卡标识，隐藏抽牌堆不泄漏附魔或卡引用。
 
@@ -48,7 +58,7 @@ Host 的派生 0.2 应答目录增加可选 Boolean Flag，Bool 暂停发布 fal
 
 首包复用现有 Ironclad／内容模型与公开检查，补足能区分下列错误的判别：重复／缺正文、未知键、模板词法绑定、错误签名、pure 拒绝、正文顺序、付款次数、嵌套执行标识及原生选择暂停。局部调试按失败定向运行；集成时固定最终包执行受影响 Engine、base 与公开组，不反复跑未变化状态。
 
-core 文本分派进入编译标识 dispatch/1；依附标识投影、pure 显式失败与 none 相等比较进入当前执行语义；64位字与文本操作由 engine/ir@0.9、Core.TheSpire 0.9.4标识。当前base为0.7.0-dsl.54，公开构建标识同步。旧规则产物不能冒用新标识。原正常 scope、来源条目总数、独立比较与 ENV／W 完整条件不变，未执行独立参考比较不记通过。
+core 文本分派进入编译标识 dispatch/1；依附标识投影、pure 显式失败与 none 相等比较进入当前执行语义；64位字与文本操作由 engine/ir@0.9、Core.TheSpire 0.9.4标识。base版本见[包manifest](../../../mod-the-spire/base-spire/package.json)，公开构建标识同步。旧规则产物不能冒用新标识。原正常 scope、来源条目总数、独立比较与 ENV／W 完整条件不变，未执行独立参考比较不记通过。
 
 ## 行为要求与完成条件
 

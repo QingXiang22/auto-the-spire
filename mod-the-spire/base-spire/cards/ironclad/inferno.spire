@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Inferno.cs; SHA-256 retained in cards/catalog.json.
 use Inferno { template = CardDefinition args = { sourceEntry = "INFERNO" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:inferno" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use InfernoEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:inferno" power = "base-spire:inferno-power" stacks = 6 upgradedStacks = 9 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure InfernoBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = InfernoEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use InfernoEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:inferno" power = "base-spire:inferno-power" stacks = 6 upgradedStacks = 9 }
 }
-dispatchCase InfernoBody { dispatch = ExecuteCardBody key = "base-spire:inferno" procedure = InfernoBody }
-
-procedure InfernoDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase InfernoDamageValue { dispatch = ReadCardDamage key = "base-spire:inferno" procedure = InfernoDamageValue }

@@ -31,10 +31,4 @@ procedure OfferingBody {
 }
 dispatchCase OfferingBody { dispatch = ExecuteCardBody key = "base-spire:offering" procedure = OfferingBody }
 
-procedure OfferingDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase OfferingDamageValue { dispatch = ReadCardDamage key = "base-spire:offering" procedure = OfferingDamageValue }
+use OfferingDamageValue { template = StaticCardDamage args = { definition = "base-spire:offering" } }

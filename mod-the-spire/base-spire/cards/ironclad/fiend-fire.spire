@@ -2,39 +2,18 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/FiendFire.cs; SHA-256 retained in cards/catalog.json.
-template ExhaustHandAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { hits = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-let = { into = hits value = count(collection(Hand)) }
-forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
-call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = hits mode = "single" dynamic = true } }
-
-      } } }
-    }
-
-  }
-}
 
 use FiendFire { template = CardDefinition args = { sourceEntry = "FIEND_FIRE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:fiend-fire" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = true leavesPlay = false baseDamage = 7 upgradedBaseDamage = 10 } }
-use FiendFireEffect1 { template = ExhaustHandAttackEffect args = { definition = "base-spire:fiend-fire" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure FiendFireBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  locals = { hits = Int }
   body = {
-    call = { procedure = FiendFireEffect1.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = ExhaustHandCards args = { owner = owner } into = hits }
+    call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = pureCall(CardBaseDamage, owner, card, target) hits = hits mode = "single" dynamic = true } }
   }
 }
 dispatchCase FiendFireBody { dispatch = ExecuteCardBody key = "base-spire:fiend-fire" procedure = FiendFireBody }
 
-procedure FiendFireDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase FiendFireDamageValue { dispatch = ReadCardDamage key = "base-spire:fiend-fire" procedure = FiendFireDamageValue }
+use FiendFireDamageValue { template = StaticCardDamage args = { definition = "base-spire:fiend-fire" } }

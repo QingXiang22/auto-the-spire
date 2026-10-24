@@ -18,10 +18,4 @@ procedure BrandBody {
 }
 dispatchCase BrandBody { dispatch = ExecuteCardBody key = "base-spire:brand" procedure = BrandBody }
 
-procedure BrandDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BrandDamageValue { dispatch = ReadCardDamage key = "base-spire:brand" procedure = BrandDamageValue }
+use BrandDamageValue { template = StaticCardDamage args = { definition = "base-spire:brand" } }

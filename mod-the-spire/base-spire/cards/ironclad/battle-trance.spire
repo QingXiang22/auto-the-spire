@@ -16,10 +16,4 @@ procedure BattleTranceBody {
 }
 dispatchCase BattleTranceBody { dispatch = ExecuteCardBody key = "base-spire:battle-trance" procedure = BattleTranceBody }
 
-procedure BattleTranceDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BattleTranceDamageValue { dispatch = ReadCardDamage key = "base-spire:battle-trance" procedure = BattleTranceDamageValue }
+use BattleTranceDamageValue { template = StaticCardDamage args = { definition = "base-spire:battle-trance" } }

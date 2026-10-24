@@ -8,7 +8,7 @@
 
 ## 修改已有卡牌
 
-先按[单个内容修改指南](edit-content.md)定位卡牌文件。普通AttackEffect／AttackAllEnemiesEffect的伤害只在CardDefinition中配置baseDamage／upgradedBaseDamage，效果读取CardBaseDamage；不要恢复damage／upgradedDamage双份配置。卡牌kind仍表示attack／skill／power，与已经移除的Power调用方kind不同。独有效果留在卡牌文件，只有复用行为进入cards/rules。以下恢复步骤用于缺共享机制的工作，不要求每改一张牌就重写出牌流程。
+先按[单个内容修改指南](edit-content.md)定位卡牌文件。普通AttackEffect／AttackAllEnemiesEffect的伤害只在CardDefinition中配置baseDamage／upgradedBaseDamage，效果读取CardBaseDamage；不要恢复damage／upgradedDamage双份配置。卡牌kind仍表示attack／skill／power，与已经移除的Power调用方kind不同。卡牌主要保留定义、参数、顺序与生命周期绑定；选择、移动、变换、生成和结果读取等通用行为放cards/rules供mod组合，即使当前只有一张原版牌使用。先查[公共组合操作](../reference/card-behavior.md#供内容与mod组合的公共操作)，不再把完整效果模板复制到卡牌里。只有依赖本内容语义的私有状态与绑定留在所属文件。以下恢复步骤用于缺共享机制的工作，不要求每改一张牌就重写出牌流程。
 
 ## 恢复费用、目标与出牌
 

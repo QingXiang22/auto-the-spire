@@ -4,7 +4,7 @@ dsl_version = "core/0.3"
 # Source: sts2/src/Core/Models/Cards/FightMe.cs; SHA-256 retained in cards/catalog.json.
 use FightMe { template = CardDefinition args = { sourceEntry = "FIGHT_ME" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:fight-me" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 5 upgradedBaseDamage = 6 } }
 use FightMeEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:fight-me" hits = 2 upgradedHits = 2 hitScale = "fixed" } }
-use FightMeEffect2 { template = TargetedSelfPowerEffect args = { definition = "base-spire:fight-me" power = "base-spire:strength-power" stacks = 3 upgradedStacks = 4 } }
+use FightMeEffect2 { template = ApplySelfPowerEffect args = { definition = "base-spire:fight-me" power = "base-spire:strength-power" stacks = 3 upgradedStacks = 4 } }
 use FightMeEffect3 { template = ApplyEnemyPowerEffect args = { definition = "base-spire:fight-me" power = "base-spire:strength-power" stacks = 1 upgradedStacks = 1 } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
@@ -12,16 +12,10 @@ procedure FightMeBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = FightMeEffect1.Apply args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = FightMeEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = FightMeEffect2.WhenPlayed args = { play = play owner = owner card = card } }
     call = { procedure = FightMeEffect3.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
   }
 }
 dispatchCase FightMeBody { dispatch = ExecuteCardBody key = "base-spire:fight-me" procedure = FightMeBody }
 
-procedure FightMeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase FightMeDamageValue { dispatch = ReadCardDamage key = "base-spire:fight-me" procedure = FightMeDamageValue }
+use FightMeDamageValue { template = StaticCardDamage args = { definition = "base-spire:fight-me" } }

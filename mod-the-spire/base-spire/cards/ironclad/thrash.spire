@@ -2,46 +2,18 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Thrash.cs; SHA-256 retained in cards/catalog.json.
-template AbsorbAttackDamageEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { chosen = Binding damage = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = RandomHandCard args = { owner = owner attacksOnly = true } into = chosen }
-if = { condition = not(isNone(chosen)) then = {
-  let = { into = damage value = pureCall(CardBaseDamage, owner, chosen, none) }
-  let = { into = damage value = multiply(maximum(0, foldEvent(ModifyAttackAdditive, damage, owner, chosen, none)), 10000)
-                }
-                let = { into = damage value = divide(foldEvent(ModifyAttackMultiplier, damage, owner, chosen, none), 10000) }
-  set = { target = card field = Card.DamageGrowth value = add(field(card, Card.DamageGrowth), damage) }
-  call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } }
-} }
-      } } }
-    }
-
-  }
-}
 
 use Thrash { template = CardDefinition args = { sourceEntry = "THRASH" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:thrash" cost = 1 upgradedCost = 1 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 4 upgradedBaseDamage = 6 } }
 use ThrashEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:thrash" hits = 2 upgradedHits = 2 hitScale = "fixed" } }
-use ThrashEffect2 { template = AbsorbAttackDamageEffect args = { definition = "base-spire:thrash" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure ThrashBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = ThrashEffect1.Apply args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = ThrashEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = AbsorbRandomHandAttack args = { owner = owner card = card } }
   }
 }
 dispatchCase ThrashBody { dispatch = ExecuteCardBody key = "base-spire:thrash" procedure = ThrashBody }
 
-procedure ThrashDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ThrashDamageValue { dispatch = ReadCardDamage key = "base-spire:thrash" procedure = ThrashDamageValue }
+use ThrashDamageValue { template = StaticCardDamage args = { definition = "base-spire:thrash" } }

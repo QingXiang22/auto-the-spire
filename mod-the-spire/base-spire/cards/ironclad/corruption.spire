@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Corruption.cs; SHA-256 retained in cards/catalog.json.
 use Corruption { template = CardDefinition args = { sourceEntry = "CORRUPTION" rarity = "ancient" inIroncladPool = true generatable = false definition = "base-spire:corruption" cost = 3 upgradedCost = 2 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use CorruptionEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:corruption" power = "base-spire:corruption-power" stacks = 1 upgradedStacks = 1 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure CorruptionBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = CorruptionEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use CorruptionEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:corruption" power = "base-spire:corruption-power" stacks = 1 upgradedStacks = 1 }
 }
-dispatchCase CorruptionBody { dispatch = ExecuteCardBody key = "base-spire:corruption" procedure = CorruptionBody }
-
-procedure CorruptionDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase CorruptionDamageValue { dispatch = ReadCardDamage key = "base-spire:corruption" procedure = CorruptionDamageValue }

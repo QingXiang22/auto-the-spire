@@ -2,20 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/DrumOfBattle.cs; SHA-256 retained in cards/catalog.json.
-template ExhaustEnergyReaction {
-  parameters = { definition = { type = String(length = 64) } energy = { type = Int } upgradedEnergy = { type = Int } }
-  body = {
-    procedure Apply {
-      parameters = { owner = Ref(Player) card = Ref(Card) }
-      locals = { amount = Int }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = field(card, Card.Upgraded) then = { let = { into = amount value = arg(upgradedEnergy) } } else = { let = { into = amount value = arg(energy) } } }
-call = { procedure = GainEnergy args = { owner = owner amount = amount } }
-      } } }
-    }
-    subscription Apply { event = CardExhausted reaction = Apply }
-  }
-}
 
 use DrumOfBattle { template = CardDefinition args = { sourceEntry = "DRUM_OF_BATTLE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:drum-of-battle" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = false exhausts = false leavesPlay = false } }
 use DrumOfBattleEffect1 { template = DrawEffect args = { definition = "base-spire:drum-of-battle" cards = 2 upgradedCards = 2 } }
@@ -30,10 +16,4 @@ procedure DrumOfBattleBody {
 }
 dispatchCase DrumOfBattleBody { dispatch = ExecuteCardBody key = "base-spire:drum-of-battle" procedure = DrumOfBattleBody }
 
-procedure DrumOfBattleDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase DrumOfBattleDamageValue { dispatch = ReadCardDamage key = "base-spire:drum-of-battle" procedure = DrumOfBattleDamageValue }
+use DrumOfBattleDamageValue { template = StaticCardDamage args = { definition = "base-spire:drum-of-battle" } }

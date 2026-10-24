@@ -26,10 +26,4 @@ procedure BashBody {
 }
 dispatchCase BashBody { dispatch = ExecuteCardBody key = "base-spire:bash" procedure = BashBody }
 
-procedure BashDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BashDamageValue { dispatch = ReadCardDamage key = "base-spire:bash" procedure = BashDamageValue }
+use BashDamageValue { template = StaticCardDamage args = { definition = "base-spire:bash" } }

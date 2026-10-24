@@ -26,10 +26,4 @@ procedure BloodlettingBody {
 }
 dispatchCase BloodlettingBody { dispatch = ExecuteCardBody key = "base-spire:bloodletting" procedure = BloodlettingBody }
 
-procedure BloodlettingDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BloodlettingDamageValue { dispatch = ReadCardDamage key = "base-spire:bloodletting" procedure = BloodlettingDamageValue }
+use BloodlettingDamageValue { template = StaticCardDamage args = { definition = "base-spire:bloodletting" } }

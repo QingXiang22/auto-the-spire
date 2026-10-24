@@ -2,44 +2,19 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: BodySlam.cs: cost 1 and OnUpgrade lowers the cost by 1; damage equals the player's block.
-template DamageEqualBlockEffect {
-  parameters = { definition = { type = String(length = 64) } }
-  body = {
-    procedure WhenPlayedOnTarget {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      body = {
-        if = {
-          condition = equal(field(card, Card.DefinitionId), arg(definition))
-          then = { call = { procedure = CardAttack args = { play = play hits = 1 mode = "single" dynamic = false  owner = owner card = card target = target amount = field(owner, Player.Block) } } }
-        }
-      }
-    }
-
-  }
-}
 
 use BodySlam {
   template = CardDefinition
   args = { sourceEntry = "BODY_SLAM" rarity = "common" inIroncladPool = true generatable = true baseDamage = 0 upgradedBaseDamage = 0 kind = "attack" strikeTag = false definition = "base-spire:body-slam" cost = 1 upgradedCost = 0 targeted = true exhausts = false leavesPlay = false }
-}
-use BodySlamDamage {
-  template = DamageEqualBlockEffect
-  args = { definition = "base-spire:body-slam" }
 }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure BodySlamBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
-    call = { procedure = BodySlamDamage.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = CardAttack args = { owner = owner card = card play = play target = target amount = field(owner, Player.Block) hits = 1 mode = "single" dynamic = false } }
   }
 }
 dispatchCase BodySlamBody { dispatch = ExecuteCardBody key = "base-spire:body-slam" procedure = BodySlamBody }
 
-procedure BodySlamDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = field(owner, Player.Block) }
-  }
-}
-dispatchCase BodySlamDamageValue { dispatch = ReadCardDamage key = "base-spire:body-slam" procedure = BodySlamDamageValue }
+dispatchCase BodySlamDamageValue { dispatch = ReadCardDamage key = "base-spire:body-slam" procedure = ReadCardDamageFromBlock }

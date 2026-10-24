@@ -203,11 +203,14 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | [EveryTurnsEnergyRelic](../../../../mod-the-spire/base-spire/relics/rules/every-turns-energy.spire) | amount、turns: Int(1..999) | AfterSideTurnStarted：实例 Counter 加一并取模 turns，为 0 时 GainEnergy；Counter 跨战斗保留 | HappyFlower（每 3 回合 1 能量） |
 | [TurnStartDamageAllEnemiesRelic](../../../../mod-the-spire/base-spire/relics/rules/turn-start-damage-all-enemies.spire) | amount: Int(0..999) | AfterPlayerTurnStart：对每个 `Hp > 0` 的 Enemy 调用 DamageEnemy；没有目标时无事发生也不消耗随机 | MercuryHourglass（3 点无加成伤害） |
 
-卡牌内容绑定唯一ExecuteCardBody及ReadCardDamage；正文显式顺序调用效果模板的过程。卡牌内容由**一次** [CardDefinition](../../../../mod-the-spire/base-spire/cards/rules/card-definition.spire)（definition、cost、upgradedCost、targeted、exhausts）加若干[效果模板](../../../../mod-the-spire/base-spire/cards/rules/effects.spire)组成；效果过程保留定义过滤，主效果不再订阅广播。CardDefinition 生成 `AddToHand`（开发授予，直接放进手牌）与升级订阅：
+卡牌内容由**一次** [CardDefinition](../../../../mod-the-spire/base-spire/cards/rules/card-definition.spire)与[正文模板](card-behavior.md#定义正文与纯值)或显式组合正文构成，绑定唯一ExecuteCardBody及ReadCardDamage。普通攻击、格挡和自身Power优先使用正文模板；组合牌按call顺序调用[效果模板](../../../../mod-the-spire/base-spire/cards/rules/effects.spire)，并用StaticCardDamage绑定静态公式，动态公式保留自己的pure绑定。效果过程保留定义过滤，主效果不再订阅广播。CardDefinition 生成 `AddToHand`（开发授予，直接放进手牌）与升级订阅。
+
+实例克隆后放置复用[CloneCombatCardToPile及ClonePlayedCardEffect](card-behavior.md#复制附魔与永久牌)，保留复制通知、费用与附属状态、满手回退和移动原因。普通／升级数值用CardUpgradeValue计算，目标卡的自身增益也使用ApplySelfPowerEffect；无需在具体牌里重复声明同一效果模板。
 
 | 效果模板 | 参数 | 正文显式调用后的行为 | 当前内容 |
 | --- | --- | --- | --- |
 | AttackEffect | definition: String(64)、hits: Int(1..9) | 读取CardBaseDamage并创建一个hits段的CardAttack | Strike（6／9）、TwinStrike（5／7×2）、PommelStrike（9／10）、IronWave（5／7）、Anger（6／8）、Bludgeon（32／42） |
+| ClonePlayedCardEffect | definition、destination（默认discard） | 克隆当前牌并通过CloneCombatCardToPile放置，以clone记录移动原因 | Anger；Juggling从监听中调用同一放置过程 |
 | AttackAllEnemiesEffect | definition: String(64)、hits／upgradedHits: Int(1..9) | 创建一个all目标策略的CardAttack，按击次再按目标结算 | Thunderclap（4／7，1 段）、HowlFromBeyond（16／21，1 段）、Breakthrough（9／13，1 段）、Conflagration（2／2，4／5 段） |
 | BlockEffect | block、upgradedBlock | 按 `Upgraded` 取值后 GainBlock | Defend（5／8）、ShrugItOff（8／11）、IronWave（5／7）、Impervious（30／40）、Taunt（7／8）、BloodWall（16／20） |
 | DrawEffect | cards、upgradedCards | 按 `Upgraded` 取值后 DrawCards | PommelStrike（1／2）、ShrugItOff（1／1）、Offering（3／5） |
@@ -215,19 +218,9 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | LoseHpEffect | hp、upgradedHp | 按 `Upgraded` 取值后 LosePlayerHpFromCard并显式传play | Bloodletting（3／3）、Offering（6／6）、BloodWall（2／2） |
 | ApplyEnemyPowerEffect | power、stacks、upgradedStacks | 按 `Upgraded` 取值后 ApplyEnemyPowerFromCard到解析出的目标 | Bash（Vulnerable 2／3）、Uppercut（Weak 与 Vulnerable 各 1／2）、Taunt（Vulnerable 1／2）、Tremble（Vulnerable 3／4） |
 | ApplyAllEnemiesPowerEffect | power、stacks、upgradedStacks | 对每个 `Hp > 0` 的开发目标调用ApplyEnemyPowerFromCard | Shockwave（Weak 与 Vulnerable 各 3／5）、Thunderclap（Vulnerable 1／1） |
-| ApplySelfPowerEffect | power、stacks、upgradedStacks | 按 `Upgraded` 取值后ApplyPlayerPowerFromCard | Inflame（Strength 2／3） |
+| ApplySelfPowerEffect | power、stacks、upgradedStacks、untilTurnEnd（默认false） | 通过CardUpgradeValue取值，按到期标志调用对应的带来源Power操作；不要求目标敌人 | Inflame（Strength 2／3）、FightMe、Unrelenting、FlameBarrier（untilTurnEnd=true） |
 
-以下模板仅由一个内容拥有，已移到所属卡牌文件；它们不是effects.spire中的共享操作。需要类似能力时先确认语义，再决定是否抽成共用模板。
-
-| 独有效果 | 所属模块 |
-| --- | --- |
-| DamageEqualBlockEffect | [BodySlam](../../../../mod-the-spire/base-spire/cards/ironclad/body-slam.spire) |
-| AddCopyEffect | [Anger](../../../../mod-the-spire/base-spire/cards/ironclad/anger.spire) |
-| ApplySelfPowerUntilTurnEndEffect | [FlameBarrier](../../../../mod-the-spire/base-spire/cards/ironclad/flame-barrier.spire) |
-| FlaggedHitsAttackEffect | [Spite](../../../../mod-the-spire/base-spire/cards/ironclad/spite.spire) |
-| FlaggedBlockMultiplierEffect | [EvilEye](../../../../mod-the-spire/base-spire/cards/ironclad/evil-eye.spire) |
-| VulnerableHitsAttackEffect | [Dismantle](../../../../mod-the-spire/base-spire/cards/ironclad/dismantle.spire) |
-| AmplifyVulnerableEffect | [MoltenFist](../../../../mod-the-spire/base-spire/cards/ironclad/molten-fist.spire) |
+卡牌不再在本地声明选择消耗、手牌变换、生成改费、吸收伤害或条件攻击等效果模板。直接调用[供内容与mod组合的公共操作](card-behavior.md#供内容与mod组合的公共操作)：手牌操作管理选择、批次及实例生命周期，战斗数值库提供条件读取、成长和致死结果查询。BodySlam直接绑定共享格挡公式；Spite／EvilEye／Dismantle把条件值传入已有攻击／格挡命令，MoltenFist传入Power与倍率。通用操作不要求当前已有两个消费者。
 
 同一张牌内的效果顺序由所属ExecuteCardBody处理过程的call顺序决定，与模板use或事件订阅顺序无关。Bash、Uppercut的正文显式先伤害后施加。Weak、Vulnerable与Frail在所属Power模块监听AfterEnemyTurnEnded并调用TickPowerDuration，玩家新实例的首次跳过由debuff标志控制；详见[Power参考](powers.md)。
 

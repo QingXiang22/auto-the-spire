@@ -16,10 +16,4 @@ procedure TrueGritBody {
 }
 dispatchCase TrueGritBody { dispatch = ExecuteCardBody key = "base-spire:true-grit" procedure = TrueGritBody }
 
-procedure TrueGritDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase TrueGritDamageValue { dispatch = ReadCardDamage key = "base-spire:true-grit" procedure = TrueGritDamageValue }
+use TrueGritDamageValue { template = StaticCardDamage args = { definition = "base-spire:true-grit" } }

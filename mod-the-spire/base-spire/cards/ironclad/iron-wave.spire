@@ -25,10 +25,4 @@ procedure IronWaveBody {
 }
 dispatchCase IronWaveBody { dispatch = ExecuteCardBody key = "base-spire:iron-wave" procedure = IronWaveBody }
 
-procedure IronWaveDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase IronWaveDamageValue { dispatch = ReadCardDamage key = "base-spire:iron-wave" procedure = IronWaveDamageValue }
+use IronWaveDamageValue { template = StaticCardDamage args = { definition = "base-spire:iron-wave" } }

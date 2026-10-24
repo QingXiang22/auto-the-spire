@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Unmovable.cs; SHA-256 retained in cards/catalog.json.
 use Unmovable { template = CardDefinition args = { sourceEntry = "UNMOVABLE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:unmovable" cost = 2 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use UnmovableEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:unmovable" power = "base-spire:unmovable-power" stacks = 1 upgradedStacks = 1 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure UnmovableBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = UnmovableEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use UnmovableEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:unmovable" power = "base-spire:unmovable-power" stacks = 1 upgradedStacks = 1 }
 }
-dispatchCase UnmovableBody { dispatch = ExecuteCardBody key = "base-spire:unmovable" procedure = UnmovableBody }
-
-procedure UnmovableDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase UnmovableDamageValue { dispatch = ReadCardDamage key = "base-spire:unmovable" procedure = UnmovableDamageValue }

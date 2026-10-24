@@ -29,7 +29,7 @@ call = {
 
 Power在自己的模块内展开PowerDefinition，随后订阅所需通知或pure修正。定义决定基础策略，调用方不传kind。SelfFormingClayPower的Cleared先调用GainUnpoweredBlock，再经RemovePower移除自身；它不修改共享回合过程，也不让遗物负责清理Power。
 
-多个内容确实共用同一行为时再抽模板进入领域rules。独有效果无需先建立一份只有单个消费者的共享模板文件。准确标志、生命周期及失败语义查[Power参考](../reference/powers.md)。
+可单独组合的选择、移动、生成、资源和结果操作进入领域rules，mod也可直接调用；当前消费者数量不决定行为是否进入公共库。模板负责定义绑定和参数配置，公共过程负责动作。只依赖本内容语义的私有状态与生命周期绑定保留在所属模块。准确标志、生命周期及失败语义查[Power参考](../reference/powers.md)。
 
 ## 3. 将私有状态绑定到实际实例
 
@@ -59,15 +59,12 @@ catalog定义文件不承担start、imports、includes、version等包属性；�
 
 ## 5. 验证完整消费者
 
-先运行validate确认加载、绑定、元数据和启动，再用真实操作检查获得、触发、层数合并、兑现、移除，以及不持有／失效／其他持有者／跨战边界。已经实现的SelfFormingClay可复查：
+同一批内容完成后一次运行检查，入口自动完成构建、加载、行为与覆盖核对。行为用例检查获得、触发、层数合并、兑现、移除，以及不持有／失效／其他持有者／跨战边界：
 
 ```powershell
-dotnet build tools/base-spire-dev/BaseSpire.Dev.csproj -v quiet
-dotnet run --no-build --project tools/base-spire-dev -- validate
-dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter CLAY
-dotnet run --no-build --project tools/base-spire-dev -- check --content-model-only
+python tools/ci/check.py base docs
 ```
 
-其他新内容需要自己的判别；CLAY通过不能替代它的行为测试结果。新增执行结果接入包外检查，批次最终使用完整check --report核对实际定义与执行执行结果。需要公开的新事实还应走真实Host轨迹；纯玩法复用不要求复制整套协议检查。
+新增内容需要实际行为判别，复用同机制参数化用例；其他内容通过不能替代它的执行结果。base组自动生成完整行为报告并核对实际定义，需要公开的新事实时追加net组，独立比较适配变化时追加migration组。失败后才使用[定向命令](verify-and-debug.md)排障，纯玩法复用不要求复制整套协议检查。
 
 SelfFormingClay的保留首轮共享时序修正与修正后的7文件接入。修改范围可供后续开发核对，不表示所有新机制都无需修改共享领域操作，也不证明正常Run或独立原版比较完成。

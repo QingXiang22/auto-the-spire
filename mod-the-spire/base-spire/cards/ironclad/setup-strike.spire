@@ -16,10 +16,4 @@ procedure SetupStrikeBody {
 }
 dispatchCase SetupStrikeBody { dispatch = ExecuteCardBody key = "base-spire:setup-strike" procedure = SetupStrikeBody }
 
-procedure SetupStrikeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase SetupStrikeDamageValue { dispatch = ReadCardDamage key = "base-spire:setup-strike" procedure = SetupStrikeDamageValue }
+use SetupStrikeDamageValue { template = StaticCardDamage args = { definition = "base-spire:setup-strike" } }

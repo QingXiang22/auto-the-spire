@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/StoneArmor.cs; SHA-256 retained in cards/catalog.json.
 use StoneArmor { template = CardDefinition args = { sourceEntry = "STONE_ARMOR" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:stone-armor" cost = 1 upgradedCost = 1 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use StoneArmorEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:stone-armor" power = "base-spire:plating-power" stacks = 4 upgradedStacks = 6 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure StoneArmorBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = StoneArmorEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use StoneArmorEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:stone-armor" power = "base-spire:plating-power" stacks = 4 upgradedStacks = 6 }
 }
-dispatchCase StoneArmorBody { dispatch = ExecuteCardBody key = "base-spire:stone-armor" procedure = StoneArmorBody }
-
-procedure StoneArmorDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase StoneArmorDamageValue { dispatch = ReadCardDamage key = "base-spire:stone-armor" procedure = StoneArmorDamageValue }

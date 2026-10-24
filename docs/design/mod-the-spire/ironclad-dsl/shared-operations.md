@@ -2,7 +2,7 @@
 
 本页供内容作者查询调用入口，适用于 `base-spire-dsl-relic-draw-dev-v1` 的单人、全部解锁开发配置。范围与验证条件见[约定](spec.md)，当前进度见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。这些过程由 Engine 执行；Host 只投影状态和提交合法候选。
 
-新增正文分派、费用、攻击、附魔和永久选择的准确签名见[行为操作参考](../../../development/base-spire/reference/card-behavior.md)。
+单消费者也可供mod组合的[手牌、生成、条件值、伤害成长及致死操作](../../../development/base-spire/reference/card-behavior.md#供内容与mod组合的公共操作)由公共过程提供，卡牌配置参数和顺序。新增正文分派、费用、攻击、附魔和永久选择的准确签名见[行为操作参考](../../../development/base-spire/reference/card-behavior.md)。
 
 ## 定义、实例与牌区
 

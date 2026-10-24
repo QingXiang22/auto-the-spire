@@ -2,38 +2,18 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Dominate.cs; SHA-256 retained in cards/catalog.json.
-template DominateStrengthEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = "base-spire:strength-power" stacks = pureCall(EnemyPowerAmount, target, "base-spire:vulnerable-power") } }
-      } } }
-    }
-
-  }
-}
 
 use Dominate { template = CardDefinition args = { sourceEntry = "DOMINATE" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:dominate" cost = 1 upgradedCost = 1 kind = "skill" strikeTag = false targeted = true exhausts = true leavesPlay = false } }
 use DominateEffect1 { template = ApplyEnemyPowerEffect args = { definition = "base-spire:dominate" power = "base-spire:vulnerable-power" stacks = 1 upgradedStacks = 2 } }
-use DominateEffect2 { template = DominateStrengthEffect args = { definition = "base-spire:dominate" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure DominateBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = DominateEffect1.WhenPlayedOnTarget args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = DominateEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = ApplyPlayerPowerFromCard args = { owner = owner card = card play = play definition = "base-spire:strength-power" stacks = pureCall(EnemyPowerAmount, target, "base-spire:vulnerable-power") } }
   }
 }
 dispatchCase DominateBody { dispatch = ExecuteCardBody key = "base-spire:dominate" procedure = DominateBody }
 
-procedure DominateDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase DominateDamageValue { dispatch = ReadCardDamage key = "base-spire:dominate" procedure = DominateDamageValue }
+use DominateDamageValue { template = StaticCardDamage args = { definition = "base-spire:dominate" } }

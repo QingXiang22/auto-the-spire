@@ -26,10 +26,4 @@ procedure HemokinesisBody {
 }
 dispatchCase HemokinesisBody { dispatch = ExecuteCardBody key = "base-spire:hemokinesis" procedure = HemokinesisBody }
 
-procedure HemokinesisDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase HemokinesisDamageValue { dispatch = ReadCardDamage key = "base-spire:hemokinesis" procedure = HemokinesisDamageValue }
+use HemokinesisDamageValue { template = StaticCardDamage args = { definition = "base-spire:hemokinesis" } }

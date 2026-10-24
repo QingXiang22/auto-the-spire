@@ -2,39 +2,18 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Cinder.cs; SHA-256 retained in cards/catalog.json.
-template RandomExhaustAfterAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) target = Ref(Enemy) }
-      locals = { chosen = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-if = { condition = true then = { call = { procedure = RandomHandCard args = { owner = owner attacksOnly = false } into = chosen } } else = { call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = false } into = chosen } } }
-if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } } } }
-      } } }
-    }
-
-  }
-}
 
 use Cinder { template = CardDefinition args = { sourceEntry = "CINDER" rarity = "common" inIroncladPool = true generatable = true definition = "base-spire:cinder" cost = 2 upgradedCost = 2 kind = "attack" strikeTag = false targeted = true exhausts = false leavesPlay = false baseDamage = 18 upgradedBaseDamage = 24 } }
 use CinderEffect1 { template = ComputedAttackEffect args = { definition = "base-spire:cinder" hits = 1 upgradedHits = 1 hitScale = "fixed" } }
-use CinderEffect2 { template = RandomExhaustAfterAttackEffect args = { definition = "base-spire:cinder" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure CinderBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
   body = {
     call = { procedure = CinderEffect1.Apply args = { play = play  owner = owner card = card target = target } }
-    call = { procedure = CinderEffect2.Apply args = { play = play  owner = owner card = card target = target } }
+    call = { procedure = SelectAndExhaustHandCard args = { owner = owner random = true } }
   }
 }
 dispatchCase CinderBody { dispatch = ExecuteCardBody key = "base-spire:cinder" procedure = CinderBody }
 
-procedure CinderDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase CinderDamageValue { dispatch = ReadCardDamage key = "base-spire:cinder" procedure = CinderDamageValue }
+use CinderDamageValue { template = StaticCardDamage args = { definition = "base-spire:cinder" } }

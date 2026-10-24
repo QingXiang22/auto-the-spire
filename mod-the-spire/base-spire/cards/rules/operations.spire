@@ -136,9 +136,25 @@ procedure CloneCombatCard {
     return = { value = copy }
   }
 }
+procedure CloneCombatCardToPile {
+  parameters = { owner = Ref(Player) source = Ref(Card) to = String(length = 16) reason = String(length = 32) }
+  locals = { copy = Binding } result = Binding
+  body = {
+    call = { procedure = CloneCombatCard args = { owner = owner source = source } into = copy }
+    call = { procedure = MoveCombatCard args = { owner = owner card = copy to = to reason = reason } }
+    return = { value = copy }
+  }
+}
 procedure AddGeneratedToHand {
   parameters = { card = Ref(Card) }
   body = { call = { procedure = MoveCombatCard args = { owner = first(where(type(Player), p, equal(field(p, Player.Owner), field(card, Card.Owner)))) card = card to = "hand" reason = "generate" } } }
+}
+procedure CardUpgradeValue {
+  pure = true parameters = { card = Ref(Card) baseValue = Int upgradedValue = Int } result = Int
+  body = {
+    if = { condition = field(card, Card.Upgraded) then = { return = { value = upgradedValue } } }
+    return = { value = baseValue }
+  }
 }
 procedure CardBaseDamage {
   pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int

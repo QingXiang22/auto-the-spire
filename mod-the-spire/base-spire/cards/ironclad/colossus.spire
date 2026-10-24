@@ -16,10 +16,4 @@ procedure ColossusBody {
 }
 dispatchCase ColossusBody { dispatch = ExecuteCardBody key = "base-spire:colossus" procedure = ColossusBody }
 
-procedure ColossusDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ColossusDamageValue { dispatch = ReadCardDamage key = "base-spire:colossus" procedure = ColossusDamageValue }
+use ColossusDamageValue { template = StaticCardDamage args = { definition = "base-spire:colossus" } }

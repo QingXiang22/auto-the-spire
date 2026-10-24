@@ -21,10 +21,4 @@ procedure ConflagrationBody {
 }
 dispatchCase ConflagrationBody { dispatch = ExecuteCardBody key = "base-spire:conflagration" procedure = ConflagrationBody }
 
-procedure ConflagrationDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ConflagrationDamageValue { dispatch = ReadCardDamage key = "base-spire:conflagration" procedure = ConflagrationDamageValue }
+use ConflagrationDamageValue { template = StaticCardDamage args = { definition = "base-spire:conflagration" } }

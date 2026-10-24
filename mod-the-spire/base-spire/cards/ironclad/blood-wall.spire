@@ -26,10 +26,4 @@ procedure BloodWallBody {
 }
 dispatchCase BloodWallBody { dispatch = ExecuteCardBody key = "base-spire:blood-wall" procedure = BloodWallBody }
 
-procedure BloodWallDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BloodWallDamageValue { dispatch = ReadCardDamage key = "base-spire:blood-wall" procedure = BloodWallDamageValue }
+use BloodWallDamageValue { template = StaticCardDamage args = { definition = "base-spire:blood-wall" } }

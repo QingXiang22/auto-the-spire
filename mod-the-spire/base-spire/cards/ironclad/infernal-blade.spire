@@ -2,40 +2,18 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/InfernalBlade.cs; SHA-256 retained in cards/catalog.json.
-template GenerateAttackEffect {
-  parameters = { definition = { type = String(length = 64) }  }
-  body = {
-    procedure Apply {
-      parameters = { play = Binding  owner = Ref(Player) card = Ref(Card) }
-      locals = { generated = Binding }
-      body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = true } into = generated }
-if = { condition = not(isNone(generated)) then = {
-  call = { procedure = AddCardCostModifier args = { card = generated source = "base-spire:infernal-blade" operation = "set" amount = 0 lifetime = "turn-or-play" } }
-  call = { procedure = AddGeneratedToHand args = { card = generated } }
-} }
-      } } }
-    }
-
-  }
-}
 
 use InfernalBlade { template = CardDefinition args = { sourceEntry = "INFERNAL_BLADE" rarity = "uncommon" inIroncladPool = true generatable = true definition = "base-spire:infernal-blade" cost = 1 upgradedCost = 0 kind = "skill" strikeTag = false targeted = false exhausts = true leavesPlay = false } }
-use InfernalBladeEffect1 { template = GenerateAttackEffect args = { definition = "base-spire:infernal-blade" } }
 
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure InfernalBladeBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  locals = { generated = Binding }
   body = {
-    call = { procedure = InfernalBladeEffect1.Apply args = { play = play  owner = owner card = card } }
+    call = { procedure = GenerateCombatCardWithCost args = { owner = owner attacksOnly = true cost = 0 source = "base-spire:infernal-blade" lifetime = "turn-or-play" } into = generated }
+    if = { condition = not(isNone(generated)) then = { call = { procedure = AddGeneratedToHand args = { card = generated } } } }
   }
 }
 dispatchCase InfernalBladeBody { dispatch = ExecuteCardBody key = "base-spire:infernal-blade" procedure = InfernalBladeBody }
 
-procedure InfernalBladeDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase InfernalBladeDamageValue { dispatch = ReadCardDamage key = "base-spire:infernal-blade" procedure = InfernalBladeDamageValue }
+use InfernalBladeDamageValue { template = StaticCardDamage args = { definition = "base-spire:infernal-blade" } }

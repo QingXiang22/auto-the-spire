@@ -26,10 +26,4 @@ procedure BreakthroughBody {
 }
 dispatchCase BreakthroughBody { dispatch = ExecuteCardBody key = "base-spire:breakthrough" procedure = BreakthroughBody }
 
-procedure BreakthroughDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase BreakthroughDamageValue { dispatch = ReadCardDamage key = "base-spire:breakthrough" procedure = BreakthroughDamageValue }
+use BreakthroughDamageValue { template = StaticCardDamage args = { definition = "base-spire:breakthrough" } }

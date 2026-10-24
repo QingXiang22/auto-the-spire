@@ -3,21 +3,7 @@ dsl_version = "core/0.3"
 
 # Source: sts2/src/Core/Models/Cards/Juggernaut.cs; SHA-256 retained in cards/catalog.json.
 use Juggernaut { template = CardDefinition args = { sourceEntry = "JUGGERNAUT" rarity = "rare" inIroncladPool = true generatable = true definition = "base-spire:juggernaut" cost = 2 upgradedCost = 2 kind = "power" strikeTag = false targeted = false exhausts = false leavesPlay = true } }
-use JuggernautEffect1 { template = ApplySelfPowerEffect args = { definition = "base-spire:juggernaut" power = "base-spire:juggernaut-power" stacks = 6 upgradedStacks = 8 } }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure JuggernautBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = JuggernautEffect1.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
+use JuggernautEffect1 {
+  template = SelfPowerCardBody
+  args = { definition = "base-spire:juggernaut" power = "base-spire:juggernaut-power" stacks = 6 upgradedStacks = 8 }
 }
-dispatchCase JuggernautBody { dispatch = ExecuteCardBody key = "base-spire:juggernaut" procedure = JuggernautBody }
-
-procedure JuggernautDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase JuggernautDamageValue { dispatch = ReadCardDamage key = "base-spire:juggernaut" procedure = JuggernautDamageValue }

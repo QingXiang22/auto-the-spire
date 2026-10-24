@@ -7,23 +7,6 @@ use Defend {
   args = { sourceEntry = "DEFEND_IRONCLAD" rarity = "basic" inIroncladPool = true generatable = false baseDamage = 0 upgradedBaseDamage = 0 kind = "skill" strikeTag = false definition = "base-spire:defend-ironclad" cost = 1 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false }
 }
 use DefendBlock {
-  template = BlockEffect
+  template = BlockCardBody
   args = { definition = "base-spire:defend-ironclad" block = 5 upgradedBlock = 8 }
 }
-
-# The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
-procedure DefendBody {
-  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
-  body = {
-    call = { procedure = DefendBlock.WhenPlayed args = { play = play  owner = owner card = card } }
-  }
-}
-dispatchCase DefendBody { dispatch = ExecuteCardBody key = "base-spire:defend-ironclad" procedure = DefendBody }
-
-procedure DefendDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase DefendDamageValue { dispatch = ReadCardDamage key = "base-spire:defend-ironclad" procedure = DefendDamageValue }

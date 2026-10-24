@@ -17,10 +17,4 @@ procedure ExpectAFightBody {
 }
 dispatchCase ExpectAFightBody { dispatch = ExecuteCardBody key = "base-spire:expect-a-fight" procedure = ExpectAFightBody }
 
-procedure ExpectAFightDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase ExpectAFightDamageValue { dispatch = ReadCardDamage key = "base-spire:expect-a-fight" procedure = ExpectAFightDamageValue }
+use ExpectAFightDamageValue { template = StaticCardDamage args = { definition = "base-spire:expect-a-fight" } }

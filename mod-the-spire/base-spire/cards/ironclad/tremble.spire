@@ -21,10 +21,4 @@ procedure TrembleBody {
 }
 dispatchCase TrembleBody { dispatch = ExecuteCardBody key = "base-spire:tremble" procedure = TrembleBody }
 
-procedure TrembleDamageValue {
-  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
-  body = {
-    return = { value = add(field(card, Card.BaseDamage), field(card, Card.DamageGrowth)) }
-  }
-}
-dispatchCase TrembleDamageValue { dispatch = ReadCardDamage key = "base-spire:tremble" procedure = TrembleDamageValue }
+use TrembleDamageValue { template = StaticCardDamage args = { definition = "base-spire:tremble" } }
