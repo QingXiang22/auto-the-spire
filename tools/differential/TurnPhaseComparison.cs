@@ -288,7 +288,7 @@ internal static class TurnPhaseComparison
                 } }
                 action PhaseExhaust { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = {
                   set = { target = first(type(Player)) field = Player.EffectDepth value = add(field(first(type(Player)), Player.EffectDepth), 1) }
-                  call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card } }
+                  call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card causedByEthereal = false } }
                   set = { target = first(type(Player)) field = Player.EffectDepth value = subtract(field(first(type(Player)), Player.EffectDepth), 1) }
                 } }
                 """);

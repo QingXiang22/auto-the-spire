@@ -89,7 +89,7 @@ procedure FinishTurnHand {
     } }
     forEach = { query = where(type(TurnEndHandEntry), e, and(equal(field(e, TurnEndHandEntry.Batch), batch), not(field(e, TurnEndHandEntry.Effect)))) item = selected body = {
       if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
-        call = { procedure = ExhaustCombatCard args = { owner = owner card = field(selected, TurnEndHandEntry.Card) } }
+        call = { procedure = ExhaustCombatCard args = { owner = owner card = field(selected, TurnEndHandEntry.Card) causedByEthereal = true } }
       } }
       destroy = { target = selected }
     } }
@@ -101,7 +101,7 @@ procedure FinishTurnHand {
       emit = { event = CardTurnEndInHandEffect payload = { owner = owner card = effectCard } }
       if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
         if = { condition = pureCall(CardHasKeyword, effectCard, "ethereal") then = {
-          call = { procedure = ExhaustCombatCard args = { owner = owner card = effectCard } }
+          call = { procedure = ExhaustCombatCard args = { owner = owner card = effectCard causedByEthereal = true } }
         } else = { call = { procedure = MoveCombatCard args = { owner = owner card = effectCard to = "discard" reason = "turn-end-effect" } } } }
       } }
       destroy = { target = selected }

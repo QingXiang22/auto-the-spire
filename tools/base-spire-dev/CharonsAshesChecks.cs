@@ -14,7 +14,7 @@ internal static partial class PackageChecks
               parameters = { card = Ref(Card) }
               candidates = { parameter = card query = collection(Hand) }
               body = {
-                call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card } }
+                call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card causedByEthereal = false } }
               }
             }
             action ObtainSecondAshes {
@@ -43,7 +43,7 @@ internal static partial class PackageChecks
             action ExhaustOtherCard {
               role = player parameters = { card = Ref(Card) }
               candidates = { parameter = card query = collection(Hand) }
-              body = { call = { procedure = ExhaustCombatCard args = { owner = first(skip(type(Player), 1)) card = card } } }
+              body = { call = { procedure = ExhaustCombatCard args = { owner = first(skip(type(Player), 1)) card = card causedByEthereal = false } } }
             }
             """);
         var configured = probes.Load();
@@ -139,7 +139,7 @@ internal static partial class PackageChecks
                   } }
                 } }
                 subscription ObserveAshDamage { event = DamageResolved reaction = ObserveAshDamage }
-                procedure AfterAshes { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+                procedure AfterAshes { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } body = {
                   if = { condition = not(field(owner, Player.CombatActive)) then = { fail = { message = "combat closed before remaining exhaust listeners" } } }
                   set = { target = owner field = Player.Gold value = add(field(owner, Player.Gold), 1) }
                 } }
@@ -159,9 +159,9 @@ internal static partial class PackageChecks
         {
             using var nested = new Copy(package.Root);
             nested.Include("nested-ashes.spire", """
-                procedure ExhaustAnother { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+                procedure ExhaustAnother { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } body = {
                   if = { condition = equal(field(card, Card.DefinitionId), "base-spire:impervious") then = {
-                    call = { procedure = ExhaustCombatCard args = { owner = owner card = first(collection(Hand)) } }
+                    call = { procedure = ExhaustCombatCard args = { owner = owner card = first(collection(Hand)) causedByEthereal = false } }
                   } }
                 } }
                 subscription ExhaustAnother { event = CardExhausted reaction = ExhaustAnother priority = -1 }

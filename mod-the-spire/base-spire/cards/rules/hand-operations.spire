@@ -11,7 +11,7 @@ procedure SelectAndExhaustHandCard {
     } else = {
       call = { procedure = SelectHandCard args = { owner = owner upgradeOnly = false } into = chosen }
     } }
-    if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } } } }
+    if = { condition = not(isNone(chosen)) then = { call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen causedByEthereal = false } } } }
   }
 }
 procedure UpgradeHandCards {
@@ -43,7 +43,7 @@ procedure ExhaustHandCards {
   locals = { size = Int } result = Int
   body = {
     let = { into = size value = count(collection(Hand)) }
-    forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c } } } }
+    forEach = { query = collection(Hand) item = c body = { call = { procedure = ExhaustCombatCard args = { owner = owner card = c causedByEthereal = false } } } }
     return = { value = size }
   }
 }
@@ -51,7 +51,7 @@ procedure ExhaustNonAttackCardsForBlock {
   parameters = { owner = Ref(Player) block = Int }
   body = {
     forEach = { query = where(collection(Hand), c, not(equal(field(c, Card.Kind), "attack"))) item = c body = {
-      call = { procedure = ExhaustCombatCard args = { owner = owner card = c } }
+      call = { procedure = ExhaustCombatCard args = { owner = owner card = c causedByEthereal = false } }
       call = { procedure = GainBlock args = { owner = owner amount = block } }
     } }
   }
@@ -113,7 +113,7 @@ procedure AbsorbRandomHandAttack {
     call = { procedure = RandomHandCard args = { owner = owner attacksOnly = true } into = chosen }
     if = { condition = not(isNone(chosen)) then = {
       call = { procedure = GrowCardDamage args = { card = card amount = pureCall(ReadUntargetedCardAttackDamage, owner, chosen) } }
-      call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen } }
+      call = { procedure = ExhaustCombatCard args = { owner = owner card = chosen causedByEthereal = false } }
     } }
   }
 }

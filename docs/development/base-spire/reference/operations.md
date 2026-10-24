@@ -51,7 +51,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 旧声明保留，当前正文管线不发布；新增主效果绑定ExecuteCardBody，外部反应使用Before／After通知 |
 | CardPlayedOnTarget | owner、card、target: Ref(Enemy) | 旧声明保留，当前正文管线不发布；目标通过ExecuteCardBody的target传入；兼容入口选首个存活敌人，PlayTargetedCard使用原生决策 |
 | CardUpgraded | card: Ref(Card) | 实例标记为升级后发出；卡片定义用它应用定义层费用、伤害参数和 Innate 升级 |
-| CardExhausted | owner: Ref(Player)、card: Ref(Card) | ExhaustCombatCard入口按源拒绝ending；成功移动到ExhaustPile并完成CardMoved后，在未ending时发布本通知；已进入的监听快照保持，订阅时可确认实际耗尽牌已在耗尽堆 |
+| CardExhausted | owner: Ref(Player)、card: Ref(Card)、causedByEthereal: Bool | ExhaustCombatCard入口按源拒绝ending；成功移动到ExhaustPile并完成CardMoved后，在未ending时发布本通知；已进入的监听快照保持，订阅时可确认实际耗尽牌已在耗尽堆 |
 
 ## 过程与公开动作
 
@@ -113,7 +113,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗／回合、手牌、共享资格与能量；付款、进入InPlay、执行唯一正文；全部重复完成后提交捕获的结果区 |
 | PlayAttackCard | owner、card | 同上，但把敌人解析为第一个 `Hp > 0` 的开发目标后调用唯一正文；无目标不是合法候选 |
 | UpgradeCard | card=Ref(Card) | 只允许 CanUpgrade=true 且未升级的实例；置 `Upgraded=true` 并发 CardUpgraded，定义层费用变化由 CardDefinition 应用；只改当前实例 |
-| [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(0..999) | 效果抽牌，fromHandDraw=false；逐张调用 DrawOne，保留重洗、手牌上限、禁止抽牌与 AfterCardDrawn 的既有顺序；不是一次抽多张的新算法 |
+| [DrawCards](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player)、count=Int(min=0) | 效果抽牌，fromHandDraw=false，委托DrawCardsWithSource；次数允许层数乘虚无次数超过999，仍受实际手牌上限约束 |
 | PlayCardFromHand／PlayAttackFromHand／UpgradeCardInHand | 参数 card=Ref(Card)，候选来自 Hand | 公开 action：分别打出无目标牌、打出有目标牌与升级手牌；PlayCardFromHand 只提供 `Targeted=false` 的候选，PlayAttackFromHand 只提供 `Targeted=true` 的候选 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) 结算收尾 | — | 效果后按Exhausts调用完整耗尽、LeavesPlay移出，否则弃牌；耗尽命令依源拒绝ending时牌仍在InPlay，不能为触发回调强制入堆 |
 | [EnterDevelopmentRestSite](../../../../mod-the-spire/base-spire/rooms/rest-site.spire) | owner=Ref(Player) | 公开 action：把房间置为 `rest-site` 并清掉已使用标记；不是地图节点入口 |
@@ -144,8 +144,8 @@ Assassin、Axe、BowlbugEgg、Brute、Crossbow、Stabbot与Tracker均复用共�
 | [ReshuffleDiscard](../../../../mod-the-spire/base-spire/cards/rules/draw.spire) | owner=Ref(Player) | DrawPile 空且 DiscardPile 非空才按源条目／升级排序后转移、shuffle、emit AfterShuffle；与初始洗牌共用原版流 base-spire:run:shuffle |
 | CanDrawCards | owner=Ref(Player)、fromHandDraw=Bool → Bool | 纯 ShouldDraw 查询；非活跃战斗跳过战斗监听，不含容量或牌堆条件，不改状态或随机 |
 | RefreshDrawPermissions | 无 | 战斗活跃状态或 Power 生命周期改变资格后同步所有 Player.DrawBlocked；新增其他资格状态的消费者须在状态改变后调用 |
-| DrawCardsWithSource | owner=Ref(Player)、count=Int(0..999)、fromHandDraw=Bool | 逐张抽牌并明确来源；回合手牌为 true，效果抽牌为 false |
-| DrawOne | owner=Ref(Player)、fromHandDraw=Bool | 命令入口拒绝ending；CanDrawCards允许且手牌不足10时重洗，随后复查命令资格／手牌上限，再取首张；成功移动后分AfterCardDrawnEarly和普通两轮，普通入口再次检查ending。DrawBlocked仍只表示ShouldDraw资格 |
+| DrawCardsWithSource | owner=Ref(Player)、count=Int(min=0)、fromHandDraw=Bool | 命令入口检查ending并征询一次ShouldDraw；逐张复查容量与ending、必要时重洗，空牌堆或满手即返回。回合手牌为true，效果抽牌为false |
+| DrawOne | owner=Ref(Player)、fromHandDraw=Bool | 委托DrawCardsWithSource(count=1)。内部DrawNextCard重洗后复查命令资格／手牌上限，再取首张；成功移动后分AfterCardDrawnEarly和普通两轮，普通入口再次检查ending。DrawBlocked仍只表示ShouldDraw资格 |
 | Draw／DiscardHand | 无参数，role=player | Draw 使用 first(type(Player))；DiscardHand 将全局 Hand 移到 DiscardPile；均是开发动作 |
 | [BeginDevelopmentCombat](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | action 与同名过程：inactive 时先置 Block=0、TurnNumber=0、Energy=0、TurnOpen=false、CombatActive=true，再 emit BeforeCombatStart；已活跃时报 "Development combat is already active"。不是正常战斗初始化 |
 | EndDevelopmentCombat | owner=Ref(Player) | action 与同名过程：只在活跃时允许，置 CombatActive=false，不发开始事件也不发胜利；不活跃时报 "Development combat is not active" |

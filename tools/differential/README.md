@@ -198,3 +198,9 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 自检逐项删除双方同一个必需字段、注入各维度首差、检查零执行、缺动作／终点、缺协议检查结果及目标脚本缺决策，并核对开启与关闭诊断时真实 Host 和原生参考的已比较状态及随机状态不变；Host 另核对完整公开快照。迁移组同时执行四条正常路径和缺参考构建；原11份 suite、必测ID和严格失败语义保留。
 
 公开 `Player.DrawBlocked` 比较实际效果抽牌资格：DSL 发布同一 `CanDrawCards(owner,false)` 查询的否决结果，参考战斗使用真实 `Hook.ShouldDraw`。首战创建前没有原生战斗态，参考直接枚举 `RunState.IterateHookListeners(null)` 并调用各原生 `ShouldDraw(player,false)`，不构造战斗态或填常量。正常四路径逐边界比较 `public.draw_blocked`；受控 `draw-permission-vector.json` 另用真实 NoDraw、效果抽牌、回合手牌及到期验证正负状态，不冒充正常路径已覆盖该 Power。
+
+## 耗尽原因与延迟抽牌组件
+
+`dotnet run --project tools/differential -c Release -- exhaust-cause-compare --output .artifacts/differential/exhaust-causes`运行两seed各15种场景。受控命令例比较设置、耗尽后与侧结束三个边界，自然回合末例比较设置与敌方开始前两个边界；均比较五个有序牌区、实际Power与隐藏虚无次数、每次抽牌时已清零的次数、资源／ending及monster_ai、shuffle、combat_targets的完整状态、游标和逐次调用候选。普通耗尽、改量、NoDraw先后获得、满手、重洗、Hellraiser嵌套耗尽、移除重建、无事件生成、即时Charon／FeelNoPain、真实回合末虚无及Infection正文、末杀和暂停续接均执行实际命令。
+
+两侧明确使用空永久牌组、HP1000和受控牌区；Strike／Bash／Infection显式取得虚无，嵌套Strike另取得耗尽关键词。自然回合末比较参考原生EnemyTurnStarting观察点与DSL清手／侧结束后、敌方行动前的行政暂停；末杀停在奖励前。暂停抽牌先与参考只读CardDrawn通知比较首张，再续接完成。该报告仅认证受控组件，不认证正常Run或M01；原11份suite与正常比较的缺维度失败保持。

@@ -86,7 +86,7 @@ event CardPlayedOnTarget { payload = { owner = Ref(Player) card = Ref(Card) targ
 # Emitted after an instance is marked upgraded, so a card definition can apply definition-level upgrades.
 event CardUpgraded { payload = { card = Ref(Card) } }
 # Emitted when a resolving card with CardKeyword.Exhaust reaches the exhaust pile.
-event CardExhausted { payload = { owner = Ref(Player) card = Ref(Card) } }
+event CardExhausted { payload = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } }
 
 event CardCreated { payload = { card = Ref(Card) } }
 event CardEnteredCombat { payload = { owner = Ref(Player) card = Ref(Card) clone = Bool } }

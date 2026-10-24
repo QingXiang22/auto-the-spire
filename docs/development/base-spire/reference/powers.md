@@ -1,6 +1,6 @@
 # Power定义与生命周期参考
 
-文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.72的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
+文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.73的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
 
 ## 定义与共有状态
 
@@ -85,3 +85,7 @@ Weak／Vulnerable／Frail在自己的模块监听AfterEnemySideTurnEnd并调用T
 私有entity声明在所属模板内，字段设为Hidden，通过实际Power引用关联。例如JugglingPower.State保存计数，RupturePower.Pending关联实际CardPlayRecord；模块负责创建、重置与移除清理。Engine保存这些实体；它们不是C#隐藏状态，也不应公开为玩法观察。
 
 本接口未提供完整Creature模型、任意Power的私有状态复制或全部源hook。接收修正者当前以Power实例记录，遗物接收修正消费者仍需明确其记录与资格；Given仍使用当前Int范围，未迁移的比例型内容不因此获得支持。Rupture沿已有开发上下文。不能从一个已登记定义推导全量来源资格或独立原版等价性。
+
+## DarkEmbrace的虚无耗尽计数
+
+[DarkEmbracePower](../../../../mod-the-spire/base-spire/powers/shared/dark-embrace-power.spire)按Power实例保存隐藏State。CardExhausted的causedByEthereal为false时立即按当时Stacks抽牌；为true时只累计次数。在持有者AfterPlayerSideTurnEnd读取当前Stacks与次数，先清零再调用DrawCards抽乘积，因此抽到的牌在清手后保留。NoDraw、满手、空牌堆或ending阻止抽牌时仍已消费次数；嵌套抽牌和暂停续接不能重兑。移除Power销毁对应State，战斗清理沿同一路径移除；公开观察不暴露计数。CharonsAshes和FeelNoPain接收原因但保持即时伤害／格挡。

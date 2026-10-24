@@ -40,7 +40,7 @@ procedure RemoveFromCombatPiles {
   }
 }
 procedure ExhaustCombatCard {
-  parameters = { owner = Ref(Player) card = Ref(Card) }
+  parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool }
   locals = { from = String(length = 16) }
   body = {
     # CardPileCmd.Exhaust checks ending before validation/movement; an already-entered
@@ -55,7 +55,7 @@ procedure ExhaustCombatCard {
     call = { procedure = RemoveFromCombatPiles args = { card = card } }
     addToCollection = { collection = ExhaustPile item = card }
     emit = { event = CardMoved payload = { owner = owner card = card from = from to = "exhaust" reason = "exhaust" } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card causedByEthereal = causedByEthereal } } } }
   }
 }
 procedure SelectHandCard {
