@@ -72,5 +72,16 @@ internal static partial class PackageChecks
         Equal(0, Members(fatalBash, "Powers").Count, "fatal Bash cannot add Vulnerable after target detach");
         Equal("none", Outcome(fatalBash), "fatal Bash leaves the other source enemies active");
         Console.WriteLine("ok   CB08 controlled fatal Bash rejects post-death Vulnerable while other enemies remain");
+
+        var tracker = Start(package);
+        Submit(tracker, "TrackerRubyRaider.Spawn"); Submit(tracker, "BeginDevelopmentCombat"); Submit(tracker, "BeginDevelopmentTurn");
+        Submit(tracker, "EndDevelopmentTurn");
+        Equal(2L, IcPower(tracker, "base-spire:frail-power"), "real TRACK_MOVE applies Frail before the lethal turn");
+        Submit(tracker, "BeginDevelopmentTurn"); Set(tracker, Player(tracker), "Player", "Hp", Value.Of(3L));
+        Submit(tracker, "EndDevelopmentTurn");
+        Equal("defeat", Outcome(tracker), "real HOUNDS_MOVE kills the player");
+        Equal(0L, IcPower(tracker, "base-spire:frail-power"), "confirmed player death removes Frail");
+        Console.WriteLine("ok   CB09 controlled Tracker turns: real lethal multi-hit clears player Frail");
+        RunPlayerDeathPowerChecks(package);
     }
 }

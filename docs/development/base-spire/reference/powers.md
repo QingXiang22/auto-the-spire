@@ -1,6 +1,6 @@
 # Power定义与生命周期参考
 
-文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.63的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
+文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.70的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
 
 ## 定义与共有状态
 
@@ -30,12 +30,13 @@ ExpiresAtTurnEnd是一次施加的临时寿命事实，保留临时FlameBarrier�
 | ApplyEnemyPower | target: Ref(Enemy)、definition、stacks；无返回 | 委托ApplyPower，对敌人施加 |
 | ApplyPlayerPowerUntilTurnEnd | owner、definition、stacks；无返回 | 施加时设置ExpiresAtTurnEnd，在AfterPlayerTurnFinished移除；保留敌方阶段的效果 |
 | ApplyPower | player: Binding、enemy: Binding、definition: String(64)、stacks: Int(-999..999)、untilTurnEnd: Bool；返回Binding | 先查定义并验证恰好一个持有者，再按定义与持有者匹配实例；返回仍有效的Power，否则none |
-| ApplyPowerWithSource | 上述参数加applierPlayer／applierEnemy／card／play: Binding；返回Binding | 验证来源及持有者后，已确认死亡的敌人直接返回none；其余经过ShouldApplyPower、ModifyPowerGiven（存在施加者时）、ModifyPowerReceived，再按instanceMode匹配；阻止及新实例零结果返回none |
+| ApplyPowerWithSource | 上述参数加applierPlayer／applierEnemy／card／play: Binding；返回Binding | 验证来源及持有者后，已确认死亡／逃离的敌人或CombatOutcome为defeat的玩家直接返回none；其余经过ShouldApplyPower、ModifyPowerGiven（存在施加者时）、ModifyPowerReceived，再按instanceMode匹配；阻止及新实例零结果返回none |
 | ApplyPlayerPowerFromCard／ApplyEnemyPowerFromCard | owner、card、play、definition、stacks；敌方另加target | 卡牌效果显式传执行来源与玩家施加者；不通过CurrentPlay猜来源。临时版本ApplyPlayerPowerFromCardUntilTurnEnd同样保留来源 |
 | ModifyPowerAmount | power: Ref(Power)、delta: Int；无返回 | 委托ModifyPowerAmountWithSource，来源参数为none |
 | ModifyPowerAmountWithSource | power、delta，加applierPlayer／applierEnemy／card／play: Binding；无返回 | 先改Stacks，再对非零增量发布PowerAmountChanged，最后将0或不允许的负数通过RemovePower移除。字段范围仍为-999..999 |
 | RemovePower | power: Ref(Power)；无返回 | 有效实例在Powers中时先出集合、发PowerRemoved、再销毁；不直接destroy绕过清理 |
 | RemoveEnemyPowersOnDeath | target: Ref(Enemy)；无返回 | 普通敌人的死亡通知完成后，标记DeathResolved并按Powers顺序调用RemovePower；重复调用无额外效果，存活目标失败。仅覆盖当前Power的源默认移除策略，保留／否决消费者尚未接入，见[死亡约定](../../../design/mod-the-spire/combat-end/spec.md) |
+| RemovePowersOnDeath | player／enemy: Binding，恰好一个持有者；无返回 | 要求持有者生命为0；死亡通知完成后快照其Powers，逐个复核仍在集合中并调用RemovePower。玩家失败和敌人死亡共用此操作；只覆盖已加载Power的两项源默认移除资格，不移除其他持有者 |
 | ConsumePower | power: Ref(Power)；无返回 | 调用ModifyPowerAmount(-1) |
 | TickPowerDuration | power: Ref(Power)；无返回 | SkipTick为true时只清标志，否则ConsumePower；不会自行安排调用时点 |
 | ClearCombatPowers | 无参数／返回 | 遍历Powers并调用RemovePower，复用同一私有清理路径 |
@@ -61,7 +62,7 @@ Weak／Vulnerable／Frail在自己的模块监听AfterEnemyTurnEnded并调用Tic
 
 FlexPotionPower首次在BeforePowerCreated施加等量Strength，后续按PowerAmountChanged同步实际增量并保留本次施加来源。本方回合结束先RemovePower，再撤回保存层数。它不使用ExpiresAtTurnEnd：直接移除与跨战清理不会再次撤回Strength，零层变化已在移除前同步。
 
-显式EndDevelopmentCombat和下次BeginDevelopmentCombat调用ClearCombatPowers。自然胜负发布CombatEnded；开发场景沿用现有能力清理边界。正常胜利在该通知后清理所有能力、格挡及战斗牌，再通知早期／普通胜利效果并生成奖励。精确阶段见[战斗操作参考](operations.md)。
+显式EndDevelopmentCombat和下次BeginDevelopmentCombat调用ClearCombatPowers。玩家失败先提交defeat状态，发布PlayerDied(owner)，再通过RemovePowersOnDeath清理该玩家的Power及模块私有状态，随后发布CombatEnded并提交失败访问；存活敌人及其他玩家不受清理影响。正常胜利在CombatEnded后清理所有能力、格挡及战斗牌，再通知早期／普通胜利效果并生成奖励。精确阶段见[战斗操作参考](operations.md)。
 
 ## 私有状态与未支持范围
 
