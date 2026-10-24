@@ -4,19 +4,25 @@ dsl_version = "core/0.3"
 # Shared combat boundaries, also used by the supported normal first-visit path.
 event BeforeCombatStart { payload = { owner = Ref(Player) } }
 event PlayerDied { payload = { owner = Ref(Player) } }
-event BeforePlayerTurnStart { payload = { owner = Ref(Player) } }
-event BeforePlayerTurnEnd { payload = { owner = Ref(Player) } }
-# sts2 Creature.AfterTurnStart -> CombatManager.Hook.AfterBlockCleared, dispatched for every creature starting the turn.
+# Hook phases use distinct dispatch snapshots; energy/block hooks observe the previous turn number.
+event BeforePlayerSideTurnStart { payload = { owner = Ref(Player) } }
 event AfterBlockCleared { payload = { owner = Ref(Player) } }
 event AfterEnergyReset { payload = { owner = Ref(Player) } }
-# Side turn-start reactions run after the separate energy reset event.
-event AfterSideTurnStarted { payload = { owner = Ref(Player) } }
-# Development time point for the player turn-start hooks (vanilla runs Early, AfterPlayerTurnStart, then Late).
+event BeforeHandDraw { payload = { owner = Ref(Player) } }
+event AfterPlayerTurnStartEarly { payload = { owner = Ref(Player) } }
 event AfterPlayerTurnStart { payload = { owner = Ref(Player) } }
-# Development time point for the late player turn-start hooks (vanilla AfterPlayerTurnStartLate).
 event AfterPlayerTurnStartLate { payload = { owner = Ref(Player) } }
-# Development end-of-turn time point: the hand is discarded first, then this fires before the turn gate closes.
-event AfterTurnEnded { payload = { owner = Ref(Player) } }
+event AfterPlayerSideTurnStart { payload = { owner = Ref(Player) } }
+event BeforePlayerSideTurnEndVeryEarly { payload = { owner = Ref(Player) } }
+event BeforePlayerSideTurnEndEarly { payload = { owner = Ref(Player) } }
+event BeforePlayerSideTurnEnd { payload = { owner = Ref(Player) } }
+event AfterPlayerSideTurnEnd { payload = { owner = Ref(Player) } }
+event BeforeEnemySideTurnStart { payload = { owner = Ref(Player) } }
+event AfterEnemySideTurnStart { payload = { owner = Ref(Player) } }
+event BeforeEnemySideTurnEndVeryEarly { payload = { owner = Ref(Player) } }
+event BeforeEnemySideTurnEndEarly { payload = { owner = Ref(Player) } }
+event BeforeEnemySideTurnEnd { payload = { owner = Ref(Player) } }
+event AfterEnemyBlockCleared { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 # Confirmed ordinary death notification, before the supported source Power cleanup. The instance
 # remains available to damage/play references; complete death prevention/removal hooks are not migrated.
 event EnemyDied { payload = { target = Ref(Enemy) } }
@@ -30,12 +36,8 @@ event CombatVictoryEarly { payload = { owner = Ref(Player) victory = Bool } }
 # One enemy's turn. The enemy content template subscribes and filters by its DefinitionId.
 event EnemyTurnStarted { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 # The enemy phase finished; source duration tick-down happens here rather than at the player's end of turn.
-event AfterEnemyTurnEnded { payload = { owner = Ref(Player) } }
+event AfterEnemySideTurnEnd { payload = { owner = Ref(Player) } }
 
-procedure EnemySideTurnEndOrder {
-  pure = true parameters = { target = Ref(Enemy) } result = Int
-  body = { return = { value = add(multiply(add(field(target, Enemy.SpawnOrder), 1), add(count(collection(Powers)), 1)), count(collection(Powers))) } }
-}
 procedure RemoveCombatEnemy {
   parameters = { target = Ref(Enemy) }
   body = {
@@ -170,80 +172,55 @@ procedure EndDevelopmentCombat {
   }
 }
 
-# Source order: turn number increments, block is cleared except on turn 1 (Creature.AfterTurnStart
-# returns early for the player's first turn), AfterBlockCleared runs, energy is reset to MaxEnergy,
-# then the side/player turn-start hooks run. CombatManager dispatches AfterBlockCleared even when the
-# first-turn exception or a retention listener prevents clearing the block value.
+# BeforeSideTurnStart precedes block reset. AfterEnergyReset still sees the old TurnNumber;
+# SetupPlayerTurn then increments it before BeforeHandDraw and the starting draw.
 procedure BeginDevelopmentTurn {
   parameters = { owner = Ref(Player) }
   body = {
-    if = {
-      condition = not(field(owner, Player.CombatActive))
-      then = { fail = { message = "Development combat is not active" } }
-    }
-    if = {
-      condition = field(owner, Player.TurnOpen)
-      then = { fail = { message = "Development turn is already open" } }
-    }
+    if = { condition = not(field(owner, Player.CombatActive)) then = { fail = { message = "Development combat is not active" } } }
+    if = { condition = field(owner, Player.TurnOpen) then = { fail = { message = "Development turn is already open" } } }
     set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
-    set = { target = owner field = Player.TurnNumber value = add(field(owner, Player.TurnNumber), 1) }
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
-    emit = { event = BeforePlayerTurnStart payload = { owner = owner } }
-    if = {
-      condition = and(greater(field(owner, Player.TurnNumber), 1), foldEvent(ShouldClearBlock, true, owner))
-      then = {
-        set = { target = owner field = Player.Block value = 0 }
-      }
-    }
-    emit = { event = AfterBlockCleared payload = { owner = owner } }
-    emit = {
-      event = BeforeTurnResources payload = { owner = owner } }
-    call = { procedure = ResetTurnEnergy args = { owner = owner } }
-    emit = { event = AfterEnergyReset payload = { owner = owner } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnStart payload = { owner = owner } } } }
+    # Enemy move preparation at this boundary is tracked separately by the enemy lifecycle.
+    if = { condition = and(not(pureCall(CombatIsEnding)), and(greater(field(owner, Player.TurnNumber), 0), foldEvent(ShouldClearBlock, true, owner))) then = {
+      set = { target = owner field = Player.Block value = 0 }
+    } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterBlockCleared payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetTurnEnergy args = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnergyReset payload = { owner = owner } } } }
+    set = { target = owner field = Player.TurnNumber value = add(field(owner, Player.TurnNumber), 1) }
     set = { target = owner field = Player.TurnOpen value = true }
-    emit = { event = AfterSideTurnStarted payload = { owner = owner } }
-    if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeHandDraw payload = { owner = owner } } } }
+    if = { condition = and(not(pureCall(CombatIsEnding)), greater(field(owner, Player.AutoDrawPerTurn), 0)) then = {
       call = { procedure = DrawDevelopmentTurnHand args = { owner = owner } }
     } }
-    emit = { event = AfterPlayerTurnStart payload = { owner = owner } }
-    emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerTurnStartEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerTurnStart payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerSideTurnStart payload = { owner = owner } } } }
     set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
     call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
 }
-# End of the player's turn. The hand is discarded, the player's end-of-turn time point runs, then every
-# hittable enemy takes its turn and the enemy phase closes (which is where debuffs tick down). Victory and
-# rewards are handled by the damage paths; per-card discard hooks are not migrated.
+# Auto-post-play precedes the three BeforeSideTurnEnd stages, hand effects/flush and side-end.
+# Each stage checks ending at entry; callbacks already in that stage keep their snapshot.
 procedure EndDevelopmentTurn {
   parameters = { owner = Ref(Player) }
   body = {
-    if = {
-      condition = not(field(owner, Player.CombatActive))
-      then = { fail = { message = "Development combat is not active" } }
-    }
-    if = {
-      condition = not(field(owner, Player.TurnOpen))
-      then = { fail = { message = "Development turn is not open" } }
-    }
+    if = { condition = not(field(owner, Player.CombatActive)) then = { fail = { message = "Development combat is not active" } } }
+    if = { condition = not(field(owner, Player.TurnOpen)) then = { fail = { message = "Development turn is not open" } } }
     set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
-    emit = {
-      event = BeforeTurnEndEffects payload = { owner = owner } }
-    if = { condition = field(owner, Player.CombatActive) then = { emit = { event = BeforePlayerTurnEnd payload = { owner = owner } } } }
-    if = { condition = field(owner, Player.CombatActive) then = {
-      call = { procedure = FinishTurnHand args = { owner = owner } }
-    } }
-    if = { condition = field(owner, Player.CombatActive) then = {
-      emit = { event = AfterTurnEnded payload = { owner = owner } }
-        emit = {
-          event = AfterPlayerSideEnd payload = { owner = owner } }
-      call = { procedure = RunEnemyTurn args = { owner = owner } }
-        emit = {
-          event = AfterPlayerTurnFinished payload = { owner = owner }
-        }
-      call = { procedure = ResetCardTurnCosts }
-      set = { target = owner field = Player.TurnOpen value = false }
-    } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterAutoPostPlayPhaseEntered payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnEndVeryEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnEndEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = FinishTurnHand args = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetCardTurnCosts } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerSideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = RunEnemyTurn args = { owner = owner } } } }
+    set = { target = owner field = Player.TurnOpen value = false }
     set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
     call = { procedure = CheckCombatVictory args = { owner = owner } }
   }

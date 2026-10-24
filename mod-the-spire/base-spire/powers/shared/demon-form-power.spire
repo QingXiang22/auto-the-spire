@@ -21,7 +21,7 @@ procedure DemonForm {
 }
 
 subscription DemonForm {
-  event = AfterSideTurnStarted reaction = DemonForm instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:demon-form"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterPlayerSideTurnStart reaction = DemonForm instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:demon-form"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use DemonFormPower { template = DemonFormPowerModule }

@@ -20,7 +20,7 @@ Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Ku
 
 拾取效果在入Relics后发RelicObtained时执行，不能只放开发Obtain动作；模板拾取订阅按本次relic过滤，旧Strawberry迁移到相同接缝，不重复奖励。永久最大生命不会在移除时撤回，治疗和金币不能因移除反向扣除。OldCoin源商店／幕资格保留在来源说明，当前显式开发获得不等于正常池资格已恢复。BlackBlood当前只交付持有效果，不宣称先古之民升级替换BurningBlood已接入。
 
-新增BeforePlayerTurnStart在回合编号增加后、抽牌／自动出牌前发出，供当回合计数重置。新增BeforePlayerTurnEnd在回合末自动出牌后、弃牌前发出，供StoneCalendar；完成当前群体伤害后沿现有胜负判定，终局后不得继续敌方行动。EndDevelopmentCombat手动终止不发胜利治疗。
+BeforePlayerSideTurnStart在清格挡、能量重置与回合编号增加前发出，供当回合计数重置。BeforePlayerSideTurnEnd在回合末自动打出及VeryEarly／Early之后、手牌回合末效果前发出；StoneCalendar在AfterPlayerSideTurnStart保存第七回合资格，在本阶段先清资格再造成群体伤害。各阶段入口复查ending，终局后不得继续敌方行动。EndDevelopmentCombat手动终止不发胜利治疗。
 
 CentennialPuzzle消费已支持的PlayerHpLost站点，要求存活且战斗活跃，先写本实例已用再DrawCards；来源为当前未挡伤害／牌源掉血，未知伤害修正与死亡防止未额外承诺。移除／熔化使后续触发和动态手牌／营火修正失效；每次获得新实例从默认计数开始。
 
@@ -28,9 +28,9 @@ CentennialPuzzle消费已支持的PlayerHpLost站点，要求存活且战斗活�
 
 StrikeDummy／FakeStrikeDummy对有Strike标签的牌源加成攻击分别加3／1，先与力量相加，再应用虚弱和易伤，最后取整和扣格挡；非Strike及无加成伤害不参与。DamageEnemyPowered改为显式传owner、card、target和amount，所有真实调用方迁移，不以全局CurrentCard猜来源；当前单人范围owner同时是攻击者和牌拥有者，召唤物／跨拥有者攻击另行恢复。通过ModifyAttackAdditive纯监听贡献加值，不改变牌本身的基础伤害。重复与多段每段均参与，嵌套自动出牌以各自card为准。
 
-IceCream监听ShouldResetEnergy决定保留资格，首回合仍重置为GetMaxEnergy，后续回合将当前余能加GetMaxEnergy，按现有资源域上限999封顶。能量重置与补足不走GainEnergy，不能被no-energy-gain阻止；重置完成发AfterEnergyReset，再打开回合门并发AfterSideTurnStarted。移除／熔化后下一重置即时失效。
+IceCream监听ShouldResetEnergy决定保留资格，此时TurnNumber仍为上一编号：首回合0仍重置为GetMaxEnergy，后续编号大于0时将余能加GetMaxEnergy，按现有资源域上限999封顶。能量重置与补足不走GainEnergy，不能被no-energy-gain阻止；AfterEnergyReset完成后递增编号、起手抽牌并完成玩家Early／普通／Late，最后发AfterPlayerSideTurnStart。移除／熔化后下一重置即时失效。
 
-ArtOfWar.State按遗物实例保存ThisTurn和LastTurn，获得时创建、移除时销毁，AfterCardPlayed只记录本拥有者实际打完的Attack，自动／重复同样记录；在玩家侧末AfterTurnEnded转交上一回合标志，AfterEnergyReset在TurnNumber>1且上回合未攻击时GainEnergy(1)，随后清理两标志。首回合不奖励；重置站点早于起手抽牌／回合开始自动攻击。战斗开始与CombatEnded清理，手动终止后下一战也重新清理。移除销毁状态，熔化不参与触发与奖励。判别须覆盖连续空攻击回合、攻击后下一回合失奖而再下一回合恢复、技能嵌套自动攻击与回合末自动攻击、奖励受no-energy-gain抑制、与IceCream叠加及不同持有者隔离。
+ArtOfWar.State按遗物实例保存ThisTurn和LastTurn，获得时创建、移除时销毁，AfterCardPlayed只记录本拥有者实际打完的Attack，自动／重复同样记录；在玩家侧末AfterPlayerSideTurnEnd转交上一回合标志，AfterEnergyReset在上一编号TurnNumber>0且上回合未攻击时GainEnergy(1)，随后清理两标志。首回合不奖励；重置站点早于起手抽牌／回合开始自动攻击。战斗开始与CombatEnded清理，手动终止后下一战也重新清理。移除销毁状态，熔化不参与触发与奖励。判别须覆盖连续空攻击回合、攻击后下一回合失奖而再下一回合恢复、技能嵌套自动攻击与回合末自动攻击、奖励受no-energy-gain抑制、与IceCream叠加及不同持有者隔离。
 
 ## 效果 X 修正（DSL-RELIC-CONTENT-03）
 
@@ -56,9 +56,9 @@ cards拥有`UpgradeRandomPermanentCards(owner: Ref(Player), kind: String(16), am
 
 Candelabra在本持有者第2回合GainEnergy(2)，Chandelier在第3回合GainEnergy(3)，VeryHotCocoa在TurnNumber<=1时GainEnergy(4)。三者复用TurnStartEnergyRelic；新增throughTurn布尔参数，默认false保持精确相等，true使用小于等于turn，保留Cocoa源条件。当前回合入口先递增编号再发通知，首个可达回合为1。拾取和开战不回能，每战重新按本场回合号判断。
 
-FakeHappyFlower复用EveryTurnsEnergyRelic(amount=1,turns=5)，每次本持有者AfterSideTurnStarted先将本实例Counter加1模5，归零时才GainEnergy。计数跨战保留，获得新实例从0开始；NoEnergyGain只抑制奖励，不阻止计数递增或归零。移除／熔化后不再推进计数。视觉状态、等待动画和源商店价格不属于本次玩法恢复。
+FakeHappyFlower复用EveryTurnsEnergyRelic(amount=1,turns=5)，每次本持有者AfterPlayerSideTurnStart先将本实例Counter加1模5，归零时才GainEnergy。计数跨战保留，获得新实例从0开始；NoEnergyGain只抑制奖励，不阻止计数递增或归零。移除／熔化后不再推进计数。视觉状态、等待动画和源商店价格不属于本次玩法恢复。
 
-Sai使用TurnStartBlockRelic，每次本持有者AfterSideTurnStarted调用GainUnpoweredBlock(7)，不受敏捷／脆弱影响。此事件位于清除格挡、AfterBlockCleared、能量重置之后、起手抽牌之前；不能复用HornCleat的AfterBlockCleared，因为该事件在能量重置前；首回合和保留格挡时也会发布。首回合叠加Anchor，次回合先清理再叠加HornCleat与Sai。资源沿现有上限999，能量走GainEnergy并受NoEnergyGain限制，重置MaxEnergy不受该限制。
+Sai使用TurnStartBlockRelic，每次本持有者AfterPlayerSideTurnStart调用GainUnpoweredBlock(7)，不受敏捷／脆弱影响。此事件位于清除格挡、AfterBlockCleared、能量重置、起手抽牌及玩家Early／普通／Late通知之后；不能复用HornCleat的AfterBlockCleared，因为该事件在能量重置前；首回合和保留格挡时也会发布。首回合叠加Anchor，次回合先清理再叠加HornCleat与Sai。资源沿现有上限999，能量走GainEnergy并受NoEnergyGain限制，重置MaxEnergy不受该限制。
 
 三模板均按实际库存顺序绑定有效、未熔化且Holder匹配的实例，执行前由统一调度重查资格。开发Obtain仅检查本持有者已有定义，不让其他持有者阻止获得；直接ObtainRelic同样触发后续回合效果。同定义实例分别计数并各自贡献。非法重复BeginDevelopmentTurn在发布通知前拒绝，不能推进计数或重复奖励。判别复用回合测试，补每件数值执行结果、跨战、新实例、失效与持有者隔离、NoEnergyGain和资源封顶；公开stdio从实际获得到多回合和跨战结果。正常来源／Run和独立原版双侧仍未验证。
 
@@ -94,7 +94,7 @@ CharonsAshes 在本持有者的卡牌移入 ExhaustPile 并发布 CardExhausted 
 
 ## Neow 的 BoomingConch
 
-BoomingConch 按有效持有实例监听 `ModifyTurnDraw` 和 `AfterSideTurnStarted`。实际房间为 Elite 且玩家处于首回合时，抽牌数加 2、能量加 1；Monster／Boss、后续回合、其他持有者及已熔化实例不触发。房型读取所属 RunVisit.RoomType，MapType 保留原地图类型，不能将地图图标当作实际房间资格。多个有效实例分别响应，pure 抽牌查询不写状态或抽取随机数。
+BoomingConch 按有效持有实例监听 `ModifyTurnDraw` 和 `AfterPlayerSideTurnStart`。实际房间为 Elite 且玩家处于首回合时，抽牌数加 2、能量加 1；Monster／Boss、后续回合、其他持有者及已熔化实例不触发。房型读取所属 RunVisit.RoomType，MapType 保留原地图类型，不能将地图图标当作实际房间资格。多个有效实例分别响应，pure 抽牌查询不写状态或抽取随机数。
 
 Neow 的真实获得和 Monster 首战通过公开 Host 验证；Elite 首回合、后续回合、失效与多实例使用受控房型状态验证，不代表正常精英访问已经接通。
 

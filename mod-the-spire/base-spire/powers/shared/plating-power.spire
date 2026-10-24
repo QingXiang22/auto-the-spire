@@ -21,7 +21,7 @@ procedure PlatingDecay {
 }
 
 subscription PlatingDecay {
-  event = AfterSideTurnStarted reaction = PlatingDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterPlayerSideTurnStart reaction = PlatingDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure PlatingBlock {
@@ -36,7 +36,7 @@ procedure PlatingBlock {
 }
 
 subscription PlatingBlock {
-  event = BeforeTurnEndEffects reaction = PlatingBlock instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = BeforePlayerSideTurnEndEarly reaction = PlatingBlock instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use PlatingPower { template = PlatingPowerModule }

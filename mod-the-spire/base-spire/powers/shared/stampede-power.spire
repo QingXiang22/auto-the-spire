@@ -29,7 +29,7 @@ procedure Stampede {
 }
 
 subscription Stampede {
-  event = BeforeTurnEndEffects reaction = Stampede instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:stampede-power"))) instance_order = collectionIndex(Powers, listener) priority = 10
+  event = AfterAutoPostPlayPhaseEntered reaction = Stampede instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:stampede-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use StampedePower { template = StampedePowerModule }

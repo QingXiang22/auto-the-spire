@@ -64,6 +64,14 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 独立／按施加者两种模式使用明确的probe定义，分别与原生FlankingPower／StranglePower的实例策略比较；没有出牌、伤害或到期调用这些probe，不据此登记两项生产内容支持。来源场景使用真实卡牌引用与怪物施加者。migration要求全部96项、每条已声明命令及所有维度实际执行且一致，缺项或差异非零；normal_run_verified保持false。
 
+## 回合阶段与监听顺序组件比较
+
+运行`dotnet run --project tools/differential -c Release -- turn-phase-compare --output .artifacts/differential/turn-phases`。两seed共20项保留真实Orichalcum＋Plating、同定义双遗物、Charon普通耗尽末杀／非末杀／重洗、BloodVial与Lantern起手、Run与Direct监听顺序，以及Hellraiser嵌套末杀时FeelNoPain先后获得和OrnamentalFan末杀格挡。双方均使用真实Fuzzy战斗；DSL显式获得参考玩家自带的BurningBlood。永久牌组通常为空，起手场景为Strike／Defend／Bash，生命等受控设置写入报告。
+
+每个声明边界比较回合号、能量、生命／格挡、完整有序五牌区、玩家Power、实际挡伤、ending，以及monster_ai／shuffle／combat_targets完整状态和游标。逐次随机调用保留操作、边界、结果和候选顺序；起手洗牌沿原牌组顺序，后续重洗沿StableShuffle排序，各自从参考自身牌堆重建并核对结果。监听顺序直接读取锁定参考的实际迭代器，与调用生产排序函数的DSL实例通知比较，覆盖玩家Power、库存、牌区、敌方Power及模型；ShouldClearBlock使用同一Direct路径。缺场景、维度、边界或差异均非零。
+
+末杀组件比较到耗尽／出牌完成，奖励结算不在组件内；base另验证外层胜利与合法余效。移除／熔化与跨战资格、起手阶段由base行为检查验证；新建／失效快照、嵌套及暂停续接保留core与Power改量原测试。敌人出生／槽位与选招时点、虚无耗尽原因／延迟抽牌仍有独立未支持边界。此结果不认证正常Run或M01。
+
 ## BattleFriend受控组件比较
 
 运行`dotnet run --project tools/differential -c Release -- battle-friend-compare --output .artifacts/differential/battle-friend`。两侧各自创建真实三档靶人、执行入场与前三回合，比较HP、计时、活动／逃离／死亡、意图、胜利／超时、最大生命，以及niche的实际抽样参数／结果／游标／完整状态和AI消费。真实击杀场景在第三回合出牌前将双方目标HP设置为5，再实际打出Feed；双实例场景核对固定HP的候选耗尽抽样形式。没有重设随机种子或注入结束结果。

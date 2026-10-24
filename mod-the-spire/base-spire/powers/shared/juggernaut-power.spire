@@ -27,7 +27,7 @@ procedure Juggernaut {
 }
 
 subscription Juggernaut {
-  event = PlayerBlockGained reaction = Juggernaut instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggernaut-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = PlayerBlockGained reaction = Juggernaut instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggernaut-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use JuggernautPower { template = JuggernautPowerModule }

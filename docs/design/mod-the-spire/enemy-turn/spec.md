@@ -8,7 +8,7 @@
 
 `TwigSlimeM.cs` 的 A0 初始 HP 为26..28，攻击 `POKEY_POUNCE_MOVE` 造成11点伤害，状态招 `STICKY_SHOT_MOVE` 向每个目标的弃牌堆加入一张Slimed，首招固定为状态招。源码 `AddBranch(moveState, 2)` 选择最多连续两次的重载，默认权重1；状态招使用CannotRepeat，同样权重1，冷却均为0。两个分支保持攻击、状态的源顺序。Slimed花1能量，抽1张后耗尽，不能升级。
 
-敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
+敌方阶段依次发BeforeEnemySideTurnStart、清本侧全部格挡并逐个发AfterEnemyBlockCleared、AfterEnemySideTurnStart，然后按活动敌人各发一次 `EnemyTurnStarted`，结束时分VeryEarly／Early／普通阶段后发 `AfterEnemySideTurnEnd`。共享图消费者执行已经保存的招式；当前实现仍在敌方阶段结束、持续时间更新后为存活敌人选择下一招。源通常在玩家BeforeSideTurnStart后准备下一招；条件选招时点以及出生标识／槽位分离尚未迁移，不由本阶段调整认证。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
 图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档、Wriggler及下述七个固定轮转敌人。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
 
@@ -26,7 +26,7 @@ EnemyAttack接收attacker、defender、amount和hits，拒绝负命中数，一�
 
 | ID | 约定 | 判别 |
 | --- | --- | --- |
-| EN01 | 玩家回合结束后依次弃手牌、发 AfterTurnEnded、跑敌方阶段（每个可命中敌人一次）、发 AfterEnemyTurnEnded，最后关闭回合门 | 敌人已死亡时跳过；结束后仍可开下一回合 |
+| EN01 | 玩家回合结束后依次弃手牌、发 AfterPlayerSideTurnEnd、跑敌方阶段（每个可命中敌人一次）、发 AfterEnemySideTurnEnd，最后关闭回合门 | 敌人已死亡时跳过；结束后仍可开下一回合 |
 | EN02 | 敌方攻击按源顺序结算：攻击者 Strength 加性、攻击者 Weak ×0.75、防守方 Vulnerable ×1.5，整数向下取整，再格挡→生命 | 7 强度的 goop 打 11；1 层 Weak 的 4 点打 3；有 10 格挡时只掉 4 点格挡里的 4 并与剩余格挡共存 |
 | EN03 | 共享图执行保存的招式，内容按DefinitionId提供动作正文；未迁移敌人继续用原模板 | 三个招位按源顺序轮转，MoveId／MoveIndex／Intent一致 |
 | EN04 | debuff 减层发生在敌方阶段结束后 | Bash 施加 2 层 Vulnerable，结束玩家回合后变 1 层 |

@@ -18,7 +18,7 @@ procedure CorruptionCost {
 }
 
 subscription CorruptionCost {
-  event = ModifyCardCost reaction = CorruptionCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyCardCost reaction = CorruptionCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure CorruptionExhaust {
@@ -34,7 +34,7 @@ procedure CorruptionExhaust {
 }
 
 subscription CorruptionExhaust {
-  event = ShouldExhaustSkill reaction = CorruptionExhaust instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ShouldExhaustSkill reaction = CorruptionExhaust instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:corruption-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use CorruptionPower { template = CorruptionPowerModule }

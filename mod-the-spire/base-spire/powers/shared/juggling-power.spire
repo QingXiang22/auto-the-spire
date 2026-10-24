@@ -32,7 +32,7 @@ procedure SetupStrike {
 }
 
 subscription SetupStrike {
-  event = AfterCardPlayed reaction = SetupStrike instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterCardPlayed reaction = SetupStrike instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = pureCall(PowerHookOrder, listener, true) priority = 0
 }
 
 procedure SetupReset {
@@ -43,10 +43,10 @@ procedure SetupReset {
 }
 
 subscription SetupReset {
-  event = AfterPlayerSideEnd reaction = SetupReset instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterPlayerSideTurnEnd reaction = SetupReset instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 procedure Applied { parameters = { power = Ref(Power) amount = Int created = Bool listener = Ref(Power) } body = { set = { target = first(where(type(State), s, equal(field(s, State.Power), power))) field = State.Value value = pureCall(AttacksPlayedThisTurn, field(power, Power.HolderPlayer)) } } }
-subscription Applied { event = AfterPowerApplied reaction = Applied instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = collectionIndex(Powers, listener) }
+subscription Applied { event = AfterPowerApplied reaction = Applied instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
 
 } }
 use JugglingPower { template = JugglingPowerModule }

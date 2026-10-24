@@ -18,7 +18,7 @@ procedure Barricade {
 }
 
 subscription Barricade {
-  event = ShouldClearBlock reaction = Barricade instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:barricade"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ShouldClearBlock reaction = Barricade instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:barricade"))) instance_order = pureCall(PowerHookOrder, listener, true) priority = 0
 }
 } }
 use BarricadePower { template = BarricadePowerModule }

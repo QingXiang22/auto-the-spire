@@ -1,34 +1,50 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-# Orichalcum.cs: at the end of the owner's turn, if the owner still has no block, gain unpowered block.
-# The source splits this into a very early check and a later gain so other end-of-turn block does not suppress
-# it; the development end-of-turn time point checks the block once, which matches the observable result for a
-# single player.
-
+# Orichalcum captures zero block in Early, before Power listeners, and consumes that
+# per-instance eligibility in the ordinary phase even if another listener granted block.
 template TurnEndNoBlockRelic {
-  parameters = {
-    definition = { type = String(length = 64) }
-    block = { type = Int(min = 0, max = 999) }
-  }
+  parameters = { definition = { type = String(length = 64) } block = { type = Int(min = 0, max = 999) } }
   body = {
-    procedure WhenTurnEnded {
-      parameters = { owner = Ref(Player) listener = Ref(Relic) }
+    entity State { fields = { Relic = { type = Ref(Relic) } Armed = { type = Bool default = false } } }
+    procedure Acquired {
+      parameters = { owner = Ref(Player) relic = Ref(Relic) } locals = { state = Binding }
+      body = { if = { condition = equal(field(relic, Relic.DefinitionId), arg(definition)) then = {
+        create = { type = State scope = entityScope(owner) into = state fields = { Relic = relic } }
+      } } }
+    }
+    subscription Acquired { event = RelicObtained reaction = Acquired }
+    procedure Removed {
+      parameters = { owner = Ref(Player) relic = Ref(Relic) }
+      body = { forEach = { query = where(type(State), s, equal(field(s, State.Relic), relic)) item = state body = { destroy = { target = state } } } }
+    }
+    subscription Removed { event = RelicRemoved reaction = Removed }
+    procedure Reset {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) } locals = { state = Binding }
       body = {
-        if = {
-          condition = equal(field(owner, Player.Block), 0)
-          then = {
-            call = {
-              procedure = GainUnpoweredBlock args = {
-                owner = owner amount = arg(block)
-              }
-            }
-          }
-        }
+        let = { into = state value = first(where(type(State), s, equal(field(s, State.Relic), listener))) }
+        set = { target = state field = State.Armed value = false }
       }
     }
-    subscription OnTurnEnded {
-      event = AfterTurnEnded reaction = WhenTurnEnded instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+    procedure Capture {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) } locals = { state = Binding }
+      body = {
+        let = { into = state value = first(where(type(State), s, equal(field(s, State.Relic), listener))) }
+        if = { condition = equal(field(owner, Player.Block), 0) then = { set = { target = state field = State.Armed value = true } } }
+      }
     }
+    procedure Grant {
+      parameters = { owner = Ref(Player) listener = Ref(Relic) } locals = { state = Binding }
+      body = {
+        let = { into = state value = first(where(type(State), s, equal(field(s, State.Relic), listener))) }
+        if = { condition = field(state, State.Armed) then = {
+          set = { target = state field = State.Armed value = false }
+          call = { procedure = GainUnpoweredBlock args = { owner = owner amount = arg(block) } }
+        } }
+      }
+    }
+    subscription Reset { event = BeforePlayerSideTurnStart reaction = Reset instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0 }
+    subscription Capture { event = BeforePlayerSideTurnEndEarly reaction = Capture instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0 }
+    subscription Grant { event = BeforePlayerSideTurnEnd reaction = Grant instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0 }
     action Obtain {
       role = player
       requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(exists(where(collection(Relics), relic, equal(field(relic, Relic.DefinitionId), arg(definition))))))
@@ -69,7 +85,7 @@ template EveryTurnsDrawRelic {
       }
     }
     subscription OnTurnStart {
-      event = AfterSideTurnStarted reaction = WhenTurnStarted instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+      event = AfterPlayerSideTurnStart reaction = WhenTurnStarted instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
     }
     action Obtain {
       role = player

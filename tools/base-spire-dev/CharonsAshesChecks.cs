@@ -164,7 +164,7 @@ internal static partial class PackageChecks
                     call = { procedure = ExhaustCombatCard args = { owner = owner card = first(collection(Hand)) } }
                   } }
                 } }
-                subscription ExhaustAnother { event = CardExhausted reaction = ExhaustAnother priority = 99 }
+                subscription ExhaustAnother { event = CardExhausted reaction = ExhaustAnother priority = -1 }
                 """);
             var s = Start(nested.Load()); Submit(s, "CharonsAshes.Obtain"); Submit(s, "AddDevelopmentTarget");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");

@@ -17,7 +17,7 @@ template ArtifactPowerContent { body = {
  subscription Receive {
   event = PowerAmountReceiving reaction = Receive
   instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:artifact-power"))
-  instance_order = pureCall(PowerSideTurnEndOrder, listener)
+  instance_order = pureCall(PowerHookOrder, listener, false)
  }
  procedure Consume {
   parameters = { change = Ref(PowerAmountChange) listener = Ref(Power) }
@@ -26,7 +26,7 @@ template ArtifactPowerContent { body = {
  subscription Consume {
   event = AfterModifyingPowerAmountReceived reaction = Consume
   instances = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "base-spire:artifact-power"), exists(where(type(PowerAmountModifier), r, and(equal(field(r, PowerAmountModifier.Change), change), equal(field(r, PowerAmountModifier.Power), p))))))
-  instance_order = pureCall(PowerSideTurnEndOrder, listener)
+  instance_order = pureCall(PowerHookOrder, listener, false)
  }
 } }
 use ArtifactPower { template = ArtifactPowerContent }

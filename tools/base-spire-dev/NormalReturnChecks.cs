@@ -204,7 +204,7 @@ internal static partial class PackageChecks
               call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = 999 } }
               if = { condition = or(not(field(owner, Player.CombatActive)), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "Turn effect settled before its outer callback finished" } } }
             } }
-            subscription EndTurnKill { event = AfterPlayerTurnFinished reaction = EndTurnKill }
+            subscription EndTurnKill { event = AfterEnemySideTurnEnd reaction = EndTurnKill }
             procedure PotionAfterKill { parameters = { owner = Ref(Player) potion = Ref(Potion) target = Ref(Enemy) } body = {
               if = { condition = or(not(field(owner, Player.CombatActive)), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "Potion effect settled before consumption" } } }
             } }

@@ -44,8 +44,8 @@ action AmountApply { role = player body = { call = { procedure = AmountAppliers 
 action AmountModify { role = player body = { call = { procedure = AmountAppliers args = { modify = true } } } }
 action AmountExpire { role = player body = {
  if = { condition = isNone(field(first(type(AmountProbe)), AmountProbe.Player)) then = {
-  emit = { event = AfterEnemyTurnEnded payload = { owner = first(type(Player)) } }
- } else = { emit = { event = AfterPlayerSideEnd payload = { owner = first(type(Player)) } } } }
+  emit = { event = AfterEnemySideTurnEnd payload = { owner = first(type(Player)) } }
+ } else = { emit = { event = AfterPlayerSideTurnEnd payload = { owner = first(type(Player)) } } } }
 } }
 procedure AmountLog { parameters = { stage = String(length = 1) } body = {
  set = { target = first(type(AmountProbe)) field = AmountProbe.Log value = concat(field(first(type(AmountProbe)), AmountProbe.Log), stage) }

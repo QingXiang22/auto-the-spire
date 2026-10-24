@@ -16,7 +16,7 @@ internal static partial class PackageChecks
             } }
             subscription AuditDamage { event = DamageResolved reaction = AuditDamage }
             procedure AuditEnd { parameters = { owner = Ref(Player) } body = { set = { target = first(type(InfectionAudit)) field = InfectionAudit.Ends value = add(field(first(type(InfectionAudit)), InfectionAudit.Ends), 1) } } }
-            subscription AuditEnd { event = AfterTurnEnded reaction = AuditEnd }
+            subscription AuditEnd { event = AfterPlayerSideTurnEnd reaction = AuditEnd }
             procedure AuditDiscard { parameters = { owner = Ref(Player) card = Ref(Card) } body = { set = { target = first(type(InfectionAudit)) field = InfectionAudit.Discards value = add(field(first(type(InfectionAudit)), InfectionAudit.Discards), 1) } } }
             subscription AuditDiscard { event = CardDiscarded reaction = AuditDiscard }
             procedure TestKeyword { pure = true parameters = { value = Bool card = Ref(Card) keyword = String(length = 16) } result = Bool body = {

@@ -1,6 +1,6 @@
 # Power定义与生命周期参考
 
-文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.71的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
+文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.72的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
 
 ## 定义与共有状态
 
@@ -41,7 +41,7 @@ FlexPotion、SetupStrike与Mangle的初次力量变化由临时Power的BeforePow
 | --- | --- | --- |
 | ApplyPlayerPower | owner: Ref(Player)、definition: String(64)、stacks: Int(-999..999)；无返回 | 委托ApplyPower，对玩家施加 |
 | ApplyEnemyPower | target: Ref(Enemy)、definition、stacks；无返回 | 委托ApplyPower，对敌人施加 |
-| ApplyPlayerPowerUntilTurnEnd | owner、definition、stacks；无返回 | 施加时设置ExpiresAtTurnEnd，在AfterPlayerTurnFinished移除；保留敌方阶段的效果 |
+| ApplyPlayerPowerUntilTurnEnd | owner、definition、stacks；无返回 | 施加时设置ExpiresAtTurnEnd，在AfterEnemySideTurnEnd移除；保留敌方阶段的效果 |
 | ApplyPower | player: Binding、enemy: Binding、definition: String(64)、stacks: Int(-999..999)、untilTurnEnd: Bool；返回Binding | 先查定义并验证恰好一个持有者，再按定义与持有者匹配实例；返回仍有效的Power，否则none |
 | ApplyPowerWithSource | 上述参数加applierPlayer／applierEnemy／card／play: Binding；返回Binding | ending时在通知前返回none；验证来源与持有者，排除死亡／逃离敌人，经ShouldApplyPower并按instanceMode匹配后，进入一次共享改量流程。新建原始0量或修正后0量返回none |
 | ApplyPlayerPowerFromCard／ApplyEnemyPowerFromCard | owner、card、play、definition、stacks；敌方另加target | 卡牌效果显式传执行来源与玩家施加者；不通过CurrentPlay猜来源。临时版本ApplyPlayerPowerFromCardUntilTurnEnd同样保留来源 |
@@ -74,7 +74,7 @@ FlexPotion、SetupStrike与Mangle的初次力量变化由临时Power的BeforePow
 
 层数变化导致移除时，不再发布PowerApplied。重新施加已有玩家实例不会重新设置SkipTick。PowerAmountChange及PowerAmountModifier不进入公开投影；完成后销毁，暂停期间由Session保存。移除参与者时可选引用清空，后续回调重新检查有效性。
 
-Weak／Vulnerable／Frail在自己的模块监听AfterEnemyTurnEnded并调用TickPowerDuration。Rage等短期Power自行订阅AfterPlayerSideEnd。AfterBlockCleared在每次玩家回合开始的格挡处理阶段发布，包括首回合以及格挡被保留时；它不是“Block值发生变化”的通知。
+Weak／Vulnerable／Frail在自己的模块监听AfterEnemySideTurnEnd并调用TickPowerDuration。Rage等短期Power自行订阅AfterPlayerSideTurnEnd。AfterBlockCleared在每次玩家回合开始的格挡处理阶段发布，包括首回合以及格挡被保留时；它不是“Block值发生变化”的通知。
 
 三个临时力量Power共享TemporaryStrengthPowerContent，参数definition／sign／powerType。FlexPotion与SetupStrike的sign为1，Mangle为-1。首次BeforePowerCreated已处理初始量，因此源AfterPowerAmountChanged在delta等于当前Stacks时不重复处理；其余改量按实际delta同步。它们不使用ExpiresAtTurnEnd：直接移除与跨战清理不会再次撤回Strength，零层变化已在移除前同步。
 

@@ -15,7 +15,7 @@ template SelfFormingClayModule {
     subscription Damaged {
       event = PlayerDamaged reaction = Damaged
       instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:self-forming-clay"))))
-      instance_order = collectionIndex(Relics, listener)
+      instance_order = pureCall(RelicHookOrder, listener, false)
     }
     action Obtain {
       role = player requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), not(pureCall(HasOwnedRelic, first(type(Player)), "base-spire:self-forming-clay")))

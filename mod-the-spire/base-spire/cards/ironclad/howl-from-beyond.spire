@@ -24,10 +24,12 @@ dispatchCase HowlFromBeyondBody { dispatch = ExecuteCardBody key = "base-spire:h
 use HowlFromBeyondDamageValue { template = StaticCardDamage args = { definition = "base-spire:howl-from-beyond" } }
 
 procedure HowlFromBeyondAutoExhausted {
-  parameters = { owner = Ref(Player) }
-  body = { call = { procedure = AutoPlayExhaustedCards args = { owner = owner definition = "base-spire:howl-from-beyond" forceExhaust = false } } }
+  parameters = { owner = Ref(Player) listener = Ref(Card) }
+  body = { call = { procedure = AutoPlayCard args = { owner = owner card = listener forceExhaust = false } } }
 }
 
 subscription HowlFromBeyondAutoExhausted {
-  event = BeforeTurnEndEffects reaction = HowlFromBeyondAutoExhausted priority = 5
+  event = AfterAutoPostPlayPhaseEntered reaction = HowlFromBeyondAutoExhausted
+  instances = where(collection(ExhaustPile), c, and(equal(field(c, Card.Owner), field(owner, Player.Owner)), equal(field(c, Card.DefinitionId), "base-spire:howl-from-beyond")))
+  instance_order = pureCall(CardHookOrder, listener, false) priority = 0
 }

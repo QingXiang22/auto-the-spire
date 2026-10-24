@@ -18,7 +18,7 @@ procedure FreeAttackCost {
 }
 
 subscription FreeAttackCost {
-  event = ModifyCardCost reaction = FreeAttackCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:free-attack-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyCardCost reaction = FreeAttackCost instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:free-attack-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure FreeAttackConsumed {

@@ -2,10 +2,6 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Empty development targets are a command-test context, not a natural victory.
-procedure PowerCommandIsEnding {
- pure = true result = Bool
- body = { return = { value = exists(where(type(Player), owner, or(equal(field(owner, Player.CombatOutcome), "defeat"), and(field(owner, Player.CombatActive), or(lessOrEqual(field(owner, Player.Hp), 0), and(exists(type(Enemy)), not(exists(where(type(Enemy), e, pureCall(EnemyIsActive, e)))))))))) } }
-}
 procedure PowerTypeForAmount {
  pure = true parameters = { definition = Ref(PowerBlueprint) amount = Int } result = String(length = 8)
  body = {
@@ -30,7 +26,7 @@ procedure ExecutePowerAmountChange {
  result = Binding
  body = {
   let = { into = power value = initial }
-  if = { condition = pureCall(PowerCommandIsEnding) then = { return = { value = none } } }
+  if = { condition = pureCall(CombatIsEnding) then = { return = { value = none } } }
   if = { condition = not(isNone(enemy)) then = {
    if = { condition = or(field(enemy, Enemy.DeathResolved), field(enemy, Enemy.Escaped)) then = { return = { value = none } } }
   } }

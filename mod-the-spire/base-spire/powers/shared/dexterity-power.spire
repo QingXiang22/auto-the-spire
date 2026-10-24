@@ -14,7 +14,7 @@ procedure Dexterity {
 }
 
 subscription Dexterity {
-  event = ModifyBlockAdditive reaction = Dexterity instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dexterity-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyBlockAdditive reaction = Dexterity instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dexterity-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use DexterityPower { template = DexterityPowerModule }

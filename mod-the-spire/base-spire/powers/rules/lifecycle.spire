@@ -12,17 +12,6 @@ procedure RemovePower {
   } }
  }
 }
-procedure PowerSideTurnEndOrder {
- pure = true parameters = { power = Ref(Power) } result = Int
- locals = { group = Int }
- body = {
-  let = { into = group value = 0 }
-  if = { condition = not(isNone(field(power, Power.HolderEnemy))) then = {
-   let = { into = group value = add(field(field(power, Power.HolderEnemy), Enemy.SpawnOrder), 1) }
-  } }
-  return = { value = add(multiply(group, add(count(collection(Powers)), 1)), collectionIndex(Powers, power)) }
- }
-}
 procedure RemoveEnemyPowersOnDeath {
  parameters = { target = Ref(Enemy) }
  body = {
@@ -69,7 +58,7 @@ procedure ApplyPowerWithSource {
  parameters = { player = Binding enemy = Binding definition = String(length = 64) stacks = Int(min = -999, max = 999) untilTurnEnd = Bool applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding }
  locals = { entry = Binding power = Binding created = Bool } result = Binding
  body = {
-  if = { condition = pureCall(PowerCommandIsEnding) then = { return = { value = none } } }
+  if = { condition = pureCall(CombatIsEnding) then = { return = { value = none } } }
   let = { into = entry value = first(where(collection(PowerLibrary), d, equal(field(d, PowerBlueprint.DefinitionId), definition))) }
   if = { condition = isNone(entry) then = { fail = { message = "Unknown Power definition" } } }
   if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Power requires exactly one holder" } } }
@@ -124,7 +113,7 @@ procedure TickPowerDuration {
  body = { if = { condition = field(power, Power.SkipTick) then = { set = { target = power field = Power.SkipTick value = false } } else = { call = { procedure = ConsumePower args = { power = power } } } } }
 }
 procedure ExpireTurnPower { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = RemovePower args = { power = listener } } } }
-subscription ExpireTurnPower { event = AfterPlayerTurnFinished reaction = ExpireTurnPower instances = where(collection(Powers), p, field(p, Power.ExpiresAtTurnEnd)) instance_order = collectionIndex(Powers, listener) }
+subscription ExpireTurnPower { event = AfterEnemySideTurnEnd reaction = ExpireTurnPower instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), field(p, Power.ExpiresAtTurnEnd))) instance_order = pureCall(PowerHookOrder, listener, false) }
 procedure ClearCombatPowers { body = { forEach = { query = collection(Powers) item = power body = { call = { procedure = RemovePower args = { power = power } } } } } }
 
 procedure ApplyPlayerPowerFromCard {

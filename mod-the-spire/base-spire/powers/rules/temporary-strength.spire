@@ -28,7 +28,7 @@ template TemporaryStrengthPowerContent {
   subscription Changed {
    event = PowerAmountChanged reaction = Changed
    instances = where(collection(Powers), p, and(equal(p, power), equal(field(p, Power.DefinitionId), arg(definition))))
-   instance_order = collectionIndex(Powers, listener)
+   instance_order = pureCall(PowerHookOrder, listener, false)
   }
   procedure Expire {
    parameters = { owner = Ref(Player) listener = Ref(Power) }
@@ -42,14 +42,14 @@ template TemporaryStrengthPowerContent {
    }
   }
   subscription PlayerEnd {
-   event = AfterPlayerSideEnd reaction = Expire
+   event = AfterPlayerSideTurnEnd reaction = Expire
    instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), arg(definition))))
-   instance_order = pureCall(PowerSideTurnEndOrder, listener)
+   instance_order = pureCall(PowerHookOrder, listener, false)
   }
   subscription EnemyEnd {
-   event = AfterEnemyTurnEnded reaction = Expire
+   event = AfterEnemySideTurnEnd reaction = Expire
    instances = where(collection(Powers), p, and(not(isNone(field(p, Power.HolderEnemy))), equal(field(p, Power.DefinitionId), arg(definition))))
-   instance_order = pureCall(PowerSideTurnEndOrder, listener)
+   instance_order = pureCall(PowerHookOrder, listener, false)
   }
  }
 }

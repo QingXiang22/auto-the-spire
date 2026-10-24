@@ -83,19 +83,11 @@ event ModifyPlayCount {
   payload = { value = Int owner = Ref(Player) card = Ref(Card) }
 }
 
-event BeforeTurnResources {
+event AfterAutoPostPlayPhaseEntered {
   payload = { owner = Ref(Player) }
 }
 
-event BeforeTurnEndEffects {
-  payload = { owner = Ref(Player) }
-}
-
-event AfterPlayerSideEnd {
-  payload = { owner = Ref(Player) }
-}
-
-event BeforeCardDrawnReactions {
+event AfterCardDrawnEarly {
   payload = { owner = Ref(Player) card = Ref(Card) }
 }
 
@@ -105,8 +97,4 @@ event BeforePlayerAttacked {
 
 event BeforeCardPlaySequence {
   payload = { owner = Ref(Player) card = Ref(Card) }
-}
-
-event AfterPlayerTurnFinished {
-  payload = { owner = Ref(Player) }
 }

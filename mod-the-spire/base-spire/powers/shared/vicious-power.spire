@@ -21,7 +21,7 @@ procedure Vicious {
 }
 
 subscription Vicious {
-  event = PowerAmountChanged reaction = Vicious instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vicious-power")) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0
+  event = PowerAmountChanged reaction = Vicious instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:vicious-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use ViciousPower { template = ViciousPowerModule }

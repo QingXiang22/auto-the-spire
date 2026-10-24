@@ -23,7 +23,7 @@
 
 出牌计数模板CardCountRelic按真实AfterCardPlayed逐次计数，自动／重复打出分别计算，多段攻击只计一次。perTurn决定回合开始早期重置或跨战保留，实例计数不能从全局出牌数反推。首回合抽牌和营火治疗修正通过ModifyTurnDraw／ModifyRestHeal纯监听贡献；移除／熔化后停止参与。共享参数、完整消费者和边界见[遗物生命周期约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
 
-回合开始资源监听AfterSideTurnStarted：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置后、起手抽牌前，因此监听AfterSideTurnStarted；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
+回合开始资源监听AfterPlayerSideTurnStart：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置、起手抽牌及玩家Early／普通／Late通知之后，因此监听AfterPlayerSideTurnStart；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
 
 替换与熔化尚无正式 DSL 操作。实现时明确：旧获得效果如何撤回，新获得效果何时生效，是否保留同一实例／计数，熔化时保留哪些库存事实与触发，跨战如何重建。不能仅写 DefinitionId 或 IsMelted 就宣称完整生命周期。
 

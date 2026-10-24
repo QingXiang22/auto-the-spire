@@ -228,7 +228,7 @@ internal static partial class PackageChecks
             var top = IcAdd(s, "StrikeIronclad"); IcMove(s, top, "Hand", "DrawPile");
             IcPlay(s, IcAdd(s, "Havoc")); Equal(1L, IcPower(s, "base-spire:strength-power"), "automatic child attack counts");
             var lethal = Combat("OrnamentalFan"); Plays(lethal, "StrikeIronclad", 2); Set(lethal, FirstTarget(lethal), "Enemy", "Hp", Value.Of(1L));
-            Plays(lethal, "StrikeIronclad", 1); Equal("victory", Outcome(lethal), "third attack really killed"); Equal(4L, Block(lethal), "post-play block completed before victory");
+            Plays(lethal, "StrikeIronclad", 1); Equal("victory", Outcome(lethal), "third attack really killed"); Equal(0L, Block(lethal), "source GainBlock refuses the final-kill ending even before victory settlement");
         });
         check("RL counter instances isolate holders and newly acquired copies, while melted ownership still blocks duplicates", () =>
         {

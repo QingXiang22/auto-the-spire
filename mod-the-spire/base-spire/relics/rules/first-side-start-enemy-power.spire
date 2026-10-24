@@ -1,32 +1,33 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-# Relic that debuffs every hittable enemy when a combat starts. BagOfMarbles.cs applies VulnerablePower 1 to
-# the combat's hittable enemies from its room-entry hook; the development combat start is the equivalent point.
+# First-player-side debuff before block clearing and starting draw.
 
-template BeforeCombatStartEnemyPowerRelic {
+template FirstSideStartEnemyPowerRelic {
   parameters = {
     definition = { type = String(length = 64) }
     power = { type = String(length = 64) }
     stacks = { type = Int(min = 1, max = 999) }
   }
   body = {
-    procedure WhenCombatStarts {
+    procedure WhenSideStarts {
       parameters = { owner = Ref(Player) listener = Ref(Relic) }
+      locals = { applied = Binding }
       body = {
+        if = { condition = not(equal(field(owner, Player.TurnNumber), 0)) then = { return = {} } }
         forEach = {
           query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
           body = {
             call = {
-              procedure = ApplyEnemyPower args = {
-                target = enemy definition = arg(power) stacks = arg(stacks)
-              }
+              procedure = ApplyPowerWithSource args = {
+                player = none enemy = enemy definition = arg(power) stacks = arg(stacks) untilTurnEnd = false applierPlayer = owner applierEnemy = none card = none play = none
+              } into = applied
             }
           }
         }
       }
     }
     subscription OnCombatStart {
-      event = BeforeCombatStart reaction = WhenCombatStarts instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+      event = BeforePlayerSideTurnStart reaction = WhenSideStarts instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
     }
     action Obtain {
       role = player
