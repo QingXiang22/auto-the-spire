@@ -26,6 +26,14 @@
 
 X 牌按源 CardEnergyCost.GetAmountToSpend 首先支付当前能量，普通免费修正不能改变它；自动出牌只捕获、不支付。InfernalBlade 的免费修改在打出或回合结束时失效，Stomp 的本回合加性减费独立保留。HowlFromBeyond 没有原生 Exhaust，只有耗尽堆中的回合末自动打出，不能从 hover tip 推导关键词。BodySlam 的计算伤害仍走 powered 修正链。
 
+### 耗尽原因与延迟抽牌
+
+ExhaustCombatCard与CardExhausted显式传递causedByEthereal: Bool。普通出牌收尾、自动强制耗尽、选牌和正文效果传false；FinishTurnHand的虚无名单及在手效果牌完成后的虚无耗尽传true。仅生成到耗尽堆不调用该命令、不发耗尽通知。来源为锁定参考CardPileCmd.Exhaust、CombatEngine.DoTurnEndAsync与DarkEmbracePower；不能用卡牌当前是否带虚无关键词代替本次耗尽原因。
+
+DarkEmbrace每个Power实例保存隐藏虚无次数：同持有者普通耗尽立即DrawCards，虚无耗尽只加次数。在所属侧AfterSideTurnEnd按实际获得顺序读取当时层数与次数，先将次数清零再抽层数乘次数，避免嵌套重复兑现；因此抽到的牌在Flush后留在手牌。NoDraw、满手、ending等Draw门禁仍可能阻止兑现，但次数不会带到下回合。CharonsAshes、FeelNoPain、DrumOfBattle仍即时响应两类耗尽，忽略原因的消费者也须接收完整载荷。
+
+计数随Power创建、移除、死亡清理及跨战清理，不能跨实例或持有者共享。暂停保留本次调用局部值与事件快照，恢复不重复清零／移牌／抽牌；观察与候选不得公开计数或改变随机状态。回合末快照、阶段和ending沿现有约定，未开始的后续命令各自检查资格，不统一取消已进入的耗尽快照。
+
 ## 验证与交付
 
 ### 不可打出负费用与在手回合末效果

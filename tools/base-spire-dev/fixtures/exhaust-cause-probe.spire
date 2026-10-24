@@ -1,0 +1,15 @@
+procedure CauseKeyword { pure = true parameters = { value = Bool card = Ref(Card) keyword = String(length = 16) } result = Bool body = {
+  return = { value = or(value, and(equal(keyword, "ethereal"), equal(field(card, Card.DefinitionId), "base-spire:strike-ironclad"))) }
+} }
+subscription CauseKeyword { event = ModifyCardKeyword reaction = CauseKeyword }
+action CauseDark { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dark-embrace-power" stacks = 1 } } } }
+action CauseNoDraw { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:no-draw-power" stacks = 1 } } } }
+action CauseFeel { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:feel-no-pain-power" stacks = 3 } } } }
+action CauseOrdinary { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = { call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card causedByEthereal = false } } } }
+action CauseEthereal { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = { call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card causedByEthereal = true } } } }
+action CauseSideEnd { role = player body = { emit = { event = AfterPlayerSideTurnEnd payload = { owner = first(type(Player)) } } } }
+action CauseRemoveDark { role = player body = { forEach = { query = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power")) item = p body = { call = { procedure = RemovePower args = { power = p } } } } } }
+action CauseGenerateExhaust { role = player locals = { card = Binding } body = {
+  call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = "base-spire:defend-ironclad" } into = card }
+  addToCollection = { collection = ExhaustPile item = card }
+} }

@@ -16,7 +16,7 @@ procedure FinishCardPlay {
   body = {
     if = { condition = greaterOrEqual(collectionIndex(InPlay, card), 0) then = {
       if = { condition = equal(resultPile, "exhaust") then = {
-        call = { procedure = ExhaustCombatCard args = { owner = owner card = card } }
+        call = { procedure = ExhaustCombatCard args = { owner = owner card = card causedByEthereal = false } }
       } else = {
         call = { procedure = MoveCombatCard args = { owner = owner card = card to = resultPile reason = "play-result" } }
       } }
@@ -182,7 +182,7 @@ action UpgradeCardInHand {
   body = { call = { procedure = UpgradeCard args = { card = card } } }
 }
 procedure WhenCardExhausted {
-  parameters = { owner = Ref(Player) card = Ref(Card) }
+  parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool }
   body = { set = { target = owner field = Player.ExhaustedCardThisTurn value = true } }
 }
 subscription OnCardExhausted { event = CardExhausted reaction = WhenCardExhausted }

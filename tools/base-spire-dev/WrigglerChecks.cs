@@ -23,7 +23,7 @@ internal static partial class PackageChecks
               return = { value = or(value, or(and(equal(field(card, Card.Label), "retained"), equal(keyword, "retain")), and(or(equal(field(card, Card.Label), "ethereal"), equal(field(card, Card.Label), "draw-trigger")), equal(keyword, "ethereal")))) }
             } }
             subscription TestKeyword { event = ModifyCardKeyword reaction = TestKeyword }
-            procedure DrawOnExhaust { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+            procedure DrawOnExhaust { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } body = {
               if = { condition = equal(field(card, Card.Label), "draw-trigger") then = { call = { procedure = DrawCards args = { owner = owner count = 1 } } } }
             } }
             subscription DrawOnExhaust { event = CardExhausted reaction = DrawOnExhaust }
@@ -40,7 +40,7 @@ internal static partial class PackageChecks
             action ExhaustAutoFirst { role = player body = { call = { procedure = AutoPlayCard args = { owner = first(type(Player)) card = first(collection(Hand)) forceExhaust = true } } } }
             action DiscardFirst { role = player body = { call = { procedure = DiscardCombatCard args = { owner = first(type(Player)) card = first(collection(Hand)) } } } }
             action DrawFirst { role = player body = { call = { procedure = MoveCombatCard args = { owner = first(type(Player)) card = first(collection(Hand)) to = "draw-top" reason = "test" } } } }
-            action ExhaustFirst { role = player body = { call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = first(collection(Hand)) } } } }
+            action ExhaustFirst { role = player body = { call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = first(collection(Hand)) causedByEthereal = false } } } }
             action DamagePowers { role = player body = {
               call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:strength-power" stacks = 20 } }
               call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:weak-power" stacks = 2 } }

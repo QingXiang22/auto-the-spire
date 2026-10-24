@@ -1,0 +1,31 @@
+# Tool-only instrumentation and administrative pause, never loaded by the production package.
+entity CauseProbe { fields = { PauseEnd = { type = Bool default = false } PauseDraw = { type = Bool default = false } Amount = { type = Int default = 1 } } }
+entity CauseDraw { fields = { Card = { type = Ref(Card) } Deferred = { type = Int } } }
+action CauseInitialize { role = player locals = { probe = Binding } body = { create = { type = CauseProbe scope = entityScope(first(type(Player))) into = probe } } }
+procedure CauseOtherKeyword { pure = true parameters = { value = Bool card = Ref(Card) keyword = String(length = 16) } result = Bool body = {
+  return = { value = or(value, and(equal(keyword, "ethereal"), or(equal(field(card, Card.DefinitionId), "base-spire:bash"), equal(field(card, Card.DefinitionId), "base-spire:infection")))) }
+} }
+subscription CauseOtherKeyword { event = ModifyCardKeyword reaction = CauseOtherKeyword }
+action CauseHellraiser { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:hellraiser-power" stacks = 1 } } } }
+action CauseIncrease { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dark-embrace-power" stacks = field(first(type(CauseProbe)), CauseProbe.Amount) } } } }
+procedure CauseCount { pure = true result = Int locals = { total = Int } body = {
+  let = { into = total value = 0 }
+  forEach = { query = type(DarkEmbracePower.State) item = state body = { let = { into = total value = add(total, field(state, DarkEmbracePower.State.EtherealExhausts)) } } }
+  return = { value = total }
+} }
+procedure CauseRecord { parameters = { owner = Ref(Player) card = Ref(Card) } locals = { record = Binding answer = Bool } body = {
+  create = { type = CauseDraw scope = entityScope(owner) into = record fields = { Card = card Deferred = pureCall(CauseCount) } }
+  if = { condition = field(first(type(CauseProbe)), CauseProbe.PauseDraw) then = {
+    set = { target = first(type(CauseProbe)) field = CauseProbe.PauseDraw value = false }
+    decide = { participant = participant(1) kind = Bool prompt = "resume deferred draw" into = answer }
+  } }
+} }
+subscription CauseRecord { event = AfterCardDrawnEarly reaction = CauseRecord priority = -1000000 }
+procedure CausePauseEnd { parameters = { owner = Ref(Player) } locals = { answer = Bool } body = {
+  if = { condition = field(first(type(CauseProbe)), CauseProbe.PauseEnd) then = { decide = { participant = participant(1) kind = Bool prompt = "half-turn observed" into = answer } } }
+} }
+subscription CausePauseEnd { event = AfterPlayerSideTurnEnd reaction = CausePauseEnd priority = 1000000 }
+procedure CausePauseLethal { parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool } locals = { answer = Bool } body = {
+  if = { condition = and(field(first(type(CauseProbe)), CauseProbe.PauseEnd), pureCall(CombatIsEnding)) then = { decide = { participant = participant(1) kind = Bool prompt = "lethal exhausted boundary" into = answer } } }
+} }
+subscription CausePauseLethal { event = CardExhausted reaction = CausePauseLethal priority = 1000000 }

@@ -91,7 +91,7 @@ internal static partial class PackageChecks
                 action PhaseDarkEmbrace { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dark-embrace-power" stacks = 1 } } } }
                 action PhaseExhaust { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = {
                   set = { target = first(type(Player)) field = Player.EffectDepth value = add(field(first(type(Player)), Player.EffectDepth), 1) }
-                  call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card } }
+                  call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card causedByEthereal = false } }
                   set = { target = first(type(Player)) field = Player.EffectDepth value = subtract(field(first(type(Player)), Player.EffectDepth), 1) }
                 } }
                 action PhaseSettle { role = player body = { call = { procedure = CheckCombatVictory args = { owner = first(type(Player)) } } } }

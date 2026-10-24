@@ -11,7 +11,7 @@ template CardExhaustDamageRelic {
   }
   body = {
     procedure WhenCardExhausted {
-      parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Relic) }
+      parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool listener = Ref(Relic) }
       body = {
         call = {
           procedure = DamageAllEnemiesFromPlayer args = {

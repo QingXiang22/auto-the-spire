@@ -6,7 +6,7 @@ template FeelNoPainPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:feel-no-pain-power" } }
 
 procedure FeelNoPain {
-  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  parameters = { owner = Ref(Player) card = Ref(Card) causedByEthereal = Bool listener = Ref(Power) }
   body = {
     call = {
       procedure = GainUnpoweredBlock args = {

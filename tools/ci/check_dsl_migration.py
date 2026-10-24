@@ -320,6 +320,36 @@ def main() -> int:
             if name in ("starting-draw", "charon-reshuffle", "draw-before-block", "block-before-draw") and not end["calls"]:
                 raise ValueError("Nonempty shuffle/target random calls must be compared")
 
+        causes = run("exhaust-causes", ["exhaust-cause-compare", "--output", str(args.output / "exhaust-causes")], 0)
+        cause_names = ("ordinary", "deferred", "current-amount", "no-draw-before", "no-draw-after",
+                       "full-hand", "reshuffle", "nested", "remove-replace", "generated",
+                       "immediate-listeners", "natural", "natural-effect", "natural-lethal", "paused")
+        cause_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in cause_names]
+        cause_dimensions = {"at", "turn", "energy", "hp", "block", "enemy_hp", "ending", "piles", "powers",
+                            "deferred", "draws", "ai_draws", "ai_state", "shuffle_draws", "shuffle_state",
+                            "target_draws", "target_state", "calls"}
+        if (causes is None or causes["schema"] != "dsl-migration/exhaust-causes@1" or causes["status"] != "passed"
+                or causes["independent_verified"] is not True or causes["normal_run_verified"] is not False
+                or causes["reference"]["commit"] != lock["commit"] or [c["id"] for c in causes["cases"]] != cause_ids):
+            raise ValueError("Exhaust cause comparison must execute and pass all 30 controlled cases")
+        for case in causes["cases"]:
+            if (case["status"] != "passed" or case["left"] != case["right"] or len(case["left"]) != (2 if case["id"].rsplit(":", 1)[1].startswith("natural") else 3)
+                    or any(set(b) != cause_dimensions or len(b["piles"]) != 5
+                           or any(len(b[s]) != 4 for s in ("ai_state", "shuffle_state", "target_state"))
+                           or any(set(c) != call_dimensions for c in b["calls"])
+                           or any(set(p) != {"definition", "amount"} for p in b["powers"])
+                           or any(set(d) != {"card", "deferred"} or d["deferred"] != 0 for d in b["draws"])
+                           for b in case["left"])):
+                raise ValueError(f"Exhaust cause comparison omitted a dimension or boundary: {case['id']}")
+            name = case["id"].rsplit(":", 1)[1]
+            end = case["left"][-1]
+            if name in ("reshuffle", "nested") and not end["calls"]:
+                raise ValueError("Shuffle/target candidates must be measured for exhaust draws")
+            if name in ("natural", "natural-effect", "paused") and not end["draws"]:
+                raise ValueError("Deferred draw and natural half-turn must execute real draws")
+            if name == "natural-lethal" and (not end["ending"] or end["draws"] or end["deferred"] != [1]):
+                raise ValueError("Lethal snapshot must retain entered-listener counting and suppress later draws")
+
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
         paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]

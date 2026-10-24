@@ -16,7 +16,7 @@
 | `CreateCombatCard` | `owner, definition` → Binding | 从已注册定义创建全新战斗实例，初始化字段后发 `CardEnteredCombat(clone=false)`；未知定义在创建前明确失败。尚不入牌区 |
 | `CloneCombatCard` | `owner, source` → Binding | 保留实际升级、类型、Strike 标签、成长、费用修改与回合末自动打出能力；不携带 PermanentSource、当前 PaidX 或强制耗尽结果。依次发 CardCloned 与 `CardEnteredCombat(clone=true)`，私有费用／附魔监听自行复制，避免 Stomp 重复初始化减费 |
 | `AddGeneratedToHand` | `card` | 未入牌区的新建／复制实例进入手牌；满十张则进入弃牌堆。不是普通抽牌，不发抽牌事件 |
-| `ExhaustCombatCard` | `owner, card` | 仅处理该玩家 Hand／DrawPile／DiscardPile／InPlay 中未耗尽的战斗牌；先移动，再发 CardExhausted。永久牌、已耗尽牌、离场牌拒绝 |
+| `ExhaustCombatCard` | `owner, card, causedByEthereal: Bool` | 仅处理该玩家 Hand／DrawPile／DiscardPile／InPlay 中未耗尽的战斗牌；先移动，再发含完整原因的CardExhausted；仅回合末虚无及虚无效果牌收尾传true，其他耗尽传false。永久牌、已耗尽牌、离场牌拒绝 |
 | `SelectHandCard` | `owner, upgradeOnly` → Binding | 空域返回 none，单张自动选，多张发布必须单选的原生决策。升级模式仅选 CanUpgrade 且未升级牌；当前 InPlay 不属于手牌 |
 | `SelectDiscardCard` | `owner` → Binding | 同样按 0／1／多张处理，仅选该玩家弃牌。Headbutt 消费结果并移到抽牌堆顶部 |
 | `UpgradeCard` | `card` | 验证实际可升级性，先标记升级，再发 CardUpgraded；不会把战斗副本反写到永久源 |
