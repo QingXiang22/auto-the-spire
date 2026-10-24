@@ -174,10 +174,10 @@ internal static partial class PackageChecks
             True(s.Fault!.Message.Contains("unsupported_capability", StringComparison.Ordinal), "explicit unsupported diagnostic");
             Equal(before, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Card").Id).Count, "no empty fallback entity");
         });
-        check("IC merged power instances: self-damage applications accumulate and single-stack powers stay single", () =>
+        check("IC merged power instances: self-damage applications accumulate and Single display keeps source ModifyAmount", () =>
         {
             var s = Combat(); IcPlay(s, IcAdd(s, "CrimsonMantle")); IcPlay(s, IcAdd(s, "CrimsonMantle", true));
-            IcPlay(s, IcAdd(s, "Corruption")); IcPlay(s, IcAdd(s, "Corruption")); Equal(1L, IcPower(s, "base-spire:corruption-power"), "single source stack");
+            IcPlay(s, IcAdd(s, "Corruption")); IcPlay(s, IcAdd(s, "Corruption")); Equal(2L, IcPower(s, "base-spire:corruption-power"), "locked PowerCmd.ModifyAmount still adds the second application; Single is display metadata");
             IcNextTurn(s); Equal(78L, Hp(s), "two applications cause two self damage"); Equal(18L, Block(s), "normal and upgraded amounts merged");
         });
     }

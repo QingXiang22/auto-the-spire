@@ -107,18 +107,6 @@ event BeforeCardPlaySequence {
   payload = { owner = Ref(Player) card = Ref(Card) }
 }
 
-event EnemyPowerApplied {
-  payload = { target = Ref(Enemy) power = Ref(Power) amount = Int }
-}
-
-event ModifyPowerStacks {
-  payload = { value = Int power = Ref(Power) amount = Int }
-}
-
-event PlayerPowerApplied {
-  payload = { owner = Ref(Player) power = Ref(Power) amount = Int }
-}
-
 event AfterPlayerTurnFinished {
   payload = { owner = Ref(Player) }
 }

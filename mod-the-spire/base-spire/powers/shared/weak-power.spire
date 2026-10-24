@@ -3,7 +3,7 @@ dsl_version = "core/0.3"
 
 # Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template WeakPowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:weak-power" debuff = true } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:weak-power" powerType = "debuff" } }
 
 procedure Weak {
   pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Power) }

@@ -12,6 +12,8 @@
 
 通知与修正分开：Before／After通知产生后续行为，Should／Modify修正决定当前计算。伤害拥有者、牌源、攻击者、目标显式传递，嵌套上下文不借全局字段猜测。保留现有开发范围及资源上限，所有旧内容实际行为执行结果继续执行。
 
+Power接收修正需要记录实际参与者，以便计算后执行其副作用，使用[Power改量约定](../../development/base-spire/reference/powers.md#新建叠加与直接改量的阶段)。PowerAmountReceiving是计算包装通知：实例过程调用pure判定／计算，只写本次隐藏上下文与参与者记录，不在此阶段消费Power、发玩法通知或请求决策。Artifact的判断是pure过程；扣层在AfterModifyingPowerAmountReceived通知执行，资格同时要求本次记录与当前实例仍有效。该流程仍使用相同Session事件栈，不把pure的foldEvent改为可写操作；测试中的暂停专用于验证通用续接，不作为生产修正者的编写方式。
+
 ## 迁移和判别
 
 移除Relic的StrikeDamageBonus、RetainEnergy、FirstTurnDrawBonus、RestHealBonus等效果配置字段，由具体监听规则贡献。ArtOfWar等私有状态移入对应附属实体，移除时清理、下战重置，不能污染其他遗物。Power的修正和反应从战斗主过程搬到Power监听模板；层数叠加、临时寿命及独立计数仍在实例生命周期中维护。

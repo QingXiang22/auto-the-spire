@@ -54,7 +54,15 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 逐边界核对节点、复合意图、实例历史、生命／格挡、Strength／Vigor／Frail、按承受方分组的逐击结果，以及完整monster_ai状态和游标。初始HP抽样、正常遭遇、全局事件顺序不属于此组件范围，开发行为检查另核对一次Attack及前后通知各一次。
 
-两seed共50个场景保留在报告中。玩家死亡后双方均移除Frail；带Vigor攻击击杀玩家时仍存在真实差异：DSL在结束中消费敌人Vigor为0，参考保留Vigor3。命令因此返回1、independent_verified=false；migration核对全部50个场景，要求其他场景相同，并保留这项准确差异，额外差异同样失败。该检查不表示敌人符合性或正常Run已验收；Power结束中改量须按工单修复后同步比较条件。
+两seed共50个场景保留在报告中。玩家死亡后双方均移除Frail，ending期间拒绝消费敌人Vigor并保留3层；migration要求命令返回0、全部场景所有已比较边界相同。该结果只证明上述受控组件，不代表全部敌人、初始化或正常Run已验收。
+
+## Power改量组件比较
+
+运行`dotnet run --project tools/differential -c Release -- power-amount-compare --output .artifacts/differential/power-amounts`。两seed、玩家／敌人两类持有者与24种场景共96项，分别执行新建、叠加、直接Modify、零量、负Strength、负减益、到零移除、Artifact耗尽和临时力量到期；Given的非交换加法／乘法、通知顺序、嵌套、参与者失效与暂停续接另由base的`check --content-model-only`验证。
+
+双方从真实FuzzyWurmCrawler战斗启动，永久牌组为空，生命显式设为1000。每次命令后比较双方按持有者排列的完整Power库存、层数、PowerType／StackType、持续时间跳过标志、真实施加者，以及生命与monster_ai／shuffle完整状态和游标。侧回合末场景显式调用双方已有通知入口，不伪装成正常整回合；出生HP与niche不属于此组件。测试DSL只调用生产Power操作，参考源码只读。
+
+独立／按施加者两种模式使用明确的probe定义，分别与原生FlankingPower／StranglePower的实例策略比较；没有出牌、伤害或到期调用这些probe，不据此登记两项生产内容支持。来源场景使用真实卡牌引用与怪物施加者。migration要求全部96项、每条已声明命令及所有维度实际执行且一致，缺项或差异非零；normal_run_verified保持false。
 
 ## BattleFriend受控组件比较
 

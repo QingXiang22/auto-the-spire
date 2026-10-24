@@ -57,19 +57,19 @@ procedure ModifyPowerAmount {
 }
 procedure ModifyPowerAmountWithSource {
  parameters = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding }
+ locals = { changed = Binding }
  body = {
-  set = { target = power field = Power.Stacks value = add(field(power, Power.Stacks), delta) }
-  call = { procedure = RefreshDrawPermissions }
-  if = { condition = not(equal(delta, 0)) then = { emit = { event = PowerAmountChanged payload = { power = power delta = delta applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } } } }
-  if = { condition = or(equal(field(power, Power.Stacks), 0), and(not(field(field(power, Power.Definition), PowerBlueprint.AllowNegative)), less(field(power, Power.Stacks), 0))) then = {
-   call = { procedure = RemovePower args = { power = power } }
-  } }
+  call = { procedure = ExecutePowerAmountChange args = {
+   initial = power entry = field(power, Power.Definition) player = field(power, Power.HolderPlayer) enemy = field(power, Power.HolderEnemy)
+   amount = delta created = false applyCommand = false untilTurnEnd = false applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play
+  } into = changed }
  }
 }
 procedure ApplyPowerWithSource {
  parameters = { player = Binding enemy = Binding definition = String(length = 64) stacks = Int(min = -999, max = 999) untilTurnEnd = Bool applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding }
- locals = { entry = Binding power = Binding created = Bool delta = Int actual = Int } result = Binding
+ locals = { entry = Binding power = Binding created = Bool } result = Binding
  body = {
+  if = { condition = pureCall(PowerCommandIsEnding) then = { return = { value = none } } }
   let = { into = entry value = first(where(collection(PowerLibrary), d, equal(field(d, PowerBlueprint.DefinitionId), definition))) }
   if = { condition = isNone(entry) then = { fail = { message = "Unknown Power definition" } } }
   if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Power requires exactly one holder" } } }
@@ -77,47 +77,19 @@ procedure ApplyPowerWithSource {
   if = { condition = not(isNone(enemy)) then = {
    if = { condition = or(field(enemy, Enemy.DeathResolved), field(enemy, Enemy.Escaped)) then = { return = { value = none } } }
   } }
-  if = { condition = not(isNone(player)) then = {
-   if = { condition = equal(field(player, Player.CombatOutcome), "defeat") then = { return = { value = none } } }
-  } }
   if = { condition = not(foldEvent(ShouldApplyPower, true, player, enemy, definition, applierPlayer, applierEnemy, card, play)) then = { return = { value = none } } }
-  let = { into = actual value = stacks }
-  if = { condition = or(not(isNone(applierPlayer)), not(isNone(applierEnemy))) then = {
-    let = { into = actual value = foldEvent(ModifyPowerGiven, actual, player, enemy, definition, applierPlayer, applierEnemy, card, play) }
-  } }
-  let = { into = actual value = foldEvent(ModifyPowerReceived, actual, player, enemy, definition, applierPlayer, applierEnemy, card, play) }
-  let = { into = power value = first(where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), definition), or(and(not(isNone(player)), equal(field(p, Power.HolderPlayer), player)), and(not(isNone(enemy)), equal(field(p, Power.HolderEnemy), enemy)))))) }
+  let = { into = power value = first(where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), definition), and(equal(field(p, Power.HolderPlayer), player), equal(field(p, Power.HolderEnemy), enemy))))) }
   if = { condition = equal(field(entry, PowerBlueprint.InstanceMode), "independent") then = { let = { into = power value = none } } }
   if = { condition = equal(field(entry, PowerBlueprint.InstanceMode), "per-applier") then = {
-    let = { into = power value = first(where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), definition), and(and(equal(field(p, Power.HolderPlayer), player), equal(field(p, Power.HolderEnemy), enemy)), and(equal(field(p, Power.ApplierPlayer), applierPlayer), equal(field(p, Power.ApplierEnemy), applierEnemy)))))) }
+   let = { into = power value = first(where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), definition), and(and(equal(field(p, Power.HolderPlayer), player), equal(field(p, Power.HolderEnemy), enemy)), and(equal(field(p, Power.ApplierPlayer), applierPlayer), equal(field(p, Power.ApplierEnemy), applierEnemy)))))) }
   } }
   let = { into = created value = isNone(power) }
-  if = { condition = created then = {
-   if = { condition = or(equal(actual, 0), and(not(field(entry, PowerBlueprint.AllowNegative)), less(actual, 0))) then = { return = { value = none } } }
-   emit = { event = BeforePowerCreated payload = { player = player enemy = enemy definition = definition amount = actual applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } }
-   create = { type = Power scope = frameScope() into = power collection = Powers fields = {
-    DefinitionId = definition Definition = entry HolderPlayer = player HolderEnemy = enemy Stacks = actual
-    ExpiresAtTurnEnd = untilTurnEnd ApplierPlayer = applierPlayer ApplierEnemy = applierEnemy SourceCard = card SourcePlay = play
-   } }
-   if = { condition = not(isNone(player)) then = {
-    set = { target = power field = Power.Owner value = field(player, Player.Owner) }
-    set = { target = power field = Power.SkipTick value = field(entry, PowerBlueprint.Debuff) }
-   } }
-   call = { procedure = RefreshDrawPermissions }
-   emit = { event = PowerCreated payload = { power = power } }
-  } else = {
-   let = { into = delta value = actual }
-   if = { condition = field(entry, PowerBlueprint.SingleStack) then = { let = { into = delta value = 0 } } }
-   let = { into = delta value = subtract(foldEvent(ModifyPowerStacks, add(field(power, Power.Stacks), delta), power, delta), field(power, Power.Stacks)) }
-   call = { procedure = ModifyPowerAmountWithSource args = { power = power delta = delta applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play } }
-   if = { condition = untilTurnEnd then = { if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = { set = { target = power field = Power.ExpiresAtTurnEnd value = true } } } } }
-  } }
-  if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = {
-   emit = { event = PowerApplied payload = { power = power amount = actual created = created } }
-   if = { condition = not(isNone(player)) then = { emit = { event = PlayerPowerApplied payload = { owner = player power = power amount = actual } } } else = { emit = { event = EnemyPowerApplied payload = { target = enemy power = power amount = actual } } } }
-   return = { value = power }
-  } }
-  return = { value = none }
+  if = { condition = and(created, equal(stacks, 0)) then = { return = { value = none } } }
+  call = { procedure = ExecutePowerAmountChange args = {
+   initial = power entry = entry player = player enemy = enemy amount = stacks created = created applyCommand = true untilTurnEnd = untilTurnEnd
+   applierPlayer = applierPlayer applierEnemy = applierEnemy card = card play = play
+  } into = power }
+  return = { value = power }
  }
 }
 procedure ApplyPower {

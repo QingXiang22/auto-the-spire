@@ -1,0 +1,99 @@
+# Test-only callers of the production Power operations. No expected values or reference results.
+entity AmountProbe { fields = {
+ Definition = { type = String(length = 64) default = "base-spire:weak-power" }
+ Amount = { type = Int default = 2 }
+ Artifact = { type = Int default = 2 }
+ Player = { type = Ref(Player) optional = true }
+ Enemy = { type = Ref(Enemy) optional = true }
+ Power = { type = Ref(Power) optional = true }
+ Card = { type = Ref(Card) optional = true }
+ Play = { type = Ref(CardPlayRecord) optional = true }
+ MonsterApplier = { type = Bool default = false }
+ Log = { type = String(length = 512) default = "" }
+ LastDelta = { type = Int default = 0 }
+} }
+use IndependentAmount { template = PowerDefinition args = { definition = "probe:independent" instanceMode = "independent" powerType = "debuff" } }
+use PerApplierAmount { template = PowerDefinition args = { definition = "probe:per-applier" instanceMode = "per-applier" powerType = "debuff" } }
+action AmountInitialize { role = player locals = { probe = Binding } body = {
+ create = { type = AmountProbe scope = frameScope() into = probe fields = { Player = first(type(Player)) } }
+} }
+action AmountArtifact { role = player locals = { probe = Binding applied = Binding } body = {
+ let = { into = probe value = first(type(AmountProbe)) }
+ call = { procedure = ApplyPowerWithSource args = { player = field(probe, AmountProbe.Player) enemy = field(probe, AmountProbe.Enemy) definition = "base-spire:artifact-power" stacks = field(probe, AmountProbe.Artifact) untilTurnEnd = false applierPlayer = first(type(Player)) applierEnemy = none card = none play = none } into = applied }
+} }
+procedure AmountAppliers {
+ parameters = { modify = Bool }
+ locals = { probe = Binding applied = Binding player = Binding enemy = Binding }
+ body = {
+  let = { into = probe value = first(type(AmountProbe)) }
+  let = { into = player value = first(type(Player)) }
+  let = { into = enemy value = none }
+  if = { condition = field(probe, AmountProbe.MonsterApplier) then = {
+   let = { into = player value = none }
+   let = { into = enemy value = first(type(Enemy)) }
+  } }
+  if = { condition = modify then = {
+   call = { procedure = ModifyPowerAmountWithSource args = { power = field(probe, AmountProbe.Power) delta = field(probe, AmountProbe.Amount) applierPlayer = player applierEnemy = enemy card = field(probe, AmountProbe.Card) play = field(probe, AmountProbe.Play) } }
+  } else = {
+   call = { procedure = ApplyPowerWithSource args = { player = field(probe, AmountProbe.Player) enemy = field(probe, AmountProbe.Enemy) definition = field(probe, AmountProbe.Definition) stacks = field(probe, AmountProbe.Amount) untilTurnEnd = false applierPlayer = player applierEnemy = enemy card = field(probe, AmountProbe.Card) play = field(probe, AmountProbe.Play) } into = applied }
+   set = { target = probe field = AmountProbe.Power value = applied }
+  } }
+ }
+}
+action AmountApply { role = player body = { call = { procedure = AmountAppliers args = { modify = false } } } }
+action AmountModify { role = player body = { call = { procedure = AmountAppliers args = { modify = true } } } }
+action AmountExpire { role = player body = {
+ if = { condition = isNone(field(first(type(AmountProbe)), AmountProbe.Player)) then = {
+  emit = { event = AfterEnemyTurnEnded payload = { owner = first(type(Player)) } }
+ } else = { emit = { event = AfterPlayerSideEnd payload = { owner = first(type(Player)) } } } }
+} }
+procedure AmountLog { parameters = { stage = String(length = 1) } body = {
+ set = { target = first(type(AmountProbe)) field = AmountProbe.Log value = concat(field(first(type(AmountProbe)), AmountProbe.Log), stage) }
+} }
+procedure AmountBefore { parameters = { change = Ref(PowerAmountChange) } body = {
+ if = { condition = equal(field(field(change, PowerAmountChange.Definition), PowerBlueprint.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = {
+  call = { procedure = AmountLog args = { stage = "B" } }
+  if = { condition = or(not(equal(field(change, PowerAmountChange.Card), field(first(type(AmountProbe)), AmountProbe.Card))), not(equal(field(change, PowerAmountChange.Play), field(first(type(AmountProbe)), AmountProbe.Play)))) then = { fail = { message = "Power command lost card or play source" } } }
+  if = { condition = field(first(type(AmountProbe)), AmountProbe.MonsterApplier) then = {
+   if = { condition = or(not(isNone(field(change, PowerAmountChange.ApplierPlayer))), not(equal(field(change, PowerAmountChange.ApplierEnemy), first(type(Enemy))))) then = { fail = { message = "Power command lost its real enemy applier" } } }
+  } else = {
+   if = { condition = or(not(isNone(field(change, PowerAmountChange.ApplierEnemy))), not(equal(field(change, PowerAmountChange.ApplierPlayer), first(type(Player))))) then = { fail = { message = "Power command lost its real player applier" } } }
+  } }
+ } }
+} }
+subscription AmountBefore { event = BeforePowerAmountChanged reaction = AmountBefore priority = -10000 }
+procedure AmountReceiving { parameters = { change = Ref(PowerAmountChange) } body = {
+ if = { condition = equal(field(field(change, PowerAmountChange.Definition), PowerBlueprint.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "R" } } } }
+} }
+subscription AmountReceiving { event = PowerAmountReceiving reaction = AmountReceiving priority = 10000 }
+procedure AmountBeforeCreated { parameters = { player = Binding enemy = Binding definition = String(length = 64) amount = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } body = {
+ if = { condition = equal(definition, field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "C" } } } }
+} }
+subscription AmountBeforeCreated { event = BeforePowerCreated reaction = AmountBeforeCreated priority = -10000 }
+procedure AmountCreated { parameters = { power = Ref(Power) } body = {
+ if = { condition = equal(field(power, Power.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "P" } } } }
+} }
+subscription AmountCreated { event = PowerCreated reaction = AmountCreated priority = -10000 }
+procedure AmountModified { parameters = { change = Ref(PowerAmountChange) } body = {
+ if = { condition = equal(field(field(change, PowerAmountChange.Definition), PowerBlueprint.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "M" } } } }
+} }
+subscription AmountModified { event = AfterModifyingPowerAmountReceived reaction = AmountModified priority = -10000 }
+procedure AmountAfterApplied { parameters = { power = Ref(Power) amount = Int created = Bool } body = {
+ if = { condition = equal(field(power, Power.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "A" } } } }
+} }
+subscription AmountAfterApplied { event = AfterPowerApplied reaction = AmountAfterApplied priority = -10000 }
+procedure AmountChanged { parameters = { power = Ref(Power) delta = Int applierPlayer = Binding applierEnemy = Binding card = Binding play = Binding } body = {
+ if = { condition = equal(field(power, Power.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = {
+  call = { procedure = AmountLog args = { stage = "H" } }
+  set = { target = first(type(AmountProbe)) field = AmountProbe.LastDelta value = delta }
+ } }
+} }
+subscription AmountChanged { event = PowerAmountChanged reaction = AmountChanged priority = -10000 }
+procedure AmountApplied { parameters = { power = Ref(Power) amount = Int created = Bool } body = {
+ if = { condition = equal(field(power, Power.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "D" } } } }
+} }
+subscription AmountApplied { event = PowerApplied reaction = AmountApplied priority = -10000 }
+procedure AmountRemoved { parameters = { power = Ref(Power) } body = {
+ if = { condition = equal(field(power, Power.DefinitionId), field(first(type(AmountProbe)), AmountProbe.Definition)) then = { call = { procedure = AmountLog args = { stage = "X" } } } }
+} }
+subscription AmountRemoved { event = PowerRemoved reaction = AmountRemoved priority = -10000 }

@@ -40,7 +40,7 @@ MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、�
 
 CardCloned、CardCombatCopied、CardRemoving 是附属能力的复制与清理接缝。Stomp 的费用与 HowlFromBeyond 的耗尽堆自动行为归所属模块；通用 Card 不再保存它们的专属开关。CardAttachment 保存附魔标识与状态，Sown 在明确附魔阶段回能后禁用；永久→战斗副本与战斗克隆按各自来源复制，升级不重置状态，销毁前清理。公开附属实体采用通用 identity_from 依附卡标识，隐藏抽牌堆不泄漏附魔或卡引用。
 
-Power 施加接收 applierPlayer／applierEnemy／card／play，并经过 ShouldApplyPower、ModifyPowerGiven、ModifyPowerReceived。定义选择 shared／per-applier／independent 匹配；现有 singleStack 兼容语义保留，不能视为完整原版 StackType。Vigor 支持敌我攻击资格与层数快照，Rupture 消费实际 DamageResult 的来源。
+Power施加接收applierPlayer／applierEnemy／card／play，按shared／per-applier／independent匹配后，与直接Modify共用一次Before、Given加法／乘法、Received计算、提交、修正者After和改量通知。隐藏计算上下文记录实际接收修正者，Artifact在计算后消费自身；powerType／stackType与实例模式分别声明，single不抑制锁定参考的再施加增量。完整接口与零量、ending、临时力量约定见[Power参考](../../development/base-spire/reference/powers.md)。Vigor保留敌我攻击资格与层数快照，Rupture消费实际DamageResult来源。
 
 准确类型、调用签名和阶段见[行为操作参考](../../development/base-spire/reference/card-behavior.md)。
 
@@ -134,7 +134,7 @@ core 文本分派进入编译标识 dispatch/1；依附标识投影、pure 显�
 
 ### G08：补齐 Power 与其他能力的来源和实例策略
 
-复用已实现的定义驱动生命周期，增补实际所需的 applier、来源 card／play、施加前后修正、被阻止结果及实例匹配策略。共享单例、每施加者实例和每次独立实例不能都按“定义＋持有者”合并；InstanceType、StackType、负值、零量及 duration 各自依据源规则，现有 SingleStack 标志不是完整策略。
+复用已实现的定义驱动生命周期，保留applier、来源card／play、施加前后修正、被阻止结果及实例匹配策略。共享单例、每施加者实例和每次独立实例不能都按“定义＋持有者”合并；InstanceType、StackType、按符号判定的变更类型、零量及duration各自依据源规则，不以显示类型替代层数变化策略。
 
 Power、遗物、药水和附着均使用统一实例监听；公共命令不根据具体内容 ID 选择效果。私有状态响应创建／改量／移除，领域层承担一致的解绑与清理；Rupture 不再用 EnemyPhase 猜伤害来自卡牌，Vigor 不用 AfterCardPlayed 近似 AfterAttack。
 

@@ -250,6 +250,7 @@
       "field_name": "DefinitionId",
       "content_ids": [
         "base-spire:aggression-power",
+        "base-spire:artifact-power",
         "base-spire:barricade",
         "base-spire:battleworn-dummy-time-limit-power",
         "base-spire:colossus-power",

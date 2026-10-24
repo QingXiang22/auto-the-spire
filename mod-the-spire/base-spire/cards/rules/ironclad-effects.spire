@@ -59,10 +59,8 @@ template TemporaryStrengthEffect {
       body = { if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
 let = { into = amount value = pureCall(CardUpgradeValue, card, arg(stacks), arg(upgradedStacks)) }
 if = { condition = arg(enemy) then = {
-  call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = "base-spire:strength-power" stacks = subtract(0, amount) } }
   call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = target definition = "base-spire:mangle-power" stacks = amount } }
 } else = {
-  call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = "base-spire:strength-power" stacks = amount } }
   call = { procedure = ApplyPlayerPowerFromCard args = { card = card play = play  owner = owner definition = "base-spire:setup-strike-power" stacks = amount } }
 } }
       } } }

@@ -1,24 +1,5 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
-template SetupStrikePowerModule { body = {
-  use Definition { template = PowerDefinition args = { definition = "base-spire:setup-strike-power" } }
-
-procedure RemoveStrength {
-  parameters = { owner = Ref(Player) listener = Ref(Power) }
-  body = {
-    call = {
-      procedure = ApplyPlayerPower args = {
-        owner = owner definition = "base-spire:strength-power" stacks = subtract(0, field(listener, Power.Stacks))
-      }
-    }
-    call = { procedure = RemovePower args = { power = listener } }
-  }
-}
-
-subscription RemoveStrength {
-  event = AfterPlayerSideEnd reaction = RemoveStrength instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:setup-strike-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
-}
-} }
-use SetupStrikePower { template = SetupStrikePowerModule }
+# Locked SetupStrikePower inherits TemporaryStrengthPower's complete application and expiry.
+use SetupStrikePower { template = TemporaryStrengthPowerContent args = { definition = "base-spire:setup-strike-power" sign = 1 powerType = "buff" } }
