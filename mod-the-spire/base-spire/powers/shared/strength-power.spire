@@ -14,7 +14,7 @@ procedure Strength {
 }
 
 subscription Strength {
-  event = ModifyAttackAdditive reaction = Strength instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:strength-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyAttackAdditive reaction = Strength instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:strength-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure EnemyStrength {
@@ -30,7 +30,7 @@ procedure EnemyStrength {
 }
 
 subscription EnemyStrength {
-  event = ModifyEnemyAttackAdditive reaction = EnemyStrength instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:strength-power")) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyEnemyAttackAdditive reaction = EnemyStrength instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:strength-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use StrengthPower { template = StrengthPowerModule }

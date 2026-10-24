@@ -45,10 +45,12 @@ procedure DrawOne {
   locals = { drawn = Binding }
   body = {
     set = { target = owner field = Player.LastDrawn value = none }
+    if = { condition = not(pureCall(CanExecuteCombatCommand, owner)) then = { return = {} } }
     if = {
       condition = and(pureCall(CanDrawCards, owner, fromHandDraw), less(count(collection(Hand)), 10))
       then = {
         call = { procedure = ReshuffleDiscard args = { owner = owner } }
+        if = { condition = or(not(pureCall(CanExecuteCombatCommand, owner)), greaterOrEqual(count(collection(Hand)), 10)) then = { return = {} } }
         let = { into = drawn value = first(collection(DrawPile)) }
         if = {
           condition = not(isNone(drawn))
@@ -56,8 +58,8 @@ procedure DrawOne {
             call = { procedure = MoveCombatCard args = { owner = owner card = drawn to = "hand" reason = "draw" } }
             set = { target = owner field = Player.LastDrawn value = drawn }
             emit = {
-              event = BeforeCardDrawnReactions payload = { owner = owner card = drawn } }
-            emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } }
+              event = AfterCardDrawnEarly payload = { owner = owner card = drawn } }
+            if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } } } }
             set = { target = owner field = Player.LastDrawn value = drawn }
           }
         }

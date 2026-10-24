@@ -20,9 +20,9 @@ template BattleFriendEnemy {
       } }
     } }
     subscription Escape {
-      event = AfterEnemyTurnEnded reaction = Escape
+      event = AfterEnemySideTurnEnd reaction = Escape
       instances = where(type(Enemy), e, and(equal(field(e, Enemy.DefinitionId), arg(definition)), pureCall(EnemyIsActive, e)))
-      instance_order = pureCall(EnemySideTurnEndOrder, listener) priority = 0
+      instance_order = pureCall(EnemyHookOrder, listener, false) priority = 0
     }
     action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) locals = { hp = Int } body = {
       if = { condition = exists(where(type(Enemy), e, and(not(field(e, Enemy.Escaped)), equal(field(e, Enemy.MaxHp), arg(hp))))) then = {

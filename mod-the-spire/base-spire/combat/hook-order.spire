@@ -1,0 +1,76 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Single-player source listener composition. Existing SpawnOrder is the enemy-order input;
+# birth identity and encounter slot preparation belong to the enemy lifecycle.
+procedure HookOrderStride {
+ pure = true result = Int
+ body = { return = { value = add(1, add(count(collection(Powers)), add(count(collection(Relics)), add(count(type(Card)), count(type(Enemy)))))) } }
+}
+procedure CombatCardHookIndex {
+ pure = true parameters = { card = Ref(Card) } locals = { offset = Int position = Int } result = Int
+ body = {
+  let = { into = position value = collectionIndex(Hand, card) }
+  if = { condition = greaterOrEqual(position, 0) then = { return = { value = position } } }
+  let = { into = offset value = count(collection(Hand)) }
+  let = { into = position value = collectionIndex(DrawPile, card) }
+  if = { condition = greaterOrEqual(position, 0) then = { return = { value = add(offset, position) } } }
+  let = { into = offset value = add(offset, count(collection(DrawPile))) }
+  let = { into = position value = collectionIndex(DiscardPile, card) }
+  if = { condition = greaterOrEqual(position, 0) then = { return = { value = add(offset, position) } } }
+  let = { into = offset value = add(offset, count(collection(DiscardPile))) }
+  let = { into = position value = collectionIndex(ExhaustPile, card) }
+  if = { condition = greaterOrEqual(position, 0) then = { return = { value = add(offset, position) } } }
+  let = { into = offset value = add(offset, count(collection(ExhaustPile))) }
+  let = { into = position value = collectionIndex(InPlay, card) }
+  if = { condition = greaterOrEqual(position, 0) then = { return = { value = add(offset, position) } } }
+  fail = { message = "Combat hook card requires an active combat pile" }
+ }
+}
+procedure PowerHookOrder {
+ pure = true parameters = { power = Ref(Power) direct = Bool } locals = { order = Int } result = Int
+ body = {
+  let = { into = order value = collectionIndex(Powers, power) }
+  if = { condition = not(isNone(field(power, Power.HolderEnemy))) then = {
+   let = { into = order value = add(order, multiply(add(field(field(power, Power.HolderEnemy), Enemy.SpawnOrder), 1), pureCall(HookOrderStride))) }
+  } }
+  if = { condition = not(direct) then = { let = { into = order value = add(order, count(collection(Relics))) } } }
+  return = { value = order }
+ }
+}
+procedure RelicHookOrder {
+ pure = true parameters = { relic = Ref(Relic) direct = Bool } locals = { order = Int } result = Int
+ body = {
+  let = { into = order value = collectionIndex(Relics, relic) }
+  if = { condition = direct then = { let = { into = order value = add(order, count(collection(Powers))) } } }
+  return = { value = order }
+ }
+}
+procedure CardHookOrder {
+ pure = true parameters = { card = Ref(Card) direct = Bool } locals = { order = Int } result = Int
+ body = {
+  let = { into = order value = add(add(count(collection(Powers)), count(collection(Relics))), pureCall(CombatCardHookIndex, card)) }
+  return = { value = order }
+ }
+}
+procedure EnemyHookOrder {
+ pure = true parameters = { target = Ref(Enemy) direct = Bool } locals = { order = Int } result = Int
+ body = {
+  let = { into = order value = add(multiply(add(field(target, Enemy.SpawnOrder), 1), pureCall(HookOrderStride)), count(collection(Powers))) }
+  if = { condition = not(direct) then = { let = { into = order value = add(order, count(collection(Relics))) } } }
+  return = { value = order }
+ }
+}
+
+procedure CombatIsEnding {
+ pure = true result = Bool
+ body = { return = { value = exists(where(type(Player), owner, or(equal(field(owner, Player.CombatOutcome), "defeat"), and(field(owner, Player.CombatActive), or(lessOrEqual(field(owner, Player.Hp), 0), and(exists(type(Enemy)), not(exists(where(type(Enemy), e, pureCall(EnemyIsActive, e)))))))))) } }
+}
+procedure CanExecuteCombatCommand {
+ pure = true parameters = { owner = Ref(Player) } result = Bool
+ body = {
+  if = { condition = or(lessOrEqual(field(owner, Player.Hp), 0), not(equal(field(owner, Player.CombatOutcome), "none"))) then = { return = { value = false } } }
+  if = { condition = not(field(owner, Player.CombatActive)) then = { return = { value = pureCall(CanUseDevelopmentActions, owner) } } }
+  return = { value = not(pureCall(CombatIsEnding)) }
+ }
+}

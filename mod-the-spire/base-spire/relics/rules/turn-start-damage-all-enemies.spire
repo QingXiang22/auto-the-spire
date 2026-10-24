@@ -15,7 +15,7 @@ template TurnStartDamageAllEnemiesRelic {
       }
     }
     subscription OnPlayerTurnStart {
-      event = AfterPlayerTurnStart reaction = WhenPlayerTurnStarts instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+      event = AfterPlayerTurnStart reaction = WhenPlayerTurnStarts instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
     }
     action Obtain {
       role = player

@@ -46,6 +46,8 @@ python tools/ci/check_card_coverage.py .artifacts/ci/base/behavior/package-behav
 
 完整来源固定数据位于[包外工具 fixture](../base-spire-dev/fixtures/source-catalogs.json)，共10个领域1516项，保留来源路径、原始字节SHA256、池及成员顺序和源排除依据。base工具嵌入该文件，Python覆盖检查与定位助手读取同一份已纳管数据；生产目录只登记已加载定义。来源条目总数和实际执行结果分别校验，干净检出无需本地原版源码或历史报告。
 
+migration还要求[回合阶段与监听顺序组件](../differential/README.md#回合阶段与监听顺序组件比较)的28项全部一致：实际Orichalcum／Plating、Charon／DarkEmbrace、起手阶段、Run与Direct顺序，以及末杀后的抽牌与格挡门禁。保留逐次随机参数、候选、结果、游标及完整流状态；原50／96项和11份suite继续执行，不以组件结果认证M01。
+
 问号房型另有两seed共10种受控组件场景，由migration逐边界核对18次抽样与赔率重置；`normal_run_verified`保持false。base正常组和net真实stdio新增seed `unknown-normal-354`，从Neow、首战胜利及奖励关闭进入真实问号Monster，保留原始地图类型并核对实际遭遇。base还比较源生命、访问、四类赔率与完整问号流状态；完整事件和Run不在该前缀验收范围。
 
 首幕事件选择增加两seed共42种受控双侧场景，migration核对完整31项资格、每种41个边界、最终事件标识／游标／访问历史及无随机消费。base正常组与net真实stdio保留新增seed `event-normal-11` 的真实胜利后问号Event路径，核对源选择与未接效果的明确失败；不会创建空访问。此选择器比较不替代各事件效果、父子战斗或后幕验收。

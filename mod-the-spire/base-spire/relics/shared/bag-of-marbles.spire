@@ -1,8 +1,8 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: BagOfMarbles.cs; Common relic, PowerVar<VulnerablePower>(1) applied to all hittable enemies when a combat begins.
+# Source: BagOfMarbles.cs; Common relic, PowerVar<VulnerablePower>(1) applied to all hittable enemies at the first player side start.
 use BagOfMarbles {
-  template = BeforeCombatStartEnemyPowerRelic
+  template = FirstSideStartEnemyPowerRelic
   args = { definition = "base-spire:bag-of-marbles" power = "base-spire:vulnerable-power" stacks = 1 }
 }

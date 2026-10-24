@@ -6,7 +6,28 @@
 
 主流程只定义并发布领域通知或计算阶段，不能读取遗物专属能力字段，也不直接调用Power家族的效果过程。遗物与Power使用同一监听模型：实例保存标识／持有者／寿命，规则监听通知或修正，根据自身状态响应。玩法仍全部在base DSL，core不识别任何游戏内容或阶段。
 
-通知沿现有事件栈执行，允许嵌套、原生决策暂停和续接。base订阅用instances声明有效实例、instance_order声明集合位置，core在入口固定候选与排序键，执行前重新检查资格。新增实例不追溯参与已开始的同一通知，移除后不得执行。通常Power优先级0、遗物100，各自按实际有序集合；必要的早期／晚期阶段用明确priority区分。敌我Power的适用性由监听者判定，具体内容模板不再各自遍历全库存。
+通知沿现有事件栈执行，允许嵌套、原生决策暂停和续接。base订阅用instances声明有效实例，混合监听采用相同priority，再用instance_order表达源顺序；core在入口固定候选与排序键，执行前重新检查资格。新增实例不追溯参与已开始的同一通知，移除后不得执行。已经进入的快照不会仅因中途胜负已定就统一取消，具体命令按自身源规则决定是否执行。
+
+## 源时点与监听顺序
+
+依据锁定参考的RunState.IterateHookListeners、CombatState.IterateHookListeners与Hook各站点，不能把Power0／遗物100作为全部事件的顺序。combat/hook-order中的PowerHookOrder、RelicHookOrder、CardHookOrder及EnemyHookOrder统一计算键，direct参数选择下表两种路径。同一持有者保留实际实例／牌堆顺序，敌方分组使用当前Enemy.SpawnOrder；出生与槽位分离、条件选招时点仍按敌人领域的支持边界处理。
+
+| 源路径 | 顺序 | 当前对应事件 |
+| --- | --- | --- |
+| Run包装，direct=false | 遗物库存，再玩家Power与有序战斗牌区，再敌人的Power及模型 | 回合阶段、抽牌Early／普通、耗尽、伤害接收、HP变化、Power修正及通常的计算监听 |
+| Direct生物路径，direct=true | 玩家Power、该玩家库存与牌区，再敌人的Power及模型 | AfterCardPlayed、ModifyCardKeyword、ShouldClearBlock、EnemyAddedToCombat；源中尚未接入的格挡击破／伤害给予等站点仍须逐项恢复 |
+
+玩家回合的编号在AfterEnergyReset后增加。AfterBlockCleared看到的是上一编号：第一回合为0；HornCleat／CaptainsWheel等依源值判断，不能将AfterSideTurnStart提前到起手抽牌前。
+
+| 顺序 | DSL站点与源调用 |
+| --- | --- |
+| 玩家开始 | BeforePlayerSideTurnStart（Hook.BeforeSideTurnStart）→清格挡／AfterBlockCleared→ResetTurnEnergy／AfterEnergyReset→编号增加／BeforeHandDraw→起手抽牌→AfterPlayerTurnStartEarly／普通／Late→AfterPlayerSideTurnStart |
+| 玩家结束 | AfterAutoPostPlayPhaseEntered→BeforePlayerSideTurnEndVeryEarly／Early／普通→回合末手牌效果及Flush→AfterPlayerSideTurnEnd |
+| 敌方开始／结束 | BeforeEnemySideTurnStart→清本侧格挡／AfterEnemyBlockCleared→AfterEnemySideTurnStart→逐个敌人行动→BeforeEnemySideTurnEndVeryEarly／Early／普通→AfterEnemySideTurnEnd |
+
+每个外层阶段按源检查ending，已经选中的通知或父效果内部不使用统一中断。Draw、GainBlock与Exhaust各自拒绝ending操作，Feed等其他余效仍保留各自规则；DrawBlocked仍来自ShouldDraw资格，不混入Draw命令的ending限制。FiendFire先耗尽手牌并完成抽牌，再造成伤害；末杀后其自身耗尽命令被拒绝，牌留在InPlay。已经开始的耗尽则保留移牌与监听快照。普通开发空靶场和脱战调试操作仍按其明确范围运行。
+
+Orichalcum在BeforePlayerSideTurnStart清理实例资格，在BeforePlayerSideTurnEndEarly记录Block为0，在普通阶段先清标志再得6格挡。Plating的5格挡位于Early；同一源迭代中库存先于Power，因此两者初始Block0时共得11。移除、熔化与同定义实例分别校验，跨战的新回合重新清理资格。StoneCalendar同样按实例在AfterPlayerSideTurnStart保存第七回合资格，普通侧回合末先清标志再兑现。
 
 修正监听必须pure且返回与累积值相同的类型，不能写实体、消费随机、发布事件或请求决策。foldEvent以事件载荷首项为初值，依priority／instance_order／声明顺序调用纯监听者，每次把返回值作为下一监听者首参；没有监听者返回初值。签名、返回类型及纯性在链接时验证，执行时缺返回值也明确失败。通知和修正共用实例快照与有效性检查，各实例收到上下文与当前累计值。计算阶段明确加法／乘法／最终取整，不能把临时实体当预览缓存；观察、候选和费用查询不得改变实体／随机快照。
 

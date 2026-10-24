@@ -136,7 +136,7 @@ internal static partial class PackageChecks
             var s = Combat(); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(6L)); IcPlay(s, IcAdd(s, "Anger")); Equal("victory", Outcome(s), "victory");
             Equal(2, Members(s, "DiscardPile").Count, "lethal Anger still creates its copy before settlement");
             var t = Combat(); IcPlay(t, IcAdd(t, "DarkEmbrace")); Set(t, FirstTarget(t), "Enemy", "Hp", Value.Of(7L)); var fire = IcAdd(t, "FiendFire"); IcAdd(t, "DefendIronclad"); IcMove(t, IcAdd(t, "Anger"), "Hand", "DrawPile"); IcMove(t, IcAdd(t, "Anger"), "Hand", "DrawPile"); IcPlay(t, fire);
-            Equal("victory", Outcome(t), "settlement follows source self-exhaust"); Equal(2, Hand(t).Count, "all exhaust draws completed on final hit");
+            Equal("victory", Outcome(t), "settlement follows source self-exhaust"); Equal(1, Hand(t).Count, "hand exhaust draws before damage, then final-kill self-exhaust Draw refuses ending");
         });
         check("IC combat lifecycle: temporary growth, play history, powers and energy modifiers never leak to next combat", () =>
         {

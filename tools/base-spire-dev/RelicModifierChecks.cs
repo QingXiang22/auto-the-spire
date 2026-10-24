@@ -99,7 +99,7 @@ internal static partial class PackageChecks
                     call = { procedure = AutoPlayCard args = { owner = owner card = first(where(collection(Hand), c, field(c, Card.StrikeTag))) forceExhaust = false } }
                   } }
                 } }
-                subscription EarlyAttack { event = AfterSideTurnStarted reaction = EarlyAttack }
+                subscription EarlyAttack { event = AfterPlayerSideTurnStart reaction = EarlyAttack }
                 action OtherHolder { role = player locals = { other = Binding } body = {
                   create = { type = Player scope = frameScope() into = other fields = { Owner = participant(2) } }
                   call = { procedure = ObtainRelic args = { owner = other definition = "base-spire:strike-dummy" } }

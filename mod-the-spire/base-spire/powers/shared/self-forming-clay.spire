@@ -17,7 +17,7 @@ template SelfFormingClayPowerModule {
     subscription Cleared {
       event = AfterBlockCleared reaction = Cleared
       instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:self-forming-clay")))
-      instance_order = collectionIndex(Powers, listener)
+      instance_order = pureCall(PowerHookOrder, listener, false)
     }
   }
 }

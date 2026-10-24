@@ -17,7 +17,7 @@ procedure DarkEmbrace {
 }
 
 subscription DarkEmbrace {
-  event = CardExhausted reaction = DarkEmbrace instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = CardExhausted reaction = DarkEmbrace instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dark-embrace-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use DarkEmbracePower { template = DarkEmbracePowerModule }

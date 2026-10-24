@@ -14,7 +14,7 @@ procedure Pyre {
 }
 
 subscription Pyre {
-  event = ModifyMaxEnergy reaction = Pyre instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:pyre-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = ModifyMaxEnergy reaction = Pyre instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:pyre-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use PyrePower { template = PyrePowerModule }

@@ -19,7 +19,7 @@ procedure LostHp {
   } }
  } } }
 }
-subscription LostHp { event = PlayerDamaged reaction = LostHp instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rupture-power"))) instance_order = collectionIndex(Powers, listener) priority = 0 }
+subscription LostHp { event = PlayerDamaged reaction = LostHp instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rupture-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
 procedure Completed {
  parameters = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) listener = Ref(Power) }
  body = { forEach = { query = where(type(Pending), s, and(equal(field(s, Pending.Power), listener), equal(field(s, Pending.Play), play))) item = pending body = {

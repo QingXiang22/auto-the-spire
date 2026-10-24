@@ -18,7 +18,7 @@ procedure Colossus {
 }
 
 subscription Colossus {
-  event = ModifyIncomingAttackMultiplier reaction = Colossus instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:colossus-power"))) instance_order = collectionIndex(Powers, listener) priority = 10
+  event = ModifyIncomingAttackMultiplier reaction = Colossus instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:colossus-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure ColossusDecay {
@@ -33,7 +33,7 @@ procedure ColossusDecay {
 }
 
 subscription ColossusDecay {
-  event = AfterEnemyTurnEnded reaction = ColossusDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:colossus-power"))) instance_order = pureCall(PowerSideTurnEndOrder, listener) priority = 0
+  event = AfterEnemySideTurnEnd reaction = ColossusDecay instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:colossus-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use ColossusPower { template = ColossusPowerModule }

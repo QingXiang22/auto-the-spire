@@ -5,6 +5,7 @@ dsl_version = "core/0.3"
 procedure GainUnpoweredBlock {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
   body = {
+    if = { condition = not(pureCall(CanExecuteCombatCommand, owner)) then = { return = {} } }
     if = { condition = greater(amount, 0) then = {
       set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), amount)) }
       emit = { event = PlayerBlockGained payload = { owner = owner amount = amount } }
@@ -20,6 +21,7 @@ procedure GainBlock {
   parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
   locals = { total = Int }
   body = {
+    if = { condition = not(pureCall(CanExecuteCombatCommand, owner)) then = { return = {} } }
     let = {
       into = total value = maximum(0, foldEvent(ModifyBlockAdditive, amount, owner)) }
     let = { into = total value = foldEvent(ModifyBlockMultiplier, total, owner) }

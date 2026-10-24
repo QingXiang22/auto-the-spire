@@ -22,24 +22,29 @@ procedure EnemyAttack {
   }
 }
 
-# Shared enemy phase. Each hittable enemy is offered one turn through EnemyTurnStarted, so the enemy content
-# template owns its own move rotation; the phase then closes with AfterEnemyTurnEnded.
+# Clear block for all participants before AfterBlockCleared and individual enemy turns.
 procedure RunEnemyTurn {
   parameters = { owner = Ref(Player) }
   body = {
     set = { target = owner field = Player.EnemyPhase value = true }
-    forEach = {
-      query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
-      body = {
-        # Source Creature.AfterTurnStart clears block for the side starting its turn; the player-side turn-one
-        # exception does not apply to enemies, so every enemy turn starts with zero block.
-        set = { target = enemy field = Enemy.Block value = 0 }
-        emit = { event = EnemyTurnStarted payload = { owner = owner target = enemy } }
-      }
-    }
-    emit = { event = AfterEnemyTurnEnded payload = { owner = owner } }
-    # Source prepares all surviving enemies for the next player side, after the completed enemy phase.
-    if = { condition = and(field(owner, Player.CombatActive), greater(field(owner, Player.Hp), 0)) then = {
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnStart payload = { owner = owner } } } }
+    forEach = { query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy body = {
+      if = { condition = not(pureCall(CombatIsEnding)) then = { set = { target = enemy field = Enemy.Block value = 0 } } }
+    } }
+    forEach = { query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy body = {
+      if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnemyBlockCleared payload = { owner = owner target = enemy } } } }
+    } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnemySideTurnStart payload = { owner = owner } } } }
+    forEach = { query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy body = {
+      if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = EnemyTurnStarted payload = { owner = owner target = enemy } } } }
+    } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnEndVeryEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnEndEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetCardTurnCosts } } }
+    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnemySideTurnEnd payload = { owner = owner } } } }
+    # Existing preparation site is retained until enemy birth/slot and roll timing are migrated.
+    if = { condition = not(pureCall(CombatIsEnding)) then = {
       forEach = { query = where(type(Enemy), e, pureCall(EnemyIsActive, e)) item = enemy body = {
         call = { procedure = SelectNextEnemyMove args = { target = enemy } }
       } }
@@ -53,6 +58,7 @@ procedure RunEnemyTurn {
 procedure GainEnemyBlock {
   parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999) }
   body = {
+    if = { condition = or(pureCall(CombatIsEnding), not(pureCall(EnemyIsActive, target))) then = { return = {} } }
     set = { target = target field = Enemy.Block value = minimum(999, add(field(target, Enemy.Block), amount)) }
   }
 }

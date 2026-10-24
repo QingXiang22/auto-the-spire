@@ -21,7 +21,7 @@ procedure Hellraiser {
 }
 
 subscription Hellraiser {
-  event = BeforeCardDrawnReactions reaction = Hellraiser instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:hellraiser-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterCardDrawnEarly reaction = Hellraiser instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:hellraiser-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use HellraiserPower { template = HellraiserPowerModule }

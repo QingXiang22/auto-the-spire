@@ -25,7 +25,7 @@ template BoomingConchContent { body = {
   subscription Draw {
     event = ModifyTurnDraw reaction = Draw
     instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:booming-conch"))))
-    instance_order = collectionIndex(Relics, listener) priority = 100
+    instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
   }
   procedure Energy {
     parameters = { owner = Ref(Player) listener = Ref(Relic) }
@@ -34,9 +34,9 @@ template BoomingConchContent { body = {
     }
   }
   subscription Energy {
-    event = AfterSideTurnStarted reaction = Energy
+    event = AfterPlayerSideTurnStart reaction = Energy
     instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:booming-conch"))))
-    instance_order = collectionIndex(Relics, listener) priority = 100
+    instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
   }
 } }
 use BoomingConch { template = BoomingConchContent }

@@ -30,8 +30,8 @@ subscription OnDraw {
   event = AfterCardDrawn
   reaction = WhenDrawn
   instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), arg(definition)))))
-  instance_order = collectionIndex(Relics, listener)
-  priority = 100
+  instance_order = pureCall(RelicHookOrder, listener, false)
+  priority = 0
 }
 ```
 
@@ -58,7 +58,7 @@ subscription Strength {
   event = ModifyAttackAdditive
   reaction = Strength
   instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:strength-power")))
-  instance_order = collectionIndex(Powers, listener)
+  instance_order = pureCall(PowerHookOrder, listener, false)
   priority = 0
 }
 ```

@@ -18,7 +18,7 @@ procedure Unmovable {
 }
 
 subscription Unmovable {
-  event = ModifyBlockMultiplier reaction = Unmovable instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:unmovable-power"))) instance_order = collectionIndex(Powers, listener) priority = 10
+  event = ModifyBlockMultiplier reaction = Unmovable instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:unmovable-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use UnmovablePower { template = UnmovablePowerModule }
