@@ -4,7 +4,7 @@
 
 先打开[交互图文](combat-engine-comparison.html)：六个主题分别展示架构、开始阶段、结束阶段、监听与攻击、Power和遗物。点击节点可定位锁定源码，支持突出差异、导出SVG和打印全部图文。下面的静态图与文字适合在仓库内阅读。
 
-本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`9be02893c13d915d3edcf4153337800749a1df09`（包版本`0.7.0-dsl.68`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../reference/operations.md)和[Power参考](../reference/powers.md)。
+本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`2a9b96ef17c2866d66069d0765f64fe56a802c68`（包版本`0.7.0-dsl.73`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../reference/operations.md)和[Power参考](../reference/powers.md)。
 
 ## 两侧的职责与状态
 
@@ -26,9 +26,9 @@ base-spire把这些领域规则放在DSL：Host提交公开动作，通用`Sessi
 
 参考普通玩家回合的主要顺序为：保存各Power的回合开始量，`BeforeSideTurnStart`，为怪物`RollMove`，按条件清格挡与`AfterBlockCleared`，重置能量与`AfterEnergyReset`，增加`TurnNumber`，起手抽牌，`AfterPlayerTurnStart`，`AfterSideTurnStart`，充能球和自动出牌阶段，胜负检查，再允许操作。`AfterPlayerTurnStart`的dispatcher内部依次调用Early、普通和Late；额外回合不按普通路径重新选招。
 
-当前DSL的`BeginDevelopmentCombat`清理旧战斗状态与准备牌区，发布敌人入场和`BeforeCombatStart`；部分生成入口已提前重置招式图，开场订阅又会重置。后续选招位于上一敌方阶段末。玩家开始过程先增加回合号与重置字段，再清格挡、重置能量；`TurnOpen`在起手抽牌前开启，`AfterSideTurnStarted`也在起手抽牌前发布，随后才是抽牌与玩家开始／Late通知。
+当前DSL的`BeginDevelopmentCombat`清理旧战斗状态与准备牌区，发布敌人入场和`BeforeCombatStart`；部分生成入口已提前重置招式图，开场订阅又会重置。普通玩家回合先`BeforePlayerSideTurnStart`，按条件清格挡及`AfterBlockCleared`，重置能量与`AfterEnergyReset`，此时仍是旧回合号；再增加回合号，发布`BeforeHandDraw`并抽牌，随后依次Early、普通、Late和`AfterPlayerSideTurnStart`。
 
-因此，即使Sai、HappyFlower等都订阅了看似对应的站点，其与起手抽牌的先后关系仍不同。选招还可能提前消费RNG或改变依赖玩家开始状态的条件。应先建立每个站点的准确映射，再修改共享模板；只对齐事件名称不够。
+Sai、HappyFlower等当前按明确阶段与实例获得顺序响应。选招仍在上一敌方阶段末，出生／槽位与选招时点尚需独立迁移；不能由普通开始阶段的组件一致推断全部编队流程已符合。
 
 源码入口：[参考CombatRoom](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Rooms/CombatRoom.cs)、[参考Hook](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Hooks/Hook.cs)、[当前敌方流程](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire)。
 
@@ -38,11 +38,11 @@ base-spire把这些领域规则放在DSL：Host提交公开动作，通用`Sessi
 
 参考在自动出牌收尾后进入结束阶段，依次发布VeryEarly、Early与普通末阶段通知，处理充能球、虚无与手牌末效果，再执行`BeforeFlush`、保留／弃牌、`AfterFlush`、`AfterSideTurnEnd`。随后换边进入敌方完整开始生命周期，依次执行已选招式与胜负检查，再进入敌方末阶段。换回玩家后增加Round，下一次普通玩家开始阶段才准备后续招式。
 
-当前DSL依次执行`BeforeTurnEndEffects`、`BeforePlayerTurnEnd`与`FinishTurnHand`，随后是`AfterTurnEnded`、`AfterPlayerSideEnd`和`RunEnemyTurn`。敌方逐实例直接清格挡并发布`EnemyTurnStarted`，行动后发布`AfterEnemyTurnEnded`，选择下一招，再执行玩家回合收尾、费用重置并关闭`TurnOpen`。这条路径尚不是双方共用完整的开始／结束阶段。
+当前DSL在自动出牌收尾后依次发布VeryEarly、Early、普通`BeforePlayerSideTurnEnd`，调用`FinishTurnHand`，重置回合费用，再`AfterPlayerSideTurnEnd`。敌方先侧开始前通知、全部清格挡、逐体清格挡后通知及侧开始，再逐体行动；三个结束前阶段、清理与`AfterEnemySideTurnEnd`之后仍选择下一招。下一次玩家开始由调用方推进；额外回合未认证。
 
-Orichalcum说明了为什么需要独立阶段：参考在Early记录“此刻是否零格挡”，允许同阶段的Plating增加格挡，再在普通阶段兑现6点。当前DSL先让Plating加格挡，较晚的Orichalcum才即时检查，因此组合结果改变。应为遗物实例保存短期资格，不能只把两个处理器改成相邻优先级。
+Orichalcum在Early按每个遗物实例记录零格挡资格，允许Plating增加5格挡，再在普通阶段兑现6点。当前DSL已保存并清理这份私有资格，组件结果与参考均为11；移除、熔化和新战避免旧资格泄漏。
 
-耗尽还需要保留原因。参考`causedByEthereal`使DarkEmbrace先累计次数，等持有者`AfterSideTurnEnd`再抽牌；普通耗尽仍即时抽牌。当前`CardExhausted`只传owner／card，DarkEmbrace统一即时处理。应补齐完整耗尽操作的上下文，由具体消费者决定延迟，不应统一推迟所有耗尽效果。
+耗尽操作和`CardExhausted`保留`causedByEthereal`：两条回合末虚无路径为true，其他正文／出牌／选牌／强制耗尽为false，不能从虚无关键词推断原因。DarkEmbrace按实例累计虚无次数，在持有者`AfterPlayerSideTurnEnd`先清零再按当前层数抽牌；普通耗尽仍即时抽牌。CharonsAshes和FeelNoPain接收原因但继续即时伤害／格挡。
 
 源码入口：[参考DarkEmbrace](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Models/Powers/DarkEmbracePower.cs)、[参考Orichalcum](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Models/Relics/Orichalcum.cs)、[当前牌区操作](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)。
 
@@ -52,13 +52,13 @@ Orichalcum说明了为什么需要独立阶段：参考在Early记录“此刻�
 
 参考常用的`RunState.IterateHookListeners`先枚举玩家遗物与药水，再组合Combat监听者；Combat通常按盟友、敌人枚举Power、怪物及玩家专属牌区等。具体dispatcher可以选择不同路径，例如`ShouldClearBlock`使用Power先于库存的路径。因此不存在适用于所有通知的“遗物一定先于Power”规则。参考对不同模型的有效资格检查也有已声明的简化，不能把它理想化为全部模型都会严格重查库存。
 
-当前`Session`在事件入口保存候选与排序键，按`priority`、`instance_order`和声明顺序执行，调用前重查实例存在及筛选资格。它提供通用机制；常用Power优先级0、遗物100只是base的选择，不自动等于源语义。修复应按事件决定参与者与顺序，保留获得顺序、槽位顺序及监听期间移除／新建的行为。
+当前`Session`在事件入口保存候选与排序键，按`priority`、`instance_order`和声明顺序执行，调用前重查实例存在及筛选资格。base按站点显式选择Run或Direct次序：常用广播先库存再玩家Power／牌与敌方，ShouldClearBlock等Direct路径Power先于库存。各阶段独立快照；期间移除／新增按执行器资格处理。
 
-通知允许副作用和嵌套效果；`pure foldEvent`只计算值。参考部分修正链还记录实际修改数值的监听者，再单独通知这些参与者执行副作用。Artifact消费层数属于后一阶段。只返回最终数值，或者在纯修正中直接写状态，都不能完整表达这个流程。
+通知允许副作用和嵌套效果；`pure foldEvent`只计算值。当前Power改量用隐藏上下文记录Received实际参与者，再单独通知它们执行副作用。Artifact在这一阶段消费层数，修正为0也保留参与记录，不在pure计算中写状态。
 
-攻击应以整次Attack为边界，再包含多个Hit。现有`ExecuteAttack`已支持`Hits`；旧Tracker模板循环创建八次Attack，会让Vigor在第一击后消费，改变后续伤害。攻击前后通知、每击伤害、反应与结果需要继续复用同一完整操作。
+攻击以整次Attack为边界，再包含多个Hit。旧七敌人已迁移到招式图，Tracker用`EnemyAttack`创建一次八击Attack，Vigor作用全部八击后消费；Vigor3时双方伤害均为32。攻击前后通知、每击伤害、反应与结果继续复用完整操作。
 
-战斗结束也有不同含义。参考分别维护`IsEnding`和`IsInProgress`，各命令决定在结束中能否继续执行，例如最后一个敌人已死时后续抽牌会被拒绝。当前DSL用Attack／Play／Effect等深度计数推迟外层战斗关闭。这有助于完成嵌套操作，但不等于每条命令都已有相同的结束中检查。应逐命令对齐，保留允许发生的末杀后效果。
+战斗结束有不同含义。当前DSL用深度计数推迟外层结算，并为Draw、GainBlock、Exhaust与Power改量加入源ending门禁；已进入的监听快照仍可继续，后续命令各自判断。Feed末杀仍增加最大生命并治疗，但收尾自耗尽被拒绝。正常整局认证与其他命令的未支持边界仍独立。
 
 源码入口：[参考RunState](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Runs/RunState.cs)、[参考AttackCommand](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Commands/Builders/AttackCommand.cs)、[当前攻击过程](../../../../mod-the-spire/base-spire/combat/attacks.spire)、[通知与修正规格](../../../design/mod-the-spire/effect-listeners.md)。
 
@@ -68,9 +68,9 @@ Orichalcum说明了为什么需要独立阶段：参考在Early记录“此刻�
 
 参考施加Power时先判断战斗状态、目标附着与可命中资格，寻找已有实例。新建和层数变更都需要经过变更前通知、Given／Received修正，记录实际Received修正者，再提交实例与层数；新建还有`BeforeApplied`。计算完成后通知实际修正者，即使最终变化为0也可能消费其他Power；非零时再处理新建后的通知、层数变化及必要移除。实例模式、来源、回合到期状态也属于这条生命周期。
 
-当前`ApplyPowerWithSource`已有施加者与接收者的折叠、普通／独立／按applier实例、创建与变化通知，以及模块私有状态入口。但已有实例的变更前通知和修正者事后通知尚不完整；`ModifyPowerAmountWithSource`直接写层数、通知变化并按零层移除，没有经过同一完整修正流程。
+当前`ApplyPowerWithSource`、叠加与`ModifyPowerAmountWithSource`共用一次变更流程：变更前通知、Given加法／乘法、Received参与记录、提交实例／层数、修正者After与后置通知、按层数移除。每次操作拥有独立隐藏上下文，嵌套／暂停不覆盖父操作；保留施加者、来源、实例模式与持续时间事实。
 
-应先区分新建、叠加、直接增减的源调用关系，再提取共同步骤，避免Apply调用Modify后把修正执行两遍。Artifact尚未登记；其对负面变化返回0，并在修正后扣层，不能仅靠`PowerCreated`或`PowerApplied`订阅补齐。Strength等效果的负面类型还可能依本次变化符号而定。
+新建原始0量不发布通知；已有实例0量仍经过修正与参与者后置。Artifact已登记，按本次增量判断debuff，将其改0并在修正后扣一层，即使没有新Power也消费。Apply叠加不会再执行两遍修正。负Strength与负减益的类型按符号和定义判断。
 
 共同生命周期不应接管所有内容私有计数：Vigor关心本次Attack及开始层数，DarkEmbrace关心虚无耗尽次数；这些状态继续归内容模块。公开标志、来源与通用到期机制才进入共享结构。
 
