@@ -7,11 +7,19 @@ dsl_version = "core/0.3"
 # from Powers held by the defending player. Block absorbs first and the player HP floor stays zero.
 procedure DamagePlayerPowered {
  parameters = { attacker = Ref(Enemy) owner = Ref(Player) amount = Int(min = 0, max = 999) }
- locals = { attack = Binding }
  body = {
-  create = { type = Attack scope = entityScope(owner) into = attack collection = Attacks fields = { Enemy = attacker Defender = owner Amount = amount Hits = 1 Mode = "single" } }
-  call = { procedure = ExecuteAttack args = { attack = attack } }
+  call = { procedure = EnemyAttack args = { attacker = attacker defender = owner amount = amount hits = 1 } }
  }
+}
+
+procedure EnemyAttack {
+  parameters = { attacker = Ref(Enemy) defender = Ref(Player) amount = Int(min = 0, max = 999) hits = Int }
+  locals = { attack = Binding }
+  body = {
+    if = { condition = less(hits, 0) then = { fail = { message = "Negative attack hit count" } } }
+    create = { type = Attack scope = entityScope(defender) into = attack collection = Attacks fields = { Enemy = attacker Defender = defender Amount = amount Hits = hits Mode = "single" } }
+    call = { procedure = ExecuteAttack args = { attack = attack } }
+  }
 }
 
 # Shared enemy phase. Each hittable enemy is offered one turn through EnemyTurnStarted, so the enemy content

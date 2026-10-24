@@ -249,6 +249,30 @@ def main() -> int:
                 or [c["id"] for c in whistle["cases"]] != whistle_cases or any(c["status"] != "passed" for c in whistle["cases"])):
             raise ValueError("Whistle controlled comparison did not execute all required paid-card and stun cases")
 
+        rotations = run("enemy-rotations", ["enemy-rotation-compare", "--output", str(args.output / "enemy-rotations")], 1)
+        rotation_names = ("AssassinRubyRaider", "AxeRubyRaider", "BowlbugEgg", "BruteRubyRaider", "CrossbowRubyRaider", "Stabbot", "TrackerRubyRaider")
+        rotation_ids = [seed + ":" + name + ":" + mode for seed in ("777", "A😀B")
+                        for name in rotation_names for mode in ("rotation", "stun", "two")]
+        rotation_ids += [seed + ":TrackerRubyRaider:" + mode for seed in ("777", "A😀B")
+                         for mode in ("vigor", "retaliation", "lethal", "lethal-clean")]
+        if (rotations is None or rotations["status"] != "diverged" or rotations["independent_verified"] is not False
+                or rotations["normal_run_verified"] is not False or [case["id"] for case in rotations["cases"]] != rotation_ids):
+            raise ValueError("Enemy rotations must retain all controlled cases and the real lethal Power differences")
+
+        def rotation_differences(left, right, path=""):
+            if isinstance(left, dict) and isinstance(right, dict) and left.keys() == right.keys():
+                return [difference for key in left for difference in rotation_differences(left[key], right[key], path + "." + key)]
+            if isinstance(left, list) and isinstance(right, list) and len(left) == len(right):
+                return [difference for index, (left_item, right_item) in enumerate(zip(left, right))
+                        for difference in rotation_differences(left_item, right_item, path + f"[{index}]")]
+            return [] if left == right else [(path, left, right)]
+
+        for case in rotations["cases"]:
+            differences = rotation_differences(case["left"], case["right"])
+            expected = [("[2].enemies[0].vigor", 0, 3), ("[2].frail", 1, 0)] if case["id"].endswith(":lethal") else []
+            if differences != expected or case["status"] != ("diverged" if expected else "passed"):
+                raise ValueError(f"Enemy rotation changed its measured boundaries: {case['id']}: {differences}")
+
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
         paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]

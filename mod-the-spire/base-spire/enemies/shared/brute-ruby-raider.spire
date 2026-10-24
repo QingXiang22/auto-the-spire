@@ -1,8 +1,20 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: BruteRubyRaider.cs; Ascension 0 initial HP 30..33 (development spawn uses the minimum) and BEAT_MOVE 7 damage then ROAR_MOVE StrengthPower 3, alternating.
-use BruteRubyRaider {
-  template = AttackBuffEnemy
-  args = { definition = "base-spire:brute-ruby-raider" hp = 30 damage = 7 strength = 3 }
-}
+template BruteRubyRaiderContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:brute-ruby-raider" initial = "BEAT_MOVE" } }
+  use Beat { template = EnemyMoveNodeDefinition args = { definition = "base-spire:brute-ruby-raider" id = "BEAT_MOVE" next = "ROAR_MOVE" intent = "attack" index = 0 } }
+  use Roar { template = EnemyMoveNodeDefinition args = { definition = "base-spire:brute-ruby-raider" id = "ROAR_MOVE" next = "BEAT_MOVE" intent = "buff" index = 1 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { power = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "BEAT_MOVE") then = {
+      call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 7 hits = 1 } }
+    } else = {
+      call = { procedure = ApplyPowerWithSource args = { player = none enemy = target definition = "base-spire:strength-power" stacks = 3 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = power }
+    } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:brute-ruby-raider" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:brute-ruby-raider" hp = 30 } }
+  } }
+} }
+use BruteRubyRaider { template = BruteRubyRaiderContent }

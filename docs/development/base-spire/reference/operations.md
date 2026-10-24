@@ -126,19 +126,16 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 在伤害、攻击、出牌、回合或药水操作的外层边界检查；本场已有真实敌人死亡通知、深度均归零且已无存活敌人时，写 victory、关闭回合与活跃标记，按结束→正常清理→早期胜利→普通胜利顺序通知，再提交正常访问及生成奖励 |
 | CheckCombatDefeat | owner=Ref(Player) | 每次玩家掉血后调用：生命为 0 且战斗仍活跃时写 defeat 并关闭状态，再发 CombatEnded |
 | [DamagePlayerPowered](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire) | attacker=Ref(Enemy)、owner=Ref(Player)、amount | 敌方攻击链：防守方 `after-attacked-damage`（Thorns）先以无加成伤害反击攻击者，再按攻击者 Strength→攻击者 Weak ×0.75→防守方 Vulnerable ×1.5（整数向下取整）→格挡→生命，并做失败判定 |
+| EnemyAttack | attacker=Ref(Enemy)、defender=Ref(Player)、amount=Int(0..999)、hits=Int | 一次Attack包含指定命中数；负命中数拒绝，BeforeAttack／AfterAttack各一次，逐击走已有伤害／反应／死亡流程；单击DamagePlayerPowered复用此过程 |
 | RunEnemyTurn | owner=Ref(Player) | 敌方阶段：对每个可命中敌人先清空其格挡（源 `Creature.AfterTurnStart` 的敌侧语义），再发 EnemyTurnStarted；最后发 AfterEnemyTurnEnded |
 | [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义图保存初始招式；固定首招不抽样。生成和BeforeCombatStart复用，不重置随机流 |
 | ClearEnemyMoves／RemoveCombatEnemy | target=Ref(Enemy) | 前者只清招式及历史；后者依次移除Power、清招式、发EnemyRemoving供内容清私有状态，再销毁敌人。正常访问关闭复用后者 |
 | Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态并初始化图；条件节点不消费AI随机，未知槽位拒绝 |
 | PerformEnemyMove | owner=Ref(Player)、target=Ref(Enemy) | 复核双方生命，按保存节点分派ExecuteEnemyMove；完成后标记需要选招，暂停续接不重放正文 |
 | SelectNextEnemyMove | target=Ref(Enemy) | 对存活且未准备实例解析共享后继，保存MoveId／MoveIndex／Intent及实例历史；随机节点按源顺序与binary32权重消费monster_ai，已准备实例不再选招 |
-| [SingleAttackEnemy](../../../../mod-the-spire/base-spire/enemies/rules/single-attack-enemy.spire) 模板 | definition、hp、damage | 生成 `WhenEnemyTurn`（每回合对玩家造成固定伤害并保持 attack 意图）与 `Spawn`（用源最小 HP 创建） | TwigSlimeS（7 HP，4 伤害）、AssassinRubyRaider（18 HP，10 伤害） |
-| AttackDefendEnemy | definition、hp、damage、block | 攻击后给自身格挡（`GainEnemyBlock`）并保持 attack 意图 | BowlbugEgg（21 HP，7 伤害＋7 格挡） |
-| AttackBuffEnemy | definition、hp、damage、strength | 攻击与自我强化交替（MoveIndex 0／1） | BruteRubyRaider（30 HP，7 伤害／+3 强度） |
-| AttackDebuffEnemy | definition、hp、damage、frail | 攻击后给玩家施加 `block-dealt-multiplier`（Frail） | Stabbot（18 HP，11 伤害＋1 Frail） |
-| AttackDefendRotationEnemy | definition、hp、damage、block、bigDamage | 三段轮转：两次「攻击＋格挡」，再一记大攻击 | AxeRubyRaider（20 HP，5＋5 格挡 ×2，然后 12） |
-| BlockThenAttackEnemy | definition、hp、block、damage | 先格挡再攻击，交替 | CrossbowRubyRaider（18 HP，3 格挡／14 伤害） |
-| DebuffThenMultiAttackEnemy | definition、hp、frail、damage、hits | 先施加 Frail，之后每回合多段攻击 | TrackerRubyRaider（21 HP，Frail 2 后 1 伤害 ×8） |
+| EnemyMoveGraphDefinition／EnemyMoveNodeDefinition／EnemyMoveBranchDefinition | 具体参数见[招式图约定](../../../design/mod-the-spire/enemy-turn/spec.md#共享图的当前操作与失败方式) | 固定、条件和随机招式复用同一状态与执行分派；具体敌人模块保存源节点、后继、意图和正文 |
+
+Assassin、Axe、BowlbugEgg、Brute、Crossbow、Stabbot与Tracker均复用共享图。Axe／BowlbugEgg的复合意图为attack,defend，Stabbot为attack,debuff；Tracker的HOUNDS_MOVE调用一次EnemyAttack(amount=1,hits=8)。怪物施加Power通过ApplyPowerWithSource保留applierEnemy，card／play为空。各模块的Spawn动作名和最小HP保持既有定义，旧轮转模板已移除。
 
 遭遇内容用模板生成 `Spawn` 动作：`SingleEnemyEncounter`（definition 是遭遇标识，enemyDefinition／hp 描述唯一怪物）调用共享过程 `SpawnDevelopmentEnemy`；`RubyRaidersFormation` 先建 `EnemyPool` 的五个候选（Axe 20／Assassin 18／Brute 30／Crossbow 18／Tracker 21），再用 `samplePick(stream = base-spire:development-encounter)` 抽三次并逐个移除（不重复），最后清空池。当前遭遇：`base-spire:fuzzy-wurm-crawler-weak`（Monster 房、Weak、单怪）与 `base-spire:ruby-raiders-normal`（Monster 房、三个互不相同的 Ruby Raider，源随机流未迁移）。
 | [ObtainRelic](../../../../mod-the-spire/base-spire/relics/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64) | 在 owner 作用域创建、写 Owner／Holder／DefinitionId、加入 Relics 后发获得事件；过程本身不去重 |

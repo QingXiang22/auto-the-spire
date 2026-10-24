@@ -1,8 +1,20 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Source: TrackerRubyRaider.cs; Ascension 0 initial HP 21..25 (development spawn uses the minimum) and TRACK applies FrailPower 2 then HOUNDS_MOVE hits 1 damage eight times and repeats.
-use TrackerRubyRaider {
-  template = DebuffThenMultiAttackEnemy
-  args = { definition = "base-spire:tracker-ruby-raider" hp = 21 frail = 2 damage = 1 hits = 8 }
-}
+template TrackerRubyRaiderContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:tracker-ruby-raider" initial = "TRACK_MOVE" } }
+  use Track { template = EnemyMoveNodeDefinition args = { definition = "base-spire:tracker-ruby-raider" id = "TRACK_MOVE" next = "HOUNDS_MOVE" intent = "debuff" index = 0 } }
+  use Hounds { template = EnemyMoveNodeDefinition args = { definition = "base-spire:tracker-ruby-raider" id = "HOUNDS_MOVE" next = "HOUNDS_MOVE" intent = "attack" index = 1 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { power = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "TRACK_MOVE") then = {
+      call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:frail-power" stacks = 2 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = power }
+    } else = {
+      call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 1 hits = 8 } }
+    } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:tracker-ruby-raider" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:tracker-ruby-raider" hp = 21 } }
+  } }
+} }
+use TrackerRubyRaider { template = TrackerRubyRaiderContent }

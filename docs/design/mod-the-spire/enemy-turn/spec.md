@@ -10,7 +10,17 @@
 
 敌方阶段在玩家回合结束后按可命中敌人各发一次 `EnemyTurnStarted`，随后发 `AfterEnemyTurnEnded`。共享图消费者执行已经保存的招式；敌方阶段结束、持续时间更新后，为存活敌人选择下一招。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
-图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档和Wriggler，其他既有敌人仍使用原模板。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档、Wriggler及下述七个固定轮转敌人。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
+
+### 固定轮转与完整敌人攻击
+
+七个既有敌人按锁定参考的节点和后继登记同一共享图，正文由各自内容模块提供，不再由内容订阅EnemyTurnStarted自行改MoveIndex。Assassin的KILLSHOT_MOVE、BowlbugEgg的BITE_MOVE及Stabbot的STAB_MOVE各自循环；Axe为SWING_1→SWING_2→BIG_SWING→SWING_1；Brute为BEAT_MOVE与ROAR_MOVE交替；Crossbow从RELOAD_MOVE开始与FIRE_MOVE交替；Tracker从TRACK_MOVE进入HOUNDS_MOVE并保持。固定后继不消费monster_ai，首次生成、跨战重置和StunEnemy沿用已有共享图操作。
+
+Axe的两次普通挥击及BowlbugEgg公布attack,defend，Stabbot公布attack,debuff，顺序与源Intents一致。开发Spawn保留原动作ID和A0最小HP；这不包含正常编队的出生抽样或选招时点验收。
+
+EnemyAttack接收attacker、defender、amount和hits，拒绝负命中数，一次创建Attack再调用ExecuteAttack；DamagePlayerPowered作为单击调用复用它。BeforeAttack／AfterAttack各一次，逐击保留独立DamageResult与伤害反应；攻击者在反击中死亡后当前命中按已有伤害操作完成，后续命中停止，目标死亡也停止。普通非结束中的攻击由Vigor在整次攻击结束后消费开始层数，不能用多次单击或合并总伤害替代。Tracker的1×8与Vigor3应产生八次4点伤害、一次Attack；反击死亡与玩家致死分别验证命中边界和一次终局。当前结束中Power改量及玩家死亡后的Power清理仍存在差异，组件比较继续保留这些失败，不以命中数相同替代完整生命周期符合。
+
+怪物正文施加Power使用ApplyPowerWithSource，applierEnemy为真实怪物，card／play为空；自我强化仍保留自身施加者。已有逐实例历史、公开查询只读、击晕恢复、死亡清理与正常首战检查继续适用。独立组件比较使用真实参考怪物、空永久牌组和明确设置的生命／Power，比较逐回合节点、意图、历史、生命、格挡、逐击结果及AI随机状态；人工状态不证明正常遭遇可达或完整Run符合。
 
 ## 行为要求与设计
 

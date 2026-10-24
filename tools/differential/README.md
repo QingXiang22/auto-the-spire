@@ -48,6 +48,14 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 组件初态在出生后将双方敌人HP设为1000、玩家HP设为1000；致死场景只把目标设为33。出生HP生成与niche不属于此项比较，没有重键、重设流或补抽。未消费的DSL流按实际配置seed只读投影初始状态，不创建或推进流。migration要求两seed共16个场景全部通过；normal_run_verified保持false，不能替代正常Run或完整行动控制验收。
 
+## 固定轮转敌人组件比较
+
+运行`dotnet run --project tools/differential -c Release -- enemy-rotation-compare --output .artifacts/differential/enemy-rotations`。七个既有敌人各自执行完整固定轮转、首招击晕及同定义双实例；Tracker另比较Vigor3、Thorns反击击杀攻击者、玩家致死，以及先移除Frail后的无Power致死。双侧使用真实怪物及普通回合，空永久牌组；敌人生命设置为1000，玩家生命通常为1000，专项显式改为100或3。反击专项只把首个Tracker设为3HP，并增加4层Thorns，保留另一个存活敌人。设置动作调用生产操作，参考源码与随机流不改动。
+
+逐边界核对节点、复合意图、实例历史、生命／格挡、Strength／Vigor／Frail、按承受方分组的逐击结果，以及完整monster_ai状态和游标。初始HP抽样、正常遭遇、全局事件顺序不属于此组件范围，开发行为检查另核对一次Attack及前后通知各一次。
+
+两seed共50个场景保留在报告中。当前玩家带Frail并被Vigor攻击击杀时仍存在真实差异：DSL在结束中消费敌人Vigor并保留玩家Frail，参考保留Vigor3并移除玩家Frail。命令因此返回1、independent_verified=false；migration核对全部50个场景，要求其他场景相同，并保留这两项准确差异，额外差异同样失败。该检查不表示敌人符合性或正常Run已验收；Power结束中改量与玩家死亡清理须按工单修复后同步比较条件。
+
 ## BattleFriend受控组件比较
 
 运行`dotnet run --project tools/differential -c Release -- battle-friend-compare --output .artifacts/differential/battle-friend`。两侧各自创建真实三档靶人、执行入场与前三回合，比较HP、计时、活动／逃离／死亡、意图、胜利／超时、最大生命，以及niche的实际抽样参数／结果／游标／完整状态和AI消费。真实击杀场景在第三回合出牌前将双方目标HP设置为5，再实际打出Feed；双实例场景核对固定HP的候选耗尽抽样形式。没有重设随机种子或注入结束结果。

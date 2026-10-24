@@ -70,7 +70,7 @@ internal static partial class PackageChecks
             Equal(54L, Hp(s), "two goop hits (4 and 11) plus a second inhale and goop for 15 land over four turns");
         });
 
-        Case("CP62: the shared single-attack template drives two different enemies with their own damage", () =>
+        Case("CP62: the shared attack operation drives two different enemies with their own damage", () =>
         {
             var slime = Start(package); Submit(slime, "TwigSlimeS.Spawn");
             Equal(7L, EnemyHp(slime), "Twig Slime S spawns with the source minimum HP");
@@ -154,7 +154,7 @@ internal static partial class PackageChecks
             var s = Start(package); Submit(s, "Stabbot.Spawn");
             Equal(18L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
-            Equal("attack", EnemyIntent(s), "the intent stays attack"); Equal(1L, PowerStacks(s, "base-spire:frail-power"), "one frail applied");
+            Equal("attack,debuff", EnemyIntent(s), "both source intents remain ordered"); Equal(1L, PowerStacks(s, "base-spire:frail-power"), "one frail applied");
             Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
             Equal(58L, Hp(s), "the second stab hit for 11 again");
         });
@@ -191,6 +191,92 @@ internal static partial class PackageChecks
             Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
             Equal(64L, Hp(s), "the hounds repeat on the following turn");
         });
+
+        Own("base-spire:tracker-ruby-raider", "CP126 Tracker Vigor applies to all eight hits of one attack", () =>
+        {
+            using var copy = new Copy(package.Root);
+            copy.Include("tracker-vigor.spire", """
+                entity AttackCounters { fields = { Before = { type = Int default = 0 } After = { type = Int default = 0 } } }
+                action GrantVigor { role = player locals = { counters = Binding } body = {
+                  create = { type = AttackCounters scope = frameScope() into = counters }
+                  call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:vigor-power" stacks = 3 } }
+                } }
+                procedure CountBefore { parameters = { attack = Ref(Attack) } body = {
+                  set = { target = first(type(AttackCounters)) field = AttackCounters.Before value = add(field(first(type(AttackCounters)), AttackCounters.Before), 1) }
+                } }
+                procedure CountAfter { parameters = { attack = Ref(Attack) } body = {
+                  set = { target = first(type(AttackCounters)) field = AttackCounters.After value = add(field(first(type(AttackCounters)), AttackCounters.After), 1) }
+                } }
+                subscription CountBefore { event = BeforeAttack reaction = CountBefore }
+                subscription CountAfter { event = AfterAttack reaction = CountAfter }
+                """);
+            var session = Start(copy.Load()); Submit(session, "TrackerRubyRaider.Spawn");
+            Submit(session, "BeginDevelopmentCombat"); Submit(session, "BeginDevelopmentTurn"); Submit(session, "EndDevelopmentTurn");
+            Submit(session, "BeginDevelopmentTurn"); Submit(session, "GrantVigor");
+            Set(session, Player(session), "Player", "Hp", Value.Of(100L));
+            Set(session, Player(session), "Player", "MaxHp", Value.Of(100L));
+            Submit(session, "EndDevelopmentTurn");
+            Equal(68L, Hp(session), "eight source hits each gain the original three Vigor");
+            var attack = Members(session, "Attacks").Single();
+            Equal(8L, IntField(session, attack, "Attack", "Hit"), "all eight hits belong to one command");
+            Equal(0L, PowerStacksFor(session, "base-spire:vigor-power", FirstTarget(session)), "Vigor consumed once after the attack");
+            var results = Members(session, "DamageResults");
+            Equal(8, results.Count, "eight individual damage results");
+            var counters = session.State.AllInstances(session.RuleSet.TypeByQualifiedId("base-spire:AttackCounters").Id).Single();
+            Equal(1L, IntField(session, counters, "AttackCounters", "Before"), "one BeforeAttack notification");
+            Equal(1L, IntField(session, counters, "AttackCounters", "After"), "one AfterAttack notification");
+            Equal("0,1,2,3,4,5,6,7", string.Join(',', results.Select(result => IntField(session, result, "DamageResult", "Hit"))), "hit indices stay within one attack");
+            True(results.All(result => IntField(session, result, "DamageResult", "Unblocked") == 4), "per-hit damage is four");
+        });
+
+        using var graphCopy = new Copy(package.Root);
+        graphCopy.Include("rotation-control.spire", """
+            action RotationStun { role = player body = { call = { procedure = StunEnemy args = { target = first(type(Enemy)) } } } }
+            """);
+        var graphPackage = graphCopy.Load();
+        foreach (var (name, initial, next) in new[]
+        {
+            ("AssassinRubyRaider", "KILLSHOT_MOVE", "KILLSHOT_MOVE"), ("AxeRubyRaider", "SWING_1", "SWING_2"),
+            ("BowlbugEgg", "BITE_MOVE", "BITE_MOVE"), ("BruteRubyRaider", "BEAT_MOVE", "ROAR_MOVE"),
+            ("CrossbowRubyRaider", "RELOAD_MOVE", "FIRE_MOVE"), ("Stabbot", "STAB_MOVE", "STAB_MOVE"),
+            ("TrackerRubyRaider", "TRACK_MOVE", "HOUNDS_MOVE")
+        })
+        {
+            Case("CP126 graph isolation, stun, query purity and combat reset: " + name, () =>
+            {
+                var session = Start(graphPackage); Submit(session, name + ".Spawn"); Submit(session, name + ".Spawn");
+                var enemies = Targets(session).ToArray();
+                Submit(session, "BeginDevelopmentCombat"); Submit(session, "BeginDevelopmentTurn");
+                Submit(session, "RotationStun");
+                Equal("STUNNED", MoveText(session, enemies[0], "Enemy", "MoveId"), "only first instance is stunned");
+                Equal(initial, MoveText(session, enemies[1], "Enemy", "MoveId"), "other instance retains source first move");
+                var hash = session.State.StateHash(); var version = session.StateVersion; var draws = session.Random.TotalDraws;
+                for (var read = 0; read < 3; read++) { session.Observe(session.Participant(0), "base-spire:PlayerView"); session.LegalActions(session.Participant(0)); }
+                Equal(hash, session.State.StateHash(), "observations preserve state"); Equal(version, session.StateVersion, "observations preserve version");
+                Equal(draws, session.Random.TotalDraws, "observations preserve RNG");
+                Submit(session, "EndDevelopmentTurn");
+                Equal(initial, MoveText(session, enemies[0], "Enemy", "MoveId"), "stun restores selected source move itself");
+                Equal(next, MoveText(session, enemies[1], "Enemy", "MoveId"), "other instance advances exactly once");
+                if (name == "BruteRubyRaider") { Submit(session, "BeginDevelopmentTurn"); Submit(session, "EndDevelopmentTurn"); }
+                if (name is "Stabbot" or "TrackerRubyRaider" or "BruteRubyRaider")
+                {
+                    var power = Members(session, "Powers").Single();
+                    var powerType = session.RuleSet.TypeByQualifiedId("base-spire:Power");
+                    Equal(Value.OfRef(enemies[1]), session.State.GetField(power, powerType.FieldIndex("ApplierEnemy")), "real monster is the Power applier");
+                    True(session.State.GetField(power, powerType.FieldIndex("SourceCard")).IsNone, "monster Power has no card source");
+                    True(session.State.GetField(power, powerType.FieldIndex("SourcePlay")).IsNone, "monster Power has no play source");
+                }
+                Submit(session, "EndDevelopmentCombat"); Submit(session, "BeginDevelopmentCombat");
+                foreach (var enemy in enemies)
+                {
+                    Equal(initial, MoveText(session, enemy, "Enemy", "MoveId"), "combat reset restores first move");
+                    Equal(1L, IntField(session, MoveState(session, enemy), "EnemyMoveState", "Sequence"), "combat history resets per instance");
+                }
+                Equal(0L, session.Random.DrawCount(MonsterAi), "fixed graphs and stun do not sample AI");
+                var other = Start(graphPackage); Submit(other, name + ".Spawn");
+                Equal(initial, MoveText(other, FirstTarget(other), "Enemy", "MoveId"), "separate session retains fresh first move");
+            });
+        }
 
         foreach (var list in witness.Values) list.InsertRange(0, shared);
         return witness.ToDictionary(row => row.Key, row => row.Value.ToArray(), StringComparer.Ordinal);
