@@ -362,11 +362,12 @@ def main() -> int:
                        or len(c["protocol_checks"]) != len(c["boundaries"])
                        or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
                        or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
+                       or any(b["left"]["diagnostic"]["unmapped_public_fields"] for b in c["boundaries"])
                        or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
                               or "events.observed_order" not in b[side]["values"]
                               or "lifecycle.settlement" not in b[side]["values"]
                               or any(path not in b[side]["values"] for path in (
-                                  "public.map", "public.run", "public.neow", "public.reward_offer", "public.potion_inventory",
+                                  "public.snapshot", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potions", "public.potion_inventory",
                                   "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits"))
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
@@ -376,6 +377,20 @@ def main() -> int:
                        or (c["id"].startswith("m01-targeted-")
                            and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):
             raise ValueError("all four normal paths must return with matching dimensions, real target decisions and protocol evidence while rejecting incomplete M01")
+        for case in paired["cases"]:
+            for boundary in case["boundaries"]:
+                for side in ("left", "right"):
+                    state = boundary[side]
+                    public = json.loads(state["values"]["public.snapshot"])
+                    if (public["status"] != "decision" or not public["projections"]
+                            or any(p.startswith("public:") for p in state["missing_dimensions"])
+                            or any(json.loads(state["values"][k]) != v for k, v in public["projections"].items())):
+                        raise ValueError("full public snapshot must retain actual independently compared semantic surfaces")
+                for evidence in boundary["right"]["diagnostic"]["native_potion_capability_probes"]:
+                    if (evidence["id"] != "base-spire:flex-potion" or not evidence["procured"] or not evidence["consumed"]
+                            or evidence["strength_after"] - evidence["strength_before"] != 5 or evidence["temporary_amount"] != 5
+                            or evidence["strength_after_turn"] != evidence["strength_before"] or not evidence["temporary_removed"]):
+                        raise ValueError("potion capability must come from real native use and expiry, not a support constant")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")

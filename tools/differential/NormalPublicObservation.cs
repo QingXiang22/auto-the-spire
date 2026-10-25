@@ -5,10 +5,10 @@ namespace Differential;
 
 internal sealed record NormalMapNode(long Index, string Coordinate, string Type, bool Visited, bool Selectable, string[] Children);
 internal sealed record NormalRunView(string Phase, long Act, long Floor, long TotalFloor, string CurrentNode, long NodeCount, bool NeowPending, string Profile);
-internal sealed record NormalNeowOption(string Relic, long Position);
+internal sealed record NormalNeowOption(string Relic, long Position, bool EffectSupported);
 internal sealed record NormalNeowView(string Status, string SelectedRelic, NormalNeowOption[] Options);
 internal sealed record NormalCardOffer(string Id, bool Upgraded, long Cost, string Rarity);
-internal sealed record NormalPotionView(string Origin, long Slot, string Usage, string Target);
+internal sealed record NormalPotionView(string Origin, long Slot, string Usage, string Target, bool EffectSupported);
 internal sealed record NormalRelicView(string Id, bool Melted);
 internal sealed record NormalPlayerView(long Hp, long MaxHp, long Gold, string Character, long MaxEnergy, bool CombatActive, string CombatOutcome,
     string Room, bool TurnOpen, long Energy, long Turn, long Block, bool CurrentRun, long AutoDraw, bool RoomUsed, bool PendingForge, bool CombatTimedOut);
@@ -21,7 +21,7 @@ internal sealed record NormalCardView(string Scope, string Origin, string Id, st
 internal sealed record NormalRewardView(bool Open, bool GoldPending, long GoldAmount, bool CardPending, bool PotionPending,
     NormalCardOffer[] Cards, string[] Potions);
 internal sealed record NormalRewardSetView(long Visit, string Source, string Character, long Act, long Ascension, long CardCount,
-    string RarityPolicy, bool Generated, bool Closed, string? Potion, NormalRewardPolicyView Policies);
+    string RarityPolicy, bool Generated, bool Closed, string? Potion, NormalRewardPolicyView Policies, bool PotionPending);
 internal sealed record NormalRewardPolicyView(string PoolEligibility, string UpgradePolicy, string ModifiersPolicy, string RandomStream);
 
 // These projections read the protocol snapshot, never Engine fields or hidden collection members.
@@ -29,17 +29,18 @@ internal sealed record NormalRewardPolicyView(string PoolEligibility, string Upg
 // applicable entity field and topology surface has its own mapping or justified normalization.
 internal static class NormalPublicObservation
 {
-    private static string FieldName(FieldDto field) => field.FieldId.Split(':')[^1];
+    private static string FieldName(FieldDto field) => field.FieldId.StartsWith("net:field:base-spire:", StringComparison.Ordinal)
+        ? field.FieldId["net:field:base-spire:".Length..] : field.FieldId;
     private static readonly HashSet<string> MappedFields = new[]
     {
         ("Run", "Phase ActIndex MapFloor TotalFloor CurrentNode MapNodeCount NeowPending CurrentVisit VisitSequence Profile"),
         ("MapNode", "Index Col Row Type Visited Selectable"),
-        ("NeowVisit", "Status SelectedRelic"), ("NeowOption", "Position RelicId"),
+        ("NeowVisit", "Status SelectedRelic"), ("NeowOption", "Position RelicId EffectSupported"),
         ("Player", "Hp MaxHp Gold CharacterId MaxEnergy CombatActive CombatOutcome Room TurnOpen Energy TurnNumber Block CurrentRun CurrentRewardSet GoldRewardPending GoldRewardAmount CardRewardPending PlaySequence HpLossCount LostHpThisTurn ExhaustedCardThisTurn EnemyPhase UsesRunDeck DrawBlocked AutoDrawPerTurn RoomUsed PendingForge CombatTimedOut"),
         ("Enemy", "Hp MaxHp Block MoveId MoveIndex Intent Escaped"), ("Power", "HolderPlayer HolderEnemy Stacks SkipTick ExpiresAtTurnEnd"),
         ("RunVisit", "StableId Node MapType RoomType EncounterId Phase Status Committed Rewards"),
         ("Card", "Label SourceEntry Kind Rarity Cost BaseCost BaseDamage DamageGrowth Upgraded CanUpgrade Targeted Exhausts Innate LeavesPlay StrikeTag IsX PaidX"),
-        ("CombatRewardSet", "PotionPending VisitId Source CharacterId ActIndex Ascension CardCount RarityPolicy Generated Closed Potion PoolEligibility UpgradePolicy ModifiersPolicy RandomStream"), ("Potion", "Slot Usage Target"), ("Relic", "IsMelted"),
+        ("CombatRewardSet", "PotionPending VisitId Source CharacterId ActIndex Ascension CardCount RarityPolicy Generated Closed Potion PoolEligibility UpgradePolicy ModifiersPolicy RandomStream"), ("Potion", "Slot Usage Target EffectSupported"), ("Relic", "IsMelted"),
         ("HandView", "Player"), ("DrawPileView", "Player"), ("DiscardPileView", "Player"), ("ExhaustPileView", "Player"),
         ("InPlayView", "Player"), ("RemovedFromCombatView", "Player"), ("RunDeckView", "Player")
     }.SelectMany(p => p.Item2.Split(' ').Select(f => p.Item1 + "." + f)).ToHashSet(StringComparer.Ordinal);
@@ -61,6 +62,15 @@ internal static class NormalPublicObservation
         : throw new NotSupportedException("missing_dimension: public content identity for " + entity.KindId);
     internal static void Add(PublicSnapshotDto snapshot, SortedDictionary<string, string> values, Func<WireValue, string> binding)
     {
+        foreach (var entity in snapshot.Entities)
+        {
+            if (!entity.KindId.StartsWith("net:kind:base-spire:", StringComparison.Ordinal))
+                throw new NotSupportedException("missing_dimension: unknown public kind namespace " + entity.KindId);
+            var content = entity.KindId.Split(':')[^1] is "Card" or "Enemy" or "Power" or "Potion" or "Relic";
+            if (content ? entity.ContentState != "known" || string.IsNullOrEmpty(entity.ContentId)
+                : entity.ContentState != "not_applicable" || entity.ContentId is not null)
+                throw new NotSupportedException("missing_dimension: unexpected public content state " + entity.KindId);
+        }
         NormalPublicTopology.Add(snapshot, values);
         EntityDto[] Entities(string kind) => snapshot.Entities.Where(e => e.KindId == "net:kind:base-spire:" + kind).ToArray();
         var byHandle = snapshot.Entities.ToDictionary(e => e.InstanceId, StringComparer.Ordinal);
@@ -100,7 +110,7 @@ internal static class NormalPublicObservation
             .Select(r => byHandle[r.TargetRef]).ToArray();
         if (options.Length != Entities("NeowOption").Length) throw new NotSupportedException("missing_dimension: orphan public Neow option");
         Put("public.neow", new NormalNeowView(Text(neow, "Status"), Text(neow, "SelectedRelic"), options
-            .OrderBy(o => Number(o, "Position")).Select(o => new NormalNeowOption(Text(o, "RelicId"), Number(o, "Position"))).ToArray()));
+            .OrderBy(o => Number(o, "Position")).Select(o => new NormalNeowOption(Text(o, "RelicId"), Number(o, "Position"), Flag(o, "EffectSupported"))).ToArray()));
         var current = player.Fields.SingleOrDefault(f => FieldName(f) == "Player.CurrentRewardSet");
         var reward = current is null ? null : byHandle[Text(player, "CurrentRewardSet")];
         Put("public.reward_offer", new NormalRewardView(reward is not null, Flag(player, "GoldRewardPending"), Number(player, "GoldRewardAmount"),
@@ -111,9 +121,11 @@ internal static class NormalPublicObservation
         Put("public.reward_sets", Entities("CombatRewardSet").Select(r => new NormalRewardSetView(Number(r, "VisitId"), Text(r, "Source"),
             Text(r, "CharacterId"), Number(r, "ActIndex"), Number(r, "Ascension"), Number(r, "CardCount"), Text(r, "RarityPolicy"),
             Flag(r, "Generated"), Flag(r, "Closed"), r.Fields.Any(f => FieldName(f) == "CombatRewardSet.Potion") ? binding(Field(r, "Potion")) : null,
-            new(Text(r, "PoolEligibility"), Text(r, "UpgradePolicy"), Text(r, "ModifiersPolicy"), Text(r, "RandomStream"))))
+            new(Text(r, "PoolEligibility"), Text(r, "UpgradePolicy"), Text(r, "ModifiersPolicy"), Text(r, "RandomStream")), Flag(r, "PotionPending")))
                 .OrderBy(r => r.Visit).ToArray());
-        Put("public.potion_inventory", Group("Potions").Select(p => new NormalPotionView(binding(WireValue.Str(p.InstanceId)), Number(p, "Slot"), Text(p, "Usage"), Text(p, "Target")))
+        NormalPotionView Potion(EntityDto p) => new(binding(WireValue.Str(p.InstanceId)), Number(p, "Slot"), Text(p, "Usage"), Text(p, "Target"), Flag(p, "EffectSupported"));
+        Put("public.potions", Entities("Potion").Select(Potion).OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
+        Put("public.potion_inventory", Group("Potions").Select(Potion)
             .OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
         Put("public.relic_inventory", Group("Relics").Select(r => new NormalRelicView(Content(r), Flag(r, "IsMelted"))).OrderBy(r => r.Id, StringComparer.Ordinal).ToArray());
         var deck = snapshot.Piles.Single(p => byHandle[p.PileRef].KindId == "net:kind:base-spire:RunDeckView").VisibleMembers.ToHashSet(StringComparer.Ordinal);

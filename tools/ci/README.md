@@ -28,7 +28,7 @@ python tools/ci/check.py base net migration docs
 | base | 通用加载并启动纯 DSL 包、执行当前机制行为、正常开局及固定源地图／队列比较、核对 DSL 遗物及卡牌执行结果 | 机制 scope及部分正常开局；铁甲战士卡牌检查要求源池 85 张单人铁甲战士完整且有实际执行结果，保留90项新版来源及五项多人排除 |
 | net | 通用 wire／text-rules 检查和纯 DSL 公开路径，包含真实 stdio 子进程 | 含seed 777的真实Neow至首战奖励领取／跳过及地图返回；完整正常Run的snapshot／control／formal检查尚未迁移 |
 | docs | 检查 Git 文档（含共享 AGENTS.md）的链接、锚点、JSON 示例、需求引用、Vale 项目术语和差异格式 | CI 安装固定版本 Vale 并校验 SHA256；检查不读取本地原版源码或历史产物 |
-| migration | 准备锁定参考，校验构建依赖隔离、153 个固定版本的源代码组与 11 份原 suite；执行 Strike／重洗双侧、逐次随机诊断、正常开局预检、共同动作四路径及严格失败检查 | BattleFriend的13个及Wriggler／Infection的24个受控组件场景须通过；Strike 通过，重洗保留真实首差；正常领取／跳过及目标选择共四路径返回地图，已比较状态、公开牌堆与逐边界协议检查通过；完整公开投影、逐次随机与事件等维度仍缺，因此非零；其余原用例未支持，不代表完整差异测试验收 |
+| migration | 准备锁定参考，校验构建依赖隔离、153 个固定版本的源代码组与 11 份原 suite；执行 Strike／重洗双侧、逐次随机诊断、正常开局预检、共同动作四路径及严格失败检查 | BattleFriend的13个及Wriggler／Infection的24个受控组件场景须通过；Strike 通过，重洗保留真实首差；正常领取／跳过及目标选择共四路径返回地图，完整公开语义快照和逐边界协议检查通过；逐次随机与适用事件仍缺，因此非零；其余原用例未支持，不代表完整差异测试验收 |
 
 首次非零使当前组失败。原始日志、退出码及 `result.json` 写入 `.artifacts/ci/<组名>/`，Actions 上传各组 artifact，保留 14 天。base 的行为报告标记 `independent_verified: false`；迁移清单中的原检查均标记未执行。固定版本的文本 SHA256 采用 UTF-8 与 LF，跨检出换行保持一致。
 

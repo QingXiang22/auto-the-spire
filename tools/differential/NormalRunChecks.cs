@@ -44,13 +44,28 @@ internal static class NormalRunChecks
         Require(!NormalRunComparison.Certified(item with { FirstDifference = new(0, "start", "facts", "a", "b") }), "real difference");
         CheckHostDiagnostics(repository);
         NormalSnapshotChecks.Run(repository);
+        CheckPublicCompleteness();
 #if REFERENCE_SIM
+        CheckNeowCallbackAvailability();
         CheckReferenceDiagnostics();
         CheckPotionDiscard(repository);
 #endif
         Console.WriteLine("Normal comparison checks passed: all dimensions/first differences, zero execution, incomplete policy/return, and real Host diagnostic non-interference.");
     }
 #if REFERENCE_SIM
+    private static void CheckNeowCallbackAvailability()
+    {
+        Sts2Sim.Core.Demo.RunReplayDemo.EnsureModelsRegistered();
+        var enabled = new Sts2Sim.Core.Events.EventOption("WingedBoots", () => Task.CompletedTask);
+        var locked = new Sts2Sim.Core.Events.EventOption("WingedBoots", null);
+        Require(NormalReferenceNeow.Read(enabled, 0).EffectSupported && !NormalReferenceNeow.Read(locked, 0).EffectSupported,
+            "native option availability reads the real callback, including the disabled control; it is not a true constant");
+        var rejected = false;
+        try { NormalReferenceNeow.Read(new("UnknownUnregisteredRelic", () => Task.CompletedTask), 0); }
+        catch (NotSupportedException) { rejected = true; }
+        Require(rejected, "unknown native callback target cannot acquire a fabricated support value");
+    }
+
     private static void CheckPotionDiscard(string repository)
     {
         var directory = Path.Combine(repository, ".artifacts/differential/diagnostic-checks");
@@ -162,9 +177,9 @@ internal static class NormalRunChecks
             }
         }
         Apply(new("claim-potion", []));
-        Require(RewardSet() == generatedReward with { Potion = null }, "claim clears only the pending reward potion link");
+        Require(RewardSet() == generatedReward with { Potion = null, PotionPending = false }, "claim clears only the pending reward potion link");
         Apply(new("close-rewards", []));
-        Require(RewardSet() == generatedReward with { Potion = null, Closed = true }, "room exit closes and retains the same generated reward context");
+        Require(RewardSet() == generatedReward with { Potion = null, PotionPending = false, Closed = true }, "room exit closes and retains the same generated reward context");
         CheckPublicProjection(left.Snapshot);
         var discard = left.Semantic(left.Action("DiscardPotion"));
         Require(discard.Arguments.Single().Contains(":potion-reward:0:", StringComparison.Ordinal), "held potion retains its actual reward creation origin");
@@ -336,6 +351,9 @@ internal static class NormalRunChecks
         Changed(Replace(First("Run"), "TotalFloor", WireValue.Str("999")), "public.run");
         Changed(Replace(First("Run"), "Profile", WireValue.Str("corrupted-profile")), "public.run");
         Changed(Replace(First("NeowOption"), "Position", WireValue.Str("999")), "public.neow");
+        Changed(Replace(First("NeowOption"), "EffectSupported", WireValue.Bool(!NormalPublicObservation.Flag(First("NeowOption"), "EffectSupported"))), "public.neow");
+        Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != First("NeowOption") ? e : e with
+            { Fields = e.Fields.Where(f => !f.FieldId.EndsWith(".EffectSupported", StringComparison.Ordinal)).ToArray() }).ToArray() }, "missing Neow option effect availability");
         Changed(Replace(First("Player"), "GoldRewardAmount", WireValue.Str("999")), "public.reward_offer");
         if (snapshot.Entities.Any(e => e.KindId.EndsWith(":CombatRewardSet", StringComparison.Ordinal)))
         {
@@ -392,6 +410,43 @@ internal static class NormalRunChecks
         var extended = snapshot with { Entities = snapshot.Entities.Select(e => e != node ? e : e with
         { Fields = [.. e.Fields, field with { FieldId = "net:field:base-spire:MapNode.FutureField", Value = WireValue.Bool(true) }] }).ToArray() };
         Require(NormalPublicObservation.UnmappedFields(extended).Contains("MapNode.FutureField"), "new public fields remain explicitly unverified until mapped");
+        var wrongNamespace = snapshot with { Entities = snapshot.Entities.Select(e => e != node ? e : e with
+        { Fields = e.Fields.Select(f => f != field ? f : f with { FieldId = "net:field:other-mod:MapNode.Visited" }).ToArray() }).ToArray() };
+        Require(NormalPublicObservation.UnmappedFields(wrongNamespace).Contains("net:field:other-mod:MapNode.Visited"), "a matching field suffix in another namespace is not mapped");
+        Reject(wrongNamespace, "foreign field namespace");
+        Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != run ? e : e with { ContentState = "unknown" }).ToArray() }, "changed non-content entity visibility");
+        Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != run ? e : e with { KindId = "net:kind:other-mod:Run" }).ToArray() }, "foreign entity kind namespace");
+        // Every currently published field must influence the semantic result or be rejected.
+        // One example per qualified field avoids repeating the same check for every map node.
+        var omitted = new List<string>();
+        foreach (var pair in snapshot.Entities.SelectMany(e => e.Fields.Select(f => (entity: e, field: f))).GroupBy(p => p.field.FieldId).Select(g => g.First()))
+        {
+            var changedValue = pair.field.Value switch
+            {
+                WireBool b => WireValue.Bool(!b.Value),
+                WireString s when long.TryParse(s.Value, out var n) => WireValue.Str((n == long.MaxValue ? n - 1 : n + 1).ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                WireString s => WireValue.Str(s.Value + "-corrupted"),
+                _ => throw new InvalidOperationException("Unexpected normal public value shape.")
+            };
+            var changedSnapshot = snapshot with { Entities = snapshot.Entities.Select(e => e != pair.entity ? e : e with
+                { Fields = e.Fields.Select(f => f != pair.field ? f : f with { Value = changedValue }).ToArray() }).ToArray() };
+            var detected = false;
+            try { detected = NormalRunComparison.First(0, original, original with { Values = Project(changedSnapshot) }) is not null; }
+            catch (Exception error) when (error is NotSupportedException or InvalidOperationException or KeyNotFoundException or FormatException) { detected = true; }
+            if (!detected) omitted.Add(pair.field.FieldId);
+        }
+        Require(omitted.Count == 0, "published fields cannot disappear from comparison: " + string.Join(", ", omitted));
+        var expected = new IdentityDto(snapshot.ProtocolVersion, snapshot.RulesetId, snapshot.CatalogId, snapshot.BackendProfileId);
+        NormalPublicSnapshot.ValidateEnvelope(snapshot, expected, snapshot.SessionId);
+        foreach (var corrupted in new[] { snapshot with { RulesetId = "wrong" }, snapshot with { CatalogId = "wrong" },
+            snapshot with { BackendProfileId = "wrong" }, snapshot with { ProtocolVersion = "wrong" }, snapshot with { SessionId = "wrong" },
+            snapshot with { ObservationId = -1 }, snapshot with { Status = "terminal" } })
+        {
+            var failed = false;
+            try { NormalPublicSnapshot.ValidateEnvelope(corrupted, expected, snapshot.SessionId); }
+            catch (NotSupportedException) { failed = true; }
+            Require(failed, "public envelope is checked against the actual handshake/session");
+        }
         var relation = snapshot.Relations.First();
         Reject(snapshot with { Relations = [.. snapshot.Relations, relation with { SourceRef = First("Player").InstanceId }] }, "relation endpoint has wrong kind");
         Reject(snapshot with { Relations = snapshot.Relations.Select(r => r != relation ? r : r with { Position = 0 }).ToArray() }, "unordered relation has unexpected position");
@@ -402,6 +457,20 @@ internal static class NormalRunChecks
             try { Project(value); } catch (NotSupportedException) { failed = true; }
             Require(failed, "actual public topology corruption fails: " + name);
         }
+    }
+    private static void CheckPublicCompleteness()
+    {
+        var paths = NormalRunComparison.RequiredPaths.Where(p => p.StartsWith("public.", StringComparison.Ordinal) && p != "public.snapshot")
+            .Concat(new[] { "actions.candidates", "decisions.current" }).ToArray();
+        SortedDictionary<string, string> Values() => new(paths.ToDictionary(p => p, _ => "[]"), StringComparer.Ordinal);
+        var complete = Values();
+        Require(NormalPublicSnapshot.Add(complete, [], "decision") && complete.ContainsKey("public.snapshot"), "complete public semantic surfaces form a snapshot");
+        foreach (var path in paths)
+        {
+            var missing = Values(); missing.Remove(path);
+            Require(!NormalPublicSnapshot.Add(missing, [], "decision") && !missing.ContainsKey("public.snapshot"), "missing public component cannot pass: " + path);
+        }
+        Require(!NormalPublicSnapshot.Add(Values(), ["MapNode.FutureField"], "decision"), "unknown fields block complete public snapshot");
     }
     private static void Require(bool condition, string name)
     { if (!condition) throw new InvalidOperationException("Normal comparison check failed: " + name); }

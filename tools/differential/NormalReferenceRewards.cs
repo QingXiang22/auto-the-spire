@@ -41,7 +41,7 @@ internal sealed class NormalReferenceRewards
             {
                 CardRarityOddsType.RegularEncounter => "regular-encounter",
                 _ => throw new NotSupportedException("missing_dimension: native reward rarity policy")
-            }, Read<bool>(reward.Card, "_isPopulated"), false, null, policies[index]))).ToArray();
+            }, Read<bool>(reward.Card, "_isPopulated"), false, null, policies[index], false))).ToArray();
     }
     internal static NormalRewardPolicyView Classify(NormalRewardPolicyEvidence evidence)
     {
@@ -53,6 +53,7 @@ internal sealed class NormalReferenceRewards
     internal NormalRewardSetView[] Capture(Func<PotionModel, string> potion) => sets.Select(s => s.Context with
     {
         Generated = Read<bool>(s.Reward.Card, "_isPopulated"), Closed = Read<bool>(room, "_exitCompleted"),
+        PotionPending = s.Reward.Potion is { IsResolved: false, Potion: not null },
         Potion = s.Reward.Potion is { IsResolved: false, Potion: { } pending } ? potion(pending) : null
     }).OrderBy(s => s.Visit).ToArray();
 
