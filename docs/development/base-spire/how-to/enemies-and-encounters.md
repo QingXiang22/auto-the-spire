@@ -16,6 +16,8 @@
 
 一次多击调用EnemyAttack(attacker、defender、amount、hits)，不循环调用单击DamagePlayerPowered。Tracker展示先施加Frail再进入1×8的固定循环；Axe与BowlbugEgg展示攻击后格挡及attack,defend复合意图，Stabbot保留attack,debuff。Power操作显式传真实applierEnemy，正文不直接写层数；这些敌人同样支持StunEnemy，不另写击晕调度。
 
+敌人和遭遇的开发Spawn动作仅用于战前配置；生成完成后启动战斗。活动战斗内生成需要另行实现准确入场流程，当前动作不提供这项能力。
+
 正常出生使用CreateSourceEncounterEnemy(definition,min,max)，显式固定HP的开发配置继续使用CreateEncounterEnemy。新战斗工厂前调用PrepareEnemyBirthContext（要求无敌人），不能在移除单个敌人后重置计数。出生编号、CombatId与MonsterSeed保持不变；设置真实槽位的SlotIndex后，由战斗入口统一SortEncounterEnemies整理行动／监听顺序。无槽位使用-1。HP抽样对零生命但未确认死亡者仍排除其MaxHp，已确认死亡／逃离者不参与；候选非空从0起抽偏移，耗尽才按原HP区间抽样，固定HP同样消费一次。
 
 ## 保留原版随机语义

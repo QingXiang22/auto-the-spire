@@ -1,6 +1,15 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
+# Active-combat creation needs a separate entry lifecycle; these actions configure the next battle.
+procedure CanSpawnDevelopmentEnemies {
+  pure = true parameters = { owner = Ref(Player) } result = Bool
+  body = {
+    if = { condition = field(owner, Player.CombatActive) then = { return = { value = false } } }
+    return = { value = pureCall(CanUseDevelopmentActions, owner) }
+  }
+}
+
 # Creation owns stable identity; slot ordering follows the complete batch.
 procedure PrepareEnemyBirthContext { body = {
   if = { condition = field(first(type(Player)), Player.CombatActive) then = { fail = { message = "Enemy birth context requires an inactive combat" } } }
@@ -90,7 +99,7 @@ template SingleEnemyEncounter {
   body = {
     action Spawn {
       role = player
-      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
+      requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
       body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(enemyDefinition) hp = arg(hp) } } }
     }
   }

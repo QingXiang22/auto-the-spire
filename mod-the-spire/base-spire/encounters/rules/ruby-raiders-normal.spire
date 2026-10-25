@@ -45,7 +45,7 @@ template RubyRaidersFormation {
   body = {
     action Spawn {
       role = player
-      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
+      requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
       body = {
         call = { procedure = BuildRubyRaiderPool }
         call = { procedure = PickRaiderFromPool }

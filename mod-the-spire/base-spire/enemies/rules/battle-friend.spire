@@ -24,7 +24,7 @@ template BattleFriendEnemy {
       instances = where(type(Enemy), e, and(equal(field(e, Enemy.DefinitionId), arg(definition)), pureCall(EnemyIsActive, e)))
       instance_order = pureCall(EnemyHookOrder, listener, false) priority = 0
     }
-    action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) locals = { hp = Int } body = {
+    action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { hp = Int } body = {
       call = { procedure = RollEncounterEnemyHp args = { min = arg(hp) max = arg(hp) } into = hp }
       call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(definition) hp = hp } }
     } }

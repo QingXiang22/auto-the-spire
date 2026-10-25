@@ -42,6 +42,19 @@ internal static partial class PackageChecks
             Equal(3L, IntField(s, audit, "BirthRoomAudit", "Added"), "all real SlimesWeak monsters enter after room notification");
             True(Targets(s).All(e => MoveText(s, e, "Enemy", "MoveId") != "none"), "normal first turn prepares all moves");
         });
+        check("BIRTH real enemy Spawn actions reject active-combat creation before any state or RNG change", () =>
+        {
+            var s = Start(rules); Submit(s, "FuzzyWurmCrawler.Spawn"); Submit(s, "BeginDevelopmentCombat");
+            var before = s.State.StateHash(); var draws = s.Random.TotalDraws;
+            True(!s.LegalActions(s.Participant(0)).Any(a => a.Definition.QualifiedId.EndsWith(".Spawn", StringComparison.Ordinal)), "only pre-combat configuration exposes real enemy Spawn");
+            foreach (var name in new[] { "FuzzyWurmCrawler.Spawn", "FuzzyWurmCrawlerWeak.Spawn", "Wriggler.Spawn", "BattleFriendV3.Spawn", "RubyRaidersNormal.Spawn" })
+            {
+                var action = s.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:" + name);
+                Throws<EngineFaultException>(() => s.Submit(action, s.Participant(0), []));
+                Equal(before, s.State.StateHash(), "invalid spawn keeps the complete state: " + name);
+                Equal(draws, s.Random.TotalDraws, "invalid spawn consumes no HP or composition draw: " + name);
+            }
+        });
         check("BIRTH removal does not reuse identity, explicit fresh context resets and sessions isolate", () =>
         {
             var s = Start(rules); Submit(s, "FuzzyWurmCrawler.Spawn");
