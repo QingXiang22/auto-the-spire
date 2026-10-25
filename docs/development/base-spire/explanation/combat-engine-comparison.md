@@ -2,9 +2,186 @@
 
 文档类型：解释（Explanation）。面向需要审阅共享玩法、迁移遗物／Power，以及判断效果应放在哪个阶段的开发者。
 
-先打开[交互图文](combat-engine-comparison.html)：六个主题分别展示架构、开始阶段、结束阶段、监听与攻击、Power和遗物。点击节点可定位锁定源码，支持突出差异、导出SVG和打印全部图文。下面的静态图与文字适合在仓库内阅读。
+人工阅读可先打开[交互图文](combat-engine-comparison.html)：六个主题分别展示架构、开始阶段、结束阶段、监听与攻击、Power和遗物。点击节点可定位锁定源码，支持突出差异、导出SVG和打印全部图文。审查或实施前先读本文的[战斗内部调用与源码定位](#战斗内部调用与源码定位)和[差异与修改方案](#差异与修改方案)，其中区分当前代码、建议行为和验证条件。
 
 本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`2a9b96ef17c2866d66069d0765f64fe56a802c68`（包版本`0.7.0-dsl.73`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../reference/operations.md)和[Power参考](../reference/powers.md)。
+
+本文是有界源码对照，不是全内容符合性报告。继续工作前读取实际 manifest 与[参考锁定清单](../../../../reference/baselines/sts2-sim.json)，核对下面列出的符号；包版本相同也不能替代源码核对。源码变化时同步改文字、流程图及受影响的交互图。当前仍仅开放开发 scope；部分正常首战和事件战斗复用名称含 `Development` 的过程，不能据名称判断是否有正常消费者，也不能据局部可达性声称支持完整 Run。
+
+## 战斗内部调用与源码定位
+
+下表中的参考路径均相对于锁定 checkout 的 `src/Sts2Sim.Core/`。本地源码不存在时按[参考恢复说明](../../../../reference/README.md)准备；不要把未纳管的本地 checkout 当成正式文档链接，也不要改动参考源码以适配 DSL。
+
+| 阶段 | sts2-sim 源符号 | base-spire 实际入口 |
+| --- | --- | --- |
+| 入战与玩家开始 | `Combat/CombatEngine.cs`：`StartCombatAsync`、`StartTurnAsync`、`SetupPlayerTurnAsync` | [lifecycle.spire](../../../../mod-the-spire/base-spire/combat/lifecycle.spire)：`BeginDevelopmentCombat`、`BeginDevelopmentTurn`；[normal.spire](../../../../mod-the-spire/base-spire/run/normal.spire)：`EnterNormalMapPoint` |
+| 玩家结束与手牌 | `Combat/CombatEngine.cs`：`EndPlayerTurnAsync`、`DoTurnEndAsync` | `lifecycle.spire::EndDevelopmentTurn`；[piles.spire](../../../../mod-the-spire/base-spire/cards/rules/piles.spire)：`FinishTurnHand` |
+| 敌人行动与换边 | `Combat/CombatEngine.cs`：`ExecuteEnemyTurnAsync`、`EndEnemyTurnAsync`、`NotifySideSwitch`；`Models/MonsterModel.cs`：`RollMove`、`PerformMove` | [enemy-turn.spire](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire)：`RunEnemyTurn`；[move-graph.spire](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire)：`ResetEnemyMoves`、`PerformEnemyMove`、`SelectNextEnemyMove` |
+| 一次出牌与重复 | `Models/CardModel.cs`：`PlayInternalAsync`、`PlayAfterObserverStartedAsync` | [play.spire](../../../../mod-the-spire/base-spire/cards/rules/play.spire)：`ResolvePaidCard`、`ResolveAutoCard`、`ResolveCardEffects`、`FinishCardPlay` |
+| 攻击与逐击伤害 | `Commands/Builders/AttackCommand.cs::Execute`；`Commands/CreatureCmd.cs`：`Damage`、`DamageSingle`、`ResolvePotentialDeath`、`ResolveConfirmedDeath` | [attacks.spire](../../../../mod-the-spire/base-spire/combat/attacks.spire)：`ExecuteAttack`；[damage-results.spire](../../../../mod-the-spire/base-spire/combat/damage-results.spire)：`ResolveEnemyDamage`、`ResolvePlayerDamage`、`PublishDamageBatch` |
+| 结束中与结果提交 | `Combat/CombatEngine.cs`：`IsEnding`、`CheckWinCondition`；`Rooms/CombatRoom.cs`：`ResolveOutcomeAsync`、`ResolveVictoryOnceAsync`、`CompleteCombatOnceAsync` | [hook-order.spire](../../../../mod-the-spire/base-spire/combat/hook-order.spire)：`CombatIsEnding`；`lifecycle.spire`：`CheckCombatVictory`、`CheckCombatDefeat`；`normal.spire`：`ClearNormalCombat`、`SettleNormalCombat` |
+| 通知及修正派发 | `Hooks/Hook.cs` 的具体站点；`Runs/RunState.cs`、`Combat/CombatState.HookListeners.cs` 的监听枚举 | [hook-order.spire](../../../../mod-the-spire/base-spire/combat/hook-order.spire)、各 DSL 订阅与 [Session.Events.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Events.cs) |
+
+### 当前双方回合循环
+
+实线是各自实际推进关系，不表示左右节点完全等价。图仅展开战斗继续时的主链；末杀、死亡和暂停会在具体命令／阶段边界分流，不能由主链补发后续通知。普通正常首战入口会连续调用 base 的入战与首回合开始，但后续回合仍采用下图的分步动作。
+
+```mermaid
+flowchart TB
+    subgraph Base[base-spire 当前流程]
+        direction TB
+        B0[BeginDevelopmentCombat：牌组与状态初始化、入场通知]
+        B1[BeforeCombatStart：订阅重置招式并选首招]
+        B2[BeginDevelopmentTurn：BeforePlayerSideTurnStart]
+        B3[条件清格挡、AfterBlockCleared、能量重置与通知]
+        B4[回合号加一、BeforeHandDraw、抽牌]
+        B5[玩家开始 Early／普通／Late、AfterPlayerSideTurnStart]
+        B6[玩家操作]
+        B7[EndDevelopmentTurn：AutoPostPlay、结束前三阶段]
+        B8[FinishTurnHand、重置费用、AfterPlayerSideTurnEnd]
+        B9[RunEnemyTurn：敌方开始、清格挡、逐敌执行已选招式]
+        B10[敌方结束三阶段、清理、AfterEnemySideTurnEnd]
+        B11[SelectNextEnemyMove：提前选下一招]
+        B12[关闭 TurnOpen 并返回；等待下一次开始动作]
+        B0 --> B1 --> B2 --> B3 --> B4 --> B5 --> B6
+        B6 -->|继续操作| B6
+        B6 -->|结束回合| B7 --> B8 --> B9 --> B10 --> B11 --> B12
+        B12 -->|另一次调用| B2
+    end
+    subgraph Reference[sts2-sim 锁定流程]
+        direction TB
+        S0[StartCombatAsync：牌组、怪物 Setup、入场回调]
+        S1[BeforeCombatStart；自动进入 StartTurnAsync]
+        S2[玩家开始：BeforeSideTurnStart、RollMove]
+        S3[条件清格挡、AfterBlockCleared、能量重置与通知]
+        S4[回合号加一、BeforeHandDraw、抽牌]
+        S5[玩家开始各阶段、充能球、AutoPrePlay、Play]
+        S6[玩家操作]
+        S7[EndPlayerTurnAsync：AutoPostPlay、结束前三阶段]
+        S8[充能球、DoTurnEndAsync、Flush、AfterSideTurnEnd]
+        S9{额外玩家回合？}
+        SX[消费资格、StartTurnAsync：不重新 RollMove]
+        S10[切敌方、StartTurnAsync、逐敌 PerformMove]
+        S11[EndEnemyTurnAsync：结束通知与清理]
+        S12[切玩家方、RoundNumber 加一、自动 StartTurnAsync]
+        S0 --> S1 --> S2 --> S3 --> S4 --> S5 --> S6
+        S6 -->|继续操作| S6
+        S6 -->|结束回合| S7 --> S8 --> S9
+        S9 -->|有| SX --> S3
+        S9 -->|无| S10 --> S11 --> S12 --> S2
+    end
+```
+
+### 出牌、攻击与每击目标批次
+
+先区别一次出牌动作、一次重复执行、一次攻击和一次命中。`AfterCardPlayed` 在双方都处于重复循环内部；一次性移入结果牌区发生在整个重复循环之后，不能把该通知移动到循环外。下图将正文中的非攻击命令省略为直接返回正文；它们仍按所属正文顺序执行。
+
+```mermaid
+flowchart TB
+    subgraph Base[base-spire 手动出牌]
+        direction TB
+        B0[ResolvePaidCard：校验、扣能量、捕获 X、移入 InPlay]
+        B1[ResolveCardEffects：次数、结果区、父上下文]
+        B2[每次重复：CardPlayRecord、Before 通知]
+        B3[ExecuteCardBody：唯一有序正文]
+        B4[ExecuteAttack：BeforeAttack、修正击数]
+        B5[每击：先提交本批全部目标，再结果通知，再死亡通知]
+        B6[AfterAttack；返回正文继续余效]
+        B7[附魔、负面附着、记录完成、After 通知]
+        B8[FinishCardPlay 一次移牌、恢复父上下文、外层胜利检查]
+        B0 --> B1 --> B2 --> B3
+        B3 -->|攻击命令| B4 --> B5 --> B6 --> B7
+        B3 -->|其他命令完成| B7
+        B7 -->|仍有重复| B2
+        B7 -->|完成| B8
+    end
+    subgraph Reference[sts2-sim 手动出牌]
+        direction TB
+        S0[PlayInternalAsync：校验、移入 Play、支付资源及支付通知]
+        S1[结果位置修正、附魔次数修正、Hook 次数修正及后置通知]
+        S2[每次重复：CardPlay、BeforeCardPlayed、记录开始]
+        S3[CardModel.OnPlay：具体正文]
+        S4[AttackCommand.Execute：BeforeAttack、修正击数]
+        S5[每击 CreatureCmd.Damage：整批状态、结果 Hook、死亡处理]
+        S6[AfterAttack；返回正文继续余效]
+        S7[附魔、负面附着、记录完成、AfterCardPlayed]
+        S8[一次移入结果区、空手检查、清理费用、返回外层]
+        S0 --> S1 --> S2 --> S3
+        S3 -->|攻击命令| S4 --> S5 --> S6 --> S7
+        S3 -->|其他命令完成| S7
+        S7 -->|仍有重复| S2
+        S7 -->|完成| S8
+    end
+```
+
+base 的手动指定目标入口在支付前通过原生 `decide` 暂停；回答后才进入 `ResolvePaidCard`。自动出牌使用自己的目标与支付策略，不应按手动图推断为全部自动操作都免费。具体支持边界见[内容行为要求 G02～G06](../../../design/mod-the-spire/content-behavior-migration.md)。
+
+## 差异与修改方案
+
+以下 CF 编号只定位技术差异，不保存负责人、进度或排期。方案均未因本文而实施；实施须按现有工单授权范围、依赖及最新源码重新核对。已有机制对应[行为要求 G01～G10](../../../design/mod-the-spire/content-behavior-migration.md)，实例监听遵循[统一约定](../../../design/mod-the-spire/effect-listeners.md)。
+
+### CF01：出生、图初始化与选招时点不同
+
+- **现状与依据**：参考 `CombatRoom.Prepare` 按工厂顺序创建并抽 HP 后按槽位排序；`StartCombatAsync` 为全部怪物 Setup 后执行入场回调；普通 `StartTurnAsync` 在 `BeforeSideTurnStart` 后、清格挡前 `RollMove`。base 部分生成入口已 `ResetEnemyMoves`，`BeforeCombatStart` 订阅再重置并选首招，后续在 `RunEnemyTurn` 末尾 `SelectNextEnemyMove`。详见上表源码和[敌人领域约定](../../../design/mod-the-spire/enemy-turn/spec.md)。
+- **影响**：入场 Power 或开始通知改变条件节点时，提前选招会读旧状态；重复重置可能重放历史或消费随机。固定轮转一致不能排除这些差异。
+- **方案**：按[#127](https://github.com/QingXiang22/auto-the-spire/issues/127)分离创建、出生状态、图初始化和选招，保留稳定出生标识与行动槽位两种顺序；将普通选招移入 DSL 玩家开始的准确站点，再去掉旧末阶段准备。首招、已准备招、击晕恢复和额外回合分别定义，不能直接移动一次调用而保留重复重置。
+- **验证**：比较创建顺序与槽位不同的编队、入场状态决定首招、开始通知改变分支，以及 Whistle 首招前击晕／恢复。核对每个通知边界的节点、历史、实际随机调用与完整流状态；不重设游标、不补抽。
+
+### CF02：下一回合由谁推进属于接口选择
+
+- **现状与依据**：base `EndDevelopmentTurn` 执行敌方回合后关闭 `TurnOpen` 并返回，下一次 `BeginDevelopmentTurn` 是另一次公开动作。参考 `EndEnemyTurnAsync` 换边并增加 `RoundNumber`，立即 `StartTurnAsync`；`EndPlayerTurnAsync` 还可分流到额外玩家回合。
+- **影响**：把两边的 `EndTurn` 返回状态直接比较，会分别得到“等待开始”和“下一玩家行动阶段”。这是一项显式开发接口差异，不能直接判为所有内容效果错误，也不能把额外开始动作漏出比较协议。
+- **方案**：先在正常战斗的行为约定确定稳定返回边界，再在 base DSL 编排换边与下一玩家回合。开发分步入口若仍有消费者，单独保留其明确语义；比较适配器只能记录声明的动作映射，不能代执行遗漏的游戏效果。Host 和 core 不增加自动游戏推进器。若改变公开动作及返回边界，同步迁移 net 客户端、候选、脚本和随机／事件比较。
+- **验证**：从一次真实结束回合直到下一合法玩家动作，比较敌人行动次数、玩家回合号、能量、手牌、阶段通知和随机消费；额外回合不执行敌人行动、不重选普通招式；结束中或死亡不再开启新回合。
+
+### CF03：开始阶段与敌方行动资格尚未接齐
+
+- **现状与依据**：参考 `StartTurnAsync` 调用生物开始处理、条件清格挡及 `AfterPreventingBlockClear`，还有充能球和 `AutoPrePlay`。base 当前开始主链没有全部对应阶段；`RunEnemyTurn` 直接清活动敌人格挡，行动筛选没有参考 `SpawnedThisTurn` 和死亡后保留生物的完整语义。已有玩家 `ShouldClearBlock` 不代表敌方拥有同样修正路径。
+- **影响**：阻止清格挡、入场当回合是否行动、额外回合及角色专属消费者可能落在错误阶段。普通 Ironclad 组件不能证明这些分支符合。
+- **方案**：在 `lifecycle.spire`、`enemy-turn.spire` 及拥有状态的领域补齐实际消费者所需的阶段和资格；不同侧的清格挡查询应带明确持有者，先完整处理参与者再发布后置通知。与 CF01／CF02 共用换边定义；充能球、召唤／复活和其他角色的恢复须有独立授权，不能仅新增空事件便宣称支持。
+- **验证**：第一回合保留格挡、阻止清格挡的后置回调、多个敌人先全部清格挡再行动、同侧新增实例及各回合类型；未支持消费者保持明确拒绝。检查 `AfterEnergyReset` 读取旧回合号、起手后开始通知读取新回合号。
+
+### CF04：支付、结果位置和次数捕获不完全相同
+
+- **现状与依据**：base `ResolvePaidCard` 先扣能量，再移入 `InPlay`；`ResolveCardEffects` 先 `ModifyPlayCount`，再计算有限的结果区策略。参考 `PlayAfterObserverStartedAsync` 先移入 `Play`，再支付能量／星星并发支付通知，再修正结果位置及通知实际修正者，随后经过附魔和 Hook 修正重复次数。参考完成出牌后还有空手检查。
+- **影响**：移牌与支付监听读取到的能量不同；结果区修正者、次数修正者及其后置副作用可能错序或缺失。两边都有重复循环和一次结果移牌，不代表这些捕获点相同。
+- **方案**：在 `cards/rules/play.spire` 按 G02／G05 定义资格、费用读取、移牌、实际支付与通知、结果位置、次数的准确顺序；保持每次操作独立的支付／原始 X 快照和父执行。通知执行真实副作用，pure 修正只计算值；星星等新资源按消费者单独纳入范围。手动、自动、已付费批次分别迁移，不能把免费策略扩至全部自动路径。
+- **验证**：移入 Play 的监听读取支付前能量、支付后监听读取实际扣除量；修正结果位置后改变次数的非交换场景；X 值、重复支付一次、嵌套自动批次、暂停续接、空手反应。两侧期望分别由锁定源码执行产生，不由 DSL 自算。
+
+### CF05：回合末效果牌的依赖与结束中检查需逐点比较
+
+- **现状与依据**：base `FinishTurnHand` 固定虚无／效果牌名单，先耗尽普通虚无牌，再逐张完整处理效果牌，然后 Flush。参考 `DoTurnEndAsync` 还有充能球前置，并为效果牌建立移入 Play 与前一张结果的依赖；headless 下移牌可先于上一张效果完成。参考 `EndPlayerTurnAsync` 在多个位置 `CheckWinCondition`；base 有外层深度保护，但 `FinishTurnHand` 内部分支检查的是 `CombatActive`／HP，不能将它当作 `CombatIsEnding`。
+- **影响**：第一张末杀或嵌套移动其他效果牌时，后续牌的所在牌区与通知资格可能不同；只比较最终弃牌堆会漏掉差异。现有虚无原因和 DarkEmbrace 延迟抽牌已接入，不应回退为即时抽牌。
+- **方案**：保持原快照和 `causedByEthereal`，按参考实际依赖重建“收集、入 Play、效果、结果、Flush”的 DSL 批次；不用墙钟延时模拟动画。逐站点定义结束中行为和胜负提交位置，不能简单将所有判断替换成统一提前返回。
+- **验证**：两张末效果牌，首张末杀／抽牌／移动后张，普通虚无与效果虚无混合、耗尽反应重洗、BeforeFlush 末杀、DarkEmbrace 在侧结束延迟抽牌；比较中间牌区、通知序列及随机调用，而非仅最终状态。
+
+### CF06：伤害批次形状对应，完整修正与死亡链仍有缺口
+
+- **现状与依据**：双方都是每击先提交全部目标，再结果反应，最后死亡处理。参考 `CreatureCmd.DamageSingle` 还包含伤害修正、`BeforeDamageReceived`、HP 损失分阶段修正、承伤转移；`Damage` 在死亡处理前发布破格挡、HP 变化、伤害给予／接收等 Hook。base `ResolveEnemyDamage`／`ResolvePlayerDamage` 和结果通知仅承载已迁移部分，数值仍有四位整数中间值；`PublishDamageDeath` 未提供完整防死链。
+- **影响**：批次顺序一致不能证明修正精度、承伤者、死亡防止、通知参与者一致；直接伤害与真正攻击也不能共用隐含来源。
+- **方案**：按 G03～G05 扩充现有伤害操作和结果来源，保留每击目标与逐结果顺序；每项缺失修正、后置通知和数值策略先写输入／输出，再接真实消费者。死亡事实、阻止死亡、确认死亡和移除分开；暂停的防死／复活内容不因本文自动恢复。共用原 Engine 数值能力，通用缺口另给最小复现。
+- **验证**：群体同击致死、反击杀死攻击者、全挡／破挡／超杀、非交换乘法与取整、无加成攻击和直接伤害、实际来源与 Feed 收益；承伤转移和防死仅在获准实现后补独立用例。逐结果保存请求值、最终值、实际失血、承受者和事件顺序。
+
+### CF07：结束中、失败和胜利提交不是同一个边界
+
+- **现状与依据**：base `CombatIsEnding` 以活动敌人和玩家生命判断；`CheckCombatVictory` 还要求死亡／逃离事实，且等待 `DamageDepth`、`AttackDepth`、`PlayDepth`、`EffectDepth` 全部退出；`CheckCombatDefeat` 在玩家伤害发布路径提交。参考 `IsEnding` 使用玩家存活、主要敌人与 `ShouldStopCombatFromEnding`；`CheckWinCondition` 在显式边界提交。两侧不能用一个 Bool 互相替代。
+- **收尾对应**：base 胜利为 `CombatEnded → ClearNormalCombat → CombatVictoryEarly → CombatVictory → SettleNormalCombat`；参考为 `CheckWinCondition → CombatRoom.ResolveOutcomeAsync → AfterCombatEnd → ClearCombatForVictory → AfterCombatVictory（Early／普通）→ 奖励生成`。base 失败先关闭状态，再玩家死亡通知、Power 清理、`CombatEnded`、失败访问提交；参考 `ResolveOutcomeAsync` 不走胜利收尾，退出房间另负责解除战斗关联，不能机械补发胜利链。
+- **方案**：在[战斗结束约定](../../../design/mod-the-spire/combat-end/spec.md)和 Run 约定分开定义结束条件、命令资格、死亡提交和房间收尾；恢复主要敌人／阻止结束机制时保留开发空场不自动判胜的显式范围。沿准确外层边界恰好一次清理与提出奖励，不允许更早清空出牌／攻击引用。保持已有 Feed 末杀收益和 ending 时拒绝抽牌／格挡／耗尽等各自源规则。
+- **验证**：末杀正文余效、AfterAttack／AfterCardPlayed 反应、嵌套末杀、玩家与最后敌人同批死亡、全部逃离、空开发场、重复结果提交；扩展主要敌人机制时加入次要敌人仍存活与阻止结束场景。分别核对结果确定、结束通知、清理和奖励边界，不只比较 `Won`。
+
+### CF08：监听枚举与有效资格需按 dispatcher 逐个核对
+
+- **现状与依据**：base 的通用事件执行器固定候选并在调用前复核实例资格，参考各 Hook 的枚举路径和快照方式不完全相同；参考本身也有已声明的模型资格简化。已接 Run／Direct 两类排序不表示所有新通知都可复用同一排列。
+- **方案**：新增或修改阶段时注明源 Hook 的枚举函数、是否快照、过滤条件与本次 payload；内容私有状态继续归所属模块。若锁定源与通用 Session 的资格语义发生可观察冲突，先给最小消费者及双方轨迹，按当前核心约定协调；不能把 core 改成遗物专用调度器，也不能把源改成理想化行为来消除差异。
+- **验证**：交换库存／Power 获得顺序，同定义双实例、执行中移除／新增后续监听者、嵌套和暂停；分别比较 Run 与 Direct 站点。Observe／LegalActions 仍不得写状态或消费随机。
+
+### 实施约束与验证安排
+
+按所属领域确定依赖：CF01 的出生与选招、CF02 的换边和返回边界、CF07 的结束中定义会影响 CF03／CF05 的阶段接入；不能只改末端内容数值补偿上游顺序。CF04／CF06 修改共享出牌或伤害操作时，须保留既有批次、嵌套、来源与实例隔离。此处说明技术依赖，不指定执行顺序或恢复暂停任务。
+
+每次实现都应保留双方原始阶段名称、稳定实例对应、通知顺序、完整牌区和逐流随机轨迹；声明清楚双方动作映射及返回边界。受控输入与正常可达路径分别验证；调试观察不能进入公开 AI 输入。缺例、缺维度、未支持和首差保留非零，不删原 suite、不缩小来源池、不重写参考或期望值制造通过。
+
+本页仅修改文档时运行 `python tools/ci/check.py docs`。后续实现按[验证指南](../how-to/verify-and-debug.md)选择 base／net／migration 组及定向双侧场景；[差异工具说明](../../../../tools/differential/README.md)列出的现有组件命令只证明各自范围。新增场景必须实际接入比较器并执行，不能把已有命令或本文方案当作修复验证。任何方案都不以局部组件一致替代完整正常 Run 或真实客户端保真。
 
 ## 两侧的职责与状态
 

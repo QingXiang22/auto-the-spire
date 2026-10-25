@@ -1,6 +1,8 @@
 # 当前 base 控制流程与模块
 
-文档类型：解释（Explanation）。本页按纯 DSL base `0.7.0-dsl.40` 描述现行职责。调用签名见[行为操作参考](../../development/base-spire/reference/card-behavior.md)，来源顺序与限制见[迁移约定](content-behavior-migration.md)。旧 C# CardPlayPipeline 等模块不进入生产。
+文档类型：解释（Explanation）。本页描述纯 DSL base 的现行职责，版本以[包 manifest](../../../mod-the-spire/base-spire/package.json)为准。调用签名见[行为操作参考](../../development/base-spire/reference/card-behavior.md)，来源顺序与限制见[迁移约定](content-behavior-migration.md)。旧 C# CardPlayPipeline 等模块不进入生产。
+
+逐阶段审阅或修改战斗流程时，先读[双方内部调用、差异与修改方案](../../development/base-spire/explanation/combat-engine-comparison.md#战斗内部调用与源码定位)。该页按锁定 sts2-sim 的源符号对照入战、玩家／敌人回合、出牌、逐击批次和胜负提交；当前实现与建议分列。尤其不能把开发态的分步回合动作当作参考的自动换边，也不能把敌方末阶段选招当作玩家开始时选招。
 
 ## 当前调用链
 
@@ -35,7 +37,7 @@ flowchart TD
 | 永久牌、复制与附魔 | [permanent-operations](../../../mod-the-spire/base-spire/cards/rules/permanent-operations.spire)、[attachments](../../../mod-the-spire/base-spire/cards/rules/attachments.spire) | 永久／战斗副本分开；复制、升级与移除协议；依附投影保护隐藏牌标识 |
 | Power 与其他能力监听 | [Power生命周期](../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire)、[统一监听约定](effect-listeners.md) | 显式来源、定义匹配策略、实例通知与纯修正；完整 StackType 仍未承诺 |
 | 资源、访问与奖励 | [resources](../../../mod-the-spire/base-spire/combat/resources.spire)、[visits](../../../mod-the-spire/base-spire/events/rules/visits.spire)、[rewards](../../../mod-the-spire/base-spire/rewards/index.spire) | 共享完整领域调用；访问拥有页面／状态／返回位置，普通事件不直接改 Player.Room |
-| 回合、历史及战斗结束 | [lifecycle](../../../mod-the-spire/base-spire/combat/lifecycle.spire) | 开发状态门禁和阶段通知；新战先清理来源历史及临时能力，未恢复正常 Run 结算 |
+| 回合、历史及战斗结束 | [lifecycle](../../../mod-the-spire/base-spire/combat/lifecycle.spire)、[enemy-turn](../../../mod-the-spire/base-spire/combat/enemy-turn.spire)、[normal](../../../mod-the-spire/base-spire/run/normal.spire) | 阶段通知与结束中判断；结束回合执行敌方后返回，下一玩家开始另行调用；新战清理来源历史及临时能力，部分正常访问已接奖励，完整 Run 仍未支持 |
 
 所有可变状态、局部变量、挂起点和续接均在同一 Engine Session。Host 只负责声明派生、候选应答与公开投影，不编排第二份玩法。
 
