@@ -414,6 +414,7 @@ internal static class NormalRunChecks
         { Fields = e.Fields.Select(f => f != field ? f : f with { FieldId = "net:field:other-mod:MapNode.Visited" }).ToArray() }).ToArray() };
         Require(NormalPublicObservation.UnmappedFields(wrongNamespace).Contains("net:field:other-mod:MapNode.Visited"), "a matching field suffix in another namespace is not mapped");
         Reject(wrongNamespace, "foreign field namespace");
+        Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != run ? e : e with { Fields = [.. e.Fields, field] }).ToArray() }, "known field attached to the wrong entity kind");
         Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != run ? e : e with { ContentState = "unknown" }).ToArray() }, "changed non-content entity visibility");
         Reject(snapshot with { Entities = snapshot.Entities.Select(e => e != run ? e : e with { KindId = "net:kind:other-mod:Run" }).ToArray() }, "foreign entity kind namespace");
         // Every currently published field must influence the semantic result or be rejected.

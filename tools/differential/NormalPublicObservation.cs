@@ -66,6 +66,9 @@ internal static class NormalPublicObservation
         {
             if (!entity.KindId.StartsWith("net:kind:base-spire:", StringComparison.Ordinal))
                 throw new NotSupportedException("missing_dimension: unknown public kind namespace " + entity.KindId);
+            var ownerPrefix = "net:field:base-spire:" + entity.KindId["net:kind:base-spire:".Length..] + ".";
+            if (entity.Fields.Any(f => !f.FieldId.StartsWith(ownerPrefix, StringComparison.Ordinal)))
+                throw new NotSupportedException("missing_dimension: public field belongs to another entity kind " + entity.KindId);
             var content = entity.KindId.Split(':')[^1] is "Card" or "Enemy" or "Power" or "Potion" or "Relic";
             if (content ? entity.ContentState != "known" || string.IsNullOrEmpty(entity.ContentId)
                 : entity.ContentState != "not_applicable" || entity.ContentId is not null)
