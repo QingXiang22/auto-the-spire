@@ -148,7 +148,10 @@ procedure BeginDevelopmentCombat {
     if = { condition = greater(field(owner, Player.AutoDrawPerTurn), 0) then = {
       shuffle = { collection = DrawPile stream = "base-spire:run:shuffle" }
     } }
-    forEach = { query = where(type(Enemy), e, pureCall(EnemyIsActive, e)) item = enemy body = {
+    call = { procedure = SortEncounterEnemies }
+    call = { procedure = ResetCombatEnemyMoves args = { owner = owner } }
+    call = { procedure = NotifyCurrentCombatRoomEntered args = { owner = owner } }
+    forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
       emit = { event = EnemyAddedToCombat payload = { owner = owner target = enemy } }
     } }
     emit = { event = BeforeCombatStart payload = { owner = owner } }
@@ -183,7 +186,11 @@ procedure BeginDevelopmentTurn {
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
     if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnStart payload = { owner = owner } } } }
-    # Enemy move preparation at this boundary is tracked separately by the enemy lifecycle.
+    if = { condition = not(pureCall(CombatIsEnding)) then = {
+      forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
+        call = { procedure = SelectNextEnemyMove args = { target = enemy } }
+      } }
+    } }
     if = { condition = and(not(pureCall(CombatIsEnding)), and(greater(field(owner, Player.TurnNumber), 0), foldEvent(ShouldClearBlock, true, owner))) then = {
       set = { target = owner field = Player.Block value = 0 }
     } }

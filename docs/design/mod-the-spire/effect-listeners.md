@@ -10,7 +10,7 @@
 
 ## 源时点与监听顺序
 
-依据锁定参考的RunState.IterateHookListeners、CombatState.IterateHookListeners与Hook各站点，不能把Power0／遗物100作为全部事件的顺序。combat/hook-order中的PowerHookOrder、RelicHookOrder、CardHookOrder及EnemyHookOrder统一计算键，direct参数选择下表两种路径。同一持有者保留实际实例／牌堆顺序，敌方分组使用当前Enemy.SpawnOrder；出生与槽位分离、条件选招时点仍按敌人领域的支持边界处理。
+依据锁定参考的RunState.IterateHookListeners、CombatState.IterateHookListeners与Hook各站点，不能把Power0／遗物100作为全部事件的顺序。combat/hook-order中的PowerHookOrder、RelicHookOrder、CardHookOrder及EnemyHookOrder统一计算键，direct参数选择下表两种路径。同一持有者保留实际实例／牌堆顺序，敌方分组使用当前Enemy.SpawnOrder；不可变出生编号与槽位行动顺序分开；普通玩家BeforeSideTurnStart完成后才准备敌人招式，详见敌人领域约定。
 
 | 源路径 | 顺序 | 当前对应事件 |
 | --- | --- | --- |

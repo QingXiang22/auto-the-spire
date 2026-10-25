@@ -216,3 +216,9 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 `dotnet run --project tools/differential -c Release -- exhaust-cause-compare --output .artifacts/differential/exhaust-causes`运行两seed各15种场景。受控命令例比较设置、耗尽后与侧结束三个边界，自然回合末例比较设置与敌方开始前两个边界；均比较五个有序牌区、实际Power与隐藏虚无次数、每次抽牌时已清零的次数、资源／ending及monster_ai、shuffle、combat_targets的完整状态、游标和逐次调用候选。普通耗尽、改量、NoDraw先后获得、满手、重洗、Hellraiser嵌套耗尽、移除重建、无事件生成、即时Charon／FeelNoPain、真实回合末虚无及Infection正文、末杀和暂停续接均执行实际命令。
 
 两侧明确使用空永久牌组、HP1000和受控牌区；Strike／Bash／Infection显式取得虚无，嵌套Strike另取得耗尽关键词。自然回合末比较参考原生EnemyTurnStarting观察点与DSL清手／侧结束后、敌方行动前的行政暂停；末杀停在奖励前。暂停抽牌先与参考只读CardDrawn通知比较首张，再续接完成。该报告仅认证受控组件，不认证正常Run或M01；原11份suite与正常比较的缺维度失败保持。
+
+## 敌人出生与选招边界组件
+
+`dotnet run --project tools/differential -c Release -- enemy-birth-compare --output .artifacts/differential/enemy-birth`运行两seed共18项受控判别。反向槽位编队使用真实CombatRoom.Prepare，先登记玩家，再按4、1、3、2工厂顺序创建Wriggler并排序；比较源CombatId、逐只HP、个体RNG初始状态、实际行动顺序、niche每次参数／结果／游标及完整终态。另保留第三幕位置种子、零HP但仍在侧列表、完整移除后编号不复用、显式新战斗重置、重复MaxHp去重与固定HP仍消费的场景。位置／HP／移除设置明确为工具状态，不证明正常可达。
+
+入场条件使用原生SlumberingBeetle的真实入场Power及SLEEP_CHECK图；DSL仅加载工具专用条件探针，比较BeforeCombatStart、玩家BeforeSideTurnStart、AfterEnergyReset和敌方末的节点／历史，再验证下一回合。回合前移除原生Slumber与改变探针条件用于判别提前选招。该场景不登记SlumberingBeetle或Slumber为正式支持，不认证其伤害／Power全效果。组件显式执行DSL End+Begin，正常EndTurn自动进入下一可行动回合仍独立验收。新组件不替代原11份suite或正常Run比较。

@@ -12,7 +12,9 @@ internal static partial class PackageChecks
             var s = Start(package); Submit(s, "FuzzyWurmCrawlerWeak.Spawn");
             Equal(1, Targets(s).Count, "one monster"); Equal("base-spire:fuzzy-wurm-crawler", TargetId(s), "the source monster");
             Equal(55L, EnemyHp(s), "the encounter spawns the minimum initial HP"); Equal(55L, s.State.GetField(FirstTarget(s), EnemyField(s, "MaxHp")).AsInt(), "max HP matches");
-            Equal("attack", EnemyIntent(s), "the first intent is public"); Equal(0L, EnemyMove(s), "it starts on its first move");
+            Equal("none", EnemyIntent(s), "the factory does not select a move");
+            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            Equal("attack", EnemyIntent(s), "the first player start publishes the real first intent"); Equal(0L, EnemyMove(s), "it starts on its first move");
         });
         Case("CP80: the encounter monster takes its rotation and can be defeated like any other enemy", () =>
         {

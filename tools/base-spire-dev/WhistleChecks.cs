@@ -37,9 +37,11 @@ internal static partial class PackageChecks
             Equal(draws, s.Random.TotalDraws, "stun does not consume randomness");
             Submit(s, "EndDevelopmentTurn");
             Equal(80L, Hp(s), "the stunned enemy skips its turn");
+            Equal("STUNNED", MoveText(s, FirstTarget(s), "Enemy", "MoveId"), "enemy end has not resumed the move");
+            Submit(s, "BeginDevelopmentTurn");
             Equal("FIRST_ACID_GOOP", MoveText(s, FirstTarget(s), "Enemy", "MoveId"), "first selected move resumes without skipping");
             Equal("attack", MoveText(s, FirstTarget(s), "Enemy", "Intent"), "the resumed intent is public");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn");
             Equal(76L, Hp(s), "saved first attack really executes after the skip");
             Equal(0L, PowerStacksFor(s, "base-spire:strength-power", FirstTarget(s)), "inhale has not executed early");
             Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
@@ -58,6 +60,7 @@ internal static partial class PackageChecks
             Equal("FIRST_ACID_GOOP", MoveText(s, enemies[1], "Enemy", "MoveId"), "the other instance is unchanged before its turn");
             Submit(s, "EndDevelopmentTurn");
             Equal(76L, Hp(s), "the other enemy acts while the targeted one skips");
+            Submit(s, "BeginDevelopmentTurn");
             Equal("FIRST_ACID_GOOP", MoveText(s, enemies[0], "Enemy", "MoveId"), "targeted instance resumes independently");
             Equal("INHALE", MoveText(s, enemies[1], "Enemy", "MoveId"), "other instance advances normally");
         });
@@ -103,11 +106,11 @@ internal static partial class PackageChecks
         Case("MOVE Whistle: combat reset and full instance removal discard transient stun state", () =>
         {
             var s = Start(rules); Submit(s, "FuzzyWurmCrawler.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Submit(s, "StunFirst"); Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat"); Saved(s, "FIRST_ACID_GOOP");
+            Submit(s, "StunFirst"); Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat"); Saved(s, "none");
             Submit(s, "BeginDevelopmentTurn"); Submit(s, "StunFirst"); Submit(s, "EndDevelopmentCombat"); Submit(s, "RemoveFirst");
             foreach (var name in new[] { "EnemyMoveState", "EnemyMoveHistory" })
                 Equal(0, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:" + name).Id).Count(), "no stale state after full removal");
-            Submit(s, "FuzzyWurmCrawler.Spawn"); Saved(s, "FIRST_ACID_GOOP");
+            Submit(s, "FuzzyWurmCrawler.Spawn"); Saved(s, "none");
         });
 
         Case("MOVE Whistle: unmigrated live move graph fails explicitly instead of ignoring stun", () =>

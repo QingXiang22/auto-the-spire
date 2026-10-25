@@ -127,6 +127,22 @@ def main() -> int:
                 or len(dummy["cases"]) != 13 or any(c["status"] != "passed" for c in dummy["cases"])):
             raise ValueError("BattleFriend controlled component comparison did not execute all required cases")
 
+        birth = run("enemy-birth", ["enemy-birth-compare", "--output", str(args.output / "enemy-birth")], 0)
+        birth_ids = [seed + ":" + mode for seed in ("777", "A😀B")
+                     for mode in ("reverse-slots", "located-slots", "new-combat", "fixed-hp", "zero-hp-member", "detached", "duplicate-max", "entry-condition", "before-side-condition")]
+        if (birth is None or birth["schema"] != "dsl-migration/enemy-birth@1" or birth["status"] != "passed"
+                or birth["reference"]["commit"] != lock["commit"] or birth["independent_verified"] is not True
+                or birth["normal_run_verified"] is not False or [c["id"] for c in birth["cases"]] != birth_ids
+                or any(c["status"] != "passed" or c["left"] != c["right"] for c in birth["cases"])):
+            raise ValueError("Enemy birth comparison must retain exact HP calls, identities, RNG and roll boundaries")
+        for case in birth["cases"]:
+            trace = case["left"]
+            if (not trace["births"] or len(trace["hp_calls"]) != len(trace["births"])
+                    or trace["niche_draws"] != len(trace["births"]) or len(trace["niche_state"]) != 4
+                    or any(len(b["monster_rng"]) != 4 for b in trace["births"])
+                    or len(trace["random_targets"]) != (8 if case["id"].endswith("-slots") else 0)):
+                raise ValueError("Enemy birth comparison omitted births or actual random state")
+
         wriggler = run("wriggler", ["wriggler-compare", "--output", str(args.output / "wriggler")], 0)
         wriggler_cases = [seed + ":" + mode for seed in ("777", "A😀B")
                           for mode in ("four", "stunned", "hp-exhausted", "block", "unpowered", "death", "retain", "ethereal", "auto", "force-auto", "cost", "nonhand")]

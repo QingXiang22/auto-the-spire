@@ -61,7 +61,7 @@ internal static partial class PackageChecks
             {
                 var s = New(tier); var enemy = FirstTarget(s); var hp = 75L << (tier - 1);
                 Equal(hp, EnemyHp(s), "fixed source HP"); Equal(1L, s.Random.DrawCount("base-spire:run:niche"), "fixed HP still draws once");
-                Equal("IDLE", MoveText(s, enemy, "Enemy", "MoveId"), "saved source move"); Equal("stun", MoveText(s, enemy, "Enemy", "Intent"), "source intent");
+                Equal("none", MoveText(s, enemy, "Enemy", "MoveId"), "no move before the first player start"); Equal("none", MoveText(s, enemy, "Enemy", "Intent"), "no intent before the first player start");
                 for (var turn = 1; turn <= 3; turn++)
                 {
                     var hash = s.State.StateHash(); var draws = s.Random.TotalDraws;
@@ -69,6 +69,7 @@ internal static partial class PackageChecks
                     Equal(hash, s.State.StateHash(), "observations are pure"); Equal(draws, s.Random.TotalDraws, "observations never tick or draw");
                     Equal(4L - turn, IntField(s, Members(s, "Powers").Single(), "Power", "Stacks"), "source timer before side end");
                     Turn(s);
+                    if (turn == 1) { Equal("IDLE", MoveText(s, enemy, "Enemy", "MoveId"), "first player start selects actual idle"); Equal("stun", MoveText(s, enemy, "Enemy", "Intent"), "idle source intent"); }
                     Equal(hp, EnemyHp(s), "escape never substitutes zero HP");
                     Equal(0L, s.Random.DrawCount(MonsterAi), "IDLE self loop does not draw AI");
                     Equal(turn == 3, Flag(s, enemy, "Enemy", "Escaped"), "exact escape boundary");
