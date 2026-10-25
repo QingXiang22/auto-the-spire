@@ -100,7 +100,7 @@ def main() -> int:
                     raise ValueError("derivation metadata migration changed original inputs, scripts or dimensions")
         executable = ROOT / f"tools/differential/bin/{args.configuration}/net9.0/Differential.dll"
 
-        def run(name: str, arguments: list[str], expected_code: int, dll: Path = executable) -> dict | None:
+        def run(name: str, arguments: list[str], expected_code: int | tuple[int, ...], dll: Path = executable) -> dict | None:
             folder = args.output / name
             folder.mkdir(parents=True, exist_ok=True)
             result = folder / "result.json"
@@ -111,9 +111,15 @@ def main() -> int:
             process = subprocess.run(command, cwd=ROOT, capture_output=True, text=True,
                                      encoding="utf-8", errors="replace", timeout=120)
             (folder / "command.log").write_text(process.stdout + process.stderr, encoding="utf-8")
-            if process.returncode != expected_code:
+            if process.returncode not in (expected_code if isinstance(expected_code, tuple) else (expected_code,)):
                 raise ValueError(f"{name}: expected exit {expected_code}, got {process.returncode}; see {folder / 'command.log'}")
-            return json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+            report = json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+            if isinstance(expected_code, tuple):
+                if report is None or report.get("status") not in ("passed", "diverged"):
+                    raise ValueError(f"{name}: an allowed diagnostic exit still requires an actual comparison report")
+                if process.returncode != (0 if report["status"] == "passed" else 1):
+                    raise ValueError(f"{name}: exit code contradicts the actual diagnostic result")
+            return report
 
         dummy = run("battle-friend", ["battle-friend-compare", "--output", str(args.output / "battle-friend")], 0)
         if (dummy is None or dummy["status"] != "passed" or dummy["independent_verified"] is not True
@@ -349,6 +355,42 @@ def main() -> int:
                 raise ValueError("Deferred draw and natural half-turn must execute real draws")
             if name == "natural-lethal" and (not end["ending"] or end["draws"] or end["deferred"] != [1]):
                 raise ValueError("Lethal snapshot must retain entered-listener counting and suppress later draws")
+
+        run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
+        boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending")
+        boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
+        point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles"}
+        if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"
+                or boundaries["executed"] != len(boundary_ids) or boundaries["expected_case_ids"] != boundary_ids
+                or [c["id"] for c in boundaries["cases"]] != boundary_ids
+                or any(boundaries[k] is not False for k in ("complete", "independent_verified", "normal_run_verified"))
+                or boundaries["reference"]["commit"] != lock["commit"] or not boundaries["hook_sources"]):
+            raise ValueError("Boundary diagnostics must retain all controlled scenarios and unverified full-game scope")
+        for hook in boundaries["hook_sources"]:
+            source = ROOT / hook["path"]
+            if (not source.resolve().is_relative_to((ROOT / "reference/sts2-sim/src/Sts2Sim.Core").resolve())
+                    or hashlib.sha256(hook["body"].encode("utf-8")).hexdigest() != hook["body_sha256"]
+                    or not "\n".join(source.read_text(encoding="utf-8").splitlines()[hook["line"] - 1:]).startswith(hook["body"])):
+                raise ValueError("Boundary Hook evidence must identify actual locked source")
+        for case in boundaries["cases"]:
+            if case["diagnostics_read_only"] is not True or case["status"] not in ("passed", "diverged"):
+                raise ValueError("Boundary diagnostics changed gameplay or failed to execute")
+            for side in ("left", "right"):
+                trace = case[side]
+                if (not trace["final_state"] or not trace["raw"] or not trace["points"]
+                        or trace["points"][-1]["phase"] != "action-return"
+                        or any(not any(p["phase"] == phase for p in trace["points"])
+                               for phase in ("combat-before", "player-before", "begin-return", "configured", "action-return"))
+                        or any(set(p) != point_fields or len(p["piles"]) != 5 for p in trace["points"])):
+                    raise ValueError("Boundary diagnostic omitted actual phases or fields")
+                if case["id"].endswith(":two-end-effects-paused") and sum(p["phase"] == "paused" for p in trace["points"]) != 1:
+                    raise ValueError("Both effect-card pipelines must really suspend and resume once")
+            equal = case["left"]["points"] == case["right"]["points"]
+            if equal != (case["status"] == "passed") or equal != (case["first_difference"] is None):
+                raise ValueError("Boundary diagnosis hid an actual difference or invented one")
+        if boundaries["status"] != ("passed" if all(c["status"] == "passed" for c in boundaries["cases"]) else "diverged"):
+            raise ValueError("Boundary diagnostic summary contradicts measured cases")
 
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
