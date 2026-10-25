@@ -6,7 +6,7 @@
 
 当前依据为[锁定 sts2-sim](../../../../reference/README.md)的 `AttackCommand.Execute` 与 `CreatureCmd.Damage`／`DamageSingle`。本页规定基本挡伤与失血；完整来源、攻击／命中批次和外层提交见[行为要求 G03～G05](../content-behavior-migration.md)，死亡清理见[战斗结束约定](../combat-end/spec.md)。当前实现已包含部分有加成攻击、不可格挡失血和普通死亡通知；完整 `ModifyHpLost`、承伤转移及防死链仍有缺口，不能继续按旧无加成探针范围解释整个包。
 
-`Enemy` 已由开发目标、具名敌人与部分正常遭遇共用，定义存在不等于完整行为支持。MercuryHourglass 在 `AfterPlayerTurnStart` 对合资格敌人造成 3 点无加成伤害，当前通过完整群伤操作先提交全批，再通知和处理死亡。阶段对照与后续修改方案见[战斗内部对照 CF06／CF07](../../../development/base-spire/explanation/combat-engine-comparison.md#差异与修改方案)。
+`Enemy` 已由开发目标、具名敌人与部分正常遭遇共用，定义存在不等于完整行为支持。MercuryHourglass 在 `AfterPlayerTurnStart` 对合资格敌人造成 3 点无加成伤害，当前通过完整群伤操作先提交全批，再通知和处理死亡。阶段对照与后续修改方案见[伤害与战斗结束的对照说明](../../../development/base-spire/explanation/combat-engine-comparison.md#一次攻击怎样处理多个目标)。
 
 ## 行为要求与设计
 

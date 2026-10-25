@@ -22,7 +22,7 @@ flowchart LR
 
 当前已有统一出牌、牌区、永久牌／战斗副本、Power 定义生命周期和实例修正等可复用 DSL。准确入口与限制见[当前控制流程](control-flow-modules.md)和[操作参考](../../development/base-spire/reference/operations.md)。卡牌正文与纯基础伤害由所属模块的唯一分派绑定表达，攻击与结果各有独立标识，费用与附魔采用独立状态及复制通知。精确边界见[行为迁移约定](content-behavior-migration.md)。
 
-比较具体战斗流转时使用[战斗引擎与效果生命周期对照](../../development/base-spire/explanation/combat-engine-comparison.md#战斗内部调用与源码定位)：其中按双方源符号列出实际调用链、时序差异、修改位置和验证条件。编译／加载架构相同或阶段名称对应，都不能替代战斗顺序比较；修复方案也不表示当前已支持。
+具体战斗流程见[一场战斗怎样流转](../../development/base-spire/explanation/combat-engine-comparison.md#一场战斗怎样流转)。该页沿入战、出牌、回合结束和胜负收尾解释双方的执行顺序，再说明差异和修改方案；源码索引放在文末。
 
 包 manifest 目前只开放开发 scope；显式 Ironclad 初态与开发战斗不代表包含 Neow、地图、事件往返和跨幕的正常 Run。旧 C# 与检查只在[迁移对照](../../../tools/base-migration-baseline/README.md)保存，生产与默认 Host 不回退。后续恢复与认领按[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)执行。
 

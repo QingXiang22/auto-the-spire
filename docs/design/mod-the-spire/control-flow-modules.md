@@ -2,7 +2,7 @@
 
 文档类型：解释（Explanation）。本页描述纯 DSL base 的现行职责，版本以[包 manifest](../../../mod-the-spire/base-spire/package.json)为准。调用签名见[行为操作参考](../../development/base-spire/reference/card-behavior.md)，来源顺序与限制见[迁移约定](content-behavior-migration.md)。旧 C# CardPlayPipeline 等模块不进入生产。
 
-逐阶段审阅或修改战斗流程时，先读[双方内部调用、差异与修改方案](../../development/base-spire/explanation/combat-engine-comparison.md#战斗内部调用与源码定位)。该页按锁定 sts2-sim 的源符号对照入战、玩家／敌人回合、出牌、逐击批次和胜负提交；当前实现与建议分列。尤其不能把开发态的分步回合动作当作参考的自动换边，也不能把敌方末阶段选招当作玩家开始时选招。
+先读[双方战斗流程对照](../../development/base-spire/explanation/combat-engine-comparison.md#一场战斗怎样流转)，了解两边怎样完成一轮战斗，再用下表定位 base 模块。对照页还解释了选招时点、回合衔接等差异，并给出修改方案。
 
 ## 当前调用链
 
