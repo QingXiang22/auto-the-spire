@@ -75,13 +75,7 @@ event ShouldDraw {
   payload = { value = Bool owner = Ref(Player) fromHandDraw = Bool }
 }
 
-event ShouldExhaustSkill {
-  payload = { value = Bool owner = Ref(Player) card = Ref(Card) }
-}
 
-event ModifyPlayCount {
-  payload = { value = Int owner = Ref(Player) card = Ref(Card) }
-}
 
 event AfterAutoPostPlayPhaseEntered {
   payload = { owner = Ref(Player) }
@@ -93,8 +87,4 @@ event AfterCardDrawnEarly {
 
 event BeforePlayerAttacked {
   payload = { owner = Ref(Player) attacker = Ref(Enemy) }
-}
-
-event BeforeCardPlaySequence {
-  payload = { owner = Ref(Player) card = Ref(Card) }
 }

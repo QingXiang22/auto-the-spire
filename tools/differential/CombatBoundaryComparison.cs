@@ -17,6 +17,7 @@ using Sts2Sim.Core.Models;
 using Sts2Sim.Core.Models.Cards;
 using Sts2Sim.Core.Models.Characters;
 using Sts2Sim.Core.Models.Monsters;
+using Sts2Sim.Core.Models.Powers;
 using Sts2Sim.Core.Runs;
 using Sts2Sim.Core.Random;
 using Sts2Sim.Core.Entities.Rngs;
@@ -26,11 +27,11 @@ namespace Differential;
 
 internal static class CombatBoundaryComparison
 {
-    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending"];
+    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "zero-card", "free-x", "repeat-card", "corruption"];
     private static readonly string[] Seeds = ["777", "A😀B"];
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     internal sealed record Point(string Phase, string Card, long Turn, long Energy, long Hp, long MaxHp, long Block,
-        long EnemyHp, string Move, bool Ending, string[] Piles);
+        long EnemyHp, string Move, bool Ending, string[] Piles, long Spent = 0);
     internal sealed record Trace(Point[] Points, string FinalState, object[] Raw);
     internal sealed record Difference(int Index, string Field, object? Left, object? Right);
     private sealed record HookSource(string Hook, int Overload, string Path, int Line, string BodySha256, string[] Iterators,
@@ -106,7 +107,7 @@ internal static class CombatBoundaryComparison
         Reject(trace with { Points = [] }); Reject(trace with { FinalState = "" });
         Reject(trace with { Points = trace.Points.Append(trace.Points[^1]).ToArray() });
         Reject(trace with { Points = trace.Points.Select(p => p with { Piles = [""] }).ToArray() });
-        foreach (var changed in new[] { point with { Phase = "wrong-stage" }, point with { Energy = 2 }, point with { Move = "NEXT" },
+        foreach (var changed in new[] { point with { Phase = "wrong-stage" }, point with { Energy = 2 }, point with { Spent = 2 }, point with { Move = "NEXT" },
             point with { Ending = true }, point with { Piles = ["INFECTION,", "", "", "", ""] } })
             if (FirstDifference([point], [changed]) is null) throw new InvalidOperationException("Missed boundary divergence.");
         if (FirstDifference([point], []) is null || FirstDifference([], [point]) is null) throw new InvalidOperationException("Missed missing notification.");
@@ -157,10 +158,10 @@ internal static class CombatBoundaryComparison
                 if (record.Subject == "base-spire:BoundaryPoint" && record.Kind == SessionDebugKind.EventEmit)
                 {
                     var snapshot = record.Snapshot;
-                    if (record.TextTruncated || snapshot is null || !snapshot.Complete || snapshot.Values.Count != 15) throw new InvalidOperationException("Incomplete DSL boundary snapshot.");
+                    if (record.TextTruncated || snapshot is null || !snapshot.Complete || snapshot.Values.Count != 16) throw new InvalidOperationException("Incomplete DSL boundary snapshot.");
                     var v = snapshot.Values; string S(int i) => v[i].Scalar ?? throw new InvalidOperationException("Missing scalar.");
                     long N(int i) => long.Parse(S(i), CultureInfo.InvariantCulture);
-                    var point = new Point(S(0), S(1), N(2), N(3), N(4), N(5), N(6), N(7), S(8), bool.Parse(S(9)), Enumerable.Range(10, 5).Select(S).ToArray());
+                    var point = new Point(S(0), S(1), N(3), N(4), N(5), N(6), N(7), N(8), S(9), bool.Parse(S(10)), Enumerable.Range(11, 5).Select(S).ToArray(), N(2));
                     if (fixture) raw.Add(new { fixture = true, point }); else boundaries.Add(point);
                 }
                 else if (record.Kind is SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter)
@@ -171,12 +172,16 @@ internal static class CombatBoundaryComparison
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn"); Flush(); Take("begin-return");
         if (plan is "paid-card" or "feed-ending") Submit(plan == "paid-card" ? "Strike.AddToHand" : "Feed.AddToHand");
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Submit("Infection.AddToHand"); Submit("Infection.AddToHand"); }
+        else if (plan == "zero-card") Submit("Anger.AddToHand");
+        else if (plan == "free-x") Submit("Whirlwind.AddToHand");
+        else if (plan == "repeat-card") { Submit("Strike.AddToHand"); Submit("BoundaryRepeat"); }
+        else if (plan == "corruption") { Submit("Defend.AddToHand"); Submit("BoundaryCorruption"); }
         if (plan == "feed-ending") Set(enemy, "Enemy", "Hp", 10);
         Flush(fixture: true); Take("configured");
         if (plan == "two-end-effects-paused")
             Submit("BoundaryEnablePause");
         if (plan == "turn-return" || plan.StartsWith("two-end-effects", StringComparison.Ordinal)) Submit("EndTurn");
-        else Submit("BoundaryPlay", All("Card").Single());
+        else Submit(plan == "free-x" ? "BoundaryAuto" : "BoundaryPlay", All("Card").Single());
         if (plan == "two-end-effects-paused")
         {
             if (session.Status != SessionStatus.AwaitingDecision) throw new InvalidOperationException("First effect-card move did not pause.");
@@ -212,7 +217,7 @@ internal static class CombatBoundaryComparison
                 new[] { s.Hand, s.DrawPile, s.DiscardPile, s.ExhaustPile, s.PlayPile }.Select(p => string.Concat(p.Cards.Select(c => c.Id.Entry + ","))).ToArray());
         }
         var probe = (BoundaryProbeRelic)new BoundaryProbeRelic().MutableClone(); probe.AssignOwner(player); player.AddRelicInternal(probe);
-        probe.Capture = (phase, card) => { if (capture) points.Add(Take(phase, card)); };
+        probe.Capture = (phase, card) => { if (capture) points.Add(phase.StartsWith("energy-spent:", StringComparison.Ordinal) ? Take("energy-spent", card) with { Spent = int.Parse(phase.Split(':')[1], CultureInfo.InvariantCulture) } : Take(phase, card)); };
         var observerType = typeof(CombatEngine).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!;
         var observer = DispatchProxy.Create(observerType, typeof(NormalReferenceObserver));
         ((NormalReferenceObserver)observer).Record = (name, arguments) =>
@@ -236,8 +241,13 @@ internal static class CombatBoundaryComparison
         if (plan == "paid-card") played = Add(ModelDb.Card<StrikeIronclad>());
         else if (plan == "feed-ending") { played = Add(ModelDb.Card<Feed>()); enemy.SetCurrentHpInternal(10); }
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Add(ModelDb.Card<Infection>()); Add(ModelDb.Card<Infection>()); }
+        else if (plan == "zero-card") played = Add(ModelDb.Card<Anger>());
+        else if (plan == "free-x") played = Add(ModelDb.Card<Whirlwind>());
+        else if (plan == "repeat-card") { played = Add(ModelDb.Card<StrikeIronclad>()); PowerCmd.Apply<OneTwoPunchPower>(combat, player.Creature, 1, null, null).GetAwaiter().GetResult(); }
+        else if (plan == "corruption") { played = Add(ModelDb.Card<DefendIronclad>()); PowerCmd.Apply<CorruptionPower>(combat, player.Creature, 1, null, null).GetAwaiter().GetResult(); }
         points.Add(Take("configured"));
-        if (played is not null) engine.PlayCardAsync(player, played, enemy).GetAwaiter().GetResult();
+        if (plan == "free-x") AutoPlayCmd.FromCards(combat, player, [played!]).GetAwaiter().GetResult();
+        else if (played is not null) engine.PlayCardAsync(player, played, played.TargetType == TargetType.AnyEnemy ? enemy : null).GetAwaiter().GetResult();
         else
         {
             probe.PauseMoves = plan == "two-end-effects-paused";
